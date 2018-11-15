@@ -1,7 +1,7 @@
+<i><b>WARNING:</b> This application is under development. It is neither complete nor adequately documented yet.</i>
+
 # crawlserv++
 <b>crawlserv++</b> is an application for crawling websites and analyzing textual content on these websites.
-
-<i><b>WARNING:</b> This application is under development. It is neither complete nor adequately documented yet.</i>
 
 The architecture of <b>crawlserv++</b> consists of three main parts:
 
