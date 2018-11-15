@@ -76,7 +76,7 @@ The commands and their replies are using the JSON format (implemented by using t
 }
 ````
 
-<i><b>Response from server:</b> Success (otherwise `"failed":true"` would be sent).</i>
+<i><b>Response from server:</b> Success (otherwise `"failed":true` would be sent).</i>
 
 ```json
 {
