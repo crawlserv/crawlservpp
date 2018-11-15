@@ -1,8 +1,8 @@
 /*
  * URIParser.cpp
  *
- * Encapsulation of the RFC 3986 URI parsing library to parse URLs, checking whether their domain is identical with the current domain
- *  and getting the sub-URL for the current domain.
+ * Encapsulation of the RFC 3986 URI parsing library to parse URLs, check whether their domain is identical with the current domain
+ *  and get the sub-URL for the current domain.
  *
  *  Created on: Oct 18, 2018
  *      Author: ans
