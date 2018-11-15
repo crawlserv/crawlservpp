@@ -1,7 +1,7 @@
 /*
  * ServerSettings.h
  *
- * Server settings.
+ * Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
