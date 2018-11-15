@@ -7,11 +7,11 @@
  *      Author: ans
  */
 
-#ifndef VERSIONS_H_
-#define VERSIONS_H_
+#ifndef NAMESPACES_VERSIONS_H_
+#define NAMESPACES_VERSIONS_H_
 
-#include "external/mongoose.h"
-#include "external/rapidjson/rapidjson.h"
+#include "../external/mongoose.h"
+#include "../external/rapidjson/rapidjson.h"
 
 #include <boost/version.hpp>
 #include <curl/curl.h>
@@ -30,4 +30,4 @@ namespace Versions {
 	std::string getLibraryVersions(const std::string& indent);
 }
 
-#endif /* VERSIONS_H_ */
+#endif /* NAMESPACES_VERSIONS_H_ */
