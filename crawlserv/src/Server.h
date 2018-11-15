@@ -1,7 +1,7 @@
 /*
  * Server.h
  *
- * The command and control server. Uses the mongoose and RapidJSON libraries to implement a HTTP server for receiving JSON-formatted
+ * The command-and-control server. Uses the mongoose and RapidJSON libraries to implement a HTTP server for receiving JSON-formatted
  *  commands and sending JSON-formatted replies from/to the crawlserv_frontend.
  *
  *  Also handles all threads for the different modules as well as worker threads for query testing.
