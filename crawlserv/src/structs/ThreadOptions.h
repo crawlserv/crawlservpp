@@ -1,7 +1,7 @@
 /*
  * ThreadOptions.h
  *
- * Thread options.
+ * Basic thread options (IDs of website, URL list and configuration).
  *
  *  Created on: Oct 13, 2018
  *      Author: ans

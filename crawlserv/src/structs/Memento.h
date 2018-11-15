@@ -1,7 +1,7 @@
 /*
  * Memento.h
  *
- * URL and timestamp of a memento (archived URL).
+ * URL and timestamp of a memento (archived website).
  *
  *  Created on: Oct 28, 2018
  *      Author: ans

@@ -1,7 +1,7 @@
 /*
  * ThreadDatabaseEntry.h
  *
- * Thread status as saved in the database.
+ * Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
