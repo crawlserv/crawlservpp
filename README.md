@@ -199,4 +199,4 @@ For each website and each URL list a namespace of at least four allowed characte
 * <b>`<namespace of website>_<namespace of URL list>_crawled`</b>: Crawled content.
 * <b>`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
 
-See the source code of the `Database::addUrlList(...)` function for details about the structure of these tables.
+See the source code of the `Database::addUrlList(...)` function in [`crawlserv/src/Database.cpp`](crawlserv/src/Database.cpp) for details about the structure of these tables.
