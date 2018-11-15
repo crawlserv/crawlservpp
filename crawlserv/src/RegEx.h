@@ -1,7 +1,7 @@
 /*
  * RegEx.h
  *
- * Using the PCRE library to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
+ * Using the PCRE2 library to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
  *
  *  Created on: Oct 17, 2018
  *      Author: ans
