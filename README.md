@@ -90,12 +90,12 @@ For more information on the server commands, check out the `Server` class of the
 
 As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the `Thread` template class:
 
-* <b>crawler</b>: Crawling of a website (using custom URLs and following links, downloading the plain content to the database and optionally checking archives using the [Memento Protocol](http://mementoweb.org/)).
-* ~~<b>parser</b>~~: Parsing data from the downloaded content with the help of user-defined RegEx and XPath queries.
+* <b>crawler</b>: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento Protocol](http://mementoweb.org/) \[although at the moment, only `archive.org` can be accessed this way]).
+* ~~<b>parser</b>~~: Parsing data from URLs and downloaded content using user-defined RegEx and XPath queries.
 * ~~<b>extractor</b>~~: Downloading additional data such as comments and social media content.
 * ~~<b>analyzer</b>~~: Analyzing textual data using different methods and algorithms.
 
-The server and each thread have their own connection to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (`DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads from accidentally using the server connection to the database. See the corresponsing source code for details.
+The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (instances of `DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads from accidentally using the server connection to the database. See the next section on classes and namespaces as well as the corresponsing source code for details.
 
 ### Classes and Namespaces
 
@@ -129,9 +129,9 @@ The source code of the server consists of the following classes (as of November 
 The following additional namespaces are used:
 
 * <b>`Helpers`</b>: Global helper functions for timing, file system operations, string manipulation, memento parsing, time conversion and portability.
-* <b>`Versions`</b>: Get the versions of the different libraries used by the command-and-control server.
+* <b>`Versions`</b>: Get the versions of the different libraries used by the server.
 
-The `main.cpp` source file as entry point of the application contains only one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
+The `main.cpp` source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
 ### Third-party Libraries
 
@@ -167,7 +167,7 @@ The frontend is a simple HTML/PHP and JavaScript application that has read-only 
 
 ## Database
 
-The application uses exactly one database scheme and all tables will be prefixed with `crawlserv_`. The following main tables are used:
+The application uses exactly one database scheme and all tables are prefixed with `crawlserv_`. The following main tables are used:
 
 * <b>`log`</b>: Log entries.
 * <b>`websites`</b>: Websites.
@@ -186,6 +186,8 @@ For each website and each URL list a namespace of at least four allowed characte
 * <b>`<namespace of website>_<namespace of URL list>`</b>: Content of the URL list.
 * <b>`<namespace of website>_<namespace of URL list>_crawled`</b>: Crawled content.
 * <b>`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
+
+See the source code of the `Database::addUrlList(...)` function for details about the structure of these tables.
 
 ## Configuration
 
