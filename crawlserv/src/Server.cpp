@@ -449,7 +449,7 @@ Server::CmdResponse Server::cmdKill(const rapidjson::Document& json, const std::
 	return Server::CmdResponse(false, true, "Are you sure to kill the server?");
 }
 
-// server command allow(ip): allow acces to the specified IP(s)
+// server command allow(ip): allow acces for the specified IP(s)
 Server::CmdResponse Server::cmdAllow(const rapidjson::Document& json, const std::string& ip) {
 	// get argument
 	if(!json.HasMember("ip")) return Server::CmdResponse(true, "Invalid arguments (\'ip\' is missing).");
@@ -469,7 +469,7 @@ Server::CmdResponse Server::cmdAllow(const rapidjson::Document& json, const std:
 	return Server::CmdResponse("Allowed IPs: " + this->allowed + ".");
 }
 
-// server command disallow: revoke access from all except the initial IPs
+// server command disallow: revoke access from all except the initial IP(s) specified by the configuration file
 Server::CmdResponse Server::cmdDisallow(const rapidjson::Document& json, const std::string& ip) {
 	// reset alled IP(s)
 	this->allowed = this->settings.allowedClients;
@@ -480,7 +480,7 @@ Server::CmdResponse Server::cmdDisallow(const rapidjson::Document& json, const s
 	return Server::CmdResponse("Allowed IP(s): " + this->allowed + ".");
 }
 
-// server command log(entry): write a log entry into the database
+// server command log(entry): write a log entry by the frontend into the database
 Server::CmdResponse Server::cmdLog(const rapidjson::Document& json) {
 	// get argument
 	if(!json.HasMember("entry")) return Server::CmdResponse(true, "Invalid arguments (\'entry\' is missing).");
@@ -521,7 +521,7 @@ Server::CmdResponse Server::cmdClearLog(const rapidjson::Document& json, const s
 	return Server::CmdResponse("All logs cleared.");
 }
 
-// server command startcrawler(website, urllist, config): start a crawler using the specified configuration
+// server command startcrawler(website, urllist, config): start a crawler using the specified website, URL list and configuration
 Server::CmdResponse Server::cmdStartCrawler(const rapidjson::Document& json, const std::string& ip) {
 	// get arguments
 	ThreadOptions options;
@@ -730,7 +730,7 @@ Server::CmdResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
 	return Server::CmdResponse("Website updated.");
 }
 
-// server command deletewebsite(id): delete a website
+// server command deletewebsite(id): delete a website and all associated data from the database
 Server::CmdResponse Server::cmdDeleteWebsite(const rapidjson::Document& json, const std::string& ip) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
@@ -870,7 +870,7 @@ Server::CmdResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
 	return Server::CmdResponse("URL list updated.");
 }
 
-// server command deleteurllist(id): delete a URL list
+// server command deleteurllist(id): delete a URL list and all associated data from the database
 Server::CmdResponse Server::cmdDeleteUrlList(const rapidjson::Document& json, const std::string& ip) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
@@ -1011,7 +1011,7 @@ Server::CmdResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
 	return Server::CmdResponse("Query updated.");
 }
 
-// server command deletequery(id): delete a query
+// server command deletequery(id): delete a query from the database
 Server::CmdResponse Server::cmdDeleteQuery(const rapidjson::Document& json) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
@@ -1305,7 +1305,7 @@ Server::CmdResponse Server::cmdUpdateConfig(const rapidjson::Document& json) {
 	return Server::CmdResponse("Configuration updated.");
 }
 
-// server command deleteconfig(id): delete a configuration
+// server command deleteconfig(id): delete a configuration from the database
 Server::CmdResponse Server::cmdDeleteConfig(const rapidjson::Document& json) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
