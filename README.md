@@ -1,5 +1,7 @@
 <i><b>WARNING:</b> This application is under development. It is neither complete nor adequately documented yet.</i>
 
+<i>~~strikethrough~~ means this feature is not implemented yet.</i>
+
 # crawlserv++
 <b>crawlserv++</b> is an application for crawling websites and analyzing textual content on these websites.
 
@@ -11,7 +13,63 @@ The architecture of <b>crawlserv++</b> consists of three distinct components:
 
 ## Command-and-Control Server
 
-The command-and-control server contains an embedded web server (implemented by using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the frontend by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) of JSON code. Access can (and should) be restricted to specific IPs only.
+The command-and-control server contains an embedded web server (implemented by using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the frontend by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) of JSON code.
+
+In the configuration file, access can (and should) be restricted to specific IPs only.
+
+### Classes, Namespaces and Structures
+
+The source code of the server consists of the following classes (as of November 2018):
+
+* <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class, processing command line arguments, showing initial console output, loading configuration file, creating and starting the server.
+* <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
+* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration.
+* <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
+* <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
+* <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration.
+* <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with only basic functionality).
+* <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements `DatabaseModule` interface).
+* <b>[`DatabaseModule`](crawlserv/src/DatabaseModule.cpp)</b>: Interface for the database access of threads (wraps `DatabaseThread`).
+* <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of `Database`).
+* <b>[`Networking`](crawlserv/src/Networking.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/).
+* <b>[`RegEx`](crawlserv/src/RegEx.cpp)</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
+* <b>[`Server`](crawlserv/src/Server.cpp)</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
+* <b>[`Thread`](crawlserv/src/Thread.cpp)</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
+* ~~<b>`ThreadAnalyzer`</b>~~: Implementation of the `Thread` interface for analyzers.
+* <b>[`ThreadCrawler`](crawlserv/src/ThreadCrawler.cpp)</b>: Implementation of the `Thread` interface for crawlers.
+* ~~<b>`ThreadExtractor`</b>~~: Implementation of the `Thread` interface for extractors.
+* ~~<b>`ThreadParser`</b>~~: Implementation of the `Thread` interface for parsers.
+* <b>[`TimerSimpleHR`](crawlserv/src/TimerSimpleHR.cpp)</b>: Simple high resolution timer for getting the time since creation in microseconds.
+* <b>[`TimerStartStop`](crawlserv/src/TimerStartStop.cpp)</b>: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
+* <b>[`TimerStartStopHR`](crawlserv/src/TimerStartStopHR.cpp)</b>: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
+* <b>[`URIParser`](crawlserv/src/URIParser.cpp)</b>: URL parsing, domain checking and sub-URL extraction.
+* <b>[`XMLDocument`](crawlserv/src/XMLDocument.cpp)</b>: Parse HTML documents into clean XML.
+* <b>[`XPath`](crawlserv/src/XPath.cpp)</b>: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
+
+The following additional namespaces are used (to be found in [`crawlserv/src/namespaces`](crawlserv/src/namespaces)):
+
+* <b>[`Helpers`](crawlserv/src/namespaces/Helpers.cpp)</b>: Global helper functions for timing, file system operations, string manipulation, memento parsing, time conversion and portability.
+* <b>[`Versions`](crawlserv/src/namespaces/Versions.cpp)</b>: Get the versions of the different libraries used by the server.
+
+The following custom structures are used (to be found in [`crawlserv/src/structs`](crawlserv/src/structs)):
+
+* <b>[`ConfigEntry`](crawlserv/src/structs/ConfigEntry.h)</b>: A \[`name`, `value`\] pair from the configuration file.
+* <b>[`DatabaseSettings`](crawlserv/src/structs/DatabaseSettings.h)</b>: Basic database settings (host, port, user, password, scheme).
+* <b>[`IdString`](crawlserv/src/structs/IdString.h)</b>: A simple \[`id`, `string`\] pair.
+* <b>[`Memento`](crawlserv/src/structs/Memento.h)</b>: URL and timestamp of a memento (archived website).
+* <b>[`PreparedSqlStatement`](crawlserv/src/structs/PreparedSqlStatement.h)</b>: Content of and pointer to a prepared SQL statement.
+* <b>[`ServerCommandArgument`](crawlserv/src/structs/ServerCommandArgument.h)</b>: The \[`name`,`value`\] pair of a server command argument.
+* <b>[`ServerSettings`](crawlserv/src/structs/ServerSettings.h)</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
+* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.h)</b>: Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
+* <b>[`ThreadOptions`](crawlserv/src/structs/ThreadOptions.h)</b>: Basic thread options (IDs of website, URL list and configuration).
+
+The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
+
+### Configuration
+
+The server needs a configuration file as argument, the test configuration can be found at [`crawlserv/config`](crawlserv/config). Replace the values in this file with those for your own test database. The password for granting the server full access to the database will be prompted when starting the server.
+
+The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
 
 ### Server Commands
 
@@ -97,60 +155,6 @@ As can be seen from the commands, the server also manages threads for performing
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (instances of `DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads from accidentally using the server connection to the database. See the next section on classes and namespaces as well as the corresponsing source code for details.
 
-### Classes, Namespaces and Structures
-
-The source code of the server consists of the following classes (as of November 2018):
-
-* <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class, processing command line arguments, showing initial console output, loading configuration file, creating and starting the server.
-* <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
-* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration.
-* <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
-* <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
-* <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration.
-* <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with only basic functionality).
-* <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements `DatabaseModule` interface).
-* <b>[`DatabaseModule`](crawlserv/src/DatabaseModule.cpp)</b>: Interface for the database access of threads (wraps `DatabaseThread`).
-* <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of `Database`).
-* <b>[`Networking`](crawlserv/src/Networking.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/).
-* <b>[`RegEx`](crawlserv/src/RegEx.cpp)</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
-* <b>[`Server`](crawlserv/src/Server.cpp)</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
-* <b>[`Thread`](crawlserv/src/Thread.cpp)</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
-* ~~<b>`ThreadAnalyzer`</b>~~: Implementation of the `Thread` interface for analyzers.
-* <b>[`ThreadCrawler`](crawlserv/src/ThreadCrawler.cpp)</b>: Implementation of the `Thread` interface for crawlers.
-* ~~<b>`ThreadExtractor`</b>~~: Implementation of the `Thread` interface for extractors.
-* ~~<b>`ThreadParser`</b>~~: Implementation of the `Thread` interface for parsers.
-* <b>[`TimerSimpleHR`](crawlserv/src/TimerSimpleHR.cpp)</b>: Simple high resolution timer for getting the time since creation in microseconds.
-* <b>[`TimerStartStop`](crawlserv/src/TimerStartStop.cpp)</b>: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
-* <b>[`TimerStartStopHR`](crawlserv/src/TimerStartStopHR.cpp)</b>: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
-* <b>[`URIParser`](crawlserv/src/URIParser.cpp)</b>: URL parsing, domain checking and sub-URL extraction.
-* <b>[`XMLDocument`](crawlserv/src/XMLDocument.cpp)</b>: Parse HTML documents into clean XML.
-* <b>[`XPath`](crawlserv/src/XPath.cpp)</b>: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
-
-The following additional namespaces are used (to be found in [`crawlserv/src/namespaces`](crawlserv/src/namespaces)):
-
-* <b>[`Helpers`](crawlserv/src/namespaces/Helpers.cpp)</b>: Global helper functions for timing, file system operations, string manipulation, memento parsing, time conversion and portability.
-* <b>[`Versions`](crawlserv/src/namespaces/Versions.cpp)</b>: Get the versions of the different libraries used by the server.
-
-The following custom structures are used (to be found in [`crawlserv/src/structs`](crawlserv/src/structs)):
-
-* <b>[`ConfigEntry`](crawlserv/src/structs/ConfigEntry.h)</b>: A \[`name`, `value`\] pair from the configuration file.
-* <b>[`DatabaseSettings`](crawlserv/src/structs/DatabaseSettings.h)</b>: Basic database settings (host, port, user, password, scheme).
-* <b>[`IdString`](crawlserv/src/structs/IdString.h)</b>: A simple \[`id`, `string`\] pair.
-* <b>[`Memento`](crawlserv/src/structs/Memento.h)</b>: URL and timestamp of a memento (archived website).
-* <b>[`PreparedSqlStatement`](crawlserv/src/structs/PreparedSqlStatement.h)</b>: Content of and pointer to a prepared SQL statement.
-* <b>[`ServerCommandArgument`](crawlserv/src/structs/ServerCommandArgument.h)</b>: The \[`name`,`value`\] pair of a server command argument.
-* <b>[`ServerSettings`](crawlserv/src/structs/ServerSettings.h)</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
-* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.h)</b>: Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
-* <b>[`ThreadOptions`](crawlserv/src/structs/ThreadOptions.h)</b>: Basic thread options (IDs of website, URL list and configuration).
-
-The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
-
-### Configuration
-
-The server needs a configuration file as argument, the test configuration can be found at [`crawlserv/config`](crawlserv/config). See this file for details about the test configuration (including the used database scheme and the user name). Replace those values with those for your own test database. The password for granting the server full access to the database will be prompted when starting the server.
-
-The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
-
 ### Third-party Libraries
 
 The following third-party libraries are used:
@@ -158,12 +162,15 @@ The following third-party libraries are used:
 * [Boost C++ Libraries](https://www.boost.org/)
 * [libcurl](https://curl.haxx.se/libcurl/)
 * [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/external/mongoose.*`)
+* [MySQL Connector/C++ 8.0](https://dev.mysql.com/doc/connector-cpp/8.0/en/)
 * [Perl Compatible Regular Expressions 2](https://www.pcre.org/)
 * [pugixml](https://github.com/zeux/pugixml)
 * [RapidJSON](https://github.com/Tencent/rapidjson) (included in `crawlserv/src/external/rapidjson`)
 * [HTML Tidy API](http://www.html-tidy.org/)
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/external/utf8*`)
+
+The following libraries need to be manually linked: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml tidy uriparser`.
 
 ## Frontend
 
@@ -173,7 +180,7 @@ The frontend is a simple HTML/PHP and JavaScript application that has read-only 
 * <b>Websites</b>: Manage websites and their URL lists including the download of URL lists as text files. 
 * <b>Queries</b>: Manage RegEx and XPath queries saved in the database including the test of such queries on custom texts by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
 * <b>Crawlers</b>: Manage crawling configurations in simple or advanced mode.
-* ~~<b>Parsers</b>~~: Manage parsing configurations in simple or advanced mode.
+* <b>Parsers</b>: Manage parsing configurations in simple or advanced mode.
 * ~~<b>Extractors</b>~~: Manage extracting configurations in simple or advanced mode.
 * ~~<b>Analyzers</b>~~: Manage analyzing configurations in simple or advanced mode.
 * <b>Threads</b>: Currently active threads and their status. Start, pause and stop specific threads.
@@ -187,7 +194,7 @@ The frontend is a simple HTML/PHP and JavaScript application that has read-only 
 
 The frontend uses [`crawlserv_frontend/crawlserv/config.php`](crawlserv_frontend/crawlserv/config.php) to gain read-only access to the database. For security reasons, the database account used by the frontend should only have `SELECT` privileges! See this file for details about the test configuration (including the database scheme and the user name and password for read-only access to the test database). Replace those values with those for your own test database.
 
-The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). Therefore, the (randomly created) password in `config.php` is irrelevant for usage outside the original test environment and needs to be replaced! The command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
+The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). Therefore, the (randomly created) password in `config.php` is irrelevant for usage outside the original test environment and needs to be replaced! In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
 
 ## Database
 
