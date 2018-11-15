@@ -97,7 +97,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 			var timerEnd = +new Date();
 			if(data["confirm"]) {
 				if(confirm("crawlserv asks (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"])) {
-					cmdArgs["confirmed"] = "";
+					cmdArgs["confirmed"] = true;
 					timerStart = +new Date();
 					$.ajax({ type: "POST", url: "http://localhost:8080", data: JSON.stringify(cmdArgs, null, 1),
 						contentType: "application/json; charset=utf-8", dataType: "json", success: function(data) {
