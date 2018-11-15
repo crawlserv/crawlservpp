@@ -133,6 +133,12 @@ The following additional namespaces are used:
 
 The `main.cpp` source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
+### Configuration
+
+The server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. See this file for details about the test configuration (including the used database scheme and the user name). Replace those values with those for your own test database if necessary. The password for granting the server full access to the database will be prompted when starting the server.
+
+The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user.
+
 ### Third-party Libraries
 
 The following third-party libraries are used:
@@ -165,6 +171,12 @@ The frontend is a simple HTML/PHP and JavaScript application that has read-only 
 * ~~<b>Statistics</b>:~~ ...
 * <b>Logs</b>: Show log entries and delete logs.
 
+### Configuration
+
+The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to gain read-only access to the database. For security reasons, the database account used by the frontend should only have SELECT privileges. See this file for details about the test configuration (including the database scheme and the user name and password for read-only access to the test database). Replace those values with those for your own test database if necessary.
+
+The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user.
+
 ## Database
 
 The application uses exactly one database scheme and all tables are prefixed with `crawlserv_`. The following main tables are used:
@@ -188,9 +200,3 @@ For each website and each URL list a namespace of at least four allowed characte
 * <b>`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
 
 See the source code of the `Database::addUrlList(...)` function for details about the structure of these tables.
-
-## Configuration
-
-The command-and-control server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to gain access to the database.
-
-The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). See those files for details about the test configuration.
