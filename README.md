@@ -5,8 +5,8 @@
 
 The architecture of <b>crawlserv++</b> consists of three distinct components:
 
-* The <b>command-and-control server</b>, written in C++ (source code in `crawlserv/src`),
-* a webserver hosting the <b>frontend</b> written in HTML, PHP and JavaScript (source code in `crawlserv_frontend/crawlserv`),
+* The <b>command-and-control server</b>, written in C++ (source code in [`crawlserv/src`](crawlserv/src)),
+* a webserver hosting the <b>frontend</b> written in HTML, PHP and JavaScript (source code in [`crawlserv_frontend/crawlserv`](crawlserv_frontend/crawlserv)),
 * a mySQL <b>database</b> containing all data (i.e. thread status, configurations, logs, crawled content, parsed data as well as the results of all analyses).
 
 ## Command-and-Control Server
@@ -135,7 +135,7 @@ The `main.cpp` source file as entry point of the application only consists of on
 
 ### Configuration
 
-The server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. See this file for details about the test configuration (including the used database scheme and the user name). Replace those values with those for your own test database. The password for granting the server full access to the database will be prompted when starting the server.
+The server needs a configuration file as argument, the test configuration can be found at [`crawlserv/config`](crawlserv/config). See this file for details about the test configuration (including the used database scheme and the user name). Replace those values with those for your own test database. The password for granting the server full access to the database will be prompted when starting the server.
 
 The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
 
@@ -173,7 +173,7 @@ The frontend is a simple HTML/PHP and JavaScript application that has read-only 
 
 ### Configuration
 
-The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to gain read-only access to the database. For security reasons, the database account used by the frontend should only have `SELECT` privileges! See this file for details about the test configuration (including the database scheme and the user name and password for read-only access to the test database). Replace those values with those for your own test database.
+The frontend uses [`crawlserv_frontend/crawlserv/php/config.php`](crawlserv_frontend/crawlserv/php/config.php) to gain read-only access to the database. For security reasons, the database account used by the frontend should only have `SELECT` privileges! See this file for details about the test configuration (including the database scheme and the user name and password for read-only access to the test database). Replace those values with those for your own test database.
 
 The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). Therefore, the (randomly created) password in `crawlserv_frontend/crawlserv/php/config.php` is irrelevant for usage outside the original test environment and needs to be replaced! The command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
 
@@ -191,7 +191,7 @@ The application uses exactly one database scheme and all tables are prefixed wit
 * <b>`analyzedtables`</b>: Result tables for analyzing.
 * <b>`threads`</b>: Thread status.
 
-If not already existing, these tables will be created on startup of the command-and-control-server by executing the SQL commands in `crawlserv/sql/init.sql`. See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
+If not already existing, these tables will be created on startup of the command-and-control-server by executing the SQL commands in [`crawlserv/sql/init.sql`](crawlserv/sql/init.sql). See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
 
 For each website and each URL list a namespace of at least four allowed characters (a-z, A-Z, 0-9, $, \_) is used. These namespaces determine the names of the tables used for each URL list (also prefixed by `crawlserv_`):
 
