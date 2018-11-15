@@ -98,7 +98,7 @@ The frontend is a simple PHP and JavaScript application that has read-only acces
 
 * <b>Server</b>: Authorize additional IPs or revoke authorization for all custom IPs, run custom commands and kill the server.
 * <b>Websites</b>: Manage websites and their URL lists including the download of URL lists as text files. 
-* <b>Queries</b>: Manage RegEx and XPath queries saved in the database including the test of RegEx/XPath on custom texts queries by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
+* <b>Queries</b>: Manage RegEx and XPath queries saved in the database including the test of such queries on custom texts by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
 * <b>Crawlers</b>: Manage crawling configurations in simple or advanced mode.
 * ~~<b>Parsers</b>~~: Manage parsing configurations in simple or advanced mode.
 * ~~<b>Extractors</b>~~: Manage extracting configurations in simple or advanced mode.
