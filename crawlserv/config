@@ -1,0 +1,8 @@
+db_host=localhost
+db_port=3306
+db_user=crawler
+db_name=crawled
+server_port=8080
+server_allow=127.0.0.1,::1
+server_logs_deletable=1
+server_data_deletable=1

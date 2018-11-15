@@ -1,0 +1,149 @@
+<?php
+if(isset($_POST["website"])) $website = $_POST["website"];
+else $website = 0;
+if(isset($_POST["query"])) $query = $_POST["query"];
+?>
+<h2>Queries</h2>
+<div class="content-block">
+<div class="entry-row">
+<div class="entry-label">Website:</div><div class="entry-input">
+<select class="entry-input" id="website-select" data-m="queries">
+<option value="0"<?php if(!$website) echo " selected"; ?>>All websites [global]</option>
+<?php
+$result = $dbConnection->query("SELECT id,name FROM crawlserv_websites ORDER BY name");
+if(!$result) exit("ERROR: Could not get ids and names of websites.");
+$first = true;
+while($row = $result->fetch_assoc()) {
+    $id = $row["id"];
+    $name = $row["name"];
+    
+    if($first) {
+        if(!isset($website)) $website = $id;
+        $first = false;
+    }
+    echo "<option value=\"".$id."\"";
+    if($website == $id) {
+        echo " selected";
+    }
+    echo ">".htmlspecialchars($name)."</option>\n";
+}
+$result->close();
+?>
+</select>
+</div>
+</div>
+<div class="entry-row">
+<div class="entry-label">Query:</div><div class="entry-x-input">
+<select class="entry-x-input" id="query-select" data-m="queries">
+<?php
+if(!$website) $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website IS NULL ORDER BY name");
+else $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website=$website ORDER BY name");
+if(!$result) exit("ERROR: Could not get ids and names of queries.");
+$first = true;
+$found = false;
+while($row = $result->fetch_assoc()) {
+    $id = $row["id"];
+    $name = $row["name"];
+    
+    if($first) {
+        if(!isset($query)) $query = $id;
+        $first = false;
+    }
+    echo "<option value=\"".$id."\"";
+    if($query == $id) {
+        echo " selected";
+        $queryName = $name;
+    }
+    echo ">".htmlspecialchars($name)."</option>\n";
+}
+$result->close();
+if(isset($query)) {
+    if($query) {
+        $result = $dbConnection->query("SELECT type,query,resultbool,resultsingle,resultmulti,textonly FROM crawlserv_queries".
+            " WHERE id=".$query." LIMIT 1");
+        if(!$result) exit("ERROR: Could not get query properties from database.");
+        $row = $result->fetch_assoc();
+        $queryType = $row["type"];
+        $queryText = $row["query"];
+        $queryResultBool = $row["resultbool"];
+        $queryResultSingle = $row["resultsingle"];
+        $queryResultMulti = $row["resultmulti"];
+        $queryTextOnly = $row["textonly"];
+        $result->close();
+    }
+}
+else $query = 0;
+?>
+<option value="0"<?php if(!$query) echo " selected"; ?>>Add new</option>
+</select>
+<a href="#" class="actionlink query-delete"><span class="remove-entry">X</span></a>
+</div>
+</div>
+<div class="action-link-box">
+<div class="action-link">
+<?php
+if($query) echo "<a href=\"#\" class=\"action-link query-duplicate\">Duplicate query</a>\n";
+?>
+</div>
+</div>
+</div>
+<div class="content-block">
+<div class="entry-row">
+<div class="entry-label">Name:</div><div class="entry-input">
+<input type="text" class="entry-input" id="query-name" value="<?php if($query) echo $queryName; ?>" />
+</div>
+</div>
+<div class="entry-row">
+<div class="entry-label">Type:</div><div class="entry-input">
+<select class="entry-input" id="query-type-select">
+<option value="regex"<?php if($query && $queryType == "regex") echo " selected"; ?>>RegEx (PCRE2 v10.31)</option>
+<option value="xpath"<?php if($query && $queryType == "xpath") echo " selected"; ?>>XPath (tidy v5.2, pugixml v1.8)</option>
+</select>
+</div>
+</div>
+<div class="entry-row">
+<div class="entry-label">Result:</div><div class="entry-input">
+<input type="checkbox" id="query-result-bool" class="entry-check-first"<?php
+if(!$query || ($query && $queryResultBool)) echo " checked";
+?> /> boolean
+<input type="checkbox" id="query-result-single" class="entry-check-next"<?php
+if($query && $queryResultSingle) echo " checked";
+?> /> single
+<input type="checkbox" id="query-result-multi" class="entry-check-next"<?php
+if($query && $queryResultMulti) echo " checked";
+?> /> multiple
+<input type="checkbox" id="query-text-only" class="entry-check-next"<?php
+if($query && $queryTextOnly) echo " checked";
+?> /> <span id="query-text-only-label">text only</span>
+</div>
+</div>
+<div class="entry-row">
+<div class="entry-label-top">Query text:</div><div class="entry-input">
+<textarea class="entry-input" id="query-text" spellcheck="false" autocomplete="off"><?php if($query) echo $queryText; ?></textarea>
+</div>
+</div>
+<div class="action-link-box">
+<div class="action-link">
+<?php
+if($query)
+    echo "<a href=\"#\" class=\"action-link query-update\">Change query</a>";
+else echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
+?>
+</div>
+</div>
+</div>
+<div class="content-block">
+<div class="entry-row">
+<div class="entry-label-top" id="query-test-label">Test text:</div><div class="entry-input">
+<textarea class="entry-input" id="query-test-text" spellcheck="false" autocomplete="off">
+<?php if(isset($_POST["test"])) echo $_POST["test"]; ?>
+</textarea>
+<textarea class="entry-input" id="query-test-result" disabled></textarea>
+</div>
+</div>
+<div class="action-link-box">
+<div class="action-link">
+<a href="#" class="action-link query-test">Test query</a>
+</div>
+</div>
+</div>
