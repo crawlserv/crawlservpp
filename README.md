@@ -3,7 +3,7 @@
 # crawlserv++
 <b>crawlserv++</b> is an application for crawling websites and analyzing textual content on these websites.
 
-The architecture of <b>crawlserv++</b> consists of three main parts:
+The architecture of <b>crawlserv++</b> consists of three distinct components:
 
 * The <b>command-and-control server</b>, written in C++ (source code in `crawlserv/src`)
 * A webserver hosting the <b>frontend</b> written in HTML, PHP and JavaScript (source code in `crawlserv_frontend/crawlserv`)
@@ -149,7 +149,7 @@ The following third-party libraries are used:
 
 ## Frontend
 
-The frontend is a simple PHP and JavaScript application that has read-only access to the database and can (under certain conditions) interact with the command-and-control server when the user wants to perform actions that will change the content of the database. The frontend provides the following menu structure:
+The frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database. The frontend provides the following menu structure:
 
 * <b>Server</b>: Authorize additional IPs or revoke authorization for all custom IPs, run custom commands and kill the server.
 * <b>Websites</b>: Manage websites and their URL lists including the download of URL lists as text files. 
@@ -167,7 +167,7 @@ The frontend is a simple PHP and JavaScript application that has read-only acces
 
 ## Database
 
-The application uses one database scheme and all tables will be prefixed with `crawlserv_`. The following main tables are used:
+The application uses exactly one database scheme and all tables will be prefixed with `crawlserv_`. The following main tables are used:
 
 * <b>`log`</b>: Log entries.
 * <b>`websites`</b>: Websites.
@@ -189,4 +189,4 @@ For each website and each URL list a namespace of at least four allowed characte
 
 ## Configuration
 
-The testing environment consists of one PC that runs all components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to provide access to the database. See those files for details about the test configuration.
+The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to provide access to the database. See those files for details about the test configuration.
