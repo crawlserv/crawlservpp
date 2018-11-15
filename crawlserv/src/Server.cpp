@@ -570,7 +570,7 @@ Server::CmdResponse Server::cmdStartCrawler(const rapidjson::Document& json, con
 	return Server::CmdResponse("Crawler has been started.");
 }
 
-// server command pausecrawler(id): pause a crawler
+// server command pausecrawler(id): pause a crawler by its ID
 Server::CmdResponse Server::cmdPauseCrawler(const rapidjson::Document& json, const std::string& ip) {
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -596,7 +596,7 @@ Server::CmdResponse Server::cmdPauseCrawler(const rapidjson::Document& json, con
 	return Server::CmdResponse("Crawler is pausing.");
 }
 
-// server command unpausecrawler(id): unpause a crawler
+// server command unpausecrawler(id): unpause a crawler by its ID
 Server::CmdResponse Server::cmdUnPauseCrawler(const rapidjson::Document& json, const std::string& ip) {
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -622,7 +622,7 @@ Server::CmdResponse Server::cmdUnPauseCrawler(const rapidjson::Document& json, c
 	return Server::CmdResponse("Crawler is unpausing.");
 }
 
-// server command stopcrawler(id): stop a crawler
+// server command stopcrawler(id): stop a crawler by its ID
 Server::CmdResponse Server::cmdStopCrawler(const rapidjson::Document& json, const std::string& ip) {
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -734,7 +734,7 @@ Server::CmdResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
 	return Server::CmdResponse("Website updated.");
 }
 
-// server command deletewebsite(id): delete a website and all associated data from the database
+// server command deletewebsite(id): delete a website and all associated data from the database by its ID
 Server::CmdResponse Server::cmdDeleteWebsite(const rapidjson::Document& json, const std::string& ip) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
@@ -776,7 +776,7 @@ Server::CmdResponse Server::cmdDeleteWebsite(const rapidjson::Document& json, co
 	return Server::CmdResponse("Website deleted.");
 }
 
-// server command duplicatewebsite(id): Duplicate the website configuration (no processed data will be duplicated)
+// server command duplicatewebsite(id): Duplicate a website by its ID (no processed data will be duplicated)
 Server::CmdResponse Server::cmdDuplicateWebsite(const rapidjson::Document& json) {
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -874,7 +874,7 @@ Server::CmdResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
 	return Server::CmdResponse("URL list updated.");
 }
 
-// server command deleteurllist(id): delete a URL list and all associated data from the database
+// server command deleteurllist(id): delete a URL list and all associated data from the database by its ID
 Server::CmdResponse Server::cmdDeleteUrlList(const rapidjson::Document& json, const std::string& ip) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
@@ -1015,7 +1015,7 @@ Server::CmdResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
 	return Server::CmdResponse("Query updated.");
 }
 
-// server command deletequery(id): delete a query from the database
+// server command deletequery(id): delete a query from the database by its ID
 Server::CmdResponse Server::cmdDeleteQuery(const rapidjson::Document& json) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
@@ -1040,7 +1040,7 @@ Server::CmdResponse Server::cmdDeleteQuery(const rapidjson::Document& json) {
 	return Server::CmdResponse("Query deleted.");
 }
 
-// server command duplicatequery(id): Duplicate the query
+// server command duplicatequery(id): Duplicate a query by its ID
 Server::CmdResponse Server::cmdDuplicateQuery(const rapidjson::Document& json) {
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -1309,7 +1309,7 @@ Server::CmdResponse Server::cmdUpdateConfig(const rapidjson::Document& json) {
 	return Server::CmdResponse("Configuration updated.");
 }
 
-// server command deleteconfig(id): delete a configuration from the database
+// server command deleteconfig(id): delete a configuration from the database by its ID
 Server::CmdResponse Server::cmdDeleteConfig(const rapidjson::Document& json) {
 	// check whether the deletion of data is allowed
 	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
@@ -1336,7 +1336,7 @@ Server::CmdResponse Server::cmdDeleteConfig(const rapidjson::Document& json) {
 	return Server::CmdResponse("Configuration deleted.");
 }
 
-// server command duplicateconfig(id): Duplicate the configuration
+// server command duplicateconfig(id): Duplicate a configuration by its ID
 Server::CmdResponse Server::cmdDuplicateConfig(const rapidjson::Document& json) {
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
