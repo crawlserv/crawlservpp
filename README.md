@@ -87,14 +87,28 @@ As you can already see from the commands, the server also manages threads for pe
 
 * <b>crawler</b>: Crawling of a website (using custom URLs and following links, downloading the plain content to the database and optionally checking archives using the [Memento Protocol](http://mementoweb.org/)).
 * ~~<b>parser</b>~~: Parsing data from the downloaded content with the help of user-defined RegEx and XPath queries.
-* ~~<b>analyzer</b>~~: Analyzing textual data using different methods and algorithms.
 * ~~<b>extractor</b>~~: Downloading additional data such as comments and social media content.
+* ~~<b>analyzer</b>~~: Analyzing textual data using different methods and algorithms.
 
 The server and each thread have their own connection to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (`DatabaseThread` as child class fo `Database`) are wrapped through the `DatabaseModule` class to protect the threads from accidentally using the server connection to the database. See the corresponsing source code for details.
 
 ## crawlserv++ frontend
 
-The frontend is a simple PHP and JavaScript application that has read-only access to the database and can (under certain conditions) interact with the command-and-control server when the user wants to perform actions that will change the content of the database.
+The frontend is a simple PHP and JavaScript application that has read-only access to the database and can (under certain conditions) interact with the command-and-control server when the user wants to perform actions that will change the content of the database. The frontend provides the following menu structure:
+
+* <b>Server</b>: Authorize additional IPs or revoke authorization for all custom IPs, run custom commands and kill the server.
+* <b>Websites</b>: Manage websites and their URL lists including the download of URL lists as text files. 
+* <b>Queries</b>: Manage RegEx and XPath queries saved in the database including the test of RegEx/XPath on custom texts queries by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
+* <b>Crawlers</b>: Manage crawling configurations in simple or advanced mode.
+* ~~<b>Parsers</b>~~: Manage parsing configurations in simple or advanced mode.
+* ~~<b>Extractors</b>~~: Manage extracting configurations in simple or advanced mode.
+* ~~<b>Analyzers</b>~~: Manage analyzing configurations in simple or advanced mode.
+* <b>Threads</b>: Currently active threads and their status. Start, pause and stop specific threads.
+* ~~<b>Search</b>:~~ ...
+* ~~<b>Content</b>:~~ ...
+* ~~<b>Import/Export</b>:~~ ...
+* ~~<b>Statistics</b>:~~ ...
+* <b>Logs</b>: Show log entries and delete logs.
 
 ## database
 
