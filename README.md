@@ -17,34 +17,34 @@ The command-and-control server contains an embedded web server (implemented by u
 
 The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of November 2018):
 
-* <b>`addconfig`</b> (arguments: `website`, `module`, `name`, `config`): add a configuration to the database
-* <b>`addquery`</b> (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): add a RegEx or XPath query to the database
-* <b>`addurllist`</b> (arguments: `website`, `name`, `namespace`): add a URL list to a website in the database
-* <b>`addwebsite`</b> (arguments: `name`, `namespace`, `domain`): add a website to the database
-* <b>`allow`</b> (argument: `ip`): allow access for the specified IP(s)
-* <b>`clearlog`</b> (optional argument: `module`): clear the logs of a specified module or all logs if no module is specified
-* <b>`deleteconfig`</b> (argument: `id`): delete a configuration from the database
-* <b>`deletequery`</b> (argument: `id`): delete a RegEx or XPath query from the database
-* <b>`deleteurllist`</b> (argument: `id`): delete a URL list (and all associated data) from the database
-* <b>`deletewebsite`</b> (argument: `id`): delete a website (and all associated data) from the database
-* <b>`disallow`</b>: revoke access from all except the initial IP(s) specified by the configuration file
-* <b>`duplicateconfig`</b> (argument: `id`): duplicate the specified configuration
-* <b>`duplicatequery`</b> (argument: `id`): duplicate the specified RegEx or XPath query
-* <b>`duplicatewebsite`</b> (argument: `id`): duplicate the specified website
-* <b>`kill`</b>: kill the server
-* <b>`log`</b> (argument: `entry`): write a log entry by the frontend into the database
-* ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): pause a running analyzer by its id
-* <b>`pausecrawler`</b> (argument: `id`): pause a running crawler by its id
-* ~~<b>`pauseextractor`</b>~~ (argument: `id`): pause a running extractor by its id
-* ~~<b>`pauseparser`</b>~~ (argument: `id`): pause a running parser by its id
-* ~~<b>`startanalyzer`</b>~~ (arguments: `website`, `urllist`, `config`): start an analyzer using the specified website, URL list and configuration
-* <b>`startcrawler`</b> (arguments: `website`, `urllist`, `config`): start a crawler using the specified website, URL list and configuration
-* ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): start an extractor using the specified website, URL list and configuration
-* ~~<b>`startparser`</b>~~ (arguments: `website`, `urllist`, `config`): start a parser using the specified website, URL list and configuration
-* ~~<b>`stopanalyzer`</b>~~ (argument: `id`): stop a running analyzer by its id
-* <b>`stopcrawler`</b> (argument: `id`): stop a running crawler by its id
-* ~~<b>`stopextractor`</b>~~ (argument: `id`): stop a running extractor by its id
-* ~~<b>`stopparser`</b>~~ (argument: `id`): stop a running parser by its id
+* <b>`addconfig`</b> (arguments: `website`, `module`, `name`, `config`): Add a configuration to the database.
+* <b>`addquery`</b> (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Add a RegEx or XPath query to the database.
+* <b>`addurllist`</b> (arguments: `website`, `name`, `namespace`): Add a URL list to a website in the database.
+* <b>`addwebsite`</b> (arguments: `name`, `namespace`, `domain`): Add a website to the database.
+* <b>`allow`</b> (argument: `ip`): Allow access for the specified IP(s).
+* <b>`clearlog`</b> (optional argument: `module`): Clear the logs of a specified module or all logs if no module is specified.
+* <b>`deleteconfig`</b> (argument: `id`): Delete a configuration from the database.
+* <b>`deletequery`</b> (argument: `id`): Delete a RegEx or XPath query from the database.
+* <b>`deleteurllist`</b> (argument: `id`): Delete a URL list (and all associated data) from the database.
+* <b>`deletewebsite`</b> (argument: `id`): Delete a website (and all associated data) from the database.
+* <b>`disallow`</b>: Revoke access from all except the initial IP(s) specified by the configuration file.
+* <b>`duplicateconfig`</b> (argument: `id`): Duplicate the specified configuration.
+* <b>`duplicatequery`</b> (argument: `id`): Duplicate the specified RegEx or XPath query.
+* <b>`duplicatewebsite`</b> (argument: `id`): Duplicate the specified website.
+* <b>`kill`</b>: kill the server.
+* <b>`log`</b> (argument: `entry`): Write a log entry by the frontend into the database.
+* ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): Pause a running analyzer by its id.
+* <b>`pausecrawler`</b> (argument: `id`): Pause a running crawler by its id.
+* ~~<b>`pauseextractor`</b>~~ (argument: `id`): Pause a running extractor by its id.
+* ~~<b>`pauseparser`</b>~~ (argument: `id`): Pause a running parser by its id.
+* ~~<b>`startanalyzer`</b>~~ (arguments: `website`, `urllist`, `config`): Start an analyzer using the specified website, URL list and configuration.
+* <b>`startcrawler`</b> (arguments: `website`, `urllist`, `config`): Start a crawler using the specified website, URL list and configuration.
+* ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): Start an extractor using the specified website, URL list and configuration.
+* ~~<b>`startparser`</b>~~ (arguments: `website`, `urllist`, `config`): Start a parser using the specified website, URL list and configuration.
+* ~~<b>`stopanalyzer`</b>~~ (argument: `id`): Stop a running analyzer by its id.
+* <b>`stopcrawler`</b> (argument: `id`): Stop a running crawler by its id.
+* ~~<b>`stopextractor`</b>~~ (argument: `id`): Stop a running extractor by its id.
+* ~~<b>`stopparser`</b>~~ (argument: `id`): Stop a running parser by its id.
 
 The commands and their replies are using the JSON format (implemented by using the [RapidJSON library](https://github.com/Tencent/rapidjson)). See the following examples:
 
@@ -212,3 +212,13 @@ For each website and each URL list a namespace of at least four allowed characte
 * <b>`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
 
 See the source code of the `Database::addUrlList(...)` function in [`crawlserv/src/Database.cpp`](crawlserv/src/Database.cpp) for details about the structure of these tables.
+
+## Platform
+
+At the moment, this software has been developed for and tested on Linux only.
+
+Developed with Eclipse 2018-09 (4.9.0), Eclipse CDT 9.5.4, Eclipse PDT 6.1.0 and Eclipse Web Tools Platform 3.11.0.
+
+Compiled and linked with g++ 7.3.0.
+
+Tested with Apache/2.4.29 and mySQL 14.14 on Ubuntu 18.04.1 LTS (64-bit).
