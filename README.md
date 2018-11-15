@@ -217,8 +217,4 @@ See the source code of the `Database::addUrlList(...)` function in [`crawlserv/s
 
 At the moment, this software has been developed for and tested on Linux only.
 
-Developed with Eclipse 2018-09 (4.9.0), Eclipse CDT 9.5.4, Eclipse PDT 6.1.0 and Eclipse Web Tools Platform 3.11.0.
-
-Compiled and linked with g++ 7.3.0.
-
-Tested with Apache/2.4.29 and mySQL 14.14 on Ubuntu 18.04.1 LTS (64-bit).
+Developed with Eclipse 2018-09 (4.9.0), Eclipse CDT 9.5.4, Eclipse PDT 6.1.0 and Eclipse Web Tools Platform 3.11.0. Compiled and linked with g++ 7.3.0. Tested with Apache/2.4.29 and mySQL 14.14 on Ubuntu 18.04.1 (64-bit).
