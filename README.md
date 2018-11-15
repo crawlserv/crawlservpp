@@ -112,4 +112,26 @@ The frontend is a simple PHP and JavaScript application that has read-only acces
 
 ## database
 
-...
+The application uses one database scheme and all tables will be prefixed with `crawlserv_`. The following main tables are used:
+
+* <b>log</b>: Log entries.
+* <b>websites</b>: Websites.
+* <b>urllists</b>: URL lists.
+* <b>queries</b>: RegEx and XPath queries.
+* <b>configs</b>: Crawling, parsing, extracting and analyzing configurations.
+* <b>parsedtables</b>: Result tables for parsing.
+* <b>extractedtables</b>: Result tables for extracting.
+* <b>analyzedtables</b>: Result tables for analyzing.
+* <b>threads</b>: Thread status.
+
+The tables will be created on startup of the command-and-control-server by executing the SQL commands in <i>crawlserv/sql/init.sql</i>. See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
+
+For each website and each URL list a namespace of at least four allowed characters (a-z, A-Z, 0-9, $, \_) is used. These namespaces determine the names of the tables used for each URL list (also prefixed by `crawlserv_`):
+
+* <b>\<namespace of website\>\_\<namespace of URL list\></b>: Content of the URL list.
+* <b>\<namespace of website\>\_\<namespace of URL list\>\_crawled</b>: Crawled content.
+* <b>\<namespace of website\>\_\<namespace of URL list\>\_links</b>: Linkage information (which URLs link to which other URLs).
+
+## test configuration
+
+The testing environment consists of one PC that runs all components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server needs a configuration file as argument, the test configuration can be found at <i>crawlserv/config</i>. The frontend uses <i>crawlserv_frontend/crawlserv/php/config.php</i> to provide access to the database. See those files for details about the test configuration.
