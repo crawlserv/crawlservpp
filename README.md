@@ -15,7 +15,7 @@ The command-and-control server contains an embedded web server (implemented by u
 
 ### Server Commands
 
-The server performs commands and sends back their results. Some commands need to be confirmed before actually performed and some commands can be restricted by the configuration file loaded by the server. The following commands are implemented (as of November 2018):
+The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded by the server. The following commands are implemented (as of November 2018):
 
 * <b>`addconfig`</b> (arguments: `website`, `module`, `name`, `config`): add a configuration to the database
 * <b>`addquery`</b> (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): add a RegEx or XPath query to the database
