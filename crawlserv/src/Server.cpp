@@ -422,7 +422,7 @@ void Server::eventHandler(mg_connection * connection, int event, void * data) {
 
 // static helper function: check the validity of a namespace name
 bool Server::cmdCheckNameSpace(const std::string& nameSpace) {
-	return nameSpace.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890$_") == std::string::npos;
+	return nameSpace.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_") == std::string::npos;
 }
 
 // static helper function: get client IP from connection
