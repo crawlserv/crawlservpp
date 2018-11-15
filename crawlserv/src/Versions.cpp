@@ -34,8 +34,8 @@ std::string Versions::getLibraryVersions(const std::string& indent) {
 	out << indent << "pugixml v" << PUGIXML_VERSION / 100 << "." << PUGIXML_VERSION % 100 / 10 << "." << PUGIXML_VERSION % 10
 			<< "\n";
 
-	// rapidjson
-	out << indent << "rapidjson v" << RAPIDJSON_VERSION_STRING << "\n";
+	// RapidJSON
+	out << indent << "RapidJSON v" << RAPIDJSON_VERSION_STRING << "\n";
 
 	// tidy
 	out << indent << "tidy v" << tidyLibraryVersion() << "\n";
@@ -43,6 +43,9 @@ std::string Versions::getLibraryVersions(const std::string& indent) {
 	// uriparser
 	out << indent << "uriparser v" << URI_VER_MAJOR << "." << URI_VER_MINOR << "." << URI_VER_RELEASE << URI_VER_SUFFIX_ANSI
 			<< "\n";
+
+	// UTF8-CPP
+	out << indent << "UTF8-CPP v2.1\n";
 
 	return out.str();
 }
