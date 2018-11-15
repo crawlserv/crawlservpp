@@ -226,7 +226,7 @@ const std::string& Server::getStatus() const {
 	return this->status;
 }
 
-// get uptime of server in seconds
+// get up-time of server in seconds
 unsigned long Server::getUpTime() const {
 	return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - this->uptimeStart).count();
 }
