@@ -42,7 +42,7 @@ The server performs commands and sends back their results. Some commands need to
 * ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): start an extractor using the specified website, URL list and configuration
 * ~~<b>`startparser`</b>~~ (arguments: `website`, `urllist`, `config`): start a parser using the specified website, URL list and configuration
 * ~~<b>`stopanalyzer`</b>~~ (argument: `id`): stop a running analyzer by its id
-* <b>stopcrawler</b> (argument: `id`): stop a running crawler by its id
+* <b>`stopcrawler`</b> (argument: `id`): stop a running crawler by its id
 * ~~<b>`stopextractor`</b>~~ (argument: `id`): stop a running extractor by its id
 * ~~<b>`stopparser`</b>~~ (argument: `id`): stop a running parser by its id
 
