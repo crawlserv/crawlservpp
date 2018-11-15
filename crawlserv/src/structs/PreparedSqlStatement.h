@@ -1,6 +1,8 @@
 /*
  * PreparedSqlStatement.h
  *
+ * Content of and pointer to a prepared SQL statement
+ *
  *  Created on: Oct 12, 2018
  *      Author: ans
  */
