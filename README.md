@@ -103,7 +103,7 @@ The source code of the server consists of the following classes (as of November 
 
 * <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class, processing command line arguments, showing initial console output, loading configuration file, creating and starting the server.
 * <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
-* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler)</b>: Crawling configuration.
+* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration.
 * <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
 * <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration.
