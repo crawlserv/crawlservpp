@@ -111,7 +111,7 @@ The source code of the server consists of the following classes (as of November 
 * <b>`DatabaseCrawler`</b>: Database access for crawlers (implements `DatabaseModule` interface).
 * <b>`DatabaseModule`</b>: Interface for the database access of threads (wraps `DatabaseThread`).
 * <b>`DatabaseThread`</b>: Database functionality for threads (child of `Database`).
-* <b>`Networking`</b>: Provide networking functionality by using the libcurl library.
+* <b>`Networking`</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/).
 * <b>`RegEx`</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * <b>`Server`</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
 * <b>`Thread`</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
