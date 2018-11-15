@@ -1,6 +1,8 @@
 /*
  * ServerCommandArgument.h
  *
+ * Name, value pair of a server command argument.
+ *
  *  Created on: Oct 11, 2018
  *      Author: ans
  */

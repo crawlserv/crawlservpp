@@ -1,6 +1,8 @@
 /*
  * ThreadDatabaseEntry.h
  *
+ * Thread status as saved in the database.
+ *
  *  Created on: Oct 11, 2018
  *      Author: ans
  */

@@ -1,6 +1,8 @@
 /*
  * ServerSettings.h
  *
+ * Server settings.
+ *
  *  Created on: Oct 11, 2018
  *      Author: ans
  */
