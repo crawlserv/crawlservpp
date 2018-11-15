@@ -179,7 +179,7 @@ The application uses one database scheme and all tables will be prefixed with `c
 * <b>`analyzedtables`</b>: Result tables for analyzing.
 * <b>`threads`</b>: Thread status.
 
-The tables will be created on startup of the command-and-control-server by executing the SQL commands in `crawlserv/sql/init.sql`. See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
+If not already existing, these tables will be created on startup of the command-and-control-server by executing the SQL commands in `crawlserv/sql/init.sql`. See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
 
 For each website and each URL list a namespace of at least four allowed characters (a-z, A-Z, 0-9, $, \_) is used. These namespaces determine the names of the tables used for each URL list (also prefixed by `crawlserv_`):
 
