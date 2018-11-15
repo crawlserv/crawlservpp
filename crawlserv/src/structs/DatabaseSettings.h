@@ -1,6 +1,8 @@
 /*
  * DatabaseSettings.h
  *
+ * Database settings.
+ *
  *  Created on: Oct 11, 2018
  *      Author: ans
  */
