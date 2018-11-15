@@ -177,7 +177,7 @@ The frontend is a simple HTML/PHP and JavaScript application that has read-only 
 * <b>Websites</b>: Manage websites and their URL lists including the download of URL lists as text files. 
 * <b>Queries</b>: Manage RegEx and XPath queries saved in the database including the test of such queries on custom texts by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
 * <b>Crawlers</b>: Manage crawling configurations in simple or advanced mode.
-* ~~<b>Parsers</b>~~: Manage parsing configurations in simple or advanced mode.
+* <b>Parsers</b>: Manage parsing configurations in simple or advanced mode.
 * ~~<b>Extractors</b>~~: Manage extracting configurations in simple or advanced mode.
 * ~~<b>Analyzers</b>~~: Manage analyzing configurations in simple or advanced mode.
 * <b>Threads</b>: Currently active threads and their status. Start, pause and stop specific threads.
