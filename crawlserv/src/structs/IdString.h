@@ -1,7 +1,7 @@
 /*
  * IdString.h
  *
- * Id, string pair.
+ * A simple [id,string] pair.
  *
  *  Created on: Oct 13, 2018
  *      Author: ans

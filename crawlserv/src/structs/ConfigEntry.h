@@ -1,7 +1,7 @@
 /*
  * ConfigEntry.h
  *
- * Name, value pair from configuration file.
+ * A [name,value] pair from the configuration file.
  *
  *  Created on: Oct 13, 2018
  *      Author: ans
