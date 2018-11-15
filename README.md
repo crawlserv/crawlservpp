@@ -97,7 +97,7 @@ As can be seen from the commands, the server also manages threads for performing
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (instances of `DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads from accidentally using the server connection to the database. See the next section on classes and namespaces as well as the corresponsing source code for details.
 
-### Classes and Namespaces
+### Classes, Namespaces and Structures
 
 The source code of the server consists of the following classes (as of November 2018):
 
@@ -130,6 +130,18 @@ The following additional namespaces are used:
 
 * <b>`Helpers`</b>: Global helper functions for timing, file system operations, string manipulation, memento parsing, time conversion and portability.
 * <b>`Versions`</b>: Get the versions of the different libraries used by the server.
+
+The following custom structures are used (to be found in [`crawlserv/src/structs`](crawlserv/src/structs)):
+
+* <b>`ConfigEntry'</b>: A \[`name`, `value`\] pair from the configuration file.
+* <b>`DatabaseSettings'</b>: Basic database settings (host, port, user, password, scheme).
+* <b>`IdString'</b>: A simple \[`id`, `string`\] pair.
+* <b>`Memento'</b>: URL and timestamp of a memento (archived website).
+* <b>`PreparedSqlStatement'</b>: Content of and pointer to a prepared SQL statement.
+* <b>`ServerCommandArgument'</b>: The \[`name`,`value`\] pair of a server command argument.
+* <b>`ServerSettings'</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
+* <b>`ThreadDatabaseEntry'</b>: Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
+* <b>`ThreadOptions'</b>: Basic thread options (IDs of website, URL list and configuration).
 
 The `main.cpp` source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
