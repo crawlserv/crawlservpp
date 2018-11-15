@@ -17,36 +17,36 @@ This server contains an embedded web server (implemented by using the [mongoose 
 
 The server performs commands and sends back their results. Some commands need to be confirmed before actually performed and some commands can be restricted by the configuration file loaded by the server. The following commands are implemented (as of November 2018):
 
-* <b>`addconfig`</b> (arguments: website, module, name, config): add a configuration to the database
-* <b>`addquery`</b> (arguments: website, name, query, type, resultbool, resultsingle, resultmulti, textonly): add a RegEx or XPath query to the database
-* <b>`addurllist`</b> (arguments: website, name, namespace): add a URL list to a website in the database
-* <b>`addwebsite`</b> (arguments: name, namespace, domain): add a website to the database
-* <b>`allow`</b> (argument: ip): allow access for the specified IP(s)
-* <b>`clearlog`</b> (optional argument: module): clear the logs of a specified module or all logs if no module is specified
-* <b>`deleteconfig`</b> (argument: id): delete a configuration from the database
-* <b>`deletequery`</b> (argument: id): delete a RegEx or XPath query from the database
-* <b>`deleteurllist`</b> (argument: id): delete a URL list (and all associated data) from the database
-* <b>`deletewebsite`</b> (argument: id): delete a website (and all associated data) from the database
+* <b>`addconfig`</b> (arguments: `website`, `module`, `name`, `config`): add a configuration to the database
+* <b>`addquery`</b> (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): add a RegEx or XPath query to the database
+* <b>`addurllist`</b> (arguments: `website`, `name`, `namespace`): add a URL list to a website in the database
+* <b>`addwebsite`</b> (arguments: `name`, `namespace`, `domain`): add a website to the database
+* <b>`allow`</b> (argument: `ip`): allow access for the specified IP(s)
+* <b>`clearlog`</b> (optional argument: `module`): clear the logs of a specified module or all logs if no module is specified
+* <b>`deleteconfig`</b> (argument: `id`): delete a configuration from the database
+* <b>`deletequery`</b> (argument: `id`): delete a RegEx or XPath query from the database
+* <b>`deleteurllist`</b> (argument: `id`): delete a URL list (and all associated data) from the database
+* <b>`deletewebsite`</b> (argument: `id`): delete a website (and all associated data) from the database
 * <b>`disallow`</b>: revoke access from all except the initial IP(s) specified by the configuration file
-* <b>`duplicateconfig`</b> (argument: id): duplicate the specified configuration
-* <b>`duplicatequery`</b> (argument: id): duplicate the specified RegEx or XPath query
-* <b>`duplicatewebsite`</b> (argument: id): duplicate the specified website
+* <b>`duplicateconfig`</b> (argument: `id`): duplicate the specified configuration
+* <b>`duplicatequery`</b> (argument: `id`): duplicate the specified RegEx or XPath query
+* <b>`duplicatewebsite`</b> (argument: `id`): duplicate the specified website
 * <b>`kill`</b>: kill the server
-* <b>`log`</b> (argument: entry): write a log entry by the frontend into the database
-* ~~<b>`pauseanalyzer`</b>~~ (argument: id): pause a running analyzer by its id
-* <b>`pausecrawler`</b> (argument: id): pause a running crawler by its id
-* ~~<b>`pauseextractor`</b>~~ (argument: id): pause a running extractor by its id
-* ~~<b>`pauseparser`</b>~~ (argument: id): pause a running parser by its id
-* ~~<b>`startanalyzer`</b>~~ (arguments: website, urllist, config): start an analyzer using the specified website, URL list and configuration
-* <b>`startcrawler`</b> (arguments: website, urllist, config): start a crawler using the specified website, URL list and configuration
-* ~~<b>`startextractor`</b>~~ (arguments: website, urllist, config): start an extractor using the specified website, URL list and configuration
-* ~~<b>`startparser`</b>~~ (arguments: website, urllist, config): start a parser using the specified website, URL list and configuration
-* ~~<b>`stopanalyzer`</b>~~ (argument: id): stop a running analyzer by its id
-* <b>stopcrawler</b> (argument: id): stop a running crawler by its id
-* ~~<b>`stopextractor`</b>~~ (argument: id): stop a running extractor by its id
-* ~~<b>`stopparser`</b>~~ (argument: id): stop a running parser by its id
+* <b>`log`</b> (argument: `entry`): write a log entry by the frontend into the database
+* ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): pause a running analyzer by its id
+* <b>`pausecrawler`</b> (argument: `id`): pause a running crawler by its id
+* ~~<b>`pauseextractor`</b>~~ (argument: `id`): pause a running extractor by its id
+* ~~<b>`pauseparser`</b>~~ (argument: `id`): pause a running parser by its id
+* ~~<b>`startanalyzer`</b>~~ (arguments: `website`, `urllist`, `config`): start an analyzer using the specified website, URL list and configuration
+* <b>`startcrawler`</b> (arguments: `website`, `urllist`, `config`): start a crawler using the specified website, URL list and configuration
+* ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): start an extractor using the specified website, URL list and configuration
+* ~~<b>`startparser`</b>~~ (arguments: `website`, `urllist`, `config`): start a parser using the specified website, URL list and configuration
+* ~~<b>`stopanalyzer`</b>~~ (argument: `id`): stop a running analyzer by its id
+* <b>stopcrawler</b> (argument: `id`): stop a running crawler by its id
+* ~~<b>`stopextractor`</b>~~ (argument: `id`): stop a running extractor by its id
+* ~~<b>`stopparser`</b>~~ (argument: `id`): stop a running parser by its id
 
-The commands and their replies are using the JSON format. See the following examples:
+The commands and their replies are using the JSON format (implemented by using the [RapidJSON library](https://github.com/Tencent/rapidjson)). See the following examples:
 
 <i><b>Command from frontend to server:</b> Delete the URL list with the ID #1</i>
 
@@ -95,36 +95,36 @@ As can be seen from the commands, the server also manages threads for performing
 * ~~<b>extractor</b>~~: Downloading additional data such as comments and social media content.
 * ~~<b>analyzer</b>~~: Analyzing textual data using different methods and algorithms.
 
-The server and each thread have their own connection to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (`DatabaseThread` as child class fo `Database`) are wrapped through the `DatabaseModule` class to protect the threads from accidentally using the server connection to the database. See the corresponsing source code for details.
+The server and each thread have their own connection to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (`DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads from accidentally using the server connection to the database. See the corresponsing source code for details.
 
 ### Classes and Namespaces
 
 The source code of the server consists of the following classes (as of November 2018):
 
-* <b>`App`</b>: 
-* <b>~~`ConfigAnalyzer`~~</b>: 
-* <b>`ConfigCrawler`</b>: 
-* <b>~~`ConfigExtractor`~~</b>: 
-* <b>`ConfigFile`</b>: 
-* <b>`ConfigParser`</b>: 
-* <b>`Database`</b>: 
-* <b>`DatabaseCrawler`</b>: 
-* <b>`DatabaseModule`</b>: 
-* <b>`DatabaseThread`</b>: 
-* <b>`Networking`</b>: 
-* <b>`RegEx`</b>: 
-* <b>`Server`</b>: 
-* <b>`Thread`</b>: 
-* ~~<b>`ThreadAnalyzer`</b>~~: 
-* <b>`ThreadCrawler`</b>: 
-* ~~<b>`ThreadExtractor`</b>~~: 
-* ~~<b>`ThreadParser`</b>~~: 
-* <b>`TimerSimpleHR`</b>: 
-* <b>`TimerStartStop`</b>: 
-* <b>`TimerStartStopHR`</b>: 
-* <b>`URIParser`</b>: 
-* <b>`XMLDocument`</b>: 
-* <b>`XPath`</b>: 
+* <b>`App`</b>: Main application class, processing command line arguments, showing initial console output, loading configuration file, creating and starting the server.
+* <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
+* <b>`ConfigCrawler`</b>: Crawling configuration.
+* <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
+* <b>`ConfigFile`</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
+* <b>`ConfigParser`</b>: Parsing configuration.
+* <b>`Database`</b>: Database access for the server and its threads (parent class with only basic functionality).
+* <b>`DatabaseCrawler`</b>: Database access for crawlers (implements `DatabaseModule` interface).
+* <b>`DatabaseModule`</b>: Interface for the database access of threads (wraps `DatabaseThread`).
+* <b>`DatabaseThread`</b>: Database functionality for threads (child of `Database`).
+* <b>`Networking`</b>: Provide networking functionality by using the libcurl library.
+* <b>`RegEx`</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
+* <b>`Server`</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
+* <b>`Thread`</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
+* ~~<b>`ThreadAnalyzer`</b>~~: Implementation of the `Thread` interface for analyzers.
+* <b>`ThreadCrawler`</b>: Implementation of the `Thread` interface for crawlers.
+* ~~<b>`ThreadExtractor`</b>~~: Implementation of the `Thread` interface for extractors.
+* ~~<b>`ThreadParser`</b>~~: Implementation of the `Thread` interface for parsers.
+* <b>`TimerSimpleHR`</b>: Simple high resolution timer for getting the time since creation in microseconds.
+* <b>`TimerStartStop`</b>: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
+* <b>`TimerStartStopHR`</b>: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
+* <b>`URIParser`</b>: URL parsing, domain checking and sub-URL extraction.
+* <b>`XMLDocument`</b>: Parse HTML documents into clean XML.
+* <b>`XPath`</b>: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
 
 The following additional namespaces are used:
 
