@@ -1,0 +1,81 @@
+<h2>Logs</h2>
+<?php
+function filterlink($filter) {
+    return "<a href=\"#\" class=\"action-link post-redirect-filter\" data-m=\"logs\" data-filter=\"$filter\">$filter</a>";
+}
+
+if(isset($_POST["filter"]) && $_POST["filter"] != "all") $filter = $_POST["filter"];
+else $filter = "";
+?>
+<div id="top-box">
+<?php
+if(empty($filter)) echo "<b>all</b>";
+else echo filterlink("all");
+echo " &middot; ";
+if($filter == "server") echo "<b>server</b>";
+else echo filterlink("server");
+echo " &middot; ";
+if($filter == "frontend") echo "<b>frontend</b>";
+else echo filterlink("frontend");
+echo " &middot; ";
+if($filter == "crawler") echo "<b>crawler</b>";
+else echo filterlink("crawler");
+echo " &middot; ";
+if($filter == "parser") echo "<b>parser</b>";
+else echo filterlink("parser");
+echo " &middot; ";
+if($filter == "extractor") echo "<b>extractor</b>";
+else echo filterlink("extractor");
+echo " &middot; ";
+if($filter == "analyzer") echo "<b>analyzer</b>";
+else echo filterlink("analyzer");
+if(isset($_POST["offset"])) $offset = $_POST["offset"];
+else $offset = 0;
+if(isset($_POST["limit"])) $limit = $_POST["limit"];
+else $limit = 100;
+?>
+</div>
+<div class="content-list">
+<select size="<?php echo $limit; ?>" class="content-list">
+<?php
+$no = 0;
+if(empty($filter)) $result = $dbConnection->query("SELECT COUNT(id) FROM crawlserv_log");
+else $result = $dbConnection->query("SELECT COUNT(id) FROM crawlserv_log WHERE module='$filter'");
+$row = $result->fetch_row();
+$total = $row[0];
+if(empty($filter)) $result = $dbConnection->query("SELECT time,module,entry FROM crawlserv_log ORDER BY id DESC LIMIT $offset,$limit");
+else $result = $dbConnection->query("SELECT time,module,entry FROM crawlserv_log WHERE module='$filter' ORDER BY id DESC LIMIT $offset,$limit");
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $entry = "[".$row["time"]."] ".$row["module"].": ".$row["entry"];
+        echo "<option>".htmlspecialchars($entry)."</option>\n";
+        $no++;
+    }
+}
+else echo "<option disabled>No log entries available.</option>";
+?>
+</select>
+</div>
+<div id="bottom-box">
+<?php
+if($no) {
+    if($offset > 0) {
+        echo "<a href=\"#\" class=\"action-link logs-nav\" data-filter=\"$filter\" data-offset=\"";
+        echo ($offset - $limit)."\" data-limit=\"$limit\">&larr;Previous</a>";
+    }
+    else echo "<span class=\"inactive-link\">&larr;Previous</span>";
+    echo " &middot; ";
+    if($offset + $no < $total) {
+        echo "<a href=\"#\" class=\"action-link logs-nav\" data-filter=\"$filter\" data-offset=\"";
+        echo ($offset + $limit)."\" data-limit=\"$limit\">Next&rarr;</a>";
+    }
+    else echo "<span class=\"inactive-link\">Next&rarr;</span>";
+    echo " &middot; ";
+    echo "<a href=\"#\" class=\"action-link logs-nav\" data-filter=\"$filter\" data-offset=\"0\" data-limit=\"$limit\">";
+    echo "&#8635;Refresh</a> &middot; ";
+    echo "<a href=\"#\" class=\"action-link logs-clear\" data-filter=\"$filter\">&cross;Clear</a>";
+    echo "<br>Showing ".($offset + 1)." to ".($offset + $no)." of ".$total." entries.<br>\n";
+}
+else echo "<a href=\"#\" class=\"action-link logs-nav\" data-filter=\"$filter\">&#8635;Refresh</a>";
+?>
+</div>
