@@ -122,7 +122,7 @@ Server::~Server() {
 			logStrStr << "#" << (*i)->getId() << " interrupted.";
 			this->database.log("parser", logStrStr.str());
 
-			(*i)->interrupt();
+			(*i)->Thread::interrupt();
 			delete *i;
 			*i = NULL;
 		}
@@ -134,7 +134,7 @@ Server::~Server() {
 			logStrStr << "#" << (*i)->getId() << " interrupted.";
 			this->database.log("extractor", logStrStr.str());
 
-			(*i)->interrupt();
+			(*i)->Thread::interrupt();
 			delete *i;
 			*i = NULL;
 		}
@@ -146,7 +146,7 @@ Server::~Server() {
 			logStrStr << "#" << (*i)->getId() << " interrupted.";
 			this->database.log("analyzer", logStrStr.str());
 
-			(*i)->interrupt();
+			(*i)->Thread::interrupt();
 			delete *i;
 			*i = NULL;
 		}
