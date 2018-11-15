@@ -133,15 +133,15 @@ The following additional namespaces are used (to be found in [`crawlserv/src/nam
 
 The following custom structures are used (to be found in [`crawlserv/src/structs`](crawlserv/src/structs)):
 
-* <b>[`ConfigEntry`](crawlserv/src/structs/ConfigEntry.cpp)</b>: A \[`name`, `value`\] pair from the configuration file.
-* <b>[`DatabaseSettings`](crawlserv/src/structs/DatabaseSettings.cpp)</b>: Basic database settings (host, port, user, password, scheme).
-* <b>[`IdString`](crawlserv/src/structs/IdString.cpp)</b>: A simple \[`id`, `string`\] pair.
-* <b>[`Memento`](crawlserv/src/structs/Memento.cpp)</b>: URL and timestamp of a memento (archived website).
-* <b>[`PreparedSqlStatement`](crawlserv/src/structs/PreparedSqlStatement.cpp)</b>: Content of and pointer to a prepared SQL statement.
-* <b>[`ServerCommandArgument`](crawlserv/src/structs/ServerCommandArgument.cpp)</b>: The \[`name`,`value`\] pair of a server command argument.
-* <b>[`ServerSettings`](crawlserv/src/structs/ServerSettings.cpp)</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
-* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.cpp)</b>: Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
-* <b>[`ThreadOptions`](crawlserv/src/structs/ThreadOptions.cpp)</b>: Basic thread options (IDs of website, URL list and configuration).
+* <b>[`ConfigEntry`](crawlserv/src/structs/ConfigEntry.h)</b>: A \[`name`, `value`\] pair from the configuration file.
+* <b>[`DatabaseSettings`](crawlserv/src/structs/DatabaseSettings.h)</b>: Basic database settings (host, port, user, password, scheme).
+* <b>[`IdString`](crawlserv/src/structs/IdString.h)</b>: A simple \[`id`, `string`\] pair.
+* <b>[`Memento`](crawlserv/src/structs/Memento.h)</b>: URL and timestamp of a memento (archived website).
+* <b>[`PreparedSqlStatement`](crawlserv/src/structs/PreparedSqlStatement.h)</b>: Content of and pointer to a prepared SQL statement.
+* <b>[`ServerCommandArgument`](crawlserv/src/structs/ServerCommandArgument.h)</b>: The \[`name`,`value`\] pair of a server command argument.
+* <b>[`ServerSettings`](crawlserv/src/structs/ServerSettings.h)</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
+* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.h)</b>: Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
+* <b>[`ThreadOptions`](crawlserv/src/structs/ThreadOptions.h)</b>: Basic thread options (IDs of website, URL list and configuration).
 
 The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
