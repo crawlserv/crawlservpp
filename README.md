@@ -169,6 +169,8 @@ The following third-party libraries are used:
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/external/utf8*`)
 
+The following libraries need to be linked manually: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml tidy uriparser`.
+
 ## Frontend
 
 The frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database. The frontend provides the following menu structure:
