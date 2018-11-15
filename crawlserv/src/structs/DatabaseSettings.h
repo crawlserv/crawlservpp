@@ -1,7 +1,7 @@
 /*
  * DatabaseSettings.h
  *
- * Database settings.
+ * Basic database settings (host, port, user, password, scheme).
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
