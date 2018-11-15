@@ -1,7 +1,7 @@
-
 <?php
-
 /*
+ * config.php
+ * 
  * Configuration file for the crawlserv++ frontent allowing read-only database access.
  * 
  */
