@@ -191,4 +191,6 @@ See the source code of the `Database::addUrlList(...)` function for details abou
 
 ## Configuration
 
-The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to provide access to the database. See those files for details about the test configuration.
+The command-and-control server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to gain access to the database.
+
+The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). See those files for details about the test configuration.
