@@ -11,7 +11,7 @@ The architecture of <b>crawlserv++</b> consists of three main parts:
 
 ## crawlserv++ Command-and-Control Server
 
-The command-and-control server contains an embedded web server (implemented by using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the <b>crawlserv++ frontend</b> by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing). Access can (and should) be restricted to whitelisted IPs only.
+The command-and-control server contains an embedded web server (implemented by using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the <b>crawlserv++ frontend</b> by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) of JSON code. Access can (and should) be restricted to whitelisted IPs only.
 
 ### Server Commands
 
