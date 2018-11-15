@@ -126,7 +126,7 @@ The source code of the server consists of the following classes (as of November 
 * <b>`XMLDocument`</b>: Parse HTML documents into clean XML.
 * <b>`XPath`</b>: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
 
-The following additional namespaces are used:
+The following additional namespaces are used (to be found in [`crawlserv/src/namespaces`](crawlserv/src/namespaces)):
 
 * <b>`Helpers`</b>: Global helper functions for timing, file system operations, string manipulation, memento parsing, time conversion and portability.
 * <b>`Versions`</b>: Get the versions of the different libraries used by the server.
