@@ -170,7 +170,7 @@ The following third-party libraries are used:
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/external/utf8*`)
 
-The following libraries need to be linked manually: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml tidy uriparser`.
+The following libraries need to be manually linked: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml tidy uriparser`.
 
 ## Frontend
 
