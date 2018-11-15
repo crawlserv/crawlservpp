@@ -185,8 +185,8 @@ For each website and each URL list a namespace of at least four allowed characte
 
 * <b>`<namespace of website>_<namespace of URL list>`</b>: Content of the URL list.
 * <b>`<namespace of website>_<namespace of URL list>_crawled`</b>: Crawled content.
-* <b`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
+* <b>`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
 
-## Test Configuration
+## Configuration
 
 The testing environment consists of one PC that runs all components of the application which can only be accessed locally (by using ``localhost``). The command-and-control server needs a configuration file as argument, the test configuration can be found at `crawlserv/config`. The frontend uses `crawlserv_frontend/crawlserv/php/config.php` to provide access to the database. See those files for details about the test configuration.
