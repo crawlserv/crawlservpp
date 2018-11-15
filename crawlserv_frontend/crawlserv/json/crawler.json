@@ -1,0 +1,822 @@
+{
+	"crawler": {
+		"id": 1,
+		"label": "Crawling",
+		"open": true,
+		
+		"archives": {
+			"id": 1,
+			"type": "bool",
+			"default": false,
+			"label": "Crawl archives",
+			"description": "Include archived pages from archive.org.",
+			"simple": true,
+			"position": 5
+		},
+		"lock": {
+			"id": 2,
+			"type": "number",
+			"default": 300,
+			"min": 1,
+			"step": 10,
+			"description": "URL locking time (in s).",
+			"simple": false
+		},
+		"logging": {
+			"id": 3,
+			"type": "enum",
+			"default": 1,
+			"enum-values": [
+				"silent",
+				"default",
+				"extended",
+				"verbose"
+			],
+			"label": "Logging mode:",
+			"description": "Level of logging activity.",
+			"simple": true,
+			"position": 11
+		},
+		"params.blacklist": {
+			"id": 4,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Parameters in URL that will be ignored.",
+			"simple": false
+		},
+		"params.whitelist": {
+			"id": 5,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "URL parameters:",
+			"description": "Parameters in URLs that will not be ignored.",
+			"simple": true,
+			"position": 10
+		},
+		"queries.blacklist.content": {
+			"id": 6,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"default": [],
+			"description": "Boolean queries on content that will not be crawled.",
+			"simple": false
+		},
+		"queries.blacklist.types": {
+			"id": 7,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"description": "Boolean RegEx queries on content types that will not be crawled.",
+			"simple": false
+		},
+		"queries.blacklist.urls": {
+			"id": 8,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"label": "Always skip:",
+			"description": "Boolean RegEx queries on URLs that will not be crawled.",
+			"simple": true,
+			"position": 8
+		},
+		"queries.links": {
+			"id": 9,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single",
+				"multi"
+			],
+			"default": [],
+			"label": "Link extraction:",
+			"description": "Queries on content to find URLs.",
+			"simple": true,
+			"position": 3
+		},
+		"queries.whitelist.content": {
+			"id": 10,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"default": [],
+			"description": "If not empty, only content according to these boolean queries will be crawled.",
+			"simple": false
+		},
+		"queries.whitelist.types": {
+			"id": 11,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"label": "",
+			"description": "If not empty, only content types according to these boolean RegEx queries will be crawled.",
+			"simple": false
+		},
+		"queries.whitelist.urls": {
+			"id": 12,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"description": "If not empty, only URLs according to these boolean RegEx queries will be crawled.",
+			"simple": false
+		},
+		"recrawl": {
+			"id": 13,
+			"type": "bool",
+			"default": false,
+			"label": "Re-crawl URLs",
+			"description": "Re-crawl already crawled URLs.",
+			"simple": true,
+			"position": 4
+		},
+		"recrawl.always": {
+			"id": 14,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Always re-crawl:",
+			"description": "List of URLs that will always be re-crawled.",
+			"simple": true,
+			"position": 7
+		},
+		"recrawl.start": {
+			"id": 15,
+			"type": "bool",
+			"default": true,
+			"label": "Re-crawl start page",
+			"description": "Re-crawl the start page every time.",
+			"simple": true,
+			"position": 2
+		},
+		"retries": {
+			"id": 16,
+			"type": "number",
+			"default": -1,
+			"min": -1,
+			"label": "Re-tries:",
+			"description": "Number of re-tries on connection errors (-1=infinite).",
+			"simple": true,
+			"position": 9
+		},
+		"retry.archive": {
+			"id": 17,
+			"type": "bool",
+			"default": true,
+			"label": "Re-try archives",
+			"description": "Re-try when getting the archived pages fails.",
+			"simple": true,
+			"position": 5
+		},
+		"retry.http": {
+			"id": 18,
+			"type": "array",
+			"item-type": "number",
+			"default": [ 503 ],
+			"min": 400,
+			"max": 599,
+			"description": "HTTP errors that will be handled like connection errors.",
+			"simple": false
+		},
+		"sleep.error": {
+			"id": 19,
+			"type": "number",
+			"default": 5000,
+			"min": 0,
+			"description": "Sleeping time (in ms) on connection errors",
+			"simple": false
+		},
+		"sleep.http": {
+			"id": 20,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 100,
+			"description": "Time (in ms) that will be waited between HTTP requests.",
+			"simple": false
+		},
+		"sleep.idle": {
+			"id": 21,
+			"type": "number",
+			"default": 500,
+			"min": 100,
+			"step": 100,
+			"description": "Time (in ms) that will be waited before checking for new URLs when all URLs have been crawled.",
+			"simple": false
+		},
+		"sleep.mysql": {
+			"id": 22,
+			"type": "number",
+			"default": 10,
+			"min": 1,
+			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
+			"simple": false
+		},
+		"start": {
+			"id": 23,
+			"type": "string",
+			"default": "/",
+			"label": "Start page:",
+			"description": "Starting point for crawling.",
+			"simple": true,
+			"position": 1
+		},
+		"timing": {
+			"id": 24,
+			"type": "bool",
+			"default": false,
+			"description": "Calculate timing statistics.",
+			"simple": false
+		},
+		"warnings.file": {
+			"id": 25,
+			"type": "bool",
+			"default": false,
+			"description": "Warn when files are found (instead of folders).",
+			"simple": false
+		},
+		"xml": {
+			"id": 26,
+			"type": "bool",
+			"default": false,
+			"description": "Save crawled content as cleaned XML.",
+			"simple": false
+		}
+	},
+	"custom": {
+		"id": 2,
+		"label": "Custom URLs",
+		"open": false,
+		
+		"counters": {
+			"id": 1,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Counter variables:",
+			"description": "List of counter variables to be replaced in custom URLs.",
+			"simple": true,
+			"position": 2
+		},
+		"counters.end": {
+			"id": 2,
+			"type": "array",
+			"item-type": "number",
+			"default": [],
+			"label": "Stop counter at:",
+			"description": "End value for the counter with the same array index.",
+			"simple": true,
+			"position": 4
+		},
+		"counters.global": {
+			"id": 3,
+			"type": "bool",
+			"default": true,
+			"label": "Use counters globally",
+			"description": "Use every counter for all custom URLs. Otherwise a counters will only be used for URLs with the same array index.",
+			"simple": true,
+			"position": 6
+		},
+		"counters.start": {
+			"id": 4,
+			"type": "array",
+			"item-type": "number",
+			"default": [],
+			"label": "Start counter at:",
+			"description": "Start value for the counter with the same array index.",
+			"simple": true,
+			"position": 3
+		},
+		"counters.step": {
+			"id": 5,
+			"type": "array",
+			"item-type": "number",
+			"default": [],
+			"label": "Increase counter by:",
+			"description": "Step value for the counter with the same array index.",
+			"simple": true,
+			"position": 5
+		},
+		"recrawl": {
+			"id": 6,
+			"type": "bool",
+			"default": true,
+			"label": "Re-crawl custom URLs",
+			"description": "Always re-crawl custom URLs.",
+			"simple": true,
+			"position": 7
+		},
+		"urls": {
+			"id": 7,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Custom URLs:",
+			"description": "List of custom URL for crawling.",
+			"simple": true,
+			"position": 1
+		}
+	},
+	"network": {
+		"id": 3,
+		"label": "Networking",
+		"open": false,
+		
+		"connections.max": {
+			"id": 1,
+			"type": "number",
+			"default": 5,
+			"min": 1,
+			"max": 65535,
+			"description": "Maximum number of connections.",
+			"simple": false
+		},
+		"contentlength.ignore": {
+			"id": 2,
+			"type": "bool",
+			"default": false,
+			"description": "Ignore Content-Length header.",
+			"simple": false
+		},
+		"cookies": {
+			"id": 3,
+			"type": "bool",
+			"default": false,
+			"label": "Enable cookies",
+			"description": "Enable the internal cookie engine.",
+			"simple": true,
+			"position": 6
+		},
+		"cookies.load": {
+			"id": 4,
+			"type": "string",
+			"default": "",
+			"description": "Read cookies from specific server file.",
+			"simple": false
+		},
+		"cookies.overwrite": {
+			"id": 5,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Cookies that will be permanently overwritten.",
+			"simple": false
+		},
+		"cookies.save": {
+			"id": 6,
+			"type": "string",
+			"default": "",
+			"description": "Write cookies to specific server file.",
+			"simple": false
+		},
+		"cookies.session": {
+			"id": 7,
+			"type": "bool",
+			"default": true,
+			"description": "Use loaded session cookies.",
+			"simple": false
+		},
+		"cookies.set": {
+			"id": 8,
+			"type": "string",
+			"default": "",
+			"description": "Custom Cookie header independent from internal cookie engine.",
+			"simple": false
+		},
+		"dns.cachetimeout": {
+			"id": 9,
+			"type": "number",
+			"default": 60,
+			"min": -1,
+			"description": "Life-time (in s) for DNS cache entries (-1=forever).",
+			"simple": false
+		},
+		"dns.doh": {
+			"id": 10,
+			"type": "string",
+			"default": "",
+			"description": "URL of custom DNS over HTTP server.",
+			"simple": false
+		},
+		"dns.interface": {
+			"id": 11,
+			"type": "string",
+			"default": "",
+			"description": "Interface for DNS requests.",
+			"simple": false
+		},
+		"dns.resolves": {
+			"id": 12,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "List of custom DNS resolves.",
+			"simple": false
+		},
+		"dns.servers": {
+			"id": 13,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "List of custom DNS servers.",
+			"simple": false
+		},
+		"dns.shuffle": {
+			"id": 14,
+			"type": "bool",
+			"default": false,
+			"description": "Shuffle multiple DNS results.",
+			"simple": false
+		},
+		"encoding.br": {
+			"id": 15,
+			"type": "bool",
+			"default": true,
+			"description": "Accept brotli-compressed content.",
+			"simple": false
+		},
+		"encoding.deflate": {
+			"id": 16,
+			"type": "bool",
+			"default": true,
+			"description": "Accept zlib-compressed content.",
+			"simple": false
+		},
+		"encoding.gzip": {
+			"id": 17,
+			"type": "bool",
+			"default": true,
+			"description": "Accept gzip-compressed content.",
+			"simple": false
+		},
+		"encoding.identity": {
+			"id": 18,
+			"type": "bool",
+			"default": true,
+			"description": "Accept non-compressed content.",
+			"simple": false
+		},
+		"encoding.transfer": {
+			"id": 19,
+			"type": "bool",
+			"default": false,
+			"description": "Send transfer encoding header.",
+			"simple": false
+		},
+		"headers": {
+			"id": 20,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Custom HTTP headers.",
+			"simple": false
+		},
+		"http.200aliases": {
+			"id": 21,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Aliases that will be treated like HTTP/1.0 200 OK.",
+			"simple": false
+		},
+		"http.version": {
+			"id": 22,
+			"type": "enum",
+			"enum-values": [
+				"any",
+				"HTTP 1.0 only",
+				"HTTP 1.1 only",
+				"Attempt HTTP 2 with fallback to 1.1",
+				"Use non-TLS HTTP 2 even when HTTPS not available",
+				"Attempt HTTP2 over TLS, fallback to 1.1"
+			],
+			"default": 5,
+			"description": "Use HTTP 1.0 only.",
+			"simple": false
+		},
+		"local.interface": {
+			"id": 23,
+			"type": "string",
+			"default": "",
+			"description": "Source interface for out-going traffic.",
+			"simple": false
+		},
+		"local.port": {
+			"id": 24,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"max": 65535,
+			"description": "Local port for out-going traffic (0=use default).",
+			"simple": false
+		},
+		"local.portrange": {
+			"id": 25,
+			"type": "number",
+			"default": 1,
+			"min": 1,
+			"max": 65534,
+			"description": "Range of local ports to try for out-going traffic.",
+			"simple": false
+		},
+		"proxy": {
+			"id": 26,
+			"type": "string",
+			"default": "",
+			"label": "Proxy server:",
+			"description": "Proxy server used for crawling.",
+			"simple": true,
+			"position": 2
+		},
+		"proxy.auth": {
+			"id": 27,
+			"type": "string",
+			"default": "",
+			"description": "Authentification for proxy server (user:password).",
+			"simple": false
+		},
+		"proxy.headers": {
+			"id": 28,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Custom Proxy headers.",
+			"simple": false
+		},
+		"proxy.pre": {
+			"id": 29,
+			"type": "string",
+			"default": "",
+			"description": "Pre-proxy server.",
+			"simple": false
+		},
+		"proxy.tlssrp.password": {
+			"id": 30,
+			"type": "string",
+			"default": "",
+			"description": "TSL-SRP password for the proxy.",
+			"simple": false
+		},
+		"proxy.tlssrp.user": {
+			"id": 31,
+			"type": "string",
+			"default": "",
+			"description": "TSL-SRP username for the proxy.",
+			"simple": false
+		},
+		"proxyy.tunnelling": {
+			"id": 32,
+			"type": "bool",
+			"default": false,
+			"description": "Enable proxy tunnelling.",
+			"simple": false
+		},
+		"redirect": {
+			"id": 33,
+			"type": "bool",
+			"default": true,
+			"description": "Follow Location headers for automatic redirect.",
+			"simple": false
+		},
+		"redirect.max": {
+			"id": 34,
+			"type": "number",
+			"default": -1,
+			"min": -1,
+			"description": "Maximum number of automatic redirects (-1=infinite).",
+			"simple": false
+		},
+		"redirect.post301": {
+			"id": 35,
+			"type": "bool",
+			"default": false,
+			"description": "Do not convert POST 301-redirects to GET requests.",
+			"simple": false
+		},
+		"redirect.post302": {
+			"id": 36,
+			"type": "bool",
+			"default": false,
+			"description": "Do not convert POST 302-redirects to GET requests.",
+			"simple": false
+		},
+		"redirect.post303": {
+			"id": 37,
+			"type": "bool",
+			"default": false,
+			"description": "Do not convert POST 303-redirects to GET requests.",
+			"simple": false
+		},
+		"referer": {
+			"id": 38,
+			"type": "string",
+			"default": "",
+			"description": "Custom Referer header.",
+			"simple": false
+		},
+		"referer.automatic": {
+			"id": 39,
+			"type": "bool",
+			"default": false,
+			"description": "Send Referer header when automatically redirected.",
+			"simple": false
+		},
+		"speed.downlimit": {
+			"id": 40,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 1000,
+			"description": "Maximum download speed (in B/s, 0=infinite).",
+			"simple": false
+		},
+		"speed.lowlimit": {
+			"id": 41,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 100,
+			"description": "Low speed limit (in B/s, 0=none).",
+			"simple": false
+		},
+		"speed.lowtime": {
+			"id": 42,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"description": "Time-out (in s) when low speed limit is reached (0=none).",
+			"simple": false
+		},
+		"speed.uplimit": {
+			"id": 43,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 1000,
+			"description": "Maximum upload speed (in B/s, 0=none).",
+			"simple": false
+		},
+		"ssl.verify.host": {
+			"id": 44,
+			"type": "bool",
+			"default": true,
+			"description": "SSL host name verification.",
+			"simple": false
+		},
+		"ssl.verify.peer": {
+			"id": 45,
+			"type": "bool",
+			"default": true,
+			"description": "SSL peer verification.",
+			"simple": false
+		},
+		"ssl.verify.proxy.host": {
+			"id": 46,
+			"type": "bool",
+			"default": true,
+			"description": "SSL host name verification for proxy.",
+			"simple": false
+		},
+		"ssl.verify.proxy.peer": {
+			"id": 47,
+			"type": "bool",
+			"default": true,
+			"description": "SSL peer verification for proxy.",
+			"simple": false
+		},
+		"ssl.verify.status": {
+			"id": 48,
+			"type": "bool",
+			"default": false,
+			"description": "SSL status verification.",
+			"simple": false
+		},
+		"tcp.fastopen": {
+			"id": 49,
+			"type": "bool",
+			"default": false,
+			"description": "Enable TCP Fast Open.",
+			"simple": false
+		},
+		"tcp.keepalive": {
+			"id": 50,
+			"type": "bool",
+			"default": false,
+			"description": "Enable TCP Keep-alive probing.",
+			"simple": false
+		},
+		"tcp.keepalive.idle": {
+			"id": 51,
+			"type": "number",
+			"default": 60,
+			"min": 1,
+			"description": "Waiting time (in s) until TCP Keep-alive probing is started.",
+			"simple": false
+		},
+		"tcp.keepalive.interval": {
+			"id": 52,
+			"type": "number",
+			"default": 60,
+			"min": 1,
+			"description": "Interval (in s) for TCP Keep-alive probing.",
+			"simple": false
+		},
+		"tcp.nagle": {
+			"id": 53,
+			"type": "bool",
+			"default": false,
+			"description": "Enable TCP Nagle algorithm.",
+			"simple": false
+		},
+		"timeout": {
+			"id": 54,
+			"type": "number",
+			"default": 300,
+			"min": 1,
+			"step": 10,
+			"label": "Time-out on connect (s):",
+			"description": "Connecting time-out (in s).",
+			"simple": true,
+			"position": 3
+		},
+		"timeout.happyeyeballs": {
+			"id": 55,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"max": 65535,
+			"step": 50,
+			"description": "Time-out for IPv6 only using the Happy eyeballs algorithm (0=default).",
+			"simple": false
+		},
+		"timeout.request": {
+			"id": 56,
+			"type": "number",
+			"default": 300,
+			"min": 0,
+			"label": "Time-out on request (s):",
+			"description": "Request time-out (in s, 0=never).",
+			"simple": true,
+			"position": 4
+		},
+		"tlssrp.password" : {
+			"id": 57,
+			"type": "string",
+			"default": "",
+			"description": "Password for TLS-SRP authentification.",
+			"simple": false
+		},
+		"tlssrp.user": {
+			"id": 58,
+			"type": "string",
+			"default": "",
+			"description": "Username for TLS-SRP authentification.",
+			"simple": false
+		},
+		"useragent": {
+			"id": 59,
+			"type": "string",
+			"default": "",
+			"label": "Custom UserAgent:",
+			"description": "Custom UserAgent header (none if empty).",
+			"simple": true,
+			"position": 5
+		},
+		"verbose": {
+			"id": 60,
+			"type": "bool",
+			"default": false,
+			"description": "Show all connection information on server.",
+			"simple": false
+		}
+	}
+}

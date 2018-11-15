@@ -1,0 +1,185 @@
+{
+	"parser": {
+		"id": 1,
+		"label": "Parsing",
+		"open": true,
+		
+		"datetime.format": {
+			"id": 1,
+			"type": "string",
+			"default": "%F %T",
+			"label": "Date/time format:",
+			"description": "The date and time format to be parsed<br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"simple": true,
+			"position": 6
+		},
+		"datetime.locale": {
+			"id": 2,
+			"type": "string",
+			"default": "",
+			"label": "Date/time locale:",
+			"description": "Locale used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
+			"simple": true,
+			"position": 5
+		},
+		"datetime.query": {
+			"id": 3,
+			"type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": 0,
+			"label": "Date/time query:",
+			"description": "Query used for parsing the date and time.",
+			"simple": true,
+			"position": 4
+		},
+		"datetime.source": {
+			"id": 4,
+			"type": "enum",
+			"default": 1,
+			"enum-values": [
+				"URL",
+				"content"
+			],
+			"label": "Date/time source:",
+			"description": "Where from to parse the date and the time.",
+			"simple": true,
+			"position": 3
+		},
+		"field.names": {
+			"id": 5,
+			"type": "array",
+			"default": [],
+			"item-type": "string",
+			"label": "Field names:",
+			"description": "The names of the custom fields to parse.",
+			"simple": true,
+			"position": 8
+		},
+		"field.queries": {
+			"id": 6,
+			"type": "array",
+			"default": [],
+			"item-type": "query",
+			"query-results": [
+				"single",
+				"multi"
+			],
+			"label": "Field queries:",
+			"description": "The queries used to parse the custom fields.",
+			"simple": true,
+			"position": 9
+		},
+		"field.sources": {
+			"id": 7,
+			"type": "array",
+			"default": [],
+			"item-type": "enum",
+			"enum-values": [
+				"URL",
+				"content"
+			],
+			"label": "Field sources:",
+			"description": "Where from to parse the custom fields.",
+			"simple": true,
+			"position": 8
+		},
+		"id.query": {
+			"id": 8,
+			"type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": 0,
+			"label": "ID query:",
+			"description": "Query to parse the ID.",
+			"simple": true,
+			"position": 2
+		},
+		"id.source": {
+			"id": 9,
+			"type": "enum",
+			"default": 0,
+			"enum-values": [
+				"URL",
+				"content"
+			],
+			"label": "ID source:",
+			"description": "Where from to parse the ID.",
+			"simple": true,
+			"position": 1
+		},
+		"logging": {
+			"id": 10,
+			"type": "enum",
+			"default": 1,
+			"enum-values": [
+				"silent",
+				"default",
+				"extended",
+				"verbose"
+			],
+			"label": "Logging mode:",
+			"description": "Level of logging activity.",
+			"simple": true,
+			"position": 12
+		},
+		"newest.only": {
+			"id": 11,
+			"type": "bool",
+			"default": true,
+			"description": "Parse only the newest content for each URL.",
+			"simple": false
+		},
+		"reparse": {
+			"id":  12,
+			"type": "bool",
+			"default": false,
+			"label": "Re-parse content",
+			"description": "Re-parse already parsed URLs.",
+			"simple": true,
+			"position": 10
+		},
+		"result.multi.separator": {
+			"id": 13,
+			"type": "string",
+			"default": ",",
+			"description": "Separator used when parsing a field that gives multiple results.",
+			"simple": false
+		},
+		"result.multi-quotes": {
+			"id": 14,
+			"type": "string",
+			"default": "",
+			"description": "Quotes used when parsing a field that can give multiple results.",
+			"simple": false
+		},
+		"result.table": {
+			"id": 15,
+			"type": "string",
+			"default": "",
+			"label": "Result table:",
+			"description": "Table name to save parsed fields to.",
+			"simple": true,
+			"position": 11
+		},
+		"sleep.idle": {
+			"id": 16,
+			"type": "number",
+			"default": 500,
+			"min": 100,
+			"step": 100,
+			"description": "Time (in ms) to wait before checking for new URLs when all URLs have been parsed.",
+			"simple": false
+		},
+		"sleep.mysql": {
+			"id": 17,
+			"type": "number",
+			"default": 10,
+			"min": 1,
+			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
+			"simple": false
+		}
+	}
+}
