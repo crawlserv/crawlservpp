@@ -13,7 +13,6 @@
 #include "ConfigCrawler.h"
 #include "Database.h"
 #include "DatabaseCrawler.h"
-#include "Helpers.h"
 #include "Networking.h"
 #include "RegEx.h"
 #include "Thread.h"
@@ -34,6 +33,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include "namespaces/Helpers.h"
 
 class ThreadCrawler: public Thread {
 public:

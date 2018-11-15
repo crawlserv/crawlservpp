@@ -22,7 +22,7 @@
 #include "structs/ThreadDatabaseEntry.h"
 #include "structs/ThreadOptions.h"
 
-#include "Helpers.h"
+#include "namespaces/Helpers.h"
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>

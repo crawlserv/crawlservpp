@@ -11,8 +11,6 @@
 #ifndef URIPARSER_H_
 #define URIPARSER_H_
 
-#include "Helpers.h"
-
 #include <uriparser/Uri.h>
 
 #include <algorithm>
@@ -21,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include "namespaces/Helpers.h"
 
 class URIParser {
 public:

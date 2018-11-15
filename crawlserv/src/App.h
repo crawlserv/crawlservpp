@@ -12,10 +12,7 @@
 #define APP_H_
 
 #include "ConfigFile.h"
-#include "Helpers.h"
 #include "Server.h"
-#include "Versions.h"
-
 #include "structs/DatabaseSettings.h"
 #include "structs/ServerSettings.h"
 
@@ -27,6 +24,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include "namespaces/Helpers.h"
+#include "namespaces/Versions.h"
 
 class App {
 public:

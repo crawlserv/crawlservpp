@@ -14,7 +14,6 @@
 #define SERVER_H_
 
 #include "Database.h"
-#include "Helpers.h"
 #include "RegEx.h"
 #include "Thread.h"
 #include "ThreadCrawler.h"
@@ -43,6 +42,8 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
+
+#include "namespaces/Helpers.h"
 #include "TimerSimpleHR.h"
 
 class Server {

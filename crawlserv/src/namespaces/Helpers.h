@@ -7,13 +7,13 @@
  *      Author: ans
  */
 
-#ifndef HELPERS_H_
-#define HELPERS_H_
+#ifndef NAMESPACES_HELPERS_H_
+#define NAMESPACES_HELPERS_H_
 
-#include "structs/Memento.h"
+#include "../structs/Memento.h"
 
-#include "external/date.h"
-#include "external/utf8.h"
+#include "../external/date.h"
+#include "../external/utf8.h"
 
 #include <experimental/filesystem>
 
@@ -63,4 +63,4 @@ namespace Helpers {
 }
 
 
-#endif /* HELPERS_H_ */
+#endif /* NAMESPACES_HELPERS_H_ */
