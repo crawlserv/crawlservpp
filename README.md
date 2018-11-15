@@ -5,11 +5,11 @@
 
 The architecture of <b>crawlserv++</b> consists of three main parts:
 
-* The <b>crawlserv++ command-and-control server</b>, written in C++ (source code in `crawlserv/src`)
-* A webserver hosting the <b>crawlserv++ frontend</b> written in HTML, PHP and JavaScript (source code in `crawlserv_frontend/crawlserv`)
+* The <b>command-and-control server</b>, written in C++ (source code in `crawlserv/src`)
+* A webserver hosting the <b>frontend</b> written in HTML, PHP and JavaScript (source code in `crawlserv_frontend/crawlserv`)
 * A mySQL <b>database</b> containing all data (i.e. thread status, configurations, logs, crawled content, parsed data as well as the results of all analyses)
 
-## crawlserv++ Command-and-Control Server
+## Command-and-Control Server
 
 The command-and-control server contains an embedded web server (implemented by using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the <b>crawlserv++ frontend</b> by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) of JSON code. Access can (and should) be restricted to whitelisted IPs only.
 
@@ -147,7 +147,7 @@ The following third-party libraries are used:
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/external/utf8*`)
 
-## crawlserv++ Frontend
+## Frontend
 
 The frontend is a simple PHP and JavaScript application that has read-only access to the database and can (under certain conditions) interact with the command-and-control server when the user wants to perform actions that will change the content of the database. The frontend provides the following menu structure:
 
