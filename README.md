@@ -1,5 +1,7 @@
 <i><b>WARNING:</b> This application is under development. It is neither complete nor adequately documented yet.</i>
 
+<i>~~strikethrough~~ means this feature is not (fully) implemented yet.</i>
+
 # crawlserv++
 <b>crawlserv++</b> is an application for crawling websites and analyzing textual content on these websites.
 
