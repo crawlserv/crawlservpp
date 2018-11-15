@@ -1,7 +1,7 @@
 /*
  * Versions.cpp
  *
- * Getting the versions of the different libraries used by crawlserv.
+ * Get the versions of the different libraries used by crawlserv.
  *
  *  Created on: Oct 18, 2018
  *      Author: ans
