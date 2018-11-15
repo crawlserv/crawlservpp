@@ -181,22 +181,26 @@ bool Server::tick() {
 		}
 	}
 	/*
-	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
-		if((*i)->isTerminated()) {
-			(*i)->Thread::stop();
-			this->parsers.erase(i);
+	for(unsigned long n = 1; n <= this->parsers.size(); n++) {
+		if(this->parsers.at(n - 1)->isTerminated()) {
+			this->parsers.at(n - 1)->Thread::stop();
+			this->parsers.erase(this->parsers.begin() + (n - 1));
+			n--;
 		}
 	}
-	for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
-		if((*i)->isTerminated()) {
-			(*i)->Thread::stop();
-			this->extractors.erase(i);
+	for(unsigned long n = 1; n <= this->extractors.size(); n++) {
+		if(this->extractors.at(n - 1)->isTerminated()) {
+			this->extractors.at(n - 1)->Thread::stop();
+			this->extractors.erase(this->extractors.begin() + (n - 1));
+			n--;
 		}
 	}
-	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
-		if((*i)->isTerminated()) {
-			(*i)->Thread::stop();
-			this->analyzers.erase(i);
+	for(unsigned long n = 1; n <= this->analyzers.size(); n++) {
+		if(this->analyzers.at(n - 1)->isTerminated()) {
+			this->analyzers.at(n - 1)->Thread::stop();
+			this->analyzers.erase(this->analyzers.begin() + (n - 1));
+			n--;
+		}
 	}
 	*/
 
