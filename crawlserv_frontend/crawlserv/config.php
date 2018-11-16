@@ -9,7 +9,7 @@
 $db_host = "localhost";             // database host
 $db_user = "frontend";              // user name (for security reasons, this user should only have SELECT privileges!)
 $db_password = "K*^Qe,qzu=5Vn+gj";  // user password (randomly created test password, to be replaced by your own!)
-$db_name = "crawled";               // database scheme
+$db_name = "crawled";               // database schema
 
 // connect to database
 $dbConnection = new mysqli($db_host, $db_user, $db_password, $db_name);
