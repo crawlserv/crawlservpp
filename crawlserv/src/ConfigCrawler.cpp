@@ -1,7 +1,7 @@
 /*
  * ConfigCrawler.cpp
  *
- * Configuration for a crawler.
+ * Configuration for crawlers.
  *
  * WARNING:	Changing the configuration requires updating 'json/crawler.json' in crawlserv_frontend!
  * 			See there for details on the specific configuration entries.
