@@ -1,7 +1,7 @@
 /*
  * DatabaseSettings.h
  *
- * Basic database settings (host, port, user, password, scheme).
+ * Basic database settings (host, port, user, password, schema).
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
@@ -17,7 +17,7 @@ struct DatabaseSettings {
 	unsigned short port; // port of database server
 	std::string user; // user name for database
 	std::string password; // user password for database
-	std::string name; // name of database
+	std::string name; // name/schema of database
 };
 
 #endif /* DATABASESETTINGS_H_ */
