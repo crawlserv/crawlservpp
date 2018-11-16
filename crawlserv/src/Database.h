@@ -1,11 +1,12 @@
 /*
  * Database.h
  *
- * A class to handle database access for crawlserv and its threads. Only basic functionality that is used by both server and threads is
- *  implemented in this (parent) class.
+ * A class to handle database access for crawlserv and its threads.
+ * Thread-specific functionality is not implemented in this (parent) class.
  *
- * NOT THREAD-SAFE! Use instances of the child class DatabaseThread for thread-specific functionality and child classes of DatabaseModule
- *  for module-specific functionality instead.
+ * NOT THREAD-SAFE!
+ * Use instances of the child class DatabaseThread for thread-specific functionality
+ * and child classes of DatabaseModule for module-specific functionality instead.
  *
  *  Created on: Sep 29, 2018
  *      Author: ans
