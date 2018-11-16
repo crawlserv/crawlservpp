@@ -287,7 +287,7 @@ void ThreadCrawler::unpause() { throw(std::logic_error("Thread::unpause() not to
 void ThreadCrawler::stop() { throw(std::logic_error("Thread::stop() not to be used by thread itself")); }
 void ThreadCrawler::interrupt() { throw(std::logic_error("Thread::interrupt() not to be used by thread itself")); }
 
-// initializing function for custom URLs
+// initialize function for custom URLs
 void ThreadCrawler::initCustomUrls() {
 	// lock URL list
 	if(this->config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose) this->log("initializes start page and custom URLs...");
