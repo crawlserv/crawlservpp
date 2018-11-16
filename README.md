@@ -65,7 +65,7 @@ The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the appli
 
 ### Configuration
 
-The server needs a configuration file as argument, the test configuration can be found at [`crawlserv/config`](crawlserv/config). Replace the values in this file with those for your own test database. The password for granting the server full access to the database will be prompted when starting the server.
+The server needs a configuration file as argument, the test configuration can be found at [`crawlserv/config`](crawlserv/config). Replace the values in this file with those for your own database. The password for granting the server full access to the database will be prompted when starting the server.
 
 The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
 
@@ -190,7 +190,7 @@ The frontend is a simple HTML/PHP and JavaScript application that has read-only 
 
 ### Configuration
 
-The frontend uses [`crawlserv_frontend/crawlserv/config.php`](crawlserv_frontend/crawlserv/config.php) to gain read-only access to the database. For security reasons, the database account used by the frontend should only have `SELECT` privileges! See this file for details about the test configuration (including the database scheme and the user name and password for read-only access to the test database). Replace those values with those for your own test database.
+The frontend uses [`crawlserv_frontend/crawlserv/config.php`](crawlserv_frontend/crawlserv/config.php) to gain read-only access to the database. For security reasons, the database account used by the frontend should only have `SELECT` privileges! See this file for details about the test configuration (including the database scheme and the user name and password for read-only access to the test database). Replace those values with those for your own database.
 
 The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (by using ``localhost``). Therefore, the (randomly created) password in `config.php` is irrelevant for usage outside the original test environment and needs to be replaced! In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
 
