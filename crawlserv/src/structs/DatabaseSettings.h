@@ -7,8 +7,8 @@
  *      Author: ans
  */
 
-#ifndef DATABASESETTINGS_H_
-#define DATABASESETTINGS_H_
+#ifndef STRUCTS_DATABASESETTINGS_H_
+#define STRUCTS_DATABASESETTINGS_H_
 
 #include <string>
 
@@ -20,4 +20,4 @@ struct DatabaseSettings {
 	std::string name; // name/schema of database
 };
 
-#endif /* DATABASESETTINGS_H_ */
+#endif /* STRUCTS_DATABASESETTINGS_H_ */
