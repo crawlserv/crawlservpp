@@ -2,7 +2,7 @@
  * App.h
  *
  * The main application class that processes command line arguments, shows the initial header and component versions, loads the
- *  configuration from the (by argument) specified configuration file and creates as well as starts the server.
+ *  configuration from the argument-specified configuration file and creates as well as starts the server.
  *
  *  Created on: Oct 26, 2018
  *      Author: ans
