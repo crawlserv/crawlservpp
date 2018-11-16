@@ -154,7 +154,7 @@ As can be seen from the commands, the server also manages threads for performing
 * ~~<b>extractor</b>~~: Downloading additional data such as comments and social media content.
 * ~~<b>analyzer</b>~~: Analyzing textual data using different methods and algorithms.
 
-The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (instances of `DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database. See the next section on classes and namespaces as well as the corresponsing source code for details.
+The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (instances of `DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the next section on classes and namespaces as well as the corresponsing source code for details.
 
 ### Third-party Libraries
 
