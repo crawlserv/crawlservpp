@@ -6,7 +6,7 @@
 The architecture of <b>crawlserv++</b> consists of three distinct components:
 
 * The <b>command-and-control server</b>, written in C++ (source code in [`crawlserv/src`](crawlserv/src)),
-* a webserver hosting the <b>frontend</b> written in HTML, PHP and JavaScript (source code in [`crawlserv_frontend/crawlserv`](crawlserv_frontend/crawlserv)),
+* a web server hosting the <b>frontend</b> written in HTML, PHP and JavaScript (source code in [`crawlserv_frontend/crawlserv`](crawlserv_frontend/crawlserv)),
 * a mySQL <b>database</b> containing all data (i.e. thread status, configurations, logs, crawled content, parsed data as well as the results of all analyses).
 
 ## Command-and-Control Server
@@ -70,7 +70,7 @@ The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the appli
 
 The server needs a configuration file as argument, the test configuration can be found at [`crawlserv/config`](crawlserv/config). Replace the values in this file with those for your own database and server settings. The password for granting the server (full) access to the database will be prompted when starting the server.
 
-The testing environment consists of one PC that runs all three components of the application that can only be accessed locally (by using ``localhost``). In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the webserver running the frontend uses port 80 for interaction with the user. The mySQL database server uses (default) port 3306.
+The testing environment consists of one PC that runs all three components of the application that can only be accessed locally (by using ``localhost``). In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the web server running the frontend uses port 80 for interaction with the user (i.e. his\*her web browser). The mySQL database server uses (default) port 3306.
 
 ### Server Commands
 
