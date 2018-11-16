@@ -19,16 +19,16 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 The source code of the server consists of the following classes (as of November 2018):
 
-* <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class, processing command line arguments, showing initial console output, loading configuration file, creating and starting the server.
+* <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
 * <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration.
 * <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
 * <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration.
-* <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with only basic functionality).
-* <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements `DatabaseModule` interface).
-* <b>[`DatabaseModule`](crawlserv/src/DatabaseModule.cpp)</b>: Interface for the database access of threads (wraps `DatabaseThread`).
-* <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of `Database`).
+* <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with basic functionality only).
+* <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements the `DatabaseModule` interface).
+* <b>[`DatabaseModule`](crawlserv/src/DatabaseModule.cpp)</b>: Interface for the database access of threads (wraps the `DatabaseThread` class).
+* <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of the `Database` class).
 * <b>[`Networking`](crawlserv/src/Networking.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/).
 * <b>[`RegEx`](crawlserv/src/RegEx.cpp)</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * <b>[`Server`](crawlserv/src/Server.cpp)</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
