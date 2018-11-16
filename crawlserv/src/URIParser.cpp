@@ -130,6 +130,7 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 	UriUriA relativeSource;
 
 	// URL needs to be stored in class BEFORE parsing for long-term access by the parsing library
+	// (otherwise the URL would be out of scope for the library after leaving this member function)
 	this->link.swap(linkCopy);
 
 	// parse relative link
@@ -170,7 +171,7 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 		return false;
 	}
 
-	// free memory for temporary URI and save link
+	// free memory for temporary URI
 	uriFreeUriMembersA(&relativeSource);
 	return true;
 }
