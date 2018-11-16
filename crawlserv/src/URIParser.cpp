@@ -283,13 +283,13 @@ std::string URIParser::uriToString(const UriUriA * uri) {
 	if(!uri) return "";
 
 	if(uriToStringCharsRequiredA(uri, &charsRequired) != URI_SUCCESS)
-	    throw std::runtime_error("URI Parser error - Could not convert URI to string");
+	    throw std::runtime_error("URI Parser error - Could not convert URI to string because uriToStringCharsRequiredA(...) failed");
 
 	uriCString = new char[charsRequired + 1];
 
 	if(uriToStringA(uriCString, uri, charsRequired + 1, NULL) != URI_SUCCESS) {
 		delete[] uriCString;
-		throw std::runtime_error("URI Parser error - Could not convert URI to string");
+		throw std::runtime_error("URI Parser error - Could not convert URI to string because uriToStringA(...) failed");
 	}
 
 	result = uriCString;
