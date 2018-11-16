@@ -1,7 +1,7 @@
 /*
  * ConfigCrawler.cpp
  *
- * Configuration for a parser.
+ * Parsing configuration.
  *
  * WARNING:	Changing the configuration requires updating 'json/parser.json' in crawlserv_frontend!
  * 			See there for details on the specific configuration entries.
