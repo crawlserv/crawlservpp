@@ -1,10 +1,12 @@
 /*
  * Database.cpp
  *
- * A class to handle database access for crawlserv and its threads. Only basic functionality that is used by both server and threads is
- *  implemented in this (parent) class.
+ * A class to handle database access for crawlserv and its threads.
+ * Thread-specific functionality is not implemented in this (parent) class.
  *
- * NOT THREAD-SAFE! Use instances of the child class DatabaseThread for each thread instead.
+ * NOT THREAD-SAFE!
+ * Use instances of the child class DatabaseThread for thread-specific functionality
+ * and child classes of DatabaseModule for module-specific functionality instead.
  *
  *  Created on: Sep 29, 2018
  *      Author: ans
@@ -111,7 +113,7 @@ bool Database::connect() {
 	return true;
 }
 
-// run initializing SQL commands
+// run initializing SQL commands by processing all files in the "sql" sub-folder
 bool Database::initializeSql() {
 	// read 'sql' directory
 	std::vector<std::string> sqlFiles;
@@ -219,7 +221,7 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 	}
 }
 
-// get the number of log entries for a specific module (or for all modules if module is an empty string) from database
+// get number of log entries for a specific module (or for all modules if module is an empty string) from database
 unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -292,7 +294,7 @@ void Database::clearLogs(const std::string& logModule) {
 	}
 }
 
-// get threads from database
+// get all threads from database
 std::vector<ThreadDatabaseEntry> Database::getThreads() {
 	sql::Statement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -376,7 +378,7 @@ unsigned long Database::addThread(const std::string& threadModule, const ThreadO
 	return result;
 }
 
-// get run time of thread (in seconds) from database
+// get run time of thread (in seconds) from database by its ID
 unsigned long Database::getThreadRunTime(unsigned long threadId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -413,7 +415,7 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 	return result;
 }
 
-// get pause time of thread (in seconds) from database
+// get pause time of thread (in seconds) from database by its ID
 unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -450,7 +452,7 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 	return result;
 }
 
-// update status of a thread in the database (and add the pause state to the status message if necessary)
+// update thread status in database (and add the pause state to the status message if necessary)
 void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check connection
 	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
@@ -539,7 +541,7 @@ void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPa
 	}
 }
 
-// remove thread from database
+// remove thread from database by its ID
 void Database::deleteThread(unsigned long threadId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
@@ -621,7 +623,7 @@ unsigned long Database::addWebsite(const std::string& websiteName, const std::st
 	return result;
 }
 
-// get website domain from database
+// get website domain from database by its ID
 std::string Database::getWebsiteDomain(unsigned long websiteId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -658,7 +660,7 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 	return result;
 }
 
-// get namespace of website from database
+// get namespace of website from database by its ID
 std::string Database::getWebsiteNameSpace(unsigned long int websiteId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -695,7 +697,7 @@ std::string Database::getWebsiteNameSpace(unsigned long int websiteId) {
 	return result;
 }
 
-// get id and namespace of website from URL list ID in database
+// get ID and namespace of website from database by URL list ID
 IdString Database::getWebsiteNameSpaceFromUrlList(unsigned long listId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -732,7 +734,7 @@ IdString Database::getWebsiteNameSpaceFromUrlList(unsigned long listId) {
 	return IdString(websiteId, this->getWebsiteNameSpace(websiteId));
 }
 
-// get id and namespace of website from configuration ID in database
+// get ID and namespace of website from database by configuration ID
 IdString Database::getWebsiteNameSpaceFromConfig(unsigned long configId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -769,7 +771,7 @@ IdString Database::getWebsiteNameSpaceFromConfig(unsigned long configId) {
 	return IdString(websiteId, this->getWebsiteNameSpace(websiteId));
 }
 
-// get id and namespace of website from parsing table ID in database
+// get ID and namespace of website from database by parsing table ID
 IdString Database::getWebsiteNameSpaceFromParsedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -806,7 +808,7 @@ IdString Database::getWebsiteNameSpaceFromParsedTable(unsigned long tableId) {
 	return IdString(websiteId, this->getWebsiteNameSpace(websiteId));
 }
 
-// get id and namespace of website from extracting table ID in database
+// get ID and namespace of website from database by extracting table ID
 IdString Database::getWebsiteNameSpaceFromExtractedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -843,7 +845,7 @@ IdString Database::getWebsiteNameSpaceFromExtractedTable(unsigned long tableId) 
 	return IdString(websiteId, this->getWebsiteNameSpace(websiteId));
 }
 
-// get id and namespace of website from analyzing table ID in database
+// get ID and namespace of website from database by analyzing table ID
 IdString Database::getWebsiteNameSpaceFromAnalyzedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -880,7 +882,7 @@ IdString Database::getWebsiteNameSpaceFromAnalyzedTable(unsigned long tableId) {
 	return IdString(websiteId, this->getWebsiteNameSpace(websiteId));
 }
 
-// check whether website namespace exists
+// check whether website namespace exists in database
 bool Database::isWebsiteNameSpace(const std::string& nameSpace) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -918,7 +920,7 @@ bool Database::isWebsiteNameSpace(const std::string& nameSpace) {
 	return result;
 }
 
-// create website namespace for duplicate
+// create new website namespace for duplicated website
 std::string Database::duplicateWebsiteNameSpace(const std::string& websiteNameSpace) {
 	std::string nameString, numberString;
 	unsigned long end = websiteNameSpace.find_last_not_of("0123456789");
@@ -1055,7 +1057,7 @@ void Database::updateWebsite(unsigned long websiteId, const std::string& website
 	}
 }
 
-// remove website (and all associated data) from database
+// delete website (and all associated data) from database by its ID
 void Database::deleteWebsite(unsigned long websiteId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
@@ -1095,7 +1097,7 @@ void Database::deleteWebsite(unsigned long websiteId) {
 	}
 }
 
-// duplicate the configuration of a website
+// duplicate website in database by its ID (no processed data will be duplicated)
 unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1273,7 +1275,7 @@ unsigned long Database::addUrlList(unsigned long websiteId, const std::string& l
 	return result;
 }
 
-// get URL lists for specific website from database
+// get URL lists for ID-specified website from database
 std::vector<IdString> Database::getUrlLists(unsigned long websiteId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1309,7 +1311,7 @@ std::vector<IdString> Database::getUrlLists(unsigned long websiteId) {
 	return result;
 }
 
-// get namespace of URL list
+// get namespace of URL list by its ID
 std::string Database::getUrlListNameSpace(unsigned long listId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1346,7 +1348,7 @@ std::string Database::getUrlListNameSpace(unsigned long listId) {
 	return result;
 }
 
-// get id and namespace of URL list from parsing table ID in database
+// get ID and namespace of URL list from database by parsing table ID
 IdString Database::getUrlListNameSpaceFromParsedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1383,7 +1385,7 @@ IdString Database::getUrlListNameSpaceFromParsedTable(unsigned long tableId) {
 	return IdString(urlListId, this->getUrlListNameSpace(urlListId));
 }
 
-// get id and namespace of URL list from extracting table ID in database
+// get ID and namespace of URL list from database by extracting table ID
 IdString Database::getUrlListNameSpaceFromExtractedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1420,7 +1422,7 @@ IdString Database::getUrlListNameSpaceFromExtractedTable(unsigned long tableId) 
 	return IdString(urlListId, this->getUrlListNameSpace(urlListId));
 }
 
-// get id and namespace of URL list from analyzing table ID in database
+// get ID and namespace of URL list from database by analyzing table ID
 IdString Database::getUrlListNameSpaceFromAnalyzedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1457,7 +1459,7 @@ IdString Database::getUrlListNameSpaceFromAnalyzedTable(unsigned long tableId) {
 	return IdString(urlListId, this->getUrlListNameSpace(urlListId));
 }
 
-// check whether URL list namespace exists
+// check whether URL list namespace for an ID-specified website exists in database
 bool Database::isUrlListNameSpace(unsigned long websiteId, const std::string& nameSpace) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1496,7 +1498,7 @@ bool Database::isUrlListNameSpace(unsigned long websiteId, const std::string& na
 	return result;
 }
 
-// update URL list in database
+// update URL list (and all associated tables) in database
 void Database::updateUrlList(unsigned long listId, const std::string& listName, const std::string& listNameSpace) {
 	sql::Statement * renameStatement = NULL;
 	sql::PreparedStatement * updateStatement = NULL;
@@ -1589,7 +1591,7 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 	}
 }
 
-// delete URL list from database
+// delete URL list (and all associated data) from database by its ID
 void Database::deleteUrlList(unsigned long listId) {
 	sql::PreparedStatement * deleteStatement = NULL;
 	sql::Statement * dropStatement = NULL;
@@ -1698,7 +1700,7 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 	return result;
 }
 
-// get query properties from database
+// get query properties from database by its ID
 void Database::getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
 		bool& queryResultSingleTo, bool& queryResultMultiTo, bool queryTextOnlyTo) {
 	sql::PreparedStatement * sqlStatement = NULL;
@@ -1775,7 +1777,7 @@ void Database::updateQuery(unsigned long queryId, const std::string& queryName, 
 	}
 }
 
-// delete query from database
+// delete query from database by its ID
 void Database::deleteQuery(unsigned long queryId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
@@ -1805,7 +1807,7 @@ void Database::deleteQuery(unsigned long queryId) {
 	}
 }
 
-// duplicate query in database
+// duplicate query in database by its ID
 unsigned long Database::duplicateQuery(unsigned long queryId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1886,7 +1888,7 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const std::str
 	return result;
 }
 
-// get configuration from database
+// get configuration from database by its ID
 const std::string Database::getConfiguration(unsigned long configId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -1953,7 +1955,7 @@ void Database::updateConfiguration(unsigned long configId, const std::string& co
 	}
 }
 
-// delete configuration from website
+// delete configuration from database by its ID
 void Database::deleteConfiguration(unsigned long configId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
@@ -1983,7 +1985,7 @@ void Database::deleteConfiguration(unsigned long configId) {
 	}
 }
 
-// duplicate configuration in database
+// duplicate configuration in database by its ID
 unsigned long Database::duplicateConfiguration(unsigned long configId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2024,7 +2026,7 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 	return result;
 }
 
-// get parsed tables for specific website and URL list from database
+// get parsed tables for ID-specified URL list from database
 std::vector<IdString> Database::getParsedTables(unsigned long listId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2061,7 +2063,7 @@ std::vector<IdString> Database::getParsedTables(unsigned long listId) {
 	return result;
 }
 
-// get name of id-specified parsing table from database
+// get name of parsing table from database by its ID
 std::string Database::getParsedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2098,7 +2100,7 @@ std::string Database::getParsedTable(unsigned long tableId) {
 	return result;
 }
 
-// delete id-specified parsing table for specific website and URL list from database
+// delete parsing table from database by its ID
 void Database::deleteParsedTable(unsigned long tableId) {
 	sql::PreparedStatement * deleteStatement = NULL;
 	sql::Statement * dropStatement = NULL;
@@ -2146,7 +2148,7 @@ void Database::deleteParsedTable(unsigned long tableId) {
 	}
 }
 
-// get extracted tables for specific website and URL list from database
+// get extracted tables for ID-specified URL list from database
 std::vector<IdString> Database::getExtractedTables(unsigned long listId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2183,7 +2185,7 @@ std::vector<IdString> Database::getExtractedTables(unsigned long listId) {
 	return result;
 }
 
-// get name of id-specified extracting table from database
+// get name extracting table from database by its ID
 std::string Database::getExtractedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2220,7 +2222,7 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 	return result;
 }
 
-// delete id-specified extracting table for specific website and URL list from database
+// delete extracting table from database by its ID
 void Database::deleteExtractedTable(unsigned long tableId) {
 	sql::PreparedStatement * deleteStatement = NULL;
 	sql::Statement * dropStatement = NULL;
@@ -2268,7 +2270,7 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 	}
 }
 
-// get analyzed tables for specific website and URL list from database
+// get analyzed tables for ID-specified URL list from database
 std::vector<IdString> Database::getAnalyzedTables(unsigned long listId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2305,7 +2307,7 @@ std::vector<IdString> Database::getAnalyzedTables(unsigned long listId) {
 	return result;
 }
 
-// get name of id-specified analyzing table from database
+// get name of analyzing table from database by its ID
 std::string Database::getAnalyzedTable(unsigned long tableId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2342,7 +2344,7 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 	return result;
 }
 
-// delete id-specified analyzing table for specific website and URL list from database
+// delete analyzing from database by its ID
 void Database::deleteAnalyzedTable(unsigned long tableId) {
 	sql::PreparedStatement * deleteStatement = NULL;
 	sql::Statement * dropStatement = NULL;
@@ -2390,7 +2392,7 @@ void Database::deleteAnalyzedTable(unsigned long tableId) {
 	}
 }
 
-// release table locks if necessary
+// release table locks in database if necessary
 void Database::releaseLocks() {
 	if(this->tablesLocked) this->unlockTables();
 }
@@ -2471,7 +2473,7 @@ bool Database::isUrlList(unsigned long urlListId) {
 	return result;
 }
 
-// check whether URL list ID is valid for the specified website
+// check whether URL list ID is valid for the ID-specified website
 bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2548,7 +2550,7 @@ bool Database::isQuery(unsigned long queryId) {
 	return result;
 }
 
-// check whether query ID is valid for the specified website
+// check whether query ID is valid for the ID-specified website
 bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2625,7 +2627,7 @@ bool Database::isConfiguration(unsigned long configId) {
 	return result;
 }
 
-// check whether configuration ID is valid for the specified website
+// check whether configuration ID is valid for the ID-specified website
 bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2837,7 +2839,7 @@ bool Database::checkConnection() {
 	return true;
 }
 
-// get last inserted id
+// get last inserted ID from database
 unsigned long Database::getLastInsertedId() {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2873,7 +2875,7 @@ unsigned long Database::getLastInsertedId() {
 	return result;
 }
 
-// check whether a table is empty
+// check whether a name-specified table is empty
 bool Database::isTableEmpty(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2909,7 +2911,7 @@ bool Database::isTableEmpty(const std::string& tableName) {
 	return result;
 }
 
-// reset the auto increment of an (empty) table
+// reset the auto increment of an (empty) table in database
 void Database::resetAutoIncrement(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 
