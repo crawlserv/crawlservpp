@@ -78,7 +78,7 @@ bool URIParser::setCurrentSubUrl(const std::string& currentSubUrl) {
 		errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
 		if(end.length() < current.length()) errStrStr << current.substr(0, current.length() - end.length()) << "[!!!]" << end;
 		else errStrStr << current << "[!!!]";
-		errStrStr << "\'.";
+		errStrStr << "\' in URIParser::setCurrentSubUrl().";
 		this->errorMessage = errStrStr.str();
 		return false;
 	}
@@ -87,12 +87,6 @@ bool URIParser::setCurrentSubUrl(const std::string& currentSubUrl) {
 
 // parse link to sub-URL (beginning with slash)
 bool URIParser::parseLink(const std::string& linkToParse) {
-	this->link = linkToParse;
-
-	// trim URL
-	Helpers::trim(this->link);
-	this->link = URIParser::escapeUrl(this->link);
-
 	// error checking
 	if(!(this->domain.length())) {
 		this->errorMessage = "URI Parser error: No current domain specified.";
@@ -103,15 +97,19 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 		return false;
 	}
 
-	// remove anchor
-	unsigned long end = this->link.find('#');
-	if(end != std::string::npos && this->link.length() > end) {
-		if(end) this->link = this->link.substr(0, end);
-		else this->link = "";
+	// copy URL
+	std::string linkCopy = linkToParse;
+
+	// remove anchor if necessary
+	unsigned long end = linkCopy.find('#');
+	if(end != std::string::npos && linkCopy.length() > end) {
+		if(end) linkCopy = linkCopy.substr(0, end);
+		else linkCopy = "";
 	}
 
 	// trim URL
-	Helpers::trim(this->link);
+	Helpers::trim(linkCopy);
+	linkCopy = URIParser::escapeUrl(linkCopy);
 
 	// delete old URI if necessary
 	if(this->uri) {
@@ -120,7 +118,7 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 		this->uri = NULL;
 	}
 
-	if(!(this->link.length())) {
+	if(!(linkCopy.length())) {
 		this->errorMessage = "";
 		return false;
 	}
@@ -133,15 +131,15 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 
 	// parse relative link
 	this->state.uri = &relativeSource;
-	if(uriParseUriA(&(this->state), this->link.c_str()) != URI_SUCCESS) {
+	if(uriParseUriA(&(this->state), linkCopy.c_str()) != URI_SUCCESS) {
 		std::ostringstream errStrStr;
 		std::string end(this->state.errorPos);
 		errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
-		if(end.length() < this->link.length())
-			errStrStr << this->link.substr(0, this->link.length() - end.length())	<< "[!!!]" << end;
+		if(end.length() < linkCopy.length())
+			errStrStr << linkCopy.substr(0, linkCopy.length() - end.length())	<< "[!!!]" << end;
 		else
-			errStrStr << this->link << "[!!!]";
-		errStrStr << "\'.";
+			errStrStr << linkCopy << "[!!!]";
+		errStrStr << "\' in URIParser::parseLink().";
 		this->errorMessage = errStrStr.str();
 		uriFreeUriMembersA(&relativeSource);
 		delete this->uri;
@@ -169,8 +167,9 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 		return false;
 	}
 
-	// free memory for temporary URI
+	// free memory for temporary URI and save link
 	uriFreeUriMembersA(&relativeSource);
+	this->link.swap(linkCopy);
 	return true;
 }
 
