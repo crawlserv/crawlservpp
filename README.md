@@ -136,7 +136,7 @@ The commands and their replies are using the JSON format (implemented by using t
 
 ```json
 {
- "text":"URL list deleted"
+ "text":"URL list deleted."
 }
 ```
 
