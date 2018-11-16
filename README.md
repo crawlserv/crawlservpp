@@ -25,7 +25,7 @@ The source code of the server consists of the following classes (as of November 
 * <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
 * <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration.
-* <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with basic functionality only).
+* <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with server-specific and basic functionality only).
 * <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements the `DatabaseModule` interface).
 * <b>[`DatabaseModule`](crawlserv/src/DatabaseModule.cpp)</b>: Interface for the database access of threads (wraps the `DatabaseThread` class).
 * <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of the `Database` class).
