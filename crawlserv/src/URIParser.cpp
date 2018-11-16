@@ -129,16 +129,19 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 	// create temporary URI for relative link
 	UriUriA relativeSource;
 
+	// URL needs to be stored in class BEFORE parsing for long-term access by the parsing library
+	this->link.swap(linkCopy);
+
 	// parse relative link
 	this->state.uri = &relativeSource;
-	if(uriParseUriA(&(this->state), linkCopy.c_str()) != URI_SUCCESS) {
+	if(uriParseUriA(&(this->state), this->link.c_str()) != URI_SUCCESS) {
 		std::ostringstream errStrStr;
 		std::string end(this->state.errorPos);
 		errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
-		if(end.length() < linkCopy.length())
-			errStrStr << linkCopy.substr(0, linkCopy.length() - end.length())	<< "[!!!]" << end;
+		if(end.length() < this->link.length())
+			errStrStr << this->link.substr(0, this->link.length() - end.length())	<< "[!!!]" << end;
 		else
-			errStrStr << linkCopy << "[!!!]";
+			errStrStr << this->link << "[!!!]";
 		errStrStr << "\' in URIParser::parseLink().";
 		this->errorMessage = errStrStr.str();
 		uriFreeUriMembersA(&relativeSource);
@@ -169,7 +172,6 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 
 	// free memory for temporary URI and save link
 	uriFreeUriMembersA(&relativeSource);
-	this->link.swap(linkCopy);
 	return true;
 }
 
