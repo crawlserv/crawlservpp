@@ -986,7 +986,8 @@ void ThreadCrawler::crawlingParseAndAddUrls(const IdString& url, std::vector<std
 			while(pos < urls.at(n - 1).length()) {
 				unsigned long end = urls.at(n - 1).find("&amp;", pos);
 				if(end == std::string::npos) {
-					processed += urls.at(n - 1).substr(pos);
+					if(pos) processed += urls.at(n - 1).substr(pos);
+					else processed = urls.at(n - 1);
 					break;
 				}
 				else {
