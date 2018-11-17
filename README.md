@@ -61,7 +61,7 @@ The following custom structures are used (to be found in [`crawlserv/src/structs
 * <b>[`PreparedSqlStatement`](crawlserv/src/structs/PreparedSqlStatement.h)</b>: Content of and pointer to a prepared SQL statement.
 * <b>[`ServerCommandArgument`](crawlserv/src/structs/ServerCommandArgument.h)</b>: The `[name,value]` pair of a server command argument.
 * <b>[`ServerSettings`](crawlserv/src/structs/ServerSettings.h)</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
-* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.h)</b>: Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
+* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.h)</b>: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * <b>[`ThreadOptions`](crawlserv/src/structs/ThreadOptions.h)</b>: Basic thread options (IDs of website, URL list and configuration).
 
 The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
@@ -92,18 +92,18 @@ The server performs commands and sends back their results. Some commands need to
 * <b>`duplicatewebsite`</b> (argument: `id`): Duplicate the specified website.
 * <b>`kill`</b>: kill the server.
 * <b>`log`</b> (argument: `entry`): Write a log entry by the frontend into the database.
-* ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): Pause a running analyzer by its id.
-* <b>`pausecrawler`</b> (argument: `id`): Pause a running crawler by its id.
-* ~~<b>`pauseextractor`</b>~~ (argument: `id`): Pause a running extractor by its id.
-* ~~<b>`pauseparser`</b>~~ (argument: `id`): Pause a running parser by its id.
+* ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): Pause a running analyzer by its ID.
+* <b>`pausecrawler`</b> (argument: `id`): Pause a running crawler by its ID.
+* ~~<b>`pauseextractor`</b>~~ (argument: `id`): Pause a running extractor by its ID.
+* ~~<b>`pauseparser`</b>~~ (argument: `id`): Pause a running parser by its ID.
 * ~~<b>`startanalyzer`</b>~~ (arguments: `website`, `urllist`, `config`): Start an analyzer using the specified website, URL list and configuration.
 * <b>`startcrawler`</b> (arguments: `website`, `urllist`, `config`): Start a crawler using the specified website, URL list and configuration.
 * ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): Start an extractor using the specified website, URL list and configuration.
 * ~~<b>`startparser`</b>~~ (arguments: `website`, `urllist`, `config`): Start a parser using the specified website, URL list and configuration.
-* ~~<b>`stopanalyzer`</b>~~ (argument: `id`): Stop a running analyzer by its id.
-* <b>`stopcrawler`</b> (argument: `id`): Stop a running crawler by its id.
-* ~~<b>`stopextractor`</b>~~ (argument: `id`): Stop a running extractor by its id.
-* ~~<b>`stopparser`</b>~~ (argument: `id`): Stop a running parser by its id.
+* ~~<b>`stopanalyzer`</b>~~ (argument: `id`): Stop a running analyzer by its ID.
+* <b>`stopcrawler`</b> (argument: `id`): Stop a running crawler by its ID.
+* ~~<b>`stopextractor`</b>~~ (argument: `id`): Stop a running extractor by its ID.
+* ~~<b>`stopparser`</b>~~ (argument: `id`): Stop a running parser by its ID.
 
 The commands and their replies are using the JSON format (implemented by using the [RapidJSON library](https://github.com/Tencent/rapidjson)). See the following examples:
 
