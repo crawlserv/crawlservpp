@@ -149,7 +149,7 @@ For more information on the server commands, see the [source code](crawlserv/src
 
 As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the `Thread` template class:
 
-* <b>crawler</b>: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://timetravel.mementoweb.org/guide/api/)).
+* <b>crawler</b>: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://www.mementoweb.org/guide/quick-intro/)).
 * ~~<b>parser</b>~~: Parsing data from URLs and downloaded content using user-defined RegEx and XPath queries.
 * ~~<b>extractor</b>~~: Downloading additional data such as comments and social media content.
 * ~~<b>analyzer</b>~~: Analyzing textual data using different methods and algorithms.
