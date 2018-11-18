@@ -21,10 +21,10 @@ The source code of the server consists of the following classes (as of November 
 
 * <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
-* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration.
+* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration. See [crawlserv_frontend/crawlserv/json/crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
 * <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
 * <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
-* <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration.
+* <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration. See [crawlserv_frontend/crawlserv/json/parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
 * <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with server-specific and basic functionality only).
 * ~~<b>`DatabaseAnalyzer`</b>~~: Database access for analyzers (implements the `DatabaseModule` interface).
 * <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements the `DatabaseModule` interface).
