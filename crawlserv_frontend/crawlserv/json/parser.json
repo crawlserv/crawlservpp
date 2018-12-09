@@ -4,40 +4,44 @@
 		"label": "Parsing",
 		"open": true,
 		
-		"datetime.format": {
+		"datetime.formats": {
 			"id": 1,
-			"type": "string",
-			"default": "%F %T",
+			"type": "array",
+			"item-type": "string",
+			"default": [],
 			"label": "Date/time format:",
-			"description": "The date and time format to be parsed<br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
 			"position": 6
 		},
-		"datetime.locale": {
+		"datetime.locales": {
 			"id": 2,
-			"type": "string",
-			"default": "",
+			"type": "array",
+			"item-type": "string",
+			"default": [],
 			"label": "Date/time locale:",
-			"description": "Locale used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
+			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
 			"simple": true,
 			"position": 5
 		},
-		"datetime.query": {
+		"datetime.queries": {
 			"id": 3,
-			"type": "query",
+			"type": "array",
+			"item-type": "query",
 			"query-results": [
 				"single"
 			],
-			"default": 0,
+			"default": [],
 			"label": "Date/time query:",
-			"description": "Query used for parsing the date and time.",
+			"description": "Queries used for parsing the date and time (first query that returns a non-empty result will be used).",
 			"simple": true,
 			"position": 4
 		},
-		"datetime.source": {
+		"datetime.sources": {
 			"id": 4,
-			"type": "enum",
-			"default": 1,
+			"type": "array",
+			"item-type": "enum",
+			"default": [],
 			"enum-values": [
 				"URL",
 				"content"
@@ -85,22 +89,24 @@
 			"simple": true,
 			"position": 8
 		},
-		"id.query": {
+		"id.queries": {
 			"id": 8,
-			"type": "query",
+			"type": "array",
+			"item-type": "query",
 			"query-results": [
 				"single"
 			],
-			"default": 0,
+			"default": [],
 			"label": "ID query:",
-			"description": "Query to parse the ID.",
+			"description": "Queries to parse the ID (first query that returns a non-empty result will be used).",
 			"simple": true,
 			"position": 2
 		},
-		"id.source": {
+		"id.sources": {
 			"id": 9,
-			"type": "enum",
-			"default": 0,
+			"type": "array",
+			"item-type": "enum",
+			"default": [],
 			"enum-values": [
 				"URL",
 				"content"

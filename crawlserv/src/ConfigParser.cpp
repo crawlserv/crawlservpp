@@ -15,11 +15,6 @@
 // constructor: set default values
 ConfigParser::ConfigParser() {
 	// parser entries
-	this->parserDateTimeFormat = "%F %T";
-	this->parserDateTimeQuery = 0;
-	this->parserDateTimeSource = ConfigParser::parserSourceContent;
-	this->parserIdQuery = 0;
-	this->parserIdSource = ConfigParser::parserSourceUrl;
 	this->parserLogging = ConfigParser::parserLoggingDefault;
 	this->parserNewestOnly = true;
 	this->parserReParse = false;
@@ -44,7 +39,7 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 		return false;
 	}
 
-	// go through all array items
+	// go through all array items i.e. configuration entries
 	for(rapidjson::Value::ConstValueIterator i = json.Begin(); i != json.End(); i++) {
 		if(i->IsObject()) {
 			std::string cat;
@@ -56,10 +51,12 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 					// check item member
 					std::string itemName = j->name.GetString();
 					if(itemName == "cat") {
+						// category of item
 						if(j->value.IsString()) cat = j->value.GetString();
 						else warningsTo.push_back("Invalid category name ignored.");
 					}
 					else if(itemName == "name") {
+						// name
 						if(j->value.IsString()) name = j->value.GetString();
 						else warningsTo.push_back("Invalid option name ignored.");
 					}
@@ -87,21 +84,51 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 				if(j->name.IsString() && std::string(j->name.GetString()) == "value") {
 					// save configuration entry
 					if(cat == "parser") {
-						if(name == "datetime.format") {
-							if(j->value.IsString()) this->parserDateTimeFormat = j->value.GetString();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
+						if(name == "datetime.formats") {
+							if(j->value.IsArray()) {
+								this->parserDateTimeFormats.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsString()) {
+										std::string dateTimeFormat = k->GetString();
+										if(dateTimeFormat.length()) this->parserDateTimeFormats.push_back(dateTimeFormat);
+										else this->parserDateTimeFormats.push_back("%F %T"); // default value when string is empty
+									}
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not string).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
-						else if(name == "datetime.locale") {
-							if(j->value.IsString()) this->parserDateTimeLocale = j->value.GetString();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
+						else if(name == "datetime.locales") {
+							if(j->value.IsArray()) {
+								this->parserDateTimeLocales.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsString()) this->parserDateTimeLocales.push_back(k->GetString());
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not string).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
-						else if(name == "datetime.query") {
-							if(j->value.IsUint64()) this->parserDateTimeQuery = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+						else if(name == "datetime.queries") {
+							if(j->value.IsArray()) {
+								this->parserDateTimeQueries.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsUint64()) this->parserDateTimeQueries.push_back(k->GetUint64());
+									else warningsTo.push_back("\'" + cat + "." + name
+											+ "\' ignored because of wrong type (not unsigned long).");
+								}
+							}
 						}
-						else if(name == "datetime.source") {
-							if(j->value.IsUint()) this->parserDateTimeSource = j->value.GetUint();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned int).");
+						else if(name == "datetime.sources") {
+							if(j->value.IsArray()) {
+								this->parserDateTimeSources.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsUint()) this->parserDateTimeSources.push_back(k->GetUint());
+									else warningsTo.push_back("\'" + cat + "." + name
+											+ "\' ignored because of wrong type (not unsigned int).");
+								}
+							}
 						}
 						else if(name == "field.names") {
 							if(j->value.IsArray()) {
@@ -136,13 +163,26 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
-						else if(name == "id.query") {
-							if(j->value.IsUint64()) this->parserIdQuery = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+						else if(name == "id.queries") {
+							if(j->value.IsArray()) {
+								this->parserIdQueries.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsUint64()) this->parserIdQueries.push_back(k->GetUint64());
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not unsigned long).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
-						else if(name == "id.source") {
-							if(j->value.IsUint()) this->parserIdSource = j->value.GetUint();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned int).");
+						else if(name == "id.sources") {
+							if(j->value.IsArray()) {
+								this->parserIdSources.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(j->value.IsUint()) this->parserIdSources.push_back(k->GetUint());
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not unsigned int).");
+								}
+							}
 						}
 						else if(name == "logging") {
 							if(j->value.IsUint()) this->parserLogging = j->value.GetUint();
@@ -188,25 +228,81 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 		else warningsTo.push_back("Configuration entry that is no object ignored.");
 	}
 
-	// check fields
+	// check properties of datetime queries (arrays defining these queries should have the same number fo elements - one for each query)
+	unsigned long completeDateTimes = std::min(this->parserDateTimeFormats.size(), std::min(this->parserDateTimeLocales.size(),
+			std::min(this->parserDateTimeQueries.size(), this->parserDateTimeSources.size())));	// number of complete datetime queries
+																								// (= minimum size of all property arrays)
+	bool incompleteDateTimes = false;
+	if(this->parserDateTimeFormats.size() > completeDateTimes) {
+		// remove formats of incomplete datetime queries
+		this->parserDateTimeFormats.resize(completeDateTimes);
+		incompleteDateTimes = true;
+	}
+	if(this->parserDateTimeLocales.size() > completeDateTimes) {
+		// remove locales of incomplete datetime queries
+		this->parserDateTimeLocales.resize(completeDateTimes);
+		incompleteDateTimes = true;
+	}
+	if(this->parserDateTimeQueries.size() > completeDateTimes) {
+		// remove queries of incomplete datetime queries
+		this->parserDateTimeQueries.resize(completeDateTimes);
+		incompleteDateTimes = true;
+	}
+	if(this->parserDateTimeSources.size() > completeDateTimes) {
+		// remove sources of incomplete datetime queries
+		this->parserDateTimeSources.resize(completeDateTimes);
+		incompleteDateTimes = true;
+	}
+	if(incompleteDateTimes) {
+		// warn about incomplete datetime queries
+		warningsTo.push_back("\'datetime.formats\', \'.locales\', \'.queries\' and \'.sources\' should have the same number of"
+				" elements).");
+		warningsTo.push_back("Incomplete datetime queries removed.");
+	}
+
+	// check properties of parsing fields (arrays defining these fields should have the same number of elements - one for each field)
 	unsigned long completeFields = std::min(this->parserFieldNames.size(), std::min(this->parserFieldQueries.size(),
-			this->parserFieldSources.size()));
+			this->parserFieldSources.size())); // number of complete fields (= minimum size of all property arrays)
 	bool incompleteFields = false;
 	if(this->parserFieldNames.size() > completeFields) {
+		// remove names of incomplete parsing fields
 		this->parserFieldNames.resize(completeFields);
 		incompleteFields = true;
 	}
 	if(this->parserFieldQueries.size() > completeFields) {
+		// remove queries of incomplete parsing fields
 		this->parserFieldQueries.resize(completeFields);
 		incompleteFields = true;
 	}
 	if(this->parserFieldSources.size() > completeFields) {
+		// remove sources of incomplete parsing fields
 		this->parserFieldSources.resize(completeFields);
 		incompleteFields = true;
 	}
 	if(incompleteFields) {
+		// warn about incomplete parsing fields
 		warningsTo.push_back("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements).");
-		warningsTo.push_back("Incomplete field(s) at the end removed.");
+		warningsTo.push_back("Incomplete field(s) removed.");
+	}
+
+	// check properties of id queries (arrays defining these queries should have the same number of elements - one for each query)
+	unsigned long completeIds = std::min(this->parserIdQueries.size(), this->parserIdSources.size());	// number of complete id queries
+																										// (= minimum size of all arrays)
+	bool incompleteIds = false;
+	if(this->parserIdQueries.size() > completeIds) {
+		// remove queries of incomplete id queries
+		this->parserIdQueries.resize(completeIds);
+		incompleteIds = true;
+	}
+	if(this->parserIdSources.size() > completeIds) {
+		// remove sources of incomplete id queries
+		this->parserIdSources.resize(completeIds);
+		incompleteIds = true;
+	}
+	if(incompleteIds) {
+		// warn about incomplete id queries
+		warningsTo.push_back("\'id.queries\' and \'.sources\' should have the same number of elements).");
+		warningsTo.push_back("Incomplete id queries removed.");
 	}
 
 	return true;

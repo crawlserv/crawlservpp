@@ -31,15 +31,15 @@ public:
 	const std::string& getErrorMessage() const;
 
 	// parser entries
-	std::string parserDateTimeFormat;
-	std::string parserDateTimeLocale;
-	unsigned long parserDateTimeQuery;
-	unsigned short parserDateTimeSource;
+	std::vector<std::string> parserDateTimeFormats;
+	std::vector<std::string> parserDateTimeLocales;
+	std::vector<unsigned long> parserDateTimeQueries;
+	std::vector<unsigned short> parserDateTimeSources;
 	std::vector<std::string> parserFieldNames;
 	std::vector<unsigned long> parserFieldQueries;
 	std::vector<unsigned short> parserFieldSources;
-	unsigned long parserIdQuery;
-	unsigned short parserIdSource;
+	std::vector<unsigned long> parserIdQueries;
+	std::vector<unsigned short> parserIdSources;
 	bool parserLogging;
 	static const unsigned short parserLoggingSilent = 0;
 	static const unsigned short parserLoggingDefault = 1;
