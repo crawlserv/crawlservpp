@@ -35,6 +35,7 @@ public:
 	std::vector<std::string> parserDateTimeLocales;
 	std::vector<unsigned long> parserDateTimeQueries;
 	std::vector<unsigned short> parserDateTimeSources;
+	std::vector<bool> parserFieldJSON;
 	std::vector<std::string> parserFieldNames;
 	std::vector<unsigned long> parserFieldQueries;
 	std::vector<unsigned short> parserFieldSources;
@@ -47,8 +48,6 @@ public:
 	static const unsigned short parserLoggingVerbose = 3;
 	bool parserNewestOnly;
 	bool parserReParse;
-	std::string parserResultMultiSeparator;
-	std::string parserResultMultiQuotes;
 	static const unsigned short parserSourceUrl = 0;
 	static const unsigned short parserSourceContent = 1;
 	std::string parserResultTable;

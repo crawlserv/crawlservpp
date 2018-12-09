@@ -130,6 +130,16 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 								}
 							}
 						}
+						else if(name == "field.json") {
+							if(j->value.IsArray()) {
+								this->parserFieldJSON.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsBool()) this->parserFieldJSON.push_back(k->GetBool());
+									else warningsTo.push_back("\'" + cat + "." + name
+											+ "\' ignored because of wrong type (not bool).");
+								}
+							}
+						}
 						else if(name == "field.names") {
 							if(j->value.IsArray()) {
 								this->parserFieldNames.clear();
@@ -204,14 +214,6 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 							if(j->value.IsUint64()) this->parserSleepMySql = j->value.GetUint64();
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
 						}
-						else if(name == "result.multi.quotes") {
-							if(j->value.IsString()) this->parserResultMultiQuotes = j->value.GetString();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
-						}
-						else if(name == "result.multi.separator") {
-							if(j->value.IsString()) this->parserResultMultiSeparator = j->value.GetString();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
-						}
 						else if(name == "result.table") {
 							if(j->value.IsString()) this->parserResultTable = j->value.GetString();
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
@@ -232,6 +234,7 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 	unsigned long completeDateTimes = std::min(this->parserDateTimeFormats.size(), std::min(this->parserDateTimeLocales.size(),
 			std::min(this->parserDateTimeQueries.size(), this->parserDateTimeSources.size())));	// number of complete datetime queries
 																								// (= minimum size of all property arrays)
+
 	bool incompleteDateTimes = false;
 	if(this->parserDateTimeFormats.size() > completeDateTimes) {
 		// remove formats of incomplete datetime queries
@@ -264,6 +267,11 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 	unsigned long completeFields = std::min(this->parserFieldNames.size(), std::min(this->parserFieldQueries.size(),
 			this->parserFieldSources.size())); // number of complete fields (= minimum size of all property arrays)
 	bool incompleteFields = false;
+
+	// EXCEPTION: the 'save field entry as JSON data' property will be ignored if array is too large or set to 'false' if entry is missing
+	if(this->parserFieldJSON.size() > completeFields) this->parserFieldJSON.resize(completeFields);
+	else while(this->parserFieldJSON.size() < completeFields) this->parserFieldJSON.push_back(false);
+
 	if(this->parserFieldNames.size() > completeFields) {
 		// remove names of incomplete parsing fields
 		this->parserFieldNames.resize(completeFields);
