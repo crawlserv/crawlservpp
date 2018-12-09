@@ -112,12 +112,17 @@ Server::~Server() {
 	// wait for module threads and delete them
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) {
 		if(*i) {
+			// get thread id (for logging)
+			unsigned long id = (*i)->getId();
+
+			// wait for thread and delete it
 			(*i)->Thread::finishInterrupt();
 			delete *i;
 			*i = NULL;
 
+			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << (*i)->getId() << " interrupted.";
+			logStrStr << "#" << id << " interrupted.";
 			this->database.log("crawler", logStrStr.str());
 		}
 	}
