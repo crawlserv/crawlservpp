@@ -21,10 +21,10 @@ The source code of the server consists of the following classes (as of November 
 
 * <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
-* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration.
+* <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration. See [crawlserv_frontend/crawlserv/json/crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
 * <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
 * <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
-* <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration.
+* <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration. See [crawlserv_frontend/crawlserv/json/parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
 * <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with server-specific and basic functionality only).
 * ~~<b>`DatabaseAnalyzer`</b>~~: Database access for analyzers (implements the `DatabaseModule` interface).
 * <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements the `DatabaseModule` interface).
@@ -61,7 +61,7 @@ The following custom structures are used (to be found in [`crawlserv/src/structs
 * <b>[`PreparedSqlStatement`](crawlserv/src/structs/PreparedSqlStatement.h)</b>: Content of and pointer to a prepared SQL statement.
 * <b>[`ServerCommandArgument`](crawlserv/src/structs/ServerCommandArgument.h)</b>: The `[name,value]` pair of a server command argument.
 * <b>[`ServerSettings`](crawlserv/src/structs/ServerSettings.h)</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
-* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.h)</b>: Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
+* <b>[`ThreadDatabaseEntry`](crawlserv/src/structs/ThreadDatabaseEntry.h)</b>: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * <b>[`ThreadOptions`](crawlserv/src/structs/ThreadOptions.h)</b>: Basic thread options (IDs of website, URL list and configuration).
 
 The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
@@ -92,18 +92,18 @@ The server performs commands and sends back their results. Some commands need to
 * <b>`duplicatewebsite`</b> (argument: `id`): Duplicate the specified website.
 * <b>`kill`</b>: kill the server.
 * <b>`log`</b> (argument: `entry`): Write a log entry by the frontend into the database.
-* ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): Pause a running analyzer by its id.
-* <b>`pausecrawler`</b> (argument: `id`): Pause a running crawler by its id.
-* ~~<b>`pauseextractor`</b>~~ (argument: `id`): Pause a running extractor by its id.
-* ~~<b>`pauseparser`</b>~~ (argument: `id`): Pause a running parser by its id.
+* ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): Pause a running analyzer by its ID.
+* <b>`pausecrawler`</b> (argument: `id`): Pause a running crawler by its ID.
+* ~~<b>`pauseextractor`</b>~~ (argument: `id`): Pause a running extractor by its ID.
+* ~~<b>`pauseparser`</b>~~ (argument: `id`): Pause a running parser by its ID.
 * ~~<b>`startanalyzer`</b>~~ (arguments: `website`, `urllist`, `config`): Start an analyzer using the specified website, URL list and configuration.
 * <b>`startcrawler`</b> (arguments: `website`, `urllist`, `config`): Start a crawler using the specified website, URL list and configuration.
 * ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): Start an extractor using the specified website, URL list and configuration.
 * ~~<b>`startparser`</b>~~ (arguments: `website`, `urllist`, `config`): Start a parser using the specified website, URL list and configuration.
-* ~~<b>`stopanalyzer`</b>~~ (argument: `id`): Stop a running analyzer by its id.
-* <b>`stopcrawler`</b> (argument: `id`): Stop a running crawler by its id.
-* ~~<b>`stopextractor`</b>~~ (argument: `id`): Stop a running extractor by its id.
-* ~~<b>`stopparser`</b>~~ (argument: `id`): Stop a running parser by its id.
+* ~~<b>`stopanalyzer`</b>~~ (argument: `id`): Stop a running analyzer by its ID.
+* <b>`stopcrawler`</b> (argument: `id`): Stop a running crawler by its ID.
+* ~~<b>`stopextractor`</b>~~ (argument: `id`): Stop a running extractor by its ID.
+* ~~<b>`stopparser`</b>~~ (argument: `id`): Stop a running parser by its ID.
 
 The commands and their replies are using the JSON format (implemented by using the [RapidJSON library](https://github.com/Tencent/rapidjson)). See the following examples:
 
@@ -149,12 +149,12 @@ For more information on the server commands, see the [source code](crawlserv/src
 
 As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the `Thread` template class:
 
-* <b>crawler</b>: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://timetravel.mementoweb.org/guide/api/)).
+* <b>crawler</b>: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://www.mementoweb.org/guide/quick-intro/)).
 * ~~<b>parser</b>~~: Parsing data from URLs and downloaded content using user-defined RegEx and XPath queries.
 * ~~<b>extractor</b>~~: Downloading additional data such as comments and social media content.
 * ~~<b>analyzer</b>~~: Analyzing textual data using different methods and algorithms.
 
-The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (instances of `DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the next section on classes and namespaces as well as the corresponsing source code for details.
+The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Database` class. Additionally, thread connections to the database (instances of `DatabaseThread` as child class of `Database`) are wrapped through the `DatabaseModule` class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
 
 ### Third-party Libraries
 
