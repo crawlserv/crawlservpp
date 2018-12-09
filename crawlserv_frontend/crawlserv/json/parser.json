@@ -9,7 +9,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"label": "Date/time format:",
+			"label": "Date/time formats:",
 			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
 			"position": 6
@@ -19,7 +19,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"label": "Date/time locale:",
+			"label": "Date/time locales:",
 			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
 			"simple": true,
 			"position": 5
@@ -32,7 +32,7 @@
 				"single"
 			],
 			"default": [],
-			"label": "Date/time query:",
+			"label": "Date/time queries:",
 			"description": "Queries used for parsing the date and time (first query that returns a non-empty result will be used).",
 			"simple": true,
 			"position": 4
@@ -46,7 +46,7 @@
 				"URL",
 				"content"
 			],
-			"label": "Date/time source:",
+			"label": "Date/time sources:",
 			"description": "Where from to parse the date and the time.",
 			"simple": true,
 			"position": 3
@@ -97,7 +97,7 @@
 				"single"
 			],
 			"default": [],
-			"label": "ID query:",
+			"label": "ID queries:",
 			"description": "Queries to parse the ID (first query that returns a non-empty result will be used).",
 			"simple": true,
 			"position": 2
@@ -111,7 +111,7 @@
 				"URL",
 				"content"
 			],
-			"label": "ID source:",
+			"label": "ID sources:",
 			"description": "Where from to parse the ID.",
 			"simple": true,
 			"position": 1
