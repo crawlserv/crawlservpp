@@ -719,8 +719,7 @@ bool ConfigCrawler::loadConfig(const std::string& configJson, std::vector<std::s
 
 	// check properties of archives (arrays defining the archives should have the same number of elements - one for each archive)
 	unsigned long completeArchives = std::min(this->crawlerArchivesNames.size(), std::min(this->crawlerArchivesUrlsMemento.size(),
-			this->crawlerArchivesUrlsTimemap.size()));	// number of complete archives
-														// = minimum array size of all propertiy arrays)
+			this->crawlerArchivesUrlsTimemap.size()));	// number of complete archives (= minimum size of all propertiy arrays)
 	bool incompleteArchives = false;
 	if(this->crawlerArchivesNames.size() > completeArchives) {
 		// remove names of incomplete archives
@@ -746,7 +745,7 @@ bool ConfigCrawler::loadConfig(const std::string& configJson, std::vector<std::s
 	// check properties of counters (arrays defining the counters should have the same number of elements - one for each counter)
 	unsigned long completeCounters = std::min(this->customCounters.size(), std::min(this->customCountersStart.size(),
 			std::min(this->customCountersEnd.size(), this->customCountersStep.size())));	// number of complete counters
-																							// = minimum array size of all property arrays
+																							// (= minimum size of all property arrays)
 	bool incompleteCounters = false;
 	if(this->customCounters.size() > completeCounters) {
 		// remove counter variables of incomplete counters
