@@ -32,6 +32,9 @@ public:
 
 	// crawler entries
 	bool crawlerArchives;
+	std::vector<std::string> crawlerArchivesNames;
+	std::vector<std::string> crawlerArchivesUrlsMemento;
+	std::vector<std::string> crawlerArchivesUrlsTimemap;
 	unsigned int crawlerLock;
 	unsigned short crawlerLogging;
 	static const unsigned short crawlerLoggingSilent = 0;
