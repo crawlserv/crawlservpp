@@ -103,57 +103,59 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 
 // destructor
 Server::~Server() {
-	// interrupt and delete threads
+	// interrupt module threads
+	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
+	//for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
+	//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
+	//for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
+
+	// wait for module threads and delete them
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) {
 		if(*i) {
+			(*i)->Thread::finishInterrupt();
+			delete *i;
+			*i = NULL;
+
 			std::ostringstream logStrStr;
 			logStrStr << "#" << (*i)->getId() << " interrupted.";
 			this->database.log("crawler", logStrStr.str());
-
-			(*i)->Thread::interrupt();
-			delete *i;
-			*i = NULL;
 		}
 	}
-	/*
-	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
+	/*for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
 		if(*i) {
 			std::ostringstream logStrStr;
 			logStrStr << "#" << (*i)->getId() << " interrupted.";
 			this->database.log("parser", logStrStr.str());
 
-			(*i)->Thread::interrupt();
+			(*i)->Thread::finishInterrupt();
 			delete *i;
 			*i = NULL;
 		}
-	}
-
-	for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
+	}*/
+	/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
 		if(*i) {
 			std::ostringstream logStrStr;
 			logStrStr << "#" << (*i)->getId() << " interrupted.";
 			this->database.log("extractor", logStrStr.str());
 
-			(*i)->Thread::interrupt();
+			(*i)->Thread::finishInterrupt();
 			delete *i;
 			*i = NULL;
 		}
-	}
-
-	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
+	}*/
+	/*for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
 		if(*i) {
 			std::ostringstream logStrStr;
 			logStrStr << "#" << (*i)->getId() << " interrupted.";
 			this->database.log("analyzer", logStrStr.str());
 
-			(*i)->Thread::interrupt();
+			(*i)->Thread::finishInterrupt();
 			delete *i;
 			*i = NULL;
 		}
-	}
-	*/
+	}*/
 
-	// wait for worker threads
+	// wait for worker threads and delete them
 	for(auto i = this->workers.begin(); i != this->workers.end(); ++i) {
 		if(*i) {
 			if((*i)->joinable()) (*i)->join();
