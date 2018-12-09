@@ -42,7 +42,8 @@ public:
 	void pause();
 	void unpause();
 	void stop();
-	void interrupt();
+	void sendInterrupt();
+	void finishInterrupt();
 
 	unsigned long getId() const;
 	unsigned long getWebsite() const;

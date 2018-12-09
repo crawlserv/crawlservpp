@@ -1218,6 +1218,9 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 											break;
 										}
 									}
+
+									// check whether thread has been cancelled
+									if(!(this->isRunning())) break;
 								}
 
 								// reset status message

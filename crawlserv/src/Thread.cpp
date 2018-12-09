@@ -134,8 +134,10 @@ void Thread::stop() {
 }
 
 // interrupt the thread for shutdown (may not be used by the thread itself!)
-void Thread::interrupt() {
-	// check whether thread has to be interrupted
+// NOTE:	Thread::finishInterrupt() has to be called afterwards to wait for the thread!
+//			This enables the interruption of all threads simultaneously before waiting for their conclusion
+void Thread::sendInterrupt() {
+	// check whether thread exists and is running
 	if(this->threadPointer && this->running) {
 		// interrupt thread
 		this->interrupted = true;
@@ -150,8 +152,19 @@ void Thread::interrupt() {
 			// update condition variable
 			this->pauseCondition.notify_one();
 		}
+	}
+}
 
+// wait for the thread until interrupt is completed (may not be used by the thread itself!)
+// NOTE:	Thread::sendInterrupt() has to be called beforehand to interrupt the thread!
+//			This enables the interruption of all threads simultaneously before waiting for their conclusion
+void Thread::finishInterrupt() {
+	// check whether thread exists and has been interrupted
+	if(this->threadPointer && this->interrupted) {
+		// wait for thread
 		this->threadPointer->join();
+
+		// delete thread
 		delete this->threadPointer;
 		this->threadPointer = NULL;
 	}
