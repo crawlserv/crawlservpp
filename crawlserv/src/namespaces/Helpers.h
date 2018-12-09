@@ -51,7 +51,7 @@ namespace Helpers {
 	std::string parseMementos(std::string mementoContent, std::vector<std::string>& warningsTo,
 			std::vector<Memento>& mementosTo);
 
-	// time conversion
+	// fate/time conversions
 	bool convertLongDateToSQLTimeStamp(std::string& timeStamp);
 	bool convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	bool convertSQLTimeStampToTimeStamp(std::string& timeStamp);
