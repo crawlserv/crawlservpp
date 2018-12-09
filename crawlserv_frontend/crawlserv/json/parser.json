@@ -41,11 +41,11 @@
 			"id": 4,
 			"type": "array",
 			"item-type": "enum",
-			"default": [],
 			"enum-values": [
 				"URL",
 				"content"
 			],
+			"default": [],
 			"label": "Date/time sources:",
 			"description": "Where from to parse the date and the time.",
 			"simple": true,
@@ -54,8 +54,8 @@
 		"field.names": {
 			"id": 5,
 			"type": "array",
-			"default": [],
 			"item-type": "string",
+			"default": [],
 			"label": "Field names:",
 			"description": "The names of the custom fields to parse.",
 			"simple": true,
@@ -64,12 +64,12 @@
 		"field.queries": {
 			"id": 6,
 			"type": "array",
-			"default": [],
 			"item-type": "query",
 			"query-results": [
 				"single",
 				"multi"
 			],
+			"default": [],
 			"label": "Field queries:",
 			"description": "The queries used to parse the custom fields.",
 			"simple": true,
@@ -78,19 +78,29 @@
 		"field.sources": {
 			"id": 7,
 			"type": "array",
-			"default": [],
 			"item-type": "enum",
 			"enum-values": [
 				"URL",
 				"content"
 			],
+			"default": [],
 			"label": "Field sources:",
 			"description": "Where from to parse the custom fields.",
 			"simple": true,
 			"position": 8
 		},
-		"id.queries": {
+		"field.json": {
 			"id": 8,
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Field results as JSON:",
+			"description": "Save field data as JSON array, allowing multiple results.",
+			"simple": true,
+			"position": 10
+		},
+		"id.queries": {
+			"id": 9,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -103,7 +113,7 @@
 			"position": 2
 		},
 		"id.sources": {
-			"id": 9,
+			"id": 10,
 			"type": "array",
 			"item-type": "enum",
 			"default": [],
@@ -117,7 +127,7 @@
 			"position": 1
 		},
 		"logging": {
-			"id": 10,
+			"id": 11,
 			"type": "enum",
 			"default": 1,
 			"enum-values": [
@@ -129,49 +139,35 @@
 			"label": "Logging mode:",
 			"description": "Level of logging activity.",
 			"simple": true,
-			"position": 12
+			"position": 13
 		},
 		"newest.only": {
-			"id": 11,
+			"id": 12,
 			"type": "bool",
 			"default": true,
 			"description": "Parse only the newest content for each URL.",
 			"simple": false
 		},
 		"reparse": {
-			"id":  12,
+			"id": 13,
 			"type": "bool",
 			"default": false,
 			"label": "Re-parse content",
 			"description": "Re-parse already parsed URLs.",
 			"simple": true,
-			"position": 10
-		},
-		"result.multi.separator": {
-			"id": 13,
-			"type": "string",
-			"default": ",",
-			"description": "Separator used when parsing a field that gives multiple results.",
-			"simple": false
-		},
-		"result.multi-quotes": {
-			"id": 14,
-			"type": "string",
-			"default": "",
-			"description": "Quotes used when parsing a field that can give multiple results.",
-			"simple": false
+			"position": 11
 		},
 		"result.table": {
-			"id": 15,
+			"id": 14,
 			"type": "string",
 			"default": "",
 			"label": "Result table:",
 			"description": "Table name to save parsed fields to.",
 			"simple": true,
-			"position": 11
+			"position": 12
 		},
 		"sleep.idle": {
-			"id": 16,
+			"id": 15,
 			"type": "number",
 			"default": 500,
 			"min": 100,
@@ -180,7 +176,7 @@
 			"simple": false
 		},
 		"sleep.mysql": {
-			"id": 17,
+			"id": 16,
 			"type": "number",
 			"default": 10,
 			"min": 1,
