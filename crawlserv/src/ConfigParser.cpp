@@ -18,7 +18,6 @@ ConfigParser::ConfigParser() {
 	this->parserLogging = ConfigParser::parserLoggingDefault;
 	this->parserNewestOnly = true;
 	this->parserReParse = false;
-	this->parserResultMultiSeparator = ",";
 	this->parserSleepIdle = 500;
 	this->parserSleepMySql = 20;
 }
@@ -88,11 +87,7 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 							if(j->value.IsArray()) {
 								this->parserDateTimeFormats.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) {
-										std::string dateTimeFormat = k->GetString();
-										if(dateTimeFormat.length()) this->parserDateTimeFormats.push_back(dateTimeFormat);
-										else this->parserDateTimeFormats.push_back("%F %T"); // default value when string is empty
-									}
+									if(k->IsString()) this->parserDateTimeFormats.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -231,11 +226,17 @@ bool ConfigParser::loadConfig(const std::string& configJson, std::vector<std::st
 	}
 
 	// check properties of datetime queries (arrays defining these queries should have the same number fo elements - one for each query)
-	unsigned long completeDateTimes = std::min(this->parserDateTimeFormats.size(), std::min(this->parserDateTimeLocales.size(),
-			std::min(this->parserDateTimeQueries.size(), this->parserDateTimeSources.size())));	// number of complete datetime queries
-																								// (= minimum size of all property arrays)
-
+	unsigned long completeDateTimes = std::min(this->parserDateTimeLocales.size(), std::min(this->parserDateTimeQueries.size(),
+			this->parserDateTimeSources.size()));	// number of complete datetime queries (= minimum size of all property arrays)
 	bool incompleteDateTimes = false;
+
+	// EXCEPTION: the 'date/time format' property will be ignored if array is too large or set to "%F %T" if entry is missing
+	if(this->parserDateTimeFormats.size() > completeDateTimes) this->parserDateTimeFormats.resize(completeDateTimes);
+	else while(this->parserDateTimeFormats.size() < completeDateTimes) this->parserDateTimeFormats.push_back("%F %T");
+
+	// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
+	for(auto i = this->parserDateTimeFormats.begin(); i != this->parserDateTimeFormats.end(); ++i) if(!(i->size())) *i = "%F %T";
+
 	if(this->parserDateTimeFormats.size() > completeDateTimes) {
 		// remove formats of incomplete datetime queries
 		this->parserDateTimeFormats.resize(completeDateTimes);
