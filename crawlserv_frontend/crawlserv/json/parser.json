@@ -9,7 +9,11 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
+<<<<<<< HEAD
 			"label": "Date/time formats:",
+=======
+			"label": "Date/time format:",
+>>>>>>> 7a0cd98e394e27185bf8e2efc4db18325e225d12
 			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
 			"position": 6
@@ -19,7 +23,11 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
+<<<<<<< HEAD
 			"label": "Date/time locales:",
+=======
+			"label": "Date/time locale:",
+>>>>>>> 7a0cd98e394e27185bf8e2efc4db18325e225d12
 			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
 			"simple": true,
 			"position": 5
@@ -32,7 +40,11 @@
 				"single"
 			],
 			"default": [],
+<<<<<<< HEAD
 			"label": "Date/time queries:",
+=======
+			"label": "Date/time query:",
+>>>>>>> 7a0cd98e394e27185bf8e2efc4db18325e225d12
 			"description": "Queries used for parsing the date and time (first query that returns a non-empty result will be used).",
 			"simple": true,
 			"position": 4
@@ -46,7 +58,11 @@
 				"URL",
 				"content"
 			],
+<<<<<<< HEAD
 			"label": "Date/time sources:",
+=======
+			"label": "Date/time source:",
+>>>>>>> 7a0cd98e394e27185bf8e2efc4db18325e225d12
 			"description": "Where from to parse the date and the time.",
 			"simple": true,
 			"position": 3
@@ -97,7 +113,11 @@
 				"single"
 			],
 			"default": [],
+<<<<<<< HEAD
 			"label": "ID queries:",
+=======
+			"label": "ID query:",
+>>>>>>> 7a0cd98e394e27185bf8e2efc4db18325e225d12
 			"description": "Queries to parse the ID (first query that returns a non-empty result will be used).",
 			"simple": true,
 			"position": 2
@@ -111,7 +131,11 @@
 				"URL",
 				"content"
 			],
+<<<<<<< HEAD
 			"label": "ID sources:",
+=======
+			"label": "ID source:",
+>>>>>>> 7a0cd98e394e27185bf8e2efc4db18325e225d12
 			"description": "Where from to parse the ID.",
 			"simple": true,
 			"position": 1
