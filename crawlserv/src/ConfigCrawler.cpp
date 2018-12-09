@@ -16,6 +16,9 @@
 ConfigCrawler::ConfigCrawler() {
 	// crawler entries
 	this->crawlerArchives = false;
+	this->crawlerArchivesNames.push_back("archives.org");
+	this->crawlerArchivesUrlsMemento.push_back("http://web.archive.org/web/");
+	this->crawlerArchivesUrlsTimemap.push_back("http://web.archive.org/web/timemap/link/");
 	this->crawlerLock = 300;
 	this->crawlerLogging = ConfigCrawler::crawlerLoggingDefault;
 	this->crawlerReCrawl = false;
@@ -94,7 +97,7 @@ bool ConfigCrawler::loadConfig(const std::string& configJson, std::vector<std::s
 		return false;
 	}
 
-	// go through all array items
+	// go through all array items i.e. configuration entries
 	for(rapidjson::Value::ConstValueIterator i = json.Begin(); i != json.End(); i++) {
 		if(i->IsObject()) {
 			std::string cat;
@@ -140,6 +143,39 @@ bool ConfigCrawler::loadConfig(const std::string& configJson, std::vector<std::s
 						if(name == "archives") {
 							if(j->value.IsBool()) this->crawlerArchives = j->value.GetBool();
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+						}
+						else if(name == "archives.names") {
+							if(j->value.IsArray()) {
+								this->crawlerArchivesNames.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsString()) this->crawlerArchivesNames.push_back(k->GetString());
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not string).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+						}
+						else if(name == "archives.urls.memento") {
+							if(j->value.IsArray()) {
+								this->crawlerArchivesUrlsMemento.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsString()) this->crawlerArchivesUrlsMemento.push_back(k->GetString());
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not string).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+						}
+						else if(name == "archives.urls.timemap") {
+							if(j->value.IsArray()) {
+								this->crawlerArchivesUrlsTimemap.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsString()) this->crawlerArchivesUrlsTimemap.push_back(k->GetString());
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not string).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "lock") {
 							if(j->value.IsUint64()) this->crawlerLock = j->value.GetUint64();
@@ -681,31 +717,64 @@ bool ConfigCrawler::loadConfig(const std::string& configJson, std::vector<std::s
 		else warningsTo.push_back("Configuration entry that is no object ignored.");
 	}
 
-	// check counters
+	// check properties of archives (arrays defining the archives should have the same number of elements - one for each archive)
+	unsigned long completeArchives = std::min(this->crawlerArchivesNames.size(), std::min(this->crawlerArchivesUrlsMemento.size(),
+			this->crawlerArchivesUrlsTimemap.size()));	// number of complete archives
+														// = minimum array size of all propertiy arrays)
+	bool incompleteArchives = false;
+	if(this->crawlerArchivesNames.size() > completeArchives) {
+		// remove names of incomplete archives
+		this->crawlerArchivesNames.resize(completeArchives);
+		incompleteArchives = true;
+	}
+	if(this->crawlerArchivesUrlsMemento.size() > completeArchives) {
+		// remove memento URL templates of incomplete archives
+		this->crawlerArchivesUrlsMemento.resize(completeArchives);
+		incompleteArchives = true;
+	}
+	if(this->crawlerArchivesUrlsTimemap.size() > completeArchives) {
+		// remove timemap URL templates of incomplete archives
+		this->crawlerArchivesUrlsTimemap.resize(completeArchives);
+		incompleteArchives = true;
+	}
+	if(incompleteArchives) {
+		// warn about incomplete counters
+		warningsTo.push_back("\'archives.names\', \'.urls.memento\' and \'.urls.timemap\' should have the same number of elements).");
+		warningsTo.push_back("Incomplete archive(s) removed.");
+	}
+
+	// check properties of counters (arrays defining the counters should have the same number of elements - one for each counter)
 	unsigned long completeCounters = std::min(this->customCounters.size(), std::min(this->customCountersStart.size(),
-			std::min(this->customCountersEnd.size(), this->customCountersStep.size())));
+			std::min(this->customCountersEnd.size(), this->customCountersStep.size())));	// number of complete counters
+																							// = minimum array size of all property arrays
 	bool incompleteCounters = false;
 	if(this->customCounters.size() > completeCounters) {
+		// remove counter variables of incomplete counters
 		this->customCounters.resize(completeCounters);
 		incompleteCounters = true;
 	}
 	if(this->customCountersStart.size() > completeCounters) {
+		// remove starting values of incomplete counters
 		this->customCountersStart.resize(completeCounters);
 		incompleteCounters = true;
 	}
 	if(this->customCountersEnd.size() > completeCounters) {
+		// remove ending values of incomplete counters
 		this->customCountersEnd.resize(completeCounters);
 		incompleteCounters = true;
 	}
 	if(this->customCountersStep.size() > completeCounters) {
+		// remove step values of incomplete counters
 		this->customCountersStep.resize(completeCounters);
 		incompleteCounters = true;
 	}
 	if(incompleteCounters) {
+		// warn about incomplete counters
 		warningsTo.push_back("\'custom.counters\', \'.start\', \'.end\' and \'.step\' should have the same number of elements).");
-		warningsTo.push_back("Incomplete counter(s) at the end removed.");
+		warningsTo.push_back("Incomplete counter(s) removed.");
 	}
 
+	// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
 	for(unsigned long n = 1; n <= this->customCounters.size(); n++) {
 		unsigned long i = n - 1;
 		if((this->customCountersStep.at(i) <= 0 && this->customCountersStart.at(i) < this->customCountersEnd.at(i))

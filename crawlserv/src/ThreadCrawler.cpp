@@ -1089,16 +1089,16 @@ void ThreadCrawler::crawlingParseAndAddUrls(const IdString& url, std::vector<std
 // crawl archives
 bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo) {
 	if(this->config.crawlerArchives && this->networkingArchives) {
-		// TODO: migrate Memento API settings to crawling configuration
-		std::string archiveNames[] = { "archive.org", "archive.is" };
-		std::string archiveUrls[] = { "http://web.archive.org/web/timemap/link/", /*"http://archive.is/timemap/"*/ };
-		std::string mementoUrls[] = { "http://web.archive.org/web/", "http://archive.is/" };
 		bool success = true;
 		bool skip = false;
 
-		for(unsigned short currentArchive = 0; currentArchive < sizeof(archiveUrls) / sizeof(std::string); currentArchive++) {
-			if(!(archiveUrls[currentArchive].length())) continue;
-			std::string archivedUrl = archiveUrls[currentArchive] + this->domain + url.string;
+		for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); n++) {
+			// skip empty URLs
+			if(!(this->config.crawlerArchivesUrlsMemento.at(n).length())
+					|| !(this->config.crawlerArchivesUrlsTimemap.at(n).length()))
+				continue;
+
+			std::string archivedUrl = this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + url.string;
 			std::string archivedContent;
 
 			while(success && this->isRunning()) {
@@ -1137,8 +1137,8 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 									counter++;
 									std::ostringstream statusStrStr;
 									statusStrStr.imbue(std::locale(""));
-									statusStrStr << "[" + archiveNames[currentArchive] + ": " << counter << "/" << mementos.size() << "] "
-											<< statusMessage;
+									statusStrStr << "[" + this->config.crawlerArchivesNames.at(n) + ": " << counter << "/"
+											<< mementos.size() << "] " << statusMessage;
 									this->setStatusMessage(statusStrStr.str());
 
 									// re-new URL lock to avoid duplicate archived content
@@ -1159,7 +1159,8 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 														this->config.crawlerRetryHttp)) {
 
 													// check response code
-													if(!(this->crawlingCheckResponseCode(i->url, this->networkingArchives->getResponseCode()))) break;
+													if(!(this->crawlingCheckResponseCode(i->url,
+															this->networkingArchives->getResponseCode()))) break;
 
 													// check whether thread is still running
 													if(!(this->isRunning())) break;
@@ -1173,12 +1174,14 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 															if(subUrlPos != std::string::npos) {
 																subUrlPos += timeStamp.length();
 																timeStamp = archivedContent.substr(17, 14);
-																i->url = mementoUrls[currentArchive] + timeStamp + i->url.substr(subUrlPos);
+																i->url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
+																		+ i->url.substr(subUrlPos);
 																if(Helpers::convertTimeStampToSQLTimeStamp(timeStamp))
 																	continue;
 																else if(this->config.crawlerLogging)
 																	this->log("WARNING: Invalid timestamp \'" + timeStamp + "\' from "
-																			+ archiveNames[currentArchive] + " [" + url.string + "].");
+																			+ this->config.crawlerArchivesNames.at(n) + " ["
+																			+ url.string + "].");
 															}
 															else if(this->config.crawlerLogging)
 																this->log("WARNING: Could not find timestamp in " + i->url
@@ -1233,7 +1236,7 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 				else {
 					if(this->config.crawlerLogging) {
 						this->log(this->networkingArchives->getErrorMessage() + " [" + archivedUrl + "].");
-						this->log("resets connection to " + archiveNames[currentArchive] + "...");
+						this->log("resets connection to " + this->config.crawlerArchivesNames.at(n) + "...");
 					}
 					this->setStatusMessage("ERROR " + this->networkingArchives->getErrorMessage() + " [" + url.string + "]");
 					this->networkingArchives->resetConnection(this->config.crawlerSleepError);

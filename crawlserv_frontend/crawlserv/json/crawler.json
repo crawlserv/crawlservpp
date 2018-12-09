@@ -13,8 +13,32 @@
 			"simple": true,
 			"position": 5
 		},
-		"lock": {
+		"archives.names": {
 			"id": 2,
+			"type": "array",
+			"item-type": "string",
+			"default": [ "archive.org" ],
+			"description": "Names of archives to crawl.",
+			"simple": false
+		},
+		"archives.urls.memento": {
+			"id": 3,
+			"type": "array",
+			"item-type": "string",
+			"default": [ "http://web.archive.org/web/" ],
+			"description": "Memento URI templates for archives to crawl. To be followed by YYYYMMDDHHMMSS/URI (date and URI) of memento to crawl.",
+			"simple": false
+		},
+		"archives.urls.timemap": {
+			"id": 4,
+			"type": "array",
+			"item-type": "string",
+			"default": [ "http://web.archive.org/web/timemap/link/" ],
+			"description": "Timemap URI templates for archives to crawl. To be followed by URI of page to crawl.",
+			"simple": false
+		},
+		"lock": {
+			"id": 5,
 			"type": "number",
 			"default": 300,
 			"min": 1,
@@ -23,7 +47,7 @@
 			"simple": false
 		},
 		"logging": {
-			"id": 3,
+			"id": 6,
 			"type": "enum",
 			"default": 1,
 			"enum-values": [
@@ -38,7 +62,7 @@
 			"position": 11
 		},
 		"params.blacklist": {
-			"id": 4,
+			"id": 7,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -46,7 +70,7 @@
 			"simple": false
 		},
 		"params.whitelist": {
-			"id": 5,
+			"id": 8,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -56,7 +80,7 @@
 			"position": 10
 		},
 		"queries.blacklist.content": {
-			"id": 6,
+			"id": 9,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -67,7 +91,7 @@
 			"simple": false
 		},
 		"queries.blacklist.types": {
-			"id": 7,
+			"id": 10,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -81,7 +105,7 @@
 			"simple": false
 		},
 		"queries.blacklist.urls": {
-			"id": 8,
+			"id": 11,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -97,7 +121,7 @@
 			"position": 8
 		},
 		"queries.links": {
-			"id": 9,
+			"id": 12,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -111,7 +135,7 @@
 			"position": 3
 		},
 		"queries.whitelist.content": {
-			"id": 10,
+			"id": 13,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -122,7 +146,7 @@
 			"simple": false
 		},
 		"queries.whitelist.types": {
-			"id": 11,
+			"id": 14,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -137,7 +161,7 @@
 			"simple": false
 		},
 		"queries.whitelist.urls": {
-			"id": 12,
+			"id": 15,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -151,7 +175,7 @@
 			"simple": false
 		},
 		"recrawl": {
-			"id": 13,
+			"id": 16,
 			"type": "bool",
 			"default": false,
 			"label": "Re-crawl URLs",
@@ -160,7 +184,7 @@
 			"position": 4
 		},
 		"recrawl.always": {
-			"id": 14,
+			"id": 17,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -170,7 +194,7 @@
 			"position": 7
 		},
 		"recrawl.start": {
-			"id": 15,
+			"id": 18,
 			"type": "bool",
 			"default": true,
 			"label": "Re-crawl start page",
@@ -179,7 +203,7 @@
 			"position": 2
 		},
 		"retries": {
-			"id": 16,
+			"id": 19,
 			"type": "number",
 			"default": -1,
 			"min": -1,
@@ -189,7 +213,7 @@
 			"position": 9
 		},
 		"retry.archive": {
-			"id": 17,
+			"id": 20,
 			"type": "bool",
 			"default": true,
 			"label": "Re-try archives",
@@ -198,7 +222,7 @@
 			"position": 5
 		},
 		"retry.http": {
-			"id": 18,
+			"id": 21,
 			"type": "array",
 			"item-type": "number",
 			"default": [ 503 ],
@@ -208,7 +232,7 @@
 			"simple": false
 		},
 		"sleep.error": {
-			"id": 19,
+			"id": 22,
 			"type": "number",
 			"default": 5000,
 			"min": 0,
@@ -216,7 +240,7 @@
 			"simple": false
 		},
 		"sleep.http": {
-			"id": 20,
+			"id": 23,
 			"type": "number",
 			"default": 0,
 			"min": 0,
@@ -225,7 +249,7 @@
 			"simple": false
 		},
 		"sleep.idle": {
-			"id": 21,
+			"id": 24,
 			"type": "number",
 			"default": 500,
 			"min": 100,
@@ -234,7 +258,7 @@
 			"simple": false
 		},
 		"sleep.mysql": {
-			"id": 22,
+			"id": 25,
 			"type": "number",
 			"default": 10,
 			"min": 1,
@@ -242,7 +266,7 @@
 			"simple": false
 		},
 		"start": {
-			"id": 23,
+			"id": 26,
 			"type": "string",
 			"default": "/",
 			"label": "Start page:",
@@ -251,21 +275,21 @@
 			"position": 1
 		},
 		"timing": {
-			"id": 24,
+			"id": 27,
 			"type": "bool",
 			"default": false,
 			"description": "Calculate timing statistics.",
 			"simple": false
 		},
 		"warnings.file": {
-			"id": 25,
+			"id": 28,
 			"type": "bool",
 			"default": false,
 			"description": "Warn when files are found (instead of folders).",
 			"simple": false
 		},
 		"xml": {
-			"id": 26,
+			"id": 29,
 			"type": "bool",
 			"default": false,
 			"description": "Save crawled content as cleaned XML.",
