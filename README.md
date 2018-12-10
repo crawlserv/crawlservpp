@@ -54,7 +54,6 @@ The following additional namespaces are used (to be found in [`crawlserv/src/nam
 * <b>[`Portability`](crawlserv/src/namespaces/Portability.cpp)</b>: Global helper functions for portability.
 * <b>[`Strings`](crawlserv/src/namespaces/Strings.cpp)</b>: Global helper functions for string processing and manipulation.
 * <b>[`Utf8`](crawlserv/src/namespaces/Utf8.cpp)</b>: Global helper functions for UTF-8 conversion using the [UTF8-CPP library](http://utfcpp.sourceforge.net/).
-
 * <b>[`Versions`](crawlserv/src/namespaces/Versions.cpp)</b>: Get the versions of the different libraries used by the server.
 
 The following custom structures are used (to be found in [`crawlserv/src/structs`](crawlserv/src/structs)):
