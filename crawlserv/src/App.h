@@ -13,6 +13,10 @@
 
 #include "ConfigFile.h"
 #include "Server.h"
+
+#include "namespaces/DateTime.h"
+#include "namespaces/Helpers.h"
+#include "namespaces/Versions.h"
 #include "structs/DatabaseSettings.h"
 #include "structs/ServerSettings.h"
 
@@ -24,8 +28,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include "namespaces/Helpers.h"
-#include "namespaces/Versions.h"
 
 class App {
 public:

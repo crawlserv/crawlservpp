@@ -17,8 +17,10 @@
 #include "RegEx.h"
 #include "Thread.h"
 #include "ThreadCrawler.h"
+#include "TimerSimpleHR.h"
 #include "XPath.h"
 
+#include "namespaces/DateTime.h"
 #include "structs/ConfigEntry.h"
 #include "structs/ServerCommandArgument.h"
 #include "structs/ServerSettings.h"
@@ -42,9 +44,6 @@
 #include <stdexcept>
 #include <thread>
 #include <vector>
-
-#include "namespaces/Helpers.h"
-#include "TimerSimpleHR.h"
 
 class Server {
 public:

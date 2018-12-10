@@ -12,6 +12,9 @@
 #define NETWORKING_H_
 
 #include "ConfigCrawler.h"
+
+#include "namespaces/Utf8.h"
+
 #include <curl/curl.h>
 
 #include <algorithm>
@@ -22,7 +25,6 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include "namespaces/Helpers.h"
 
 class Networking {
 public:

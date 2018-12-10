@@ -46,7 +46,7 @@ App::App(int argc, char * argv[]) {
 App::~App() {
 	if(this->server) {
 		// server up-time message
-		std::cout << std::endl << "Up-time: " << Helpers::secondsToString(server->getUpTime()) << ".";
+		std::cout << std::endl << "Up-time: " << DateTime::secondsToString(server->getUpTime()) << ".";
 		std::cout << std::endl << "> Waiting for threads..." << std::flush;
 
 		// delete server

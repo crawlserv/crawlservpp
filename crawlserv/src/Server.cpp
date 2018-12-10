@@ -172,7 +172,7 @@ Server::~Server() {
 	mg_mgr_free(&(this->eventManager));
 
 	// log shutdown message with server up-time
-	this->database.log("server", "Shutting down after up-time of " + Helpers::secondsToString(this->getUpTime()) + ".");
+	this->database.log("server", "Shutting down after up-time of " + DateTime::secondsToString(this->getUpTime()) + ".");
 }
 
 // server tick

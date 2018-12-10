@@ -10,10 +10,10 @@
 #ifndef TIMERSTARTSTOPHR_H_
 #define TIMERSTARTSTOPHR_H_
 
+#include "namespaces/DateTime.h"
+
 #include <chrono>
 #include <string>
-
-#include "namespaces/Helpers.h"
 
 class TimerStartStopHR {
 public:

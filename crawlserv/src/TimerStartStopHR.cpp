@@ -33,5 +33,5 @@ void TimerStartStopHR::stop() {
 // get total duration as string
 std::string TimerStartStopHR::totalStr() {
 	if(this->timePoint != std::chrono::high_resolution_clock::time_point::min()) this->stop();
-	return Helpers::microsecondsToString(std::chrono::duration_cast<std::chrono::microseconds>(this->duration).count());
+	return DateTime::microsecondsToString(std::chrono::duration_cast<std::chrono::microseconds>(this->duration).count());
 }

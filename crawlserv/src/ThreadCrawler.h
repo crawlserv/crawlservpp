@@ -21,6 +21,8 @@
 #include "XMLDocument.h"
 #include "XPath.h"
 
+#include "namespaces/DateTime.h"
+#include "namespaces/Strings.h"
 #include "structs/IdString.h"
 #include "structs/Memento.h"
 #include "structs/ThreadOptions.h"
@@ -33,7 +35,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "namespaces/Helpers.h"
 
 class ThreadCrawler: public Thread {
 public:
@@ -131,6 +132,9 @@ private:
 	void crawlingSuccess(const IdString& url);
 	void crawlingSkip(const IdString& url);
 	void crawlingRetry(const IdString& url, bool archiveOnly);
+
+	// helper function for memento crawling
+	static std::string parseMementos(std::string mementoContent, std::vector<std::string>& warningsTo, std::vector<Memento>& mementosTo);
 };
 
 #endif /* THREADCRAWLER_H_ */

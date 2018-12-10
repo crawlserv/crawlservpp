@@ -16,6 +16,8 @@
 
 #include "Database.h"
 #include "DatabaseThread.h"
+
+#include "namespaces/DateTime.h"
 #include "structs/ConfigEntry.h"
 #include "structs/ThreadOptions.h"
 
@@ -29,7 +31,6 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include "namespaces/Helpers.h"
 
 class Thread {
 public:
