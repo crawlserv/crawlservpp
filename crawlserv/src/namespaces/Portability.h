@@ -1,7 +1,7 @@
 /*
- * Helpers.h
+ * Portability.h
  *
- * Global helper functions encapsulated into one namespace.
+ * Namespace with global portability helper functions.
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
@@ -19,7 +19,7 @@
 	#include <conio.h>
 #endif
 
-namespace Helpers {
+namespace Portability {
 #ifdef __unix
 	// portable getch
 	char getch(void);

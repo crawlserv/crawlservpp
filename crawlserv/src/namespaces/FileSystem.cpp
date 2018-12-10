@@ -1,7 +1,7 @@
 /*
  * FileSystem.cpp
  *
- * Helper functions for file system.
+ * Namespace with global helper functions for file system.
  *
  *  Created on: Dec 10, 2018
  *      Author: ans

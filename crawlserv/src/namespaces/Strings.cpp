@@ -1,7 +1,7 @@
 /*
  * Strings.cpp
  *
- * Namespace with string helper functions.
+ * Namespace with global string helper functions.
  *
  *  Created on: Dec 10, 2018
  *      Author: ans

@@ -138,7 +138,7 @@ bool App::getPassword(DatabaseSettings& dbSettings) {
 	bool inputLoop = true;
 	bool inputCancel = false;
 	do {
-		switch(input = Helpers::getch()) {
+		switch(input = Portability::getch()) {
 		case '\r':
 			// ignore carriage return
 			break;

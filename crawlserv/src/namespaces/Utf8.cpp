@@ -1,7 +1,7 @@
 /*
  * Utf8.cpp
  *
- * Namespace with UTF-8 helper functions.
+ * Namespace with global UTF-8 helper functions.
  *
  *  Created on: Dec 10, 2018
  *      Author: ans
