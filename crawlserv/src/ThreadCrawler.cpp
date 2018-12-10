@@ -351,7 +351,7 @@ void ThreadCrawler::initDoGlobalCounting(std::vector<std::string>& urlList, cons
 				std::string newUrl = *i;
 				std::ostringstream counterStrStr;
 				counterStrStr << counter;
-				Helpers::replaceAll(newUrl, variable, counterStrStr.str());
+				Strings::replaceAll(newUrl, variable, counterStrStr.str());
 				newUrlList.push_back(newUrl);
 				if(start == end) break;
 				counter += step;
@@ -376,7 +376,7 @@ std::vector<std::string> ThreadCrawler::initDoLocalCounting(const std::string& u
 			std::string newUrl = url;
 			std::ostringstream counterStrStr;
 			counterStrStr << counter;
-			Helpers::replaceAll(newUrl, variable, counterStrStr.str());
+			Strings::replaceAll(newUrl, variable, counterStrStr.str());
 			newUrlList.push_back(newUrl);
 			if(start == end) break;
 			counter += step;
@@ -1117,7 +1117,7 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 								// parse Memento response
 								std::vector<Memento> mementos;
 								std::vector<std::string> warnings;
-								archivedUrl = Helpers::parseMementos(archivedContent, warnings, mementos);
+								archivedUrl = ThreadCrawler::parseMementos(archivedContent, warnings, mementos);
 								if(this->config.crawlerLogging) {
 									// just show warning, maybe mementos were partially parsed
 									for(auto i = warnings.begin(); i != warnings.end(); ++i)
@@ -1169,14 +1169,14 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 													if(archivedContent.substr(0, 17) == "found capture at ") {
 
 														// found a reference string: get and validate timestamp
-														if(Helpers::convertSQLTimeStampToTimeStamp(timeStamp)) {
+														if(DateTime::convertSQLTimeStampToTimeStamp(timeStamp)) {
 															unsigned long subUrlPos = i->url.find(timeStamp);
 															if(subUrlPos != std::string::npos) {
 																subUrlPos += timeStamp.length();
 																timeStamp = archivedContent.substr(17, 14);
 																i->url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
 																		+ i->url.substr(subUrlPos);
-																if(Helpers::convertTimeStampToSQLTimeStamp(timeStamp))
+																if(DateTime::convertTimeStampToSQLTimeStamp(timeStamp))
 																	continue;
 																else if(this->config.crawlerLogging)
 																	this->log("WARNING: Invalid timestamp \'" + timeStamp + "\' from "
@@ -1321,4 +1321,124 @@ void ThreadCrawler::crawlingRetry(const IdString& url, bool archiveOnly) {
 		}
 	}
 	if(archiveOnly) this->archiveRetry = true;
+}
+
+// parse Memento reply, get mementos and link to next page if one exists (also convert timestamps to YYYYMMDD HH:MM:SS)
+std::string ThreadCrawler::parseMementos(std::string mementoContent, std::vector<std::string>& warningsTo,
+		std::vector<Memento>& mementosTo) {
+	std::string nextPage;
+	Memento newMemento;
+	std::ostringstream warningStrStr;
+	unsigned long pos = 0;
+	unsigned long end = 0;
+	bool mementoStarted = false;
+	bool newField = true;
+
+	while(pos < mementoContent.length()) {
+		// skip wildchars
+		if(mementoContent.at(pos) == ' ' || mementoContent.at(pos) == '\r' || mementoContent.at(pos) == '\n'
+				|| mementoContent.at(pos) == '\t') {
+			pos++;
+		}
+		// parse link
+		else if(mementoContent.at(pos) == '<') {
+			end = mementoContent.find('>', pos + 1);
+			if(end == std::string::npos) {
+				warningStrStr << "No '>' after '<' for link at " << pos << ".";
+				warningsTo.push_back(warningStrStr.str());
+				warningStrStr.clear();
+				warningStrStr.str(std::string());
+				break;
+			}
+			if(mementoStarted) {
+				// memento not finished -> warning
+				if(newMemento.url.length() && newMemento.timeStamp.length()) mementosTo.push_back(newMemento);
+				warningStrStr << "New memento started without finishing the old one at " << pos << ".";
+				warningsTo.push_back(warningStrStr.str());
+				warningStrStr.clear();
+				warningStrStr.str(std::string());
+			}
+			mementoStarted = true;
+			newMemento.url = mementoContent.substr(pos + 1, end - pos - 1);
+			newMemento.timeStamp = "";
+			pos = end + 1;
+		}
+		// parse field separator
+		else if(mementoContent.at(pos) == ';') {
+			newField = true;
+			pos++;
+		}
+		// parse end of memento
+		else if(mementoContent.at(pos) == ',') {
+			if(mementoStarted) {
+				if(newMemento.url.size() && newMemento.timeStamp.size()) mementosTo.push_back(newMemento);
+				mementoStarted  = false;
+			}
+			pos++;
+		}
+		else {
+			if(!newField) {
+				warningStrStr << "Field seperator missing for new field at " << pos << ".";
+				warningsTo.push_back(warningStrStr.str());
+				warningStrStr.clear();
+				warningStrStr.str(std::string());
+			}
+			else newField = false;
+			end = mementoContent.find('=', pos + 1);
+			if(end == std::string::npos) {
+				end = mementoContent.find_first_of(",;");
+				if(end == std::string::npos) {
+					warningStrStr << "Cannot find end of field at " << pos << ".";
+					warningsTo.push_back(warningStrStr.str());
+					warningStrStr.clear();
+					warningStrStr.str(std::string());
+					break;
+				}
+				pos = end;
+			}
+			else {
+				std::string fieldName = mementoContent.substr(pos, end - pos);
+				unsigned long oldPos = pos;
+				pos = mementoContent.find_first_of("\"\'", pos + 1);
+				if(pos == std::string::npos) {
+					warningStrStr << "Cannot find begin of value at " << oldPos << ".";
+					warningsTo.push_back(warningStrStr.str());
+					warningStrStr.clear();
+					warningStrStr.str(std::string());
+					pos++;
+					continue;
+				}
+				end = mementoContent.find_first_of("\"\'", pos + 1);
+				if(end == std::string::npos) {
+					warningStrStr << "Cannot find end of value at " << pos << ".";
+					warningsTo.push_back(warningStrStr.str());
+					warningStrStr.clear();
+					warningStrStr.str(std::string());
+					break;
+				}
+				std::string fieldValue = mementoContent.substr(pos + 1, end - pos - 1);
+
+				if(fieldName == "datetime") {
+					// parse timestamp
+					if(DateTime::convertLongDateToSQLTimeStamp(fieldValue)) newMemento.timeStamp = fieldValue;
+					else {
+						warningStrStr << "Could not convert timestamp \'" << fieldValue << "\'  at " << pos << ".";
+						warningsTo.push_back(warningStrStr.str());
+						warningStrStr.clear();
+						warningStrStr.str(std::string());
+					}
+				}
+				else if(fieldName == "rel") {
+					if(fieldValue == "timemap" && newMemento.url.size()) {
+						nextPage = newMemento.url;
+						newMemento.url = "";
+					}
+				}
+				pos = end + 1;
+			}
+		}
+	}
+
+	if(mementoStarted && newMemento.url.size() && newMemento.timeStamp.size()) mementosTo.push_back(newMemento);
+	return nextPage;
 }

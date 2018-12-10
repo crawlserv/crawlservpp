@@ -118,7 +118,7 @@ bool Database::initializeSql() {
 	// read 'sql' directory
 	std::vector<std::string> sqlFiles;
 	try {
-		sqlFiles = Helpers::listFilesInPath("sql", ".sql");
+		sqlFiles = FileSystem::listFilesInPath("sql", ".sql");
 	}
 	catch(std::exception& e) {
 		this->errorMessage = e.what();

@@ -17,13 +17,12 @@
 
 #define DATABASE_DELETE(X) { if(X) { X->close(); delete X; X = NULL; } }
 
+#include "namespaces/FileSystem.h"
 #include "structs/DatabaseSettings.h"
 #include "structs/IdString.h"
 #include "structs/PreparedSqlStatement.h"
 #include "structs/ThreadDatabaseEntry.h"
 #include "structs/ThreadOptions.h"
-
-#include "namespaces/Helpers.h"
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>

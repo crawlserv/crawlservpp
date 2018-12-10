@@ -108,7 +108,7 @@ bool URIParser::parseLink(const std::string& linkToParse) {
 	}
 
 	// trim URL
-	Helpers::trim(linkCopy);
+	Strings::trim(linkCopy);
 	linkCopy = URIParser::escapeUrl(linkCopy);
 
 	// delete old URI if necessary

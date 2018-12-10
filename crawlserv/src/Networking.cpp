@@ -574,8 +574,8 @@ bool Networking::getContent(const std::string& url, std::string& contentTo, cons
 	std::string repairedContent;
 	std::transform(this->contentType.begin(), this->contentType.end(), this->contentType.begin(), ::tolower);
 	this->contentType.erase(std::remove_if(this->contentType.begin(), this->contentType.end(), isspace), this->contentType.end());
-	if(this->contentType.find("charset=iso-8859-1") != std::string::npos) this->content = Helpers::iso88591ToUtf8(this->content);
-	if(Helpers::repairUtf8(this->content, repairedContent)) this->content.swap(repairedContent);
+	if(this->contentType.find("charset=iso-8859-1") != std::string::npos) this->content = Utf8::iso88591ToUtf8(this->content);
+	if(Utf8::repairUtf8(this->content, repairedContent)) this->content.swap(repairedContent);
 
 	contentTo.swap(this->content);
 	return true;

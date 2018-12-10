@@ -331,8 +331,8 @@ void Thread::main() {
 			if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
 			else {
 				// log timing statistic
-				std::string logStr = "Stopped after " + Helpers::secondsToString(this->runTime.count()) + " running";
-				if(this->pauseTime.count()) logStr += " and " + Helpers::secondsToString(this->pauseTime.count()) + " pausing";
+				std::string logStr = "Stopped after " + DateTime::secondsToString(this->runTime.count()) + " running";
+				if(this->pauseTime.count()) logStr += " and " + DateTime::secondsToString(this->pauseTime.count()) + " pausing";
 				logStr += ".";
 				this->log(logStr);
 			}

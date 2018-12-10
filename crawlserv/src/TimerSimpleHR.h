@@ -10,10 +10,10 @@
 #ifndef TIMERSIMPLEHR_H_
 #define TIMERSIMPLEHR_H_
 
+#include "namespaces/DateTime.h"
+
 #include <chrono>
 #include <string>
-
-#include "namespaces/Helpers.h"
 
 class TimerSimpleHR {
 public:

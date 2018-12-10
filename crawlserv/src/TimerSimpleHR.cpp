@@ -30,6 +30,6 @@ std::string TimerSimpleHR::tickStr() {
 	unsigned long long result = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now()
 		- this->timePoint).count();
 	this->timePoint = std::chrono::high_resolution_clock::now();
-	return Helpers::microsecondsToString(result);
+	return DateTime::microsecondsToString(result);
 }
 
