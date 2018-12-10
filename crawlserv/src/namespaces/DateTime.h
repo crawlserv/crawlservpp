@@ -1,7 +1,7 @@
 /*
  * DateTime.h
  *
- * Namespace with helper functions for date/time and time to string conversion.
+ * Namespace with global helper functions for date/time and time to string conversion.
  *
  *  Created on: Dec 10, 2018
  *      Author: ans

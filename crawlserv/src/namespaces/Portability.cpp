@@ -1,19 +1,19 @@
 /*
- * Helpers.cpp
+ * Portability.cpp
  *
- * Global helper functions encapsulated into one namespace.
+ * Namespace with global portability helper functions.
  *
  *  Created on: Oct 12, 2018
  *      Author: ans
  */
 
-#include "Helpers.h"
+#include "Portability.h"
 
 // portable getch
 static struct termios oldT, newT;
 
 // portable getch
-char Helpers::getch() {
+char Portability::getch() {
 #ifdef __unix
 	char ch = 0;
 	tcgetattr(0, &oldT);
