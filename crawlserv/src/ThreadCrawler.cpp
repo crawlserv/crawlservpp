@@ -967,8 +967,8 @@ void ThreadCrawler::crawlingParseAndAddUrls(const IdString& url, std::vector<std
 		// parse archive URLs (only absolute links behind archive links!)
 		if(archived) {
 			unsigned long pos = 0;
-			unsigned long pos1 = urls.at(n - 1).rfind("https://");
-			unsigned long pos2 = urls.at(n - 1).rfind("http://");
+			unsigned long pos1 = urls.at(n - 1).find("https://", 1);
+			unsigned long pos2 = urls.at(n - 1).find("http://", 1);
 			if(pos1 != std::string::npos && pos2 != std::string::npos) {
 				if(pos1 < pos2) pos = pos2;
 				else pos = pos1;
@@ -1145,7 +1145,7 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 									if(this->database.checkUrlLock(url.id, this->lockTime)) {
 										this->lockTime = this->database.lockUrl(url.id, this->config.crawlerLock);
 
-										while(this->isRunning()) {
+										while(this->isRunning()) { // loop over references if necessary
 
 											// check whether archived content already exists in database
 											if(!(this->database.isArchivedContentExists(url.id, timeStamp))) {
@@ -1215,6 +1215,7 @@ bool ThreadCrawler::crawlingArchive(const IdString& url, unsigned long& checkedU
 												else if(this->config.crawlerRetryArchive) success = false;
 											}
 
+											// exit loop over all references
 											break;
 										}
 									}
