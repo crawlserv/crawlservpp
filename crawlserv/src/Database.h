@@ -70,6 +70,7 @@ public:
 	unsigned long getThreadRunTime(unsigned long threadId);
 	unsigned long getThreadPauseTime(unsigned long threadId);
 	void setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
+	void setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage);
 	void setThreadRunTime(unsigned long threadId, unsigned long threadRunTime);
 	void setThreadPauseTime(unsigned long threadId, unsigned long threadPauseTime);
 	void deleteThread(unsigned long threadId);
@@ -174,6 +175,7 @@ private:
 	unsigned short psLog;
 	unsigned short psLastId;
 	unsigned short psSetThreadStatus;
+	unsigned short psSetThreadStatusMessage;
 };
 
 #endif /* DATABASE_H_ */
