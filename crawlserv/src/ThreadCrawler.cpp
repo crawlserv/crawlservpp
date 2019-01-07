@@ -190,9 +190,6 @@ bool ThreadCrawler::onTick() {
 				this->log(logStrStr.str());
 			}
 		}
-		else if(!crawled) {
-			// error while crawling and getting archives:
-		}
 
 		// remove URL lock if necessary
 		this->database.lockUrlList();
@@ -724,14 +721,22 @@ bool ThreadCrawler::crawlingContent(const IdString& url, unsigned long& checkedU
 			}
 		}
 		else {
-			// error while getting content
-			if(this->config.crawlerLogging) {
-				this->log(this->networking.getErrorMessage() + " [" + url.string + "].");
-				this->log("resets connection...");
+			// error while getting content: check type of error i.e. last cURL code
+			CURLcode curlCode = this->networking.getCurlCode();
+			if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
+				// redirection error: skip
+				this->crawlingSkip(url);
 			}
-			this->setStatusMessage("ERROR " + this->networking.getErrorMessage() + " [" + url.string + "]");
-			this->networking.resetConnection(this->config.crawlerSleepError);
-			this->crawlingRetry(url, false);
+			else {
+				// other error: reset connection and retry
+				if(this->config.crawlerLogging) {
+					this->log(this->networking.getErrorMessage() + " [" + url.string + "].");
+					this->log("resets connection...");
+				}
+				this->setStatusMessage("ERROR " + this->networking.getErrorMessage() + " [" + url.string + "]");
+				this->networking.resetConnection(this->config.crawlerSleepError);
+				this->crawlingRetry(url, false);
+			}
 			return false;
 		}
 	}
