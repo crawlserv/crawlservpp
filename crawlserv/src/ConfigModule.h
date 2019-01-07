@@ -1,7 +1,7 @@
 /*
  * ConfigModule.h
  *
- * Abstract class as base for the configuration of the different modules.
+ * Abstract class as base for module-specific configuration classes.
  *
  *  Created on: Jan 7, 2019
  *      Author: ans
