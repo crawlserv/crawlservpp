@@ -17,7 +17,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 ### Classes, Namespaces and Structures
 
-The source code of the server consists of the following classes (as of November 2018):
+The source code of the server consists of the following classes (as of January 2019):
 
 * <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
