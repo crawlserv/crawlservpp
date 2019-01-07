@@ -56,7 +56,7 @@ ConfigCrawler::ConfigCrawler() {
 	this->networkLocalPortRange = 1;
 	this->networkProxyTunnelling = false;
 	this->networkRedirect = true;
-	this->networkRedirectMax = -1;
+	this->networkRedirectMax = 20;
 	this->networkRedirectPost301 = false;
 	this->networkRedirectPost302 = false;
 	this->networkRedirectPost303 = false;

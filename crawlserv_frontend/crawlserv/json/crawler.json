@@ -634,7 +634,7 @@
 		"redirect.max": {
 			"id": 34,
 			"type": "number",
-			"default": -1,
+			"default": 20,
 			"min": -1,
 			"description": "Maximum number of automatic redirects (-1=infinite).",
 			"simple": false
