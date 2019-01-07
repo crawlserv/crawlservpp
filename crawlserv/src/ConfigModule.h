@@ -27,11 +27,11 @@ public:
 	bool loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo);
 
 protected:
-	// load module-specific configuration from parsed JSON document
-	virtual bool loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) = 0;
-
 	// error message
 	std::string errorMessage;
+
+	// load module-specific configuration from parsed JSON document
+	virtual bool loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) = 0;
 };
 
 #endif /* SRC_CONFIGMODULE_H_ */
