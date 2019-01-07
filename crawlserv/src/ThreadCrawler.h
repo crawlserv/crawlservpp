@@ -27,6 +27,8 @@
 #include "structs/Memento.h"
 #include "structs/ThreadOptions.h"
 
+#include <curl/curl.h>
+
 #include <algorithm>
 #include <chrono>
 #include <exception>
