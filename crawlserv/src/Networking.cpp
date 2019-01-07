@@ -496,7 +496,7 @@ bool Networking::setCrawlingConfigGlobal(const ConfigCrawler& config, bool limit
 
 // set current network options from crawling configuration
 bool Networking::setCrawlingConfigCurrent(const ConfigCrawler& config) {
-	//TODO
+	//TODO (cookie management)
 	return true;
 }
 
@@ -736,7 +736,7 @@ std::string Networking::escapeUrl(const std::string& urlToEncode) {
 // static cURL writer function
 int Networking::cURLWriter(char * data, unsigned long size, unsigned long nmemb, void * thisPointer) {
 	if(!thisPointer) return 0;
-	return static_cast<Networking*>(thisPointer)->cURLWriterInClass(data, size, nmemb);
+	return static_cast<Networking *>(thisPointer)->cURLWriterInClass(data, size, nmemb);
 }
 
 // in-class cURL writer function
