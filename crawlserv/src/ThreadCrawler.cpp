@@ -190,6 +190,9 @@ bool ThreadCrawler::onTick() {
 				this->log(logStrStr.str());
 			}
 		}
+		else if(!crawled) {
+			// error while crawling and getting archives:
+		}
 
 		// remove URL lock if necessary
 		this->database.lockUrlList();
@@ -613,7 +616,10 @@ bool ThreadCrawler::crawlingContent(const IdString& url, unsigned long& checkedU
 	timerStrTo = "";
 
 	// skip crawling if only archive needs to be retried
-	if(this->config.crawlerArchives && this->archiveRetry) return true;
+	if(this->config.crawlerArchives && this->archiveRetry) {
+		if(this->config.crawlerLogging > ConfigCrawler::crawlerLoggingDefault) this->log("Re-trying archive only [" + url.string + "].");
+		return true;
+	}
 
 	// check HTTP sleeping time
 	if(this->config.crawlerSleepHttp) {
