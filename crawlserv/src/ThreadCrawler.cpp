@@ -724,7 +724,8 @@ bool ThreadCrawler::crawlingContent(const IdString& url, unsigned long& checkedU
 			// error while getting content: check type of error i.e. last cURL code
 			CURLcode curlCode = this->networking.getCurlCode();
 			if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
-				// redirection error: skip
+				// redirection error: skip URL
+				if(this->config.crawlerLogging) this->log("redirection error at " + url.string + " - skips...");
 				this->crawlingSkip(url);
 			}
 			else {
