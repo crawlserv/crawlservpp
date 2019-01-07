@@ -39,22 +39,22 @@ Networking::Networking() {
 	if(!this->curl) throw std::runtime_error("Could not initialize cURL");
 
 	// configure cURL (global defaults)
-	CURLcode result = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
-	if(result != CURLE_OK) error = true;
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
+	if(this->curlCode != CURLE_OK) error = true;
 	else {
-		result = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Networking::cURLWriter);
-		if(result != CURLE_OK) error = true;
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Networking::cURLWriter);
+		if(this->curlCode != CURLE_OK) error = true;
 		else {
 			// set pointer to instance
-			result = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
-			if(result != CURLE_OK) error = true;
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
+			if(this->curlCode != CURLE_OK) error = true;
 		}
 	}
 
 	// error handling
 	if(error) {
 		if(this->curl) {
-			this->errorMessage = curl_easy_strerror(result);
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			curl_easy_cleanup(this->curl);
 			this->curl = NULL;
 		}
@@ -105,54 +105,54 @@ bool Networking::setCrawlingConfigGlobal(const ConfigCrawler& config, bool limit
 		return false;
 	}
 
-	CURLcode result = curl_easy_setopt(this->curl, CURLOPT_MAXCONNECTS, (long) config.networkConnectionsMax);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAXCONNECTS, (long) config.networkConnectionsMax);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_IGNORE_CONTENT_LENGTH, config.networkContentLengthIgnore ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_IGNORE_CONTENT_LENGTH, config.networkContentLengthIgnore ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 	if(config.networkCookies && !limited) {
-		result = curl_easy_setopt(this->curl, CURLOPT_COOKIEFILE, config.networkCookiesLoad.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIEFILE, config.networkCookiesLoad.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 		if(config.networkCookiesSave.c_str()) {
-			result = curl_easy_setopt(this->curl, CURLOPT_COOKIEJAR, config.networkCookiesSave.c_str());
-			if(result != CURLE_OK) {
-				this->errorMessage = curl_easy_strerror(result);
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIEJAR, config.networkCookiesSave.c_str());
+			if(this->curlCode != CURLE_OK) {
+				this->errorMessage = curl_easy_strerror(this->curlCode);
 				return false;
 			}
 		}
 	}
 	if(!config.networkCookiesSession && !limited) {
-		result = curl_easy_setopt(this->curl, CURLOPT_COOKIESESSION, 1L);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIESESSION, 1L);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkCookiesSet.length() && !limited) {
-		result = curl_easy_setopt(this->curl, CURLOPT_COOKIE, config.networkCookiesSet.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIE, config.networkCookiesSet.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_DNS_CACHE_TIMEOUT, config.networkDnsCacheTimeOut);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_CACHE_TIMEOUT, config.networkDnsCacheTimeOut);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 	if(config.networkDnsDoH.length()) {
 #if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 62)
-		result = curl_easy_setopt(this->curl, CURLOPT_DOH_URL, config.networkDnsDoH.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DOH_URL, config.networkDnsDoH.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 #else
@@ -160,18 +160,18 @@ bool Networking::setCrawlingConfigGlobal(const ConfigCrawler& config, bool limit
 #endif
 	}
 	if(config.networkDnsInterface.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_DNS_INTERFACE, config.networkDnsInterface.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_INTERFACE, config.networkDnsInterface.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkDnsResolves.size()) {
 		for(auto i = config.networkDnsResolves.begin(); i != config.networkDnsResolves.end(); ++i)
 			this->dnsResolves = curl_slist_append(this->dnsResolves, i->c_str());
-		result = curl_easy_setopt(this->curl, CURLOPT_RESOLVE, this->dnsResolves);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_RESOLVE, this->dnsResolves);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
@@ -180,16 +180,16 @@ bool Networking::setCrawlingConfigGlobal(const ConfigCrawler& config, bool limit
 		for(auto i = config.networkDnsServers.begin(); i != config.networkDnsServers.end(); ++i)
 			serverList += *i + ",";
 		serverList.pop_back();
-		result = curl_easy_setopt(this->curl, CURLOPT_DNS_SERVERS, serverList.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_SERVERS, serverList.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 #if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 60)
-	result = curl_easy_setopt(this->curl, CURLOPT_DNS_SHUFFLE_ADDRESSES, config.networkDnsShuffle ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_SHUFFLE_ADDRESSES, config.networkDnsShuffle ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 #else
@@ -197,9 +197,9 @@ bool Networking::setCrawlingConfigGlobal(const ConfigCrawler& config, bool limit
 		warningsTo->push_back("DNS shuffling currently not supported, \'network.dns.shuffle\' ignored.");
 #endif
 	if(config.networkEncodingBr && config.networkEncodingDeflate && config.networkEncodingGZip && config.networkEncodingIdentity) {
-		result = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
@@ -210,140 +210,140 @@ bool Networking::setCrawlingConfigGlobal(const ConfigCrawler& config, bool limit
 		if(config.networkEncodingGZip) encodingList += "gzip,";
 		if(config.networkEncodingIdentity) encodingList += "identity,";
 		encodingList.pop_back();
-		result = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, encodingList.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, encodingList.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkEncodingTransfer) {
-		result = curl_easy_setopt(this->curl, CURLOPT_TRANSFER_ENCODING, config.networkEncodingTransfer ? 1L : 0L);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TRANSFER_ENCODING, config.networkEncodingTransfer ? 1L : 0L);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkHeaders.size() && !limited) {
 		for(auto i = config.networkHeaders.begin(); i != config.networkHeaders.end(); ++i)
 			this->headers = curl_slist_append(this->headers, i->c_str());
-		result = curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->dnsResolves);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->dnsResolves);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkHttp200Aliases.size() && !limited) {
 		for(auto i = config.networkHttp200Aliases.begin(); i != config.networkHttp200Aliases.end(); ++i)
 			this->http200Aliases = curl_slist_append(this->http200Aliases, i->c_str());
-		result = curl_easy_setopt(this->curl, CURLOPT_HTTP200ALIASES, this->http200Aliases);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP200ALIASES, this->http200Aliases);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(!limited) {
 		switch(config.networkHttpVersion) {
 		case ConfigCrawler::networkHttpVersionAny:
-			result = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_NONE);
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_NONE);
 			break;
 		case ConfigCrawler::networkHttpVersionV1:
-			result = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 			break;
 		case ConfigCrawler::networkHttpVersionV11:
-			result = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			break;
 		case ConfigCrawler::networkHttpVersionV2:
-			result = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
 			break;
 		case ConfigCrawler::networkHttpVersionV2only:
-			result = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
 			break;
 		case ConfigCrawler::networkHttpVersionV2tls:
-			result = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
 			break;
 		default:
 			if(warningsTo) warningsTo->push_back("Enum value for HTTP version not recognized, \'network.http.version\' ignored.");
-			result = CURLE_OK;
+			this->curlCode = CURLE_OK;
 		}
 	}
 	if(config.networkLocalInterface.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_INTERFACE, config.networkLocalInterface.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_INTERFACE, config.networkLocalInterface.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_LOCALPORT, (long) config.networkLocalPort);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOCALPORT, (long) config.networkLocalPort);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_LOCALPORTRANGE, (long) config.networkLocalPortRange);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOCALPORTRANGE, (long) config.networkLocalPortRange);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 	if(config.networkProxy.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_PROXY, config.networkProxy.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY, config.networkProxy.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkProxyAuth.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_PROXYUSERPWD , config.networkProxyAuth.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXYUSERPWD , config.networkProxyAuth.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkProxyHeaders.size()) {
 		for(auto i = config.networkProxyHeaders.begin(); i != config.networkProxyHeaders.end(); ++i)
 			this->headers = curl_slist_append(this->proxyHeaders, i->c_str());
-		result = curl_easy_setopt(this->curl, CURLOPT_PROXYHEADER, this->proxyHeaders);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXYHEADER, this->proxyHeaders);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkProxyPre.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_PRE_PROXY, config.networkProxyPre.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PRE_PROXY, config.networkProxyPre.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkProxyTlsSrpPassword.length() || config.networkProxyTlsSrpUser.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_PROXY_TLSAUTH_USERNAME, config.networkProxyTlsSrpUser.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_TLSAUTH_USERNAME, config.networkProxyTlsSrpUser.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
-		result = curl_easy_setopt(this->curl, CURLOPT_PROXY_TLSAUTH_PASSWORD, config.networkProxyTlsSrpPassword.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_TLSAUTH_PASSWORD, config.networkProxyTlsSrpPassword.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_HTTPPROXYTUNNEL, config.networkProxyTunnelling ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTPPROXYTUNNEL, config.networkProxyTunnelling ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_FOLLOWLOCATION, config.networkRedirect ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_FOLLOWLOCATION, config.networkRedirect ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_MAXREDIRS , (long) config.networkRedirectMax);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAXREDIRS , (long) config.networkRedirectMax);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 	if(config.networkRedirectPost301 && config.networkRedirectPost302 && config.networkRedirectPost303) {
-		result = curl_easy_setopt(this->curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
@@ -352,138 +352,138 @@ bool Networking::setCrawlingConfigGlobal(const ConfigCrawler& config, bool limit
 		if(config.networkRedirectPost301) redirectPost |= CURL_REDIR_POST_301;
 		if(config.networkRedirectPost302) redirectPost |= CURL_REDIR_POST_302;
 		if(config.networkRedirectPost303) redirectPost |= CURL_REDIR_POST_303;
-		result = curl_easy_setopt(this->curl, CURLOPT_POSTREDIR, redirectPost);
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_POSTREDIR, redirectPost);
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkReferer.length() && !limited) {
-		result = curl_easy_setopt(this->curl, CURLOPT_REFERER, config.networkReferer.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_REFERER, config.networkReferer.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_AUTOREFERER, config.networkRefererAutomatic ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_AUTOREFERER, config.networkRefererAutomatic ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_MAX_RECV_SPEED_LARGE, (long) config.networkSpeedDownLimit);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAX_RECV_SPEED_LARGE, (long) config.networkSpeedDownLimit);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_LOW_SPEED_LIMIT, (long) config.networkSpeedLowLimit);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOW_SPEED_LIMIT, (long) config.networkSpeedLowLimit);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_LOW_SPEED_TIME, (long) config.networkSpeedLowTime);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOW_SPEED_TIME, (long) config.networkSpeedLowTime);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_MAX_SEND_SPEED_LARGE, (long) config.networkSpeedUpLimit);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
-		return false;
-	}
-
-	result = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYHOST, config.networkSslVerifyHost ? 2L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAX_SEND_SPEED_LARGE, (long) config.networkSpeedUpLimit);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 
-	result = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYPEER, config.networkSslVerifyPeer ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYHOST, config.networkSslVerifyHost ? 2L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_PROXY_SSL_VERIFYHOST, config.networkSslVerifyProxyHost ? 2L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYPEER, config.networkSslVerifyPeer ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_PROXY_SSL_VERIFYPEER, config.networkSslVerifyProxyPeer ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_SSL_VERIFYHOST, config.networkSslVerifyProxyHost ? 2L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYSTATUS, config.networkSslVerifyStatus ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_SSL_VERIFYPEER, config.networkSslVerifyProxyPeer ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_TCP_FASTOPEN, config.networkTcpFastOpen ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYSTATUS, config.networkSslVerifyStatus ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPALIVE, config.networkTcpKeepAlive ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_FASTOPEN, config.networkTcpFastOpen ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPIDLE, (long) config.networkTcpKeepAliveIdle);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPALIVE, config.networkTcpKeepAlive ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPINTVL, (long) config.networkTcpKeepAliveInterval);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPIDLE, (long) config.networkTcpKeepAliveIdle);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_TCP_NODELAY, config.networkTcpNagle ? 0L : 1L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPINTVL, (long) config.networkTcpKeepAliveInterval);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_CONNECTTIMEOUT, (long) config.networkTimeOut);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_NODELAY, config.networkTcpNagle ? 0L : 1L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
+		return false;
+	}
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_CONNECTTIMEOUT, (long) config.networkTimeOut);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 #if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 59)
-	result = curl_easy_setopt(this->curl, CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS, (long) config.networkTimeOutHappyEyeballs);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS, (long) config.networkTimeOutHappyEyeballs);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 #else
 	if(config.networkTimeOutHappyEyeballs && warningsTo) warningsTo->push_back("Happy Eyeballs configuration currently not supported,"
 			" \'network.timeout.happyeyeballs\' ignored.");
 #endif
-	result = curl_easy_setopt(this->curl, CURLOPT_TIMEOUT, (long) config.networkTimeOutRequest);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TIMEOUT, (long) config.networkTimeOutRequest);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 	if(config.networkTlsSrpPassword.length() || config.networkTlsSrpUser.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_TLSAUTH_USERNAME, config.networkTlsSrpUser.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TLSAUTH_USERNAME, config.networkTlsSrpUser.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
-		result = curl_easy_setopt(this->curl, CURLOPT_TLSAUTH_PASSWORD, config.networkTlsSrpPassword.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TLSAUTH_PASSWORD, config.networkTlsSrpPassword.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
 	if(config.networkUserAgent.length()) {
-		result = curl_easy_setopt(this->curl, CURLOPT_USERAGENT, config.networkUserAgent.c_str());
-		if(result != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(result);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_USERAGENT, config.networkUserAgent.c_str());
+		if(this->curlCode != CURLE_OK) {
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
-	result = curl_easy_setopt(this->curl, CURLOPT_VERBOSE, config.networkVerbose ? 1L : 0L);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_VERBOSE, config.networkVerbose ? 1L : 0L);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 
@@ -509,39 +509,39 @@ bool Networking::getContent(const std::string& url, std::string& contentTo, cons
 	this->responseCode = 0;
 
 	// set URL
-	CURLcode result = curl_easy_setopt(this->curl, CURLOPT_URL, encodedUrl.c_str());
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_URL, encodedUrl.c_str());
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 
 	// set error buffer
 	errorBuffer[0] = 0;
-	result = curl_easy_setopt(this->curl, CURLOPT_ERRORBUFFER, errorBuffer);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_ERRORBUFFER, errorBuffer);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 
 	// perform request
 	try {
-		result = curl_easy_perform(this->curl);
+		this->curlCode = curl_easy_perform(this->curl);
 	}
 	catch(const std::exception& e) {
 		this->errorMessage = e.what();
 		return false;
 	}
-	if(result != CURLE_OK) {
+	if(this->curlCode != CURLE_OK) {
 		if(errorBuffer[0] != 0) this->errorMessage = errorBuffer;
-		else this->errorMessage = curl_easy_strerror(result);
+		else this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 
 	// get response code
 	long responseCodeL = 0;
-	result = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCodeL);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCodeL);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 	else if(responseCodeL < 0 || responseCodeL > UINT_MAX) {
@@ -562,9 +562,9 @@ bool Networking::getContent(const std::string& url, std::string& contentTo, cons
 
 	// get content type
 	char * cString = NULL;
-	result = curl_easy_getinfo(this->curl, CURLINFO_CONTENT_TYPE, &cString);
-	if(result != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(result);
+	this->curlCode = curl_easy_getinfo(this->curl, CURLINFO_CONTENT_TYPE, &cString);
+	if(this->curlCode != CURLE_OK) {
+		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
 	if(cString) this->contentType = cString;
@@ -626,22 +626,22 @@ void Networking::resetConnection(unsigned long sleep) {
 
 	// configure cURL (global defaults)
 	bool error = false;
-	CURLcode result = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
-	if(result != CURLE_OK) error = true;
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
+	if(this->curlCode != CURLE_OK) error = true;
 	else {
-		result = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Networking::cURLWriter);
-		if(result != CURLE_OK) error = true;
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Networking::cURLWriter);
+		if(this->curlCode != CURLE_OK) error = true;
 		else {
 			// set pointer to instance
-			result = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
-			if(result != CURLE_OK) error = true;
+			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
+			if(this->curlCode != CURLE_OK) error = true;
 		}
 	}
 
 	// error handling
 	if(error) {
 		if(this->curl) {
-			this->errorMessage = curl_easy_strerror(result);
+			this->errorMessage = curl_easy_strerror(this->curlCode);
 			curl_easy_cleanup(this->curl);
 			this->curl = NULL;
 		}
@@ -651,6 +651,11 @@ void Networking::resetConnection(unsigned long sleep) {
 
 	// set configuration
 	if(this->configCrawler) this->setCrawlingConfigGlobal(*(this->configCrawler), this->limitedSettings, NULL);
+}
+
+// get last cURL code
+CURLcode Networking::getCurlCode() const {
+	return this->curlCode;
 }
 
 // get error message
