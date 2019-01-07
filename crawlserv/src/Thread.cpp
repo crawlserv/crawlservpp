@@ -208,8 +208,9 @@ void Thread::setStatusMessage(const std::string& statusMessage) {
 		this->status = statusMessage;
 	}
 
-	// set status in database
-	this->database.setThreadStatus(this->id, this->paused, statusMessage);
+	// set status in database (when interrupted, the thread has been unpaused and the pause state needs to be ignored)
+	if(this->interrupted) this->database.setThreadStatus(this->id, statusMessage);
+	else this->database.setThreadStatus(this->id, this->paused, statusMessage);
 }
 
 // set the progress of the thread (to be used by the thread only)

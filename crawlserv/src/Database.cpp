@@ -26,6 +26,7 @@ Database::Database(const DatabaseSettings& dbSettings) : settings(dbSettings) {
 	this->psLog = 0;
 	this->psLastId = 0;
 	this->psSetThreadStatus = 0;
+	this->psSetThreadStatusMessage = 0;
 
 	// get driver instance if necessary
 	if(!Database::driver) Database::driver = get_driver_instance();
@@ -154,13 +155,20 @@ bool Database::prepare() {
 			this->psLog = this->preparedStatements.size();
 		}
 
-		// prepare thread statement
+		// prepare thread statements
 		if(!(this->psSetThreadStatus)) {
 			PreparedSqlStatement statement;
 			statement.string = "UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1";
 			statement.statement = this->connection->prepareStatement(statement.string);
 			this->preparedStatements.push_back(statement);
 			this->psSetThreadStatus = this->preparedStatements.size();
+		}
+		if(!(this->psSetThreadStatusMessage)) {
+			PreparedSqlStatement statement;
+			statement.string = "UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1";
+			statement.statement = this->connection->prepareStatement(statement.string);
+			this->preparedStatements.push_back(statement);
+			this->psSetThreadStatusMessage = this->preparedStatements.size();
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -475,6 +483,34 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 		sqlStatement->setString(1, statusMessage);
 		sqlStatement->setBoolean(2, threadPaused);
 		sqlStatement->setUInt64(3, threadId);
+		sqlStatement->execute();
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		std::ostringstream errorStrStr;
+		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// update thread status in database (without using or changing the pause state)
+void Database::setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage) {
+	// check connection
+	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+
+	// check prepared SQL statement
+	if(!this->psSetThreadStatusMessage) throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatus(...)");
+	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadStatusMessage - 1).statement;
+	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::setThreadStatus(...) is NULL");
+
+	// create status message
+	std::string statusMessage;
+	statusMessage = threadStatusMessage;
+
+	try {
+		// execute SQL statement
+		sqlStatement->setString(1, statusMessage);
+		sqlStatement->setUInt64(2, threadId);
 		sqlStatement->execute();
 	}
 	catch(sql::SQLException &e) {
