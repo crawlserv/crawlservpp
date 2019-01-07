@@ -13,22 +13,18 @@
 #ifndef CONFIGCRAWLER_H_
 #define CONFIGCRAWLER_H_
 
+#include "ConfigModule.h"
+
 #include "external/rapidjson/document.h"
 
 #include <sstream>
 #include <string>
 #include <vector>
 
-class ConfigCrawler {
+class ConfigCrawler : public ConfigModule {
 public:
 	ConfigCrawler();
 	virtual ~ConfigCrawler();
-
-	// configuration loader
-	bool loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo);
-
-	// get error message
-	const std::string& getErrorMessage() const;
 
 	// crawler entries
 	bool crawlerArchives;
@@ -142,8 +138,9 @@ public:
 	std::string networkUserAgent;
 	bool networkVerbose;
 
-private:
-	std::string errorMessage;
+protected:
+	// load crawling-specific configuration from parsed JSON document
+	bool loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo);
 };
 
 #endif /* CONFIGCRAWLER_H_ */

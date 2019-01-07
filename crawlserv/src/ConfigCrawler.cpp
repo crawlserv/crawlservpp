@@ -84,21 +84,10 @@ ConfigCrawler::ConfigCrawler() {
 // destructor stub
 ConfigCrawler::~ConfigCrawler() {}
 
-// load configuration from JSON string
-bool ConfigCrawler::loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo) {
-	// parse JSON
-	rapidjson::Document json;
-	if(json.Parse(configJson.c_str()).HasParseError()) {
-		this->errorMessage = "Could not parse configuration JSON.";
-		return false;
-	}
-	if(!json.IsArray()) {
-		this->errorMessage = "Invalid configuration JSON (is no array).";
-		return false;
-	}
-
+// load crawling-specific configuration from parsed JSON document
+bool ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) {
 	// go through all array items i.e. configuration entries
-	for(rapidjson::Value::ConstValueIterator i = json.Begin(); i != json.End(); i++) {
+	for(rapidjson::Value::ConstValueIterator i = jsonDocument.Begin(); i != jsonDocument.End(); i++) {
 		if(i->IsObject()) {
 			std::string cat;
 			std::string name;
@@ -790,9 +779,4 @@ bool ConfigCrawler::loadConfig(const std::string& configJson, std::vector<std::s
 	}
 
 	return true;
-}
-
-// get error message
-const std::string& ConfigCrawler::getErrorMessage() const {
-	return this->errorMessage;
 }

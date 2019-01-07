@@ -13,22 +13,18 @@
 #ifndef CONFIGCRAWLER_H_
 #define CONFIGCRAWLER_H_
 
+#include "ConfigModule.h"
+
 #include "external/rapidjson/document.h"
 
 #include <sstream>
 #include <string>
 #include <vector>
 
-class ConfigParser {
+class ConfigParser : public ConfigModule {
 public:
 	ConfigParser();
 	virtual ~ConfigParser();
-
-	// configuration loader
-	bool loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo);
-
-	// get error message
-	const std::string& getErrorMessage() const;
 
 	// parser entries
 	std::vector<std::string> parserDateTimeFormats;
@@ -54,8 +50,9 @@ public:
 	unsigned long parserSleepIdle;
 	unsigned long parserSleepMySql;
 
-private:
-	std::string errorMessage;
+protected:
+	// load parsing-specific configuration from parsed JSON document
+	bool loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo);
 };
 
 #endif /* CONFIGCRAWLER_H_ */
