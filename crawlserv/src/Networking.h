@@ -39,6 +39,7 @@ public:
 	std::string getContentType() const;
 	void resetConnection(unsigned long sleep);
 
+	CURLcode getCurlCode() const;
 	const std::string& getErrorMessage() const;
 
 	std::string escape(const std::string& stringToEscape, bool usePlusForSpace);
