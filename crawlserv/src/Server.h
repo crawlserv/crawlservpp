@@ -66,6 +66,9 @@ protected:
 
 	// threads
 	std::vector<ThreadCrawler*> crawlers;
+	//std::vector<ThreadParser*> parsers;
+	//std::vector<ThreadAnalyzer*> analyzers;
+	//std::vector<ThreadExtractor*> extractors;
 	std::vector<std::thread*> workers;
 	std::vector<bool> workersRunning;
 	std::mutex workersLock;
