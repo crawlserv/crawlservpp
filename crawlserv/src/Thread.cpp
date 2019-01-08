@@ -25,6 +25,7 @@ Thread::Thread(Database& dbBase, unsigned long threadId, const std::string& thre
 	this->terminated = false;
 	this->last = threadLast;
 	if(threadStatus.length() >= 12 && threadStatus.substr(0, 12) == "INTERRUPTED ") this->status = threadStatus.substr(12);
+	else if(threadStatus.length() >= 7 && threadStatus.substr(0, 7) == "PAUSED ") this->status = threadStatus.substr(7);
 	else this->status = threadStatus;
 	this->startTimePoint = std::chrono::steady_clock::time_point::min();
 	this->pauseTimePoint = std::chrono::steady_clock::time_point::min();
