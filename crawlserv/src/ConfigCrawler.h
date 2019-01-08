@@ -14,6 +14,7 @@
 #define CONFIGCRAWLER_H_
 
 #include "ConfigModule.h"
+#include "ConfigNetwork.h"
 
 #include "external/rapidjson/document.h"
 
@@ -71,76 +72,11 @@ public:
 	std::vector<std::string> customUrls;
 
 	// network entries
-	unsigned short networkConnectionsMax;
-	bool networkContentLengthIgnore;
-	bool networkCookies;
-	std::string networkCookiesLoad;
-	std::vector<std::string> networkCookiesOverwrite;
-	std::string networkCookiesSave;
-	bool networkCookiesSession;
-	std::string networkCookiesSet;
-	long networkDnsCacheTimeOut;
-	std::string networkDnsDoH;
-	std::string networkDnsInterface;
-	std::vector<std::string> networkDnsResolves;
-	std::vector<std::string> networkDnsServers;
-	bool networkDnsShuffle;
-	bool networkEncodingBr;
-	bool networkEncodingDeflate;
-	bool networkEncodingGZip;
-	bool networkEncodingIdentity;
-	bool networkEncodingTransfer;
-	std::vector<std::string> networkHeaders;
-	std::vector<std::string> networkHttp200Aliases;
-	unsigned short networkHttpVersion;
-	const static unsigned short networkHttpVersionAny = 0;
-	const static unsigned short networkHttpVersionV1 = 1;
-	const static unsigned short networkHttpVersionV11 = 2;
-	const static unsigned short networkHttpVersionV2 = 3;
-	const static unsigned short networkHttpVersionV2only = 4;
-	const static unsigned short networkHttpVersionV2tls = 5;
-	std::string networkLocalInterface;
-	unsigned short networkLocalPort;
-	unsigned short networkLocalPortRange;
-	std::string networkProxy;
-	std::string networkProxyAuth;
-	std::vector<std::string> networkProxyHeaders;
-	std::string networkProxyPre;
-	std::string networkProxyTlsSrpPassword;
-	std::string networkProxyTlsSrpUser;
-	bool networkProxyTunnelling;
-	bool networkRedirect;
-	unsigned long networkRedirectMax;
-	bool networkRedirectPost301;
-	bool networkRedirectPost302;
-	bool networkRedirectPost303;
-	std::string networkReferer;
-	bool networkRefererAutomatic;
-	unsigned long networkSpeedDownLimit;
-	unsigned long networkSpeedLowLimit;
-	unsigned long networkSpeedLowTime;
-	unsigned long networkSpeedUpLimit;
-	bool networkSslVerifyHost;
-	bool networkSslVerifyPeer;
-	bool networkSslVerifyProxyHost;
-	bool networkSslVerifyProxyPeer;
-	bool networkSslVerifyStatus;
-	bool networkTcpFastOpen;
-	bool networkTcpKeepAlive;
-	unsigned long networkTcpKeepAliveIdle;
-	unsigned long networkTcpKeepAliveInterval;
-	bool networkTcpNagle;
-	unsigned long networkTimeOut;
-	unsigned short networkTimeOutHappyEyeballs;
-	unsigned long networkTimeOutRequest;
-	std::string networkTlsSrpUser;
-	std::string networkTlsSrpPassword;
-	std::string networkUserAgent;
-	bool networkVerbose;
+	ConfigNetwork network;
 
 protected:
 	// load crawling-specific configuration from parsed JSON document
-	bool loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
+	void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
 };
 
 #endif /* CONFIGCRAWLER_H_ */

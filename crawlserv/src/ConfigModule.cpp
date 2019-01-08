@@ -34,5 +34,6 @@ bool ConfigModule::loadConfig(const std::string& configJson, std::vector<std::st
 	}
 
 	// load module-specific configuration
-	return this->loadModule(json, warningsTo);
+	this->loadModule(json, warningsTo);
+	return true;
 }
