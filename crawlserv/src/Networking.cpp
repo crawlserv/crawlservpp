@@ -37,7 +37,7 @@ Networking::Networking() {
 
 	// initialize cURL
 	this->curl = curl_easy_init();
-	if(!this->curl) throw std::runtime_error("Could not initialize cURL");
+	if(!(this->curl)) throw std::runtime_error("Could not initialize cURL");
 
 	// configure cURL (global defaults)
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
@@ -623,7 +623,7 @@ void Networking::resetConnection(unsigned long sleep) {
 
 	// re-initialize cURL
 	this->curl = curl_easy_init();
-	if(!this->curl) throw std::runtime_error("Could not initialize cURL");
+	if(!(this->curl)) throw std::runtime_error("Could not initialize cURL");
 
 	// configure cURL (global defaults)
 	bool error = false;
@@ -668,7 +668,7 @@ const std::string& Networking::getErrorMessage() const {
 std::string Networking::escape(const std::string& stringToEscape, bool usePlusForSpace) {
 	std::string result;
 
-	if(!this->curl || !(stringToEscape.length())) return "";
+	if(!(this->curl) || !(stringToEscape.length())) return "";
 
 	char * cString = curl_easy_escape(this->curl, stringToEscape.c_str(), stringToEscape.length());
 
@@ -695,7 +695,7 @@ std::string Networking::escape(const std::string& stringToEscape, bool usePlusFo
 std::string Networking::unescape(const std::string& escapedString, bool usePlusForSpace) {
 	std::string result;
 
-	if(!this->curl || !(escapedString.length())) return "";
+	if(!(this->curl) || !(escapedString.length())) return "";
 	char * cString = curl_easy_unescape(this->curl, escapedString.c_str(), escapedString.length(), NULL);
 
 	if(cString) {

@@ -324,7 +324,7 @@ void Thread::main() {
 						this->startTimePoint = std::chrono::steady_clock::now();
 					}
 					// run thread tick
-					else if(!this->onTick()) this->running = false;
+					else if(!(this->onTick())) this->running = false;
 				}
 			}
 
