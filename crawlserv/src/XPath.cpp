@@ -18,14 +18,14 @@ std::string XPath::TextOnlyWalker::getResult() const {
 	return this->result;
 }
 
-// constructor
+// constructor: set default values
 XPath::XPath() {
 	this->isTextOnly = false;
 	this->query = NULL;
 	this->isParsed = false;
 }
 
-// destructor
+// destructor: delete query (if necessary) and reset values
 XPath::~XPath() {
 	if(this->query) {
 		delete this->query;
@@ -59,7 +59,7 @@ bool XPath::compile(const std::string& xpath, bool textOnly) {
 	return true;
 }
 
-// get boolean value (at least one match?)
+// get boolean value (at least one match?, saved to resultTo), return false on error
 bool XPath::getBool(const XMLDocument& doc, bool& resultTo) const {
 	// check query and content
 	if(!(this->query)) {
@@ -83,7 +83,7 @@ bool XPath::getBool(const XMLDocument& doc, bool& resultTo) const {
 	return true;
 }
 
-// get first match only
+// get first match only (saved to resultTo), return false on error
 bool XPath::getFirst(const XMLDocument& doc, std::string& resultTo) const {
 	// check query and content
 	if(!(this->query)) {
@@ -112,7 +112,7 @@ bool XPath::getFirst(const XMLDocument& doc, std::string& resultTo) const {
 	return true;
 }
 
-// get all matches
+// get all matches as vector (saved to resultTo), return false on error
 bool XPath::getAll(const XMLDocument& doc, std::vector<std::string>& resultTo) const {
 	std::vector<std::string> resultArray;
 
