@@ -725,9 +725,9 @@ void DatabaseCrawler::saveArchivedContent(unsigned long urlId, const std::string
 // set URL as crawled in the database
 void DatabaseCrawler::setUrlFinished(unsigned long urlId) {
 	// check prepared SQL statement
-	if(!(this->psSetUrlFinished)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::setUrlCrawled(...)");
+	if(!(this->psSetUrlFinished)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::setUrlFinished(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psSetUrlFinished);
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::setUrlCrawled(...) is NULL");
+	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::setUrlFinished(...) is NULL");
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
