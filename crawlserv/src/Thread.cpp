@@ -24,6 +24,8 @@ Thread::Thread(Database& dbBase, unsigned long threadId, const std::string& thre
 	this->resumed = true;
 	this->terminated = false;
 	this->last = threadLast;
+	if(threadStatus.length() >= 12 && threadStatus.substr(0, 12) == "INTERRUPTED ") this->status = threadStatus.substr(12);
+	else this->status = threadStatus;
 	this->startTimePoint = std::chrono::steady_clock::time_point::min();
 	this->pauseTimePoint = std::chrono::steady_clock::time_point::min();
 	this->runTime = std::chrono::duration<unsigned long>::zero();
@@ -43,6 +45,9 @@ Thread::Thread(Database& dbBase, unsigned long threadId, const std::string& thre
 	this->websiteNameSpace = this->databaseClass.getWebsiteNameSpace(this->getWebsite());
 	this->urlListNameSpace = this->databaseClass.getUrlListNameSpace(this->getUrlList());
 	this->configuration = this->databaseClass.getConfiguration(this->getConfig());
+
+	// if thread is paused, update thread status in database (add "PAUSED " before status)
+	this->databaseClass.setThreadStatus(this->id, true, this->status);
 }
 
 // constructor B: start new thread (using constructor A to initialize values)
@@ -329,7 +334,10 @@ void Thread::main() {
 			this->onClear(this->interrupted);
 
 			// update status
-			if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
+			if(this->interrupted) {
+				if(this->paused) this->setStatusMessage("INTERRUPTED PAUSED " + this->status);
+				else this->setStatusMessage("INTERRUPTED " + this->status);
+			}
 			else {
 				// log timing statistic
 				std::string logStr = "Stopped after " + DateTime::secondsToString(this->runTime.count()) + " running";
