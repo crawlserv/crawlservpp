@@ -96,7 +96,7 @@ bool App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, 
 	try {
 		dbSettings.port = boost::lexical_cast<unsigned short>(configFile.getValue("db_port"));
 	}
-	catch(boost::bad_lexical_cast &e) {
+	catch(const boost::bad_lexical_cast& e) {
 		throw(std::runtime_error(fileName + ": Could not convert config file entry \"db_port\" (=\""
 				+ configFile.getValue("db_port") + "\") to numeric value"));
 	}
@@ -110,7 +110,7 @@ bool App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, 
 		try {
 			serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
 		}
-		catch(boost::bad_lexical_cast &e) {
+		catch(const boost::bad_lexical_cast& e) {
 			errorTo = fileName + ": Could not convert config file entry \"server_logs_deletable\" (=\""
 					+ configFile.getValue("server_logs_deletable") + "\") to boolean value";
 		}
@@ -121,7 +121,7 @@ bool App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, 
 		try {
 			serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
 		}
-		catch(boost::bad_lexical_cast &e) {
+		catch(const boost::bad_lexical_cast& e) {
 			errorTo = fileName + ": Could not convert config file entry \"server_data_deletable\" (=\""
 					+ configFile.getValue("server_data_deletable") + "\") to boolean value";
 		}
