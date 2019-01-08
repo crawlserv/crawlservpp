@@ -18,7 +18,6 @@
 #include "DatabaseThread.h"
 
 #include "namespaces/DateTime.h"
-#include "structs/ConfigEntry.h"
 #include "structs/ThreadOptions.h"
 
 #include <atomic>
