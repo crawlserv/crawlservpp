@@ -10,7 +10,7 @@
 
 #include "App.h"
 
-// constructor: initialize server
+// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 App::App(int argc, char * argv[]) {
 	DatabaseSettings dbSettings;
 	ServerSettings serverSettings;
