@@ -151,7 +151,7 @@
 		"reparse": {
 			"id": 13,
 			"type": "bool",
-			"default": false,
+			"default": true,
 			"label": "Re-parse content",
 			"description": "Re-parse already parsed URLs.",
 			"simple": true,
