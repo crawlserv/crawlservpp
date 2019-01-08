@@ -9,13 +9,12 @@
 
 #include "XMLDocument.h"
 
-// constructor
+// constructor: set document pointer to NULL
 XMLDocument::XMLDocument() {
 	this->doc = NULL;
-
 }
 
-// destructor: delete document if necessary
+// destructor: delete document (if necessary)
 XMLDocument::~XMLDocument() {
 	if(this->doc) {
 		delete this->doc;
@@ -23,7 +22,7 @@ XMLDocument::~XMLDocument() {
 	}
 }
 
-// parse XML content
+// parse XML content, return false on error
 bool XMLDocument::parse(const std::string& content) {
 	// delete previous document if necessary
 	if(this->doc) {
@@ -106,7 +105,7 @@ bool XMLDocument::parse(const std::string& content) {
 	return true;
 }
 
-// get content of XML document
+// get content of XML document (saved in resultTo), return false on error
 bool XMLDocument::getContent(std::string& resultTo) const {
 	if(!(this->doc)) {
 		this->errorMessage = "XML error: No content parsed.";
