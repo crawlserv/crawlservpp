@@ -37,7 +37,8 @@ public:
 	std::vector<unsigned short> parserFieldSources;
 	std::vector<unsigned long> parserIdQueries;
 	std::vector<unsigned short> parserIdSources;
-	bool parserLogging;
+	unsigned int parserLock;
+	unsigned short parserLogging;
 	static const unsigned short parserLoggingSilent = 0;
 	static const unsigned short parserLoggingDefault = 1;
 	static const unsigned short parserLoggingExtended = 2;
@@ -49,6 +50,7 @@ public:
 	std::string parserResultTable;
 	unsigned long parserSleepIdle;
 	unsigned long parserSleepMySql;
+	bool parserTiming;
 
 protected:
 	// load parsing-specific configuration from parsed JSON document
