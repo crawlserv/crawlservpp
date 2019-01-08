@@ -52,7 +52,7 @@ public:
 
 protected:
 	// load parsing-specific configuration from parsed JSON document
-	bool loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
+	void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
 };
 
 #endif /* CONFIGCRAWLER_H_ */

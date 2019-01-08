@@ -26,7 +26,7 @@ ConfigParser::ConfigParser() {
 ConfigParser::~ConfigParser() {}
 
 // load parsing-specific configuration from parsed JSON document
-bool ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) {
+void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) {
 	// go through all array items i.e. configuration entries
 	for(rapidjson::Value::ConstValueIterator i = jsonDocument.Begin(); i != jsonDocument.End(); i++) {
 		if(i->IsObject()) {
@@ -302,6 +302,4 @@ bool ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 		warningsTo.push_back("\'id.queries\' and \'.sources\' should have the same number of elements).");
 		warningsTo.push_back("Incomplete id queries removed.");
 	}
-
-	return true;
 }

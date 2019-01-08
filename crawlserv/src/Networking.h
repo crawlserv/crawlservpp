@@ -2,6 +2,7 @@
  * Networking.h
  *
  * A class using the cURL library to provide networking functionality.
+ * This class is used by both the crawler and the extractor.
  * NOT THREAD-SAFE! Use multiple instances for multiple threads.
  *
  *  Created on: Oct 8, 2018
@@ -11,7 +12,7 @@
 #ifndef NETWORKING_H_
 #define NETWORKING_H_
 
-#include "ConfigCrawler.h"
+#include "ConfigNetwork.h"
 
 #include "namespaces/Utf8.h"
 
@@ -22,17 +23,19 @@
 #include <climits>
 #include <cstdio>
 #include <exception>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <vector>
 
 class Networking {
 public:
 	Networking();
 	virtual ~Networking();
 
-	bool setCrawlingConfigGlobal(const ConfigCrawler& config, bool limited, std::vector<std::string> * warningsTo);
-	bool setCrawlingConfigCurrent(const ConfigCrawler& config);
+	bool setConfigGlobal(const ConfigNetwork& globalConfig, bool limited, std::vector<std::string> * warningsTo);
+	bool setConfigCurrent(const ConfigNetwork& currentConfig);
 
 	bool getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors);
 	unsigned int getResponseCode() const;
@@ -52,7 +55,7 @@ private:
 	std::string content;
 	std::string contentType;
 	unsigned int responseCode;
-	const ConfigCrawler * configCrawler;
+	const ConfigNetwork * config;
 	bool limitedSettings;
 
 	static int cURLWriter(char * data, unsigned long size, unsigned long nmemb, void * thisPointer);

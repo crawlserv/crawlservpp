@@ -89,7 +89,7 @@ bool ThreadCrawler::onInit(bool resumed) {
 	// set network configuration
 	configWarnings.clear();
 	if(config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose) this->log("sets global network configuration...");
-	if(!(this->networking.setCrawlingConfigGlobal(this->config, false, &configWarnings))) {
+	if(!(this->networking.setConfigGlobal(this->config.network, false, &configWarnings))) {
 		if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
 		return false;
 	}
@@ -113,7 +113,7 @@ bool ThreadCrawler::onInit(bool resumed) {
 	// initialize networking for archives if necessary
 	if(this->config.crawlerArchives && !(this->networkingArchives)) {
 		this->networkingArchives = new Networking();
-		if(!(this->networkingArchives->setCrawlingConfigGlobal(this->config, true, &configWarnings))) {
+		if(!(this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings))) {
 			if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
 			return false;
 		}
@@ -637,7 +637,7 @@ bool ThreadCrawler::crawlingContent(const IdString& url, unsigned long& checkedU
 	}
 
 	// set local networking options
-	if(this->networking.setCrawlingConfigCurrent(this->config)) {
+	if(this->networking.setConfigCurrent(this->config.network)) {
 
 		// get content
 		if(this->config.crawlerTiming) httpTimer.start();

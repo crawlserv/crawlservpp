@@ -25,6 +25,7 @@ The source code of the server consists of the following classes (as of January 2
 * <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
 * <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * <b>[`ConfigModule`](crawlserv/src/ConfigModule.cpp)</b>: Abstract class as base for module-specific configuration classes.
+* <b>[`ConfigNetwork`](crawlserv/src/ConfigModule.cpp)</b>: Network configuration. This class is both used by the crawler and the extractor. See [crawlserv_frontend/crawlserv/json/crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[crawlserv_frontend/crawlserv/json/extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * <b>[`ConfigParser`](crawlserv/src/ConfigParser.cpp)</b>: Parsing configuration. See [crawlserv_frontend/crawlserv/json/parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
 * <b>[`Database`](crawlserv/src/Database.cpp)</b>: Database access for the server and its threads (parent class with server-specific and basic functionality only).
 * ~~<b>`DatabaseAnalyzer`</b>~~: Database access for analyzers (implements the `DatabaseModule` interface).
@@ -33,7 +34,7 @@ The source code of the server consists of the following classes (as of January 2
 * <b>[`DatabaseModule`](crawlserv/src/DatabaseModule.cpp)</b>: Interface for the database access of threads (wraps the `DatabaseThread` class).
 * ~~<b>`DatabaseParser`</b>~~: Database access for parsers (implements the `DatabaseModule` interface).
 * <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of the `Database` class).
-* <b>[`Networking`](crawlserv/src/Networking.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/).
+* <b>[`Networking`](crawlserv/src/Networking.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
 * <b>[`RegEx`](crawlserv/src/RegEx.cpp)</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * <b>[`Server`](crawlserv/src/Server.cpp)</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
 * <b>[`Thread`](crawlserv/src/Thread.cpp)</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).

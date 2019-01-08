@@ -31,7 +31,7 @@ protected:
 	std::string errorMessage;
 
 	// load module-specific configuration from parsed JSON document
-	virtual bool loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) = 0;
+	virtual void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) = 0;
 };
 
 #endif /* SRC_CONFIGMODULE_H_ */
