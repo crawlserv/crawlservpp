@@ -12,17 +12,20 @@
 
 #include "DatabaseModule.h"
 #include "DatabaseThread.h"
+
+#include "structs/IdString.h"
+
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
+
 #include <mysql_connection.h>
 
 #include <chrono>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "structs/IdString.h"
 
 class DatabaseCrawler : public DatabaseModule {
 public:
