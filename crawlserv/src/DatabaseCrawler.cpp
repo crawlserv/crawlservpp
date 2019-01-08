@@ -131,8 +131,8 @@ bool DatabaseCrawler::prepare(unsigned long crawlerId, const std::string& websit
 		}
 		if(!(this->psSetUrlFinished)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares setUrlFinished()...");
-			this->psSetUrlFinished = this->addPreparedStatement("UPDATE " + this->urlListTable + " SET crawled = TRUE, crawllock = NULL"
-					" WHERE id = ? LIMIT 1");
+			this->psSetUrlFinished = this->addPreparedStatement("UPDATE " + this->urlListTable + " SET crawled = TRUE, parsed = FALSE,"
+					" extracted = FALSE, analyzed = FALSE, crawllock = NULL, WHERE id = ? LIMIT 1");
 		}
 		if(!(this->psIsArchivedContentExists)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares isArchivedContentExists()...");
