@@ -74,11 +74,11 @@ bool Database::connect() {
 
 		// connect
 		this->connection = this->driver->connect(connectOptions);
-		if(!this->connection) {
+		if(!(this->connection)) {
 			this->errorMessage = "Could not connect to database";
 			return false;
 		}
-		if(!this->connection->isValid()) {
+		if(!(this->connection->isValid())) {
 			this->errorMessage = "Connection to database is invalid";
 			return false;
 		}
@@ -136,7 +136,7 @@ bool Database::initializeSql() {
 // prepare basic SQL statements and logging
 bool Database::prepare() {
 	// check connection
-	if(!this->checkConnection()) return false;
+	if(!(this->checkConnection())) return false;
 
 	try {
 		// prepare basic SQL statements
@@ -207,12 +207,12 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 	}
 
 	// check prepared SQL statement
-	if(!this->psLog) throw std::runtime_error("Missing prepared SQL statement for Database::log(...)");
+	if(!(this->psLog)) throw std::runtime_error("Missing prepared SQL statement for Database::log(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psLog - 1).statement;
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::log(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// add entry to database
 	try {
@@ -236,7 +236,7 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// create SQL query string
 	std::string sqlQuery = "SELECT COUNT(*) FROM crawlserv_log";
@@ -275,7 +275,7 @@ void Database::clearLogs(const std::string& logModule) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// create SQL query string
 	std::string sqlQuery = "DELETE FROM crawlserv_log";
@@ -309,7 +309,7 @@ std::vector<ThreadDatabaseEntry> Database::getThreads() {
 	std::vector<ThreadDatabaseEntry> result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -355,7 +355,7 @@ unsigned long Database::addThread(const std::string& threadModule, const ThreadO
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -393,7 +393,7 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -430,7 +430,7 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -463,10 +463,10 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 // update thread status in database (and add the pause state to the status message if necessary)
 void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// check prepared SQL statement
-	if(!this->psSetThreadStatus) throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatus(...)");
+	if(!(this->psSetThreadStatus)) throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatus(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadStatus - 1).statement;
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::setThreadStatus(...) is NULL");
 
@@ -496,10 +496,10 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 // update thread status in database (without using or changing the pause state)
 void Database::setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage) {
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// check prepared SQL statement
-	if(!this->psSetThreadStatusMessage) throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatus(...)");
+	if(!(this->psSetThreadStatusMessage)) throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatus(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadStatusMessage - 1).statement;
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::setThreadStatus(...) is NULL");
 
@@ -526,7 +526,7 @@ void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunT
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -554,7 +554,7 @@ void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPa
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -582,7 +582,7 @@ void Database::deleteThread(unsigned long threadId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -619,7 +619,7 @@ unsigned long Database::addWebsite(const std::string& websiteName, const std::st
 	if(this->isWebsiteNameSpace(websiteNameSpace)) throw std::runtime_error("Website namespace already exists");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for adding website
@@ -666,7 +666,7 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 	std::string result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -703,7 +703,7 @@ std::string Database::getWebsiteNameSpace(unsigned long int websiteId) {
 	std::string result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -740,7 +740,7 @@ IdString Database::getWebsiteNameSpaceFromUrlList(unsigned long listId) {
 	unsigned long websiteId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -777,7 +777,7 @@ IdString Database::getWebsiteNameSpaceFromConfig(unsigned long configId) {
 	unsigned long websiteId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -814,7 +814,7 @@ IdString Database::getWebsiteNameSpaceFromParsedTable(unsigned long tableId) {
 	unsigned long websiteId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -851,7 +851,7 @@ IdString Database::getWebsiteNameSpaceFromExtractedTable(unsigned long tableId) 
 	unsigned long websiteId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -888,7 +888,7 @@ IdString Database::getWebsiteNameSpaceFromAnalyzedTable(unsigned long tableId) {
 	unsigned long websiteId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -925,7 +925,7 @@ bool Database::isWebsiteNameSpace(const std::string& nameSpace) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -988,7 +988,7 @@ std::string Database::duplicateWebsiteNameSpace(const std::string& websiteNameSp
 		n++;
 		resultStrStr << nameString << n;
 		result = resultStrStr.str();
-		if(!this->isWebsiteNameSpace(result)) break;
+		if(!(this->isWebsiteNameSpace(result))) break;
 	}
 	return result;
 }
@@ -1008,7 +1008,7 @@ void Database::updateWebsite(unsigned long websiteId, const std::string& website
 			throw std::runtime_error("Webspace namespace already exists");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// check whether namespace has changed
@@ -1109,7 +1109,7 @@ void Database::deleteWebsite(unsigned long websiteId) {
 		}
 
 		// check connection
-		if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+		if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 		// create SQL statement for deletion of website
 		sqlStatement = this->connection->prepareStatement("DELETE FROM crawlserv_websites WHERE id = ? LIMIT 1");
@@ -1140,7 +1140,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for geting website info
@@ -1254,7 +1254,7 @@ unsigned long Database::addUrlList(unsigned long websiteId, const std::string& l
 	if(this->isUrlListNameSpace(websiteId, listNameSpace)) throw std::runtime_error("URL list namespace already exists");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for adding URL list
@@ -1318,7 +1318,7 @@ std::vector<IdString> Database::getUrlLists(unsigned long websiteId) {
 	std::vector<IdString> result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1354,7 +1354,7 @@ std::string Database::getUrlListNameSpace(unsigned long listId) {
 	std::string result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1391,7 +1391,7 @@ IdString Database::getUrlListNameSpaceFromParsedTable(unsigned long tableId) {
 	unsigned long urlListId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1428,7 +1428,7 @@ IdString Database::getUrlListNameSpaceFromExtractedTable(unsigned long tableId) 
 	unsigned long urlListId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1465,7 +1465,7 @@ IdString Database::getUrlListNameSpaceFromAnalyzedTable(unsigned long tableId) {
 	unsigned long urlListId = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1502,7 +1502,7 @@ bool Database::isUrlListNameSpace(unsigned long websiteId, const std::string& na
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1549,7 +1549,7 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 			throw std::runtime_error("Webspace namespace already exists");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		if(listNameSpace != oldListNameSpace) {
@@ -1656,7 +1656,7 @@ void Database::deleteUrlList(unsigned long listId) {
 		}
 
 		// check connection
-		if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+		if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 		// create SQL statement for deleting URL list
 		deleteStatement = this->connection->prepareStatement("DELETE FROM crawlserv_urllists WHERE id = ? LIMIT 1");
@@ -1699,7 +1699,7 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for adding query
@@ -1743,7 +1743,7 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 	sql::ResultSet * sqlResultSet = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1783,7 +1783,7 @@ void Database::updateQuery(unsigned long queryId, const std::string& queryName, 
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for updating
@@ -1818,7 +1818,7 @@ void Database::deleteQuery(unsigned long queryId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1850,7 +1850,7 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for getting query info
@@ -1893,7 +1893,7 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const std::str
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for adding configuration
@@ -1931,7 +1931,7 @@ const std::string Database::getConfiguration(unsigned long configId) {
 	std::string result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1966,7 +1966,7 @@ void Database::updateConfiguration(unsigned long configId, const std::string& co
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for updating
@@ -1996,7 +1996,7 @@ void Database::deleteConfiguration(unsigned long configId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2028,7 +2028,7 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for getting configuration info
@@ -2069,7 +2069,7 @@ std::vector<IdString> Database::getParsedTables(unsigned long listId) {
 	std::vector<IdString> result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2106,7 +2106,7 @@ std::string Database::getParsedTable(unsigned long tableId) {
 	std::string result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2147,7 +2147,7 @@ void Database::deleteParsedTable(unsigned long tableId) {
 	std::string tableName = this->getParsedTable(tableId);
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for deletion
@@ -2191,7 +2191,7 @@ std::vector<IdString> Database::getExtractedTables(unsigned long listId) {
 	std::vector<IdString> result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2228,7 +2228,7 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 	std::string result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2269,7 +2269,7 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 	std::string tableName = this->getExtractedTable(tableId);
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for deletion
@@ -2313,7 +2313,7 @@ std::vector<IdString> Database::getAnalyzedTables(unsigned long listId) {
 	std::vector<IdString> result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2350,7 +2350,7 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 	std::string result;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2391,7 +2391,7 @@ void Database::deleteAnalyzedTable(unsigned long tableId) {
 	std::string tableName = this->getParsedTable(tableId);
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement for deletion
@@ -2440,7 +2440,7 @@ bool Database::isWebsite(unsigned long websiteId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2478,7 +2478,7 @@ bool Database::isUrlList(unsigned long urlListId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2516,7 +2516,7 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2555,7 +2555,7 @@ bool Database::isQuery(unsigned long queryId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2593,7 +2593,7 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2632,7 +2632,7 @@ bool Database::isConfiguration(unsigned long configId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2670,7 +2670,7 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2709,7 +2709,7 @@ bool Database::isParsedTable(unsigned long tableId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2747,7 +2747,7 @@ bool Database::isExtractedTable(unsigned long tableId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2785,7 +2785,7 @@ bool Database::isAnalyzedTable(unsigned long tableId) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2835,7 +2835,7 @@ bool Database::checkConnection() {
 		if(this->connection->isValid()) return true;
 
 		// try to reconnect
-		if(!this->connection->reconnect()) {
+		if(!(this->connection->reconnect())) {
 			// simple reconnect failed: try to reset connection
 			delete this->connection;
 			this->connection = NULL;
@@ -2882,12 +2882,12 @@ unsigned long Database::getLastInsertedId() {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!this->psLastId) throw std::runtime_error("Missing prepared SQL statement for last inserted id");
+	if(!(this->psLastId)) throw std::runtime_error("Missing prepared SQL statement for last inserted id");
 	sqlStatement = this->preparedStatements.at(this->psLastId - 1).statement;
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for last inserted id is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// execute SQL statement
@@ -2918,7 +2918,7 @@ bool Database::isTableEmpty(const std::string& tableName) {
 	bool result = false;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2952,7 +2952,7 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2978,7 +2978,7 @@ void Database::lockTable(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3005,7 +3005,7 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 	sql::Statement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3032,7 +3032,7 @@ void Database::unlockTables() {
 	sql::Statement * sqlStatement = NULL;
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3061,7 +3061,7 @@ bool Database::run(const std::string& sqlFile) {
 
 	if(initSQLFile.is_open()) {
 		// check connection
-		if(!this->checkConnection()) return false;
+		if(!(this->checkConnection())) return false;
 
 		// create SQL statement
 		sql::Statement * sqlStatement = this->connection->createStatement();

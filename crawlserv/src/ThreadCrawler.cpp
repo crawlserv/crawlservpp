@@ -83,7 +83,7 @@ bool ThreadCrawler::onInit(bool resumed) {
 	this->domain = this->database.getWebsiteDomain(this->getWebsite());
 
 	// create parser
-	if(!this->parser) this->parser = new URIParser;
+	if(!(this->parser)) this->parser = new URIParser;
 	this->parser->setCurrentDomain(this->domain);
 
 	// set network configuration

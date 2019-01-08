@@ -50,7 +50,7 @@ bool DatabaseCrawler::prepare(unsigned long crawlerId, const std::string& websit
 	std::string crawledTable = this->urlListTable + "_crawled";
 
 	// check connection to database
-	if(!this->checkConnection()) return false;
+	if(!(this->checkConnection())) return false;
 
 	try {
 		// prepare SQL statements for crawler
@@ -171,17 +171,17 @@ bool DatabaseCrawler::isUrlExists(const std::string& urlString) {
 	bool result = false;
 
 	// check prepared SQL statements
-	if(!this->psIsUrlHashExists)
+	if(!(this->psIsUrlHashExists))
 		throw std::runtime_error("Missing prepared SQL statement for URL hash checks");
 	sql::PreparedStatement * hashStatement = this->getPreparedStatement(this->psIsUrlHashExists);
 	if(!hashStatement)
 		throw std::runtime_error("Prepared SQL statement for URL hash checks is NULL");
-	if(!this->psIsUrlExists) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::isUrlExists(...)");
+	if(!(this->psIsUrlExists)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::isUrlExists(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psIsUrlExists);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::isUrlExists(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// check URL existence in database
 	try {
@@ -231,12 +231,12 @@ unsigned long DatabaseCrawler::getUrlId(const std::string& urlString) {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!this->psGetUrlId) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getUrlId(...)");
+	if(!(this->psGetUrlId)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getUrlId(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetUrlId);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::getUrlId(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get id of URL from database
 	try {
@@ -267,12 +267,12 @@ bool DatabaseCrawler::isUrlCrawled(unsigned long urlId) {
 	bool result = false;
 
 	// check prepared SQL statement
-	if(!this->psIsUrlCrawled) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::isUrlCrawled(...)");
+	if(!(this->psIsUrlCrawled)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::isUrlCrawled(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psIsUrlCrawled);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::isUrlCrawled(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get next URL from database
 	try {
@@ -304,12 +304,12 @@ IdString DatabaseCrawler::getNextUrl(unsigned long currentUrlId) {
 	IdString result;
 
 	// check prepared SQL statement
-	if(!this->psGetNextUrl) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getNextUrl(...)");
+	if(!(this->psGetNextUrl)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getNextUrl(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetNextUrl);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::getNextUrl(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get next URL from database
 	try {
@@ -342,12 +342,12 @@ unsigned long DatabaseCrawler::addUrl(const std::string& urlString, bool manual)
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!this->psAddUrl) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addUrl(...)");
+	if(!(this->psAddUrl)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addUrl(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psAddUrl);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::addUrl(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// add URL to database and get resulting id
 	try {
@@ -377,12 +377,12 @@ unsigned long DatabaseCrawler::getUrlPosition(unsigned long urlId) {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!this->psGetUrlPosition) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getUrlPosition()");
+	if(!(this->psGetUrlPosition)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getUrlPosition()");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetUrlPosition);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::getUrlPosition() is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get URL position of URL from database
 	try {
@@ -414,12 +414,12 @@ unsigned long DatabaseCrawler::getNumberOfUrls() {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!this->psGetNumberOfUrls) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getNumberOfUrls()");
+	if(!(this->psGetNumberOfUrls)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getNumberOfUrls()");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetNumberOfUrls);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::getNumberOfUrls() is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get number of URLs from database
 	try {
@@ -450,21 +450,21 @@ void DatabaseCrawler::addLinkIfNotExists(unsigned long from, unsigned long to, b
 	sql::ResultSet * sqlResultSet = NULL;
 
 	// check prepared SQL statements
-	if(!this->psIsLinkExists) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
+	if(!(this->psIsLinkExists)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
 	sql::PreparedStatement * checkStatement = this->getPreparedStatement(this->psIsLinkExists);
 	if(!checkStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...) is NULL");
 	if(archived) {
-		if(!this->psAddLinkArchived) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
+		if(!(this->psAddLinkArchived)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
 		addStatement = this->getPreparedStatement(this->psAddLinkArchived);
 	}
 	else {
-		if(!this->psAddLink) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
+		if(!(this->psAddLink)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
 		addStatement = this->getPreparedStatement(this->psAddLink);
 	}
 	if(!addStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// check existence of link and add it to database if it does not exist there already
 	try {
@@ -501,12 +501,12 @@ bool DatabaseCrawler::isUrlLockable(unsigned long urlId) {
 	bool result = false;
 
 	// check prepared SQL statement
-	if(!this->psIsUrlLockable) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::isUrlLockable(...)");
+	if(!(this->psIsUrlLockable)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::isUrlLockable(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psIsUrlLockable);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::isUrlLockable(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// check URL lock in database
 	try {
@@ -538,12 +538,12 @@ std::string DatabaseCrawler::getUrlLock(unsigned long urlId) {
 	std::string result;
 
 	// check prepared SQL statement
-	if(!this->psGetUrlLock) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getUrlLock(...)");
+	if(!(this->psGetUrlLock)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::getUrlLock(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetUrlLock);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::getUrlLock(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get URL lock from database
 	try {
@@ -574,12 +574,12 @@ bool DatabaseCrawler::checkUrlLock(unsigned long urlId, const std::string& lockT
 	bool result = false;
 
 	// check prepared SQL statement
-	if(!this->psCheckUrlLock) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::checkUrlLock(...)");
+	if(!(this->psCheckUrlLock)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::checkUrlLock(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psCheckUrlLock);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::checkUrlLock(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// check URL lock in database
 	try {
@@ -609,12 +609,12 @@ bool DatabaseCrawler::checkUrlLock(unsigned long urlId, const std::string& lockT
 // lock a URL in the database
 std::string DatabaseCrawler::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 	// check prepared SQL statement
-	if(!this->psLockUrl) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::lockUrl(...)");
+	if(!(this->psLockUrl)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::lockUrl(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psLockUrl);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::lockUrl(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// lock URL in database
 	try {
@@ -636,12 +636,12 @@ std::string DatabaseCrawler::lockUrl(unsigned long urlId, unsigned long lockTime
 // unlock a URL in the database
 void DatabaseCrawler::unLockUrl(unsigned long urlId) {
 	// check prepared SQL statement
-	if(!this->psUnLockUrl) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::unLockUrl(...)");
+	if(!(this->psUnLockUrl)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::unLockUrl(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psUnLockUrl);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::unLockUrl(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// unlock URL in database
 	try {
@@ -661,12 +661,12 @@ void DatabaseCrawler::unLockUrl(unsigned long urlId) {
 void DatabaseCrawler::saveContent(unsigned long urlId, unsigned int response, const std::string& type,
 		const std::string& content) {
 	// check prepared SQL statement
-	if(!this->psSaveContent) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::saveContent(...)");
+	if(!(this->psSaveContent)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::saveContent(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psSaveContent);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::saveContent(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// save content to database
 	try {
@@ -695,13 +695,13 @@ void DatabaseCrawler::saveContent(unsigned long urlId, unsigned int response, co
 void DatabaseCrawler::saveArchivedContent(unsigned long urlId, const std::string& timeStamp, unsigned int response,
 		const std::string& type, const std::string& content) {
 	// check prepared SQL statement
-	if(!this->psSaveArchivedContent)
+	if(!(this->psSaveArchivedContent))
 		throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::saveArchivedContent(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psSaveArchivedContent);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::saveArchivedContent(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// save archived content to database
 	try {
@@ -725,12 +725,12 @@ void DatabaseCrawler::saveArchivedContent(unsigned long urlId, const std::string
 // set URL as crawled in the database
 void DatabaseCrawler::setUrlFinished(unsigned long urlId) {
 	// check prepared SQL statement
-	if(!this->psSetUrlFinished) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::setUrlCrawled(...)");
+	if(!(this->psSetUrlFinished)) throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::setUrlCrawled(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psSetUrlFinished);
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::setUrlCrawled(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get id of URL from database
 	try {
@@ -751,14 +751,14 @@ bool DatabaseCrawler::isArchivedContentExists(unsigned long urlId, const std::st
 	bool result = false;
 
 	// check prepared SQL statement
-	if(!this->psIsArchivedContentExists)
+	if(!(this->psIsArchivedContentExists))
 		throw std::runtime_error("Missing prepared SQL statement for DatabaseCrawler::isArchivedContentExists(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psIsArchivedContentExists);
 	if(!sqlStatement)
 		throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::isArchivedContentExists(...) is NULL");
 
 	// check connection
-	if(!this->checkConnection()) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	// get next URL from database
 	try {

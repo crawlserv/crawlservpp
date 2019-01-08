@@ -27,9 +27,9 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 	}
 
 	// connect to database and initialize it
-	if(!this->database.connect()) throw std::runtime_error(this->database.getErrorMessage());
-	if(!this->database.initializeSql()) throw std::runtime_error(this->database.getErrorMessage());
-	if(!this->database.prepare()) throw std::runtime_error(this->database.getErrorMessage());
+	if(!(this->database.connect())) throw std::runtime_error(this->database.getErrorMessage());
+	if(!(this->database.initializeSql())) throw std::runtime_error(this->database.getErrorMessage());
+	if(!(this->database.prepare())) throw std::runtime_error(this->database.getErrorMessage());
 
 	// initialize mongoose HTTP server
 	mg_mgr_init(&(this->eventManager), NULL);
@@ -506,7 +506,7 @@ Server::CmdResponse Server::cmdLog(const rapidjson::Document& json) {
 // server command clearlog([module]): remove all log entries or the log entries of a specific module (or all when module is empty/not given)
 Server::CmdResponse Server::cmdClearLog(const rapidjson::Document& json, const std::string& ip) {
 	// check whether the clearing of logs is allowed
-	if(!this->settings.logsDeletable) return Server::CmdResponse(true, "Not allowed.");
+	if(!(this->settings.logsDeletable)) return Server::CmdResponse(true, "Not allowed.");
 
 	// get argument
 	std::string module;
@@ -675,7 +675,7 @@ Server::CmdResponse Server::cmdAddWebsite(const rapidjson::Document& json) {
 
 	// check namespace
 	if(nameSpace.length() < 4) return Server::CmdResponse(true, "Website namespace has to be at least 4 characters long.");
-	if(!this->cmdCheckNameSpace(nameSpace)) return Server::CmdResponse(true, "Invalid character(s) in website namespace.");
+	if(!(this->cmdCheckNameSpace(nameSpace))) return Server::CmdResponse(true, "Invalid character(s) in website namespace.");
 
 	// correct and check domain name (remove protocol from start and slash from the end)
 	while(domain.length() > 6 && domain.substr(0, 7) == "http://") domain = domain.substr(7);
@@ -711,7 +711,7 @@ Server::CmdResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
 
 	// check namespace name
 	if(nameSpace.length() < 4) return Server::CmdResponse(true, "Website namespace has to be at least 4 characters long.");
-	if(!this->cmdCheckNameSpace(nameSpace)) return Server::CmdResponse(true, "Invalid character(s) in website namespace.");
+	if(!(this->cmdCheckNameSpace(nameSpace))) return Server::CmdResponse(true, "Invalid character(s) in website namespace.");
 
 	// correct and check domain name (remove protocol from start and slash from the end)
 	while(domain.length() > 6 && domain.substr(0, 7) == "http://") domain = domain.substr(7);
@@ -744,7 +744,7 @@ Server::CmdResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
 // server command deletewebsite(id): delete a website and all associated data from the database by its ID
 Server::CmdResponse Server::cmdDeleteWebsite(const rapidjson::Document& json, const std::string& ip) {
 	// check whether the deletion of data is allowed
-	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
+	if(!(this->settings.dataDeletable)) return Server::CmdResponse(true, "Not allowed.");
 
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -822,7 +822,7 @@ Server::CmdResponse Server::cmdAddUrlList(const rapidjson::Document& json) {
 
 	// check namespace
 	if(nameSpace.length() < 4) return Server::CmdResponse(true, "Namespace of URL list has to be at least 4 characters long.");
-	if(!this->cmdCheckNameSpace(nameSpace)) return Server::CmdResponse(true, "Invalid character(s) in namespace of URL list.");
+	if(!(this->cmdCheckNameSpace(nameSpace))) return Server::CmdResponse(true, "Invalid character(s) in namespace of URL list.");
 	if(nameSpace == "config") return Server::CmdResponse(true, "Namespace of URL list cannot be \'config\'.");
 
 	// check website
@@ -856,7 +856,7 @@ Server::CmdResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
 
 	// check namespace
 	if(nameSpace.length() < 4) return Server::CmdResponse(true, "Namespace of URL list has to be at least 4 characters long.");
-	if(!this->cmdCheckNameSpace(nameSpace)) return Server::CmdResponse(true, "Invalid character(s) in namespace of URL list.");;
+	if(!(this->cmdCheckNameSpace(nameSpace))) return Server::CmdResponse(true, "Invalid character(s) in namespace of URL list.");;
 	if(nameSpace == "config") return Server::CmdResponse(true, "Namespace of URL list cannot be \'config\'.");
 
 	// check URL list
@@ -884,7 +884,7 @@ Server::CmdResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
 // server command deleteurllist(id): delete a URL list and all associated data from the database by its ID
 Server::CmdResponse Server::cmdDeleteUrlList(const rapidjson::Document& json, const std::string& ip) {
 	// check whether the deletion of data is allowed
-	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
+	if(!(this->settings.dataDeletable)) return Server::CmdResponse(true, "Not allowed.");
 
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -1025,7 +1025,7 @@ Server::CmdResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
 // server command deletequery(id): delete a query from the database by its ID
 Server::CmdResponse Server::cmdDeleteQuery(const rapidjson::Document& json) {
 	// check whether the deletion of data is allowed
-	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
+	if(!(this->settings.dataDeletable)) return Server::CmdResponse(true, "Not allowed.");
 
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -1319,7 +1319,7 @@ Server::CmdResponse Server::cmdUpdateConfig(const rapidjson::Document& json) {
 // server command deleteconfig(id): delete a configuration from the database by its ID
 Server::CmdResponse Server::cmdDeleteConfig(const rapidjson::Document& json) {
 	// check whether the deletion of data is allowed
-	if(!this->settings.dataDeletable) return Server::CmdResponse(true, "Not allowed.");
+	if(!(this->settings.dataDeletable)) return Server::CmdResponse(true, "Not allowed.");
 
 	// get argument
 	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
