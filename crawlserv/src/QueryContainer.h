@@ -34,6 +34,7 @@ protected:
 	};
 
 	// query functions
+	virtual void initQueries() = 0;
 	QueryContainer::Query addQuery(const std::string& queryText, const std::string& queryType, bool queryResultBool,
 			bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
 	const RegEx * getRegExQueryPtr(unsigned long index) const;

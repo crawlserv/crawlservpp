@@ -103,7 +103,7 @@ private:
 	void initCustomUrls();
 	void initDoGlobalCounting(std::vector<std::string>& urlList, const std::string& variable, long start, long end, long step);
 	std::vector<std::string> initDoLocalCounting(const std::string& url, const std::string& variable, long start, long end, long step);
-	void initQueries();
+	void initQueries() override;
 
 	// crawling functions
 	bool crawlingUrlSelection(IdString& urlTo);

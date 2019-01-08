@@ -9,13 +9,12 @@
 
 #include "QueryContainer.h"
 
-QueryContainer::QueryContainer() {
-	// TODO Auto-generated constructor stub
+// constructor stub
+QueryContainer::QueryContainer() {}
 
-}
-
+// destructor: clear queries
 QueryContainer::~QueryContainer() {
-	// TODO Auto-generated destructor stub
+	this->clearQueries();
 }
 
 // add query to internal vectors and return index
