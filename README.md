@@ -63,7 +63,7 @@ The following custom structures are used (to be found in [`crawlserv/src/structs
 * <b>[`ConfigEntry`](crawlserv/src/structs/ConfigEntry.h)</b>: A `[name,value]` pair from the configuration file.
 * <b>[`DatabaseSettings`](crawlserv/src/structs/DatabaseSettings.h)</b>: Basic database settings (host, port, user, password, schema).
 * <b>[`IdString`](crawlserv/src/structs/IdString.h)</b>: A simple `[id,string]` pair.
-* <b>[`Memento`](crawlserv/src/structs/Memento.h)</b>: URL and timestamp of a memento (archived website).
+* <b>[`Memento`](crawlserv/src/structs/Memento.h)</b>: URL and timestamp of a memento (i.e. an archived website).
 * <b>[`PreparedSqlStatement`](crawlserv/src/structs/PreparedSqlStatement.h)</b>: Content of and pointer to a prepared SQL statement.
 * <b>[`ServerCommandArgument`](crawlserv/src/structs/ServerCommandArgument.h)</b>: The `[name,value]` pair of a server command argument.
 * <b>[`ServerSettings`](crawlserv/src/structs/ServerSettings.h)</b>: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
