@@ -14,12 +14,11 @@
 #include "Database.h"
 #include "DatabaseCrawler.h"
 #include "Networking.h"
-#include "RegEx.h"
+#include "QueryContainer.h"
 #include "Thread.h"
 #include "TimerStartStop.h"
 #include "URIParser.h"
 #include "XMLDocument.h"
-#include "XPath.h"
 
 #include "namespaces/DateTime.h"
 #include "namespaces/Strings.h"
@@ -38,7 +37,7 @@
 #include <thread>
 #include <vector>
 
-class ThreadCrawler: public Thread {
+class ThreadCrawler: public Thread, public QueryContainer {
 public:
 	ThreadCrawler(Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
 			const ThreadOptions& threadOptions, unsigned long crawlerLast);
@@ -69,25 +68,14 @@ private:
 	URIParser * parser;
 	Networking * networkingArchives;
 
-	// queries (including sub-struct for query identification)
-	struct Query {
-		static const unsigned char typeRegEx = 0;
-		static const unsigned char typeXPath = 1;
-		unsigned char type;
-		unsigned long index;
-		bool resultBool;
-		bool resultSingle;
-		bool resultMulti;
-	};
-	std::vector<RegEx*> queriesRegEx;
-	std::vector<XPath*> queriesXPath;
-	std::vector<ThreadCrawler::Query> queriesBlackListContent;
-	std::vector<ThreadCrawler::Query> queriesBlackListTypes;
-	std::vector<ThreadCrawler::Query> queriesBlackListUrls;
-	std::vector<ThreadCrawler::Query> queriesLinks;
-	std::vector<ThreadCrawler::Query> queriesWhiteListContent;
-	std::vector<ThreadCrawler::Query> queriesWhiteListTypes;
-	std::vector<ThreadCrawler::Query> queriesWhiteListUrls;
+	// queries
+	std::vector<QueryContainer::Query> queriesBlackListContent;
+	std::vector<QueryContainer::Query> queriesBlackListTypes;
+	std::vector<QueryContainer::Query> queriesBlackListUrls;
+	std::vector<QueryContainer::Query> queriesLinks;
+	std::vector<QueryContainer::Query> queriesWhiteListContent;
+	std::vector<QueryContainer::Query> queriesWhiteListTypes;
+	std::vector<QueryContainer::Query> queriesWhiteListUrls;
 
 	// timing
 	unsigned long long tickCounter;
@@ -116,8 +104,6 @@ private:
 	void initDoGlobalCounting(std::vector<std::string>& urlList, const std::string& variable, long start, long end, long step);
 	std::vector<std::string> initDoLocalCounting(const std::string& url, const std::string& variable, long start, long end, long step);
 	void initQueries();
-	ThreadCrawler::Query addQuery(const std::string& queryText, const std::string& queryType, bool queryResultBool,
-			bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
 
 	// crawling functions
 	bool crawlingUrlSelection(IdString& urlTo);
