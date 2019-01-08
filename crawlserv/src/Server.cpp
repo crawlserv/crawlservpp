@@ -60,7 +60,7 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 		}
 		else if(i->module == "parser") {
 			// load parser thread
-			//Parser * parser = new Parser(this->dbSettings, i->id, i->status, i->paused, i->options, i->last);
+			//ThreadParser * parser = new ThreadParser(this->database, i->id, i->status, i->paused, i->options, i->last);
 			//parser->Thread::start();
 			//this->parsers.push_back(parser);
 
@@ -71,7 +71,7 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 		}
 		else if(i->module == "extractor") {
 			// load extractor thread
-			//Extractor * extractor = new Extractor(this->dbSettings, i->id, i->status, i->paused, i->options, i->last);
+			//ThreadExtractor * extractor = new ThreadExtractor(this->database, i->id, i->status, i->paused, i->options, i->last);
 			//extractor->Thread::start();
 			//this->extractors.push_back(extractor);
 
@@ -82,7 +82,7 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 		}
 		else if(i->module == "analyzer") {
 			// load analyzer thread
-			//Analyzer * analyzer = new Analyzer(this->dbSettings, i->id, i->status, i->paused, i->options, i->last);
+			//ThreadAnalyzer * analyzer = new ThreadAnalyzer(this->database, i->id, i->status, i->paused, i->options, i->last);
 			//analyzer->Thread::start();
 			//this->analyzers.push_back(analyzer);
 
@@ -128,35 +128,50 @@ Server::~Server() {
 	}
 	/*for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
 		if(*i) {
-			std::ostringstream logStrStr;
-			logStrStr << "#" << (*i)->getId() << " interrupted.";
-			this->database.log("parser", logStrStr.str());
+			// get thread id (for logging)
+			unsigned long id = (*i)->getId();
 
+			// wait for thread and delete it
 			(*i)->Thread::finishInterrupt();
 			delete *i;
 			*i = NULL;
+
+			// log interruption
+			std::ostringstream logStrStr;
+			logStrStr << "#" << (*i)->getId() << " interrupted.";
+			this->database.log("parser", logStrStr.str());
 		}
 	}*/
 	/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
 		if(*i) {
-			std::ostringstream logStrStr;
-			logStrStr << "#" << (*i)->getId() << " interrupted.";
-			this->database.log("extractor", logStrStr.str());
+			// get thread id (for logging)
+			unsigned long id = (*i)->getId();
 
+			// wait for thread and delete it
 			(*i)->Thread::finishInterrupt();
 			delete *i;
 			*i = NULL;
+
+			// log interruption
+			std::ostringstream logStrStr;
+			logStrStr << "#" << (*i)->getId() << " interrupted.";
+			this->database.log("extractor", logStrStr.str());
 		}
 	}*/
 	/*for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
 		if(*i) {
-			std::ostringstream logStrStr;
-			logStrStr << "#" << (*i)->getId() << " interrupted.";
-			this->database.log("analyzer", logStrStr.str());
+			// get thread id (for logging)
+			unsigned long id = (*i)->getId();
 
+			// wait for thread and delete it
 			(*i)->Thread::finishInterrupt();
 			delete *i;
 			*i = NULL;
+
+			// log interruption
+			std::ostringstream logStrStr;
+			logStrStr << "#" << (*i)->getId() << " interrupted.";
+			this->database.log("analyzer", logStrStr.str());
 		}
 	}*/
 
