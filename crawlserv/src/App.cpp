@@ -20,17 +20,17 @@ App::App(int argc, char * argv[]) {
 	this->server = NULL;
 
 	// show header
-	outputHeader();
+	this->outputHeader();
 
 	try {
 		// check number of arguments
-		if(!this->checkArgumentNumber(argc, error)) throw(std::runtime_error(error));
+		if(!(this->checkArgumentNumber(argc, error))) throw(std::runtime_error(error));
 
 		// load configuration file
-		if(!this->loadConfig(argv[1], dbSettings, serverSettings, error)) throw(std::runtime_error(error));
+		if(!(this->loadConfig(argv[1], dbSettings, serverSettings, error))) throw(std::runtime_error(error));
 
 		// get password
-		if(!this->getPassword(dbSettings)) this->running = false;
+		if(!(this->getPassword(dbSettings))) this->running = false;
 
 		// create server and run!
 		this->server = new Server(dbSettings, serverSettings);
@@ -50,7 +50,7 @@ App::~App() {
 		std::cout << std::endl << "> Waiting for threads..." << std::flush;
 
 		// delete server
-		delete server;
+		delete this->server;
 		this->server = NULL;
 	}
 
