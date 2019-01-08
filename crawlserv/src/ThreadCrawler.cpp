@@ -341,7 +341,7 @@ void ThreadCrawler::initCustomUrls() {
 	this->database.unlockTables();
 }
 
-// use a counter to multiply a list of URLs ("global" counting
+// use a counter to multiply a list of URLs ("global" counting)
 void ThreadCrawler::initDoGlobalCounting(std::vector<std::string>& urlList, const std::string& variable, long start, long end, long step) {
 	std::vector<std::string> newUrlList;
 	for(auto i = urlList.begin(); i != urlList.end(); ++i) {
