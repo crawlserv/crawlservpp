@@ -17,7 +17,7 @@ ConfigParser::ConfigParser() {
 	// parser entries
 	this->parserLogging = ConfigParser::parserLoggingDefault;
 	this->parserNewestOnly = true;
-	this->parserReParse = false;
+	this->parserReParse = true;
 	this->parserSleepIdle = 500;
 	this->parserSleepMySql = 20;
 }
