@@ -46,8 +46,8 @@ Thread::Thread(Database& dbBase, unsigned long threadId, const std::string& thre
 	this->urlListNameSpace = this->databaseClass.getUrlListNameSpace(this->getUrlList());
 	this->configuration = this->databaseClass.getConfiguration(this->getConfig());
 
-	// if thread is paused, update thread status in database (add "PAUSED " before status)
-	this->databaseClass.setThreadStatus(this->id, true, this->status);
+	// update thread status in database (remove "INTERRUPTED ", add "PAUSED " before status if necessary)
+	this->databaseClass.setThreadStatus(threadId, threadPaused, this->status);
 }
 
 // constructor B: start new thread (using constructor A to initialize values)
