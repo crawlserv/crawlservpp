@@ -36,7 +36,7 @@ public:
 	bool prepare(unsigned long crawlerId, const std::string& websiteNameSpace, const std::string& urlListNameSpace, bool recrawl,
 			bool verbose);
 
-	// table functions
+	// table function
 	void lockUrlList();
 
 	// URL functions
