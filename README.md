@@ -35,6 +35,7 @@ The source code of the server consists of the following classes (as of January 2
 * ~~<b>`DatabaseParser`</b>~~: Database access for parsers (implements the `DatabaseModule` interface).
 * <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of the `Database` class).
 * <b>[`Networking`](crawlserv/src/Networking.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
+* <b>[`QueryContainer`](crawlserv/src/QueryContainer.cpp)</b>: Abstract class for query management in child classes.
 * <b>[`RegEx`](crawlserv/src/RegEx.cpp)</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * <b>[`Server`](crawlserv/src/Server.cpp)</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
 * <b>[`Thread`](crawlserv/src/Thread.cpp)</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
