@@ -40,11 +40,11 @@ private:
 	bool running;
 	Server * server;
 
-	// helper functions
-	void outputHeader();
-	bool checkArgumentNumber(int argc, std::string& errorTo);
-	bool loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, ServerSettings& serverSettings, std::string& errorTo);
-	bool getPassword(DatabaseSettings& dbSettings);
+	// static helper functions
+	static void outputHeader();
+	static bool checkArgumentNumber(int argc, std::string& errorTo);
+	static bool loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, ServerSettings& serverSettings, std::string& errorTo);
+	static bool getPassword(DatabaseSettings& dbSettings);
 };
 
 #endif /* APP_H_ */

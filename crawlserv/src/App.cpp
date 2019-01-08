@@ -72,13 +72,13 @@ int App::run() {
 	return EXIT_FAILURE;
 }
 
-// helper function: show version (and library versions)
+// static helper function: show version (and library versions)
 void App::outputHeader() {
 	std::cout << "crawlserv++ v0.1 by Ans using" << std::endl;
 	std::cout << Versions::getLibraryVersions(" ") << std::endl;
 }
 
-// helper function: check number of command line arguments, return false on mismatch (usage notice written to errorTo)
+// static helper function: check number of command line arguments, return false on mismatch (usage notice written to errorTo)
 bool App::checkArgumentNumber(int argc, std::string& errorTo) {
 	if(argc != 2) {
 		errorTo = "USAGE: crawlserv <config_file>";
@@ -87,7 +87,7 @@ bool App::checkArgumentNumber(int argc, std::string& errorTo) {
 	return true;
 }
 
-// helper function: load database and server settings from configuration file, return false on error (written to errorTo)
+// static helper function: load database and server settings from configuration file, return false on error (written to errorTo)
 bool App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, ServerSettings& serverSettings, std::string& errorTo) {
 	ConfigFile configFile(fileName);
 
@@ -130,13 +130,14 @@ bool App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, 
 	return true;
 }
 
-// helper function: get database password from user, return false on cancel
+// static helper function: get database password from user, return false on cancel
 bool App::getPassword(DatabaseSettings& dbSettings) {
 	// prompt password for database
 	std::cout << "Enter password for " << dbSettings.user << "@" << dbSettings.host << ":" << dbSettings.port << ": ";
 	char input = 0;
 	bool inputLoop = true;
 	bool inputCancel = false;
+
 	do {
 		switch(input = Portability::getch()) {
 		case '\r':
@@ -164,6 +165,7 @@ bool App::getPassword(DatabaseSettings& dbSettings) {
 	}
 	while(inputLoop);
 	std::cout << std::endl;
+
 	if(inputCancel) return false;
 	return true;
 }
