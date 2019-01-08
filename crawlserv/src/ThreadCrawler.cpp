@@ -72,6 +72,9 @@ bool ThreadCrawler::onInit(bool resumed) {
 	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
 
+	// set database configuration
+	this->database.setSleepOnError(this->config.crawlerSleepMySql);
+
 	// prepare SQL statements for crawler
 	if(!(this->database.prepare(this->getId(), this->websiteNameSpace, this->urlListNameSpace, this->config.crawlerReCrawl,
 			config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose))) {
@@ -96,8 +99,6 @@ bool ThreadCrawler::onInit(bool resumed) {
 	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
 	configWarnings.clear();
-
-	this->database.setSleepOnError(this->config.crawlerSleepMySql);
 
 	// initialize custom URLs
 	this->initCustomUrls();
