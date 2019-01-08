@@ -15,11 +15,13 @@
 // constructor: set default values
 ConfigParser::ConfigParser() {
 	// parser entries
+	this->parserLock = 300;
 	this->parserLogging = ConfigParser::parserLoggingDefault;
 	this->parserNewestOnly = true;
-	this->parserReParse = true;
+	this->parserReParse = false;
 	this->parserSleepIdle = 500;
 	this->parserSleepMySql = 20;
+	this->parserTiming = false;
 }
 
 // destructor stub
@@ -201,6 +203,10 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						else if(name == "result.table") {
 							if(j->value.IsString()) this->parserResultTable = j->value.GetString();
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
+						}
+						else if(name == "timing") {
+							if(j->value.IsBool()) this->parserTiming = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
 						}
 						else warningsTo.push_back("Unknown configuration entry \'" + cat + "." + name + "\' ignored.");
 					}
