@@ -105,7 +105,7 @@ bool XMLDocument::parse(const std::string& content) {
 	return true;
 }
 
-// get content of XML document (saved in resultTo), return false on error
+// get content of XML document (saved to resultTo), return false on error
 bool XMLDocument::getContent(std::string& resultTo) const {
 	if(!(this->doc)) {
 		this->errorMessage = "XML error: No content parsed.";
