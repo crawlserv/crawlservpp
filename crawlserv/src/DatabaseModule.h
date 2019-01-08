@@ -11,11 +11,12 @@
 #ifndef DATABASEMODULE_H_
 #define DATABASEMODULE_H_
 
-#include "structs/DatabaseSettings.h"
-
 #include "DatabaseThread.h"
 
+#include "structs/DatabaseSettings.h"
+
 #include <cppconn/prepared_statement.h>
+
 #include <mysql_connection.h>
 
 #include <string>

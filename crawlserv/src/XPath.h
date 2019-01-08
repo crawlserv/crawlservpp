@@ -10,14 +10,14 @@
 #ifndef XPATH_H_
 #define XPATH_H_
 
+#include "XMLDocument.h"
+
 #include <pugixml.hpp>
 
 #include <exception>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "XMLDocument.h"
 
 class XPath {
 	class TextOnlyWalker : public pugi::xml_tree_walker {
