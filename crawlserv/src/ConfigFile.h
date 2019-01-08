@@ -26,12 +26,12 @@ public:
 	std::string getValue(const std::string& name) const;
 
 protected:
-	struct ConfigEntry {
+	struct NameValueEntry {
 		std::string name;
 		std::string value;
 	};
 
-	std::vector<ConfigFile::ConfigEntry> entries;
+	std::vector<ConfigFile::NameValueEntry> entries;
 };
 
 #endif /* CONFIGFILE_H_ */

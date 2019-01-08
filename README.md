@@ -60,7 +60,6 @@ The following additional namespaces are used (to be found in [`crawlserv/src/nam
 
 The following custom structures are used (to be found in [`crawlserv/src/structs`](crawlserv/src/structs)):
 
-* <b>[`ConfigEntry`](crawlserv/src/structs/ConfigEntry.h)</b>: A `[name,value]` pair from the configuration file.
 * <b>[`DatabaseSettings`](crawlserv/src/structs/DatabaseSettings.h)</b>: Basic database settings (host, port, user, password, schema).
 * <b>[`IdString`](crawlserv/src/structs/IdString.h)</b>: A simple `[id,string]` pair.
 * <b>[`Memento`](crawlserv/src/structs/Memento.h)</b>: URL and timestamp of a memento (i.e. an archived website).

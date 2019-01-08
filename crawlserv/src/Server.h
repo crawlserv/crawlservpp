@@ -21,7 +21,6 @@
 #include "XPath.h"
 
 #include "namespaces/DateTime.h"
-#include "structs/ConfigEntry.h"
 #include "structs/ServerCommandArgument.h"
 #include "structs/ServerSettings.h"
 #include "structs/ThreadDatabaseEntry.h"

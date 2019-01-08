@@ -16,7 +16,7 @@ ConfigFile::ConfigFile(const std::string& name) {
 
 	if(fileStream.is_open()) {
 		while(std::getline(fileStream, line)) {
-			ConfigFile::ConfigEntry entry;
+			ConfigFile::NameValueEntry entry;
 			unsigned long nameEnd = line.find('=');
 			if(nameEnd < line.length()) {
 				entry.name = boost::algorithm::to_lower_copy(line.substr(0, nameEnd));
