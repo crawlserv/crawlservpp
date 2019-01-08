@@ -199,7 +199,7 @@ class Config {
 	simpleOpt(cat, name, obj, value) {
 		var result = "";
 		result += this.startOpt(cat, obj.id, name, obj.type, value, false);
-		if(obj.type == "bool") result += this.label("", "");
+		if(obj.type == "bool") result += this.label("");
 		else result += this.label(obj.label);
 		result += this.startValue(obj.description);
 		if(obj.type == "bool") {
@@ -297,7 +297,6 @@ class Config {
 		result += "<input type=\"checkbox\" class=\"opt\" ";
 		
 		if(!array) result += "id=\"opt-" + cat + "-" + id + "\" ";
-		
 		if(value) result += "checked ";
 		
 		result += "/> ";
@@ -473,7 +472,10 @@ class Config {
 		result += "<div class=\"opt-array-item\" data-item=\"" + counter + "\">";
 		result += "<span class=\"opt-array-count\">[" + counter + "] </span>";
 		
-		if(type == "bool") result += this.check(cat, id, value, true);
+		if(type == "bool") {
+			result += this.check(cat, id, value, true);
+			result += this.label("");
+		}
 		else if(type == "string") {
 			if(isdef) result += this.text(cat, id, value, value, true);
 			else result += this.text(cat, id, value, "", true);
