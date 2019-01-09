@@ -295,13 +295,13 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 			this->parserFieldSources.size())); // number of complete fields (= minimum size of all property arrays)
 	bool incompleteFields = false;
 
-	// EXCEPTIOM: the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
+	// EXCEPTION: the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
 	if(this->parserFieldDelimiters.size() > completeFields) this->parserFieldDelimiters.resize(completeFields);
 	else while(this->parserFieldDelimiters.size() < completeFields) this->parserFieldDelimiters.push_back('\n');
 
 	// EXCEPTION: the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
-	if(this->parserFieldIgnoreEmpty.size() > completeFields) this->parserFieldDelimiters.resize(completeFields);
-	else while(this->parserFieldDelimiters.size() < completeFields) this->parserFieldDelimiters.push_back(true);
+	if(this->parserFieldIgnoreEmpty.size() > completeFields) this->parserFieldIgnoreEmpty.resize(completeFields);
+	else while(this->parserFieldIgnoreEmpty.size() < completeFields) this->parserFieldIgnoreEmpty.push_back(true);
 
 	// EXCEPTION: the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parserFieldJSON.size() > completeFields) this->parserFieldJSON.resize(completeFields);
