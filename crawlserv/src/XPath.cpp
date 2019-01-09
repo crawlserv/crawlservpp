@@ -11,7 +11,11 @@
 
 // XML walker helper classes
 bool XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
-	if(node.type() == pugi::node_pcdata) this->result += node.text().as_string();
+	if(node.type() == pugi::node_pcdata) {
+		std::string nodeText = node.text().as_string();
+		Strings::trim(nodeText);
+		this->result += nodeText + " ";
+	}
 	return true;
 }
 std::string XPath::TextOnlyWalker::getResult() const {
@@ -164,6 +168,7 @@ std::string XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
 			XPath::TextOnlyWalker walker;
 			node.node().traverse(walker);
 			result = walker.getResult();
+			if(result.length()) result.pop_back();
 		}
 		else {
 			for(auto i = node.node().children().begin(); i != node.node().children().end(); ++i) {
