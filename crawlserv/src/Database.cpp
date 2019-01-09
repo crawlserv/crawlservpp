@@ -1738,7 +1738,7 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 
 // get query properties from database by its ID
 void Database::getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
-		bool& queryResultSingleTo, bool& queryResultMultiTo, bool queryTextOnlyTo) {
+		bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
 
