@@ -38,3 +38,31 @@ void Strings::trim(std::string & stringToTrim) {
 		return !std::isspace(ch);
 	}).base(), stringToTrim.end());
 }
+
+// concatenate all elements of a vector into a single string
+std::string Strings::concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty) {
+	std::string result;
+	for(auto i = vectorToConcat.begin(); i != vectorToConcat.end(); ++i) {
+		if(!ignoreEmpty || i->length())	result += *i + delimiter;
+	}
+	if(result.length()) result.pop_back();
+	return result;
+}
+
+// get the first character of the string or an escaped character (\n, \t or \\)
+char Strings::getFirstOrEscapeChar(const std::string& from) {
+	if(from.length()) {
+		if(from.at(0) == '\\' && from.length() > 1) {
+			switch(from.at(1)) {
+			case 'n':
+				return '\n';
+			case 't':
+				return '\t';
+			case '\\':
+				return '\\';
+			}
+		}
+		else return from.at(0);
+	}
+	return 0;
+}
