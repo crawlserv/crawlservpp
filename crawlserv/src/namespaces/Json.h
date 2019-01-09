@@ -19,6 +19,7 @@
 
 namespace Json {
 	std::string stringify(const std::vector<std::string>& vectorToStringify);
+	std::string stringify(const std::string& stringToStringify);
 }
 
 #endif /* SRC_NAMESPACES_JSON_H_ */

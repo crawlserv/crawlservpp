@@ -33,3 +33,26 @@ std::string Json::stringify(const std::vector<std::string>& vectorToStringify) {
 	// return string
 	return std::string(buffer.GetString(), buffer.GetSize());
 }
+
+// stringify a string to an array in JSON code
+std::string Json::stringify(const std::string& stringToStringify) {
+	// create document as array and get reference to allocator
+	rapidjson::Document document;
+	document.SetArray();
+	rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
+
+	// write string as string element to array
+	rapidjson::Value stringValue;
+	stringValue.SetString(stringToStringify.c_str(), stringToStringify.length(), allocator);
+	document.PushBack(stringValue, allocator);
+
+	// create string buffer and writer
+	rapidjson::StringBuffer buffer;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+	// write array to string buffer
+	document.Accept(writer);
+
+	// return string
+	return std::string(buffer.GetString(), buffer.GetSize());
+}
