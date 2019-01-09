@@ -40,6 +40,11 @@ public:
 	void unlockTables();
 	unsigned long getLastInsertedId();
 
+	// wrappers for indexing module tables
+	void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+
 protected:
 	// reference to the database connection by the thread
 	DatabaseThread& database;
@@ -53,6 +58,13 @@ protected:
 	// lock and unlock tables
 	void lockTable(const std::string& tableName);
 	void lockTables(const std::string& tableName1, const std::string tableName2);
+
+	// table and column checking
+	bool isTableExists(const std::string& tableName);
+	bool isColumnExists(const std::string& tableName, const std::string& columnName);
+
+	// execute SQL query
+	void execute(const std::string& sqlQuery);
 
 	// manage prepared SQL statements
 	unsigned short addPreparedStatement(const std::string& sqlStatementString);
