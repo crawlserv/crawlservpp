@@ -27,7 +27,7 @@ QueryContainer::Query QueryContainer::addQuery(const std::string& queryText, con
 
 	if(queryType == "regex") {
 		RegEx * regex = new RegEx;
-		regex->compile(queryText, queryResultBool, queryResultMulti);
+		regex->compile(queryText, queryResultBool || queryResultSingle, queryResultMulti);
 		newQuery.index = this->queriesRegEx.size();
 		newQuery.type = QueryContainer::Query::typeRegEx;
 		this->queriesRegEx.push_back(regex);

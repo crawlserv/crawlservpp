@@ -68,8 +68,8 @@ bool RegEx::compile(const std::string& pattern, bool single, bool multi) {
 	}
 
 	if(multi) {
-		this->expressionMulti = pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED,
-				PCRE2_UTF | PCRE2_UCP | PCRE2_MULTILINE, &errorNumber, &errorOffset, NULL);
+		this->expressionMulti = pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP
+				| PCRE2_MULTILINE, &errorNumber, &errorOffset, NULL);
 		if(!(this->expressionMulti)) {
 			// RegEx error
 			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
