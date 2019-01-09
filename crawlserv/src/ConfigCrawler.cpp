@@ -402,7 +402,7 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 	}
 	if(incompleteArchives) {
 		// warn about incomplete counters
-		warningsTo.push_back("\'archives.names\', \'.urls.memento\' and \'.urls.timemap\' should have the same number of elements).");
+		warningsTo.push_back("\'archives.names\', \'.urls.memento\' and \'.urls.timemap\' should have the same number of elements.");
 		warningsTo.push_back("Incomplete archive(s) removed.");
 	}
 
@@ -433,7 +433,7 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 	}
 	if(incompleteCounters) {
 		// warn about incomplete counters
-		warningsTo.push_back("\'custom.counters\', \'.start\', \'.end\' and \'.step\' should have the same number of elements).");
+		warningsTo.push_back("\'custom.counters\', \'.start\', \'.end\' and \'.step\' should have the same number of elements.");
 		warningsTo.push_back("Incomplete counter(s) removed.");
 	}
 
