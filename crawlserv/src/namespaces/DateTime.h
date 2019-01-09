@@ -12,6 +12,7 @@
 
 #include "../external/date.h"
 
+#include <locale>
 #include <sstream>
 #include <string>
 
@@ -19,6 +20,7 @@ namespace DateTime {
 	// date/time conversions
 	bool convertLongDateTimeToSQLTimeStamp(std::string& dateTime);
 	bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat);
+	bool convertCustomDateTimeToSQLTimeStamp(const std::string& locale, std::string& dateTime, const std::string& customFormat);
 	bool convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	bool convertSQLTimeStampToTimeStamp(std::string& timeStamp);
 
