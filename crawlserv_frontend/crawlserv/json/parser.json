@@ -73,7 +73,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Field results as JSON:",
-			"description": "Save parsed data as JSON array.",
+			"description": "Save parsed data in JSON format.",
 			"simple": true,
 			"position": 10
 		},
