@@ -10,10 +10,12 @@
  *      Author: ans
  */
 
-#ifndef CONFIGCRAWLER_H_
-#define CONFIGCRAWLER_H_
+#ifndef CONFIGPARSER_H_
+#define CONFIGPARSER_H_
 
 #include "ConfigModule.h"
+
+#include "namespaces/Strings.h"
 
 #include "external/rapidjson/document.h"
 
@@ -31,6 +33,8 @@ public:
 	std::vector<std::string> parserDateTimeLocales;
 	std::vector<unsigned long> parserDateTimeQueries;
 	std::vector<unsigned short> parserDateTimeSources;
+	std::vector<char> parserFieldDelimiters;
+	std::vector<bool> parserFieldIgnoreEmpty;
 	std::vector<bool> parserFieldJSON;
 	std::vector<std::string> parserFieldNames;
 	std::vector<unsigned long> parserFieldQueries;
@@ -57,4 +61,4 @@ protected:
 	void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
 };
 
-#endif /* CONFIGCRAWLER_H_ */
+#endif /* CONFIGPARSER_H_ */
