@@ -63,16 +63,16 @@ ThreadCrawler::~ThreadCrawler() {
 // initialize crawler
 bool ThreadCrawler::onInit(bool resumed) {
 	std::vector<std::string> configWarnings;
-	bool verbose = config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose;
+	bool verbose = false;
 
 	// get configuration and show warnings if necessary
-	if(verbose) this->log("Get configuration...");
 	if(!(this->config.loadConfig(this->database.getConfigJson(this->getConfig()), configWarnings))) {
 		this->log(this->config.getErrorMessage());
 		return false;
 	}
 	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
+	verbose = config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose;
 
 	// set database configuration
 	if(verbose) this->log("Set database configuration...");
