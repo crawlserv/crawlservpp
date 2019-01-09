@@ -2062,6 +2062,36 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 	return result;
 }
 
+// add parsed table to database
+void Database::addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	sql::PreparedStatement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement =
+				this->connection->prepareStatement("INSERT INTO crawlserv_parsedtables(website, urllist, name) VALUES (?, ?, ?)");
+
+		// execute SQL statement
+		sqlStatement->setUInt64(1, websiteId);
+		sqlStatement->setUInt64(2, listId);
+		sqlStatement->setString(3, tableName);
+		sqlStatement->execute();
+
+		// delete SQL statement
+		DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
 // get parsed tables for ID-specified URL list from database
 std::vector<IdString> Database::getParsedTables(unsigned long listId) {
 	sql::PreparedStatement * sqlStatement = NULL;
@@ -2184,6 +2214,36 @@ void Database::deleteParsedTable(unsigned long tableId) {
 	}
 }
 
+// add extracted table to database
+void Database::addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	sql::PreparedStatement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement =
+				this->connection->prepareStatement("INSERT INTO crawlserv_extractedtables(website, urllist, name) VALUES (?, ?, ?)");
+
+		// execute SQL statement
+		sqlStatement->setUInt64(1, websiteId);
+		sqlStatement->setUInt64(1, listId);
+		sqlStatement->setString(3, tableName);
+		sqlStatement->execute();
+
+		// delete SQL statement
+		DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
 // get extracted tables for ID-specified URL list from database
 std::vector<IdString> Database::getExtractedTables(unsigned long listId) {
 	sql::PreparedStatement * sqlStatement = NULL;
@@ -2300,6 +2360,36 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 		// SQL error
 		DATABASE_DELETE(deleteStatement);
 		DATABASE_DELETE(dropStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// add analyzed table to database
+void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	sql::PreparedStatement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement =
+				this->connection->prepareStatement("INSERT INTO crawlserv_analyzedtables(website, urllist, name) VALUES (?, ?, ?)");
+
+		// execute SQL statement
+		sqlStatement->setUInt64(1, websiteId);
+		sqlStatement->setUInt64(1, listId);
+		sqlStatement->setString(3, tableName);
+		sqlStatement->execute();
+
+		// delete SQL statement
+		DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2702,120 +2792,6 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 	return result;
 }
 
-// check whether parsing table ID is valid
-bool Database::isParsedTable(unsigned long tableId) {
-	sql::PreparedStatement * sqlStatement = NULL;
-	sql::ResultSet * sqlResultSet = NULL;
-	bool result = false;
-
-	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
-
-	try {
-		// create SQL statement
-		sqlStatement = this->connection->prepareStatement("SELECT EXISTS(SELECT 1 FROM crawlserv_parsedtables WHERE id = ? LIMIT 1)"
-				" AS result");
-
-		// execute SQL statement
-		sqlStatement->setUInt64(1, tableId);
-		sqlResultSet = sqlStatement->executeQuery();
-
-		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
-
-		// delete result and SQL statement
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
-	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
-		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
-	}
-
-	return result;
-}
-
-// check whether extracting table ID is valid
-bool Database::isExtractedTable(unsigned long tableId) {
-	sql::PreparedStatement * sqlStatement = NULL;
-	sql::ResultSet * sqlResultSet = NULL;
-	bool result = false;
-
-	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
-
-	try {
-		// create SQL statement
-		sqlStatement = this->connection->prepareStatement("SELECT EXISTS(SELECT 1 FROM crawlserv_extractedtables WHERE id = ? LIMIT 1)"
-				" AS result");
-
-		// execute SQL statement
-		sqlStatement->setUInt64(1, tableId);
-		sqlResultSet = sqlStatement->executeQuery();
-
-		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
-
-		// delete result and SQL statement
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
-	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
-		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
-	}
-
-	return result;
-}
-
-// check whether analyzing table ID is valid
-bool Database::isAnalyzedTable(unsigned long tableId) {
-	sql::PreparedStatement * sqlStatement = NULL;
-	sql::ResultSet * sqlResultSet = NULL;
-	bool result = false;
-
-	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
-
-	try {
-		// create SQL statement
-		sqlStatement = this->connection->prepareStatement("SELECT EXISTS(SELECT 1 FROM crawlserv_analyzedtables WHERE id = ? LIMIT 1)"
-				" AS result");
-
-		// execute SQL statement
-		sqlStatement->setUInt64(1, tableId);
-		sqlResultSet = sqlStatement->executeQuery();
-
-		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
-
-		// delete result and SQL statement
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
-	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
-		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
-	}
-
-	return result;
-}
-
 // check whether connection is valid and try to reconnect if necesssary (sets error message on failure)
 bool Database::checkConnection() {
 	// check driver
@@ -2907,7 +2883,6 @@ unsigned long Database::getLastInsertedId() {
 		throw std::runtime_error(errorStrStr.str());
 	}
 
-	// return result
 	return result;
 }
 
@@ -3041,6 +3016,102 @@ void Database::unlockTables() {
 		// execute SQL statement
 		sqlStatement->execute("UNLOCK TABLES");
 		this->tablesLocked = false;
+
+		// delete SQL statement
+		DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// check whether a specific table exists
+bool Database::isTableExists(const std::string& tableName) {
+	sql::Statement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
+	bool result = false;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create and execute SQL statement
+		sqlStatement = this->connection->createStatement();
+		sqlResultSet = sqlStatement->executeQuery("SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '"
+				+ this->settings.name + "' AND TABLE_NAME = '" + tableName + "' LIMIT 1");
+
+		// get result
+		sqlResultSet->next();
+		result = sqlResultSet->getBoolean("result");
+
+		// delete result and SQL statement
+		DATABASE_DELETE(sqlResultSet);
+		DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		DATABASE_DELETE(sqlResultSet);
+		DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+
+	return result;
+}
+
+// check whether a specific column in a specific table exists
+bool Database::isColumnExists(const std::string& tableName, const std::string& columnName) {
+	sql::Statement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
+	bool result = false;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create and execute SQL statement
+		sqlStatement = this->connection->createStatement();
+		sqlResultSet = sqlStatement->executeQuery("SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '"
+				+ this->settings.name + "' AND TABLE_NAME = '" + tableName + "' AND COLUMN_NAME = '" + columnName + "' LIMIT 1");
+
+		// get result
+		sqlResultSet->next();
+		result = sqlResultSet->getBoolean("result");
+
+		// delete result and SQL statement
+		DATABASE_DELETE(sqlResultSet);
+		DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		DATABASE_DELETE(sqlResultSet);
+		DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+
+	return result;
+}
+
+// execute SQL query
+void Database::execute(const std::string& sqlQuery) {
+	sql::Statement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->createStatement();
+
+		// execute SQL statement
+		sqlStatement->execute(sqlQuery);
 
 		// delete SQL statement
 		DATABASE_DELETE(sqlStatement);

@@ -58,6 +58,21 @@ unsigned long DatabaseModule::getLastInsertedId() {
 	return this->database.getLastInsertedId();
 }
 
+// add parsed table to database
+void DatabaseModule::addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	this->database.addParsedTable(websiteId, listId, tableName);
+}
+
+// add extracted table to database
+void DatabaseModule::addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	this->database.addExtractedTable(websiteId, listId, tableName);
+}
+
+// add analyzed table to database
+void DatabaseModule::addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	this->database.addAnalyzedTable(websiteId, listId, tableName);
+}
+
 // provide access to the functionality for checking the connection to the database
 bool DatabaseModule::checkConnection() {
 	return this->database.checkConnection();
@@ -71,6 +86,21 @@ void DatabaseModule::lockTable(const std::string& tableName) {
 // provide access to the functionality for locking two tables in the database
 void DatabaseModule::lockTables(const std::string& tableName1, const std::string tableName2) {
 	this->database.lockTables(tableName1, tableName2);
+}
+
+// check whether a specific table exists
+bool DatabaseModule::isTableExists(const std::string& tableName) {
+	return this->database.isTableExists(tableName);
+}
+
+// check whether a specific column in a specific table exists
+bool DatabaseModule::isColumnExists(const std::string& tableName, const std::string& columnName) {
+	return this->database.isColumnExists(tableName, columnName);
+}
+
+// execute SQL command
+void DatabaseModule::execute(const std::string& sqlQuery) {
+	this->database.execute(sqlQuery);
 }
 
 // add prepared SQL statement to the database, return ID of prepared statement

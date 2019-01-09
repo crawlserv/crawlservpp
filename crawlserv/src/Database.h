@@ -121,12 +121,15 @@ public:
 	unsigned long duplicateConfiguration(unsigned long configId);
 
 	// table functions
+	void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
 	std::vector<IdString> getParsedTables(unsigned long listId);
 	std::string getParsedTable(unsigned long tableId);
 	void deleteParsedTable(unsigned long tableId);
+	void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
 	std::vector<IdString> getExtractedTables(unsigned long listId);
 	std::string getExtractedTable(unsigned long tableId);
 	void deleteExtractedTable(unsigned long tableId);
+	void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
 	std::vector<IdString> getAnalyzedTables(unsigned long listId);
 	std::string getAnalyzedTable(unsigned long tableId);
 	void deleteAnalyzedTable(unsigned long tableId);
@@ -140,9 +143,6 @@ public:
 	bool isQuery(unsigned long websiteId, unsigned long queryId);
 	bool isConfiguration(unsigned long configId);
 	bool isConfiguration(unsigned long websiteId, unsigned long configId);
-	bool isParsedTable(unsigned long tableId);
-	bool isExtractedTable(unsigned long tableId);
-	bool isAnalyzedTable(unsigned long tableId);
 
 protected:
 	// shared connection information
@@ -162,6 +162,9 @@ protected:
 	void lockTable(const std::string& tableName);
 	void lockTables(const std::string& tableName1, const std::string& tableName2);
 	void unlockTables();
+	bool isTableExists(const std::string& tableName);
+	bool isColumnExists(const std::string& tableName, const std::string& columnName);
+	void execute(const std::string& sqlQuery);
 
 private:
 	// private connection information
