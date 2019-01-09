@@ -106,7 +106,7 @@ public:
 	unsigned long addQuery(unsigned long websiteId, const std::string& queryName, const std::string& queryText,
 			const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
 	void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
-			bool& queryResultSingleTo, bool& queryResultMultiTo, bool queryTextOnlyTo);
+			bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
 	void updateQuery(unsigned long queryId, const std::string& queryName, const std::string& queryText,
 			const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
 	void deleteQuery(unsigned long queryId);
