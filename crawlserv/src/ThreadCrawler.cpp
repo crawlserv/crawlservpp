@@ -63,8 +63,10 @@ ThreadCrawler::~ThreadCrawler() {
 // initialize crawler
 bool ThreadCrawler::onInit(bool resumed) {
 	std::vector<std::string> configWarnings;
+	bool verbose = config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose;
 
 	// get configuration and show warnings if necessary
+	if(verbose) this->log("Get configuration...");
 	if(!(this->config.loadConfig(this->database.getConfigJson(this->getConfig()), configWarnings))) {
 		this->log(this->config.getErrorMessage());
 		return false;
@@ -73,23 +75,27 @@ bool ThreadCrawler::onInit(bool resumed) {
 		this->log("WARNING: " + *i);
 
 	// set database configuration
+	if(verbose) this->log("Set database configuration...");
 	this->database.setSleepOnError(this->config.crawlerSleepMySql);
 
 	// prepare SQL statements for crawler
-	if(!(this->database.prepare(this->getId(), this->websiteNameSpace, this->urlListNameSpace, this->config.crawlerReCrawl,
-			config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose))) {
+	if(verbose) this->log("Prepare SQL statements...");
+	if(!(this->database.prepare(this->getId(), this->websiteNameSpace, this->urlListNameSpace, this->config.crawlerReCrawl, verbose))) {
 		if(this->config.crawlerLogging) this->log(this->database.getErrorMessage());
 		return false;
 	}
 
 	// get domain
+	if(verbose) this->log("Get website domain...");
 	this->domain = this->database.getWebsiteDomain(this->getWebsite());
 
-	// create parser
+	// create URI parser
+	if(verbose) this->log("Create URI parser...");
 	if(!(this->parser)) this->parser = new URIParser;
 	this->parser->setCurrentDomain(this->domain);
 
 	// set network configuration
+	if(verbose) this->log("Set network configuration...");
 	configWarnings.clear();
 	if(config.crawlerLogging == ConfigCrawler::crawlerLoggingVerbose) this->log("sets global network configuration...");
 	if(!(this->networking.setConfigGlobal(this->config.network, false, &configWarnings))) {
@@ -101,18 +107,16 @@ bool ThreadCrawler::onInit(bool resumed) {
 	configWarnings.clear();
 
 	// initialize custom URLs
+	if(verbose) this->log("Initialize custom URLs...");
 	this->initCustomUrls();
 
 	// initialize queries
+	if(verbose) this->log("Initialize queries...");
 	this->initQueries();
-
-	// save start time and initialize counter
-	this->startTime = std::chrono::steady_clock::now();
-	this->pauseTime = std::chrono::steady_clock::time_point::min();
-	this->tickCounter = 0;
 
 	// initialize networking for archives if necessary
 	if(this->config.crawlerArchives && !(this->networkingArchives)) {
+		if(verbose) this->log("Initialize networking for archives...");
 		this->networkingArchives = new Networking();
 		if(!(this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings))) {
 			if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
@@ -122,6 +126,10 @@ bool ThreadCrawler::onInit(bool resumed) {
 			this->log("WARNING: " + *i);
 	}
 
+	// save start time and initialize counter
+	this->startTime = std::chrono::steady_clock::now();
+	this->pauseTime = std::chrono::steady_clock::time_point::min();
+	this->tickCounter = 0;
 	return true;
 }
 
