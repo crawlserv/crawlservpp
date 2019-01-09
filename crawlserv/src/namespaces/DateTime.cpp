@@ -99,6 +99,22 @@ bool DateTime::convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const 
 	return true;
 }
 
+// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale)
+bool DateTime::convertCustomDateTimeToSQLTimeStamp(const std::string& locale, std::string& dateTime, const std::string& customFormat) {
+	std::istringstream in(dateTime);
+	date::sys_seconds tp;
+	try {
+		in.imbue(std::locale(locale));
+	}
+	catch(std::runtime_error& e) {
+		return false;
+	}
+	in >> date::parse(customFormat, tp);
+	if(!bool(in)) return false;
+	dateTime = date::format("%F %T", tp);
+	return true;
+}
+
 // convert time stamp from YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
 bool DateTime::convertTimeStampToSQLTimeStamp(std::string& timeStamp) {
 	return DateTime::convertCustomDateTimeToSQLTimeStamp(timeStamp, "%Y%m%d%H%M%S");
