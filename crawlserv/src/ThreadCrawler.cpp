@@ -180,10 +180,14 @@ bool ThreadCrawler::onTick() {
 					|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
 				std::ostringstream logStrStr;
 				logStrStr.imbue(std::locale(""));
-				logStrStr << "finished " << url.string << " after ";
-				logStrStr << timerTotal.totalStr() << " (select: " << timerSelect.totalStr() << ", " << timerString;
-				if(this->config.crawlerArchives) logStrStr << ", archive: " << timerArchives.totalStr();
-				logStrStr << ") - checked " << checkedUrls;
+				logStrStr << "finished " << url.string;
+				if(this->config.crawlerTiming) {
+					logStrStr << " after ";
+					logStrStr << timerTotal.totalStr() << " (select: " << timerSelect.totalStr() << ", " << timerString;
+					if(this->config.crawlerArchives) logStrStr << ", archive: " << timerArchives.totalStr();
+					logStrStr << ")";
+				}
+				logStrStr << " - checked " << checkedUrls;
 				if(checkedUrlsArchive) logStrStr << " (+" << checkedUrlsArchive << " archived)";
 				logStrStr << ", added " << newUrls;
 				if(newUrlsArchive) logStrStr << " (+" << newUrlsArchive << " archived)";
