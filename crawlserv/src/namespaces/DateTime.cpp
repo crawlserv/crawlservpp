@@ -85,23 +85,23 @@ std::string DateTime::secondsToString(unsigned long long seconds) {
 }
 
 // convert time stamp from WEEKDAY[short], DD MONTH[short] YYYY HH:MM:SS TIMEZONE[short] to YYYY-MM-DD HH:MM:SS
-bool DateTime::convertLongDateToSQLTimeStamp(std::string& timeStamp) {
-	std::istringstream in(timeStamp);
+bool DateTime::convertLongDateTimeToSQLTimeStamp(std::string& dateTime) {
+	return DateTime::convertCustomDateTimeToSQLTimeStamp(dateTime, "%a, %d %b %Y %T %Z");
+}
+
+// convert date and time with custom format to YYYY-MM-DD HH:MM:SS
+bool DateTime::convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat) {
+	std::istringstream in(dateTime);
 	date::sys_seconds tp;
-	in >> date::parse("%a, %d %b %Y %T %Z", tp);
+	in >> date::parse(customFormat, tp);
 	if(!bool(in)) return false;
-	timeStamp = date::format("%F %T", tp);
+	dateTime = date::format("%F %T", tp);
 	return true;
 }
 
 // convert time stamp from YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
 bool DateTime::convertTimeStampToSQLTimeStamp(std::string& timeStamp) {
-	std::istringstream in(timeStamp);
-	date::sys_seconds tp;
-	in >> date::parse("%Y%m%d%H%M%S", tp);
-	if(!bool(in)) return false;
-	timeStamp = date::format("%F %T", tp);
-	return true;
+	return DateTime::convertCustomDateTimeToSQLTimeStamp(timeStamp, "%Y%m%d%H%M%S");
 }
 
 // convert time stamp from YYYY-MM-DD HH:MM:SS to YYYYMMDDHHMMSS

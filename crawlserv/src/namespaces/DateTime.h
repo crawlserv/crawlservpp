@@ -17,7 +17,8 @@
 
 namespace DateTime {
 	// date/time conversions
-	bool convertLongDateToSQLTimeStamp(std::string& timeStamp);
+	bool convertLongDateTimeToSQLTimeStamp(std::string& dateTime);
+	bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat);
 	bool convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	bool convertSQLTimeStampToTimeStamp(std::string& timeStamp);
 
