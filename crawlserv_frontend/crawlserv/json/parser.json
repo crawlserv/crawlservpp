@@ -64,7 +64,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Ignore empty values when parsing multiple elements (default behavior)",
+			"description": "Ignore empty values when parsing multiple elements (default behavior).",
 			"simple": false
 		},
 		"field.json": {
