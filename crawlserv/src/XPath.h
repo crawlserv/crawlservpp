@@ -12,6 +12,8 @@
 
 #include "XMLDocument.h"
 
+#include "namespaces/Strings.h"
+
 #include <pugixml.hpp>
 
 #include <exception>
@@ -20,15 +22,6 @@
 #include <vector>
 
 class XPath {
-	class TextOnlyWalker : public pugi::xml_tree_walker {
-	public:
-		virtual bool for_each(pugi::xml_node& node);
-		std::string getResult() const;
-
-	protected:
-		std::string result;
-	};
-
 public:
 	XPath();
 	virtual ~XPath();
@@ -41,6 +34,16 @@ public:
 	std::string getErrorMessage() const;
 
 private:
+	// walker class for text-only conversion
+	class TextOnlyWalker : public pugi::xml_tree_walker {
+	public:
+		virtual bool for_each(pugi::xml_node& node);
+		std::string getResult() const;
+
+	protected:
+		std::string result;
+	};
+
 	pugi::xpath_query * query;
 	bool isTextOnly;
 
