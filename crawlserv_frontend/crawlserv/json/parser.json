@@ -56,7 +56,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"label": "Delimiters for multiple results when not saved as JSON. Only the first character or \n (default), \t, \\ will be used.",
+			"description": "Delimiters for multiple results when not saved as JSON. Only the first character or \n (default), \t, \\ will be used.",
 			"simple": false
 		},
 		"field.ignore.empty": {
@@ -64,7 +64,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"label": "Ignore empty values when parsing multiple elements (default behavior)",
+			"description": "Ignore empty values when parsing multiple elements (default behavior)",
 			"simple": false
 		},
 		"field.json": {
