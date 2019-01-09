@@ -64,7 +64,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"label": "Shall empty values be ignored? Default: yes.",
+			"label": "Ignore empty values when parsing multiple elements (default behavior)",
 			"simple": false
 		},
 		"field.json": {
@@ -73,7 +73,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Field results as JSON:",
-			"description": "Save parsed data in JSON format.",
+			"description": "Save parsed data as JSON array.",
 			"simple": true,
 			"position": 10
 		},
