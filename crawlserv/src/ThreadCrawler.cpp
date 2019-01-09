@@ -729,7 +729,7 @@ bool ThreadCrawler::crawlingCheckUrl(const std::string& url) {
 		// whitelist: only allow URLs that fit a specified whitelist query
 		bool found = false;
 		for(auto i = this->queriesWhiteListUrls.begin(); i != this->queriesWhiteListUrls.end(); ++i) {
-			if(i->type == ThreadCrawler::Query::typeRegEx) {
+			if(i->type == QueryContainer::Query::typeRegEx) {
 				if(!(this->getRegExQueryPtr(i->index)->getBool(url, found)))
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
 							+ " [" + url + "].");
@@ -746,7 +746,7 @@ bool ThreadCrawler::crawlingCheckUrl(const std::string& url) {
 	if(this->queriesBlackListUrls.size()) {
 		// blacklist: do not allow URLs that fit a specified blacklist query
 		for(auto i = this->queriesBlackListUrls.begin(); i != this->queriesBlackListUrls.end(); ++i) {
-			if(i->type == ThreadCrawler::Query::typeRegEx) {
+			if(i->type == QueryContainer::Query::typeRegEx) {
 				bool found = false;
 				if(!(this->getRegExQueryPtr(i->index)->getBool(url, found)))
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
@@ -790,7 +790,7 @@ bool ThreadCrawler::crawlingCheckContentType(const IdString& url, const std::str
 	if(this->queriesWhiteListTypes.size()) {
 		bool found = false;
 		for(auto i = this->queriesWhiteListTypes.begin(); i != this->queriesWhiteListTypes.end(); ++i) {
-			if(i->type == ThreadCrawler::Query::typeRegEx) {
+			if(i->type == QueryContainer::Query::typeRegEx) {
 				if(!(this->getRegExQueryPtr(i->index)->getBool(contentType, found)))
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
 							+ " [" + url.string + "].");
@@ -805,7 +805,7 @@ bool ThreadCrawler::crawlingCheckContentType(const IdString& url, const std::str
 	if(this->queriesBlackListTypes.size()) {
 		bool found = false;
 		for(auto i = this->queriesBlackListTypes.begin(); i != this->queriesBlackListTypes.end(); ++i) {
-			if(i->type == ThreadCrawler::Query::typeRegEx) {
+			if(i->type == QueryContainer::Query::typeRegEx) {
 				if(!(this->getRegExQueryPtr(i->index)->getBool(contentType, found)))
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
 						+ " [" + url.string + "].");
@@ -825,13 +825,13 @@ bool ThreadCrawler::crawlingCheckContent(const IdString& url, const std::string&
 	if(this->queriesWhiteListContent.size()) {
 		bool found = false;
 		for(auto i = this->queriesWhiteListContent.begin(); i != this->queriesWhiteListContent.end(); ++i) {
-			if(i->type == ThreadCrawler::Query::typeRegEx) {
+			if(i->type == QueryContainer::Query::typeRegEx) {
 				if(!(this->getRegExQueryPtr(i->index)->getBool(content, found)))
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
 						+ " [" + url.string + "].");
 				if(found) break;
 			}
-			else if(i->type == ThreadCrawler::Query::typeXPath) {
+			else if(i->type == QueryContainer::Query::typeXPath) {
 				if(!(this->getXPathQueryPtr(i->index)->getBool(doc, found)))
 					if(this->config.crawlerLogging) this->log(this->getXPathQueryPtr(i->index)->getErrorMessage()
 						+ " [" + url.string + "].");
@@ -846,13 +846,13 @@ bool ThreadCrawler::crawlingCheckContent(const IdString& url, const std::string&
 	if(this->queriesBlackListContent.size()) {
 		bool found = false;
 		for(auto i = this->queriesBlackListContent.begin(); i != this->queriesBlackListContent.end(); ++i) {
-			if(i->type == ThreadCrawler::Query::typeRegEx) {
+			if(i->type == QueryContainer::Query::typeRegEx) {
 				if(!(this->getRegExQueryPtr(i->index)->getBool(content, found)))
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
 						+ " [" + url.string + "].");
 				if(found) break;
 			}
-			else if(i->type == ThreadCrawler::Query::typeXPath) {
+			else if(i->type == QueryContainer::Query::typeXPath) {
 				if(!(this->getXPathQueryPtr(i->index)->getBool(doc, found)))
 					if(this->config.crawlerLogging) this->log(this->getXPathQueryPtr(i->index)->getErrorMessage()
 						+ " [" + url.string + "].");
@@ -884,7 +884,7 @@ void ThreadCrawler::crawlingSaveContent(const IdString& url, unsigned int respon
 std::vector<std::string> ThreadCrawler::crawlingExtractUrls(const IdString& url, const std::string& content, const XMLDocument& doc) {
 	std::vector<std::string> urls;
 	for(auto i = this->queriesLinks.begin(); i != this->queriesLinks.end(); ++i) {
-		if(i->type == ThreadCrawler::Query::typeRegEx) {
+		if(i->type == QueryContainer::Query::typeRegEx) {
 			if(i->resultMulti) {
 				std::vector<std::string> results;
 				if(this->getRegExQueryPtr(i->index)->getAll(content, results)) {
@@ -903,7 +903,7 @@ std::vector<std::string> ThreadCrawler::crawlingExtractUrls(const IdString& url,
 					+ " [" + url.string + "].");
 			}
 		}
-		else if(i->type == ThreadCrawler::Query::typeXPath) {
+		else if(i->type == QueryContainer::Query::typeXPath) {
 			if(i->resultMulti) {
 				std::vector<std::string> results;
 				if(this->getXPathQueryPtr(i->index)->getAll(doc, results)) {
@@ -1398,7 +1398,7 @@ std::string ThreadCrawler::parseMementos(std::string mementoContent, std::vector
 
 				if(fieldName == "datetime") {
 					// parse timestamp
-					if(DateTime::convertLongDateToSQLTimeStamp(fieldValue)) newMemento.timeStamp = fieldValue;
+					if(DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue)) newMemento.timeStamp = fieldValue;
 					else {
 						warningStrStr << "Could not convert timestamp \'" << fieldValue << "\'  at " << pos << ".";
 						warningsTo.push_back(warningStrStr.str());
