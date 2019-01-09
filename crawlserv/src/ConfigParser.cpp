@@ -101,30 +101,56 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 								this->parserDateTimeQueries.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parserDateTimeQueries.push_back(k->GetUint64());
-									else warningsTo.push_back("\'" + cat + "." + name
+									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long).");
 								}
 							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "datetime.sources") {
 							if(j->value.IsArray()) {
 								this->parserDateTimeSources.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint()) this->parserDateTimeSources.push_back(k->GetUint());
-									else warningsTo.push_back("\'" + cat + "." + name
+									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
 							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+						}
+						else if(name == "field.delimiters") {
+							if(j->value.IsArray()) {
+								this->parserFieldDelimiters.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsString())
+										this->parserFieldDelimiters.push_back(Strings::getFirstOrEscapeChar(k->GetString()));
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not string).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+						}
+						else if(name == "field.ignore.empty") {
+							if(j->value.IsArray()) {
+								this->parserFieldIgnoreEmpty.clear();
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsBool()) this->parserFieldIgnoreEmpty.push_back(k->GetBool());
+									else warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not bool).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.json") {
 							if(j->value.IsArray()) {
 								this->parserFieldJSON.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsBool()) this->parserFieldJSON.push_back(k->GetBool());
-									else warningsTo.push_back("\'" + cat + "." + name
+									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not bool).");
 								}
 							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.names") {
 							if(j->value.IsArray()) {
@@ -174,11 +200,12 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 							if(j->value.IsArray()) {
 								this->parserIdSources.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(j->value.IsUint()) this->parserIdSources.push_back(k->GetUint());
+									if(k->IsUint()) this->parserIdSources.push_back(k->GetUint());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
 							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "logging") {
 							if(j->value.IsUint()) this->parserLogging = j->value.GetUint();
@@ -232,6 +259,10 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
 	for(auto i = this->parserDateTimeFormats.begin(); i != this->parserDateTimeFormats.end(); ++i) if(!(i->size())) *i = "%F %T";
 
+	// EXCEPTION: the 'locales' property will be ignored if array is too large or set to "" if entry is missing
+	if(this->parserDateTimeLocales.size() > completeDateTimes) this->parserDateTimeLocales.resize(completeDateTimes);
+	else while(this->parserDateTimeLocales.size() < completeDateTimes) this->parserDateTimeLocales.push_back("");
+
 	if(this->parserDateTimeFormats.size() > completeDateTimes) {
 		// remove formats of incomplete datetime queries
 		this->parserDateTimeFormats.resize(completeDateTimes);
@@ -254,8 +285,8 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	}
 	if(incompleteDateTimes) {
 		// warn about incomplete datetime queries
-		warningsTo.push_back("\'datetime.formats\', \'.locales\', \'.queries\' and \'.sources\' should have the same number of"
-				" elements).");
+		warningsTo.push_back("\'datetime.queries\' and \'.sources\' should have the same number of"
+				" elements.");
 		warningsTo.push_back("Incomplete datetime queries removed.");
 	}
 
@@ -264,7 +295,15 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 			this->parserFieldSources.size())); // number of complete fields (= minimum size of all property arrays)
 	bool incompleteFields = false;
 
-	// EXCEPTION: the 'save field entry as JSON data' property will be ignored if array is too large or set to 'false' if entry is missing
+	// EXCEPTIOM: the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
+	if(this->parserFieldDelimiters.size() > completeFields) this->parserFieldDelimiters.resize(completeFields);
+	else while(this->parserFieldDelimiters.size() < completeFields) this->parserFieldDelimiters.push_back('\n');
+
+	// EXCEPTION: the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
+	if(this->parserFieldIgnoreEmpty.size() > completeFields) this->parserFieldDelimiters.resize(completeFields);
+	else while(this->parserFieldDelimiters.size() < completeFields) this->parserFieldDelimiters.push_back(true);
+
+	// EXCEPTION: the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parserFieldJSON.size() > completeFields) this->parserFieldJSON.resize(completeFields);
 	else while(this->parserFieldJSON.size() < completeFields) this->parserFieldJSON.push_back(false);
 
@@ -285,7 +324,7 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	}
 	if(incompleteFields) {
 		// warn about incomplete parsing fields
-		warningsTo.push_back("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements).");
+		warningsTo.push_back("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
 		warningsTo.push_back("Incomplete field(s) removed.");
 	}
 
@@ -305,7 +344,7 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	}
 	if(incompleteIds) {
 		// warn about incomplete id queries
-		warningsTo.push_back("\'id.queries\' and \'.sources\' should have the same number of elements).");
+		warningsTo.push_back("\'id.queries\' and \'.sources\' should have the same number of elements.");
 		warningsTo.push_back("Incomplete id queries removed.");
 	}
 }
