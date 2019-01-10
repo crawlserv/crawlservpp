@@ -232,13 +232,13 @@ If not already existing, these tables will be created on startup of the command-
 For each website and each URL list a namespace of at least four allowed characters (a-z, A-Z, 0-9, $, \_) is used. These namespaces determine the names of the tables used for each URL list (also prefixed by `crawlserv_`):
 
 * <b>`<namespace of website>_<namespace of URL list>`</b>: Content of the URL list.
-* <b>~~`<namespace of website>_<namespace of URL list>_analyzed_<name of target table>`~~</b>: Target tables for analyzing.
+* <b>~~`<namespace of website>_<namespace of URL list>_analyzed_<name of target table>`~~</b>: Analyzing results.
 * <b>`<namespace of website>_<namespace of URL list>_crawled`</b>: Crawled content.
-* <b>~~`<namespace of website>_<namespace of URL list>_extracted_<name of target table>`~~</b>: Target tables for extracting.
+* <b>~~`<namespace of website>_<namespace of URL list>_extracted_<name of target table>`~~</b>: Extracting results.
 * <b>`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
-* <b>`<namespace of website>_<namespace of URL list>_parsed_<name of target table>`</b>: Target tables for parsing.
+* <b>`<namespace of website>_<namespace of URL list>_parsed_<name of target table>`</b>: Parsing results.
 
-See the source code of the `Database::addUrlList(...)` function in [`crawlserv/src/Database.cpp`](crawlserv/src/Database.cpp) for details about the structure of the first three tables. Most of the columns of the latter three tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `DatabaseParser::initTargetTable(...)`, ~~`DatabaseExtractor::initTargetTable(...)`~~ and ~~`DatabaseAnalyzer::initTargetTable(...)`~~ functions in [`crawlserv/src/DatabaseParser.cpp`](crawlserv/src/DatabaseParser.cpp), ~~[`crawlserv/src/DatabaseExtractor.cpp`](crawlserv/src/DatabaseExtractor.cpp)~~ and ~~[`crawlserv/src/DatabaseAnalyzer.cpp`](crawlserv/src/DatabaseAnalyzer.cpp)~~ for details.
+See the source code of the `Database::addUrlList(...)` function in [`crawlserv/src/Database.cpp`](crawlserv/src/Database.cpp) for details about the structure of the non-result tables. Most of the columns of the result tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `DatabaseParser::initTargetTable(...)`, ~~`DatabaseExtractor::initTargetTable(...)`~~ and ~~`DatabaseAnalyzer::initTargetTable(...)`~~ functions in [`crawlserv/src/DatabaseParser.cpp`](crawlserv/src/DatabaseParser.cpp), ~~[`crawlserv/src/DatabaseExtractor.cpp`](crawlserv/src/DatabaseExtractor.cpp)~~ and ~~[`crawlserv/src/DatabaseAnalyzer.cpp`](crawlserv/src/DatabaseAnalyzer.cpp)~~ for details.
 
 ## Platform
 
