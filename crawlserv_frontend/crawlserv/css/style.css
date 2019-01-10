@@ -548,6 +548,7 @@ span.interrupted {
 	color:#D3D3D3;
 }
 span.idle {
+	font-weight:bold;
 	color:#009933;
 }
 
