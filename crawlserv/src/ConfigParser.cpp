@@ -248,8 +248,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	}
 
 	// check properties of datetime queries (arrays defining these queries should have the same number fo elements - one for each query)
-	unsigned long completeDateTimes = std::min(this->parserDateTimeLocales.size(), std::min(this->parserDateTimeQueries.size(),
-			this->parserDateTimeSources.size()));	// number of complete datetime queries (= minimum size of all property arrays)
+	unsigned long completeDateTimes = std::min(this->parserDateTimeQueries.size(), this->parserDateTimeSources.size());
+																							// number of complete datetime queries
+																							// (= minimum size of all property arrays)
 	bool incompleteDateTimes = false;
 
 	// EXCEPTION: the 'date/time format' property will be ignored if array is too large or set to "%F %T" if entry is missing
@@ -263,16 +264,6 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	if(this->parserDateTimeLocales.size() > completeDateTimes) this->parserDateTimeLocales.resize(completeDateTimes);
 	else while(this->parserDateTimeLocales.size() < completeDateTimes) this->parserDateTimeLocales.push_back("");
 
-	if(this->parserDateTimeFormats.size() > completeDateTimes) {
-		// remove formats of incomplete datetime queries
-		this->parserDateTimeFormats.resize(completeDateTimes);
-		incompleteDateTimes = true;
-	}
-	if(this->parserDateTimeLocales.size() > completeDateTimes) {
-		// remove locales of incomplete datetime queries
-		this->parserDateTimeLocales.resize(completeDateTimes);
-		incompleteDateTimes = true;
-	}
 	if(this->parserDateTimeQueries.size() > completeDateTimes) {
 		// remove queries of incomplete datetime queries
 		this->parserDateTimeQueries.resize(completeDateTimes);
