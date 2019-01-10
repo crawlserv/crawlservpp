@@ -16,6 +16,8 @@
 #include "ConfigModule.h"
 #include "ConfigNetwork.h"
 
+#include "namespaces/Algos.h"
+
 #include "external/rapidjson/document.h"
 
 #include <sstream>
