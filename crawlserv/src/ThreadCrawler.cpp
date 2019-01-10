@@ -400,39 +400,46 @@ void ThreadCrawler::initQueries() {
 	bool queryTextOnly = false;
 
 	for(auto i = this->config.crawlerQueriesBlackListContent.begin(); i != this->config.crawlerQueriesBlackListContent.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
 		this->queriesBlackListContent.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
 				queryResultMulti, queryTextOnly));
 	}
 	for(auto i = this->config.crawlerQueriesBlackListTypes.begin(); i != this->config.crawlerQueriesBlackListTypes.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
-			this->queriesBlackListTypes.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
+		this->queriesBlackListTypes.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
 					queryResultMulti, queryTextOnly));
 	}
 	for(auto i = this->config.crawlerQueriesBlackListUrls.begin(); i != this->config.crawlerQueriesBlackListUrls.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
-			this->queriesBlackListUrls.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
+		this->queriesBlackListUrls.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
 					queryResultMulti, queryTextOnly));
 	}
 	for(auto i = this->config.crawlerQueriesLinks.begin(); i != this->config.crawlerQueriesLinks.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
-			this->queriesLinks.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-					queryTextOnly));
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
+		this->queriesLinks.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly));
 	}
 	for(auto i = this->config.crawlerQueriesWhiteListContent.begin(); i != this->config.crawlerQueriesWhiteListContent.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
-			this->queriesWhiteListContent.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
-					queryResultMulti, queryTextOnly));
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
+		this->queriesWhiteListContent.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
+				queryResultMulti, queryTextOnly));
 	}
 	for(auto i = this->config.crawlerQueriesWhiteListTypes.begin(); i != this->config.crawlerQueriesWhiteListTypes.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
-			this->queriesWhiteListTypes.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
-					queryResultMulti, queryTextOnly));
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
+		this->queriesWhiteListTypes.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
+				queryResultMulti, queryTextOnly));
 	}
 	for(auto i = this->config.crawlerQueriesWhiteListUrls.begin(); i != this->config.crawlerQueriesWhiteListUrls.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
-			this->queriesWhiteListUrls.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
-					queryResultMulti, queryTextOnly));
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
+		this->queriesWhiteListUrls.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle,
+				queryResultMulti, queryTextOnly));
 	}
 }
 
