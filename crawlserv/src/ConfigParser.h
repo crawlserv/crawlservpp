@@ -15,6 +15,7 @@
 
 #include "ConfigModule.h"
 
+#include "namespaces/Algos.h"
 #include "namespaces/Strings.h"
 
 #include "external/rapidjson/document.h"
@@ -54,6 +55,8 @@ public:
 	std::vector<std::string> parsingFieldNames;
 	std::vector<unsigned long> parsingFieldQueries;
 	std::vector<unsigned short> parsingFieldSources;
+	std::vector<bool> parsingFieldWarningsEmpty;
+	std::vector<std::string> parsingIdIgnore;
 	std::vector<unsigned long> parsingIdQueries;
 	std::vector<unsigned short> parsingIdSources;
 	static const unsigned short parsingSourceUrl = 0;
