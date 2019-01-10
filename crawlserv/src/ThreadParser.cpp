@@ -311,7 +311,8 @@ unsigned long ThreadParser::parsing() {
 				// parse id by running RegEx query on URL
 				if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, parsedId) && parsedId.length()) break;
 			}
-			else if(this->config.generalLogging) this->log("WARNING: ID query on URL is not of type RegEx.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+				this->log("WARNING: ID query on URL is not of type RegEx.");
 		}
 		if(!parsedId.length()) return 0;
 	}
@@ -374,7 +375,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse id by running RegEx query on URL
 					if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, id) && id.length()) break;
 				}
-				else if(this->config.generalLogging) this->log("WARNING: ID query on URL is not of type RegEx.");
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: ID query on URL is not of type RegEx.");
 			}
 			else {
 				// check query type
@@ -386,7 +388,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse if by running XPath query on parsed content
 					if(this->getXPathQueryPtr(i->index)->getFirst(parsedContent, id) && id.length()) break;
 				}
-				else if(this->config.generalLogging) this->log("WARNING: ID query on content is not of type RegEx or XPath.");
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: ID query on content is not of type RegEx or XPath.");
 			}
 
 			// not successfull: check next query for parsing the id (if exists)
@@ -415,7 +418,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 				// parse date/time by running RegEx query on URL
 				querySuccess = this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, parsedDateTime);
 			}
-			else if(this->config.generalLogging) this->log("WARNING: DateTime query on URL is not of type RegEx.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+				this->log("WARNING: DateTime query on URL is not of type RegEx.");
 		}
 		else {
 			// check query type
@@ -427,7 +431,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 				// parse date/time by running XPath query on parsed content
 				querySuccess = this->getXPathQueryPtr(i->index)->getFirst(parsedContent, parsedDateTime);
 			}
-			else if(this->config.generalLogging) this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+				this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
 		}
 
 		if(querySuccess && parsedDateTime.length()) {
@@ -476,8 +481,9 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse multiple field elements by running RegEx query on URL
 					this->getRegExQueryPtr(i->index)->getAll(this->currentUrl.string, parsedFieldValues);
 				}
-				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-						+ "\' query on URL is not of type RegEx.");
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+							+ "\' query on URL is not of type RegEx.");
 			}
 			else {
 				// parse from content: check query type
@@ -489,8 +495,9 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse multiple field elements by running XPath query on parsed content
 					this->getXPathQueryPtr(i->index)->getAll(parsedContent, parsedFieldValues);
 				}
-				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-						+ "\' query on content is not of type RegEx or XPath.");
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+							+ "\' query on content is not of type RegEx or XPath.");
 			}
 
 			// determine how to save result: JSON array or concatenate using delimiting character
@@ -515,8 +522,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse single field element by running RegEx query on URL
 					this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, parsedFieldValue);
 				}
-				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-						+ "\' query on URL is not of type RegEx.");
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' query on URL is not of type RegEx.");
 			}
 			else {
 				// parse from content: check query type
@@ -528,8 +535,9 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse single field element by running XPath query on parsed content
 					this->getXPathQueryPtr(i->index)->getFirst(parsedContent, parsedFieldValue);
 				}
-				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-						+ "\' query on content is not of type RegEx or XPath.");
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+							+ "\' query on content is not of type RegEx or XPath.");
 			}
 
 			// determine how to save result: JSON array or string as is
@@ -553,8 +561,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse boolean value by running RegEx query on URL
 					this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.string, parsedBool);
 				}
-				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-						+ "\' query on URL is not of type RegEx.");
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' query on URL is not of type RegEx.");
 			}
 			else {
 				// parse from content: check query type
@@ -566,7 +574,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse boolean value by running XPath query on parsed content
 					this->getXPathQueryPtr(i->index)->getBool(parsedContent, parsedBool);
 				}
-				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+				else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 						+ "\' query on content is not of type RegEx or XPath.");
 			}
 

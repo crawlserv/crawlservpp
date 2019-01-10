@@ -25,21 +25,23 @@ QueryContainer::Query QueryContainer::addQuery(const std::string& queryText, con
 	newQuery.resultSingle = queryResultSingle;
 	newQuery.resultMulti = queryResultMulti;
 
-	if(queryType == "regex") {
-		RegEx * regex = new RegEx;
-		regex->compile(queryText, queryResultBool || queryResultSingle, queryResultMulti);
-		newQuery.index = this->queriesRegEx.size();
-		newQuery.type = QueryContainer::Query::typeRegEx;
-		this->queriesRegEx.push_back(regex);
+	if(queryText.length()) {
+		if(queryType == "regex") {
+			RegEx * regex = new RegEx;
+			regex->compile(queryText, queryResultBool || queryResultSingle, queryResultMulti);
+			newQuery.index = this->queriesRegEx.size();
+			newQuery.type = QueryContainer::Query::typeRegEx;
+			this->queriesRegEx.push_back(regex);
+		}
+		else if(queryType == "xpath") {
+			XPath * xpath = new XPath;
+			xpath->compile(queryText, queryTextOnly);
+			newQuery.index = this->queriesXPath.size();
+			newQuery.type = QueryContainer::Query::typeXPath;
+			this->queriesXPath.push_back(xpath);
+		}
+		else throw std::runtime_error("Unknown query type \'" + queryType + "\'");
 	}
-	else if(queryType == "xpath") {
-		XPath * xpath = new XPath;
-		xpath->compile(queryText, queryTextOnly);
-		newQuery.index = this->queriesXPath.size();
-		newQuery.type = QueryContainer::Query::typeXPath;
-		this->queriesXPath.push_back(xpath);
-	}
-	else throw std::runtime_error("Unknown query type \'" + queryType + "\'");
 
 	return newQuery;
 }

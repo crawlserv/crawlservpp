@@ -742,17 +742,22 @@ bool ThreadCrawler::crawlingCheckUrl(const std::string& url) {
 
 	if(this->queriesWhiteListUrls.size()) {
 		// whitelist: only allow URLs that fit a specified whitelist query
+		bool whitelist = false;
 		bool found = false;
 		for(auto i = this->queriesWhiteListUrls.begin(); i != this->queriesWhiteListUrls.end(); ++i) {
 			if(i->type == QueryContainer::Query::typeRegEx) {
+				whitelist = true;
 				if(!(this->getRegExQueryPtr(i->index)->getBool(url, found)))
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
 							+ " [" + url + "].");
 				if(found) break;
 			}
-			else if(this->config.crawlerLogging) this->log("WARNING: Query on URL is not of type RegEx.");
+			else if(i->type != QueryContainer::Query::typeNone) {
+				whitelist = true;
+				if(this->config.crawlerLogging) this->log("WARNING: Query on URL is not of type RegEx.");
+			}
 		}
-		if(!found) {
+		if(whitelist && !found) {
 			if(this->config.crawlerLogging > ConfigCrawler::crawlerLoggingDefault) this->log("skipped " + url + " (not whitelisted).");
 			return false;
 		}
@@ -771,7 +776,8 @@ bool ThreadCrawler::crawlingCheckUrl(const std::string& url) {
 					return false;
 				}
 			}
-			else if(this->config.crawlerLogging) this->log("WARNING: Query on URL is not of type RegEx.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.crawlerLogging)
+				this->log("WARNING: Query on URL is not of type RegEx.");
 		}
 	}
 
@@ -811,7 +817,8 @@ bool ThreadCrawler::crawlingCheckContentType(const IdString& url, const std::str
 							+ " [" + url.string + "].");
 				if(found) break;
 			}
-			else if(this->config.crawlerLogging) this->log("WARNING: Query on content type is not of type RegEx.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.crawlerLogging)
+				this->log("WARNING: Query on content type is not of type RegEx.");
 		}
 		if(!found) return false;
 	}
@@ -826,7 +833,8 @@ bool ThreadCrawler::crawlingCheckContentType(const IdString& url, const std::str
 						+ " [" + url.string + "].");
 				if(found) break;
 			}
-			else if(this->config.crawlerLogging) this->log("WARNING: Query on content type is not of type RegEx.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.crawlerLogging)
+				this->log("WARNING: Query on content type is not of type RegEx.");
 		}
 		if(found) return false;
 	}
@@ -852,7 +860,8 @@ bool ThreadCrawler::crawlingCheckContent(const IdString& url, const std::string&
 						+ " [" + url.string + "].");
 				if(found) break;
 			}
-			else if(this->config.crawlerLogging) this->log("WARNING: Query on content type is not of type RegEx or XPath.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.crawlerLogging)
+				this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 		}
 		if(!found) return false;
 	}
@@ -873,7 +882,8 @@ bool ThreadCrawler::crawlingCheckContent(const IdString& url, const std::string&
 						+ " [" + url.string + "].");
 				if(found) break;
 			}
-			else if(this->config.crawlerLogging) this->log("WARNING: Query on content type is not of type RegEx or XPath.");
+			else if(i->type != QueryContainer::Query::typeNone && this->config.crawlerLogging)
+				this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 		}
 		if(found) return false;
 	}
@@ -937,7 +947,8 @@ std::vector<std::string> ThreadCrawler::crawlingExtractUrls(const IdString& url,
 					+ " [" + url.string + "].");
 			}
 		}
-		else if(this->config.crawlerLogging) this->log("WARNING: Query on content type is not of type RegEx or XPath.");
+		else if(i->type != QueryContainer::Query::typeNone && this->config.crawlerLogging)
+			this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 	}
 
 	// remove duplicates

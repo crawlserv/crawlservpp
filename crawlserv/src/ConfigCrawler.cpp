@@ -160,8 +160,9 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 								this->crawlerQueriesBlackListContent.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesBlackListContent.push_back(k->GetUint64());
+									else if(k->IsNull()) this->crawlerQueriesBlackListContent.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -171,8 +172,9 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 								this->crawlerQueriesBlackListTypes.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesBlackListTypes.push_back(k->GetUint64());
+									else if(k->IsNull()) this->crawlerQueriesBlackListTypes.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -182,8 +184,9 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 								this->crawlerQueriesBlackListUrls.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesBlackListUrls.push_back(k->GetUint64());
+									else if(k->IsNull()) this->crawlerQueriesBlackListUrls.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -193,8 +196,9 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 								this->crawlerQueriesLinks.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesLinks.push_back(k->GetUint64());
+									else if(k->IsNull()) this->crawlerQueriesLinks.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -204,8 +208,9 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 								this->crawlerQueriesWhiteListContent.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesWhiteListContent.push_back(k->GetUint64());
+									else if(k->IsNull()) this->crawlerQueriesWhiteListContent.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -215,8 +220,9 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 								this->crawlerQueriesWhiteListTypes.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesWhiteListTypes.push_back(k->GetUint64());
+									else if(k->IsNull()) this->crawlerQueriesWhiteListTypes.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -226,8 +232,9 @@ void ConfigCrawler::loadModule(const rapidjson::Document& jsonDocument, std::vec
 								this->crawlerQueriesWhiteListUrls.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesWhiteListUrls.push_back(k->GetUint64());
+									else if(k->IsNull()) this->crawlerQueriesWhiteListUrls.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");

@@ -24,13 +24,23 @@ public:
 protected:
 	// structure used by child classes to identify queries
 	struct Query {
-		static const unsigned char typeRegEx = 0;
-		static const unsigned char typeXPath = 1;
+		static const unsigned char typeNone = 0;
+		static const unsigned char typeRegEx = 1;
+		static const unsigned char typeXPath = 2;
 		unsigned char type;
 		unsigned long index;
 		bool resultBool;
 		bool resultSingle;
 		bool resultMulti;
+
+		// constructor: set default values
+		Query() {
+			this->type = QueryContainer::Query::typeNone;
+			this->index = 0;
+			this->resultBool = false;
+			this->resultSingle = false;
+			this->resultMulti = false;
+		}
 	};
 
 	// query functions
