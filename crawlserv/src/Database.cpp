@@ -1736,6 +1736,17 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
 
+	// check ID
+	if(!queryId) {
+		queryTextTo = "";
+		queryTypeTo = "";
+		queryResultBoolTo = false;
+		queryResultSingleTo = false;
+		queryResultMultiTo = false;
+		queryTextOnlyTo = false;
+		return;
+	}
+
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
@@ -1756,6 +1767,14 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 			queryResultSingleTo = sqlResultSet->getBoolean("resultsingle");
 			queryResultMultiTo = sqlResultSet->getBoolean("resultmulti");
 			queryTextOnlyTo = sqlResultSet->getBoolean("textonly");
+		}
+		else {
+			queryTextTo = "";
+			queryTypeTo = "";
+			queryResultBoolTo = false;
+			queryResultSingleTo = false;
+			queryResultMultiTo = false;
+			queryTextOnlyTo = false;
 		}
 
 		// delete result and SQL statement

@@ -137,8 +137,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 								this->parsingDateTimeQueries.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingDateTimeQueries.push_back(k->GetUint64());
+									else if(k->IsNull()) this->parsingDateTimeQueries.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -204,8 +205,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 								this->parsingFieldQueries.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingFieldQueries.push_back(k->GetUint64());
+									else if(k->IsNull()) this->parsingFieldQueries.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
@@ -226,8 +228,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 								this->parsingIdQueries.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingIdQueries.push_back(k->GetUint64());
+									else if(k->IsNull()) this->parsingIdQueries.push_back(0);
 									else warningsTo.push_back("Value in \'" + cat + "." + name
-											+ "\' ignored because of wrong type (not unsigned long).");
+											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
