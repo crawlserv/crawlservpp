@@ -52,6 +52,7 @@ The source code of the server consists of the following classes (as of January 2
 
 The following additional namespaces are used (to be found in [`crawlserv/src/namespaces`](crawlserv/src/namespaces)):
 
+* <b>[`Algos`](crawlserv/src/namespaces/Algos.h)</b>: Global helper functions for algorithms.
 * <b>[`DateTime`](crawlserv/src/namespaces/DateTime.cpp)</b>: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * <b>[`FileSystem`](crawlserv/src/namespaces/FileSystem.cpp)</b>: Global helper functions for file system operations using [Boost.Filesystem](https://www.boost.org/doc/libs/1_68_0/libs/filesystem/doc/index.htm).
 * <b>[`Json`](crawlserv/src/namespaces/Json.cpp)</b>: Global helper functions for converting to JSON.
