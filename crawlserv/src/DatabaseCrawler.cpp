@@ -298,7 +298,7 @@ bool DatabaseCrawler::isUrlCrawled(unsigned long urlId) {
 	return result;
 }
 
-// get the next URL to crawl from database or 0 if all URLs have been crawled
+// get the next URL to crawl from database or empty IdString if all URLs have been crawled
 IdString DatabaseCrawler::getNextUrl(unsigned long currentUrlId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	IdString result;
