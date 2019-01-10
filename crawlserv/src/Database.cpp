@@ -98,7 +98,7 @@ bool Database::connect() {
 	catch(sql::SQLException &e) {
 		// set error message
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "connect() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		this->errorMessage = errorStrStr.str();
 
 		// clear connection
@@ -174,7 +174,7 @@ bool Database::prepare() {
 	catch(sql::SQLException &e) {
 		// set error message
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		this->errorMessage = errorStrStr.str();
 		return false;
 	}
@@ -224,7 +224,7 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
+		errorStrStr << "log() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -251,8 +251,7 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getUInt64(1);
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64(1);
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -263,7 +262,7 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getNumberOfLogEntries() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -297,7 +296,7 @@ void Database::clearLogs(const std::string& logModule) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "clearLogs() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -320,7 +319,7 @@ std::vector<ThreadDatabaseEntry> Database::getThreads() {
 				" FROM crawlserv_threads");
 
 		// get results
-		while(sqlResultSet->next()) {
+		while(sqlResultSet && sqlResultSet->next()) {
 			ThreadDatabaseEntry entry;
 			entry.id = sqlResultSet->getUInt64("id");
 			entry.module = sqlResultSet->getString("module");
@@ -342,7 +341,7 @@ std::vector<ThreadDatabaseEntry> Database::getThreads() {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getThreads() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -379,7 +378,7 @@ unsigned long Database::addThread(const std::string& threadModule, const ThreadO
 		// SQL error
 		DATABASE_DELETE(addStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addThread() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -404,8 +403,7 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getUInt64("runtime");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("runtime");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -416,7 +414,7 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getThreadRunTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -441,8 +439,7 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getUInt64("pausetime");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("pausetime");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -453,7 +450,7 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getThreadPauseTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -488,7 +485,7 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "setThreadStatus() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -516,7 +513,7 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "setThreadStatus() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -544,7 +541,7 @@ void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunT
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "setThreadRunTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -572,7 +569,7 @@ void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPa
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "setThreadPauseTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -602,7 +599,7 @@ void Database::deleteThread(unsigned long threadId) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteThread() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -652,7 +649,7 @@ unsigned long Database::addWebsite(const std::string& websiteName, const std::st
 		DATABASE_DELETE(addStatement);
 		DATABASE_DELETE(createStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -677,8 +674,7 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getString("domain");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("domain");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -689,7 +685,7 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getWebsiteDomain() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -714,8 +710,7 @@ std::string Database::getWebsiteNameSpace(unsigned long int websiteId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getString("namespace");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("namespace");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -726,7 +721,7 @@ std::string Database::getWebsiteNameSpace(unsigned long int websiteId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getWebsiteNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -751,8 +746,7 @@ IdString Database::getWebsiteNameSpaceFromUrlList(unsigned long listId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -763,7 +757,8 @@ IdString Database::getWebsiteNameSpaceFromUrlList(unsigned long listId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getWebsiteNameSpaceFromUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
+				<< e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -788,8 +783,7 @@ IdString Database::getWebsiteNameSpaceFromConfig(unsigned long configId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -800,7 +794,8 @@ IdString Database::getWebsiteNameSpaceFromConfig(unsigned long configId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getWebsiteNameSpaceFromConfig() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
+				<< e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -825,8 +820,7 @@ IdString Database::getWebsiteNameSpaceFromParsedTable(unsigned long tableId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -837,7 +831,8 @@ IdString Database::getWebsiteNameSpaceFromParsedTable(unsigned long tableId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getWebsiteNameSpaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
+				<< e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -862,8 +857,7 @@ IdString Database::getWebsiteNameSpaceFromExtractedTable(unsigned long tableId) 
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -874,7 +868,8 @@ IdString Database::getWebsiteNameSpaceFromExtractedTable(unsigned long tableId) 
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getWebsiteNameSpaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+				<< "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -899,8 +894,7 @@ IdString Database::getWebsiteNameSpaceFromAnalyzedTable(unsigned long tableId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -911,7 +905,8 @@ IdString Database::getWebsiteNameSpaceFromAnalyzedTable(unsigned long tableId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getWebsiteNameSpaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+				<< "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -937,8 +932,7 @@ bool Database::isWebsiteNameSpace(const std::string& nameSpace) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -949,7 +943,7 @@ bool Database::isWebsiteNameSpace(const std::string& nameSpace) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isWebsiteNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1088,7 +1082,7 @@ void Database::updateWebsite(unsigned long websiteId, const std::string& website
 		DATABASE_DELETE(renameStatement);
 		DATABASE_DELETE(updateStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "updateWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -1128,7 +1122,7 @@ void Database::deleteWebsite(unsigned long websiteId) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -1152,77 +1146,78 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		std::string websiteName = sqlResultSet->getString("name");
-		std::string websiteNameSpace =sqlResultSet->getString("namespace");
-		std::string websiteDomain =sqlResultSet->getString("domain");
+		if(sqlResultSet && sqlResultSet->next()) {
+			std::string websiteName = sqlResultSet->getString("name");
+			std::string websiteNameSpace =sqlResultSet->getString("namespace");
+			std::string websiteDomain =sqlResultSet->getString("domain");
 
-		// delete result and SQL statement for geting website info
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
+			// delete result and SQL statement for geting website info
+			DATABASE_DELETE(sqlResultSet);
+			DATABASE_DELETE(sqlStatement);
 
-		// create new name and new namespace
-		std::string newName = websiteName + " (copy)";
-		std::string newNameSpace = Database::duplicateWebsiteNameSpace(websiteNameSpace);
+			// create new name and new namespace
+			std::string newName = websiteName + " (copy)";
+			std::string newNameSpace = Database::duplicateWebsiteNameSpace(websiteNameSpace);
 
-		// add website
-		result = this->addWebsite(newName, newNameSpace, websiteDomain);
+			// add website
+			result = this->addWebsite(newName, newNameSpace, websiteDomain);
 
-		// create SQL statement for geting URL list info
-		sqlStatement =
-				this->connection->prepareStatement("SELECT name, namespace FROM crawlserv_urllists WHERE website = ?");
+			// create SQL statement for geting URL list info
+			sqlStatement =
+					this->connection->prepareStatement("SELECT name, namespace FROM crawlserv_urllists WHERE website = ?");
 
-		// execute SQL statement for geting URL list info
-		sqlStatement->setUInt64(1, websiteId);
-		sqlResultSet = sqlStatement->executeQuery();
+			// execute SQL statement for geting URL list info
+			sqlStatement->setUInt64(1, websiteId);
+			sqlResultSet = sqlStatement->executeQuery();
 
-		// get results
-		while(sqlResultSet->next()) {
-			// add URL list
-			std::string urlListName = sqlResultSet->getString("namespace");
+			// get results
+			while(sqlResultSet && sqlResultSet->next()) {
+				// add URL list
+				std::string urlListName = sqlResultSet->getString("namespace");
 
-			// add empty URL lists with same name
-			if(urlListName != "default") this->addUrlList(result, urlListName, sqlResultSet->getString("namespace"));
-		}
+				// add empty URL lists with same name
+				if(urlListName != "default") this->addUrlList(result, urlListName, sqlResultSet->getString("namespace"));
+			}
 
-		// delete result and SQL statement for getting URL list info
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
+			// delete result and SQL statement for getting URL list info
+			DATABASE_DELETE(sqlResultSet);
+			DATABASE_DELETE(sqlStatement);
 
-		// create SQL statement for getting queries
-		sqlStatement = this->connection->prepareStatement("SELECT name, query, type, resultbool, resultsingle, resultmulti,"
-				" textonly FROM crawlserv_queries WHERE website = ?");
+			// create SQL statement for getting queries
+			sqlStatement = this->connection->prepareStatement("SELECT name, query, type, resultbool, resultsingle, resultmulti,"
+					" textonly FROM crawlserv_queries WHERE website = ?");
 
-		// execute SQL statement for getting queries
-		sqlStatement->setUInt64(1, websiteId);
-		sqlResultSet = sqlStatement->executeQuery();
+			// execute SQL statement for getting queries
+			sqlStatement->setUInt64(1, websiteId);
+			sqlResultSet = sqlStatement->executeQuery();
 
-		// get results
-		while(sqlResultSet->next()) {
-			// add query
-			this->addQuery(result, sqlResultSet->getString("name"), sqlResultSet->getString("query"),
-					sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
-					sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
-					sqlResultSet->getBoolean("textonly"));
+			// get results
+			while(sqlResultSet && sqlResultSet->next()) {
+				// add query
+				this->addQuery(result, sqlResultSet->getString("name"), sqlResultSet->getString("query"),
+						sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
+						sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
+						sqlResultSet->getBoolean("textonly"));
 
-		}
+			}
 
-		// delete result and SQL statement for getting queries
-		DATABASE_DELETE(sqlResultSet);
-		DATABASE_DELETE(sqlStatement);
+			// delete result and SQL statement for getting queries
+			DATABASE_DELETE(sqlResultSet);
+			DATABASE_DELETE(sqlStatement);
 
-		// create SQL statement for getting configurations
-		sqlStatement = this->connection->prepareStatement("SELECT module, name, config FROM crawlserv_configs WHERE website = ?");
+			// create SQL statement for getting configurations
+			sqlStatement = this->connection->prepareStatement("SELECT module, name, config FROM crawlserv_configs WHERE website = ?");
 
-		// execute SQL statement for getting configurations
-		sqlStatement->setUInt64(1, websiteId);
-		sqlResultSet = sqlStatement->executeQuery();
+			// execute SQL statement for getting configurations
+			sqlStatement->setUInt64(1, websiteId);
+			sqlResultSet = sqlStatement->executeQuery();
 
-		// get results
-		while(sqlResultSet->next()) {
-			// add configuration
-			this->addConfiguration(result, sqlResultSet->getString("module"), sqlResultSet->getString("name"),
-					sqlResultSet->getString("config"));
+			// get results
+			while(sqlResultSet && sqlResultSet->next()) {
+				// add configuration
+				this->addConfiguration(result, sqlResultSet->getString("module"), sqlResultSet->getString("name"),
+						sqlResultSet->getString("config"));
+			}
 		}
 
 		// delete result and SQL statement for getting configurations
@@ -1234,7 +1229,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "duplicateWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1304,7 +1299,7 @@ unsigned long Database::addUrlList(unsigned long websiteId, const std::string& l
 		DATABASE_DELETE(addStatement);
 		DATABASE_DELETE(createStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1329,7 +1324,8 @@ std::vector<IdString> Database::getUrlLists(unsigned long websiteId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get results
-		while(sqlResultSet->next()) result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("namespace")));
+		while(sqlResultSet && sqlResultSet->next())
+			result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("namespace")));
 
 		// delete results and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1340,7 +1336,7 @@ std::vector<IdString> Database::getUrlLists(unsigned long websiteId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getUrlLists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1365,8 +1361,7 @@ std::string Database::getUrlListNameSpace(unsigned long listId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getString("namespace");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("namespace");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1377,7 +1372,7 @@ std::string Database::getUrlListNameSpace(unsigned long listId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getUrlListNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1402,8 +1397,7 @@ IdString Database::getUrlListNameSpaceFromParsedTable(unsigned long tableId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		urlListId = sqlResultSet->getUInt64("urllist");
+		if(sqlResultSet && sqlResultSet->next()) urlListId = sqlResultSet->getUInt64("urllist");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1414,7 +1408,8 @@ IdString Database::getUrlListNameSpaceFromParsedTable(unsigned long tableId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getUrlListNameSpaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
+				<< e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1439,8 +1434,7 @@ IdString Database::getUrlListNameSpaceFromExtractedTable(unsigned long tableId) 
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		urlListId = sqlResultSet->getUInt64("urllist");
+		if(sqlResultSet && sqlResultSet->next()) urlListId = sqlResultSet->getUInt64("urllist");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1451,7 +1445,8 @@ IdString Database::getUrlListNameSpaceFromExtractedTable(unsigned long tableId) 
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getUrlListNameSpaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+				<< "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1476,8 +1471,7 @@ IdString Database::getUrlListNameSpaceFromAnalyzedTable(unsigned long tableId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		urlListId = sqlResultSet->getUInt64("urllist");
+		if(sqlResultSet && sqlResultSet->next()) urlListId = sqlResultSet->getUInt64("urllist");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1488,7 +1482,8 @@ IdString Database::getUrlListNameSpaceFromAnalyzedTable(unsigned long tableId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getUrlListNameSpaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+				<< "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1515,8 +1510,7 @@ bool Database::isUrlListNameSpace(unsigned long websiteId, const std::string& na
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1527,7 +1521,7 @@ bool Database::isUrlListNameSpace(unsigned long websiteId, const std::string& na
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isUrlListNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1622,7 +1616,7 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 		DATABASE_DELETE(renameStatement);
 		DATABASE_DELETE(updateStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "updateUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -1687,7 +1681,7 @@ void Database::deleteUrlList(unsigned long listId) {
 		DATABASE_DELETE(deleteStatement);
 		DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -1729,7 +1723,7 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1755,13 +1749,14 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		queryTextTo = sqlResultSet->getString("query");
-		queryTypeTo = sqlResultSet->getString("type");
-		queryResultBoolTo = sqlResultSet->getBoolean("resultbool");
-		queryResultSingleTo = sqlResultSet->getBoolean("resultsingle");
-		queryResultMultiTo = sqlResultSet->getBoolean("resultmulti");
-		queryTextOnlyTo = sqlResultSet->getBoolean("textonly");
+		if(sqlResultSet && sqlResultSet->next()) {
+			queryTextTo = sqlResultSet->getString("query");
+			queryTypeTo = sqlResultSet->getString("type");
+			queryResultBoolTo = sqlResultSet->getBoolean("resultbool");
+			queryResultSingleTo = sqlResultSet->getBoolean("resultsingle");
+			queryResultMultiTo = sqlResultSet->getBoolean("resultmulti");
+			queryTextOnlyTo = sqlResultSet->getBoolean("textonly");
+		}
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1772,7 +1767,7 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getQueryProperties() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -1808,7 +1803,7 @@ void Database::updateQuery(unsigned long queryId, const std::string& queryName, 
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "updateQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -1838,7 +1833,7 @@ void Database::deleteQuery(unsigned long queryId) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -1862,13 +1857,13 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-
-		// add query
-		result = this->addQuery(sqlResultSet->getUInt64("website"), sqlResultSet->getString("name") + " (copy)",
-				sqlResultSet->getString("query"), sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
-				sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
-				sqlResultSet->getBoolean("textonly"));
+		if(sqlResultSet && sqlResultSet->next()) {
+			// add query
+			result = this->addQuery(sqlResultSet->getUInt64("website"), sqlResultSet->getString("name") + " (copy)",
+					sqlResultSet->getString("query"), sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
+					sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
+					sqlResultSet->getBoolean("textonly"));
+		}
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1879,7 +1874,7 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "duplicateQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1917,7 +1912,7 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const std::str
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1942,8 +1937,7 @@ const std::string Database::getConfiguration(unsigned long configId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getString("config");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("config");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -1954,7 +1948,7 @@ const std::string Database::getConfiguration(unsigned long configId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -1986,7 +1980,7 @@ void Database::updateConfiguration(unsigned long configId, const std::string& co
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "updateConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2016,7 +2010,7 @@ void Database::deleteConfiguration(unsigned long configId) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2040,11 +2034,11 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-
-		// add configuration
-		result = this->addConfiguration(sqlResultSet->getUInt64("website"), sqlResultSet->getString("module"),
-				sqlResultSet->getString("name") + " (copy)", sqlResultSet->getString("config"));
+		if(sqlResultSet && sqlResultSet->next()) {
+			// add configuration
+			result = this->addConfiguration(sqlResultSet->getUInt64("website"), sqlResultSet->getString("module"),
+					sqlResultSet->getString("name") + " (copy)", sqlResultSet->getString("config"));
+		}
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2055,7 +2049,7 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "duplicateConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2065,29 +2059,48 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 // add parsed table to database
 void Database::addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	sql::PreparedStatement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
-		// create SQL statement
-		sqlStatement =
-				this->connection->prepareStatement("INSERT INTO crawlserv_parsedtables(website, urllist, name) VALUES (?, ?, ?)");
+		// create SQL statement for checking for entry
+		sqlStatement = this->connection->prepareStatement("SELECT COUNT(id) AS result FROM crawlserv_parsedtables WHERE website = ?"
+				" AND urllist = ? AND name = ? LIMIT 1");
 
-		// execute SQL statement
+		// execute SQL statement for checking for entry
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setUInt64(2, listId);
 		sqlStatement->setString(3, tableName);
-		sqlStatement->execute();
+		sqlResultSet = sqlStatement->executeQuery();
 
-		// delete SQL statement
+		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
+			// delete result and SQL statement
+			DATABASE_DELETE(sqlResultSet);
+			DATABASE_DELETE(sqlStatement);
+
+			// entry does not exist already: create SQL statement for adding table
+			sqlStatement =
+					this->connection->prepareStatement("INSERT INTO crawlserv_parsedtables(website, urllist, name) VALUES (?, ?, ?)");
+
+			// execute SQL statement for adding table
+			sqlStatement->setUInt64(1, websiteId);
+			sqlStatement->setUInt64(2, listId);
+			sqlStatement->setString(3, tableName);
+			sqlStatement->execute();
+		}
+
+		// delete result and SQL statement
+		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
+		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2111,7 +2124,8 @@ std::vector<IdString> Database::getParsedTables(unsigned long listId) {
 		sql::ResultSet * sqlResultSet = sqlStatement->executeQuery();
 
 		// get results
-		while(sqlResultSet->next()) result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
+		while(sqlResultSet && sqlResultSet->next())
+			result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
 
 		// delete results and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2122,7 +2136,7 @@ std::vector<IdString> Database::getParsedTables(unsigned long listId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getParsedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2147,8 +2161,7 @@ std::string Database::getParsedTable(unsigned long tableId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getString("name");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2159,7 +2172,7 @@ std::string Database::getParsedTable(unsigned long tableId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2209,7 +2222,7 @@ void Database::deleteParsedTable(unsigned long tableId) {
 		DATABASE_DELETE(deleteStatement);
 		DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2217,29 +2230,47 @@ void Database::deleteParsedTable(unsigned long tableId) {
 // add extracted table to database
 void Database::addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	sql::PreparedStatement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
-		// create SQL statement
-		sqlStatement =
-				this->connection->prepareStatement("INSERT INTO crawlserv_extractedtables(website, urllist, name) VALUES (?, ?, ?)");
+		// create SQL statement for checking for entry
+		sqlStatement = this->connection->prepareStatement("SELECT COUNT(id) AS result FROM crawlserv_extractedtables WHERE website = ?"
+				" AND urllist = ? AND name = ? LIMIT 1");
 
-		// execute SQL statement
+		// execute SQL statement for checking for entry
 		sqlStatement->setUInt64(1, websiteId);
-		sqlStatement->setUInt64(1, listId);
+		sqlStatement->setUInt64(2, listId);
 		sqlStatement->setString(3, tableName);
-		sqlStatement->execute();
+		sqlResultSet = sqlStatement->executeQuery();
 
-		// delete SQL statement
+		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
+			// delete result and SQL statement
+			DATABASE_DELETE(sqlResultSet);
+			DATABASE_DELETE(sqlStatement);
+
+			// create SQL statement for adding table
+			sqlStatement = this->connection->prepareStatement("INSERT INTO crawlserv_extractedtables(website, urllist, name)"
+					" VALUES (?, ?, ?)");
+
+			// execute SQL statement
+			sqlStatement->setUInt64(1, websiteId);
+			sqlStatement->setUInt64(1, listId);
+			sqlStatement->setString(3, tableName);
+			sqlStatement->execute();
+		}
+
+		// delete result and SQL statement
+		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2263,7 +2294,8 @@ std::vector<IdString> Database::getExtractedTables(unsigned long listId) {
 		sql::ResultSet * sqlResultSet = sqlStatement->executeQuery();
 
 		// get results
-		while(sqlResultSet->next()) result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
+		while(sqlResultSet && sqlResultSet->next())
+			result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
 
 		// delete results and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2274,7 +2306,7 @@ std::vector<IdString> Database::getExtractedTables(unsigned long listId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getExtractedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2299,8 +2331,7 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getString("name");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2311,7 +2342,7 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2361,7 +2392,7 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 		DATABASE_DELETE(deleteStatement);
 		DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2369,29 +2400,47 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 // add analyzed table to database
 void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	sql::PreparedStatement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
-		// create SQL statement
-		sqlStatement =
-				this->connection->prepareStatement("INSERT INTO crawlserv_analyzedtables(website, urllist, name) VALUES (?, ?, ?)");
+		// create SQL statement for checking for entry
+		sqlStatement = this->connection->prepareStatement("SELECT COUNT(id) AS result FROM crawlserv_analyzedtables WHERE website = ?"
+				" AND urllist = ? AND name = ? LIMIT 1");
 
-		// execute SQL statement
+		// execute SQL statement for checking for entry
 		sqlStatement->setUInt64(1, websiteId);
-		sqlStatement->setUInt64(1, listId);
+		sqlStatement->setUInt64(2, listId);
 		sqlStatement->setString(3, tableName);
-		sqlStatement->execute();
+		sqlResultSet = sqlStatement->executeQuery();
 
-		// delete SQL statement
+		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
+			// delete result and SQL statement
+			DATABASE_DELETE(sqlResultSet);
+			DATABASE_DELETE(sqlStatement);
+
+			// create SQL statement for adding table
+			sqlStatement =
+					this->connection->prepareStatement("INSERT INTO crawlserv_analyzedtables(website, urllist, name) VALUES (?, ?, ?)");
+
+			// execute SQL statement
+			sqlStatement->setUInt64(1, websiteId);
+			sqlStatement->setUInt64(1, listId);
+			sqlStatement->setString(3, tableName);
+			sqlStatement->execute();
+		}
+
+		// delete result and SQL statement
+		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2415,7 +2464,8 @@ std::vector<IdString> Database::getAnalyzedTables(unsigned long listId) {
 		sql::ResultSet * sqlResultSet = sqlStatement->executeQuery();
 
 		// get results
-		while(sqlResultSet->next()) result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
+		while(sqlResultSet && sqlResultSet->next())
+			result.push_back(IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
 
 		// delete results and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2426,7 +2476,7 @@ std::vector<IdString> Database::getAnalyzedTables(unsigned long listId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getAnalyzedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2451,8 +2501,7 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getString("name");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2463,7 +2512,7 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2513,7 +2562,7 @@ void Database::deleteAnalyzedTable(unsigned long tableId) {
 		DATABASE_DELETE(deleteStatement);
 		DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2542,8 +2591,7 @@ bool Database::isWebsite(unsigned long websiteId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2554,7 +2602,7 @@ bool Database::isWebsite(unsigned long websiteId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2580,8 +2628,7 @@ bool Database::isUrlList(unsigned long urlListId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2592,7 +2639,7 @@ bool Database::isUrlList(unsigned long urlListId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2619,8 +2666,7 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2631,7 +2677,7 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2657,8 +2703,7 @@ bool Database::isQuery(unsigned long queryId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2669,7 +2714,7 @@ bool Database::isQuery(unsigned long queryId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2696,8 +2741,7 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2708,7 +2752,7 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2734,8 +2778,7 @@ bool Database::isConfiguration(unsigned long configId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2746,7 +2789,7 @@ bool Database::isConfiguration(unsigned long configId) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2773,8 +2816,7 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2785,7 +2827,7 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2836,7 +2878,7 @@ bool Database::checkConnection() {
 	catch(sql::SQLException &e) {
 		// SQL error while recovering prepared statements: set error message and return
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "checkConnection() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		this->errorMessage = errorStrStr.str();
 
 		// clear connection
@@ -2870,8 +2912,7 @@ unsigned long Database::getLastInsertedId() {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getUInt64("id");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
 
 		DATABASE_DELETE(sqlResultSet);
 	}
@@ -2879,7 +2920,7 @@ unsigned long Database::getLastInsertedId() {
 		// SQL error
 		DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getLastInsertedId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2903,8 +2944,7 @@ bool Database::isTableEmpty(const std::string& tableName) {
 		sqlResultSet = sqlStatement->executeQuery("SELECT NOT EXISTS (SELECT 1 FROM " + tableName + " LIMIT 1) AS result");
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -2915,7 +2955,7 @@ bool Database::isTableEmpty(const std::string& tableName) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isTableEmpty() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -2943,7 +2983,7 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "resetAutoIncrement() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2970,7 +3010,7 @@ void Database::lockTable(const std::string& tableName) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "lockTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -2997,7 +3037,7 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "lockTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -3024,7 +3064,7 @@ void Database::unlockTables() {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "unlockTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -3045,8 +3085,7 @@ bool Database::isTableExists(const std::string& tableName) {
 				+ this->settings.name + "' AND TABLE_NAME = '" + tableName + "' LIMIT 1");
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -3057,7 +3096,7 @@ bool Database::isTableExists(const std::string& tableName) {
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isTableExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -3080,8 +3119,7 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 				+ this->settings.name + "' AND TABLE_NAME = '" + tableName + "' AND COLUMN_NAME = '" + columnName + "' LIMIT 1");
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
 		DATABASE_DELETE(sqlResultSet);
@@ -3092,7 +3130,7 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 		DATABASE_DELETE(sqlResultSet);
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "isColumnExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 
@@ -3120,7 +3158,7 @@ void Database::execute(const std::string& sqlQuery) {
 		// SQL error
 		DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "execute() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -3154,7 +3192,7 @@ bool Database::run(const std::string& sqlFile) {
 				// SQL error
 				DATABASE_DELETE(sqlStatement);
 				std::ostringstream errorStrStr;
-				errorStrStr << "SQL Error #" << e.getErrorCode() << " on line #" << lineCounter
+				errorStrStr << "run() SQL Error #" << e.getErrorCode() << " on line #" << lineCounter
 						<< " (State " << e.getSQLState() << "): " << e.what();
 				this->errorMessage = errorStrStr.str();
 				return false;

@@ -157,7 +157,7 @@ bool DatabaseCrawler::prepare(unsigned long crawlerId, const std::string& websit
 	catch(sql::SQLException &e) {
 		// set error message
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		this->errorMessage = errorStrStr.str();
 		return false;
 	}
