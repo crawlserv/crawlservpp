@@ -524,7 +524,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 						break;
 					}
 				}
-				if(!empty) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
+				if(empty) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
 						+ this->currentUrl.string);
 			}
 
