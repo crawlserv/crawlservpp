@@ -60,9 +60,9 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 		}
 		else if(i->module == "parser") {
 			// load parser thread
-			//ThreadParser * parser = new ThreadParser(this->database, i->id, i->status, i->paused, i->options, i->last);
-			//parser->Thread::start();
-			//this->parsers.push_back(parser);
+			ThreadParser * parser = new ThreadParser(this->database, i->id, i->status, i->paused, i->options, i->last);
+			parser->Thread::start();
+			this->parsers.push_back(parser);
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -105,7 +105,7 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 Server::~Server() {
 	// interrupt module threads
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
-	//for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
+	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
 	//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
 	//for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) if(*i) (*i)->Thread::sendInterrupt();
 
@@ -126,7 +126,7 @@ Server::~Server() {
 			this->database.log("crawler", logStrStr.str());
 		}
 	}
-	/*for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
+	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
 		if(*i) {
 			// get thread id (for logging)
 			unsigned long id = (*i)->getId();
@@ -138,10 +138,10 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << (*i)->getId() << " interrupted.";
+			logStrStr << "#" << id << " interrupted.";
 			this->database.log("parser", logStrStr.str());
 		}
-	}*/
+	}
 	/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
 		if(*i) {
 			// get thread id (for logging)
@@ -154,7 +154,7 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << (*i)->getId() << " interrupted.";
+			logStrStr << "#" << id << " interrupted.";
 			this->database.log("extractor", logStrStr.str());
 		}
 	}*/
@@ -170,7 +170,7 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << (*i)->getId() << " interrupted.";
+			logStrStr << "#" << id << " interrupted.";
 			this->database.log("analyzer", logStrStr.str());
 		}
 	}*/
@@ -202,7 +202,6 @@ bool Server::tick() {
 			n--;
 		}
 	}
-	/*
 	for(unsigned long n = 1; n <= this->parsers.size(); n++) {
 		if(this->parsers.at(n - 1)->isTerminated()) {
 			this->parsers.at(n - 1)->Thread::stop();
@@ -210,6 +209,7 @@ bool Server::tick() {
 			n--;
 		}
 	}
+	/*
 	for(unsigned long n = 1; n <= this->extractors.size(); n++) {
 		if(this->extractors.at(n - 1)->isTerminated()) {
 			this->extractors.at(n - 1)->Thread::stop();
@@ -279,6 +279,11 @@ std::string Server::cmd(const char * body, struct mg_connection * connection, bo
 					else if(command == "pausecrawler") response = this->cmdPauseCrawler(json, ip);
 					else if(command == "unpausecrawler") response = this->cmdUnPauseCrawler(json, ip);
 					else if(command == "stopcrawler") response = this->cmdStopCrawler(json, ip);
+
+					else if(command == "startparser") response = this->cmdStartParser(json, ip);
+					else if(command == "pauseparser") response = this->cmdPauseParser(json, ip);
+					else if(command == "unpauseparser") response = this->cmdUnPauseParser(json, ip);
+					else if(command == "stopparser") response = this->cmdStopParser(json, ip);
 
 					else if(command == "addwebsite") response = this->cmdAddWebsite(json);
 					else if(command == "updatewebsite") response = this->cmdUpdateWebsite(json);
@@ -397,8 +402,10 @@ void Server::eventHandler(mg_connection * connection, int event, void * data) {
 		// parse HTTP request
 		http_message * httpMessage = (http_message *) data;
 
+#ifdef SERVER_DEBUG_HTTP_REQUEST
 		// debug HTTP request
-		//std::cout << std::endl << std::string(httpMessage->message.p, 0, httpMessage->message.len) << std::endl;
+		std::cout << std::endl << std::string(httpMessage->message.p, 0, httpMessage->message.len) << std::endl;
+#endif
 
 		// check for GET request
 		if(httpMessage->method.len == 3 &&
@@ -672,6 +679,131 @@ Server::CmdResponse Server::cmdStopCrawler(const rapidjson::Document& json, cons
 	return Server::CmdResponse("Crawler stopped.");
 }
 
+// server command startparser(website, urllist, config): start a parser using the specified website, URL list and configuration
+Server::CmdResponse Server::cmdStartParser(const rapidjson::Document& json, const std::string& ip) {
+	// get arguments
+	ThreadOptions options;
+	if(!json.HasMember("website")) return Server::CmdResponse(true, "Invalid arguments (\'website\' is missing).");
+	if(!json["website"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'website\' is not a number).");
+	options.website = json["website"].GetInt64();
+	if(!json.HasMember("urllist")) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is missing).");
+	if(!json["urllist"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is not a number).");
+	options.urlList = json["urllist"].GetInt64();
+	if(!json.HasMember("config")) return Server::CmdResponse(true, "Invalid arguments (\'config\' is missing).");
+	if(!json["config"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'config\' is not a number).");
+	options.config = json["config"].GetInt64();
+
+	// check arguments
+	if(!(this->database.isWebsite(options.website))) {
+		std::ostringstream errStrStr;
+		errStrStr << "Website #" << options.website << " not found.";
+		return Server::CmdResponse(true, errStrStr.str());
+	}
+	if(!(this->database.isUrlList(options.website, options.urlList))) {
+		std::ostringstream errStrStr;
+		errStrStr << "URL list #" << options.urlList << " for website #" << options.website << " not found.";
+		return Server::CmdResponse(true, errStrStr.str());
+	}
+	if(!(this->database.isConfiguration(options.website, options.config))) {
+		std::ostringstream errStrStr;
+		errStrStr << "Configuration #" << options.config << " for website #" << options.website << " not found.";
+		return Server::CmdResponse(true, errStrStr.str());
+	}
+
+	// create and start parser
+	ThreadParser * newParser = new ThreadParser(this->database, options);
+	this->parsers.push_back(newParser);
+	newParser->Thread::start();
+	unsigned long id = newParser->Thread::getId();
+
+	// startparser is a logged command
+	std::ostringstream logStrStr;
+	logStrStr << "[#" << id << "] started by " << ip << ".";
+	this->database.log("parser", logStrStr.str());
+
+	return Server::CmdResponse("Parser has been started.");
+}
+
+// server command pauseparser(id): pause a parser by its ID
+Server::CmdResponse Server::cmdPauseParser(const rapidjson::Document& json, const std::string& ip) {
+	// get argument
+	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
+	if(!json["id"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'id\' is not a number).");
+	unsigned long id = json["id"].GetInt64();
+
+	// find parser
+	auto i = std::find_if(this->parsers.begin(), this->parsers.end(), [&id](ThreadParser * p) { return p->Thread::getId() == id; });
+	if(i == this->parsers.end()) {
+		std::ostringstream errStrStr;
+		errStrStr << "Could not find parser #" << id << ".";
+		return Server::CmdResponse(true, errStrStr.str());
+	}
+
+	// pause parser
+	(*i)->Thread::pause();
+
+	// pauseparser is a logged command
+	std::ostringstream logStrStr;
+	logStrStr << "[#" << id << "] paused by " << ip << ".";
+	this->database.log("parser", logStrStr.str());
+
+	return Server::CmdResponse("Parser is pausing.");
+}
+
+// server command unpauseparser(id): unpause a parser by its ID
+Server::CmdResponse Server::cmdUnPauseParser(const rapidjson::Document& json, const std::string& ip) {
+	// get argument
+	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
+	if(!json["id"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'id\' is not a number).");
+	unsigned long id = json["id"].GetInt64();
+
+	// find parser
+	auto i = std::find_if(this->parsers.begin(), this->parsers.end(), [&id](ThreadParser * p) { return p->Thread::getId() == id; });
+	if(i == this->parsers.end()) {
+		std::ostringstream errStrStr;
+		errStrStr << "Could not find parser #" << id << ".";
+		return Server::CmdResponse(true, errStrStr.str());
+	}
+
+	// unpause parser
+	(*i)->Thread::unpause();
+
+	// unpauseparser is a logged command
+	std::ostringstream logStrStr;
+	logStrStr << "[#" << id << "] unpaused by " << ip << ".";
+	this->database.log("parser", logStrStr.str());
+
+	return Server::CmdResponse("Parser is unpausing.");
+}
+
+// server command stopparser(id): stop a parser by its ID
+Server::CmdResponse Server::cmdStopParser(const rapidjson::Document& json, const std::string& ip) {
+	// get argument
+	if(!json.HasMember("id")) return Server::CmdResponse(true, "Invalid arguments (\'id\' is missing).");
+	if(!json["id"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'id\' is not a number).");
+	unsigned long id = json["id"].GetInt64();
+
+	// find parser
+	auto i = std::find_if(this->parsers.begin(), this->parsers.end(), [&id](ThreadParser * p) { return p->Thread::getId() == id; });
+	if(i == this->parsers.end()) {
+		std::ostringstream errStrStr;
+		errStrStr << "Could not find parser #" << id << ".";
+		return Server::CmdResponse(true, errStrStr.str());
+	}
+
+	// stop parser
+	(*i)->Thread::stop();
+	delete *i;
+	this->parsers.erase(i);
+
+	// stopparser is a logged command
+	std::ostringstream logStrStr;
+	logStrStr << "[#" << id << "] Stopped by " << ip << ".";
+	this->database.log("parser", logStrStr.str());
+
+	return Server::CmdResponse("Parser stopped.");
+}
+
 // server command addwebsite(name, namespace, domain): add a website
 Server::CmdResponse Server::cmdAddWebsite(const rapidjson::Document& json) {
 	// get arguments
@@ -744,9 +876,9 @@ Server::CmdResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
 	// check whether threads are using the website
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be changed while crawler is active.");
-	/*for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
+	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be changed while parser is active.");
-	for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
+	/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be changed while extractor is active.");
 	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be changed while analyzer is active.");*/
@@ -776,9 +908,9 @@ Server::CmdResponse Server::cmdDeleteWebsite(const rapidjson::Document& json, co
 	// check whether threads are using the website
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be deleted while crawler is active.");
-	/*for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
+	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be deleted while parser is active.");
-	for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
+	/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be deleted while extractor is active.");
 	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 		if((*i)->getWebsite() == id) return Server::CmdResponse(true, "Website cannot be deleted while analyzer is active.");*/
@@ -884,9 +1016,9 @@ Server::CmdResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
 	// check whether threads are using the URL list
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
 		if((*i)->getUrlList() == id) return Server::CmdResponse(true, "URL list cannot be changed while crawler is active.");
-	/*for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
+	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
 		if((*i)->getUrlList() == id) return Server::CmdResponse(true, "URL list cannot be changed while parser is active.");
-	for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
+	/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
 		if((*i)->getUrlList() == id) return Server::CmdResponse(true, "URL list cannot be changed while extractor is active.");
 	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 		if((*i)->getUrlList() == id) return Server::CmdResponse(true, "URL list cannot be changed while analyzer is active.");*/
