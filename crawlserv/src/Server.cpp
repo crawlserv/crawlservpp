@@ -284,6 +284,13 @@ std::string Server::cmd(const char * body, struct mg_connection * connection, bo
 					else if(command == "pauseparser") response = this->cmdPauseParser(json, ip);
 					else if(command == "unpauseparser") response = this->cmdUnPauseParser(json, ip);
 					else if(command == "stopparser") response = this->cmdStopParser(json, ip);
+					else if(command == "resetparsingstatus") response = this->cmdResetParsingStatus(json);
+
+					//TODO: server commands for extractor
+					else if(command == "resetextractingstatus") response = this->cmdResetExtractingStatus(json);
+
+					//TODO: server commands for analyzer
+					else if(command == "resetanalyzingstatus") response = this->cmdResetAnalyzingStatus(json);
 
 					else if(command == "addwebsite") response = this->cmdAddWebsite(json);
 					else if(command == "updatewebsite") response = this->cmdUpdateWebsite(json);
@@ -538,7 +545,7 @@ Server::CmdResponse Server::cmdClearLog(const rapidjson::Document& json, const s
 	if(!json.HasMember("confirmed")) {
 		std::ostringstream replyStrStr;
 		replyStrStr.imbue(std::locale(""));
-		replyStrStr << "CONFIRM Are you sure to delete " << this->database.getNumberOfLogEntries(module) << " log entries?";
+		replyStrStr << "Are you sure to delete " << this->database.getNumberOfLogEntries(module) << " log entries?";
 		return Server::CmdResponse(false, true, replyStrStr.str());
 	}
 
@@ -802,6 +809,54 @@ Server::CmdResponse Server::cmdStopParser(const rapidjson::Document& json, const
 	this->database.log("parser", logStrStr.str());
 
 	return Server::CmdResponse("Parser stopped.");
+}
+
+// server command resetparsingstatus(urllist): reset the parsing status of a id-specificed URL list
+Server::CmdResponse Server::cmdResetParsingStatus(const rapidjson::Document& json) {
+	// get argument
+	if(!json.HasMember("urllist")) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is missing).");
+	if(!json["urllist"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is not a number).");
+	unsigned long listId = json["urllist"].GetInt64();
+
+	// resetparsingstatus needs to be confirmed
+	if(!json.HasMember("confirmed"))
+		return Server::CmdResponse(false, true, "Are you sure that you want to reset the parsing status of this URL list?");
+
+	// reset parsing status
+	this->database.resetParsingStatus(listId);
+	return Server::CmdResponse("Parsing status reset.");
+}
+
+// server command resetextractingstatus(urllist): reset the parsing status of a id-specificed URL list
+Server::CmdResponse Server::cmdResetExtractingStatus(const rapidjson::Document& json) {
+	// get argument
+	if(!json.HasMember("urllist")) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is missing).");
+	if(!json["urllist"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is not a number).");
+	unsigned long listId = json["urllist"].GetInt64();
+
+	// resetextractingstatus needs to be confirmed
+	if(!json.HasMember("confirmed"))
+			return Server::CmdResponse(false, true, "Are you sure that you want to reset the extracting status of this URL list?");
+
+	// reset extracting status
+	this->database.resetExtractingStatus(listId);
+	return Server::CmdResponse("Extracting status reset.");
+}
+
+// server command resetanalyzingstatus(urllist): reset the parsing status of a id-specificed URL list
+Server::CmdResponse Server::cmdResetAnalyzingStatus(const rapidjson::Document& json) {
+	// get argument
+	if(!json.HasMember("urllist")) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is missing).");
+	if(!json["urllist"].IsInt64()) return Server::CmdResponse(true, "Invalid arguments (\'urllist\' is not a number).");
+	unsigned long listId = json["urllist"].GetInt64();
+
+	// resetanalyzingstatus needs to be confirmed
+	if(!json.HasMember("confirmed"))
+			return Server::CmdResponse(false, true, "Are you sure that you want to reset the analyzing status of this URL list?");
+
+	// reset analyzing status
+	this->database.resetAnalyzingStatus(listId);
+	return Server::CmdResponse("Analyzing status reset.");
 }
 
 // server command addwebsite(name, namespace, domain): add a website
