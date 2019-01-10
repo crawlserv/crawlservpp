@@ -50,6 +50,13 @@ bool ThreadParser::onInit(bool resumed) {
 		this->log("WARNING: " + *i);
 	verbose = config.generalLogging == ConfigParser::generalLoggingVerbose;
 
+	// check configuration
+	if(verbose) this->log("Check configuration...");
+	if(!(this->config.generalResultTable.length())) {
+		if(this->config.generalLogging) this->log("ERROR: No target table specified.");
+		return false;
+	}
+
 	// set database configuration
 	if(verbose) this->log("Set database configuration...");
 	this->database.setSleepOnError(this->config.generalSleepMySql);

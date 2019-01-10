@@ -60,7 +60,7 @@ bool DatabaseThread::prepare() {
 	catch(sql::SQLException &e) {
 		// set error message
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		this->errorMessage = errorStrStr.str();
 		return false;
 	}
@@ -97,7 +97,7 @@ void DatabaseThread::setThreadStatusMessage(unsigned long threadId, bool threadP
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "setThreadStatusMessage() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -122,7 +122,7 @@ void DatabaseThread::setThreadProgress(unsigned long threadId, float threadProgr
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "setThreadProgress() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
@@ -146,7 +146,7 @@ void DatabaseThread::setThreadLast(unsigned long threadId, unsigned long threadL
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "SQL Error " << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "setThreadLast() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
