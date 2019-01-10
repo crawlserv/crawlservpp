@@ -1692,7 +1692,7 @@ void Database::resetParsingStatus(unsigned long listId) {
 	IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
 	std::string listNameSpace = this->getUrlListNameSpace(listId);
 
-	this->execute("UPDATE " + websiteNameSpace.string + "_" + listNameSpace + " SET parsed = FALSE");
+	this->execute("UPDATE crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + " SET parsed = FALSE");
 }
 
 // reset extracting status of id-specified URL list
@@ -1701,7 +1701,7 @@ void Database::resetExtractingStatus(unsigned long listId) {
 	IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
 	std::string listNameSpace = this->getUrlListNameSpace(listId);
 
-	this->execute("UPDATE " + websiteNameSpace.string + "_" + listNameSpace + " SET extracted = FALSE");
+	this->execute("UPDATE crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + " SET extracted = FALSE");
 }
 
 // reset analyzing status of id-specified URL list
@@ -1710,7 +1710,7 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
 	IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
 	std::string listNameSpace = this->getUrlListNameSpace(listId);
 
-	this->execute("UPDATE " + websiteNameSpace.string + "_" + listNameSpace + " SET analyzed = FALSE");
+	this->execute("UPDATE crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + " SET analyzed = FALSE");
 }
 
 // add query to database
