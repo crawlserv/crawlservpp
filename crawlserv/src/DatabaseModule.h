@@ -37,13 +37,18 @@ public:
 	void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
 			bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
 	std::string getConfigJson(unsigned long configId);
-	void unlockTables();
 	unsigned long getLastInsertedId();
+	void unlockTables();
 
 	// wrappers for indexing module tables
 	void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
 	void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
 	void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+
+	// wrappers for resetting module status
+	void resetParsingStatus(unsigned long listId);
+	void resetExtractingStatus(unsigned long listId);
+	void resetAnalyzingStatus(unsigned long listId);
 
 protected:
 	// reference to the database connection by the thread
