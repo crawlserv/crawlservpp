@@ -264,8 +264,12 @@ div.entry-value {
 	color:#808080;
 }
 a.entry-value {
-	text-decoration:none;
 	color:#808080;
+	text-decoration:none;
+	font-size:0.8em;
+}
+a.entry-value:hover {
+	text-decoration:underline;
 }
 
 /* VALUE ONLY */

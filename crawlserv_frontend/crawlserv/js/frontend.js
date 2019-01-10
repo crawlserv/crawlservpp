@@ -370,6 +370,30 @@ jQuery(function($) {
 		return false;
 	});
 	
+// CLICK EVENT: reset parsing status
+	$(document).on("click", "a.urllist-reset-parsing", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		if(urllist) runCmd("resetparsingstatus", { "urllist" : urllist }, true, { "m" : "websites", "website" : website });
+		return false;
+	});
+	
+// CLICK EVENT: reset extracting status
+	$(document).on("click", "a.urllist-reset-extracting", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		if(urllist) runCmd("resetextractingstatus", { "urllist" : urllist }, true, { "m" : "websites", "website" : website });
+		return false;
+	});
+	
+// CLICK EVENT: reset analyzing status
+	$(document).on("click", "a.urllist-reset-analyzing", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		if(urllist) runCmd("resetanalyzingstatus", { "urllist" : urllist }, true, { "m" : "websites", "website" : website });
+		return false;
+	});
+	
 /*
  * QUERIES
  */

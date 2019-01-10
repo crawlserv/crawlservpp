@@ -137,6 +137,13 @@ private:
 	Server::CmdResponse cmdPauseParser(const rapidjson::Document& json, const std::string& ip);
 	Server::CmdResponse cmdUnPauseParser(const rapidjson::Document& json, const std::string& ip);
 	Server::CmdResponse cmdStopParser(const rapidjson::Document& json, const std::string& ip);
+	Server::CmdResponse cmdResetParsingStatus(const rapidjson::Document& json);
+
+	//TODO: Server commands for extractor
+	Server::CmdResponse cmdResetExtractingStatus(const rapidjson::Document& json);
+
+	//TODO: Server commands for analyzer
+	Server::CmdResponse cmdResetAnalyzingStatus(const rapidjson::Document& json);
 
 	Server::CmdResponse cmdAddWebsite(const rapidjson::Document& json);
 	Server::CmdResponse cmdUpdateWebsite(const rapidjson::Document& json);
