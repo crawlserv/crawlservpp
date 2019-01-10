@@ -102,15 +102,24 @@ The server performs commands and sends back their results. Some commands need to
 * ~~<b>`pauseanalyzer`</b>~~ (argument: `id`): Pause a running analyzer by its ID.
 * <b>`pausecrawler`</b> (argument: `id`): Pause a running crawler by its ID.
 * ~~<b>`pauseextractor`</b>~~ (argument: `id`): Pause a running extractor by its ID.
-* ~~<b>`pauseparser`</b>~~ (argument: `id`): Pause a running parser by its ID.
+* <b>`pauseparser`</b> (argument: `id`): Pause a running parser by its ID.
 * ~~<b>`startanalyzer`</b>~~ (arguments: `website`, `urllist`, `config`): Start an analyzer using the specified website, URL list and configuration.
 * <b>`startcrawler`</b> (arguments: `website`, `urllist`, `config`): Start a crawler using the specified website, URL list and configuration.
 * ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): Start an extractor using the specified website, URL list and configuration.
-* ~~<b>`startparser`</b>~~ (arguments: `website`, `urllist`, `config`): Start a parser using the specified website, URL list and configuration.
+* <b>`startparser`</b> (arguments: `website`, `urllist`, `config`): Start a parser using the specified website, URL list and configuration.
 * ~~<b>`stopanalyzer`</b>~~ (argument: `id`): Stop a running analyzer by its ID.
 * <b>`stopcrawler`</b> (argument: `id`): Stop a running crawler by its ID.
 * ~~<b>`stopextractor`</b>~~ (argument: `id`): Stop a running extractor by its ID.
-* ~~<b>`stopparser`</b>~~ (argument: `id`): Stop a running parser by its ID.
+* <b>`stopparser`</b> (argument: `id`): Stop a running parser by its ID.
+* <b>`testquery`</b> (arguments: `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`, `text`): Test a query on the specified text.
+* ~~<b>`unpauseanalyzer`</b>~~ (argument: `id`): Unpause a paused analyzer by its ID.
+* <b>`unpausecrawler`</b> (argument: `id`): Unpause a paused crawler by its ID.
+* ~~<b>`unpauseextractor`</b>~~ (argument: `id`): Unpause a paused extractor by its ID.
+* <b>`unpauseparser`</b> (argument: `id`): Unpause a paused parser by its ID.
+* <b>`updateconfig`</b> (arguments: `id`, `name`, `config`): Update an existing configuration in the database.
+* <b>`updatequery`</b> (arguments: `id`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Update an existing RegEx or XPath query in the database.
+* <b>`updateurllist`</b> (arguments: `id`, `name`, `namespace`): Update an existing URL list in the database.
+* <b>`updatewebsite`</b> (arguments: `id`, `name`, `namespace`, `domain`): Update an existing website in the database.
 
 The commands and their replies are using the JSON format (implemented by using the [RapidJSON library](https://github.com/Tencent/rapidjson)). See the following examples:
 
