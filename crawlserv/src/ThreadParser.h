@@ -24,6 +24,7 @@
 #include "structs/IdString.h"
 #include "structs/ThreadOptions.h"
 
+#include <algorithm>
 #include <chrono>
 #include <exception>
 #include <locale>

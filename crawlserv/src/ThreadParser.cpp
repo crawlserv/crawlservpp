@@ -77,7 +77,7 @@ bool ThreadParser::onInit(bool resumed) {
 	if(verbose) this->log("Initialiting queries...");
 	this->initQueries();
 
-	// check whether id can be parsed from URL only
+	// check whether ID can be parsed from URL only
 	if(verbose) this->log("Check for URL-only parsing of content IDs...");
 	this->idFromUrl = true;
 	for(std::vector<unsigned short>::const_iterator i = this->config.parsingIdSources.begin(); i != this->config.parsingIdSources.end();
@@ -308,7 +308,7 @@ bool ThreadParser::parsingUrlSelection() {
 unsigned long ThreadParser::parsing() {
 	std::string parsedId;
 
-	// parse id from URL if possible (using RegEx only)
+	// parse ID from URL if possible (using RegEx only)
 	if(this->idFromUrl) {
 		for(auto i = this->queriesId.begin(); i != this->queriesId.end(); ++i) {
 			// check result type of query
@@ -323,7 +323,11 @@ unsigned long ThreadParser::parsing() {
 			else if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
 				this->log("WARNING: ID query on URL is not of type RegEx.");
 		}
+
+		// check ID
 		if(!parsedId.length()) return 0;
+		if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
+				parsedId) != this->config.parsingIdIgnore.end()) return 0;
 	}
 
 	if(this->config.generalNewestOnly) {
@@ -366,7 +370,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 		return false;
 	}
 
-	// parse id (if still necessary)
+	// parse ID (if still necessary)
 	std::string id;
 	if(this->idFromUrl) id = parsedId;
 	else {
@@ -406,8 +410,10 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 		}
 	}
 
-	// check id
+	// check ID
 	if(!id.length()) return false;
+	if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
+		parsedId) != this->config.parsingIdIgnore.end()) return false;
 
 	// parse date/time
 	std::string parsedDateTime;
@@ -509,6 +515,19 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 							+ "\' query on content is not of type RegEx or XPath.");
 			}
 
+			// if necessary, check whether array or all values are empty
+			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter)) {
+				bool empty = true;
+				for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) {
+					if(i->length()) {
+						empty = false;
+						break;
+					}
+				}
+				if(!empty) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
+						+ this->currentUrl.string);
+			}
+
 			// determine how to save result: JSON array or concatenate using delimiting character
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// stringify and add parsed elements as JSON array
@@ -549,6 +568,11 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 							+ "\' query on content is not of type RegEx or XPath.");
 			}
 
+			// if necessary, check whether value is empty
+			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && !parsedFieldValue.length())
+				this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
+										+ this->currentUrl.string);
+
 			// determine how to save result: JSON array or string as is
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// stringify and add parsed element as JSON array with one element
@@ -560,7 +584,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			}
 		}
 		else if(i->resultBool) {
-			// only save whether match exists
+			// only save whether a match for the query exists
 			bool parsedBool = false;
 
 			// check query source

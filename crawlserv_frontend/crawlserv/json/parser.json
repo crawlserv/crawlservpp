@@ -203,8 +203,24 @@
 			"simple": true,
 			"position": 8
 		},
+		"field.warnings.empty": {
+			"id": 12,
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"description": "Log warning when field is empty.",
+			"simple": false
+		},
+		"id.ignore": {
+			"id": 13,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Parsed IDs to be ignored.",
+			"simple": false
+		},
 		"id.queries": {
-			"id": 11,
+			"id": 14,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -217,7 +233,7 @@
 			"position": 2
 		},
 		"id.sources": {
-			"id": 12,
+			"id": 15,
 			"type": "array",
 			"item-type": "enum",
 			"default": [],
