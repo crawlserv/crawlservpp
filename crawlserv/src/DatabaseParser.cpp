@@ -215,7 +215,7 @@ bool DatabaseParser::isUrlParsed(unsigned long urlId) {
 	return result;
 }
 
-// get the next URL to parse from database or 0 if all URLs have been parsed
+// get the next URL to parse from database or empty IdString if all URLs have been parsed
 IdString DatabaseParser::getNextUrl(unsigned long currentUrlId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	IdString result;
@@ -608,6 +608,11 @@ void DatabaseParser::setUrlFinished(unsigned long urlId) {
 		errorStrStr << "setUrlFinished() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
+}
+
+// reset parsing status of URL list
+void DatabaseParser::resetStatus() {
+	this->execute("UPDATE " + this->urlListTable + " SET parsed = FALSE");
 }
 
 // helper function: get id of parsing entry for id-specified content, return 0 if no entry exists

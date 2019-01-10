@@ -1,7 +1,95 @@
 {
-	"parser": {
+	"general": {
 		"id": 1,
-		"label": "Parsing",
+		"label": "General",
+		"open": true,
+		
+		"lock": {
+			"id": 13,
+			"type": "number",
+			"default": 300,
+			"min": 1,
+			"step": 10,
+			"description": "URL locking time (in s).",
+			"simple": false
+		},
+		"logging": {
+			"id": 2,
+			"type": "enum",
+			"default": 1,
+			"enum-values": [
+				"silent",
+				"default",
+				"extended",
+				"verbose"
+			],
+			"label": "Logging mode:",
+			"description": "Level of logging activity.",
+			"simple": true,
+			"position": 15
+		},
+		"newest.only": {
+			"id": 3,
+			"type": "bool",
+			"default": true,
+			"description": "Parse only the newest content for each URL.",
+			"simple": false
+		},
+		"reparse": {
+			"id": 4,
+			"type": "bool",
+			"default": false,
+			"label": "Re-parse content",
+			"description": "Re-parse already parsed URLs.",
+			"simple": true,
+			"position": 2
+		},
+		"reset.on.finish": {
+			"id": 5,
+			"type": "bool",
+			"default": false,
+			"label": "Reset status when finished",
+			"description": "Reset all URLs to unparsed when parsing is finished.",
+			"simple": true,
+			"position": 3
+		},
+		"result.table": {
+			"id": 6,
+			"type": "string",
+			"default": "",
+			"label": "Result table:",
+			"description": "Table name to save parsed fields to.",
+			"simple": true,
+			"position": 1
+		},
+		"sleep.idle": {
+			"id": 7,
+			"type": "number",
+			"default": 500,
+			"min": 100,
+			"step": 100,
+			"description": "Time (in ms) to wait before checking for new URLs when all URLs have been parsed.",
+			"simple": false
+		},
+		"sleep.mysql": {
+			"id": 8,
+			"type": "number",
+			"default": 10,
+			"min": 1,
+			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
+			"simple": false
+		},
+		"timing": {
+			"id": 9,
+			"type": "bool",
+			"default": false,
+			"description": "Calculate timing statistics.",
+			"simple": false
+		}
+	},
+	"parser": {
+		"id": 2,
+		"label": "Parsing data",
 		"open": true,
 		
 		"datetime.formats": {
@@ -12,7 +100,7 @@
 			"label": "Date/time formats:",
 			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
-			"position": 6
+			"position": 5
 		},
 		"datetime.locales": {
 			"id": 2,
@@ -22,7 +110,7 @@
 			"label": "Date/time locales:",
 			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
 			"simple": true,
-			"position": 5
+			"position": 6
 		},
 		"datetime.queries": {
 			"id": 3,
@@ -85,7 +173,7 @@
 			"label": "Field names:",
 			"description": "The names of the custom fields to parse.",
 			"simple": true,
-			"position": 8
+			"position": 7
 		},
 		"field.queries": {
 			"id": 9,
@@ -141,79 +229,6 @@
 			"description": "Where from to parse the ID.",
 			"simple": true,
 			"position": 1
-		},
-		"lock": {
-			"id": 13,
-			"type": "number",
-			"default": 300,
-			"min": 1,
-			"step": 10,
-			"description": "URL locking time (in s).",
-			"simple": false
-		},
-		"logging": {
-			"id": 14,
-			"type": "enum",
-			"default": 1,
-			"enum-values": [
-				"silent",
-				"default",
-				"extended",
-				"verbose"
-			],
-			"label": "Logging mode:",
-			"description": "Level of logging activity.",
-			"simple": true,
-			"position": 13
-		},
-		"newest.only": {
-			"id": 15,
-			"type": "bool",
-			"default": true,
-			"description": "Parse only the newest content for each URL.",
-			"simple": false
-		},
-		"reparse": {
-			"id": 16,
-			"type": "bool",
-			"default": false,
-			"label": "Re-parse content",
-			"description": "Re-parse already parsed URLs.",
-			"simple": true,
-			"position": 11
-		},
-		"result.table": {
-			"id": 17,
-			"type": "string",
-			"default": "",
-			"label": "Result table:",
-			"description": "Table name to save parsed fields to.",
-			"simple": true,
-			"position": 12
-		},
-		"sleep.idle": {
-			"id": 18,
-			"type": "number",
-			"default": 500,
-			"min": 100,
-			"step": 100,
-			"description": "Time (in ms) to wait before checking for new URLs when all URLs have been parsed.",
-			"simple": false
-		},
-		"sleep.mysql": {
-			"id": 19,
-			"type": "number",
-			"default": 10,
-			"min": 1,
-			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
-			"simple": false
-		},
-		"timing": {
-			"id": 20,
-			"type": "bool",
-			"default": false,
-			"description": "Calculate timing statistics.",
-			"simple": false
 		}
 	}
 }

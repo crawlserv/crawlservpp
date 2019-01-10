@@ -15,13 +15,14 @@
 // constructor: set default values
 ConfigParser::ConfigParser() {
 	// parser entries
-	this->parserLock = 300;
-	this->parserLogging = ConfigParser::parserLoggingDefault;
-	this->parserNewestOnly = true;
-	this->parserReParse = false;
-	this->parserSleepIdle = 500;
-	this->parserSleepMySql = 20;
-	this->parserTiming = false;
+	this->generalLock = 300;
+	this->generalLogging = ConfigParser::generalLoggingDefault;
+	this->generalNewestOnly = true;
+	this->generalReParse = false;
+	this->generalResetOnFinish = false;
+	this->generalSleepIdle = 500;
+	this->generalSleepMySql = 20;
+	this->generalTiming = false;
 }
 
 // destructor stub
@@ -73,12 +74,47 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 			for(rapidjson::Value::ConstMemberIterator j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString() && std::string(j->name.GetString()) == "value") {
 					// save configuration entry
-					if(cat == "parser") {
+					if(cat == "general") {
+						if(name == "logging") {
+							if(j->value.IsUint()) this->generalLogging = j->value.GetUint();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned int).");
+						}
+						else if(name == "newest.only") {
+							if(j->value.IsBool()) this->generalNewestOnly = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+						}
+						else if(name == "reparse") {
+							if(j->value.IsBool()) this->generalReParse = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+						}
+						else if(name == "reset.on.finish") {
+							if(j->value.IsBool()) this->generalResetOnFinish = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+						}
+						else if(name == "result.table") {
+							if(j->value.IsString()) this->generalResultTable = j->value.GetString();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
+						}
+						else if(name == "sleep.idle") {
+							if(j->value.IsUint64()) this->generalSleepIdle = j->value.GetUint64();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+						}
+						else if(name == "sleep.mysql") {
+							if(j->value.IsUint64()) this->generalSleepMySql = j->value.GetUint64();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+						}
+						else if(name == "timing") {
+							if(j->value.IsBool()) this->generalTiming = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+						}
+						else warningsTo.push_back("Unknown configuration entry \'" + cat + "." + name + "\' ignored.");
+					}
+					else if(cat == "parser") {
 						if(name == "datetime.formats") {
 							if(j->value.IsArray()) {
-								this->parserDateTimeFormats.clear();
+								this->parsingDateTimeFormats.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parserDateTimeFormats.push_back(k->GetString());
+									if(k->IsString()) this->parsingDateTimeFormats.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -87,9 +123,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "datetime.locales") {
 							if(j->value.IsArray()) {
-								this->parserDateTimeLocales.clear();
+								this->parsingDateTimeLocales.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parserDateTimeLocales.push_back(k->GetString());
+									if(k->IsString()) this->parsingDateTimeLocales.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -98,9 +134,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "datetime.queries") {
 							if(j->value.IsArray()) {
-								this->parserDateTimeQueries.clear();
+								this->parsingDateTimeQueries.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsUint64()) this->parserDateTimeQueries.push_back(k->GetUint64());
+									if(k->IsUint64()) this->parsingDateTimeQueries.push_back(k->GetUint64());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long).");
 								}
@@ -109,9 +145,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "datetime.sources") {
 							if(j->value.IsArray()) {
-								this->parserDateTimeSources.clear();
+								this->parsingDateTimeSources.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsUint()) this->parserDateTimeSources.push_back(k->GetUint());
+									if(k->IsUint()) this->parsingDateTimeSources.push_back(k->GetUint());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
@@ -120,10 +156,10 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "field.delimiters") {
 							if(j->value.IsArray()) {
-								this->parserFieldDelimiters.clear();
+								this->parsingFieldDelimiters.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString())
-										this->parserFieldDelimiters.push_back(Strings::getFirstOrEscapeChar(k->GetString()));
+										this->parsingFieldDelimiters.push_back(Strings::getFirstOrEscapeChar(k->GetString()));
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -132,9 +168,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "field.ignore.empty") {
 							if(j->value.IsArray()) {
-								this->parserFieldIgnoreEmpty.clear();
+								this->parsingFieldIgnoreEmpty.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsBool()) this->parserFieldIgnoreEmpty.push_back(k->GetBool());
+									if(k->IsBool()) this->parsingFieldIgnoreEmpty.push_back(k->GetBool());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not bool).");
 								}
@@ -143,9 +179,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "field.json") {
 							if(j->value.IsArray()) {
-								this->parserFieldJSON.clear();
+								this->parsingFieldJSON.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsBool()) this->parserFieldJSON.push_back(k->GetBool());
+									if(k->IsBool()) this->parsingFieldJSON.push_back(k->GetBool());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not bool).");
 								}
@@ -154,9 +190,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "field.names") {
 							if(j->value.IsArray()) {
-								this->parserFieldNames.clear();
+								this->parsingFieldNames.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parserFieldNames.push_back(k->GetString());
+									if(k->IsString()) this->parsingFieldNames.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -165,9 +201,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "field.queries") {
 							if(j->value.IsArray()) {
-								this->parserFieldQueries.clear();
+								this->parsingFieldQueries.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsUint64()) this->parserFieldQueries.push_back(k->GetUint64());
+									if(k->IsUint64()) this->parsingFieldQueries.push_back(k->GetUint64());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long).");
 								}
@@ -176,9 +212,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "field.sources") {
 							if(j->value.IsArray()) {
-								this->parserFieldSources.clear();
+								this->parsingFieldSources.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsUint()) this->parserFieldSources.push_back(k->GetUint());
+									if(k->IsUint()) this->parsingFieldSources.push_back(k->GetUint());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
@@ -187,9 +223,9 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "id.queries") {
 							if(j->value.IsArray()) {
-								this->parserIdQueries.clear();
+								this->parsingIdQueries.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsUint64()) this->parserIdQueries.push_back(k->GetUint64());
+									if(k->IsUint64()) this->parsingIdQueries.push_back(k->GetUint64());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long).");
 								}
@@ -198,42 +234,14 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 						}
 						else if(name == "id.sources") {
 							if(j->value.IsArray()) {
-								this->parserIdSources.clear();
+								this->parsingIdSources.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsUint()) this->parserIdSources.push_back(k->GetUint());
+									if(k->IsUint()) this->parsingIdSources.push_back(k->GetUint());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
-						}
-						else if(name == "logging") {
-							if(j->value.IsUint()) this->parserLogging = j->value.GetUint();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned int).");
-						}
-						else if(name == "newest.only") {
-							if(j->value.IsBool()) this->parserNewestOnly = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
-						}
-						else if(name == "reparse") {
-							if(j->value.IsBool()) this->parserReParse = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
-						}
-						else if(name == "sleep.idle") {
-							if(j->value.IsUint64()) this->parserSleepIdle = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
-						}
-						else if(name == "sleep.mysql") {
-							if(j->value.IsUint64()) this->parserSleepMySql = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
-						}
-						else if(name == "result.table") {
-							if(j->value.IsString()) this->parserResultTable = j->value.GetString();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
-						}
-						else if(name == "timing") {
-							if(j->value.IsBool()) this->parserTiming = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
 						}
 						else warningsTo.push_back("Unknown configuration entry \'" + cat + "." + name + "\' ignored.");
 					}
@@ -248,30 +256,30 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	}
 
 	// check properties of datetime queries (arrays defining these queries should have the same number fo elements - one for each query)
-	unsigned long completeDateTimes = std::min(this->parserDateTimeQueries.size(), this->parserDateTimeSources.size());
+	unsigned long completeDateTimes = std::min(this->parsingDateTimeQueries.size(), this->parsingDateTimeSources.size());
 																							// number of complete datetime queries
 																							// (= minimum size of all property arrays)
 	bool incompleteDateTimes = false;
 
 	// EXCEPTION: the 'date/time format' property will be ignored if array is too large or set to "%F %T" if entry is missing
-	if(this->parserDateTimeFormats.size() > completeDateTimes) this->parserDateTimeFormats.resize(completeDateTimes);
-	else while(this->parserDateTimeFormats.size() < completeDateTimes) this->parserDateTimeFormats.push_back("%F %T");
+	if(this->parsingDateTimeFormats.size() > completeDateTimes) this->parsingDateTimeFormats.resize(completeDateTimes);
+	else while(this->parsingDateTimeFormats.size() < completeDateTimes) this->parsingDateTimeFormats.push_back("%F %T");
 
 	// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
-	for(auto i = this->parserDateTimeFormats.begin(); i != this->parserDateTimeFormats.end(); ++i) if(!(i->size())) *i = "%F %T";
+	for(auto i = this->parsingDateTimeFormats.begin(); i != this->parsingDateTimeFormats.end(); ++i) if(!(i->size())) *i = "%F %T";
 
 	// EXCEPTION: the 'locales' property will be ignored if array is too large or set to "" if entry is missing
-	if(this->parserDateTimeLocales.size() > completeDateTimes) this->parserDateTimeLocales.resize(completeDateTimes);
-	else while(this->parserDateTimeLocales.size() < completeDateTimes) this->parserDateTimeLocales.push_back("");
+	if(this->parsingDateTimeLocales.size() > completeDateTimes) this->parsingDateTimeLocales.resize(completeDateTimes);
+	else while(this->parsingDateTimeLocales.size() < completeDateTimes) this->parsingDateTimeLocales.push_back("");
 
-	if(this->parserDateTimeQueries.size() > completeDateTimes) {
+	if(this->parsingDateTimeQueries.size() > completeDateTimes) {
 		// remove queries of incomplete datetime queries
-		this->parserDateTimeQueries.resize(completeDateTimes);
+		this->parsingDateTimeQueries.resize(completeDateTimes);
 		incompleteDateTimes = true;
 	}
-	if(this->parserDateTimeSources.size() > completeDateTimes) {
+	if(this->parsingDateTimeSources.size() > completeDateTimes) {
 		// remove sources of incomplete datetime queries
-		this->parserDateTimeSources.resize(completeDateTimes);
+		this->parsingDateTimeSources.resize(completeDateTimes);
 		incompleteDateTimes = true;
 	}
 	if(incompleteDateTimes) {
@@ -282,35 +290,35 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	}
 
 	// check properties of parsing fields (arrays defining these fields should have the same number of elements - one for each field)
-	unsigned long completeFields = std::min(this->parserFieldNames.size(), std::min(this->parserFieldQueries.size(),
-			this->parserFieldSources.size())); // number of complete fields (= minimum size of all property arrays)
+	unsigned long completeFields = std::min(this->parsingFieldNames.size(), std::min(this->parsingFieldQueries.size(),
+			this->parsingFieldSources.size())); // number of complete fields (= minimum size of all property arrays)
 	bool incompleteFields = false;
 
 	// EXCEPTION: the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
-	if(this->parserFieldDelimiters.size() > completeFields) this->parserFieldDelimiters.resize(completeFields);
-	else while(this->parserFieldDelimiters.size() < completeFields) this->parserFieldDelimiters.push_back('\n');
+	if(this->parsingFieldDelimiters.size() > completeFields) this->parsingFieldDelimiters.resize(completeFields);
+	else while(this->parsingFieldDelimiters.size() < completeFields) this->parsingFieldDelimiters.push_back('\n');
 
 	// EXCEPTION: the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
-	if(this->parserFieldIgnoreEmpty.size() > completeFields) this->parserFieldIgnoreEmpty.resize(completeFields);
-	else while(this->parserFieldIgnoreEmpty.size() < completeFields) this->parserFieldIgnoreEmpty.push_back(true);
+	if(this->parsingFieldIgnoreEmpty.size() > completeFields) this->parsingFieldIgnoreEmpty.resize(completeFields);
+	else while(this->parsingFieldIgnoreEmpty.size() < completeFields) this->parsingFieldIgnoreEmpty.push_back(true);
 
 	// EXCEPTION: the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
-	if(this->parserFieldJSON.size() > completeFields) this->parserFieldJSON.resize(completeFields);
-	else while(this->parserFieldJSON.size() < completeFields) this->parserFieldJSON.push_back(false);
+	if(this->parsingFieldJSON.size() > completeFields) this->parsingFieldJSON.resize(completeFields);
+	else while(this->parsingFieldJSON.size() < completeFields) this->parsingFieldJSON.push_back(false);
 
-	if(this->parserFieldNames.size() > completeFields) {
+	if(this->parsingFieldNames.size() > completeFields) {
 		// remove names of incomplete parsing fields
-		this->parserFieldNames.resize(completeFields);
+		this->parsingFieldNames.resize(completeFields);
 		incompleteFields = true;
 	}
-	if(this->parserFieldQueries.size() > completeFields) {
+	if(this->parsingFieldQueries.size() > completeFields) {
 		// remove queries of incomplete parsing fields
-		this->parserFieldQueries.resize(completeFields);
+		this->parsingFieldQueries.resize(completeFields);
 		incompleteFields = true;
 	}
-	if(this->parserFieldSources.size() > completeFields) {
+	if(this->parsingFieldSources.size() > completeFields) {
 		// remove sources of incomplete parsing fields
-		this->parserFieldSources.resize(completeFields);
+		this->parsingFieldSources.resize(completeFields);
 		incompleteFields = true;
 	}
 	if(incompleteFields) {
@@ -320,17 +328,17 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	}
 
 	// check properties of id queries (arrays defining these queries should have the same number of elements - one for each query)
-	unsigned long completeIds = std::min(this->parserIdQueries.size(), this->parserIdSources.size());	// number of complete id queries
+	unsigned long completeIds = std::min(this->parsingIdQueries.size(), this->parsingIdSources.size());	// number of complete id queries
 																										// (= minimum size of all arrays)
 	bool incompleteIds = false;
-	if(this->parserIdQueries.size() > completeIds) {
+	if(this->parsingIdQueries.size() > completeIds) {
 		// remove queries of incomplete id queries
-		this->parserIdQueries.resize(completeIds);
+		this->parsingIdQueries.resize(completeIds);
 		incompleteIds = true;
 	}
-	if(this->parserIdSources.size() > completeIds) {
+	if(this->parsingIdSources.size() > completeIds) {
 		// remove sources of incomplete id queries
-		this->parserIdSources.resize(completeIds);
+		this->parsingIdSources.resize(completeIds);
 		incompleteIds = true;
 	}
 	if(incompleteIds) {
