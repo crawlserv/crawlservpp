@@ -20,9 +20,9 @@ In the configuration file, access can (and should) be restricted to specific IPs
 The source code of the server consists of the following classes (as of January 2019):
 
 * <b>[`App`](crawlserv/src/App.cpp)</b>: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
-* <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration.
+* <b>~~`ConfigAnalyzer`~~</b>: Analyzing configuration. See ~~[analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json)~~ for all configuration entries.
 * <b>[`ConfigCrawler`](crawlserv/src/ConfigCrawler.cpp)</b>: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
-* <b>~~`ConfigExtractor`~~</b>: Extracting configuration.
+* <b>~~`ConfigExtractor`~~</b>: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * <b>[`ConfigFile`](crawlserv/src/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * <b>[`ConfigModule`](crawlserv/src/ConfigModule.cpp)</b>: Abstract class as base for module-specific configuration classes.
 * <b>[`ConfigNetwork`](crawlserv/src/ConfigModule.cpp)</b>: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
