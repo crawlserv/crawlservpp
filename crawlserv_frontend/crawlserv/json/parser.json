@@ -89,7 +89,7 @@
 	},
 	"parser": {
 		"id": 2,
-		"label": "Parsing data",
+		"label": "Parsing",
 		"open": true,
 		
 		"datetime.formats": {
