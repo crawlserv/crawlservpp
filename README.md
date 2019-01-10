@@ -54,7 +54,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/nam
 
 * <b>[`DateTime`](crawlserv/src/namespaces/DateTime.cpp)</b>: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * <b>[`FileSystem`](crawlserv/src/namespaces/FileSystem.cpp)</b>: Global helper functions for file system operations using [Boost.Filesystem](https://www.boost.org/doc/libs/1_68_0/libs/filesystem/doc/index.htm).
-* <b>[`Json'](crawlserv/src/namespaces/Json.cpp)</b>: Global helper functions for converting to JSON.
+* <b>[`Json`](crawlserv/src/namespaces/Json.cpp)</b>: Global helper functions for converting to JSON.
 * <b>[`Portability`](crawlserv/src/namespaces/Portability.cpp)</b>: Global helper functions for portability.
 * <b>[`Strings`](crawlserv/src/namespaces/Strings.cpp)</b>: Global helper functions for string processing and manipulation.
 * <b>[`Utf8`](crawlserv/src/namespaces/Utf8.cpp)</b>: Global helper functions for UTF-8 conversion using the [UTF8-CPP library](http://utfcpp.sourceforge.net/).
