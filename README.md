@@ -217,26 +217,26 @@ The testing environment consists of one PC that runs all three components of the
 
 The application uses exactly one database schema and all tables are prefixed with `crawlserv_`. The following main tables are used:
 
-* <b>`log`</b>: Log entries.
-* <b>`websites`</b>: Websites.
-* <b>`urllists`</b>: URL lists.
-* <b>`queries`</b>: RegEx and XPath queries.
-* <b>`configs`</b>: Crawling, parsing, extracting and analyzing configurations.
-* <b>`parsedtables`</b>: Index of result tables for parsing.
-* <b>`extractedtables`</b>: Index of result tables for extracting.
 * <b>`analyzedtables`</b>: Index of result tables for analyzing.
+* <b>`configs`</b>: Crawling, parsing, extracting and analyzing configurations.
+* <b>`extractedtables`</b>: Index of result tables for extracting.
+* <b>`log`</b>: Log entries.
+* <b>`parsedtables`</b>: Index of result tables for parsing.
+* <b>`queries`</b>: RegEx and XPath queries.
 * <b>`threads`</b>: Thread status.
+* <b>`urllists`</b>: URL lists.
+* <b>`websites`</b>: Websites.
 
 If not already existing, these tables will be created on startup of the command-and-control server by executing the SQL commands in [`crawlserv/sql/init.sql`](crawlserv/sql/init.sql). See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
 
 For each website and each URL list a namespace of at least four allowed characters (a-z, A-Z, 0-9, $, \_) is used. These namespaces determine the names of the tables used for each URL list (also prefixed by `crawlserv_`):
 
 * <b>`<namespace of website>_<namespace of URL list>`</b>: Content of the URL list.
+* <b>~~`<namespace of website>_<namespace of URL list>_analyzed_<name of target table>`~~</b>: Target tables for analyzing.
 * <b>`<namespace of website>_<namespace of URL list>_crawled`</b>: Crawled content.
+* <b>~~`<namespace of website>_<namespace of URL list>_extracted_<name of target table>`~~</b>: Target tables for extracting.
 * <b>`<namespace of website>_<namespace of URL list>_links`</b>: Linkage information (which URLs link to which other URLs).
 * <b>`<namespace of website>_<namespace of URL list>_parsed_<name of target table>`</b>: Target tables for parsing.
-* <b>~~`<namespace of website>_<namespace of URL list>_extracted_<name of target table>`~~</b>: Target tables for extracting.
-* <b>~~`<namespace of website>_<namespace of URL list>_analyzed_<name of target table>`~~</b>: Target tables for analyzing.
 
 See the source code of the `Database::addUrlList(...)` function in [`crawlserv/src/Database.cpp`](crawlserv/src/Database.cpp) for details about the structure of the first three tables. Most of the columns of the latter three tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `DatabaseParser::initTargetTable(...)`, ~~`DatabaseExtractor::initTargetTable(...)`~~ and ~~`DatabaseAnalyzer::initTargetTable(...)`~~ functions in [`crawlserv/src/DatabaseParser.cpp`](crawlserv/src/DatabaseParser.cpp), ~~[`crawlserv/src/DatabaseExtractor.cpp`](crawlserv/src/DatabaseExtractor.cpp)~~ and ~~[`crawlserv/src/DatabaseAnalyzer.cpp`](crawlserv/src/DatabaseAnalyzer.cpp)~~ for details.
 
