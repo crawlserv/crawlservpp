@@ -88,6 +88,9 @@ bool ThreadParser::onInit(bool resumed) {
 		}
 	}
 
+	// set current URL to last URL
+	this->currentUrl.id = this->getLast();
+
 	// save start time and initialize counter
 	this->startTime = std::chrono::steady_clock::now();
 	this->pauseTime = std::chrono::steady_clock::time_point::min();
@@ -287,7 +290,13 @@ bool ThreadParser::parsingUrlSelection() {
 	// set thread status
 	if(result) this->setStatusMessage(this->currentUrl.string);
 	else {
-		if(notIdle && this->config.generalResetOnFinish) this->database.resetStatus();
+		if(notIdle) {
+			if(this->config.generalResetOnFinish) {
+				if(this->config.generalLogging) this->log("finished, resetting parsing status.");
+				this->database.resetStatus();
+			}
+			else if(this->config.generalLogging) this->log("finished.");
+		}
 		this->setStatusMessage("IDLE Waiting for new URLs to parse.");
 		this->setProgress(1L);
 	}
