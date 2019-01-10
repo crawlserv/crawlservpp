@@ -46,23 +46,23 @@ bool ThreadParser::onInit(bool resumed) {
 		this->log(this->config.getErrorMessage());
 		return false;
 	}
-	if(this->config.parserLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
+	if(this->config.generalLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
-	verbose = config.parserLogging == ConfigParser::parserLoggingVerbose;
+	verbose = config.generalLogging == ConfigParser::generalLoggingVerbose;
 
 	// set database configuration
 	if(verbose) this->log("Set database configuration...");
-	this->database.setSleepOnError(this->config.parserSleepMySql);
+	this->database.setSleepOnError(this->config.generalSleepMySql);
 
 	// initialize table
 	if(verbose) this->log("Initialiting target table...");
 	this->database.initTargetTable(this->getWebsite(), this->getUrlList(), this->websiteNameSpace, this->urlListNameSpace,
-			this->config.parserResultTable, &(this->config.parserFieldNames));
+			this->config.generalResultTable, &(this->config.parsingFieldNames));
 
 	// prepare SQL statements for parser
 	if(verbose) this->log("Prepare SQL statements...");
-	if(!(this->database.prepare(this->getId(), this->config.parserResultTable, this->config.parserReParse, verbose))) {
-		if(this->config.parserLogging) this->log(this->database.getErrorMessage());
+	if(!(this->database.prepare(this->getId(), this->config.generalResultTable, this->config.generalReParse, verbose))) {
+		if(this->config.generalLogging) this->log(this->database.getErrorMessage());
 		return false;
 	}
 
@@ -73,9 +73,9 @@ bool ThreadParser::onInit(bool resumed) {
 	// check whether id can be parsed from URL only
 	if(verbose) this->log("Check for URL-only parsing of content IDs...");
 	this->idFromUrl = true;
-	for(std::vector<unsigned short>::const_iterator i = this->config.parserIdSources.begin(); i != this->config.parserIdSources.end();
+	for(std::vector<unsigned short>::const_iterator i = this->config.parsingIdSources.begin(); i != this->config.parsingIdSources.end();
 			++i) {
-		if(*i == ConfigParser::parserSourceContent) {
+		if(*i == ConfigParser::parsingSourceContent) {
 			this->idFromUrl = false;
 			break;
 		}
@@ -95,14 +95,14 @@ bool ThreadParser::onTick() {
 	unsigned long parsed = 0;
 
 	// start timers
-	if(this->config.parserTiming) {
+	if(this->config.generalTiming) {
 		timerTotal.start();
 		timerSelect.start();
 	}
 
 	// URL selection
 	if(this->parsingUrlSelection()) {
-		if(this->config.parserTiming) timerSelect.stop();
+		if(this->config.generalTiming) timerSelect.stop();
 		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 			// idling stopped
 			this->startTime += std::chrono::steady_clock::now() - this->idleTime;
@@ -114,13 +114,13 @@ bool ThreadParser::onTick() {
 		this->tickCounter++;
 
 		// start parsing
-		if(this->config.parserLogging > ConfigParser::parserLoggingDefault) this->log("parses " + this->currentUrl.string + "...");
+		if(this->config.generalLogging > ConfigParser::generalLoggingDefault) this->log("parses " + this->currentUrl.string + "...");
 
 		// parse content(s)
 		parsed = this->parsing();
 
 		// stop timer
-		if(this->config.parserTiming) timerTotal.stop();
+		if(this->config.generalTiming) timerTotal.stop();
 
 		// update URL list if possible, release URL lock
 		this->database.lockUrlList();
@@ -133,18 +133,18 @@ bool ThreadParser::onTick() {
 		this->setProgress((float) (this->database.getUrlPosition(this->currentUrl.id) + 1) / this->database.getNumberOfUrls());
 
 		// write to log if necessary
-		if((this->config.parserLogging > ConfigParser::parserLoggingDefault)
-				|| (this->config.parserTiming && this->config.parserLogging)) {
+		if((this->config.generalLogging > ConfigParser::generalLoggingDefault)
+				|| (this->config.generalTiming && this->config.generalLogging)) {
 			std::ostringstream logStrStr;
 			logStrStr.imbue(std::locale(""));
 			if(parsed > 1) logStrStr << "parsed " << parsed << " versions of ";
 			else if(parsed == 1) logStrStr << "parsed ";
 			else logStrStr << "skipped ";
 			logStrStr << this->currentUrl.string;
-			if(this->config.parserTiming) logStrStr << " in " << timerTotal.totalStr();
+			if(this->config.generalTiming) logStrStr << " in " << timerTotal.totalStr();
 			this->log(logStrStr.str());
 		}
-		else if(this->config.parserLogging && !parsed) this->log("skipped " + this->currentUrl.string);
+		else if(this->config.generalLogging && !parsed) this->log("skipped " + this->currentUrl.string);
 
 		// remove URL lock if necessary
 		this->database.lockUrlList();
@@ -157,7 +157,7 @@ bool ThreadParser::onTick() {
 		if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
 			this->idleTime = std::chrono::steady_clock::now();
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.parserSleepIdle));
+		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepIdle));
 	}
 
 	return true;
@@ -223,17 +223,17 @@ void ThreadParser::initQueries() {
 	bool queryResultMulti = false;
 	bool queryTextOnly = false;
 
-	for(auto i = this->config.parserIdQueries.begin(); i != this->config.parserIdQueries.end(); ++i) {
+	for(auto i = this->config.parsingIdQueries.begin(); i != this->config.parsingIdQueries.end(); ++i) {
 		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
 		this->queriesId.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
 				queryTextOnly));
 	}
-	for(auto i = this->config.parserDateTimeQueries.begin(); i != this->config.parserDateTimeQueries.end(); ++i) {
+	for(auto i = this->config.parsingDateTimeQueries.begin(); i != this->config.parsingDateTimeQueries.end(); ++i) {
 		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
 		this->queriesDateTime.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
 				queryTextOnly));
 	}
-	for(auto i = this->config.parserFieldQueries.begin(); i != this->config.parserFieldQueries.end(); ++i) {
+	for(auto i = this->config.parsingFieldQueries.begin(); i != this->config.parsingFieldQueries.end(); ++i) {
 		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
 
 		this->queriesFields.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
@@ -245,6 +245,7 @@ void ThreadParser::initQueries() {
 bool ThreadParser::parsingUrlSelection() {
 	std::vector<std::string> logEntries;
 	bool result = true;
+	bool notIdle = this->currentUrl.id > 0;
 
 	// lock URL list
 	this->database.lockUrlList();
@@ -256,7 +257,7 @@ bool ThreadParser::parsingUrlSelection() {
 		if(this->currentUrl.id) {
 			// lock URL
 			if(this->database.isUrlLockable(this->currentUrl.id)) {
-				this->lockTime = this->database.lockUrl(this->currentUrl.id, this->config.parserLock);
+				this->lockTime = this->database.lockUrl(this->currentUrl.id, this->config.generalLock);
 				// success!
 				break;
 			}
@@ -274,11 +275,12 @@ bool ThreadParser::parsingUrlSelection() {
 
 	// unlock URL list and write to log if necessary
 	this->database.unlockTables();
-	if(this->config.parserLogging) for(auto i = logEntries.begin(); i != logEntries.end(); ++i) this->log(*i);
+	if(this->config.generalLogging) for(auto i = logEntries.begin(); i != logEntries.end(); ++i) this->log(*i);
 
 	// set thread status
 	if(result) this->setStatusMessage(this->currentUrl.string);
 	else {
+		if(notIdle && this->config.generalResetOnFinish) this->database.resetStatus();
 		this->setStatusMessage("IDLE Waiting for new URLs to parse.");
 		this->setProgress(1L);
 	}
@@ -294,7 +296,7 @@ unsigned long ThreadParser::parsing() {
 	if(this->idFromUrl) {
 		for(auto i = this->queriesId.begin(); i != this->queriesId.end(); ++i) {
 			// check result type of query
-			if(!(i->resultSingle) && this->config.parserLogging)
+			if(!(i->resultSingle) && this->config.generalLogging)
 				this->log("WARNING: Invalid result type of ID query (not single).");
 
 			// check query type
@@ -302,12 +304,12 @@ unsigned long ThreadParser::parsing() {
 				// parse id by running RegEx query on URL
 				if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, parsedId) && parsedId.length()) break;
 			}
-			else if(this->config.parserLogging) this->log("WARNING: ID query on URL is not of type RegEx.");
+			else if(this->config.generalLogging) this->log("WARNING: ID query on URL is not of type RegEx.");
 		}
 		if(!parsedId.length()) return 0;
 	}
 
-	if(this->config.parserNewestOnly) {
+	if(this->config.generalNewestOnly) {
 		// parse newest content of URL
 		unsigned long index = 0;
 		while(true) {
@@ -339,7 +341,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 	// parse HTML
 	XMLDocument parsedContent;
 	if(!parsedContent.parse(content.string)) {
-		if(this->config.parserLogging > ConfigParser::parserLoggingDefault) {
+		if(this->config.generalLogging > ConfigParser::generalLoggingDefault) {
 			std::ostringstream logStrStr;
 			logStrStr << "Content #" << content.id << " [" << this->currentUrl.string << "] could not be parsed.";
 			this->log(logStrStr.str());
@@ -355,17 +357,17 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 
 		for(auto i = this->queriesId.begin(); i != this->queriesId.end(); ++i) {
 			// check result type of query
-			if(!(i->resultSingle) && this->config.parserLogging)
+			if(!(i->resultSingle) && this->config.generalLogging)
 				this->log("WARNING: Invalid result type of ID query (not single).");
 
 			// check query source
-			if(this->config.parserIdSources.at(idQueryCounter) == ConfigParser::parserSourceUrl) {
+			if(this->config.parsingIdSources.at(idQueryCounter) == ConfigParser::parsingSourceUrl) {
 				// check query type
 				if(i->type == QueryContainer::Query::typeRegEx) {
 					// parse id by running RegEx query on URL
 					if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, id) && id.length()) break;
 				}
-				else if(this->config.parserLogging) this->log("WARNING: ID query on URL is not of type RegEx.");
+				else if(this->config.generalLogging) this->log("WARNING: ID query on URL is not of type RegEx.");
 			}
 			else {
 				// check query type
@@ -377,7 +379,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse if by running XPath query on parsed content
 					if(this->getXPathQueryPtr(i->index)->getFirst(parsedContent, id) && id.length()) break;
 				}
-				else if(this->config.parserLogging) this->log("WARNING: ID query on content is not of type RegEx or XPath.");
+				else if(this->config.generalLogging) this->log("WARNING: ID query on content is not of type RegEx or XPath.");
 			}
 
 			// not successfull: check next query for parsing the id (if exists)
@@ -396,17 +398,17 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 		bool querySuccess = false;
 
 		// check result type of query
-		if(!(i->resultSingle) && this->config.parserLogging)
+		if(!(i->resultSingle) && this->config.generalLogging)
 			this->log("WARNING: Invalid result type of DateTime query (not single).");
 
 		// check query source
-		if(this->config.parserDateTimeSources.at(dateTimeQueryCounter) == ConfigParser::parserSourceUrl) {
+		if(this->config.parsingDateTimeSources.at(dateTimeQueryCounter) == ConfigParser::parsingSourceUrl) {
 			// check query type
 			if(i->type == QueryContainer::Query::typeRegEx) {
 				// parse date/time by running RegEx query on URL
 				querySuccess = this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, parsedDateTime);
 			}
-			else if(this->config.parserLogging) this->log("WARNING: DateTime query on URL is not of type RegEx.");
+			else if(this->config.generalLogging) this->log("WARNING: DateTime query on URL is not of type RegEx.");
 		}
 		else {
 			// check query type
@@ -418,14 +420,14 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 				// parse date/time by running XPath query on parsed content
 				querySuccess = this->getXPathQueryPtr(i->index)->getFirst(parsedContent, parsedDateTime);
 			}
-			else if(this->config.parserLogging) this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
+			else if(this->config.generalLogging) this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
 		}
 
 		if(querySuccess && parsedDateTime.length()) {
 			// found date/time: try to convert it to SQL time stamp
 			bool conversionSuccess = false;
-			std::string format = this->config.parserDateTimeFormats.at(dateTimeQueryCounter);
-			std::string locale = this->config.parserDateTimeLocales.at(dateTimeQueryCounter);
+			std::string format = this->config.parsingDateTimeFormats.at(dateTimeQueryCounter);
+			std::string locale = this->config.parsingDateTimeLocales.at(dateTimeQueryCounter);
 
 			// use "%F %T" as default date/time format
 			if(!format.length()) format = "%F %T";
@@ -435,7 +437,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					conversionSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format, std::locale(locale));
 				}
 				catch(const std::runtime_error& e) {
-					if(this->config.parserLogging) this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
+					if(this->config.generalLogging) this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
 					conversionSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
 				}
 			}
@@ -461,13 +463,13 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			std::vector<std::string> parsedFieldValues;
 
 			// check query source
-			if(this->config.parserFieldSources.at(fieldCounter) == ConfigParser::parserSourceUrl) {
+			if(this->config.parsingFieldSources.at(fieldCounter) == ConfigParser::parsingSourceUrl) {
 				// parse from URL: check query type
 				if(i->type == QueryContainer::Query::typeRegEx) {
 					// parse multiple field elements by running RegEx query on URL
 					this->getRegExQueryPtr(i->index)->getAll(this->currentUrl.string, parsedFieldValues);
 				}
-				else if(this->config.parserLogging) this->log("WARNING: \'" + this->config.parserFieldNames.at(fieldCounter)
+				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 						+ "\' query on URL is not of type RegEx.");
 			}
 			else {
@@ -480,19 +482,19 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse multiple field elements by running XPath query on parsed content
 					this->getXPathQueryPtr(i->index)->getAll(parsedContent, parsedFieldValues);
 				}
-				else if(this->config.parserLogging) this->log("WARNING: \'" + this->config.parserFieldNames.at(fieldCounter)
+				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 						+ "\' query on content is not of type RegEx or XPath.");
 			}
 
 			// determine how to save result: JSON array or concatenate using delimiting character
-			if(this->config.parserFieldJSON.at(fieldCounter)) {
+			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// stringify and add parsed elements as JSON array
 				parsedFields.push_back(Json::stringify(parsedFieldValues));
 			}
 			else {
 				// concatenate elements
-				parsedFields.push_back(Strings::concat(parsedFieldValues, this->config.parserFieldDelimiters.at(fieldCounter),
-						this->config.parserFieldIgnoreEmpty.at(fieldCounter)));
+				parsedFields.push_back(Strings::concat(parsedFieldValues, this->config.parsingFieldDelimiters.at(fieldCounter),
+						this->config.parsingFieldIgnoreEmpty.at(fieldCounter)));
 			}
 		}
 		else if(i->resultSingle) {
@@ -500,13 +502,13 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			std::string parsedFieldValue;
 
 			// check query source
-			if(this->config.parserFieldSources.at(fieldCounter) == ConfigParser::parserSourceUrl) {
+			if(this->config.parsingFieldSources.at(fieldCounter) == ConfigParser::parsingSourceUrl) {
 				// parse from URL: check query type
 				if(i->type == QueryContainer::Query::typeRegEx) {
 					// parse single field element by running RegEx query on URL
 					this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, parsedFieldValue);
 				}
-				else if(this->config.parserLogging) this->log("WARNING: \'" + this->config.parserFieldNames.at(fieldCounter)
+				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 						+ "\' query on URL is not of type RegEx.");
 			}
 			else {
@@ -519,12 +521,12 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse single field element by running XPath query on parsed content
 					this->getXPathQueryPtr(i->index)->getFirst(parsedContent, parsedFieldValue);
 				}
-				else if(this->config.parserLogging) this->log("WARNING: \'" + this->config.parserFieldNames.at(fieldCounter)
+				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 						+ "\' query on content is not of type RegEx or XPath.");
 			}
 
 			// determine how to save result: JSON array or string as is
-			if(this->config.parserFieldJSON.at(fieldCounter)) {
+			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// stringify and add parsed element as JSON array with one element
 				parsedFields.push_back(Json::stringify(parsedFieldValue));
 			}
@@ -538,13 +540,13 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			bool parsedBool = false;
 
 			// check query source
-			if(this->config.parserFieldSources.at(fieldCounter) == ConfigParser::parserSourceUrl) {
+			if(this->config.parsingFieldSources.at(fieldCounter) == ConfigParser::parsingSourceUrl) {
 				// parse from URL: check query type
 				if(i->type == QueryContainer::Query::typeRegEx) {
 					// parse boolean value by running RegEx query on URL
 					this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.string, parsedBool);
 				}
-				else if(this->config.parserLogging) this->log("WARNING: \'" + this->config.parserFieldNames.at(fieldCounter)
+				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 						+ "\' query on URL is not of type RegEx.");
 			}
 			else {
@@ -557,12 +559,12 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 					// parse boolean value by running XPath query on parsed content
 					this->getXPathQueryPtr(i->index)->getBool(parsedContent, parsedBool);
 				}
-				else if(this->config.parserLogging) this->log("WARNING: \'" + this->config.parserFieldNames.at(fieldCounter)
+				else if(this->config.generalLogging) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 						+ "\' query on content is not of type RegEx or XPath.");
 			}
 
 			// determine how to save result: JSON array or boolean value as string
-			if(this->config.parserFieldJSON.at(fieldCounter)) {
+			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// stringify and add parsed element as JSON array with one boolean value as string
 				parsedFields.push_back(Json::stringify(parsedBool ? "true" : "false"));
 			}
@@ -571,7 +573,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 				parsedFields.push_back(parsedBool ? "true" : "false");
 			}
 		}
-		else if(this->config.parserLogging) this->log("WARNING: Ignored \'" + this->config.parserFieldNames.at(fieldCounter)
+		else if(this->config.generalLogging) this->log("WARNING: Ignored \'" + this->config.parsingFieldNames.at(fieldCounter)
 				+ "\' query without specified result type.");
 
 		fieldCounter++;

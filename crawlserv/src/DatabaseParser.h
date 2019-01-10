@@ -60,6 +60,7 @@ public:
 	void updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 			const std::vector<std::string>& parsedFields);
 	void setUrlFinished(unsigned long urlId);
+	void resetStatus();
 
 private:
 	// table names

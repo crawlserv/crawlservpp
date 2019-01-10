@@ -28,33 +28,36 @@ public:
 	ConfigParser();
 	virtual ~ConfigParser();
 
-	// parser entries
-	std::vector<std::string> parserDateTimeFormats;
-	std::vector<std::string> parserDateTimeLocales;
-	std::vector<unsigned long> parserDateTimeQueries;
-	std::vector<unsigned short> parserDateTimeSources;
-	std::vector<char> parserFieldDelimiters;
-	std::vector<bool> parserFieldIgnoreEmpty;
-	std::vector<bool> parserFieldJSON;
-	std::vector<std::string> parserFieldNames;
-	std::vector<unsigned long> parserFieldQueries;
-	std::vector<unsigned short> parserFieldSources;
-	std::vector<unsigned long> parserIdQueries;
-	std::vector<unsigned short> parserIdSources;
-	unsigned int parserLock;
-	unsigned short parserLogging;
-	static const unsigned short parserLoggingSilent = 0;
-	static const unsigned short parserLoggingDefault = 1;
-	static const unsigned short parserLoggingExtended = 2;
-	static const unsigned short parserLoggingVerbose = 3;
-	bool parserNewestOnly;
-	bool parserReParse;
-	static const unsigned short parserSourceUrl = 0;
-	static const unsigned short parserSourceContent = 1;
-	std::string parserResultTable;
-	unsigned long parserSleepIdle;
-	unsigned long parserSleepMySql;
-	bool parserTiming;
+	// general entries
+	unsigned int generalLock;
+	unsigned short generalLogging;
+	static const unsigned short generalLoggingSilent = 0;
+	static const unsigned short generalLoggingDefault = 1;
+	static const unsigned short generalLoggingExtended = 2;
+	static const unsigned short generalLoggingVerbose = 3;
+	bool generalNewestOnly;
+	bool generalReParse;
+	bool generalResetOnFinish;
+	std::string generalResultTable;
+	unsigned long generalSleepIdle;
+	unsigned long generalSleepMySql;
+	bool generalTiming;
+
+	// parsing entries
+	std::vector<std::string> parsingDateTimeFormats;
+	std::vector<std::string> parsingDateTimeLocales;
+	std::vector<unsigned long> parsingDateTimeQueries;
+	std::vector<unsigned short> parsingDateTimeSources;
+	std::vector<char> parsingFieldDelimiters;
+	std::vector<bool> parsingFieldIgnoreEmpty;
+	std::vector<bool> parsingFieldJSON;
+	std::vector<std::string> parsingFieldNames;
+	std::vector<unsigned long> parsingFieldQueries;
+	std::vector<unsigned short> parsingFieldSources;
+	std::vector<unsigned long> parsingIdQueries;
+	std::vector<unsigned short> parsingIdSources;
+	static const unsigned short parsingSourceUrl = 0;
+	static const unsigned short parsingSourceContent = 1;
 
 protected:
 	// load parsing-specific configuration from parsed JSON document
