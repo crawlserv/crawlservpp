@@ -101,6 +101,9 @@ public:
 	bool isUrlListNameSpace(unsigned long websiteId, const std::string& nameSpace);
 	void updateUrlList(unsigned long listId, const std::string& listName, const std::string& listNameSpace);
 	void deleteUrlList(unsigned long listId);
+	void resetParsingStatus(unsigned long listId);
+	void resetExtractingStatus(unsigned long listId);
+	void resetAnalyzingStatus(unsigned long listId);
 
 	// query functions
 	unsigned long addQuery(unsigned long websiteId, const std::string& queryName, const std::string& queryText,

@@ -1686,6 +1686,33 @@ void Database::deleteUrlList(unsigned long listId) {
 	}
 }
 
+// reset parsing status of id-specified URL list
+void Database::resetParsingStatus(unsigned long listId) {
+	// get website namespace and URL list name
+	IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
+	std::string listNameSpace = this->getUrlListNameSpace(listId);
+
+	this->execute("UPDATE " + websiteNameSpace.string + "_" + listNameSpace + " SET parsed = FALSE");
+}
+
+// reset extracting status of id-specified URL list
+void Database::resetExtractingStatus(unsigned long listId) {
+	// get website namespace and URL list name
+	IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
+	std::string listNameSpace = this->getUrlListNameSpace(listId);
+
+	this->execute("UPDATE " + websiteNameSpace.string + "_" + listNameSpace + " SET extracted = FALSE");
+}
+
+// reset analyzing status of id-specified URL list
+void Database::resetAnalyzingStatus(unsigned long listId) {
+	// get website namespace and URL list name
+	IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
+	std::string listNameSpace = this->getUrlListNameSpace(listId);
+
+	this->execute("UPDATE " + websiteNameSpace.string + "_" + listNameSpace + " SET analyzed = FALSE");
+}
+
 // add query to database
 unsigned long Database::addQuery(unsigned long websiteId, const std::string& queryName, const std::string& queryText,
 		const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly) {

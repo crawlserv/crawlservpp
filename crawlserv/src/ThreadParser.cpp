@@ -293,7 +293,7 @@ bool ThreadParser::parsingUrlSelection() {
 		if(notIdle) {
 			if(this->config.generalResetOnFinish) {
 				if(this->config.generalLogging) this->log("finished, resetting parsing status.");
-				this->database.resetStatus();
+				this->database.resetParsingStatus(this->getUrlList());
 			}
 			else if(this->config.generalLogging) this->log("finished.");
 		}

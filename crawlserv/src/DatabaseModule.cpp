@@ -48,14 +48,14 @@ std::string DatabaseModule::getConfigJson(unsigned long configId) {
 	return this->database.getConfiguration(configId);
 }
 
-// provide access to the functionality for unlocking all tables in the database
-void DatabaseModule::unlockTables() {
-	this->database.unlockTables();
-}
-
 // provide access to the functionality for getting the last inserted id
 unsigned long DatabaseModule::getLastInsertedId() {
 	return this->database.getLastInsertedId();
+}
+
+// provide access to the functionality for unlocking all tables in the database
+void DatabaseModule::unlockTables() {
+	this->database.unlockTables();
 }
 
 // add parsed table to database
@@ -71,6 +71,21 @@ void DatabaseModule::addExtractedTable(unsigned long websiteId, unsigned long li
 // add analyzed table to database
 void DatabaseModule::addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	this->database.addAnalyzedTable(websiteId, listId, tableName);
+}
+
+// reset parsing status of id-specified URL list
+void DatabaseModule::resetParsingStatus(unsigned long listId) {
+	this->database.resetParsingStatus(listId);
+}
+
+// reset extracting status of id-specified URL list
+void DatabaseModule::resetExtractingStatus(unsigned long listId) {
+	this->database.resetExtractingStatus(listId);
+}
+
+// reset analyzing status of id-specified URL list
+void DatabaseModule::resetAnalyzingStatus(unsigned long listId) {
+	this->database.resetAnalyzingStatus(listId);
 }
 
 // provide access to the functionality for checking the connection to the database

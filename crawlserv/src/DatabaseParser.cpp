@@ -610,11 +610,6 @@ void DatabaseParser::setUrlFinished(unsigned long urlId) {
 	}
 }
 
-// reset parsing status of URL list
-void DatabaseParser::resetStatus() {
-	this->execute("UPDATE " + this->urlListTable + " SET parsed = FALSE");
-}
-
 // helper function: get id of parsing entry for id-specified content, return 0 if no entry exists
 unsigned long DatabaseParser::getEntryId(unsigned long contentId) {
 	sql::ResultSet * sqlResultSet = NULL;
