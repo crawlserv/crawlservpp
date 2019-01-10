@@ -32,7 +32,7 @@ The source code of the server consists of the following classes (as of January 2
 * <b>[`DatabaseCrawler`](crawlserv/src/DatabaseCrawler.cpp)</b>: Database access for crawlers (implements the `DatabaseModule` interface).
 * ~~<b>`DatabaseExtractor`</b>~~: Database access for extractors (implements the `DatabaseModule` interface).
 * <b>[`DatabaseModule`](crawlserv/src/DatabaseModule.cpp)</b>: Interface for the database access of threads (wraps the `DatabaseThread` class).
-* ~~<b>`DatabaseParser`</b>~~: Database access for parsers (implements the `DatabaseModule` interface).
+* <b>[`DatabaseParser`](crawlserv/src/DatabaseParser.cpp)</b>: Database access for parsers (implements the `DatabaseModule` interface).
 * <b>[`DatabaseThread`](crawlserv/src/DatabaseThread.cpp)</b>: Database functionality for threads (child of the `Database` class).
 * <b>[`Networking`](crawlserv/src/Networking.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
 * <b>[`QueryContainer`](crawlserv/src/QueryContainer.cpp)</b>: Abstract class for query management in child classes.
@@ -42,7 +42,7 @@ The source code of the server consists of the following classes (as of January 2
 * ~~<b>`ThreadAnalyzer`</b>~~: Implementation of the `Thread` interface for analyzers.
 * <b>[`ThreadCrawler`](crawlserv/src/ThreadCrawler.cpp)</b>: Implementation of the `Thread` interface for crawlers.
 * ~~<b>`ThreadExtractor`</b>~~: Implementation of the `Thread` interface for extractors.
-* ~~<b>`ThreadParser`</b>~~: Implementation of the `Thread` interface for parsers.
+* <b>[`ThreadParser`](crawlserv/src/ThreadParser.cpp)</b>: Implementation of the `Thread` interface for parsers.
 * <b>[`TimerSimpleHR`](crawlserv/src/TimerSimpleHR.cpp)</b>: Simple high resolution timer for getting the time since creation in microseconds.
 * <b>[`TimerStartStop`](crawlserv/src/TimerStartStop.cpp)</b>: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
 * <b>[`TimerStartStopHR`](crawlserv/src/TimerStartStopHR.cpp)</b>: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
@@ -54,6 +54,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/nam
 
 * <b>[`DateTime`](crawlserv/src/namespaces/DateTime.cpp)</b>: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * <b>[`FileSystem`](crawlserv/src/namespaces/FileSystem.cpp)</b>: Global helper functions for file system operations using [Boost.Filesystem](https://www.boost.org/doc/libs/1_68_0/libs/filesystem/doc/index.htm).
+* <b>[`Json'](crawlserv/src/namespaces/Json.cpp)</b>: Global helper functions for converting to JSON.
 * <b>[`Portability`](crawlserv/src/namespaces/Portability.cpp)</b>: Global helper functions for portability.
 * <b>[`Strings`](crawlserv/src/namespaces/Strings.cpp)</b>: Global helper functions for string processing and manipulation.
 * <b>[`Utf8`](crawlserv/src/namespaces/Utf8.cpp)</b>: Global helper functions for UTF-8 conversion using the [UTF8-CPP library](http://utfcpp.sourceforge.net/).

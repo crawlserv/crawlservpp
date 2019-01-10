@@ -13,10 +13,13 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
+//#define SERVER_DEBUG_HTTP_REQUEST
+
 #include "Database.h"
 #include "RegEx.h"
 #include "Thread.h"
 #include "ThreadCrawler.h"
+#include "ThreadParser.h"
 #include "TimerSimpleHR.h"
 #include "XPath.h"
 
@@ -44,6 +47,10 @@
 #include <thread>
 #include <vector>
 
+#ifdef SERVER_DEBUG_HTTP_REQUEST
+#include <iostream>
+#endif
+
 class Server {
 public:
 	Server(const DatabaseSettings& databaseSettings, const ServerSettings& serverSettings);
@@ -66,7 +73,7 @@ protected:
 
 	// threads
 	std::vector<ThreadCrawler*> crawlers;
-	//std::vector<ThreadParser*> parsers;
+	std::vector<ThreadParser*> parsers;
 	//std::vector<ThreadAnalyzer*> analyzers;
 	//std::vector<ThreadExtractor*> extractors;
 	std::vector<std::thread*> workers;
@@ -125,6 +132,11 @@ private:
 	Server::CmdResponse cmdPauseCrawler(const rapidjson::Document& json, const std::string& ip);
 	Server::CmdResponse cmdUnPauseCrawler(const rapidjson::Document& json, const std::string& ip);
 	Server::CmdResponse cmdStopCrawler(const rapidjson::Document& json, const std::string& ip);
+
+	Server::CmdResponse cmdStartParser(const rapidjson::Document& json, const std::string& ip);
+	Server::CmdResponse cmdPauseParser(const rapidjson::Document& json, const std::string& ip);
+	Server::CmdResponse cmdUnPauseParser(const rapidjson::Document& json, const std::string& ip);
+	Server::CmdResponse cmdStopParser(const rapidjson::Document& json, const std::string& ip);
 
 	Server::CmdResponse cmdAddWebsite(const rapidjson::Document& json);
 	Server::CmdResponse cmdUpdateWebsite(const rapidjson::Document& json);
