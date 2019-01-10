@@ -598,8 +598,12 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 				parsedFields.push_back(parsedBool ? "true" : "false");
 			}
 		}
-		else if(this->config.generalLogging) this->log("WARNING: Ignored \'" + this->config.parsingFieldNames.at(fieldCounter)
-				+ "\' query without specified result type.");
+		else {
+			if(i->type != QueryContainer::Query::typeNone && this->config.generalLogging)
+				this->log("WARNING: Ignored \'" + this->config.parsingFieldNames.at(fieldCounter)
+						+ "\' query without specified result type.");
+			parsedFields.push_back("");
+		}
 
 		fieldCounter++;
 	}
