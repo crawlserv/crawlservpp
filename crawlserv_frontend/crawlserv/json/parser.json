@@ -208,8 +208,10 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
+			"label": "Field results as tidied texts:",
 			"description": "Remove line breaks and unnecessary spaces.",
-			"simple": false
+			"simple": true,
+			"position": 11
 		},
 		"field.warnings.empty": {
 			"id": 13,
