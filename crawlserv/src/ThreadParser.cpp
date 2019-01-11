@@ -134,7 +134,8 @@ bool ThreadParser::onTick() {
 
 		// update URL list if possible, release URL lock
 		this->database.lockUrlList();
-		if(this->database.checkUrlLock(this->currentUrl.id, this->lockTime)) this->database.setUrlFinished(this->currentUrl.id);
+		if(this->database.checkUrlLock(this->currentUrl.id, this->lockTime) && parsed)
+			this->database.setUrlFinished(this->currentUrl.id);
 		this->database.unlockTables();
 		this->lockTime = "";
 
