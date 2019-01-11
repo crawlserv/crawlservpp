@@ -533,7 +533,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// if necessary, tidy texts
 				if(this->config.parsingFieldTidyTexts.at(fieldCounter))
-					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) Strings::tidy(*i);
+					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) Strings::utfTidy(*i);
 
 				// stringify and add parsed elements as JSON array
 				parsedFields.push_back(Json::stringify(parsedFieldValues));
@@ -544,7 +544,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 						this->config.parsingFieldIgnoreEmpty.at(fieldCounter));
 
 				// if necessary, tidy text
-				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Strings::tidy(result);
+				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Strings::utfTidy(result);
 
 				parsedFields.push_back(result);
 			}
@@ -584,7 +584,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 										+ this->currentUrl.string);
 
 			// if necessary, tidy text
-			if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Strings::tidy(parsedFieldValue);
+			if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Strings::utfTidy(parsedFieldValue);
 
 			// determine how to save result: JSON array or string as is
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {
