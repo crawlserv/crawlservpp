@@ -532,9 +532,8 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			// determine how to save result: JSON array or concatenate using delimiting character
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// if necessary, tidy texts
-				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) {
+				if(this->config.parsingFieldTidyTexts.at(fieldCounter))
 					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) Strings::tidy(*i);
-				}
 
 				// stringify and add parsed elements as JSON array
 				parsedFields.push_back(Json::stringify(parsedFieldValues));
