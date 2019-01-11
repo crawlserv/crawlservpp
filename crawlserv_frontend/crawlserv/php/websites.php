@@ -202,7 +202,7 @@ if($website) {
             if($urllistParsed == 1) echo "1 entry";
             else echo number_format($urllistParsed)." entries";
             echo " (";
-            echo number_format((float) $urllistParsed / $urllistCrawled * 100, 1);
+            echo number_format((float) $urllistParsed / $urllistSize * 100, 1);
             echo "%) <a href=\"#\" class=\"urllist-reset-parsing entry-value\">[Reset]</a>";
             echo "</div>\n";
             echo "</div>\n";
