@@ -9,7 +9,7 @@
 
 #include "Strings.h"
 
-// replace all occurences of a string with another string (onlyOnce avoids replacing the replacements)
+// replace all occurences of a string with another string (onlyOnce avoids replacing parts of the replacements)
 void Strings::replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce) {
 	unsigned long startPos = 0;
 	if(from.empty()) return;
@@ -29,7 +29,7 @@ bool Strings::stringToBool(std::string inputString) {
 	return result;
 }
 
-// trim a string
+// trim a string (NOTE: Only ASCII white spaces will be processed!)
 void Strings::trim(std::string & stringToTrim) {
 	stringToTrim.erase(stringToTrim.begin(), std::find_if(stringToTrim.begin(), stringToTrim.end(), [](int ch) {
 		return !std::isspace(ch);
@@ -49,7 +49,7 @@ std::string Strings::concat(const std::vector<std::string>& vectorToConcat, char
 	return result;
 }
 
-// get the first character of the string or an escaped character (\n, \t or \\)
+// get the first character of the string or an escaped character (\n, \t or \\) (NOTE: Only ASCII supported!)
 char Strings::getFirstOrEscapeChar(const std::string& from) {
 	if(from.length()) {
 		if(from.at(0) == '\\' && from.length() > 1) {
@@ -67,18 +67,26 @@ char Strings::getFirstOrEscapeChar(const std::string& from) {
 	return 0;
 }
 
-// remove new lines and unnecessary spaces
-void Strings::tidy(std::string& stringToTidy) {
-	// replace special characters with spaces
-	std::replace(stringToTidy.begin(), stringToTidy.end(), '\n', ' ');
+// remove new lines and unnecessary spaces (including Unicode white spaces)
+void Strings::utfTidy(std::string& stringToTidy) {
+	// replace Unicode white spaces with spaces
+	for(unsigned long n = 0; n < sizeof(Strings::utfWhitespaces) / sizeof(std::string); n++)
+		Strings::replaceAll(stringToTidy, Strings::utfWhitespaces[n], " ", true);
+
+	// replace special ASCII characters with spaces
+	std::replace(stringToTidy.begin(), stringToTidy.end(), '\t', ' '); // horizontal tab
+	std::replace(stringToTidy.begin(), stringToTidy.end(), '\n', ' '); // line feed
+	std::replace(stringToTidy.begin(), stringToTidy.end(), '\v', ' '); // vertical tab
+	std::replace(stringToTidy.begin(), stringToTidy.end(), '\f', ' '); // form feed
+	std::replace(stringToTidy.begin(), stringToTidy.end(), '\r', ' '); // carriage return
 
 	// replace unnecessary spaces
-	Strings::replaceAll(stringToTidy, " .", ".", false);
-	Strings::replaceAll(stringToTidy, " ,", ",", false);
-	Strings::replaceAll(stringToTidy, " :", ":", false);
-	Strings::replaceAll(stringToTidy, " ;", ";", false);
-	Strings::replaceAll(stringToTidy, "( ", "(", false);
-	Strings::replaceAll(stringToTidy, " )", ")", false);
+	Strings::replaceAll(stringToTidy, " .", ".", true);
+	Strings::replaceAll(stringToTidy, " ,", ",", true);
+	Strings::replaceAll(stringToTidy, " :", ":", true);
+	Strings::replaceAll(stringToTidy, " ;", ";", true);
+	Strings::replaceAll(stringToTidy, "( ", "(", true);
+	Strings::replaceAll(stringToTidy, " )", ")", true);
 
 	// replace double spaces
 	Strings::replaceAll(stringToTidy, "  ", " ", false);
