@@ -351,7 +351,7 @@ void ThreadCrawler::initDoGlobalCounting(std::vector<std::string>& urlList, cons
 				std::string newUrl = *i;
 				std::ostringstream counterStrStr;
 				counterStrStr << counter;
-				Strings::replaceAll(newUrl, variable, counterStrStr.str());
+				Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
 				newUrlList.push_back(newUrl);
 				if(start == end) break;
 				counter += step;
@@ -376,7 +376,7 @@ std::vector<std::string> ThreadCrawler::initDoLocalCounting(const std::string& u
 			std::string newUrl = url;
 			std::ostringstream counterStrStr;
 			counterStrStr << counter;
-			Strings::replaceAll(newUrl, variable, counterStrStr.str());
+			Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
 			newUrlList.push_back(newUrl);
 			if(start == end) break;
 			counter += step;

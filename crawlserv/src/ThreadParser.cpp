@@ -531,13 +531,23 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 
 			// determine how to save result: JSON array or concatenate using delimiting character
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {
+				// if necessary, tidy texts
+				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) {
+					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) Strings::tidy(*i);
+				}
+
 				// stringify and add parsed elements as JSON array
 				parsedFields.push_back(Json::stringify(parsedFieldValues));
 			}
 			else {
 				// concatenate elements
-				parsedFields.push_back(Strings::concat(parsedFieldValues, this->config.parsingFieldDelimiters.at(fieldCounter),
-						this->config.parsingFieldIgnoreEmpty.at(fieldCounter)));
+				std::string result = Strings::concat(parsedFieldValues, this->config.parsingFieldDelimiters.at(fieldCounter),
+						this->config.parsingFieldIgnoreEmpty.at(fieldCounter));
+
+				// if necessary, tidy text
+				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Strings::tidy(result);
+
+				parsedFields.push_back(result);
 			}
 		}
 		else if(i->resultSingle) {
@@ -573,6 +583,9 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && !parsedFieldValue.length())
 				this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
 										+ this->currentUrl.string);
+
+			// if necessary, tidy text
+			if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Strings::tidy(parsedFieldValue);
 
 			// determine how to save result: JSON array or string as is
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {

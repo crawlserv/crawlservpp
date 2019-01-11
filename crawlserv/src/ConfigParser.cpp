@@ -240,6 +240,20 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
+						else if(name == "field.tidy.texts") {
+								if(j->value.IsArray()) {
+									this->parsingFieldTidyTexts.clear();
+									for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+										if(k->IsBool()) this->parsingFieldTidyTexts.push_back(k->GetBool());
+										else {
+											this->parsingFieldTidyTexts.push_back(false);
+											warningsTo.push_back("Value in \'" + cat + "." + name
+													+ "\' ignored because of wrong type (not bool).");
+										}
+									}
+								}
+								else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							}
 						else if(name == "field.warnings.empty") {
 							if(j->value.IsArray()) {
 								this->parsingFieldWarningsEmpty.clear();
@@ -350,6 +364,10 @@ void ConfigParser::loadModule(const rapidjson::Document& jsonDocument, std::vect
 	// the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parsingFieldJSON.size() > completeFields) this->parsingFieldJSON.resize(completeFields);
 	else while(this->parsingFieldJSON.size() < completeFields) this->parsingFieldJSON.push_back(false);
+
+	// the 'tidy text' property will be ignored if array is too large or set to 'false' if entry is missing
+	if(this->parsingFieldTidyTexts.size() > completeFields) this->parsingFieldTidyTexts.resize(completeFields);
+	else while(this->parsingFieldTidyTexts.size() < completeFields) this->parsingFieldTidyTexts.push_back(false);
 
 	// the 'warning if empty' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parsingFieldWarningsEmpty.size() > completeFields) this->parsingFieldWarningsEmpty.resize(completeFields);

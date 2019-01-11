@@ -10,13 +10,13 @@
 #include "Strings.h"
 
 // replace all occurences of a string with another string
-void Strings::replaceAll(std::string& strInOut, const std::string& from, const std::string& to) {
+void Strings::replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce) {
 	unsigned long startPos = 0;
 	if(from.empty()) return;
 
 	while((startPos = strInOut.find(from, startPos)) != std::string::npos) {
 		strInOut.replace(startPos, from.length(), to);
-		startPos += to.length();
+		if(onlyOnce) startPos += to.length();
 	}
 }
 
@@ -65,4 +65,17 @@ char Strings::getFirstOrEscapeChar(const std::string& from) {
 		else return from.at(0);
 	}
 	return 0;
+}
+
+// remove new lines and unnecessary spaces
+void Strings::tidy(std::string& stringToTidy) {
+	Strings::replaceAll(stringToTidy, "\n", " ", false);
+	Strings::replaceAll(stringToTidy, " .", ".", false);
+	Strings::replaceAll(stringToTidy, " ,", ",", false);
+	Strings::replaceAll(stringToTidy, " :", ":", false);
+	Strings::replaceAll(stringToTidy, " ;", ";", false);
+	Strings::replaceAll(stringToTidy, "( ", "(", false);
+	Strings::replaceAll(stringToTidy, " )", ")", false);
+	Strings::replaceAll(stringToTidy, "  ", " ", false);
+	Strings::trim(stringToTidy);
 }

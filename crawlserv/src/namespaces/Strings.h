@@ -16,11 +16,12 @@
 #include <vector>
 
 namespace Strings {
-	void replaceAll(std::string& strInOut, const std::string& from, const std::string& to);
+	void replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce);
 	bool stringToBool(std::string inputString);
 	void trim(std::string& stringToTrim);
 	std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty);
 	char getFirstOrEscapeChar(const std::string& from);
+	void tidy(std::string& stringToTidy);
 }
 
 
