@@ -203,8 +203,16 @@
 			"simple": true,
 			"position": 8
 		},
-		"field.warnings.empty": {
+		"field.tidy.texts": {
 			"id": 12,
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"description": "Remove line breaks and unnecessary spaces.",
+			"simple": false
+		},
+		"field.warnings.empty": {
+			"id": 13,
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
@@ -212,7 +220,7 @@
 			"simple": false
 		},
 		"id.ignore": {
-			"id": 13,
+			"id": 14,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -220,7 +228,7 @@
 			"simple": false
 		},
 		"id.queries": {
-			"id": 14,
+			"id": 15,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -233,7 +241,7 @@
 			"position": 2
 		},
 		"id.sources": {
-			"id": 15,
+			"id": 16,
 			"type": "array",
 			"item-type": "enum",
 			"default": [],

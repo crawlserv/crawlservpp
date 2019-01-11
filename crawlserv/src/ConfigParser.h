@@ -55,6 +55,7 @@ public:
 	std::vector<std::string> parsingFieldNames;
 	std::vector<unsigned long> parsingFieldQueries;
 	std::vector<unsigned short> parsingFieldSources;
+	std::vector<bool> parsingFieldTidyTexts;
 	std::vector<bool> parsingFieldWarningsEmpty;
 	std::vector<std::string> parsingIdIgnore;
 	std::vector<unsigned long> parsingIdQueries;
