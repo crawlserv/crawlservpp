@@ -9,7 +9,7 @@
 
 #include "Strings.h"
 
-// replace all occurences of a string with another string
+// replace all occurences of a string with another string (onlyOnce avoids replacing the replacements)
 void Strings::replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce) {
 	unsigned long startPos = 0;
 	if(from.empty()) return;
@@ -69,13 +69,20 @@ char Strings::getFirstOrEscapeChar(const std::string& from) {
 
 // remove new lines and unnecessary spaces
 void Strings::tidy(std::string& stringToTidy) {
-	Strings::replaceAll(stringToTidy, "\n", " ", false);
+	// replace special characters with spaces
+	std::replace(stringToTidy.begin(), stringToTidy.end(), '\n', ' ');
+
+	// replace unnecessary spaces
 	Strings::replaceAll(stringToTidy, " .", ".", false);
 	Strings::replaceAll(stringToTidy, " ,", ",", false);
 	Strings::replaceAll(stringToTidy, " :", ":", false);
 	Strings::replaceAll(stringToTidy, " ;", ";", false);
 	Strings::replaceAll(stringToTidy, "( ", "(", false);
 	Strings::replaceAll(stringToTidy, " )", ")", false);
+
+	// replace double spaces
 	Strings::replaceAll(stringToTidy, "  ", " ", false);
+
+	// trim result
 	Strings::trim(stringToTidy);
 }
