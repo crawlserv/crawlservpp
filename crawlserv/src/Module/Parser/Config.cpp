@@ -160,7 +160,9 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 								this->parsingFieldDelimiters.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString())
-										this->parsingFieldDelimiters.push_back(crawlservpp::Helper::Strings::getFirstOrEscapeChar(k->GetString()));
+										this->parsingFieldDelimiters.push_back(
+												crawlservpp::Helper::Strings::getFirstOrEscapeChar(k->GetString())
+										);
 									else {
 										this->parsingFieldDelimiters.push_back('\n');
 										warningsTo.push_back("Value in \'" + cat + "." + name
