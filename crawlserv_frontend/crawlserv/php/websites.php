@@ -1,4 +1,34 @@
 <?php
+// datetime to time elapsed string function based on https://stackoverflow.com/a/18602474 by Glavić
+function time_elapsed_string($datetime) {
+    $now = new DateTime;
+    $ago = new DateTime($datetime);
+    $diff = $now->diff($ago);
+    
+    $diff->w = floor($diff->d / 7);
+    $diff->d -= $diff->w * 7;
+    
+    $string = array(
+        'y' => 'y',
+        'm' => 'm',
+        'w' => 'w',
+        'd' => 'd',
+        'h' => 'h',
+        'i' => 'min',
+        's' => 's',
+    );
+    foreach ($string as $k => &$v) {
+        if ($diff->$k) {
+            $v = $diff->$k . $v . ($diff->$k > 1 ? 's' : '');
+        } else {
+            unset($string[$k]);
+        }
+    }
+    
+    $string = array_slice($string, 0, 1);
+    return $string ? implode(', ', $string) . ' ago' : 'just now';
+}
+
 if(isset($_POST["website"])) $website = $_POST["website"];
 if(isset($_POST["urllist"])) $urllist = $_POST["urllist"];
 ?>
@@ -149,9 +179,31 @@ if($website) {
         // get last update of selected URL list
         $result = $dbConnection->query("SELECT UPDATE_TIME FROM information_schema.tables WHERE TABLE_SCHEMA='".$db_name."'"
            ." AND TABLE_NAME='crawlserv_".$namespace."_".$urllistNamespace."'");
-        if(!$result) exit("ERROR: Could not get update time of URL list");
-        $row = $result->fetch_assoc();
-        $urllistUpdate = $row["UPDATE_TIME"];
+        if($result) {
+            $row = $result->fetch_assoc();
+            if($row) $urllistUpdate = $row["UPDATE_TIME"];
+        }
+        
+        // get last update of any parsing table
+        $result = $dbConnection->query("SELECT updated FROM crawlserv_parsedtables WHERE urllist=$ulId ORDER BY updated LIMIT 1");
+        if($result) {
+            $row = $result->fetch_assoc();
+            if($row) $parsedUpdate = $row["updated"];
+        }
+        
+        // get last update of any extracting table
+        $result = $dbConnection->query("SELECT updated FROM crawlserv_extractedtables WHERE urllist=$ulId ORDER BY updated LIMIT 1");
+        if($result) {
+            $row = $result->fetch_assoc();
+            if($row) $extractedUpdate = $row["updated"];
+        }
+        
+        // get last update of any analyzing table
+        $result = $dbConnection->query("SELECT updated FROM crawlserv_analyzedtables WHERE urllist=$ulId ORDER BY updated LIMIT 1");
+        if($result) {
+            $row = $result->fetch_assoc();
+            if($row) $analyzedUpdate = $row["updated"];
+        }
     }
     else {
         $urllist = 0;
@@ -191,7 +243,12 @@ if($website) {
             else echo number_format($urllistCrawled)." entries";
             echo " (";
             echo number_format((float) $urllistCrawled / $urllistSize * 100, 1);
-            echo "%)";
+            echo "%";
+            if($urllistUpdate) {
+                echo ", ";
+                echo time_elapsed_string($urllistUpdate);
+            }
+            echo ")";
             echo "</div>\n";
             echo "</div>\n";
         }
@@ -203,7 +260,12 @@ if($website) {
             else echo number_format($urllistParsed)." entries";
             echo " (";
             echo number_format((float) $urllistParsed / $urllistSize * 100, 1);
-            echo "%) <a href=\"#\" class=\"urllist-reset-parsing entry-value\">[Reset]</a>";
+            echo "%";
+            if($parsedUpdate) {
+                echo ", ";
+                echo time_elapsed_string($parsedUpdate);
+            }
+            echo ") <a href=\"#\" class=\"urllist-reset-parsing entry-value\">[Reset]</a>";
             echo "</div>\n";
             echo "</div>\n";
         }
@@ -215,7 +277,12 @@ if($website) {
             else echo number_format($urllistExtracted)." entries";
             echo " (";
             echo number_format((float) $urllistExtracted / $urllistParsed * 100, 1);
-            echo "%) <a href=\"#\" class=\"urllist-reset-extracting entry-value\">[Reset]</a>";
+            echo "%";
+            if($extractedUpdate) {
+                echo ", ";
+                echo time_elapsed_string($extractedUpdate);
+            }
+            echo ") <a href=\"#\" class=\"urllist-reset-extracting entry-value\">[Reset]</a>";
             echo "</div>\n";
             echo "</div>\n";
         }
@@ -227,13 +294,13 @@ if($website) {
             else echo number_format($urllistAnalyzed)." entries";
             echo " (";
             echo number_format((float) $urllistAnalyzed / $urllistParsed * 100, 1);
-            echo "%) <a href=\"#\" class=\"urllist-reset-analyzing entry-value\">[Reset]</a>";
+            echo "%";
+            if($analyzedUpdate) {
+                echo ", ";
+                echo time_elapsed_string($analyzedUpdate);
+            }
+            echo ") <a href=\"#\" class=\"urllist-reset-analyzing entry-value\">[Reset]</a>";
             echo "</div>\n";
-            echo "</div>\n";
-        }
-        if($urllistUpdate) {
-            echo "<div class=\"entry-row\">\n";
-            echo "<div class=\"entry-label\">Updated:</div><div class=\"entry-value\">$urllistUpdate</div>\n";
             echo "</div>\n";
         }
     }
