@@ -419,6 +419,7 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 	// parse date/time
 	std::string parsedDateTime;
 	unsigned long dateTimeQueryCounter = 0;
+	bool dateTimeSuccess = false;
 
 	for(auto i = this->queriesDateTime.begin(); i != this->queriesDateTime.end(); ++i) {
 		bool querySuccess = false;
@@ -453,7 +454,6 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 
 		if(querySuccess && parsedDateTime.length()) {
 			// found date/time: try to convert it to SQL time stamp
-			bool conversionSuccess = false;
 			std::string format = this->config.parsingDateTimeFormats.at(dateTimeQueryCounter);
 			std::string locale = this->config.parsingDateTimeLocales.at(dateTimeQueryCounter);
 
@@ -461,23 +461,33 @@ bool ThreadParser::parsingContent(const IdString& content, const std::string& pa
 			if(!format.length()) format = "%F %T";
 
 			if(locale.length()) {
+				// locale hack: The French abbreviation "avr." for April is not stringently supported
+				if(locale.length() > 1 && tolower(locale.at(0) == 'f') && tolower(locale.at(1) == 'r'))
+					Strings::replaceAll(parsedDateTime, "avr.", "avril", true);
+
 				try {
-					conversionSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format, std::locale(locale));
+					dateTimeSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format, std::locale(locale));
 				}
 				catch(const std::runtime_error& e) {
 					if(this->config.generalLogging) this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
-					conversionSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
+					dateTimeSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
 				}
 			}
 			else {
-				conversionSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
+				dateTimeSuccess = DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
 			}
 
-			if(conversionSuccess && parsedDateTime.length()) break;
+			if(dateTimeSuccess && parsedDateTime.length()) break;
 		}
 
 		// not successfull: check next query for parsing the date/time (if exists)
 		dateTimeQueryCounter++;
+	}
+
+	// check whether date/time conversion was successful
+	if(parsedDateTime.length() && !dateTimeSuccess) {
+		if(this->config.generalLogging) this->log("ERROR: Could not parse date/time \'" + parsedDateTime + "\'!");
+		parsedDateTime = "";
 	}
 
 	// parse custom fields
