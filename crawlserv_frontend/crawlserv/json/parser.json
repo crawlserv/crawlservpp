@@ -5,7 +5,7 @@
 		"open": true,
 		
 		"lock": {
-			"id": 13,
+			"id": 1,
 			"type": "number",
 			"default": 300,
 			"min": 1,
