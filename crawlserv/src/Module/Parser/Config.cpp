@@ -316,7 +316,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 		else warningsTo.push_back("Configuration entry that is no object ignored.");
 	}
 
-	// check properties of datetime queries (arrays with queries and sources should have the same number fo elements)
+	// check properties of datetime queries (arrays with queries and sources should have the same number of elements)
 	unsigned long completeDateTimes = std::min(this->parsingDateTimeQueries.size(), this->parsingDateTimeSources.size());
 																							// number of complete datetime queries
 																							// (= minimum size of all property arrays)
