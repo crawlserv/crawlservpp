@@ -36,7 +36,8 @@ public:
 	// prepare target table and SQL statements for parser
 	void initTargetTable(unsigned long websiteId, unsigned long listId, const std::string& websiteNameSpace,
 			const std::string& urlListNameSpace, const std::string& tableName, const std::vector<std::string> * fields);
-	bool prepare(unsigned long parserId, const std::string& tableName, bool reparse, bool verbose);
+	bool prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId, const std::string& tableName, bool reparse,
+			bool verbose);
 
 	// table function
 	void lockUrlList();
@@ -85,6 +86,7 @@ private:
 	unsigned short psGetEntryId;
 	unsigned short psUpdateEntry;
 	unsigned short psAddEntry;
+	unsigned short psUpdateParsedTable;
 
 	// internal helper functions
 	unsigned long getEntryId(unsigned long contentId);
@@ -92,6 +94,7 @@ private:
 			const std::vector<std::string>& parsedFields);
 	void addEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 			const std::vector<std::string>& parsedFields);
+	void updateParsedTable();
 };
 
 #endif /* DATABASEPARSER_H_ */

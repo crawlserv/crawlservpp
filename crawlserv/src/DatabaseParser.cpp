@@ -27,6 +27,7 @@ DatabaseParser::DatabaseParser(DatabaseThread& dbThread) : DatabaseModule(dbThre
 	this->psGetEntryId = 0;
 	this->psUpdateEntry = 0;
 	this->psAddEntry = 0;
+	this->psUpdateParsedTable = 0;
 }
 
 // destructor stub
@@ -66,7 +67,8 @@ void DatabaseParser::initTargetTable(unsigned long websiteId, unsigned long list
 }
 
 // prepare SQL statements for parser
-bool DatabaseParser::prepare(unsigned long parserId, const std::string& tableName, bool reparse, bool verbose) {
+bool DatabaseParser::prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId, const std::string& tableName,
+		bool reparse, bool verbose) {
 	// convert id to string
 	std::ostringstream idStrStr;
 	idStrStr << parserId;
@@ -160,6 +162,12 @@ bool DatabaseParser::prepare(unsigned long parserId, const std::string& tableNam
 			sqlQuery += ")";
 			if(verbose) this->log("parser", "[#" + idString + "] > " + sqlQuery);
 			this->psAddEntry = this->addPreparedStatement(sqlQuery);
+		}
+		if(!(this->psUpdateParsedTable)) {
+			if(verbose) this->log("parser", "[#" + idString + "] prepares parsingTableUpdated()...");
+			std::stringstream sqlQueryStrStr;
+			sqlQueryStrStr << "UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP WHERE website = " << websiteId
+					<< ", urllist = " << listId << ", name = " << tableName << " LIMIT 1";
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -710,6 +718,30 @@ void DatabaseParser::addEntry(unsigned long contentId, const std::string& parsed
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "addEntry() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// helper function: update parsing table index
+void DatabaseParser::updateParsedTable() {
+	// check prepared SQL statement
+	if(!(this->psUpdateParsedTable))
+		throw std::runtime_error("Missing prepared SQL statement for DatabaseParser::updateParsedTable(...)");
+	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
+	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseParser::updateParsedTable(...) is NULL");
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	// get id of URL from database
+	try {
+		// execute SQL query
+		sqlStatement->execute();
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		std::ostringstream errorStrStr;
+		errorStrStr << "updateParsedTable() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
