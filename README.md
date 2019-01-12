@@ -51,7 +51,9 @@ The source code of the server consists of the following classes (as of January 2
 * <b>[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)</b>: Simple high resolution timer for getting the time since creation in microseconds.
 * <b>[`Timer::StartStop`](crawlserv/src/Timer/StartStop.cpp)</b>: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
 * <b>[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.cpp)</b>: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
+
 The following additional namespaces are used (to be found in [`crawlserv/src/Helper`](crawlserv/src/Helper)):
+
 * <b>[`Helper::Algos`](crawlserv/src/Helper/Algos.h)</b>: Global helper functions for algorithms.
 * <b>[`Helper::DateTime`](crawlserv/src/Helper/DateTime.cpp)</b>: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * <b>[`Helper::FileSystem`](crawlserv/src/Helper/FileSystem.cpp)</b>: Global helper functions for file system operations using [Boost.Filesystem](https://www.boost.org/doc/libs/1_68_0/libs/filesystem/doc/index.htm).
