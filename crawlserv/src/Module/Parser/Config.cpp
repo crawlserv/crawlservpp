@@ -345,8 +345,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 	}
 	if(incompleteDateTimes) {
 		// warn about incomplete datetime queries
-		warningsTo.push_back("\'datetime.queries\' and \'.sources\' should have the same number of"
-				" elements.");
+		warningsTo.push_back("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
 		warningsTo.push_back("Incomplete datetime queries removed.");
 	}
 
