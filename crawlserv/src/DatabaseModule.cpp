@@ -16,8 +16,8 @@ DatabaseModule::DatabaseModule(DatabaseThread& dbRef) : database(dbRef) {}
 // destructor stub
 DatabaseModule::~DatabaseModule() {}
 
-// get error message
-const std::string& DatabaseModule::getErrorMessage() const {
+// get module error message
+const std::string& DatabaseModule::getModuleErrorMessage() const {
 	return this->errorMessage;
 }
 
@@ -91,6 +91,11 @@ void DatabaseModule::resetAnalyzingStatus(unsigned long listId) {
 // provide access to the functionality for checking the connection to the database
 bool DatabaseModule::checkConnection() {
 	return this->database.checkConnection();
+}
+
+// provide access to database for geting database error message
+const std::string& DatabaseModule::getDatabaseErrorMessage() const {
+	return this->database.getErrorMessage();
 }
 
 // provide access to the functionality for locking a table in the database
