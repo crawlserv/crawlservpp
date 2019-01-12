@@ -25,44 +25,33 @@ The source code of the server consists of the following classes (as of January 2
 * <b>[`Global::ConfigFile`](crawlserv/src/Global/ConfigFile.cpp)</b>: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * <b>[`Global::Database`](crawlserv/src/Global/Database.cpp)</b>: Database access for the server and its threads (parent class with server-specific and basic functionality only).
 * <b>[`Global::Server`](crawlserv/src/Global/Server.cpp)</b>: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
-
 * <b>[`Module::Config`](crawlserv/src/Module/Config.cpp)</b>: Abstract class as base for module-specific configuration classes.
 * <b>[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)</b>: Database functionality for threads (child of the `Global::Database` class).
 * <b>[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)</b>: Interface for the database access of threads (wraps the `Module::DBThread` class).
 * <b>[`Module::Thread`](crawlserv/src/Module/Thread.cpp)</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
-
 * <b>~~`Module::Analyzer::Config`~~</b>: Analyzing configuration. See ~~[analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json)~~ for all configuration entries.
 * ~~<b>`Module::Analyzer::Database`</b>~~: Database access for analyzers (implements the `Module::DBWrapper` interface).
 * ~~<b>`Module::Analyzer::Thread`</b>~~: Implementation of the `Module::Thread` interface for analyzers.
-
 * <b>[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.cpp)</b>: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
 * <b>[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)</b>: Database access for crawlers (implements the `Module::DBWrapper` interface).
 * <b>[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)</b>: Implementation of the `Module::Thread` interface for crawlers.
-
 * <b>~~`Module::Extractor::Config`~~</b>: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * ~~<b>`Module::Extractor::Database`</b>~~: Database access for extractors (implements the `Module::DBWrapper` interface).
 * ~~<b>`Module::Extractor::Thread`</b>~~: Implementation of the `Module::Thread` interface for extractors.
-
 * <b>[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.cpp)</b>: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
 * <b>[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)</b>: Database access for parsers (implements the `Module::DBWrapper` interface).
 * <b>[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)</b>: Implementation of the `Module::Thread` interface for parsers.
-
 * <b>[`Network::Config`](crawlserv/src/Network/Config.cpp)</b>: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * <b>[`Network::Curl`](crawlserv/src/Network/Curl.cpp)</b>: Provide networking functionality by using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
-
 * <b>[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)</b>: URL parsing, domain checking and sub-URL extraction.
 * <b>[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)</b>: Parse HTML documents into clean XML.
-
 * <b>[`Query::Container`](crawlserv/src/Query/Container.cpp)</b>: Abstract class for query management in child classes.
 * <b>[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * <b>[`Query::XPath`](crawlserv/src/Query//XPath.cpp)</b>: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
-
 * <b>[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)</b>: Simple high resolution timer for getting the time since creation in microseconds.
 * <b>[`Timer::StartStop`](crawlserv/src/Timer/StartStop.cpp)</b>: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
 * <b>[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.cpp)</b>: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
-
 The following additional namespaces are used (to be found in [`crawlserv/src/Helper`](crawlserv/src/Helper)):
-
 * <b>[`Helper::Algos`](crawlserv/src/Helper/Algos.h)</b>: Global helper functions for algorithms.
 * <b>[`Helper::DateTime`](crawlserv/src/Helper/DateTime.cpp)</b>: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * <b>[`Helper::FileSystem`](crawlserv/src/Helper/FileSystem.cpp)</b>: Global helper functions for file system operations using [Boost.Filesystem](https://www.boost.org/doc/libs/1_68_0/libs/filesystem/doc/index.htm).
