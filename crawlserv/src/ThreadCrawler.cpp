@@ -81,7 +81,7 @@ bool ThreadCrawler::onInit(bool resumed) {
 	// prepare SQL statements for crawler
 	if(verbose) this->log("Prepare SQL statements...");
 	if(!(this->database.prepare(this->getId(), this->websiteNameSpace, this->urlListNameSpace, this->config.crawlerReCrawl, verbose))) {
-		if(this->config.crawlerLogging) this->log(this->database.getErrorMessage());
+		if(this->config.crawlerLogging) this->log(this->database.getModuleErrorMessage());
 		return false;
 	}
 

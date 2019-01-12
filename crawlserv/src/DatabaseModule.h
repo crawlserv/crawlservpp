@@ -27,8 +27,8 @@ public:
 	DatabaseModule(DatabaseThread& dbRef);
 	virtual ~DatabaseModule() = 0;
 
-	// get error message
-	const std::string& getErrorMessage() const;
+	// get module error message
+	const std::string& getModuleErrorMessage() const;
 
 	// wrappers for basic functionality implemented by Database and DatabaseThread
 	void setSleepOnError(unsigned long seconds);
@@ -54,11 +54,14 @@ protected:
 	// reference to the database connection by the thread
 	DatabaseThread& database;
 
-	// own error message
+	// module error message
 	std::string errorMessage;
 
 	// check connection to database (try to reconnect if necessary)
 	bool checkConnection();
+
+	// get database error message
+	const std::string& getDatabaseErrorMessage() const;
 
 	// lock and unlock tables
 	void lockTable(const std::string& tableName);

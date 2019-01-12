@@ -50,7 +50,10 @@ bool DatabaseCrawler::prepare(unsigned long crawlerId, const std::string& websit
 	std::string crawledTable = this->urlListTable + "_crawled";
 
 	// check connection to database
-	if(!(this->checkConnection())) return false;
+	if(!(this->checkConnection())) {
+		this->errorMessage = this->getDatabaseErrorMessage();
+		return false;
+	}
 
 	try {
 		// prepare SQL statements for crawler
@@ -730,7 +733,7 @@ void DatabaseCrawler::setUrlFinished(unsigned long urlId) {
 	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for DatabaseCrawler::setUrlFinished(...) is NULL");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw std::runtime_error(this->getDatabaseErrorMessage());
 
 	// get id of URL from database
 	try {

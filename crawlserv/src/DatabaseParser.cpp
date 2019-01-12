@@ -75,7 +75,10 @@ bool DatabaseParser::prepare(unsigned long parserId, unsigned long websiteId, un
 	std::string idString = idStrStr.str();
 
 	// check connection to database
-	if(!(this->checkConnection())) return false;
+	if(!(this->checkConnection())) {
+		this->errorMessage = this->getDatabaseErrorMessage();
+		return false;
+	}
 
 	try {
 		// prepare SQL statements for parser
@@ -497,7 +500,7 @@ void DatabaseParser::unLockUrl(unsigned long urlId) {
 	}
 }
 
-// get latest content for the id-specified URL
+// get latest content for the id-specified URL, return false if there is no content
 bool DatabaseParser::getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo) {
 	sql::ResultSet * sqlResultSet = NULL;
 	IdString result;

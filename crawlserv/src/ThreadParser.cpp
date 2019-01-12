@@ -70,7 +70,7 @@ bool ThreadParser::onInit(bool resumed) {
 	if(verbose) this->log("Prepare SQL statements...");
 	if(!(this->database.prepare(this->getId(), this->getWebsite(), this->getUrlList(), this->config.generalResultTable,
 			this->config.generalReParse, verbose))) {
-		if(this->config.generalLogging) this->log(this->database.getErrorMessage());
+		if(this->config.generalLogging) this->log(this->database.getModuleErrorMessage());
 		return false;
 	}
 
