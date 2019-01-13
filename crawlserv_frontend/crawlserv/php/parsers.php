@@ -112,10 +112,13 @@ if(isset($website)) {
     echo "<div class=\"action-link-box\">\n";
     echo "<div class=\"action-link\">\n";
     if($config) {
-        echo "<a href=\"#\" class=\"action-link config-update\" data-m=\"$m\">";
+        echo "<a href=\"#\" class=\"action-link config-update\" data-m=\"$m\" data-mode=\"$mode\">";
         echo "Change parser</a>\n";
     }
-    else echo "<a href=\"#\" class=\"action-link config-add\" data-module=\"parser\" data-m=\"$m\">Add parser</a>\n";
+    else {
+        echo "<a href=\"#\" class=\"action-link config-add\" data-module=\"parser\" data-m=\"$m\" data-mode=\"$mode\">";
+        echo "Add parser</a>\n";
+    }
     echo "</div>\n";
     echo "</div>\n";
     echo "</div>\n";
