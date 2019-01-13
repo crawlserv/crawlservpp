@@ -44,7 +44,8 @@ crawlservpp::Module::Crawler::Config::Config() {
 crawlservpp::Module::Crawler::Config::~Config() {}
 
 // load crawling-specific configuration from parsed JSON document
-void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) {
+void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document& jsonDocument,
+		std::vector<std::string>& warningsTo) {
 	// go through all array items i.e. configuration entries
 	for(rapidjson::Value::ConstValueIterator i = jsonDocument.Begin(); i != jsonDocument.End(); i++) {
 		if(i->IsObject()) {
@@ -90,7 +91,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 					if(cat == "crawler") {
 						if(name == "archives") {
 							if(j->value.IsBool()) this->crawlerArchives = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "archives.names") {
 							if(j->value.IsArray()) {
@@ -101,7 +103,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "archives.urls.memento") {
 							if(j->value.IsArray()) {
@@ -112,7 +115,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "archives.urls.timemap") {
 							if(j->value.IsArray()) {
@@ -123,15 +127,18 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "lock") {
 							if(j->value.IsUint64()) this->crawlerLock = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "logging") {
 							if(j->value.IsUint()) this->crawlerLogging = j->value.GetUint();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned int).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned int).");
 						}
 						else if(name == "params.blacklist") {
 							if(j->value.IsArray()) {
@@ -142,7 +149,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "params.whitelist") {
 							if(j->value.IsArray()) {
@@ -153,7 +161,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.blacklist.content") {
 							if(j->value.IsArray()) {
@@ -165,7 +174,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.blacklist.types") {
 							if(j->value.IsArray()) {
@@ -177,7 +187,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.blacklist.urls") {
 							if(j->value.IsArray()) {
@@ -189,7 +200,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.links") {
 							if(j->value.IsArray()) {
@@ -201,7 +213,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.whitelist.content") {
 							if(j->value.IsArray()) {
@@ -213,7 +226,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.whitelist.types") {
 							if(j->value.IsArray()) {
@@ -225,7 +239,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.whitelist.urls") {
 							if(j->value.IsArray()) {
@@ -237,11 +252,13 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "recrawl") {
 							if(j->value.IsBool()) this->crawlerReCrawl = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+							else warningsTo.push_back("\'" + cat + "." + name
+								+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "recrawl.always") {
 							if(j->value.IsArray()) {
@@ -252,19 +269,23 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "recrawl.start") {
 							if(j->value.IsBool()) this->crawlerReCrawlStart = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "retries") {
 							if(j->value.IsInt64()) this->crawlerReTries = j->value.GetInt64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not long).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not long).");
 						}
 						else if(name == "retry.archive") {
 							if(j->value.IsBool()) this->crawlerRetryArchive = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "retry.http") {
 							if(j->value.IsArray()) {
@@ -275,35 +296,43 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "sleep.error") {
 							if(j->value.IsUint64()) this->crawlerSleepError = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "sleep.http") {
 							if(j->value.IsUint64()) this->crawlerSleepHttp = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "sleep.idle") {
 							if(j->value.IsUint64()) this->crawlerSleepIdle = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "sleep.mysql") {
 							if(j->value.IsUint64()) this->crawlerSleepMySql = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not unsigned long).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "start") {
 							if(j->value.IsString()) this->crawlerStart = j->value.GetString();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not string).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not string).");
 						}
 						else if(name == "timing") {
 							if(j->value.IsBool()) this->crawlerTiming = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "xml") {
 							if(j->value.IsBool()) this->crawlerXml = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "warnings.file") {
 							if(j->value.IsBool()) this->crawlerWarningsFile = j->value.GetBool();
@@ -389,8 +418,9 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 	}
 
 	// check properties of archives (arrays defining the archives should have the same number of elements - one for each archive)
-	unsigned long completeArchives = crawlservpp::Helper::Algos::min(this->crawlerArchivesNames.size(), this->crawlerArchivesUrlsMemento.size(),
-			this->crawlerArchivesUrlsTimemap.size());	// number of complete archives (= minimum size of all propertiy arrays)
+	unsigned long completeArchives = crawlservpp::Helper::Algos::min(this->crawlerArchivesNames.size(),
+			this->crawlerArchivesUrlsMemento.size(), this->crawlerArchivesUrlsTimemap.size());	// number of complete archives
+																								// (= minimum size of all arrays)
 	bool incompleteArchives = false;
 	if(this->crawlerArchivesNames.size() > completeArchives) {
 		// remove names of incomplete archives
@@ -409,14 +439,15 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 	}
 	if(incompleteArchives) {
 		// warn about incomplete counters
-		warningsTo.push_back("\'archives.names\', \'.urls.memento\' and \'.urls.timemap\' should have the same number of elements.");
+		warningsTo.push_back("\'archives.names\', \'.urls.memento\' and \'.urls.timemap\'"
+				" should have the same number of elements.");
 		warningsTo.push_back("Incomplete archive(s) removed.");
 	}
 
 	// check properties of counters (arrays defining the counters should have the same number of elements - one for each counter)
-	unsigned long completeCounters = crawlservpp::Helper::Algos::min(this->customCounters.size(), this->customCountersStart.size(),
-			this->customCountersEnd.size(), this->customCountersStep.size());	// number of complete counters
-																				// (= minimum size of all property arrays)
+	unsigned long completeCounters = crawlservpp::Helper::Algos::min(this->customCounters.size(),
+			this->customCountersStart.size(), this->customCountersEnd.size(),
+			this->customCountersStep.size());	// number of complete counters (= minimum size of all arrays)
 	bool incompleteCounters = false;
 	if(this->customCounters.size() > completeCounters) {
 		// remove counter variables of incomplete counters
@@ -440,7 +471,8 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 	}
 	if(incompleteCounters) {
 		// warn about incomplete counters
-		warningsTo.push_back("\'custom.counters\', \'.start\', \'.end\' and \'.step\' should have the same number of elements.");
+		warningsTo.push_back("\'custom.counters\', \'.start\', \'.end\' and \'.step\'"
+				" should have the same number of elements.");
 		warningsTo.push_back("Incomplete counter(s) removed.");
 	}
 
