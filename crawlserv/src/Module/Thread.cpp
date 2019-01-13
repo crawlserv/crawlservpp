@@ -12,7 +12,8 @@
 
 // constructor A: run previously interrupted thread
 crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, unsigned long threadId, const std::string& threadModule,
-		const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,	unsigned long threadLast)
+		const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
+		unsigned long threadLast)
 		: database(dbBase.getSettings()), databaseClass(dbBase), module(threadModule), options(threadOptions) {
 	// set thread pointer to NULL (will be initialized by Module::Thread::start())
 	this->threadPointer = NULL;

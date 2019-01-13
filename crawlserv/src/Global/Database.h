@@ -77,7 +77,8 @@ namespace crawlservpp::Global {
 		void deleteThread(unsigned long threadId);
 
 		// website functions
-		unsigned long addWebsite(const std::string& websiteName, const std::string& websiteNameSpace, const std::string& websiteDomain);
+		unsigned long addWebsite(const std::string& websiteName, const std::string& websiteNameSpace,
+				const std::string& websiteDomain);
 		std::string getWebsiteDomain(unsigned long id);
 		std::string getWebsiteNameSpace(unsigned long websiteId);
 		crawlservpp::Struct::IdString getWebsiteNameSpaceFromUrlList(unsigned long listId);
@@ -108,11 +109,13 @@ namespace crawlservpp::Global {
 
 		// query functions
 		unsigned long addQuery(unsigned long websiteId, const std::string& queryName, const std::string& queryText,
-				const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
-		void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
-				bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
+				const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti,
+				bool queryTextOnly);
+		void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo,
+				bool& queryResultBoolTo, bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
 		void updateQuery(unsigned long queryId, const std::string& queryName, const std::string& queryText,
-				const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
+				const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti,
+				bool queryTextOnly);
 		void deleteQuery(unsigned long queryId);
 		unsigned long duplicateQuery(unsigned long queryId);
 
@@ -120,7 +123,7 @@ namespace crawlservpp::Global {
 		unsigned long addConfiguration(unsigned long websiteId, const std::string& configModule, const std::string& configName,
 				const std::string& config);
 		const std::string getConfiguration(unsigned long configId);
-		void updateConfiguration(unsigned long configId, const std::string& configName, const std::string& config);
+		void updateConfiguration(unsigned long configId, const std::string& configName,	const std::string& config);
 		void deleteConfiguration(unsigned long configId);
 		unsigned long duplicateConfiguration(unsigned long configId);
 

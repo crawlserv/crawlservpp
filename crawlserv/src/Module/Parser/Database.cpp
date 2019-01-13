@@ -69,7 +69,7 @@ void crawlservpp::Module::Parser::Database::initTargetTable(unsigned long websit
 // prepare SQL statements for parser
 bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId, const std::string& tableName,
 		bool reparse, bool verbose) {
-	// convert id to string
+	// convert ID to string
 	std::ostringstream idStrStr;
 	idStrStr << parserId;
 	std::string idString = idStrStr.str();
@@ -500,7 +500,7 @@ void crawlservpp::Module::Parser::Database::unLockUrl(unsigned long urlId) {
 	}
 }
 
-// get latest content for the id-specified URL, return false if there is no content
+// get latest content for the ID-specified URL, return false if there is no content
 bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId, unsigned long index, crawlservpp::Struct::IdString& contentTo) {
 	sql::ResultSet * sqlResultSet = NULL;
 	crawlservpp::Struct::IdString result;
@@ -546,7 +546,7 @@ bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId
 	return false;
 }
 
-// get all contents for the id-specified URL
+// get all contents for the ID-specified URL
 std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database::getAllContents(unsigned long urlId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	std::vector<crawlservpp::Struct::IdString> result;
@@ -566,7 +566,8 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		while(sqlResultSet->next()) result.push_back(crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content")));
+		while(sqlResultSet->next())
+			result.push_back(crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content")));
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -582,7 +583,7 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database
 	return result;
 }
 
-// add parsed data to database (update if row for id-specified content already exists
+// add parsed data to database (update if row for ID-specified content already exists
 void crawlservpp::Module::Parser::Database::updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 			const std::vector<std::string>& parsedFields) {
 	// lock target table
@@ -607,7 +608,7 @@ void crawlservpp::Module::Parser::Database::setUrlFinished(unsigned long urlId) 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
-	// get id of URL from database
+	// get ID of URL from database
 	try {
 		// execute SQL query
 		sqlStatement->setUInt64(1, urlId);
@@ -621,7 +622,7 @@ void crawlservpp::Module::Parser::Database::setUrlFinished(unsigned long urlId) 
 	}
 }
 
-// helper function: get id of parsing entry for id-specified content, return 0 if no entry exists
+// helper function: get ID of parsing entry for ID-specified content, return 0 if no entry exists
 unsigned long crawlservpp::Module::Parser::Database::getEntryId(unsigned long contentId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	unsigned long result = 0;
@@ -657,7 +658,7 @@ unsigned long crawlservpp::Module::Parser::Database::getEntryId(unsigned long co
 	return result;
 }
 
-// helper function: update id-specified parsing entry
+// helper function: update ID-specified parsing entry
 void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, const std::string& parsedId, const std::string& parsedDateTime,
 		const std::vector<std::string>& parsedFields) {
 	// check prepared SQL statement
@@ -668,7 +669,7 @@ void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, c
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
-	// get id of URL from database
+	// get ID of URL from database
 	try {
 		// execute SQL query
 		sqlStatement->setString(1, parsedId);
@@ -691,7 +692,7 @@ void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, c
 	}
 }
 
-// helper function: add parsing entry for id-specified content
+// helper function: add parsing entry for ID-specified content
 void crawlservpp::Module::Parser::Database::addEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 		const std::vector<std::string>& parsedFields) {
 	// check prepared SQL statement
@@ -702,7 +703,7 @@ void crawlservpp::Module::Parser::Database::addEntry(unsigned long contentId, co
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
-	// get id of URL from database
+	// get ID of URL from database
 	try {
 		// execute SQL query
 		sqlStatement->setUInt64(1, contentId);
@@ -736,7 +737,7 @@ void crawlservpp::Module::Parser::Database::updateParsedTable() {
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
-	// get id of URL from database
+	// get ID of URL from database
 	try {
 		// execute SQL query
 		sqlStatement->execute();

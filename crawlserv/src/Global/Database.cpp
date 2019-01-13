@@ -317,7 +317,7 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> crawlservpp::Global::Datab
 		sqlStatement = this->connection->createStatement();
 
 		// execute SQL query
-		sqlResultSet = sqlStatement->executeQuery("SELECT id, module, algo, status, paused, website, urllist, config, last"
+		sqlResultSet = sqlStatement->executeQuery("SELECT id, module, status, paused, website, urllist, config, last"
 				" FROM crawlserv_threads");
 
 		// get results
@@ -325,8 +325,6 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> crawlservpp::Global::Datab
 			crawlservpp::Struct::ThreadDatabaseEntry entry;
 			entry.id = sqlResultSet->getUInt64("id");
 			entry.module = sqlResultSet->getString("module");
-			if(sqlResultSet->isNull("algo")) entry.options.algo = crawlservpp::Module::Analyzer::Algo::List::none;
-			else entry.options.algo = (crawlservpp::Module::Analyzer::Algo::List) sqlResultSet->getUInt("algo");
 			entry.status = sqlResultSet->getString("status");
 			entry.paused = sqlResultSet->getBoolean("paused");
 			entry.options.website = sqlResultSet->getUInt64("website");
@@ -363,16 +361,14 @@ unsigned long crawlservpp::Global::Database::addThread(const std::string& thread
 
 	try {
 		// create SQL statement
-		addStatement = this->connection->prepareStatement("INSERT INTO crawlserv_threads(module, algo, website, urllist, config)"
-				" VALUES (?, ?, ?, ?, ?)");
+		addStatement = this->connection->prepareStatement("INSERT INTO crawlserv_threads(module, website, urllist, config)"
+				" VALUES (?, ?, ?, ?)");
 
 		// execute SQL statement
 		addStatement->setString(1, threadModule);
-		if(threadOptions.algo == crawlservpp::Module::Analyzer::Algo::List::none) addStatement->setNull(2, sql::DataType::VARCHAR);
-		else addStatement->setUInt(2, threadOptions.algo);
-		addStatement->setUInt64(3, threadOptions.website);
-		addStatement->setUInt64(4, threadOptions.urlList);
-		addStatement->setUInt64(5, threadOptions.config);
+		addStatement->setUInt64(2, threadOptions.website);
+		addStatement->setUInt64(3, threadOptions.urlList);
+		addStatement->setUInt64(4, threadOptions.config);
 		addStatement->execute();
 
 		// get id
@@ -1705,7 +1701,7 @@ void crawlservpp::Global::Database::deleteUrlList(unsigned long listId) {
 	}
 }
 
-// reset parsing status of id-specified URL list
+// reset parsing status of ID-specified URL list
 void crawlservpp::Global::Database::resetParsingStatus(unsigned long listId) {
 	// get website namespace and URL list name
 	crawlservpp::Struct::IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
@@ -1714,7 +1710,7 @@ void crawlservpp::Global::Database::resetParsingStatus(unsigned long listId) {
 	this->execute("UPDATE crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + " SET parsed = FALSE, parselock = NULL");
 }
 
-// reset extracting status of id-specified URL list
+// reset extracting status of ID-specified URL list
 void crawlservpp::Global::Database::resetExtractingStatus(unsigned long listId) {
 	// get website namespace and URL list name
 	crawlservpp::Struct::IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
@@ -1724,7 +1720,7 @@ void crawlservpp::Global::Database::resetExtractingStatus(unsigned long listId) 
 			" extractlock = NULL");
 }
 
-// reset analyzing status of id-specified URL list
+// reset analyzing status of ID-specified URL list
 void crawlservpp::Global::Database::resetAnalyzingStatus(unsigned long listId) {
 	// get website namespace and URL list name
 	crawlservpp::Struct::IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
