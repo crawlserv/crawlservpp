@@ -46,9 +46,11 @@ namespace crawlservpp::Module::Crawler {
 		virtual ~Thread();
 
 	protected:
+		// database and networking for thread
 		crawlservpp::Module::Crawler::Database database;
 		crawlservpp::Network::Curl networking;
 
+		// implemented thread functions
 		bool onInit(bool resumed) override;
 		bool onTick() override;
 		void onPause() override;
