@@ -1,7 +1,7 @@
 /*
  * ThreadOptions.h
  *
- * Basic thread options (IDs of website, URL list and configuration).
+ * Basic thread options (IDs of website, URL list, algorithm and configuration).
  *
  *  Created on: Oct 13, 2018
  *      Author: ans
@@ -20,7 +20,7 @@ namespace crawlservpp::Struct {
 		unsigned long config; // configuration id for the thread
 
 		// default values
-		ThreadOptions::ThreadOptions() {
+		ThreadOptions() {
 			this->website = 0;
 			this->urlList = 0;
 			this->algo = crawlservpp::Module::Analyzer::Algo::List::none;
