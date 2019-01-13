@@ -34,8 +34,9 @@ crawlservpp::Module::Parser::Database::Database(crawlservpp::Module::DBThread& d
 crawlservpp::Module::Parser::Database::~Database() {}
 
 // create target table if it does not exists or add custom field columns if they do not exist
-void crawlservpp::Module::Parser::Database::initTargetTable(unsigned long websiteId, unsigned long listId, const std::string& websiteNameSpace,
-		const std::string& urlListNameSpace, const  std::string& tableName, const std::vector<std::string> * fields) {
+void crawlservpp::Module::Parser::Database::initTargetTable(unsigned long websiteId, unsigned long listId,
+		const std::string& websiteNameSpace, const std::string& urlListNameSpace, const  std::string& tableName,
+		const std::vector<std::string> * fields) {
 	// create table names
 	this->urlListTable = "crawlserv_" + websiteNameSpace + "_" + urlListNameSpace;
 	this->targetTable = this->urlListTable + "_parsed_" + tableName;
@@ -67,7 +68,8 @@ void crawlservpp::Module::Parser::Database::initTargetTable(unsigned long websit
 }
 
 // prepare SQL statements for parser
-bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId, const std::string& tableName,
+bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId,
+		const std::string& tableName,
 		bool reparse, bool verbose) {
 	// convert ID to string
 	std::ostringstream idStrStr;
@@ -501,15 +503,18 @@ void crawlservpp::Module::Parser::Database::unLockUrl(unsigned long urlId) {
 }
 
 // get latest content for the ID-specified URL, return false if there is no content
-bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId, unsigned long index, crawlservpp::Struct::IdString& contentTo) {
+bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId, unsigned long index,
+		crawlservpp::Struct::IdString& contentTo) {
 	sql::ResultSet * sqlResultSet = NULL;
 	crawlservpp::Struct::IdString result;
 	bool success = false;
 
 	// check prepared SQL statement
-	if(!(this->psGetLatestContent)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::getLatestContent(...)");
+	if(!(this->psGetLatestContent))
+		throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::getLatestContent(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetLatestContent);
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Module::Parser::Database::getLatestContent(...) is NULL");
+	if(!sqlStatement)
+		throw std::runtime_error("Prepared SQL statement for Module::Parser::Database::getLatestContent(...) is NULL");
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
@@ -552,9 +557,11 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database
 	std::vector<crawlservpp::Struct::IdString> result;
 
 	// check prepared SQL statement
-	if(!(this->psGetAllContents)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::getAllContents(...)");
+	if(!(this->psGetAllContents))
+		throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::getAllContents(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetAllContents);
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Module::Parser::Database::getAllContents(...) is NULL");
+	if(!sqlStatement)
+		throw std::runtime_error("Prepared SQL statement for Module::Parser::Database::getAllContents(...) is NULL");
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
@@ -584,8 +591,8 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database
 }
 
 // add parsed data to database (update if row for ID-specified content already exists
-void crawlservpp::Module::Parser::Database::updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
-			const std::vector<std::string>& parsedFields) {
+void crawlservpp::Module::Parser::Database::updateOrAddEntry(unsigned long contentId, const std::string& parsedId,
+		const std::string& parsedDateTime, const std::vector<std::string>& parsedFields) {
 	// lock target table
 	this->lockTable(this->targetTable);
 
@@ -601,9 +608,11 @@ void crawlservpp::Module::Parser::Database::updateOrAddEntry(unsigned long conte
 // set URL as parsed in the database
 void crawlservpp::Module::Parser::Database::setUrlFinished(unsigned long urlId) {
 	// check prepared SQL statement
-	if(!(this->psSetUrlFinished)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::setUrlFinished(...)");
+	if(!(this->psSetUrlFinished))
+		throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::setUrlFinished(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psSetUrlFinished);
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Module::Parser::Database::setUrlFinished(...) is NULL");
+	if(!sqlStatement)
+		throw std::runtime_error("Prepared SQL statement for Module::Parser::Database::setUrlFinished(...) is NULL");
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
@@ -659,8 +668,8 @@ unsigned long crawlservpp::Module::Parser::Database::getEntryId(unsigned long co
 }
 
 // helper function: update ID-specified parsing entry
-void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, const std::string& parsedId, const std::string& parsedDateTime,
-		const std::vector<std::string>& parsedFields) {
+void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, const std::string& parsedId,
+		const std::string& parsedDateTime, const std::vector<std::string>& parsedFields) {
 	// check prepared SQL statement
 	if(!(this->psUpdateEntry)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::updateEntry(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psUpdateEntry);
