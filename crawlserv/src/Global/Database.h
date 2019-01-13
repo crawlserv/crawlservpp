@@ -15,7 +15,7 @@
 #ifndef GLOBAL_DATABASE_H_
 #define GLOBAL_DATABASE_H_
 
-#define DATABASE_MAIN_DELETE(X) { if(X) { X->close(); delete X; X = NULL; } }
+#define GLOBAL_DATABASE_DELETE(X) { if(X) { X->close(); delete X; X = NULL; } }
 
 #include "../Helper/FileSystem.h"
 #include "../Struct/DatabaseSettings.h"

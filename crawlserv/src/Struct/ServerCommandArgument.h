@@ -22,7 +22,7 @@ namespace crawlservpp::Struct {
 			this->value = setValue;
 		}
 
-		bool operator==(const ServerCommandArgument& argument) const {
+		bool operator==(const crawlservpp::Struct::ServerCommandArgument& argument) const {
 			return this->name == argument.name && this->value == argument.value;
 		}
 

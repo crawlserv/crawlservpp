@@ -14,7 +14,7 @@ crawlservpp::Module::Crawler::Thread::Thread(crawlservpp::Global::Database& dbBa
 		const std::string& crawlerStatus, bool crawlerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
 		unsigned long crawlerLast)
 			: crawlservpp::Module::Thread(dbBase, crawlerId, "crawler", crawlerStatus, crawlerPaused, threadOptions, crawlerLast),
-	  database(this->crawlservpp::Module::Thread::database) {
+			  database(this->crawlservpp::Module::Thread::database) {
 	// set default values
 	this->parser = NULL;
 	this->networkingArchives = NULL;
@@ -34,7 +34,8 @@ crawlservpp::Module::Crawler::Thread::Thread(crawlservpp::Global::Database& dbBa
 // constructor B: start a new crawler
 crawlservpp::Module::Crawler::Thread::Thread(crawlservpp::Global::Database& dbBase,
 		const crawlservpp::Struct::ThreadOptions& threadOptions)
-	: crawlservpp::Module::Thread(dbBase, "crawler", threadOptions), database(this->crawlservpp::Module::Thread::database) {
+			: crawlservpp::Module::Thread(dbBase, "crawler", threadOptions),
+			  database(this->crawlservpp::Module::Thread::database) {
 	// set default values
 	this->parser = NULL;
 	this->networkingArchives = NULL;
@@ -75,7 +76,7 @@ bool crawlservpp::Module::Crawler::Thread::onInit(bool resumed) {
 	}
 	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
-	verbose = config.crawlerLogging == Config::crawlerLoggingVerbose;
+	verbose = config.crawlerLogging == crawlservpp::Module::Crawler::Config::crawlerLoggingVerbose;
 
 	// set database configuration
 	if(verbose) this->log("Set database configuration...");
@@ -100,7 +101,8 @@ bool crawlservpp::Module::Crawler::Thread::onInit(bool resumed) {
 	// set network configuration
 	if(verbose) this->log("Set network configuration...");
 	configWarnings.clear();
-	if(config.crawlerLogging == Config::crawlerLoggingVerbose) this->log("sets global network configuration...");
+	if(config.crawlerLogging == crawlservpp::Module::Crawler::Config::crawlerLoggingVerbose)
+		this->log("sets global network configuration...");
 	if(!(this->networking.setConfigGlobal(this->config.network, false, &configWarnings))) {
 		if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
 		return false;
@@ -168,13 +170,14 @@ bool crawlservpp::Module::Crawler::Thread::onTick() {
 		this->tickCounter++;
 
 		// start crawling
-		if(this->config.crawlerLogging > Config::crawlerLoggingDefault) this->log("crawls " + url.string + "...");
+		if(this->config.crawlerLogging > crawlservpp::Module::Crawler::Config::crawlerLoggingDefault)
+			this->log("crawls " + url.string + "...");
 
 		// get content
 		bool crawled = this->crawlingContent(url, checkedUrls, newUrls, timerString);
 
 		// get archive (also when crawling failed!)
-		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+		if(this->config.crawlerLogging > crawlservpp::Module::Crawler::Config::crawlerLoggingDefault)
 			this->log("gets archives of " + url.string + "...");
 		if(this->config.crawlerTiming) timerArchives.start();
 
@@ -187,7 +190,7 @@ bool crawlservpp::Module::Crawler::Thread::onTick() {
 
 			// success!
 			this->crawlingSuccess(url);
-			if((this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			if((this->config.crawlerLogging > crawlservpp::Module::Crawler::Config::crawlerLoggingDefault)
 					|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
 				std::ostringstream logStrStr;
 				logStrStr.imbue(std::locale(""));
@@ -284,16 +287,27 @@ void crawlservpp::Module::Crawler::Thread::onClear(bool interrupted) {
 }
 
 // hide functions not to be used by thread
-void crawlservpp::Module::Crawler::Thread::start() { throw(std::logic_error("Thread::start() not to be used by thread itself")); }
-void crawlservpp::Module::Crawler::Thread::pause() { throw(std::logic_error("Thread::pause() not to be used by thread itself")); }
-void crawlservpp::Module::Crawler::Thread::unpause() { throw(std::logic_error("Thread::unpause() not to be used by thread itself")); }
-void crawlservpp::Module::Crawler::Thread::stop() { throw(std::logic_error("Thread::stop() not to be used by thread itself")); }
-void crawlservpp::Module::Crawler::Thread::interrupt() { throw(std::logic_error("Thread::interrupt() not to be used by thread itself")); }
+void crawlservpp::Module::Crawler::Thread::start() {
+	throw(std::logic_error("crawlservpp::Module::Crawler::Thread::start() not to be used by thread itself"));
+}
+void crawlservpp::Module::Crawler::Thread::pause() {
+	throw(std::logic_error("crawlservpp::Module::Crawler::Thread::pause() not to be used by thread itself"));
+}
+void crawlservpp::Module::Crawler::Thread::unpause() {
+	throw(std::logic_error("crawlservpp::Module::Crawler::Thread::unpause() not to be used by thread itself"));
+}
+void crawlservpp::Module::Crawler::Thread::stop() {
+	throw(std::logic_error("crawlservpp::Module::Crawler::Thread::stop() not to be used by thread itself"));
+}
+void crawlservpp::Module::Crawler::Thread::interrupt() {
+	throw(std::logic_error("crawlservpp::Module::Crawler::Thread::interrupt() not to be used by thread itself"));
+}
 
 // initialize function for custom URLs
 void crawlservpp::Module::Crawler::Thread::initCustomUrls() {
 	// lock URL list
-	if(this->config.crawlerLogging == Config::crawlerLoggingVerbose) this->log("initializes start page and custom URLs...");
+	if(this->config.crawlerLogging == crawlservpp::Module::Crawler::Config::crawlerLoggingVerbose)
+		this->log("initializes start page and custom URLs...");
 	this->database.lockUrlList();
 
 	// get id for start page (and add it to URL list if necessary)
@@ -597,7 +611,8 @@ bool crawlservpp::Module::Crawler::Thread::crawlingContent(const crawlservpp::St
 
 	// skip crawling if only archive needs to be retried
 	if(this->config.crawlerArchives && this->archiveRetry) {
-		if(this->config.crawlerLogging > Config::crawlerLoggingDefault) this->log("Re-trying archive only [" + url.string + "].");
+		if(this->config.crawlerLogging > crawlservpp::Module::Crawler::Config::crawlerLoggingDefault)
+			this->log("Re-trying archive only [" + url.string + "].");
 		return true;
 	}
 
@@ -761,7 +776,8 @@ bool crawlservpp::Module::Crawler::Thread::crawlingCheckUrl(const std::string& u
 			}
 		}
 		if(whitelist && !found) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault) this->log("skipped " + url + " (not whitelisted).");
+			if(this->config.crawlerLogging > crawlservpp::Module::Crawler::Config::crawlerLoggingDefault)
+				this->log("skipped " + url + " (not whitelisted).");
 			return false;
 		}
 	}
@@ -775,7 +791,8 @@ bool crawlservpp::Module::Crawler::Thread::crawlingCheckUrl(const std::string& u
 					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index)->getErrorMessage()
 							+ " [" + url + "].");
 				if(found) {
-					if(this->config.crawlerLogging > Config::crawlerLoggingDefault) this->log("skipped " + url + " (blacklisted).");
+					if(this->config.crawlerLogging > crawlservpp::Module::Crawler::Config::crawlerLoggingDefault)
+						this->log("skipped " + url + " (blacklisted).");
 					return false;
 				}
 			}
@@ -1109,26 +1126,26 @@ bool crawlservpp::Module::Crawler::Thread::crawlingArchive(const crawlservpp::St
 			std::string archivedContent;
 
 			while(success && this->isRunning()) {
-				// get Struct::Memento content
+				// get memento content
 				archivedContent = "";
 				if(this->networkingArchives->getContent(archivedUrl, archivedContent, this->config.crawlerRetryHttp)) {
 
 					// check response code
 					if(this->crawlingCheckResponseCode(archivedUrl, this->networkingArchives->getResponseCode())) {
 
-						// get Struct::Memento content type
+						// get memento content type
 						std::string contentType = this->networkingArchives->getContentType();
 						if(contentType == "application/link-format") {
 							if(archivedContent.length()) {
 
-								// parse Struct::Memento response
+								// parse memento response
 								std::vector<crawlservpp::Struct::Memento> mementos;
 								std::vector<std::string> warnings;
 								archivedUrl = crawlservpp::Module::Crawler::Thread::parseMementos(archivedContent, warnings, mementos);
 								if(this->config.crawlerLogging) {
 									// just show warning, maybe mementos were partially parsed
 									for(auto i = warnings.begin(); i != warnings.end(); ++i)
-										this->log("Struct::Memento parsing WARNING: " + *i + " [" + url.string + "]");
+										this->log("Memento parsing WARNING: " + *i + " [" + url.string + "]");
 								}
 
 
@@ -1176,19 +1193,20 @@ bool crawlservpp::Module::Crawler::Thread::crawlingArchive(const crawlservpp::St
 													if(archivedContent.substr(0, 17) == "found capture at ") {
 
 														// found a reference string: get and validate timestamp
-														if(crawlservpp::Helper::DateTime::convertSQLTimeStampToTimeStamp(timeStamp)) {
+														if(crawlservpp::Helper::DateTime::convertSQLTimeStampToTimeStamp(
+																timeStamp)) {
 															unsigned long subUrlPos = i->url.find(timeStamp);
 															if(subUrlPos != std::string::npos) {
 																subUrlPos += timeStamp.length();
 																timeStamp = archivedContent.substr(17, 14);
 																i->url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
 																		+ i->url.substr(subUrlPos);
-																if(crawlservpp::Helper::DateTime::convertTimeStampToSQLTimeStamp(timeStamp))
-																	continue;
+																if(crawlservpp::Helper::DateTime::convertTimeStampToSQLTimeStamp(
+																		timeStamp))	continue;
 																else if(this->config.crawlerLogging)
-																	this->log("WARNING: Invalid timestamp \'" + timeStamp + "\' from "
-																			+ this->config.crawlerArchivesNames.at(n) + " ["
-																			+ url.string + "].");
+																	this->log("WARNING: Invalid timestamp \'" + timeStamp
+																			+ "\' from " + this->config.crawlerArchivesNames.at(n)
+																			+ " [" + url.string + "].");
 															}
 															else if(this->config.crawlerLogging)
 																this->log("WARNING: Could not find timestamp in " + i->url
@@ -1428,7 +1446,8 @@ std::string crawlservpp::Module::Crawler::Thread::parseMementos(std::string meme
 
 				if(fieldName == "datetime") {
 					// parse timestamp
-					if(crawlservpp::Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue)) newMemento.timeStamp = fieldValue;
+					if(crawlservpp::Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue))
+						newMemento.timeStamp = fieldValue;
 					else {
 						warningStrStr << "Could not convert timestamp \'" << fieldValue << "\'  at " << pos << ".";
 						warningsTo.push_back(warningStrStr.str());

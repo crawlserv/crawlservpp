@@ -24,7 +24,8 @@ crawlservpp::Module::Parser::Thread::Thread(crawlservpp::Global::Database& dbBas
 }
 
 // constructor B: start a new parser
-crawlservpp::Module::Parser::Thread::Thread(Global::Database& dbBase, const crawlservpp::Struct::ThreadOptions& threadOptions)
+crawlservpp::Module::Parser::Thread::Thread(crawlservpp::Global::Database& dbBase,
+		const crawlservpp::Struct::ThreadOptions& threadOptions)
 	: crawlservpp::Module::Thread(dbBase, "parser", threadOptions), database(this->crawlservpp::Module::Thread::database) {
 	// set default values
 	this->tickCounter = 0;
@@ -83,8 +84,8 @@ bool crawlservpp::Module::Parser::Thread::onInit(bool resumed) {
 	// check whether ID can be parsed from URL only
 	if(verbose) this->log("Check for URL-only parsing of content IDs...");
 	this->idFromUrl = true;
-	for(std::vector<unsigned short>::const_iterator i = this->config.parsingIdSources.begin(); i != this->config.parsingIdSources.end();
-			++i) {
+	for(std::vector<unsigned short>::const_iterator i = this->config.parsingIdSources.begin();
+			i != this->config.parsingIdSources.end(); ++i) {
 		if(*i == crawlservpp::Module::Parser::Config::parsingSourceContent) {
 			this->idFromUrl = false;
 			break;
@@ -127,7 +128,8 @@ bool crawlservpp::Module::Parser::Thread::onTick() {
 		this->tickCounter++;
 
 		// start parsing
-		if(this->config.generalLogging > crawlservpp::Module::Parser::Config::generalLoggingDefault) this->log("parses " + this->currentUrl.string + "...");
+		if(this->config.generalLogging > crawlservpp::Module::Parser::Config::generalLoggingDefault)
+			this->log("parses " + this->currentUrl.string + "...");
 
 		// parse content(s)
 		parsed = this->parsing();
@@ -222,11 +224,21 @@ void crawlservpp::Module::Parser::Thread::onClear(bool interrupted) {
 }
 
 // hide functions not to be used by thread
-void crawlservpp::Module::Parser::Thread::start() { throw(std::logic_error("Thread::start() not to be used by thread itself")); }
-void crawlservpp::Module::Parser::Thread::pause() { throw(std::logic_error("Thread::pause() not to be used by thread itself")); }
-void crawlservpp::Module::Parser::Thread::unpause() { throw(std::logic_error("Thread::unpause() not to be used by thread itself")); }
-void crawlservpp::Module::Parser::Thread::stop() { throw(std::logic_error("Thread::stop() not to be used by thread itself")); }
-void crawlservpp::Module::Parser::Thread::interrupt() { throw(std::logic_error("Thread::interrupt() not to be used by thread itself")); }
+void crawlservpp::Module::Parser::Thread::start() {
+	throw(std::logic_error("crawlservpp::Module::Parser::Thread::start() not to be used by thread itself"));
+}
+void crawlservpp::Module::Parser::Thread::pause() {
+	throw(std::logic_error("crawlservpp::Module::Parser::Thread::pause() not to be used by thread itself"));
+}
+void crawlservpp::Module::Parser::Thread::unpause() {
+	throw(std::logic_error("crawlservpp::Module::Parser::Thread::unpause() not to be used by thread itself"));
+}
+void crawlservpp::Module::Parser::Thread::stop() {
+	throw(std::logic_error("crawlservpp::Module::Parser::Thread::stop() not to be used by thread itself"));
+}
+void crawlservpp::Module::Parser::Thread::interrupt() {
+	throw(std::logic_error("crawlservpp::Module::Parser::Thread::interrupt() not to be used by thread itself"));
+}
 
 // initialize queries
 void crawlservpp::Module::Parser::Thread::initQueries() {
@@ -238,17 +250,20 @@ void crawlservpp::Module::Parser::Thread::initQueries() {
 	bool queryTextOnly = false;
 
 	for(auto i = this->config.parsingIdQueries.begin(); i != this->config.parsingIdQueries.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
 		this->queriesId.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
 				queryTextOnly));
 	}
 	for(auto i = this->config.parsingDateTimeQueries.begin(); i != this->config.parsingDateTimeQueries.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
 		this->queriesDateTime.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
 				queryTextOnly));
 	}
 	for(auto i = this->config.parsingFieldQueries.begin(); i != this->config.parsingFieldQueries.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti, queryTextOnly);
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
 
 		this->queriesFields.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
 				queryTextOnly));
@@ -330,8 +345,9 @@ unsigned long crawlservpp::Module::Parser::Thread::parsing() {
 
 		// check ID
 		if(!parsedId.length()) return 0;
-		if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
-				parsedId) != this->config.parsingIdIgnore.end()) return 0;
+		if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(),
+				this->config.parsingIdIgnore.end(),	parsedId) != this->config.parsingIdIgnore.end())
+			return 0;
 	}
 
 	if(this->config.generalNewestOnly) {
@@ -362,7 +378,8 @@ unsigned long crawlservpp::Module::Parser::Thread::parsing() {
 }
 
 // parse id-specific content, return whether parsing was successfull (i.e. an id could be parsed)
-bool crawlservpp::Module::Parser::Thread::parsingContent(const crawlservpp::Struct::IdString& content, const std::string& parsedId) {
+bool crawlservpp::Module::Parser::Thread::parsingContent(const crawlservpp::Struct::IdString& content,
+		const std::string& parsedId) {
 	// parse HTML
 	crawlservpp::Parsing::XML parsedContent;
 	if(!parsedContent.parse(content.string)) {
@@ -469,7 +486,8 @@ bool crawlservpp::Module::Parser::Thread::parsingContent(const crawlservpp::Stru
 					crawlservpp::Helper::Strings::replaceAll(parsedDateTime, "avr.", "avril", true);
 
 				try {
-					dateTimeSuccess = crawlservpp::Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format, std::locale(locale));
+					dateTimeSuccess = crawlservpp::Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format,
+							std::locale(locale));
 				}
 				catch(const std::runtime_error& e) {
 					if(this->config.generalLogging) this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
@@ -546,14 +564,16 @@ bool crawlservpp::Module::Parser::Thread::parsingContent(const crawlservpp::Stru
 			if(this->config.parsingFieldJSON.at(fieldCounter)) {
 				// if necessary, tidy texts
 				if(this->config.parsingFieldTidyTexts.at(fieldCounter))
-					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) crawlservpp::Helper::Strings::utfTidy(*i);
+					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i)
+						crawlservpp::Helper::Strings::utfTidy(*i);
 
 				// stringify and add parsed elements as JSON array
 				parsedFields.push_back(crawlservpp::Helper::Json::stringify(parsedFieldValues));
 			}
 			else {
 				// concatenate elements
-				std::string result = crawlservpp::Helper::Strings::concat(parsedFieldValues, this->config.parsingFieldDelimiters.at(fieldCounter),
+				std::string result = crawlservpp::Helper::Strings::concat(parsedFieldValues,
+						this->config.parsingFieldDelimiters.at(fieldCounter),
 						this->config.parsingFieldIgnoreEmpty.at(fieldCounter));
 
 				// if necessary, tidy text
@@ -574,7 +594,8 @@ bool crawlservpp::Module::Parser::Thread::parsingContent(const crawlservpp::Stru
 					this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.string, parsedFieldValue);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' query on URL is not of type RegEx.");
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+							+ "\' query on URL is not of type RegEx.");
 			}
 			else {
 				// parse from content: check query type
@@ -621,7 +642,8 @@ bool crawlservpp::Module::Parser::Thread::parsingContent(const crawlservpp::Stru
 					this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.string, parsedBool);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' query on URL is not of type RegEx.");
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+							+ "\' query on URL is not of type RegEx.");
 			}
 			else {
 				// parse from content: check query type

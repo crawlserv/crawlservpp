@@ -54,8 +54,8 @@ namespace crawlservpp::Parsing {
 
 		mutable std::string errorMessage;
 
-		static std::string uriTextRangeToString(const UriTextRangeA * range);
-		static std::string uriToString(const UriUriA * uri);
+		static std::string textRangeToString(const UriTextRangeA * range);
+		static std::string toString(const UriUriA * uri);
 	};
 }
 

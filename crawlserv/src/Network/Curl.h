@@ -59,8 +59,8 @@ namespace crawlservpp::Network {
 		const Config * config;
 		bool limitedSettings;
 
-		static int cURLWriter(char * data, unsigned long size, unsigned long nmemb, void * thisPointer);
-		int cURLWriterInClass(char * data, unsigned long size, unsigned long nmemb);
+		static int writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer);
+		int writerInClass(char * data, unsigned long size, unsigned long nmemb);
 
 		std::string errorMessage;
 		static bool globalInit;
