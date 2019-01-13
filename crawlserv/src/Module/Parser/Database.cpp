@@ -173,6 +173,7 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 			std::stringstream sqlQueryStrStr;
 			sqlQueryStrStr << "UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP WHERE website = " << websiteId
 					<< ", urllist = " << listId << ", name = " << tableName << " LIMIT 1";
+			this->psUpdateParsedTable = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -692,6 +693,9 @@ void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, c
 		}
 		sqlStatement->setUInt64(counter, entryId);
 		sqlStatement->execute();
+
+		// update parsing table
+		this->updateParsedTable();
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
@@ -726,6 +730,9 @@ void crawlservpp::Module::Parser::Database::addEntry(unsigned long contentId, co
 			counter++;
 		}
 		sqlStatement->execute();
+
+		// update parsing table
+		this->updateParsedTable();
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
