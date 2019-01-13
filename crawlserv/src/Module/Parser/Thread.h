@@ -44,8 +44,10 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Thread();
 
 	protected:
+		// database for the thread
 		crawlservpp::Module::Parser::Database database;
 
+		// implemented thread functions
 		bool onInit(bool resumed) override;
 		bool onTick() override;
 		void onPause() override;
