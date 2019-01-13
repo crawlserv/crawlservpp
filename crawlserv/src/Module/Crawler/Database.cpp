@@ -37,8 +37,8 @@ crawlservpp::Module::Crawler::Database::Database(crawlservpp::Module::DBThread& 
 crawlservpp::Module::Crawler::Database::~Database() {}
 
 // prepare SQL statements for crawler
-bool crawlservpp::Module::Crawler::Database::prepare(unsigned long crawlerId, const std::string& websiteNameSpace, const std::string& urlListNameSpace,
-		bool recrawl, bool verbose) {
+bool crawlservpp::Module::Crawler::Database::prepare(unsigned long crawlerId, const std::string& websiteNameSpace,
+		const std::string& urlListNameSpace, bool recrawl, bool verbose) {
 	// convert id to string
 	std::ostringstream idStrStr;
 	idStrStr << crawlerId;

@@ -68,7 +68,7 @@ namespace crawlservpp::Module::Crawler {
 		bool renewUrlLock(unsigned long lockTimeout, unsigned long urlId, std::string& lockTime);
 
 	private:
-		// URL list name
+		// table names
 		std::string urlListTable;
 		std::string linkTable;
 
