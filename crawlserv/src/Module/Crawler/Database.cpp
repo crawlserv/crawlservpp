@@ -39,7 +39,7 @@ crawlservpp::Module::Crawler::Database::~Database() {}
 // prepare SQL statements for crawler
 bool crawlservpp::Module::Crawler::Database::prepare(unsigned long crawlerId, const std::string& websiteNameSpace,
 		const std::string& urlListNameSpace, bool recrawl, bool verbose) {
-	// convert id to string
+	// convert ID to string
 	std::ostringstream idStrStr;
 	idStrStr << crawlerId;
 	std::string idString = idStrStr.str();
@@ -228,7 +228,7 @@ void crawlservpp::Module::Crawler::Database::lockUrlList() {
 	this->lockTables(this->urlListTable, this->linkTable);
 }
 
-// get the id of an URL (uses hash check for first checking probable existence of URL)
+// get the ID of an URL (uses hash check for first checking probable existence of URL)
 unsigned long crawlservpp::Module::Crawler::Database::getUrlId(const std::string& urlString) {
 	sql::ResultSet * sqlResultSet = NULL;
 	unsigned long result = 0;
@@ -241,7 +241,7 @@ unsigned long crawlservpp::Module::Crawler::Database::getUrlId(const std::string
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
-	// get id of URL from database
+	// get ID of URL from database
 	try {
 		// execute SQL query for getting URL
 		sqlStatement->setString(1, urlString);
@@ -352,7 +352,7 @@ unsigned long crawlservpp::Module::Crawler::Database::addUrl(const std::string& 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
-	// add URL to database and get resulting id
+	// add URL to database and get resulting ID
 	try {
 		// execute SQL query
 		sqlStatement->setString(1, urlString);
@@ -735,7 +735,7 @@ void crawlservpp::Module::Crawler::Database::setUrlFinished(unsigned long urlId)
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->getDatabaseErrorMessage());
 
-	// get id of URL from database
+	// get ID of URL from database
 	try {
 		// execute SQL query
 		sqlStatement->setUInt64(1, urlId);

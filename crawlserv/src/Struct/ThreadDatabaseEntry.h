@@ -12,7 +12,7 @@
 
 #include "ThreadOptions.h"
 
-#include "../Module/Analyzer/Algo/List.h"
+#include "../Module/Analyzer/Algo/Enum.h"
 
 #include <string>
 
@@ -20,7 +20,6 @@ namespace crawlservpp::Struct {
 	struct ThreadDatabaseEntry {
 		unsigned long id; // thread id
 		std::string module; // thread module
-		crawlservpp::Module::Analyzer::Algo::List algo; // thread algorithm (only used by analyzer)
 		std::string status; // thread status
 		bool paused; // is thread paused?
 		crawlservpp::Struct::ThreadOptions options; // options for thread
