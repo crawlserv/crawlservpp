@@ -1,7 +1,7 @@
 /*
  * Database.h
  *
- * This class provides database functionality for a crawler thread by implementing the DatabaseModule interface.
+ * This class provides database functionality for a crawler thread by implementing the Module::DBWrapper interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
