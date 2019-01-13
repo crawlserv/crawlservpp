@@ -98,7 +98,8 @@ if($config) echo "<a href=\"#\" class=\"action-link config-duplicate\" data-m=\"
 if(isset($website)) {
     echo "<div class =\"content-block\">\n";
     echo "<div class=\"opt-block\">\n";
-    echo "<div class=\"opt-label\">Name:</div>\n<div class=\"opt-value\" data-tippy=\"Name of the parsing configuration.\""
+    echo "<div class=\"opt-label\">Name:</div>\n";
+    echo "<div class=\"opt-value\" data-tippy=\"Name of the parsing configuration.\""
         ." data-tippy-delay=\"0\" data-tippy-duration=\"0\" data-tippy-arrow=\"true\" data-tippy-placement=\"left-start\""
         ." data-tippy-size=\"small\">\n";
     echo "<input type=\"text\" class=\"opt\" id=\"config-name\" value=\"";
