@@ -64,7 +64,7 @@ namespace crawlservpp::Module::Crawler {
 		void interrupt();
 
 		// configuration, domain, URI parser and separate networking for archive.org
-		Config config;
+		crawlservpp::Module::Crawler::Config config;
 		std::string domain;
 		crawlservpp::Parsing::URI * parser;
 		crawlservpp::Network::Curl * networkingArchives;

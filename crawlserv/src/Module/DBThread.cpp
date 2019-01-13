@@ -16,13 +16,15 @@ crawlservpp::Module::DBThread::DBThread(const crawlservpp::Struct::DatabaseSetti
 	this->psSetThreadStatusMessage = 0;
 	this->psSetThreadProgress = 0;
 	this->psSetThreadLast = 0;
-	if(crawlservpp::Global::Database::driver) Global::Database::driver->threadInit();
+	if(crawlservpp::Global::Database::driver)
+		crawlservpp::Global::Database::driver->threadInit();
 	else throw(std::runtime_error("MySQL driver not loaded"));
 }
 
 // destructor stub
 crawlservpp::Module::DBThread::~DBThread() {
-	if(Database::driver) Database::driver->threadEnd();
+	if(crawlservpp::Global::Database::driver)
+		crawlservpp::Global::Database::driver->threadEnd();
 }
 
 // prepare SQL statements for thread management

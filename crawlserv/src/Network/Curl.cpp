@@ -43,7 +43,7 @@ crawlservpp::Network::Curl::Curl() {
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
 	if(this->curlCode != CURLE_OK) error = true;
 	else {
-		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, crawlservpp::Network::Curl::cURLWriter);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, crawlservpp::Network::Curl::writer);
 		if(this->curlCode != CURLE_OK) error = true;
 		else {
 			// set pointer to instance
@@ -244,22 +244,22 @@ bool crawlservpp::Network::Curl::setConfigGlobal(const crawlservpp::Network::Con
 	}
 	if(!limited) {
 		switch(globalConfig.httpVersion) {
-		case Config::httpVersionAny:
+		case crawlservpp::Network::Config::httpVersionAny:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_NONE);
 			break;
-		case Config::httpVersionV1:
+		case crawlservpp::Network::Config::httpVersionV1:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 			break;
-		case Config::httpVersionV11:
+		case crawlservpp::Network::Config::httpVersionV11:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			break;
-		case Config::httpVersionV2:
+		case crawlservpp::Network::Config::httpVersionV2:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
 			break;
-		case Config::httpVersionV2only:
+		case crawlservpp::Network::Config::httpVersionV2only:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
 			break;
-		case Config::httpVersionV2tls:
+		case crawlservpp::Network::Config::httpVersionV2tls:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
 			break;
 		default:
@@ -630,7 +630,7 @@ void crawlservpp::Network::Curl::resetConnection(unsigned long sleep) {
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
 	if(this->curlCode != CURLE_OK) error = true;
 	else {
-		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, crawlservpp::Network::Curl::cURLWriter);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, crawlservpp::Network::Curl::writer);
 		if(this->curlCode != CURLE_OK) error = true;
 		else {
 			// set pointer to instance
@@ -740,13 +740,13 @@ std::string crawlservpp::Network::Curl::escapeUrl(const std::string& urlToEncode
 }
 
 // static cURL writer function
-int crawlservpp::Network::Curl::cURLWriter(char * data, unsigned long size, unsigned long nmemb, void * thisPointer) {
+int crawlservpp::Network::Curl::writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer) {
 	if(!thisPointer) return 0;
-	return static_cast<Curl *>(thisPointer)->cURLWriterInClass(data, size, nmemb);
+	return static_cast<crawlservpp::Network::Curl *>(thisPointer)->writerInClass(data, size, nmemb);
 }
 
 // in-class cURL writer function
-int crawlservpp::Network::Curl::cURLWriterInClass(char * data, unsigned long size, unsigned long nmemb) {
+int crawlservpp::Network::Curl::writerInClass(char * data, unsigned long size, unsigned long nmemb) {
 	this->content.append(data, size * nmemb);
 	return size * nmemb;
 }

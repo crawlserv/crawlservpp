@@ -29,14 +29,15 @@ crawlservpp::Global::Database::Database(const crawlservpp::Struct::DatabaseSetti
 	this->psSetThreadStatusMessage = 0;
 
 	// get driver instance if necessary
-	if(!Database::Database::driver) Database::Database::driver = get_driver_instance();
+	if(!crawlservpp::Global::Database::Database::driver)
+		crawlservpp::Global::Database::Database::driver = get_driver_instance();
 }
 
 // destructor
 crawlservpp::Global::Database::~Database() {
 	// clear prepared SQL statements
 	for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i) {
-		DATABASE_MAIN_DELETE(i->statement);
+		GLOBAL_DATABASE_DELETE(i->statement);
 	}
 	this->preparedStatements.clear();
 
@@ -67,7 +68,7 @@ bool crawlservpp::Global::Database::connect() {
 		connectOptions["preInit"] = "SET NAMES utf8mb4";
 
 		// get driver if necessary
-		if(!Database::Database::driver) {
+		if(!crawlservpp::Global::Database::Database::driver) {
 			this->errorMessage = "MySQL driver not loaded";
 			return false;
 		}
@@ -87,13 +88,13 @@ bool crawlservpp::Global::Database::connect() {
 		sql::Statement * sqlStatement = this->connection->createStatement();
 		if(!sqlStatement) {
 			this->errorMessage = "Could not create SQL statement";
-			DATABASE_MAIN_DELETE(sqlStatement);
+			GLOBAL_DATABASE_DELETE(sqlStatement);
 			return false;
 		}
 
 		// set lock timeout to 10min
 		sqlStatement->execute("SET SESSION innodb_lock_wait_timeout = 600");
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// set error message
@@ -254,13 +255,13 @@ unsigned long crawlservpp::Global::Database::getNumberOfLogEntries(const std::st
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64(1);
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getNumberOfLogEntries() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -289,12 +290,12 @@ void crawlservpp::Global::Database::clearLogs(const std::string& logModule) {
 		sqlStatement->execute();
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "clearLogs() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -333,13 +334,13 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> crawlservpp::Global::Datab
 		}
 
 		// delete results and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getThreads() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -372,11 +373,11 @@ unsigned long crawlservpp::Global::Database::addThread(const std::string& thread
 		result = this->getLastInsertedId();
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(addStatement);
+		GLOBAL_DATABASE_DELETE(addStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(addStatement);
+		GLOBAL_DATABASE_DELETE(addStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addThread() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -406,13 +407,13 @@ unsigned long crawlservpp::Global::Database::getThreadRunTime(unsigned long thre
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("runtime");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getThreadRunTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -442,13 +443,13 @@ unsigned long crawlservpp::Global::Database::getThreadPauseTime(unsigned long th
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("pausetime");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getThreadPauseTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -535,11 +536,11 @@ void crawlservpp::Global::Database::setThreadRunTime(unsigned long threadId, uns
 		sqlStatement->execute();
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadRunTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -563,11 +564,11 @@ void crawlservpp::Global::Database::setThreadPauseTime(unsigned long threadId, u
 		sqlStatement->execute();
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadPauseTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -590,14 +591,14 @@ void crawlservpp::Global::Database::deleteThread(unsigned long threadId) {
 		sqlStatement->execute();
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_threads")) this->resetAutoIncrement("crawlserv_threads");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteThread() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -630,7 +631,7 @@ unsigned long crawlservpp::Global::Database::addWebsite(const std::string& websi
 		addStatement->execute();
 
 		// delete SQL statement for adding website
-		DATABASE_MAIN_DELETE(addStatement);
+		GLOBAL_DATABASE_DELETE(addStatement);
 
 		// get id
 		result = this->getLastInsertedId();
@@ -639,15 +640,15 @@ unsigned long crawlservpp::Global::Database::addWebsite(const std::string& websi
 		createStatement = this->connection->createStatement();
 
 		// delete SQL statement for table creation
-		DATABASE_MAIN_DELETE(createStatement);
+		GLOBAL_DATABASE_DELETE(createStatement);
 
 		// add default URL list
 		this->addUrlList(result, "Default URL list", "default");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(addStatement);
-		DATABASE_MAIN_DELETE(createStatement);
+		GLOBAL_DATABASE_DELETE(addStatement);
+		GLOBAL_DATABASE_DELETE(createStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -677,13 +678,13 @@ std::string crawlservpp::Global::Database::getWebsiteDomain(unsigned long websit
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("domain");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteDomain() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -713,13 +714,13 @@ std::string crawlservpp::Global::Database::getWebsiteNameSpace(unsigned long int
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("namespace");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -749,13 +750,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getWebsiteNameSpace
 		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNameSpaceFromUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
 				<< e.what();
@@ -786,13 +787,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getWebsiteNameSpace
 		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNameSpaceFromConfig() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
 				<< e.what();
@@ -823,13 +824,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getWebsiteNameSpace
 		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNameSpaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
 				<< e.what();
@@ -860,13 +861,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getWebsiteNameSpace
 		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNameSpaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
@@ -897,13 +898,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getWebsiteNameSpace
 		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNameSpaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
@@ -935,13 +936,13 @@ bool crawlservpp::Global::Database::isWebsiteNameSpace(const std::string& nameSp
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isWebsiteNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1046,7 +1047,7 @@ void crawlservpp::Global::Database::updateWebsite(unsigned long websiteId, const
 			}
 
 			// delete SQL statement for renaming
-			DATABASE_MAIN_DELETE(renameStatement);
+			GLOBAL_DATABASE_DELETE(renameStatement);
 
 			// create SQL statement for updating
 			updateStatement = this->connection->prepareStatement("UPDATE crawlserv_websites SET name = ?, namespace = ?,"
@@ -1060,7 +1061,7 @@ void crawlservpp::Global::Database::updateWebsite(unsigned long websiteId, const
 			updateStatement->execute();
 
 			// delete SQL statement for updating
-			DATABASE_MAIN_DELETE(updateStatement);
+			GLOBAL_DATABASE_DELETE(updateStatement);
 		}
 		else {
 			// create SQL statement for updating
@@ -1074,13 +1075,13 @@ void crawlservpp::Global::Database::updateWebsite(unsigned long websiteId, const
 			updateStatement->execute();
 
 			// delete SQL statement for updating
-			DATABASE_MAIN_DELETE(updateStatement);
+			GLOBAL_DATABASE_DELETE(updateStatement);
 		}
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(renameStatement);
-		DATABASE_MAIN_DELETE(updateStatement);
+		GLOBAL_DATABASE_DELETE(renameStatement);
+		GLOBAL_DATABASE_DELETE(updateStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1113,14 +1114,14 @@ void crawlservpp::Global::Database::deleteWebsite(unsigned long websiteId) {
 		sqlStatement->execute();
 
 		// delete SQL statements for deletion of website
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_websites")) this->resetAutoIncrement("crawlserv_websites");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1152,12 +1153,12 @@ unsigned long crawlservpp::Global::Database::duplicateWebsite(unsigned long webs
 			std::string websiteDomain =sqlResultSet->getString("domain");
 
 			// delete result and SQL statement for geting website info
-			DATABASE_MAIN_DELETE(sqlResultSet);
-			DATABASE_MAIN_DELETE(sqlStatement);
+			GLOBAL_DATABASE_DELETE(sqlResultSet);
+			GLOBAL_DATABASE_DELETE(sqlStatement);
 
 			// create new name and new namespace
 			std::string newName = websiteName + " (copy)";
-			std::string newNameSpace = Database::Database::duplicateWebsiteNameSpace(websiteNameSpace);
+			std::string newNameSpace = crawlservpp::Global::Database::duplicateWebsiteNameSpace(websiteNameSpace);
 
 			// add website
 			result = this->addWebsite(newName, newNameSpace, websiteDomain);
@@ -1180,8 +1181,8 @@ unsigned long crawlservpp::Global::Database::duplicateWebsite(unsigned long webs
 			}
 
 			// delete result and SQL statement for getting URL list info
-			DATABASE_MAIN_DELETE(sqlResultSet);
-			DATABASE_MAIN_DELETE(sqlStatement);
+			GLOBAL_DATABASE_DELETE(sqlResultSet);
+			GLOBAL_DATABASE_DELETE(sqlStatement);
 
 			// create SQL statement for getting queries
 			sqlStatement = this->connection->prepareStatement("SELECT name, query, type, resultbool, resultsingle, resultmulti,"
@@ -1202,8 +1203,8 @@ unsigned long crawlservpp::Global::Database::duplicateWebsite(unsigned long webs
 			}
 
 			// delete result and SQL statement for getting queries
-			DATABASE_MAIN_DELETE(sqlResultSet);
-			DATABASE_MAIN_DELETE(sqlStatement);
+			GLOBAL_DATABASE_DELETE(sqlResultSet);
+			GLOBAL_DATABASE_DELETE(sqlStatement);
 
 			// create SQL statement for getting configurations
 			sqlStatement = this->connection->prepareStatement("SELECT module, name, config FROM crawlserv_configs WHERE website = ?");
@@ -1221,13 +1222,13 @@ unsigned long crawlservpp::Global::Database::duplicateWebsite(unsigned long webs
 		}
 
 		// delete result and SQL statement for getting configurations
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "duplicateWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1263,7 +1264,7 @@ unsigned long crawlservpp::Global::Database::addUrlList(unsigned long websiteId,
 		addStatement->execute();
 
 		// delete SQL statement for adding URL list
-		DATABASE_MAIN_DELETE(addStatement);
+		GLOBAL_DATABASE_DELETE(addStatement);
 
 		// get id
 		result = this->getLastInsertedId();
@@ -1292,12 +1293,12 @@ unsigned long crawlservpp::Global::Database::addUrlList(unsigned long websiteId,
 				+ listNameSpace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE)");
 
 		// delete SQL statement for table creation
-		DATABASE_MAIN_DELETE(createStatement);
+		GLOBAL_DATABASE_DELETE(createStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(addStatement);
-		DATABASE_MAIN_DELETE(createStatement);
+		GLOBAL_DATABASE_DELETE(addStatement);
+		GLOBAL_DATABASE_DELETE(createStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1328,13 +1329,13 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Global::Database::getUrl
 			result.push_back(crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("namespace")));
 
 		// delete results and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlLists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1364,13 +1365,13 @@ std::string crawlservpp::Global::Database::getUrlListNameSpace(unsigned long lis
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("namespace");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1400,13 +1401,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getUrlListNameSpace
 		if(sqlResultSet && sqlResultSet->next()) urlListId = sqlResultSet->getUInt64("urllist");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNameSpaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "
 				<< e.what();
@@ -1437,13 +1438,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getUrlListNameSpace
 		if(sqlResultSet && sqlResultSet->next()) urlListId = sqlResultSet->getUInt64("urllist");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNameSpaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
@@ -1474,13 +1475,13 @@ crawlservpp::Struct::IdString crawlservpp::Global::Database::getUrlListNameSpace
 		if(sqlResultSet && sqlResultSet->next()) urlListId = sqlResultSet->getUInt64("urllist");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNameSpaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
@@ -1513,13 +1514,13 @@ bool crawlservpp::Global::Database::isUrlListNameSpace(unsigned long websiteId, 
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlListNameSpace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1583,7 +1584,7 @@ void crawlservpp::Global::Database::updateUrlList(unsigned long listId, const st
 			}
 
 			// delete SQL statement for renaming
-			DATABASE_MAIN_DELETE(renameStatement);
+			GLOBAL_DATABASE_DELETE(renameStatement);
 
 			// create SQL statement for updating
 			updateStatement = this->connection->prepareStatement("UPDATE crawlserv_urllists SET name = ?, namespace = ?"
@@ -1596,7 +1597,7 @@ void crawlservpp::Global::Database::updateUrlList(unsigned long listId, const st
 			updateStatement->execute();
 
 			// delete SQL statement for updating
-			DATABASE_MAIN_DELETE(updateStatement);
+			GLOBAL_DATABASE_DELETE(updateStatement);
 		}
 		else {
 			// create SQL statement for updating
@@ -1608,13 +1609,13 @@ void crawlservpp::Global::Database::updateUrlList(unsigned long listId, const st
 			updateStatement->execute();
 
 			// delete SQL statement for updating
-			DATABASE_MAIN_DELETE(updateStatement);
+			GLOBAL_DATABASE_DELETE(updateStatement);
 		}
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(renameStatement);
-		DATABASE_MAIN_DELETE(updateStatement);
+		GLOBAL_DATABASE_DELETE(renameStatement);
+		GLOBAL_DATABASE_DELETE(updateStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1660,7 +1661,7 @@ void crawlservpp::Global::Database::deleteUrlList(unsigned long listId) {
 		deleteStatement->execute();
 
 		// delete SQL statement for deleting URL list
-		DATABASE_MAIN_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
 
 		// create SQL statement for dropping tables
 		dropStatement = this->connection->createStatement();
@@ -1671,15 +1672,15 @@ void crawlservpp::Global::Database::deleteUrlList(unsigned long listId) {
 		dropStatement->execute("DROP TABLE IF EXISTS crawlserv_" + websiteNameSpace.string + "_" + listNameSpace);
 
 		// delete SQL statement for dropping tables
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_urllists")) this->resetAutoIncrement("crawlserv_urllists");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(deleteStatement);
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1741,14 +1742,14 @@ unsigned long crawlservpp::Global::Database::addQuery(unsigned long websiteId, c
 		sqlStatement->execute();
 
 		// delete SQL statement for adding query
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 		// get id
 		result = this->getLastInsertedId();
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1805,13 +1806,13 @@ void crawlservpp::Global::Database::getQueryProperties(unsigned long queryId, st
 		}
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getQueryProperties() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1843,11 +1844,11 @@ void crawlservpp::Global::Database::updateQuery(unsigned long queryId, const std
 		sqlStatement->execute();
 
 		// delete SQL statement for updating
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1870,14 +1871,14 @@ void crawlservpp::Global::Database::deleteQuery(unsigned long queryId) {
 		sqlStatement->execute();
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_queries")) this->resetAutoIncrement("crawlserv_queries");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1912,13 +1913,13 @@ unsigned long crawlservpp::Global::Database::duplicateQuery(unsigned long queryI
 		}
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "duplicateQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1949,14 +1950,14 @@ unsigned long crawlservpp::Global::Database::addConfiguration(unsigned long webs
 		sqlStatement->execute();
 
 		// delete SQL statement for adding website
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 		// get id
 		result = this->getLastInsertedId();
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -1986,13 +1987,13 @@ const std::string crawlservpp::Global::Database::getConfiguration(unsigned long 
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("config");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2020,11 +2021,11 @@ void crawlservpp::Global::Database::updateConfiguration(unsigned long configId, 
 		sqlStatement->execute();
 
 		// delete SQL statement for updating
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2047,14 +2048,14 @@ void crawlservpp::Global::Database::deleteConfiguration(unsigned long configId) 
 		sqlStatement->execute();
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_configs")) this->resetAutoIncrement("crawlserv_configs");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2087,13 +2088,13 @@ unsigned long crawlservpp::Global::Database::duplicateConfiguration(unsigned lon
 		}
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "duplicateConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2123,8 +2124,8 @@ void crawlservpp::Global::Database::addParsedTable(unsigned long websiteId, unsi
 
 		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
 			// delete result and SQL statement
-			DATABASE_MAIN_DELETE(sqlResultSet);
-			DATABASE_MAIN_DELETE(sqlStatement);
+			GLOBAL_DATABASE_DELETE(sqlResultSet);
+			GLOBAL_DATABASE_DELETE(sqlStatement);
 
 			// entry does not exist already: create SQL statement for adding table
 			sqlStatement =
@@ -2138,13 +2139,13 @@ void crawlservpp::Global::Database::addParsedTable(unsigned long websiteId, unsi
 		}
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2174,13 +2175,13 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Global::Database::getPar
 			result.push_back(crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
 
 		// delete results and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getParsedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2210,13 +2211,13 @@ std::string crawlservpp::Global::Database::getParsedTable(unsigned long tableId)
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2248,7 +2249,7 @@ void crawlservpp::Global::Database::deleteParsedTable(unsigned long tableId) {
 		deleteStatement->execute();
 
 		// delete SQL statement for deletion
-		DATABASE_MAIN_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
 
 		// create SQL statement for dropping table
 		dropStatement = this->connection->createStatement();
@@ -2258,15 +2259,15 @@ void crawlservpp::Global::Database::deleteParsedTable(unsigned long tableId) {
 				+ tableName);
 
 		// delete SQL statement for dropping table
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_parsedtables")) this->resetAutoIncrement("crawlserv_parsedtables");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(deleteStatement);
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2294,8 +2295,8 @@ void crawlservpp::Global::Database::addExtractedTable(unsigned long websiteId, u
 
 		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
 			// delete result and SQL statement
-			DATABASE_MAIN_DELETE(sqlResultSet);
-			DATABASE_MAIN_DELETE(sqlStatement);
+			GLOBAL_DATABASE_DELETE(sqlResultSet);
+			GLOBAL_DATABASE_DELETE(sqlStatement);
 
 			// create SQL statement for adding table
 			sqlStatement = this->connection->prepareStatement("INSERT INTO crawlserv_extractedtables(website, urllist, name)"
@@ -2309,12 +2310,12 @@ void crawlservpp::Global::Database::addExtractedTable(unsigned long websiteId, u
 		}
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2344,13 +2345,13 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Global::Database::getExt
 			result.push_back(crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
 
 		// delete results and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getExtractedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2380,13 +2381,13 @@ std::string crawlservpp::Global::Database::getExtractedTable(unsigned long table
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2418,7 +2419,7 @@ void crawlservpp::Global::Database::deleteExtractedTable(unsigned long tableId) 
 		deleteStatement->execute();
 
 		// delete SQL statement for deletion
-		DATABASE_MAIN_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
 
 		// create SQL statement for dropping table
 		dropStatement = this->connection->createStatement();
@@ -2428,15 +2429,15 @@ void crawlservpp::Global::Database::deleteExtractedTable(unsigned long tableId) 
 				+ tableName);
 
 		// delete SQL statement for dropping table
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_extractedtables")) this->resetAutoIncrement("crawlserv_extractedtables");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(deleteStatement);
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2464,8 +2465,8 @@ void crawlservpp::Global::Database::addAnalyzedTable(unsigned long websiteId, un
 
 		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
 			// delete result and SQL statement
-			DATABASE_MAIN_DELETE(sqlResultSet);
-			DATABASE_MAIN_DELETE(sqlStatement);
+			GLOBAL_DATABASE_DELETE(sqlResultSet);
+			GLOBAL_DATABASE_DELETE(sqlStatement);
 
 			// create SQL statement for adding table
 			sqlStatement =
@@ -2479,12 +2480,12 @@ void crawlservpp::Global::Database::addAnalyzedTable(unsigned long websiteId, un
 		}
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2514,13 +2515,13 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Global::Database::getAna
 			result.push_back(crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
 
 		// delete results and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getAnalyzedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2550,13 +2551,13 @@ std::string crawlservpp::Global::Database::getAnalyzedTable(unsigned long tableI
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2588,7 +2589,7 @@ void crawlservpp::Global::Database::deleteAnalyzedTable(unsigned long tableId) {
 		deleteStatement->execute();
 
 		// delete SQL statement for deletion
-		DATABASE_MAIN_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
 
 		// create SQL statement for dropping table
 		dropStatement = this->connection->createStatement();
@@ -2598,15 +2599,15 @@ void crawlservpp::Global::Database::deleteAnalyzedTable(unsigned long tableId) {
 				+ tableName);
 
 		// delete SQL statement for dropping table
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_analyzedtables")) this->resetAutoIncrement("crawlserv_analyzedtables");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(deleteStatement);
-		DATABASE_MAIN_DELETE(dropStatement);
+		GLOBAL_DATABASE_DELETE(deleteStatement);
+		GLOBAL_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2640,13 +2641,13 @@ bool crawlservpp::Global::Database::isWebsite(unsigned long websiteId) {
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2677,13 +2678,13 @@ bool crawlservpp::Global::Database::isUrlList(unsigned long urlListId) {
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2715,13 +2716,13 @@ bool crawlservpp::Global::Database::isUrlList(unsigned long websiteId, unsigned 
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2752,13 +2753,13 @@ bool crawlservpp::Global::Database::isQuery(unsigned long queryId) {
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2790,13 +2791,13 @@ bool crawlservpp::Global::Database::isQuery(unsigned long websiteId, unsigned lo
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2827,13 +2828,13 @@ bool crawlservpp::Global::Database::isConfiguration(unsigned long configId) {
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2865,13 +2866,13 @@ bool crawlservpp::Global::Database::isConfiguration(unsigned long websiteId, uns
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2960,11 +2961,11 @@ unsigned long crawlservpp::Global::Database::getLastInsertedId() {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
 
-		DATABASE_MAIN_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getLastInsertedId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -2993,13 +2994,13 @@ bool crawlservpp::Global::Database::isTableEmpty(const std::string& tableName) {
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isTableEmpty() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3023,11 +3024,11 @@ void crawlservpp::Global::Database::resetAutoIncrement(const std::string& tableN
 		sqlStatement->execute("ALTER TABLE " + tableName + " AUTO_INCREMENT = 1");
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "resetAutoIncrement() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3050,11 +3051,11 @@ void crawlservpp::Global::Database::lockTable(const std::string& tableName) {
 		sqlStatement->execute("LOCK TABLES " + tableName + " WRITE");
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "lockTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3077,11 +3078,11 @@ void crawlservpp::Global::Database::lockTables(const std::string& tableName1, co
 		sqlStatement->execute("LOCK TABLES " + tableName1 + " WRITE, " + tableName2 + " WRITE");
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "lockTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3104,11 +3105,11 @@ void crawlservpp::Global::Database::unlockTables() {
 		this->tablesLocked = false;
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "unlockTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3134,13 +3135,13 @@ bool crawlservpp::Global::Database::isTableExists(const std::string& tableName) 
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isTableExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3168,13 +3169,13 @@ bool crawlservpp::Global::Database::isColumnExists(const std::string& tableName,
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlResultSet);
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isColumnExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3198,11 +3199,11 @@ void crawlservpp::Global::Database::execute(const std::string& sqlQuery) {
 		sqlStatement->execute(sqlQuery);
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "execute() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -3236,7 +3237,7 @@ bool crawlservpp::Global::Database::run(const std::string& sqlFile) {
 			}
 			catch(sql::SQLException &e) {
 				// SQL error
-				DATABASE_MAIN_DELETE(sqlStatement);
+				GLOBAL_DATABASE_DELETE(sqlStatement);
 				std::ostringstream errorStrStr;
 				errorStrStr << "run() SQL Error #" << e.getErrorCode() << " on line #" << lineCounter
 						<< " (State " << e.getSQLState() << "): " << e.what();
@@ -3246,7 +3247,7 @@ bool crawlservpp::Global::Database::run(const std::string& sqlFile) {
 		}
 
 		// delete SQL statement
-		DATABASE_MAIN_DELETE(sqlStatement);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
 
 		// close SQL file
 		initSQLFile.close();

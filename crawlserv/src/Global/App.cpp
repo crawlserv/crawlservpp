@@ -12,8 +12,8 @@
 
 // constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 crawlservpp::Global::App::App(int argc, char * argv[]) {
-	Struct::DatabaseSettings dbSettings;
-	Struct::ServerSettings serverSettings;
+	crawlservpp::Struct::DatabaseSettings dbSettings;
+	crawlservpp::Struct::ServerSettings serverSettings;
 	std::string error;
 
 	// set default value
