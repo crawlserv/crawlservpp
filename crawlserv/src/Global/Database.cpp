@@ -3258,6 +3258,7 @@ void crawlservpp::Global::Database::execute(const std::string& sqlQuery) {
 		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "execute() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << " [QUERY: \'" << sqlQuery << "\']";
 		throw std::runtime_error(errorStrStr.str());
 	}
 }
