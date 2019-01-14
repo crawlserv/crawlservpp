@@ -79,27 +79,27 @@ bool crawlservpp::Module::Crawler::Thread::onInit(bool resumed) {
 	verbose = config.crawlerLogging == crawlservpp::Module::Crawler::Config::crawlerLoggingVerbose;
 
 	// set database configuration
-	if(verbose) this->log("Setting database configuration...");
+	if(verbose) this->log("sets database configuration...");
 	this->database.setSleepOnError(this->config.crawlerSleepMySql);
 
 	// prepare SQL statements for crawler
-	if(verbose) this->log("Preparing SQL statements...");
+	if(verbose) this->log("prepares SQL statements...");
 	if(!(this->database.prepare(this->getId(), this->websiteNameSpace, this->urlListNameSpace, this->config.crawlerReCrawl, verbose))) {
 		if(this->config.crawlerLogging) this->log(this->database.getModuleErrorMessage());
 		return false;
 	}
 
 	// get domain
-	if(verbose) this->log("Getting website domain...");
+	if(verbose) this->log("gets website domain...");
 	this->domain = this->database.getWebsiteDomain(this->getWebsite());
 
 	// create URI parser
-	if(verbose) this->log("Creating URI parser...");
+	if(verbose) this->log("creates URI parser...");
 	if(!(this->parser)) this->parser = new crawlservpp::Parsing::URI;
 	this->parser->setCurrentDomain(this->domain);
 
 	// set network configuration
-	if(verbose) this->log("Setting network configuration...");
+	if(verbose) this->log("sets network configuration...");
 	configWarnings.clear();
 	if(config.crawlerLogging == crawlservpp::Module::Crawler::Config::crawlerLoggingVerbose)
 		this->log("sets global network configuration...");
@@ -112,16 +112,16 @@ bool crawlservpp::Module::Crawler::Thread::onInit(bool resumed) {
 	configWarnings.clear();
 
 	// initialize custom URLs
-	if(verbose) this->log("Initializing custom URLs...");
+	if(verbose) this->log("initializes custom URLs...");
 	this->initCustomUrls();
 
 	// initialize queries
-	if(verbose) this->log("Initializing queries...");
+	if(verbose) this->log("initializes queries...");
 	this->initQueries();
 
 	// initialize networking for archives if necessary
 	if(this->config.crawlerArchives && !(this->networkingArchives)) {
-		if(verbose) this->log("Initializing networking for archives...");
+		if(verbose) this->log("initializes networking for archives...");
 		this->networkingArchives = new crawlservpp::Network::Curl();
 		if(!(this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings))) {
 			if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
