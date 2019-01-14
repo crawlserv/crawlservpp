@@ -88,41 +88,6 @@ void crawlservpp::Module::DBWrapper::resetAnalyzingStatus(unsigned long listId) 
 	this->database.resetAnalyzingStatus(listId);
 }
 
-// provide access to the functionality for checking the connection to the database
-bool crawlservpp::Module::DBWrapper::checkConnection() {
-	return this->database.checkConnection();
-}
-
-// provide access to database for geting database error message
-const std::string& crawlservpp::Module::DBWrapper::getDatabaseErrorMessage() const {
-	return this->database.getErrorMessage();
-}
-
-// provide access to the functionality for locking a table in the database
-void crawlservpp::Module::DBWrapper::lockTable(const std::string& tableName) {
-	this->database.lockTable(tableName);
-}
-
-// provide access to the functionality for locking two tables in the database
-void crawlservpp::Module::DBWrapper::lockTables(const std::string& tableName1, const std::string tableName2) {
-	this->database.lockTables(tableName1, tableName2);
-}
-
-// provide access to the functionality for checking whether a specific table exists
-bool crawlservpp::Module::DBWrapper::isTableExists(const std::string& tableName) {
-	return this->database.isTableExists(tableName);
-}
-
-// provide access to the functionality for checking whether a specific column in a specific table exists
-bool crawlservpp::Module::DBWrapper::isColumnExists(const std::string& tableName, const std::string& columnName) {
-	return this->database.isColumnExists(tableName, columnName);
-}
-
-// provide access to the functionality for executing a SQL command
-void crawlservpp::Module::DBWrapper::execute(const std::string& sqlQuery) {
-	this->database.execute(sqlQuery);
-}
-
 // provide access to the functionality for getting an entry from a text column
 void crawlservpp::Module::DBWrapper::getText(const std::string& tableName, const std::string& columnName, const std::string& condition,
 		std::string& resultTo) {
@@ -156,6 +121,41 @@ void crawlservpp::Module::DBWrapper::insertTexts(const std::string& tableName, c
 void crawlservpp::Module::DBWrapper::updateText(const std::string& tableName, const std::string& columnName, const std::string& condition,
 		std::string& text) {
 	this->database.updateText(tableName, columnName, condition, text);
+}
+
+// provide access to the functionality for checking the connection to the database
+bool crawlservpp::Module::DBWrapper::checkConnection() {
+	return this->database.checkConnection();
+}
+
+// provide access to database for geting database error message
+const std::string& crawlservpp::Module::DBWrapper::getDatabaseErrorMessage() const {
+	return this->database.getErrorMessage();
+}
+
+// provide access to the functionality for locking a table in the database
+void crawlservpp::Module::DBWrapper::lockTable(const std::string& tableName) {
+	this->database.lockTable(tableName);
+}
+
+// provide access to the functionality for locking two tables in the database
+void crawlservpp::Module::DBWrapper::lockTables(const std::string& tableName1, const std::string tableName2) {
+	this->database.lockTables(tableName1, tableName2);
+}
+
+// provide access to the functionality for checking whether a specific table exists
+bool crawlservpp::Module::DBWrapper::isTableExists(const std::string& tableName) {
+	return this->database.isTableExists(tableName);
+}
+
+// provide access to the functionality for checking whether a specific column in a specific table exists
+bool crawlservpp::Module::DBWrapper::isColumnExists(const std::string& tableName, const std::string& columnName) {
+	return this->database.isColumnExists(tableName, columnName);
+}
+
+// provide access to the functionality for executing a SQL command
+void crawlservpp::Module::DBWrapper::execute(const std::string& sqlQuery) {
+	this->database.execute(sqlQuery);
 }
 
 // provide access to the functionality for adding prepared SQL statement to the database, return ID of prepared statement
