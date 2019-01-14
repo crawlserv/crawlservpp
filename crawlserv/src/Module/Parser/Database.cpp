@@ -151,7 +151,7 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 			if(verbose) this->log("parser", "[#" + idString + "] prepares updateEntry()...");
 			std::string sqlQuery = "UPDATE `" + this->targetTable + "` SET parsed_id = ?, parsed_datetime = ?";
 			for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i!= this->fieldNames.end(); ++i)
-				sqlQuery += ", `parsed__" + *i + "` = ?";
+				if(i->length()) sqlQuery += ", `parsed__" + *i + "` = ?";
 			sqlQuery += " WHERE id = ? LIMIT 1";
 			if(verbose) this->log("parser", "[#" + idString + "] > " + sqlQuery);
 			this->psUpdateEntry = this->addPreparedStatement(sqlQuery);
@@ -159,10 +159,15 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 		if(!(this->psAddEntry)) {
 			if(verbose) this->log("parser", "[#" + idString + "] prepares addEntry()...");
 			std::string sqlQuery = "INSERT INTO `" + this->targetTable + "`(content, parsed_id, parsed_datetime";
-			for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i!= this->fieldNames.end(); ++i)
-				sqlQuery += ", `parsed__" + *i + "`";
+			unsigned long counter = 0;
+			for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i!= this->fieldNames.end(); ++i) {
+				if(i->length()) {
+					sqlQuery += ", `parsed__" + *i + "`";
+					counter++;
+				}
+			}
 			sqlQuery += ") VALUES (?, ?, ?";
-			for(unsigned long n = 0; n < this->fieldNames.size(); n++) sqlQuery += ", ?";
+			for(unsigned long n = 0; n < counter; n++) sqlQuery += ", ?";
 			sqlQuery += ")";
 			if(verbose) this->log("parser", "[#" + idString + "] > " + sqlQuery);
 			this->psAddEntry = this->addPreparedStatement(sqlQuery);
@@ -695,8 +700,10 @@ void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, c
 
 		unsigned int counter = 3;
 		for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i) {
-			sqlStatement->setString(counter, *i);
-			counter++;
+			if(this->fieldNames.at(i - parsedFields.begin()).length()) {
+				sqlStatement->setString(counter, *i);
+				counter++;
+			}
 		}
 		sqlStatement->setUInt64(counter, entryId);
 		sqlStatement->execute();
@@ -733,8 +740,10 @@ void crawlservpp::Module::Parser::Database::addEntry(unsigned long contentId, co
 
 		unsigned int counter = 4;
 		for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i) {
-			sqlStatement->setString(counter, *i);
-			counter++;
+			if(this->fieldNames.at(i - parsedFields.begin()).length()) {
+				sqlStatement->setString(counter, *i);
+				counter++;
+			}
 		}
 		sqlStatement->execute();
 
