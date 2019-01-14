@@ -54,23 +54,23 @@ bool crawlservpp::Module::Parser::Thread::onInit(bool resumed) {
 	verbose = config.generalLogging == crawlservpp::Module::Parser::Config::generalLoggingVerbose;
 
 	// check configuration
-	if(verbose) this->log("Checking configuration...");
+	if(verbose) this->log("checks configuration...");
 	if(!(this->config.generalResultTable.length())) {
 		if(this->config.generalLogging) this->log("ERROR: No target table specified.");
 		return false;
 	}
 
 	// set database configuration
-	if(verbose) this->log("Setting database configuration...");
+	if(verbose) this->log("sets database configuration...");
 	this->database.setSleepOnError(this->config.generalSleepMySql);
 
 	// initialize table
-	if(verbose) this->log("Initialiting target table...");
+	if(verbose) this->log("initializes target table...");
 	this->database.initTargetTable(this->getWebsite(), this->getUrlList(), this->websiteNameSpace, this->urlListNameSpace,
 			this->config.generalResultTable, &(this->config.parsingFieldNames));
 
 	// prepare SQL statements for parser
-	if(verbose) this->log("Preparing SQL statements...");
+	if(verbose) this->log("prepares SQL statements...");
 	if(!(this->database.prepare(this->getId(), this->getWebsite(), this->getUrlList(), this->config.generalResultTable,
 			this->config.generalReParse, verbose))) {
 		if(this->config.generalLogging) this->log(this->database.getModuleErrorMessage());
@@ -78,11 +78,11 @@ bool crawlservpp::Module::Parser::Thread::onInit(bool resumed) {
 	}
 
 	// initialize queries
-	if(verbose) this->log("Initialiting queries...");
+	if(verbose) this->log("initializes queries...");
 	this->initQueries();
 
 	// check whether ID can be parsed from URL only
-	if(verbose) this->log("Checking for URL-only parsing of content IDs...");
+	if(verbose) this->log("checks for URL-only parsing of content IDs...");
 	this->idFromUrl = true;
 	for(std::vector<unsigned short>::const_iterator i = this->config.parsingIdSources.begin();
 			i != this->config.parsingIdSources.end(); ++i) {
