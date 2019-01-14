@@ -2331,7 +2331,7 @@ void crawlservpp::Global::Database::addExtractedTable(unsigned long websiteId, u
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
-			sqlStatement->setUInt64(1, listId);
+			sqlStatement->setUInt64(2, listId);
 			sqlStatement->setString(3, tableName);
 			sqlStatement->execute();
 		}
@@ -2507,7 +2507,7 @@ void crawlservpp::Global::Database::addAnalyzedTable(unsigned long websiteId, un
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
-			sqlStatement->setUInt64(1, listId);
+			sqlStatement->setUInt64(2, listId);
 			sqlStatement->setString(3, tableName);
 			sqlStatement->execute();
 		}
