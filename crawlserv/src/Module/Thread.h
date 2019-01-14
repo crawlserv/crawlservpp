@@ -68,6 +68,7 @@ namespace crawlservpp::Module {
 
 		unsigned long getLast() const;
 		void setLast(unsigned long last);
+		void incrementLast();
 		std::string getStatusMessage();
 
 		virtual bool onInit(bool resumed) = 0;
@@ -86,10 +87,10 @@ namespace crawlservpp::Module {
 		std::atomic<bool> terminated; // thread has terminated due to exception
 
 		const std::string module; // the module of the thread (used for logging)
-		std::atomic<unsigned long> id; // id of the thread in the database
+		std::atomic<unsigned long> id; //  of the thread in the database
 		const crawlservpp::Struct::ThreadOptions options; // options for the thread
-		unsigned long last; // last id for the thread
-		std::string idString; // id of the thread as string (used for logging, ONLY for threads!)
+		unsigned long last; // last  for the thread
+		std::string idString; //  of the thread as string (used for logging, ONLY for threads!)
 
 		std::condition_variable pauseCondition; // condition variable to wait for unpause
 		std::mutex pauseLock;
