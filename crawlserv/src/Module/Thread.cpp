@@ -339,7 +339,7 @@ void crawlservpp::Module::Thread::main() {
 			if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
 			else {
 				// log timing statistic
-				std::string logStr = "Stopped after " + crawlservpp::Helper::DateTime::secondsToString(this->runTime.count()) + " running";
+				std::string logStr = "stopped after " + crawlservpp::Helper::DateTime::secondsToString(this->runTime.count()) + " running";
 				if(this->pauseTime.count()) logStr += " and " + crawlservpp::Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
 				logStr += ".";
 				this->log(logStr);
