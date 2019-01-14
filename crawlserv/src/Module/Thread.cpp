@@ -34,10 +34,10 @@ crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, unsig
 	this->pauseTime = std::chrono::duration<unsigned long>::zero();
 
 	if(threadId) {
-		// set id
+		// set ID
 		this->id = threadId;
 
-		// create id string
+		// create ID string
 		std::ostringstream idStrStr;
 		idStrStr << threadId;
 		this->idString = idStrStr.str();
@@ -55,7 +55,7 @@ crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, unsig
 // constructor B: start new thread (using constructor A to initialize values)
 crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, const std::string& threadModule,
 		const crawlservpp::Struct::ThreadOptions& threadOptions) : Thread(dbBase, 0, threadModule, "", false, threadOptions, 0) {
-	// add thread to database and save id
+	// add thread to database and save ID
 	this->id = this->databaseClass.addThread(threadModule, threadOptions);
 	std::ostringstream idStrStr;
 	idStrStr << this->id;
@@ -177,22 +177,22 @@ void crawlservpp::Module::Thread::finishInterrupt() {
 	}
 }
 
-// get id of the thread (thread-safe)
+// get ID of the thread (thread-safe)
 unsigned long crawlservpp::Module::Thread::getId() const {
 	return this->id;
 }
 
-// get id of the website (thread-safe)
+// get ID of the website (thread-safe)
 unsigned long crawlservpp::Module::Thread::getWebsite() const {
 	return this->options.website;
 }
 
-// get id of URL list (thread-safe)
+// get ID of URL list (thread-safe)
 unsigned long crawlservpp::Module::Thread::getUrlList() const {
 	return this->options.urlList;
 }
 
-// get id of the configuration (thread-safe)
+// get ID of the configuration (thread-safe)
 unsigned long crawlservpp::Module::Thread::getConfig() const {
 	return this->options.config;
 }
@@ -231,18 +231,27 @@ void crawlservpp::Module::Thread::log(const std::string& entry) {
 	this->database.log(this->module, "[#" + this->idString + "] " + entry);
 }
 
-// get value of last id (to be used by the thread only)
+// get value of last ID (to be used by the thread only)
 unsigned long crawlservpp::Module::Thread::getLast() const {
 	return this->last;
 }
 
-// set last id (to be used by the thread only)
+// set last ID (to be used by the thread only)
 void crawlservpp::Module::Thread::setLast(unsigned long last) {
-	// set last id internally
+	// set last ID internally
 	this->last = last;
 
-	// set last id in database
+	// set last ID in database
 	this->database.setThreadLast(this->id, last);
+}
+
+// increment last ID (to be used by the thread only)
+void crawlservpp::Module::Thread::incrementLast() {
+	// increment last ID internally
+	(this->last)++;
+
+	// increment last ID in database
+	this->database.setThreadLast(this->id, this->last);
 }
 
 // get a copy of the current status message
