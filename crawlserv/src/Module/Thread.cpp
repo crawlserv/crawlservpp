@@ -354,7 +354,7 @@ void crawlservpp::Module::Thread::main() {
 
 				// log error
 				std::ostringstream logStrStr;
-				logStrStr << "Failed - " << std::string(e.what()) << ".";
+				logStrStr << "failed - " << std::string(e.what()) << ".";
 				this->log(logStrStr.str());
 
 				// update run or pause time if necessary
