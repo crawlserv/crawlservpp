@@ -1021,35 +1021,35 @@ void crawlservpp::Global::Database::updateWebsite(unsigned long websiteId, const
 			// rename sub tables
 			std::vector<crawlservpp::Struct::IdString> urlLists = this->getUrlLists(websiteId);
 			for(auto liI = urlLists.begin(); liI != urlLists.end(); ++liI) {
-				renameStatement->execute("ALTER TABLE crawlserv_" + oldNameSpace + "_" + liI->string + " RENAME TO "
-						+ "crawlserv_" + websiteNameSpace + "_" + liI->string);
-				renameStatement->execute("ALTER TABLE crawlserv_" + oldNameSpace + "_" + liI->string + "_crawled RENAME TO "
-						+ "crawlserv_" + websiteNameSpace + "_" + liI->string + "_crawled");
-				renameStatement->execute("ALTER TABLE crawlserv_" + oldNameSpace + "_" + liI->string + "_links RENAME TO "
-						+ "crawlserv_" + websiteNameSpace + "_" + liI->string + "_links");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNameSpace + "_" + liI->string + "` RENAME TO "
+						+ "`crawlserv_" + websiteNameSpace + "_" + liI->string + "`");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNameSpace + "_" + liI->string + "_crawled` RENAME TO "
+						+ "`crawlserv_" + websiteNameSpace + "_" + liI->string + "_crawled`");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNameSpace + "_" + liI->string + "_links` RENAME TO "
+						+ "`crawlserv_" + websiteNameSpace + "_" + liI->string + "_links`");
 
 				// rename parsing tables
 				std::vector<crawlservpp::Struct::IdString> parsedTables = this->getParsedTables(liI->id);
 				for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
-					renameStatement->execute("ALTER TABLE crawlserv_" + oldNameSpace + "_" + liI->string + "_parsed_"
-							+ taI->string + " RENAME TO " + "crawlserv_" + oldNameSpace + "_" + liI->string + "_parsed_"
-							+ taI->string);
+					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNameSpace + "_" + liI->string + "_parsed_"
+							+ taI->string + "` RENAME TO `" + "crawlserv_" + oldNameSpace + "_" + liI->string + "_parsed_"
+							+ taI->string + "`");
 				}
 
 				// rename extracting tables
 				std::vector<crawlservpp::Struct::IdString> extractedTables = this->getExtractedTables(liI->id);
 				for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
-					renameStatement->execute("ALTER TABLE crawlserv_" + oldNameSpace + "_" + liI->string + "_extracted_"
-							+ taI->string + " RENAME TO " + "crawlserv_" + oldNameSpace + "_" + liI->string + "_extracted_"
-							+ taI->string);
+					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNameSpace + "_" + liI->string + "_extracted_"
+							+ taI->string + "` RENAME TO `" + "crawlserv_" + oldNameSpace + "_" + liI->string + "_extracted_"
+							+ taI->string + "`");
 				}
 
 				// rename analyzing tables
 				std::vector<crawlservpp::Struct::IdString> analyzedTables = this->getAnalyzedTables(liI->id);
 				for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
-					renameStatement->execute("ALTER TABLE crawlserv_" + oldNameSpace + "_" + liI->string + "_analyzed_"
-							+ taI->string + " RENAME TO " + "crawlserv_" + oldNameSpace + "_" + liI->string + "_analyzed_"
-							+ taI->string);
+					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNameSpace + "_" + liI->string + "_analyzed_"
+							+ taI->string + "` RENAME TO `" + "crawlserv_" + oldNameSpace + "_" + liI->string + "_analyzed_"
+							+ taI->string + "`");
 				}
 			}
 
@@ -1282,21 +1282,21 @@ unsigned long crawlservpp::Global::Database::addUrlList(unsigned long websiteId,
 		createStatement = this->connection->createStatement();
 
 		// execute SQL queries for table creation
-		createStatement->execute("CREATE TABLE IF NOT EXISTS crawlserv_" + websiteNameSpace + "_" + listNameSpace
-				+ "(id SERIAL, manual BOOLEAN DEFAULT false NOT NULL, url VARCHAR(2000) NOT NULL,"
+		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNameSpace + "_" + listNameSpace
+				+ "`(id SERIAL, manual BOOLEAN DEFAULT false NOT NULL, url VARCHAR(2000) NOT NULL,"
 				" hash INT UNSIGNED DEFAULT 0 NOT NULL, crawled BOOLEAN DEFAULT false NOT NULL,"
 				" parsed BOOLEAN DEFAULT false NOT NULL, extracted BOOLEAN DEFAULT false NOT NULL,"
 				" analyzed BOOLEAN DEFAULT false NOT NULL, crawllock DATETIME DEFAULT NULL,"
 				" parselock DATETIME DEFAULT NULL, extractlock DATETIME DEFAULT NULL, analyzelock DATETIME DEFAULT NULL,"
 				" PRIMARY KEY(id), INDEX(hash)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-		createStatement->execute("CREATE TABLE IF NOT EXISTS crawlserv_" + websiteNameSpace + "_" + listNameSpace
-				+ "_crawled(id SERIAL, url BIGINT UNSIGNED NOT NULL,"
+		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNameSpace + "_" + listNameSpace
+				+ "_crawled`(id SERIAL, url BIGINT UNSIGNED NOT NULL,"
 				" crawltime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,"
 				" archived BOOLEAN DEFAULT false NOT NULL, response SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
 				" type TINYTEXT NOT NULL, content LONGTEXT NOT NULL, PRIMARY KEY(id), FOREIGN KEY(url) REFERENCES crawlserv_"
 				+ websiteNameSpace + "_" + listNameSpace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE, INDEX(crawltime))"
 				" CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED");
-		createStatement->execute("CREATE TABLE IF NOT EXISTS crawlserv_" + websiteNameSpace + "_" + listNameSpace + "_links("
+		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNameSpace + "_" + listNameSpace + "_links`("
 				"id SERIAL, fromurl BIGINT UNSIGNED NOT NULL, tourl BIGINT UNSIGNED NOT NULL,"
 				" archived BOOLEAN DEFAULT FALSE NOT NULL, PRIMARY KEY(id), FOREIGN KEY(fromurl) REFERENCES crawlserv_"
 				+ websiteNameSpace + "_" + listNameSpace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE, "
@@ -1566,35 +1566,35 @@ void crawlservpp::Global::Database::updateUrlList(unsigned long listId, const st
 			renameStatement = this->connection->createStatement();
 
 			// rename main tables
-			renameStatement->execute("ALTER TABLE crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
-					+ " RENAME TO crawlserv_" + websiteNameSpace.string + "_" + listNameSpace);
-			renameStatement->execute("ALTER TABLE crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
-					+ "_crawled RENAME TO crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_crawled");
-			renameStatement->execute("ALTER TABLE crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
-					+ "_links RENAME TO crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_links");
+			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
+					+ "` RENAME TO `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "`");
+			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
+					+ "_crawled` RENAME TO `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_crawled`");
+			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
+					+ "_links` RENAME TO `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_links`");
 
 			// rename parsing tables
 			std::vector<crawlservpp::Struct::IdString> parsedTables = this->getParsedTables(listId);
 			for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
-				renameStatement->execute("ALTER TABLE crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
-						+ "_parsed_" + taI->string + " RENAME TO " + "crawlserv_" + websiteNameSpace.string + "_"
-						+ listNameSpace	+ "_parsed_" + taI->string);
+				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
+						+ "_parsed_" + taI->string + "` RENAME TO `crawlserv_" + websiteNameSpace.string + "_"
+						+ listNameSpace	+ "_parsed_" + taI->string + "`");
 			}
 
 			// rename extracting tables
 			std::vector<crawlservpp::Struct::IdString> extractedTables = this->getExtractedTables(listId);
 			for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
-				renameStatement->execute("ALTER TABLE crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
-						+ "_extracted_"	+ taI->string + " RENAME TO " + "crawlserv_" + websiteNameSpace.string + "_"
-						+ listNameSpace + "_extracted_"	+ taI->string);
+				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
+						+ "_extracted_"	+ taI->string + "` RENAME TO `crawlserv_" + websiteNameSpace.string + "_"
+						+ listNameSpace + "_extracted_"	+ taI->string + "`");
 			}
 
 			// rename analyzing tables
 			std::vector<crawlservpp::Struct::IdString> analyzedTables = this->getAnalyzedTables(listId);
 			for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
-				renameStatement->execute("ALTER TABLE crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
-						+ "_analyzed_" + taI->string + " RENAME TO " + "crawlserv_" + websiteNameSpace.string + "_"
-						+ listNameSpace + "_analyzed_" + taI->string);
+				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNameSpace.string + "_" + oldListNameSpace
+						+ "_analyzed_" + taI->string + "` RENAME TO `crawlserv_" + websiteNameSpace.string + "_"
+						+ listNameSpace + "_analyzed_" + taI->string + "`");
 			}
 
 			// delete SQL statement for renaming
@@ -1681,9 +1681,9 @@ void crawlservpp::Global::Database::deleteUrlList(unsigned long listId) {
 		dropStatement = this->connection->createStatement();
 
 		// execute SQL queries for dropping tables
-		dropStatement->execute("DROP TABLE IF EXISTS crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_links");
-		dropStatement->execute("DROP TABLE IF EXISTS crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_crawled");
-		dropStatement->execute("DROP TABLE IF EXISTS crawlserv_" + websiteNameSpace.string + "_" + listNameSpace);
+		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_links`");
+		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "_crawled`");
+		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "`");
 
 		// delete SQL statement for dropping tables
 		GLOBAL_DATABASE_DELETE(dropStatement);
@@ -1707,7 +1707,7 @@ void crawlservpp::Global::Database::resetParsingStatus(unsigned long listId) {
 	crawlservpp::Struct::IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
 	std::string listNameSpace = this->getUrlListNameSpace(listId);
 
-	this->execute("UPDATE crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + " SET parsed = FALSE, parselock = NULL");
+	this->execute("UPDATE `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "` SET parsed = FALSE, parselock = NULL");
 }
 
 // reset extracting status of ID-specified URL list
@@ -1716,7 +1716,7 @@ void crawlservpp::Global::Database::resetExtractingStatus(unsigned long listId) 
 	crawlservpp::Struct::IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
 	std::string listNameSpace = this->getUrlListNameSpace(listId);
 
-	this->execute("UPDATE crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + " SET extracted = FALSE,"
+	this->execute("UPDATE `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "` SET extracted = FALSE,"
 			" extractlock = NULL");
 }
 
@@ -1726,7 +1726,7 @@ void crawlservpp::Global::Database::resetAnalyzingStatus(unsigned long listId) {
 	crawlservpp::Struct::IdString websiteNameSpace = this->getWebsiteNameSpaceFromUrlList(listId);
 	std::string listNameSpace = this->getUrlListNameSpace(listId);
 
-	this->execute("UPDATE crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + " SET analyzed = FALSE,"
+	this->execute("UPDATE `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace + "` SET analyzed = FALSE,"
 			" analyzelock = NULL");
 }
 
@@ -2127,7 +2127,7 @@ unsigned long crawlservpp::Global::Database::duplicateConfiguration(unsigned lon
 	return result;
 }
 
-// add parsed table to database
+// add parsed table to database if entry does not exist already
 void crawlservpp::Global::Database::addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
@@ -2280,8 +2280,8 @@ void crawlservpp::Global::Database::deleteParsedTable(unsigned long tableId) {
 		dropStatement = this->connection->createStatement();
 
 		// execute SQL query for dropping table
-		dropStatement->execute("DROP TABLE IF EXISTS crawlserv_" + websiteNameSpace.string + "_" + listNameSpace.string
-				+ "_parsed_" + tableName);
+		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace.string
+				+ "_parsed_" + tableName + "`");
 
 		// delete SQL statement for dropping table
 		GLOBAL_DATABASE_DELETE(dropStatement);
@@ -2300,7 +2300,7 @@ void crawlservpp::Global::Database::deleteParsedTable(unsigned long tableId) {
 	}
 }
 
-// add extracted table to database
+// add extracted table to database if entry does not exist already
 void crawlservpp::Global::Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
 	sql::PreparedStatement * sqlStatement = NULL;
@@ -2455,8 +2455,8 @@ void crawlservpp::Global::Database::deleteExtractedTable(unsigned long tableId) 
 		dropStatement = this->connection->createStatement();
 
 		// execute SQL query for dropping table
-		dropStatement->execute("DROP TABLE IF EXISTS crawlserv_" + websiteNameSpace.string + "_" + listNameSpace.string
-				+ "_extracted_"	+ tableName);
+		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace.string
+				+ "_extracted_"	+ tableName + "`");
 
 		// delete SQL statement for dropping table
 		GLOBAL_DATABASE_DELETE(dropStatement);
@@ -2475,7 +2475,7 @@ void crawlservpp::Global::Database::deleteExtractedTable(unsigned long tableId) 
 	}
 }
 
-// add analyzed table to database
+// add analyzed table to database if entry does not exist already
 void crawlservpp::Global::Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
 	sql::PreparedStatement * sqlStatement = NULL;
@@ -2631,8 +2631,8 @@ void crawlservpp::Global::Database::deleteAnalyzedTable(unsigned long tableId) {
 		dropStatement = this->connection->createStatement();
 
 		// execute SQL query for dropping table
-		dropStatement->execute("DROP TABLE IF EXISTS crawlserv_" + websiteNameSpace.string + "_" + listNameSpace.string
-				+ "_analyzed_" + tableName);
+		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNameSpace.string + "_" + listNameSpace.string
+				+ "_analyzed_" + tableName + "`");
 
 		// delete SQL statement for dropping table
 		GLOBAL_DATABASE_DELETE(dropStatement);
@@ -3019,41 +3019,6 @@ unsigned long crawlservpp::Global::Database::getLastInsertedId() {
 	return result;
 }
 
-// check whether a name-specified table is empty
-bool crawlservpp::Global::Database::isTableEmpty(const std::string& tableName) {
-	sql::Statement * sqlStatement = NULL;
-	sql::ResultSet * sqlResultSet = NULL;
-	bool result = false;
-
-	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
-
-	try {
-		// create SQL statement
-		sqlStatement = this->connection->createStatement();
-
-		// execute SQL statement
-		sqlResultSet = sqlStatement->executeQuery("SELECT NOT EXISTS (SELECT 1 FROM " + tableName + " LIMIT 1) AS result");
-
-		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
-
-		// delete result and SQL statement
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
-		GLOBAL_DATABASE_DELETE(sqlStatement);
-	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
-		GLOBAL_DATABASE_DELETE(sqlStatement);
-		std::ostringstream errorStrStr;
-		errorStrStr << "isTableEmpty() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
-	}
-
-	return result;
-}
-
 // reset the auto increment of an (empty) table in database
 void crawlservpp::Global::Database::resetAutoIncrement(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
@@ -3066,7 +3031,7 @@ void crawlservpp::Global::Database::resetAutoIncrement(const std::string& tableN
 		sqlStatement = this->connection->createStatement();
 
 		// execute SQL statement
-		sqlStatement->execute("ALTER TABLE " + tableName + " AUTO_INCREMENT = 1");
+		sqlStatement->execute("ALTER TABLE `" + tableName + "` AUTO_INCREMENT = 1");
 
 		// delete SQL statement
 		GLOBAL_DATABASE_DELETE(sqlStatement);
@@ -3094,7 +3059,7 @@ void crawlservpp::Global::Database::lockTable(const std::string& tableName) {
 
 		// execute SQL statement
 		this->tablesLocked = true;
-		sqlStatement->execute("LOCK TABLES " + tableName + " WRITE");
+		sqlStatement->execute("LOCK TABLES `" + tableName + "` WRITE");
 
 		// delete SQL statement
 		GLOBAL_DATABASE_DELETE(sqlStatement);
@@ -3121,7 +3086,7 @@ void crawlservpp::Global::Database::lockTables(const std::string& tableName1, co
 
 		// execute SQL statement
 		this->tablesLocked = true;
-		sqlStatement->execute("LOCK TABLES " + tableName1 + " WRITE, " + tableName2 + " WRITE");
+		sqlStatement->execute("LOCK TABLES `" + tableName1 + "` WRITE, `" + tableName2 + "` WRITE");
 
 		// delete SQL statement
 		GLOBAL_DATABASE_DELETE(sqlStatement);
@@ -3162,8 +3127,8 @@ void crawlservpp::Global::Database::unlockTables() {
 	}
 }
 
-// check whether a specific table exists
-bool crawlservpp::Global::Database::isTableExists(const std::string& tableName) {
+// check whether a name-specified table is empty
+bool crawlservpp::Global::Database::isTableEmpty(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
 	bool result = false;
@@ -3172,12 +3137,49 @@ bool crawlservpp::Global::Database::isTableExists(const std::string& tableName) 
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
 	try {
-		// create and execute SQL statement
+		// create SQL statement
 		sqlStatement = this->connection->createStatement();
-		sqlResultSet = sqlStatement->executeQuery("SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.TABLES"
-				" WHERE TABLE_SCHEMA = '" + this->settings.name + "' AND TABLE_NAME = '" + tableName + "' LIMIT 1");
+
+		// execute SQL statement
+		sqlResultSet = sqlStatement->executeQuery("SELECT NOT EXISTS (SELECT 1 FROM `" + tableName + "` LIMIT 1) AS result");
 
 		// get result
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+
+		// delete result and SQL statement
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "isTableEmpty() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+
+	return result;
+}
+
+// check whether a specific table exists
+bool crawlservpp::Global::Database::isTableExists(const std::string& tableName) {
+	sql::PreparedStatement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
+	bool result = false;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create and execute SQL statement
+		sqlStatement = this->connection->prepareStatement("SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.TABLES"
+				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1");
+
+		// get result
+		sqlStatement->setString(1, this->settings.name);
+		sqlStatement->setString(2, tableName);
+		sqlResultSet = sqlStatement->executeQuery();
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
@@ -3198,7 +3200,7 @@ bool crawlservpp::Global::Database::isTableExists(const std::string& tableName) 
 
 // check whether a specific column in a specific table exists
 bool crawlservpp::Global::Database::isColumnExists(const std::string& tableName, const std::string& columnName) {
-	sql::Statement * sqlStatement = NULL;
+	sql::PreparedStatement * sqlStatement = NULL;
 	sql::ResultSet * sqlResultSet = NULL;
 	bool result = false;
 
@@ -3207,12 +3209,14 @@ bool crawlservpp::Global::Database::isColumnExists(const std::string& tableName,
 
 	try {
 		// create and execute SQL statement
-		sqlStatement = this->connection->createStatement();
-		sqlResultSet = sqlStatement->executeQuery("SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS"
-				" WHERE TABLE_SCHEMA = '" + this->settings.name + "' AND TABLE_NAME = '" + tableName
-				+ "' AND COLUMN_NAME = '" + columnName + "' LIMIT 1");
+		sqlStatement = this->connection->prepareStatement("SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS"
+				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1");
 
 		// get result
+		sqlStatement->setString(1, this->settings.name);
+		sqlStatement->setString(2, tableName);
+		sqlStatement->setString(3, columnName);
+		sqlResultSet = sqlStatement->executeQuery();
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result and SQL statement
@@ -3254,6 +3258,193 @@ void crawlservpp::Global::Database::execute(const std::string& sqlQuery) {
 		GLOBAL_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "execute() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// get an entry from a text column
+void crawlservpp::Global::Database::getText(const std::string& tableName, const std::string& columnName, const std::string& condition,
+		std::string& resultTo) {
+	sql::ResultSet * sqlResultSet = NULL;
+	sql::Statement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->createStatement();
+
+		// execute SQL statement
+		sqlResultSet = sqlStatement->executeQuery("SELECT `" + columnName + "` FROM `" + tableName + "` WHERE (" + condition + ")");
+
+		// get result
+		if(sqlResultSet->next()) resultTo = sqlResultSet->getString(columnName);
+
+		// delete result and SQL statement
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "getText() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// get all entries of a text column
+void crawlservpp::Global::Database::getTexts(const std::string& tableName, const std::string& columnName,
+		std::vector<std::string>& resultTo) {
+	sql::ResultSet * sqlResultSet = NULL;
+	sql::Statement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->createStatement();
+
+		// execute SQL statement
+		sqlResultSet = sqlStatement->executeQuery("SELECT `" + columnName + "` FROM `" + tableName + "`");
+
+		// get result
+		while(sqlResultSet->next()) resultTo.push_back(sqlResultSet->getString(columnName));
+
+		// delete result and SQL statement
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "getTexts() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// get specific entries of a text column
+void crawlservpp::Global::Database::getTexts(const std::string& tableName, const std::string& columnName, const std::string& condition,
+		unsigned long limit, std::vector<std::string>& resultTo) {
+	sql::ResultSet * sqlResultSet = NULL;
+	sql::Statement * sqlStatement = NULL;
+	std::ostringstream sqlStrStr;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->createStatement();
+
+		// execute SQL statement
+		sqlStrStr << "SELECT `" << columnName << "` FROM `" << tableName << "` WHERE (" << condition << ")";
+		if(limit) sqlStrStr << " LIMIT " << limit;
+		sqlResultSet = sqlStatement->executeQuery(sqlStrStr.str());
+
+		// get result
+		while(sqlResultSet->next()) resultTo.push_back(sqlResultSet->getString(columnName));
+
+		// delete result and SQL statement
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "getTexts() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// insert entry into a text column
+void crawlservpp::Global::Database::insertText(const std::string& tableName, const std::string& columnName, const std::string& text) {
+	sql::PreparedStatement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->prepareStatement("INSERT INTO `" + tableName + "`(`" + columnName + "`) VALUES (?)");
+
+		// execute SQL statement
+		sqlStatement->setString(1, text);
+		sqlStatement->execute();
+
+		// delete SQL statement
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "insertText() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// insert entries into a text column
+void crawlservpp::Global::Database::insertTexts(const std::string& tableName, const std::string& columnName,
+		const std::vector<std::string>& texts) {
+	sql::PreparedStatement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->prepareStatement("INSERT INTO `" + tableName + "`(`" + columnName + "`) VALUES (?)");
+
+		// execute SQL statement
+		for(auto i = texts.begin(); i != texts.end(); ++i) {
+			sqlStatement->setString(1, *i);
+			sqlStatement->execute();
+		}
+
+		// delete SQL statement
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "insertTexts() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
+// update entry in a text column
+void crawlservpp::Global::Database::updateText(const std::string& tableName, const std::string& columnName, const std::string& condition,
+		std::string& text) {
+	sql::PreparedStatement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->prepareStatement("UPDATE `" + tableName + "` SET `" + columnName + "` = ?");
+
+		// execute SQL statement
+		sqlStatement->setString(1, text);
+		sqlStatement->execute();
+
+		// delete SQL statement
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "updateText() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
 }

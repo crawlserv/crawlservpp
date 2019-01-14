@@ -164,14 +164,23 @@ namespace crawlservpp::Global {
 		// database helper functions
 		bool checkConnection();
 		unsigned long getLastInsertedId();
-		bool isTableEmpty(const std::string& tableName);
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const std::string& tableName);
 		void lockTables(const std::string& tableName1, const std::string& tableName2);
 		void unlockTables();
+		bool isTableEmpty(const std::string& tableName);
 		bool isTableExists(const std::string& tableName);
 		bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		void execute(const std::string& sqlQuery);
+
+		// data helper functions for algorithms
+		void getText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& resultTo);
+		void getTexts(const std::string& tableName, const std::string& columnName, std::vector<std::string>& resultTo);
+		void getTexts(const std::string& tableName, const std::string& columnName, const std::string& condition, unsigned long limit,
+				std::vector<std::string>& resultTo);
+		void insertText(const std::string& tableName, const std::string& columnName, const std::string& text);
+		void insertTexts(const std::string& tableName, const std::string& columnName, const std::vector<std::string>& texts);
+		void updateText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& text);
 
 	private:
 		// private connection information
