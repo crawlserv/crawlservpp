@@ -3392,6 +3392,36 @@ void crawlservpp::Global::Database::insertText(const std::string& tableName, con
 	}
 }
 
+// insert entry into a text column and entry into an unsigned long column
+void crawlservpp::Global::Database::insertTextUInt64(const std::string& tableName, const std::string& textColumnName,
+		const std::string& numberColumnName, const std::string& text, unsigned long number) {
+	sql::PreparedStatement * sqlStatement = NULL;
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->prepareStatement("INSERT INTO `" + tableName + "`(`" + textColumnName + "`, `" + numberColumnName
+				+ "`) VALUES (?, ?)");
+
+		// execute SQL statement
+		sqlStatement->setString(1, text);
+		sqlStatement->setUInt64(2, number);
+		sqlStatement->execute();
+
+		// delete SQL statement
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		GLOBAL_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "insertTextUInt64() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+}
+
 // insert entries into a text column
 void crawlservpp::Global::Database::insertTexts(const std::string& tableName, const std::string& columnName,
 		const std::vector<std::string>& texts) {

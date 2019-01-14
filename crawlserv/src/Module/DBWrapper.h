@@ -57,6 +57,8 @@ namespace crawlservpp::Module {
 		void getTexts(const std::string& tableName, const std::string& columnName, const std::string& condition, unsigned long limit,
 				std::vector<std::string>& resultTo);
 		void insertText(const std::string& tableName, const std::string& columnName, const std::string& text);
+		void insertTextUInt64(const std::string& tableName, const std::string& textColumnName, const std::string& numberColumnName,
+				const std::string& text, unsigned long number);
 		void insertTexts(const std::string& tableName, const std::string& columnName, const std::vector<std::string>& texts);
 		void updateText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& text);
 
