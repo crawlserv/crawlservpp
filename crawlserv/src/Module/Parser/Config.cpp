@@ -97,7 +97,13 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "result.table") {
-							if(j->value.IsString()) this->generalResultTable = j->value.GetString();
+							if(j->value.IsString()) {
+								std::string tableName = j->value.GetString();
+								if(crawlservpp::Helper::Strings::checkSQLName(tableName))
+									this->generalResultTable = tableName;
+								else warningsTo.push_back("\'" + tableName + "\' in \'" + cat + "." + name
+									+ "\' ignored because it contains invalid characters.");
+							}
 							else warningsTo.push_back("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not string).");
 						}
@@ -220,7 +226,16 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 							if(j->value.IsArray()) {
 								this->parsingFieldNames.clear();
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parsingFieldNames.push_back(k->GetString());
+									if(k->IsString()) {
+										std::string fieldName = k->GetString();
+										if(crawlservpp::Helper::Strings::checkSQLName(fieldName))
+											this->parsingFieldNames.push_back(fieldName);
+										else {
+											this->parsingFieldNames.push_back("");
+											warningsTo.push_back("\'" + fieldName + "\' in \'" + cat + "." + name
+												+ "\' ignored because it contains invalid characters.");
+										}
+									}
 									else {
 										this->parsingFieldNames.push_back("");
 										warningsTo.push_back("Value in \'" + cat + "." + name

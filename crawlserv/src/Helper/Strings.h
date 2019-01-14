@@ -46,6 +46,7 @@ namespace crawlservpp::Helper::Strings {
 	std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty);
 	char getFirstOrEscapeChar(const std::string& from);
 	void utfTidy(std::string& stringToTidy);
+	bool checkSQLName(const std::string& name);
 }
 
 
