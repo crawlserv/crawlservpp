@@ -51,6 +51,15 @@ namespace crawlservpp::Module {
 		void resetExtractingStatus(unsigned long listId);
 		void resetAnalyzingStatus(unsigned long listId);
 
+		// wrappers for data functions used by algorithms
+		void getText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& resultTo);
+		void getTexts(const std::string& tableName, const std::string& columnName, std::vector<std::string>& resultTo);
+		void getTexts(const std::string& tableName, const std::string& columnName, const std::string& condition, unsigned long limit,
+				std::vector<std::string>& resultTo);
+		void insertText(const std::string& tableName, const std::string& columnName, const std::string& text);
+		void insertTexts(const std::string& tableName, const std::string& columnName, const std::vector<std::string>& texts);
+		void updateText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& text);
+
 	protected:
 		// reference to the database connection by the thread
 		crawlservpp::Module::DBThread& database;
@@ -74,15 +83,6 @@ namespace crawlservpp::Module {
 
 		// execute SQL query
 		void execute(const std::string& sqlQuery);
-
-		// data helper functions for algorithms
-		void getText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& resultTo);
-		void getTexts(const std::string& tableName, const std::string& columnName, std::vector<std::string>& resultTo);
-		void getTexts(const std::string& tableName, const std::string& columnName, const std::string& condition, unsigned long limit,
-				std::vector<std::string>& resultTo);
-		void insertText(const std::string& tableName, const std::string& columnName, const std::string& text);
-		void insertTexts(const std::string& tableName, const std::string& columnName, const std::vector<std::string>& texts);
-		void updateText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& text);
 
 		// manage prepared SQL statements
 		unsigned short addPreparedStatement(const std::string& sqlStatementString);
