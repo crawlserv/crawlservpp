@@ -11,7 +11,6 @@
 
 // constructor: initialize values
 crawlservpp::Module::Parser::Database::Database(crawlservpp::Module::DBThread& dbThread) : crawlservpp::Module::DBWrapper(dbThread) {
-	this->fieldNames = NULL;
 	this->psIsUrlParsed = 0;
 	this->psGetNextUrl = 0;
 	this->psGetUrlPosition = 0;
@@ -35,8 +34,8 @@ crawlservpp::Module::Parser::Database::~Database() {}
 
 // create target table if it does not exists or add custom field columns if they do not exist
 void crawlservpp::Module::Parser::Database::initTargetTable(unsigned long websiteId, unsigned long listId,
-		const std::string& websiteNameSpace, const std::string& urlListNameSpace, const  std::string& tableName,
-		const std::vector<std::string> * fields) {
+		const std::string& websiteNameSpace, const std::string& urlListNameSpace, const std::string& tableName,
+		const std::vector<std::string>& fields) {
 	// create table names
 	this->urlListTable = "crawlserv_" + websiteNameSpace + "_" + urlListNameSpace;
 	this->targetTable = this->urlListTable + "_parsed_" + tableName;
@@ -47,18 +46,18 @@ void crawlservpp::Module::Parser::Database::initTargetTable(unsigned long websit
 	// create table if not exists
 	if(this->isTableExists(this->targetTable)) {
 		// add columns that do not exist
-		for(auto i = this->fieldNames->begin(); i != this->fieldNames->end(); ++i) {
+		for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i != this->fieldNames.end(); ++i) {
 			if(!(this->isColumnExists(this->targetTable, "parsed__" + *i))) {
-				this->execute("ALTER TABLE " + this->targetTable + " ADD parsed__" + *i + " LONGTEXT");
+				this->execute("ALTER TABLE `" + this->targetTable + "` ADD `parsed__" + *i + "` LONGTEXT");
 			}
 		}
 	}
 	else {
 		// create table
-		std::string sqlQuery = "CREATE TABLE " + this->targetTable + "(id SERIAL, content BIGINT UNSIGNED NOT NULL,"
+		std::string sqlQuery = "CREATE TABLE `" + this->targetTable + "`(id SERIAL, content BIGINT UNSIGNED NOT NULL,"
 				" parsed_id TEXT NOT NULL, parsed_datetime DATETIME DEFAULT NULL";
-		for(auto i = this->fieldNames->begin(); i != this->fieldNames->end(); ++i) sqlQuery += ", parsed__" + *i + " LONGTEXT";
-		sqlQuery += ", PRIMARY KEY(id), FOREIGN KEY(content) REFERENCES " + this->urlListTable + "_crawled(id)"
+		for(auto i = this->fieldNames.begin(); i != this->fieldNames.end(); ++i) sqlQuery += ", `parsed__" + *i + "` LONGTEXT";
+		sqlQuery += ", PRIMARY KEY(id), FOREIGN KEY(content) REFERENCES `" + this->urlListTable + "_crawled`(id)"
 				" ON UPDATE RESTRICT ON DELETE CASCADE) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED";
 		this->execute(sqlQuery);
 
@@ -150,20 +149,20 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 		}
 		if(!(this->psUpdateEntry)) {
 			if(verbose) this->log("parser", "[#" + idString + "] prepares updateEntry()...");
-			std::string sqlQuery = "UPDATE " + this->targetTable + " SET parsed_id = ?, parsed_datetime = ?";
-			for(std::vector<std::string>::const_iterator i = this->fieldNames->begin(); i!= this->fieldNames->end(); ++i)
-				sqlQuery += ", parsed__" + *i + " = ?";
+			std::string sqlQuery = "UPDATE `" + this->targetTable + "` SET parsed_id = ?, parsed_datetime = ?";
+			for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i!= this->fieldNames.end(); ++i)
+				sqlQuery += ", `parsed__" + *i + "` = ?";
 			sqlQuery += " WHERE id = ? LIMIT 1";
 			if(verbose) this->log("parser", "[#" + idString + "] > " + sqlQuery);
 			this->psUpdateEntry = this->addPreparedStatement(sqlQuery);
 		}
 		if(!(this->psAddEntry)) {
 			if(verbose) this->log("parser", "[#" + idString + "] prepares addEntry()...");
-			std::string sqlQuery = "INSERT INTO " + this->targetTable + "(content, parsed_id, parsed_datetime";
-			for(std::vector<std::string>::const_iterator i = this->fieldNames->begin(); i!= this->fieldNames->end(); ++i)
-				sqlQuery += ", parsed__" + *i;
+			std::string sqlQuery = "INSERT INTO `" + this->targetTable + "`(content, parsed_id, parsed_datetime";
+			for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i!= this->fieldNames.end(); ++i)
+				sqlQuery += ", `parsed__" + *i + "`";
 			sqlQuery += ") VALUES (?, ?, ?";
-			for(unsigned long n = 0; n < this->fieldNames->size(); n++) sqlQuery += ", ?";
+			for(unsigned long n = 0; n < this->fieldNames.size(); n++) sqlQuery += ", ?";
 			sqlQuery += ")";
 			if(verbose) this->log("parser", "[#" + idString + "] > " + sqlQuery);
 			this->psAddEntry = this->addPreparedStatement(sqlQuery);
@@ -249,7 +248,7 @@ crawlservpp::Struct::IdString crawlservpp::Module::Parser::Database::getNextUrl(
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) {
+		if(sqlResultSet && sqlResultSet->next()) {
 			result.id = sqlResultSet->getUInt64("id");
 			result.string = sqlResultSet->getString("url");
 		}
@@ -398,7 +397,7 @@ std::string crawlservpp::Module::Parser::Database::getUrlLock(unsigned long urlI
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getString("parselock");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("parselock");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -528,7 +527,7 @@ bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) {
+		if(sqlResultSet && sqlResultSet->next()) {
 			result = crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content"));
 			success = true;
 		}
@@ -652,7 +651,7 @@ unsigned long crawlservpp::Module::Parser::Database::getEntryId(unsigned long co
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);

@@ -64,10 +64,10 @@ bool crawlservpp::Module::Parser::Thread::onInit(bool resumed) {
 	if(verbose) this->log("sets database configuration...");
 	this->database.setSleepOnError(this->config.generalSleepMySql);
 
-	// initialize table
+	// initialize target table
 	if(verbose) this->log("initializes target table...");
 	this->database.initTargetTable(this->getWebsite(), this->getUrlList(), this->websiteNameSpace, this->urlListNameSpace,
-			this->config.generalResultTable, &(this->config.parsingFieldNames));
+			this->config.generalResultTable, this->config.parsingFieldNames);
 
 	// prepare SQL statements for parser
 	if(verbose) this->log("prepares SQL statements...");

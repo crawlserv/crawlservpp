@@ -193,7 +193,7 @@ bool crawlservpp::Module::Crawler::Database::isUrlExists(const std::string& urlS
 		sqlResultSet = hashStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -204,7 +204,7 @@ bool crawlservpp::Module::Crawler::Database::isUrlExists(const std::string& urlS
 			sqlResultSet = sqlStatement->executeQuery();
 
 			// get result
-			if(sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+			if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 			// delete result
 			GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -246,7 +246,7 @@ unsigned long crawlservpp::Module::Crawler::Database::getUrlId(const std::string
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -282,7 +282,7 @@ bool crawlservpp::Module::Crawler::Database::isUrlCrawled(unsigned long urlId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -318,7 +318,7 @@ crawlservpp::Struct::IdString crawlservpp::Module::Crawler::Database::getNextUrl
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) {
+		if(sqlResultSet && sqlResultSet->next()) {
 			result.id = sqlResultSet->getUInt64("id");
 			result.string = sqlResultSet->getString("url");
 		}
@@ -391,7 +391,7 @@ unsigned long crawlservpp::Module::Crawler::Database::getUrlPosition(unsigned lo
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -426,7 +426,7 @@ unsigned long crawlservpp::Module::Crawler::Database::getNumberOfUrls() {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -472,7 +472,7 @@ void crawlservpp::Module::Crawler::Database::addLinkIfNotExists(unsigned long fr
 		sqlResultSet = checkStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) if(!(sqlResultSet->getBoolean("result"))) {
+		if(sqlResultSet && sqlResultSet->next()) if(!(sqlResultSet->getBoolean("result"))) {
 
 			// link does not exist: execute SQL query for adding link
 			addStatement->setUInt64(1, from);
@@ -512,7 +512,7 @@ bool crawlservpp::Module::Crawler::Database::isUrlLockable(unsigned long urlId) 
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -548,7 +548,7 @@ std::string crawlservpp::Module::Crawler::Database::getUrlLock(unsigned long url
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getString("crawllock");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("crawllock");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -585,7 +585,7 @@ bool crawlservpp::Module::Crawler::Database::checkUrlLock(unsigned long urlId, c
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get (and parse) result
-		if(sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);
@@ -763,7 +763,7 @@ bool crawlservpp::Module::Crawler::Database::isArchivedContentExists(unsigned lo
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		if(sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		GLOBAL_DATABASE_DELETE(sqlResultSet);

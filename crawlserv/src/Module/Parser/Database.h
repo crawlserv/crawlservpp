@@ -36,7 +36,7 @@ namespace crawlservpp::Module::Parser {
 
 		// prepare target table and SQL statements for parser
 		void initTargetTable(unsigned long websiteId, unsigned long listId, const std::string& websiteNameSpace,
-				const std::string& urlListNameSpace, const std::string& tableName, const std::vector<std::string> * fields);
+				const std::string& urlListNameSpace, const std::string& tableName, const std::vector<std::string>& fields);
 		bool prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId, const std::string& tableName, bool reparse,
 				bool verbose);
 
@@ -68,8 +68,8 @@ namespace crawlservpp::Module::Parser {
 		std::string urlListTable;
 		std::string targetTable;
 
-		// pointer to field names
-		const std::vector<std::string> * fieldNames;
+		// field names
+		std::vector<std::string> fieldNames;
 
 		// prepared SQL statements
 		unsigned short psIsUrlParsed;
