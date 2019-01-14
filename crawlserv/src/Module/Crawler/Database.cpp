@@ -59,101 +59,101 @@ bool crawlservpp::Module::Crawler::Database::prepare(unsigned long crawlerId, co
 		// prepare SQL statements for crawler
 		if(!(this->psIsUrlExists)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares isUrlExists()...");
-			this->psIsUrlExists = this->addPreparedStatement("SELECT EXISTS (SELECT id FROM " + this->urlListTable
-					+ " WHERE url = ?) AS result");
+			this->psIsUrlExists = this->addPreparedStatement("SELECT EXISTS (SELECT id FROM `" + this->urlListTable
+					+ "` WHERE url = ?) AS result");
 		}
 		if(!(this->psIsUrlHashExists)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares hash check for URLs...");
-			this->psIsUrlHashExists = this->addPreparedStatement("SELECT EXISTS (SELECT id FROM " + this->urlListTable
-					+ " WHERE hash = CRC32( ? )) AS result");
+			this->psIsUrlHashExists = this->addPreparedStatement("SELECT EXISTS (SELECT id FROM `" + this->urlListTable
+					+ "` WHERE hash = CRC32( ? )) AS result");
 		}
 		if(!(this->psGetUrlId)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares getUrlId()...");
-			this->psGetUrlId = this->addPreparedStatement("SELECT id FROM " + this->urlListTable + " WHERE url = ? LIMIT 1");
+			this->psGetUrlId = this->addPreparedStatement("SELECT id FROM `" + this->urlListTable + "` WHERE url = ? LIMIT 1");
 		}
 		if(!(this->psIsUrlCrawled)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares isUrlCrawled()...");
-			this->psIsUrlCrawled = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM " + this->urlListTable + " WHERE id = ?"
+			this->psIsUrlCrawled = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE id = ?"
 					" AND crawled = TRUE LIMIT 1) AS result");
 		}
 		if(!(this->psGetNextUrl)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares getNextUrl()...");
-			if(recrawl) this->psGetNextUrl = this->addPreparedStatement("SELECT id, url FROM " + this->urlListTable
-							+ " WHERE id > ? AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
-			else this->psGetNextUrl = this->addPreparedStatement("SELECT id, url FROM " + this->urlListTable
-				+ " WHERE id > ? AND crawled = 0 AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
+			if(recrawl) this->psGetNextUrl = this->addPreparedStatement("SELECT id, url FROM `" + this->urlListTable
+							+ "` WHERE id > ? AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
+			else this->psGetNextUrl = this->addPreparedStatement("SELECT id, url FROM `" + this->urlListTable
+				+ "` WHERE id > ? AND crawled = 0 AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
 		}
 		if(!(this->psAddUrl)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares addUrl()...");
 			this->psAddUrl =
-					this->addPreparedStatement("INSERT INTO " + this->urlListTable + "(url, hash, manual) VALUES(?, CRC32(?), ?)");
+					this->addPreparedStatement("INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES(?, CRC32(?), ?)");
 		}
 		if(!(this->psGetUrlPosition)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares getUrlPosition()...");
-			this->psGetUrlPosition = this->addPreparedStatement("SELECT COUNT(id) AS result FROM " + this->urlListTable
-					+ " WHERE id < ?");
+			this->psGetUrlPosition = this->addPreparedStatement("SELECT COUNT(id) AS result FROM `" + this->urlListTable
+					+ "` WHERE id < ?");
 		}
 		if(!(this->psGetNumberOfUrls)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares getNumberOfUrls()...");
-			this->psGetNumberOfUrls = this->addPreparedStatement("SELECT COUNT(id) AS result FROM " + this->urlListTable);
+			this->psGetNumberOfUrls = this->addPreparedStatement("SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
 		}
 
 		if(!(this->psIsUrlLockable)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares isUrlLockable()...");
-			this->psIsUrlLockable = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM " + this->urlListTable
-					+ " WHERE id = ? AND (crawllock IS NULL OR crawllock < NOW())) AS result");
+			this->psIsUrlLockable = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable
+					+ "` WHERE id = ? AND (crawllock IS NULL OR crawllock < NOW())) AS result");
 		}
 		if(!(this->psGetUrlLock)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares getUrlLock()...");
-			this->psGetUrlLock = this->addPreparedStatement("SELECT crawllock FROM " + this->urlListTable + " WHERE id = ? LIMIT 1");
+			this->psGetUrlLock = this->addPreparedStatement("SELECT crawllock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
 		}
 		if(!(this->psCheckUrlLock)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares checkUrlLock()...");
-			this->psCheckUrlLock = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM " + this->urlListTable
-					+ " WHERE id = ? AND (crawllock < NOW() OR crawllock <= ? OR crawllock IS NULL)) AS result");
+			this->psCheckUrlLock = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable
+					+ "` WHERE id = ? AND (crawllock < NOW() OR crawllock <= ? OR crawllock IS NULL)) AS result");
 		}
 		if(!(this->psLockUrl)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares lockUrl()...");
-			this->psLockUrl = this->addPreparedStatement("UPDATE " + this->urlListTable + " SET crawllock = NOW() + INTERVAL ? SECOND"
+			this->psLockUrl = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET crawllock = NOW() + INTERVAL ? SECOND"
 					" WHERE id = ? LIMIT 1");
 		}
 		if(!(this->psUnLockUrl)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares unLockUrl()...");
-			this->psUnLockUrl = this->addPreparedStatement("UPDATE " + this->urlListTable + " SET crawllock = NULL WHERE id = ? LIMIT 1");
+			this->psUnLockUrl = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET crawllock = NULL WHERE id = ? LIMIT 1");
 		}
 
 		if(!(this->psSaveContent)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares saveContent()...");
-			this->psSaveContent = this->addPreparedStatement("INSERT INTO " + crawledTable + "(url, response, type, content)"
+			this->psSaveContent = this->addPreparedStatement("INSERT INTO `" + crawledTable + "`(url, response, type, content)"
 					" VALUES (?, ?, ?, ?)");
 		}
 		if(!(this->psSaveArchivedContent)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares saveArchivedContent()...");
-			this->psSaveArchivedContent = this->addPreparedStatement("INSERT INTO " + crawledTable + "(url, crawltime, archived,"
+			this->psSaveArchivedContent = this->addPreparedStatement("INSERT INTO `" + crawledTable + "`(url, crawltime, archived,"
 					" response, type, content) VALUES (?, ?, TRUE, ?, ?, ?)");
 		}
 		if(!(this->psSetUrlFinished)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares setUrlFinished()...");
-			this->psSetUrlFinished = this->addPreparedStatement("UPDATE " + this->urlListTable + " SET crawled = TRUE, parsed = FALSE,"
+			this->psSetUrlFinished = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET crawled = TRUE, parsed = FALSE,"
 					" extracted = FALSE, analyzed = FALSE, crawllock = NULL WHERE id = ? LIMIT 1");
 		}
 		if(!(this->psIsArchivedContentExists)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares isArchivedContentExists()...");
-			this->psIsArchivedContentExists = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM " + crawledTable
-					+ " WHERE url = ? AND crawltime = ?) AS result");
+			this->psIsArchivedContentExists = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + crawledTable
+					+ "` WHERE url = ? AND crawltime = ?) AS result");
 		}
 		if(!(this->psIsLinkExists)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares addLinkIfNotExists() [1/3]...");
-			this->psIsLinkExists = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM " + linkTable + " WHERE fromurl = ?"
+			this->psIsLinkExists = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + linkTable + "` WHERE fromurl = ?"
 					" AND tourl = ?) AS result");
 		}
 		if(!(this->psAddLink)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares addLinkIfNotExists() [2/3]...");
-			this->psAddLink = this->addPreparedStatement("INSERT INTO " + linkTable + "(fromurl, tourl, archived) VALUES(?, ?, FALSE)");
+			this->psAddLink = this->addPreparedStatement("INSERT INTO `" + linkTable + "`(fromurl, tourl, archived) VALUES(?, ?, FALSE)");
 		}
 		if(!(this->psAddLinkArchived)) {
 			if(verbose) this->log("crawler", "[#" + idString + "] prepares addLinkIfNotExists() [3/3]...");
-			this->psAddLinkArchived = this->addPreparedStatement("INSERT INTO " + linkTable + "(fromurl, tourl, archived)"
+			this->psAddLinkArchived = this->addPreparedStatement("INSERT INTO `" + linkTable + "`(fromurl, tourl, archived)"
 					" VALUES(?, ?, TRUE)");
 		}
 	}
