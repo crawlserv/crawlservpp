@@ -111,6 +111,12 @@ void crawlservpp::Module::DBWrapper::insertText(const std::string& tableName, co
 	this->database.insertText(tableName, columnName, text);
 }
 
+// provide access to the functionality for inserting entry into a text column and entry into a unsigned long column
+void crawlservpp::Module::DBWrapper::insertTextUInt64(const std::string& tableName, const std::string& textColumnName,
+		const std::string& numberColumnName, const std::string& text, unsigned long number) {
+	this->database.insertTextUInt64(tableName, textColumnName, numberColumnName, text, number);
+}
+
 // provide access to the functionality for inserting entries into a text column
 void crawlservpp::Module::DBWrapper::insertTexts(const std::string& tableName, const std::string& columnName,
 		const std::vector<std::string>& texts) {
