@@ -205,6 +205,11 @@ void crawlservpp::Module::Parser::Database::lockUrlList() {
 	this->lockTable(this->urlListTable);
 }
 
+// lock URL list and table with crawled content (for URL selection)
+void crawlservpp::Module::Parser::Database::lockUrlListAndCrawledTable() {
+	this->lockTables(this->urlListTable, this->urlListTable + "_crawled");
+}
+
 // check whether an URL has been parsed
 bool crawlservpp::Module::Parser::Database::isUrlParsed(unsigned long urlId) {
 	sql::ResultSet * sqlResultSet = NULL;

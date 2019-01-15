@@ -277,7 +277,7 @@ bool crawlservpp::Module::Parser::Thread::parsingUrlSelection() {
 	bool notIdle = this->currentUrl.id > 0;
 
 	// lock URL list
-	this->database.lockUrlList();
+	this->database.lockUrlListAndCrawledTable();
 
 	// get id and name of next URL (skip locked URLs)
 	while(true) {
