@@ -90,10 +90,12 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 		}
 		if(!(this->psGetNextUrl)) {
 			if(verbose) this->log("parser", "[#" + idString + "] prepares getNextUrl()...");
-			std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a JOIN `" + this->urlListTable
-					+ "_crawled` AS b ON a.id = b.url WHERE a.id > ? AND (a.parselock IS NULL OR a.parselock < NOW())";
-			if(!reparse) sqlQuery += " AND parsed = 0";
-			sqlQuery += " ORDER BY a.id LIMIT 1";
+			std::string sqlQuery = "SELECT `" + this->urlListTable + "`.id, `" + this->urlListTable + "`.url FROM `" + this->urlListTable
+					+ "` JOIN `" + this->urlListTable + "_crawled` ON `" + this->urlListTable + "`.id = `" + this->urlListTable +
+					"_crawled`.url WHERE `" + this->urlListTable + "`.id > ? AND (`" + this->urlListTable + "`.parselock IS NULL OR `"
+					+ this->urlListTable + "`.parselock < NOW())";
+			if(!reparse) sqlQuery += " AND `" + this->urlListTable + "`.parsed = 0";
+			sqlQuery += " ORDER BY `" + this->urlListTable + "`.id LIMIT 1";
 			this->psGetNextUrl = this->addPreparedStatement(sqlQuery);
 		}
 		if(!(this->psGetUrlPosition)) {
