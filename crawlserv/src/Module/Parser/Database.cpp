@@ -181,7 +181,7 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 			this->psUpdateParsedTable = this->addPreparedStatement(sqlQueryStrStr.str());*/
 
 			this->psUpdateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
-					" WHERE website = ?, urllist = ?, name = ? LIMIT 1");
+					" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1");
 			sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
 			sqlStatement->setUInt64(1, websiteId);
 			sqlStatement->setUInt64(2, listId);
