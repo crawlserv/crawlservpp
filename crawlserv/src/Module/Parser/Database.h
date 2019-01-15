@@ -42,6 +42,7 @@ namespace crawlservpp::Module::Parser {
 
 		// table function
 		void lockUrlList();
+		void lockUrlListAndCrawledTable();
 
 		// URL functions
 		bool isUrlParsed(unsigned long urlId);
