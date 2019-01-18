@@ -212,7 +212,9 @@ The following libraries need to be installed and manually linked after compiling
 
 **NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server.
 
-This frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database. It provides the following menu structure:
+This frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database.
+
+It provides the following menu structure:
 
 * **Server**: Authorize additional IPs or revoke authorization for all custom IPs, run custom commands and kill the server.
 * **Websites**: Manage websites and their URL lists including the download of URL lists as text files. 
@@ -250,7 +252,9 @@ Using some algorithms on large corpora may require a large amount of memory. Con
 
 ## Database
 
-The application uses exactly one database schema and all tables are prefixed with `crawlserv_`. The following main tables are used:
+The application uses exactly one database schema and all tables are prefixed with `crawlserv_`.
+
+The following main tables are created and used:
 
 * **`analyzedtables`**: Index of result tables for analyzing.
 * **`configs`**: Crawling, parsing, extracting and analyzing configurations.
