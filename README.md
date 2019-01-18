@@ -1,4 +1,4 @@
-<i><b>WARNING:</b> This application is under development. It is neither complete nor adequately documented. ~~strikethrough~~ means a feature is not implemented yet.</i>
+<mark>**WARNING!** This application is under development. It is neither complete nor adequately documented. ~~strikethrough~~ means a feature is not implemented yet.</i></mark>
 
 # crawlserv++
 <b>crawlserv++</b> is an application for crawling websites and analyzing textual content on these websites.
@@ -17,7 +17,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 ### Classes, Namespaces, Structures and Enums
 
-**NB!** All non-external classes are part of the namespace `crawlservpp`.
+<mark>**NB!** All non-external classes are part of the namespace `crawlservpp`.</mark>
 
 The source code of the server consists of the following classes (as of January 2019):
 
@@ -205,6 +205,8 @@ The following directory names need to be (recursively) ignored when compiling wi
 The following libraries need to be installed and manually linked after compiling the source code: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml tidy uriparser aspell`.
 
 ## Frontend
+
+<mark>**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language, all you need is a SQL connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server.</mark>
 
 The frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database. The frontend provides the following menu structure:
 
