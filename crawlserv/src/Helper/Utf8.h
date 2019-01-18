@@ -10,7 +10,7 @@
 #ifndef HELPER_UTF8_H_
 #define HELPER_UTF8_H_
 
-#include "../_extern/utf8.h"
+#include "../_extern/utf8/source/utf8.h"
 
 #include <string>
 
