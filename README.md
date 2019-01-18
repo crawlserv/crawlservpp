@@ -1,6 +1,6 @@
-_**WARNING!** This application is under development. It is neither complete nor adequately documented.
+_**WARNING!** This application is under development. It is neither complete nor adequately documented._
 
- ~~strikethrough~~ means a feature is not implemented yet._
+ _~~strikethrough~~ means a feature is not implemented yet._
 
 # crawlserv++
 **crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
