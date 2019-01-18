@@ -12,7 +12,7 @@
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 
-#include "../_extern/mongoose.h"
+#include "../_extern/mongoose/mongoose.h"
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 
 #include <boost/version.hpp>

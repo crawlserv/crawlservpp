@@ -33,7 +33,7 @@
 #include "../Struct/ServerSettings.h"
 #include "../Struct/ThreadDatabaseEntry.h"
 
-#include "../_extern/mongoose.h"
+#include "../_extern/mongoose/mongoose.h"
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/prettywriter.h"
 
