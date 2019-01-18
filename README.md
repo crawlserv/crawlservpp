@@ -32,14 +32,14 @@ The source code of the server consists of the following classes (as of January 2
 * <b>[`Module::Analyzer::Algo::MarkovSentence`](crawlserv/src/Module/Analyzer/Algo/MarkovSentence.cpp)</b>: Proof-of-concept implementation of markov chain sentence generator, borrowed from Kelly Rauchenberger at https://github.com/hatkirby/rawr-ebooks.
 * <b>[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)</b>: Proof-of-concept implementation of markov chain text generator, borrowed from Rosetta Code at https://rosettacode.org/wiki/Markov_chain_text_generator.
 * <b>[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.cpp)</b>: Analyzing configuration. See ~~[analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json)~~ for all configuration entries.
-* ~~[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)</b>~~: Database access for analyzers (implements the `Module::DBWrapper` interface).
-* ~~[`Module::Analyzer::Thread`]~~: Implementation of the `Module::Thread` interface for analyzers. Abstract class to be inherited by algorithm classes.
+* ~~<b>[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)</b>~~: Database access for analyzers (implements the `Module::DBWrapper` interface).
+* ~~<b>[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)</b>~~: Implementation of the `Module::Thread` interface for analyzers. Abstract class to be inherited by algorithm classes.
 * <b>[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.cpp)</b>: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
 * <b>[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)</b>: Database access for crawlers (implements the `Module::DBWrapper` interface).
 * <b>[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)</b>: Implementation of the `Module::Thread` interface for crawlers.
-* <b>~~`Module::Extractor::Config`~~</b>: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
-* ~~<b>`Module::Extractor::Database`</b>~~: Database access for extractors (implements the `Module::DBWrapper` interface).
-* ~~<b>`Module::Extractor::Thread`</b>~~: Implementation of the `Module::Thread` interface for extractors.
+* <b>~~[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.cpp)~~</b>: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
+* ~~<b>[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)</b>~~: Database access for extractors (implements the `Module::DBWrapper` interface).
+* ~~<b>[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)</b>~~: Implementation of the `Module::Thread` interface for extractors.
 * <b>[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.cpp)</b>: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
 * <b>[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)</b>: Database access for parsers (implements the `Module::DBWrapper` interface).
 * <b>[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)</b>: Implementation of the `Module::Thread` interface for parsers.
@@ -77,7 +77,7 @@ The following custom enumerations are used:
 
 * <b>[`Module::Analyzer::Algo::List`](crawlserv/src/Module/Algo/List.h)</b>: List of implemented algorithms.
 
-Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Main/Data.h`].
+Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Main/Data.h`](crawlserv/src/Main/Data.h).
 
 The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `Main::App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
