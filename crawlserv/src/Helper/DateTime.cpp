@@ -9,8 +9,68 @@
 
 #include "DateTime.h"
 
+namespace crawlservpp::Helper::DateTime {
+
+// convert time stamp from WEEKDAY[short], DD MONTH[short] YYYY HH:MM:SS TIMEZONE[short] to YYYY-MM-DD HH:MM:SS
+bool convertLongDateTimeToSQLTimeStamp(std::string& dateTime) {
+	return convertCustomDateTimeToSQLTimeStamp(dateTime, "%a, %d %b %Y %T %Z");
+}
+
+// convert date and time with custom format to YYYY-MM-DD HH:MM:SS
+bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat) {
+	std::istringstream in(dateTime);
+	date::sys_seconds tp;
+	in >> date::parse(customFormat, tp);
+	if(!bool(in)) return false;
+	dateTime = date::format("%F %T", tp);
+	return true;
+}
+
+// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale)
+bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat, const std::locale& locale) {
+	std::istringstream in(dateTime);
+	date::sys_seconds tp;
+	in.imbue(locale);
+	in >> date::parse(customFormat, tp);
+	if(!bool(in)) return false;
+	dateTime = date::format("%F %T", tp);
+	return true;
+}
+
+// convert time stamp from YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
+bool convertTimeStampToSQLTimeStamp(std::string& timeStamp) {
+	return convertCustomDateTimeToSQLTimeStamp(timeStamp, "%Y%m%d%H%M%S");
+}
+
+// convert time stamp from YYYY-MM-DD HH:MM:SS to YYYYMMDDHHMMSS
+bool convertSQLTimeStampToTimeStamp(std::string& timeStamp) {
+	std::istringstream in(timeStamp);
+	date::sys_seconds tp;
+	in >> date::parse("%F %T", tp);
+	if(!bool(in)) return false;
+	timeStamp = date::format("%Y%m%d%H%M%S", tp);
+	return true;
+}
+
+// check whether a string contains a valid ISO date
+bool isValidISODate(const std::string& isoDate) {
+	std::istringstream in(isoDate);
+	date::sys_days tp;
+	in >> date::parse("%F", tp);
+	return bool(in);
+}
+
+// check whether a ISO date (YYYY-MM-DD) is in a specific date range
+bool isISODateInRange(const std::string& isoDate, const std::string& rangeFrom, const std::string& rangeTo) {
+	if(isoDate.length() < 10) return false;
+	if(rangeFrom.length() < 10 && rangeTo.length() < 10) return true;
+	if(rangeTo.length() < 10) return isoDate.substr(0, 10) >= rangeFrom.substr(0, 10);
+	if(rangeFrom.length() < 10) return isoDate.substr(0, 10) <= rangeTo.substr(0, 10);
+	return isoDate.substr(0, 10) >= rangeFrom.substr(0, 10) && isoDate <= rangeTo.substr(0, 10);
+}
+
 // convert microseconds to string
-std::string crawlservpp::Helper::DateTime::microsecondsToString(unsigned long long microseconds) {
+std::string microsecondsToString(unsigned long long microseconds) {
 	unsigned long long rest = microseconds;
 	unsigned long days = rest / 86400000000;
 	rest -= days * 86400000000;
@@ -33,12 +93,12 @@ std::string crawlservpp::Helper::DateTime::microsecondsToString(unsigned long lo
 
 	std::string resultStr = resultStrStr.str();
 	if(resultStr.length()) resultStr.pop_back();
-	else return "0μs";
+	else return "<1μs";
 	return resultStr;
 }
 
 // convert milliseconds to string
-std::string crawlservpp::Helper::DateTime::millisecondsToString(unsigned long long milliseconds) {
+std::string millisecondsToString(unsigned long long milliseconds) {
 	unsigned long long rest = milliseconds;
 	unsigned long days = rest / 86400000;
 	rest -= days * 86400000;
@@ -58,12 +118,12 @@ std::string crawlservpp::Helper::DateTime::millisecondsToString(unsigned long lo
 
 	std::string resultStr = resultStrStr.str();
 	if(resultStr.length()) resultStr.pop_back();
-	else return "0ms";
+	else return "<1ms";
 	return resultStr;
 }
 
 // convert seconds to string
-std::string crawlservpp::Helper::DateTime::secondsToString(unsigned long long seconds) {
+std::string secondsToString(unsigned long long seconds) {
 	unsigned long long rest = seconds;
 	unsigned long days = rest / 86400;
 	rest -= days * 86400;
@@ -80,47 +140,8 @@ std::string crawlservpp::Helper::DateTime::secondsToString(unsigned long long se
 
 	std::string resultStr = resultStrStr.str();
 	if(resultStr.length()) resultStr.pop_back();
-	else return "0s";
+	else return "<1s";
 	return resultStr;
 }
 
-// convert time stamp from WEEKDAY[short], DD MONTH[short] YYYY HH:MM:SS TIMEZONE[short] to YYYY-MM-DD HH:MM:SS
-bool crawlservpp::Helper::DateTime::convertLongDateTimeToSQLTimeStamp(std::string& dateTime) {
-	return crawlservpp::Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(dateTime, "%a, %d %b %Y %T %Z");
-}
-
-// convert date and time with custom format to YYYY-MM-DD HH:MM:SS
-bool crawlservpp::Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat) {
-	std::istringstream in(dateTime);
-	date::sys_seconds tp;
-	in >> date::parse(customFormat, tp);
-	if(!bool(in)) return false;
-	dateTime = date::format("%F %T", tp);
-	return true;
-}
-
-// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale)
-bool crawlservpp::Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat, const std::locale& locale) {
-	std::istringstream in(dateTime);
-	date::sys_seconds tp;
-	in.imbue(locale);
-	in >> date::parse(customFormat, tp);
-	if(!bool(in)) return false;
-	dateTime = date::format("%F %T", tp);
-	return true;
-}
-
-// convert time stamp from YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
-bool crawlservpp::Helper::DateTime::convertTimeStampToSQLTimeStamp(std::string& timeStamp) {
-	return crawlservpp::Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(timeStamp, "%Y%m%d%H%M%S");
-}
-
-// convert time stamp from YYYY-MM-DD HH:MM:SS to YYYYMMDDHHMMSS
-bool crawlservpp::Helper::DateTime::convertSQLTimeStampToTimeStamp(std::string& timeStamp) {
-	std::istringstream in(timeStamp);
-	date::sys_seconds tp;
-	in >> date::parse("%F %T", tp);
-	if(!bool(in)) return false;
-	timeStamp = date::format("%Y%m%d%H%M%S", tp);
-	return true;
 }

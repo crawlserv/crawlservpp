@@ -11,7 +11,7 @@
 #ifndef MODULE_DBTHREAD_H_
 #define MODULE_DBTHREAD_H_
 
-#include "../Global/Database.h"
+#include "../Main/Database.h"
 #include "../Struct/DatabaseSettings.h"
 
 #include <exception>
@@ -21,8 +21,8 @@
 namespace crawlservpp::Module {
 	class DBWrapper;
 
-	class DBThread : public crawlservpp::Global::Database {
-		friend class crawlservpp::Module::DBWrapper;
+	class DBThread : public crawlservpp::Main::Database {
+		friend class DBWrapper;
 	public:
 		DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings);
 		virtual ~DBThread();

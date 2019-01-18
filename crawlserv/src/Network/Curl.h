@@ -35,8 +35,8 @@ namespace crawlservpp::Network {
 		Curl();
 		virtual ~Curl();
 
-		bool setConfigGlobal(const crawlservpp::Network::Config& globalConfig, bool limited, std::vector<std::string> * warningsTo);
-		bool setConfigCurrent(const crawlservpp::Network::Config& currentConfig);
+		bool setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo);
+		bool setConfigCurrent(const Config& currentConfig);
 
 		bool getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors);
 		unsigned int getResponseCode() const;

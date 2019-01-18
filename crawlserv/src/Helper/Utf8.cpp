@@ -9,9 +9,12 @@
 
 #include "Utf8.h"
 
+namespace crawlservpp::Helper::Utf8 {
+
 // convert ISO-8859-1 to UTF-8
-std::string crawlservpp::Helper::Utf8::iso88591ToUtf8(const std::string& strIn) {
+std::string iso88591ToUtf8(const std::string& strIn) {
 	std::string strOut;
+	strOut.reserve(strIn.size() * 2);
 	for(auto i = strIn.begin(); i != strIn.end(); ++i) {
 		uint8_t c = *i;
 		if(c < 0x80) strOut.push_back(c);
@@ -24,8 +27,10 @@ std::string crawlservpp::Helper::Utf8::iso88591ToUtf8(const std::string& strIn) 
 }
 
 // replace invalid UTF-8 characters, return whether invalid characters occured
-bool crawlservpp::Helper::Utf8::repairUtf8(const std::string& strIn, std::string& strOut) {
+bool repairUtf8(const std::string& strIn, std::string& strOut) {
 	if(utf8::is_valid(strIn.begin(), strIn.end())) return false;
 	utf8::replace_invalid(strIn.begin(), strIn.end(), back_inserter(strOut));
 	return true;
+}
+
 }

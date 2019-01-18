@@ -16,7 +16,7 @@
 
 #include "DBThread.h"
 
-#include "../Global/Database.h"
+#include "../Main/Database.h"
 #include "../Helper/DateTime.h"
 #include "../Struct/ThreadOptions.h"
 
@@ -34,15 +34,15 @@
 namespace crawlservpp::Module {
 	class Thread {
 	public:
-		Thread(crawlservpp::Global::Database& dbBase, unsigned long threadId, const std::string& threadModule,
+		Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
 				const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
 				unsigned long threadLast);
-		Thread(crawlservpp::Global::Database& dbBase, const std::string& threadModule,
+		Thread(crawlservpp::Main::Database& dbBase, const std::string& threadModule,
 				const crawlservpp::Struct::ThreadOptions& threadOptions);
 		virtual ~Thread();
 
 		void start();
-		void pause();
+		bool pause();
 		void unpause();
 		void stop();
 		void sendInterrupt();
@@ -56,15 +56,18 @@ namespace crawlservpp::Module {
 		bool isRunning() const;
 
 	protected:
-		crawlservpp::Module::DBThread database; // access to the database for the thread
+		DBThread database; // access to the database for the thread
 
-		std::string websiteNameSpace; // namespace of website
-		std::string urlListNameSpace; // namespace of URL list
+		std::string websiteNamespace; // namespace of website
+		std::string urlListNamespace; // namespace of URL list
 		std::string configuration; // configuration
 
 		void setStatusMessage(const std::string& statusMessage);
 		void setProgress(float progress);
 		void log(const std::string& entry);
+
+		void allowPausing();
+		void disallowPausing();
 
 		unsigned long getLast() const;
 		void setLast(unsigned long last);
@@ -78,9 +81,10 @@ namespace crawlservpp::Module {
 		virtual void onClear(bool interrupted) = 0;
 
 	private:
-		crawlservpp::Global::Database& databaseClass; // access to the database for the class
+		crawlservpp::Main::Database& databaseClass; // access to the database for the class
 
-		std::atomic<bool> running; // thread is running (or paused)
+		std::atomic<bool> pausable; // thread is pausable
+ 		std::atomic<bool> running; // thread is running (or paused)
 		std::atomic<bool> paused; // thread is paused
 		std::atomic<bool> interrupted; // thread has been interrupted by shutdown
 		std::atomic<bool> resumed; // thread has been resumed after interruption by shutdown

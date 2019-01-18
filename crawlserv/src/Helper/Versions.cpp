@@ -9,7 +9,9 @@
 
 #include "Versions.h"
 
-std::string crawlservpp::Helper::Versions::getLibraryVersions(const std::string& indent) {
+namespace crawlservpp::Helper::Versions {
+
+std::string getLibraryVersions(const std::string& indent) {
 	std::ostringstream out;
 
 	// Boost
@@ -18,6 +20,12 @@ std::string crawlservpp::Helper::Versions::getLibraryVersions(const std::string&
 
 	// Curl
 	out << indent << "cURL v" << curl_version_info(CURLVERSION_NOW)->version << "\n";
+
+	// GNU Aspell
+	out << indent << "GNU Aspell v" << aspell_version_string() << "\n";
+
+	// date.h (no version information available)
+	out << indent << "Howard E. Hinnant's date.h library\n";
 
 	// mongoose
 	out << indent << "mongoose v" << MG_VERSION << "\n";
@@ -37,6 +45,9 @@ std::string crawlservpp::Helper::Versions::getLibraryVersions(const std::string&
 	// RapidJSON
 	out << indent << "RapidJSON v" << RAPIDJSON_VERSION_STRING << "\n";
 
+	// rawr-gen (no version information available)
+	out << indent << "rawr-gen by Kelly Rauchenberger\n";
+
 	// tidy
 	out << indent << "tidy v" << tidyLibraryVersion() << "\n";
 
@@ -48,4 +59,6 @@ std::string crawlservpp::Helper::Versions::getLibraryVersions(const std::string&
 	out << indent << "UTF8-CPP v2.1\n";
 
 	return out.str();
+}
+
 }

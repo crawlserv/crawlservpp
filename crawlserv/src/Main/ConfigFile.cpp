@@ -7,10 +7,12 @@
  *      Author: ans
  */
 
-#include "ConfigFile.h"
+#include "../Main/ConfigFile.h"
+
+namespace crawlservpp::Main {
 
 // constructor: read file
-crawlservpp::Global::ConfigFile::ConfigFile(const std::string& name) {
+ConfigFile::ConfigFile(const std::string& name) {
 	std::ifstream fileStream(name);
 	std::string line;
 
@@ -35,14 +37,16 @@ crawlservpp::Global::ConfigFile::ConfigFile(const std::string& name) {
 }
 
 // destructor: stub
-crawlservpp::Global::ConfigFile::~ConfigFile() {}
+ConfigFile::~ConfigFile() {}
 
 // get value of config entry (or empty string if entry does not exist)
-std::string crawlservpp::Global::ConfigFile::getValue(const std::string& name) const {
+std::string ConfigFile::getValue(const std::string& name) const {
 	for(auto i = entries.begin(); i != entries.end(); ++i) {
 		if(i->name == boost::algorithm::to_lower_copy(name)) {
 			return i->value;
 		}
 	}
 	return "";
+}
+
 }

@@ -1,28 +1,59 @@
-/*
+/**
  * Configuration class for the crawlserv frontend
  * 
  */
 
-// helper function to flatten an object
-var flattenObject = function(ob) {
-    var toReturn = {};
+// @required: helper function msToStr() from frontend.js !!!
 
-    for (var i in ob) {
-        if (!ob.hasOwnProperty(i)) continue;
-
-        if ((typeof ob[i]) == "object") {
-            var flatObject = flattenObject(ob[i]);
-            for (var x in flatObject) {
-                if (!flatObject.hasOwnProperty(x)) continue;
-
-                toReturn[i + '.' + x] = flatObject[x];
-            }
-        } else {
-            toReturn[i] = ob[i];
-        }
-    }
-    return toReturn;
+// helper function to compare two configurations
+function areConfigsEqual(config1, config2, logging = false) {
+	// go through all configuration entries in first configuration
+	for(key1 in config1) {
+		// find configuration entry in second configuration
+		var found = false;
+		for(key2 in config2) {
+			if(config1[key1].cat == config2[key2].cat) {
+				if(config1[key1].name == config2[key2].name) {
+					// configuration entry found: check for array
+					if($.isArray(config1[key1].value) && $.isArray(config2[key2].value)) {
+						// compare array size
+						var arrayLength = config1[key1].value.length;
+						if(arrayLength != config2[key2].value.length) {
+							if(logging) console.log("areConfigsEqual(): Unequal number of elements in " + config1[key1].cat + "."
+									+ config1[key1].name);
+							return false;
+						}
+						
+						// compare array items
+						for(var i = 0; i < arrayLength; i++) {
+							if(config1[key1].value[i] != config2[key2].value[i]) {
+								if(logging)	console.log("areConfigsEqual(): " + config1[key1].cat + "." + config1[key1].name
+										+ "[" + i + "]: " + config1[key1].value[i] + " != " + config2[key2].value[i]);
+								return false;
+							}
+						}
+					}
+					// compare value (ignore change of algorithm)
+					else if(config1[key1].name != "_algo" && config1[key1].value != config2[key2].value) {
+						if(logging) console.log("areConfigsEqual(): " + config1[key1].cat + "." + config1[key1].name + ": "
+								+ config1[key1].value + " != " + config2[key2].value);
+						return false;
+					}
+					found = true;
+					break;
+				}
+			}
+		}
+		if(!found && config1[key1].name != "_algo") {
+			if(logging)
+				console.log("areConfigsEqual(): " + config1[key1].cat + "."
+						+ config1[key1].name + " [=\'" + config1[key1].value + "\'] not found");
+			return false;
+		}
+	}
+	return true;
 };
+
 
 class Config {
 	
@@ -31,7 +62,10 @@ class Config {
 	 */
 	
 	// constructor: create or load configuration
-	constructor(module, json, mode) {		
+	constructor(module, json, mode, algo = null, filter = null, callback_when_finished = null) {
+		// save algorithm
+		this.algo = algo;
+		
 		// link class to view
 		this.view = $("#config-view");
 		
@@ -39,14 +73,17 @@ class Config {
 			// set empty content
 			this.content = "";
 			
-			// parse data structure from JSON file for module
-			let thisClass = this;
+			// save start time
 			var startTime = +new Date();
+			
+			// save class pointer
+			let thisClass = this;
+			
+			// parse configuration data from JSON file for module
 			$.getJSON("json/" + module + ".json", function(data) {
 				thisClass.config_base = data;
-				
-				// check data structure for consistency (only one id per
-				// category)
+								
+				// check data for consistency (only one id per category)
 				for(var cat in thisClass.config_base) {
 					var cat_ids = [];
 					for(var opt in thisClass.config_base[cat]) {
@@ -54,17 +91,17 @@ class Config {
 						if(thisClass.config_base[cat].hasOwnProperty(opt) && opt != "id" && opt != "open" && opt != "label") {
 							let id = thisClass.config_base[cat][opt].id;
 							if(cat_ids.includes(id)) {
-								alert("Could not load data structure.\n\nDuplicate id #" + id + " in category \'" + cat
-										+ "\', option \'" + opt + "\'.");
-								return;
+								throw new Error("Config::constructor(): Could not load configuration data.\n\nDuplicate id #"
+										+ id + " in category \'" + cat + "\', option \'" + opt + "\'.");
 							}
 							else cat_ids.push(id);
 						}
 					}
 				}
 				
+				// calculate loading time
 				var endTime = +new Date();
-				console.log("Config(): Data structure loaded after " + msToStr(endTime - startTime) + ".");
+				console.log("Config::constructor(): Configuration data loaded after " + msToStr(endTime - startTime) + ".");
 				startTime = endTime;
 				
 				// parse configuration from database
@@ -103,9 +140,27 @@ class Config {
 					}
 				}				
 				
-				// create configuration content
+				// create configuration content: go through all categories
 				for(var cat in thisClass.config_base) {
 					var simple = [];
+					
+					// check whether filter is enabled
+					if(filter != null) {
+						var found = false;
+						
+						// search for category in filter
+						for(var whitelisted of filter) {
+							if(whitelisted == cat) {
+								found = true;
+								break;
+							}
+						}
+						if(!found) {
+							// category not in filter: do not render it
+							continue;
+						}
+					}
+					
 					// start category
 					let cobj = thisClass.config_base[cat];
 					thisClass.content += thisClass.startCat(cobj.id, cat, cobj.label, cobj.open);
@@ -126,8 +181,7 @@ class Config {
 								thisClass.content += thisClass.advancedOpt(cat, opt, obj, value);
 							}
 							else {
-								// simple configuration: hide options that are
-								// not simple
+								// simple configuration: hide options that are not simple
 								if(obj.simple) {
 									// push simple option to array for sorting
 									simple.push([obj.position, cat, opt, obj, value]);
@@ -152,13 +206,18 @@ class Config {
 				
 				// render configuration
 				endTime = +new Date();
-				console.log("Config(): Content created after " + msToStr(endTime - startTime) + ".");
+				console.log("Config::constructor(): Content created after " + msToStr(endTime - startTime) + ".");
 				thisClass.renderToView();
+				
+				// success!
+				if(callback_when_finished != null) callback_when_finished();
 			})
 			.fail(function(jqXHR, textStatus, errorThrown) {
-				alert('Could not load configuration data structure.\n\n' + textStatus);
+				throw new Error("Config::constructor(): Could not load configuration data.\n" + textStatus + ": "
+						+ errorThrown);
 			});
 		}
+		else throw new Error("Config::constructor(): Content view not found.")
 	}
 	
 	// sort values according to position
@@ -177,8 +236,8 @@ class Config {
 		else if(obj.type == "number") result += this.number(cat, obj.id, value, obj.default, obj.min, obj.max, obj.step);
 		else if(obj.type == "date") result += this.date(cat, obj.id, value, obj.default, obj.min, obj.max);
 		else if(obj.type == "array") {
-			result += this.array(cat, obj.id, obj["item-type"], value, obj.min, obj.max, obj.step, this.getFilter(obj), obj["enum-values"],
-					obj.default);
+			result += this.array(cat, obj.id, obj["item-type"], value, obj.min, obj.max, obj.step, this.getFilter(obj),
+					obj["enum-values"], obj.default);
 		}
 		else if(obj.type == "query") result += this.query(cat, obj.id, value, this.getFilter(obj));
 		else if(obj.type == "enum") result += this.valuelist(cat, obj.id, value, obj["enum-values"]);
@@ -210,8 +269,8 @@ class Config {
 		else if(obj.type == "number") result += this.number(cat, obj.id, value, obj.default, obj.min, obj.max, obj.step);
 		else if(obj.type == "date") result += this.date(cat, obj.id, value, obj.default, obj.min, obj.max);
 		else if(obj.type == "array")
-			result += this.array(cat, obj.id, obj["item-type"], value, obj.min, obj.max, obj.step, this.getFilter(obj), obj["enum-values"],
-					obj.default);
+			result += this.array(cat, obj.id, obj["item-type"], value, obj.min, obj.max, obj.step, this.getFilter(obj),
+					obj["enum-values"],	obj.default);
 		else if(obj.type == "query") result += this.query(cat, obj.id, value, this.getFilter(obj));
 		else if(obj.type == "enum") result += this.valuelist(cat, obj.id, value, obj["enum-values"]);
 		result += this.endValue();
@@ -361,6 +420,10 @@ class Config {
 		
 		if(!array) result += "id=\"opt-" + cat + "-" + id + "\" ";
 		
+		result += "placeholder=\"" + def + "\"";
+		
+		if(def != value) result += " value=\"" + value + "\"";
+		
 		if(typeof min !== "undefined") result += " min=\"" + min + "\"";
 		if(typeof max !== "undefined") result += " max=\"" + max + "\"";
 		
@@ -432,9 +495,9 @@ class Config {
 		var result = "";
 		
 		if(!Array.isArray(def))
-			console.log("Error: Invalid default value for " + cat + ".#" + id + " (should be an array of " + type + ", but is \'"
-					+ def + "\').");
-		else isdef = def.equals(value);
+			throw new Error("config::array(): Invalid default value for " + cat + ".#" + id + " (should be an array of "
+					+ type + ", but is \'" + def + "\').");
+		isdef = def.equals(value);
 		
 		result += "<div class=\"opt-array\" id=\"opt-" + cat + "-" + id + "\" data-cat=\"" + cat + "\" data-id=\"" + id;
 		result += "\" data-count=\"" + value.length + "\" data-type=\"" + type + "\"";
@@ -529,6 +592,7 @@ class Config {
 		array.append(this.arrayitem(count + 1, cat, id, array.data("type"), "", array.data("min"), array.data("max"),
 				array.data("step"), array.data("filter"), array.data("enum-values"), false));
 		array.data("count", count + 1);
+		array.children("div").last().children("input[type=text], input[type=number], input[type=date]").focus();
 	}
 	
 	// remove element from array
@@ -565,13 +629,18 @@ class Config {
 	 * DATA FUNCTIONS
 	 */
 	
+	// set algorithm
+	setAlgo(algo) {
+		this.algo = algo;
+	}
+	
 	// get value from current configuration
 	getConfValue(cat, opt) {
 		for(var i = 0; i < this.config_combined.length; i++) {
 			if(this.config_combined[i].cat == cat && this.config_combined[i].name == opt)
 				return this.config_combined[i].value;
 		}
-		console.log("Error: Could not find \'" + cat + "." + opt + "\' in current configuration.");
+		throw new Error("config::getConfValue(): Could not find \'" + cat + "." + opt + "\' in current configuration.");
 	}
 	
 	// update and get current configuration
@@ -651,7 +720,7 @@ class Config {
 					
 					// add new object to the current configuration
 					if(nobj.value != null) this.config_current.push(nobj);
-					else console.log("Error: Could not get value of '" + cat + "." + opt + "'. Invalid type?");
+					else throw new Error("Config::updateConf(): Could not get value of '" + cat + "." + opt + "'. Invalid type?");
 				}
 			}
 		}
@@ -659,11 +728,14 @@ class Config {
 		// remove default values from configuration
 		for(var i = 0; i < this.config_current.length; i++) {
 			let opt = this.config_current[i];
+			if(opt.name == "_algo") continue;
+			else if(this.config_base[opt.cat] === undefined) throw new Error("Category \"" + opt.cat + "\" not defined.");
 			if(this.config_base[opt.cat][opt.name] === undefined) {
 				if(this.config_current.splice(i, 1).length < 1)
-					console.log("Error deleting " + opt.cat + "." + opt.name + " from current configuration.");
+					console.log("Config::updateConf() WARNING: Could not delete " + opt.cat + "." + opt.name
+							+ " from current configuration.");
 				else {
-					console.log("Error: Invalid option \'" + opt.cat + "." + opt.name + "\' removed.");
+					console.log("Config::updateConf() WARNING: Invalid option \'" + opt.cat + "." + opt.name + "\' removed.");
 					i--;
 				}
 				continue;
@@ -672,17 +744,32 @@ class Config {
 			if(Array.isArray(opt.value)) {
 				if(opt.value.equals(def)) {
 					if(this.config_current.splice(i, 1).length < 1)
-						console.log("Error deleting " + opt.cat + "." + opt.name + " from current configuration.");
+						console.log("Config::updateConf() WARNING: Could not delete " + opt.cat + "." + opt.name
+								+ " from current configuration.");
 					else i--;
 				}
 			}
 			else {
 				if(opt.value == def) {
 					if(this.config_current.splice(i, 1).length < 1)
-						console.log("Error deleting " + opt.cat + "." + opt.name + " from current configuration.");
+						console.log("Config::updateConf() WARNING: Could not delete " + opt.cat + "." + opt.name
+								+ " from current configuration.");
 					else i--;
 				}
 			}
+		}
+		
+		// add or update algorithm if necessary
+		if(this.algo != null) {
+			var found = false;
+			for(var key in this.config_current) {
+				if(this.config_current[key].name == "_algo") {
+					this.config_current[key].value = this.algo;
+					found = true;
+					break;
+				}
+			}
+			if(!found) this.config_current.unshift({ 'name': '_algo', 'value': this.algo });
 		}
 		
 		// return JSON
@@ -691,8 +778,11 @@ class Config {
 	
 	// check for changes
 	isConfChanged() {
-		return JSON.stringify(this.updateConf(), Object.keys(flattenObject(this.updateConf())).sort())
-			!= JSON.stringify(this.config_db, Object.keys(flattenObject(this.config_db)).sort())
+		var newConfig = this.updateConf();
+		var oldConfig = this.config_db;
+		
+		// compare configurations
+		return !areConfigsEqual(newConfig, oldConfig);
 	}
 	
 	/*

@@ -10,8 +10,10 @@
 
 #include "Thread.h"
 
+namespace crawlservpp::Module {
+
 // constructor A: run previously interrupted thread
-crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, unsigned long threadId, const std::string& threadModule,
+Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
 		const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
 		unsigned long threadLast)
 		: database(dbBase.getSettings()), databaseClass(dbBase), module(threadModule), options(threadOptions) {
@@ -19,6 +21,7 @@ crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, unsig
 	this->threadPointer = NULL;
 
 	// set status variables
+	this->pausable = true;
 	this->running = true;
 	this->paused = threadPaused;
 	this->interrupted = false;
@@ -44,8 +47,8 @@ crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, unsig
 	}
 
 	// get namespace of website, URL list and configuration
-	this->websiteNameSpace = this->databaseClass.getWebsiteNameSpace(this->getWebsite());
-	this->urlListNameSpace = this->databaseClass.getUrlListNameSpace(this->getUrlList());
+	this->websiteNamespace = this->databaseClass.getWebsiteNamespace(this->getWebsite());
+	this->urlListNamespace = this->databaseClass.getUrlListNamespace(this->getUrlList());
 	this->configuration = this->databaseClass.getConfiguration(this->getConfig());
 
 	// update thread status in database (remove "INTERRUPTED ", add "PAUSED " before status if necessary)
@@ -53,7 +56,7 @@ crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, unsig
 }
 
 // constructor B: start new thread (using constructor A to initialize values)
-crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, const std::string& threadModule,
+Thread::Thread(crawlservpp::Main::Database& dbBase, const std::string& threadModule,
 		const crawlservpp::Struct::ThreadOptions& threadOptions) : Thread(dbBase, 0, threadModule, "", false, threadOptions, 0) {
 	// add thread to database and save ID
 	this->id = this->databaseClass.addThread(threadModule, threadOptions);
@@ -63,7 +66,7 @@ crawlservpp::Module::Thread::Thread(crawlservpp::Global::Database& dbBase, const
 }
 
 // destructor
-crawlservpp::Module::Thread::~Thread() {
+Thread::~Thread() {
 	if(this->threadPointer) {
 		// THIS SHOULD NOT HAPPEN!
 		std::cout << "WARNING: Thread pointer still active in Module::Thread::~Thread()"
@@ -74,15 +77,18 @@ crawlservpp::Module::Thread::~Thread() {
 }
 
 // start the thread (may not be used by the thread itself!)
-void crawlservpp::Module::Thread::start() {
+void Thread::start() {
 	// run thread
-	if(!(this->threadPointer)) this->threadPointer = new std::thread(&crawlservpp::Module::Thread::main, this);
+	if(!(this->threadPointer)) this->threadPointer = new std::thread(&Thread::main, this);
 }
 
 // pause the thread (may not be used by the thread itself!)
-void crawlservpp::Module::Thread::pause() {
+bool Thread::pause() {
 	// ignore if thread is paused
-	if(this->paused) return;
+	if(this->paused) return true;
+
+	// check whether thread is pausable
+	if(!(this->pausable)) return false;
 
 	// set internal pause state
 	this->paused = true;
@@ -92,10 +98,12 @@ void crawlservpp::Module::Thread::pause() {
 		std::lock_guard<std::mutex> statusLocked(this->statusLock);
 		this->databaseClass.setThreadStatus(this->id, true, this->status);
 	}
+
+	return true;
 }
 
 // unpause the thread (may not be used by the thread itself!)
-void crawlservpp::Module::Thread::unpause() {
+void Thread::unpause() {
 	// ignore if thread is not paused
 	if(!(this->paused)) return;
 
@@ -114,7 +122,7 @@ void crawlservpp::Module::Thread::unpause() {
 }
 
 // stop the thread for good (may not be used by the thread itself!)
-void crawlservpp::Module::Thread::stop() {
+void Thread::stop() {
 	// stop running
 	if(this->threadPointer && this->running) {
 		this->running = false;
@@ -143,7 +151,7 @@ void crawlservpp::Module::Thread::stop() {
 // interrupt the thread for shutdown (may not be used by the thread itself!)
 // NOTE:	Module::Thread::finishInterrupt() has to be called afterwards to wait for the thread!
 //			This enables the interruption of all threads simultaneously before waiting for their conclusion
-void crawlservpp::Module::Thread::sendInterrupt() {
+void Thread::sendInterrupt() {
 	// check whether thread exists and is running
 	if(this->threadPointer && this->running) {
 		// interrupt thread
@@ -165,7 +173,7 @@ void crawlservpp::Module::Thread::sendInterrupt() {
 // wait for the thread until interrupt is completed (may not be used by the thread itself!)
 // NOTE:	Module::Thread::sendInterrupt() has to be called beforehand to interrupt the thread!
 //			This enables the interruption of all threads simultaneously before waiting for their conclusion
-void crawlservpp::Module::Thread::finishInterrupt() {
+void Thread::finishInterrupt() {
 	// check whether thread exists and has been interrupted
 	if(this->threadPointer && this->interrupted) {
 		// wait for thread
@@ -178,37 +186,37 @@ void crawlservpp::Module::Thread::finishInterrupt() {
 }
 
 // get ID of the thread (thread-safe)
-unsigned long crawlservpp::Module::Thread::getId() const {
+unsigned long Thread::getId() const {
 	return this->id;
 }
 
 // get ID of the website (thread-safe)
-unsigned long crawlservpp::Module::Thread::getWebsite() const {
+unsigned long Thread::getWebsite() const {
 	return this->options.website;
 }
 
 // get ID of URL list (thread-safe)
-unsigned long crawlservpp::Module::Thread::getUrlList() const {
+unsigned long Thread::getUrlList() const {
 	return this->options.urlList;
 }
 
 // get ID of the configuration (thread-safe)
-unsigned long crawlservpp::Module::Thread::getConfig() const {
+unsigned long Thread::getConfig() const {
 	return this->options.config;
 }
 
 // get whether thread was terminated due to an exception
-bool crawlservpp::Module::Thread::isTerminated() const {
+bool Thread::isTerminated() const {
 	return this->terminated;
 }
 
 // get whether thread is still supposed to run
-bool crawlservpp::Module::Thread::isRunning() const {
+bool Thread::isRunning() const {
 	return this->running;
 }
 
 // set the status messsage of the thread (to be used by the thread only)
-void crawlservpp::Module::Thread::setStatusMessage(const std::string& statusMessage) {
+void Thread::setStatusMessage(const std::string& statusMessage) {
 	// set internal status
 	{
 		std::lock_guard<std::mutex> statusLocked(this->statusLock);
@@ -221,23 +229,33 @@ void crawlservpp::Module::Thread::setStatusMessage(const std::string& statusMess
 }
 
 // set the progress of the thread (to be used by the thread only)
-void crawlservpp::Module::Thread::setProgress(float progress) {
+void Thread::setProgress(float progress) {
 	// set progress in database
 	this->database.setThreadProgress(this->id, progress);
 }
 
 // add a log entry for the thread to the database using the module of the thread (to be used by the thread only)
-void crawlservpp::Module::Thread::log(const std::string& entry) {
+void Thread::log(const std::string& entry) {
 	this->database.log(this->module, "[#" + this->idString + "] " + entry);
 }
 
+// allow the thread to be paused (enabled by default)
+void Thread::allowPausing() {
+	this->pausable = true;
+}
+
+// do not allow the thread to be paused
+void Thread::disallowPausing() {
+	this->pausable = false;
+}
+
 // get value of last ID (to be used by the thread only)
-unsigned long crawlservpp::Module::Thread::getLast() const {
+unsigned long Thread::getLast() const {
 	return this->last;
 }
 
 // set last ID (to be used by the thread only)
-void crawlservpp::Module::Thread::setLast(unsigned long last) {
+void Thread::setLast(unsigned long last) {
 	// set last ID internally
 	this->last = last;
 
@@ -246,7 +264,7 @@ void crawlservpp::Module::Thread::setLast(unsigned long last) {
 }
 
 // increment last ID (to be used by the thread only)
-void crawlservpp::Module::Thread::incrementLast() {
+void Thread::incrementLast() {
 	// increment last ID internally
 	(this->last)++;
 
@@ -255,13 +273,13 @@ void crawlservpp::Module::Thread::incrementLast() {
 }
 
 // get a copy of the current status message
-std::string crawlservpp::Module::Thread::getStatusMessage() {
+std::string Thread::getStatusMessage() {
 	std::lock_guard<std::mutex> statusLocked(this->statusLock);
 	return this->status;
 }
 
 // update run time of thread (and save it to database)
-void crawlservpp::Module::Thread::updateRunTime() {
+void Thread::updateRunTime() {
 	if(this->startTimePoint > std::chrono::steady_clock::time_point::min()) {
 		// add run time
 		this->runTime += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - this->startTimePoint);
@@ -275,7 +293,7 @@ void crawlservpp::Module::Thread::updateRunTime() {
 }
 
 // uüdate pause time of thread and save it to database
-void crawlservpp::Module::Thread::updatePauseTime() {
+void Thread::updatePauseTime() {
 	// check whether pause time was running
 	if(this->pauseTimePoint > std::chrono::steady_clock::time_point::min()) {
 		// add pause time
@@ -290,12 +308,12 @@ void crawlservpp::Module::Thread::updatePauseTime() {
 }
 
 // function for checking whether to unpause the thread (multi-threading safe)
-bool crawlservpp::Module::Thread::isUnpaused() const {
+bool Thread::isUnpaused() const {
 	return !(this->paused);
 }
 
 // main function of the thread
-void crawlservpp::Module::Thread::main() {
+void Thread::main() {
 	// connect to database and prepare logging
 	if(this->database.connect() && this->database.prepare()) {
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
@@ -324,7 +342,7 @@ void crawlservpp::Module::Thread::main() {
 
 						// wait for unpausing
 						std::unique_lock<std::mutex> pause(this->pauseLock);
-						this->pauseCondition.wait(pause, std::bind(&crawlservpp::Module::Thread::isUnpaused, this));
+						this->pauseCondition.wait(pause, std::bind(&Thread::isUnpaused, this));
 
 						// notify thread for unpausing
 						if(this->running) this->onUnpause();
@@ -337,6 +355,7 @@ void crawlservpp::Module::Thread::main() {
 					else if(!(this->onTick())) this->running = false;
 				}
 			}
+			else this->terminated = true;
 
 			// update run time
 			this->updateRunTime();
@@ -348,10 +367,14 @@ void crawlservpp::Module::Thread::main() {
 			if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
 			else {
 				// log timing statistic
-				std::string logStr = "stopped after " + crawlservpp::Helper::DateTime::secondsToString(this->runTime.count()) + " running";
-				if(this->pauseTime.count()) logStr += " and " + crawlservpp::Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
+				std::string logStr = "stopped after "
+						+ crawlservpp::Helper::DateTime::secondsToString(this->runTime.count()) + " running";
+				if(this->pauseTime.count())
+					logStr += " and " + crawlservpp::Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
 				logStr += ".";
 				this->log(logStr);
+
+
 			}
 		}
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
@@ -381,4 +404,6 @@ void crawlservpp::Module::Thread::main() {
 #endif
 	}
 	else throw std::runtime_error(this->database.getErrorMessage());
+}
+
 }

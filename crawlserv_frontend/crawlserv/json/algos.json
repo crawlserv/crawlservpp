@@ -1,0 +1,18 @@
+{
+	"Metadata Analyses": {
+	},
+	"Corpus Analyses": {
+		"Markov Text Generator": {
+			"algo-id": 43,
+			"config-cats": [ "markov-text", "filter-date" ]
+		},
+		"Markov Tweet Generator": {
+			"algo-id": 44,
+			"config-cats": [ "markov-tweet", "filter-date" ]
+		}
+	},
+	"Network Analyses": {
+	},
+	"Geographic Analyses": {
+	}
+}

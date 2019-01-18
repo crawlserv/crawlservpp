@@ -9,14 +9,16 @@
 
 #include "RegEx.h"
 
+namespace crawlservpp::Query {
+
 // constructor
-crawlservpp::Query::RegEx::RegEx() {
+RegEx::RegEx() {
 	this->expressionSingle = NULL;
 	this->expressionMulti = NULL;
 }
 
 // destructor
-crawlservpp::Query::RegEx::~RegEx() {
+RegEx::~RegEx() {
 	if(this->expressionSingle) {
 		pcre2_code_free(this->expressionSingle);
 		this->expressionSingle = NULL;
@@ -28,7 +30,7 @@ crawlservpp::Query::RegEx::~RegEx() {
 }
 
 // compile RegEx expression
-bool crawlservpp::Query::RegEx::compile(const std::string& pattern, bool single, bool multi) {
+bool RegEx::compile(const std::string& pattern, bool single, bool multi) {
 	int errorNumber = 0;
 	PCRE2_SIZE errorOffset = 0;
 
@@ -89,7 +91,7 @@ bool crawlservpp::Query::RegEx::compile(const std::string& pattern, bool single,
 }
 
 // get boolean result of RegEx expression (at least one match?)
-bool crawlservpp::Query::RegEx::getBool(const std::string& text, bool& resultTo) const {
+bool RegEx::getBool(const std::string& text, bool& resultTo) const {
 	// check compiled expression
 	if(!(this->expressionSingle)) {
 		this->errorMessage = "RegEx error: No single result expression compiled.";
@@ -135,7 +137,7 @@ bool crawlservpp::Query::RegEx::getBool(const std::string& text, bool& resultTo)
 }
 
 // get single result of RegEx expression (first match)
-bool crawlservpp::Query::RegEx::getFirst(const std::string& text, std::string& resultTo) const {
+bool RegEx::getFirst(const std::string& text, std::string& resultTo) const {
 	// check compiled expression
 	if(!(this->expressionSingle)) {
 		this->errorMessage = "RegEx error: No single result expression compiled.";
@@ -182,7 +184,7 @@ bool crawlservpp::Query::RegEx::getFirst(const std::string& text, std::string& r
 }
 
 // get all results of RegEx expression (all full matches)
-bool crawlservpp::Query::RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) const {
+bool RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) const {
 	std::vector<std::string> resultArray;
 
 	// check compiled expression
@@ -294,6 +296,8 @@ bool crawlservpp::Query::RegEx::getAll(const std::string& text, std::vector<std:
 }
 
 // get error message
-std::string crawlservpp::Query::RegEx::getErrorMessage() const {
+std::string RegEx::getErrorMessage() const {
 	return this->errorMessage;
+}
+
 }

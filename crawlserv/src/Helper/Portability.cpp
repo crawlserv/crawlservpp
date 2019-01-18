@@ -9,11 +9,13 @@
 
 #include "Portability.h"
 
+namespace crawlservpp::Helper::Portability {
+
 // portable getch
 static struct termios oldT, newT;
 
 // portable getch
-char crawlservpp::Helper::Portability::getch() {
+char getch() {
 #ifdef __unix
 	char ch = 0;
 	tcgetattr(0, &oldT);
@@ -27,4 +29,6 @@ char crawlservpp::Helper::Portability::getch() {
 #elif
 	return ::getch();
 #endif
+}
+
 }

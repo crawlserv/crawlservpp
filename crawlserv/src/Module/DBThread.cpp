@@ -10,35 +10,40 @@
 
 #include "DBThread.h"
 
+namespace crawlservpp::Module {
+
 // constructor
-crawlservpp::Module::DBThread::DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings)
-		: crawlservpp::Global::Database(dbSettings) {
+DBThread::DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings)
+		: crawlservpp::Main::Database(dbSettings) {
 	this->psSetThreadStatusMessage = 0;
 	this->psSetThreadProgress = 0;
 	this->psSetThreadLast = 0;
-	if(crawlservpp::Global::Database::driver)
-		crawlservpp::Global::Database::driver->threadInit();
+	if(crawlservpp::Main::Database::driver)
+		crawlservpp::Main::Database::driver->threadInit();
 	else throw(std::runtime_error("MySQL driver not loaded"));
 }
 
 // destructor stub
-crawlservpp::Module::DBThread::~DBThread() {
-	if(crawlservpp::Global::Database::driver)
-		crawlservpp::Global::Database::driver->threadEnd();
+DBThread::~DBThread() {
+	if(crawlservpp::Main::Database::driver)
+		crawlservpp::Main::Database::driver->threadEnd();
 }
 
 // prepare SQL statements for thread management
-bool crawlservpp::Module::DBThread::prepare() {
+bool DBThread::prepare() {
 	// prepare basic functions
 	this->Database::prepare();
 
 	// check connection
 	if(!(this->checkConnection())) return false;
 
+	// reserve memory
+	this->preparedStatements.reserve(3);
+
 	try {
 		// prepare general SQL statements for thread
 		if(!(this->psSetThreadStatusMessage)) {
-			crawlservpp::Struct::PreparedSqlStatement statement;
+			PreparedSqlStatement statement;
 			statement.string = "UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1";
 			statement.statement = this->connection->prepareStatement(statement.string);
 			this->preparedStatements.push_back(statement);
@@ -46,14 +51,14 @@ bool crawlservpp::Module::DBThread::prepare() {
 		}
 		// prepare general SQL statements for thread
 		if(!(this->psSetThreadProgress)) {
-			crawlservpp::Struct::PreparedSqlStatement statement;
+			PreparedSqlStatement statement;
 			statement.string = "UPDATE crawlserv_threads SET progress = ? WHERE id = ? LIMIT 1";
 			statement.statement = this->connection->prepareStatement(statement.string);
 			this->preparedStatements.push_back(statement);
 			this->psSetThreadProgress = this->preparedStatements.size();
 		}
 		if(!(this->psSetThreadLast)) {
-			crawlservpp::Struct::PreparedSqlStatement statement;
+			PreparedSqlStatement statement;
 			statement.string = "UPDATE crawlserv_threads SET last = ? WHERE id = ? LIMIT 1";
 			statement.statement = this->connection->prepareStatement(statement.string);
 			this->preparedStatements.push_back(statement);
@@ -72,7 +77,7 @@ bool crawlservpp::Module::DBThread::prepare() {
 }
 
 // set the status message of a thread (and add the pause state)
-void crawlservpp::Module::DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
+void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
@@ -106,7 +111,7 @@ void crawlservpp::Module::DBThread::setThreadStatusMessage(unsigned long threadI
 }
 
 // set the progress of a thread to between 0 for 0% and 1 for 100% in database
-void crawlservpp::Module::DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
+void DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
@@ -131,7 +136,7 @@ void crawlservpp::Module::DBThread::setThreadProgress(unsigned long threadId, fl
 }
 
 // set last id of thread in database
-void crawlservpp::Module::DBThread::setThreadLast(unsigned long threadId, unsigned long threadLast) {
+void DBThread::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
 
@@ -152,4 +157,6 @@ void crawlservpp::Module::DBThread::setThreadLast(unsigned long threadId, unsign
 		errorStrStr << "setThreadLast() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
+}
+
 }

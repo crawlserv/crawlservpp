@@ -10,6 +10,8 @@
 #ifndef HELPER_VERSIONS_H_
 #define HELPER_VERSIONS_H_
 
+#define PCRE2_CODE_UNIT_WIDTH 8
+
 #include "../_extern/mongoose.h"
 #include "../_extern/rapidjson/rapidjson.h"
 
@@ -17,7 +19,7 @@
 #include <curl/curl.h>
 #include <cppconn/driver.h>
 
-#define PCRE2_CODE_UNIT_WIDTH 8
+#include <aspell.h>
 #include <pcre2.h>
 #include <pugixml.hpp>
 #include <tidy/tidy.h>

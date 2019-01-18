@@ -13,8 +13,6 @@
 #include "../DBWrapper.h"
 #include "../DBThread.h"
 
-#include "../../Struct/IdString.h"
-
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
@@ -26,6 +24,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <utility>
 
 namespace crawlservpp::Module::Crawler {
 	class Database : public crawlservpp::Module::DBWrapper {
@@ -33,9 +32,16 @@ namespace crawlservpp::Module::Crawler {
 		Database(crawlservpp::Module::DBThread& dbRef);
 		virtual ~Database();
 
+		// setters
+		void setId(unsigned long crawlerId);
+		void setWebsiteNamespace(const std::string& websiteNamespace);
+		void setUrlListNamespace(const std::string& urlListNamespace);
+		void setRecrawl(bool isRecrawl);
+		void setLogging(bool isLogging);
+		void setVerbose(bool isVerbose);
+
 		// prepare SQL statements for crawler
-		bool prepare(unsigned long crawlerId, const std::string& websiteNameSpace, const std::string& urlListNameSpace, bool recrawl,
-				bool verbose);
+		bool prepare();
 
 		// table function
 		void lockUrlList();
@@ -44,7 +50,7 @@ namespace crawlservpp::Module::Crawler {
 		bool isUrlExists(const std::string& urlString);
 		unsigned long getUrlId(const std::string& urlString);
 		bool isUrlCrawled(unsigned long urlId);
-		crawlservpp::Struct::IdString getNextUrl(unsigned long currentUrlId);
+		std::pair<unsigned long, std::string> getNextUrl(unsigned long currentUrlId);
 		unsigned long addUrl(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
@@ -67,11 +73,18 @@ namespace crawlservpp::Module::Crawler {
 		// helper functions (using multiple database commands)
 		bool renewUrlLock(unsigned long lockTimeout, unsigned long urlId, std::string& lockTime);
 
-	private:
-		// table names
+	protected:
+		// options
+		std::string idString;
+		std::string websiteName;
+		std::string urlListName;
+		bool recrawl;
+		bool logging;
+		bool verbose;
 		std::string urlListTable;
 		std::string linkTable;
 
+	private:
 		// prepared SQL statements
 		unsigned short psIsUrlExists;
 		unsigned short psIsUrlHashExists;

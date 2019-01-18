@@ -36,7 +36,7 @@ namespace crawlservpp::Query {
 
 			// constructor: set default values
 			QueryStruct() {
-				this->type = crawlservpp::Query::Container::QueryStruct::typeNone;
+				this->type = Container::QueryStruct::typeNone;
 				this->index = 0;
 				this->resultBool = false;
 				this->resultSingle = false;
@@ -46,16 +46,17 @@ namespace crawlservpp::Query {
 
 		// query functions
 		virtual void initQueries() = 0;
-		crawlservpp::Query::Container::QueryStruct addQuery(const std::string& queryText, const std::string& queryType, bool queryResultBool,
+		void reserveQueries(unsigned long numQueries);
+		Container::QueryStruct addQuery(const std::string& queryText, const std::string& queryType, bool queryResultBool,
 				bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
-		const crawlservpp::Query::RegEx * getRegExQueryPtr(unsigned long index) const;
-		const crawlservpp::Query::XPath * getXPathQueryPtr(unsigned long index) const;
+		const RegEx * getRegExQueryPtr(unsigned long index) const;
+		const XPath * getXPathQueryPtr(unsigned long index) const;
 		void clearQueries();
 
 	private:
 		// queries
-		std::vector<crawlservpp::Query::RegEx*> queriesRegEx;
-		std::vector<crawlservpp::Query::XPath*> queriesXPath;
+		std::vector<RegEx*> queriesRegEx;
+		std::vector<XPath*> queriesXPath;
 	};
 }
 

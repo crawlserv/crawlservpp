@@ -13,6 +13,7 @@
 
 #include "DBThread.h"
 
+#include "../Main/Data.h"
 #include "../Struct/DatabaseSettings.h"
 
 #include <cppconn/prepared_statement.h>
@@ -25,7 +26,7 @@
 namespace crawlservpp::Module {
 	class DBWrapper {
 	public:
-		DBWrapper(crawlservpp::Module::DBThread& dbRef);
+		DBWrapper(DBThread& dbRef);
 		virtual ~DBWrapper() = 0;
 
 		// get module error message
@@ -39,6 +40,7 @@ namespace crawlservpp::Module {
 				bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
 		std::string getConfigJson(unsigned long configId);
 		unsigned long getLastInsertedId();
+		unsigned long getMaxAllowedPacketSize() const;
 		void unlockTables();
 
 		// wrappers for indexing module tables
@@ -51,20 +53,24 @@ namespace crawlservpp::Module {
 		void resetExtractingStatus(unsigned long listId);
 		void resetAnalyzingStatus(unsigned long listId);
 
-		// wrappers for data functions used by algorithms
-		void getText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& resultTo);
-		void getTexts(const std::string& tableName, const std::string& columnName, std::vector<std::string>& resultTo);
-		void getTexts(const std::string& tableName, const std::string& columnName, const std::string& condition, unsigned long limit,
-				std::vector<std::string>& resultTo);
-		void insertText(const std::string& tableName, const std::string& columnName, const std::string& text);
-		void insertTextUInt64(const std::string& tableName, const std::string& textColumnName, const std::string& numberColumnName,
-				const std::string& text, unsigned long number);
-		void insertTexts(const std::string& tableName, const std::string& columnName, const std::vector<std::string>& texts);
-		void updateText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& text);
+		// wrappers for custom data functions used by algorithms
+		unsigned long strlen(const std::string& str);
+		void getCustomData(crawlservpp::Main::Data::GetValue& data);
+		void getCustomData(crawlservpp::Main::Data::GetFields& data);
+		void getCustomData(crawlservpp::Main::Data::GetFieldsMixed& data);
+		void getCustomData(crawlservpp::Main::Data::GetColumn& data);
+		void getCustomData(crawlservpp::Main::Data::GetColumns& data);
+		void getCustomData(crawlservpp::Main::Data::GetColumnsMixed& data);
+		void insertCustomData(const crawlservpp::Main::Data::InsertValue& data);
+		void insertCustomData(const crawlservpp::Main::Data::InsertFields& data);
+		void insertCustomData(const crawlservpp::Main::Data::InsertFieldsMixed& data);
+		void updateCustomData(const crawlservpp::Main::Data::UpdateValue& data);
+		void updateCustomData(const crawlservpp::Main::Data::UpdateFields& data);
+		void updateCustomData(const crawlservpp::Main::Data::UpdateFieldsMixed& data);
 
 	protected:
 		// reference to the database connection by the thread
-		crawlservpp::Module::DBThread& database;
+		DBThread& database;
 
 		// module error message
 		std::string errorMessage;
@@ -87,6 +93,7 @@ namespace crawlservpp::Module {
 		void execute(const std::string& sqlQuery);
 
 		// manage prepared SQL statements
+		void reservePreparedStatements(unsigned long numPreparedStatements);
 		unsigned short addPreparedStatement(const std::string& sqlStatementString);
 		sql::PreparedStatement * getPreparedStatement(unsigned short sqlStatementId);
 	};

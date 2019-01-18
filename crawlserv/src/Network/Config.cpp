@@ -12,8 +12,10 @@
 
 #include "Config.h"
 
+namespace crawlservpp::Network {
+
 // constructor: set default values
-crawlservpp::Network::Config::Config() {
+Config::Config() {
 	this->connectionsMax = 5;
 	this->contentLengthIgnore = false;
 	this->cookies = false;
@@ -25,7 +27,7 @@ crawlservpp::Network::Config::Config() {
 	this->encodingGZip = true;
 	this->encodingIdentity = true;
 	this->encodingTransfer = false;
-	this->httpVersion = crawlservpp::Network::Config::httpVersionV2tls;
+	this->httpVersion = Config::httpVersionV2tls;
 	this->localPort = 0;
 	this->localPortRange = 1;
 	this->proxyTunnelling = false;
@@ -56,10 +58,10 @@ crawlservpp::Network::Config::Config() {
 }
 
 // destructor stub
-crawlservpp::Network::Config::~Config() {}
+Config::~Config() {}
 
 // set network configuration entry from parsed JSON member (set value by iterator)
-void crawlservpp::Network::Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemberIterator& iterator,
+void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemberIterator& iterator,
 		std::vector<std::string>& warningsTo) {
 	if(name == "connections.max") {
 		if(iterator->value.IsUint()) this->connectionsMax = iterator->value.GetUint();
@@ -80,6 +82,7 @@ void crawlservpp::Network::Config::setEntry(const std::string& name, const rapid
 	else if(name == "cookies.overwrite") {
 		if(iterator->value.IsArray()) {
 			this->cookiesOverwrite.clear();
+			this->cookiesOverwrite.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
 				if(k->IsString()) this->cookiesOverwrite.push_back(k->GetString());
 				else warningsTo.push_back("Value in \'networking." + name
@@ -115,6 +118,7 @@ void crawlservpp::Network::Config::setEntry(const std::string& name, const rapid
 	else if(name == "dns.resolves") {
 		if(iterator->value.IsArray()) {
 			this->dnsResolves.clear();
+			this->dnsResolves.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
 				if(k->IsString()) this->dnsResolves.push_back(k->GetString());
 				else warningsTo.push_back("Value in \'networking." + name
@@ -126,6 +130,7 @@ void crawlservpp::Network::Config::setEntry(const std::string& name, const rapid
 	else if(name == "dns.servers") {
 		if(iterator->value.IsArray()) {
 			this->dnsServers.clear();
+			this->dnsServers.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
 				if(k->IsString()) this->dnsServers.push_back(k->GetString());
 				else warningsTo.push_back("Value in \'networking." + name
@@ -161,6 +166,7 @@ void crawlservpp::Network::Config::setEntry(const std::string& name, const rapid
 	else if(name == "headers") {
 		if(iterator->value.IsArray()) {
 			this->headers.clear();
+			this->headers.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
 				if(k->IsString()) this->headers.push_back(k->GetString());
 				else warningsTo.push_back("Value in \'networking." + name
@@ -172,6 +178,7 @@ void crawlservpp::Network::Config::setEntry(const std::string& name, const rapid
 	else if(name == "http.200aliases") {
 		if(iterator->value.IsArray()) {
 			this->http200Aliases.clear();
+			this->http200Aliases.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
 				if(k->IsString()) this->http200Aliases.push_back(k->GetString());
 				else warningsTo.push_back("Value in \'networking." + name
@@ -207,6 +214,7 @@ void crawlservpp::Network::Config::setEntry(const std::string& name, const rapid
 	else if(name == "proxy.headers") {
 		if(iterator->value.IsArray()) {
 			this->proxyHeaders.clear();
+			this->proxyHeaders.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
 				if(k->IsString()) this->proxyHeaders.push_back(k->GetString());
 				else warningsTo.push_back("Value in \'networking." + name
@@ -344,5 +352,7 @@ void crawlservpp::Network::Config::setEntry(const std::string& name, const rapid
 		else warningsTo.push_back("\'networking." + name + "\' ignored because of wrong type (not bool).");
 	}
 	else warningsTo.push_back("Unknown configuration entry \'networking." + name + "\' ignored.");
+}
+
 }
 

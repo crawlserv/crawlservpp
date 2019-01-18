@@ -12,15 +12,17 @@
 
 #include "Config.h"
 
+namespace crawlservpp::Module::Crawler {
+
 // constructor: set default values
-crawlservpp::Module::Crawler::Config::Config() {
+Config::Config() {
 	// crawler entries
 	this->crawlerArchives = false;
 	this->crawlerArchivesNames.push_back("archives.org");
 	this->crawlerArchivesUrlsMemento.push_back("http://web.archive.org/web/");
 	this->crawlerArchivesUrlsTimemap.push_back("http://web.archive.org/web/timemap/link/");
 	this->crawlerLock = 300;
-	this->crawlerLogging = crawlservpp::Module::Crawler::Config::crawlerLoggingDefault;
+	this->crawlerLogging = Config::crawlerLoggingDefault;
 	this->crawlerReCrawl = false;
 	this->crawlerReCrawlStart = true;
 	this->crawlerReTries = -1;
@@ -41,11 +43,10 @@ crawlservpp::Module::Crawler::Config::Config() {
 }
 
 // destructor stub
-crawlservpp::Module::Crawler::Config::~Config() {}
+Config::~Config() {}
 
 // load crawling-specific configuration from parsed JSON document
-void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document& jsonDocument,
-		std::vector<std::string>& warningsTo) {
+void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) {
 	// go through all array items i.e. configuration entries
 	for(rapidjson::Value::ConstValueIterator i = jsonDocument.Begin(); i != jsonDocument.End(); i++) {
 		if(i->IsObject()) {
@@ -53,7 +54,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 			std::string name;
 
 			// get item properties
-			for(rapidjson::Value::ConstMemberIterator j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
+			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString()) {
 					// check item member
 					std::string itemName = j->name.GetString();
@@ -85,7 +86,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 
 			// get item value
 			bool valueFound = false;
-			for(rapidjson::Value::ConstMemberIterator j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
+			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString() && std::string(j->name.GetString()) == "value") {
 					// save configuration entry
 					if(cat == "crawler") {
@@ -97,6 +98,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "archives.names") {
 							if(j->value.IsArray()) {
 								this->crawlerArchivesNames.clear();
+								this->crawlerArchivesNames.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->crawlerArchivesNames.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -109,6 +111,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "archives.urls.memento") {
 							if(j->value.IsArray()) {
 								this->crawlerArchivesUrlsMemento.clear();
+								this->crawlerArchivesUrlsMemento.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->crawlerArchivesUrlsMemento.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -121,6 +124,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "archives.urls.timemap") {
 							if(j->value.IsArray()) {
 								this->crawlerArchivesUrlsTimemap.clear();
+								this->crawlerArchivesUrlsTimemap.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->crawlerArchivesUrlsTimemap.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -143,6 +147,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "params.blacklist") {
 							if(j->value.IsArray()) {
 								this->crawlerParamsBlackList.clear();
+								this->crawlerParamsBlackList.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->crawlerParamsBlackList.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -155,6 +160,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "params.whitelist") {
 							if(j->value.IsArray()) {
 								this->crawlerParamsWhiteList.clear();
+								this->crawlerParamsWhiteList.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->crawlerParamsWhiteList.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -167,6 +173,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "queries.blacklist.content") {
 							if(j->value.IsArray()) {
 								this->crawlerQueriesBlackListContent.clear();
+								this->crawlerQueriesBlackListContent.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesBlackListContent.push_back(k->GetUint64());
 									else if(k->IsNull()) this->crawlerQueriesBlackListContent.push_back(0);
@@ -180,6 +187,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "queries.blacklist.types") {
 							if(j->value.IsArray()) {
 								this->crawlerQueriesBlackListTypes.clear();
+								this->crawlerQueriesBlackListTypes.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesBlackListTypes.push_back(k->GetUint64());
 									else if(k->IsNull()) this->crawlerQueriesBlackListTypes.push_back(0);
@@ -193,6 +201,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "queries.blacklist.urls") {
 							if(j->value.IsArray()) {
 								this->crawlerQueriesBlackListUrls.clear();
+								this->crawlerQueriesBlackListUrls.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesBlackListUrls.push_back(k->GetUint64());
 									else if(k->IsNull()) this->crawlerQueriesBlackListUrls.push_back(0);
@@ -206,6 +215,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "queries.links") {
 							if(j->value.IsArray()) {
 								this->crawlerQueriesLinks.clear();
+								this->crawlerQueriesLinks.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesLinks.push_back(k->GetUint64());
 									else if(k->IsNull()) this->crawlerQueriesLinks.push_back(0);
@@ -219,6 +229,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "queries.whitelist.content") {
 							if(j->value.IsArray()) {
 								this->crawlerQueriesWhiteListContent.clear();
+								this->crawlerQueriesWhiteListContent.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesWhiteListContent.push_back(k->GetUint64());
 									else if(k->IsNull()) this->crawlerQueriesWhiteListContent.push_back(0);
@@ -232,6 +243,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "queries.whitelist.types") {
 							if(j->value.IsArray()) {
 								this->crawlerQueriesWhiteListTypes.clear();
+								this->crawlerQueriesWhiteListTypes.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesWhiteListTypes.push_back(k->GetUint64());
 									else if(k->IsNull()) this->crawlerQueriesWhiteListTypes.push_back(0);
@@ -245,6 +257,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "queries.whitelist.urls") {
 							if(j->value.IsArray()) {
 								this->crawlerQueriesWhiteListUrls.clear();
+								this->crawlerQueriesWhiteListUrls.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->crawlerQueriesWhiteListUrls.push_back(k->GetUint64());
 									else if(k->IsNull()) this->crawlerQueriesWhiteListUrls.push_back(0);
@@ -263,6 +276,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "recrawl.always") {
 							if(j->value.IsArray()) {
 								this->crawlerReCrawlAlways.clear();
+								this->crawlerReCrawlAlways.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->crawlerReCrawlAlways.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -290,6 +304,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "retry.http") {
 							if(j->value.IsArray()) {
 								this->crawlerRetryHttp.clear();
+								this->crawlerRetryHttp.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint()) this->crawlerRetryHttp.push_back(k->GetUint());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -320,7 +335,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "start") {
-							if(j->value.IsString()) this->crawlerStart = j->value.GetString();
+							if(j->value.IsString()) this->crawlerStart = Config::makeSubUrl(j->value.GetString());
 							else warningsTo.push_back("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not string).");
 						}
@@ -344,6 +359,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						if(name == "counters") {
 							if(j->value.IsArray()) {
 								this->customCounters.clear();
+								this->customCounters.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->customCounters.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -355,6 +371,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "counters.end") {
 							if(j->value.IsArray()) {
 								this->customCountersEnd.clear();
+								this->customCountersEnd.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsInt64()) this->customCountersEnd.push_back(k->GetInt64());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -370,6 +387,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "counters.start") {
 							if(j->value.IsArray()) {
 								this->customCountersStart.clear();
+								this->customCountersStart.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsInt64()) this->customCountersStart.push_back(k->GetInt64());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -381,6 +399,7 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "counters.step") {
 							if(j->value.IsArray()) {
 								this->customCountersStep.clear();
+								this->customCountersStep.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsInt64()) this->customCountersStep.push_back(k->GetInt64());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -396,8 +415,9 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 						else if(name == "urls") {
 							if(j->value.IsArray()) {
 								this->customUrls.clear();
+								this->customUrls.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->customUrls.push_back(k->GetString());
+									if(k->IsString()) this->customUrls.push_back(Config::makeSubUrl(k->GetString()));
 									else warningsTo.push_back("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -491,4 +511,49 @@ void crawlservpp::Module::Crawler::Config::loadModule(const rapidjson::Document&
 			n--;
 		}
 	}
+}
+
+// check for sub-URL (starting with /) or curl-supported URL protocol - adds a slash in the beginning if no protocol is found
+std::string Config::makeSubUrl(const std::string& source) {
+	if(source.length()) {
+		if(source.at(0) == '/') return source;
+
+		if(source.length() > 5) {
+			if(source.substr(0, 6) == "ftp://") return source;
+			if(source.substr(0, 6) == "scp://") return source;
+			if(source.substr(0, 6) == "smb://") return source;
+
+			if(source.length() > 6) {
+				if(source.substr(0, 7) == "http://") return source;
+				if(source.substr(0, 7) == "ftps://") return source;
+				if(source.substr(0, 7) == "sftp://") return source;
+				if(source.substr(0, 7) == "file://") return source;
+				if(source.substr(0, 7) == "dict://") return source;
+				if(source.substr(0, 7) == "imap://") return source;
+				if(source.substr(0, 7) == "ldap://") return source;
+				if(source.substr(0, 7) == "pop3://") return source;
+				if(source.substr(0, 7) == "rtmp://") return source;
+				if(source.substr(0, 7) == "rtsp://") return source;
+				if(source.substr(0, 7) == "smbs://") return source;
+				if(source.substr(0, 7) == "smtp://") return source;
+				if(source.substr(0, 7) == "tftp://") return source;
+
+				if(source.length() > 7) {
+					if(source.substr(0, 8) == "https://") return source;
+					if(source.substr(0, 8) == "imaps://") return source;
+					if(source.substr(0, 8) == "ldaps://") return source;
+					if(source.substr(0, 8) == "pop3s://") return source;
+					if(source.substr(0, 8) == "smtps://") return source;
+
+					if(source.length() > 8) {
+						if(source.substr(0, 9) == "gopher://") return source;
+						if(source.substr(0, 9) == "telnet://") return source;
+					}
+				}
+			}
+		}
+	}
+	return "/" + source;
+}
+
 }

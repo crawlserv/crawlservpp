@@ -11,10 +11,12 @@
 
 #include "Curl.h"
 
-bool crawlservpp::Network::Curl::globalInit = false;
+namespace crawlservpp::Network {
+
+bool Curl::globalInit = false;
 
 // constructor
-crawlservpp::Network::Curl::Curl() {
+Curl::Curl() {
 	bool error = false;
 
 	// set default values
@@ -28,9 +30,9 @@ crawlservpp::Network::Curl::Curl() {
 	this->limitedSettings = false;
 
 	// initialize networking if necessary
-	if(crawlservpp::Network::Curl::globalInit) this->localInit = false;
+	if(Curl::globalInit) this->localInit = false;
 	else {
-		crawlservpp::Network::Curl::globalInit = true;
+		Curl::globalInit = true;
 		this->localInit = true;
 		curl_global_init(CURL_GLOBAL_ALL);
 	}
@@ -43,7 +45,7 @@ crawlservpp::Network::Curl::Curl() {
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
 	if(this->curlCode != CURLE_OK) error = true;
 	else {
-		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, crawlservpp::Network::Curl::writer);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Curl::writer);
 		if(this->curlCode != CURLE_OK) error = true;
 		else {
 			// set pointer to instance
@@ -65,7 +67,7 @@ crawlservpp::Network::Curl::Curl() {
 }
 
 // destructor
-crawlservpp::Network::Curl::~Curl() {
+Curl::~Curl() {
 	// cleanup cURL
 	if(this->curl) {
 		curl_easy_cleanup(this->curl);
@@ -91,16 +93,16 @@ crawlservpp::Network::Curl::~Curl() {
 	}
 
 	// cleanup global instance if necessary
-	if(crawlservpp::Network::Curl::globalInit && this->localInit) {
+	if(Curl::globalInit && this->localInit) {
 		curl_global_cleanup();
-		crawlservpp::Network::Curl::globalInit = false;
+		Curl::globalInit = false;
 		this->localInit = false;
 	}
 }
 
 // set global network options from crawling configuration
 // if limited is set, cookie settings, custom headers, HTTP version and error responses will be ignored
-bool crawlservpp::Network::Curl::setConfigGlobal(const crawlservpp::Network::Config& globalConfig, bool limited, std::vector<std::string> * warningsTo) {
+bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo) {
 	if(!(this->curl)) {
 		this->errorMessage = "cURL not initialized";
 		return false;
@@ -244,22 +246,22 @@ bool crawlservpp::Network::Curl::setConfigGlobal(const crawlservpp::Network::Con
 	}
 	if(!limited) {
 		switch(globalConfig.httpVersion) {
-		case crawlservpp::Network::Config::httpVersionAny:
+		case Config::httpVersionAny:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_NONE);
 			break;
-		case crawlservpp::Network::Config::httpVersionV1:
+		case Config::httpVersionV1:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
 			break;
-		case crawlservpp::Network::Config::httpVersionV11:
+		case Config::httpVersionV11:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 			break;
-		case crawlservpp::Network::Config::httpVersionV2:
+		case Config::httpVersionV2:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_0);
 			break;
-		case crawlservpp::Network::Config::httpVersionV2only:
+		case Config::httpVersionV2only:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
 			break;
-		case crawlservpp::Network::Config::httpVersionV2tls:
+		case Config::httpVersionV2tls:
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
 			break;
 		default:
@@ -496,13 +498,13 @@ bool crawlservpp::Network::Curl::setConfigGlobal(const crawlservpp::Network::Con
 }
 
 // set current network options from crawling configuration
-bool crawlservpp::Network::Curl::setConfigCurrent(const crawlservpp::Network::Config& currentConfig) {
+bool Curl::setConfigCurrent(const Config& currentConfig) {
 	//TODO (e.g. overwrite cookies)
 	return true;
 }
 
 // get remote content
-bool crawlservpp::Network::Curl::getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors) {
+bool Curl::getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors) {
 	std::string encodedUrl = this->escapeUrl(url);
 	char errorBuffer[CURL_ERROR_SIZE];
 	this->content.clear();
@@ -583,17 +585,17 @@ bool crawlservpp::Network::Curl::getContent(const std::string& url, std::string&
 }
 
 // get last response code
-unsigned int crawlservpp::Network::Curl::getResponseCode() const {
+unsigned int Curl::getResponseCode() const {
 	return this->responseCode;
 }
 
 // get last content type
-std::string crawlservpp::Network::Curl::getContentType() const {
+std::string Curl::getContentType() const {
 	return this->contentType;
 }
 
 // reset connection
-void crawlservpp::Network::Curl::resetConnection(unsigned long sleep) {
+void Curl::resetConnection(unsigned long sleep) {
 	// cleanup cURL
 	if(this->curl) {
 		curl_easy_cleanup(this->curl);
@@ -630,7 +632,7 @@ void crawlservpp::Network::Curl::resetConnection(unsigned long sleep) {
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
 	if(this->curlCode != CURLE_OK) error = true;
 	else {
-		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, crawlservpp::Network::Curl::writer);
+		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Curl::writer);
 		if(this->curlCode != CURLE_OK) error = true;
 		else {
 			// set pointer to instance
@@ -655,17 +657,17 @@ void crawlservpp::Network::Curl::resetConnection(unsigned long sleep) {
 }
 
 // get last cURL code
-CURLcode crawlservpp::Network::Curl::getCurlCode() const {
+CURLcode Curl::getCurlCode() const {
 	return this->curlCode;
 }
 
 // get error message
-const std::string& crawlservpp::Network::Curl::getErrorMessage() const {
+const std::string& Curl::getErrorMessage() const {
 	return this->errorMessage;
 }
 
 // escape a string
-std::string crawlservpp::Network::Curl::escape(const std::string& stringToEscape, bool usePlusForSpace) {
+std::string Curl::escape(const std::string& stringToEscape, bool usePlusForSpace) {
 	std::string result;
 
 	if(!(this->curl) || !(stringToEscape.length())) return "";
@@ -692,7 +694,7 @@ std::string crawlservpp::Network::Curl::escape(const std::string& stringToEscape
 }
 
 // unescape an escaped string
-std::string crawlservpp::Network::Curl::unescape(const std::string& escapedString, bool usePlusForSpace) {
+std::string Curl::unescape(const std::string& escapedString, bool usePlusForSpace) {
 	std::string result;
 
 	if(!(this->curl) || !(escapedString.length())) return "";
@@ -718,7 +720,7 @@ std::string crawlservpp::Network::Curl::unescape(const std::string& escapedStrin
 }
 
 // escape an URL but leave reserved characters (; / ? : @ = & #) intact
-std::string crawlservpp::Network::Curl::escapeUrl(const std::string& urlToEncode) {
+std::string Curl::escapeUrl(const std::string& urlToEncode) {
 	unsigned long pos = 0;
 	std::string result;
 
@@ -740,13 +742,15 @@ std::string crawlservpp::Network::Curl::escapeUrl(const std::string& urlToEncode
 }
 
 // static cURL writer function
-int crawlservpp::Network::Curl::writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer) {
+int Curl::writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer) {
 	if(!thisPointer) return 0;
-	return static_cast<crawlservpp::Network::Curl *>(thisPointer)->writerInClass(data, size, nmemb);
+	return static_cast<Curl *>(thisPointer)->writerInClass(data, size, nmemb);
 }
 
 // in-class cURL writer function
-int crawlservpp::Network::Curl::writerInClass(char * data, unsigned long size, unsigned long nmemb) {
+int Curl::writerInClass(char * data, unsigned long size, unsigned long nmemb) {
 	this->content.append(data, size * nmemb);
 	return size * nmemb;
+}
+
 }

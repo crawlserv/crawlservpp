@@ -9,13 +9,15 @@
 
 #include "XML.h"
 
+namespace crawlservpp::Parsing {
+
 // constructor: set document pointer to NULL
-crawlservpp::Parsing::XML::XML() {
+XML::XML() {
 	this->doc = NULL;
 }
 
 // destructor: delete document (if necessary)
-crawlservpp::Parsing::XML::~XML() {
+XML::~XML() {
 	if(this->doc) {
 		delete this->doc;
 		this->doc = NULL;
@@ -23,7 +25,7 @@ crawlservpp::Parsing::XML::~XML() {
 }
 
 // parse XML content, return false on error
-bool crawlservpp::Parsing::XML::parse(const std::string& content) {
+bool XML::parse(const std::string& content) {
 	// delete previous document if necessary
 	if(this->doc) {
 		delete this->doc;
@@ -106,7 +108,7 @@ bool crawlservpp::Parsing::XML::parse(const std::string& content) {
 }
 
 // get content of XML document (saved to resultTo), return false on error
-bool crawlservpp::Parsing::XML::getContent(std::string& resultTo) const {
+bool XML::getContent(std::string& resultTo) const {
 	if(!(this->doc)) {
 		this->errorMessage = "XML error: No content parsed.";
 		return false;
@@ -120,6 +122,8 @@ bool crawlservpp::Parsing::XML::getContent(std::string& resultTo) const {
 }
 
 // get error string
-std::string crawlservpp::Parsing::XML::getErrorMessage() const {
+std::string XML::getErrorMessage() const {
 	return this->errorMessage;
+}
+
 }

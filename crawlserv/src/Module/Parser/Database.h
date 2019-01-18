@@ -13,8 +13,6 @@
 #include "../DBThread.h"
 #include "../DBWrapper.h"
 
-#include "../../Struct/IdString.h"
-
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
@@ -26,6 +24,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
@@ -34,11 +33,21 @@ namespace crawlservpp::Module::Parser {
 		Database(crawlservpp::Module::DBThread& dbRef);
 		virtual ~Database();
 
+		// setters
+		void setId(unsigned long analyzerId);
+		void setWebsite(unsigned long websiteId);
+		void setWebsiteNamespace(const std::string& websiteNamespace);
+		void setUrlList(unsigned long listId);
+		void setUrlListNamespace(const std::string& urlListNamespace);
+		void setReparse(bool isReparse);
+		void setLogging(bool isLogging);
+		void setVerbose(bool isVerbose);
+		void setTargetTable(const std::string& table);
+		void setTargetFields(const std::vector<std::string>& fields);
+
 		// prepare target table and SQL statements for parser
-		void initTargetTable(unsigned long websiteId, unsigned long listId, const std::string& websiteNameSpace,
-				const std::string& urlListNameSpace, const std::string& tableName, const std::vector<std::string>& fields);
-		bool prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId, const std::string& tableName, bool reparse,
-				bool verbose);
+		void initTargetTable();
+		bool prepare();
 
 		// table function
 		void lockUrlList();
@@ -46,7 +55,7 @@ namespace crawlservpp::Module::Parser {
 
 		// URL functions
 		bool isUrlParsed(unsigned long urlId);
-		crawlservpp::Struct::IdString getNextUrl(unsigned long currentUrlId);
+		std::pair<unsigned long, std::string> getNextUrl(unsigned long currentUrlId);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
 
@@ -58,20 +67,32 @@ namespace crawlservpp::Module::Parser {
 		void unLockUrl(unsigned long urlId);
 
 		// parsing functions
-		bool getLatestContent(unsigned long urlId, unsigned long index, crawlservpp::Struct::IdString& contentTo);
-		std::vector<crawlservpp::Struct::IdString> getAllContents(unsigned long urlId);
+		bool getLatestContent(unsigned long urlId, unsigned long index, std::pair<unsigned long, std::string>& contentTo);
+		std::vector<std::pair<unsigned long, std::string>> getAllContents(unsigned long urlId);
 		void updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 				const std::vector<std::string>& parsedFields);
 		void setUrlFinished(unsigned long urlId);
 
-	private:
+	protected:
+		// options
+		std::string idString;
+		unsigned long website;
+		std::string websiteIdString;
+		std::string websiteName;
+		unsigned long urlList;
+		std::string listIdString;
+		std::string urlListName;
+		bool reparse;
+		bool logging;
+		bool verbose;
+		std::string targetTableName;
+		std::vector<std::string> targetFieldNames;
+
 		// table names
 		std::string urlListTable;
-		std::string targetTable;
+		std::string targetTableFull;
 
-		// field names
-		std::vector<std::string> fieldNames;
-
+	private:
 		// prepared SQL statements
 		unsigned short psIsUrlParsed;
 		unsigned short psGetNextUrl;

@@ -7,8 +7,8 @@
  *      Author: ans
  */
 
-#ifndef GLOBAL_CONFIGFILE_H_
-#define GLOBAL_CONFIGFILE_H_
+#ifndef MAIN_CONFIGFILE_H_
+#define MAIN_CONFIGFILE_H_
 
 #include <boost/algorithm/string.hpp>
 
@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace crawlservpp::Global {
+namespace crawlservpp::Main {
 	class ConfigFile {
 	public:
 		ConfigFile(const std::string& name);
@@ -32,8 +32,8 @@ namespace crawlservpp::Global {
 			std::string value;
 		};
 
-		std::vector<crawlservpp::Global::ConfigFile::NameValueEntry> entries;
+		std::vector<ConfigFile::NameValueEntry> entries;
 	};
 }
 
-#endif /* GLOBAL_CONFIGFILE_H_ */
+#endif /* MAIN_CONFIGFILE_H_ */

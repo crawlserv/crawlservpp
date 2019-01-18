@@ -15,11 +15,18 @@
 #include "../_extern/rapidjson/writer.h"
 
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace crawlservpp::Helper::Json {
+	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings (words, dates etc.)
+	typedef std::vector<std::tuple<std::string, unsigned long, unsigned long>> TextMap;
+
+	// stringify different kind of data to a JSON string
 	std::string stringify(const std::vector<std::string>& vectorToStringify);
 	std::string stringify(const std::string& stringToStringify);
+	std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify);
+	std::string stringify(const TextMap& textMapToStringify);
 }
 
 #endif /* HELPER_JSON_H_ */

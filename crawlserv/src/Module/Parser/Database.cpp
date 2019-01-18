@@ -9,8 +9,16 @@
 
 #include "Database.h"
 
+namespace crawlservpp::Module::Parser {
+
 // constructor: initialize values
-crawlservpp::Module::Parser::Database::Database(crawlservpp::Module::DBThread& dbThread) : crawlservpp::Module::DBWrapper(dbThread) {
+Database::Database(crawlservpp::Module::DBThread& dbThread) : crawlservpp::Module::DBWrapper(dbThread) {
+	this->website = 0;
+	this->urlList = 0;
+	this->reparse = false;
+	this->logging = false;
+	this->verbose = false;
+
 	this->psIsUrlParsed = 0;
 	this->psGetNextUrl = 0;
 	this->psGetUrlPosition = 0;
@@ -30,66 +38,117 @@ crawlservpp::Module::Parser::Database::Database(crawlservpp::Module::DBThread& d
 }
 
 // destructor stub
-crawlservpp::Module::Parser::Database::~Database() {}
+Database::~Database() {}
+
+// convert thread ID to string for logging
+void Database::setId(unsigned long analyzerId) {
+	std::ostringstream idStrStr;
+	idStrStr << analyzerId;
+	this->idString = idStrStr.str();
+}
+
+// set website ID (and convert it to string for SQL requests)
+void Database::setWebsite(unsigned long websiteId) {
+	std::ostringstream idStrStr;
+	idStrStr << websiteId;
+	this->website = websiteId;
+	this->websiteIdString = idStrStr.str();
+}
+
+// set website namespace
+void Database::setWebsiteNamespace(const std::string& websiteNamespace) {
+	this->websiteName = websiteNamespace;
+}
+
+// set URL list ID (and convert it to string for SQL requests)
+void Database::setUrlList(unsigned long listId) {
+	std::ostringstream idStrStr;
+	idStrStr << listId;
+	this->urlList = listId;
+	this->listIdString = idStrStr.str();
+}
+
+// set URL list namespace
+void Database::setUrlListNamespace(const std::string& urlListNamespace) {
+	this->urlListName = urlListNamespace;
+}
+
+// enable or disable reparsing
+void Database::setReparse(bool isReparse) {
+	this->reparse = isReparse;
+}
+
+// enable or disable logging
+void Database::setLogging(bool isLogging) {
+	this->logging = isLogging;
+}
+
+// enable or disable verbose logging
+void Database::setVerbose(bool isVerbose) {
+	this->verbose = isVerbose;
+}
+
+// set target table name
+void Database::setTargetTable(const std::string& table) {
+	this->targetTableName = table;
+}
+
+// set target table fields
+void Database::setTargetFields(const std::vector<std::string>& fields) {
+	this->targetFieldNames = fields;
+}
 
 // create target table if it does not exists or add custom field columns if they do not exist
-void crawlservpp::Module::Parser::Database::initTargetTable(unsigned long websiteId, unsigned long listId,
-		const std::string& websiteNameSpace, const std::string& urlListNameSpace, const std::string& tableName,
-		const std::vector<std::string>& fields) {
+void Database::initTargetTable() {
 	// create table names
-	this->urlListTable = "crawlserv_" + websiteNameSpace + "_" + urlListNameSpace;
-	this->targetTable = this->urlListTable + "_parsed_" + tableName;
-
-	// save field names
-	this->fieldNames = fields;
+	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
+	this->targetTableFull = this->urlListTable + "_parsed_" + this->targetTableName;
 
 	// create table if not exists
-	if(this->isTableExists(this->targetTable)) {
+	if(this->isTableExists(this->targetTableFull)) {
 		// add columns that do not exist
-		for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i != this->fieldNames.end(); ++i) {
-			if(!(this->isColumnExists(this->targetTable, "parsed__" + *i))) {
-				this->execute("ALTER TABLE `" + this->targetTable + "` ADD `parsed__" + *i + "` LONGTEXT");
+		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
+			if(i->length() && !(this->isColumnExists(this->targetTableFull, "parsed__" + *i))) {
+				this->execute("ALTER TABLE `" + this->targetTableFull + "` ADD `parsed__" + *i + "` LONGTEXT");
 			}
 		}
 	}
 	else {
 		// create table
-		std::string sqlQuery = "CREATE TABLE `" + this->targetTable + "`(id SERIAL, content BIGINT UNSIGNED NOT NULL,"
+		std::string sqlQuery = "CREATE TABLE `" + this->targetTableFull + "`(id SERIAL, content BIGINT UNSIGNED NOT NULL,"
 				" parsed_id TEXT NOT NULL, parsed_datetime DATETIME DEFAULT NULL";
-		for(auto i = this->fieldNames.begin(); i != this->fieldNames.end(); ++i) sqlQuery += ", `parsed__" + *i + "` LONGTEXT";
+		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
+			if(i->length()) sqlQuery += ", `parsed__" + *i + "` LONGTEXT";
+		}
 		sqlQuery += ", PRIMARY KEY(id), FOREIGN KEY(content) REFERENCES `" + this->urlListTable + "_crawled`(id)"
 				" ON UPDATE RESTRICT ON DELETE CASCADE) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED";
 		this->execute(sqlQuery);
 
 		// add target table to index
-		this->addParsedTable(websiteId, listId, tableName);
+		this->addParsedTable(this->website, this->urlList, this->targetTableName);
 	}
 }
 
 // prepare SQL statements for parser
-bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsigned long websiteId, unsigned long listId,
-		const std::string& tableName,
-		bool reparse, bool verbose) {
-	// convert ID to string
-	std::ostringstream idStrStr;
-	idStrStr << parserId;
-	std::string idString = idStrStr.str();
-
+bool Database::prepare() {
 	// check connection to database
 	if(!(this->checkConnection())) {
 		this->errorMessage = this->getDatabaseErrorMessage();
 		return false;
 	}
 
+	// reserve memory
+	this->reservePreparedStatements(16);
+
 	try {
 		// prepare SQL statements for parser
 		if(!(this->psIsUrlParsed)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares isUrlParsed()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlParsed()...");
 			this->psIsUrlParsed = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE id = ?"
 					" AND parsed = TRUE LIMIT 1) AS result");
 		}
 		if(!(this->psGetNextUrl)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares getNextUrl()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
 			std::string sqlQuery = "SELECT `" + this->urlListTable + "`.id, `" + this->urlListTable + "`.url FROM `" + this->urlListTable
 					+ "` JOIN `" + this->urlListTable + "_crawled` ON `" + this->urlListTable + "`.id = `" + this->urlListTable +
 					"_crawled`.url WHERE `" + this->urlListTable + "`.id > ? AND (`" + this->urlListTable + "`.parselock IS NULL OR `"
@@ -99,71 +158,71 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 			this->psGetNextUrl = this->addPreparedStatement(sqlQuery);
 		}
 		if(!(this->psGetUrlPosition)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares getUrlPosition()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlPosition()...");
 			this->psGetUrlPosition = this->addPreparedStatement("SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
 		}
 		if(!(this->psGetNumberOfUrls)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares getNumberOfUrls()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNumberOfUrls()...");
 			this->psGetNumberOfUrls = this->addPreparedStatement("SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
 		}
 
 		if(!(this->psIsUrlLockable)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares isUrlLockable()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlLockable()...");
 			this->psIsUrlLockable = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 					+ "` WHERE id = ? AND (parselock IS NULL OR parselock < NOW())) AS result");
 		}
 		if(!(this->psGetUrlLock)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares getUrlLock()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlLock()...");
 			this->psGetUrlLock = this->addPreparedStatement("SELECT parselock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
 		}
 		if(!(this->psCheckUrlLock)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares checkUrlLock()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares checkUrlLock()...");
 			this->psCheckUrlLock = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 					+ "` WHERE id = ? AND (parselock < NOW() OR parselock <= ? OR parselock IS NULL)) AS result");
 		}
 		if(!(this->psLockUrl)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares lockUrl()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares lockUrl()...");
 			this->psLockUrl = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET parselock = NOW() + INTERVAL ? SECOND"
 					" WHERE id = ? LIMIT 1");
 		}
 		if(!(this->psUnLockUrl)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares unLockUrl()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares unLockUrl()...");
 			this->psUnLockUrl = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET parselock = NULL WHERE id = ?"
 					" LIMIT 1");
 		}
 		if(!(this->psGetLatestContent)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares getLatestContent()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getLatestContent()...");
 			this->psGetLatestContent = this->addPreparedStatement("SELECT id, content FROM `" + this->urlListTable + "_crawled`"
 					" WHERE url = ? ORDER BY crawltime DESC LIMIT ?, 1");
 		}
 		if(!(this->psGetAllContents)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares getAllContents()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getAllContents()...");
 			this->psGetAllContents = this->addPreparedStatement("SELECT id, content FROM `" + this->urlListTable + "_crawled`"
 					" WHERE url = ?");
 		}
 		if(!(this->psSetUrlFinished)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares setUrlFinished()...");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares setUrlFinished()...");
 			this->psSetUrlFinished = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET parsed = TRUE, analyzed = FALSE,"
 					"parselock = NULL WHERE id = ? LIMIT 1");
 		}
 		if(!(this->psGetEntryId)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares getEntryId()...");
-			this->psGetEntryId = this->addPreparedStatement("SELECT id FROM `" + this->targetTable + "` WHERE content = ? LIMIT 1");
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getEntryId()...");
+			this->psGetEntryId = this->addPreparedStatement("SELECT id FROM `" + this->targetTableFull + "` WHERE content = ? LIMIT 1");
 		}
 		if(!(this->psUpdateEntry)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares updateEntry()...");
-			std::string sqlQuery = "UPDATE `" + this->targetTable + "` SET parsed_id = ?, parsed_datetime = ?";
-			for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i!= this->fieldNames.end(); ++i)
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares updateEntry()...");
+			std::string sqlQuery = "UPDATE `" + this->targetTableFull + "` SET parsed_id = ?, parsed_datetime = ?";
+			for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 				if(i->length()) sqlQuery += ", `parsed__" + *i + "` = ?";
 			sqlQuery += " WHERE id = ? LIMIT 1";
-			if(verbose) this->log("parser", "[#" + idString + "] > " + sqlQuery);
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
 			this->psUpdateEntry = this->addPreparedStatement(sqlQuery);
 		}
 		if(!(this->psAddEntry)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares addEntry()...");
-			std::string sqlQuery = "INSERT INTO `" + this->targetTable + "`(content, parsed_id, parsed_datetime";
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares addEntry()...");
+			std::string sqlQuery = "INSERT INTO `" + this->targetTableFull + "`(content, parsed_id, parsed_datetime";
 			unsigned long counter = 0;
-			for(std::vector<std::string>::const_iterator i = this->fieldNames.begin(); i!= this->fieldNames.end(); ++i) {
+			for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
 				if(i->length()) {
 					sqlQuery += ", `parsed__" + *i + "`";
 					counter++;
@@ -172,22 +231,17 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 			sqlQuery += ") VALUES (?, ?, ?";
 			for(unsigned long n = 0; n < counter; n++) sqlQuery += ", ?";
 			sqlQuery += ")";
-			if(verbose) this->log("parser", "[#" + idString + "] > " + sqlQuery);
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
 			this->psAddEntry = this->addPreparedStatement(sqlQuery);
 		}
 		if(!(this->psUpdateParsedTable)) {
-			if(verbose) this->log("parser", "[#" + idString + "] prepares parsingTableUpdated()...");
-			/*std::stringstream sqlQueryStrStr;
-			sqlQueryStrStr << "UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP WHERE website = " << websiteId
-					<< ", urllist = " << listId << ", name = '" << tableName << "' LIMIT 1";
-			this->psUpdateParsedTable = this->addPreparedStatement(sqlQueryStrStr.str());*/
-
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares parsingTableUpdated()...");
 			this->psUpdateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
 					" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1");
 			sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
-			sqlStatement->setUInt64(1, websiteId);
-			sqlStatement->setUInt64(2, listId);
-			sqlStatement->setString(3, tableName);
+			sqlStatement->setUInt64(1, this->website);
+			sqlStatement->setUInt64(2, this->urlList);
+			sqlStatement->setString(3, this->targetTableName);
 
 		}
 	}
@@ -203,17 +257,17 @@ bool crawlservpp::Module::Parser::Database::prepare(unsigned long parserId, unsi
 }
 
 // lock URL list
-void crawlservpp::Module::Parser::Database::lockUrlList() {
+void Database::lockUrlList() {
 	this->lockTable(this->urlListTable);
 }
 
 // lock URL list and table with crawled content (for URL selection)
-void crawlservpp::Module::Parser::Database::lockUrlListAndCrawledTable() {
+void Database::lockUrlListAndCrawledTable() {
 	this->lockTables(this->urlListTable, this->urlListTable + "_crawled");
 }
 
 // check whether an URL has been parsed
-bool crawlservpp::Module::Parser::Database::isUrlParsed(unsigned long urlId) {
+bool Database::isUrlParsed(unsigned long urlId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	bool result = false;
 
@@ -236,11 +290,11 @@ bool crawlservpp::Module::Parser::Database::isUrlParsed(unsigned long urlId) {
 		result = sqlResultSet->getBoolean("result");
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlParsed() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -250,9 +304,9 @@ bool crawlservpp::Module::Parser::Database::isUrlParsed(unsigned long urlId) {
 }
 
 // get the next URL to parse from database or empty IdString if all URLs have been parsed
-crawlservpp::Struct::IdString crawlservpp::Module::Parser::Database::getNextUrl(unsigned long currentUrlId) {
+std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long currentUrlId) {
 	sql::ResultSet * sqlResultSet = NULL;
-	crawlservpp::Struct::IdString result;
+	std::pair<unsigned long, std::string> result;
 
 	// check prepared SQL statement
 	if(!(this->psGetNextUrl)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::getNextUrl(...)");
@@ -270,16 +324,16 @@ crawlservpp::Struct::IdString crawlservpp::Module::Parser::Database::getNextUrl(
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			result.id = sqlResultSet->getUInt64("id");
-			result.string = sqlResultSet->getString("url");
+			result.first = sqlResultSet->getUInt64("id");
+			result.second = sqlResultSet->getString("url");
 		}
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getNextUrl() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -289,7 +343,7 @@ crawlservpp::Struct::IdString crawlservpp::Module::Parser::Database::getNextUrl(
 }
 
 // get the position of the URL in the URL list
-unsigned long crawlservpp::Module::Parser::Database::getUrlPosition(unsigned long urlId) {
+unsigned long Database::getUrlPosition(unsigned long urlId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	unsigned long result = 0;
 
@@ -312,11 +366,11 @@ unsigned long crawlservpp::Module::Parser::Database::getUrlPosition(unsigned lon
 		result = sqlResultSet->getUInt64("result");
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlPosition() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -326,7 +380,7 @@ unsigned long crawlservpp::Module::Parser::Database::getUrlPosition(unsigned lon
 }
 
 // get the number of URLs in the URL list
-unsigned long crawlservpp::Module::Parser::Database::getNumberOfUrls() {
+unsigned long Database::getNumberOfUrls() {
 	sql::ResultSet * sqlResultSet = NULL;
 	unsigned long result = 0;
 
@@ -348,11 +402,11 @@ unsigned long crawlservpp::Module::Parser::Database::getNumberOfUrls() {
 		result = sqlResultSet->getUInt64("result");
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getNumberOfUrls() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -362,7 +416,7 @@ unsigned long crawlservpp::Module::Parser::Database::getNumberOfUrls() {
 }
 
 // check whether an URL is already locked in database
-bool crawlservpp::Module::Parser::Database::isUrlLockable(unsigned long urlId) {
+bool Database::isUrlLockable(unsigned long urlId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	bool result = false;
 
@@ -385,11 +439,11 @@ bool crawlservpp::Module::Parser::Database::isUrlLockable(unsigned long urlId) {
 		result = sqlResultSet->getBoolean("result");
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlLockable() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -399,7 +453,7 @@ bool crawlservpp::Module::Parser::Database::isUrlLockable(unsigned long urlId) {
 }
 
 // get the URL lock end time of a specific URL from database
-std::string crawlservpp::Module::Parser::Database::getUrlLock(unsigned long urlId) {
+std::string Database::getUrlLock(unsigned long urlId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	std::string result;
 
@@ -421,11 +475,11 @@ std::string crawlservpp::Module::Parser::Database::getUrlLock(unsigned long urlI
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("parselock");
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlLock() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -435,7 +489,7 @@ std::string crawlservpp::Module::Parser::Database::getUrlLock(unsigned long urlI
 }
 
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
-bool crawlservpp::Module::Parser::Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
+bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	sql::ResultSet * sqlResultSet = NULL;
 	bool result = false;
 
@@ -459,11 +513,11 @@ bool crawlservpp::Module::Parser::Database::checkUrlLock(unsigned long urlId, co
 		result = sqlResultSet->getBoolean("result");
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "checkUrlLock() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -473,7 +527,7 @@ bool crawlservpp::Module::Parser::Database::checkUrlLock(unsigned long urlId, co
 }
 
 // lock a URL in the database
-std::string crawlservpp::Module::Parser::Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
+std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 	// check prepared SQL statement
 	if(!(this->psLockUrl)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psLockUrl);
@@ -500,7 +554,7 @@ std::string crawlservpp::Module::Parser::Database::lockUrl(unsigned long urlId, 
 }
 
 // unlock a URL in the database
-void crawlservpp::Module::Parser::Database::unLockUrl(unsigned long urlId) {
+void Database::unLockUrl(unsigned long urlId) {
 	// check prepared SQL statement
 	if(!(this->psUnLockUrl)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::unLockUrl(...)");
 	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psUnLockUrl);
@@ -524,10 +578,10 @@ void crawlservpp::Module::Parser::Database::unLockUrl(unsigned long urlId) {
 }
 
 // get latest content for the ID-specified URL, return false if there is no content
-bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId, unsigned long index,
-		crawlservpp::Struct::IdString& contentTo) {
+bool Database::getLatestContent(unsigned long urlId, unsigned long index,
+		std::pair<unsigned long, std::string>& contentTo) {
 	sql::ResultSet * sqlResultSet = NULL;
-	crawlservpp::Struct::IdString result;
+	std::pair<unsigned long, std::string> result;
 	bool success = false;
 
 	// check prepared SQL statement
@@ -549,16 +603,16 @@ bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			result = crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content"));
+			result = std::pair<unsigned long, std::string>(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content"));
 			success = true;
 		}
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getLatestContent() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -573,9 +627,9 @@ bool crawlservpp::Module::Parser::Database::getLatestContent(unsigned long urlId
 }
 
 // get all contents for the ID-specified URL
-std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database::getAllContents(unsigned long urlId) {
+std::vector<std::pair<unsigned long, std::string>> Database::getAllContents(unsigned long urlId) {
 	sql::ResultSet * sqlResultSet = NULL;
-	std::vector<crawlservpp::Struct::IdString> result;
+	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check prepared SQL statement
 	if(!(this->psGetAllContents))
@@ -594,15 +648,18 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		while(sqlResultSet->next())
-			result.push_back(crawlservpp::Struct::IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content")));
+		if(sqlResultSet) {
+			result.reserve(sqlResultSet->rowsCount());
+			while(sqlResultSet->next())
+				result.push_back(std::pair<unsigned long, std::string>(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content")));
+		}
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getAllContents() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -612,10 +669,36 @@ std::vector<crawlservpp::Struct::IdString> crawlservpp::Module::Parser::Database
 }
 
 // add parsed data to database (update if row for ID-specified content already exists
-void crawlservpp::Module::Parser::Database::updateOrAddEntry(unsigned long contentId, const std::string& parsedId,
+void Database::updateOrAddEntry(unsigned long contentId, const std::string& parsedId,
 		const std::string& parsedDateTime, const std::vector<std::string>& parsedFields) {
+	// check data sizes
+	unsigned long tooLarge = 0;
+	if(parsedId.size() > this->getMaxAllowedPacketSize()) tooLarge = parsedId.size();
+	if(parsedDateTime.size() > this->getMaxAllowedPacketSize() && parsedDateTime.size() > tooLarge) tooLarge = parsedDateTime.size();
+	for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i)
+		if(i->size() > this->getMaxAllowedPacketSize() && i->size() > tooLarge) tooLarge = i->size();
+	if(tooLarge) {
+		if(this->logging) {
+			// show warning about data size
+			bool adjustServerSettings = false;
+			std::ostringstream logStrStr;
+			logStrStr.imbue(std::locale(""));
+			logStrStr << "[#" << this->idString << "] WARNING: An entry could not be saved to the database,"
+					" because the size of a parsed value (" << tooLarge << " bytes) exceeds the ";
+			if(tooLarge > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
+			else {
+				logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
+				adjustServerSettings = true;
+			}
+			this->log("parser", logStrStr.str());
+			if(adjustServerSettings)
+				this->log("parser", "[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+		}
+		return;
+	}
+
 	// lock target table
-	this->lockTable(this->targetTable);
+	this->lockTable(this->targetTableFull);
 
 	// update existing or add new entry
 	unsigned long entryId = this->getEntryId(contentId);
@@ -627,7 +710,7 @@ void crawlservpp::Module::Parser::Database::updateOrAddEntry(unsigned long conte
 }
 
 // set URL as parsed in the database
-void crawlservpp::Module::Parser::Database::setUrlFinished(unsigned long urlId) {
+void Database::setUrlFinished(unsigned long urlId) {
 	// check prepared SQL statement
 	if(!(this->psSetUrlFinished))
 		throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::setUrlFinished(...)");
@@ -653,7 +736,7 @@ void crawlservpp::Module::Parser::Database::setUrlFinished(unsigned long urlId) 
 }
 
 // helper function: get ID of parsing entry for ID-specified content, return 0 if no entry exists
-unsigned long crawlservpp::Module::Parser::Database::getEntryId(unsigned long contentId) {
+unsigned long Database::getEntryId(unsigned long contentId) {
 	sql::ResultSet * sqlResultSet = NULL;
 	unsigned long result = 0;
 
@@ -675,11 +758,11 @@ unsigned long crawlservpp::Module::Parser::Database::getEntryId(unsigned long co
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
 
 		// delete result
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		GLOBAL_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getEntryId() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
@@ -689,7 +772,7 @@ unsigned long crawlservpp::Module::Parser::Database::getEntryId(unsigned long co
 }
 
 // helper function: update ID-specified parsing entry
-void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, const std::string& parsedId,
+void Database::updateEntry(unsigned long entryId, const std::string& parsedId,
 		const std::string& parsedDateTime, const std::vector<std::string>& parsedFields) {
 	// check prepared SQL statement
 	if(!(this->psUpdateEntry)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::updateEntry(...)");
@@ -704,11 +787,11 @@ void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, c
 		// execute SQL query
 		sqlStatement->setString(1, parsedId);
 		if(parsedDateTime.length())	sqlStatement->setString(2, parsedDateTime);
-		else sqlStatement->setNull(2, sql::DataType::VARCHAR);
+		else sqlStatement->setNull(2, 0);
 
 		unsigned int counter = 3;
 		for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i) {
-			if(this->fieldNames.at(i - parsedFields.begin()).length()) {
+			if(this->targetFieldNames.at(i - parsedFields.begin()).length()) {
 				sqlStatement->setString(counter, *i);
 				counter++;
 			}
@@ -728,7 +811,7 @@ void crawlservpp::Module::Parser::Database::updateEntry(unsigned long entryId, c
 }
 
 // helper function: add parsing entry for ID-specified content
-void crawlservpp::Module::Parser::Database::addEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
+void Database::addEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 		const std::vector<std::string>& parsedFields) {
 	// check prepared SQL statement
 	if(!(this->psAddEntry)) throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::addEntry(...)");
@@ -744,11 +827,11 @@ void crawlservpp::Module::Parser::Database::addEntry(unsigned long contentId, co
 		sqlStatement->setUInt64(1, contentId);
 		sqlStatement->setString(2, parsedId);
 		if(parsedDateTime.length())	sqlStatement->setString(3, parsedDateTime);
-		else sqlStatement->setNull(3, sql::DataType::VARCHAR);
+		else sqlStatement->setNull(3, 0);
 
 		unsigned int counter = 4;
 		for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i) {
-			if(this->fieldNames.at(i - parsedFields.begin()).length()) {
+			if(this->targetFieldNames.at(i - parsedFields.begin()).length()) {
 				sqlStatement->setString(counter, *i);
 				counter++;
 			}
@@ -767,7 +850,7 @@ void crawlservpp::Module::Parser::Database::addEntry(unsigned long contentId, co
 }
 
 // helper function: update parsing table index
-void crawlservpp::Module::Parser::Database::updateParsedTable() {
+void Database::updateParsedTable() {
 	// check prepared SQL statement
 	if(!(this->psUpdateParsedTable))
 		throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::updateParsedTable(...)");
@@ -788,4 +871,6 @@ void crawlservpp::Module::Parser::Database::updateParsedTable() {
 		errorStrStr << "updateParsedTable() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
+}
+
 }

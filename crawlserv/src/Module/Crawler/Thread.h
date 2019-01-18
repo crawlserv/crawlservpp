@@ -21,8 +21,6 @@
 #include "../../Parsing/URI.h"
 #include "../../Parsing/XML.h"
 #include "../../Query/Container.h"
-#include "../../Struct/IdString.h"
-#include "../../Struct/Memento.h"
 #include "../../Struct/ThreadOptions.h"
 #include "../../Timer/StartStop.h"
 
@@ -35,19 +33,20 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace crawlservpp::Module::Crawler {
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
 	public:
-		Thread(crawlservpp::Global::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
+		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
 				const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long crawlerLast);
-		Thread(crawlservpp::Global::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
+		Thread(crawlservpp::Main::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
 		virtual ~Thread();
 
 	protected:
 		// database and networking for thread
-		crawlservpp::Module::Crawler::Database database;
+		Database database;
 		crawlservpp::Network::Curl networking;
 
 		// implemented thread functions
@@ -58,6 +57,12 @@ namespace crawlservpp::Module::Crawler {
 		void onClear(bool interrupted) override;
 
 	private:
+		// structure for mementos (archived versions of websites)
+		struct Memento {
+			std::string url;
+			std::string timeStamp;
+		};
+
 		// hide functions not to be used by thread
 		void start();
 		void pause();
@@ -66,7 +71,7 @@ namespace crawlservpp::Module::Crawler {
 		void interrupt();
 
 		// configuration, domain, URI parser and separate networking for archive.org
-		crawlservpp::Module::Crawler::Config config;
+		Config config;
 		std::string domain;
 		crawlservpp::Parsing::URI * parser;
 		crawlservpp::Network::Curl * networkingArchives;
@@ -88,19 +93,19 @@ namespace crawlservpp::Module::Crawler {
 
 		// custom URLs
 		unsigned long startPageId;
-		std::vector<crawlservpp::Struct::IdString> customPages;
+		std::vector<std::pair<unsigned long, std::string>> customPages;
 
 		// crawling state
-		crawlservpp::Struct::IdString nextUrl;		// next URL (currently crawled URL in automatic mode)
-		std::string lockTime;			// last locking time for currently crawled URL
-		crawlservpp::Struct::IdString manualUrl;		// custom URL to be retried
-		unsigned long manualCounter;	// number of crawled custom URLs
-		bool startCrawled;				// start page has been successfully crawled
-		bool manualOff;					// manual mode has been turned off (will happen after first URL from database is crawled)
-		std::string crawledContent;		// crawled content
-		unsigned long retryCounter;		// number of retries
-		bool archiveRetry;				// archive needs to be retried
-		std::chrono::steady_clock::time_point httpTime;// time of last HTTP request (only used when HTTP sleep is enabled)
+		std::pair<unsigned long, std::string> nextUrl;	// next URL (currently crawled URL in automatic mode)
+		std::string lockTime;							// last locking time for currently crawled URL
+		std::pair<unsigned long, std::string> manualUrl;// custom URL to be retried
+		unsigned long manualCounter;					// number of crawled custom URLs
+		bool startCrawled;								// start page has been successfully crawled
+		bool manualOff;									// manual mode has been turned off (after first URL from database is crawled)
+		std::string crawledContent;						// crawled content
+		unsigned long retryCounter;						// number of retries
+		bool archiveRetry;								// archive needs to be retried
+		std::chrono::steady_clock::time_point httpTime;	// time of last HTTP request (only used when HTTP sleep is enabled)
 
 		// initializing functions
 		void initCustomUrls();
@@ -110,27 +115,29 @@ namespace crawlservpp::Module::Crawler {
 		void initQueries() override;
 
 		// crawling functions
-		bool crawlingUrlSelection(crawlservpp::Struct::IdString& urlTo);
-		bool crawlingContent(const crawlservpp::Struct::IdString& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo,
+		bool crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo);
+		bool crawlingContent(const std::pair<unsigned long, std::string>& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo,
 				std::string& timerStrTo);
 		bool crawlingCheckUrl(const std::string& url);
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
-		bool crawlingCheckContentType(const crawlservpp::Struct::IdString& url, const std::string& contentType);
-		bool crawlingCheckContent(const crawlservpp::Struct::IdString& url, const std::string& content, const crawlservpp::Parsing::XML& doc);
-		void crawlingSaveContent(const crawlservpp::Struct::IdString& url, unsigned int response, const std::string& type,
+		bool crawlingCheckContentType(const std::pair<unsigned long, std::string>& url, const std::string& contentType);
+		bool crawlingCheckContent(const std::pair<unsigned long, std::string>& url, const std::string& content,
+				const crawlservpp::Parsing::XML& doc);
+		void crawlingSaveContent(const std::pair<unsigned long, std::string>& url, unsigned int response, const std::string& type,
 				const std::string& content,
 				const crawlservpp::Parsing::XML& doc);
-		std::vector<std::string> crawlingExtractUrls(const crawlservpp::Struct::IdString& url, const std::string& content, const crawlservpp::Parsing::XML& doc);
-		void crawlingParseAndAddUrls(const crawlservpp::Struct::IdString& url, std::vector<std::string>& urls, unsigned long& newUrlsTo,
-				bool archived);
-		bool crawlingArchive(const crawlservpp::Struct::IdString& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo);
-		void crawlingSuccess(const crawlservpp::Struct::IdString& url);
-		void crawlingSkip(const crawlservpp::Struct::IdString& url);
-		void crawlingRetry(const crawlservpp::Struct::IdString& url, bool archiveOnly);
+		std::vector<std::string> crawlingExtractUrls(const std::pair<unsigned long, std::string>& url, const std::string& content,
+				const crawlservpp::Parsing::XML& doc);
+		void crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>& url, std::vector<std::string>& urls,
+				unsigned long& newUrlsTo, bool archived);
+		bool crawlingArchive(const std::pair<unsigned long, std::string>& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo);
+		void crawlingSuccess(const std::pair<unsigned long, std::string>& url);
+		void crawlingSkip(const std::pair<unsigned long, std::string>& url);
+		void crawlingRetry(const std::pair<unsigned long, std::string>& url, bool archiveOnly);
 
 		// helper function for memento crawling
 		static std::string parseMementos(std::string mementoContent, std::vector<std::string>& warningsTo,
-				std::vector<crawlservpp::Struct::Memento>& mementosTo);
+				std::vector<Memento>& mementosTo);
 	};
 }
 
