@@ -179,6 +179,8 @@ As can be seen from the commands, the server also manages threads for performing
 * **~~extractor~~**: Downloading additional data such as comments and social media content.
 * **analyzer**: Analyzing textual data using different methods and algorithms.
 
+Configurations for these modules are saved as JSON arrays in the shared `configs` table.
+
 Analyzers are implemented by their own set of subclasses - algorithm classes. The following algorithms are implemented at the moment:
  
 * **MarkovText**: Markov Chain Text Generator.
@@ -210,7 +212,7 @@ The following libraries need to be installed and manually linked after compiling
 
 ## Frontend
 
-**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server.
+**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server. You may also want to use the provided JSON files in [`crawlserv_frontend/crawlserv/json`] as keeping them up-to-date will inform you about module-specific configuration changes.
 
 This frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database.
 
