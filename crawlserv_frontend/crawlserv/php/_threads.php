@@ -1,7 +1,14 @@
+/**
+*** _threads.php
+***
+*** Use the database to show the active module-specific threads on the server.
+***
+**/
+
 <?php
 require "../config.php";
 
-$result = $dbConnection->query("SELECT id,module,status,progress,paused,website,urllist,config FROM crawlserv_threads");
+$result = $dbConnection->query("SELECT id, module, status, progress, paused, website, urllist, config FROM crawlserv_threads");
 if(!$result) http_response_code(503);
 $num = $result->num_rows;
 $none = true;
@@ -54,6 +61,7 @@ if($num) {
         if($row["paused"]) echo " value";
         echo "\">\n";
         echo "<span class=\"nowrap";
+        
         if(substr($row["status"], 0, 6) == "ERROR ")
             echo " error\" title=\"".htmlentities(substr($row["status"], 6))."\">".substr($row["status"], 6);
         else if(substr($row["status"], 0, 12) == "INTERRUPTED ")
@@ -61,11 +69,13 @@ if($num) {
         else if(substr($row["status"], 0, 5) == "IDLE ")
             echo " idle\" title=\"".htmlentities(substr($row["status"], 5))."\">".substr($row["status"], 5);
         else echo "\" title=\"".htmlentities($row["status"])."\">".$row["status"];
+        
         echo "</span>\n";
         echo "</div>\n";
         
         echo "<div class=\"action-link-box\">\n";
         echo "<div class=\"action-link\">\n";
+        
         if($row["paused"]) {
             echo "<a href=\"#\" class=\"action-link thread-unpause\" data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\">";
             echo "Unpause</a>\n";
@@ -78,6 +88,7 @@ if($num) {
             echo "<a href=\"#\" class=\"action-link thread-pause\" data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\">";
             echo "Pause</a>\n";
         }
+        
         echo " &middot; ";
         echo "<a href=\"#\" class=\"action-link thread-stop\" data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\">Stop</a>\n";
         echo "</div>\n";
