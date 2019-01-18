@@ -60,7 +60,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 * <b>[`Helper::Algos`](crawlserv/src/Helper/Algos.h)</b>: Global helper functions for algorithms.
 * <b>[`Helper::DateTime`](crawlserv/src/Helper/DateTime.cpp)</b>: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * <b>[`Helper::FileSystem`](crawlserv/src/Helper/FileSystem.cpp)</b>: Global helper functions for file system operations using `std::experimental::filesystem`.
-* <b>[`Helper::Json`](crawlserv/src/Helper/Json.cpp)</b>: Global helper functions for converting to JSON.
+* <b>[`Helper::Json`](crawlserv/src/Helper/Json.cpp)</b>: Global helper functions for converting to JSON using the [RapidJSON library](https://github.com/Tencent/rapidjson).
 * <b>[`Helper::Portability`](crawlserv/src/Helper/Portability.cpp)</b>: Global helper functions for portability.
 * <b>[`Helper::Strings`](crawlserv/src/Helper/Strings.cpp)</b>: Global helper functions for string processing and manipulation.
 * <b>[`Helper::Utf8`](crawlserv/src/Helper/Utf8.cpp)</b>: Global helper functions for UTF-8 conversion using the [UTF8-CPP library](http://utfcpp.sourceforge.net/).
