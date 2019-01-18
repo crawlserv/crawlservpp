@@ -34,8 +34,8 @@
 #include "../Struct/ThreadDatabaseEntry.h"
 
 #include "../_extern/mongoose.h"
-#include "../_extern/rapidjson/document.h"
-#include "../_extern/rapidjson/prettywriter.h"
+#include "../_extern/rapidjson/include/rapidjson/document.h"
+#include "../_extern/rapidjson/include/rapidjson/prettywriter.h"
 
 #include <boost/lexical_cast.hpp>
 #include <experimental/filesystem>

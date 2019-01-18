@@ -20,7 +20,7 @@
 #include "../../Helper/Json.h"
 #include "../../Timer/Simple.h"
 
-#include "../../_extern/rapidjson/document.h"
+#include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>

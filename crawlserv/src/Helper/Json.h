@@ -10,9 +10,9 @@
 #ifndef HELPER_JSON_H_
 #define HELPER_JSON_H_
 
-#include "../_extern/rapidjson/document.h"
-#include "../_extern/rapidjson/stringbuffer.h"
-#include "../_extern/rapidjson/writer.h"
+#include "../_extern/rapidjson/include/rapidjson/document.h"
+#include "../_extern/rapidjson/include/rapidjson/stringbuffer.h"
+#include "../_extern/rapidjson/include/rapidjson/writer.h"
 
 #include <string>
 #include <tuple>
