@@ -31,8 +31,8 @@ The source code of the server consists of the following classes (as of January 2
 * **[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)**: Database functionality for threads (child of the `Main::Database` class).
 * **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Interface for the database access of threads (wraps the `Module::DBThread` class).
 * **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
-* **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Proof-of-concept implementation of markov chain text generator, borrowed from Rosetta Code at https://rosettacode.org/wiki/Markov_chain_text_generator.
-* **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Proof-of-concept implementation of markov chain tweet generator, borrowed from Kelly Rauchenberger at https://github.com/hatkirby/rawr-ebooks.
+* **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Proof-of-concept implementation of markov chain text generator, [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
+* **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Proof-of-concept implementation of markov chain tweet generator, [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
 * **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.cpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for all configuration entries.
 * **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the `Module::DBWrapper` interface).
 * **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the `Module::Thread` interface for analyzers. Abstract class to be inherited by algorithm classes.
@@ -158,7 +158,7 @@ The commands and their replies are using the JSON format (implemented using the 
 }
 ````
 
-**_Response from server:_** Success (otherwise `"failed":true` would be included in the response).
+**Response from server:** Success (otherwise `"failed":true` would be included in the response).
 
 ```json
 {
