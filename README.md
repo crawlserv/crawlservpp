@@ -31,8 +31,8 @@ The source code of the server consists of the following classes (as of January 2
 * **[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)**: Database functionality for threads (child of the `Main::Database` class).
 * **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Interface for the database access of threads (wraps the `Module::DBThread` class).
 * **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
-* **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Proof-of-concept implementation of markov chain text generator, [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
-* **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Proof-of-concept implementation of markov chain tweet generator, [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
+* **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
+* **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
 * **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.cpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for all configuration entries.
 * **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the `Module::DBWrapper` interface).
 * **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the `Module::Thread` interface for analyzers. Abstract class to be inherited by algorithm classes.
@@ -42,7 +42,7 @@ The source code of the server consists of the following classes (as of January 2
 * **~~[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.cpp)~~**: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * **~~[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the `Module::DBWrapper` interface).
 * **~~[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the `Module::Thread` interface for extractors.
-* **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.cpp): Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
+* **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.cpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
 * **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the `Module::DBWrapper` interface).
 * **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the `Module::Thread` interface for parsers.
 * **[`Network::Config`](crawlserv/src/Network/Config.cpp)**: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
