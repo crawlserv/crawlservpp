@@ -29,8 +29,8 @@ The source code of the server consists of the following classes (as of January 2
 * <b>[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)</b>: Database functionality for threads (child of the `Main::Database` class).
 * <b>[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)</b>: Interface for the database access of threads (wraps the `Module::DBThread` class).
 * <b>[`Module::Thread`](crawlserv/src/Module/Thread.cpp)</b>: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
-* <b>[`Module::Analyzer::Algo::MarkovSentence`](crawlserv/src/Module/Analyzer/Algo/MarkovSentence.cpp)</b>: Proof-of-concept implementation of markov chain sentence generator, borrowed from Kelly Rauchenberger at https://github.com/hatkirby/rawr-ebooks.
 * <b>[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)</b>: Proof-of-concept implementation of markov chain text generator, borrowed from Rosetta Code at https://rosettacode.org/wiki/Markov_chain_text_generator.
+* <b>[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)</b>: Proof-of-concept implementation of markov chain tweet generator, borrowed from Kelly Rauchenberger at https://github.com/hatkirby/rawr-ebooks.
 * <b>[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.cpp)</b>: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for all configuration entries.
 * ~~<b>[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)</b>~~: Database access for analyzers (implements the `Module::DBWrapper` interface).
 * ~~<b>[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)</b>~~: Implementation of the `Module::Thread` interface for analyzers. Abstract class to be inherited by algorithm classes.
@@ -176,9 +176,9 @@ As can be seen from the commands, the server also manages threads for performing
 * <b>analyzer</b>: Analyzing textual data using different methods and algorithms.
 
 Analyzers are implemented by their own set of subclasses - algorithm classes. The following algorithms are implemented at the moment:
-
-* <b>MarkovSentence</b>: Markov Chain Sentence Generator. 
+ 
 * <b>MarkovText</b>: Markov Chain Text Generator.
+* <b>MarkovTweet</b>: Markov Chain Tweet Generator.
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Main::Database` class. Additionally, thread connections to the database (instances of `Module::DBThread` as child class of `Main::Database`) are wrapped through the `Module::DBWrapper` class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
 
