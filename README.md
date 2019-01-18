@@ -1,4 +1,5 @@
-_**WARNING!** This application is under development. It is neither complete nor adequately documented. ~~strikethrough~~ means a feature is not implemented yet._
+_**WARNING!** This application is under development. It is neither complete nor adequately documented.
+ ~~strikethrough~~ means a feature is not implemented yet._
 
 # crawlserv++
 **crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
@@ -17,7 +18,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 ### Classes, Namespaces, Structures and Enums
 
-_**NB!** All non-external classes are part of the namespace `crawlservpp`._
+**NB!** All non-external classes are part of the namespace `crawlservpp`.
 
 The source code of the server consists of the following classes (as of January 2019):
 
@@ -206,7 +207,8 @@ The following libraries need to be installed and manually linked after compiling
 
 ## Frontend
 
-_**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language, all you need is a SQL connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server._
+**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server.
+Feel free to implement your own nice frontend solution in your favorite programming language, all you need is a SQL connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server.
 
 The frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database. The frontend provides the following menu structure:
 
