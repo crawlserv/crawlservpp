@@ -7,3 +7,6 @@
 [submodule "crawlserv/src/_extern/mongoose"]
 	path = crawlserv/src/_extern/mongoose
 	url = https://github.com/cesanta/mongoose
+[submodule "crawlserv/src/_extern/date"]
+	path = crawlserv/src/_extern/date
+	url = https://github.com/HowardHinnant/date
