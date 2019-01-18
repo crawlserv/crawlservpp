@@ -139,7 +139,7 @@ bool Database::connect() {
 	return success;
 }
 
-// run initializing SQL commands by processing all files in the "sql" sub-folder
+// run initializing SQL commands by processing all .sql files in the "sql" sub-folder
 bool Database::initializeSql() {
 	// read 'sql' directory
 	std::vector<std::string> sqlFiles;
