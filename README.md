@@ -29,22 +29,22 @@ The source code of the server consists of the following classes (as of January 2
 * **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
 * **[`Module::Config`](crawlserv/src/Module/Config.cpp)**: Abstract class as base for module-specific configuration classes.
 * **[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)**: Database functionality for threads (child of the [`Main::Database`](crawlserv/src/Main/Database.cpp) class).
-* **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Interface for the database access of threads (wraps the [`Module::DBThread`](crawlserv/src/Module/DBThread.cpp) class).
-* **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
+* **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Abstract class for the database access of threads (wraps the [`Module::DBThread`](crawlserv/src/Module/DBThread.cpp) class).
+* **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Abstract class for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
 * **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
 * **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
 * **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.cpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for all configuration entries.
-* **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the `Module::DBWrapper` interface).
-* **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for analyzers. Abstract class to be inherited by algorithm classes.
+* **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for analyzers. Abstract class to be inherited by algorithm classes.
 * **[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.cpp)**: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
-* **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the `Module::DBWrapper` interface).
-* **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for crawlers.
+* **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for crawlers.
 * **~~[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.cpp)~~**: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
-* **~~[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the `Module::DBWrapper` interface).
-* **~~[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for extractors.
+* **~~[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **~~[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for extractors.
 * **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.cpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
-* **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) interface).
-* **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for parsers.
+* **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for parsers.
 * **[`Network::Config`](crawlserv/src/Network/Config.cpp)**: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * **[`Network::Curl`](crawlserv/src/Network/Curl.cpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction.
