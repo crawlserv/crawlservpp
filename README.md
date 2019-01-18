@@ -28,23 +28,23 @@ The source code of the server consists of the following classes (as of January 2
 * **[`Main::Database`](crawlserv/src/Main/Database.cpp)**: Database access for the server and its threads (parent class with server-specific and basic functionality only).
 * **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
 * **[`Module::Config`](crawlserv/src/Module/Config.cpp)**: Abstract class as base for module-specific configuration classes.
-* **[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)**: Database functionality for threads (child of the `Main::Database` class).
-* **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Interface for the database access of threads (wraps the `Module::DBThread` class).
+* **[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)**: Database functionality for threads (child of the [`Main::Database`](crawlserv/src/Main/Database.cpp) class).
+* **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Interface for the database access of threads (wraps the [`Module::DBThread`](crawlserv/src/Module/DBThread.cpp) class).
 * **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Interface for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
 * **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
 * **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
 * **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.cpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for all configuration entries.
 * **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the `Module::DBWrapper` interface).
-* **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the `Module::Thread` interface for analyzers. Abstract class to be inherited by algorithm classes.
+* **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for analyzers. Abstract class to be inherited by algorithm classes.
 * **[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.cpp)**: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
 * **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the `Module::DBWrapper` interface).
-* **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the `Module::Thread` interface for crawlers.
+* **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for crawlers.
 * **~~[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.cpp)~~**: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * **~~[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the `Module::DBWrapper` interface).
-* **~~[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the `Module::Thread` interface for extractors.
+* **~~[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for extractors.
 * **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.cpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
-* **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the `Module::DBWrapper` interface).
-* **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the `Module::Thread` interface for parsers.
+* **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) interface).
+* **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) interface for parsers.
 * **[`Network::Config`](crawlserv/src/Network/Config.cpp)**: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * **[`Network::Curl`](crawlserv/src/Network/Curl.cpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction.
@@ -81,7 +81,7 @@ The following custom enumerations are used:
 
 Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Main/Data.h`](crawlserv/src/Main/Data.h).
 
-The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the `Main::App` class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
+The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the [`Main::App`](crawlserv/src/Main/App.cpp) class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
 ### Server Commands
 
@@ -172,7 +172,7 @@ For more information on the server commands, see the [source code](crawlserv/src
 
 ### Threads
 
-As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the `Module::Thread` template class:
+As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) template class:
 
 * **crawler**: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://www.mementoweb.org/guide/quick-intro/)).
 * **parser**: Parsing data from URLs and downloaded content using user-defined RegEx and XPath queries.
@@ -186,7 +186,7 @@ Analyzers are implemented by their own set of subclasses - algorithm classes. Th
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
 
-The server and each thread have their own connections to the database. These connections are handled by inheritance from the `Main::Database` class. Additionally, thread connections to the database (instances of `Module::DBThread` as child class of `Main::Database`) are wrapped through the `Module::DBWrapper` class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
+The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](crawlserv/src/Main/Database.cpp) class. Additionally, thread connections to the database (instances of [`Module::DBThread`](crawlserv/src/Module/DBThread.cpp) as child class of `Main::Database`) are wrapped through the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
 
 ### Third-party Libraries
 
