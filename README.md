@@ -105,9 +105,9 @@ The server performs commands and sends back their results. Some commands need to
 * <b>`pausecrawler`</b> (argument: `id`): Pause a running crawler by its ID.
 * ~~<b>`pauseextractor`</b>~~ (argument: `id`): Pause a running extractor by its ID.
 * <b>`pauseparser`</b> (argument: `id`): Pause a running parser by its ID.
-* <b>`resetanalyzingstatus` (argument: `urllist`): Reset the analyzing status of an ID-specified URL list.
-* <b>`resetextractingstatus` (argument: `urllist`): Reset the extracting status of an ID-specified URL list.
-* <b>`resetparsingstatus` (argument: `urllist`): Reset the parsing status of an ID-specified URL list.
+* <b>`resetanalyzingstatus`</b> (argument: `urllist`): Reset the analyzing status of an ID-specified URL list.
+* <b>`resetextractingstatus`</b> (argument: `urllist`): Reset the extracting status of an ID-specified URL list.
+* <b>`resetparsingstatus`</b> (argument: `urllist`): Reset the parsing status of an ID-specified URL list.
 * <b>`startanalyzer`</b> (arguments: `website`, `urllist`, `config`): Start an analyzer using the specified website, URL list and configuration.
 * <b>`startcrawler`</b> (arguments: `website`, `urllist`, `config`): Start a crawler using the specified website, URL list and configuration.
 * ~~<b>`startextractor`</b>~~ (arguments: `website`, `urllist`, `config`): Start an extractor using the specified website, URL list and configuration.
