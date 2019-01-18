@@ -8,10 +8,12 @@
  *      Author: ans
  */
 
-#include "App.h"
+#include "../Main/App.h"
+
+namespace crawlservpp::Main {
 
 // constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
-crawlservpp::Global::App::App(int argc, char * argv[]) {
+App::App(int argc, char * argv[]) {
 	crawlservpp::Struct::DatabaseSettings dbSettings;
 	crawlservpp::Struct::ServerSettings serverSettings;
 	std::string error;
@@ -43,7 +45,7 @@ crawlservpp::Global::App::App(int argc, char * argv[]) {
 }
 
 // destructor: clean-up server
-crawlservpp::Global::App::~App() {
+App::~App() {
 	if(this->server) {
 		// server up-time message
 		std::cout << std::endl << "Up-time: " << crawlservpp::Helper::DateTime::secondsToString(server->getUpTime()) << ".";
@@ -59,7 +61,7 @@ crawlservpp::Global::App::~App() {
 }
 
 // run app
-int crawlservpp::Global::App::run() {
+int App::run() {
 	if(this->server && this->running) {
 		try {
 			while(this->server->tick()) {}
@@ -73,13 +75,13 @@ int crawlservpp::Global::App::run() {
 }
 
 // static helper function: show version (and library versions)
-void crawlservpp::Global::App::outputHeader() {
+void App::outputHeader() {
 	std::cout << "crawlserv++ v0.1 by Ans using" << std::endl;
 	std::cout << crawlservpp::Helper::Versions::getLibraryVersions(" ") << std::endl;
 }
 
 // static helper function: check number of command line arguments, return false on mismatch (usage notice written to errorTo)
-bool crawlservpp::Global::App::checkArgumentNumber(int argc, std::string& errorTo) {
+bool App::checkArgumentNumber(int argc, std::string& errorTo) {
 	if(argc != 2) {
 		errorTo = "USAGE: crawlserv <config_file>";
 		return false;
@@ -88,9 +90,9 @@ bool crawlservpp::Global::App::checkArgumentNumber(int argc, std::string& errorT
 }
 
 // static helper function: load database and server settings from configuration file, return false on error (written to errorTo)
-bool crawlservpp::Global::App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
+bool App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
 		crawlservpp::Struct::ServerSettings& serverSettings, std::string& errorTo) {
-	crawlservpp::Global::ConfigFile configFile(fileName);
+	ConfigFile configFile(fileName);
 
 	dbSettings.host = configFile.getValue("db_host");
 
@@ -132,7 +134,7 @@ bool crawlservpp::Global::App::loadConfig(const std::string& fileName, crawlserv
 }
 
 // static helper function: get database password from user, return false on cancel
-bool crawlservpp::Global::App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
+bool App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
 	// prompt password for database
 	std::cout << "Enter password for " << dbSettings.user << "@" << dbSettings.host << ":" << dbSettings.port << ": ";
 	char input = 0;
@@ -169,4 +171,6 @@ bool crawlservpp::Global::App::getPassword(crawlservpp::Struct::DatabaseSettings
 
 	if(inputCancel) return false;
 	return true;
+}
+
 }

@@ -20,7 +20,6 @@
 #include "../../Helper/Strings.h"
 #include "../../Parsing/XML.h"
 #include "../../Query/Container.h"
-#include "../../Struct/IdString.h"
 #include "../../Struct/ThreadOptions.h"
 #include "../../Timer/StartStop.h"
 
@@ -33,19 +32,20 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
 	public:
-		Thread(crawlservpp::Global::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
+		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
 				const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long crawlerLast);
-		Thread(crawlservpp::Global::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
+		Thread(crawlservpp::Main::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
 		virtual ~Thread();
 
 	protected:
 		// database for the thread
-		crawlservpp::Module::Parser::Database database;
+		Database database;
 
 		// implemented thread functions
 		bool onInit(bool resumed) override;
@@ -63,7 +63,7 @@ namespace crawlservpp::Module::Parser {
 		void interrupt();
 
 		// configuration
-		crawlservpp::Module::Parser::Config config;
+		Config config;
 		bool idFromUrl;
 
 		std::vector<crawlservpp::Query::Container::QueryStruct> queriesId;
@@ -77,7 +77,7 @@ namespace crawlservpp::Module::Parser {
 		std::chrono::steady_clock::time_point idleTime;
 
 		// parsing state
-		crawlservpp::Struct::IdString currentUrl;	// currently parsed URL
+		std::pair<unsigned long, std::string> currentUrl;	// currently parsed URL
 		std::string lockTime;	// last locking time for currently parsed URL
 
 		// initializing function
@@ -87,7 +87,7 @@ namespace crawlservpp::Module::Parser {
 		// parsing functions
 		bool parsingUrlSelection();
 		unsigned long parsing();
-		bool parsingContent(const crawlservpp::Struct::IdString& content, const std::string& parsedId);
+		bool parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId);
 	};
 }
 

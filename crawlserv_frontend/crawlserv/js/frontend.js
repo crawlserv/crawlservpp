@@ -30,7 +30,7 @@ function msToStr(ms) {
 
 // check whether a date is valid
 function isValidDate(dateString) {
-	if(!dateString.length()) return true; // empty string allowed (no date specified)
+	if(!dateString.length) return true; // empty string allowed (no date specified)
 	var regEx = /^\d{4}-\d{2}-\d{2}$/;
 	if(!dateString.match(regEx)) return false;  // invalid format
 	var d = new Date(dateString);
@@ -143,6 +143,28 @@ function hasData(obj, key) {
 	return (typeof attr !== typeof undefined && attr !== false);
 }
 
+// disable selection fields with redirects
+function disableSelects() {
+	if($("#website-select")) $("#website-select").prop('disabled', 'disabled');
+	if($("#urllist-select")) $("#urllist-select").prop('disabled', 'disabled');
+	if($("#query-select")) $("#query-select").prop('disabled', 'disabled');
+	if($("#config-select")) $("#config-select").prop('disabled', 'disabled');
+	if($("#module-select")) $("#module-select").prop('disabled', 'disabled');
+	if($("#algo-cat-select")) $("#algo-cat-select").prop('disabled', 'disabled');
+	if($("#algo-select")) $("#algo-select").prop('disabled', 'disabled');
+}
+
+// enable selection fields with redirects
+function enableSelects() {
+	if($("#website-select")) $("#website-select").prop('disabled', false);
+	if($("#urllist-select")) $("#urllist-select").prop('disabled', false);
+	if($("#query-select")) $("#query-select").prop('disabled', false);
+	if($("#config-select")) $("#config-select").prop('disabled', false);
+	if($("#module-select")) $("#module-select").prop('disabled', false);
+	if($("#algo-cat-select")) $("#algo-cat-select").prop('disabled', false);
+	if($("#algo-select")) $("#algo-select").prop('disabled', false);
+}
+
 jQuery(function($) {
 
 /*
@@ -176,6 +198,13 @@ jQuery(function($) {
 		// set leave time
 		localStorage["_crawlserv_leavetime"] = +new Date();
 	});
+
+// CHANGE EVENT: check date
+	$(document).on("change", "input[type='date']", function() {
+		if(isValidDate($(this).val())) return true;
+		alert("Please enter an empty or a valid date in the format \'YYYY-MM-DD\'.");
+		return false;
+	});
 	
 // CLICK EVENT: navigation
 	$(document).on("click", "a.post-redirect", function() {
@@ -192,13 +221,6 @@ jQuery(function($) {
 // CLICK EVENT: run command without arguments
 	$(document).on("click", "a.cmd", function() {
   		runCmd($(this).data("cmd"), {}, hasData($(this), "reload"), { "m" : $(this).data("m") });
-		return false;
-	});
-	
-// CHANGE EVENT: check date
-	$(document).on("change", "input[type='date']", function() {
-		if(isValidDate($(this).val())) return true;
-		alert("Please enter an empty or a valid date in the format \'YYYY-MM-DD\'.");
 		return false;
 	});
 
@@ -284,11 +306,40 @@ jQuery(function($) {
 
 // CHANGE EVENT: website selected
 	$("#website-select").on("change", function() {
+		$(this).blur();
+		disableSelects();
 		var id = parseInt($(this).val(), 10);
 		var args = { "m" : $(this).data("m"), "website" : id };
 		if($("#query-test-text")) args["test"] = $("#query-test-text").val();
-		reload(args);
+		if(typeof config !== "undefined") {
+			if(config.isConfChanged()) {
+				if(confirm("Do you want to discard the changes to your current configuration?"))
+					reload(args);
+				else {
+					$(this).val(prevConfig);
+					enableSelects();
+				}
+			}
+			else reload(args);
+		}
+		else {
+			// reload in "Threads" menu also
+			reload(args);
+		}
 		return false;
+	});
+	
+// CHANGE EVENT: URL list selected
+	$("#urllist-select").on("change", function() {
+		$(this).blur();
+		
+		if(typeof config !== "undefined") {
+			disableSelects();
+			var website = parseInt($("#website-select").val(), 10);
+			var id = parseInt($(this).val(), 10);
+			reload({ "m" : $(this).data("m"), "website" : website, "urllist" : id });
+			return false;
+		} // do not reload in "Threads" menu
 	});
 
 // CLICK EVENT: add website
@@ -318,14 +369,6 @@ jQuery(function($) {
 	$(document).on("click", "a.website-delete", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		if(id) runCmd("deletewebsite", { "id" : id }, true, { "m" : "websites" });
-		return false;
-	});
-	
-// CHANGE EVENT: URL list selected
-	$("#urllist-select").on("change", function() {
-		var website = parseInt($("#website-select").val(), 10);
-		var id = parseInt($(this).val(), 10);
-		reload({ "m" : $(this).data("m"), "website" : website, "urllist" : id });
 		return false;
 	});
 
@@ -400,10 +443,25 @@ jQuery(function($) {
 	
 // CHANGE EVENT: query selected
 	$("#query-select").on("change", function() {
+		$(this).blur();
+		disableSelects();
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($(this).val(), 10);
 		reload({ "m" : $(this).data("m"), "website" : website, "query" : id, "test" : $("#query-test-text").val() });
 		return false;
+	});
+	
+// CHANGE EVENT: query type selected
+	$("#query-type-select").on("change", function() {
+		if($(this).val() == "regex") {
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
+		}
+		else {
+			$("#query-text-only").prop("disabled", false);
+			$("#query-text-only-label").removeClass("check-label-disabled");
+		}
 	});
 	
 // CLICK EVENT: add query
@@ -488,42 +546,90 @@ jQuery(function($) {
 		}
 		return false;
 	});
-	
-// CHANGE EVENT: query type selected
-	$("#query-type-select").on("change", function() {
-		if($(this).val() == "regex") {
-			$("#query-text-only").prop("checked", false);
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
-		}
-		else {
-			$("#query-text-only").prop("disabled", false);
-			$("#query-text-only-label").removeClass("check-label-disabled");
-		}
-	});
 
 /*
- * CRAWLERS, PARSERS, EXTRACTORS, ANALYZERS
+ * CONFIGURASIONS (for CRAWLERS, PARSERS, EXTRACTORS and ANALYZERS)
  */
 
 var prevConfig;
+var prevAlgoCat;
+var prevAlgo;
 
 // FOCUS EVENT: save selected configuration before change
 	$("#config-select").on("focus", function() {
 		prevConfig = $(this).val();
 	})
+	
+// FOCUS EVENT: save selected algorithm category before change (for ANALYZERS only)
+	$("#algo-cat-select").on("focus", function() {
+		prevAlgoCat = $(this).val();
+	})
+
+// FOCUS EVENT: save selected algorithm before change (for ANALYZERS only)
+	$("#algo-select").on("focus", function() {
+		prevAlgo = $(this).val();
+	})
 
 // CHANGE EVENT: configuration selected
 	$("#config-select").on("change", function() {
+		$(this).blur();
+		if(typeof config !== "undefined") {
+			disableSelects();
+			var website = parseInt($("#website-select").val(), 10);
+			var id = parseInt($(this).val(), 10);
+			if(config.isConfChanged()) {
+				if(confirm("Do you want to discard the changes to your current configuration?"))
+					reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
+				else {
+					$(this).val(prevConfig);
+					enableSelects();
+				}
+			}
+			else reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
+			return false;
+		}
+	});
+
+// CHANGE EVENT: algorithm category selected (for ANALYZERS only)
+	$("#algo-cat-select").on("change", function() {
 		$(this).blur()
+		disableSelects();
 		var website = parseInt($("#website-select").val(), 10);
+		var config_id = parseInt($("#config-select").val(), 10);
 		var id = parseInt($(this).val(), 10);
 		if(config.isConfChanged()) {
-			if(confirm("Do you want to discard the changes to your current configuration?"))
-				reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
-			else $(this).val(prevConfig);
+			if(confirm("Do you want to discard the changes to your algorithm?"))
+				reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
+					"algo-cat" : id });
+			else {
+				$(this).val(prevAlgoCat);
+				enableSelects();
+			}
 		}
-		else reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
+		else reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
+			"algo_cat": id });
+		return false;
+	});
+	
+// CHANGE EVENT: algorithm selected (for ANALYZERS only)
+	$("#algo-select").on("change", function() {
+		$(this).blur()
+		disableSelects()
+		var website = parseInt($("#website-select").val(), 10);
+		var config_id = parseInt($("#config-select").val(), 10);
+		var algo_cat = parseInt($("#algo-cat-select").val(), 10);
+		var id = parseInt($(this).val(), 10);
+		if(config.isConfChanged()) {
+			if(confirm("Do you want to discard the changes to your algorithm?"))
+				reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
+					"algo-cat" : algo_cat, "algo_id:" : id });
+			else {
+				$(this).val(prevAlgoCat);
+				enableSelects();
+			}
+		}
+		else reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
+			"algo_id": id });
 		return false;
 	});
 
@@ -531,8 +637,10 @@ var prevConfig;
 	$(document).on("click", "a.post-redirect-mode", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
-		reload({ "m" : $(this).data("m"), "mode" : $(this).data("mode"), "website" : website, "config" : id,
-			"current" : JSON.stringify(config.updateConf()), "name" : $("#config-name").val() });
+		var algo_id = parseInt($("#algo-select").val(), 10);
+		var algo_cat = parseInt($("#algo-cat-select").val(), 10);
+		reload({ "m" : $(this).data("m"), "mode" : $(this).data("mode"), "website" : website, "config" : id, "algo_id" : algo_id,
+			"algo_cat" : algo_cat, "current" : JSON.stringify(config.updateConf()), "name" : $("#config-name").val() });
 		return false;
 	});
 
@@ -616,6 +724,7 @@ var prevConfig;
 // CHANGE EVENT: module selected
 	$("#module-select").on("change", function() {
 		var website = parseInt($("#website-select").val(), 10);
+		disableSelects();
 		reload({ "m" : $(this).data("m"), "website" : website, "module": $(this).val() });
 		return false;
 	});

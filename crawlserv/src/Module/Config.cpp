@@ -9,19 +9,21 @@
 
 #include "Config.h"
 
+namespace crawlservpp::Module {
+
 // constructor stub
-crawlservpp::Module::Config::Config() {}
+Config::Config() {}
 
 // destructor stub
-crawlservpp::Module::Config::~Config() {}
+Config::~Config() {}
 
 // get error message
-const std::string& crawlservpp::Module::Config::getErrorMessage() const {
+const std::string& Config::getErrorMessage() const {
 	return this->errorMessage;
 }
 
 // load configuration
-bool crawlservpp::Module::Config::loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo) {
+bool Config::loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo) {
 	// parse JSON
 	rapidjson::Document json;
 	if(json.Parse(configJson.c_str()).HasParseError()) {
@@ -36,4 +38,6 @@ bool crawlservpp::Module::Config::loadConfig(const std::string& configJson, std:
 	// load module-specific configuration
 	this->loadModule(json, warningsTo);
 	return true;
+}
+
 }

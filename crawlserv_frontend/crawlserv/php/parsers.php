@@ -125,7 +125,7 @@ if(isset($website)) {
 }
 ?>
 <script>
-var config = new Config("parser", '<?php echo $current; ?>', "<?php echo $mode; ?>");
+// load queries and configuration
 <?php 
 if($website) {
     echo "var db_queries = [\n";
@@ -153,5 +153,8 @@ if($website) {
     echo ";\n";
 }
 ?>
+	
+// create configuration object
+var config = new Config("parser", '<?php echo $current; ?>', "<?php echo $mode; ?>");
 </script>
 

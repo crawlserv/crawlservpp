@@ -24,6 +24,12 @@ namespace crawlservpp::Helper::DateTime {
 	bool convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	bool convertSQLTimeStampToTimeStamp(std::string& timeStamp);
 
+	// date/time verification
+	bool isValidISODate(const std::string& isoDate);
+
+	// date/time comparison
+	bool isISODateInRange(const std::string& isoDate, const std::string& rangeFrom, const std::string& rangeTo);
+
 	// timing
 	std::string microsecondsToString(unsigned long long microseconds);
 	std::string millisecondsToString(unsigned long long milliseconds);

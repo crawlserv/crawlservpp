@@ -10,14 +10,16 @@
 
 #include "URI.h"
 
+namespace crawlservpp::Parsing {
+
 // constructor
-crawlservpp::Parsing::URI::URI() {
+URI::URI() {
 	this->base = NULL;
 	this->uri = NULL;
 }
 
 // destructor
-crawlservpp::Parsing::URI::~URI() {
+URI::~URI() {
 	if(this->base) {
 		uriFreeUriMembersA(this->base);
 		delete this->base;
@@ -31,17 +33,17 @@ crawlservpp::Parsing::URI::~URI() {
 }
 
 // set current host
-bool crawlservpp::Parsing::URI::setCurrentDomain(const std::string& currentHost) {
+bool URI::setCurrentDomain(const std::string& currentHost) {
 	if(!currentHost.length()) {
 		this->errorMessage = "URI Parser error: Empty domain.";
 		return false;
 	}
-	this->domain = crawlservpp::Parsing::URI::escapeUrl(currentHost);
+	this->domain = URI::escapeUrl(currentHost);
 	return true;
 }
 
 // set current sub-URL (beginning with slash)
-bool crawlservpp::Parsing::URI::setCurrentSubUrl(const std::string& currentSubUrl) {
+bool URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 	// error checking
 	if(!(this->domain.length())) {
 		this->errorMessage = "URI Parser error: No current domain specified.";
@@ -55,7 +57,7 @@ bool crawlservpp::Parsing::URI::setCurrentSubUrl(const std::string& currentSubUr
 		this->errorMessage = "URI Parser error: Sub-URL does not start with slash (\'/\').";
 		return false;
 	}
-	this->subUrl = crawlservpp::Parsing::URI::escapeUrl(currentSubUrl);
+	this->subUrl = URI::escapeUrl(currentSubUrl);
 
 	// create current URI string
 	this->current = "https://" + this->domain + this->subUrl;
@@ -86,7 +88,7 @@ bool crawlservpp::Parsing::URI::setCurrentSubUrl(const std::string& currentSubUr
 }
 
 // parse link to sub-URL (beginning with slash)
-bool crawlservpp::Parsing::URI::parseLink(const std::string& linkToParse) {
+bool URI::parseLink(const std::string& linkToParse) {
 	// error checking
 	if(!(this->domain.length())) {
 		this->errorMessage = "URI Parser error: No current domain specified.";
@@ -109,7 +111,7 @@ bool crawlservpp::Parsing::URI::parseLink(const std::string& linkToParse) {
 
 	// trim URL
 	crawlservpp::Helper::Strings::trim(linkCopy);
-	linkCopy = crawlservpp::Parsing::URI::escapeUrl(linkCopy);
+	linkCopy = URI::escapeUrl(linkCopy);
 
 	// delete old URI if necessary
 	if(this->uri) {
@@ -177,14 +179,14 @@ bool crawlservpp::Parsing::URI::parseLink(const std::string& linkToParse) {
 }
 
 // check whether parsed link links to current domain
-bool crawlservpp::Parsing::URI::isSameDomain() const {
+bool URI::isSameDomain() const {
 	if(!(this->domain.length())) throw std::runtime_error("URI Parser error - No current domain specified");
 	if(!(this->uri)) throw std::runtime_error("URI Parser error - No link parsed");
-	return crawlservpp::Parsing::URI::textRangeToString(&(this->uri->hostText)) == this->domain;
+	return URI::textRangeToString(&(this->uri->hostText)) == this->domain;
 }
 
 // get sub-URL for link
-std::string crawlservpp::Parsing::URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
+std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
 	if(!(this->uri)) throw std::runtime_error("URI Parser error - No link parsed");
 	UriQueryListA * queryList = NULL;
 	UriQueryListA * queryNext = NULL;
@@ -214,7 +216,7 @@ std::string crawlservpp::Parsing::URI::getSubUrl(const std::vector<std::string>&
 	UriPathSegmentStructA * nextSegment = this->uri->pathHead;
 	std::string result;
 	while(nextSegment) {
-		result += "/" + crawlservpp::Parsing::URI::unescape(crawlservpp::Parsing::URI::textRangeToString(&(nextSegment->text)), false);
+		result += "/" + URI::unescape(URI::textRangeToString(&(nextSegment->text)), false);
 		nextSegment = nextSegment->next;
 	}
 
@@ -225,12 +227,12 @@ std::string crawlservpp::Parsing::URI::getSubUrl(const std::vector<std::string>&
 }
 
 // get error string
-std::string crawlservpp::Parsing::URI::getErrorMessage() const {
+std::string URI::getErrorMessage() const {
 	return this->errorMessage;
 }
 
 // public static helper function: escape string
-std::string crawlservpp::Parsing::URI::escape(const std::string& string, bool plusSpace) {
+std::string URI::escape(const std::string& string, bool plusSpace) {
 	char * cString = new char[string.length() * 6 + 1];
 	uriEscapeExA(string.c_str(), string.c_str() + string.length(), cString, plusSpace, false);
 	std::string result = cString;
@@ -239,7 +241,7 @@ std::string crawlservpp::Parsing::URI::escape(const std::string& string, bool pl
 }
 
 // public static helper function: unescape string
-std::string crawlservpp::Parsing::URI::unescape(const std::string& string, bool plusSpace) {
+std::string URI::unescape(const std::string& string, bool plusSpace) {
 	if(!string.length()) return "";
 	char * cString = new char[string.length() + 1];
 	for(unsigned long n = 0; n < string.length(); n++) cString[n] = string.at(n);
@@ -251,7 +253,7 @@ std::string crawlservpp::Parsing::URI::unescape(const std::string& string, bool 
 }
 
 // escape an URL but leave reserved characters (; / ? : @ = & # %) intact
-std::string crawlservpp::Parsing::URI::escapeUrl(const std::string& urlToEscape) {
+std::string URI::escapeUrl(const std::string& urlToEscape) {
 	unsigned long pos = 0;
 	std::string result;
 
@@ -261,7 +263,7 @@ std::string crawlservpp::Parsing::URI::escapeUrl(const std::string& urlToEscape)
 		if(end == std::string::npos) end = urlToEscape.length();
 		if(end - pos) {
 			std::string part = urlToEscape.substr(pos, end - pos);
-			result += crawlservpp::Parsing::URI::escape(part, false);
+			result += URI::escape(part, false);
 		}
 		if(end < urlToEscape.length()) result += urlToEscape.at(end);
 		pos = end + 1;
@@ -270,14 +272,14 @@ std::string crawlservpp::Parsing::URI::escapeUrl(const std::string& urlToEscape)
 }
 
 // static helper function: convert URITextRangeA to string
-std::string crawlservpp::Parsing::URI::textRangeToString(const UriTextRangeA * range) {
+std::string URI::textRangeToString(const UriTextRangeA * range) {
 	if(!range || !(range->first) || range->first == range->afterLast) return "";
 	std::string result = std::string(range->first, 0, range->afterLast - range->first);
 	return result;
 }
 
 // static helper function: convert URI to string
-std::string crawlservpp::Parsing::URI::toString(const UriUriA * uri) {
+std::string URI::toString(const UriUriA * uri) {
 	char * uriCString = NULL;
 	int charsRequired = 0;
 	std::string result;
@@ -297,4 +299,6 @@ std::string crawlservpp::Parsing::URI::toString(const UriUriA * uri) {
 	result = uriCString;
 	delete[] uriCString;
 	return result;
+}
+
 }

@@ -9,8 +9,10 @@
 
 #include "FileSystem.h"
 
+namespace crawlservpp::Helper::FileSystem {
+
 // list files with specific extension in a directory and its subdirectories
-std::vector<std::string> crawlservpp::Helper::FileSystem::listFilesInPath(const std::string& pathToDir,
+std::vector<std::string> listFilesInPath(const std::string& pathToDir,
 		const std::string& fileExtension) {
 	std::vector<std::string> result;
 
@@ -25,4 +27,6 @@ std::vector<std::string> crawlservpp::Helper::FileSystem::listFilesInPath(const 
 	}
 
 	return result;
+}
+
 }

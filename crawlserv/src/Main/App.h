@@ -8,8 +8,8 @@
  *      Author: ans
  */
 
-#ifndef GLOBAL_APP_H_
-#define GLOBAL_APP_H_
+#ifndef MAIN_APP_H_
+#define MAIN_APP_H_
 
 #include "ConfigFile.h"
 #include "Server.h"
@@ -29,7 +29,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace crawlservpp::Global {
+namespace crawlservpp::Main {
 	class App {
 	public:
 		App(int argc, char * argv[]);
@@ -39,7 +39,7 @@ namespace crawlservpp::Global {
 
 	private:
 		bool running;
-		crawlservpp::Global::Server * server;
+		Server * server;
 
 		// static helper functions
 		static void outputHeader();
@@ -49,4 +49,4 @@ namespace crawlservpp::Global {
 	};
 }
 
-#endif /* GLOBAL_APP_H_ */
+#endif /* MAIN_APP_H_ */

@@ -1,0 +1,283 @@
+{
+	"general": {
+		"id": 1,
+		"label": "General",
+		"open": true,
+		
+		"input.fields": {
+			"id": 1,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Input fields:",
+			"description": "Fields to be used from input tables.",
+			"simple": true,
+			"position": 3
+		},
+		"input.sources": {
+			"id": 2,
+			"type": "array",
+			"item-type": "enum",
+			"enum-values": [
+				"Parsed data",
+				"Extracted data",
+				"Analyzed data",
+				"Raw crawled data"
+			],
+			"default": [],
+			"label": "Input sources:",
+			"description": "Types of tables to be used as input.",
+			"simple": true,
+			"position": 1
+		},
+		"input.tables": {
+			"id": 3,
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Input tables:",
+			"description": "Names of tables to be used as input.",
+			"simple": true,
+			"position": 2
+		},
+		"logging": {
+			"id": 4,
+			"type": "enum",
+			"default": 1,
+			"enum-values": [
+				"silent",
+				"default",
+				"extended",
+				"verbose"
+			],
+			"label": "Logging mode:",
+			"description": "Level of logging activity.",
+			"simple": true,
+			"position": 5
+		},
+		"result.table": {
+			"id": 5,
+			"type": "string",
+			"default": "",
+			"label": "Result table:",
+			"description": "Table name to save analyzed data to.",
+			"simple": true,
+			"position": 4
+		},
+		"sleep.mysql": {
+			"id": 6,
+			"type": "number",
+			"default": 10,
+			"min": 1,
+			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
+			"simple": false
+		},
+		"sleep.when.finished": {
+			"id": 7,
+			"type": "number",
+			"default": 1000,
+			"min": 100,
+			"description": "Time (in ms) to wait each tick when finished.",
+			"simple": false
+		}
+	},
+	"markov-text": {
+		"id": 2,
+		"label": "Markov Text Generator",
+		"open": true,
+		
+		"dimension": {
+			"id": 1,
+			"type": "number",
+			"default": 3,
+			"min": 2,
+			"max": 255,
+			"step": 1,
+			"label": "Chain dimension:",
+			"description": "The order of the markov chain used. Higher values mean less random texts.",
+			"simple": true,
+			"position": 3
+		},
+		"length": {
+			"id": 2,
+			"type": "number",
+			"default": 400,
+			"min": 5,
+			"step": 25,
+			"label": "Text length:",
+			"description": "Length of generated texts (in words).",
+			"simple": true,
+			"position": 4
+		},
+		"max": {
+			"id": 3,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 25,
+			"label": "Maximum texts:",
+			"description": "Maximum number of texts to be generated (0=infinite).",
+			"simple": true,
+			"position": 5
+		},
+		"result.field": {
+			"id": 4,
+			"type": "string",
+			"default": "text",
+			"label": "Result field:",
+			"description": "Field name to save texts to.",
+			"simple": true,
+			"position": 1
+		},
+		"sleep": {
+			"id": 5,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 100,
+			"description": "Optional sleeping time inbetween text generation (in ms).",
+			"simple": false
+		},
+		"sources.field": {
+			"id": 6,
+			"type": "string",
+			"default": "sources",
+			"label": "Number of sources field:",
+			"description": "Field name to save number of sources to.",
+			"simple": true,
+			"position": 2
+		},
+		"timing": {
+			"id": 7,
+			"type": "bool",
+			"default": true,
+			"description": "Calculate timing statistics.",
+			"simple": false
+		}
+	},
+	"markov-tweet": {
+		"id": 3,
+		"label": "Markov Tweet Generator",
+		"open": true,
+		
+		"dimension": {
+			"id": 1,
+			"type": "number",
+			"default": 5,
+			"min": 2,
+			"max": 255,
+			"step": 1,
+			"label": "Chain dimension:",
+			"description": "The order of the markov chain used. Higher values mean less random texts.",
+			"simple": true,
+			"position": 3
+		},
+		"language": {
+			"id": 2,
+			"type": "string",
+			"default": "en_US",
+			"label": "Language:",
+			"description": "Language used by the spell-checking (only GNU Aspell language codes are valid).",
+			"simple": true,
+			"position": 7
+		},
+		"length": {
+			"id": 3,
+			"type": "number",
+			"default": 140,
+			"min": 5,
+			"step": 25,
+			"label": "Tweet length:",
+			"description": "Maximum length of generated tweets (in tokens).",
+			"simple": true,
+			"position": 4
+		},
+		"max": {
+			"id": 4,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 25,
+			"label": "Maximum tweets:",
+			"description": "Maximum number of tweets to be generated (0=infinite).",
+			"simple": true,
+			"position": 5
+		},
+		"result.field": {
+			"id": 5,
+			"type": "string",
+			"default": "tweet",
+			"label": "Result field:",
+			"description": "Field name to save twets to.",
+			"simple": true,
+			"position": 1
+		},
+		"sleep": {
+			"id": 6,
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"step": 100,
+			"description": "Optional sleeping time inbetween tweet generation (in ms).",
+			"simple": false
+		},
+		"sources.field": {
+			"id": 7,
+			"type": "string",
+			"default": "sources",
+			"label": "Number of sources field:",
+			"description": "Field name to save number of sources to.",
+			"simple": true,
+			"position": 2
+		},
+		"spellcheck": {
+			"id": 8,
+			"type": "bool",
+			"default": true,
+			"label": "Spell-checking",
+			"description": "Spell-check the words used for tweet generation.",
+			"simple": true,
+			"position": 6
+		},
+		"timing": {
+			"id": 9,
+			"type": "bool",
+			"default": true,
+			"description": "Calculate timing statistics.",
+			"simple": false
+		}
+	},
+	"filter-date": {
+		"id": 4,
+		"label": "Filter by date",
+		"open": false,
+		
+		"enable": {
+			"id": 1,
+			"type": "bool",
+			"default": false,
+			"label": "Filter parsed data by date",
+			"description": "Enable filtering source data by date (only applies to parsed data).",
+			"simple": true,
+			"position": 1
+		},
+		"from": {
+			"id": 2,
+			"type": "date",
+			"default": "",
+			"label": "From:",
+			"description": "The date from (including) which to filter the parsed data.",
+			"simple": true,
+			"position": 2
+		},
+		"to": {
+			"id": 3,
+			"type": "date",
+			"default": "",
+			"label": "To:",
+			"description": "The date to (including) which to filter the parsed data.",
+			"simple": true,
+			"position": 3
+		}
+	}
+}

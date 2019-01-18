@@ -12,15 +12,15 @@
  *      Author: ans
  */
 
-#ifndef GLOBAL_DATABASE_H_
-#define GLOBAL_DATABASE_H_
+#ifndef MAIN_DATABASE_H_
+#define MAIN_DATABASE_H_
 
-#define GLOBAL_DATABASE_DELETE(X) { if(X) { X->close(); delete X; X = NULL; } }
+#define MAIN_DATABASE_DELETE(X) { if(X) { X->close(); delete X; X = NULL; } }
+
+#include "Data.h"
 
 #include "../Helper/FileSystem.h"
 #include "../Struct/DatabaseSettings.h"
-#include "../Struct/IdString.h"
-#include "../Struct/PreparedSqlStatement.h"
 #include "../Struct/ThreadDatabaseEntry.h"
 #include "../Struct/ThreadOptions.h"
 
@@ -37,15 +37,19 @@
 #include <ctime>
 #include <exception>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <iostream>
+#include <locale>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <tuple>
+#include <utility>
 #include <vector>
 
-namespace crawlservpp::Global {
+namespace crawlservpp::Main {
 	class Database {
 	public:
 		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings);
@@ -77,31 +81,31 @@ namespace crawlservpp::Global {
 		void deleteThread(unsigned long threadId);
 
 		// website functions
-		unsigned long addWebsite(const std::string& websiteName, const std::string& websiteNameSpace,
+		unsigned long addWebsite(const std::string& websiteName, const std::string& websiteNamespace,
 				const std::string& websiteDomain);
 		std::string getWebsiteDomain(unsigned long id);
-		std::string getWebsiteNameSpace(unsigned long websiteId);
-		crawlservpp::Struct::IdString getWebsiteNameSpaceFromUrlList(unsigned long listId);
-		crawlservpp::Struct::IdString getWebsiteNameSpaceFromConfig(unsigned long configId);
-		crawlservpp::Struct::IdString getWebsiteNameSpaceFromParsedTable(unsigned long tableId);
-		crawlservpp::Struct::IdString getWebsiteNameSpaceFromExtractedTable(unsigned long tableId);
-		crawlservpp::Struct::IdString getWebsiteNameSpaceFromAnalyzedTable(unsigned long tableId);
-		bool isWebsiteNameSpace(const std::string& nameSpace);
-		std::string duplicateWebsiteNameSpace(const std::string& websiteNameSpace);
-		void updateWebsite(unsigned long websiteId, const std::string& websiteName, const std::string& websiteNameSpace,
+		std::string getWebsiteNamespace(unsigned long websiteId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromUrlList(unsigned long listId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromConfig(unsigned long configId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromParsedTable(unsigned long tableId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromExtractedTable(unsigned long tableId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromAnalyzedTable(unsigned long tableId);
+		bool isWebsiteNamespace(const std::string& nameSpace);
+		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
+		void updateWebsite(unsigned long websiteId, const std::string& websiteName, const std::string& websiteNamespace,
 				const std::string& websiteDomain);
 		void deleteWebsite(unsigned long websiteId);
 		unsigned long duplicateWebsite(unsigned long websiteId);
 
 		// URL list functions
-		unsigned long addUrlList(unsigned long websiteId, const std::string& listName, const std::string& listNameSpace);
-		std::vector<crawlservpp::Struct::IdString> getUrlLists(unsigned long websiteId);
-		std::string getUrlListNameSpace(unsigned long listId);
-		crawlservpp::Struct::IdString getUrlListNameSpaceFromParsedTable(unsigned long listId);
-		crawlservpp::Struct::IdString getUrlListNameSpaceFromExtractedTable(unsigned long listId);
-		crawlservpp::Struct::IdString getUrlListNameSpaceFromAnalyzedTable(unsigned long listId);
-		bool isUrlListNameSpace(unsigned long websiteId, const std::string& nameSpace);
-		void updateUrlList(unsigned long listId, const std::string& listName, const std::string& listNameSpace);
+		unsigned long addUrlList(unsigned long websiteId, const std::string& listName, const std::string& listNamespace);
+		std::vector<std::pair<unsigned long, std::string>> getUrlLists(unsigned long websiteId);
+		std::string getUrlListNamespace(unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromParsedTable(unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromExtractedTable(unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromAnalyzedTable(unsigned long listId);
+		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
+		void updateUrlList(unsigned long listId, const std::string& listName, const std::string& listNamespace);
 		void deleteUrlList(unsigned long listId);
 		void resetParsingStatus(unsigned long listId);
 		void resetExtractingStatus(unsigned long listId);
@@ -129,15 +133,15 @@ namespace crawlservpp::Global {
 
 		// table functions
 		void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<crawlservpp::Struct::IdString> getParsedTables(unsigned long listId);
+		std::vector<std::pair<unsigned long, std::string>> getParsedTables(unsigned long listId);
 		std::string getParsedTable(unsigned long tableId);
 		void deleteParsedTable(unsigned long tableId);
 		void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<crawlservpp::Struct::IdString> getExtractedTables(unsigned long listId);
+		std::vector<std::pair<unsigned long, std::string>> getExtractedTables(unsigned long listId);
 		std::string getExtractedTable(unsigned long tableId);
 		void deleteExtractedTable(unsigned long tableId);
 		void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<crawlservpp::Struct::IdString> getAnalyzedTables(unsigned long listId);
+		std::vector<std::pair<unsigned long, std::string>> getAnalyzedTables(unsigned long listId);
 		std::string getAnalyzedTable(unsigned long tableId);
 		void deleteAnalyzedTable(unsigned long tableId);
 		void releaseLocks();
@@ -152,6 +156,12 @@ namespace crawlservpp::Global {
 		bool isConfiguration(unsigned long websiteId, unsigned long configId);
 
 	protected:
+		// structure for prepared SQL statements
+		struct PreparedSqlStatement {
+			std::string string;
+			sql::PreparedStatement * statement;
+		};
+
 		// shared connection information
 		sql::Connection * connection;
 		std::string errorMessage;
@@ -159,11 +169,12 @@ namespace crawlservpp::Global {
 		bool tablesLocked;
 
 		// prepared statements
-		std::vector<crawlservpp::Struct::PreparedSqlStatement> preparedStatements;
+		std::vector<PreparedSqlStatement> preparedStatements;
 
 		// database helper functions
 		bool checkConnection();
 		unsigned long getLastInsertedId();
+		unsigned long getMaxAllowedPacketSize() const;
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const std::string& tableName);
 		void lockTables(const std::string& tableName1, const std::string& tableName2);
@@ -173,20 +184,25 @@ namespace crawlservpp::Global {
 		bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		void execute(const std::string& sqlQuery);
 
-		// data functions for algorithms
-		void getText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& resultTo);
-		void getTexts(const std::string& tableName, const std::string& columnName, std::vector<std::string>& resultTo);
-		void getTexts(const std::string& tableName, const std::string& columnName, const std::string& condition, unsigned long limit,
-				std::vector<std::string>& resultTo);
-		void insertText(const std::string& tableName, const std::string& columnName, const std::string& text);
-		void insertTextUInt64(const std::string& tableName, const std::string& textColumnName, const std::string& numberColmnName,
-				const std::string& text, unsigned long number);
-		void insertTexts(const std::string& tableName, const std::string& columnName, const std::vector<std::string>& texts);
-		void updateText(const std::string& tableName, const std::string& columnName, const std::string& condition, std::string& text);
+		// custom data functions for algorithms
+		unsigned long strlen(const std::string& str);
+		void getCustomData(Data::GetValue& data);
+		void getCustomData(Data::GetFields& data);
+		void getCustomData(Data::GetFieldsMixed& data);
+		void getCustomData(Data::GetColumn& data);
+		void getCustomData(Data::GetColumns& data);
+		void getCustomData(Data::GetColumnsMixed& data);
+		void insertCustomData(const Data::InsertValue& data);
+		void insertCustomData(const Data::InsertFields& data);
+		void insertCustomData(const Data::InsertFieldsMixed& data);
+		void updateCustomData(const Data::UpdateValue& data);
+		void updateCustomData(const Data::UpdateFields& data);
+		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
 	private:
 		// private connection information
 		const crawlservpp::Struct::DatabaseSettings settings;
+		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
 
 		// run file with SQL commands
@@ -197,7 +213,12 @@ namespace crawlservpp::Global {
 		unsigned short psLastId;
 		unsigned short psSetThreadStatus;
 		unsigned short psSetThreadStatusMessage;
+		unsigned short psStrlen;
+
+		// prevent use of these
+		Database(const Database&);
+		void operator=(Database&);
 	};
 }
 
-#endif /* GLOBAL_DATABASE_H_ */
+#endif /* MAIN_DATABASE_H_ */

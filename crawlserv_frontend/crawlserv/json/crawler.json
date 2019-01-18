@@ -270,7 +270,7 @@
 			"type": "string",
 			"default": "/",
 			"label": "Start page:",
-			"description": "Starting point for crawling.",
+			"description": "Starting point for crawling (should start with /).",
 			"simple": true,
 			"position": 1
 		},
@@ -365,7 +365,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Custom URLs:",
-			"description": "List of custom URL for crawling.",
+			"description": "List of custom URL for crawling (should start with /).",
 			"simple": true,
 			"position": 1
 		}

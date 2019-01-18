@@ -12,11 +12,13 @@
 
 #include "Config.h"
 
+namespace crawlservpp::Module::Parser {
+
 // constructor: set default values
-crawlservpp::Module::Parser::Config::Config() {
+Config::Config() {
 	// parser entries
 	this->generalLock = 300;
-	this->generalLogging = crawlservpp::Module::Parser::Config::generalLoggingDefault;
+	this->generalLogging = Config::generalLoggingDefault;
 	this->generalNewestOnly = true;
 	this->generalReParse = false;
 	this->generalResetOnFinish = false;
@@ -26,10 +28,10 @@ crawlservpp::Module::Parser::Config::Config() {
 }
 
 // destructor stub
-crawlservpp::Module::Parser::Config::~Config() {}
+Config::~Config() {}
 
 // load parsing-specific configuration from parsed JSON document
-void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& jsonDocument,
+void Config::loadModule(const rapidjson::Document& jsonDocument,
 		std::vector<std::string>& warningsTo) {
 	// go through all array items i.e. configuration entries
 	for(rapidjson::Value::ConstValueIterator i = jsonDocument.Begin(); i != jsonDocument.End(); i++) {
@@ -38,7 +40,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 			std::string name;
 
 			// get item properties
-			for(rapidjson::Value::ConstMemberIterator j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
+			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString()) {
 					// check item member
 					std::string itemName = j->name.GetString();
@@ -72,7 +74,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 
 			// get item value
 			bool valueFound = false;
-			for(rapidjson::Value::ConstMemberIterator j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
+			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString() && std::string(j->name.GetString()) == "value") {
 					// save configuration entry
 					if(cat == "general") {
@@ -128,6 +130,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						if(name == "datetime.formats") {
 							if(j->value.IsArray()) {
 								this->parsingDateTimeFormats.clear();
+								this->parsingDateTimeFormats.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->parsingDateTimeFormats.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -140,6 +143,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "datetime.locales") {
 							if(j->value.IsArray()) {
 								this->parsingDateTimeLocales.clear();
+								this->parsingDateTimeLocales.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->parsingDateTimeLocales.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -152,6 +156,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "datetime.queries") {
 							if(j->value.IsArray()) {
 								this->parsingDateTimeQueries.clear();
+								this->parsingDateTimeQueries.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingDateTimeQueries.push_back(k->GetUint64());
 									else if(k->IsNull()) this->parsingDateTimeQueries.push_back(0);
@@ -165,6 +170,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "datetime.sources") {
 							if(j->value.IsArray()) {
 								this->parsingDateTimeSources.clear();
+								this->parsingDateTimeSources.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint()) this->parsingDateTimeSources.push_back(k->GetUint());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -177,6 +183,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.delimiters") {
 							if(j->value.IsArray()) {
 								this->parsingFieldDelimiters.clear();
+								this->parsingFieldDelimiters.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString())
 										this->parsingFieldDelimiters.push_back(
@@ -195,6 +202,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.ignore.empty") {
 							if(j->value.IsArray()) {
 								this->parsingFieldIgnoreEmpty.clear();
+								this->parsingFieldIgnoreEmpty.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsBool()) this->parsingFieldIgnoreEmpty.push_back(k->GetBool());
 									else {
@@ -210,6 +218,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.json") {
 							if(j->value.IsArray()) {
 								this->parsingFieldJSON.clear();
+								this->parsingFieldJSON.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsBool()) this->parsingFieldJSON.push_back(k->GetBool());
 									else {
@@ -225,6 +234,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.names") {
 							if(j->value.IsArray()) {
 								this->parsingFieldNames.clear();
+								this->parsingFieldNames.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) {
 										std::string fieldName = k->GetString();
@@ -249,6 +259,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.queries") {
 							if(j->value.IsArray()) {
 								this->parsingFieldQueries.clear();
+								this->parsingFieldQueries.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingFieldQueries.push_back(k->GetUint64());
 									else {
@@ -264,6 +275,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.sources") {
 							if(j->value.IsArray()) {
 								this->parsingFieldSources.clear();
+								this->parsingFieldSources.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint()) this->parsingFieldSources.push_back(k->GetUint());
 									else {
@@ -279,6 +291,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.tidy.texts") {
 								if(j->value.IsArray()) {
 									this->parsingFieldTidyTexts.clear();
+									this->parsingFieldTidyTexts.reserve(j->value.Size());
 									for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 										if(k->IsBool()) this->parsingFieldTidyTexts.push_back(k->GetBool());
 										else {
@@ -294,6 +307,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "field.warnings.empty") {
 							if(j->value.IsArray()) {
 								this->parsingFieldWarningsEmpty.clear();
+								this->parsingFieldWarningsEmpty.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsBool()) this->parsingFieldWarningsEmpty.push_back(k->GetBool());
 									else {
@@ -309,6 +323,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "id.ignore") {
 							if(j->value.IsArray()) {
 								this->parsingIdIgnore.clear();
+								this->parsingIdIgnore.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) this->parsingIdIgnore.push_back(k->GetString());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -321,6 +336,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "id.queries") {
 							if(j->value.IsArray()) {
 								this->parsingIdQueries.clear();
+								this->parsingIdQueries.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingIdQueries.push_back(k->GetUint64());
 									else if(k->IsNull()) this->parsingIdQueries.push_back(0);
@@ -334,6 +350,7 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 						else if(name == "id.sources") {
 							if(j->value.IsArray()) {
 								this->parsingIdSources.clear();
+								this->parsingIdSources.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint()) this->parsingIdSources.push_back(k->GetUint());
 									else warningsTo.push_back("Value in \'" + cat + "." + name
@@ -363,7 +380,10 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 
 	// the 'date/time format' property will be ignored if array is too large or set to "%F %T" if entry is missing
 	if(this->parsingDateTimeFormats.size() > completeDateTimes) this->parsingDateTimeFormats.resize(completeDateTimes);
-	else while(this->parsingDateTimeFormats.size() < completeDateTimes) this->parsingDateTimeFormats.push_back("%F %T");
+	else {
+		this->parsingDateTimeFormats.reserve(completeDateTimes);
+		while(this->parsingDateTimeFormats.size() < completeDateTimes) this->parsingDateTimeFormats.push_back("%F %T");
+	}
 
 	// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
 	for(auto i = this->parsingDateTimeFormats.begin(); i != this->parsingDateTimeFormats.end(); ++i)
@@ -371,7 +391,10 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 
 	// the 'locales' property will be ignored if array is too large or set to "" if entry is missing
 	if(this->parsingDateTimeLocales.size() > completeDateTimes) this->parsingDateTimeLocales.resize(completeDateTimes);
-	else while(this->parsingDateTimeLocales.size() < completeDateTimes) this->parsingDateTimeLocales.push_back("");
+	else {
+		this->parsingDateTimeLocales.reserve(completeDateTimes);
+		while(this->parsingDateTimeLocales.size() < completeDateTimes) this->parsingDateTimeLocales.push_back("");
+	}
 
 	if(this->parsingDateTimeQueries.size() > completeDateTimes) {
 		// remove queries of incomplete datetime queries
@@ -397,23 +420,38 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 
 	// the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
 	if(this->parsingFieldDelimiters.size() > completeFields) this->parsingFieldDelimiters.resize(completeFields);
-	else while(this->parsingFieldDelimiters.size() < completeFields) this->parsingFieldDelimiters.push_back('\n');
+	else {
+		this->parsingFieldDelimiters.reserve(completeFields);
+		while(this->parsingFieldDelimiters.size() < completeFields) this->parsingFieldDelimiters.push_back('\n');
+	}
 
 	// the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
 	if(this->parsingFieldIgnoreEmpty.size() > completeFields) this->parsingFieldIgnoreEmpty.resize(completeFields);
-	else while(this->parsingFieldIgnoreEmpty.size() < completeFields) this->parsingFieldIgnoreEmpty.push_back(true);
+	else {
+		this->parsingFieldIgnoreEmpty.reserve(completeFields);
+		while(this->parsingFieldIgnoreEmpty.size() < completeFields) this->parsingFieldIgnoreEmpty.push_back(true);
+	}
 
 	// the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parsingFieldJSON.size() > completeFields) this->parsingFieldJSON.resize(completeFields);
-	else while(this->parsingFieldJSON.size() < completeFields) this->parsingFieldJSON.push_back(false);
+	else {
+		this->parsingFieldJSON.reserve(completeFields);
+		while(this->parsingFieldJSON.size() < completeFields) this->parsingFieldJSON.push_back(false);
+	}
 
 	// the 'tidy text' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parsingFieldTidyTexts.size() > completeFields) this->parsingFieldTidyTexts.resize(completeFields);
-	else while(this->parsingFieldTidyTexts.size() < completeFields) this->parsingFieldTidyTexts.push_back(false);
+	else {
+		this->parsingFieldTidyTexts.reserve(completeFields);
+		while(this->parsingFieldTidyTexts.size() < completeFields) this->parsingFieldTidyTexts.push_back(false);
+	}
 
 	// the 'warning if empty' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parsingFieldWarningsEmpty.size() > completeFields) this->parsingFieldWarningsEmpty.resize(completeFields);
-	else while(this->parsingFieldWarningsEmpty.size() < completeFields) this->parsingFieldWarningsEmpty.push_back(false);
+	else {
+		this->parsingFieldWarningsEmpty.reserve(completeFields);
+		while(this->parsingFieldWarningsEmpty.size() < completeFields) this->parsingFieldWarningsEmpty.push_back(false);
+	}
 
 	if(this->parsingFieldNames.size() > completeFields) {
 		// remove names of incomplete parsing fields
@@ -456,4 +494,6 @@ void crawlservpp::Module::Parser::Config::loadModule(const rapidjson::Document& 
 		warningsTo.push_back("\'id.queries\' and \'.sources\' should have the same number of elements.");
 		warningsTo.push_back("Incomplete id queries removed.");
 	}
+}
+
 }

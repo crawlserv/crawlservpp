@@ -7,6 +7,6 @@
  *      Author: ans
  */
 
-#include "Global/App.h"
+#include "Main/App.h"
 
-int main(int argc, char * argv[]) { return crawlservpp::Global::App(argc, argv).run(); }
+int main(int argc, char * argv[]) { return crawlservpp::Main::App(argc, argv).run(); }

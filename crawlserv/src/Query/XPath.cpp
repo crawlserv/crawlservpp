@@ -9,28 +9,31 @@
 
 #include "XPath.h"
 
+namespace crawlservpp::Query {
+
 // XML walker helper classes
-bool crawlservpp::Query::XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
+bool XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
 	if(node.type() == pugi::node_pcdata) {
 		std::string nodeText = node.text().as_string();
 		crawlservpp::Helper::Strings::trim(nodeText);
-		this->result += nodeText + " ";
+		this->result += nodeText;
+		this->result.push_back(' ');
 	}
 	return true;
 }
-std::string crawlservpp::Query::XPath::TextOnlyWalker::getResult() const {
+std::string XPath::TextOnlyWalker::getResult() const {
 	return this->result;
 }
 
 // constructor: set default values
-crawlservpp::Query::XPath::XPath() {
+XPath::XPath() {
 	this->isTextOnly = false;
 	this->query = NULL;
 	this->isParsed = false;
 }
 
 // destructor: delete query (if necessary) and reset values
-crawlservpp::Query::XPath::~XPath() {
+XPath::~XPath() {
 	if(this->query) {
 		delete this->query;
 		this->query = NULL;
@@ -41,7 +44,7 @@ crawlservpp::Query::XPath::~XPath() {
 }
 
 // compile a XPath query
-bool crawlservpp::Query::XPath::compile(const std::string& xpath, bool textOnly) {
+bool XPath::compile(const std::string& xpath, bool textOnly) {
 	// delete previous XPath object if necessary
 	if(this->query) {
 		delete this->query;
@@ -64,7 +67,7 @@ bool crawlservpp::Query::XPath::compile(const std::string& xpath, bool textOnly)
 }
 
 // get boolean value (at least one match?, saved to resultTo), return false on error
-bool crawlservpp::Query::XPath::getBool(const crawlservpp::Parsing::XML& doc, bool& resultTo) const {
+bool XPath::getBool(const crawlservpp::Parsing::XML& doc, bool& resultTo) const {
 	// check query and content
 	if(!(this->query)) {
 		this->errorMessage = "XPath error: No query compiled.";
@@ -88,7 +91,7 @@ bool crawlservpp::Query::XPath::getBool(const crawlservpp::Parsing::XML& doc, bo
 }
 
 // get first match only (saved to resultTo), return false on error
-bool crawlservpp::Query::XPath::getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const {
+bool XPath::getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const {
 	// check query and content
 	if(!(this->query)) {
 		this->errorMessage = "XPath error: No query compiled.";
@@ -103,7 +106,7 @@ bool crawlservpp::Query::XPath::getFirst(const crawlservpp::Parsing::XML& doc, s
 	try {
 		if(this->query->return_type() == pugi::xpath_type_node_set) {
 			pugi::xpath_node_set nodeSet = this->query->evaluate_node_set(*(doc.doc));
-			if(nodeSet.size()) resultTo = crawlservpp::Query::XPath::nodeToString(nodeSet[0], this->isTextOnly);
+			if(nodeSet.size()) resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
 			else resultTo = "";
 		}
 		else resultTo = this->query->evaluate_string(*(doc.doc));
@@ -117,7 +120,7 @@ bool crawlservpp::Query::XPath::getFirst(const crawlservpp::Parsing::XML& doc, s
 }
 
 // get all matches as vector (saved to resultTo), return false on error
-bool crawlservpp::Query::XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const {
+bool XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const {
 	std::vector<std::string> resultArray;
 
 	// check query and content
@@ -134,8 +137,9 @@ bool crawlservpp::Query::XPath::getAll(const crawlservpp::Parsing::XML& doc, std
 	try {
 		if(this->query->return_type() == pugi::xpath_type_node_set) {
 			pugi::xpath_node_set nodeSet = this->query->evaluate_node_set(*(doc.doc));
+			resultArray.reserve(resultArray.size() + nodeSet.size());
 			for(auto i = nodeSet.begin(); i != nodeSet.end(); ++i) {
-				std::string result = crawlservpp::Query::XPath::nodeToString(*i, this->isTextOnly);
+				std::string result = XPath::nodeToString(*i, this->isTextOnly);
 				if(result.length()) resultArray.push_back(result);
 			}
 		}
@@ -154,18 +158,18 @@ bool crawlservpp::Query::XPath::getAll(const crawlservpp::Parsing::XML& doc, std
 }
 
 // get error message
-std::string crawlservpp::Query::XPath::getErrorMessage() const {
+std::string XPath::getErrorMessage() const {
 	return this->errorMessage;
 }
 
 // static helper function: convert node to string
-std::string crawlservpp::Query::XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
+std::string XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
 	std::string result;
 
 	if(node.attribute()) result = node.attribute().as_string();
 	else if(node.node()) {
 		if(textOnly) {
-			crawlservpp::Query::XPath::TextOnlyWalker walker;
+			XPath::TextOnlyWalker walker;
 			node.node().traverse(walker);
 			result = walker.getResult();
 			if(result.length()) result.pop_back();
@@ -185,4 +189,6 @@ std::string crawlservpp::Query::XPath::nodeToString(const pugi::xpath_node& node
 		}
 	}
 	return result;
+}
+
 }
