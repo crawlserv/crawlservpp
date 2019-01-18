@@ -210,7 +210,7 @@ The following libraries need to be installed and manually linked after compiling
 
 ## Frontend
 
-**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a SQL connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server.
+**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server.
 
 This frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database. It provides the following menu structure:
 
