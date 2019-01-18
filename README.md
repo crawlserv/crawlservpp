@@ -50,8 +50,8 @@ The source code of the server consists of the following classes (as of January 2
 * <b>[`Query::Container`](crawlserv/src/Query/Container.cpp)</b>: Abstract class for query management in child classes.
 * <b>[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)</b>: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * <b>[`Query::XPath`](crawlserv/src/Query//XPath.cpp)</b>: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
-* <b>[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)</b>: Simple timer for getting the time since creation in milliseconds.
-* <b>[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)</b>: Simple high resolution timer for getting the time since creation in microseconds.
+* <b>[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)</b>: Simple timer for getting the time since creation and later ticks in milliseconds.
+* <b>[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)</b>: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
 * <b>[`Timer::StartStop`](crawlserv/src/Timer/StartStop.cpp)</b>: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
 * <b>[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.cpp)</b>: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
 
