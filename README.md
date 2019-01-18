@@ -128,7 +128,9 @@ The server performs commands and sends back their results. Some commands need to
 * **`updateurllist`** (arguments: `id`, `name`, `namespace`): Update an existing URL list in the database.
 * **`updatewebsite`** (arguments: `id`, `name`, `namespace`, `domain`): Update an existing website in the database.
 
-The commands and their replies are using the JSON format (implemented using the [RapidJSON library](https://github.com/Tencent/rapidjson)). See the following examples:
+The commands and their replies are using the JSON format (implemented using the [RapidJSON library](https://github.com/Tencent/rapidjson)).
+
+See the following examples.
 
 **Command from frontend to server:** Delete the URL list with the ID #1.
 
