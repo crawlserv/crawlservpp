@@ -1,3 +1,6 @@
 [submodule "crawlserv/src/_extern/rapidjson"]
 	path = crawlserv/src/_extern/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "crawlserv/src/_extern/utf8"]
+	path = crawlserv/src/_extern/utf8
+	url = https://github.com/nemtrif/utfcpp
