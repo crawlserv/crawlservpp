@@ -200,7 +200,7 @@ The following third-party libraries are used:
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8.h` and `.../utf`)
 
-The following directory names need to be (recursively) ignored when compiling with submodules: `test*`, `example`, `samples`.
+The following directory names need to be (recursively) ignored when compiling with submodules: `test*`, `example*`, `samples`, `src/_extern/mongoose/src`(project-relative path).
 
 The following libraries need to be installed and manually linked after compiling the source code: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml tidy uriparser aspell`.
 
