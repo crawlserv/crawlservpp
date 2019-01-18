@@ -97,7 +97,6 @@ bool Database::connect() {
 		sql::Statement * sqlStatement = this->connection->createStatement();
 		if(!sqlStatement) {
 			this->errorMessage = "Could not create SQL statement";
-			MAIN_DATABASE_DELETE(sqlStatement);
 			return false;
 		}
 
