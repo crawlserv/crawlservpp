@@ -40,9 +40,8 @@ Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings) : se
 // destructor
 Database::~Database() {
 	// clear prepared SQL statements
-	for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i) {
+	for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i)
 		MAIN_DATABASE_DELETE(i->statement);
-	}
 	this->preparedStatements.clear();
 
 	// clear connection
