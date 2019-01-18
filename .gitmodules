@@ -1,0 +1,3 @@
+[submodule "crawlserv/src/_extern/rapidjson"]
+	path = crawlserv/src/_extern/rapidjson
+	url = https://github.com/Tencent/rapidjson

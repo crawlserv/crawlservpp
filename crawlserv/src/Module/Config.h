@@ -10,7 +10,7 @@
 #ifndef MODULE_CONFIG_H_
 #define MODULE_CONFIG_H_
 
-#include "../_extern/rapidjson/document.h"
+#include "../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <string>
 #include <vector>

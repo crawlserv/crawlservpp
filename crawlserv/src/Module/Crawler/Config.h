@@ -18,7 +18,7 @@
 #include "../../Helper/Algos.h"
 #include "../../Network/Config.h"
 
-#include "../../_extern/rapidjson/document.h"
+#include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <sstream>
 #include <string>
