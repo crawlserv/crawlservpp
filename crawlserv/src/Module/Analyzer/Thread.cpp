@@ -1,7 +1,7 @@
 /*
  * Thread.cpp
  *
- * Abstract implementation of the Thread interface for analyzer threads to be inherited by the algorithm class.
+ * Abstract implementation of the Thread interface for analyzer threads to be inherited by the algorithm classes.
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
