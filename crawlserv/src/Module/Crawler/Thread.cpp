@@ -81,7 +81,7 @@ bool Thread::onInit(bool resumed) {
 	verbose = config.crawlerLogging == Config::crawlerLoggingVerbose;
 
 	// check for link extraction queries
-	if(!(this->config.crawlerQueriesLinks.size())) {
+	if(this->config.crawlerQueriesLinks.empty()) {
 		this->log("ERROR: No link extraction query specified.");
 		return false;
 	}
@@ -330,7 +330,7 @@ void Thread::initCustomUrls() {
 	if(this->database.isUrlExists(this->config.crawlerStart)) this->startPageId = this->database.getUrlId(this->config.crawlerStart);
 	else this->startPageId = this->database.addUrl(this->config.crawlerStart, true);
 
-	if(this->config.customCounters.size()) {
+	if(!(this->config.customCounters.empty())) {
 		// run custom counters
 		std::vector<std::string> newUrls;
 		newUrls.reserve(this->config.customCounters.size());
@@ -509,7 +509,7 @@ bool Thread::crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo) 
 
 		if(!(this->manualUrl.first)) {
 			// no retry: check custom URLs
-			if(this->customPages.size()) {
+			if(!(this->customPages.empty())) {
 				if(!(this->manualCounter)) {
 					// start manual crawling with custom URLs
 					logEntries.push_back("starts crawling in non-recoverable MANUAL mode.");
@@ -543,7 +543,7 @@ bool Thread::crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo) 
 			if(this->manualCounter == this->customPages.size()) {
 				// no more custom URLs to go: get start page (if lockable)
 				if(!(this->startCrawled)) {
-					if(!(this->customPages.size())) {
+					if(this->customPages.empty()) {
 						// start manual crawling with start page
 						logEntries.push_back("starts crawling in non-recoverable MANUAL mode.");
 					}
@@ -701,7 +701,7 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 
 							// extract URLs
 							std::vector<std::string> urls = this->crawlingExtractUrls(url, content, doc);
-							if(urls.size()) {
+							if(!urls.empty()) {
 								if(this->config.crawlerTiming) {
 									parseTimer.stop();
 									updateTimer.start();
@@ -782,7 +782,7 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 bool Thread::crawlingCheckUrl(const std::string& url) {
 	if(url.empty()) return false;
 
-	if(this->queriesWhiteListUrls.size()) {
+	if(!(this->queriesWhiteListUrls.empty())) {
 		// whitelist: only allow URLs that fit a specified whitelist query
 		bool whitelist = false;
 		bool found = false;
@@ -806,7 +806,7 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 		}
 	}
 
-	if(this->queriesBlackListUrls.size()) {
+	if(!(this->queriesBlackListUrls.empty())) {
 		// blacklist: do not allow URLs that fit a specified blacklist query
 		for(auto i = this->queriesBlackListUrls.begin(); i != this->queriesBlackListUrls.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
@@ -852,7 +852,7 @@ bool Thread::crawlingCheckResponseCode(const std::string& url, long responseCode
 // check whether specific content type should be crawled
 bool Thread::crawlingCheckContentType(const std::pair<unsigned long, std::string>& url, const std::string& contentType) {
 	// check whitelist for content types
-	if(this->queriesWhiteListTypes.size()) {
+	if(!(this->queriesWhiteListTypes.empty())) {
 		bool found = false;
 		for(auto i = this->queriesWhiteListTypes.begin(); i != this->queriesWhiteListTypes.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
@@ -868,7 +868,7 @@ bool Thread::crawlingCheckContentType(const std::pair<unsigned long, std::string
 	}
 
 	// check blacklist for content types
-	if(this->queriesBlackListTypes.size()) {
+	if(!(this->queriesBlackListTypes.empty())) {
 		bool found = false;
 		for(auto i = this->queriesBlackListTypes.begin(); i != this->queriesBlackListTypes.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
@@ -890,7 +890,7 @@ bool Thread::crawlingCheckContentType(const std::pair<unsigned long, std::string
 bool Thread::crawlingCheckContent(const std::pair<unsigned long, std::string>& url, const std::string& content,
 		const crawlservpp::Parsing::XML& doc) {
 	// check whitelist for content types
-	if(this->queriesWhiteListContent.size()) {
+	if(!(this->queriesWhiteListContent.empty())) {
 		bool found = false;
 		for(auto i = this->queriesWhiteListContent.begin(); i != this->queriesWhiteListContent.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
@@ -912,7 +912,7 @@ bool Thread::crawlingCheckContent(const std::pair<unsigned long, std::string>& u
 	}
 
 	// check blacklist for content types
-	if(this->queriesBlackListContent.size()) {
+	if(!(this->queriesBlackListContent.empty())) {
 		bool found = false;
 		for(auto i = this->queriesBlackListContent.begin(); i != this->queriesBlackListContent.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
@@ -1050,7 +1050,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 			// parse link
 			if(this->parser->parseLink(urls.at(n - 1))) {
 				if(this->parser->isSameDomain()) {
-					if(this->config.crawlerParamsBlackList.size()) {
+					if(!(this->config.crawlerParamsBlackList.empty())) {
 						urls.at(n - 1) = this->parser->getSubUrl(this->config.crawlerParamsBlackList, false);
 
 					}
@@ -1255,7 +1255,7 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 															// extract URLs
 															std::vector<std::string> urls = this->crawlingExtractUrls(url,
 																	archivedContent, doc);
-															if(urls.size()) {
+															if(!urls.empty()) {
 																// parse and add URLs
 																checkedUrlsTo += urls.size();
 																this->crawlingParseAndAddUrls(url, urls, newUrlsTo, true);
@@ -1423,7 +1423,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 		// parse end of memento
 		else if(mementoContent.at(pos) == ',') {
 			if(mementoStarted) {
-				if(newMemento.url.size() && newMemento.timeStamp.size()) mementosTo.push_back(newMemento);
+				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.push_back(newMemento);
 				mementoStarted  = false;
 			}
 			pos++;
@@ -1482,7 +1482,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 					}
 				}
 				else if(fieldName == "rel") {
-					if(fieldValue == "timemap" && newMemento.url.size()) {
+					if(fieldValue == "timemap" && !newMemento.url.empty()) {
 						nextPage = newMemento.url;
 						newMemento.url = "";
 					}
@@ -1492,7 +1492,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 		}
 	}
 
-	if(mementoStarted && newMemento.url.size() && newMemento.timeStamp.size()) mementosTo.push_back(newMemento);
+	if(mementoStarted && !newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.push_back(newMemento);
 	return nextPage;
 }
 

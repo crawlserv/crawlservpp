@@ -169,7 +169,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.dnsResolves.size()) {
+	if(!globalConfig.dnsResolves.empty()) {
 		for(auto i = globalConfig.dnsResolves.begin(); i != globalConfig.dnsResolves.end(); ++i)
 			this->dnsResolves = curl_slist_append(this->dnsResolves, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_RESOLVE, this->dnsResolves);
@@ -178,7 +178,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.dnsServers.size()) {
+	if(!globalConfig.dnsServers.empty()) {
 		std::string serverList;
 		for(auto i = globalConfig.dnsServers.begin(); i != globalConfig.dnsServers.end(); ++i)
 			serverList += *i + ",";
@@ -226,7 +226,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.headers.size() && !limited) {
+	if(!globalConfig.headers.empty() && !limited) {
 		for(auto i = globalConfig.headers.begin(); i != globalConfig.headers.end(); ++i)
 			this->headers = curl_slist_append(this->headers, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->dnsResolves);
@@ -235,7 +235,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.http200Aliases.size() && !limited) {
+	if(!globalConfig.http200Aliases.empty() && !limited) {
 		for(auto i = globalConfig.http200Aliases.begin(); i != globalConfig.http200Aliases.end(); ++i)
 			this->http200Aliases = curl_slist_append(this->http200Aliases, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP200ALIASES, this->http200Aliases);
@@ -300,7 +300,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.proxyHeaders.size()) {
+	if(!globalConfig.proxyHeaders.empty()) {
 		for(auto i = globalConfig.proxyHeaders.begin(); i != globalConfig.proxyHeaders.end(); ++i)
 			this->headers = curl_slist_append(this->proxyHeaders, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXYHEADER, this->proxyHeaders);

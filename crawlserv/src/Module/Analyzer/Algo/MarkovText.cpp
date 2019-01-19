@@ -43,7 +43,7 @@ MarkovText::~MarkovText() {}
 // initialize algorithm run
 bool MarkovText::onAlgoInit(bool resumed) {
 	// check options
-	if(!(this->config.generalInputFields.size())) {
+	if(this->config.generalInputFields.empty()) {
 		if(this->config.generalLogging) this->log("ERROR: No input sources provided.");
 		return false;
 	}
@@ -197,7 +197,7 @@ void MarkovText::createDictionary() {
 		// ***
 
 		w1 = this->source.substr( next, pos - next );
-		if( w1.size() < 1 ) break;
+		if( w1.empty() ) break;
 		if( std::find( dictionary[key].begin(), dictionary[key].end(), w1 ) == dictionary[key].end() )
 			dictionary[key].push_back( w1 );
 		key = key.substr( key.find_first_of( 32 ) + 1 ) + " " + w1;
@@ -225,7 +225,7 @@ std::string MarkovText::createText() {
 	result += key;
 	while( true ) {
 		std::vector<std::string> d = dictionary[key];
-		if( d.size() < 1 ) break;
+		if( d.empty() ) break;
 		second = d[rand() % d.size()];
 		if( second.empty() ) break;
 		result.push_back(' ');

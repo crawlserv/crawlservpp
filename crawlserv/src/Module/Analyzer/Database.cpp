@@ -473,7 +473,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		data.order = "parsed_datetime";
 		this->getCustomData(data);
 
-		if(data.values.size()) {
+		if(!data.values.empty()) {
 			// go through all strings
 			for(auto i = data.values.at(0).begin(); i != data.values.at(0).end(); ++i) {
 				// check string
@@ -529,7 +529,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 			}
 
 			// finish up data
-			if(corpusTo.size()) corpusTo.pop_back();	// remove last space
+			if(!corpusTo.empty()) corpusTo.pop_back();	// remove last space
 			if(!std::get<0>(dateMapEntry).empty()) {	// check for unfinished date
 				// conclude last date
 				dateMap.push_back(dateMapEntry);

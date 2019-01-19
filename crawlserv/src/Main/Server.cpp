@@ -1804,7 +1804,7 @@ void Server::cmdTestQuery(unsigned long index, const char * body, struct mg_conn
 						else {
 							result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-							if(tempResult.size()) {
+							if(!tempResult.empty()) {
 								unsigned long n = 0;
 								std::ostringstream resultStrStr;
 								resultStrStr << '\n';
@@ -1858,7 +1858,7 @@ void Server::cmdTestQuery(unsigned long index, const char * body, struct mg_conn
 								else {
 									result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-									if(tempResult.size()) {
+									if(!tempResult.empty()) {
 										unsigned long n = 0;
 										std::ostringstream resultStrStr;
 										resultStrStr << '\n';
