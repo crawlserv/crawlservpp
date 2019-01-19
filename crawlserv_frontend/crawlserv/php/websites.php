@@ -88,17 +88,17 @@ if($website) echo "<a href=\"#\" class=\"action-link website-duplicate\">Duplica
 <div class="content-block">
 <div class="entry-row">
 <div class="entry-label">Name:</div><div class="entry-input">
-<input type="text" class="entry-input" id="website-name" value="<?php if($website) echo $websiteName; ?>" />
+<input type="text" class="entry-input" id="website-name" value="<?php if($website) echo htmlspecialchars($websiteName); ?>" />
 </div>
 </div>
 <div class="entry-row">
 <div class="entry-label">Namespace:</div><div class="entry-input">
-<input type="text" class="entry-input" id="website-namespace" value="<?php if($website) echo $namespace; ?>" />
+<input type="text" class="entry-input" id="website-namespace" value="<?php if($website) echo htmlspecialchars($namespace); ?>" />
 </div>
 </div>
 <div class="entry-row">
 <div class="entry-label">Domain:</div><div class="entry-input">
-<input type="text" class="entry-input" id="website-domain" value="<?php if($website) echo $domain; ?>" />
+<input type="text" class="entry-input" id="website-domain" value="<?php if($website) echo htmlspecialchars($domain); ?>" />
 </div>
 </div>
 <div class="action-link-box">
@@ -219,11 +219,11 @@ if($website) {
     echo "<div class=\"content-block\">\n";
     echo "<div class=\"entry-row\">\n";
     echo "<div class=\"entry-label\">Name:</div><div class=\"entry-input\">\n";
-    echo "<input type=\"text\" class=\"entry-input\" id=\"urllist-name\" value=\"$urllistName\" /></div>\n";
+    echo "<input type=\"text\" class=\"entry-input\" id=\"urllist-name\" value=\"".htmlspecialchars($urllistName)."\" /></div>\n";
     echo "</div>\n";
     echo "<div class=\"entry-row\">\n";
     echo "<div class=\"entry-label\">Namespace:</div><div class=\"entry-input\">\n";
-    echo "<input type=\"text\" class=\"entry-input\" id=\"urllist-namespace\" value=\"$urllistNamespace\" /></div>\n";
+    echo "<input type=\"text\" class=\"entry-input\" id=\"urllist-namespace\" value=\"".htmlspecialchars($urllistNamespace)."\" /></div>\n";
     echo "</div>\n";
     if($urllist) {
         echo "<div class=\"entry-row\">\n";
@@ -232,7 +232,7 @@ if($website) {
         if($urllistSize == 1) echo "1 entry";
         else echo number_format($urllistSize)." entries";
         echo " <a href=\"#\" class=\"urllist-download entry-value\" target=\"_blank\"";
-        echo " data-website-namespace=\"$namespace\" data-namespace=\"$urllistNamespace\">[Download]</a>\n";
+        echo " data-website-namespace=\"$namespace\" data-namespace=\"".htmlspecialchars($urllistNamespace)."\">[Download]</a>\n";
         echo "</div>\n";
         echo "</div>\n";
         if($urllistCrawled) {
