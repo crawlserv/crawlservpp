@@ -14,11 +14,21 @@ namespace crawlservpp::Helper::Strings {
 // replace all occurences of a string with another string (onlyOnce avoids replacing parts of the replacements)
 void replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce) {
 	unsigned long startPos = 0;
+	unsigned long jump = 0;
 	if(from.empty()) return;
 
+	// avoid infinite loop
+	if(!onlyOnce) {
+		jump = to.find_last_of(from);
+		if(jump == std::string::npos) jump = 0;
+		else jump++;
+	}
+
+	// replace!
 	while((startPos = strInOut.find(from, startPos)) != std::string::npos) {
 		strInOut.replace(startPos, from.length(), to);
 		if(onlyOnce) startPos += to.length();
+		else startPos += jump;
 	}
 }
 
