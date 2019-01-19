@@ -333,6 +333,18 @@ select.entry-half-input {
 	box-sizing:border-box;
 }
 
+/* ENTRY INPUT FIELD (in-line) */
+input.entry-input-inline {
+	width:50px;
+	text-align:center;
+	margin:0px;
+	padding:0px;
+}
+input.entry-input-inline-wide {
+	width:70px;
+	text-align:center;
+}
+
 /* SEPARATOR */
 div.entry-separator {
 	display:table-cell;
@@ -382,6 +394,34 @@ span.remove-entry {
 	box-sizing:border-box;
 	padding-top:2px;
 	padding-bottom:2px;
+}
+
+/* XPATH and REGEX HELPER */
+div.helper {
+	font-size:0.8em;
+}
+div.xpath-helper-code {
+	font-family:"Courier New", Courier, monospace;
+}
+input.xpath-helper {
+	font-family:"Courier New", Courier, monospace;
+	font-size:0.8em;
+}
+input.tag, span.tag {
+	font-weight:bold;
+	color:#3F7F7F;
+}
+input.property {
+	font-weight:bold;
+	color:#7F007F;
+}
+input.value, span.value {
+	font-weight:bold;
+	color:#2A00FF;
+}
+span.content {
+	padding-left:5px;
+	font-weight:bold;
 }
 
 /* QUERY TEST RESULT (not shown by default) */

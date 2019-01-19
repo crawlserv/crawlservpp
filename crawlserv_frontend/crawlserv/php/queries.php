@@ -87,7 +87,7 @@ if($query) echo "<a href=\"#\" class=\"action-link query-duplicate\">Duplicate q
 </div>
 </div>
 </div>
-<div class="content-block">
+<div class="content-block" id="query-properties">
 <div class="entry-row">
 <div class="entry-label">Name:</div><div class="entry-input">
 <input type="text" class="entry-input" id="query-name" value="<?php if($query) echo $queryName; ?>" />
@@ -131,6 +131,43 @@ if($query)
     echo "<a href=\"#\" class=\"action-link query-update\">Change query</a>";
 else echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
 ?>
+</div>
+</div>
+</div>
+<div class="content-block" id="xpath-helper">
+<div class="entry-row">
+<div class="entry-label-top helper">XPath Helper:</div><div class="entry-input xpath-helper-code">
+<span class="tag">&lt;</span><input type="text" class="entry-input-inline xpath-helper tag" id="xpath-element" value="div"
+	data-tippy="Name of the HTML tag" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true" data-tippy-placement="left-start"
+	data-tippy-size="small" />
+<input type="text" class="entry-input-inline xpath-helper property" id="xpath-property" value="class"
+	data-tippy="Name of the first HTML attribute" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
+	data-tippy-placement="left-start" data-tippy-size="small" />=<input type="text" class="entry-input-inline-wide xpath-helper value"
+	id="xpath-value" placeholder="?" data-tippy="Value of the first HTML attribute" data-tippy-delay="0" data-tippy-duration="0"
+	data-tippy-arrow="true" data-tippy-placement="left-start" data-tippy-size="small" /> <input type="text"
+	class="entry-input-inline xpath-helper property" id="xpath-result-property" value="href" disabled
+	data-tippy="Name of the second HTML attribute" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
+	data-tippy-placement="left-start" data-tippy-size="small" />=<span class="value">&hellip;<input type="radio" name="xpath-result" value="property"
+	data-tippy="Get the value of a HTML attribute" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
+	data-tippy-placement="left-start" data-tippy-size="small" />&hellip;</span><span class="tag">&gt;</span><span class="content">&hellip;<input
+	type="radio" name="xpath-result" value="text" checked data-tippy="Get the inner content of the whole HTML tag" data-tippy-delay="0"
+	data-tippy-duration="0" data-tippy-arrow="true" data-tippy-placement="left-start" data-tippy-size="small" />&hellip;</span>
+</div>
+</div>
+<div class="action-link-box">
+<div class="action-link">
+<a href="#" class="action-link xpath-generate" id="xpath-generate"  data-tippy="Let XPath Helper generate a XPath query for you"
+	data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true" data-tippy-placement="left-start" data-tippy-size="small">
+	Generate query for HTML tag
+</a>
+</div>
+</div>
+</div>
+<div class="content-block" id="regex-helper">
+<div class="entry-row">
+<div class="entry-label-top helper">Help?!</div><div class="entry-input">
+<p>Try <a href="https://regexr.com/" target"_blank">RegExr</a> or <a href="https://regex101.com/" target="_blank">regex101</a>
+for help with your query.</p>
 </div>
 </div>
 </div>
