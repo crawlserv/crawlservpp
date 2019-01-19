@@ -3598,6 +3598,7 @@ void Database::getCustomData(Data::GetColumn& data) {
 
 		// create SQL query
 		sqlQuery = "SELECT `" + data.column + "` FROM `" + data.table + "`";
+		if(!data.condition.empty()) sqlQuery += " WHERE (" + data.condition + ")";
 		if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
 
 		// execute SQL statement
@@ -3682,6 +3683,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
 		sqlQuery += " FROM `" + data.table + "`";
+		if(!data.condition.empty()) sqlQuery += " WHERE (" + data.condition + ")";
 		if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
 
 		// execute SQL statement
@@ -3771,6 +3773,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
 		sqlQuery += " FROM `" + data.table + "`";
+		if(!data.condition.empty()) sqlQuery += " WHERE (" + data.condition + ")";
 		if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
 
 		// execute SQL statement

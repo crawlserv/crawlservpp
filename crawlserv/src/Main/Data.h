@@ -92,12 +92,13 @@ struct GetFieldsMixed {
 	std::vector<Value> values;
 };
 
-// structure for getting a complete column
+// structure for getting a a column
 struct GetColumn {
 	std::string table;
 	std::string column;
 	Type type;
-	std::string order;
+	std::string condition;	// optional
+	std::string order;		// optional
 	std::vector<Value> values;
 };
 
@@ -106,7 +107,8 @@ struct GetColumns {
 	std::string table;
 	std::vector<std::string> columns;
 	Type type;
-	std::string order;
+	std::string condition;	// optional
+	std::string order;		// optional
 	std::vector<std::vector<Value>> values;
 };
 
@@ -114,7 +116,8 @@ struct GetColumns {
 struct GetColumnsMixed {
 	std::string table;
 	std::vector<std::pair<std::string, Type>> columns_types;
-	std::string order;
+	std::string condition;	// optional
+	std::string order;		// optional
 	std::vector<std::vector<Value>> values;
 };
 
