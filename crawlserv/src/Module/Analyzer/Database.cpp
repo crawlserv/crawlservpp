@@ -89,22 +89,22 @@ void Database::setTargetFields(const std::vector<std::string>& fields, const std
 // NOTE: Needs to be called by algorithm class in order to get the required field names!
 bool Database::initTargetTable(bool compressed) {
 	// check options
-	if(!(this->websiteName.length())) {
+	if(this->websiteName.empty()) {
 		if(this->logging) this->log("analyzer", "[#" + this->idString + "] ERROR: No website specified.");
 		return false;
 	}
-	if(!(this->urlListName.length())) {
+	if(this->urlListName.empty()) {
 		if(this->logging) this->log("analyzer", "[#" + this->idString + "] ERROR: No URL list specified.");
 		return false;
 	}
-	if(!(this->targetTableName.length())) {
+	if(this->targetTableName.empty()) {
 		if(this->logging) this->log("analyzer", "[#" + this->idString + "] ERROR: Name of result table is empty.");
 		return false;
 	}
 
 	bool emptyFields = true;
 	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-		if(i->length()) {
+		if(!(i->empty())) {
 			emptyFields = false;
 			break;
 		}
@@ -122,9 +122,9 @@ bool Database::initTargetTable(bool compressed) {
 	if(this->isTableExists(this->targetTableFull)) {
 		// table exists already: add columns that do not exist yet
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			if(i->length() && !(this->isColumnExists(this->targetTableFull, "analyzed__" + *i))) {
+			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "analyzed__" + *i))) {
 				std::string type = this->targetFieldTypes.at(i - this->targetFieldNames.begin());
-				if(!type.length()) {
+				if(type.empty()) {
 					if(this->logging)
 						this->log("analyzer", "[#" + this->idString + "] ERROR: No type for target field \'" + *i + "\' specified.");
 					return false;
@@ -139,7 +139,7 @@ bool Database::initTargetTable(bool compressed) {
 		std::string sqlQuery = "CREATE TABLE `" + this->targetTableFull + "`(id SERIAL";
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
 			std::string type = this->targetFieldTypes.at(i - this->targetFieldNames.begin());
-			if(!type.length()) {
+			if(type.empty()) {
 				if(this->logging)
 					this->log("analyzer", "[#" + this->idString + "] ERROR: No type for target field \'" + *i + "\' specified.");
 				return false;
@@ -230,11 +230,11 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 	std::string dateMap;
 
 	// check arguments
-	if(!sourceTable.length()) {
+	if(sourceTable.empty()) {
 		if(this->logging) this->log("analyzer", "[#" + this->idString + "] WARNING: Name of source table is empty.");
 		return;
 	}
-	if(!sourceField.length()) {
+	if(sourceField.empty()) {
 		if(this->logging) this->log("analyzer", "[#" + this->idString + "] WARNING: Name of source field is empty.");
 		return;
 	}
@@ -286,8 +286,8 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 	}
 
 	// filter corpus by dates
-	if(filterDateFrom.length()) {
-		if(dateMap.length()) {
+	if(!filterDateFrom.empty()) {
+		if(!dateMap.empty()) {
 			std::string filteredCorpus;
 			filteredCorpus.reserve(corpusTo.length());
 
@@ -313,7 +313,7 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 				}
 			}
 
-			if(filteredCorpus.length()) filteredCorpus.pop_back();
+			if(!filteredCorpus.empty()) filteredCorpus.pop_back();
 			corpusTo.swap(filteredCorpus);
 
 			if(this->logging) {
@@ -441,8 +441,8 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		if(this->logging) {
 			this->log("analyzer", "[#" + this->idString + "] WARNING: Corpus will always be re-created when created from raw crawled data.");
 			this->log("analyzer", "[#" + this->idString + "]  It is highly recommended to use parsed data instead!");
-			if(sourceTable.length()) this->log("analyzer", "[#" + this->idString + "] WARNING: Source table name ignored.");
-			if(sourceField.length()) this->log("analyzer", "[#" + this->idString + "] WARNING: Source field name ignored.");
+			if(!sourceTable.empty()) this->log("analyzer", "[#" + this->idString + "] WARNING: Source table name ignored.");
+			if(!sourceField.empty()) this->log("analyzer", "[#" + this->idString + "] WARNING: Source field name ignored.");
 		}
 		break;
 	default:
@@ -477,7 +477,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 			// go through all strings
 			for(auto i = data.values.at(0).begin(); i != data.values.at(0).end(); ++i) {
 				// check string
-				if((!(i->_isnull)) && i->_s.length()) {
+				if((!(i->_isnull)) && !(i->_s.empty())) {
 					// check for datetime (i.e. whether to create a datemap)
 					if(data.values.size() > 1) {
 						auto datetime = data.values.at(1).begin() + (i - data.values.at(0).begin());
@@ -497,7 +497,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 							std::string date = datetime->_s.substr(0, 10); // get only date (YYYY-MM-DD) from datetime
 
 							// check whether a date is already set
-							if(std::get<0>(dateMapEntry).length()) {
+							if(!std::get<0>(dateMapEntry).empty()) {
 								// date is already set -> compare last with current date
 								if(std::get<0>(dateMapEntry) == date) {
 									// last date equals current date -> append last date
@@ -514,7 +514,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 								dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
 							}
 						}
-						else if(std::get<0>(dateMapEntry).length()) {
+						else if(!std::get<0>(dateMapEntry).empty()) {
 							// no valid datetime was found, but last date is set -> conclude last date
 							dateMap.push_back(dateMapEntry);
 							dateMapEntry = std::make_tuple("", 0, 0);
@@ -530,7 +530,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 			// finish up data
 			if(corpusTo.size()) corpusTo.pop_back();	// remove last space
-			if(std::get<0>(dateMapEntry).length()) {	// check for unfinished date
+			if(!std::get<0>(dateMapEntry).empty()) {	// check for unfinished date
 				// conclude last date
 				dateMap.push_back(dateMapEntry);
 			}

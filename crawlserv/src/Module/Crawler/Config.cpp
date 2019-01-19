@@ -67,7 +67,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std
 						else warningsTo.push_back("Invalid option name ignored.");
 					}
 					else if(itemName != "value") {
-						if(itemName.length()) warningsTo.push_back("Unknown configuration item \'" + itemName + "\' ignored.");
+						if(!itemName.empty()) warningsTo.push_back("Unknown configuration item \'" + itemName + "\' ignored.");
 						else warningsTo.push_back("Unnamed configuration item ignored.");
 					}
 				}
@@ -75,11 +75,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std
 			}
 
 			// check item properties
-			if(!cat.length()) {
+			if(cat.empty()) {
 				warningsTo.push_back("Configuration item without category ignored");
 				continue;
 			}
-			if(!name.length()) {
+			if(name.empty()) {
 				warningsTo.push_back("Configuration item without name ignored.");
 				continue;
 			}
@@ -515,7 +515,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std
 
 // check for sub-URL (starting with /) or curl-supported URL protocol - adds a slash in the beginning if no protocol is found
 std::string Config::makeSubUrl(const std::string& source) {
-	if(source.length()) {
+	if(!source.empty()) {
 		if(source.at(0) == '/') return source;
 
 		if(source.length() > 5) {

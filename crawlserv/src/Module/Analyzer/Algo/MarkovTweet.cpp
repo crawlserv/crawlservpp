@@ -50,7 +50,7 @@ bool MarkovTweet::onAlgoInit(bool resumed) {
 		if(this->config.generalLogging) this->log("ERROR: No input sources provided.");
 		return false;
 	}
-	if(!(this->config.generalResultTable.length())) {
+	if(this->config.generalResultTable.empty()) {
 		if(this->config.generalLogging) this->log("ERROR: No result table specified.");
 		return false;
 	}

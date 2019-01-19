@@ -140,12 +140,12 @@ bool XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string
 			resultArray.reserve(resultArray.size() + nodeSet.size());
 			for(auto i = nodeSet.begin(); i != nodeSet.end(); ++i) {
 				std::string result = XPath::nodeToString(*i, this->isTextOnly);
-				if(result.length()) resultArray.push_back(result);
+				if(!result.empty()) resultArray.push_back(result);
 			}
 		}
 		else {
 			std::string result = this->query->evaluate_string(*(doc.doc));
-			if(result.length()) resultArray.push_back(result);
+			if(!result.empty()) resultArray.push_back(result);
 		}
 	}
 	catch(const std::exception& e) {
@@ -172,7 +172,7 @@ std::string XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
 			XPath::TextOnlyWalker walker;
 			node.node().traverse(walker);
 			result = walker.getResult();
-			if(result.length()) result.pop_back();
+			if(!result.empty()) result.pop_back();
 		}
 		else {
 			for(auto i = node.node().children().begin(); i != node.node().children().end(); ++i) {

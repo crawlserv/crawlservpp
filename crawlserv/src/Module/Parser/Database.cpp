@@ -108,7 +108,7 @@ void Database::initTargetTable() {
 	if(this->isTableExists(this->targetTableFull)) {
 		// add columns that do not exist
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			if(i->length() && !(this->isColumnExists(this->targetTableFull, "parsed__" + *i))) {
+			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "parsed__" + *i))) {
 				this->execute("ALTER TABLE `" + this->targetTableFull + "` ADD `parsed__" + *i + "` LONGTEXT");
 			}
 		}
@@ -118,7 +118,7 @@ void Database::initTargetTable() {
 		std::string sqlQuery = "CREATE TABLE `" + this->targetTableFull + "`(id SERIAL, content BIGINT UNSIGNED NOT NULL,"
 				" parsed_id TEXT NOT NULL, parsed_datetime DATETIME DEFAULT NULL";
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			if(i->length()) sqlQuery += ", `parsed__" + *i + "` LONGTEXT";
+			if(!(i->empty())) sqlQuery += ", `parsed__" + *i + "` LONGTEXT";
 		}
 		sqlQuery += ", PRIMARY KEY(id), FOREIGN KEY(content) REFERENCES `" + this->urlListTable + "_crawled`(id)"
 				" ON UPDATE RESTRICT ON DELETE CASCADE) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED";
@@ -213,7 +213,7 @@ bool Database::prepare() {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares updateEntry()...");
 			std::string sqlQuery = "UPDATE `" + this->targetTableFull + "` SET parsed_id = ?, parsed_datetime = ?";
 			for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
-				if(i->length()) sqlQuery += ", `parsed__" + *i + "` = ?";
+				if(!(i->empty())) sqlQuery += ", `parsed__" + *i + "` = ?";
 			sqlQuery += " WHERE id = ? LIMIT 1";
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
 			this->psUpdateEntry = this->addPreparedStatement(sqlQuery);
@@ -223,7 +223,7 @@ bool Database::prepare() {
 			std::string sqlQuery = "INSERT INTO `" + this->targetTableFull + "`(content, parsed_id, parsed_datetime";
 			unsigned long counter = 0;
 			for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
-				if(i->length()) {
+				if(!(i->empty())) {
 					sqlQuery += ", `parsed__" + *i + "`";
 					counter++;
 				}
@@ -786,12 +786,12 @@ void Database::updateEntry(unsigned long entryId, const std::string& parsedId,
 	try {
 		// execute SQL query
 		sqlStatement->setString(1, parsedId);
-		if(parsedDateTime.length())	sqlStatement->setString(2, parsedDateTime);
+		if(!parsedDateTime.empty()) sqlStatement->setString(2, parsedDateTime);
 		else sqlStatement->setNull(2, 0);
 
 		unsigned int counter = 3;
 		for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i) {
-			if(this->targetFieldNames.at(i - parsedFields.begin()).length()) {
+			if(!(this->targetFieldNames.at(i - parsedFields.begin()).empty())) {
 				sqlStatement->setString(counter, *i);
 				counter++;
 			}
@@ -826,12 +826,12 @@ void Database::addEntry(unsigned long contentId, const std::string& parsedId, co
 		// execute SQL query
 		sqlStatement->setUInt64(1, contentId);
 		sqlStatement->setString(2, parsedId);
-		if(parsedDateTime.length())	sqlStatement->setString(3, parsedDateTime);
+		if(!parsedDateTime.empty()) sqlStatement->setString(3, parsedDateTime);
 		else sqlStatement->setNull(3, 0);
 
 		unsigned int counter = 4;
 		for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i) {
-			if(this->targetFieldNames.at(i - parsedFields.begin()).length()) {
+			if(!(this->targetFieldNames.at(i - parsedFields.begin()).empty())) {
 				sqlStatement->setString(counter, *i);
 				counter++;
 			}

@@ -57,7 +57,7 @@ bool Thread::onInit(bool resumed) {
 
 	// check configuration
 	if(verbose) this->log("checks configuration...");
-	if(!(this->config.generalResultTable.length())) {
+	if(this->config.generalResultTable.empty()) {
 		if(this->config.generalLogging) this->log("ERROR: No target table specified.");
 		return false;
 	}
@@ -355,14 +355,14 @@ unsigned long Thread::parsing() {
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse id by running RegEx query on URL
-				if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, parsedId) && parsedId.length()) break;
+				if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, parsedId) && !parsedId.empty()) break;
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 				this->log("WARNING: ID query on URL is not of type RegEx.");
 		}
 
 		// check ID
-		if(!parsedId.length()) return 0;
+		if(parsedId.empty()) return 0;
 		if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(),
 				this->config.parsingIdIgnore.end(),	parsedId) != this->config.parsingIdIgnore.end())
 			return 0;
@@ -423,7 +423,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse id by running RegEx query on URL
-					if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, id) && id.length()) break;
+					if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, id) && !id.empty()) break;
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: ID query on URL is not of type RegEx.");
@@ -432,11 +432,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse id by running RegEx query on content string
-					if(this->getRegExQueryPtr(i->index)->getFirst(content.second, id) && id.length()) break;
+					if(this->getRegExQueryPtr(i->index)->getFirst(content.second, id) && !id.empty()) break;
 				}
 				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 					// parse if by running XPath query on parsed content
-					if(this->getXPathQueryPtr(i->index)->getFirst(parsedContent, id) && id.length()) break;
+					if(this->getXPathQueryPtr(i->index)->getFirst(parsedContent, id) && !id.empty()) break;
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: ID query on content is not of type RegEx or XPath.");
@@ -448,7 +448,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	}
 
 	// check ID
-	if(!id.length()) return false;
+	if(id.empty()) return false;
 	if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
 		parsedId) != this->config.parsingIdIgnore.end()) return false;
 
@@ -488,15 +488,15 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
 		}
 
-		if(querySuccess && parsedDateTime.length()) {
+		if(querySuccess && !parsedDateTime.empty()) {
 			// found date/time: try to convert it to SQL time stamp
 			std::string format = this->config.parsingDateTimeFormats.at(dateTimeQueryCounter);
 			std::string locale = this->config.parsingDateTimeLocales.at(dateTimeQueryCounter);
 
 			// use "%F %T" as default date/time format
-			if(!format.length()) format = "%F %T";
+			if(format.empty()) format = "%F %T";
 
-			if(locale.length()) {
+			if(!locale.empty()) {
 				// locale hack: The French abbreviation "avr." for April is not stringently supported
 				if(locale.length() > 1 && tolower(locale.at(0) == 'f') && tolower(locale.at(1) == 'r'))
 					crawlservpp::Helper::Strings::replaceAll(parsedDateTime, "avr.", "avril", true);
@@ -514,7 +514,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				dateTimeSuccess = crawlservpp::Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
 			}
 
-			if(dateTimeSuccess && parsedDateTime.length()) break;
+			if(dateTimeSuccess && !parsedDateTime.empty()) break;
 		}
 
 		// not successfull: check next query for parsing the date/time (if exists)
@@ -522,7 +522,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	}
 
 	// check whether date/time conversion was successful
-	if(parsedDateTime.length() && !dateTimeSuccess) {
+	if(!parsedDateTime.empty() && !dateTimeSuccess) {
 		if(this->config.generalLogging) this->log("ERROR: Could not parse date/time \'" + parsedDateTime + "\'!");
 		parsedDateTime = "";
 	}
@@ -568,7 +568,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter)) {
 				bool empty = true;
 				for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) {
-					if(i->length()) {
+					if(!(i->empty())) {
 						empty = false;
 						break;
 					}
@@ -630,7 +630,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			}
 
 			// if necessary, check whether value is empty
-			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && !parsedFieldValue.length())
+			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && parsedFieldValue.empty())
 				this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
 										+ this->currentUrl.second);
 

@@ -34,7 +34,7 @@ URI::~URI() {
 
 // set current host
 bool URI::setCurrentDomain(const std::string& currentHost) {
-	if(!currentHost.length()) {
+	if(currentHost.empty()) {
 		this->errorMessage = "URI Parser error: Empty domain.";
 		return false;
 	}
@@ -45,11 +45,11 @@ bool URI::setCurrentDomain(const std::string& currentHost) {
 // set current sub-URL (beginning with slash)
 bool URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 	// error checking
-	if(!(this->domain.length())) {
+	if(this->domain.empty()) {
 		this->errorMessage = "URI Parser error: No current domain specified.";
 		return false;
 	}
-	if(!currentSubUrl.length()) {
+	if(currentSubUrl.empty()) {
 		this->errorMessage = "URI Parser error: Empty sub-URL.";
 		return false;
 	}
@@ -90,11 +90,11 @@ bool URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 // parse link to sub-URL (beginning with slash)
 bool URI::parseLink(const std::string& linkToParse) {
 	// error checking
-	if(!(this->domain.length())) {
+	if(this->domain.empty()) {
 		this->errorMessage = "URI Parser error: No current domain specified.";
 		return false;
 	}
-	if(!(this->subUrl.length())) {
+	if(this->subUrl.empty()) {
 		this->errorMessage = "URI Parser error: No current sub-URL specified.";
 		return false;
 	}
@@ -120,7 +120,7 @@ bool URI::parseLink(const std::string& linkToParse) {
 		this->uri = NULL;
 	}
 
-	if(!(linkCopy.length())) {
+	if(linkCopy.empty()) {
 		this->errorMessage = "";
 		return false;
 	}
@@ -180,7 +180,7 @@ bool URI::parseLink(const std::string& linkToParse) {
 
 // check whether parsed link links to current domain
 bool URI::isSameDomain() const {
-	if(!(this->domain.length())) throw std::runtime_error("URI Parser error - No current domain specified");
+	if(this->domain.empty()) throw std::runtime_error("URI Parser error - No current domain specified");
 	if(!(this->uri)) throw std::runtime_error("URI Parser error - No link parsed");
 	return URI::textRangeToString(&(this->uri->hostText)) == this->domain;
 }
@@ -210,7 +210,7 @@ std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList)
 		}
 	}
 
-	if(queries.length()) queries.pop_back();
+	if(!queries.empty()) queries.pop_back();
 
 	// construct sub-URL (starting with slash)
 	UriPathSegmentStructA * nextSegment = this->uri->pathHead;
@@ -221,7 +221,7 @@ std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList)
 	}
 
 	// add queries
-	if(queries.length()) result += "?" + queries;
+	if(!queries.empty()) result += "?" + queries;
 
 	return result;
 }
@@ -242,7 +242,7 @@ std::string URI::escape(const std::string& string, bool plusSpace) {
 
 // public static helper function: unescape string
 std::string URI::unescape(const std::string& string, bool plusSpace) {
-	if(!string.length()) return "";
+	if(string.empty()) return "";
 	char * cString = new char[string.length() + 1];
 	for(unsigned long n = 0; n < string.length(); n++) cString[n] = string.at(n);
 	cString[string.length()] = '\0';

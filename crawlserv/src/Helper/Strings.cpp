@@ -44,16 +44,15 @@ void trim(std::string & stringToTrim) {
 // concatenate all elements of a vector into a single string
 std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty) {
 	std::string result;
-	for(auto i = vectorToConcat.begin(); i != vectorToConcat.end(); ++i) {
-		if(!ignoreEmpty || i->length())	result += *i + delimiter;
-	}
-	if(result.length()) result.pop_back();
+	for(auto i = vectorToConcat.begin(); i != vectorToConcat.end(); ++i)
+		if(!ignoreEmpty || !(i->empty())) result += *i + delimiter;
+	if(!result.empty()) result.pop_back();
 	return result;
 }
 
 // get the first character of the string or an escaped character (\n, \t or \\) (NOTE: Only ASCII supported!)
 char getFirstOrEscapeChar(const std::string& from) {
-	if(from.length()) {
+	if(!from.empty()) {
 		if(from.at(0) == '\\' && from.length() > 1) {
 			switch(from.at(1)) {
 			case 'n':
