@@ -1,9 +1,9 @@
-/**
-*** _threads.php
-***
-*** Use the database to show the active module-specific threads on the server.
-***
-**/
+<!--
+---- _threads.php
+----
+---- Use the database to show the active module-specific threads on the server.
+----
+-->
 
 <?php
 require "../config.php";
