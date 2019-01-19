@@ -9,7 +9,7 @@ The architecture of **crawlserv++** consists of three distinct components:
 
 * The **command-and-control server**, written in C++ (source code in [`crawlserv/src`](crawlserv/src)),
 * a web server hosting the **frontend** written in HTML, PHP and JavaScript (source code in [`crawlserv_frontend/crawlserv`](crawlserv_frontend/crawlserv)),
-* a mySQL **database** containing all data (i.e. thread status, configurations, logs, crawled content, parsed data as well as the results of all analyses).
+* a mySQL **database** containing all data (i.e. thread status, configurations, logs, crawled content, parsed and extracted data as well as the results of all analyses).
 
 ## Command-and-Control Server
 
