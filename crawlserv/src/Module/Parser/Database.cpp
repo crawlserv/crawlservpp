@@ -150,8 +150,8 @@ bool Database::prepare() {
 		if(!(this->psGetNextUrl)) {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
 			std::string sqlQuery = "SELECT `" + this->urlListTable + "`.id, `" + this->urlListTable + "`.url FROM `" + this->urlListTable
-					+ "` JOIN `" + this->urlListTable + "_crawled` ON `" + this->urlListTable + "`.id = `" + this->urlListTable +
-					"_crawled`.url WHERE `" + this->urlListTable + "`.id > ? AND (`" + this->urlListTable + "`.parselock IS NULL OR `"
+					+ "`, `" + this->urlListTable + "_crawled` WHERE `" + this->urlListTable + "`.id = `" + this->urlListTable +
+					"_crawled`.url AND `" + this->urlListTable + "`.id > ? AND (`" + this->urlListTable + "`.parselock IS NULL OR `"
 					+ this->urlListTable + "`.parselock < NOW())";
 			if(!reparse) sqlQuery += " AND `" + this->urlListTable + "`.parsed = 0";
 			sqlQuery += " ORDER BY `" + this->urlListTable + "`.id LIMIT 1";
