@@ -166,7 +166,7 @@ else echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
 <div class="content-block" id="regex-helper">
 <div class="entry-row">
 <div class="entry-label-top helper">Help?!</div><div class="entry-input">
-<p>Try <a href="https://regexr.com/" target"_blank">RegExr</a> or <a href="https://regex101.com/" target="_blank">regex101</a>
+<p>Try <a href="https://regexr.com/" target="_blank">RegExr</a> or <a href="https://regex101.com/" target="_blank">regex101</a>
 for help with your query.</p>
 </div>
 </div>
