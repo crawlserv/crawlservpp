@@ -101,7 +101,7 @@ struct GetColumn {
 	std::vector<Value> values;
 };
 
-// structure for getting multiple columns
+// structure for getting multiple columns of the same type
 struct GetColumns {
 	std::string table;
 	std::vector<std::string> columns;
