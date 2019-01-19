@@ -92,7 +92,7 @@ std::string microsecondsToString(unsigned long long microseconds) {
 	if(rest) resultStrStr << rest << "μs ";
 
 	std::string resultStr = resultStrStr.str();
-	if(resultStr.length()) resultStr.pop_back();
+	if(!resultStr.empty()) resultStr.pop_back();
 	else return "<1μs";
 	return resultStr;
 }
@@ -117,7 +117,7 @@ std::string millisecondsToString(unsigned long long milliseconds) {
 	if(rest) resultStrStr << rest << "ms ";
 
 	std::string resultStr = resultStrStr.str();
-	if(resultStr.length()) resultStr.pop_back();
+	if(!resultStr.empty()) resultStr.pop_back();
 	else return "<1ms";
 	return resultStr;
 }
@@ -139,7 +139,7 @@ std::string secondsToString(unsigned long long seconds) {
 	if(rest) resultStrStr << rest << "s ";
 
 	std::string resultStr = resultStrStr.str();
-	if(resultStr.length()) resultStr.pop_back();
+	if(!resultStr.empty()) resultStr.pop_back();
 	else return "<1s";
 	return resultStr;
 }

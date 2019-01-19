@@ -361,7 +361,7 @@ std::string Server::cmd(const char * body, struct mg_connection * connection, bo
 					else if(command == "deleteconfig") response = this->cmdDeleteConfig(json);
 					else if(command == "duplicateconfig") response = this->cmdDuplicateConfig(json);
 
-					else if(command.length()) {
+					else if(!command.empty()) {
 						// unknown command: debug the command and its arguments
 						response.fail = true;
 						response.text = "Unknown command \'" + command + "\'.";
@@ -633,7 +633,7 @@ Server::ServerCommandResponse Server::cmdClearLog(const rapidjson::Document& jso
 	this->database.clearLogs(module);
 
 	// clearlog is a logged command
-	if(module.length()) {
+	if(!module.empty()) {
 		this->database.log("server", "Logs of " + module + " cleared by " + ip + ".");
 		return Server::ServerCommandResponse("Logs of " + module + " cleared.");
 	}
@@ -1200,7 +1200,7 @@ Server::ServerCommandResponse Server::cmdAddWebsite(const rapidjson::Document& j
 	std::string domain = json["domain"].GetString();
 
 	// check name
-	if(!name.length()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check namespace
 	if(nameSpace.length() < 4)
@@ -1211,8 +1211,8 @@ Server::ServerCommandResponse Server::cmdAddWebsite(const rapidjson::Document& j
 	// correct and check domain name (remove protocol from start and slash from the end)
 	while(domain.length() > 6 && domain.substr(0, 7) == "http://") domain = domain.substr(7);
 	while(domain.length() > 7 && domain.substr(0, 8) == "https://") domain = domain.substr(8);
-	while(domain.length() && domain.back() == '/') domain.pop_back();
-	if(!domain.length()) return Server::ServerCommandResponse(true, "Domain is empty.");
+	while(!domain.empty() && domain.back() == '/') domain.pop_back();
+	if(domain.empty()) return Server::ServerCommandResponse(true, "Domain is empty.");
 
 	// add website to database
 	unsigned long id = this->database.addWebsite(name, nameSpace, domain);
@@ -1249,7 +1249,7 @@ Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document
 	std::string domain = json["domain"].GetString();
 
 	// check name
-	if(!name.length()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check namespace name
 	if(nameSpace.length() < 4)
@@ -1260,8 +1260,8 @@ Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document
 	// correct and check domain name (remove protocol from start and slash from the end)
 	while(domain.length() > 6 && domain.substr(0, 7) == "http://") domain = domain.substr(7);
 	while(domain.length() > 7 && domain.substr(0, 8) == "https://") domain = domain.substr(8);
-	while(domain.length() && domain.back() == '/') domain.pop_back();
-	if(!domain.length()) Server::ServerCommandResponse(true, "Domain is empty.");
+	while(!domain.empty() && domain.back() == '/') domain.pop_back();
+	if(domain.empty()) Server::ServerCommandResponse(true, "Domain is empty.");
 
 	// check website
 	if(!(this->database.isWebsite(id))) {
@@ -1381,7 +1381,7 @@ Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& j
 	std::string nameSpace = json["namespace"].GetString();
 
 	// check name
-	if(!name.length()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check namespace
 	if(nameSpace.length() < 4)
@@ -1426,7 +1426,7 @@ Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
 	std::string nameSpace = json["namespace"].GetString();
 
-	if(!name.length()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check namespace
 	if(nameSpace.length() < 4)
@@ -1549,13 +1549,13 @@ Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& jso
 	bool textOnly = json["textonly"].GetBool();
 
 	// check name
-	if(!name.length()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check query text
-	if(!query.length()) return Server::ServerCommandResponse(true, "Query text is empty.");
+	if(query.empty()) return Server::ServerCommandResponse(true, "Query text is empty.");
 
 	// check query type
-	if(!type.length()) return Server::ServerCommandResponse(true, "Query type is empty.");
+	if(type.empty()) return Server::ServerCommandResponse(true, "Query type is empty.");
 	if(type != "regex" && type != "xpath")
 		return Server::ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
 
@@ -1630,15 +1630,15 @@ Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& 
 	bool textOnly = json["textonly"].GetBool();
 
 	// check name
-	if(!name.length())
+	if(name.empty())
 		return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check query text
-	if(!query.length())
+	if(query.empty())
 		return Server::ServerCommandResponse(true, "Query text is empty.");
 
 	// check query type
-	if(!type.length())
+	if(type.empty())
 		return Server::ServerCommandResponse(true, "Query type is empty.");
 	if(type != "regex" && type != "xpath")
 		return Server::ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
@@ -1761,9 +1761,9 @@ void Server::cmdTestQuery(unsigned long index, const char * body, struct mg_conn
 			std::string text = json["text"].GetString();
 
 			// check query text, query type and result type
-			if(!query.length())
+			if(query.empty())
 				response = Server::ServerCommandResponse(true, "Query text is empty.");
-			else if(!type.length())
+			else if(type.empty())
 				response = Server::ServerCommandResponse(true, "Query type is empty.");
 			else if(type != "regex" && type != "xpath")
 				response = Server::ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
@@ -1792,7 +1792,7 @@ void Server::cmdTestQuery(unsigned long index, const char * body, struct mg_conn
 						std::string tempResult;
 						if(!regExTest.getFirst(text, tempResult))
 							response = Server::ServerCommandResponse(true, regExTest.getErrorMessage());
-						else if(tempResult.length())
+						else if(!tempResult.empty())
 							result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
 						else result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
 					}
@@ -1845,7 +1845,7 @@ void Server::cmdTestQuery(unsigned long index, const char * body, struct mg_conn
 								Timer::SimpleHR timer;
 								if(!xPathTest.getFirst(xmlDocumentTest, tempResult))
 									response = Server::ServerCommandResponse(true, xPathTest.getErrorMessage());
-								else if(tempResult.length())
+								else if(!tempResult.empty())
 									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
 								else result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
 							}
@@ -1942,7 +1942,7 @@ Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& js
 	std::string config = json["config"].GetString();
 
 	// check name
-	if(!name.length()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check configuration JSON
 	rapidjson::Document configJson;
@@ -1993,7 +1993,7 @@ Server::ServerCommandResponse Server::cmdUpdateConfig(const rapidjson::Document&
 	std::string config = json["config"].GetString();
 
 	// check name
-	if(!name.length()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check configuration JSON
 	rapidjson::Document configJson;

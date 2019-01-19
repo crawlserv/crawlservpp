@@ -33,7 +33,7 @@ Container::QueryStruct Container::addQuery(const std::string& queryText, const s
 	newQuery.resultSingle = queryResultSingle;
 	newQuery.resultMulti = queryResultMulti;
 
-	if(queryText.length()) {
+	if(!queryText.empty()) {
 		if(queryType == "regex") {
 			RegEx * regex = new RegEx;
 			regex->compile(queryText, queryResultBool || queryResultSingle, queryResultMulti);

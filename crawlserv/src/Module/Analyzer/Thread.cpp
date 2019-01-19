@@ -42,7 +42,7 @@ bool Thread::onInit(bool resumed) {
 
 	// check configuration
 	if(verbose) this->log("checks configuration...");
-	if(!(this->config.generalResultTable.length())) {
+	if(this->config.generalResultTable.empty()) {
 		if(this->config.generalLogging) this->log("ERROR: No target table specified.");
 		return false;
 	}

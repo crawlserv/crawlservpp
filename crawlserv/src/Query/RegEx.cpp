@@ -45,7 +45,7 @@ bool RegEx::compile(const std::string& pattern, bool single, bool multi) {
 	}
 
 	// check arguments
-	if(!pattern.length()) {
+	if(pattern.empty()) {
 		this->errorMessage = "RegEx error: Expression is empty.";
 		return false;
 	}

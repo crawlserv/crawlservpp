@@ -47,7 +47,7 @@ bool MarkovText::onAlgoInit(bool resumed) {
 		if(this->config.generalLogging) this->log("ERROR: No input sources provided.");
 		return false;
 	}
-	if(!(this->config.generalResultTable.length())) {
+	if(this->config.generalResultTable.empty()) {
 		if(this->config.generalLogging) this->log("ERROR: No result table specified.");
 		return false;
 	}
@@ -93,7 +93,7 @@ bool MarkovText::onAlgoInit(bool resumed) {
 		this->source.push_back(' ');
 		this->sources += corpusSources;
 	}
-	if(this->source.length()) this->source.pop_back();
+	if(!(this->source.empty())) this->source.pop_back();
 
 	// create dictionary
 	this->setStatusMessage("Creating dictionary...");
@@ -132,7 +132,7 @@ bool MarkovText::onAlgoTick() {
 	}
 
 	// insert text into result table in the database
-	if(text.length()) {
+	if(!text.empty()) {
 		crawlservpp::Main::Data::InsertFieldsMixed data;
 		data.columns_types_values.reserve(2);
 		data.table = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
@@ -227,7 +227,7 @@ std::string MarkovText::createText() {
 		std::vector<std::string> d = dictionary[key];
 		if( d.size() < 1 ) break;
 		second = d[rand() % d.size()];
-		if( second.length() < 1 ) break;
+		if( second.empty() ) break;
 		result.push_back(' ');
 		result += second;
 		if( --w < 0 ) break;

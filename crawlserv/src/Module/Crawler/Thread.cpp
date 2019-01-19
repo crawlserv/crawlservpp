@@ -671,7 +671,7 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 			if(this->crawlingCheckResponseCode(url.second, responseCode)) {
 				if(this->config.crawlerTiming) {
 					httpTimer.stop();
-					if(timerStrTo.length()) timerStrTo += ", ";
+					if(!timerStrTo.empty()) timerStrTo += ", ";
 					timerStrTo += "http: " + httpTimer.totalStr();
 					parseTimer.start();
 				}
@@ -780,7 +780,7 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 
 // check whether URL should be added
 bool Thread::crawlingCheckUrl(const std::string& url) {
-	if(!url.length()) return false;
+	if(url.empty()) return false;
 
 	if(this->queriesWhiteListUrls.size()) {
 		// whitelist: only allow URLs that fit a specified whitelist query
@@ -1029,7 +1029,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 			else urls.at(n - 1) = "";
 		}
 
-		if(urls.at(n - 1).length()) {
+		if(!urls.at(n - 1).empty()) {
 			// replace &amp; with &
 			unsigned long pos = 0;
 			std::string processed;
@@ -1058,7 +1058,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 							= this->parser->getSubUrl(this->config.crawlerParamsWhiteList, true);
 					if(!(this->crawlingCheckUrl(urls.at(n - 1)))) urls.at(n - 1) = "";
 
-					if(urls.at(n - 1).length()) {
+					if(!urls.at(n - 1).empty()) {
 						if(urls.at(n - 1).at(0) != '/') {
 							throw std::runtime_error(urls.at(n - 1) + " is no sub-URL!");
 						}
@@ -1114,7 +1114,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 				linkUrlId = this->database.getUrlId(*i);
 			}
 			else {
-				if(this->config.crawlerLogging && this->config.crawlerWarningsFile && i->length() && i->back() != '/') {
+				if(this->config.crawlerLogging && this->config.crawlerWarningsFile && !(i->empty()) && i->back() != '/') {
 					this->log("WARNING: Found file \'" + *i + "\'.");
 				}
 
@@ -1144,8 +1144,8 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 
 		for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); n++) {
 			// skip empty URLs
-			if(!(this->config.crawlerArchivesUrlsMemento.at(n).length())
-					|| !(this->config.crawlerArchivesUrlsTimemap.at(n).length()))
+			if((this->config.crawlerArchivesUrlsMemento.at(n).empty())
+					|| (this->config.crawlerArchivesUrlsTimemap.at(n).empty()))
 				continue;
 
 			std::string archivedUrl = this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + url.second;
@@ -1162,7 +1162,7 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 						// get memento content type
 						std::string contentType = this->networkingArchives->getContentType();
 						if(contentType == "application/link-format") {
-							if(archivedContent.length()) {
+							if(!archivedContent.empty()) {
 
 								// parse memento response
 								std::vector<Memento> mementos;
@@ -1404,7 +1404,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 			}
 			if(mementoStarted) {
 				// memento not finished -> warning
-				if(newMemento.url.length() && newMemento.timeStamp.length()) mementosTo.push_back(newMemento);
+				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.push_back(newMemento);
 				warningStrStr << "New memento started without finishing the old one at " << pos << ".";
 				warningsTo.push_back(warningStrStr.str());
 				warningStrStr.clear();

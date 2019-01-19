@@ -139,7 +139,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.cookiesSet.length() && !limited) {
+	if(!globalConfig.cookiesSet.empty() && !limited) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIE, globalConfig.cookiesSet.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -151,7 +151,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	if(globalConfig.dnsDoH.length()) {
+	if(!globalConfig.dnsDoH.empty()) {
 #if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 62)
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DOH_URL, globalConfig.dnsDoH.c_str());
 		if(this->curlCode != CURLE_OK) {
@@ -162,7 +162,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 		if(warningsTo) warningsTo->push_back("DNS-over-HTTPS currently not supported, \'network.dns.doh\' ignored.");
 #endif
 	}
-	if(globalConfig.dnsInterface.length()) {
+	if(!globalConfig.dnsInterface.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_INTERFACE, globalConfig.dnsInterface.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -269,7 +269,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			this->curlCode = CURLE_OK;
 		}
 	}
-	if(globalConfig.localInterface.length()) {
+	if(!globalConfig.localInterface.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_INTERFACE, globalConfig.localInterface.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -286,14 +286,14 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	if(globalConfig.proxy.length()) {
+	if(!globalConfig.proxy.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY, globalConfig.proxy.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
-	if(globalConfig.proxyAuth.length()) {
+	if(!globalConfig.proxyAuth.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXYUSERPWD , globalConfig.proxyAuth.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -309,14 +309,14 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.proxyPre.length()) {
+	if(!globalConfig.proxyPre.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PRE_PROXY, globalConfig.proxyPre.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
 			return false;
 		}
 	}
-	if(globalConfig.proxyTlsSrpPassword.length() || globalConfig.proxyTlsSrpUser.length()) {
+	if(!globalConfig.proxyTlsSrpPassword.empty() || !globalConfig.proxyTlsSrpUser.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_TLSAUTH_USERNAME, globalConfig.proxyTlsSrpUser.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -361,7 +361,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.referer.length() && !limited) {
+	if(!globalConfig.referer.empty() && !limited) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_REFERER, globalConfig.referer.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -465,7 +465,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 		this->errorMessage = curl_easy_strerror(this->curlCode);
 		return false;
 	}
-	if(globalConfig.tlsSrpPassword.length() || globalConfig.tlsSrpUser.length()) {
+	if(!globalConfig.tlsSrpPassword.empty() || !globalConfig.tlsSrpUser.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TLSAUTH_USERNAME, globalConfig.tlsSrpUser.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -477,7 +477,7 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			return false;
 		}
 	}
-	if(globalConfig.userAgent.length()) {
+	if(!globalConfig.userAgent.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_USERAGENT, globalConfig.userAgent.c_str());
 		if(this->curlCode != CURLE_OK) {
 			this->errorMessage = curl_easy_strerror(this->curlCode);
@@ -670,7 +670,7 @@ const std::string& Curl::getErrorMessage() const {
 std::string Curl::escape(const std::string& stringToEscape, bool usePlusForSpace) {
 	std::string result;
 
-	if(!(this->curl) || !(stringToEscape.length())) return "";
+	if(!(this->curl) || stringToEscape.empty()) return "";
 
 	char * cString = curl_easy_escape(this->curl, stringToEscape.c_str(), stringToEscape.length());
 
@@ -697,7 +697,7 @@ std::string Curl::escape(const std::string& stringToEscape, bool usePlusForSpace
 std::string Curl::unescape(const std::string& escapedString, bool usePlusForSpace) {
 	std::string result;
 
-	if(!(this->curl) || !(escapedString.length())) return "";
+	if(!(this->curl) || escapedString.empty()) return "";
 	char * cString = curl_easy_unescape(this->curl, escapedString.c_str(), escapedString.length(), NULL);
 
 	if(cString) {

@@ -109,7 +109,7 @@ bool App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseS
 	serverSettings.port = configFile.getValue("server_port");
 	serverSettings.allowedClients = configFile.getValue("server_allow");
 
-	if(configFile.getValue("server_logs_deletable").length()) {
+	if(!configFile.getValue("server_logs_deletable").empty()) {
 		try {
 			serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
 		}
@@ -120,7 +120,7 @@ bool App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseS
 	}
 	else serverSettings.logsDeletable = false;
 
-	if(configFile.getValue("server_data_deletable").length()) {
+	if(!configFile.getValue("server_data_deletable").empty()) {
 		try {
 			serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
 		}
@@ -153,7 +153,7 @@ bool App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
 		case '\b':
 		case 127:
 			// BACKSPACE/DELETE: delete last character from password (if it exists)
-			if(dbSettings.password.length()) dbSettings.password.pop_back();
+			if(!dbSettings.password.empty()) dbSettings.password.pop_back();
 			break;
 		case 27:
 			// ESCAPE -> cancel and end input loop

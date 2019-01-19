@@ -90,7 +90,7 @@ void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 	// create status message
 	std::string statusMessage;
 	if(threadPaused) {
-		if(threadStatusMessage.length()) statusMessage = "{PAUSED} " + threadStatusMessage;
+		if(!threadStatusMessage.empty()) statusMessage = "{PAUSED} " + threadStatusMessage;
 		else statusMessage = "{PAUSED}";
 	}
 	else statusMessage = threadStatusMessage;
