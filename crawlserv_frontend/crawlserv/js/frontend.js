@@ -2,6 +2,9 @@
 // is page unloading?
 var crawlserv_frontend_unloading = false;
 
+// detached helper
+var helper;
+
 /*
  * HELPER FUNCTIONS
  */
@@ -168,7 +171,7 @@ function enableSelects() {
 jQuery(function($) {
 
 /*
- * GLOBAL
+ * GLOBAL EVENTS
  */
 	
 // DOCUMENT READY
@@ -177,10 +180,14 @@ jQuery(function($) {
 		if(redirected) $("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
 		
 		// check query type if necessary
-		if($("#query-type-select") && $("#query-type-select").val() == "regex") {
-			$("#query-text-only").prop("checked", false);
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
+		if($("#query-type-select")) {
+			if($("#query-type-select").val() == "regex") {
+				helper = $("#xpath-helper").detach();
+				$("#query-text-only").prop("checked", false);
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
+			else helper = $("#regex-helper").detach();
 		}
 		
 		// set timer
@@ -225,7 +232,7 @@ jQuery(function($) {
 	});
 
 /* 
- * SERVER
+ * EVENTS FOR SERVER
  */
 
 // CLICK EVENT: add allowed IP
@@ -284,7 +291,7 @@ jQuery(function($) {
 	});
 
 /*
- * LOGS
+ * EVENTS FOR LOGS
  */
 
 // CLICK EVENT: navigate log entries
@@ -301,7 +308,7 @@ jQuery(function($) {
 	});
 
 /*
-/* WEBSITES
+/* EVENTS FOR WEBSITES
 */
 
 // CHANGE EVENT: website selected
@@ -340,6 +347,7 @@ jQuery(function($) {
 			reload({ "m" : $(this).data("m"), "website" : website, "urllist" : id });
 			return false;
 		} // do not reload in "Threads" menu
+		return true;
 	});
 
 // CLICK EVENT: add website
@@ -438,7 +446,7 @@ jQuery(function($) {
 	});
 	
 /*
- * QUERIES
+ * EVENTS for QUERIES
  */
 	
 // CHANGE EVENT: query selected
@@ -457,11 +465,64 @@ jQuery(function($) {
 			$("#query-text-only").prop("checked", false);
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
+			
+			helper.insertAfter("#query-properties");
+			helper = $("#xpath-helper").detach();
 		}
 		else {
 			$("#query-text-only").prop("disabled", false);
 			$("#query-text-only-label").removeClass("check-label-disabled");
+			
+			helper.insertAfter("#query-properties");
+			helper = $("#regex-helper").detach();
 		}
+		return true;
+	});
+	
+// CHANGE EVENT: XPath helper result type selected
+	$("input[name='xpath-result']").on("change", function() {
+		if($(this).val() == "property") {
+			$("#xpath-result-property").prop("disabled", false);
+			$("#xpath-result-property").select();
+			$("#xpath-generate").text("Generate query for HTML attribute");
+		}
+		else {
+			$("#xpath-result-property").prop("disabled", true);
+			$("#xpath-generate").text("Generate query for HTML tag");
+		}
+		return true;
+	});
+	
+// CLICK EVENT: let XPath helper generate a query
+	$(document).on("click", "a.xpath-generate", function() {
+		var query = "";
+		var property = $("input:radio[name='xpath-result']:checked").val() == "property";
+		if(!$("#xpath-element").val().length) {
+			alert("Please enter a tag name into the first input field.");
+			$("#xpath-element").focus();
+			return false;
+		}
+		if(!$("#xpath-property").val().length) {
+			alert("Please enter a property name into the second input field.");
+			$("#xpath-property").focus();
+			return false;
+		}
+		if(!$("#xpath-value").val().length) {
+			alert("Please enter a property value into the third input field.");
+			$("#xpath-value").focus();
+			return false;
+		}
+		if(property && !$("#xpath-result-property").val().length) {
+			alert("Please enter a property name into the fourth input field.");
+			$("#xpath-result-property").focus();
+			return false;
+		}
+		if($("#query-text").val().length && !confirm("Do you want to override the existing query?")) return false;
+		query = "//" + $("#xpath-element").val() + "[contains(concat(' ', normalize-space(@" + $("#xpath-property").val()	+ "), ' '), ' "
+				+ $("#xpath-value").val() + " ')]";
+		if(property) query += "/@" + $("#xpath-result-property").val();
+		$("#query-text").val(query); 
+		return false;
 	});
 	
 // CLICK EVENT: add query
@@ -548,7 +609,7 @@ jQuery(function($) {
 	});
 
 /*
- * CONFIGURASIONS (for CRAWLERS, PARSERS, EXTRACTORS and ANALYZERS)
+ * EVENTS for CONFIGURATIONS (for CRAWLERS, PARSERS, EXTRACTORS and ANALYZERS)
  */
 
 var prevConfig;
@@ -558,16 +619,19 @@ var prevAlgo;
 // FOCUS EVENT: save selected configuration before change
 	$("#config-select").on("focus", function() {
 		prevConfig = $(this).val();
+		return true;
 	})
 	
 // FOCUS EVENT: save selected algorithm category before change (for ANALYZERS only)
 	$("#algo-cat-select").on("focus", function() {
 		prevAlgoCat = $(this).val();
+		return true;
 	})
 
 // FOCUS EVENT: save selected algorithm before change (for ANALYZERS only)
 	$("#algo-select").on("focus", function() {
 		prevAlgo = $(this).val();
+		return true;
 	})
 
 // CHANGE EVENT: configuration selected
@@ -588,6 +652,7 @@ var prevAlgo;
 			else reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
 			return false;
 		}
+		return true;
 	});
 
 // CHANGE EVENT: algorithm category selected (for ANALYZERS only)
@@ -650,6 +715,7 @@ var prevAlgo;
 		block.toggleClass("segment-body-closed segment-body-open");
 		$("span.segment-arrow[data-block=\"" + $(this).data("block") + "\"]").html("&dArr;");
 		$(this).toggleClass("segment-head-closed segment-head-open");
+		return true;
 	});
 
 // CLICK EVENT: hide segment body
@@ -658,6 +724,7 @@ var prevAlgo;
 		block.toggleClass("segment-body-open segment-body-closed");
 		$("span.segment-arrow[data-block=\"" + $(this).data("block") + "\"]").html("&rArr;");
 		$(this).toggleClass("segment-head-open segment-head-closed");
+		return true;
 	});
 
 // CLICK EVENT: add configuration
@@ -705,20 +772,23 @@ var prevAlgo;
 // CLICK EVENT: add item to array
 	$(document).on("click", "input.opt-array-add", function() {
 		config.onAddElement($(this).data("cat"), $(this).data("id"));
+		return true;
 	});
 	
 // CLICK EVENT: remove item from array
 	$(document).on("click", "input.opt-array-del", function() {
 		config.onDelElement($(this).data("cat"), $(this).data("id"), $(this).data("item"));
+		return true;
 	});
 	
 // CLICK EVENT: remove placeholder on click
 	$(document).on("click", "input.opt", function() {
 		$(this).removeAttr("placeholder");
+		return true;
 	});
 
 /*
- * THREADS
+ * EVENTS for THREADS
  */
 	
 // CHANGE EVENT: module selected
