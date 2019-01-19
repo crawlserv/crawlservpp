@@ -86,7 +86,7 @@ void Database::setTargetFields(const std::vector<std::string>& fields, const std
 }
 
 // create target table if it does not exists or add field columns if they do not exist
-// NOTE: Needs to be called by algorithm class in order to get the required field names!
+// 	NOTE: Needs to be called by algorithm class in order to get the required field names!
 bool Database::initTargetTable(bool compressed) {
 	// check options
 	if(this->websiteName.empty()) {
@@ -123,32 +123,29 @@ bool Database::initTargetTable(bool compressed) {
 		// table exists already: add columns that do not exist yet
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
 			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "analyzed__" + *i))) {
-				std::string type = this->targetFieldTypes.at(i - this->targetFieldNames.begin());
-				if(type.empty()) {
+				TableColumn column("analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin()));
+				if(column._type.empty()) {
 					if(this->logging)
 						this->log("analyzer", "[#" + this->idString + "] ERROR: No type for target field \'" + *i + "\' specified.");
 					return false;
 				}
-				this->execute("ALTER TABLE `" + this->targetTableFull + "` ADD `analyzed__" + *i + "` " + type);
+				this->addColumn(this->targetTableFull, column);
 			}
 		}
-		if(compressed) this->execute("ALTER TABLE `" + this->targetTableFull + "` ROW_FORMAT=COMPRESSED");
+		if(compressed) this->compressTable(this->targetTableFull);
 	}
 	else {
 		// table does not exist already: create table
-		std::string sqlQuery = "CREATE TABLE `" + this->targetTableFull + "`(id SERIAL";
+		std::vector<TableColumn> columns;
+		columns.reserve(targetFieldNames.size());
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			std::string type = this->targetFieldTypes.at(i - this->targetFieldNames.begin());
-			if(type.empty()) {
+			columns.push_back(TableColumn("analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin())));
+			if(columns.back()._type.empty()) {
 				if(this->logging)
 					this->log("analyzer", "[#" + this->idString + "] ERROR: No type for target field \'" + *i + "\' specified.");
 				return false;
 			}
-			sqlQuery += ", `analyzed__" + *i + "` " + type;
 		}
-		sqlQuery += ", PRIMARY KEY(id)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-		if(compressed) sqlQuery += ", ROW_FORMAT=COMPRESSED";
-		this->execute(sqlQuery);
 
 		// add target table to index
 		this->addAnalyzedTable(this->website, this->urlList, this->targetTableName);

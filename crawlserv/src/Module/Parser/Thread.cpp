@@ -47,7 +47,7 @@ bool Thread::onInit(bool resumed) {
 	bool verbose = false;
 
 	// get configuration and show warnings if necessary
-	if(!(this->config.loadConfig(this->database.getConfigJson(this->getConfig()), configWarnings))) {
+	if(!(this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings))) {
 		this->log(this->config.getErrorMessage());
 		return false;
 	}
@@ -151,7 +151,7 @@ bool Thread::onTick() {
 		this->database.lockUrlList();
 		if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime) && parsed)
 			this->database.setUrlFinished(this->currentUrl.first);
-		this->database.unlockTables();
+		this->database.releaseLocks();
 		this->lockTime = "";
 
 		// update status
@@ -175,7 +175,7 @@ bool Thread::onTick() {
 		// remove URL lock if necessary
 		this->database.lockUrlList();
 		if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime)) this->database.unLockUrl(this->currentUrl.first);
-		this->database.unlockTables();
+		this->database.releaseLocks();
 		this->lockTime = "";
 	}
 	else {
@@ -321,7 +321,7 @@ bool Thread::parsingUrlSelection() {
 	}
 
 	// unlock URL list and write to log if necessary
-	this->database.unlockTables();
+	this->database.releaseLocks();
 	if(this->config.generalLogging) for(auto i = logEntries.begin(); i != logEntries.end(); ++i) this->log(*i);
 
 	// set thread status

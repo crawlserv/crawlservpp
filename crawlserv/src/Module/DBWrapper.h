@@ -24,37 +24,48 @@
 #include <vector>
 
 namespace crawlservpp::Module {
+
+	// for convenience
+	typedef crawlservpp::Main::Database::Column TableColumn;
+
 	class DBWrapper {
 	public:
 		DBWrapper(DBThread& dbRef);
 		virtual ~DBWrapper() = 0;
 
-		// get module error message
+		// getter
 		const std::string& getModuleErrorMessage() const;
 
-		// wrappers for basic functionality implemented by Database and DatabaseThread
+		// wrapper for setter
 		void setSleepOnError(unsigned long seconds);
+
+		// wrapper for logging function
 		void log(const std::string& logModule, const std::string& logEntry);
+
+		// wrapper for website function
 		std::string getWebsiteDomain(unsigned long websiteId);
-		void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
-				bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
-		std::string getConfigJson(unsigned long configId);
-		unsigned long getLastInsertedId();
-		unsigned long getMaxAllowedPacketSize() const;
-		void unlockTables();
 
-		// wrappers for indexing module tables
-		void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-
-		// wrappers for resetting module status
+		// wrappers for URL list functions
 		void resetParsingStatus(unsigned long listId);
 		void resetExtractingStatus(unsigned long listId);
 		void resetAnalyzingStatus(unsigned long listId);
 
+		// wrapper for query function
+		void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
+				bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
+
+		// wrapper for configuration function
+		std::string getConfiguration(unsigned long configId);
+
+		// wrappers for table indexing functions
+		void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+
+		// wrapper for table lock function
+		void releaseLocks();
+
 		// wrappers for custom data functions used by algorithms
-		unsigned long strlen(const std::string& str);
 		void getCustomData(crawlservpp::Main::Data::GetValue& data);
 		void getCustomData(crawlservpp::Main::Data::GetFields& data);
 		void getCustomData(crawlservpp::Main::Data::GetFieldsMixed& data);
@@ -75,27 +86,26 @@ namespace crawlservpp::Module {
 		// module error message
 		std::string errorMessage;
 
-		// check connection to database (try to reconnect if necessary)
-		bool checkConnection();
-
-		// get database error message
+		// wrapper for getters
 		const std::string& getDatabaseErrorMessage() const;
+		unsigned long getMaxAllowedPacketSize() const;
 
-		// lock and unlock tables
-		void lockTable(const std::string& tableName);
-		void lockTables(const std::string& tableName1, const std::string tableName2);
-
-		// table and column checking
-		bool isTableExists(const std::string& tableName);
-		bool isColumnExists(const std::string& tableName, const std::string& columnName);
-
-		// execute SQL query
-		void execute(const std::string& sqlQuery);
-
-		// manage prepared SQL statements
+		// wrappers for managing prepared SQL statements
 		void reservePreparedStatements(unsigned long numPreparedStatements);
 		unsigned short addPreparedStatement(const std::string& sqlStatementString);
 		sql::PreparedStatement * getPreparedStatement(unsigned short sqlStatementId);
+
+		// wrappers for database helper functions
+		bool checkConnection();
+		unsigned long getLastInsertedId();
+		void lockTable(const std::string& tableName);
+		void lockTables(const std::string& tableName1, const std::string tableName2);
+		void unlockTables();
+		bool isTableExists(const std::string& tableName);
+		bool isColumnExists(const std::string& tableName, const std::string& columnName);
+		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
+		void addColumn(const std::string& tableName, const TableColumn& column);
+		void compressTable(const std::string& tableName);
 	};
 }
 

@@ -28,6 +28,10 @@
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
+
+	// for convenience
+	typedef crawlservpp::Main::Database::Column TableColumn;
+
 	class Database : public crawlservpp::Module::DBWrapper {
 	public:
 		Database(crawlservpp::Module::DBThread& dbRef);
