@@ -104,25 +104,25 @@ void Database::initTargetTable() {
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
 	this->targetTableFull = this->urlListTable + "_parsed_" + this->targetTableName;
 
-	// create table if not exists
+	// check for existence of target table
 	if(this->isTableExists(this->targetTableFull)) {
-		// add columns that do not exist
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "parsed__" + *i))) {
-				this->execute("ALTER TABLE `" + this->targetTableFull + "` ADD `parsed__" + *i + "` LONGTEXT");
-			}
-		}
+		// target table exists: add columns that do not exist
+		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
+			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "parsed__" + *i)))
+				this->addColumn(this->targetTableFull, TableColumn("parsed__" + *i, "LONGTEXT"));
+		this->compressTable(this->targetTableFull);
 	}
 	else {
-		// create table
-		std::string sqlQuery = "CREATE TABLE `" + this->targetTableFull + "`(id SERIAL, content BIGINT UNSIGNED NOT NULL,"
-				" parsed_id TEXT NOT NULL, parsed_datetime DATETIME DEFAULT NULL";
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			if(!(i->empty())) sqlQuery += ", `parsed__" + *i + "` LONGTEXT";
-		}
-		sqlQuery += ", PRIMARY KEY(id), FOREIGN KEY(content) REFERENCES `" + this->urlListTable + "_crawled`(id)"
-				" ON UPDATE RESTRICT ON DELETE CASCADE) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED";
-		this->execute(sqlQuery);
+		// create target table
+		std::vector<TableColumn> columns;
+		columns.reserve(3 + this->targetFieldNames.size());
+		columns.push_back(TableColumn("content", "BIGINT UNSIGNED NOT NULL", this->urlListTable + "_crawled", "id"));
+		columns.push_back(TableColumn("parsed_id", "TEXT NOT NULL"));
+		columns.push_back(TableColumn("parsed_datetime", "DATETIME DEFAULT NULL"));
+		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
+			columns.push_back(TableColumn("parsed__" + *i, "LONGTEXT"));
+
+		this->createTable(this->targetTableFull, columns, true);
 
 		// add target table to index
 		this->addParsedTable(this->website, this->urlList, this->targetTableName);
@@ -149,12 +149,10 @@ bool Database::prepare() {
 		}
 		if(!(this->psGetNextUrl)) {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
-			std::string sqlQuery = "SELECT `" + this->urlListTable + "`.id, `" + this->urlListTable + "`.url FROM `" + this->urlListTable
-					+ "`, `" + this->urlListTable + "_crawled` WHERE `" + this->urlListTable + "`.id = `" + this->urlListTable +
-					"_crawled`.url AND `" + this->urlListTable + "`.id > ? AND (`" + this->urlListTable + "`.parselock IS NULL OR `"
-					+ this->urlListTable + "`.parselock < NOW())";
-			if(!reparse) sqlQuery += " AND `" + this->urlListTable + "`.parsed = 0";
-			sqlQuery += " ORDER BY `" + this->urlListTable + "`.id LIMIT 1";
+			std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
+					" WHERE a.id = b.url AND a.id > ? AND (a.parselock IS NULL OR a.parselock < NOW())";
+			if(!reparse) sqlQuery += " AND a.parsed = FALSE";
+			sqlQuery += " ORDER BY a.id LIMIT 1";
 			this->psGetNextUrl = this->addPreparedStatement(sqlQuery);
 		}
 		if(!(this->psGetUrlPosition)) {

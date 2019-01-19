@@ -18,189 +18,197 @@ DBWrapper::DBWrapper(DBThread& dbRef) : database(dbRef) {}
 // destructor stub
 DBWrapper::~DBWrapper() {}
 
+/*
+ * GETTER
+ */
+
 // get module error message
 const std::string& DBWrapper::getModuleErrorMessage() const {
 	return this->errorMessage;
 }
 
-// provice access to setting the error sleep time
+/*
+ * WRAPPER FOR SETTER
+ */
+
+// set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
 void DBWrapper::setSleepOnError(unsigned long seconds) {
 	this->database.setSleepOnError(seconds);
 }
 
-// provide access to logging functionality
+/*
+ * WRAPPER FOR LOGGING FUNCTION
+ */
+
+// add a log entry to the database
 void DBWrapper::log(const std::string& logModule, const std::string& logEntry) {
 	this->database.log(logModule, logEntry);
 }
 
-// provide access to the functionality for getting the domain of a website from the database
+/*
+ * WRAPPER FOR WEBSITE FUNCTION
+ */
+
+// get website domain from the database by its ID
 std::string DBWrapper::getWebsiteDomain(unsigned long websiteId) {
 	return this->database.getWebsiteDomain(websiteId);
 }
 
-// provide access to the functionality for getting the properties of a query from the database
+/*
+ * WRAPPERS FOR URL LIST FUNCTIONS
+ */
+
+// reset parsing status of ID-specified URL list
+void DBWrapper::resetParsingStatus(unsigned long listId) {
+	this->database.resetParsingStatus(listId);
+}
+
+// reset extracting status of ID-specified URL list
+void DBWrapper::resetExtractingStatus(unsigned long listId) {
+	this->database.resetExtractingStatus(listId);
+}
+
+// reset analyzing status of ID-specified URL list
+void DBWrapper::resetAnalyzingStatus(unsigned long listId) {
+	this->database.resetAnalyzingStatus(listId);
+}
+
+/*
+ * WRAPPER FOR QUERY FUNCTION
+ */
+
+// get the properties of a query from the database by its ID
 void DBWrapper::getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo,
 		bool& queryResultBoolTo, bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo) {
 	this->database.getQueryProperties(queryId, queryTextTo, queryTypeTo, queryResultBoolTo, queryResultSingleTo, queryResultMultiTo,
 			queryTextOnlyTo);
 }
 
-// provide access to the functionality for getting the current configuration
-std::string DBWrapper::getConfigJson(unsigned long configId) {
+/*
+ * WRAPPER FOR CONFIGURATION FUNCTION
+ */
+
+// get a configuration from the database by its ID
+std::string DBWrapper::getConfiguration(unsigned long configId) {
 	return this->database.getConfiguration(configId);
 }
 
-// provide access to the functionality for getting the last inserted id
-unsigned long DBWrapper::getLastInsertedId() {
-	return this->database.getLastInsertedId();
-}
+/*
+ * WRAPPERS FOR TABLE INDEXING FUNCTIONS
+ */
 
-// provide access to the functionality for getting the maximum allowed packet size
-unsigned long DBWrapper::getMaxAllowedPacketSize() const {
-	return this->database.getMaxAllowedPacketSize();
-}
-
-// provide access to the functionality for unlocking all tables in the database
-void DBWrapper::unlockTables() {
-	this->database.unlockTables();
-}
-
-// provide access to the functionality for adding parsed table to database
+// add a parsed table to the database if a such a table does not exist already
 void DBWrapper::addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	this->database.addParsedTable(websiteId, listId, tableName);
 }
 
-// provide access to the functionality for adding extracted table to database
+// add an extracted table to the database if such a table does not exist already
 void DBWrapper::addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	this->database.addExtractedTable(websiteId, listId, tableName);
 }
 
-// provide access to the functionality for adding analyzed table to database
+// add an analyzed table to the database if such a table does not exist already
 void DBWrapper::addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	this->database.addAnalyzedTable(websiteId, listId, tableName);
 }
 
-// provide access to the functionality for resetting parsing status of id-specified URL list
-void DBWrapper::resetParsingStatus(unsigned long listId) {
-	this->database.resetParsingStatus(listId);
+/*
+ * WRAPPER FOR TABLE LOCKING FUNCTION
+ */
+
+// release table locks in the database (if necessary)
+void DBWrapper::releaseLocks() {
+	this->database.releaseLocks();
 }
 
-// provide access to the functionality for resetting extracting status of id-specified URL list
-void DBWrapper::resetExtractingStatus(unsigned long listId) {
-	this->database.resetExtractingStatus(listId);
-}
+/*
+ * WRAPPERS FOR CUSTOM DATA FUNCTIONS USED BY ALGORITHMS
+ */
 
-// provide access to the functionality for resetting analyzing status of id-specified URL list
-void DBWrapper::resetAnalyzingStatus(unsigned long listId) {
-	this->database.resetAnalyzingStatus(listId);
-}
-
-// provide access to getting the length of a string as it were in the database
-unsigned long DBWrapper::strlen(const std::string& str) {
-	return this->database.strlen(str);
-}
-
-// provide access to the functionality for getting one custom value from one field of a row in the database
+// get one custom value from one field of a row in the database
 void DBWrapper::getCustomData(crawlservpp::Main::Data::GetValue& data) {
 	this->database.getCustomData(data);
 }
 
-// provide access to the functionality for getting custom values from multiple fields of a row in the database
+// get custom values from multiple fields of a row in the database
 void DBWrapper::getCustomData(crawlservpp::Main::Data::GetFields& data) {
 	this->database.getCustomData(data);
 }
 
-// provide access to the functionality for getting custom values from multiple fields of a row with different types in the database
+// get custom values from multiple fields of a row with different types in the database
 void DBWrapper::getCustomData(crawlservpp::Main::Data::GetFieldsMixed& data) {
 	this->database.getCustomData(data);
 }
 
-// provide access to the functionality for getting custom values from one column in the database
+// get custom values from one column in the database
 void DBWrapper::getCustomData(crawlservpp::Main::Data::GetColumn& data) {
 	this->database.getCustomData(data);
 }
 
-// provide access to the functionality for getting custom values from multiple columns in the database
+// get custom values from multiple columns of the same type in the database
 void DBWrapper::getCustomData(crawlservpp::Main::Data::GetColumns& data) {
 	this->database.getCustomData(data);
 }
 
-// provide access to the functionality for getting custom values from multiple columns with different types in the database
+// get custom values from multiple columns of different types in the database
 void DBWrapper::getCustomData(crawlservpp::Main::Data::GetColumnsMixed& data) {
 	this->database.getCustomData(data);
 }
 
-// provide access to the functionality for inserting one custom value into a field of a row the database
+// insert one custom value into a row in the database
 void DBWrapper::insertCustomData(const crawlservpp::Main::Data::InsertValue& data) {
 	this->database.insertCustomData(data);
 }
 
-// provide access to the functionality for inserting custom values into multiple fields of a row in the database
+// insert custom values into multiple fields of the same type into a row in the database
 void DBWrapper::insertCustomData(const crawlservpp::Main::Data::InsertFields& data) {
 	this->database.insertCustomData(data);
 }
 
-// provide access to the functionality for inserting custom values into multiple fields of a row with different types in the database
+// insert custom values into multiple fields of different types into a row in the database
 void DBWrapper::insertCustomData(const crawlservpp::Main::Data::InsertFieldsMixed& data) {
 	this->database.insertCustomData(data);
 }
 
-// provide access to the functionality for updating one custom value in one field of a row in the database
+// update one custom value in one field of a row in the database
 void DBWrapper::updateCustomData(const crawlservpp::Main::Data::UpdateValue& data) {
 	this->database.updateCustomData(data);
 }
 
-// provide access to the functionality for updating custom values in multiple fields of a row in the database
+// update custom values in multiple fields of a row with the same type in the database
 void DBWrapper::updateCustomData(const crawlservpp::Main::Data::UpdateFields& data) {
 	this->database.updateCustomData(data);
 }
 
-// provide access to the functionality for updating custom values in multiple fields of a row with different types in the database
+// update custom values in multiple fields of a row with different types in the database
 void DBWrapper::updateCustomData(const crawlservpp::Main::Data::UpdateFieldsMixed& data) {
 	this->database.updateCustomData(data);
 }
 
-// provide access to the functionality for checking the connection to the database
-bool DBWrapper::checkConnection() {
-	return this->database.checkConnection();
-}
+/*
+ * WRAPPERS FOR GETTERS (protected)
+ */
 
-// provide access to database for geting database error message
+// get the database error message
 const std::string& DBWrapper::getDatabaseErrorMessage() const {
 	return this->database.getErrorMessage();
 }
 
-// provide access to the functionality for locking a table in the database
-void DBWrapper::lockTable(const std::string& tableName) {
-	this->database.lockTable(tableName);
+// get the maximum allowed packet size
+unsigned long DBWrapper::getMaxAllowedPacketSize() const {
+	return this->database.getMaxAllowedPacketSize();
 }
 
-// provide access to the functionality for locking two tables in the database
-void DBWrapper::lockTables(const std::string& tableName1, const std::string tableName2) {
-	this->database.lockTables(tableName1, tableName2);
-}
+/*
+ * WRAPPERS FOR MANAGING PREPARED SQL STATEMENTS (protected)
+ */
 
-// provide access to the functionality for checking whether a specific table exists
-bool DBWrapper::isTableExists(const std::string& tableName) {
-	return this->database.isTableExists(tableName);
-}
-
-// provide access to the functionality for checking whether a specific column in a specific table exists
-bool DBWrapper::isColumnExists(const std::string& tableName, const std::string& columnName) {
-	return this->database.isColumnExists(tableName, columnName);
-}
-
-// provide access to the functionality for executing a SQL command
-void DBWrapper::execute(const std::string& sqlQuery) {
-	this->database.execute(sqlQuery);
-}
-
-// provide access to the functionality for reserving memory for prepared SQL statements
+// reserve memory for prepared SQL statements
 void DBWrapper::reservePreparedStatements(unsigned long numStatements) {
 	this->database.preparedStatements.reserve(this->database.preparedStatements.size() + numStatements);
 }
 
-// provide access to the functionality for adding prepared SQL statement to the database, return ID of prepared statement
+// add prepared SQL statement to the database and return the ID of the newly added prepared statement
 unsigned short DBWrapper::addPreparedStatement(const std::string& sqlStatementString) {
 	DBThread::PreparedSqlStatement statement;
 	statement.string = sqlStatementString;
@@ -209,9 +217,63 @@ unsigned short DBWrapper::addPreparedStatement(const std::string& sqlStatementSt
 	return this->database.preparedStatements.size();
 }
 
-// provide access to the functionality for getting prepared SQL statement from database by ID
+// get prepared SQL statement from database by its ID
 sql::PreparedStatement * DBWrapper::getPreparedStatement(unsigned short sqlStatementId) {
 	return this->database.preparedStatements.at(sqlStatementId - 1).statement;
+}
+
+/*
+ * WRAPPERS FOR DATABASE HELPER FUNCTIONS (protected)
+ */
+
+// check whether the connection to the database is still valid and try to reconnect if necesssary (set error message on failure)
+bool DBWrapper::checkConnection() {
+	return this->database.checkConnection();
+}
+
+// get the last inserted ID from the database
+unsigned long DBWrapper::getLastInsertedId() {
+	return this->database.getLastInsertedId();
+}
+
+// lock a table in the database for writing
+void DBWrapper::lockTable(const std::string& tableName) {
+	this->database.lockTable(tableName);
+}
+
+// lock two tables in the database for writing (plus the alias 'a' for reading the first and the alias 'b' for reading the second table)
+void DBWrapper::lockTables(const std::string& tableName1, const std::string tableName2) {
+	this->database.lockTables(tableName1, tableName2);
+}
+
+// unlock tables in the database
+void DBWrapper::unlockTables() {
+	this->database.unlockTables();
+}
+
+// check whether a specific table exists in the database
+bool DBWrapper::isTableExists(const std::string& tableName) {
+	return this->database.isTableExists(tableName);
+}
+
+// check whether a specific column of a specific table exists in the database
+bool DBWrapper::isColumnExists(const std::string& tableName, const std::string& columnName) {
+	return this->database.isColumnExists(tableName, columnName);
+}
+
+// add a table to the database (the primary key 'id' will be created automatically; WARNING: check existence beforehand!)
+void DBWrapper::createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed) {
+	this->database.createTable(tableName, columns, compressed);
+}
+
+// add a column to a table in the database
+void DBWrapper::addColumn(const std::string& tableName, const TableColumn& column) {
+	this->database.addColumn(tableName, column);
+}
+
+// compress a table in the database
+void DBWrapper::compressTable(const std::string& tableName) {
+	this->database.compressTable(tableName);
 }
 
 }

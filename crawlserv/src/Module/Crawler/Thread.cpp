@@ -72,7 +72,7 @@ bool Thread::onInit(bool resumed) {
 	bool verbose = false;
 
 	// get configuration and show warnings if necessary
-	if(!(this->config.loadConfig(this->database.getConfigJson(this->getConfig()), configWarnings))) {
+	if(!(this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings))) {
 		this->log(this->config.getErrorMessage());
 		return false;
 	}
@@ -227,7 +227,7 @@ bool Thread::onTick() {
 		// remove URL lock if necessary
 		this->database.lockUrlList();
 		if(this->database.checkUrlLock(url.first, this->lockTime)) this->database.unLockUrl(url.first);
-		this->database.unlockTables();
+		this->database.releaseLocks();
 		this->lockTime = "";
 	}
 	else {
@@ -375,7 +375,7 @@ void Thread::initCustomUrls() {
 	}
 
 	// unlock URL list
-	this->database.unlockTables();
+	this->database.releaseLocks();
 
 	// log warnings
 	for(auto i = warnings.begin(); i != warnings.end(); ++i) this->log(*i);
@@ -609,7 +609,7 @@ bool Thread::crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo) 
 	}
 
 	// unlock URL list and write to log if necessary
-	this->database.unlockTables();
+	this->database.releaseLocks();
 	if(this->config.crawlerLogging) for(auto i = logEntries.begin(); i != logEntries.end(); ++i) this->log(*i);
 
 	// set thread status
@@ -1095,7 +1095,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 		counter++;
 		if(counter % 500 == 0) {
 			// unlock tables
-			if(locked) this->database.unlockTables();
+			if(locked) this->database.releaseLocks();
 
 			// set status
 			std::ostringstream statusStrStr;
@@ -1128,7 +1128,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 	}
 
 	// unlock URL list
-	this->database.unlockTables();
+	this->database.releaseLocks();
 
 	// reset status
 	this->setStatusMessage(statusMessage);
@@ -1318,7 +1318,7 @@ void Thread::crawlingSuccess(const std::pair<unsigned long, std::string>& url) {
 	// update URL list if possible
 	this->database.lockUrlList();
 	if(this->database.checkUrlLock(url.first, this->lockTime)) this->database.setUrlFinished(url.first);
-	this->database.unlockTables();
+	this->database.releaseLocks();
 	this->lockTime = "";
 
 	if(this->manualUrl.first) {

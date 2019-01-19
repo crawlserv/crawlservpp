@@ -55,14 +55,17 @@ namespace crawlservpp::Main {
 		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings);
 		virtual ~Database();
 
+		// setters
+		void setSleepOnError(unsigned long seconds);
+
+		// getters
+		const crawlservpp::Struct::DatabaseSettings& getSettings() const;
+		const std::string& getErrorMessage() const;
+
+		// initializing functions
 		bool connect();
 		bool initializeSql();
 		bool prepare();
-		void setSleepOnError(unsigned long seconds);
-
-		// getters of member variables
-		const crawlservpp::Struct::DatabaseSettings& getSettings() const;
-		const std::string& getErrorMessage() const;
 
 		// logging functions
 		void log(const std::string& logModule, const std::string& logEntry);
@@ -131,7 +134,7 @@ namespace crawlservpp::Main {
 		void deleteConfiguration(unsigned long configId);
 		unsigned long duplicateConfiguration(unsigned long configId);
 
-		// table functions
+		// table indexing functions
 		void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
 		std::vector<std::pair<unsigned long, std::string>> getParsedTables(unsigned long listId);
 		std::string getParsedTable(unsigned long tableId);
@@ -144,6 +147,8 @@ namespace crawlservpp::Main {
 		std::vector<std::pair<unsigned long, std::string>> getAnalyzedTables(unsigned long listId);
 		std::string getAnalyzedTable(unsigned long tableId);
 		void deleteAnalyzedTable(unsigned long tableId);
+
+		// table locking function
 		void releaseLocks();
 
 		// validation functions
@@ -154,6 +159,36 @@ namespace crawlservpp::Main {
 		bool isQuery(unsigned long websiteId, unsigned long queryId);
 		bool isConfiguration(unsigned long configId);
 		bool isConfiguration(unsigned long websiteId, unsigned long configId);
+
+		// custom data functions for algorithms
+		void getCustomData(Data::GetValue& data);
+		void getCustomData(Data::GetFields& data);
+		void getCustomData(Data::GetFieldsMixed& data);
+		void getCustomData(Data::GetColumn& data);
+		void getCustomData(Data::GetColumns& data);
+		void getCustomData(Data::GetColumnsMixed& data);
+		void insertCustomData(const Data::InsertValue& data);
+		void insertCustomData(const Data::InsertFields& data);
+		void insertCustomData(const Data::InsertFieldsMixed& data);
+		void updateCustomData(const Data::UpdateValue& data);
+		void updateCustomData(const Data::UpdateFields& data);
+		void updateCustomData(const Data::UpdateFieldsMixed& data);
+
+		// structure for table columns
+		struct Column {
+			std::string _name;				// name of the column
+			std::string _type;				// type of the column
+			std::string _referenceTable;	// name of the referenced table
+			std::string _referenceColumn;	// name of the referenced column
+
+			Column(const std::string& name, const std::string& type, const std::string& referenceTable, const std::string& referenceColumn) {
+				this->_name = name;
+				this->_type = type;
+				this->_referenceTable = referenceTable;
+				this->_referenceColumn = referenceColumn;
+			}
+			Column(const std::string& name, const std::string& type) : Column(name, type, "", "") {}
+		};
 
 	protected:
 		// structure for prepared SQL statements
@@ -171,10 +206,12 @@ namespace crawlservpp::Main {
 		// prepared statements
 		std::vector<PreparedSqlStatement> preparedStatements;
 
+		// protected getter
+		unsigned long getMaxAllowedPacketSize() const;
+
 		// database helper functions
 		bool checkConnection();
 		unsigned long getLastInsertedId();
-		unsigned long getMaxAllowedPacketSize() const;
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const std::string& tableName);
 		void lockTables(const std::string& tableName1, const std::string& tableName2);
@@ -182,22 +219,9 @@ namespace crawlservpp::Main {
 		bool isTableEmpty(const std::string& tableName);
 		bool isTableExists(const std::string& tableName);
 		bool isColumnExists(const std::string& tableName, const std::string& columnName);
-		void execute(const std::string& sqlQuery);
-
-		// custom data functions for algorithms
-		unsigned long strlen(const std::string& str);
-		void getCustomData(Data::GetValue& data);
-		void getCustomData(Data::GetFields& data);
-		void getCustomData(Data::GetFieldsMixed& data);
-		void getCustomData(Data::GetColumn& data);
-		void getCustomData(Data::GetColumns& data);
-		void getCustomData(Data::GetColumnsMixed& data);
-		void insertCustomData(const Data::InsertValue& data);
-		void insertCustomData(const Data::InsertFields& data);
-		void insertCustomData(const Data::InsertFieldsMixed& data);
-		void updateCustomData(const Data::UpdateValue& data);
-		void updateCustomData(const Data::UpdateFields& data);
-		void updateCustomData(const Data::UpdateFieldsMixed& data);
+		void createTable(const std::string& tableName, const std::vector<Column>& columns, bool compressed);
+		void addColumn(const std::string& tableName, const Column& column);
+		void compressTable(const std::string& tableName);
 
 	private:
 		// private connection information
@@ -205,8 +229,9 @@ namespace crawlservpp::Main {
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
 
-		// run file with SQL commands
+		// internal helper function
 		bool run(const std::string& sqlFile);
+		void execute(const std::string& sqlQuery);
 
 		// ids of prepared SQL statements
 		unsigned short psLog;

@@ -32,7 +32,7 @@ bool Thread::onInit(bool resumed) {
 	bool verbose = false;
 
 	// get configuration and show warnings if necessary
-	if(!(this->config.loadConfig(this->database.getConfigJson(this->getConfig()), configWarnings))) {
+	if(!(this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings))) {
 		this->log(this->config.getErrorMessage());
 		return false;
 	}

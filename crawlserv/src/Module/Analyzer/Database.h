@@ -38,8 +38,10 @@
 #include <vector>
 
 namespace crawlservpp::Module::Analyzer {
+
 	// for convenience
 	typedef crawlservpp::Main::Data::Type DataType;
+	typedef crawlservpp::Main::Database::Column TableColumn;
 
 	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings (words, dates etc.)
 	typedef std::tuple<std::string, unsigned long, unsigned long> TextMapEntry;
