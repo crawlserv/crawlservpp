@@ -503,17 +503,17 @@ jQuery(function($) {
 			return false;
 		}
 		if(!$("#xpath-property").val().length) {
-			alert("Please enter a property name into the second input field.");
+			alert("Please enter an attribute name into the second input field.");
 			$("#xpath-property").focus();
 			return false;
 		}
 		if(!$("#xpath-value").val().length) {
-			alert("Please enter a property value into the third input field.");
+			alert("Please enter an attribute value into the third input field.");
 			$("#xpath-value").focus();
 			return false;
 		}
 		if(property && !$("#xpath-result-property").val().length) {
-			alert("Please enter a property name into the fourth input field.");
+			alert("Please enter an attribute name into the fourth input field.");
 			$("#xpath-result-property").focus();
 			return false;
 		}
