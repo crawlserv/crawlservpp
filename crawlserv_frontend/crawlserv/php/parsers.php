@@ -48,7 +48,7 @@ if(isset($website)) {
     echo "<div class=\"entry-label\">Parser:</div><div class=\"entry-x-input\">\n";
     echo "<select id=\"config-select\" class=\"entry-x-input\" data-m=\"$m\" data-mode=\"$mode\">\n";
     
-    $result = $dbConnection->query("SELECT id, name FROM crawlserv_configs WHERE website=$website AND module='parser'");
+    $result = $dbConnection->query("SELECT id, name FROM crawlserv_configs WHERE website=$website AND module='parser' ORDER BY name");
     if(!$result) exit("ERROR: Could not get ids and names of URL lists.");
     $first = true;
     while($row = $result->fetch_assoc()) {
