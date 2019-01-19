@@ -46,7 +46,7 @@ MarkovTweet::~MarkovTweet() {}
 // initialize algorithm run
 bool MarkovTweet::onAlgoInit(bool resumed) {
 	// check options
-	if(!(this->config.generalInputFields.size())) {
+	if(this->config.generalInputFields.empty()) {
 		if(this->config.generalLogging) this->log("ERROR: No input sources provided.");
 		return false;
 	}

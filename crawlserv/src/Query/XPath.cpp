@@ -106,7 +106,7 @@ bool XPath::getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo
 	try {
 		if(this->query->return_type() == pugi::xpath_type_node_set) {
 			pugi::xpath_node_set nodeSet = this->query->evaluate_node_set(*(doc.doc));
-			if(nodeSet.size()) resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
+			if(!nodeSet.empty()) resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
 			else resultTo = "";
 		}
 		else resultTo = this->query->evaluate_string(*(doc.doc));

@@ -387,7 +387,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 
 	// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
 	for(auto i = this->parsingDateTimeFormats.begin(); i != this->parsingDateTimeFormats.end(); ++i)
-		if(!(i->size())) *i = "%F %T";
+		if(i->empty()) *i = "%F %T";
 
 	// the 'locales' property will be ignored if array is too large or set to "" if entry is missing
 	if(this->parsingDateTimeLocales.size() > completeDateTimes) this->parsingDateTimeLocales.resize(completeDateTimes);

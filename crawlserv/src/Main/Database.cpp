@@ -3423,7 +3423,7 @@ void Database::getCustomData(Data::GetFields& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns.size()) return;
+	if(data.columns.empty()) return;
 	data.values.clear();
 	data.values.reserve(data.columns.size());
 
@@ -3511,7 +3511,7 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns_types.size()) return;
+	if(data.columns_types.empty()) return;
 	data.values.clear();
 	data.values.reserve(data.columns_types.size());
 
@@ -3660,7 +3660,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns.size()) return;
+	if(data.columns.empty()) return;
 	data.values.clear();
 	data.values.reserve(data.columns.size());
 
@@ -3749,7 +3749,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns_types.size()) return;
+	if(data.columns_types.empty()) return;
 	data.values.clear();
 	data.values.reserve(data.columns_types.size());
 
@@ -3916,7 +3916,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns_values.size()) return;
+	if(data.columns_values.empty()) return;
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
@@ -4035,7 +4035,7 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns_types_values.size()) return;
+	if(data.columns_types_values.empty()) return;
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
@@ -4213,7 +4213,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns_values.size()) return;
+	if(data.columns_values.empty()) return;
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
@@ -4330,7 +4330,7 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check arguments
-	if(!data.columns_types_values.size()) return;
+	if(data.columns_types_values.empty()) return;
 
 	// check connection
 	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);

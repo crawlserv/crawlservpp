@@ -363,7 +363,7 @@ unsigned long Thread::parsing() {
 
 		// check ID
 		if(parsedId.empty()) return 0;
-		if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(),
+		if(!(this->config.parsingIdIgnore.empty()) && std::find(this->config.parsingIdIgnore.begin(),
 				this->config.parsingIdIgnore.end(),	parsedId) != this->config.parsingIdIgnore.end())
 			return 0;
 	}
@@ -449,7 +449,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 
 	// check ID
 	if(id.empty()) return false;
-	if(this->config.parsingIdIgnore.size() && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
+	if(!(this->config.parsingIdIgnore.empty()) && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
 		parsedId) != this->config.parsingIdIgnore.end()) return false;
 
 	// parse date/time
