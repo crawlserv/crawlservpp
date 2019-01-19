@@ -4733,6 +4733,8 @@ void Database::addColumn(const std::string& tableName, const Column& column) {
 // compress a table in the database
 void Database::compressTable(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
+	bool compressed = false;
 
 	// check argument
 	if(tableName.empty()) throw std::runtime_error("compressTable(): No table name specified");
@@ -4744,14 +4746,30 @@ void Database::compressTable(const std::string& tableName) {
 		// create SQL statement
 		sqlStatement = this->connection->createStatement();
 
-		// execute SQL statement
-		sqlStatement->execute("ALTER TABLE `" + tableName + "` ROW_FORMAT=COMPRESSED");
+		// execute SQL statement for checking whether the table is already compressed
+		sqlResultSet = sqlStatement->executeQuery("SELECT LOWER(row_format) = 'compressed' AS result FROM information_schema.tables"
+				" WHERE table_schema = '" + this->settings.name + "' AND table_name = '" + tableName + "' LIMIT 1;");
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next()) compressed = sqlResultSet->getBoolean("result");
+		else {
+			MAIN_DATABASE_DELETE(sqlResultSet);
+			MAIN_DATABASE_DELETE(sqlStatement);
+			throw std::runtime_error("compressTable(): Could not determine row format of table \'" + tableName + "\'");
+		}
+
+		// delete result
+		MAIN_DATABASE_DELETE(sqlResultSet);
+
+		// execute SQL statement for compressing the table if table is not already compressed
+		if(!compressed) sqlStatement->execute("ALTER TABLE `" + tableName + "` ROW_FORMAT=COMPRESSED");
 
 		// delete SQL statement
 		MAIN_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
+		MAIN_DATABASE_DELETE(sqlResultSet);
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "compressTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
