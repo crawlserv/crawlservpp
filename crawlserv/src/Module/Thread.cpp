@@ -52,7 +52,7 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, cons
 	this->configuration = this->databaseClass.getConfiguration(this->getConfig());
 
 	// update thread status in database (remove "INTERRUPTED ", add "PAUSED " before status if necessary)
-	this->databaseClass.setThreadStatus(threadId, threadPaused, this->status);
+	if(threadId) this->databaseClass.setThreadStatus(threadId, threadPaused, this->status);
 }
 
 // constructor B: start new thread (using constructor A to initialize values)
