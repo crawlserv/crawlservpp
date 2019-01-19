@@ -1,4 +1,4 @@
-_**WARNING!** This application is under development. It is neither complete nor adequately documented._
+_**WARNING!** This application is under development. It is neither complete nor adequately documented or tested._
 
  _~~Strikethrough~~ means a feature is not implemented yet._
 
