@@ -120,7 +120,7 @@ if($query && $queryTextOnly) echo " checked";
 <div class="entry-row">
 <div class="entry-label-top">Query text:</div><div class="entry-input">
 <textarea class="entry-input" id="query-text" spellcheck="false" autocomplete="off">
-<?php if($query) echo htmlentities($queryText, ENT_QUOTES); ?>
+<?php if($query) echo htmlspecialchars($queryText, ENT_QUOTES); ?>
 </textarea>
 </div>
 </div>
@@ -138,7 +138,7 @@ else echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
 <div class="entry-row">
 <div class="entry-label-top" id="query-test-label">Test text:</div><div class="entry-input">
 <textarea class="entry-input" id="query-test-text" spellcheck="false" autocomplete="off">
-<?php if(isset($_POST["test"])) echo htmlentities($_POST["test"], ENT_QUOTES); ?>
+<?php if(isset($_POST["test"])) echo htmlspecialchars($_POST["test"], ENT_QUOTES); ?>
 </textarea>
 <textarea class="entry-input" id="query-test-result" disabled></textarea>
 </div>
