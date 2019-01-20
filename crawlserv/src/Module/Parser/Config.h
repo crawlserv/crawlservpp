@@ -38,9 +38,11 @@ namespace crawlservpp::Module::Parser {
 		static const unsigned short generalLoggingExtended = 2;
 		static const unsigned short generalLoggingVerbose = 3;
 		bool generalNewestOnly;
+		bool generalParseCustom;
 		bool generalReParse;
 		bool generalResetOnFinish;
 		std::string generalResultTable;
+		std::vector<unsigned long> generalSkip;
 		unsigned long generalSleepIdle;
 		unsigned long generalSleepMySql;
 		bool generalTiming;

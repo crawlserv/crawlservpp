@@ -26,7 +26,7 @@
 			"label": "Logging mode:",
 			"description": "Level of logging activity.",
 			"simple": true,
-			"position": 15
+			"position": 6
 		},
 		"newest.only": {
 			"id": 3,
@@ -35,8 +35,17 @@
 			"description": "Parse only the newest content for each URL.",
 			"simple": false
 		},
-		"reparse": {
+		"parse.custom": {
 			"id": 4,
+			"type": "bool",
+			"default": false,
+			"label": "Parse custom URLs",
+			"description": "Include custom URLs when parsing.",
+			"simple": true,
+			"position": 4
+		},
+		"reparse": {
+			"id": 5,
 			"type": "bool",
 			"default": false,
 			"label": "Re-parse content",
@@ -45,7 +54,7 @@
 			"position": 2
 		},
 		"reset.on.finish": {
-			"id": 5,
+			"id": 6,
 			"type": "bool",
 			"default": false,
 			"label": "Reset status when finished",
@@ -54,7 +63,7 @@
 			"position": 3
 		},
 		"result.table": {
-			"id": 6,
+			"id": 7,
 			"type": "string",
 			"default": "",
 			"label": "Result table:",
@@ -62,8 +71,24 @@
 			"simple": true,
 			"position": 1
 		},
+		"skip": {
+			"id": 8,
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"label": "Skip URLs:",
+			"description": "Boolean RegEx queries on URLs that will not be parsed.",
+			"simple": true,
+			"position": 5
+		},
 		"sleep.idle": {
-			"id": 7,
+			"id": 9,
 			"type": "number",
 			"default": 500,
 			"min": 100,
@@ -72,7 +97,7 @@
 			"simple": false
 		},
 		"sleep.mysql": {
-			"id": 8,
+			"id": 10,
 			"type": "number",
 			"default": 10,
 			"min": 1,
@@ -80,7 +105,7 @@
 			"simple": false
 		},
 		"timing": {
-			"id": 9,
+			"id": 11,
 			"type": "bool",
 			"default": false,
 			"description": "Calculate timing statistics.",

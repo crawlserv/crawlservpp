@@ -66,6 +66,8 @@ namespace crawlservpp::Module::Parser {
 		Config config;
 		bool idFromUrl;
 
+		// queries
+		std::vector<crawlservpp::Query::Container::QueryStruct> queriesSkip;
 		std::vector<crawlservpp::Query::Container::QueryStruct> queriesId;
 		std::vector<crawlservpp::Query::Container::QueryStruct> queriesDateTime;
 		std::vector<crawlservpp::Query::Container::QueryStruct> queriesFields;
