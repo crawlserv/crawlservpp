@@ -1,4 +1,94 @@
 <?php
+// function to wrap long code lines
+function codeWrapper($str, $limit, $indent_limit) {
+    $out = "";
+    foreach(preg_split("/((\r?\n)|(\r\n?))/", $str) as $line) {
+        while(strlen($line) > $limit) {
+            // get indent
+            $indent = strspn($line, " \t");
+            if($indent !== false) {
+                if($indent < strlen($line)) {
+                    if($indent > $indent_limit) $indent = $indent_limit;
+                    $begin = substr($line, 0, $indent);
+                }
+                else break;
+            }
+            else $begin = "";
+            
+            // find last space, tab or tag in line inside $limit
+            $allowed = substr($line, 0, $limit);
+            $space = strrpos($allowed, " ", $indent + 1);
+            if($space === false) $space = 0;
+            $tab = strrpos($allowed, "\t", $indent + 1);
+            if($tab === false) $tab = 0;
+            $tag = strrpos($allowed, "<", $indent + 1);
+            if($tag === false) $tag = 0;
+            else $tag--;
+            $cut = max($space, $tab, $tag);
+            if($cut > 0) {
+                $out .= substr($line, 0, $cut + 1)."\n";
+                $line = $begin.substr($line, $cut + 1);
+            }
+            else {
+                // find last hyphen, comma or semicolon in line inside $limit
+                $allowed = substr($line, 0, $limit);
+                $hyphen = strrpos($allowed, "-", $indent + 1);
+                if($space === false) $space = 0;
+                $comma = strrpos($allowed, ",", $indent + 1);
+                if($tab === false) $tab = 0;
+                $semicolon = strrpos($allowed, ";", $indent + 1);
+                if($tag === false) $tag = 0;
+                else $tag--;
+                $cut = max($hyphen, $comma, $semicolon);
+                if($cut > 0) {
+                    $out .= substr($line, 0, $cut + 1)."\n";
+                    $line = $begin.substr($line, $cut + 1);
+                }
+                else {
+                    // find first space, tab or tag outside $limit
+                    $l = strlen($line);
+                    $space = strpos($line, " ", $limit);
+                    if($space === false) $space = $l;
+                    $tab = strpos($line, "\t", $limit);
+                    if($tab === false) $tab = $l;
+                    $tag = strpos($line, "<", $limit);
+                    if($tag === false) $tag = $l;
+                    else $tag--;
+                    $cut = min($space, $tab, $tag);
+                    if($cut < $l) {
+                        $out .= substr($line, 0, $cut + 1)."\n";
+                        $line = $begin.substr($line, $cut + 1);
+                    }
+                    else {
+                        // try to break at hyphen or comma
+                        $hyphen = strpos($line, "-", $limit);
+                        if($hyphen === false) $hyphen = $l;
+                        $comma = strpos($line, ",", $limit);
+                        if($comma === false) $comma = $l;
+                        $cut = min($hyphen, $comma);
+                        if($cut < $l) {
+                            $out .= substr($line, 0, $cut + 1)."\n";
+                            $line = $begin.substr($line, $cut + 1);
+                        }
+                        else $out .= $line."\n";
+                    }
+                }
+            }
+        }
+        $out .= $line."\n";
+    }
+    return $out."\n";
+}
+
+// function to check for JSON code
+function isJSON($str) {
+    if($str[0] == '{' || $str[0] == "[") {
+        json_decode($str);
+        return json_last_error() == JSON_ERROR_NONE;
+    }
+    return false;
+}
+
 $is404 = false;
 if(isset($_POST["website"])) $website = $_POST["website"];
 if(isset($_POST["urllist"])) $urllist = $_POST["urllist"];
@@ -86,7 +176,11 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
         $url = $row["id"];
         $urltext = $row["url"];
     }
-    else $is404 = true;
+    else {
+        $is404 = true;
+        $url = 0;
+        $urltext = "/".$_POST["urltext"];
+    }
     $result->close();
 }
 if(isset($_POST["tab"])) $tab = $_POST["tab"];
@@ -204,7 +298,10 @@ if($website && $urllist) {
             $url = $row["id"];
             $urltext = $row["url"];
         }
-        else $is404 = true;
+        else {
+            $url = 0;
+            $is404 = true;
+        }
         $result->close();
     }
     
@@ -216,38 +313,58 @@ if($website && $urllist) {
     echo "<button id=\"content-next\" class=\"fs-insert-after\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
     
     if($is404) {
-        // no content available
+        echo "<br><br><i>URL not found.</i><br><br>\n";
     }
     else {
        // show content dependent on tab
         switch($tab) {
             case "parsed":
                 // parsed data
-                if(isset($_POST["version"])) {
-                    // select specified parsing table
-                    $version = $_POST["version"];
-                    $result = $dbConnection->query("SELECT name FROM crawlserv_parsedtables WHERE website = $website AND id = $version LIMIT 1");
-                    if(!$result) die("ERROR: Could not get parsing table.");
-                    $row = $result->fetch_assoc();
-                    if(!$row) die("ERROR: Could not get parsing table.");
+                $ctable = "crawlserv_".$namespace."_".$urllistNamespace."_crawled";
+                
+                // get parsing table
+                $result = $dbConnection->query("SELECT id, name, updated FROM crawlserv_parsedtables WHERE website = $website AND urllist = "
+                        .$urllist." ORDER BY id DESC");
+                if(!$result) die("ERROR: Could not get parsing tables.");
+                if($result->num_rows) {
+                    $tables = array();
+                    while($row = $result->fetch_assoc()) {
+                        $tables[] = array("id" => $row["id"], "name" => $row["name"], "updated" => $row["updated"]);
+                    }
                     $result->close();
-                }
-                else {
-                    // select newest parsing table
-                    $result =
-                        $dbConnection->query("SELECT id, name FROM crawlserv_parsedtables WHERE website = $website ORDER BY id DESC LIMIT 1");
-                    if(!$result) die("ERROR: Could not get parsing table.");
-                    $row = $result->fetch_assoc();
-                    if(!$row) $version = 0;
-                    $version = $row["id"];
-                    $result->close();
-                }
-                if($version) {
+                    
+                    if(isset($_POST["version"])) {
+                        // select specified parsing table
+                        foreach($tables as $table) {
+                            if($table["id"] == $_POST["version"]) {
+                                $parsingtable = $table;
+                                break;
+                            }
+                        }
+                    }
+                    else {
+                        // select newest parsing table with parsed data in it
+                        foreach($tables as $table) {
+                            $result = $dbConnection->query("SELECT EXISTS(SELECT * FROM `$ctable` AS a, `crawlserv_".$namespace."_"
+                                    .$urllistNamespace."_parsed_".$table["name"]."`  AS b WHERE a.id = b.content AND a.url=$url)");
+                            if(!$result) die("ERROR: Could not read parsing table.");
+                            $row = $result->fetch_row();
+                            if(!$row) die("ERROR: Could not read parsing table.");
+                            $result->close();
+                            if($row[0]) {
+                                $parsingtable = $table;
+                                break;
+                            }
+                        }
+                        if(!isset($parsingtable)) $parsingtable = $tables[0];
+                    }
+                    
+                    if(!isset($parsingtable)) die("ERROR: Could not get parsing table.");
+                        
                     // get column names
-                    $crawlingtable = "crawlserv_".$namespace."_".$urllistNamespace."_crawled";
-                    $parsingtable = "crawlserv_".$namespace."_".$urllistNamespace."_parsed_".$row["name"];
+                    $ptable = "crawlserv_".$namespace."_".$urllistNamespace."_parsed_".$parsingtable["name"];
                     $result = $dbConnection->query("SELECT COLUMN_NAME AS name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 'crawled'"
-                        ." AND TABLE_NAME = N'$parsingtable'");
+                        ." AND TABLE_NAME = N'$ptable'");
                     if(!$result) die("ERROR: Could not get columns from parsing table.");
                     $columns = array();
                     while($row = $result->fetch_assoc())
@@ -260,20 +377,20 @@ if($website && $urllist) {
                             $query .= "b.`".$column."`, ";
                         }
                         $query = substr($query, 0, -2);
-                        $query .= " FROM `$crawlingtable` AS a, `$parsingtable` AS b WHERE a.id = b.content AND a.url = "
+                        $query .= " FROM `$ctable` AS a, `$ptable` AS b WHERE a.id = b.content AND a.url = "
                             .$url." ORDER BY b.id DESC LIMIT 1";
                         $result = $dbConnection->query($query);
                         if(!$result) die("Could not get data from parsing table.");
                         $row = $result->fetch_assoc();
                         if($row) {
                             $result->close();
+                            echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
                             echo "<div id=\"content-table\" class=\"fs-div\">\n";
-                            echo "<button id=\"content-fullscreen\" title=\"Show Fullscreeen\">&#9727;</button>\n";
                             echo "<table class=\"fs-content\">\n";
                             echo "<thead>\n";
                             echo "<tr>\n";
                             echo "<th>Field</th>\n";
-                            echo "<th>Value</th>\n";
+                            echo "<th>Parsed value</th>\n";
                             echo "</tr>\n";
                             echo "</thead>\n";
                             echo "<tbody>\n";
@@ -281,18 +398,42 @@ if($website && $urllist) {
                                 echo "<tr>\n";
                                 if(strlen($column) > 8 && substr($column, 0, 8) == "parsed__") echo "<td>".substr($column, 8)."</td>\n";
                                 else if(strlen($column) > 7 && substr($column, 0, 7) == "parsed_") echo "<td>".substr($column, 7)."</td>\n";
-                                echo "<td>".$row[$column]."</td>\n";
+                                echo "<td>\n";
+                                if(!strlen(trim($row[$column]))) echo "<i>[empty]</i>";
+                                else if(isJSON($row[$column])) {
+                                    echo "<i>JSON</i><pre><code class=\"language-json\">\n";
+                                    echo htmlspecialchars($row[$column])."\n\n";
+                                    echo "</code></pre></td>\n";
+                                }
+                                else echo htmlspecialchars($row[$column])."\n";
+                                echo "</td>\n";
                                 echo "</tr>\n";
                             }
                             echo "</tbody>\n";
                             echo "</table>\n";
                             echo "</div>\n";
                         }
-                        else echo "<br><br><i>No parsing data available for this URL.</i><br><br>\n";
+                        else echo "<br><br><i>No parsing data available for this specific URL.</i><br><br>\n";
+                        echo "<div id=\"content-status\">\n";
+                        echo "<select id=\"content-version\" class=\"long\" data-m=\"$m\" data-tab=\"$tab\">\n";
+                        $count = 0;
+                        $num = sizeof($tables);
+                        foreach($tables as $table) {
+                            $count++;
+                            echo "<option value=\"".$table["id"]."\"";
+                            if($table["id"] == $parsingtable["id"]) echo " selected";
+                            echo ">Table ".number_format($count)." of ".number_format($num).": '".$table["name"]."'";
+                            if($table["updated"]) echo " &ndash; last updated on ".$table["updated"];
+                            echo "</option>\n";
+                        }
+                        echo "</select>\n";
                     }
                     else echo "<br><br><i>No parsing data available for this website.</i><br><br>\n";
                 }
-                else echo "<br><br><i>No parsing data available for this website.</i><br><br>\n";
+                else {
+                    $result->close();
+                    echo "<br><br><i>No parsing data available for this website.</i><br><br>\n";
+                }
                 break;
             case "extracted":
                 // extracted data
@@ -306,9 +447,9 @@ if($website && $urllist) {
                 break;
             default:
                 // crawled data
+                echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
                 echo "<div id=\"content-text\" class=\"fs-div\">\n";
-                echo "<button id=\"content-fullscreen\" title=\"Show Fullscreeen\">&#9727;</button>\n";
-                echo "<pre><code id=\"content-code\" class=\"language-html fs-content\">\n";
+                echo "<pre class=\"fs-content\"><code id=\"content-code\" class=\"language-html fs-content\">\n";
                 if(isset($_POST["version"])) {
                     // select specified version
                     $version = $_POST["version"];
@@ -330,14 +471,14 @@ if($website && $urllist) {
                     $version = $row["id"];
                     $result->close();
                 }
-                echo htmlspecialchars($row["content"]);
+                echo htmlspecialchars(codeWrapper($row["content"], 220, 120));
                 $info = number_format(strlen($row["content"]))
                         ." bytes <a href=\"#\" id=\"content-download\" target=\"_blank\" data-website-namespace=\""
                         .htmlspecialchars($namespace)."\" data-namespace=\"".htmlspecialchars($urllistNamespace)
                         ."\" data-version=\"$version\">[Download]</a>";
                 echo "</code></pre></div>\n";
                 echo "<div id=\"content-status\">\n";
-                echo "<select id=\"content-version\" data-m=\"$m\" data-tab=\"$tab\">\n";
+                echo "<select id=\"content-version\" class=\"short\" data-m=\"$m\" data-tab=\"$tab\">\n";
                 $result = $dbConnection->query("SELECT b.id AS id, b.crawltime AS crawltime, b.archived AS archived FROM `crawlserv_".$namespace."_"
                     .$urllistNamespace."` AS a, `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.id = ".$url
                     ." ORDER BY b.crawltime DESC");
@@ -353,7 +494,7 @@ if($website && $urllist) {
                     echo "</option>\n";
                 }
                 echo "</select>\n";
-                echo "<span id=\"content-info\">$info</span></div>";
+                echo "<span id=\"content-info\">$info</span></div>\n";
         }
     }
 }

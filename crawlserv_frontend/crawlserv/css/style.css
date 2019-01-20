@@ -17,7 +17,7 @@ a, a:visited {
 /* TITLE BAR */
 h1 {
 	position:fixed;
-	width:800px;
+	width:795px;
 	font-size:14px;
 	color:#e1efe6;
 	background-color:#45443F;
@@ -120,6 +120,7 @@ a.menu-item-link {
 
 /* CONTENT BLOCK */
 div.content-block {
+	position:relative;
 	background-color:#ffffff;
 	padding-left:10px;
 	padding-right:10px;
@@ -637,29 +638,29 @@ span.idle {
 	width:440px;
 }
 #content-text {
+	display:inline-block;
 	position:relative;
-	width:555px;
+	width:570px;
 	height:400px;
 	font-size:12px;
+	overflow:auto;
 }
 #content-fullscreen {
 	position:absolute;
-	right:5px;;
-	bottom:30px;;
+	right:20px;;
+	bottom:60px;;
 	font-size:12px;
 	z-index:3;
 }
 #content-code {
-	width:530px;
-	height:390px;
+	display:inline-block;
 	font-size:12px;
-	overflow:scroll; 
-	overflow-y:scroll; 
-	overflow-x:scroll;
-	overflow:-moz-scrollbars-vertical;
+	overflow:inherit;
 }
 #content-table {
+	margin-left:0;
 	margin-top:2px;
+	margin-bottom:5px;
 	width:570px;
 	height:390px;
 	font-size:12px;
@@ -669,11 +670,16 @@ span.idle {
 	overflow:-moz-scrollbars-vertical;
 }
 #content-version {
-	width:350px;
 	height:25px;
 	margin-right:4px;
 	font-size:12px;
 	box-sizing: border-box;
+}
+#content-version.short {
+	width:350px;
+}
+#content-version.long {
+	width:450px;
 }
 #content-status {
 	font-size:12px;
