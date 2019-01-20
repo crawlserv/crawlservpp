@@ -1,6 +1,6 @@
 /*
  *  Array.prototype.equals by Rob Bednark
- *  from from https://stackoverflow.com/a/14853974
+ *  from https://stackoverflow.com/a/14853974
  */
 
 // Warn if overriding existing method
