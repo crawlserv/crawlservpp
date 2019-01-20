@@ -695,8 +695,8 @@ void Database::updateOrAddEntry(unsigned long contentId, const std::string& pars
 		return;
 	}
 
-	// lock target table
-	this->lockTable(this->targetTableFull);
+	// lock target table and parsing table index
+	this->lockTables(this->targetTableFull, "crawlserv_parsedtables");
 
 	// update existing or add new entry
 	unsigned long entryId = this->getEntryId(contentId);
