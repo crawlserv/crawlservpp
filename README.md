@@ -227,7 +227,7 @@ It provides the following menu structure:
 * **Analyzers**: Manage analyzing configurations in simple or advanced mode.
 * **Threads**: Currently active threads and their status. Start, pause and stop specific threads.
 * **~~Search:~~** Search crawled content.
-* **~~Content:~~** View crawled content.
+* **Content:** View crawled, parsed, ~~extracted~~ and ~~analyzed~~ content.
 * **~~Import/Export:~~** Import and export URL lists and possibly other data.
 * **~~Statistics:~~** Show specific statistics derived from the database.
 * **Logs**: Show and delete log entries.
