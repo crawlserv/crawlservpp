@@ -294,7 +294,7 @@ bool Thread::parsingUrlSelection() {
 	bool result = true;
 	bool notIdle = this->currentUrl.first > 0;
 
-	// lock URL list
+	// lock URL list and crawling table
 	this->database.lockUrlListAndCrawledTable();
 
 	// get id and name of next URL (skip locked URLs)
