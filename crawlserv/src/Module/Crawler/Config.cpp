@@ -209,8 +209,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
-									+ "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "queries.links") {
 							if(j->value.IsArray()) {
