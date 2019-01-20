@@ -20,6 +20,7 @@ Config::Config() {
 	this->generalLock = 300;
 	this->generalLogging = Config::generalLoggingDefault;
 	this->generalNewestOnly = true;
+	this->generalParseCustom = false;
 	this->generalReParse = false;
 	this->generalResetOnFinish = false;
 	this->generalSleepIdle = 500;
@@ -88,6 +89,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 							else warningsTo.push_back("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
+						else if(name == "parse.custom") {
+							if(j->value.IsBool()) this->generalParseCustom = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
+						}
 						else if(name == "reparse") {
 							if(j->value.IsBool()) this->generalReParse = j->value.GetBool();
 							else warningsTo.push_back("\'" + cat + "." + name
@@ -108,6 +114,18 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 							}
 							else warningsTo.push_back("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not string).");
+						}
+						else if(name == "skip") {
+							if(j->value.IsArray()) {
+								this->generalSkip.clear();
+								this->generalSkip.reserve(j->value.Size());
+								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
+									if(k->IsUint64()) this->generalSkip.push_back(k->GetUint64());
+									else if(!(k->IsNull())) warningsTo.push_back("Value in \'" + cat + "." + name
+											+ "\' ignored because of wrong type (not unsigned long or null).");
+								}
+							}
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "sleep.idle") {
 							if(j->value.IsUint64()) this->generalSleepIdle = j->value.GetUint64();

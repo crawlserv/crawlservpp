@@ -16,6 +16,7 @@ Database::Database(crawlservpp::Module::DBThread& dbThread) : crawlservpp::Modul
 	this->website = 0;
 	this->urlList = 0;
 	this->reparse = false;
+	this->parseCustom = false;
 	this->logging = false;
 	this->verbose = false;
 
@@ -76,6 +77,11 @@ void Database::setUrlListNamespace(const std::string& urlListNamespace) {
 // enable or disable reparsing
 void Database::setReparse(bool isReparse) {
 	this->reparse = isReparse;
+}
+
+// enable or disable parsing custom URLs
+void Database::setParseCustom(bool isParseCustom) {
+	this->parseCustom = isParseCustom;
 }
 
 // enable or disable logging
@@ -152,6 +158,7 @@ bool Database::prepare() {
 			std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
 					" WHERE a.id = b.url AND a.id > ? AND (a.parselock IS NULL OR a.parselock < NOW())";
 			if(!reparse) sqlQuery += " AND a.parsed = FALSE";
+			if(!parseCustom) sqlQuery += " AND a.manual = FALSE";
 			sqlQuery += " ORDER BY a.id LIMIT 1";
 			this->psGetNextUrl = this->addPreparedStatement(sqlQuery);
 		}

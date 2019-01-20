@@ -72,6 +72,7 @@ bool Thread::onInit(bool resumed) {
 	this->database.setTargetTable(this->config.generalResultTable);
 	this->database.setTargetFields(this->config.parsingFieldNames);
 	this->database.setReparse(this->config.generalReParse);
+	this->database.setParseCustom(this->config.generalParseCustom);
 	this->database.setLogging(this->config.generalLogging);
 	this->database.setVerbose(verbose);
 	this->database.setSleepOnError(this->config.generalSleepMySql);
@@ -227,6 +228,7 @@ void Thread::onClear(bool interrupted) {
 	}
 
 	// delete queries
+	this->queriesSkip.clear();
 	this->queriesDateTime.clear();
 	this->queriesFields.clear();
 	this->queriesId.clear();
@@ -267,6 +269,12 @@ void Thread::initQueries() {
 			+ this->config.parsingFieldQueries.size());
 
 	// create queries and get query ids
+	for(auto i = this->config.generalSkip.begin(); i != this->config.generalSkip.end(); ++i) {
+		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly);
+		this->queriesSkip.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
+				queryTextOnly));
+	}
 	for(auto i = this->config.parsingIdQueries.begin(); i != this->config.parsingIdQueries.end(); ++i) {
 		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
 				queryTextOnly);
@@ -298,19 +306,56 @@ bool Thread::parsingUrlSelection() {
 	this->database.lockUrlListAndCrawledTable();
 
 	// get id and name of next URL (skip locked URLs)
+	bool skip = false;
+	unsigned long skipped = 0;
+
 	while(true) {
-		this->currentUrl = this->database.getNextUrl(this->getLast());
+		if(skip) this->currentUrl = this->database.getNextUrl(skipped);
+		else this->currentUrl = this->database.getNextUrl(this->getLast());
 
 		if(this->currentUrl.first) {
-			// lock URL
-			if(this->database.isUrlLockable(this->currentUrl.first)) {
-				this->lockTime = this->database.lockUrl(this->currentUrl.first, this->config.generalLock);
-				// success!
-				break;
+			// check whether to skip URL
+			skip = false;
+			if(!(this->config.generalSkip.empty())) {
+				for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
+					// check result type of query
+					if(!(i->resultBool) && this->config.generalLogging)
+						this->log("WARNING: Invalid result type of skip query (not bool).");
+
+					// check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse id by running RegEx query on URL
+						bool queryResult = false;
+						if(this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.second, queryResult)) {
+							if(queryResult) {
+								skip = true;
+							}
+							break;
+						}
+					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: ID query on URL is not of type RegEx.");
+				}
+			}
+
+			if(skip) {
+				// skip URL
+				if(this->config.generalLogging) logEntries.push_back("skipped " + this->currentUrl.second);
+				skipped = this->currentUrl.first;
 			}
 			else {
-				// skip locked URL
-				logEntries.push_back("skipped " + this->currentUrl.second + ", because it is locked.");
+				// lock URL
+				if(this->database.isUrlLockable(this->currentUrl.first)) {
+					this->lockTime = this->database.lockUrl(this->currentUrl.first, this->config.generalLock);
+					// success!
+					break;
+				}
+				else if(this->config.generalLogging) {
+					// skip locked URL
+					logEntries.push_back("skipped " + this->currentUrl.second + ", because it is locked.");
+					skip = true;
+					skipped = this->currentUrl.first;
+				}
 			}
 		}
 		else {
@@ -349,7 +394,7 @@ unsigned long Thread::parsing() {
 	if(this->idFromUrl) {
 		for(auto i = this->queriesId.begin(); i != this->queriesId.end(); ++i) {
 			// check result type of query
-			if(!(i->resultSingle) && this->config.generalLogging)
+			if(!(i->resultSingle) && (this->config.generalLogging))
 				this->log("WARNING: Invalid result type of ID query (not single).");
 
 			// check query type

@@ -44,6 +44,7 @@ namespace crawlservpp::Module::Parser {
 		void setUrlList(unsigned long listId);
 		void setUrlListNamespace(const std::string& urlListNamespace);
 		void setReparse(bool isReparse);
+		void setParseCustom(bool isParseCustom);
 		void setLogging(bool isLogging);
 		void setVerbose(bool isVerbose);
 		void setTargetTable(const std::string& table);
@@ -87,6 +88,7 @@ namespace crawlservpp::Module::Parser {
 		std::string listIdString;
 		std::string urlListName;
 		bool reparse;
+		bool parseCustom;
 		bool logging;
 		bool verbose;
 		std::string targetTableName;
