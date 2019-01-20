@@ -382,8 +382,8 @@ if($website && $urllist) {
                         $result = $dbConnection->query($query);
                         if(!$result) die("Could not get data from parsing table.");
                         $row = $result->fetch_assoc();
+                        $result->close();
                         if($row) {
-                            $result->close();
                             echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
                             echo "<div id=\"content-table\" class=\"fs-div\">\n";
                             echo "<table class=\"fs-content\">\n";
@@ -395,15 +395,16 @@ if($website && $urllist) {
                             echo "</thead>\n";
                             echo "<tbody>\n";
                             foreach($columns as $column) {
+                                if(strlen($column) > 8 && substr($column, 0, 8) == "parsed__") $cname = substr($column, 8);
+                                else $cname = substr($column, 7);
                                 echo "<tr>\n";
-                                if(strlen($column) > 8 && substr($column, 0, 8) == "parsed__") echo "<td>".substr($column, 8)."</td>\n";
-                                else if(strlen($column) > 7 && substr($column, 0, 7) == "parsed_") echo "<td>".substr($column, 7)."</td>\n";
+                                echo "<td>".htmlspecialchars($cname)."</td>\n";
                                 echo "<td>\n";
                                 if(!strlen(trim($row[$column]))) echo "<i>[empty]</i>";
                                 else if(isJSON($row[$column])) {
                                     echo "<i>JSON</i><pre><code class=\"language-json\">\n";
                                     echo htmlspecialchars($row[$column])."\n\n";
-                                    echo "</code></pre></td>\n";
+                                    echo "</code></pre>\n";
                                 }
                                 else echo htmlspecialchars($row[$column])."\n";
                                 echo "</td>\n";
@@ -427,6 +428,9 @@ if($website && $urllist) {
                             echo "</option>\n";
                         }
                         echo "</select>\n";
+                        echo "<span id=\"content-info\">\n";
+                        echo "[Download]\n";
+                        echo "</span></div>\n";
                     }
                     else echo "<br><br><i>No parsing data available for this website.</i><br><br>\n";
                 }
@@ -473,7 +477,7 @@ if($website && $urllist) {
                 }
                 echo htmlspecialchars(codeWrapper($row["content"], 220, 120));
                 $info = number_format(strlen($row["content"]))
-                        ." bytes <a href=\"#\" id=\"content-download\" target=\"_blank\" data-website-namespace=\""
+                        ." bytes <a href=\"#\" id=\"content-download\" target=\"_blank\" data-type=\"content\" data-website-namespace=\""
                         .htmlspecialchars($namespace)."\" data-namespace=\"".htmlspecialchars($urllistNamespace)
                         ."\" data-version=\"$version\">[Download]</a>";
                 echo "</code></pre></div>\n";
