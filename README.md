@@ -190,7 +190,7 @@ The server and each thread have their own connections to the database. These con
 
 ### Third-party Libraries
 
-The following third-party libraries are used:
+The following third-party libraries are used by the command-and-control server:
 
 * [Boost C++ Libraries](https://www.boost.org/)
 * [GNU Aspell](http://aspell.net/)
