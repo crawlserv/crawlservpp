@@ -950,14 +950,34 @@ var prevAlgo;
 		return true;
 	});
 	
+// KEYPRESS EVENT: input URL text (ENTER)
+	$(document).on("keypress", "#content-url-text", function(e) {
+		if(e.which == 13) {
+			if(!$(this).val().length) return true;
+			$("#website-select").prop("disabled", true);
+			$("#urllist-select").prop("disabled", true);
+			$("#content-last").prop("disabled", true);
+			$(this).prop("disabled", true);
+			$("#content-url-text").prop("disabled", true);
+			$("#content-next").prop("disabled", true);
+			$("#content-version").prop("disabled", true);
+			var website = parseInt($("#website-select").val(), 10);
+			var urllist = parseInt($("#urllist-select").val(), 10);
+			var urltext = $(this).val();
+			reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "urltext": urltext });
+			return false;
+		}
+		return true;
+	});
+	
 // CLICK EVENT: fullscreen
 	$(document).on("click", "#content-fullscreen", function() {
 		if(fullscreen) {
 			fullscreen = false;
 			var temp = $(".fs-div").detach();
 			temp.insertAfter($(".fs-insert-after"));
-			$(".fs-content").css({ "width" : this.oldCodeWidth, "height" : this.oldCodeHeight });
-			temp.css({ "position" : this.oldPos, "width" : this.oldWidth, "height" : this.oldHeight });
+			$(".fs-content").css({ "display" : this.oldDisplay, "width" : this.oldCodeWidth, "height" : this.oldCodeHeight });
+			temp.css({ "position" : this.oldPos, "width" : this.oldWidth, "height" : this.oldHeight, "margin-left": this.oldMargin });
 			$(this).css({ "position" : "absolute", "right" : this.oldBtnPos });
 			$(this).html("&#9727;");
 			$(this).prop("title", "Show Fullscreen");
@@ -967,16 +987,17 @@ var prevAlgo;
 			this.oldPos = $(".fs-div").css("position");
 			this.oldWidth = $(".fs-div").css("width");
 			this.oldHeight = $(".fs-div").css("height");
+			this.oldMargin = $(".fs-div").css("margin-left");
 			this.oldCodeWidth = $(".fs-content").css("width");
 			this.oldCodeHeight = $(".fs-content").css("height");
 			this.oldBtnPos = $(this).css("right");
 			var temp = $(".fs-div").detach();
 			temp.appendTo("body");
-			temp.css({ "position" : "absolute", "width" : "100%", "height" : "100%", "z-index": "2" });
-			$(".fs-content").css({ "width" : "100%", "height" : "100%" });
+			temp.css({ "position" : "absolute", "width" : "100%", "height" : "100%", "margin-left" : "5px", "z-index": "2" });
+			$(".fs-content").css({ "width" : "auto", "height" : "auto" });
 			$(this).css({"position" : "fixed", "right" : "30px"});
 			$(this).html("&ultri;");
-			$(this).prop("title", "Exit Fullscreen");
+			$(this).prop("title", "Exit Fullscreen [ESC]");
 		}
 	});
 	
