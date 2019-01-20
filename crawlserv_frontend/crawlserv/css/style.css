@@ -6,6 +6,7 @@
 }
 html, body {
 	font-family:Arimo, sans-serif;
+	background-color:lightgray;
 }
 
 /* LINK COLOR */
@@ -16,7 +17,7 @@ a, a:visited {
 /* TITLE BAR */
 h1 {
 	position:fixed;
-	width:795px;
+	width:800px;
 	font-size:14px;
 	color:#e1efe6;
 	background-color:#45443F;
@@ -24,7 +25,7 @@ h1 {
 	padding-top:3px;
 	padding-bottom:3px;
 	padding-left:5px;
-	z-index:9999;
+	z-index:1;
 }
 
 /* TITLE */
@@ -437,6 +438,7 @@ span.content {
 	margin-right:10px;
 	margin-bottom:10px;
 	font-size:10px;
+	z-index:3;
 }
 
 /* WRAPPING */
@@ -595,7 +597,7 @@ progress {
 	margin-right:15px;
 }
 
-/* ERROR */
+/* THREAD STATUS */
 span.error {
 	color:#FF6347;
 }
@@ -607,3 +609,91 @@ span.idle {
 	color:#009933;
 }
 
+/* CONTENT BROWSER */
+#content-last, #content-next {
+	margin:1px 1px 0 1px;
+	padding:0;
+	width:25px;
+	height:25px;
+	line-height:0px;
+	vertical-align:middle;
+	font-size:12px;
+}
+#content-url, #content-url-text {
+	margin:1px;
+	padding:0;
+	height:25px;
+	font-size:12px;
+	line-height:0px;
+	box-sizing:border-box;
+}
+#content-url {
+	width:50px;
+}
+#content-slash {
+	font-size:12px;
+}
+#content-url-text {
+	width:440px;
+}
+#content-text {
+	position:relative;
+	width:555px;
+	height:400px;
+	font-size:12px;
+}
+#content-fullscreen {
+	position:absolute;
+	right:5px;;
+	bottom:30px;;
+	font-size:12px;
+	z-index:3;
+}
+#content-code {
+	width:530px;
+	height:390px;
+	font-size:12px;
+	overflow:scroll; 
+	overflow-y:scroll; 
+	overflow-x:scroll;
+	overflow:-moz-scrollbars-vertical;
+}
+#content-table {
+	margin-top:2px;
+	width:570px;
+	height:390px;
+	font-size:12px;
+	overflow:scroll; 
+	overflow-y:scroll; 
+	overflow-x:scroll;
+	overflow:-moz-scrollbars-vertical;
+}
+#content-version {
+	width:350px;
+	height:25px;
+	margin-right:4px;
+	font-size:12px;
+	box-sizing: border-box;
+}
+#content-status {
+	font-size:12px;
+	color: #808080;
+	padding:0;
+	margin:0;
+}
+#content-info {
+	float:right;
+	line-height:25px;
+	vertical-align:middle;
+}
+#content-download {
+	color: #808080;
+	text-decoration:none;
+}
+#content-download:hover {
+	text-decoration:underline;
+}
+pre[class*="language-"]:before,
+pre[class*="language-"]:after {
+    display: none;
+}

@@ -5,6 +5,9 @@ var crawlserv_frontend_unloading = false;
 // detached helper
 var helper;
 
+// fullscreen mode
+var fullscreen = false;
+
 /*
  * HELPER FUNCTIONS
  */
@@ -40,7 +43,13 @@ function isValidDate(dateString) {
 	if(Number.isNaN(d.getTime())) return false; // invalid date
 	return d.toISOString().slice(0,10) === dateString;
 }
-	
+
+// check whether a (positive) integer is valid [based on https://stackoverflow.com/a/10834843 by T.J. Crowder]
+function isNormalInteger(str) {
+	var n = Math.floor(Number(str));
+    return n !== Infinity && String(n) === str && n >= 0;
+}
+
 // refresh data
 function refreshData() {
 	if(crawlserv_frontend_unloading) return;
@@ -155,6 +164,11 @@ function disableSelects() {
 	if($("#module-select")) $("#module-select").prop('disabled', 'disabled');
 	if($("#algo-cat-select")) $("#algo-cat-select").prop('disabled', 'disabled');
 	if($("#algo-select")) $("#algo-select").prop('disabled', 'disabled');
+	if($("#content-last")) $("#content-last").prop("disabled", true);
+	if($("#content-url")) $("#content-url").prop("disabled", true);
+	if($("#content-url-text")) $("#content-url-text").prop("disabled", true);
+	if($("#content-next")) $("#content-next").prop("disabled", true);
+	if($("#content-version")) $("#content-version").prop("disabled", true);
 }
 
 // enable selection fields with redirects
@@ -229,6 +243,15 @@ jQuery(function($) {
 	$(document).on("click", "a.cmd", function() {
   		runCmd($(this).data("cmd"), {}, hasData($(this), "reload"), { "m" : $(this).data("m") });
 		return false;
+	});
+	
+// KEYUP EVENT: exit fullscreen on ESC
+	$(document).on("keyup", function(e) {
+		if(e.keyCode === 27 && $("#content-fullscreen") && fullscreen) {
+			$("#content-fullscreen").click();
+			return false;
+		}
+		return true;
 	});
 
 /* 
@@ -318,6 +341,7 @@ jQuery(function($) {
 		var id = parseInt($(this).val(), 10);
 		var args = { "m" : $(this).data("m"), "website" : id };
 		if($("#query-test-text")) args["test"] = $("#query-test-text").val();
+		if(typeof $(this).data("tab") != "undefined") args["tab"] = $(this).data("tab");
 		if(typeof config !== "undefined") {
 			if(config.isConfChanged()) {
 				if(confirm("Do you want to discard the changes to your current configuration?"))
@@ -344,7 +368,9 @@ jQuery(function($) {
 			disableSelects();
 			var website = parseInt($("#website-select").val(), 10);
 			var id = parseInt($(this).val(), 10);
-			reload({ "m" : $(this).data("m"), "website" : website, "urllist" : id });
+			var args = { "m" : $(this).data("m"), "website" : website, "urllist" : id };
+			if(typeof $(this).data("tab") != "undefined") args["tab"] = $(this).data("tab");
+			reload(args);
 			return false;
 		} // do not reload in "Threads" menu
 		return true;
@@ -413,7 +439,7 @@ jQuery(function($) {
 		var ulwebsite = $(this).data("website-namespace");
 		var ulnamespace = $(this).data("namespace");
 		var ulfilename = ulwebsite + "_" + ulnamespace + ".txt";
-		$.post("download/", { type: "urllist", namespace: ulnamespace, website: ulwebsite, filename: ulfilename },
+		$.post("download/", { "type": "urllist", "namespace": ulnamespace, "website": ulwebsite, "filename": ulfilename },
 			function() {
 				window.open("download/");
 			}
@@ -700,6 +726,10 @@ var prevAlgo;
 
 // CLICK EVENT: change mode
 	$(document).on("click", "a.post-redirect-mode", function() {
+		$("#website-select").prop("disabled", true);
+		$("#config-select").prop("disabled", true);
+		$("#algo-select").prop("disabled", true);
+		$("#algo-cat-select").prop("disabled", true);
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
 		var algo_id = parseInt($("#algo-select").val(), 10);
@@ -832,6 +862,154 @@ var prevAlgo;
 		runCmd("start" + module, { "website" : website, "config": config, "urllist": urllist }, false);
 		return false;
 	})
+	
+/*
+ * EVENTS for CONTENT
+ */
+	
+// CLICK EVENT: change tab
+	$(document).on("click", "a.post-redirect-tab", function() {
+		$("#website-select").prop("disabled", true);
+		$("#urllist-select").prop("disabled", true);
+		$("#content-last").prop("disabled", true);
+		$("#content-url").prop("disabled", true);
+		$("#content-url-text").prop("disabled", true);
+		$("#content-next").prop("disabled", true);
+		$("#content-version").prop("disabled", true);
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var url = parseInt($("#content-url").val(), 10);
+		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url });
+		return false;
+	});
+	
+// CLICK EVENT: last URL
+	$(document).on("click", "#content-last", function() {
+		$("#website-select").prop("disabled", true);
+		$("#urllist-select").prop("disabled", true);
+		$(this).prop("disabled", true);
+		$("#content-url").prop("disabled", true);
+		$("#content-url-text").prop("disabled", true);
+		$("#content-next").prop("disabled", true);
+		$("#content-version").prop("disabled", true);
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var url = parseInt($("#content-url").val(), 10);
+		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url, "last": true });
+		return false;
+	});
+	
+// CLICK EVENT: next URL
+	$(document).on("click", "#content-next", function() {
+		$("#website-select").prop("disabled", true);
+		$("#urllist-select").prop("disabled", true);
+		$("#content-last").prop("disabled", true);
+		$("#content-url").prop("disabled", true);
+		$("#content-url-text").prop("disabled", true);
+		$(this).prop("disabled", true);
+		$("#content-version").prop("disabled", true);
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var url = parseInt($("#content-url").val(), 10);
+		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url + 1 });
+		return false;
+	});
+
+// CHANGE EVENT: input URL id (numbers only)
+	$(document).on("input keydown keyup mousedown mouseup select contextmenu drop", "#content-url", function() {
+		var input = $(this).val();
+		if(!input.length || isNormalInteger(input)) {
+	        this.oldValue = this.value;
+	        this.oldSelectionStart = this.selectionStart;
+	        this.oldSelectionEnd = this.selectionEnd;
+		}
+		else if(this.hasOwnProperty("oldValue")) {
+	        this.value = this.oldValue;
+	        this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+		}
+		return true;
+	});
+	
+// KEYPRESS EVENT: input URL id (ENTER)
+	$(document).on("keypress", "#content-url", function(e) {
+		if(e.which == 13) {
+			if(!$(this).val().length) return true;
+			$("#website-select").prop("disabled", true);
+			$("#urllist-select").prop("disabled", true);
+			$("#content-last").prop("disabled", true);
+			$(this).prop("disabled", true);
+			$("#content-url-text").prop("disabled", true);
+			$("#content-next").prop("disabled", true);
+			$("#content-version").prop("disabled", true);
+			var website = parseInt($("#website-select").val(), 10);
+			var urllist = parseInt($("#urllist-select").val(), 10);
+			var url = parseInt($(this).val(), 10);
+			reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url });
+			return false;
+		}
+		return true;
+	});
+	
+// CLICK EVENT: fullscreen
+	$(document).on("click", "#content-fullscreen", function() {
+		if(fullscreen) {
+			fullscreen = false;
+			var temp = $(".fs-div").detach();
+			temp.insertAfter($(".fs-insert-after"));
+			$(".fs-content").css({ "width" : this.oldCodeWidth, "height" : this.oldCodeHeight });
+			temp.css({ "position" : this.oldPos, "width" : this.oldWidth, "height" : this.oldHeight });
+			$(this).css({ "position" : "absolute", "right" : this.oldBtnPos });
+			$(this).html("&#9727;");
+			$(this).prop("title", "Show Fullscreen");
+		}
+		else {
+			fullscreen = true;
+			this.oldPos = $(".fs-div").css("position");
+			this.oldWidth = $(".fs-div").css("width");
+			this.oldHeight = $(".fs-div").css("height");
+			this.oldCodeWidth = $(".fs-content").css("width");
+			this.oldCodeHeight = $(".fs-content").css("height");
+			this.oldBtnPos = $(this).css("right");
+			var temp = $(".fs-div").detach();
+			temp.appendTo("body");
+			temp.css({ "position" : "absolute", "width" : "100%", "height" : "100%", "z-index": "2" });
+			$(".fs-content").css({ "width" : "100%", "height" : "100%" });
+			$(this).css({"position" : "fixed", "right" : "30px"});
+			$(this).html("&ultri;");
+			$(this).prop("title", "Exit Fullscreen");
+		}
+	});
+	
+// CHANGE EVENT: select content version
+	$(document).on("change", "#content-version", function() {
+		$("#website-select").prop("disabled", true);
+		$("#urllist-select").prop("disabled", true);
+		$("#content-last").prop("disabled", true);
+		$("#content-url").prop("disabled", true);
+		$("#content-url-text").prop("disabled", true);
+		$("#content-next").prop("disabled", true);
+		$(this).prop("disabled", true);
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var url = parseInt($("#content-url").val(), 10);
+		var version = parseInt($(this).val(), 10);
+		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url,
+			"version": version });
+		return false;
+	});
+	
+// CLICK EVENT: download content
+	$(document).on("click", "#content-download", function() {
+		var contentwebsite = $(this).data("website-namespace");
+		var contentnamespace = $(this).data("namespace");
+		var contentversion = $(this).data("version");
+		var contentfilename = contentwebsite + "_" + contentnamespace + "_" + contentversion + ".htm";
+		$.post("download/", { "type": "content", "namespace": contentnamespace, "website": contentwebsite, "version": contentversion,
+			"filename": contentfilename }, function() {
+				window.open("download/");
+		});
+		return false;
+	});
 	
 /*
  * 
