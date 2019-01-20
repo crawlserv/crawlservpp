@@ -6,13 +6,13 @@ else $mode = "simple";
 if(isset($_POST["current"])) $current = $_POST["current"];
 ?>
 <h2>Parsing options<?php 
-echo "<div id=\"opt-mode\">\n";
+echo "<span id=\"opt-mode\">\n";
 if($mode == "simple") echo "<b>simple</b>";
 else echo "<a href=\"#\" class=\"action-link post-redirect-mode\" data-m=\"$m\" data-mode=\"simple\">simple</a>\n";
 echo " &middot; ";
 if($mode == "advanced") echo "<b>advanced</b>";
 else echo "<a href=\"#\" class=\"action-link post-redirect-mode\" data-m=\"$m\" data-mode=\"advanced\">advanced</a>\n";
-echo "</div>\n";
+echo "</span>\n";
 ?></h2>
 <div class="content-block">
 <div class="entry-row">

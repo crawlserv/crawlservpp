@@ -60,13 +60,13 @@ $result->close();
 
 if(isset($website)) {
     if($website) {
-        $result = $dbConnection->query("SELECT namespace,domain FROM crawlserv_websites WHERE id=$website");
+        // get namespace and domain of website
+        $result = $dbConnection->query("SELECT namespace,domain FROM crawlserv_websites WHERE id=$website LIMIT 1");
         if(!$result) exit("ERROR: Could not get namespace and domain of website.");
         $row = $result->fetch_assoc();
-        
+        if(!$row) exit("ERROR: Could not get namespace and domain of website.");
         $namespace = $row["namespace"];
         $domain = $row["domain"];
-        
         $result->close();
     }
 }
@@ -118,6 +118,7 @@ if($website) {
     echo "<select class=\"entry-x-input\" id=\"urllist-select\" data-m=\"$m\">\n";
     
     $result = $dbConnection->query("SELECT id,name,namespace FROM crawlserv_urllists WHERE website=$website ORDER BY name");
+    if(!$result) exit("ERROR: Could not get URL lists of website.");
     if($result) {
         $first = true;
         while($row = $result->fetch_assoc()) {
@@ -142,36 +143,36 @@ if($website) {
     
     if(isset($urllist) && $urllist) {
         // get size of selected URL list
-        $result = $dbConnection->query("SELECT COUNT(*) FROM crawlserv_".$namespace."_".$urllistNamespace);
-        if(!$result) exit("ERROR: Could not get size of URL list from crawlserv_".$namespace."_".$urllistNamespace);
+        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."`");
+        if(!$result) exit("ERROR: Could not get size of URL list from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
         $urllistSize = $row[0];
         $result->close();
         
         // get number of crawled URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM crawlserv_".$namespace."_".$urllistNamespace." WHERE crawled = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from crawlserv_".$namespace."_".$urllistNamespace);
+        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE crawled = TRUE");
+        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
         $urllistCrawled = $row[0];
         $result->close();
         
         // get number of parsed URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM crawlserv_".$namespace."_".$urllistNamespace." WHERE parsed = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from crawlserv_".$namespace."_".$urllistNamespace);
+        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE parsed = TRUE");
+        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
         $urllistParsed = $row[0];
         $result->close();
         
         // get number of extracted URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM crawlserv_".$namespace."_".$urllistNamespace." WHERE extracted = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from crawlserv_".$namespace."_".$urllistNamespace);
+        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE extracted = TRUE");
+        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
         $urllistExtracted = $row[0];
         $result->close();
         
         // get number of analyzed URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM crawlserv_".$namespace."_".$urllistNamespace." WHERE analyzed = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from crawlserv_".$namespace."_".$urllistNamespace);
+        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE analyzed = TRUE");
+        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
         $urllistAnalyzed = $row[0];
         $result->close();
@@ -232,7 +233,8 @@ if($website) {
         if($urllistSize == 1) echo "1 entry";
         else echo number_format($urllistSize)." entries";
         echo " <a href=\"#\" class=\"urllist-download entry-value\" target=\"_blank\"";
-        echo " data-website-namespace=\"$namespace\" data-namespace=\"".htmlspecialchars($urllistNamespace)."\">[Download]</a>\n";
+        echo " data-website-namespace=\"".htmlspecialchars($namespace)."\" data-namespace=\"".htmlspecialchars($urllistNamespace)
+                ."\">[Download]</a>\n";
         echo "</div>\n";
         echo "</div>\n";
         if($urllistCrawled) {

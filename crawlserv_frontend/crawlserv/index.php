@@ -15,15 +15,17 @@ header('Content-Type: text/html; charset=utf-8');
 <!doctype html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>crawlserv++ frontend</title>
+<link rel="stylesheet" type="text/css" href="css/external/prism.css">
+<link rel="stylesheet" type="text/css" href="css/external/table.css">
 <link rel="stylesheet" type="text/css" href="css/style.css">
 <script src="js/external/array.equals.js"></script>
 <script src="js/external/jquery-3.3.1.min.js"></script>
 <script src="js/external/jquery.redirect.js"></script>
 <script src="js/external/tippy.all.min.js"></script>
+<script src="js/external/prism.js"></script>
 <script src="js/style.js"></script>
 <script src="js/frontend.js"></script>
 <script src="js/algo.js"></script>
