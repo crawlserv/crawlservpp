@@ -384,6 +384,7 @@ if($website && $urllist) {
                         $row = $result->fetch_assoc();
                         $result->close();
                         if($row) {
+                            $data = true;
                             echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
                             echo "<div id=\"content-table\" class=\"fs-div\">\n";
                             echo "<table class=\"fs-content\">\n";
@@ -414,9 +415,12 @@ if($website && $urllist) {
                             echo "</table>\n";
                             echo "</div>\n";
                         }
-                        else echo "<br><br><i>No parsing data available for this specific URL.</i><br><br>\n";
+                        else {
+                            $data = false;
+                            echo "<br><br><i>No parsing data available for this specific URL.</i><br><br>\n";
+                        }
                         echo "<div id=\"content-status\">\n";
-                        echo "<select id=\"content-version\" class=\"long\" data-m=\"$m\" data-tab=\"$tab\">\n";
+                        echo "<select id=\"content-version\" class=\"wide\" data-m=\"$m\" data-tab=\"$tab\">\n";
                         $count = 0;
                         $num = sizeof($tables);
                         foreach($tables as $table) {
@@ -428,9 +432,15 @@ if($website && $urllist) {
                             echo "</option>\n";
                         }
                         echo "</select>\n";
-                        echo "<span id=\"content-info\">\n";
-                        echo "[Download]\n";
-                        echo "</span></div>\n";
+                        if($data) {
+                            echo "<span id=\"content-info\">\n";
+                            echo "<a href=\"#\" id=\"content-download\" target=\"_blank\" data-type=\"parsed\" data-website-namespace=\""
+                                    .htmlspecialchars($namespace)."\" data-namespace=\"".htmlspecialchars($urllistNamespace)
+                                    ."\" data-version=\"".$parsingtable["id"]."\" data-filename=\"".htmlspecialchars($namespace."_"
+                                    .$urllistNamespace."_".$url)."_parsed.json\">[Download as JSON]</a>\n";
+                            echo "</span>\n";
+                        }
+                        echo "</div>\n";
                     }
                     else echo "<br><br><i>No parsing data available for this website.</i><br><br>\n";
                 }
@@ -457,8 +467,9 @@ if($website && $urllist) {
                 if(isset($_POST["version"])) {
                     // select specified version
                     $version = $_POST["version"];
-                    $result = $dbConnection->query("SELECT b.content FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a, `crawlserv_"
-                        .$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.id = $url AND b.id = $version LIMIT 1");
+                    $result = $dbConnection->query("SELECT b.content FROM `crawlserv_".$namespace."_".$urllistNamespace
+                        ."` AS a, `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.id = "
+                        .$url." AND b.id = $version LIMIT 1");
                     if(!$result) die("ERROR: Could not get content of URL.");
                     $row = $result->fetch_assoc();
                     if(!$row) die("ERROR: Could not get content of URL.");
@@ -466,9 +477,9 @@ if($website && $urllist) {
                 }
                 else {
                     // select newest version
-                    $result = $dbConnection->query("SELECT b.id AS id, b.content AS content FROM `crawlserv_".$namespace."_".$urllistNamespace.
-                        "` AS a, `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.id = ".$url
-                        ." ORDER BY b.crawltime DESC LIMIT 1");
+                    $result = $dbConnection->query("SELECT b.id AS id, b.content AS content FROM `crawlserv_".$namespace."_"
+                        .$urllistNamespace."` AS a, `crawlserv_".$namespace."_".$urllistNamespace
+                        ."_crawled` AS b WHERE a.id = b.url AND a.id = $url ORDER BY b.crawltime DESC LIMIT 1");
                     if(!$result) die("ERROR: Could not get content of URL.");
                     $row = $result->fetch_assoc();
                     if(!$row) die("ERROR: Could not get content of URL.");
@@ -479,13 +490,14 @@ if($website && $urllist) {
                 $info = number_format(strlen($row["content"]))
                         ." bytes <a href=\"#\" id=\"content-download\" target=\"_blank\" data-type=\"content\" data-website-namespace=\""
                         .htmlspecialchars($namespace)."\" data-namespace=\"".htmlspecialchars($urllistNamespace)
-                        ."\" data-version=\"$version\">[Download]</a>";
+                        ."\" data-version=\"$version\" data-filename=\"".htmlspecialchars($namespace."_".$urllistNamespace."_"
+                        .$url).".htm\">[Download]</a>";
                 echo "</code></pre></div>\n";
                 echo "<div id=\"content-status\">\n";
                 echo "<select id=\"content-version\" class=\"short\" data-m=\"$m\" data-tab=\"$tab\">\n";
-                $result = $dbConnection->query("SELECT b.id AS id, b.crawltime AS crawltime, b.archived AS archived FROM `crawlserv_".$namespace."_"
-                    .$urllistNamespace."` AS a, `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.id = ".$url
-                    ." ORDER BY b.crawltime DESC");
+                $result = $dbConnection->query("SELECT b.id AS id, b.crawltime AS crawltime, b.archived AS archived FROM `crawlserv_"
+                    .$namespace."_".$urllistNamespace."` AS a, `crawlserv_".$namespace."_".$urllistNamespace
+                    ."_crawled` AS b WHERE a.id = b.url AND a.id = $url ORDER BY b.crawltime DESC");
                 if(!$result) die("ERROR: Could not get content versions.");
                 $num = $result->num_rows;
                 $count = 0;

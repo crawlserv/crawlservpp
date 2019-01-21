@@ -1021,13 +1021,21 @@ var prevAlgo;
 	
 // CLICK EVENT: download content
 	$(document).on("click", "#content-download", function() {
+		var contentwebsiteid = parseInt($("#website-select").val(), 10);
+		var contentwebsitename = $("#website-select option:selected").text();
+		var contenturlid = parseInt($("#content-url").val(), 10);
+		var contenturl = "/" + $("#content-url-text").val();
 		var contentwebsite = $(this).data("website-namespace");
 		var contentnamespace = $(this).data("namespace");
 		var contentversion = $(this).data("version");
-		var contentfilename = contentwebsite + "_" + contentnamespace + "_" + contentversion + ".htm";
-		$.post("download/", { "type": "content", "namespace": contentnamespace, "website": contentwebsite, "version": contentversion,
-			"filename": contentfilename }, function() {
-				window.open("download/");
+		var contenttype = $(this).data("type");
+		var contentfilename = $(this).data("filename");
+		var args = { "type": contenttype, "namespace": contentnamespace, "website": contentwebsite, "version": contentversion,
+				"w_id": contentwebsiteid, "w_name" : contentwebsitename, "u_id": contenturlid, "url": contenturl,
+				"filename": contentfilename };
+		console.log(args);
+		$.post("download/", args, function() {
+			window.open("download/");
 		});
 		return false;
 	});
