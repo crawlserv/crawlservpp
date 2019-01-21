@@ -168,6 +168,8 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     $result->close();
     
     // search for matching URL with content
+    if(strlen($_POST["urltext"]) > 0 AND substr($_POST["urltext"], 0, 1) == "/")
+        $_POST["urltext"] = substr($_POST["urltext"], 1);
     $result = $dbConnection->query("SELECT a.id AS id, a.url AS url FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a, `crawlserv_"
         .$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.url LIKE '/".$_POST["urltext"]."%' ORDER BY a.url LIMIT 1");
     if(!$result) die("ERROR: Could not search for URL.");
