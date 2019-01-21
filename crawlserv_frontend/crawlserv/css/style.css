@@ -678,8 +678,8 @@ span.idle {
 #content-version.short {
 	width:350px;
 }
-#content-version.long {
-	width:450px;
+#content-version.wide {
+	width:435px;
 }
 #content-status {
 	font-size:12px;
