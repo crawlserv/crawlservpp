@@ -21,6 +21,7 @@ Config::Config() {
 	this->crawlerArchivesNames.push_back("archives.org");
 	this->crawlerArchivesUrlsMemento.push_back("http://web.archive.org/web/");
 	this->crawlerArchivesUrlsTimemap.push_back("http://web.archive.org/web/timemap/link/");
+	this->crawlerHTMLConsistencyCheck = false;
 	this->crawlerLock = 300;
 	this->crawlerLogging = Config::crawlerLoggingDefault;
 	this->crawlerReCrawl = false;
@@ -92,8 +93,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std
 					if(cat == "crawler") {
 						if(name == "archives") {
 							if(j->value.IsBool()) this->crawlerArchives = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name
-									+ "\' ignored because of wrong type (not bool).");
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "archives.names") {
 							if(j->value.IsArray()) {
@@ -131,8 +131,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
-									+ "\' ignored because of wrong type (not array).");
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+						}
+						else if(name == "html.consistency.check") {
+							if(j->value.IsBool()) this->crawlerHTMLConsistencyCheck = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "lock") {
 							if(j->value.IsUint64()) this->crawlerLock = j->value.GetUint64();
