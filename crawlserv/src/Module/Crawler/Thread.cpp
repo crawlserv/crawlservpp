@@ -680,6 +680,19 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 				std::string contentType = this->networking.getContentType();
 				if(this->crawlingCheckContentType(url, contentType)) {
 
+					// optional: simple HTML consistency check (not very reliable though)
+					if(this->config.crawlerHTMLConsistencyCheck) {
+						unsigned long html = content.find_first_of("<html");
+						if(html != std::string::npos) {
+							if(content.find("<html", html + 5) != std::string::npos) {
+								if(this->config.crawlerLogging)
+									this->log("ERROR: HTML consistency check failed for " + url.second);
+								this->crawlingSkip(url);
+								return false;
+							}
+						}
+					}
+
 					// parse content
 					crawlservpp::Parsing::XML doc;
 					if(doc.parse(content)) {
