@@ -440,6 +440,10 @@ void Thread::initQueries() {
 	bool queryResultMulti = false;
 	bool queryTextOnly = false;
 
+	if(this->config.crawlerHTMLCanonicalCheck) {
+		this->queryCanonicalCheck = this->addQuery("//link[contains(concat(' ', normalize-space(@rel), ' '), ' canonical ')]/@href", "xpath",
+				false, true, false, true);
+	}
 	for(auto i = this->config.crawlerQueriesBlackListContent.begin(); i != this->config.crawlerQueriesBlackListContent.end(); ++i) {
 		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
 				queryTextOnly);
@@ -680,13 +684,18 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 				std::string contentType = this->networking.getContentType();
 				if(this->crawlingCheckContentType(url, contentType)) {
 
-					// optional: simple HTML consistency check (not very reliable though)
+					// optional: simple HTML consistency check (not very reliable though, mostly for debugging purposes)
 					if(this->config.crawlerHTMLConsistencyCheck) {
 						unsigned long html = content.find_first_of("<html");
 						if(html != std::string::npos) {
 							if(content.find("<html", html + 5) != std::string::npos) {
-								if(this->config.crawlerLogging)
+								if(this->config.crawlerLogging) {
 									this->log("ERROR: HTML consistency check failed for " + url.second);
+									std::ofstream out("debug.txt");
+									out << content;
+									out.close();
+									this->log("Wrote content to \"debug.txt\".");
+								}
 								this->crawlingSkip(url);
 								return false;
 							}
@@ -696,6 +705,33 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 					// parse content
 					crawlservpp::Parsing::XML doc;
 					if(doc.parse(content)) {
+
+						// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
+						if(this->config.crawlerHTMLCanonicalCheck) {
+							std::string canonical;
+							if(this->getXPathQueryPtr(this->queryCanonicalCheck.index)->getFirst(doc, canonical) && !canonical.empty()) {
+								if(!(canonical.length() == (8 + this->domain.length() + url.second.length())
+											&& canonical.substr(0, 8) == "https://"
+											&& canonical.substr(8, this->domain.length()) == this->domain
+											&& canonical.substr(8 + this->domain.length()) == url.second)
+										&& (!(canonical.length() == (7 + this->domain.length() + url.second.length())
+											&& canonical.substr(0, 7) == "http://"
+											&& canonical.substr(7, this->domain.length()) == this->domain
+											&& canonical.substr(7 + this->domain.length()) == url.second))) {
+									if(this->config.crawlerLogging) {
+										this->log("ERROR: HTML canonical check failed for " + url.second + " [ != " + canonical + "].");
+										std::ofstream out("debug.txt");
+										out << content;
+										out.close();
+										this->log("Wrote content to \"debug.txt\".");
+									}
+									this->crawlingSkip(url);
+									return false;
+								}
+							}
+							else if(this->config.crawlerLogging)
+								this->log("WARNING: Could not perform canonical check for " + url.second + ".");
+						}
 
 						// check content
 						if(this->crawlingCheckContent(url, content, doc)) {

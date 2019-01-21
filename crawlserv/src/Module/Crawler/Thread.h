@@ -29,6 +29,7 @@
 #include <algorithm>
 #include <chrono>
 #include <exception>
+#include <fstream>
 #include <locale>
 #include <stdexcept>
 #include <string>
@@ -38,6 +39,9 @@
 
 namespace crawlservpp::Module::Crawler {
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
+		// for convenience
+		typedef crawlservpp::Query::Container::QueryStruct QueryStruct;
+
 	public:
 		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
 				const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long crawlerLast);
@@ -77,13 +81,14 @@ namespace crawlservpp::Module::Crawler {
 		crawlservpp::Network::Curl * networkingArchives;
 
 		// queries
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesBlackListContent;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesBlackListTypes;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesBlackListUrls;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesLinks;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesWhiteListContent;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesWhiteListTypes;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesWhiteListUrls;
+		std::vector<QueryStruct> queriesBlackListContent;
+		std::vector<QueryStruct> queriesBlackListTypes;
+		std::vector<QueryStruct> queriesBlackListUrls;
+		std::vector<QueryStruct> queriesLinks;
+		std::vector<QueryStruct> queriesWhiteListContent;
+		std::vector<QueryStruct> queriesWhiteListTypes;
+		std::vector<QueryStruct> queriesWhiteListUrls;
+		QueryStruct queryCanonicalCheck;
 
 		// timing
 		unsigned long long tickCounter;
