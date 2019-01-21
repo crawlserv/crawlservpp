@@ -8,6 +8,13 @@ html, body {
 	font-family:Arimo, sans-serif;
 	background-color:lightgray;
 }
+table {
+	width:100%;
+	table-layout:fixed;
+}
+td {
+	word-wrap:break-word;
+}
 
 /* LINK COLOR */
 a, a:visited {
