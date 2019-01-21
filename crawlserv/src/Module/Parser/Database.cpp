@@ -156,7 +156,7 @@ bool Database::prepare() {
 		if(!(this->psGetNextUrl)) {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
 			std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
-					" WHERE a.id = b.url AND a.id > ? AND (a.parselock IS NULL OR a.parselock < NOW())";
+					" WHERE a.id = b.url AND a.id > ? AND b.response < 400 AND (a.parselock IS NULL OR a.parselock < NOW())";
 			if(!reparse) sqlQuery += " AND a.parsed = FALSE";
 			if(!parseCustom) sqlQuery += " AND a.manual = FALSE";
 			sqlQuery += " ORDER BY a.id LIMIT 1";
