@@ -377,7 +377,7 @@ bool Thread::parsingUrlSelection() {
 				if(this->config.generalLogging) this->log("finished, resetting parsing status.");
 				this->database.resetParsingStatus(this->getUrlList());
 			}
-			else if(this->config.generalLogging) this->log("finished.");
+			else if(this->config.generalLogging > Config::generalLoggingDefault) this->log("finished.");
 		}
 		this->setStatusMessage("IDLE Waiting for new URLs to parse.");
 		this->setProgress(1L);
