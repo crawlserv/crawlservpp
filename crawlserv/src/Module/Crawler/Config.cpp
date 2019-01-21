@@ -21,6 +21,7 @@ Config::Config() {
 	this->crawlerArchivesNames.push_back("archives.org");
 	this->crawlerArchivesUrlsMemento.push_back("http://web.archive.org/web/");
 	this->crawlerArchivesUrlsTimemap.push_back("http://web.archive.org/web/timemap/link/");
+	this->crawlerHTMLCanonicalCheck = false;
 	this->crawlerHTMLConsistencyCheck = false;
 	this->crawlerLock = 300;
 	this->crawlerLogging = Config::crawlerLoggingDefault;
@@ -132,6 +133,10 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::vector<std
 								}
 							}
 							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+						}
+						else if(name == "html.canonical.check") {
+							if(j->value.IsBool()) this->crawlerHTMLCanonicalCheck = j->value.GetBool();
+							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "html.consistency.check") {
 							if(j->value.IsBool()) this->crawlerHTMLConsistencyCheck = j->value.GetBool();

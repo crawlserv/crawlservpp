@@ -35,6 +35,7 @@ public:
 	std::vector<std::string> crawlerArchivesNames;
 	std::vector<std::string> crawlerArchivesUrlsMemento;
 	std::vector<std::string> crawlerArchivesUrlsTimemap;
+	bool crawlerHTMLCanonicalCheck;
 	bool crawlerHTMLConsistencyCheck;
 	unsigned int crawlerLock;
 	unsigned short crawlerLogging;
