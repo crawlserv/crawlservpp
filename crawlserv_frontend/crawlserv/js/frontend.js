@@ -994,7 +994,7 @@ var prevAlgo;
 			var temp = $(".fs-div").detach();
 			temp.appendTo("body");
 			temp.css({ "position" : "absolute", "width" : "100%", "height" : "100%", "margin-left" : "5px", "z-index": "2" });
-			$(".fs-content").css({ "width" : "auto", "height" : "auto" });
+			$(".fs-content").css({ "width" : "100%", "height" : "auto" });
 			$(this).css({"position" : "fixed", "right" : "30px"});
 			$(this).html("&ultri;");
 			$(this).prop("title", "Exit Fullscreen [ESC]");
