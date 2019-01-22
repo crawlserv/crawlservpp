@@ -465,9 +465,11 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		data.table = tableName;
 		data.columns.reserve(2);
 		data.columns.push_back(columnName);
-		if(sourceType == Config::generalInputSourcesParsing) data.columns.push_back("parsed_datetime");
+		if(sourceType == Config::generalInputSourcesParsing) {
+			data.columns.push_back("parsed_datetime");
+			data.order = "parsed_datetime";
+		}
 		data.type = DataType::_string;
-		data.order = "parsed_datetime";
 		this->getCustomData(data);
 
 		if(!data.values.empty()) {
