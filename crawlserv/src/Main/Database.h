@@ -222,6 +222,7 @@ namespace crawlservpp::Main {
 		void createTable(const std::string& tableName, const std::vector<Column>& columns, bool compressed);
 		void addColumn(const std::string& tableName, const Column& column);
 		void compressTable(const std::string& tableName);
+		void deleteTableIfExists(const std::string& tableName);
 
 	private:
 		// private connection information

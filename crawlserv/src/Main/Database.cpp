@@ -4777,6 +4777,35 @@ void Database::compressTable(const std::string& tableName) {
 	}
 }
 
+// delete a table from the database if it exists
+void Database::deleteTableIfExists(const std::string& tableName) {
+	sql::Statement * sqlStatement = NULL;
+
+		// check arguments
+		if(tableName.empty()) throw std::runtime_error("deleteTableIfExists(): No table name specified");
+
+		// check connection
+		if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+		try {
+			// create SQL statement
+			sqlStatement = this->connection->createStatement();
+
+			// execute SQL statement
+			sqlStatement->execute("DELETE TABLE IF EXISTS `" + tableName + "`");
+
+			// delete SQL statement
+			MAIN_DATABASE_DELETE(sqlStatement);
+		}
+		catch(sql::SQLException &e) {
+			// SQL error
+			MAIN_DATABASE_DELETE(sqlStatement);
+			std::ostringstream errorStrStr;
+			errorStrStr << "deleteTableIfExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+			throw std::runtime_error(errorStrStr.str());
+		}
+}
+
 /*
  * INTERNAL HELPER FUNCTION (private)
  */

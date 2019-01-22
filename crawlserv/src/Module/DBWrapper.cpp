@@ -276,4 +276,9 @@ void DBWrapper::compressTable(const std::string& tableName) {
 	this->database.compressTable(tableName);
 }
 
+// delete a table from the database if it exists
+void DBWrapper::deleteTableIfExists(const std::string& tableName) {
+	this->database.deleteTableIfExists(tableName);
+}
+
 }
