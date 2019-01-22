@@ -29,6 +29,7 @@ Database::Database(crawlservpp::Module::DBThread& dbThread) : crawlservpp::Modul
 	this->psGetUrlLock = 0;
 	this->psLockUrl = 0;
 	this->psUnLockUrl = 0;
+	this->psGetContentIdFromParsedId = 0;
 	this->psGetLatestContent = 0;
 	this->psGetAllContents = 0;
 	this->psSetUrlFinished = 0;
@@ -150,8 +151,8 @@ bool Database::prepare() {
 		// prepare SQL statements for parser
 		if(!(this->psIsUrlParsed)) {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlParsed()...");
-			this->psIsUrlParsed = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE id = ?"
-					" AND parsed = TRUE LIMIT 1) AS result");
+			this->psIsUrlParsed = this->addPreparedStatement("SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ?"
+					" AND parsed = TRUE) AS result");
 		}
 		if(!(this->psGetNextUrl)) {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
@@ -194,6 +195,11 @@ bool Database::prepare() {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares unLockUrl()...");
 			this->psUnLockUrl = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET parselock = NULL WHERE id = ?"
 					" LIMIT 1");
+		}
+		if(!(this->psGetContentIdFromParsedId)) {
+			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getContentIdFromParsedId()...");
+			this->psGetContentIdFromParsedId = this->addPreparedStatement("SELECT content FROM `" + this->targetTableFull
+					+ "` WHERE parsed_id = ? LIMIT 1");
 		}
 		if(!(this->psGetLatestContent)) {
 			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getLatestContent()...");
@@ -291,8 +297,7 @@ bool Database::isUrlParsed(unsigned long urlId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		MAIN_DATABASE_DELETE(sqlResultSet);
@@ -367,8 +372,7 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getUInt64("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
 
 		// delete result
 		MAIN_DATABASE_DELETE(sqlResultSet);
@@ -403,8 +407,7 @@ unsigned long Database::getNumberOfUrls() {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getUInt64("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
 
 		// delete result
 		MAIN_DATABASE_DELETE(sqlResultSet);
@@ -440,8 +443,7 @@ bool Database::isUrlLockable(unsigned long urlId) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		MAIN_DATABASE_DELETE(sqlResultSet);
@@ -514,8 +516,7 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 		sqlResultSet = sqlStatement->executeQuery();
 
 		// get (and parse) result
-		sqlResultSet->next();
-		result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 
 		// delete result
 		MAIN_DATABASE_DELETE(sqlResultSet);
@@ -580,6 +581,43 @@ void Database::unLockUrl(unsigned long urlId) {
 		errorStrStr << "unLockUrl() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
 		throw std::runtime_error(errorStrStr.str());
 	}
+}
+
+// get content ID from parsed ID
+unsigned long Database::getContentIdFromParsedId(const std::string& parsedId) {
+	sql::ResultSet * sqlResultSet = NULL;
+	unsigned long result = 0;
+
+	// check prepared SQL statement
+	if(!(this->psGetContentIdFromParsedId))
+		throw std::runtime_error("Missing prepared SQL statement for Module::Parser::Database::getContentIdFromParsedId(...)");
+	sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetContentIdFromParsedId);
+	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Module::Parser::Database::getContentIdFromParsedId(...) is NULL");
+
+	// check connection
+	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+
+	// check URL lock in database
+	try {
+		// execute SQL query
+		sqlStatement->setString(1, parsedId);
+		sqlResultSet = sqlStatement->executeQuery();
+
+		// get (and parse) result
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("content");
+
+		// delete result
+		MAIN_DATABASE_DELETE(sqlResultSet);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		std::ostringstream errorStrStr;
+		errorStrStr << "getContentIdFromParsedId() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
+		throw std::runtime_error(errorStrStr.str());
+	}
+
+	return result;
 }
 
 // get latest content for the ID-specified URL, return false if there is no content

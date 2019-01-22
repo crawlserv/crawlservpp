@@ -12,9 +12,8 @@
 namespace crawlservpp::Module::Parser {
 
 // constructor A: run previously interrupted parser
-Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long parserId,
-		const std::string& parserStatus, bool parserPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long parserLast)
+Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long parserId, const std::string& parserStatus, bool parserPaused,
+		const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long parserLast)
 	: crawlservpp::Module::Thread(dbBase, parserId, "parser", parserStatus, parserPaused, threadOptions, parserLast),
 	  	  database(this->crawlservpp::Module::Thread::database) {
 	// set default values
@@ -26,8 +25,7 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long parserId,
 }
 
 // constructor B: start a new parser
-Thread::Thread(crawlservpp::Main::Database& dbBase,
-		const crawlservpp::Struct::ThreadOptions& threadOptions)
+Thread::Thread(crawlservpp::Main::Database& dbBase, const crawlservpp::Struct::ThreadOptions& threadOptions)
 	: crawlservpp::Module::Thread(dbBase, "parser", threadOptions), database(this->crawlservpp::Module::Thread::database) {
 	// set default values
 	this->tickCounter = 0;
@@ -305,7 +303,7 @@ bool Thread::parsingUrlSelection() {
 	// lock URL list and crawling table
 	this->database.lockUrlListAndCrawledTable();
 
-	// get id and name of next URL (skip locked URLs)
+	// get ID and name of next URL (skip locked URLs)
 	bool skip = false;
 	unsigned long skipped = 0;
 
@@ -324,7 +322,7 @@ bool Thread::parsingUrlSelection() {
 
 					// check query type
 					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-						// parse id by running RegEx query on URL
+						// parse ID by running RegEx query on URL
 						bool queryResult = false;
 						if(this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.second, queryResult)) {
 							if(queryResult) {
@@ -399,7 +397,7 @@ unsigned long Thread::parsing() {
 
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-				// parse id by running RegEx query on URL
+				// parse ID by running RegEx query on URL
 				if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, parsedId) && !parsedId.empty()) break;
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
@@ -438,9 +436,8 @@ unsigned long Thread::parsing() {
 	return 0;
 }
 
-// parse id-specific content, return whether parsing was successfull (i.e. an id could be parsed)
-bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content,
-		const std::string& parsedId) {
+// parse ID-specific content, return whether parsing was successfull (i.e. an ID could be parsed)
+bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId) {
 	// parse HTML
 	crawlservpp::Parsing::XML parsedContent;
 	if(!parsedContent.parse(content.second)) {
@@ -467,7 +464,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			if(this->config.parsingIdSources.at(idQueryCounter) == Config::parsingSourceUrl) {
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse id by running RegEx query on URL
+					// parse ID by running RegEx query on URL
 					if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, id) && !id.empty()) break;
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
@@ -476,26 +473,34 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			else {
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse id by running RegEx query on content string
+					// parse ID by running RegEx query on content string
 					if(this->getRegExQueryPtr(i->index)->getFirst(content.second, id) && !id.empty()) break;
 				}
 				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
-					// parse if by running XPath query on parsed content
+					// parse ID by running XPath query on parsed content
 					if(this->getXPathQueryPtr(i->index)->getFirst(parsedContent, id) && !id.empty()) break;
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: ID query on content is not of type RegEx or XPath.");
 			}
 
-			// not successfull: check next query for parsing the id (if exists)
+			// not successfull: check next query for parsing the ID (if it exists)
 			idQueryCounter++;
 		}
 	}
 
-	// check ID
+	// check whether parsed ID is ought to be ignored
 	if(id.empty()) return false;
 	if(!(this->config.parsingIdIgnore.empty()) && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
 		parsedId) != this->config.parsingIdIgnore.end()) return false;
+
+	// check whether parsed ID already exists and the current content ID differs from the one in the database
+	unsigned long contentId = this->database.getContentIdFromParsedId(parsedId);
+	if(contentId && contentId != content.first) {
+		if(this->config.generalLogging)
+			this->log("WARNING: Content for parsed ID '" + id + "' already exists.");
+		return false;
+	}
 
 	// parse date/time
 	std::string parsedDateTime;
