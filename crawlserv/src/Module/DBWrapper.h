@@ -106,6 +106,7 @@ namespace crawlservpp::Module {
 		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
+		void deleteTableIfExists(const std::string& tableName);
 	};
 }
 
