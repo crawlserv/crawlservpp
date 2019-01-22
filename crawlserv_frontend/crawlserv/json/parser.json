@@ -146,7 +146,7 @@
 			],
 			"default": [],
 			"label": "Date/time queries:",
-			"description": "Queries used for parsing the date and time (first query that returns a non-empty result will be used).",
+			"description": "Queries used for parsing the date and time. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 4
 		},
@@ -160,7 +160,7 @@
 			],
 			"default": [],
 			"label": "Date/time sources:",
-			"description": "Where from to parse the date and the time.",
+			"description": "Where to parse the date and time from.",
 			"simple": true,
 			"position": 3
 		},
@@ -224,7 +224,7 @@
 			],
 			"default": [],
 			"label": "Field sources:",
-			"description": "Where from to parse the custom fields.",
+			"description": "Where to parse the custom fields from.",
 			"simple": true,
 			"position": 8
 		},
@@ -263,7 +263,7 @@
 			],
 			"default": [],
 			"label": "ID queries:",
-			"description": "Queries to parse the ID (first query that returns a non-empty result will be used).",
+			"description": "Queries to parse the ID. The first query that returns a non-empty result will be used. Pages with duplicate or empty IDs will not be parsed.",
 			"simple": true,
 			"position": 2
 		},
@@ -277,7 +277,7 @@
 				"content"
 			],
 			"label": "ID sources:",
-			"description": "Where from to parse the ID.",
+			"description": "Where to parse the ID from.",
 			"simple": true,
 			"position": 1
 		}

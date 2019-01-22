@@ -74,6 +74,7 @@ namespace crawlservpp::Module::Parser {
 		// parsing functions
 		bool getLatestContent(unsigned long urlId, unsigned long index, std::pair<unsigned long, std::string>& contentTo);
 		std::vector<std::pair<unsigned long, std::string>> getAllContents(unsigned long urlId);
+		unsigned long getContentIdFromParsedId(const std::string& parsedId);
 		void updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 				const std::vector<std::string>& parsedFields);
 		void setUrlFinished(unsigned long urlId);
@@ -109,6 +110,7 @@ namespace crawlservpp::Module::Parser {
 		unsigned short psGetUrlLock;
 		unsigned short psLockUrl;
 		unsigned short psUnLockUrl;
+		unsigned short psGetContentIdFromParsedId;
 		unsigned short psGetLatestContent;
 		unsigned short psGetAllContents;
 		unsigned short psSetUrlFinished;
