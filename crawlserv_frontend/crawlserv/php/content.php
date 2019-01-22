@@ -347,7 +347,7 @@ if($website && $urllist) {
                     else {
                         // select newest parsing table with parsed data in it
                         foreach($tables as $table) {
-                            $result = $dbConnection->query("SELECT EXISTS(SELECT * FROM `$ctable` AS a, `crawlserv_".$namespace."_"
+                            $result = $dbConnection->query("SELECT EXISTS(SELECT 1 FROM `$ctable` AS a, `crawlserv_".$namespace."_"
                                     .$urllistNamespace."_parsed_".$table["name"]."`  AS b WHERE a.id = b.content AND a.url=$url)");
                             if(!$result) die("ERROR: Could not read parsing table.");
                             $row = $result->fetch_row();
