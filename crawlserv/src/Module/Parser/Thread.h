@@ -89,7 +89,7 @@ namespace crawlservpp::Module::Parser {
 		// parsing functions
 		bool parsingUrlSelection();
 		unsigned long parsing();
-		bool parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId);
+		bool parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId, bool& skipUrl);
 	};
 }
 
