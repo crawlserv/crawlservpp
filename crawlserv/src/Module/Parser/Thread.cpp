@@ -311,6 +311,8 @@ bool Thread::parsingUrlSelection() {
 		if(skip) this->currentUrl = this->database.getNextUrl(skipped);
 		else this->currentUrl = this->database.getNextUrl(this->getLast());
 
+		std::cout << std::endl << currentUrl.first << std::flush;
+
 		if(this->currentUrl.first) {
 			// check whether to skip URL
 			skip = false;
@@ -417,7 +419,9 @@ unsigned long Thread::parsing() {
 		while(true) {
 			std::pair<unsigned long, std::string> latestContent;
 			if(this->database.getLatestContent(this->currentUrl.first, index, latestContent)) {
-				if(this->parsingContent(latestContent, parsedId)) return 1;
+				bool skipUrl = false;
+				if(this->parsingContent(latestContent, parsedId, skipUrl)) return 1;
+				if(skipUrl) return 0;
 				index++;
 			}
 			else break;
@@ -428,7 +432,11 @@ unsigned long Thread::parsing() {
 		unsigned long counter = 0;
 
 		std::vector<std::pair<unsigned long, std::string>> contents = this->database.getAllContents(this->currentUrl.first);
-		for(auto i = contents.begin(); i != contents.end(); ++i) if(this->parsingContent(*i, parsedId)) counter++;
+		for(auto i = contents.begin(); i != contents.end(); ++i) {
+			bool skipUrl = false;
+			if(this->parsingContent(*i, parsedId, skipUrl)) counter++;
+			else if(skipUrl) break;
+		}
 
 		return counter;
 	}
@@ -437,7 +445,7 @@ unsigned long Thread::parsing() {
 }
 
 // parse ID-specific content, return whether parsing was successfull (i.e. an ID could be parsed)
-bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId) {
+bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId, bool& skipUrl) {
 	// parse HTML
 	crawlservpp::Parsing::XML parsedContent;
 	if(!parsedContent.parse(content.second)) {
@@ -492,13 +500,17 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	// check whether parsed ID is ought to be ignored
 	if(id.empty()) return false;
 	if(!(this->config.parsingIdIgnore.empty()) && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
-		parsedId) != this->config.parsingIdIgnore.end()) return false;
+		parsedId) != this->config.parsingIdIgnore.end()) {
+		skipUrl = true;
+		return false;
+	}
 
 	// check whether parsed ID already exists and the current content ID differs from the one in the database
 	unsigned long contentId = this->database.getContentIdFromParsedId(parsedId);
 	if(contentId && contentId != content.first) {
 		if(this->config.generalLogging)
 			this->log("WARNING: Content for parsed ID '" + id + "' already exists.");
+		skipUrl = true;
 		return false;
 	}
 
