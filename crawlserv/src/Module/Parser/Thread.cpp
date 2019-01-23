@@ -311,8 +311,6 @@ bool Thread::parsingUrlSelection() {
 		if(skip) this->currentUrl = this->database.getNextUrl(skipped);
 		else this->currentUrl = this->database.getNextUrl(this->getLast());
 
-		std::cout << std::endl << currentUrl.first << std::flush;
-
 		if(this->currentUrl.first) {
 			// check whether to skip URL
 			skip = false;
