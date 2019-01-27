@@ -1330,14 +1330,14 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 
 									// check whether thread has been cancelled
 									if(!(this->isRunning())) break;
-
-									// check whether archive needs to be re-tried
-									if(!success && this->config.crawlerRetryArchive && !skip) break;
 								}
 
 								// reset status message
 								if(success) this->setStatusMessage(statusMessage);
 								if(archivedUrl.empty()) break;
+
+								// check whether archive needs to be re-tried
+								if(!success && this->config.crawlerRetryArchive && !skip) break;
 							}
 							else break;
 						}
