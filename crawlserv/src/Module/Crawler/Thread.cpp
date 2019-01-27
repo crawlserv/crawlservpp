@@ -1238,7 +1238,6 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 								// go through all mementos
 								unsigned long counter = 0;
 								for(auto i = mementos.begin(); i != mementos.end(); ++i) {
-									bool skipMemento = false;
 									std::string timeStamp = i->timeStamp;
 
 									// set status
@@ -1324,22 +1323,20 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 												else {
 													if(this->config.crawlerRetryArchive) {
 														// error while getting content: check type of error i.e. last cURL code
-														if(this->crawlingCheckCurlCode(this->networkingArchives->getCurlCode(), url.second)) {
+														if(this->crawlingCheckCurlCode(this->networkingArchives->getCurlCode(), i->url)) {
 															// reset connection and retry
 															if(this->config.crawlerLogging) {
 																this->log(this->networkingArchives->getErrorMessage()
-																		+ " [" + archivedUrl + "].");
+																		+ " [" + i->url + "].");
 																this->log("resets connection to "
 																		+ this->config.crawlerArchivesNames.at(n) + "...");
 															}
 
 															this->setStatusMessage("ERROR " + this->networkingArchives->getErrorMessage()
-																	+ " [" + url.second + "]");
+																	+ " [" + i->url + "]");
 															this->networkingArchives->resetConnection(this->config.crawlerSleepError);
 															success = false;
 														}
-														else skipMemento = true;
-														success = false;
 													}
 													else if(this->config.crawlerLogging)
 														this->log(this->networkingArchives->getErrorMessage() + " - skips...");
@@ -1355,7 +1352,7 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 									if(!(this->isRunning())) break;
 
 									// check whether archive needs to be re-tried
-									if(!success && this->config.crawlerRetryArchive && !skipMemento) break;
+									if(!success && this->config.crawlerRetryArchive) break;
 								}
 
 								// set next archived URL
