@@ -793,14 +793,8 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 		}
 		else {
 			// error while getting content: check type of error i.e. last cURL code
-			CURLcode curlCode = this->networking.getCurlCode();
-			if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
-				// redirection error: skip URL
-				if(this->config.crawlerLogging) this->log("redirection error at " + url.second + " - skips...");
-				this->crawlingSkip(url);
-			}
-			else {
-				// other error: reset connection and retry
+			if(this->crawlingCheckCurlCode(this->networking.getCurlCode(), url.second)) {
+				// reset connection and retry
 				if(this->config.crawlerLogging) {
 					this->log(this->networking.getErrorMessage() + " [" + url.second + "].");
 					this->log("resets connection...");
@@ -808,6 +802,10 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 				this->setStatusMessage("ERROR " + this->networking.getErrorMessage() + " [" + url.second + "]");
 				this->networking.resetConnection(this->config.crawlerSleepError);
 				this->crawlingRetry(url, false);
+			}
+			else {
+				// skip URL
+				this->crawlingSkip(url);
 			}
 			return false;
 		}
@@ -874,6 +872,16 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 		}
 	}
 
+	return true;
+}
+
+// check CURL code and decide whether to retry or skip
+bool Thread::crawlingCheckCurlCode(CURLcode curlCode, const std::string& url) {
+	if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
+		// redirection error: skip URL
+		if(this->config.crawlerLogging) this->log("redirection error at " + url + " - skips...");
+		return false;
+	}
 	return true;
 }
 
@@ -1216,7 +1224,7 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 								// parse memento response
 								std::vector<Memento> mementos;
 								std::vector<std::string> warnings;
-								archivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
+								std::string nextArchivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
 								if(this->config.crawlerLogging) {
 									// just show warning, maybe mementos were partially parsed
 									for(auto i = warnings.begin(); i != warnings.end(); ++i)
@@ -1230,6 +1238,7 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 								// go through all mementos
 								unsigned long counter = 0;
 								for(auto i = mementos.begin(); i != mementos.end(); ++i) {
+									bool skipMemento = false;
 									std::string timeStamp = i->timeStamp;
 
 									// set status
@@ -1314,9 +1323,23 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 												}
 												else {
 													if(this->config.crawlerRetryArchive) {
+														// error while getting content: check type of error i.e. last cURL code
+														if(this->crawlingCheckCurlCode(this->networkingArchives->getCurlCode(), url.second)) {
+															// reset connection and retry
+															if(this->config.crawlerLogging) {
+																this->log(this->networkingArchives->getErrorMessage()
+																		+ " [" + archivedUrl + "].");
+																this->log("resets connection to "
+																		+ this->config.crawlerArchivesNames.at(n) + "...");
+															}
+
+															this->setStatusMessage("ERROR " + this->networkingArchives->getErrorMessage()
+																	+ " [" + url.second + "]");
+															this->networkingArchives->resetConnection(this->config.crawlerSleepError);
+															success = false;
+														}
+														else skipMemento = true;
 														success = false;
-														if(this->config.crawlerLogging)
-															this->log(this->networkingArchives->getErrorMessage() + " - retries...");
 													}
 													else if(this->config.crawlerLogging)
 														this->log(this->networkingArchives->getErrorMessage() + " - skips...");
@@ -1330,14 +1353,17 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 
 									// check whether thread has been cancelled
 									if(!(this->isRunning())) break;
+
+									// check whether archive needs to be re-tried
+									if(!success && this->config.crawlerRetryArchive && !skipMemento) break;
 								}
+
+								// set next archived URL
+								if(success || !(this->config.crawlerRetryArchive)) archivedUrl = nextArchivedUrl;
 
 								// reset status message
 								if(success) this->setStatusMessage(statusMessage);
 								if(archivedUrl.empty()) break;
-
-								// check whether archive needs to be re-tried
-								if(!success && this->config.crawlerRetryArchive && !skip) break;
 							}
 							else break;
 						}
@@ -1422,7 +1448,7 @@ void Thread::crawlingSkip(const std::pair<unsigned long, std::string>& url) {
 	this->archiveRetry = false;
 }
 
-// retry URL (completely) after crawling problem
+// retry URL (completely or achives-only) after crawling problem
 void Thread::crawlingRetry(const std::pair<unsigned long, std::string>& url, bool archiveOnly) {
 	if(this->config.crawlerReTries > -1) {
 		// increment and check retry counter
