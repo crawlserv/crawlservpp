@@ -29,7 +29,9 @@ Config::Config() {
 	this->crawlerReCrawlStart = true;
 	this->crawlerReTries = -1;
 	this->crawlerRetryArchive = true;
+	this->crawlerRetryHttp.push_back(502);
 	this->crawlerRetryHttp.push_back(503);
+	this->crawlerRetryHttp.push_back(504);
 	this->crawlerSleepError = 5000;
 	this->crawlerSleepHttp = 0;
 	this->crawlerSleepIdle = 500;
