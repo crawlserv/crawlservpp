@@ -1318,7 +1318,8 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 														if(this->config.crawlerLogging)
 															this->log(this->networkingArchives->getErrorMessage() + " - retries...");
 													}
-													else this->log(this->networkingArchives->getErrorMessage() + " - skips...");
+													else if(this->config.crawlerLogging)
+														this->log(this->networkingArchives->getErrorMessage() + " - skips...");
 												}
 											}
 
