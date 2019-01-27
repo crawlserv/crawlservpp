@@ -124,6 +124,7 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingContent(const std::pair<unsigned long, std::string>& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo,
 				std::string& timerStrTo);
 		bool crawlingCheckUrl(const std::string& url);
+		bool crawlingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
 		bool crawlingCheckContentType(const std::pair<unsigned long, std::string>& url, const std::string& contentType);
 		bool crawlingCheckContent(const std::pair<unsigned long, std::string>& url, const std::string& content,
