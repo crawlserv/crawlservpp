@@ -239,7 +239,7 @@
 			"id": 23,
 			"type": "array",
 			"item-type": "number",
-			"default": [ 503 ],
+			"default": [ 502, 503, 504 ],
 			"min": 400,
 			"max": 599,
 			"description": "HTTP errors that will be handled like connection errors.",
