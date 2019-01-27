@@ -25,7 +25,7 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long crawlerId,
 	this->manualCounter = 0;
 	this->startCrawled = false;
 	this->manualOff = false;
-	this->archiveRetry = false;
+	this->archiveRetry = true;
 	this->retryCounter = 0;
 	this->httpTime = std::chrono::steady_clock::time_point::min();
 	this->startTime = std::chrono::steady_clock::time_point::min();
