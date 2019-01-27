@@ -1312,7 +1312,14 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 														}
 													}
 												}
-												else if(this->config.crawlerRetryArchive) success = false;
+												else {
+													if(this->config.crawlerRetryArchive) {
+														success = false;
+														if(this->config.crawlerLogging)
+															this->log(this->networkingArchives->getErrorMessage() + " - retries...");
+													}
+													else this->log(this->networkingArchives->getErrorMessage() + " - skips...");
+												}
 											}
 
 											// exit loop over all references
