@@ -557,7 +557,7 @@ bool Curl::getContent(const std::string& url, std::string& contentTo, const std:
 	for(auto i = errors.begin(); i != errors.end(); ++i) {
 		if(this->responseCode == *i) {
 			std::ostringstream errStrStr;
-			errStrStr << "HTTP error " << this->responseCode << " from " << url << ".";
+			errStrStr << "HTTP error " << this->responseCode << " from " << url;
 			this->errorMessage = errStrStr.str();
 			return false;
 		}
