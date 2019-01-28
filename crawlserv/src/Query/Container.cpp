@@ -19,10 +19,10 @@ Container::~Container() {
 	this->clearQueries();
 }
 
-// reserve memory for queries
-void Container::reserveQueries(unsigned long numQueries) {
-	this->queriesRegEx.reserve(this->queriesRegEx.size() + numQueries);
-	this->queriesXPath.reserve(this->queriesXPath.size() + numQueries);
+// reserve memory for additional queries
+void Container::reserveForQueries(unsigned long numOfAdditionalQueries) {
+	this->queriesRegEx.reserve(this->queriesRegEx.size() + numOfAdditionalQueries);
+	this->queriesXPath.reserve(this->queriesXPath.size() + numOfAdditionalQueries);
 }
 
 // add query to internal vectors and return index

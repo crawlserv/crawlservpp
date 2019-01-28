@@ -263,7 +263,7 @@ void Thread::initQueries() {
 	this->queriesId.reserve(this->config.parsingIdQueries.size());
 	this->queriesDateTime.reserve(this->config.parsingDateTimeQueries.size());
 	this->queriesFields.reserve(this->config.parsingFieldQueries.size());
-	this->reserveQueries(this->config.parsingIdQueries.size() + this->config.parsingDateTimeQueries.size()
+	this->reserveForQueries(this->config.parsingIdQueries.size() + this->config.parsingDateTimeQueries.size()
 			+ this->config.parsingFieldQueries.size());
 
 	// create queries and get query ids
