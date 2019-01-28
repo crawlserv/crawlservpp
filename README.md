@@ -2,14 +2,16 @@ _**WARNING!** This application is under development. It is neither complete nor 
 
  _~~Strikethrough~~ means a feature is not implemented yet._
 
-**LEGAL NOTICE:** Before using crawlserv++ for crawling websites and other data, please make sure you are [legally allowed to do so](https://benbernardblog.com/web-scraping-and-crawling-are-perfectly-legal-right/). You may _not_ use this program:
+**LEGAL NOTICE**
 
-# crawlserv++
-**crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
+Before using crawlserv++ for crawling websites and other data, please make sure you are [legally allowed to do so](https://benbernardblog.com/web-scraping-and-crawling-are-perfectly-legal-right/). You may _not_ use this program:
 
 * in any way that breaches any applicable local, national or international law or regulation;
 * in any way that is unlawful or fraudulent, or has any unlawful or fraudulent purpose or effect;
 * to make unauthorised attempts to access any third party networks.
+
+# crawlserv++
+**crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
 
 The architecture of **crawlserv++** consists of three distinct components:
 
