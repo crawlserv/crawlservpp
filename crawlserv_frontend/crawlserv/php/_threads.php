@@ -62,13 +62,24 @@ if($num) {
         echo "\">\n";
         echo "<span class=\"nowrap";
         
-        if(substr($row["status"], 0, 6) == "ERROR ")
-            echo " error\" title=\"".htmlentities(substr($row["status"], 6))."\">".substr($row["status"], 6);
-        else if(substr($row["status"], 0, 12) == "INTERRUPTED ")
-            echo " interrupted\" title=\"".htmlentities(substr($row["status"], 12))."\">".substr($row["status"], 12);
-        else if(substr($row["status"], 0, 5) == "IDLE ")
-            echo " idle\" title=\"".htmlentities(substr($row["status"], 5))."\">".substr($row["status"], 5);
-        else echo "\" title=\"".htmlentities($row["status"])."\">".$row["status"];
+        // cut ERROR, INTERRUPTED or IDLE keyword and use CSS classes instead        
+        $start = false;
+        if($row["status"][0] == "[") $start = strpos($row["status"], "]", 1);
+        if($start === false) $start = 0;
+        else $start += 2;
+        if(substr($row["status"], $start, 6) == "ERROR ") {
+            $cut = htmlentities(substr($row["status"], 0, $start).substr($row["status"], $start + 6));
+            echo " error\" title=\"$cut\">$cut";
+        }
+        else if(substr($row["status"], $start, 12) == "INTERRUPTED ") {
+            $cut = htmlentities(substr($row["status"], 0, $start).substr($row["status"], $start + 12));
+            echo " interrupted\" title=\"$cut\">$cut";
+        }
+        else if(substr($row["status"], $start, 5) == "IDLE ") {            
+            $cut = htmlentities(substr($row["status"], 0, $start).substr($row["status"], $start + 5));
+            echo " idle\" title=\"$cut\">$cut";
+        }
+        else echo "\" title=\"".htmlentities($row["status"])."\">".htmlentities($row["status"]);
         
         echo "</span>\n";
         echo "</div>\n";
