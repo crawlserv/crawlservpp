@@ -46,7 +46,7 @@ namespace crawlservpp::Query {
 
 		// query functions
 		virtual void initQueries() = 0;
-		void reserveQueries(unsigned long numQueries);
+		void reserveForQueries(unsigned long numOfAdditionalQueries);
 		Container::QueryStruct addQuery(const std::string& queryText, const std::string& queryType, bool queryResultBool,
 				bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
 		const RegEx * getRegExQueryPtr(unsigned long index) const;
