@@ -221,7 +221,7 @@ div.content-list {
 	overflow-x:auto;
 }
 select.content-list {
-	min-width:570px;
+	min-width:565px;
 	overflow-y:hidden;
 }
 
