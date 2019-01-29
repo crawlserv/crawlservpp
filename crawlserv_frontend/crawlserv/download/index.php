@@ -9,7 +9,7 @@ function isJSON($str) {
     return false;
 }
 
-// set memory limit to 1G
+// set memory limit to 1 GiB
 ini_set('memory_limit', '1G');
 
 // send headers
