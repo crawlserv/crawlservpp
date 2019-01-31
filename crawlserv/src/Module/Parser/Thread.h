@@ -54,10 +54,12 @@ namespace crawlservpp::Module::Parser {
 		void onUnpause() override;
 		void onClear(bool interrupted) override;
 
-	private:
-		// hide functions not to be used by thread
-		void start();
+		// shadow pause function not to be used by thread
 		void pause();
+
+	private:
+		// hide other functions not to be used by thread
+		void start();
 		void unpause();
 		void stop();
 		void interrupt();

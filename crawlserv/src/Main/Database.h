@@ -190,6 +190,16 @@ namespace crawlservpp::Main {
 			Column(const std::string& name, const std::string& type) : Column(name, type, "", "") {}
 		};
 
+		// class for database exceptions
+		class Exception : public std::exception {
+		public:
+			Exception(const std::string& description) { this->_description = description; }
+			const char * what() const throw() { return this->_description.c_str(); }
+			const std::string& whatStr() const throw() { return this->_description; }
+		private:
+			std::string _description;
+		};
+
 	protected:
 		// structure for prepared SQL statements
 		struct PreparedSqlStatement {

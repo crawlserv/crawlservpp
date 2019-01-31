@@ -83,6 +83,8 @@ const std::string& Database::getErrorMessage() const {
 
 // connect to the database
 bool Database::connect() {
+	sql::Statement * sqlStatement = NULL;
+	sql::ResultSet * sqlResultSet = NULL;
 	bool success = true;
 
 	// connect to database
@@ -121,7 +123,7 @@ bool Database::connect() {
 		this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", (void *) &maxAllowedPacket);
 
 		// run initializing session commands
-		sql::Statement * sqlStatement = this->connection->createStatement();
+		sqlStatement = this->connection->createStatement();
 		if(!sqlStatement) {
 			this->errorMessage = "Could not create SQL statement";
 			return false;
@@ -131,7 +133,7 @@ bool Database::connect() {
 		sqlStatement->execute("SET SESSION innodb_lock_wait_timeout = 600");
 
 		// get maximum allowed package size
-		sql::ResultSet * sqlResultSet = sqlStatement->executeQuery("SHOW VARIABLES LIKE 'max_allowed_packet'");
+		sqlResultSet = sqlStatement->executeQuery("SHOW VARIABLES LIKE 'max_allowed_packet'");
 		if(sqlResultSet && sqlResultSet->next()){
 			this->maxAllowedPacketSize = sqlResultSet->getUInt64("Value");
 			if(!(this->maxAllowedPacketSize)) {
@@ -148,6 +150,10 @@ bool Database::connect() {
 		MAIN_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
+		// free memory
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "connect() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
@@ -161,6 +167,12 @@ bool Database::connect() {
 		}
 
 		return false;
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return success;
@@ -259,12 +271,12 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 	}
 
 	// check prepared SQL statement
-	if(!(this->psLog)) throw std::runtime_error("Missing prepared SQL statement for Database::log(...)");
+	if(!(this->psLog)) throw Database::Exception("Missing prepared SQL statement for Database::log(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psLog - 1).statement;
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::log(...) is NULL");
+	if(!sqlStatement) throw Database::Exception("Prepared SQL statement for Database::log(...) is NULL");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// add entry to database
 	try {
@@ -279,7 +291,7 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "log() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
 	}
 }
 
@@ -290,7 +302,7 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// create SQL query string
 	std::string sqlQuery = "SELECT COUNT(*) FROM crawlserv_log";
@@ -317,7 +329,13 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getNumberOfLogEntries() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -328,7 +346,7 @@ void Database::clearLogs(const std::string& logModule) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// create SQL query string
 	std::string sqlQuery = "DELETE FROM crawlserv_log";
@@ -351,7 +369,12 @@ void Database::clearLogs(const std::string& logModule) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "clearLogs() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -366,7 +389,7 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> Database::getThreads() {
 	std::vector<crawlservpp::Struct::ThreadDatabaseEntry> result;
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -403,7 +426,13 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> Database::getThreads() {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getThreads() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -411,42 +440,47 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> Database::getThreads() {
 
 // add a thread to the database and return its new ID
 unsigned long Database::addThread(const std::string& threadModule, const crawlservpp::Struct::ThreadOptions& threadOptions) {
-	sql::PreparedStatement * addStatement = NULL;
+	sql::PreparedStatement * sqlStatement = NULL;
 	unsigned long result = 0;
 
 	// check arguments
-	if(threadModule.empty()) throw std::runtime_error("addThread(): No thread module specified");
-	if(!threadOptions.website) throw std::runtime_error("addThread(): No website specified");
-	if(!threadOptions.urlList) throw std::runtime_error("addThread(): No URL list specified");
-	if(!threadOptions.config) throw std::runtime_error("addThread(): No configuration specified");
+	if(threadModule.empty()) throw Database::Exception("addThread(): No thread module specified");
+	if(!threadOptions.website) throw Database::Exception("addThread(): No website specified");
+	if(!threadOptions.urlList) throw Database::Exception("addThread(): No URL list specified");
+	if(!threadOptions.config) throw Database::Exception("addThread(): No configuration specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
-		addStatement = this->connection->prepareStatement("INSERT INTO crawlserv_threads(module, website, urllist, config)"
+		sqlStatement = this->connection->prepareStatement("INSERT INTO crawlserv_threads(module, website, urllist, config)"
 				" VALUES (?, ?, ?, ?)");
 
 		// execute SQL statement
-		addStatement->setString(1, threadModule);
-		addStatement->setUInt64(2, threadOptions.website);
-		addStatement->setUInt64(3, threadOptions.urlList);
-		addStatement->setUInt64(4, threadOptions.config);
-		addStatement->execute();
+		sqlStatement->setString(1, threadModule);
+		sqlStatement->setUInt64(2, threadOptions.website);
+		sqlStatement->setUInt64(3, threadOptions.urlList);
+		sqlStatement->setUInt64(4, threadOptions.config);
+		sqlStatement->execute();
 
 		// get id
 		result = this->getLastInsertedId();
 
 		// delete result and SQL statement
-		MAIN_DATABASE_DELETE(addStatement);
+		MAIN_DATABASE_DELETE(sqlStatement);
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		MAIN_DATABASE_DELETE(addStatement);
+		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addThread() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -459,10 +493,10 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!threadId) throw std::runtime_error("getThreadRunTime(): No thread ID specified");
+	if(!threadId) throw Database::Exception("getThreadRunTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -485,7 +519,13 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getThreadRunTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -498,10 +538,10 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!threadId) throw std::runtime_error("getThreadPauseTime(): No thread ID specified");
+	if(!threadId) throw Database::Exception("getThreadPauseTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -524,7 +564,13 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getThreadPauseTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -533,17 +579,15 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 // update thread status in the database (and add the pause state to the status message if necessary)
 void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check argument
-	if(!threadId) {
-		throw std::runtime_error("setThreadStatus(): No thread ID specified");
-	}
+	if(!threadId) throw Database::Exception("setThreadStatus(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// check prepared SQL statement
-	if(!(this->psSetThreadStatus)) throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatus(...)");
+	if(!(this->psSetThreadStatus)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadStatus - 1).statement;
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::setThreadStatus(...) is NULL");
+	if(!sqlStatement) throw Database::Exception("Prepared SQL statement for Database::setThreadStatus(...) is NULL");
 
 	// create status message
 	std::string statusMessage;
@@ -564,24 +608,24 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadStatus() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
 	}
 }
 
 // update thread status in the database (without using or changing the pause state)
 void Database::setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage) {
 	// check argument
-	if(!threadId) throw std::runtime_error("setThreadStatus(): No thread ID specified");
+	if(!threadId) throw Database::Exception("setThreadStatus(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadStatusMessage))
-		throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatus(...)");
+		throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadStatusMessage - 1).statement;
 	if(!sqlStatement)
-		throw std::runtime_error("Prepared SQL statement for Database::setThreadStatus(...) is NULL");
+		throw Database::Exception("Prepared SQL statement for Database::setThreadStatus(...) is NULL");
 
 	// create status message
 	std::string statusMessage;
@@ -597,7 +641,7 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadStatus() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
 	}
 }
 
@@ -606,10 +650,10 @@ void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunT
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(!threadId) throw std::runtime_error("setThreadRunTime(): No thread ID specified");
+	if(!threadId) throw Database::Exception("setThreadRunTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -628,7 +672,12 @@ void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunT
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadRunTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -637,10 +686,10 @@ void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPa
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(!threadId) throw std::runtime_error("setThreadPauseTime(): No thread ID specified");
+	if(!threadId) throw Database::Exception("setThreadPauseTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -659,7 +708,12 @@ void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPa
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadPauseTime() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -668,10 +722,10 @@ void Database::deleteThread(unsigned long threadId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(!threadId) throw std::runtime_error("deleteThread(): No thread ID specified");
+	if(!threadId) throw Database::Exception("deleteThread(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -692,7 +746,12 @@ void Database::deleteThread(unsigned long threadId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteThread() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -708,15 +767,15 @@ unsigned long Database::addWebsite(const std::string& websiteName, const std::st
 	std::string timeStamp;
 
 	// check arguments
-	if(websiteName.empty()) throw std::runtime_error("addWebsite(): No website name specified");
-	if(websiteNamespace.empty()) throw std::runtime_error("addWebsite(): No website namespace specified");
-	if(websiteDomain.empty()) throw std::runtime_error("addWebsite(): No domain specified");
+	if(websiteName.empty()) throw Database::Exception("addWebsite(): No website name specified");
+	if(websiteNamespace.empty()) throw Database::Exception("addWebsite(): No website namespace specified");
+	if(websiteDomain.empty()) throw Database::Exception("addWebsite(): No domain specified");
 
 	// check website namespace
-	if(this->isWebsiteNamespace(websiteNamespace)) throw std::runtime_error("Website namespace already exists");
+	if(this->isWebsiteNamespace(websiteNamespace)) throw Database::Exception("Website namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for adding website
@@ -750,7 +809,13 @@ unsigned long Database::addWebsite(const std::string& websiteName, const std::st
 		MAIN_DATABASE_DELETE(createStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(addStatement);
+		MAIN_DATABASE_DELETE(createStatement);
+		throw;
 	}
 
 	return result;
@@ -763,10 +828,10 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 	std::string result;
 
 	// check argument
-	if(!websiteId) throw std::runtime_error("getWebsiteDomain(): No website ID specified");
+	if(!websiteId) throw Database::Exception("getWebsiteDomain(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -789,7 +854,13 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteDomain() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -802,10 +873,10 @@ std::string Database::getWebsiteNamespace(unsigned long int websiteId) {
 	std::string result;
 
 	// check argument
-	if(!websiteId) throw std::runtime_error("getWebsiteNamespace(): No website ID specified");
+	if(!websiteId) throw Database::Exception("getWebsiteNamespace(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -828,7 +899,13 @@ std::string Database::getWebsiteNamespace(unsigned long int websiteId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNamespace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -841,10 +918,10 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromUrlList(u
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!listId) throw std::runtime_error("getWebsiteNamespaceFromUrlList(): No URL list ID specified");
+	if(!listId) throw Database::Exception("getWebsiteNamespaceFromUrlList(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -868,7 +945,13 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromUrlList(u
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNamespaceFromUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
@@ -881,10 +964,10 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(un
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!configId) throw std::runtime_error("getWebsiteNamespaceFromConfig(): No configuration ID specified");
+	if(!configId) throw Database::Exception("getWebsiteNamespaceFromConfig(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -908,7 +991,13 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(un
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNamespaceFromConfig() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
@@ -921,10 +1010,10 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromParsedTab
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getWebsiteNamespaceFromParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -948,7 +1037,13 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromParsedTab
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNamespaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
@@ -961,10 +1056,10 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromExtracted
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getWebsiteNamespaceFromExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromExtractedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -988,7 +1083,13 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromExtracted
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNamespaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
@@ -1001,10 +1102,10 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromAnalyzedT
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getWebsiteNamespaceFromAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1028,7 +1129,13 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromAnalyzedT
 		std::ostringstream errorStrStr;
 		errorStrStr << "getWebsiteNamespaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
@@ -1041,10 +1148,10 @@ bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 	bool result = false;
 
 	// check argument
-	if(nameSpace.empty()) throw std::runtime_error("isWebsiteNamespace(): No namespace specified");
+	if(nameSpace.empty()) throw Database::Exception("isWebsiteNamespace(): No namespace specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1068,7 +1175,13 @@ bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isWebsiteNamespace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): "	<< e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -1077,7 +1190,7 @@ bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 // create new website namespace for duplicated website
 std::string Database::duplicateWebsiteNamespace(const std::string& websiteNamespace) {
 	// check argument
-	if(websiteNamespace.empty()) throw std::runtime_error("duplicateWebsiteNamespace(): No namespace specified");
+	if(websiteNamespace.empty()) throw Database::Exception("duplicateWebsiteNamespace(): No namespace specified");
 
 	std::string nameString, numberString;
 	unsigned long end = websiteNamespace.find_last_not_of("0123456789");
@@ -1121,10 +1234,10 @@ void Database::updateWebsite(unsigned long websiteId, const std::string& website
 	sql::PreparedStatement * updateStatement = NULL;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("updateWebsite(): No website ID specified");
-	if(websiteName.empty()) throw std::runtime_error("updateWebsite(): No website name specified");
-	if(websiteNamespace.empty()) throw std::runtime_error("updateWebsite(): No website namespace specified");
-	if(websiteDomain.empty()) throw std::runtime_error("updateWebsite(): No domain specified");
+	if(!websiteId) throw Database::Exception("updateWebsite(): No website ID specified");
+	if(websiteName.empty()) throw Database::Exception("updateWebsite(): No website name specified");
+	if(websiteNamespace.empty()) throw Database::Exception("updateWebsite(): No website namespace specified");
+	if(websiteDomain.empty()) throw Database::Exception("updateWebsite(): No domain specified");
 
 	// get old namespace
 	std::string oldNamespace = this->getWebsiteNamespace(websiteId);
@@ -1132,10 +1245,10 @@ void Database::updateWebsite(unsigned long websiteId, const std::string& website
 	// check website namespace if necessary
 	if(websiteNamespace != oldNamespace)
 		if(this->isWebsiteNamespace(websiteNamespace))
-			throw std::runtime_error("Webspace namespace already exists");
+			throw Database::Exception("Webspace namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// check whether namespace has changed
@@ -1216,7 +1329,13 @@ void Database::updateWebsite(unsigned long websiteId, const std::string& website
 		MAIN_DATABASE_DELETE(updateStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(renameStatement);
+		MAIN_DATABASE_DELETE(updateStatement);
+		throw;
 	}
 }
 
@@ -1225,7 +1344,7 @@ void Database::deleteWebsite(unsigned long websiteId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(!websiteId) throw std::runtime_error("deleteWebsite(): No website ID specified");
+	if(!websiteId) throw Database::Exception("deleteWebsite(): No website ID specified");
 
 	// get website namespace
 	std::string websiteNamespace = this->getWebsiteNamespace(websiteId);
@@ -1239,7 +1358,7 @@ void Database::deleteWebsite(unsigned long websiteId) {
 		}
 
 		// check connection
-		if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+		if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 		// create SQL statement for deletion of website
 		sqlStatement = this->connection->prepareStatement("DELETE FROM crawlserv_websites WHERE id = ? LIMIT 1");
@@ -1259,7 +1378,12 @@ void Database::deleteWebsite(unsigned long websiteId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -1270,10 +1394,10 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!websiteId) throw std::runtime_error("duplicateWebsite(): No website ID specified");
+	if(!websiteId) throw Database::Exception("duplicateWebsite(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for geting website info
@@ -1369,7 +1493,13 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "duplicateWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -1386,18 +1516,18 @@ unsigned long Database::addUrlList(unsigned long websiteId, const std::string& l
 	unsigned long result = 0;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("addUrlList(): No website ID specified");
-	if(listName.empty()) throw std::runtime_error("addUrlList(): No URL list name specified");
-	if(listNamespace.empty()) throw std::runtime_error("addUrlList(): No URL list namespace specified");
+	if(!websiteId) throw Database::Exception("addUrlList(): No website ID specified");
+	if(listName.empty()) throw Database::Exception("addUrlList(): No URL list name specified");
+	if(listNamespace.empty()) throw Database::Exception("addUrlList(): No URL list namespace specified");
 
 	// get website namespace
 	std::string websiteNamespace = this->getWebsiteNamespace(websiteId);
 
 	// check URL list namespace
-	if(this->isUrlListNamespace(websiteId, listNamespace)) throw std::runtime_error("URL list namespace already exists");
+	if(this->isUrlListNamespace(websiteId, listNamespace)) throw Database::Exception("URL list namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for adding URL list
@@ -1450,7 +1580,13 @@ unsigned long Database::addUrlList(unsigned long websiteId, const std::string& l
 		MAIN_DATABASE_DELETE(createStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(addStatement);
+		MAIN_DATABASE_DELETE(createStatement);
+		throw;
 	}
 
 	return result;
@@ -1463,10 +1599,10 @@ std::vector<std::pair<unsigned long, std::string>> Database::getUrlLists(unsigne
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("getUrlLists(): No website ID specified");
+	if(!websiteId) throw Database::Exception("getUrlLists(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1493,7 +1629,13 @@ std::vector<std::pair<unsigned long, std::string>> Database::getUrlLists(unsigne
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlLists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -1506,10 +1648,10 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 	std::string result;
 
 	// check argument
-	if(!listId) throw std::runtime_error("getUrlListNamespace(): No URL list ID specified");
+	if(!listId) throw Database::Exception("getUrlListNamespace(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1532,7 +1674,13 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNamespace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -1545,10 +1693,10 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromParsedTab
 	unsigned long urlListId = 0;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getUrlListNamespaceFromParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getUrlListNamespaceFromParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1572,7 +1720,13 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromParsedTab
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNamespaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(urlListId, this->getUrlListNamespace(urlListId));
@@ -1585,10 +1739,10 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromExtracted
 	unsigned long urlListId = 0;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getUrlListNamespaceFromExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getUrlListNamespaceFromExtractedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1612,7 +1766,13 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromExtracted
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNamespaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(urlListId, this->getUrlListNamespace(urlListId));
@@ -1625,10 +1785,10 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromAnalyzedT
 	unsigned long urlListId = 0;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getUrlListNamespaceFromAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getUrlListNamespaceFromAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1652,7 +1812,13 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromAnalyzedT
 		std::ostringstream errorStrStr;
 		errorStrStr << "getUrlListNamespaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return std::pair<unsigned long, std::string>(urlListId, this->getUrlListNamespace(urlListId));
@@ -1665,11 +1831,11 @@ bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& na
 	bool result = false;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("isUrlListNamespace(): No website ID specified");
-	if(nameSpace.empty()) throw std::runtime_error("isUrlListNamespace(): No namespace specified");
+	if(!websiteId) throw Database::Exception("isUrlListNamespace(): No website ID specified");
+	if(nameSpace.empty()) throw Database::Exception("isUrlListNamespace(): No namespace specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -1694,7 +1860,13 @@ bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& na
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlListNamespace() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -1706,9 +1878,9 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 	sql::PreparedStatement * updateStatement = NULL;
 
 	// check arguments
-	if(!listId) throw std::runtime_error("updateUrlList(): No website ID specified");
-	if(listName.empty()) throw std::runtime_error("updateUrlList(): No URL list name specified");
-	if(listNamespace.empty()) throw std::runtime_error("updateUrlList(): No URL list namespace specified");
+	if(!listId) throw Database::Exception("updateUrlList(): No website ID specified");
+	if(listName.empty()) throw Database::Exception("updateUrlList(): No URL list name specified");
+	if(listNamespace.empty()) throw Database::Exception("updateUrlList(): No URL list namespace specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1717,10 +1889,10 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 	// check website namespace if necessary
 	if(listNamespace != oldListNamespace)
 		if(this->isUrlListNamespace(websiteNamespace.first, listNamespace))
-			throw std::runtime_error("Webspace namespace already exists");
+			throw Database::Exception("Webspace namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		if(listNamespace != oldListNamespace) {
@@ -1794,7 +1966,13 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 		MAIN_DATABASE_DELETE(updateStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(renameStatement);
+		MAIN_DATABASE_DELETE(updateStatement);
+		throw;
 	}
 }
 
@@ -1804,7 +1982,7 @@ void Database::deleteUrlList(unsigned long listId) {
 	sql::Statement * dropStatement = NULL;
 
 	// check argument
-	if(!listId) throw std::runtime_error("deleteUrlList(): No URL list ID specified");
+	if(!listId) throw Database::Exception("deleteUrlList(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1827,7 +2005,7 @@ void Database::deleteUrlList(unsigned long listId) {
 			this->deleteParsedTable(taI->first);
 
 		// check connection
-		if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+		if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 		// create SQL statement for deleting URL list
 		deleteStatement = this->connection->prepareStatement("DELETE FROM crawlserv_urllists WHERE id = ? LIMIT 1");
@@ -1859,14 +2037,20 @@ void Database::deleteUrlList(unsigned long listId) {
 		MAIN_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(deleteStatement);
+		MAIN_DATABASE_DELETE(dropStatement);
+		throw;
 	}
 }
 
 // reset parsing status of ID-specified URL list
 void Database::resetParsingStatus(unsigned long listId) {
 	// check argument
-	if(!listId) throw std::runtime_error("resetParsingStatus(): No URL list ID specified");
+	if(!listId) throw Database::Exception("resetParsingStatus(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1878,7 +2062,7 @@ void Database::resetParsingStatus(unsigned long listId) {
 // reset extracting status of ID-specified URL list
 void Database::resetExtractingStatus(unsigned long listId) {
 	// check argument
-	if(!listId) throw std::runtime_error("resetExtractingStatus(): No URL list ID specified");
+	if(!listId) throw Database::Exception("resetExtractingStatus(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1890,7 +2074,7 @@ void Database::resetExtractingStatus(unsigned long listId) {
 // reset analyzing status of ID-specified URL list
 void Database::resetAnalyzingStatus(unsigned long listId) {
 	// check argument
-	if(!listId) throw std::runtime_error("resetAnalyzingStatus(): No URL list ID specified");
+	if(!listId) throw Database::Exception("resetAnalyzingStatus(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1910,12 +2094,12 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 	unsigned long result = 0;
 
 	// check arguments
-	if(queryName.empty()) throw std::runtime_error("addQuery(): No query name specified");
-	if(queryText.empty()) throw std::runtime_error("addQuery(): No query text specified");
-	if(queryType.empty()) throw std::runtime_error("addQuery(): No query type specified");
+	if(queryName.empty()) throw Database::Exception("addQuery(): No query name specified");
+	if(queryText.empty()) throw Database::Exception("addQuery(): No query text specified");
+	if(queryType.empty()) throw Database::Exception("addQuery(): No query type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for adding query
@@ -1946,7 +2130,12 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -1959,7 +2148,7 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 	sql::ResultSet * sqlResultSet = NULL;
 
 	// check argument
-	if(!queryId) throw std::runtime_error("getQueryProperties(): No query ID specified");
+	if(!queryId) throw Database::Exception("getQueryProperties(): No query ID specified");
 
 	// check ID
 	if(!queryId) {
@@ -1973,7 +2162,7 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 	}
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2012,7 +2201,13 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getQueryProperties() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2022,13 +2217,13 @@ void Database::updateQuery(unsigned long queryId, const std::string& queryName, 
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check arguments
-	if(!queryId) throw std::runtime_error("updateQuery(): No query ID specified");
-	if(queryName.empty()) throw std::runtime_error("updateQuery(): No query name specified");
-	if(queryText.empty()) throw std::runtime_error("updateQuery(): No query text specified");
-	if(queryType.empty()) throw std::runtime_error("updateQuery(): No query type specified");
+	if(!queryId) throw Database::Exception("updateQuery(): No query ID specified");
+	if(queryName.empty()) throw Database::Exception("updateQuery(): No query name specified");
+	if(queryText.empty()) throw Database::Exception("updateQuery(): No query text specified");
+	if(queryType.empty()) throw Database::Exception("updateQuery(): No query type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for updating
@@ -2054,7 +2249,12 @@ void Database::updateQuery(unsigned long queryId, const std::string& queryName, 
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2063,10 +2263,10 @@ void Database::deleteQuery(unsigned long queryId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(!queryId) throw std::runtime_error("deleteQuery(): No query ID specified");
+	if(!queryId) throw Database::Exception("deleteQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2087,7 +2287,12 @@ void Database::deleteQuery(unsigned long queryId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2098,10 +2303,10 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!queryId) throw std::runtime_error("duplicateQuery(): No query ID specified");
+	if(!queryId) throw Database::Exception("duplicateQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for getting query info
@@ -2131,7 +2336,13 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "duplicateQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2148,12 +2359,12 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const std::str
 	unsigned long result = 0;
 
 	// check arguments
-	if(configModule.empty()) throw std::runtime_error("addConfiguration(): No configuration module specified");
-	if(configName.empty()) throw std::runtime_error("addConfiguration(): No configuration name specified");
-	if(config.empty()) throw std::runtime_error("addConfiguration(): No configuration specified");
+	if(configModule.empty()) throw Database::Exception("addConfiguration(): No configuration module specified");
+	if(configName.empty()) throw Database::Exception("addConfiguration(): No configuration name specified");
+	if(config.empty()) throw Database::Exception("addConfiguration(): No configuration specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for adding configuration
@@ -2177,7 +2388,12 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const std::str
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2190,10 +2406,10 @@ const std::string Database::getConfiguration(unsigned long configId) {
 	std::string result;
 
 	// check argument
-	if(!configId) throw std::runtime_error("getConfiguration(): No configuration ID specified");
+	if(!configId) throw Database::Exception("getConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2216,7 +2432,13 @@ const std::string Database::getConfiguration(unsigned long configId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2227,12 +2449,12 @@ void Database::updateConfiguration(unsigned long configId, const std::string& co
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check arguments
-	if(!configId) throw std::runtime_error("updateConfiguration(): No configuration ID specified");
-	if(configName.empty()) throw std::runtime_error("updateConfiguration(): No configuration name specified");
-	if(config.empty()) throw std::runtime_error("updateConfiguration(): No configuration specified");
+	if(!configId) throw Database::Exception("updateConfiguration(): No configuration ID specified");
+	if(configName.empty()) throw Database::Exception("updateConfiguration(): No configuration name specified");
+	if(config.empty()) throw Database::Exception("updateConfiguration(): No configuration specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for updating
@@ -2253,7 +2475,12 @@ void Database::updateConfiguration(unsigned long configId, const std::string& co
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2262,10 +2489,10 @@ void Database::deleteConfiguration(unsigned long configId) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(!configId) throw std::runtime_error("deleteConfiguration(): No configuration ID specified");
+	if(!configId) throw Database::Exception("deleteConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2286,7 +2513,12 @@ void Database::deleteConfiguration(unsigned long configId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2297,10 +2529,10 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!configId) throw std::runtime_error("duplicateConfiguration(): No configuration ID specified");
+	if(!configId) throw Database::Exception("duplicateConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for getting configuration info
@@ -2328,7 +2560,13 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "duplicateConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2344,12 +2582,12 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 	sql::ResultSet * sqlResultSet = NULL;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("addParsedTable(): No website ID specified");
-	if(!listId) throw std::runtime_error("addParsedTable(): No URL list ID specified");
-	if(tableName.empty()) throw std::runtime_error("addParsedTable(): No table name specified");
+	if(!websiteId) throw Database::Exception("addParsedTable(): No website ID specified");
+	if(!listId) throw Database::Exception("addParsedTable(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("addParsedTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for checking for entry
@@ -2389,7 +2627,13 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2400,10 +2644,10 @@ std::vector<std::pair<unsigned long, std::string>> Database::getParsedTables(uns
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
-	if(!listId) throw std::runtime_error("getParsedTables(): No URL list ID specified");
+	if(!listId) throw Database::Exception("getParsedTables(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2431,7 +2675,13 @@ std::vector<std::pair<unsigned long, std::string>> Database::getParsedTables(uns
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getParsedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2444,10 +2694,10 @@ std::string Database::getParsedTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2470,7 +2720,13 @@ std::string Database::getParsedTable(unsigned long tableId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2487,10 +2743,10 @@ void Database::deleteParsedTable(unsigned long tableId) {
 	std::string tableName = this->getParsedTable(tableId);
 
 	// check argument
-	if(!tableId) throw std::runtime_error("deleteParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("deleteParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for deletion
@@ -2523,7 +2779,13 @@ void Database::deleteParsedTable(unsigned long tableId) {
 		MAIN_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(deleteStatement);
+		MAIN_DATABASE_DELETE(dropStatement);
+		throw;
 	}
 }
 
@@ -2534,12 +2796,12 @@ void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 	sql::ResultSet * sqlResultSet = NULL;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("addExtractedTable(): No website ID specified");
-	if(!listId) throw std::runtime_error("addExtractedTable(): No URL list ID specified");
-	if(tableName.empty()) throw std::runtime_error("addExtractedTable(): No table name specified");
+	if(!websiteId) throw Database::Exception("addExtractedTable(): No website ID specified");
+	if(!listId) throw Database::Exception("addExtractedTable(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("addExtractedTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for checking for entry
@@ -2577,7 +2839,13 @@ void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2588,10 +2856,10 @@ std::vector<std::pair<unsigned long, std::string>> Database::getExtractedTables(
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
-	if(!listId) throw std::runtime_error("getExtractedTables(): No URL list ID specified");
+	if(!listId) throw Database::Exception("getExtractedTables(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2619,7 +2887,13 @@ std::vector<std::pair<unsigned long, std::string>> Database::getExtractedTables(
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getExtractedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2632,10 +2906,10 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getExtractedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2658,7 +2932,13 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2670,7 +2950,7 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 	sql::Statement * dropStatement = NULL;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("deleteExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("deleteExtractedTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromExtractedTable(tableId);
@@ -2678,7 +2958,7 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 	std::string tableName = this->getExtractedTable(tableId);
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for deletion
@@ -2711,7 +2991,13 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 		MAIN_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(deleteStatement);
+		MAIN_DATABASE_DELETE(dropStatement);
+		throw;
 	}
 }
 
@@ -2722,12 +3008,12 @@ void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 	sql::ResultSet * sqlResultSet = NULL;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("addAnalyzedTable(): No website ID specified");
-	if(!listId) throw std::runtime_error("addAnalyzedTable(): No URL list ID specified");
-	if(tableName.empty()) throw std::runtime_error("addAnalyzedTable(): No table name specified");
+	if(!websiteId) throw Database::Exception("addAnalyzedTable(): No website ID specified");
+	if(!listId) throw Database::Exception("addAnalyzedTable(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("addAnalyzedTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for checking for entry
@@ -2766,7 +3052,13 @@ void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -2777,10 +3069,10 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzedTables(u
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
-	if(!listId) throw std::runtime_error("getAnalyzedTable(): No table ID specified");
+	if(!listId) throw Database::Exception("getAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2808,7 +3100,13 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzedTables(u
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getAnalyzedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2821,10 +3119,10 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("getAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2847,7 +3145,13 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2859,7 +3163,7 @@ void Database::deleteAnalyzedTable(unsigned long tableId) {
 	sql::Statement * dropStatement = NULL;
 
 	// check argument
-	if(!tableId) throw std::runtime_error("deleteAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("deleteAnalyzedTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromAnalyzedTable(tableId);
@@ -2867,7 +3171,7 @@ void Database::deleteAnalyzedTable(unsigned long tableId) {
 	std::string tableName = this->getParsedTable(tableId);
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement for deletion
@@ -2900,7 +3204,13 @@ void Database::deleteAnalyzedTable(unsigned long tableId) {
 		MAIN_DATABASE_DELETE(dropStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "deleteAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(deleteStatement);
+		MAIN_DATABASE_DELETE(dropStatement);
+		throw;
 	}
 }
 
@@ -2924,10 +3234,10 @@ bool Database::isWebsite(unsigned long websiteId) {
 	bool result = false;
 
 	// check argument
-	if(!websiteId) throw std::runtime_error("isWebsite(): No website ID specified");
+	if(!websiteId) throw Database::Exception("isWebsite(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2952,7 +3262,13 @@ bool Database::isWebsite(unsigned long websiteId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isWebsite() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -2965,10 +3281,10 @@ bool Database::isUrlList(unsigned long urlListId) {
 	bool result = false;
 
 	// check argument
-	if(!urlListId) throw std::runtime_error("isUrlList(): No URL list ID specified");
+	if(!urlListId) throw Database::Exception("isUrlList(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -2993,7 +3309,13 @@ bool Database::isUrlList(unsigned long urlListId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -3006,11 +3328,11 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 	bool result = false;
 
 	// check arguments
-	if(!websiteId) throw std::runtime_error("isUrlList(): No website ID specified");
-	if(!urlListId) throw std::runtime_error("isUrlList(): No URL list ID specified");
+	if(!websiteId) throw Database::Exception("isUrlList(): No website ID specified");
+	if(!urlListId) throw Database::Exception("isUrlList(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3035,7 +3357,13 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -3048,10 +3376,10 @@ bool Database::isQuery(unsigned long queryId) {
 	bool result = false;
 
 	// check argument
-	if(!queryId) throw std::runtime_error("isQuery(): No query ID specified");
+	if(!queryId) throw Database::Exception("isQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3076,7 +3404,13 @@ bool Database::isQuery(unsigned long queryId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -3089,10 +3423,10 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 	bool result = false;
 
 	// check arguments
-	if(!queryId) throw std::runtime_error("isQuery(): No query ID specified");
+	if(!queryId) throw Database::Exception("isQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3117,7 +3451,13 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isQuery() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -3130,10 +3470,10 @@ bool Database::isConfiguration(unsigned long configId) {
 	bool result = false;
 
 	// check argument
-	if(!configId) throw std::runtime_error("isConfiguration(): No configuration ID specified");
+	if(!configId) throw Database::Exception("isConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3158,7 +3498,13 @@ bool Database::isConfiguration(unsigned long configId) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -3171,10 +3517,10 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 	bool result = false;
 
 	// check arguments
-	if(!configId) throw std::runtime_error("isConfiguration(): No configuration ID specified");
+	if(!configId) throw Database::Exception("isConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3199,7 +3545,13 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isConfiguration() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -3215,11 +3567,11 @@ void Database::getCustomData(Data::GetValue& data) {
 	sql::Statement * sqlStatement = NULL;
 
 	// check argument
-	if(data.column.empty()) throw std::runtime_error("getCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("getCustomData(): No column type specified");
+	if(data.column.empty()) throw Database::Exception("getCustomData(): No column name specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("getCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3255,7 +3607,7 @@ void Database::getCustomData(Data::GetValue& data) {
 					data.value = Data::Value((unsigned long) sqlResultSet->getUInt64(data.column));
 					break;
 				default:
-					throw std::runtime_error("getCustomData(): Invalid data type when getting custom data.");
+					throw Database::Exception("getCustomData(): Invalid data type when getting custom data.");
 				}
 			}
 		}
@@ -3270,7 +3622,13 @@ void Database::getCustomData(Data::GetValue& data) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3281,13 +3639,13 @@ void Database::getCustomData(Data::GetFields& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns.empty()) throw std::runtime_error("getCustomData(): No column names specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("getCustomData(): No column type specified");
+	if(data.columns.empty()) throw Database::Exception("getCustomData(): No column names specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("getCustomData(): No column type specified");
 	data.values.clear();
 	data.values.reserve(data.columns.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3344,7 +3702,7 @@ void Database::getCustomData(Data::GetFields& data) {
 					else data.values.push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(*i)));
 				break;
 			default:
-				throw std::runtime_error("getCustomData(): Invalid data type when getting custom data.");
+				throw Database::Exception("getCustomData(): Invalid data type when getting custom data.");
 			}
 		}
 
@@ -3359,7 +3717,13 @@ void Database::getCustomData(Data::GetFields& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "getCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3370,12 +3734,12 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_types.empty()) throw std::runtime_error("getCustomData(): No columns specified");
+	if(data.columns_types.empty()) throw Database::Exception("getCustomData(): No columns specified");
 	data.values.clear();
 	data.values.reserve(data.columns_types.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3421,7 +3785,7 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 						data.values.push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(i->first)));
 						break;
 					default:
-						throw std::runtime_error("getCustomData(): Invalid data type when getting custom data.");
+						throw Database::Exception("getCustomData(): Invalid data type when getting custom data.");
 					}
 				}
 			}
@@ -3438,7 +3802,13 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "getCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3449,12 +3819,12 @@ void Database::getCustomData(Data::GetColumn& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.column.empty()) throw std::runtime_error("getCustomData(): No columns specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("getCustomData(): No column type specified");
+	if(data.column.empty()) throw Database::Exception("getCustomData(): No columns specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("getCustomData(): No column type specified");
 	data.values.clear();
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3497,7 +3867,7 @@ void Database::getCustomData(Data::GetColumn& data) {
 						data.values.push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(data.column)));
 						break;
 					default:
-						throw std::runtime_error("getCustomData(): Invalid data type when getting custom data.");
+						throw Database::Exception("getCustomData(): Invalid data type when getting custom data.");
 					}
 				}
 			}
@@ -3514,7 +3884,13 @@ void Database::getCustomData(Data::GetColumn& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "getCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3525,13 +3901,13 @@ void Database::getCustomData(Data::GetColumns& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns.empty()) throw std::runtime_error("getCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("getCustomData(): No column type specified");
+	if(data.columns.empty()) throw Database::Exception("getCustomData(): No column name specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("getCustomData(): No column type specified");
 	data.values.clear();
 	data.values.reserve(data.columns.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3587,7 +3963,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 							column->push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(*i)));
 							break;
 						default:
-							throw std::runtime_error("getCustomData(): Invalid data type when getting custom data.");
+							throw Database::Exception("getCustomData(): Invalid data type when getting custom data.");
 						}
 					}
 				}
@@ -3605,7 +3981,13 @@ void Database::getCustomData(Data::GetColumns& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "getCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3616,12 +3998,12 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_types.empty()) throw std::runtime_error("getCustomData(): No columns specified");
+	if(data.columns_types.empty()) throw Database::Exception("getCustomData(): No columns specified");
 	data.values.clear();
 	data.values.reserve(data.columns_types.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3677,7 +4059,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 							column->push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(i->first)));
 							break;
 						default:
-							throw std::runtime_error("getCustomData(): Invalid data type when getting custom data.");
+							throw Database::Exception("getCustomData(): Invalid data type when getting custom data.");
 						}
 					}
 				}
@@ -3695,7 +4077,13 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "getCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3704,11 +4092,11 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(data.column.empty()) throw std::runtime_error("insertCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("insertCustomData(): No column type specified");
+	if(data.column.empty()) throw Database::Exception("insertCustomData(): No column name specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("insertCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -3751,7 +4139,7 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 						if(data.value._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
 						else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
 								" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
-						throw std::runtime_error(errStrStr.str());
+						throw Database::Exception(errStrStr.str());
 					}
 				}
 				else sqlStatement->setString(1, data.value._s);
@@ -3763,7 +4151,7 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 				sqlStatement->setUInt64(1, data.value._ul);
 				break;
 			default:
-				throw std::runtime_error("insertCustomData(): Invalid data type when inserting custom data.");
+				throw Database::Exception("insertCustomData(): Invalid data type when inserting custom data.");
 			}
 		}
 
@@ -3778,7 +4166,12 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "insertCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3788,11 +4181,11 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_values.empty()) throw std::runtime_error("insertCustomData(): No columns specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("insertCustomData(): No column type specified");
+	if(data.columns_values.empty()) throw Database::Exception("insertCustomData(): No columns specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("insertCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL query
@@ -3861,7 +4254,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 						if(i->second._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
 						else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
 								" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
-						throw std::runtime_error(errStrStr.str());
+						throw Database::Exception(errStrStr.str());
 					}
 				}
 				else sqlStatement->setString(counter, i->second._s);
@@ -3883,7 +4276,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 			}
 			break;
 		default:
-			throw std::runtime_error("insertCustomData(): Invalid data type when inserting custom data.");
+			throw Database::Exception("insertCustomData(): Invalid data type when inserting custom data.");
 		}
 
 		// execute SQL statement
@@ -3898,7 +4291,12 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "insertCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -3908,10 +4306,10 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_types_values.empty()) throw std::runtime_error("insertCustomData(): No columns specified");
+	if(data.columns_types_values.empty()) throw Database::Exception("insertCustomData(): No columns specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL query
@@ -3966,7 +4364,7 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 							if(std::get<2>(*i)._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
 							else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
 									" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
-							throw std::runtime_error(errStrStr.str());
+							throw Database::Exception(errStrStr.str());
 						}
 					}
 					else sqlStatement->setString(counter, std::get<2>(*i)._s);
@@ -3978,7 +4376,7 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 					sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
 					break;
 				default:
-					throw std::runtime_error("insertCustomData(): Invalid data type when inserting custom data.");
+					throw Database::Exception("insertCustomData(): Invalid data type when inserting custom data.");
 				}
 			}
 			counter++;
@@ -3996,7 +4394,12 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "insertCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4005,11 +4408,11 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 	sql::PreparedStatement * sqlStatement = NULL;
 
 	// check argument
-	if(data.column.empty()) throw std::runtime_error("updateCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("updateCustomData(): No column type specified");
+	if(data.column.empty()) throw Database::Exception("updateCustomData(): No column name specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("updateCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4053,7 +4456,7 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 						if(data.value._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
 						else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
 								" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
-						throw std::runtime_error(errStrStr.str());
+						throw Database::Exception(errStrStr.str());
 					}
 				}
 				else sqlStatement->setString(1, data.value._s);
@@ -4065,7 +4468,7 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 				sqlStatement->setUInt64(1, data.value._ul);
 				break;
 			default:
-				throw std::runtime_error("updateCustomData(): Invalid data type when updating custom data.");
+				throw Database::Exception("updateCustomData(): Invalid data type when updating custom data.");
 			}
 		}
 
@@ -4080,7 +4483,12 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4090,11 +4498,11 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_values.empty()) throw std::runtime_error("updateCustomData(): No columns specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw std::runtime_error("updateCustomData(): No column type specified");
+	if(data.columns_values.empty()) throw Database::Exception("updateCustomData(): No columns specified");
+	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("updateCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL query
@@ -4161,7 +4569,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 						if(i->second._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
 						else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
 								" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
-						throw std::runtime_error(errStrStr.str());
+						throw Database::Exception(errStrStr.str());
 					}
 				}
 				else sqlStatement->setString(counter, i->second._s);
@@ -4183,7 +4591,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 			}
 			break;
 		default:
-			throw std::runtime_error("updateCustomData(): Invalid data type when updating custom data.");
+			throw Database::Exception("updateCustomData(): Invalid data type when updating custom data.");
 		}
 
 		// execute SQL statement
@@ -4198,7 +4606,12 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4208,10 +4621,10 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_types_values.empty()) throw std::runtime_error("updateCustomData(): No columns specified");
+	if(data.columns_types_values.empty()) throw Database::Exception("updateCustomData(): No columns specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL query
@@ -4264,7 +4677,7 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 							if(std::get<2>(*i)._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
 							else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
 									" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
-							throw std::runtime_error(errStrStr.str());
+							throw Database::Exception(errStrStr.str());
 						}
 					}
 					else sqlStatement->setString(counter, std::get<2>(*i)._s);
@@ -4276,7 +4689,7 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 					sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
 					break;
 				default:
-					throw std::runtime_error("updateCustomData(): Invalid data type when updating custom data.");
+					throw Database::Exception("updateCustomData(): Invalid data type when updating custom data.");
 				}
 			}
 			counter++;
@@ -4294,7 +4707,12 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "updateCustomData() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		if(!sqlQuery.empty()) errorStrStr << " [QUERY: " << sqlQuery << "]";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4359,12 +4777,16 @@ bool Database::checkConnection() {
 		this->errorMessage = errorStrStr.str();
 
 		// clear connection
-		if(this->connection) {
-			delete this->connection;
-			this->connection = NULL;
-		}
+		delete this->connection;
+		this->connection = NULL;
 
 		return false;
+	}
+	catch(...) {
+		// any other exception: clear connection and re-throw
+		delete this->connection;
+		this->connection = NULL;
+		throw;
 	}
 
 	return true;
@@ -4377,12 +4799,12 @@ unsigned long Database::getLastInsertedId() {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!(this->psLastId)) throw std::runtime_error("Missing prepared SQL statement for last inserted id");
+	if(!(this->psLastId)) throw Database::Exception("Missing prepared SQL statement for last inserted id");
 	sqlStatement = this->preparedStatements.at(this->psLastId - 1).statement;
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for last inserted id is NULL");
+	if(!sqlStatement) throw Database::Exception("Prepared SQL statement for last inserted id is NULL");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// execute SQL statement
@@ -4398,7 +4820,12 @@ unsigned long Database::getLastInsertedId() {
 		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "getLastInsertedId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		throw;
 	}
 
 	return result;
@@ -4409,10 +4836,10 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 
 	// check argument
-	if(tableName.empty()) throw std::runtime_error("resetAutoIncrement(): No table name specified");
+	if(tableName.empty()) throw Database::Exception("resetAutoIncrement(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4429,7 +4856,12 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "resetAutoIncrement() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4438,10 +4870,13 @@ void Database::lockTable(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 
 	// check argument
-	if(tableName.empty()) throw std::runtime_error("lockTable(): No table name specified");
+	if(tableName.empty()) throw Database::Exception("lockTable(): No table name specified");
+
+	// check for lock and unlock if necessary
+	if(this->tablesLocked) this->unlockTables();
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4459,7 +4894,12 @@ void Database::lockTable(const std::string& tableName) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "lockTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4468,11 +4908,14 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 	sql::Statement * sqlStatement = NULL;
 
 	// check arguments
-	if(tableName1.empty()) throw std::runtime_error("lockTables(): Table name #1 missing");
-	if(tableName2.empty()) throw std::runtime_error("lockTables(): Table name #2 missing");
+	if(tableName1.empty()) throw Database::Exception("lockTables(): Table name #1 missing");
+	if(tableName2.empty()) throw Database::Exception("lockTables(): Table name #2 missing");
+
+	// check for lock and unlock if necessary
+	if(this->tablesLocked) this->unlockTables();
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4491,7 +4934,12 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "lockTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4500,7 +4948,7 @@ void Database::unlockTables() {
 	sql::Statement * sqlStatement = NULL;
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4518,7 +4966,12 @@ void Database::unlockTables() {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "unlockTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4529,10 +4982,10 @@ bool Database::isTableEmpty(const std::string& tableName) {
 	bool result = false;
 
 	// check argument
-	if(tableName.empty()) throw std::runtime_error("isTableEmpty(): No table name specified");
+	if(tableName.empty()) throw Database::Exception("isTableEmpty(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4554,7 +5007,12 @@ bool Database::isTableEmpty(const std::string& tableName) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isTableEmpty() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -4567,10 +5025,10 @@ bool Database::isTableExists(const std::string& tableName) {
 	bool result = false;
 
 	// check argument
-	if(tableName.empty()) throw std::runtime_error("isTableExists(): No table name specified");
+	if(tableName.empty()) throw Database::Exception("isTableExists(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create and execute SQL statement
@@ -4593,7 +5051,13 @@ bool Database::isTableExists(const std::string& tableName) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isTableExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -4606,11 +5070,11 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 	bool result = false;
 
 	// check arguments
-	if(tableName.empty()) throw std::runtime_error("isColumnExists(): No table name specified");
-	if(columnName.empty()) throw std::runtime_error("isColumnExists(): No column name specified");
+	if(tableName.empty()) throw Database::Exception("isColumnExists(): No table name specified");
+	if(columnName.empty()) throw Database::Exception("isColumnExists(): No column name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create and execute SQL statement
@@ -4634,7 +5098,13 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isColumnExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 
 	return result;
@@ -4645,11 +5115,11 @@ void Database::createTable(const std::string& tableName, const std::vector<Colum
 	sql::Statement * sqlStatement = NULL;
 
 	// check arguments
-	if(tableName.empty()) throw std::runtime_error("addTable(): No table name specified");
-	if(columns.empty()) throw std::runtime_error("addTable(): No columns specified");
+	if(tableName.empty()) throw Database::Exception("addTable(): No table name specified");
+	if(columns.empty()) throw Database::Exception("addTable(): No columns specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL query
@@ -4657,14 +5127,14 @@ void Database::createTable(const std::string& tableName, const std::vector<Colum
 		std::string references;
 		for(auto i = columns.begin(); i != columns.end(); ++i) {
 			// check values
-			if(i->_name.empty()) throw std::runtime_error("addTable(): A column is missing its name");
-			if(i->_type.empty()) throw std::runtime_error("addTable(): A column is missing its type");
+			if(i->_name.empty()) throw Database::Exception("addTable(): A column is missing its name");
+			if(i->_type.empty()) throw Database::Exception("addTable(): A column is missing its type");
 
 			// add to SQL query
 			sqlQuery += ", `" + i->_name + "` " + i->_type;
 			if(!(i->_referenceTable.empty())) {
 				if(i->_referenceColumn.empty())
-					throw std::runtime_error("addTable(): A column reference is missing its source column name");
+					throw Database::Exception("addTable(): A column reference is missing its source column name");
 				references += ", FOREIGN KEY(`" + i->_name + "`) REFERENCES `" + i->_referenceTable + "`(`" + i->_referenceColumn
 						+ "`) ON UPDATE RESTRICT ON DELETE CASCADE";
 			}
@@ -4686,7 +5156,12 @@ void Database::createTable(const std::string& tableName, const std::vector<Colum
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4695,19 +5170,19 @@ void Database::addColumn(const std::string& tableName, const Column& column) {
 	sql::Statement * sqlStatement = NULL;
 
 	// check arguments
-	if(tableName.empty()) throw std::runtime_error("addColumn(): No table name specified");
-	if(column._name.empty()) throw std::runtime_error("addColumn(): No column name specified");
-	if(column._type.empty()) throw std::runtime_error("addColumn(): No column type specified");
+	if(tableName.empty()) throw Database::Exception("addColumn(): No table name specified");
+	if(column._name.empty()) throw Database::Exception("addColumn(): No column name specified");
+	if(column._type.empty()) throw Database::Exception("addColumn(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL query
 		std::string sqlQuery = "ALTER TABLE `" + tableName + "` ADD COLUMN `" + column._name + "` " + column._type;
 		if(!column._referenceTable.empty()) {
 			if(column._referenceColumn.empty())
-				throw std::runtime_error("addColumn(): A column reference is missing its source column name");
+				throw Database::Exception("addColumn(): A column reference is missing its source column name");
 			sqlQuery += ", ADD FOREIGN KEY(`" + column._name + "`) REFERENCES `" + column._referenceTable + "`(`"
 					+ column._referenceColumn + "`) ON UPDATE RESTRICT ON DELETE CASCADE";
 		}
@@ -4726,7 +5201,12 @@ void Database::addColumn(const std::string& tableName, const Column& column) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "addColumn() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4737,10 +5217,10 @@ void Database::compressTable(const std::string& tableName) {
 	bool compressed = false;
 
 	// check argument
-	if(tableName.empty()) throw std::runtime_error("compressTable(): No table name specified");
+	if(tableName.empty()) throw Database::Exception("compressTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4755,7 +5235,7 @@ void Database::compressTable(const std::string& tableName) {
 		else {
 			MAIN_DATABASE_DELETE(sqlResultSet);
 			MAIN_DATABASE_DELETE(sqlStatement);
-			throw std::runtime_error("compressTable(): Could not determine row format of table \'" + tableName + "\'");
+			throw Database::Exception("compressTable(): Could not determine row format of table \'" + tableName + "\'");
 		}
 
 		// delete result
@@ -4773,7 +5253,13 @@ void Database::compressTable(const std::string& tableName) {
 		MAIN_DATABASE_DELETE(sqlStatement);
 		std::ostringstream errorStrStr;
 		errorStrStr << "compressTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 
@@ -4781,29 +5267,34 @@ void Database::compressTable(const std::string& tableName) {
 void Database::deleteTableIfExists(const std::string& tableName) {
 	sql::Statement * sqlStatement = NULL;
 
-		// check arguments
-		if(tableName.empty()) throw std::runtime_error("deleteTableIfExists(): No table name specified");
+	// check arguments
+	if(tableName.empty()) throw Database::Exception("deleteTableIfExists(): No table name specified");
 
-		// check connection
-		if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	// check connection
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
-		try {
-			// create SQL statement
-			sqlStatement = this->connection->createStatement();
+	try {
+		// create SQL statement
+		sqlStatement = this->connection->createStatement();
 
-			// execute SQL statement
-			sqlStatement->execute("DELETE TABLE IF EXISTS `" + tableName + "`");
+		// execute SQL statement
+		sqlStatement->execute("DELETE TABLE IF EXISTS `" + tableName + "`");
 
-			// delete SQL statement
-			MAIN_DATABASE_DELETE(sqlStatement);
-		}
-		catch(sql::SQLException &e) {
-			// SQL error
-			MAIN_DATABASE_DELETE(sqlStatement);
-			std::ostringstream errorStrStr;
-			errorStrStr << "deleteTableIfExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-			throw std::runtime_error(errorStrStr.str());
-		}
+		// delete SQL statement
+		MAIN_DATABASE_DELETE(sqlStatement);
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		MAIN_DATABASE_DELETE(sqlStatement);
+		std::ostringstream errorStrStr;
+		errorStrStr << "deleteTableIfExists() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
+	}
 }
 
 /*
@@ -4813,7 +5304,7 @@ void Database::deleteTableIfExists(const std::string& tableName) {
 // run file with SQL commands
 bool Database::run(const std::string& sqlFile) {
 	// check argument
-	if(sqlFile.empty()) throw std::runtime_error("run(): No SQL file specified");
+	if(sqlFile.empty()) throw Database::Exception("run(): No SQL file specified");
 
 	// open SQL file
 	std::ifstream initSQLFile(sqlFile);
@@ -4847,6 +5338,11 @@ bool Database::run(const std::string& sqlFile) {
 				this->errorMessage = errorStrStr.str();
 				return false;
 			}
+			catch(...) {
+				// any other exception: free memory and re-throw
+				MAIN_DATABASE_DELETE(sqlStatement);
+				throw;
+			}
 		}
 
 		// delete SQL statement
@@ -4868,10 +5364,10 @@ void Database::execute(const std::string& sqlQuery) {
 	sql::Statement * sqlStatement = NULL;
 
 	// check argument
-	if(sqlQuery.empty()) throw std::runtime_error("execute(): No SQL query specified");
+	if(sqlQuery.empty()) throw Database::Exception("execute(): No SQL query specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// create SQL statement
@@ -4889,7 +5385,12 @@ void Database::execute(const std::string& sqlQuery) {
 		std::ostringstream errorStrStr;
 		errorStrStr << "execute() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		errorStrStr << " [QUERY: \'" << sqlQuery << "\']";
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlStatement);
+		throw;
 	}
 }
 

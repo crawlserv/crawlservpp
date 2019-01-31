@@ -243,11 +243,11 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 	else {
 		// check prepared SQL statement
 		if(!(this->psGetCorpus))
-			throw std::runtime_error("Missing prepared SQL statement for getting the corpus");
+			throw DatabaseException("Missing prepared SQL statement for getting the corpus");
 		sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetCorpus);
 
 		// check connection
-		if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+		if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
 
 		try {
 			// execute SQL query for getting the corpus
@@ -278,7 +278,12 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 			MAIN_DATABASE_DELETE(sqlResultSet);
 			std::ostringstream errorStrStr;
 			errorStrStr << "getCorpus() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
-			throw std::runtime_error(errorStrStr.str());
+			throw DatabaseException(errorStrStr.str());
+		}
+		catch(...) {
+			// any other exception: free memory and re-throw
+			MAIN_DATABASE_DELETE(sqlResultSet);
+			throw;
 		}
 	}
 
@@ -290,19 +295,19 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 
 			// parse datemap
 			rapidjson::Document document;
-			if(document.Parse(dateMap.c_str()).HasParseError()) throw std::runtime_error("getCorpus(): Could not parse datemap of corpus");
-			if(!document.IsArray()) throw std::runtime_error("getCorpus(): Invalid datemap (is not an array)");
+			if(document.Parse(dateMap.c_str()).HasParseError()) throw DatabaseException("getCorpus(): Could not parse datemap of corpus");
+			if(!document.IsArray()) throw DatabaseException("getCorpus(): Invalid datemap (is not an array)");
 
 			for(auto i = document.Begin(); i != document.End(); ++i) {
 				rapidjson::Value::MemberIterator p = i->FindMember("p");
 				rapidjson::Value::MemberIterator l = i->FindMember("l");
 				rapidjson::Value::MemberIterator v = i->FindMember("v");
 				if(p == i->MemberEnd() || !(p->value.IsUint64()))
-					throw std::runtime_error("getCorpus(): Invalid datemap (could not find valid position)");
+					throw DatabaseException("getCorpus(): Invalid datemap (could not find valid position)");
 				if(l == i->MemberEnd() || !(l->value.IsUint64()))
-					throw std::runtime_error("getCorpus(): Invalid datemap (could not find valid length)");
+					throw DatabaseException("getCorpus(): Invalid datemap (could not find valid length)");
 				if(v == i->MemberEnd() || !(v->value.IsString()))
-					throw std::runtime_error("getCorpus(): Invalid datemap (could not find valid value)");
+					throw DatabaseException("getCorpus(): Invalid datemap (could not find valid value)");
 
 				if(crawlservpp::Helper::DateTime::isISODateInRange(v->value.GetString(), filterDateFrom, filterDateTo)) {
 					filteredCorpus += corpusTo.substr(p->value.GetUint64(), l->value.GetUint64());
@@ -320,7 +325,7 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 				this->log("analyzer", logStrStr.str());
 			}
 		}
-		else throw std::runtime_error("getCorpus(): No datemap for corpus found");
+		else throw DatabaseException("getCorpus(): No datemap for corpus found");
 	}
 }
 
@@ -332,33 +337,33 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 
 	// check prepared SQL statements
 	if(!(this->psIsCorpusChanged))
-		throw std::runtime_error("Missing prepared SQL statement for getting the corpus creation time");
+		throw DatabaseException("Missing prepared SQL statement for getting the corpus creation time");
 	sql::PreparedStatement * corpusStatement = this->getPreparedStatement(this->psIsCorpusChanged);
 
 	sql::PreparedStatement * tableStatement = NULL;
 	switch(sourceType) {
 	case Config::generalInputSourcesParsing:
 		if(!(this->psIsCorpusChangedParsing))
-			throw std::runtime_error("Missing prepared SQL statement for getting the parsing table update time");
+			throw DatabaseException("Missing prepared SQL statement for getting the parsing table update time");
 		tableStatement = this->getPreparedStatement(this->psIsCorpusChangedParsing);
 		break;
 	case Config::generalInputSourcesExtracting:
 		if(!(this->psIsCorpusChangedExtracting))
-			throw std::runtime_error("Missing prepared SQL statement for getting the extracting table update time");
+			throw DatabaseException("Missing prepared SQL statement for getting the extracting table update time");
 		tableStatement = this->getPreparedStatement(this->psIsCorpusChangedExtracting);
 		break;
 	case Config::generalInputSourcesAnalyzing:
 		if(!(this->psIsCorpusChangedAnalyzing))
-			throw std::runtime_error("Missing prepared SQL statement for getting the annalyzing table update time");
+			throw DatabaseException("Missing prepared SQL statement for getting the annalyzing table update time");
 		tableStatement = this->getPreparedStatement(this->psIsCorpusChangedAnalyzing);
 		break;
 	case Config::generalInputSourcesCrawling:
 		return true; // always re-create corpus for crawling data
 	}
-	if(!tableStatement) throw std::runtime_error("Invalid source type for text corpus");
+	if(!tableStatement) throw DatabaseException("Invalid source type for text corpus");
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
 
 	try {
 		// execute SQL query for getting the update time of the source table
@@ -391,7 +396,12 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isCorpusChanged() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw DatabaseException(errorStrStr.str());
+	}
+	catch(...) {
+		// any other exception: free memory and re-throw
+		MAIN_DATABASE_DELETE(sqlResultSet);
+		throw;
 	}
 
 	return result;
@@ -411,10 +421,10 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 	// check prepared SQL statements
 	if(!(this->psDeleteCorpus))
-		throw std::runtime_error("Missing prepared SQL statement for deleting text corpus");
+		throw DatabaseException("Missing prepared SQL statement for deleting text corpus");
 	sql::PreparedStatement * deleteStatement = this->getPreparedStatement(this->psDeleteCorpus);
 	if(!(this->psAddCorpus))
-		throw std::runtime_error("Missing prepared SQL statement for adding text corpus");
+		throw DatabaseException("Missing prepared SQL statement for adding text corpus");
 	sql::PreparedStatement * addStatement = this->getPreparedStatement(this->psAddCorpus);
 
 	// check source type
@@ -443,11 +453,11 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		}
 		break;
 	default:
-		throw std::runtime_error("Invalid source type for text corpus");
+		throw DatabaseException("Invalid source type for text corpus");
 	}
 
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
 
 	// start timing and write log entry
 	crawlservpp::Timer::Simple timer;
@@ -570,7 +580,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "createCorpus() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw DatabaseException(errorStrStr.str());
 	}
 
 	if(this->logging) {

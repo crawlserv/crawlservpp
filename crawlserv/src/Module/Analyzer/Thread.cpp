@@ -105,12 +105,14 @@ void Thread::finished() {
 	std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepWhenFinished));
 }
 
+// shadow pause function not to be used by thread
+void Thread::pause() {
+	this->pauseByThread();
+}
+
 // hide functions not to be used by thread
 void Thread::start() {
 	throw(std::logic_error("Thread::start() not to be used by thread itself"));
-}
-void Thread::pause() {
-	throw(std::logic_error("Thread::pause() not to be used by thread itself"));
 }
 void Thread::unpause() {
 	throw(std::logic_error("Thread::unpause() not to be used by thread itself"));

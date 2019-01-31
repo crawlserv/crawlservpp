@@ -148,8 +148,14 @@ bool Thread::onTick() {
 
 		// update URL list if possible, release URL lock
 		this->database.lockUrlList();
-		if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime) && parsed)
-			this->database.setUrlFinished(this->currentUrl.first);
+		try { if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime) && parsed)
+			this->database.setUrlFinished(this->currentUrl.first); }
+		catch(...) {
+			// any exception: try to release table locks and re-throw
+			try { this->database.releaseLocks(); }
+			catch(...) {}
+			throw;
+		}
 		this->database.releaseLocks();
 		this->lockTime = "";
 
@@ -173,7 +179,13 @@ bool Thread::onTick() {
 
 		// remove URL lock if necessary
 		this->database.lockUrlList();
-		if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime)) this->database.unLockUrl(this->currentUrl.first);
+		try { if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime)) this->database.unLockUrl(this->currentUrl.first); }
+		catch(...) {
+			// any exception: try to release table locks and re-throw
+			try { this->database.releaseLocks(); }
+			catch(...) {}
+			throw;
+		}
 		this->database.releaseLocks();
 		this->lockTime = "";
 	}
@@ -233,12 +245,14 @@ void Thread::onClear(bool interrupted) {
 	this->clearQueries();
 }
 
+// shadow pause function not to be used by thread
+void Thread::pause() {
+	this->pauseByThread();
+}
+
 // hide functions not to be used by thread
 void Thread::start() {
 	throw(std::logic_error("Thread::start() not to be used by thread itself"));
-}
-void Thread::pause() {
-	throw(std::logic_error("Thread::pause() not to be used by thread itself"));
 }
 void Thread::unpause() {
 	throw(std::logic_error("Thread::unpause() not to be used by thread itself"));
@@ -307,60 +321,68 @@ bool Thread::parsingUrlSelection() {
 	bool skip = false;
 	unsigned long skipped = 0;
 
-	while(true) {
-		if(skip) this->currentUrl = this->database.getNextUrl(skipped);
-		else this->currentUrl = this->database.getNextUrl(this->getLast());
+	try {
+		while(true) {
+			if(skip) this->currentUrl = this->database.getNextUrl(skipped);
+			else this->currentUrl = this->database.getNextUrl(this->getLast());
 
-		if(this->currentUrl.first) {
-			// check whether to skip URL
-			skip = false;
-			if(!(this->config.generalSkip.empty())) {
-				for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
-					// check result type of query
-					if(!(i->resultBool) && this->config.generalLogging)
-						this->log("WARNING: Invalid result type of skip query (not bool).");
+			if(this->currentUrl.first) {
+				// check whether to skip URL
+				skip = false;
+				if(!(this->config.generalSkip.empty())) {
+					for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
+						// check result type of query
+						if(!(i->resultBool) && this->config.generalLogging)
+							this->log("WARNING: Invalid result type of skip query (not bool).");
 
-					// check query type
-					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-						// parse ID by running RegEx query on URL
-						bool queryResult = false;
-						if(this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.second, queryResult)) {
-							if(queryResult) {
-								skip = true;
+						// check query type
+						if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+							// parse ID by running RegEx query on URL
+							bool queryResult = false;
+							if(this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.second, queryResult)) {
+								if(queryResult) {
+									skip = true;
+								}
+								break;
 							}
-							break;
 						}
+						else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+							this->log("WARNING: ID query on URL is not of type RegEx.");
 					}
-					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-						this->log("WARNING: ID query on URL is not of type RegEx.");
 				}
-			}
 
-			if(skip) {
-				// skip URL
-				if(this->config.generalLogging) logEntries.push_back("skipped " + this->currentUrl.second);
-				skipped = this->currentUrl.first;
-			}
-			else {
-				// lock URL
-				if(this->database.isUrlLockable(this->currentUrl.first)) {
-					this->lockTime = this->database.lockUrl(this->currentUrl.first, this->config.generalLock);
-					// success!
-					break;
-				}
-				else if(this->config.generalLogging) {
-					// skip locked URL
-					logEntries.push_back("skipped " + this->currentUrl.second + ", because it is locked.");
-					skip = true;
+				if(skip) {
+					// skip URL
+					if(this->config.generalLogging) logEntries.push_back("skipped " + this->currentUrl.second);
 					skipped = this->currentUrl.first;
 				}
+				else {
+					// lock URL
+					if(this->database.isUrlLockable(this->currentUrl.first)) {
+						this->lockTime = this->database.lockUrl(this->currentUrl.first, this->config.generalLock);
+						// success!
+						break;
+					}
+					else if(this->config.generalLogging) {
+						// skip locked URL
+						logEntries.push_back("skipped " + this->currentUrl.second + ", because it is locked.");
+						skip = true;
+						skipped = this->currentUrl.first;
+					}
+				}
+			}
+			else {
+				// no more URLs
+				result = false;
+				break;
 			}
 		}
-		else {
-			// no more URLs
-			result = false;
-			break;
-		}
+	}
+	catch(...) {
+		// any exception: try to release table locks and re-throw
+		try { this->database.releaseLocks(); }
+		catch(...) {}
+		throw;
 	}
 
 	// unlock URL list and write to log if necessary

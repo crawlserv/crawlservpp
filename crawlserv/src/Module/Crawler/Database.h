@@ -27,6 +27,9 @@
 #include <utility>
 
 namespace crawlservpp::Module::Crawler {
+	// for convenience
+	typedef crawlservpp::Main::Database::Exception DatabaseException;
+
 	class Database : public crawlservpp::Module::DBWrapper {
 	public:
 		Database(crawlservpp::Module::DBThread& dbRef);
