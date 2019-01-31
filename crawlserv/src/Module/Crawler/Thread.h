@@ -60,19 +60,21 @@ namespace crawlservpp::Module::Crawler {
 		void onUnpause() override;
 		void onClear(bool interrupted) override;
 
+		// shadow pause function not to be used by thread
+		void pause();
+
 	private:
+		// hide other functions not to be used by thread
+		void start();
+		void unpause();
+		void stop();
+		void interrupt();
+
 		// structure for mementos (archived versions of websites)
 		struct Memento {
 			std::string url;
 			std::string timeStamp;
 		};
-
-		// hide functions not to be used by thread
-		void start();
-		void pause();
-		void unpause();
-		void stop();
-		void interrupt();
 
 		// configuration, domain, URI parser and separate networking for archive.org
 		Config config;

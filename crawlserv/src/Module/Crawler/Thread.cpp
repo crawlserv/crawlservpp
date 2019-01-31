@@ -226,7 +226,13 @@ bool Thread::onTick() {
 
 		// remove URL lock if necessary
 		this->database.lockUrlList();
-		if(this->database.checkUrlLock(url.first, this->lockTime)) this->database.unLockUrl(url.first);
+		try { if(this->database.checkUrlLock(url.first, this->lockTime)) this->database.unLockUrl(url.first); }
+		catch(...) {
+			// any exception: try to release table locks and re-throw
+			try { this->database.releaseLocks(); }
+			catch(...) {}
+			throw;
+		}
 		this->database.releaseLocks();
 		this->lockTime = "";
 	}
@@ -300,12 +306,14 @@ void Thread::onClear(bool interrupted) {
 	}
 }
 
-// hide functions not to be used by thread
+// shadow pause function not to be used by thread
+void Thread::pause() {
+	this->pauseByThread();
+}
+
+// hide other functions not to be used by thread
 void Thread::start() {
 	throw(std::logic_error("Thread::start() not to be used by thread itself"));
-}
-void Thread::pause() {
-	throw(std::logic_error("Thread::pause() not to be used by thread itself"));
 }
 void Thread::unpause() {
 	throw(std::logic_error("Thread::unpause() not to be used by thread itself"));
@@ -326,52 +334,60 @@ void Thread::initCustomUrls() {
 		this->log("initializes start page and custom URLs...");
 	this->database.lockUrlList();
 
-	// get id for start page (and add it to URL list if necessary)
-	if(this->database.isUrlExists(this->config.crawlerStart)) this->startPageId = this->database.getUrlId(this->config.crawlerStart);
-	else this->startPageId = this->database.addUrl(this->config.crawlerStart, true);
+	try {
+		// get id for start page (and add it to URL list if necessary)
+		if(this->database.isUrlExists(this->config.crawlerStart)) this->startPageId = this->database.getUrlId(this->config.crawlerStart);
+		else this->startPageId = this->database.addUrl(this->config.crawlerStart, true);
 
-	if(!(this->config.customCounters.empty())) {
-		// run custom counters
-		std::vector<std::string> newUrls;
-		newUrls.reserve(this->config.customCounters.size());
+		if(!(this->config.customCounters.empty())) {
+			// run custom counters
+			std::vector<std::string> newUrls;
+			newUrls.reserve(this->config.customCounters.size());
 
-		if(this->config.customCountersGlobal) {
-			// run each counter over every URL
-			newUrls = this->config.customUrls;
-			for(unsigned long n = 0; n < this->config.customCounters.size(); n++) {
-				this->initDoGlobalCounting(newUrls, this->config.customCounters.at(n), this->config.customCountersStart.at(n),
-						this->config.customCountersEnd.at(n), this->config.customCountersStep.at(n));
+			if(this->config.customCountersGlobal) {
+				// run each counter over every URL
+				newUrls = this->config.customUrls;
+				for(unsigned long n = 0; n < this->config.customCounters.size(); n++) {
+					this->initDoGlobalCounting(newUrls, this->config.customCounters.at(n), this->config.customCountersStart.at(n),
+							this->config.customCountersEnd.at(n), this->config.customCountersStep.at(n));
+				}
 			}
+			else {
+				// run each counter over one URL
+				for(unsigned long n = 0; n < std::min(this->config.customCounters.size(), this->config.customUrls.size()); n++) {
+					std::vector<std::string> temp = this->initDoLocalCounting(this->config.customUrls.at(n),
+							this->config.customCounters.at(n), this->config.customCountersStart.at(n),
+							this->config.customCountersEnd.at(n), this->config.customCountersStep.at(n));
+					newUrls.reserve(newUrls.size() + temp.size());
+					newUrls.insert(newUrls.end(), temp.begin(), temp.end());
+				}
+			}
+
+			this->customPages.reserve(newUrls.size());
+			for(auto i = newUrls.begin(); i != newUrls.end(); ++i) this->customPages.push_back(std::pair<unsigned long, std::string>(0, *i));
 		}
 		else {
-			// run each counter over one URL
-			for(unsigned long n = 0; n < std::min(this->config.customCounters.size(), this->config.customUrls.size()); n++) {
-				std::vector<std::string> temp = this->initDoLocalCounting(this->config.customUrls.at(n),
-						this->config.customCounters.at(n), this->config.customCountersStart.at(n),
-						this->config.customCountersEnd.at(n), this->config.customCountersStep.at(n));
-				newUrls.reserve(newUrls.size() + temp.size());
-				newUrls.insert(newUrls.end(), temp.begin(), temp.end());
+			// no counters: add all custom URLs as is
+			this->customPages.reserve(this->config.customUrls.size());
+			for(auto i = this->config.customUrls.begin(); i != this->config.customUrls.end(); ++i)
+				this->customPages.push_back(std::pair<unsigned long, std::string>(0, *i));
+		}
+
+		// get ids for custom URLs (and add them to the URL list if necessary)
+		for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
+			// check URI
+			if(this->parser->setCurrentSubUrl(i->second)) {
+				if(this->database.isUrlExists(i->second)) i->first = this->database.getUrlId(i->second);
+				else i->first = this->database.addUrl(i->second, true);
 			}
+			else if(this->config.crawlerLogging) warnings.push_back("WARNING: Skipped invalid custom URL " + i->second);
 		}
-
-		this->customPages.reserve(newUrls.size());
-		for(auto i = newUrls.begin(); i != newUrls.end(); ++i) this->customPages.push_back(std::pair<unsigned long, std::string>(0, *i));
 	}
-	else {
-		// no counters: add all custom URLs as is
-		this->customPages.reserve(this->config.customUrls.size());
-		for(auto i = this->config.customUrls.begin(); i != this->config.customUrls.end(); ++i)
-			this->customPages.push_back(std::pair<unsigned long, std::string>(0, *i));
-	}
-
-	// get ids for custom URLs (and add them to the URL list if necessary)
-	for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
-		// check URI
-		if(this->parser->setCurrentSubUrl(i->second)) {
-			if(this->database.isUrlExists(i->second)) i->first = this->database.getUrlId(i->second);
-			else i->first = this->database.addUrl(i->second, true);
-		}
-		else if(this->config.crawlerLogging) warnings.push_back("WARNING: Skipped invalid custom URL " + i->second);
+	catch(...) {
+		// any exception: try to release table locks and re-throw
+		try { this->database.releaseLocks(); }
+		catch(...) {}
+		throw;
 	}
 
 	// unlock URL list
@@ -496,120 +512,127 @@ bool Thread::crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo) 
 	// lock URL list
 	this->database.lockUrlList();
 
-	// MANUAL CRAWLING MODE (get URL from configuration)
-	if(!(this->getLast())) {
-		if(this->manualUrl.first) {
-			// re-try custom URL or start page if not locked
-			this->database.lockUrlList();
-			if(this->database.renewUrlLock(this->config.crawlerLock, this->manualUrl.first, this->lockTime)) {
-				urlTo = this->manualUrl;
-			}
-			else {
-				// skipped locked URL
-				logEntries.push_back("URL lock active - " + this->manualUrl.second + " skipped.");
-				this->manualUrl = std::pair<unsigned long, std::string>(0, "");
-			}
-		}
-
-		if(!(this->manualUrl.first)) {
-			// no retry: check custom URLs
-			if(!(this->customPages.empty())) {
-				if(!(this->manualCounter)) {
-					// start manual crawling with custom URLs
-					logEntries.push_back("starts crawling in non-recoverable MANUAL mode.");
+	try {
+		// MANUAL CRAWLING MODE (get URL from configuration)
+		if(!(this->getLast())) {
+			if(this->manualUrl.first) {
+				// re-try custom URL or start page if not locked
+				if(this->database.renewUrlLock(this->config.crawlerLock, this->manualUrl.first, this->lockTime)) {
+					urlTo = this->manualUrl;
 				}
-
-				// get next custom URL (that is lockable and maybe not crawled)
-				while(this->manualCounter < this->customPages.size()) {
-					this->manualUrl = this->customPages.at(this->manualCounter);
-
-					if(!(this->config.customReCrawl)) {
-						if(this->database.isUrlCrawled(this->manualUrl.first)) {
-							this->manualCounter++;
-							this->manualUrl = std::pair<unsigned long, std::string>(0, "");
-							continue;
-						}
-					}
-
-					if(this->database.isUrlLockable(this->manualUrl.first)) {
-						this->lockTime = this->database.lockUrl(this->manualUrl.first, this->config.crawlerLock);
-						urlTo = this->manualUrl;
-						break;
-					}
-
-					// skip locked custom URL
+				else {
+					// skipped locked URL
 					logEntries.push_back("URL lock active - " + this->manualUrl.second + " skipped.");
-					this->manualCounter++;
 					this->manualUrl = std::pair<unsigned long, std::string>(0, "");
 				}
 			}
 
-			if(this->manualCounter == this->customPages.size()) {
-				// no more custom URLs to go: get start page (if lockable)
-				if(!(this->startCrawled)) {
-					if(this->customPages.empty()) {
-						// start manual crawling with start page
+			if(!(this->manualUrl.first)) {
+				// no retry: check custom URLs
+				if(!(this->customPages.empty())) {
+					if(!(this->manualCounter)) {
+						// start manual crawling with custom URLs
 						logEntries.push_back("starts crawling in non-recoverable MANUAL mode.");
 					}
 
-					this->manualUrl = std::pair<unsigned long, std::string>(this->startPageId, this->config.crawlerStart);
-					if((this->config.crawlerReCrawlStart || !(this->database.isUrlCrawled(this->startPageId)))
-							&& this->database.isUrlLockable(this->startPageId)) {
-						this->lockTime = this->database.lockUrl(this->manualUrl.first, this->config.crawlerLock);
-						urlTo = this->manualUrl;
+					// get next custom URL (that is lockable and maybe not crawled)
+					while(this->manualCounter < this->customPages.size()) {
+						this->manualUrl = this->customPages.at(this->manualCounter);
+
+						if(!(this->config.customReCrawl)) {
+							if(this->database.isUrlCrawled(this->manualUrl.first)) {
+								this->manualCounter++;
+								this->manualUrl = std::pair<unsigned long, std::string>(0, "");
+								continue;
+							}
+						}
+
+						if(this->database.isUrlLockable(this->manualUrl.first)) {
+							this->lockTime = this->database.lockUrl(this->manualUrl.first, this->config.crawlerLock);
+							urlTo = this->manualUrl;
+							break;
+						}
+
+						// skip locked custom URL
+						logEntries.push_back("URL lock active - " + this->manualUrl.second + " skipped.");
+						this->manualCounter++;
+						this->manualUrl = std::pair<unsigned long, std::string>(0, "");
+					}
+				}
+
+				if(this->manualCounter == this->customPages.size()) {
+					// no more custom URLs to go: get start page (if lockable)
+					if(!(this->startCrawled)) {
+						if(this->customPages.empty()) {
+							// start manual crawling with start page
+							logEntries.push_back("starts crawling in non-recoverable MANUAL mode.");
+						}
+
+						this->manualUrl = std::pair<unsigned long, std::string>(this->startPageId, this->config.crawlerStart);
+						if((this->config.crawlerReCrawlStart || !(this->database.isUrlCrawled(this->startPageId)))
+								&& this->database.isUrlLockable(this->startPageId)) {
+							this->lockTime = this->database.lockUrl(this->manualUrl.first, this->config.crawlerLock);
+							urlTo = this->manualUrl;
+						}
+						else {
+							// skip locked start page
+							logEntries.push_back("URL lock active - " + this->manualUrl.second + " skipped.");
+							this->manualUrl = std::pair<unsigned long, std::string>(0, "");
+							this->startCrawled = true;
+						}
+					}
+				}
+			}
+		}
+
+		// AUTOMATIC CRAWLING MODE (get URL directly from database)
+		if(!(this->manualUrl.first)) {
+			// check whether manual crawling mode was already set off
+			if(!(this->manualOff)) {
+				// start manual crawling with start page
+				logEntries.push_back("switches to recoverable AUTOMATIC mode.");
+				this->manualOff = true;
+			}
+
+			// check for re-try
+			if(this->nextUrl.first && this->database.checkUrlLock(this->nextUrl.first, this->lockTime)) {
+				this->lockTime = this->database.lockUrl(this->nextUrl.first, this->config.crawlerLock);
+				logEntries.push_back("retries " + this->nextUrl.second + "...");
+				urlTo = this->nextUrl;
+			}
+			else {
+				if(this->nextUrl.first) logEntries.push_back("could not retry " + this->nextUrl.second + ", because it is locked.");
+				while(true) {
+					// get id and name of next URL
+					this->nextUrl = this->database.getNextUrl(this->getLast());
+
+					if(this->nextUrl.first) {
+						// lock URL
+						if(this->database.isUrlLockable(this->nextUrl.first)) {
+							this->lockTime = this->database.lockUrl(this->nextUrl.first, this->config.crawlerLock);
+							urlTo = this->nextUrl;
+							// success!
+							break;
+						}
+						else {
+							// skip locked URL
+							logEntries.push_back("skipped " + this->nextUrl.second + ", because it is locked.");
+						}
 					}
 					else {
-						// skip locked start page
-						logEntries.push_back("URL lock active - " + this->manualUrl.second + " skipped.");
-						this->manualUrl = std::pair<unsigned long, std::string>(0, "");
-						this->startCrawled = true;
+						// no more URLs
+						result = false;
+						break;
 					}
 				}
 			}
 		}
 	}
-
-	// AUTOMATIC CRAWLING MODE (get URL directly from database)
-	if(!(this->manualUrl.first)) {
-		// check whether manual crawling mode was already set off
-		if(!(this->manualOff)) {
-			// start manual crawling with start page
-			logEntries.push_back("switches to recoverable AUTOMATIC mode.");
-			this->manualOff = true;
-		}
-
-		// check for re-try
-		if(this->nextUrl.first && this->database.checkUrlLock(this->nextUrl.first, this->lockTime)) {
-			this->lockTime = this->database.lockUrl(this->nextUrl.first, this->config.crawlerLock);
-			logEntries.push_back("retries " + this->nextUrl.second + "...");
-			urlTo = this->nextUrl;
-		}
-		else {
-			if(this->nextUrl.first) logEntries.push_back("could not retry " + this->nextUrl.second + ", because it is locked.");
-			while(true) {
-				// get id and name of next URL
-				this->nextUrl = this->database.getNextUrl(this->getLast());
-
-				if(this->nextUrl.first) {
-					// lock URL
-					if(this->database.isUrlLockable(this->nextUrl.first)) {
-						this->lockTime = this->database.lockUrl(this->nextUrl.first, this->config.crawlerLock);
-						urlTo = this->nextUrl;
-						// success!
-						break;
-					}
-					else {
-						// skip locked URL
-						logEntries.push_back("skipped " + this->nextUrl.second + ", because it is locked.");
-					}
-				}
-				else {
-					// no more URLs
-					result = false;
-					break;
-				}
-			}
-		}
+	catch(...) {
+		// any exception: try to release table locks and re-throw
+		try { this->database.releaseLocks(); }
+		catch(...) {}
+		throw;
 	}
 
 	// unlock URL list and write to log if necessary
@@ -1143,45 +1166,52 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 	std::string statusMessage = this->getStatusMessage();
 
 	// lock URL list and add non-existing URLs
-	bool locked = false;
+	this->database.lockUrlList();
 	bool longUrls = false;
-
 	unsigned long counter = 0;
 	unsigned long linkUrlId = 0;
-	for(auto i = urls.begin(); i != urls.end(); ++i) {
-		counter++;
-		if(counter % 500 == 0) {
-			// unlock tables
-			if(locked) this->database.releaseLocks();
 
-			// set status
-			std::ostringstream statusStrStr;
-			statusStrStr.imbue(std::locale(""));
-			statusStrStr << "[URLs: " << counter << "/" << urls.size() << "] " << statusMessage;
-			this->setStatusMessage(statusStrStr.str());
+	try {
+		for(auto i = urls.begin(); i != urls.end(); ++i) {
+			counter++;
+			if(counter % 500 == 0) {
+				// unlock tables
+				this->database.releaseLocks();
 
-			// lock tables
-			this->database.lockUrlList();
-			locked = true;
-		}
+				// set status
+				std::ostringstream statusStrStr;
+				statusStrStr.imbue(std::locale(""));
+				statusStrStr << "[URLs: " << counter << "/" << urls.size() << "] " << statusMessage;
+				this->setStatusMessage(statusStrStr.str());
 
-		if(i->size() > 2000) longUrls = true;
-		else {
-			if(this->database.isUrlExists(*i)) {
-				linkUrlId = this->database.getUrlId(*i);
+				// lock tables
+				this->database.lockUrlList();
 			}
+
+			if(i->size() > 2000) longUrls = true;
 			else {
-				if(this->config.crawlerLogging && this->config.crawlerWarningsFile && !(i->empty()) && i->back() != '/') {
-					this->log("WARNING: Found file \'" + *i + "\'.");
+				if(this->database.isUrlExists(*i)) {
+					linkUrlId = this->database.getUrlId(*i);
+				}
+				else {
+					if(this->config.crawlerLogging && this->config.crawlerWarningsFile && !(i->empty()) && i->back() != '/') {
+						this->log("WARNING: Found file \'" + *i + "\'.");
+					}
+
+					linkUrlId = this->database.addUrl(*i, false);
+					newUrlsTo++;
 				}
 
-				linkUrlId = this->database.addUrl(*i, false);
-				newUrlsTo++;
+				// add linkage information to database
+				this->database.addLinkIfNotExists(url.first, linkUrlId, archived);
 			}
-
-			// add linkage information to database
-			this->database.addLinkIfNotExists(url.first, linkUrlId, archived);
 		}
+	}
+	catch(...) {
+		// any exception: try to release table locks and re-throw
+		try { this->database.releaseLocks(); }
+		catch(...) {}
+		throw;
 	}
 
 	// unlock URL list
@@ -1420,7 +1450,13 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 void Thread::crawlingSuccess(const std::pair<unsigned long, std::string>& url) {
 	// update URL list if possible
 	this->database.lockUrlList();
-	if(this->database.checkUrlLock(url.first, this->lockTime)) this->database.setUrlFinished(url.first);
+	try { if(this->database.checkUrlLock(url.first, this->lockTime)) this->database.setUrlFinished(url.first); }
+	catch(...) {
+		// any exception: try to release table locks and re-throw
+		try { this->database.releaseLocks(); }
+		catch(...) {}
+		throw;
+	}
 	this->database.releaseLocks();
 	this->lockTime = "";
 

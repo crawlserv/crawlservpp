@@ -64,10 +64,12 @@ namespace crawlservpp::Module::Analyzer {
 		// algorithm is finished
 		void finished();
 
-	private:
-		// hide functions not to be used by thread
-		void start();
+		// shadow pause function not to be used by thread
 		void pause();
+
+	private:
+		// hide other functions not to be used by thread
+		void start();
 		void unpause();
 		void stop();
 		void interrupt();

@@ -20,7 +20,7 @@ DBThread::DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings)
 	this->psSetThreadLast = 0;
 	if(crawlservpp::Main::Database::driver)
 		crawlservpp::Main::Database::driver->threadInit();
-	else throw(std::runtime_error("MySQL driver not loaded"));
+	else throw(Database::Exception("MySQL driver not loaded"));
 }
 
 // destructor stub
@@ -79,13 +79,13 @@ bool DBThread::prepare() {
 // set the status message of a thread (and add the pause state)
 void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadStatusMessage))
-		throw std::runtime_error("Missing prepared SQL statement for Database::setThreadStatusMessage(...)");
+		throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatusMessage(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadStatusMessage - 1).statement;
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::setThreadStatusMessage(...) is NULL");
+	if(!sqlStatement) throw Database::Exception("Prepared SQL statement for Database::setThreadStatusMessage(...) is NULL");
 
 	// create status message
 	std::string statusMessage;
@@ -106,20 +106,20 @@ void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadStatusMessage() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
 	}
 }
 
 // set the progress of a thread to between 0 for 0% and 1 for 100% in database
 void DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadProgress))
-		throw std::runtime_error("Missing prepared SQL statement for Database::setThreadProgress(...)");
+		throw Database::Exception("Missing prepared SQL statement for Database::setThreadProgress(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadProgress - 1).statement;
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::setThreadProgress(...) is NULL");
+	if(!sqlStatement) throw Database::Exception("Prepared SQL statement for Database::setThreadProgress(...) is NULL");
 
 	try {
 		// execute SQL statement
@@ -131,19 +131,19 @@ void DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadProgress() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
 	}
 }
 
 // set last id of thread in database
 void DBThread::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 	// check connection
-	if(!(this->checkConnection())) throw std::runtime_error(this->errorMessage);
+	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	// check prepared SQL statement
-	if(!(this->psSetThreadLast)) throw std::runtime_error("Missing prepared SQL statement for Database::setThreadLast(...)");
+	if(!(this->psSetThreadLast)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadLast(...)");
 	sql::PreparedStatement * sqlStatement = this->preparedStatements.at(this->psSetThreadLast - 1).statement;
-	if(!sqlStatement) throw std::runtime_error("Prepared SQL statement for Database::setThreadLast(...) is NULL");
+	if(!sqlStatement) throw Database::Exception("Prepared SQL statement for Database::setThreadLast(...) is NULL");
 
 	try {
 		// execute SQL statement
@@ -155,7 +155,7 @@ void DBThread::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "setThreadLast() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw std::runtime_error(errorStrStr.str());
+		throw Database::Exception(errorStrStr.str());
 	}
 }
 

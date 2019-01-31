@@ -62,6 +62,7 @@ namespace crawlservpp::Module {
 		std::string urlListNamespace; // namespace of URL list
 		std::string configuration; // configuration
 
+		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
 		void setProgress(float progress);
 		void log(const std::string& entry);

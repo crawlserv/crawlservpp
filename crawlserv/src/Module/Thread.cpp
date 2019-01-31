@@ -215,6 +215,21 @@ bool Thread::isRunning() const {
 	return this->running;
 }
 
+// force the thread to pause (to be used by the thread only)
+void Thread::pauseByThread() {
+	// ignore if thread is paused
+	if(this->paused) return;
+
+	// set internal pause state
+	this->paused = true;
+
+	// set pause state in database
+	{
+		std::lock_guard<std::mutex> statusLocked(this->statusLock);
+		this->database.setThreadStatus(this->id, true, this->status);
+	}
+}
+
 // set the status messsage of the thread (to be used by the thread only)
 void Thread::setStatusMessage(const std::string& statusMessage) {
 	// set internal status
@@ -352,7 +367,27 @@ void Thread::main() {
 						this->startTimePoint = std::chrono::steady_clock::now();
 					}
 					// run thread tick
-					else if(!(this->onTick())) this->running = false;
+					else {
+						try {
+							if(!(this->onTick())) this->running = false;
+						}
+						// handle database exceptions by trying to pause thread
+						catch(const crawlservpp::Main::Database::Exception &dbException) {
+							// release table locks
+							this->database.releaseLocks();
+
+							// log error
+							std::ostringstream logStrStr;
+							logStrStr << "failed - " << dbException.whatStr() << ".";
+							this->log(logStrStr.str());
+
+							// try to set status
+							this->setStatusMessage("ERROR " + dbException.whatStr());
+
+							// try to pause thread
+							this->pauseByThread();
+						}
+					}
 				}
 			}
 			else this->terminated = true;
@@ -373,10 +408,9 @@ void Thread::main() {
 					logStr += " and " + crawlservpp::Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
 				logStr += ".";
 				this->log(logStr);
-
-
 			}
 		}
+
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
 		// handle exceptions by thread
 		catch(const std::exception& e) {
@@ -402,6 +436,7 @@ void Thread::main() {
 			this->terminated = true;
 		}
 #endif
+
 	}
 	else throw std::runtime_error(this->database.getErrorMessage());
 }

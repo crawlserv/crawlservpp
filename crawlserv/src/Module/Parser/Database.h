@@ -31,6 +31,7 @@ namespace crawlservpp::Module::Parser {
 
 	// for convenience
 	typedef crawlservpp::Main::Database::Column TableColumn;
+	typedef crawlservpp::Main::Database::Exception DatabaseException;
 
 	class Database : public crawlservpp::Module::DBWrapper {
 	public:
