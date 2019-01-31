@@ -2056,7 +2056,23 @@ void Database::resetParsingStatus(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
-	this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "` SET parsed = FALSE, parselock = NULL");
+	// lock URL list
+	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
+
+	try {
+		// update URL list
+		this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
+				+ "` SET parsed = FALSE, parselock = NULL");
+	}
+	catch(...) {
+		// any exeption: try to release table lock and re-throw
+		try { this->releaseLocks(); }
+		catch(...) {}
+		throw;
+	}
+
+	// release lock
+	this->releaseLocks();
 }
 
 // reset extracting status of ID-specified URL list
@@ -2068,7 +2084,23 @@ void Database::resetExtractingStatus(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
-	this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "` SET extracted = FALSE, extractlock = NULL");
+	// lock URL list
+	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
+
+	try {
+		// update URL list
+		this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
+				+ "` SET extracted = FALSE, extractlock = NULL");
+	}
+	catch(...) {
+		// any exeption: try to release table lock and re-throw
+		try { this->releaseLocks(); }
+		catch(...) {}
+		throw;
+	}
+
+	// release lock
+	this->releaseLocks();
 }
 
 // reset analyzing status of ID-specified URL list
@@ -2080,7 +2112,23 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
-	this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "` SET analyzed = FALSE, analyzelock = NULL");
+	// lock URL list
+	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
+
+	try {
+		// update URL list
+		this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
+				+ "` SET analyzed = FALSE, analyzelock = NULL");
+	}
+	catch(...) {
+		// any exeption: try to release table lock and re-throw
+		try { this->releaseLocks(); }
+		catch(...) {}
+		throw;
+	}
+
+	// release lock
+	this->releaseLocks();
 }
 
 /*
