@@ -13,18 +13,18 @@
 namespace crawlservpp::Main {
 
 // constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
-App::App(int argc, char * argv[]) {
-	crawlservpp::Struct::DatabaseSettings dbSettings;
-	crawlservpp::Struct::ServerSettings serverSettings;
-	std::string error;
-
-	// set default value
-	this->server = NULL;
-
-	// show header
-	this->outputHeader();
-
+App::App(int argc, char * argv[]) noexcept {
 	try {
+		crawlservpp::Struct::DatabaseSettings dbSettings;
+		crawlservpp::Struct::ServerSettings serverSettings;
+		std::string error;
+
+		// set default value
+		this->server = NULL;
+
+		// show header
+		this->outputHeader();
+
 		// check number of arguments
 		if(!(this->checkArgumentNumber(argc, error))) throw(std::runtime_error(error));
 
@@ -40,7 +40,8 @@ App::App(int argc, char * argv[]) {
 		std::cout << "Server is up and running." << std::flush;
 	}
 	catch(const std::exception& e) {
-		std::cout << "[ERROR] " << e.what() << std::endl;
+		try { std::cout << "[ERROR] " << e.what() << std::endl; }
+		catch(...) {}
 	}
 }
 
@@ -61,14 +62,15 @@ App::~App() {
 }
 
 // run app
-int App::run() {
+int App::run() noexcept {
 	if(this->server && this->running) {
 		try {
 			while(this->server->tick()) {}
 			return EXIT_SUCCESS;
 		}
 		catch(const std::exception& e) {
-			std::cout << std::endl << "[ERROR] " << e.what();
+			try { std::cout << std::endl << "[ERROR] " << e.what(); }
+			catch(...) {}
 		}
 	}
 	return EXIT_FAILURE;
