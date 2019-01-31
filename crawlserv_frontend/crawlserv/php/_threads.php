@@ -67,6 +67,7 @@ if($num) {
         if($row["status"][0] == "[") $start = strpos($row["status"], "]", 1);
         if($start === false) $start = 0;
         else $start += 2;
+        if(substr($row["status"], $start, 7) == "PAUSED ") $start += 7;
         if(substr($row["status"], $start, 6) == "ERROR ") {
             $cut = htmlentities(substr($row["status"], 0, $start).substr($row["status"], $start + 6));
             echo " error\" title=\"$cut\">$cut";
