@@ -30,6 +30,7 @@ ConfigFile::ConfigFile(const std::string& name) {
 			}
 			this->entries.push_back(entry);
 		}
+		fileStream.close();
 	}
 	else {
 		throw std::runtime_error("Could not open \"" + name + "\" for reading");
