@@ -32,10 +32,10 @@
 namespace crawlservpp::Main {
 	class App {
 	public:
-		App(int argc, char * argv[]);
+		App(int argc, char * argv[]) noexcept;
 		virtual ~App();
 
-		int run();
+		int run() noexcept;
 
 	private:
 		bool running;
