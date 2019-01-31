@@ -1165,8 +1165,8 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 	// get status message
 	std::string statusMessage = this->getStatusMessage();
 
-	// lock URL list and add non-existing URLs
-	this->database.lockUrlList();
+	// add non-existing URLs (lock table only if new URls are found)
+	bool locked = false;
 	bool longUrls = false;
 	unsigned long counter = 0;
 	unsigned long linkUrlId = 0;
@@ -1176,7 +1176,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 			counter++;
 			if(counter % 500 == 0) {
 				// unlock tables
-				this->database.releaseLocks();
+				if(locked) this->database.releaseLocks();
 
 				// set status
 				std::ostringstream statusStrStr;
@@ -1185,7 +1185,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 				this->setStatusMessage(statusStrStr.str());
 
 				// lock tables
-				this->database.lockUrlList();
+				if(locked) this->database.lockUrlList();
 			}
 
 			if(i->size() > 2000) longUrls = true;
@@ -1198,8 +1198,19 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 						this->log("WARNING: Found file \'" + *i + "\'.");
 					}
 
-					linkUrlId = this->database.addUrl(*i, false);
-					newUrlsTo++;
+					// check whether URL list is locked already
+					bool add = true;
+					if(!locked) {
+						// lock URL list and add URL only if it still does not exist
+						this->database.lockUrlList();
+						locked = true;
+						add = !(this->database.isUrlExists(*i));
+					}
+					if(add) {
+						// add URL
+						linkUrlId = this->database.addUrl(*i, false);
+						newUrlsTo++;
+					}
 				}
 
 				// add linkage information to database
@@ -1209,7 +1220,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 	}
 	catch(...) {
 		// any exception: try to release table locks and re-throw
-		try { this->database.releaseLocks(); }
+		try { if(locked) this->database.releaseLocks(); }
 		catch(...) {}
 		throw;
 	}
