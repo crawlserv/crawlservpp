@@ -26,22 +26,21 @@ App::App(int argc, char * argv[]) noexcept {
 		this->outputHeader();
 
 		// check number of arguments
-		if(!(this->checkArgumentNumber(argc, error))) throw(std::runtime_error(error));
+		this->checkArgumentNumber(argc);
 
 		// load configuration file
-		if(!(this->loadConfig(argv[1], dbSettings, serverSettings, error))) throw(std::runtime_error(error));
+		this->loadConfig(argv[1], dbSettings, serverSettings);
 
 		// get password
-		if(!(this->getPassword(dbSettings))) this->running = false;
-
-		// create server and run!
-		this->server = new Server(dbSettings, serverSettings);
-		this->running = true;
-		std::cout << "Server is up and running." << std::flush;
+		if(this->getPassword(dbSettings)) {
+			// create server and run!
+			this->server = std::make_unique<Server>(dbSettings, serverSettings);
+			this->running = true;
+			std::cout << "Server is up and running." << std::flush;
+		}
 	}
 	catch(const std::exception& e) {
-		try { std::cout << "[ERROR] " << e.what() << std::endl; }
-		catch(...) {}
+		std::cout << "[ERROR] " << e.what() << std::endl;
 	}
 }
 
@@ -51,10 +50,7 @@ App::~App() {
 		// server up-time message
 		std::cout << std::endl << "Up-time: " << crawlservpp::Helper::DateTime::secondsToString(server->getUpTime()) << ".";
 		std::cout << std::endl << "> Waiting for threads..." << std::flush;
-
-		// delete server
-		delete this->server;
-		this->server = NULL;
+		this->server.reset();
 	}
 
 	// quit message
@@ -69,8 +65,7 @@ int App::run() noexcept {
 			return EXIT_SUCCESS;
 		}
 		catch(const std::exception& e) {
-			try { std::cout << std::endl << "[ERROR] " << e.what(); }
-			catch(...) {}
+			std::cout << std::endl << "[ERROR] " << e.what();
 		}
 	}
 	return EXIT_FAILURE;
@@ -82,18 +77,14 @@ void App::outputHeader() {
 	std::cout << crawlservpp::Helper::Versions::getLibraryVersions(" ") << std::endl;
 }
 
-// static helper function: check number of command line arguments, return false on mismatch (usage notice written to errorTo)
-bool App::checkArgumentNumber(int argc, std::string& errorTo) {
-	if(argc != 2) {
-		errorTo = "USAGE: crawlserv <config_file>";
-		return false;
-	}
-	return true;
+// static helper function: check number of command line arguments, throws std::runtime_error
+void App::checkArgumentNumber(int argc) {
+	if(argc != 2) throw std::runtime_error("USAGE: crawlserv <config_file>");
 }
 
-// static helper function: load database and server settings from configuration file, return false on error (written to errorTo)
-bool App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
-		crawlservpp::Struct::ServerSettings& serverSettings, std::string& errorTo) {
+// static helper function: load database and server settings from configuration file, throws std::runtime_error
+void App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
+		crawlservpp::Struct::ServerSettings& serverSettings) {
 	ConfigFile configFile(fileName);
 
 	dbSettings.host = configFile.getValue("db_host");
@@ -116,8 +107,8 @@ bool App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseS
 			serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
 		}
 		catch(const boost::bad_lexical_cast& e) {
-			errorTo = fileName + ": Could not convert config file entry \"server_logs_deletable\" (=\""
-					+ configFile.getValue("server_logs_deletable") + "\") to boolean value";
+			throw std::runtime_error(fileName + ": Could not convert config file entry \"server_logs_deletable\" (=\""
+					+ configFile.getValue("server_logs_deletable") + "\") to boolean value");
 		}
 	}
 	else serverSettings.logsDeletable = false;
@@ -127,12 +118,11 @@ bool App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseS
 			serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
 		}
 		catch(const boost::bad_lexical_cast& e) {
-			errorTo = fileName + ": Could not convert config file entry \"server_data_deletable\" (=\""
-					+ configFile.getValue("server_data_deletable") + "\") to boolean value";
+			throw std::runtime_error(fileName + ": Could not convert config file entry \"server_data_deletable\" (=\""
+					+ configFile.getValue("server_data_deletable") + "\") to boolean value");
 		}
 	}
 	else serverSettings.dataDeletable = false;
-	return true;
 }
 
 // static helper function: get database password from user, return false on cancel
