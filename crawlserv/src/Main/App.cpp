@@ -39,6 +39,9 @@ App::App(int argc, char * argv[]) noexcept {
 	catch(const std::exception& e) {
 		std::cout << "[ERROR] " << e.what() << std::endl;
 	}
+	catch(...) {
+		std::cout << "[ERROR] Unknown exception in App::App()" << std::endl;
+	}
 }
 
 // destructor: clean-up server
@@ -63,6 +66,9 @@ int App::run() noexcept {
 		}
 		catch(const std::exception& e) {
 			std::cout << std::endl << "[ERROR] " << e.what();
+		}
+		catch(...) {
+			std::cout << std::endl << "[ERROR] Unknown exception in App::run()";
 		}
 	}
 	return EXIT_FAILURE;
