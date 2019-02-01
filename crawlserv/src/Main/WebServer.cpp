@@ -17,6 +17,11 @@ WebServer::WebServer() {
 	this->lastConnection = NULL;
 }
 
+// destructor: free embedded web server if necessary
+WebServer::~WebServer() {
+	if(this->loaded) mg_mgr_free(&(this->eventManager));
+}
+
 // initialize embedded web server and bind it to port, throws std::runtime_error
 void WebServer::initHTTP(const std::string& port) {
 	// initialize mongoose server
@@ -82,11 +87,6 @@ void WebServer::close() {
 
 	// set closing flag
 	this->lastConnection->flags |= MG_F_CLOSE_IMMEDIATELY;
-}
-
-// destrcutor: free embedded web server if necessary
-WebServer::~WebServer() {
-	if(this->loaded) mg_mgr_free(&(this->eventManager));
 }
 
 // static event handler
