@@ -217,6 +217,7 @@ Server::~Server() {
 
 // server tick
 bool Server::tick() {
+	// poll web server
 	this->webServer.poll(1000);
 
 	// check whether a thread was terminated
