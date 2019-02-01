@@ -24,7 +24,9 @@
 #include <chrono>
 #include <condition_variable>
 #include <exception>
+#include <functional>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
@@ -103,7 +105,7 @@ namespace crawlservpp::Module {
 		std::string status; // status message of the thread (without pause state)
 		std::mutex statusLock;
 
-		std::thread * threadPointer; // pointer to the thread
+		std::unique_ptr<std::thread> threadPointer; // pointer to the thread
 
 		// timing statistics (in seconds)
 		std::chrono::steady_clock::time_point startTimePoint;
