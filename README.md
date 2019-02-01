@@ -31,12 +31,13 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 **NB!** All non-external classes are part of the namespace `crawlservpp`.
 
-The source code of the server consists of the following classes (as of January 2019):
+The source code of the server consists of the following classes (as of February 2019):
 
 * **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * **[`Main::Database`](crawlserv/src/Main/Database.cpp)**: Database access for the server and its threads (parent class with server-specific and basic functionality only).
-* **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server implementing a HTTP server for interaction with the frontend, managing threads and performing server commands.
+* **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server managing threads and performing server commands.
+* **[`Main::WebServer`](crawlserv/src/Main/WebServer.cpp)**: Implementation of an embedded HTTP server for interaction with the frontend using the [mongoose library](https://github.com/cesanta/mongoose).
 * **[`Module::Config`](crawlserv/src/Module/Config.cpp)**: Abstract class as base for module-specific configuration classes.
 * **[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)**: Database functionality for threads (child of the [`Main::Database`](crawlserv/src/Main/Database.cpp) class).
 * **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Abstract class for the database access of threads (wraps the [`Module::DBThread`](crawlserv/src/Module/DBThread.cpp) class).
@@ -95,7 +96,7 @@ The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the appli
 
 ### Server Commands
 
-The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of November 2018):
+The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of February 2019):
 
 * **`addconfig`** (arguments: `website`, `module`, `name`, `config`): Add a configuration to the database.
 * **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Add a RegEx or XPath query to the database.
@@ -191,7 +192,7 @@ As can be seen from the commands, the server also manages threads for performing
 
 Configurations for these modules are saved as JSON arrays in the shared `configs` table.
 
-Analyzers are implemented by their own set of subclasses - algorithm classes. The following algorithms are implemented at the moment:
+Analyzers are implemented by their own set of subclasses - algorithm classes. The following algorithms are implemented at the moment (as of February 2019):
  
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
