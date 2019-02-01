@@ -17,6 +17,7 @@
 #include <pugixml.hpp>
 
 #include <exception>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -45,12 +46,11 @@ namespace crawlservpp::Query {
 			std::string result;
 		};
 
-		pugi::xpath_query * query;
+		std::unique_ptr<pugi::xpath_query> query;
 		bool isTextOnly;
 
 		static std::string nodeToString(const pugi::xpath_node& node, bool textOnly);
 
-		bool isParsed;
 		mutable std::string errorMessage;
 	};
 }

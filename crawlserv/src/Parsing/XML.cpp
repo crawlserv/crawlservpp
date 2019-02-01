@@ -11,27 +11,14 @@
 
 namespace crawlservpp::Parsing {
 
-// constructor: set document pointer to NULL
-XML::XML() {
-	this->doc = NULL;
-}
+// constructor stub
+XML::XML() {}
 
-// destructor: delete document (if necessary)
-XML::~XML() {
-	if(this->doc) {
-		delete this->doc;
-		this->doc = NULL;
-	}
-}
+// destructor stub
+XML::~XML() {}
 
 // parse XML content, return false on error
 bool XML::parse(const std::string& content) {
-	// delete previous document if necessary
-	if(this->doc) {
-		delete this->doc;
-		this->doc = NULL;
-	}
-
 	std::string tidyResult;
 	unsigned long begin = 0;
 
@@ -80,7 +67,7 @@ bool XML::parse(const std::string& content) {
 	else tidyResult = content;
 
 	// create XML document
-	this->doc = new pugi::xml_document();
+	this->doc = std::make_unique<pugi::xml_document>();
 
 	// parse XHTML with pugixml
 	std::istringstream in(tidyResult);
@@ -95,12 +82,6 @@ bool XML::parse(const std::string& content) {
 		else errStrStr << "[end]";
 		errStrStr << ").";
 		this->errorMessage = errStrStr.str();
-
-		// delete XML document
-		if(this->doc) {
-			delete this->doc;
-			this->doc = NULL;
-		}
 		return false;
 	}
 

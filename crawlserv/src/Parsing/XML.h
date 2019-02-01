@@ -15,6 +15,7 @@
 
 #include <pugixml.hpp>
 
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -36,7 +37,7 @@ namespace crawlservpp::Parsing {
 		std::string getErrorMessage() const;
 
 	protected:
-		pugi::xml_document * doc;
+		std::unique_ptr<pugi::xml_document> doc;
 
 		mutable std::string errorMessage;
 	};

@@ -28,33 +28,19 @@ std::string XPath::TextOnlyWalker::getResult() const {
 // constructor: set default values
 XPath::XPath() {
 	this->isTextOnly = false;
-	this->query = NULL;
-	this->isParsed = false;
 }
 
-// destructor: delete query (if necessary) and reset values
-XPath::~XPath() {
-	if(this->query) {
-		delete this->query;
-		this->query = NULL;
-		this->isTextOnly = false;
-	}
-	this->isParsed = false;
-	this->errorMessage = "";
-}
+// destructor stub
+XPath::~XPath() {}
 
 // compile a XPath query
 bool XPath::compile(const std::string& xpath, bool textOnly) {
-	// delete previous XPath object if necessary
-	if(this->query) {
-		delete this->query;
-		this->query = NULL;
-		this->isTextOnly = false;
-	}
+	// reset values
+	this->isTextOnly = false;
 
 	// create new XPath object
 	try {
-		this->query = new pugi::xpath_query(xpath.c_str());
+		this->query = std::make_unique<pugi::xpath_query>(xpath.c_str());
 	}
 	catch(const pugi::xpath_exception& e) {
 		this->errorMessage = "XPath compiling error: " + std::string(e.what());
