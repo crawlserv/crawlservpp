@@ -17,8 +17,6 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, cons
 		const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
 		unsigned long threadLast)
 		: database(dbBase.getSettings()), databaseClass(dbBase), module(threadModule), options(threadOptions) {
-	// set thread pointer to NULL (will be initialized by Module::Thread::start())
-	this->threadPointer = NULL;
 
 	// set status variables
 	this->pausable = true;
@@ -65,21 +63,13 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, const std::string& threadMod
 	this->idString = idStrStr.str();
 }
 
-// destructor
-Thread::~Thread() {
-	if(this->threadPointer) {
-		// THIS SHOULD NOT HAPPEN!
-		std::cout << "WARNING: Thread pointer still active in Module::Thread::~Thread()"
-				" - Module::Thread::interrupt() should have been called." << std::endl;
-		delete this->threadPointer;
-		this->threadPointer = NULL;
-	}
-}
+// destructor stub
+Thread::~Thread() {}
 
 // start the thread (may not be used by the thread itself!)
 void Thread::start() {
 	// run thread
-	if(!(this->threadPointer)) this->threadPointer = new std::thread(&Thread::main, this);
+	this->threadPointer = std::make_unique<std::thread>(&Thread::main, this);
 }
 
 // pause the thread (may not be used by the thread itself!)
@@ -137,11 +127,7 @@ void Thread::stop() {
 			this->pauseCondition.notify_one();
 		}
 
-		if(this->threadPointer) {
-			this->threadPointer->join();
-			delete this->threadPointer;
-			this->threadPointer = NULL;
-		}
+		if(this->threadPointer) this->threadPointer->join();
 	}
 
 	// remove thread from database
@@ -174,15 +160,8 @@ void Thread::sendInterrupt() {
 // NOTE:	Module::Thread::sendInterrupt() has to be called beforehand to interrupt the thread!
 //			This enables the interruption of all threads simultaneously before waiting for their conclusion
 void Thread::finishInterrupt() {
-	// check whether thread exists and has been interrupted
-	if(this->threadPointer && this->interrupted) {
-		// wait for thread
-		this->threadPointer->join();
-
-		// delete thread
-		delete this->threadPointer;
-		this->threadPointer = NULL;
-	}
+	// if thread exists and has been interrupted, wait for thread and join
+	if(this->threadPointer && this->interrupted) this->threadPointer->join();
 }
 
 // get ID of the thread (thread-safe)
