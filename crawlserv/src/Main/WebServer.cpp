@@ -16,11 +16,11 @@ WebServer::WebServer() {
 	// set connection pointer to NULL
 	this->lastConnection = NULL;
 
-	// initialize mongoose server
+	// initialize embedded web server
 	mg_mgr_init(&(this->eventManager), NULL);
 }
 
-// destructor: free embedded web server if necessary
+// destructor: free embedded web server
 WebServer::~WebServer() {
 	mg_mgr_free(&(this->eventManager));
 }
