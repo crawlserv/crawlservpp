@@ -15,8 +15,6 @@
 #ifndef MAIN_DATABASE_H_
 #define MAIN_DATABASE_H_
 
-#define MAIN_DATABASE_DELETE(X) { if(X) { X->close(); delete X; X = NULL; } }
-
 #include "Data.h"
 
 #include "../Helper/FileSystem.h"
@@ -41,6 +39,7 @@
 #include <iomanip>
 #include <iostream>
 #include <locale>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -204,11 +203,11 @@ namespace crawlservpp::Main {
 		// structure for prepared SQL statements
 		struct PreparedSqlStatement {
 			std::string string;
-			sql::PreparedStatement * statement;
+			std::shared_ptr<sql::PreparedStatement> statement;
 		};
 
 		// shared connection information
-		sql::Connection * connection;
+		std::unique_ptr<sql::Connection> connection;
 		std::string errorMessage;
 		static sql::Driver * driver;
 		bool tablesLocked;

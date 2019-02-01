@@ -212,14 +212,14 @@ void DBWrapper::reservePreparedStatements(unsigned long numStatements) {
 unsigned short DBWrapper::addPreparedStatement(const std::string& sqlStatementString) {
 	DBThread::PreparedSqlStatement statement;
 	statement.string = sqlStatementString;
-	statement.statement = this->database.connection->prepareStatement(statement.string);
-	this->database.preparedStatements.push_back(statement);
+	statement.statement = std::unique_ptr<sql::PreparedStatement>(this->database.connection->prepareStatement(statement.string));
+	this->database.preparedStatements.push_back(std::move(statement));
 	return this->database.preparedStatements.size();
 }
 
 // get prepared SQL statement from database by its ID
-sql::PreparedStatement * DBWrapper::getPreparedStatement(unsigned short sqlStatementId) {
-	return this->database.preparedStatements.at(sqlStatementId - 1).statement;
+sql::PreparedStatement& DBWrapper::getPreparedStatement(unsigned short sqlStatementId) {
+	return *(this->database.preparedStatements.at(sqlStatementId - 1).statement);
 }
 
 /*

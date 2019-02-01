@@ -223,7 +223,6 @@ bool Database::prepare() {
 // get text corpus and save it to corpusTo - the corpus will be created if it is out-of-date or does not exist
 void Database::getCorpus(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField, std::string& corpusTo,
 		unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo) {
-	sql::ResultSet * sqlResultSet = NULL;
 	std::string dateMap;
 
 	// check arguments
@@ -244,17 +243,17 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 		// check prepared SQL statement
 		if(!(this->psGetCorpus))
 			throw DatabaseException("Missing prepared SQL statement for getting the corpus");
-		sql::PreparedStatement * sqlStatement = this->getPreparedStatement(this->psGetCorpus);
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetCorpus);
 
 		// check connection
 		if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
 
 		try {
 			// execute SQL query for getting the corpus
-			sqlStatement->setUInt(1, sourceType);
-			sqlStatement->setString(2, sourceTable);
-			sqlStatement->setString(3, sourceField);
-			sqlResultSet = sqlStatement->executeQuery();
+			sqlStatement.setUInt(1, sourceType);
+			sqlStatement.setString(2, sourceTable);
+			sqlStatement.setString(3, sourceField);
+			std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
@@ -269,21 +268,12 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 					this->log("analyzer", logStrStr.str());
 				}
 			}
-
-			// delete result
-			MAIN_DATABASE_DELETE(sqlResultSet);
 		}
 		catch(sql::SQLException &e) {
 			// SQL error
-			MAIN_DATABASE_DELETE(sqlResultSet);
 			std::ostringstream errorStrStr;
 			errorStrStr << "getCorpus() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
 			throw DatabaseException(errorStrStr.str());
-		}
-		catch(...) {
-			// any other exception: free memory and re-throw
-			MAIN_DATABASE_DELETE(sqlResultSet);
-			throw;
 		}
 	}
 
@@ -332,76 +322,58 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 // helper function: check whether the basis for a specific corpus has changed since its creation, return true if corpus was not created yet
 // NOTE: Corpora from raw crawling data will always be re-created!
 bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField) {
-	sql::ResultSet * sqlResultSet = NULL;
 	bool result = true;
 
 	// check prepared SQL statements
 	if(!(this->psIsCorpusChanged))
 		throw DatabaseException("Missing prepared SQL statement for getting the corpus creation time");
-	sql::PreparedStatement * corpusStatement = this->getPreparedStatement(this->psIsCorpusChanged);
+	sql::PreparedStatement& corpusStatement = this->getPreparedStatement(this->psIsCorpusChanged);
 
-	sql::PreparedStatement * tableStatement = NULL;
+	unsigned short sourceStatement = 0;
 	switch(sourceType) {
 	case Config::generalInputSourcesParsing:
-		if(!(this->psIsCorpusChangedParsing))
-			throw DatabaseException("Missing prepared SQL statement for getting the parsing table update time");
-		tableStatement = this->getPreparedStatement(this->psIsCorpusChangedParsing);
+		sourceStatement = this->psIsCorpusChangedParsing;
 		break;
 	case Config::generalInputSourcesExtracting:
-		if(!(this->psIsCorpusChangedExtracting))
-			throw DatabaseException("Missing prepared SQL statement for getting the extracting table update time");
-		tableStatement = this->getPreparedStatement(this->psIsCorpusChangedExtracting);
+		sourceStatement = this->psIsCorpusChangedExtracting;
 		break;
 	case Config::generalInputSourcesAnalyzing:
-		if(!(this->psIsCorpusChangedAnalyzing))
-			throw DatabaseException("Missing prepared SQL statement for getting the annalyzing table update time");
-		tableStatement = this->getPreparedStatement(this->psIsCorpusChangedAnalyzing);
+		sourceStatement = this->psIsCorpusChangedAnalyzing;
 		break;
 	case Config::generalInputSourcesCrawling:
 		return true; // always re-create corpus for crawling data
 	}
-	if(!tableStatement) throw DatabaseException("Invalid source type for text corpus");
+	if(!sourceStatement) throw DatabaseException("Missing prepared SQL statement for creating text corpus from specified source type");
+	sql::PreparedStatement& tableStatement = this->getPreparedStatement(sourceStatement);
 
 	// check connection
 	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
 
 	try {
 		// execute SQL query for getting the update time of the source table
-		tableStatement->setString(1, sourceTable);
-		sqlResultSet = tableStatement->executeQuery();
+		tableStatement.setString(1, sourceTable);
+		std::unique_ptr<sql::ResultSet> sqlResultSet(tableStatement.executeQuery());
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
 			std::string updateTime = sqlResultSet->getString("updated");
 
-			// delete result
-			MAIN_DATABASE_DELETE(sqlResultSet);
-
 			// execute SQL query for comparing the creation time of the corpus with the update time of the table
-			corpusStatement->setUInt(1, sourceType);
-			corpusStatement->setString(2, sourceTable);
-			corpusStatement->setString(3, sourceField);
-			corpusStatement->setString(4, updateTime);
-			sqlResultSet = corpusStatement->executeQuery();
+			corpusStatement.setUInt(1, sourceType);
+			corpusStatement.setString(2, sourceTable);
+			corpusStatement.setString(3, sourceField);
+			corpusStatement.setString(4, updateTime);
+			sqlResultSet = std::unique_ptr<sql::ResultSet>(corpusStatement.executeQuery());
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) result = !(sqlResultSet->getBoolean("result"));
-
-			// delete result
-			MAIN_DATABASE_DELETE(sqlResultSet);
 		}
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
-		MAIN_DATABASE_DELETE(sqlResultSet);
 		std::ostringstream errorStrStr;
 		errorStrStr << "isCorpusChanged() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
 		throw DatabaseException(errorStrStr.str());
-	}
-	catch(...) {
-		// any other exception: free memory and re-throw
-		MAIN_DATABASE_DELETE(sqlResultSet);
-		throw;
 	}
 
 	return result;
@@ -422,10 +394,10 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 	// check prepared SQL statements
 	if(!(this->psDeleteCorpus))
 		throw DatabaseException("Missing prepared SQL statement for deleting text corpus");
-	sql::PreparedStatement * deleteStatement = this->getPreparedStatement(this->psDeleteCorpus);
 	if(!(this->psAddCorpus))
 		throw DatabaseException("Missing prepared SQL statement for adding text corpus");
-	sql::PreparedStatement * addStatement = this->getPreparedStatement(this->psAddCorpus);
+	sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->psDeleteCorpus);
+	sql::PreparedStatement& addStatement = this->getPreparedStatement(this->psAddCorpus);
 
 	// check source type
 	std::string tableName, columnName;
@@ -465,10 +437,10 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 	try {
 		// execute SQL query for deleting old text corpus (if it exists)
-		deleteStatement->setUInt(1, sourceType);
-		deleteStatement->setString(2, sourceTable);
-		deleteStatement->setString(3, sourceField);
-		deleteStatement->execute();
+		deleteStatement.setUInt(1, sourceType);
+		deleteStatement.setString(2, sourceTable);
+		deleteStatement.setString(3, sourceField);
+		deleteStatement.execute();
 
 		// get texts and possibly parsed datetimes from database
 		crawlservpp::Main::Data::GetColumns data;
@@ -546,17 +518,17 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 			if(corpusTo.size() <= this->getMaxAllowedPacketSize()) {
 				// add corpus to database if possible
-				addStatement->setUInt(1, sourceType);
-				addStatement->setString(2, sourceTable);
-				addStatement->setString(3, sourceField);
-				addStatement->setString(4, corpusTo);
+				addStatement.setUInt(1, sourceType);
+				addStatement.setString(2, sourceTable);
+				addStatement.setString(3, sourceField);
+				addStatement.setString(4, corpusTo);
 				if(sourceType == Config::generalInputSourcesParsing) {
 					dateMapTo = crawlservpp::Helper::Json::stringify(dateMap);
-					addStatement->setString(5, dateMapTo);
+					addStatement.setString(5, dateMapTo);
 				}
-				else addStatement->setNull(5, 0);
-				addStatement->setUInt64(6, sourcesTo);
-				addStatement->execute();
+				else addStatement.setNull(5, 0);
+				addStatement.setUInt64(6, sourcesTo);
+				addStatement.execute();
 			}
 			else if(this->logging) {
 				// show warning about text corpus size
