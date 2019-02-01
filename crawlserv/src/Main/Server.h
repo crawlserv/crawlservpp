@@ -46,6 +46,7 @@
 #include <exception>
 #include <functional>
 #include <locale>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <thread>
@@ -77,11 +78,11 @@ namespace crawlservpp::Main {
 		std::chrono::steady_clock::time_point uptimeStart;
 
 		// threads
-		std::vector<crawlservpp::Module::Crawler::Thread *> crawlers;
-		std::vector<crawlservpp::Module::Parser::Thread *> parsers;
-		//std::vector<crawlservpp::Module::Extractor::Thread *> extractors;
-		std::vector<crawlservpp::Module::Analyzer::Thread *> analyzers;
-		std::vector<std::thread *> workers;
+		std::vector<std::unique_ptr<crawlservpp::Module::Crawler::Thread>> crawlers;
+		std::vector<std::unique_ptr<crawlservpp::Module::Parser::Thread>> parsers;
+		//std::vector<std::unique_ptr<crawlservpp::Module::Extractor::Thread>> extractors;
+		std::vector<std::unique_ptr<crawlservpp::Module::Analyzer::Thread>> analyzers;
+		std::vector<std::unique_ptr<std::thread>> workers;
 		std::vector<bool> workersRunning;
 		std::mutex workersLock;
 
