@@ -42,7 +42,6 @@ public:
 	void close();
 
 private:
-	bool loaded;
 	mg_mgr eventManager;
 	mg_connection * lastConnection;
 	std::string cors;
