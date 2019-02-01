@@ -1341,8 +1341,8 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 															this->networkingArchives->getContentType(), archivedContent);
 
 															// extract URLs
-															std::vector<std::string> urls = this->crawlingExtractUrls(url,
-																	archivedContent, doc);
+															std::vector<std::string> urls = this->crawlingExtractUrls(url, archivedContent,
+																	doc);
 															if(!urls.empty()) {
 																// parse and add URLs
 																checkedUrlsTo += urls.size();
