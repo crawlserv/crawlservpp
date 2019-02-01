@@ -15,6 +15,8 @@
 #include "../_extern/mongoose/mongoose.h"
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 
+#include "tidy.h"
+
 #include <boost/version.hpp>
 #include <curl/curl.h>
 #include <cppconn/driver.h>
@@ -22,7 +24,6 @@
 #include <aspell.h>
 #include <pcre2.h>
 #include <pugixml.hpp>
-#include <tidy/tidy.h>
 #include <uriparser/UriBase.h>
 
 #include <sstream>
