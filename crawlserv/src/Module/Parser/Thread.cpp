@@ -339,7 +339,7 @@ bool Thread::parsingUrlSelection() {
 						if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 							// parse ID by running RegEx query on URL
 							bool queryResult = false;
-							if(this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.second, queryResult)) {
+							if(this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second, queryResult)) {
 								if(queryResult) {
 									skip = true;
 								}
@@ -420,7 +420,7 @@ unsigned long Thread::parsing() {
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse ID by running RegEx query on URL
-				if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, parsedId) && !parsedId.empty()) break;
+				if(this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedId) && !parsedId.empty()) break;
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 				this->log("WARNING: ID query on URL is not of type RegEx.");
@@ -493,7 +493,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on URL
-					if(this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, id) && !id.empty()) break;
+					if(this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, id) && !id.empty()) break;
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: ID query on URL is not of type RegEx.");
@@ -502,11 +502,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on content string
-					if(this->getRegExQueryPtr(i->index)->getFirst(content.second, id) && !id.empty()) break;
+					if(this->getRegExQueryPtr(i->index).getFirst(content.second, id) && !id.empty()) break;
 				}
 				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 					// parse ID by running XPath query on parsed content
-					if(this->getXPathQueryPtr(i->index)->getFirst(parsedContent, id) && !id.empty()) break;
+					if(this->getXPathQueryPtr(i->index).getFirst(parsedContent, id) && !id.empty()) break;
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: ID query on content is not of type RegEx or XPath.");
@@ -551,7 +551,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on URL
-				querySuccess = this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, parsedDateTime);
+				querySuccess = this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedDateTime);
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 				this->log("WARNING: DateTime query on URL is not of type RegEx.");
@@ -560,11 +560,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on content string
-				querySuccess = this->getRegExQueryPtr(i->index)->getFirst(content.second, parsedDateTime);
+				querySuccess = this->getRegExQueryPtr(i->index).getFirst(content.second, parsedDateTime);
 			}
 			else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 				// parse date/time by running XPath query on parsed content
-				querySuccess = this->getXPathQueryPtr(i->index)->getFirst(parsedContent, parsedDateTime);
+				querySuccess = this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedDateTime);
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 				this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
@@ -625,7 +625,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// parse from URL: check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse multiple field elements by running RegEx query on URL
-					this->getRegExQueryPtr(i->index)->getAll(this->currentUrl.second, parsedFieldValues);
+					this->getRegExQueryPtr(i->index).getAll(this->currentUrl.second, parsedFieldValues);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -635,11 +635,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// parse from content: check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse multiple field elements by running RegEx query on content string
-					this->getRegExQueryPtr(i->index)->getAll(content.second, parsedFieldValues);
+					this->getRegExQueryPtr(i->index).getAll(content.second, parsedFieldValues);
 				}
 				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 					// parse multiple field elements by running XPath query on parsed content
-					this->getXPathQueryPtr(i->index)->getAll(parsedContent, parsedFieldValues);
+					this->getXPathQueryPtr(i->index).getAll(parsedContent, parsedFieldValues);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -690,7 +690,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// parse from URL: check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse single field element by running RegEx query on URL
-					this->getRegExQueryPtr(i->index)->getFirst(this->currentUrl.second, parsedFieldValue);
+					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedFieldValue);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -700,11 +700,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// parse from content: check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse single field element by running RegEx query on content string
-					this->getRegExQueryPtr(i->index)->getFirst(content.second, parsedFieldValue);
+					this->getRegExQueryPtr(i->index).getFirst(content.second, parsedFieldValue);
 				}
 				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 					// parse single field element by running XPath query on parsed content
-					this->getXPathQueryPtr(i->index)->getFirst(parsedContent, parsedFieldValue);
+					this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedFieldValue);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -738,7 +738,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// parse from URL: check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse boolean value by running RegEx query on URL
-					this->getRegExQueryPtr(i->index)->getBool(this->currentUrl.second, parsedBool);
+					this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second, parsedBool);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -748,11 +748,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// parse from content: check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse boolean value by running RegEx query on content string
-					this->getRegExQueryPtr(i->index)->getBool(content.second, parsedBool);
+					this->getRegExQueryPtr(i->index).getBool(content.second, parsedBool);
 				}
 				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 					// parse boolean value by running XPath query on parsed content
-					this->getXPathQueryPtr(i->index)->getBool(parsedContent, parsedBool);
+					this->getXPathQueryPtr(i->index).getBool(parsedContent, parsedBool);
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
