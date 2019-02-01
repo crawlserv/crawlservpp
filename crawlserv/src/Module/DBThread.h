@@ -15,6 +15,7 @@
 #include "../Struct/DatabaseSettings.h"
 
 #include <exception>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
