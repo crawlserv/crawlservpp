@@ -19,9 +19,6 @@ App::App(int argc, char * argv[]) noexcept {
 		crawlservpp::Struct::ServerSettings serverSettings;
 		std::string error;
 
-		// set default value
-		this->server = NULL;
-
 		// show header
 		this->outputHeader();
 
