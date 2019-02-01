@@ -58,8 +58,9 @@ The source code of the server consists of the following classes (as of February 
 * **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for parsers.
 * **[`Network::Config`](crawlserv/src/Network/Config.cpp)**: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * **[`Network::Curl`](crawlserv/src/Network/Curl.cpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
+* **[`Parsing::HTML`](crawlserv/src/Parsing/HTML.cpp)**: Clean HTML documents and parse them into XML using the [HTML Tidy API](http://www.html-tidy.org/).
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction.
-* **[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)**: Parse HTML documents into clean XML.
+* **[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
 * **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for query management in child classes.
 * **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * **[`Query::XPath`](crawlserv/src/Query//XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
@@ -213,13 +214,15 @@ The following third-party libraries are used by the command-and-control server:
 * [pugixml](https://github.com/zeux/pugixml)
 * [RapidJSON](https://github.com/Tencent/rapidjson) (included in `crawlserv/src/_extern/rapidjson`)
 * [rawr-gen](https://github.com/hatkirby/rawr-ebooks) (included in `crawlserv/src/_extern/rawr`)
-* [HTML Tidy API](http://www.html-tidy.org/)
+* [HTML Tidy API](http://www.html-tidy.org/) (included in `crawlserv/src/_extern/tidy-html5`)
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8.h` and `.../utf`)
 
-The following directory names need to be (recursively) ignored when compiling with submodules: `test*`, `example*`, `samples`, `src/_extern/mongoose/src`(project-relative path) and `src/_extern/date/src` (project-relative path).
+The following directory names need to be (recursively) ignored when compiling with submodules: `test*`, `example*`, `samples`, `experimental`, `console`, `src/_extern/mongoose/src`(project-relative path), `src/_extern/date/src` (project-relative path).
 
-The following libraries need to be installed and manually linked after compiling the source code: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml tidy uriparser aspell`.
+The following additional include path is used (for both C and C++ compiler): `src/_extern/tidy-html5/include`.
+
+The following libraries need to be installed and manually linked after compiling the source code: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml uriparser aspell`.
 
 ## Frontend
 

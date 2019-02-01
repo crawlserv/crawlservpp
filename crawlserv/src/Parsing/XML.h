@@ -10,13 +10,13 @@
 #ifndef PARSING_XML_H_
 #define PARSING_XML_H_
 
-#include <tidy/tidy.h>
-#include <tidy/tidybuffio.h>
+#include "HTML.h"
 
 #include <pugixml.hpp>
 
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace crawlservpp::Query {
@@ -38,7 +38,6 @@ namespace crawlservpp::Parsing {
 
 	protected:
 		std::unique_ptr<pugi::xml_document> doc;
-
 		mutable std::string errorMessage;
 	};
 }

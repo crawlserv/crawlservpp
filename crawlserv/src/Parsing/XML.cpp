@@ -19,58 +19,28 @@ XML::~XML() {}
 
 // parse XML content, return false on error
 bool XML::parse(const std::string& content) {
-	std::string tidyResult;
+	// remove whitespaces
 	unsigned long begin = 0;
-
 	while(content.size() > begin && isspace(content.at(begin))) begin++;
-	if(content.size() <= begin + 6 || content.substr(begin, 6) != "<?xml ") {
-		// tidy HTML code (and convert it to XML)
-		TidyDoc tidyDoc = tidyCreate();
-		TidyBuffer tidyBuffer = {0};
-		bool tidyError = false;
+	std::string xml(content, begin, content.length() - begin);
 
-		if(!tidyOptSetBool(tidyDoc, TidyXmlOut, yes)
-				|| !tidyOptSetBool(tidyDoc, TidyQuiet, yes)
-				|| !tidyOptSetBool(tidyDoc, TidyNumEntities, yes)
-				|| !tidyOptSetBool(tidyDoc, TidyMark, no)
-				|| !tidyOptSetBool(tidyDoc, TidyShowWarnings, no)
-				|| !tidyOptSetInt(tidyDoc, TidyShowErrors, 0)
-				|| !tidyOptSetValue(tidyDoc, TidyOutCharEncoding, "utf8")
-				|| !tidyOptSetBool(tidyDoc, TidyForceOutput, yes)) {
-			this->errorMessage = "TidyLib error: Could not set options.";
-			tidyError = true;
+	// if necessary, try to tidy HTML and convert it to XML
+	if(xml.size() <= 6 || xml.substr(0, 6) != "<?xml ") {
+		HTML tidy;
+		try {
+			tidy.tidyAndConvert(xml);
 		}
-		if(!tidyError && tidyParseString(tidyDoc, content.c_str()) < 0) {
-			this->errorMessage = "TidyLib error: Could not parse HTML content.";
-			tidyError = true;
+		catch(const std::runtime_error& e) {
+			this->errorMessage = e.what();
+			return false;
 		}
-		if(!tidyError) {
-			int tidyResult = tidyCleanAndRepair(tidyDoc);
-			if(tidyResult < 0) {
-				this->errorMessage = "TidyLib error: Could not clean and repair HTML content.";
-				tidyError = true;
-			}
-		}
-		if(!tidyError && tidySaveBuffer(tidyDoc, &tidyBuffer) < 0) {
-			this->errorMessage = "TidyLib error: Could not save output buffer.";
-			tidyError = true;
-		}
-
-		if(!tidyError && tidyBuffer.bp) {
-			tidyResult = (char *) tidyBuffer.bp;
-			tidyBufFree(&tidyBuffer);
-		}
-		else tidyResult = content;
-		tidyRelease(tidyDoc);
-		if(tidyError) return false;
 	}
-	else tidyResult = content;
 
 	// create XML document
 	this->doc = std::make_unique<pugi::xml_document>();
 
 	// parse XHTML with pugixml
-	std::istringstream in(tidyResult);
+	std::istringstream in(xml);
 	pugi::xml_parse_result result = this->doc->load(in, pugi::parse_full);
 
 	if(!result) {
