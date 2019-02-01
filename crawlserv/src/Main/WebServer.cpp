@@ -91,7 +91,7 @@ void WebServer::close() {
 
 // static event handler
 void WebServer::eventHandler(mg_connection * connection, int event, void * data) {
-	if(connection->user_data)
+	if(connection->user_data && data)
 		static_cast<WebServer *>(connection->user_data)->eventHandlerInClass(connection, event, data);
 }
 
@@ -110,8 +110,9 @@ void WebServer::eventHandlerInClass(mg_connection * connection, int event, void 
 	else if(event == MG_EV_HTTP_REQUEST) {
 		// handle request event
 		http_message * httpMessage = (http_message *) data;
-		this->onRequest(ip, std::string(httpMessage->method.p, 0, httpMessage->method.len),
-				std::string(httpMessage->body.p, 0, httpMessage->body.len));
+		std::string method(httpMessage->method.p, httpMessage->method.len);
+		std::string body(httpMessage->body.p, httpMessage->body.len);
+		this->onRequest(ip, method, body);
 	}
 }
 
