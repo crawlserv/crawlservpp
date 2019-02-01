@@ -12,25 +12,11 @@
 
 namespace crawlservpp::Parsing {
 
-// constructor
-URI::URI() {
-	this->base = NULL;
-	this->uri = NULL;
-}
+// constructor stub
+URI::URI() {}
 
-// destructor
-URI::~URI() {
-	if(this->base) {
-		uriFreeUriMembersA(this->base);
-		delete this->base;
-		this->base = NULL;
-	}
-	if(this->uri) {
-		uriFreeUriMembersA(this->uri);
-		delete this->uri;
-		this->uri = NULL;
-	}
-}
+// destructor stub
+URI::~URI() {}
 
 // set current host
 bool URI::setCurrentDomain(const std::string& currentHost) {
@@ -62,18 +48,11 @@ bool URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 	// create current URI string
 	this->current = "https://" + this->domain + this->subUrl;
 
-	// delete old base URI if necessary
-	if(this->base) {
-		uriFreeUriMembersA(this->base);
-		delete this->base;
-		this->base = NULL;
-	}
-
 	// create new base URI
-	this->base = new UriUriA;
+	this->base.create();
 
 	// parse (current) base URI
-	this->state.uri = this->base;
+	this->state.uri = this->base.get();
 	if(uriParseUriA(&(this->state), current.c_str()) != URI_SUCCESS) {
 		std::ostringstream errStrStr;
 		std::string end(this->state.errorPos);
@@ -89,6 +68,9 @@ bool URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 
 // parse link to sub-URL (beginning with slash)
 bool URI::parseLink(const std::string& linkToParse) {
+	// reset old URI if necessary
+	this->uri.reset();
+
 	// error checking
 	if(this->domain.empty()) {
 		this->errorMessage = "URI Parser error: No current domain specified.";
@@ -100,7 +82,7 @@ bool URI::parseLink(const std::string& linkToParse) {
 	}
 
 	// copy URL
-	std::string linkCopy = linkToParse;
+	std::string linkCopy(linkToParse);
 
 	// remove anchor if necessary
 	unsigned long end = linkCopy.find('#');
@@ -109,34 +91,29 @@ bool URI::parseLink(const std::string& linkToParse) {
 		else linkCopy = "";
 	}
 
-	// trim URL
+	// trim and escape URL
 	crawlservpp::Helper::Strings::trim(linkCopy);
 	linkCopy = URI::escapeUrl(linkCopy);
 
-	// delete old URI if necessary
-	if(this->uri) {
-		uriFreeUriMembersA(this->uri);
-		delete this->uri;
-		this->uri = NULL;
-	}
-
+	// check for empty link
 	if(linkCopy.empty()) {
 		this->errorMessage = "";
 		return false;
 	}
 
 	// create new URI
-	this->uri = new UriUriA;
+	this->uri.create();
 
 	// create temporary URI for relative link
-	UriUriA relativeSource;
+	URI::URIWrapper relativeSource;
+	relativeSource.create();
 
-	// URL needs to be stored in class BEFORE parsing for long-term access by the parsing library
+	// URL needs to be stored in class BEFORE PARSING to provide long-term access by the parsing library
 	// (otherwise the URL would be out of scope for the library after leaving this member function)
 	this->link.swap(linkCopy);
 
 	// parse relative link
-	this->state.uri = &relativeSource;
+	this->state.uri = relativeSource.get();
 	if(uriParseUriA(&(this->state), this->link.c_str()) != URI_SUCCESS) {
 		std::ostringstream errStrStr;
 		std::string end(this->state.errorPos);
@@ -147,34 +124,25 @@ bool URI::parseLink(const std::string& linkToParse) {
 			errStrStr << this->link << "[!!!]";
 		errStrStr << "\' in URIParser::parseLink().";
 		this->errorMessage = errStrStr.str();
-		uriFreeUriMembersA(&relativeSource);
-		delete this->uri;
-		this->uri = NULL;
+		this->uri.reset();
 		return false;
 	}
 
 	// resolve reference
-	if(uriAddBaseUriExA(this->uri, &relativeSource, this->base, URI_RESOLVE_IDENTICAL_SCHEME_COMPAT) != URI_SUCCESS) {
-		this->errorMessage = "URI Parser error: Reference resolving failed for \'" + this->toString(&relativeSource) + "\'.";
-		uriFreeUriMembersA(&relativeSource);
-		delete this->uri;
-		this->uri = NULL;
+	if(uriAddBaseUriExA(this->uri.get(), relativeSource.get(), this->base.get(), URI_RESOLVE_IDENTICAL_SCHEME_COMPAT) != URI_SUCCESS) {
+		this->errorMessage = "URI Parser error: Reference resolving failed for \'" + this->toString(relativeSource) + "\'.";
+		this->uri.reset();
 		return false;
 	}
 
 	// normalize URI
-	const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(this->uri);
-	if(uriNormalizeSyntaxExA(this->uri, dirtyParts) != URI_SUCCESS) {
-		uriFreeUriMembersA(&relativeSource);
+	const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(this->uri.get());
+	if(uriNormalizeSyntaxExA(this->uri.get(), dirtyParts) != URI_SUCCESS) {
 		this->errorMessage = "URI Parser error: Normalizing failed for \'" + this->toString(this->uri) + "\'.";
-		uriFreeUriMembersA(this->uri);
-		delete this->uri;
-		this->uri = NULL;
+		this->uri.reset();
 		return false;
 	}
 
-	// free memory for temporary URI
-	uriFreeUriMembersA(&relativeSource);
 	return true;
 }
 
@@ -182,21 +150,22 @@ bool URI::parseLink(const std::string& linkToParse) {
 bool URI::isSameDomain() const {
 	if(this->domain.empty()) throw std::runtime_error("URI Parser error - No current domain specified");
 	if(!(this->uri)) throw std::runtime_error("URI Parser error - No link parsed");
-	return URI::textRangeToString(&(this->uri->hostText)) == this->domain;
+	return URI::textRangeToString(&(this->uri.get()->hostText)) == this->domain;
 }
 
 // get sub-URL for link
 std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
 	if(!(this->uri)) throw std::runtime_error("URI Parser error - No link parsed");
-	UriQueryListA * queryList = NULL;
+	URIQueryListWrapper queryList;
 	UriQueryListA * queryNext = NULL;
 	int queryCount = 0;
 	std::string queries;
 
 	// get query string
-	if(this->uri->query.first != this->uri->query.afterLast) {
-		if(uriDissectQueryMallocA(&queryList, &queryCount, this->uri->query.first, this->uri->query.afterLast) == URI_SUCCESS) {
-			queryNext = queryList;
+	if(this->uri.get()->query.first != this->uri.get()->query.afterLast) {
+		if(uriDissectQueryMallocA(queryList.getPtr(), &queryCount, this->uri.get()->query.first, this->uri.get()->query.afterLast)
+				== URI_SUCCESS) {
+			queryNext = queryList.get();
 			while(queryNext) {
 				if((whiteList && std::find(args.begin(), args.end(), queryNext->key) != args.end()) ||
 						(!whiteList && std::find(args.begin(), args.end(), queryNext->key) == args.end())) {
@@ -206,14 +175,13 @@ std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList)
 				}
 				queryNext = queryNext->next;
 			}
-			uriFreeQueryListA(queryList);
 		}
 	}
 
 	if(!queries.empty()) queries.pop_back();
 
 	// construct sub-URL (starting with slash)
-	UriPathSegmentStructA * nextSegment = this->uri->pathHead;
+	UriPathSegmentStructA * nextSegment = this->uri.get()->pathHead;
 	std::string result;
 	while(nextSegment) {
 		result += "/" + URI::unescape(URI::textRangeToString(&(nextSegment->text)), false);
@@ -233,31 +201,26 @@ std::string URI::getErrorMessage() const {
 
 // public static helper function: escape string
 std::string URI::escape(const std::string& string, bool plusSpace) {
-	char * cString = new char[string.length() * 6 + 1];
-	uriEscapeExA(string.c_str(), string.c_str() + string.length(), cString, plusSpace, false);
-	std::string result = cString;
-	delete[] cString;
-	return result;
+	std::unique_ptr<char[]> cString(std::make_unique<char[]>(string.size() * 6 + 1));
+	uriEscapeExA(string.c_str(), string.c_str() + string.size(), cString.get(), plusSpace, false);
+	return std::string(cString.get());
 }
 
 // public static helper function: unescape string
 std::string URI::unescape(const std::string& string, bool plusSpace) {
 	if(string.empty()) return "";
-	char * cString = new char[string.length() + 1];
+	std::unique_ptr<char[]> cString(std::make_unique<char[]>(string.size() + 1));
 	for(unsigned long n = 0; n < string.length(); n++) cString[n] = string.at(n);
 	cString[string.length()] = '\0';
-	uriUnescapeInPlaceExA(cString, plusSpace, URI_BR_DONT_TOUCH);
-	std::string result = cString;
-	delete[] cString;
-	return result;
+	uriUnescapeInPlaceExA(cString.get(), plusSpace, URI_BR_DONT_TOUCH);
+	return std::string(cString.get());
 }
 
 // escape an URL but leave reserved characters (; / ? : @ = & # %) intact
 std::string URI::escapeUrl(const std::string& urlToEscape) {
-	unsigned long pos = 0;
 	std::string result;
+	unsigned long pos = 0;
 
-	pos = 0;
 	while(pos < urlToEscape.length()) {
 		unsigned long end = urlToEscape.find_first_of(";/?:@=&#%", pos);
 		if(end == std::string::npos) end = urlToEscape.length();
@@ -279,26 +242,18 @@ std::string URI::textRangeToString(const UriTextRangeA * range) {
 }
 
 // static helper function: convert URI to string
-std::string URI::toString(const UriUriA * uri) {
-	char * uriCString = NULL;
-	int charsRequired = 0;
-	std::string result;
-
+std::string URI::toString(const URI::URIWrapper& uri) {
 	if(!uri) return "";
+	int charsRequired = 0;
 
-	if(uriToStringCharsRequiredA(uri, &charsRequired) != URI_SUCCESS)
+	if(uriToStringCharsRequiredA(uri.get(), &charsRequired) != URI_SUCCESS)
 	    throw std::runtime_error("URI Parser error - Could not convert URI to string because uriToStringCharsRequiredA(...) failed");
 
-	uriCString = new char[charsRequired + 1];
-
-	if(uriToStringA(uriCString, uri, charsRequired + 1, NULL) != URI_SUCCESS) {
-		delete[] uriCString;
+	std::unique_ptr<char[]> uriCString(std::make_unique<char[]>(charsRequired + 1));
+	if(uriToStringA(uriCString.get(), uri.get(), charsRequired + 1, NULL) != URI_SUCCESS)
 		throw std::runtime_error("URI Parser error - Could not convert URI to string because uriToStringA(...) failed");
-	}
 
-	result = uriCString;
-	delete[] uriCString;
-	return result;
+	return std::string(uriCString.get());
 }
 
 }
