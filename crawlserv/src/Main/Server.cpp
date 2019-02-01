@@ -36,101 +36,107 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 
 	// initialize mongoose HTTP server
 	mg_mgr_init(&(this->eventManager), NULL);
-	connection = mg_bind(&(this->eventManager), serverSettings.port.c_str(), Server::eventHandler);
-	if(!connection) {
-		mg_mgr_free(&(this->eventManager));
-		throw std::runtime_error("Could not bind server to port " + serverSettings.port);
-	}
-	connection->user_data = this;
-	mg_set_protocol_http_websocket(connection);
-
-	// set initial status
-	this->setStatus("crawlserv is ready");
-
-	// load threads from database
-	std::vector<Struct::ThreadDatabaseEntry> threads = this->database.getThreads();
-	for(auto i = threads.begin(); i != threads.end(); ++i) {
-		if(i->module == "crawler") {
-			// load crawler thread
-			std::unique_ptr<crawlservpp::Module::Crawler::Thread> crawler(
-					std::make_unique<crawlservpp::Module::Crawler::Thread>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-			crawler->crawlservpp::Module::Thread::start();
-			this->crawlers.push_back(std::move(crawler));
-
-			// write to log
-			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("crawler", logStrStr.str());
+	try {
+		connection = mg_bind(&(this->eventManager), serverSettings.port.c_str(), Server::eventHandler);
+		if(!connection) {
+			mg_mgr_free(&(this->eventManager));
+			throw std::runtime_error("Could not bind server to port " + serverSettings.port);
 		}
-		else if(i->module == "parser") {
-			// load parser thread
-			std::unique_ptr<crawlservpp::Module::Parser::Thread> parser(
-					std::make_unique<crawlservpp::Module::Parser::Thread>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-			parser->crawlservpp::Module::Thread::start();
-			this->parsers.push_back(std::move(parser));
+		connection->user_data = this;
+		mg_set_protocol_http_websocket(connection);
 
-			// write to log
-			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("parser", logStrStr.str());
-		}
-		else if(i->module == "extractor") {
-			// load extractor thread
-			/*
-			std::unique_ptr<crawlservpp::Module::Extractor::Thread> parser(
-					std::make_unique<crawlservpp::Module::Extractor::Thread>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-			extractor->crawlservpp::Module::Thread::start();
-			this->extractors.push_back(std::move(extractor));
-			*/
+		// set initial status
+		this->setStatus("crawlserv is ready");
 
-			// write to log
-			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("extractor", logStrStr.str());
-		}
-		else if(i->module == "analyzer") {
-			// load analyzer thread
-			std::unique_ptr<crawlservpp::Module::Analyzer::Thread> analyzer;
+		// load threads from database
+		std::vector<Struct::ThreadDatabaseEntry> threads = this->database.getThreads();
+		for(auto i = threads.begin(); i != threads.end(); ++i) {
+			if(i->module == "crawler") {
+				// load crawler thread
+				std::unique_ptr<crawlservpp::Module::Crawler::Thread> crawler(
+						std::make_unique<crawlservpp::Module::Crawler::Thread>(
+								this->database, i->id, i->status, i->paused, i->options, i->last));
+				crawler->crawlservpp::Module::Thread::start();
+				this->crawlers.push_back(std::move(crawler));
 
-			// get and parse config JSON to determine algorithm
-			rapidjson::Document configJson;
-			std::string config = this->database.getConfiguration(i->options.config);
-			if(configJson.Parse(config.c_str()).HasParseError()) throw std::runtime_error("Could not parse configuration JSON.");
-			if(!configJson.IsArray()) throw std::runtime_error("Parsed configuration JSON is not an array.");
-
-			switch(Server::getAlgoFromConfig(configJson)) {
-			case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
-						this->database, i->id, i->status, i->paused, i->options, i->last);
-				break;
-			case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
-						this->database, i->id, i->status, i->paused, i->options, i->last);
-				break;
-			default:
-				this->database.log("analyzer", "WARNING: Unknown algorithm ignored when loading threads.");
-				continue;
+				// write to log
+				std::ostringstream logStrStr;
+				logStrStr << "#" << i->id << " continued.";
+				this->database.log("crawler", logStrStr.str());
 			}
+			else if(i->module == "parser") {
+				// load parser thread
+				std::unique_ptr<crawlservpp::Module::Parser::Thread> parser(
+						std::make_unique<crawlservpp::Module::Parser::Thread>(
+								this->database, i->id, i->status, i->paused, i->options, i->last));
+				parser->crawlservpp::Module::Thread::start();
+				this->parsers.push_back(std::move(parser));
 
-			analyzer->crawlservpp::Module::Thread::start();
-			this->analyzers.push_back(std::move(analyzer));
+				// write to log
+				std::ostringstream logStrStr;
+				logStrStr << "#" << i->id << " continued.";
+				this->database.log("parser", logStrStr.str());
+			}
+			else if(i->module == "extractor") {
+				// load extractor thread
+				/*
+				std::unique_ptr<crawlservpp::Module::Extractor::Thread> parser(
+						std::make_unique<crawlservpp::Module::Extractor::Thread>(
+								this->database, i->id, i->status, i->paused, i->options, i->last));
+				extractor->crawlservpp::Module::Thread::start();
+				this->extractors.push_back(std::move(extractor));
+				*/
 
-			// write to log
-			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("analyzer", logStrStr.str());
+				// write to log
+				std::ostringstream logStrStr;
+				logStrStr << "#" << i->id << " continued.";
+				this->database.log("extractor", logStrStr.str());
+			}
+			else if(i->module == "analyzer") {
+				// load analyzer thread
+				std::unique_ptr<crawlservpp::Module::Analyzer::Thread> analyzer;
+
+				// get and parse config JSON to determine algorithm
+				rapidjson::Document configJson;
+				std::string config = this->database.getConfiguration(i->options.config);
+				if(configJson.Parse(config.c_str()).HasParseError()) throw std::runtime_error("Could not parse configuration JSON.");
+				if(!configJson.IsArray()) throw std::runtime_error("Parsed configuration JSON is not an array.");
+
+				switch(Server::getAlgoFromConfig(configJson)) {
+				case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
+					analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
+							this->database, i->id, i->status, i->paused, i->options, i->last);
+					break;
+				case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
+					analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
+							this->database, i->id, i->status, i->paused, i->options, i->last);
+					break;
+				default:
+					this->database.log("analyzer", "WARNING: Unknown algorithm ignored when loading threads.");
+					continue;
+				}
+
+				analyzer->crawlservpp::Module::Thread::start();
+				this->analyzers.push_back(std::move(analyzer));
+
+				// write to log
+				std::ostringstream logStrStr;
+				logStrStr << "#" << i->id << " continued.";
+				this->database.log("analyzer", logStrStr.str());
+			}
+			else throw std::runtime_error("Unknown thread module \'" + i->module + "\'");
 		}
-		else throw std::runtime_error("Unknown thread module \'" + i->module + "\'");
+
+		// save start time for up-time calculation
+		this->uptimeStart = std::chrono::steady_clock::now();
+
+		// start logging
+		this->database.log("server", "started.");
 	}
-
-	// save start time for up-time calculation
-	this->uptimeStart = std::chrono::steady_clock::now();
-
-	// start logging
-	this->database.log("server", "started.");
+	catch(...) {
+		// free mongoose HTTP server
+		mg_mgr_free(&(this->eventManager));
+	}
 }
 
 // destructor
