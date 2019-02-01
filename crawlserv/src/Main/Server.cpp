@@ -22,7 +22,6 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	this->settings = serverSettings;
 	this->allowed = serverSettings.allowedClients;
 	this->running = true;
-	mg_connection * connection = NULL;
 
 	// create cookies directory if it does not exist
 	if(!std::experimental::filesystem::is_directory("cookies") || !std::experimental::filesystem::exists("cookies")) {
@@ -34,109 +33,103 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	if(!(this->database.initializeSql())) throw std::runtime_error(this->database.getErrorMessage());
 	if(!(this->database.prepare())) throw std::runtime_error(this->database.getErrorMessage());
 
-	// initialize mongoose HTTP server
-	mg_mgr_init(&(this->eventManager), NULL);
-	try {
-		connection = mg_bind(&(this->eventManager), serverSettings.port.c_str(), Server::eventHandler);
-		if(!connection) {
-			mg_mgr_free(&(this->eventManager));
-			throw std::runtime_error("Could not bind server to port " + serverSettings.port);
+	// set callbacks (suppressing wrong error messages by Eclipse IDE)
+	this->webServer.setAcceptCallback( // @suppress("Invalid arguments")
+			std::bind(&Server::onAccept, this, std::placeholders::_1));
+	this->webServer.setRequestCallback( // @suppress("Invalid arguments")
+			std::bind(&Server::onRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+
+	// initialize mongoose embedded web server, bind it to port and set CORS string
+	this->webServer.initHTTP(serverSettings.port);
+	this->webServer.setCORS("*");
+
+	// set initial status
+	this->setStatus("crawlserv is ready");
+
+	// load threads from database
+	std::vector<Struct::ThreadDatabaseEntry> threads = this->database.getThreads();
+	for(auto i = threads.begin(); i != threads.end(); ++i) {
+		if(i->module == "crawler") {
+			// load crawler thread
+			std::unique_ptr<crawlservpp::Module::Crawler::Thread> crawler(
+					std::make_unique<crawlservpp::Module::Crawler::Thread>(
+							this->database, i->id, i->status, i->paused, i->options, i->last));
+			crawler->crawlservpp::Module::Thread::start();
+			this->crawlers.push_back(std::move(crawler));
+
+			// write to log
+			std::ostringstream logStrStr;
+			logStrStr << "#" << i->id << " continued.";
+			this->database.log("crawler", logStrStr.str());
 		}
-		connection->user_data = this;
-		mg_set_protocol_http_websocket(connection);
+		else if(i->module == "parser") {
+			// load parser thread
+			std::unique_ptr<crawlservpp::Module::Parser::Thread> parser(
+					std::make_unique<crawlservpp::Module::Parser::Thread>(
+							this->database, i->id, i->status, i->paused, i->options, i->last));
+			parser->crawlservpp::Module::Thread::start();
+			this->parsers.push_back(std::move(parser));
 
-		// set initial status
-		this->setStatus("crawlserv is ready");
-
-		// load threads from database
-		std::vector<Struct::ThreadDatabaseEntry> threads = this->database.getThreads();
-		for(auto i = threads.begin(); i != threads.end(); ++i) {
-			if(i->module == "crawler") {
-				// load crawler thread
-				std::unique_ptr<crawlservpp::Module::Crawler::Thread> crawler(
-						std::make_unique<crawlservpp::Module::Crawler::Thread>(
-								this->database, i->id, i->status, i->paused, i->options, i->last));
-				crawler->crawlservpp::Module::Thread::start();
-				this->crawlers.push_back(std::move(crawler));
-
-				// write to log
-				std::ostringstream logStrStr;
-				logStrStr << "#" << i->id << " continued.";
-				this->database.log("crawler", logStrStr.str());
-			}
-			else if(i->module == "parser") {
-				// load parser thread
-				std::unique_ptr<crawlservpp::Module::Parser::Thread> parser(
-						std::make_unique<crawlservpp::Module::Parser::Thread>(
-								this->database, i->id, i->status, i->paused, i->options, i->last));
-				parser->crawlservpp::Module::Thread::start();
-				this->parsers.push_back(std::move(parser));
-
-				// write to log
-				std::ostringstream logStrStr;
-				logStrStr << "#" << i->id << " continued.";
-				this->database.log("parser", logStrStr.str());
-			}
-			else if(i->module == "extractor") {
-				// load extractor thread
-				/*
-				std::unique_ptr<crawlservpp::Module::Extractor::Thread> parser(
-						std::make_unique<crawlservpp::Module::Extractor::Thread>(
-								this->database, i->id, i->status, i->paused, i->options, i->last));
-				extractor->crawlservpp::Module::Thread::start();
-				this->extractors.push_back(std::move(extractor));
-				*/
-
-				// write to log
-				std::ostringstream logStrStr;
-				logStrStr << "#" << i->id << " continued.";
-				this->database.log("extractor", logStrStr.str());
-			}
-			else if(i->module == "analyzer") {
-				// load analyzer thread
-				std::unique_ptr<crawlservpp::Module::Analyzer::Thread> analyzer;
-
-				// get and parse config JSON to determine algorithm
-				rapidjson::Document configJson;
-				std::string config = this->database.getConfiguration(i->options.config);
-				if(configJson.Parse(config.c_str()).HasParseError()) throw std::runtime_error("Could not parse configuration JSON.");
-				if(!configJson.IsArray()) throw std::runtime_error("Parsed configuration JSON is not an array.");
-
-				switch(Server::getAlgoFromConfig(configJson)) {
-				case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-					analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
-							this->database, i->id, i->status, i->paused, i->options, i->last);
-					break;
-				case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-					analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
-							this->database, i->id, i->status, i->paused, i->options, i->last);
-					break;
-				default:
-					this->database.log("analyzer", "WARNING: Unknown algorithm ignored when loading threads.");
-					continue;
-				}
-
-				analyzer->crawlservpp::Module::Thread::start();
-				this->analyzers.push_back(std::move(analyzer));
-
-				// write to log
-				std::ostringstream logStrStr;
-				logStrStr << "#" << i->id << " continued.";
-				this->database.log("analyzer", logStrStr.str());
-			}
-			else throw std::runtime_error("Unknown thread module \'" + i->module + "\'");
+			// write to log
+			std::ostringstream logStrStr;
+			logStrStr << "#" << i->id << " continued.";
+			this->database.log("parser", logStrStr.str());
 		}
+		else if(i->module == "extractor") {
+			// load extractor thread
+			/*
+			std::unique_ptr<crawlservpp::Module::Extractor::Thread> parser(
+					std::make_unique<crawlservpp::Module::Extractor::Thread>(
+							this->database, i->id, i->status, i->paused, i->options, i->last));
+			extractor->crawlservpp::Module::Thread::start();
+			this->extractors.push_back(std::move(extractor));
+			*/
 
-		// save start time for up-time calculation
-		this->uptimeStart = std::chrono::steady_clock::now();
+			// write to log
+			std::ostringstream logStrStr;
+			logStrStr << "#" << i->id << " continued.";
+			this->database.log("extractor", logStrStr.str());
+		}
+		else if(i->module == "analyzer") {
+			// load analyzer thread
+			std::unique_ptr<crawlservpp::Module::Analyzer::Thread> analyzer;
 
-		// start logging
-		this->database.log("server", "started.");
+			// get and parse config JSON to determine algorithm
+			rapidjson::Document configJson;
+			std::string config = this->database.getConfiguration(i->options.config);
+			if(configJson.Parse(config.c_str()).HasParseError()) throw std::runtime_error("Could not parse configuration JSON.");
+			if(!configJson.IsArray()) throw std::runtime_error("Parsed configuration JSON is not an array.");
+
+			switch(Server::getAlgoFromConfig(configJson)) {
+			case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
+				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
+						this->database, i->id, i->status, i->paused, i->options, i->last);
+				break;
+			case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
+				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
+						this->database, i->id, i->status, i->paused, i->options, i->last);
+				break;
+			default:
+				this->database.log("analyzer", "WARNING: Unknown algorithm ignored when loading threads.");
+				continue;
+			}
+
+			analyzer->crawlservpp::Module::Thread::start();
+			this->analyzers.push_back(std::move(analyzer));
+
+			// write to log
+			std::ostringstream logStrStr;
+			logStrStr << "#" << i->id << " continued.";
+			this->database.log("analyzer", logStrStr.str());
+		}
+		else throw std::runtime_error("Unknown thread module \'" + i->module + "\'");
 	}
-	catch(...) {
-		// free mongoose HTTP server
-		mg_mgr_free(&(this->eventManager));
-	}
+
+	// save start time for up-time calculation
+	this->uptimeStart = std::chrono::steady_clock::now();
+
+	// start logging
+	this->database.log("server", "started.");
 }
 
 // destructor
@@ -151,7 +144,7 @@ Server::~Server() {
 	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 		if(*i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
 
-	// wait for module threads and delete them
+	// wait for module threads
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) {
 		if(*i) {
 			// get thread ID (for logging)
@@ -180,6 +173,7 @@ Server::~Server() {
 			this->database.log("parser", logStrStr.str());
 		}
 	}
+	this->parsers.clear();
 	/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
 		if(*i) {
 			// get thread ID (for logging)
@@ -216,9 +210,6 @@ Server::~Server() {
 		}
 	}
 
-	// free mongoose HTTP server
-	mg_mgr_free(&(this->eventManager));
-
 	// log shutdown message with server up-time
 	this->database.log("server", "shuts down after up-time of "
 			+ crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) + ".");
@@ -226,7 +217,7 @@ Server::~Server() {
 
 // server tick
 bool Server::tick() {
-	mg_mgr_poll(&(this->eventManager), 1000);
+	this->webServer.poll(1000);
 
 	// check whether a thread was terminated
 	for(unsigned long n = 1; n <= this->crawlers.size(); n++) {
@@ -286,13 +277,12 @@ unsigned long Server::getUpTime() const {
 }
 
 // perform a server command
-std::string Server::cmd(const char * body, struct mg_connection * connection, bool& threadStartedTo) {
-	std::string ip = Server::getIP(connection);
+std::string Server::cmd(const std::string& msgBody, const std::string& ip, bool& threadStartedTo) {
 	Server::ServerCommandResponse response;
 
 	// parse JSON
 	rapidjson::Document json;
-	if(json.Parse(body).HasParseError())
+	if(json.Parse(msgBody.c_str()).HasParseError())
 		response = Server::ServerCommandResponse(true, "Could not parse JSON.");
 	else if(!json.IsObject())
 		response = Server::ServerCommandResponse(true, "Parsed JSON is not an object.");
@@ -349,7 +339,7 @@ std::string Server::cmd(const char * body, struct mg_connection * connection, bo
 							std::lock_guard<std::mutex> workersLocked(this->workersLock);
 							this->workersRunning.push_back(true);
 							this->workers.push_back(std::make_unique<std::thread>(
-									&Server::cmdTestQuery, this, this->workers.size(), body, connection));
+									&Server::cmdTestQuery, this, this->workers.size(), msgBody));
 						}
 						threadStartedTo = true;
 					}
@@ -396,7 +386,7 @@ std::string Server::cmd(const char * body, struct mg_connection * connection, bo
 		reply.Key("fail");
 		reply.Bool(true);
 		reply.Key("debug");
-		reply.String(body);
+		reply.String(msgBody.c_str());
 	}
 	else if(response.confirm) {
 		reply.Key("confirm");
@@ -417,91 +407,47 @@ void Server::setStatus(const std::string& statusMsg) {
 	this->status = statusMsg;
 }
 
-// handle server events
-void Server::eventHandler(mg_connection * connection, int event, void * data) {
-	// get pointer to server
-	Server * server = (Server *) connection->user_data;
-
-	if(event == MG_EV_ACCEPT) {
-		// check authorization
-		if(server->allowed != "*") {
-			std::string ip = Server::getIP(connection);
-			if(server->allowed.find(ip) == std::string::npos) {
-				connection->flags |= MG_F_CLOSE_IMMEDIATELY;
-				server->database.log("server", "refused client " + ip + ".");
-			}
-			else server->database.log("server", "accepted client " + ip + ".");
+// handle accept event
+void Server::onAccept(const std::string& ip) {
+	// check authorization
+	if(this->allowed != "*") {
+		if(this->allowed.find(ip) == std::string::npos) {
+			this->webServer.close();
+			this->database.log("server", "refused client " + ip + ".");
 		}
-	}
-	else if(event == MG_EV_HTTP_REQUEST) {
-		// check authorization
-		if(server->allowed != "*") {
-			std::string ip = Server::getIP(connection);
-			if(server->allowed.find(ip) == std::string::npos) {
-				connection->flags |= MG_F_CLOSE_IMMEDIATELY;
-				server->database.log("server", "Client " + ip + " refused.");
-			}
-		}
-
-		// parse HTTP request
-		http_message * httpMessage = (http_message *) data;
-
-#ifdef MAIN_SERVER_DEBUG_HTTP_REQUEST
-		// debug HTTP request
-		std::cout << std::endl << std::string(httpMessage->message.p, 0, httpMessage->message.len) << std::endl;
-#endif
-
-		// check for GET request
-		if(httpMessage->method.len == 3 &&
-				httpMessage->method.p[0] == 'G' && httpMessage->method.p[1] == 'E' && httpMessage->method.p[2] == 'T') {
-			std::string status = server->getStatus();
-			mg_send_head(connection, 200, status.length(), "Content-Type: text/plain\r\n"
-					"Access-Control-Allow-Origin: *\r\n"
-					"Access-Control-Allow-Methods: GET, POST\r\n"
-					"Access-Control-Allow-Headers: Content-Type");
-			mg_printf(connection, "%s", status.c_str());
-		}
-		// check for POST request
-		else if(httpMessage->method.len == 4 &&
-				httpMessage->method.p[0] == 'P' && httpMessage->method.p[1] == 'O' && httpMessage->method.p[2] == 'S'
-						&& httpMessage->method.p[3] == 'T') {
-			std::string replyString;
-			char * postBody = new char[httpMessage->message.len + 1];
-			for(unsigned long n = 0; n < httpMessage->body.len; n++) postBody[n] = httpMessage->body.p[n];
-			postBody[httpMessage->body.len] = '\0';
-
-			// parse JSON
-			bool threadStarted = false;
-			replyString = server->cmd(postBody, connection, threadStarted);
-
-			if(!threadStarted) {
-				// delete buffer for body
-				delete[] postBody;
-
-				// send reply
-				mg_send_head(connection, 200, replyString.size(), "Content-Type: application/json\r\n"
-						"Access-Control-Allow-Origin: *\r\n"
-						"Access-Control-Allow-Methods: GET, POST\r\n"
-						"Access-Control-Allow-Headers: Content-Type");
-				mg_printf(connection, "%s", replyString.c_str());
-			}
-		}
-		else if(httpMessage->method.len == 7 &&
-				httpMessage->method.p[0] == 'O' && httpMessage->method.p[1] == 'P' && httpMessage->method.p[2] == 'T'
-					&& httpMessage->method.p[3] == 'I' && httpMessage->method.p[4] == 'O' && httpMessage->method.p[5] == 'N'
-					&& httpMessage->method.p[6] == 'S') {
-			mg_send_head(connection, 200, 0, "Access-Control-Allow-Origin: *\r\n"
-					"Access-Control-Allow-Methods: GET, POST\r\n"
-					"Access-Control-Allow-Headers: Content-Type");
-		}
+		else this->database.log("server", "accepted client " + ip + ".");
 	}
 }
 
-// static helper function: get client IP from connection
-std::string Server::getIP(mg_connection * connection) {
-	char ip[INET6_ADDRSTRLEN];
-	mg_sock_to_str(connection->sock, ip, INET6_ADDRSTRLEN, MG_SOCK_STRINGIFY_REMOTE | MG_SOCK_STRINGIFY_IP);
-	return std::string(ip);
+// handle request event
+void Server::onRequest(const std::string& ip, const std::string& method, const std::string& body) {
+	// check authorization
+	if(this->allowed != "*") {
+		if(this->allowed.find(ip) == std::string::npos) {
+			this->webServer.close();
+			this->database.log("server", "Client " + ip + " refused.");
+		}
+	}
+
+#ifdef MAIN_SERVER_DEBUG_HTTP_REQUEST
+	// debug HTTP request
+	std::cout << std::endl << message << std::endl;
+#endif
+
+	// check for GET request
+	if(method == "GET") this->webServer.send(200, "text/plain", this->getStatus());
+	// check for POST request
+	else if(method == "POST") {
+		// parse JSON
+		bool threadStarted = false;
+		std::string reply = this->cmd(body, ip, threadStarted);
+
+		// send reply
+		if(!threadStarted) this->webServer.send(200, "application/json", reply);
+	}
+	else if(method == "OPTIONS") {
+		this->webServer.send(200, "", "");
+	}
 }
 
 // static helper function: get algorithm ID from configuration JSON
@@ -1714,12 +1660,12 @@ Server::ServerCommandResponse Server::cmdDuplicateQuery(const rapidjson::Documen
 }
 
 // server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text): test query on text
-void Server::cmdTestQuery(unsigned long index, const char * body, struct mg_connection * connection) {
+void Server::cmdTestQuery(unsigned long index, const std::string& message) {
 	Server::ServerCommandResponse response;
 
 	// parse JSON (again for thread)
 	rapidjson::Document json;
-	if(json.Parse(body).HasParseError())
+	if(json.Parse(message.c_str()).HasParseError())
 		response = Server::ServerCommandResponse(true, "Could not parse JSON.");
 	else if(!json.IsObject())
 		response = Server::ServerCommandResponse(true, "Parsed JSON is not an object.");
@@ -1892,22 +1838,15 @@ void Server::cmdTestQuery(unsigned long index, const char * body, struct mg_conn
 		reply.Key("fail");
 		reply.Bool(true);
 		reply.Key("debug");
-		reply.String(body);
+		reply.String(message.c_str());
 	}
 	reply.Key("text");
 	reply.String(response.text.c_str(), response.text.size());
 	reply.EndObject();
 	std::string replyString = replyBuffer.GetString();
 
-	// delete buffer for body
-	delete[] body;
-
 	// send reply
-	mg_send_head(connection, 200, replyString.size(), "Content-Type: application/json\r\n"
-			"Access-Control-Allow-Origin: *\r\n"
-			"Access-Control-Allow-Methods: GET, POST\r\n"
-			"Access-Control-Allow-Headers: Content-Type");
-	mg_printf(connection, "%s", replyString.c_str());
+	this->webServer.send(200, "application/json", replyString);
 
 	// set thread status to not running
 	{

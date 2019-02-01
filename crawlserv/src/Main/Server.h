@@ -17,6 +17,7 @@
 //#define MAIN_SERVER_DEBUG_HTTP_REQUEST
 
 #include "Database.h"
+#include "WebServer.h"
 
 #include "../Helper/DateTime.h"
 #include "../Helper/Strings.h"
@@ -33,7 +34,6 @@
 #include "../Struct/ServerSettings.h"
 #include "../Struct/ThreadDatabaseEntry.h"
 
-#include "../_extern/mongoose/mongoose.h"
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/prettywriter.h"
 
@@ -68,10 +68,17 @@ namespace crawlservpp::Main {
 		unsigned long getUpTime() const;
 
 	private:
+		// settings
 		crawlservpp::Struct::ServerSettings settings;
 		crawlservpp::Struct::DatabaseSettings dbSettings;
+
+		// database
 		Database database;
-		mg_mgr eventManager;
+
+		// web server (NOTE: needs to be declared after/destroyed before database, because it is doing one last poll!)
+		WebServer webServer;
+
+		// status
 		std::string status;
 		std::string allowed;
 		bool running;
@@ -87,13 +94,10 @@ namespace crawlservpp::Main {
 		std::mutex workersLock;
 
 		// run server command
-		std::string cmd(const char * body, struct mg_connection * connection, bool& threadStartedTo);
+		std::string cmd(const std::string& msgBody, const std::string& ip, bool& threadStartedTo);
 
 		// set server status
 		void setStatus(const std::string& statusString);
-
-		// event handler
-		static void eventHandler(struct mg_connection * connection, int event, void * data);
 
 		struct ServerCommandResponse {
 			// constructor initializing a successful empty response
@@ -119,8 +123,11 @@ namespace crawlservpp::Main {
 			unsigned long id;	// [can be used by the command to return an id]
 		};
 
-		// static helper functions for the class
-		static std::string getIP(mg_connection * connection);
+		// event handlers
+		void onAccept(const std::string& ip);
+		void onRequest(const std::string& ip, const std::string& method, const std::string& body);
+
+		// static helper function for the class
 		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
 
 		// server commands used by Server::cmd(...) only
@@ -164,7 +171,7 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdUpdateQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDeleteQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDuplicateQuery(const rapidjson::Document& json);
-		void cmdTestQuery(unsigned long index, const char * body, struct mg_connection * connection);
+		void cmdTestQuery(unsigned long index, const std::string& message);
 
 		ServerCommandResponse cmdAddConfig(const rapidjson::Document& json);
 		ServerCommandResponse cmdUpdateConfig(const rapidjson::Document& json);
