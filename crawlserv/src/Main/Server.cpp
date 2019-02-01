@@ -52,10 +52,11 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	for(auto i = threads.begin(); i != threads.end(); ++i) {
 		if(i->module == "crawler") {
 			// load crawler thread
-			crawlservpp::Module::Crawler::Thread * crawler =
-					new crawlservpp::Module::Crawler::Thread(this->database, i->id, i->status, i->paused, i->options, i->last);
+			std::unique_ptr<crawlservpp::Module::Crawler::Thread> crawler(
+					std::make_unique<crawlservpp::Module::Crawler::Thread>(
+							this->database, i->id, i->status, i->paused, i->options, i->last));
 			crawler->crawlservpp::Module::Thread::start();
-			this->crawlers.push_back(crawler);
+			this->crawlers.push_back(std::move(crawler));
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -64,10 +65,11 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 		}
 		else if(i->module == "parser") {
 			// load parser thread
-			crawlservpp::Module::Parser::Thread * parser =
-					new crawlservpp::Module::Parser::Thread(this->database, i->id, i->status, i->paused, i->options, i->last);
+			std::unique_ptr<crawlservpp::Module::Parser::Thread> parser(
+					std::make_unique<crawlservpp::Module::Parser::Thread>(
+							this->database, i->id, i->status, i->paused, i->options, i->last));
 			parser->crawlservpp::Module::Thread::start();
-			this->parsers.push_back(parser);
+			this->parsers.push_back(std::move(parser));
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -77,10 +79,11 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 		else if(i->module == "extractor") {
 			// load extractor thread
 			/*
-			crawlservpp::Module::Extractor::Thread * extractor =
-					new crawlservpp::Module::Extractor::Thread(this->database, i->id, i->status, i->paused, i->options, i->last);
+			std::unique_ptr<crawlservpp::Module::Extractor::Thread> parser(
+					std::make_unique<crawlservpp::Module::Extractor::Thread>(
+							this->database, i->id, i->status, i->paused, i->options, i->last));
 			extractor->crawlservpp::Module::Thread::start();
-			this->extractors.push_back(extractor);
+			this->extractors.push_back(std::move(extractor));
 			*/
 
 			// write to log
@@ -90,7 +93,7 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 		}
 		else if(i->module == "analyzer") {
 			// load analyzer thread
-			crawlservpp::Module::Analyzer::Thread * analyzer = NULL;
+			std::unique_ptr<crawlservpp::Module::Analyzer::Thread> analyzer;
 
 			// get and parse config JSON to determine algorithm
 			rapidjson::Document configJson;
@@ -100,12 +103,12 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 
 			switch(Server::getAlgoFromConfig(configJson)) {
 			case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-				analyzer = new crawlservpp::Module::Analyzer::Algo::MarkovText(this->database, i->id, i->status, i->paused,
-						i->options, i->last);
+				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
+						this->database, i->id, i->status, i->paused, i->options, i->last);
 				break;
 			case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-				analyzer = new crawlservpp::Module::Analyzer::Algo::MarkovTweet(this->database, i->id, i->status, i->paused,
-						i->options, i->last);
+				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
+						this->database, i->id, i->status, i->paused, i->options, i->last);
 				break;
 			default:
 				this->database.log("analyzer", "WARNING: Unknown algorithm ignored when loading threads.");
@@ -113,7 +116,7 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 			}
 
 			analyzer->crawlservpp::Module::Thread::start();
-			this->analyzers.push_back(analyzer);
+			this->analyzers.push_back(std::move(analyzer));
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -148,10 +151,8 @@ Server::~Server() {
 			// get thread ID (for logging)
 			unsigned long id = (*i)->getId();
 
-			// wait for thread and delete it
+			// wait for thread
 			(*i)->crawlservpp::Module::Thread::finishInterrupt();
-			delete *i;
-			*i = NULL;
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -164,10 +165,8 @@ Server::~Server() {
 			// get thread ID (for logging)
 			unsigned long id = (*i)->getId();
 
-			// wait for thread and delete it
+			// wait for thread
 			(*i)->crawlservpp::Module::Thread::finishInterrupt();
-			delete *i;
-			*i = NULL;
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -180,10 +179,8 @@ Server::~Server() {
 			// get thread ID (for logging)
 			unsigned long id = (*i)->getId();
 
-			// wait for thread and delete it
+			// wait for thread
 			(*i)->crawlservpp::Module::Thread::finishInterrupt();
-			delete *i;
-			*i = NULL;
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -196,10 +193,8 @@ Server::~Server() {
 			// get thread ID (for logging)
 			unsigned long id = (*i)->getId();
 
-			// wait for thread and delete it
+			// wait for thread
 			(*i)->crawlservpp::Module::Thread::finishInterrupt();
-			delete *i;
-			*i = NULL;
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -208,11 +203,10 @@ Server::~Server() {
 		}
 	}
 
-	// wait for worker threads and delete them
+	// wait for worker threads
 	for(auto i = this->workers.begin(); i != this->workers.end(); ++i) {
 		if(*i) {
 			if((*i)->joinable()) (*i)->join();
-			delete *i;
 		}
 	}
 
@@ -261,13 +255,13 @@ bool Server::tick() {
 	// check whether a worker thread was terminated
 	{
 		std::lock_guard<std::mutex> workersLocked(this->workersLock);
-		for(unsigned long n = 0; n < this->workers.size(); n++) {
-			std::thread * worker = this->workers.at(n);
-			if(worker && !(this->workersRunning.at(n))) {
-				// join thread and unset thread pointer
-				if(worker->joinable()) worker->join();
-				delete worker;
-				this->workers.at(n) = NULL;
+		for(unsigned long n = 1; n <= this->workers.size(); n++) {
+			std::thread& worker = *(this->workers.at(n - 1));
+			if(!(this->workersRunning.at(n - 1))) {
+				// join and remove thread
+				if(worker.joinable()) worker.join();
+				this->workers.erase(this->workers.begin() + (n - 1));
+				n--;
 			}
 		}
 	}
@@ -348,10 +342,8 @@ std::string Server::cmd(const char * body, struct mg_connection * connection, bo
 						{
 							std::lock_guard<std::mutex> workersLocked(this->workersLock);
 							this->workersRunning.push_back(true);
-							this->workers.push_back(
-									new std::thread(&Server::cmdTestQuery, this, this->workers.size(),
-											body, connection)
-							);
+							this->workers.push_back(std::make_unique<std::thread>(
+									&Server::cmdTestQuery, this, this->workers.size(), body, connection));
 						}
 						threadStartedTo = true;
 					}
@@ -683,10 +675,9 @@ Server::ServerCommandResponse Server::cmdStartCrawler(const rapidjson::Document&
 	}
 
 	// create and start crawler
-	crawlservpp::Module::Crawler::Thread * newCrawler = new crawlservpp::Module::Crawler::Thread(this->database, options);
-	this->crawlers.push_back(newCrawler);
-	newCrawler->crawlservpp::Module::Thread::start();
-	unsigned long id = newCrawler->crawlservpp::Module::Thread::getId();
+	this->crawlers.push_back(std::make_unique<crawlservpp::Module::Crawler::Thread>(this->database, options));
+	this->crawlers.back()->crawlservpp::Module::Thread::start();
+	unsigned long id = this->crawlers.back()->crawlservpp::Module::Thread::getId();
 
 	// startcrawler is a logged command
 	std::ostringstream logStrStr;
@@ -707,7 +698,8 @@ Server::ServerCommandResponse Server::cmdPauseCrawler(const rapidjson::Document&
 	unsigned long id = json["id"].GetUint64();
 
 	// find crawler
-	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](crawlservpp::Module::Crawler::Thread * p) {
+	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Crawler::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->crawlers.end()) {
@@ -738,7 +730,8 @@ Server::ServerCommandResponse Server::cmdUnpauseCrawler(const rapidjson::Documen
 	unsigned long id = json["id"].GetUint64();
 
 	// find crawler
-	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](crawlservpp::Module::Crawler::Thread * p) {
+	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Crawler::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->crawlers.end()) {
@@ -769,7 +762,8 @@ Server::ServerCommandResponse Server::cmdStopCrawler(const rapidjson::Document& 
 	unsigned long id = json["id"].GetUint64();
 
 	// find crawler
-	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](crawlservpp::Module::Crawler::Thread * p) {
+	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Crawler::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->crawlers.end()) {
@@ -780,7 +774,6 @@ Server::ServerCommandResponse Server::cmdStopCrawler(const rapidjson::Document& 
 
 	// stop crawler
 	(*i)->crawlservpp::Module::Thread::stop();
-	delete *i;
 	this->crawlers.erase(i);
 
 	// stopcrawler is a logged command
@@ -832,10 +825,9 @@ Server::ServerCommandResponse Server::cmdStartParser(const rapidjson::Document& 
 	}
 
 	// create and start parser
-	crawlservpp::Module::Parser::Thread * newParser = new crawlservpp::Module::Parser::Thread(this->database, options);
-	this->parsers.push_back(newParser);
-	newParser->crawlservpp::Module::Thread::start();
-	unsigned long id = newParser->crawlservpp::Module::Thread::getId();
+	this->parsers.push_back(std::make_unique<crawlservpp::Module::Parser::Thread>(this->database, options));
+	this->parsers.back()->crawlservpp::Module::Thread::start();
+	unsigned long id = this->parsers.back()->crawlservpp::Module::Thread::getId();
 
 	// startparser is a logged command
 	std::ostringstream logStrStr;
@@ -856,7 +848,8 @@ Server::ServerCommandResponse Server::cmdPauseParser(const rapidjson::Document& 
 	unsigned long id = json["id"].GetUint64();
 
 	// find parser
-	auto i = std::find_if(this->parsers.begin(), this->parsers.end(), [&id](crawlservpp::Module::Parser::Thread * p) {
+	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Parser::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->parsers.end()) {
@@ -887,7 +880,8 @@ Server::ServerCommandResponse Server::cmdUnpauseParser(const rapidjson::Document
 	unsigned long id = json["id"].GetUint64();
 
 	// find parser
-	auto i = std::find_if(this->parsers.begin(), this->parsers.end(), [&id](crawlservpp::Module::Parser::Thread * p) {
+	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Parser::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->parsers.end()) {
@@ -918,7 +912,8 @@ Server::ServerCommandResponse Server::cmdStopParser(const rapidjson::Document& j
 	unsigned long id = json["id"].GetUint64();
 
 	// find parser
-	auto i = std::find_if(this->parsers.begin(), this->parsers.end(), [&id](crawlservpp::Module::Parser::Thread * p) {
+	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Parser::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->parsers.end()) {
@@ -929,7 +924,6 @@ Server::ServerCommandResponse Server::cmdStopParser(const rapidjson::Document& j
 
 	// stop parser
 	(*i)->crawlservpp::Module::Thread::stop();
-	delete *i;
 	this->parsers.erase(i);
 
 	// stopparser is a logged command
@@ -1034,21 +1028,21 @@ Server::ServerCommandResponse Server::cmdStartAnalyzer(const rapidjson::Document
 	if(!algo) return Server::ServerCommandResponse(true, "Analyzing configuration does not include an algorithm.");
 
 	// create and start analyzer
-	crawlservpp::Module::Analyzer::Thread * newAnalyzer = NULL;
+	std::unique_ptr<crawlservpp::Module::Analyzer::Thread> newAnalyzer;
 
 	switch(algo) {
 	case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-		newAnalyzer = new crawlservpp::Module::Analyzer::Algo::MarkovText(this->database, options);
+		newAnalyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(this->database, options);
 		break;
 	case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-		newAnalyzer = new crawlservpp::Module::Analyzer::Algo::MarkovTweet(this->database, options);
+		newAnalyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(this->database, options);
 		break;
 	default:
 		std::ostringstream errStrStr;
 		errStrStr << "Algorithm #" << algo << " not found.";
 		return Server::ServerCommandResponse(true, errStrStr.str());
 	}
-	this->analyzers.push_back(newAnalyzer);
+	this->analyzers.push_back(std::move(newAnalyzer));
 	newAnalyzer->crawlservpp::Module::Thread::start();
 	unsigned long id = newAnalyzer->crawlservpp::Module::Thread::getId();
 
@@ -1071,7 +1065,8 @@ Server::ServerCommandResponse Server::cmdPauseAnalyzer(const rapidjson::Document
 	unsigned long id = json["id"].GetUint64();
 
 	// find analyzer
-	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](crawlservpp::Module::Analyzer::Thread * p) {
+	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Analyzer::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->analyzers.end()) {
@@ -1106,7 +1101,8 @@ Server::ServerCommandResponse Server::cmdUnpauseAnalyzer(const rapidjson::Docume
 	unsigned long id = json["id"].GetUint64();
 
 	// find analyzer
-	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](crawlservpp::Module::Analyzer::Thread * p) {
+	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Analyzer::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->analyzers.end()) {
@@ -1137,7 +1133,8 @@ Server::ServerCommandResponse Server::cmdStopAnalyzer(const rapidjson::Document&
 	unsigned long id = json["id"].GetUint64();
 
 	// find analyzer
-	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](crawlservpp::Module::Analyzer::Thread * p) {
+	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
+			[&id](std::unique_ptr<crawlservpp::Module::Analyzer::Thread>& p) {
 		return p->crawlservpp::Module::Thread::getId() == id;
 	});
 	if(i == this->analyzers.end()) {
@@ -1148,7 +1145,6 @@ Server::ServerCommandResponse Server::cmdStopAnalyzer(const rapidjson::Document&
 
 	// stop analyzer
 	(*i)->crawlservpp::Module::Thread::stop();
-	delete *i;
 	this->analyzers.erase(i);
 
 	// stopanalyzer is a logged command
