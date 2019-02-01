@@ -10,3 +10,6 @@
 [submodule "crawlserv/src/_extern/rapidjson"]
 	path = crawlserv/src/_extern/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "crawlserv/src/_extern/tidy-html5"]
+	path = crawlserv/src/_extern/tidy-html5
+	url = https://github.com/htacg/tidy-html5
