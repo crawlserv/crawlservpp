@@ -13,21 +13,20 @@ namespace crawlservpp::Main {
 
 // constructor: set default value
 WebServer::WebServer() {
-	this->loaded = false;
+	// set connection pointer to NULL
 	this->lastConnection = NULL;
+
+	// initialize mongoose server
+	mg_mgr_init(&(this->eventManager), NULL);
 }
 
 // destructor: free embedded web server if necessary
 WebServer::~WebServer() {
-	if(this->loaded) mg_mgr_free(&(this->eventManager));
+	mg_mgr_free(&(this->eventManager));
 }
 
 // initialize embedded web server and bind it to port, throws std::runtime_error
 void WebServer::initHTTP(const std::string& port) {
-	// initialize mongoose server
-	mg_mgr_init(&(this->eventManager), NULL);
-	this->loaded = true;
-
 	// bind mongoose server to port
 	mg_connection * connection = mg_bind(&(this->eventManager), port.c_str(), WebServer::eventHandler);
 	if(!connection) throw std::runtime_error("Could not bind server to port " + port);
@@ -54,19 +53,15 @@ void WebServer::setRequestCallback(RequestCallback callback) {
 	this->onRequest = callback;
 }
 
-// poll server, throws std::runtime_error
+// poll server
 void WebServer::poll(int timeOut) {
-	// check state
-	if(!(this->loaded)) throw std::runtime_error("Web server not loaded.");
-
 	// poll server
 	mg_mgr_poll(&(this->eventManager), timeOut);
 }
 
 // send reply, throws std::runtime_error
 void WebServer::send(unsigned short code, const std::string& type, const std::string& content) {
-	// check state
-	if(!(this->loaded)) throw std::runtime_error("Web server not loaded.");
+	// check for connection
 	if(!(this->lastConnection)) throw std::runtime_error("No connection available");
 
 	// send reply
@@ -81,8 +76,7 @@ void WebServer::send(unsigned short code, const std::string& type, const std::st
 
 // close connection immediately, throws std::runtime_error
 void WebServer::close() {
-	// check state
-	if(!(this->loaded)) throw std::runtime_error("Web server not loaded.");
+	// check for connection
 	if(!(this->lastConnection)) throw std::runtime_error("No connection available");
 
 	// set closing flag
