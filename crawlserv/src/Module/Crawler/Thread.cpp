@@ -54,17 +54,8 @@ Thread::Thread(crawlservpp::Main::Database& dbBase,
 	this->idleTime = std::chrono::steady_clock::time_point::min();
 }
 
-// destructor: destroy objects that somehow did not get destroyed (should not happen)
-Thread::~Thread() {
-	if(this->parser) {
-		delete this->parser;
-		this->parser = NULL;
-	}
-	if(this->networkingArchives) {
-		delete this->networkingArchives;
-		this->networkingArchives = NULL;
-	}
-}
+// destructor stub
+Thread::~Thread() {}
 
 // initialize crawler
 bool Thread::onInit(bool resumed) {
@@ -109,7 +100,7 @@ bool Thread::onInit(bool resumed) {
 
 	// create URI parser
 	if(verbose) this->log("creates URI parser...");
-	if(!(this->parser)) this->parser = new crawlservpp::Parsing::URI;
+	this->parser = std::make_unique<crawlservpp::Parsing::URI>();
 	this->parser->setCurrentDomain(this->domain);
 
 	// set network configuration
@@ -136,7 +127,7 @@ bool Thread::onInit(bool resumed) {
 	// initialize networking for archives if necessary
 	if(this->config.crawlerArchives && !(this->networkingArchives)) {
 		if(verbose) this->log("initializes networking for archives...");
-		this->networkingArchives = new crawlservpp::Network::Curl();
+		this->networkingArchives = std::make_unique<crawlservpp::Network::Curl>();
 		if(!(this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings))) {
 			if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
 			return false;
@@ -292,18 +283,6 @@ void Thread::onClear(bool interrupted) {
 	this->queriesWhiteListTypes.clear();
 	this->queriesWhiteListUrls.clear();
 	this->clearQueries();
-
-	// destroy parser
-	if(this->parser) {
-		delete this->parser;
-		this->parser = NULL;
-	}
-
-	// destroy networking for archives
-	if(this->networkingArchives) {
-		delete this->networkingArchives;
-		this->networkingArchives = NULL;
-	}
 }
 
 // shadow pause function not to be used by thread

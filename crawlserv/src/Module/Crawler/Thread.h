@@ -29,8 +29,10 @@
 #include <algorithm>
 #include <chrono>
 #include <exception>
+#include <functional>
 #include <fstream>
 #include <locale>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <thread>
@@ -79,8 +81,8 @@ namespace crawlservpp::Module::Crawler {
 		// configuration, domain, URI parser and separate networking for archive.org
 		Config config;
 		std::string domain;
-		crawlservpp::Parsing::URI * parser;
-		crawlservpp::Network::Curl * networkingArchives;
+		std::unique_ptr<crawlservpp::Parsing::URI> parser;
+		std::unique_ptr<crawlservpp::Network::Curl> networkingArchives;
 
 		// queries
 		std::vector<QueryStruct> queriesBlackListContent;
