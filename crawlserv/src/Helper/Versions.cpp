@@ -49,7 +49,7 @@ std::string getLibraryVersions(const std::string& indent) {
 	out << indent << "rawr-gen by Kelly Rauchenberger\n";
 
 	// tidy-html5
-	out << indent << "tidy-html5 v" << tidyLibraryVersion() << "-" << tidyReleaseDate() << ")\n";
+	out << indent << "tidy-html5 v" << tidyLibraryVersion() << "-" << tidyReleaseDate() << "\n";
 
 	// uriparser
 	out << indent << "uriparser v" << URI_VER_MAJOR << "." << URI_VER_MINOR << "." << URI_VER_RELEASE << URI_VER_SUFFIX_ANSI
