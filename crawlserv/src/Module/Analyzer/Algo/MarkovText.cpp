@@ -97,14 +97,11 @@ bool MarkovText::onAlgoInit(bool resumed) {
 
 	// create dictionary
 	this->setStatusMessage("Creating dictionary...");
-	crawlservpp::Timer::Simple * timer = NULL;
-	if(this->config.generalLogging && this->config.markovTextTiming) timer = new crawlservpp::Timer::Simple();
+	std::unique_ptr<crawlservpp::Timer::Simple> timer;
+	if(this->config.generalLogging && this->config.markovTextTiming) timer = std::make_unique<crawlservpp::Timer::Simple>();
 	this->createDictionary();
 	if(this->isRunning()) {
-		if(timer) {
-			this->log("created dictionary in " + timer->tickStr() + ".");
-			delete timer;
-		}
+		if(timer) this->log("created dictionary in " + timer->tickStr() + ".");
 
 		// re-allow pausing the thread
 		this->allowPausing();
@@ -123,13 +120,10 @@ bool MarkovText::onAlgoTick() {
 	}
 
 	// generate text
-	crawlservpp::Timer::Simple * timer = NULL;
-	if(this->config.generalLogging && this->config.markovTextTiming) timer = new crawlservpp::Timer::Simple();
+	std::unique_ptr<crawlservpp::Timer::Simple> timer;
+	if(this->config.generalLogging && this->config.markovTextTiming) timer = std::make_unique<crawlservpp::Timer::Simple>();
 	std::string text = this->createText();
-	if(timer) {
-		this->log("created text in " + timer->tickStr() + ".");
-		delete timer;
-	}
+	if(timer) this->log("created text in " + timer->tickStr() + ".");
 
 	// insert text into result table in the database
 	if(!text.empty()) {
