@@ -725,7 +725,7 @@ Server::ServerCommandResponse Server::cmdStopCrawler(const rapidjson::Document& 
 		return Server::ServerCommandResponse(true, errStrStr.str());
 	}
 
-	// stop crawler
+	// stop and delete crawler
 	(*i)->crawlservpp::Module::Thread::stop();
 	this->crawlers.erase(i);
 
@@ -875,7 +875,7 @@ Server::ServerCommandResponse Server::cmdStopParser(const rapidjson::Document& j
 		return Server::ServerCommandResponse(true, errStrStr.str());
 	}
 
-	// stop parser
+	// stop and delete parser
 	(*i)->crawlservpp::Module::Thread::stop();
 	this->parsers.erase(i);
 
@@ -1096,7 +1096,7 @@ Server::ServerCommandResponse Server::cmdStopAnalyzer(const rapidjson::Document&
 		return Server::ServerCommandResponse(true, errStrStr.str());
 	}
 
-	// stop analyzer
+	// stop and delete analyzer
 	(*i)->crawlservpp::Module::Thread::stop();
 	this->analyzers.erase(i);
 
