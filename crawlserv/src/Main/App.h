@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -39,12 +40,13 @@ namespace crawlservpp::Main {
 
 	private:
 		bool running;
-		Server * server;
+		std::unique_ptr<Server> server;
 
 		// static helper functions
 		static void outputHeader();
-		static bool checkArgumentNumber(int argc, std::string& errorTo);
-		static bool loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings, crawlservpp::Struct::ServerSettings& serverSettings, std::string& errorTo);
+		static void checkArgumentNumber(int argc);
+		static void loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
+				crawlservpp::Struct::ServerSettings& serverSettings);
 		static bool getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings);
 	};
 }
