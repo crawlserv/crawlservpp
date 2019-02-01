@@ -127,6 +127,7 @@ void Thread::stop() {
 			this->pauseCondition.notify_one();
 		}
 
+		// wait for thread
 		if(this->threadPointer) this->threadPointer->join();
 	}
 
