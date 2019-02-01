@@ -17,13 +17,14 @@
 
 #include <algorithm>
 #include <exception>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 namespace crawlservpp::Parsing {
-	class URI {
+	class URI final {
 	public:
 		URI();
 		virtual ~URI();
@@ -41,21 +42,80 @@ namespace crawlservpp::Parsing {
 		static std::string unescape(const std::string& string, bool plusSpace);
 		static std::string escapeUrl(const std::string& urlToEscape);
 
-	protected:
+	private:
 		std::string domain;
 		std::string subUrl;
-
-	private:
-		UriParserStateA state;
 		std::string current;
 		std::string link;
-		UriUriA * base;
-		UriUriA * uri;
+
+		UriParserStateA state;
+
+		// RAII wrapper sub-class for URI structures
+		class URIWrapper {
+		public:
+			// constructor stub
+			URIWrapper() {}
+
+			// destructor: free and reset structure
+			virtual ~URIWrapper() { this->reset(); }
+
+			// create structure, free old structure if necessary
+			void create() { if(this->ptr) { uriFreeUriMembersA(this->ptr.get()); } this->ptr = std::make_unique<UriUriA>(); }
+
+			// free and reset structure if necessary
+			void reset() { if(this->ptr) { uriFreeUriMembersA(this->ptr.get()); this->ptr.reset(); } }
+
+			// get const pointer to structure
+			const UriUriA * get() const { return this->ptr.get(); }
+
+			// get non-const pointer to structure
+			UriUriA * get() { return this->ptr.get(); }
+
+			// check pointer for NULL
+			operator bool() const { return this->ptr.operator bool(); }
+
+			// rule of five
+			URIWrapper(URIWrapper const&) = delete;
+			URIWrapper(URIWrapper&&) = delete;
+			URIWrapper& operator=(URIWrapper const&) = delete;
+			URIWrapper& operator=(URIWrapper&&) = delete;
+
+		private:
+			std::unique_ptr<UriUriA> ptr;
+		} base, uri;
+
+		// RAII wrapper sub-class for URI query lists (does NOT have ownership of the pointer!)
+		class URIQueryListWrapper {
+		public:
+			// constructor: set pointer to NULL
+			URIQueryListWrapper() { this->ptr = NULL; }
+
+			// destructor: free query list if necessary
+			virtual ~URIQueryListWrapper() { if(this->ptr) uriFreeQueryListA(this->ptr); }
+
+			// get const pointer to query list
+			const UriQueryListA * get() const { return this->ptr; }
+
+			// get non-const pointer to query list
+			UriQueryListA * get() { return this->ptr; }
+
+			// get non-const pointer to pointer to query list
+			UriQueryListA ** getPtr() { return &(this->ptr); }
+
+			// rule of five
+			URIQueryListWrapper(URIQueryListWrapper const&) = delete;
+			URIQueryListWrapper(URIQueryListWrapper&&) = delete;
+			URIQueryListWrapper& operator=(URIQueryListWrapper const&) = delete;
+			URIQueryListWrapper& operator=(URIQueryListWrapper&&) = delete;
+
+		private:
+			UriQueryListA * ptr;
+		};
 
 		mutable std::string errorMessage;
 
 		static std::string textRangeToString(const UriTextRangeA * range);
-		static std::string toString(const UriUriA * uri);
+		static std::string toString(const URI::URIWrapper& uri);
 	};
 }
 
