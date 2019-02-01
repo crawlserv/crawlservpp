@@ -56,8 +56,8 @@ bool XML::parse(const std::string& content) {
 			tidyError = true;
 		}
 
-		if(!tidyError &&tidyBuffer.bp) {
-			tidyResult = (char*) tidyBuffer.bp;
+		if(!tidyError && tidyBuffer.bp) {
+			tidyResult = (char *) tidyBuffer.bp;
 			tidyBufFree(&tidyBuffer);
 		}
 		else tidyResult = content;
