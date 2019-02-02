@@ -102,7 +102,7 @@ namespace crawlservpp::Module::Parser {
 		std::string targetTableFull;
 
 	private:
-		// prepared SQL statements
+		// IDs of prepared SQL statements
 		unsigned short psIsUrlParsed;
 		unsigned short psGetNextUrl;
 		unsigned short psGetUrlPosition;
