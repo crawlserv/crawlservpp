@@ -21,6 +21,7 @@
 #include "../../Parsing/URI.h"
 #include "../../Parsing/XML.h"
 #include "../../Query/Container.h"
+#include "../../Struct/QueryProperties.h"
 #include "../../Struct/ThreadOptions.h"
 #include "../../Timer/StartStop.h"
 

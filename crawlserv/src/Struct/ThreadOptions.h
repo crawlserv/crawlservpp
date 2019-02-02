@@ -18,11 +18,12 @@ namespace crawlservpp::Struct {
 		unsigned long urlList; // URL list id for the thread
 		unsigned long config; // configuration id for the thread
 
-		// default values
-		ThreadOptions() {
-			this->website = 0;
-			this->urlList = 0;
-			this->config = 0;
+		// constructors
+		ThreadOptions() { this->website = 0; this->urlList = 0; this->config = 0; }
+		ThreadOptions(unsigned long setWebsite, unsigned long setUrlList, unsigned long setConfig) {
+			this->website = setWebsite;
+			this->urlList = setUrlList;
+			this->config = setConfig;
 		}
 	};
 }

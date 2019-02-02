@@ -13,6 +13,8 @@
 #include "RegEx.h"
 #include "XPath.h"
 
+#include "../Struct/QueryProperties.h"
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -49,8 +51,7 @@ namespace crawlservpp::Query {
 		// query functions
 		virtual void initQueries() = 0;
 		void reserveForQueries(unsigned long numOfAdditionalQueries);
-		Container::QueryStruct addQuery(const std::string& queryText, const std::string& queryType, bool queryResultBool,
-				bool queryResultSingle, bool queryResultMulti, bool queryTextOnly);
+		Container::QueryStruct addQuery(const crawlservpp::Struct::QueryProperties& properties);
 		const RegEx& getRegExQueryPtr(unsigned long index) const;
 		const XPath& getXPathQueryPtr(unsigned long index) const;
 		void clearQueries();

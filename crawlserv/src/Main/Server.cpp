@@ -1127,51 +1127,59 @@ Server::ServerCommandResponse Server::cmdResetAnalyzingStatus(const rapidjson::D
 	return Server::ServerCommandResponse("Analyzing status reset.");
 }
 
-// server command addwebsite(name, namespace, domain): add a website
+// server command addwebsite(domain, namespace, name): add a website
 Server::ServerCommandResponse Server::cmdAddWebsite(const rapidjson::Document& json) {
+	crawlservpp::Struct::WebsiteProperties properties;
+
 	// get arguments
-	if(!json.HasMember("name"))
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
-	if(!json["name"].IsString())
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
+	if(!json.HasMember("domain"))
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is missing).");
+	if(!json["domain"].IsString())
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is not a string).");
+	properties.domain = json["domain"].GetString();
 
 	if(!json.HasMember("namespace"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
 	if(!json["namespace"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
-	std::string nameSpace = json["namespace"].GetString();
+	properties.nameSpace = json["namespace"].GetString();
 
-	if(!json.HasMember("domain"))
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is missing).");
-	if(!json["domain"].IsString())
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is not a string).");
-	std::string domain = json["domain"].GetString();
-
-	// check name
-	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(!json.HasMember("name"))
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+	if(!json["name"].IsString())
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+	properties.name = json["name"].GetString();
 
 	// check namespace
-	if(nameSpace.length() < 4)
+	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Website namespace has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(nameSpace)))
+	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in website namespace.");
 
+	// check name
+	if(properties.name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+
 	// correct and check domain name (remove protocol from start and slash from the end)
-	while(domain.length() > 6 && domain.substr(0, 7) == "http://") domain = domain.substr(7);
-	while(domain.length() > 7 && domain.substr(0, 8) == "https://") domain = domain.substr(8);
-	while(!domain.empty() && domain.back() == '/') domain.pop_back();
-	if(domain.empty()) return Server::ServerCommandResponse(true, "Domain is empty.");
+	while(properties.domain.length() > 6 && properties.domain.substr(0, 7) == "http://")
+		properties.domain = properties.domain.substr(7);
+	while(properties.domain.length() > 7 && properties.domain.substr(0, 8) == "https://")
+		properties.domain = properties.domain.substr(8);
+	while(!properties.domain.empty() && properties.domain.back() == '/')
+		properties.domain.pop_back();
+	if(properties.domain.empty())
+		return Server::ServerCommandResponse(true, "Domain is empty.");
 
 	// add website to database
-	unsigned long id = this->database.addWebsite(name, nameSpace, domain);
+	unsigned long id = this->database.addWebsite(properties);
 	if(!id) return Server::ServerCommandResponse(true, "Could not add website to database.");
 
 	return Server::ServerCommandResponse("Website added.", id);
 }
 
-// server command updatewebsite(id, name, namespace, domain): edit a website
+// server command updatewebsite(id, domain, namespace, name): edit a website
 Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
+	crawlservpp::Struct::WebsiteProperties properties;
+
 	// get arguments
 	if(!json.HasMember("id"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -1179,38 +1187,42 @@ Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
 	unsigned long id = json["id"].GetUint64();
 
-	if(!json.HasMember("name"))
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
-	if(!json["name"].IsString())
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
+	if(!json.HasMember("domain"))
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is missing).");
+	if(!json["domain"].IsString())
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is not a string).");
+	properties.domain = json["domain"].GetString();
 
 	if(!json.HasMember("namespace"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
 	if(!json["namespace"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
-	std::string nameSpace = json["namespace"].GetString();
+	properties.nameSpace = json["namespace"].GetString();
 
-	if(!json.HasMember("domain"))
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is missing).");
-	if(!json["domain"].IsString())
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'domain\' is not a string).");
-	std::string domain = json["domain"].GetString();
+	if(!json.HasMember("name"))
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+	if(!json["name"].IsString())
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+	properties.name = json["name"].GetString();
 
 	// check name
-	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(properties.name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check namespace name
-	if(nameSpace.length() < 4)
+	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Website namespace has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(nameSpace)))
+	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in website namespace.");
 
 	// correct and check domain name (remove protocol from start and slash from the end)
-	while(domain.length() > 6 && domain.substr(0, 7) == "http://") domain = domain.substr(7);
-	while(domain.length() > 7 && domain.substr(0, 8) == "https://") domain = domain.substr(8);
-	while(!domain.empty() && domain.back() == '/') domain.pop_back();
-	if(domain.empty()) Server::ServerCommandResponse(true, "Domain is empty.");
+	while(properties.domain.length() > 6 && properties.domain.substr(0, 7) == "http://")
+		properties.domain = properties.domain.substr(7);
+	while(properties.domain.length() > 7 && properties.domain.substr(0, 8) == "https://")
+		properties.domain = properties.domain.substr(8);
+	while(!properties.domain.empty() && properties.domain.back() == '/')
+		properties.domain.pop_back();
+	if(properties.domain.empty())
+		Server::ServerCommandResponse(true, "Domain is empty.");
 
 	// check website
 	if(!(this->database.isWebsite(id))) {
@@ -1234,7 +1246,7 @@ Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document
 			return Server::ServerCommandResponse(true, "Website cannot be changed while analyzer is active.");
 
 	// update website in database
-	this->database.updateWebsite(id, name, nameSpace, domain);
+	this->database.updateWebsite(id, properties);
 	return Server::ServerCommandResponse("Website updated.");
 }
 
@@ -1308,8 +1320,10 @@ Server::ServerCommandResponse Server::cmdDuplicateWebsite(const rapidjson::Docum
 	return Server::ServerCommandResponse("Website duplicated.", newId);
 }
 
-// server command addurllist(website, name, namespace): add a URL list to the ID-specified website
+// server command addurllist(website, namespace, name): add a URL list to the ID-specified website
 Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& json) {
+	crawlservpp::Struct::UrlListProperties properties;
+
 	// get arguments
 	if(!json.HasMember("website"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
@@ -1317,28 +1331,28 @@ Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& j
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'website\' is not a valid number).");
 	unsigned long website = json["website"].GetUint64();
 
-	if(!json.HasMember("name"))
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
-	if(!json["name"].IsString())
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
-
 	if(!json.HasMember("namespace"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
 	if(!json["namespace"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
-	std::string nameSpace = json["namespace"].GetString();
+	properties.nameSpace = json["namespace"].GetString();
 
-	// check name
-	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(!json.HasMember("name"))
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+	if(!json["name"].IsString())
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+	properties.name = json["name"].GetString();
 
 	// check namespace
-	if(nameSpace.length() < 4)
+	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Namespace of URL list has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(nameSpace)))
+	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");
-	if(nameSpace == "config")
+	if(properties.nameSpace == "config")
 		return Server::ServerCommandResponse(true, "Namespace of URL list cannot be \'config\'.");
+
+	// check name
+	if(properties.name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check website
 	if(!(this->database.isWebsite(website))) {
@@ -1348,14 +1362,16 @@ Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& j
 	}
 
 	// add URL list to database
-	unsigned long id = this->database.addUrlList(website, name, nameSpace);
+	unsigned long id = this->database.addUrlList(website, properties);
 	if(!id) return Server::ServerCommandResponse(true, "Could not add URL list to database.");
 
 	return Server::ServerCommandResponse("URL list added.", id);
 }
 
-// server command updateurllist(id, name, namespace): edit a URL list
+// server command updateurllist(id, namespace, name): edit a URL list
 Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
+	crawlservpp::Struct::UrlListProperties properties;
+
 	// get arguments
 	if(!json.HasMember("id"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -1363,27 +1379,28 @@ Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
 	unsigned long id = json["id"].GetUint64();
 
-	if(!json.HasMember("name"))
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
-	if(!json["name"].IsString())
-		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
-
 	if(!json.HasMember("namespace"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
 	if(!json["namespace"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
-	std::string nameSpace = json["namespace"].GetString();
+	properties.nameSpace = json["namespace"].GetString();
 
-	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(!json.HasMember("name"))
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+	if(!json["name"].IsString())
+		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+	properties.name = json["name"].GetString();
 
 	// check namespace
-	if(nameSpace.length() < 4)
+	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Namespace of URL list has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(nameSpace)))
+	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");;
-	if(nameSpace == "config")
+	if(properties.nameSpace == "config")
 		return Server::ServerCommandResponse(true, "Namespace of URL list cannot be \'config\'.");
+
+	// check name
+	if(properties.name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check URL list
 	if(!(this->database.isUrlList(id))) {
@@ -1407,7 +1424,7 @@ Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document
 			return Server::ServerCommandResponse(true, "URL list cannot be changed while analyzer is active.");
 
 	// update URL list in database
-	this->database.updateUrlList(id, name, nameSpace);
+	this->database.updateUrlList(id, properties);
 	return Server::ServerCommandResponse("URL list updated.");
 }
 
@@ -1448,6 +1465,8 @@ Server::ServerCommandResponse Server::cmdDeleteUrlList(const rapidjson::Document
 
 // server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, textonly): add a query
 Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& json) {
+	crawlservpp::Struct::QueryProperties properties;
+
 	// get arguments
 	if(!json.HasMember("website"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
@@ -1459,57 +1478,57 @@ Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& jso
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
 	if(!json["name"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
+	properties.name = json["name"].GetString();
 
 	if(!json.HasMember("query"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'query\' is missing).");
 	if(!json["query"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'query\' is not a string).");
-	std::string query = json["query"].GetString();
+	properties.text = json["query"].GetString();
 
 	if(!json.HasMember("type"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'type\' is missing).");
 	if(!json["type"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'type\' is not a string).");
-	std::string type = json["type"].GetString();
+	properties.type = json["type"].GetString();
 
 	if(!json.HasMember("resultbool"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is missing).");
 	if(!json["resultbool"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is not a boolean).");
-	bool resultBool = json["resultbool"].GetBool();
+	properties.resultBool = json["resultbool"].GetBool();
 
 	if(!json.HasMember("resultsingle"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is missing).");
 	if(!json["resultsingle"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is not a boolean).");
-	bool resultSingle = json["resultsingle"].GetBool();
+	properties.resultSingle = json["resultsingle"].GetBool();
 
 	if(!json.HasMember("resultmulti"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is missing).");
 	if(!json["resultmulti"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is not a boolean).");
-	bool resultMulti = json["resultmulti"].GetBool();
+	properties.resultMulti = json["resultmulti"].GetBool();
 
 	if(!json.HasMember("textonly"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'textonly\' is missing).");
 	if(!json["textonly"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'textonly\' is not a boolean).");
-	bool textOnly = json["textonly"].GetBool();
+	properties.textOnly = json["textonly"].GetBool();
 
 	// check name
-	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(properties.name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check query text
-	if(query.empty()) return Server::ServerCommandResponse(true, "Query text is empty.");
+	if(properties.text.empty()) return Server::ServerCommandResponse(true, "Query text is empty.");
 
 	// check query type
-	if(type.empty()) return Server::ServerCommandResponse(true, "Query type is empty.");
-	if(type != "regex" && type != "xpath")
-		return Server::ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
+	if(properties.type.empty()) return Server::ServerCommandResponse(true, "Query type is empty.");
+	if(properties.type != "regex" && properties.type != "xpath")
+		return Server::ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
 
 	// check result type
-	if(!resultBool && !resultSingle && !resultMulti)
+	if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
 		return Server::ServerCommandResponse(true, "No result type selected.");
 
 	// check website
@@ -1520,7 +1539,7 @@ Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& jso
 	}
 
 	// add query to database
-	unsigned long id = this->database.addQuery(website, name, query, type, resultBool, resultSingle, resultMulti, textOnly);
+	unsigned long id = this->database.addQuery(website, properties);
 	if(!id) return Server::ServerCommandResponse("Could not add query to database.");
 
 	return Server::ServerCommandResponse("Query added.", id);
@@ -1528,6 +1547,8 @@ Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& jso
 
 // server command updatequery(id, name, query, type, resultbool, resultsingle, resultmulti, textonly): edit a query
 Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
+	crawlservpp::Struct::QueryProperties properties;
+
 	// get arguments
 	if(!json.HasMember("id"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -1540,60 +1561,60 @@ Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& 
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
 	if(!json["name"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
+	properties.name = json["name"].GetString();
 
 	if(!json.HasMember("query"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'query\' is missing).");
 	if(!json["query"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'query\' is not a string).");
-	std::string query = json["query"].GetString();
+	properties.text = json["query"].GetString();
 
 	if(!json.HasMember("type"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'type\' is missing).");
 	if(!json["type"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'type\' is not a string).");
-	std::string type = json["type"].GetString();
+	properties.type = json["type"].GetString();
 
 	if(!json.HasMember("resultbool"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is missing).");
 	if(!json["resultbool"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is not a boolean).");
-	bool resultBool = json["resultbool"].GetBool();
+	properties.resultBool = json["resultbool"].GetBool();
 
 	if(!json.HasMember("resultsingle"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is missing).");
 	if(!json["resultsingle"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is not a boolean).");
-	bool resultSingle = json["resultsingle"].GetBool();
+	properties.resultSingle = json["resultsingle"].GetBool();
 
 	if(!json.HasMember("resultmulti"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is missing).");
 	if(!json["resultmulti"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is not a boolean).");
-	bool resultMulti = json["resultmulti"].GetBool();
+	properties.resultMulti = json["resultmulti"].GetBool();
 
 	if(!json.HasMember("textonly"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'textonly\' is missing).");
 	if(!json["textonly"].IsBool())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'textonly\' is not a boolean).");
-	bool textOnly = json["textonly"].GetBool();
+	properties.textOnly = json["textonly"].GetBool();
 
 	// check name
-	if(name.empty())
+	if(properties.name.empty())
 		return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check query text
-	if(query.empty())
+	if(properties.text.empty())
 		return Server::ServerCommandResponse(true, "Query text is empty.");
 
 	// check query type
-	if(type.empty())
+	if(properties.type.empty())
 		return Server::ServerCommandResponse(true, "Query type is empty.");
-	if(type != "regex" && type != "xpath")
-		return Server::ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
+	if(properties.type != "regex" && properties.type != "xpath")
+		return Server::ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
 
 	// check result type
-	if(!resultBool && !resultSingle && !resultMulti)
+	if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
 		return Server::ServerCommandResponse(true, "No result type selected.");
 
 	// check query
@@ -1604,7 +1625,7 @@ Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& 
 	}
 
 	// update query in database
-	this->database.updateQuery(id, name, query, type, resultBool, resultSingle, resultMulti, textOnly);
+	this->database.updateQuery(id, properties);
 
 	return Server::ServerCommandResponse("Query updated.");
 }
@@ -1858,6 +1879,8 @@ void Server::cmdTestQuery(unsigned long index, const std::string& message) {
 
 // server command addconfig(website, module, name, config): Add configuration to database
 Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& json) {
+	crawlservpp::Struct::ConfigProperties properties;
+
 	// get arguments
 	if(!json.HasMember("website"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
@@ -1875,26 +1898,26 @@ Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& js
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
 	if(!json["name"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
+	properties.name = json["name"].GetString();
 
 	if(!json.HasMember("config"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'config\' is missing).");
 	if(!json["config"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'config\' is not a string).");
-	std::string config = json["config"].GetString();
+	properties.config = json["config"].GetString();
 
 	// check name
-	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(properties.name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check configuration JSON
 	rapidjson::Document configJson;
-	if(configJson.Parse(config.c_str()).HasParseError())
+	if(configJson.Parse(properties.config.c_str()).HasParseError())
 		return Server::ServerCommandResponse(true, "Could not parse JSON.");
 	else if(!configJson.IsArray())
 		return Server::ServerCommandResponse(true, "Parsed JSON is not an array.");
 
 	// check analyzer configuration for algorithm
-	if(module == "analyzer") {
+	if(properties.module == "analyzer") {
 		if(!Server::getAlgoFromConfig(configJson))
 			return Server::ServerCommandResponse(true, "No algorithm selected.");
 	}
@@ -1907,7 +1930,7 @@ Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& js
 	}
 
 	// add configuration to database
-	unsigned long id = this->database.addConfiguration(website, module, name, config);
+	unsigned long id = this->database.addConfiguration(website, properties);
 	if(!id) return Server::ServerCommandResponse(true, "Could not add configuration to database.");
 
 	return Server::ServerCommandResponse("Configuration added.", id);
@@ -1915,6 +1938,8 @@ Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& js
 
 // server command updateconfig(id, name, config): Update a configuration in the database by its ID
 Server::ServerCommandResponse Server::cmdUpdateConfig(const rapidjson::Document& json) {
+	crawlservpp::Struct::ConfigProperties properties;
+
 	// get arguments
 	if(!json.HasMember("id"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
@@ -1926,20 +1951,20 @@ Server::ServerCommandResponse Server::cmdUpdateConfig(const rapidjson::Document&
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
 	if(!json["name"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
-	std::string name = json["name"].GetString();
+	properties.name = json["name"].GetString();
 
 	if(!json.HasMember("config"))
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'config\' is missing).");
 	if(!json["config"].IsString())
 		return Server::ServerCommandResponse(true, "Invalid arguments (\'config\' is not a string).");
-	std::string config = json["config"].GetString();
+	properties.config = json["config"].GetString();
 
 	// check name
-	if(name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
+	if(properties.name.empty()) return Server::ServerCommandResponse(true, "Name is empty.");
 
 	// check configuration JSON
 	rapidjson::Document configJson;
-	if(configJson.Parse(config.c_str()).HasParseError())
+	if(configJson.Parse(properties.config.c_str()).HasParseError())
 		return Server::ServerCommandResponse(true, "Could not parse JSON.");
 	else if(!configJson.IsArray())
 		return Server::ServerCommandResponse(true, "Parsed JSON is not an array.");
@@ -1952,7 +1977,7 @@ Server::ServerCommandResponse Server::cmdUpdateConfig(const rapidjson::Document&
 	}
 
 	// update configuration in database
-	this->database.updateConfiguration(id, name, config);
+	this->database.updateConfiguration(id, properties);
 	return Server::ServerCommandResponse("Configuration updated.");
 }
 

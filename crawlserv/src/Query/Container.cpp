@@ -24,29 +24,28 @@ void Container::reserveForQueries(unsigned long numOfAdditionalQueries) {
 }
 
 // add query to internal vectors and return index, throws std::runtime_error
-Container::QueryStruct Container::addQuery(const std::string& queryText, const std::string& queryType,
-		bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly) {
+Container::QueryStruct Container::addQuery(const crawlservpp::Struct::QueryProperties& properties) {
 	Container::QueryStruct newQuery;
-	newQuery.resultBool = queryResultBool;
-	newQuery.resultSingle = queryResultSingle;
-	newQuery.resultMulti = queryResultMulti;
+	newQuery.resultBool = properties.resultBool;
+	newQuery.resultSingle = properties.resultSingle;
+	newQuery.resultMulti = properties.resultMulti;
 
-	if(!queryText.empty()) {
-		if(queryType == "regex") {
+	if(!properties.text.empty()) {
+		if(properties.type == "regex") {
 			std::unique_ptr<RegEx> regex = std::make_unique<RegEx>();
-			regex->compile(queryText, queryResultBool || queryResultSingle, queryResultMulti);
+			regex->compile(properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti);
 			newQuery.index = this->queriesRegEx.size();
 			newQuery.type = Container::QueryStruct::typeRegEx;
 			this->queriesRegEx.push_back(std::move(regex));
 		}
-		else if(queryType == "xpath") {
+		else if(properties.type == "xpath") {
 			std::unique_ptr<XPath> xpath = std::make_unique<XPath>();
-			xpath->compile(queryText, queryTextOnly);
+			xpath->compile(properties.text, properties.textOnly);
 			newQuery.index = this->queriesXPath.size();
 			newQuery.type = Container::QueryStruct::typeXPath;
 			this->queriesXPath.push_back(std::move(xpath));
 		}
-		else throw std::runtime_error("Unknown query type \'" + queryType + "\'");
+		else throw std::runtime_error("Unknown query type \'" + properties.type + "\'");
 	}
 
 	return newQuery;
