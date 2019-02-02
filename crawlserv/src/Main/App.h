@@ -24,6 +24,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <atomic>
+#include <csignal>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
