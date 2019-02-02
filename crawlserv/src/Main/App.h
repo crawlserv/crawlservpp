@@ -23,6 +23,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <atomic>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -38,8 +39,13 @@ namespace crawlservpp::Main {
 
 		int run() noexcept;
 
+		// signal handling
+		static App * instance;
+		static void signal(int num);
+		void shutdown(int num);
+
 	private:
-		bool running;
+		std::atomic<bool> running;
 		std::unique_ptr<Server> server;
 
 		// static helper functions
