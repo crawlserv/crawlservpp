@@ -86,7 +86,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
 
-		// table namespace
+		// table prefix and name
 		std::string tablePrefix;
 		std::string targetTableFull;
 
