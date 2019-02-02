@@ -1,5 +1,5 @@
 /*
- * URLListProperties.h
+ *ConfigProperties.h
  *
  * Basic configuration properties (module, name and configuration)
  *
