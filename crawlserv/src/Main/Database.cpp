@@ -622,17 +622,17 @@ void Database::deleteThread(unsigned long threadId) {
  */
 
 // add a website to the database and return its new ID
-unsigned long Database::addWebsite(const std::string& websiteName, const std::string& websiteNamespace, const std::string& websiteDomain) {
+unsigned long Database::addWebsite(const crawlservpp::Struct::WebsiteProperties& websiteProperties) {
 	unsigned long result = 0;
 	std::string timeStamp;
 
 	// check arguments
-	if(websiteName.empty()) throw Database::Exception("addWebsite(): No website name specified");
-	if(websiteNamespace.empty()) throw Database::Exception("addWebsite(): No website namespace specified");
-	if(websiteDomain.empty()) throw Database::Exception("addWebsite(): No domain specified");
+	if(websiteProperties.domain.empty()) throw Database::Exception("addWebsite(): No domain specified");
+	if(websiteProperties.nameSpace.empty()) throw Database::Exception("addWebsite(): No website namespace specified");
+	if(websiteProperties.name.empty()) throw Database::Exception("addWebsite(): No website name specified");
 
 	// check website namespace
-	if(this->isWebsiteNamespace(websiteNamespace)) throw Database::Exception("Website namespace already exists");
+	if(this->isWebsiteNamespace(websiteProperties.nameSpace)) throw Database::Exception("Website namespace already exists");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
@@ -640,19 +640,19 @@ unsigned long Database::addWebsite(const std::string& websiteName, const std::st
 	try {
 		// create SQL statement for adding website
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"INSERT INTO crawlserv_websites(name, namespace, domain) VALUES (?, ?, ?)"));
+				"INSERT INTO crawlserv_websites(domain, namespace, name) VALUES (?, ?, ?)"));
 
 		// execute SQL statement for adding website
-		sqlStatement->setString(1, websiteName);
-		sqlStatement->setString(2, websiteNamespace);
-		sqlStatement->setString(3, websiteDomain);
+		sqlStatement->setString(1, websiteProperties.domain);
+		sqlStatement->setString(2, websiteProperties.nameSpace);
+		sqlStatement->setString(3, websiteProperties.name);
 		sqlStatement->execute();
 
 		// get id
 		result = this->getLastInsertedId();
 
 		// add default URL list
-		this->addUrlList(result, "Default URL list", "default");
+		this->addUrlList(result, crawlservpp::Struct::UrlListProperties("Default URL list", "default"));
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
@@ -966,29 +966,28 @@ std::string Database::duplicateWebsiteNamespace(const std::string& websiteNamesp
 }
 
 // update website (and all associated tables) in the database
-void Database::updateWebsite(unsigned long websiteId, const std::string& websiteName, const std::string& websiteNamespace,
-		const std::string& websiteDomain) {
+void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct::WebsiteProperties& websiteProperties) {
 
 	// check arguments
 	if(!websiteId) throw Database::Exception("updateWebsite(): No website ID specified");
-	if(websiteName.empty()) throw Database::Exception("updateWebsite(): No website name specified");
-	if(websiteNamespace.empty()) throw Database::Exception("updateWebsite(): No website namespace specified");
-	if(websiteDomain.empty()) throw Database::Exception("updateWebsite(): No domain specified");
+	if(websiteProperties.domain.empty()) throw Database::Exception("updateWebsite(): No domain specified");
+	if(websiteProperties.nameSpace.empty()) throw Database::Exception("updateWebsite(): No website namespace specified");
+	if(websiteProperties.name.empty()) throw Database::Exception("updateWebsite(): No website name specified");
 
 	// get old namespace
 	std::string oldNamespace = this->getWebsiteNamespace(websiteId);
 
 	// check website namespace if necessary
-	if(websiteNamespace != oldNamespace)
-		if(this->isWebsiteNamespace(websiteNamespace))
-			throw Database::Exception("Webspace namespace already exists");
+	if(websiteProperties.nameSpace != oldNamespace)
+		if(this->isWebsiteNamespace(websiteProperties.nameSpace))
+			throw Database::Exception("Website namespace already exists");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
 		// check whether namespace has changed
-		if(websiteNamespace != oldNamespace) {
+		if(websiteProperties.nameSpace != oldNamespace) {
 			// create SQL statement for renaming
 			std::unique_ptr<sql::Statement> renameStatement(this->connection->createStatement());
 
@@ -996,56 +995,56 @@ void Database::updateWebsite(unsigned long websiteId, const std::string& website
 			std::vector<std::pair<unsigned long, std::string>> urlLists = this->getUrlLists(websiteId);
 			for(auto liI = urlLists.begin(); liI != urlLists.end(); ++liI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "` RENAME TO "
-						+ "`crawlserv_" + websiteNamespace + "_" + liI->second + "`");
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "`");
 				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_crawled` RENAME TO "
-						+ "`crawlserv_" + websiteNamespace + "_" + liI->second + "_crawled`");
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_crawled`");
 				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_links` RENAME TO "
-						+ "`crawlserv_" + websiteNamespace + "_" + liI->second + "_links`");
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_links`");
 
 				// rename parsing tables
 				std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsedTables(liI->first);
 				for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_parsed_"
-							+ taI->second + "` RENAME TO `" + "crawlserv_" + oldNamespace + "_" + liI->second + "_parsed_"
-							+ taI->second + "`");
+							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
+							+ "_parsed_" + taI->second + "`");
 				}
 
 				// rename extracting tables
 				std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractedTables(liI->first);
 				for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_extracted_"
-							+ taI->second + "` RENAME TO `" + "crawlserv_" + oldNamespace + "_" + liI->second + "_extracted_"
-							+ taI->second + "`");
+							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
+							+ "_extracted_" + taI->second + "`");
 				}
 
 				// rename analyzing tables
 				std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzedTables(liI->first);
 				for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_analyzed_"
-							+ taI->second + "` RENAME TO `" + "crawlserv_" + oldNamespace + "_" + liI->second + "_analyzed_"
-							+ taI->second + "`");
+							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
+							+ "_analyzed_" + taI->second + "`");
 				}
 			}
 
 			// create SQL statement for updating
 			std::unique_ptr<sql::PreparedStatement> updateStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_websites SET name = ?, namespace = ?, domain = ? WHERE id = ? LIMIT 1"));
+					"UPDATE crawlserv_websites SET domain = ?, namespace = ?, name = ? WHERE id = ? LIMIT 1"));
 
 			// execute SQL statement for updating
-			updateStatement->setString(1, websiteName);
-			updateStatement->setString(2, websiteNamespace);
-			updateStatement->setString(3, websiteDomain);
+			updateStatement->setString(1, websiteProperties.domain);
+			updateStatement->setString(2, websiteProperties.nameSpace);
+			updateStatement->setString(3, websiteProperties.name);
 			updateStatement->setUInt64(4, websiteId);
 			updateStatement->execute();
 		}
 		else {
 			// create SQL statement for updating
 			std::unique_ptr<sql::PreparedStatement> updateStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_websites SET name = ?, domain = ? WHERE id = ? LIMIT 1"));
+					"UPDATE crawlserv_websites SET domain = ?, name = ? WHERE id = ? LIMIT 1"));
 
 			// execute SQL statement for updating
-			updateStatement->setString(1, websiteName);
-			updateStatement->setString(2, websiteDomain);
+			updateStatement->setString(1, websiteProperties.domain);
+			updateStatement->setString(2, websiteProperties.name);
 			updateStatement->setUInt64(3, websiteId);
 			updateStatement->execute();
 		}
@@ -1117,16 +1116,16 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			std::string websiteName = sqlResultSet->getString("name");
 			std::string websiteNamespace =sqlResultSet->getString("namespace");
+			std::string websiteName = sqlResultSet->getString("name");
 			std::string websiteDomain =sqlResultSet->getString("domain");
 
-			// create new name and new namespace
-			std::string newName = websiteName + " (copy)";
+			// create new namespace and new name
 			std::string newNamespace = Database::duplicateWebsiteNamespace(websiteNamespace);
+			std::string newName = websiteName + " (copy)";
 
 			// add website
-			result = this->addWebsite(newName, newNamespace, websiteDomain);
+			result = this->addWebsite(crawlservpp::Struct::WebsiteProperties(websiteDomain, newNamespace, newName));
 
 			// create SQL statement for geting URL list info
 			sqlStatement.reset(this->connection->prepareStatement("SELECT name, namespace FROM crawlserv_urllists WHERE website = ?"));
@@ -1137,11 +1136,10 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
-				// add URL list
+				// add URL lists with same name (except for "default", which has already been created)
 				std::string urlListName = sqlResultSet->getString("namespace");
-
-				// add empty URL lists with same name
-				if(urlListName != "default") this->addUrlList(result, urlListName, sqlResultSet->getString("namespace"));
+				if(urlListName != "default")
+					this->addUrlList(result, crawlservpp::Struct::UrlListProperties(sqlResultSet->getString("namespace"), urlListName));
 			}
 
 			// create SQL statement for getting queries
@@ -1155,10 +1153,10 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
 				// add query
-				this->addQuery(result, sqlResultSet->getString("name"), sqlResultSet->getString("query"),
-						sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
-						sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
-						sqlResultSet->getBoolean("textonly"));
+				this->addQuery(result, crawlservpp::Struct::QueryProperties(sqlResultSet->getString("name"),
+						sqlResultSet->getString("query"), sqlResultSet->getString("type"),
+						sqlResultSet->getBoolean("resultbool"),	sqlResultSet->getBoolean("resultsingle"),
+						sqlResultSet->getBoolean("resultmulti"), sqlResultSet->getBoolean("textonly")));
 
 			}
 
@@ -1173,8 +1171,8 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
 				// add configuration
-				this->addConfiguration(result, sqlResultSet->getString("module"), sqlResultSet->getString("name"),
-						sqlResultSet->getString("config"));
+				this->addConfiguration(result, crawlservpp::Struct::ConfigProperties(sqlResultSet->getString("module"),
+						sqlResultSet->getString("name"), sqlResultSet->getString("config")));
 			}
 		}
 	}
@@ -1193,19 +1191,20 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
  */
 
 // add a URL list to the database and return its new ID
-unsigned long Database::addUrlList(unsigned long websiteId, const std::string& listName, const std::string& listNamespace) {
+unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::Struct::UrlListProperties& listProperties) {
 	unsigned long result = 0;
 
 	// check arguments
 	if(!websiteId) throw Database::Exception("addUrlList(): No website ID specified");
-	if(listName.empty()) throw Database::Exception("addUrlList(): No URL list name specified");
-	if(listNamespace.empty()) throw Database::Exception("addUrlList(): No URL list namespace specified");
+	if(listProperties.nameSpace.empty()) throw Database::Exception("addUrlList(): No URL list namespace specified");
+	if(listProperties.name.empty()) throw Database::Exception("addUrlList(): No URL list name specified");
 
 	// get website namespace
 	std::string websiteNamespace = this->getWebsiteNamespace(websiteId);
 
 	// check URL list namespace
-	if(this->isUrlListNamespace(websiteId, listNamespace)) throw Database::Exception("URL list namespace already exists");
+	if(this->isUrlListNamespace(websiteId, listProperties.nameSpace))
+		throw Database::Exception("URL list namespace already exists");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
@@ -1213,12 +1212,12 @@ unsigned long Database::addUrlList(unsigned long websiteId, const std::string& l
 	try {
 		// create SQL statement for adding URL list
 		std::unique_ptr<sql::PreparedStatement> addStatement(this->connection->prepareStatement(
-				"INSERT INTO crawlserv_urllists(website, name, namespace) VALUES (?, ?, ?)"));
+				"INSERT INTO crawlserv_urllists(website, namespace, name) VALUES (?, ?, ?)"));
 
 		// execute SQL query for adding URL list
 		addStatement->setUInt64(1, websiteId);
-		addStatement->setString(2, listName);
-		addStatement->setString(3, listNamespace);
+		addStatement->setString(2, listProperties.nameSpace);
+		addStatement->setString(3, listProperties.name);
 		addStatement->execute();
 
 		// get id
@@ -1228,25 +1227,25 @@ unsigned long Database::addUrlList(unsigned long websiteId, const std::string& l
 		std::unique_ptr<sql::Statement> createStatement(this->connection->createStatement());
 
 		// execute SQL queries for table creation
-		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listNamespace
+		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace
 				+ "`(id SERIAL, manual BOOLEAN DEFAULT false NOT NULL, url VARCHAR(2000) NOT NULL,"
 				" hash INT UNSIGNED DEFAULT 0 NOT NULL, crawled BOOLEAN DEFAULT false NOT NULL,"
 				" parsed BOOLEAN DEFAULT false NOT NULL, extracted BOOLEAN DEFAULT false NOT NULL,"
 				" analyzed BOOLEAN DEFAULT false NOT NULL, crawllock DATETIME DEFAULT NULL,"
 				" parselock DATETIME DEFAULT NULL, extractlock DATETIME DEFAULT NULL, analyzelock DATETIME DEFAULT NULL,"
 				" PRIMARY KEY(id), INDEX(hash)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listNamespace
+		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace
 				+ "_crawled`(id SERIAL, url BIGINT UNSIGNED NOT NULL,"
 				" crawltime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,"
 				" archived BOOLEAN DEFAULT false NOT NULL, response SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
 				" type TINYTEXT NOT NULL, content LONGTEXT NOT NULL, PRIMARY KEY(id), FOREIGN KEY(url) REFERENCES crawlserv_"
-				+ websiteNamespace + "_" + listNamespace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE, INDEX(crawltime))"
-				" CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED");
-		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listNamespace + "_links`("
-				"id SERIAL, fromurl BIGINT UNSIGNED NOT NULL, tourl BIGINT UNSIGNED NOT NULL,"
+				+ websiteNamespace + "_" + listProperties.nameSpace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE,"
+				"INDEX(crawltime)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED");
+		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace
+				+ "_links`(id SERIAL, fromurl BIGINT UNSIGNED NOT NULL, tourl BIGINT UNSIGNED NOT NULL,"
 				" archived BOOLEAN DEFAULT FALSE NOT NULL, PRIMARY KEY(id), FOREIGN KEY(fromurl) REFERENCES crawlserv_"
-				+ websiteNamespace + "_" + listNamespace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE, "
-				"FOREIGN KEY(tourl) REFERENCES crawlserv_" + websiteNamespace + "_"	+ listNamespace
+				+ websiteNamespace + "_" + listProperties.nameSpace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE, "
+				"FOREIGN KEY(tourl) REFERENCES crawlserv_" + websiteNamespace + "_"	+ listProperties.nameSpace
 				+ "(id) ON UPDATE RESTRICT ON DELETE CASCADE)");
 	}
 	catch(sql::SQLException &e) {
@@ -1461,43 +1460,43 @@ bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& na
 }
 
 // update URL list (and all associated tables) in the database
-void Database::updateUrlList(unsigned long listId, const std::string& listName, const std::string& listNamespace) {
+void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::UrlListProperties& listProperties) {
 	// check arguments
 	if(!listId) throw Database::Exception("updateUrlList(): No website ID specified");
-	if(listName.empty()) throw Database::Exception("updateUrlList(): No URL list name specified");
-	if(listNamespace.empty()) throw Database::Exception("updateUrlList(): No URL list namespace specified");
+	if(listProperties.nameSpace.empty()) throw Database::Exception("updateUrlList(): No URL list namespace specified");
+	if(listProperties.name.empty()) throw Database::Exception("updateUrlList(): No URL list name specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string oldListNamespace = this->getUrlListNamespace(listId);
 
 	// check website namespace if necessary
-	if(listNamespace != oldListNamespace)
-		if(this->isUrlListNamespace(websiteNamespace.first, listNamespace))
-			throw Database::Exception("Webspace namespace already exists");
+	if(listProperties.nameSpace != oldListNamespace)
+		if(this->isUrlListNamespace(websiteNamespace.first, listProperties.nameSpace))
+			throw Database::Exception("URL list namespace already exists");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
 
 	try {
-		if(listNamespace != oldListNamespace) {
+		if(listProperties.nameSpace != oldListNamespace) {
 			// create SQL statement for renaming
 			std::unique_ptr<sql::Statement> renameStatement(this->connection->createStatement());
 
 			// rename main tables
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "`");
+					+ "` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "`");
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "_crawled` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawled`");
+					+ "_crawled` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_crawled`");
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "_links` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_links`");
+					+ "_links` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_links`");
 
 			// rename parsing tables
 			std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsedTables(listId);
 			for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_parsed_" + taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listNamespace	+ "_parsed_" + taI->second + "`");
+						+ listProperties.nameSpace	+ "_parsed_" + taI->second + "`");
 			}
 
 			// rename extracting tables
@@ -1505,7 +1504,7 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 			for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_extracted_"	+ taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listNamespace + "_extracted_"	+ taI->second + "`");
+						+ listProperties.nameSpace + "_extracted_"	+ taI->second + "`");
 			}
 
 			// rename analyzing tables
@@ -1513,16 +1512,16 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 			for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_analyzed_" + taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listNamespace + "_analyzed_" + taI->second + "`");
+						+ listProperties.nameSpace + "_analyzed_" + taI->second + "`");
 			}
 
 			// create SQL statement for updating
 			std::unique_ptr<sql::PreparedStatement> updateStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_urllists SET name = ?, namespace = ? WHERE id = ? LIMIT 1"));
+					"UPDATE crawlserv_urllists SET namespace = ?, name = ? WHERE id = ? LIMIT 1"));
 
 			// execute SQL statement for updating
-			updateStatement->setString(1, listName);
-			updateStatement->setString(2, listNamespace);
+			updateStatement->setString(1, listProperties.nameSpace);
+			updateStatement->setString(2, listProperties.name);
 			updateStatement->setUInt64(3, listId);
 			updateStatement->execute();
 		}
@@ -1532,7 +1531,7 @@ void Database::updateUrlList(unsigned long listId, const std::string& listName, 
 					"UPDATE crawlserv_urllists SET name = ? WHERE id = ? LIMIT 1"));
 
 			// execute SQL statement for updating
-			updateStatement->setString(1, listName);
+			updateStatement->setString(1, listProperties.name);
 			updateStatement->setUInt64(2, listId);
 			updateStatement->execute();
 		}
@@ -1689,14 +1688,13 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
  */
 
 // add a query to the database and return its new ID (add global query when websiteId is zero)
-unsigned long Database::addQuery(unsigned long websiteId, const std::string& queryName, const std::string& queryText,
-		const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly) {
+unsigned long Database::addQuery(unsigned long websiteId, const crawlservpp::Struct::QueryProperties& queryProperties) {
 	unsigned long result = 0;
 
 	// check arguments
-	if(queryName.empty()) throw Database::Exception("addQuery(): No query name specified");
-	if(queryText.empty()) throw Database::Exception("addQuery(): No query text specified");
-	if(queryType.empty()) throw Database::Exception("addQuery(): No query type specified");
+	if(queryProperties.name.empty()) throw Database::Exception("addQuery(): No query name specified");
+	if(queryProperties.text.empty()) throw Database::Exception("addQuery(): No query text specified");
+	if(queryProperties.type.empty()) throw Database::Exception("addQuery(): No query type specified");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
@@ -1710,13 +1708,13 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 		// execute SQL query for adding query
 		if(websiteId) sqlStatement->setUInt64(1, websiteId);
 		else sqlStatement->setNull(1, 0);
-		sqlStatement->setString(2, queryName);
-		sqlStatement->setString(3, queryText);
-		sqlStatement->setString(4, queryType);
-		sqlStatement->setBoolean(5, queryResultBool);
-		sqlStatement->setBoolean(6, queryResultSingle);
-		sqlStatement->setBoolean(7, queryResultMulti);
-		sqlStatement->setBoolean(8, queryTextOnly);
+		sqlStatement->setString(2, queryProperties.name);
+		sqlStatement->setString(3, queryProperties.text);
+		sqlStatement->setString(4, queryProperties.type);
+		sqlStatement->setBoolean(5, queryProperties.resultBool);
+		sqlStatement->setBoolean(6, queryProperties.resultSingle);
+		sqlStatement->setBoolean(7, queryProperties.resultMulti);
+		sqlStatement->setBoolean(8, queryProperties.textOnly);
 		sqlStatement->execute();
 
 		// get id
@@ -1733,21 +1731,9 @@ unsigned long Database::addQuery(unsigned long websiteId, const std::string& que
 }
 
 // get the properties of a query from the database by its ID
-void Database::getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
-		bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo) {
+void Database::getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo) {
 	// check argument
 	if(!queryId) throw Database::Exception("getQueryProperties(): No query ID specified");
-
-	// check ID
-	if(!queryId) {
-		queryTextTo = "";
-		queryTypeTo = "";
-		queryResultBoolTo = false;
-		queryResultSingleTo = false;
-		queryResultMultiTo = false;
-		queryTextOnlyTo = false;
-		return;
-	}
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
@@ -1755,7 +1741,8 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT query, type, resultbool, resultsingle, resultmulti, textonly FROM crawlserv_queries WHERE id = ? LIMIT 1"));
+				"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
+				" FROM crawlserv_queries WHERE id = ? LIMIT 1"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, queryId);
@@ -1763,20 +1750,22 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			queryTextTo = sqlResultSet->getString("query");
-			queryTypeTo = sqlResultSet->getString("type");
-			queryResultBoolTo = sqlResultSet->getBoolean("resultbool");
-			queryResultSingleTo = sqlResultSet->getBoolean("resultsingle");
-			queryResultMultiTo = sqlResultSet->getBoolean("resultmulti");
-			queryTextOnlyTo = sqlResultSet->getBoolean("textonly");
+			queryPropertiesTo.name = sqlResultSet->getString("name");
+			queryPropertiesTo.text = sqlResultSet->getString("query");
+			queryPropertiesTo.type = sqlResultSet->getString("type");
+			queryPropertiesTo.resultBool = sqlResultSet->getBoolean("resultbool");
+			queryPropertiesTo.resultSingle = sqlResultSet->getBoolean("resultsingle");
+			queryPropertiesTo.resultMulti = sqlResultSet->getBoolean("resultmulti");
+			queryPropertiesTo.textOnly = sqlResultSet->getBoolean("textonly");
 		}
 		else {
-			queryTextTo = "";
-			queryTypeTo = "";
-			queryResultBoolTo = false;
-			queryResultSingleTo = false;
-			queryResultMultiTo = false;
-			queryTextOnlyTo = false;
+			queryPropertiesTo.name = "";
+			queryPropertiesTo.text = "";
+			queryPropertiesTo.type = "";
+			queryPropertiesTo.resultBool = false;
+			queryPropertiesTo.resultSingle = false;
+			queryPropertiesTo.resultMulti = false;
+			queryPropertiesTo.textOnly = false;
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -1788,13 +1777,12 @@ void Database::getQueryProperties(unsigned long queryId, std::string& queryTextT
 }
 
 // edit query in the database
-void Database::updateQuery(unsigned long queryId, const std::string& queryName, const std::string& queryText,
-		const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti, bool queryTextOnly) {
+void Database::updateQuery(unsigned long queryId, const crawlservpp::Struct::QueryProperties& queryProperties) {
 	// check arguments
 	if(!queryId) throw Database::Exception("updateQuery(): No query ID specified");
-	if(queryName.empty()) throw Database::Exception("updateQuery(): No query name specified");
-	if(queryText.empty()) throw Database::Exception("updateQuery(): No query text specified");
-	if(queryType.empty()) throw Database::Exception("updateQuery(): No query type specified");
+	if(queryProperties.name.empty()) throw Database::Exception("updateQuery(): No query name specified");
+	if(queryProperties.text.empty()) throw Database::Exception("updateQuery(): No query text specified");
+	if(queryProperties.type.empty()) throw Database::Exception("updateQuery(): No query type specified");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
@@ -1806,13 +1794,13 @@ void Database::updateQuery(unsigned long queryId, const std::string& queryName, 
 				" resultsingle = ?, resultmulti = ?, textonly = ? WHERE id = ? LIMIT 1"));
 
 		// execute SQL statement for updating
-		sqlStatement->setString(1, queryName);
-		sqlStatement->setString(2, queryText);
-		sqlStatement->setString(3, queryType);
-		sqlStatement->setBoolean(4, queryResultBool);
-		sqlStatement->setBoolean(5, queryResultSingle);
-		sqlStatement->setBoolean(6, queryResultMulti);
-		sqlStatement->setBoolean(7, queryTextOnly);
+		sqlStatement->setString(1, queryProperties.name);
+		sqlStatement->setString(2, queryProperties.text);
+		sqlStatement->setString(3, queryProperties.type);
+		sqlStatement->setBoolean(4, queryProperties.resultBool);
+		sqlStatement->setBoolean(5, queryProperties.resultSingle);
+		sqlStatement->setBoolean(6, queryProperties.resultMulti);
+		sqlStatement->setBoolean(7, queryProperties.textOnly);
 		sqlStatement->setUInt64(8, queryId);
 		sqlStatement->execute();
 	}
@@ -1875,10 +1863,11 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
 			// add query
-			result = this->addQuery(sqlResultSet->getUInt64("website"), sqlResultSet->getString("name") + " (copy)",
-					sqlResultSet->getString("query"), sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
+			result = this->addQuery(sqlResultSet->getUInt64("website"), crawlservpp::Struct::QueryProperties(
+					sqlResultSet->getString("name") + " (copy)", sqlResultSet->getString("query"),
+					sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
 					sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
-					sqlResultSet->getBoolean("textonly"));
+					sqlResultSet->getBoolean("textonly")));
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -1896,14 +1885,13 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
  */
 
 // add a configuration to the database and return its new ID (add global configuration when websiteId is zero)
-unsigned long Database::addConfiguration(unsigned long websiteId, const std::string& configModule, const std::string& configName,
-		const std::string& config) {
+unsigned long Database::addConfiguration(unsigned long websiteId, const crawlservpp::Struct::ConfigProperties& configProperties) {
 	unsigned long result = 0;
 
 	// check arguments
-	if(configModule.empty()) throw Database::Exception("addConfiguration(): No configuration module specified");
-	if(configName.empty()) throw Database::Exception("addConfiguration(): No configuration name specified");
-	if(config.empty()) throw Database::Exception("addConfiguration(): No configuration specified");
+	if(configProperties.module.empty()) throw Database::Exception("addConfiguration(): No configuration module specified");
+	if(configProperties.name.empty()) throw Database::Exception("addConfiguration(): No configuration name specified");
+	if(configProperties.config.empty()) throw Database::Exception("addConfiguration(): No configuration specified");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
@@ -1915,9 +1903,9 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const std::str
 
 		// execute SQL query for adding website
 		sqlStatement->setUInt64(1, websiteId);
-		sqlStatement->setString(2, configModule);
-		sqlStatement->setString(3, configName);
-		sqlStatement->setString(4, config);
+		sqlStatement->setString(2, configProperties.module);
+		sqlStatement->setString(3, configProperties.name);
+		sqlStatement->setString(4, configProperties.config);
 		sqlStatement->execute();
 
 		// get id
@@ -1965,12 +1953,12 @@ const std::string Database::getConfiguration(unsigned long configId) {
 	return result;
 }
 
-// update configuration in the database
-void Database::updateConfiguration(unsigned long configId, const std::string& configName, const std::string& config) {
+// update configuration in the database (NOTE: module will not be updated!)
+void Database::updateConfiguration(unsigned long configId, const crawlservpp::Struct::ConfigProperties& configProperties) {
 	// check arguments
 	if(!configId) throw Database::Exception("updateConfiguration(): No configuration ID specified");
-	if(configName.empty()) throw Database::Exception("updateConfiguration(): No configuration name specified");
-	if(config.empty()) throw Database::Exception("updateConfiguration(): No configuration specified");
+	if(configProperties.name.empty()) throw Database::Exception("updateConfiguration(): No configuration name specified");
+	if(configProperties.config.empty()) throw Database::Exception("updateConfiguration(): No configuration specified");
 
 	// check connection
 	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
@@ -1981,8 +1969,8 @@ void Database::updateConfiguration(unsigned long configId, const std::string& co
 				"UPDATE crawlserv_configs SET name = ?, config = ? WHERE id = ? LIMIT 1"));
 
 		// execute SQL statement for updating
-		sqlStatement->setString(1, configName);
-		sqlStatement->setString(2, config);
+		sqlStatement->setString(1, configProperties.name);
+		sqlStatement->setString(2, configProperties.config);
 		sqlStatement->setUInt64(3, configId);
 		sqlStatement->execute();
 	}
@@ -2044,8 +2032,9 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
 			// add configuration
-			result = this->addConfiguration(sqlResultSet->getUInt64("website"), sqlResultSet->getString("module"),
-					sqlResultSet->getString("name") + " (copy)", sqlResultSet->getString("config"));
+			result = this->addConfiguration(sqlResultSet->getUInt64("website"), crawlservpp::Struct::ConfigProperties(
+					sqlResultSet->getString("module"), sqlResultSet->getString("name") + " (copy)",
+					sqlResultSet->getString("config")));
 		}
 	}
 	catch(sql::SQLException &e) {

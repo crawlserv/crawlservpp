@@ -266,13 +266,6 @@ void Thread::interrupt() {
 
 // initialize queries
 void Thread::initQueries() {
-	std::string queryText;
-	std::string queryType;
-	bool queryResultBool = false;
-	bool queryResultSingle = false;
-	bool queryResultMulti = false;
-	bool queryTextOnly = false;
-
 	// reserve memory for query ids
 	this->queriesId.reserve(this->config.parsingIdQueries.size());
 	this->queriesDateTime.reserve(this->config.parsingDateTimeQueries.size());
@@ -282,29 +275,24 @@ void Thread::initQueries() {
 
 	// create queries and get query ids
 	for(auto i = this->config.generalSkip.begin(); i != this->config.generalSkip.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly);
-		this->queriesSkip.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly));
+		crawlservpp::Struct::QueryProperties properties;
+		this->database.getQueryProperties(*i, properties);
+		this->queriesSkip.push_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.parsingIdQueries.begin(); i != this->config.parsingIdQueries.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly);
-		this->queriesId.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly));
+		crawlservpp::Struct::QueryProperties properties;
+		this->database.getQueryProperties(*i, properties);
+		this->queriesId.push_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.parsingDateTimeQueries.begin(); i != this->config.parsingDateTimeQueries.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly);
-		this->queriesDateTime.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly));
+		crawlservpp::Struct::QueryProperties properties;
+		this->database.getQueryProperties(*i, properties);
+		this->queriesDateTime.push_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.parsingFieldQueries.begin(); i != this->config.parsingFieldQueries.end(); ++i) {
-		this->database.getQueryProperties(*i, queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly);
-
-		this->queriesFields.push_back(this->addQuery(queryText, queryType, queryResultBool, queryResultSingle, queryResultMulti,
-				queryTextOnly));
+		crawlservpp::Struct::QueryProperties properties;
+		this->database.getQueryProperties(*i, properties);
+		this->queriesFields.push_back(this->addQuery(properties));
 	}
 }
 

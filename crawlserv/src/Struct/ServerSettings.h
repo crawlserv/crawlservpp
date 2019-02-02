@@ -18,6 +18,16 @@ namespace crawlservpp::Struct {
 		std::string allowedClients; // list of allowed IP addresses
 		bool logsDeletable; // are logs deletable by frontend?
 		bool dataDeletable; // is data deletable by frontend?
+
+		// constructors
+		ServerSettings() { this->logsDeletable = false; this->dataDeletable = false; }
+		ServerSettings(const std::string& setPort, const std::string& setAllowedClients,
+				bool setLogsDeletable, bool setDataDeletable) {
+			this->port = setPort;
+			this->allowedClients = setAllowedClients;
+			this->logsDeletable = setLogsDeletable;
+			this->dataDeletable = setDataDeletable;
+		}
 	};
 }
 

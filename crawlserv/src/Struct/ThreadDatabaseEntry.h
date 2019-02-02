@@ -22,8 +22,20 @@ namespace crawlservpp::Struct {
 		std::string module; // thread module
 		std::string status; // thread status
 		bool paused; // is thread paused?
-		crawlservpp::Struct::ThreadOptions options; // options for thread
+		ThreadOptions options; // options for thread
 		unsigned long last; // last id
+
+		// constructors
+		ThreadDatabaseEntry() { this->id = 0; this->paused = false; this->last = 0; }
+		ThreadDatabaseEntry(unsigned long setId, const std::string& setModule, const std::string& setStatus,
+				bool setPaused,	const ThreadOptions& setOptions, unsigned long setLast) {
+			this->id = setId;
+			this->module = setModule;
+			this->status = setStatus;
+			this->paused = setPaused;
+			this->options = setOptions;
+			this->last = setLast;
+		}
 	};
 }
 

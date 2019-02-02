@@ -78,10 +78,8 @@ void DBWrapper::resetAnalyzingStatus(unsigned long listId) {
  */
 
 // get the properties of a query from the database by its ID
-void DBWrapper::getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo,
-		bool& queryResultBoolTo, bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo) {
-	this->database.getQueryProperties(queryId, queryTextTo, queryTypeTo, queryResultBoolTo, queryResultSingleTo, queryResultMultiTo,
-			queryTextOnlyTo);
+void DBWrapper::getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo) {
+	this->database.getQueryProperties(queryId, queryPropertiesTo);
 }
 
 /*

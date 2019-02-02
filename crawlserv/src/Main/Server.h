@@ -31,8 +31,12 @@
 #include "../Query/RegEx.h"
 #include "../Query/XPath.h"
 #include "../Timer/SimpleHR.h"
+#include "../Struct/ConfigProperties.h"
+#include "../Struct/QueryProperties.h"
 #include "../Struct/ServerSettings.h"
 #include "../Struct/ThreadDatabaseEntry.h"
+#include "../Struct/UrlListProperties.h"
+#include "../Struct/WebsiteProperties.h"
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/prettywriter.h"

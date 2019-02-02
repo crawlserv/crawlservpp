@@ -18,9 +18,13 @@
 #include "Data.h"
 
 #include "../Helper/FileSystem.h"
+#include "../Struct/ConfigProperties.h"
 #include "../Struct/DatabaseSettings.h"
+#include "../Struct/QueryProperties.h"
 #include "../Struct/ThreadDatabaseEntry.h"
 #include "../Struct/ThreadOptions.h"
+#include "../Struct/UrlListProperties.h"
+#include "../Struct/WebsiteProperties.h"
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
@@ -83,8 +87,7 @@ namespace crawlservpp::Main {
 		void deleteThread(unsigned long threadId);
 
 		// website functions
-		unsigned long addWebsite(const std::string& websiteName, const std::string& websiteNamespace,
-				const std::string& websiteDomain);
+		unsigned long addWebsite(const crawlservpp::Struct::WebsiteProperties& websiteProperties);
 		std::string getWebsiteDomain(unsigned long id);
 		std::string getWebsiteNamespace(unsigned long websiteId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromUrlList(unsigned long listId);
@@ -94,42 +97,35 @@ namespace crawlservpp::Main {
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromAnalyzedTable(unsigned long tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
-		void updateWebsite(unsigned long websiteId, const std::string& websiteName, const std::string& websiteNamespace,
-				const std::string& websiteDomain);
+		void updateWebsite(unsigned long websiteId, const crawlservpp::Struct::WebsiteProperties& websiteProperties);
 		void deleteWebsite(unsigned long websiteId);
 		unsigned long duplicateWebsite(unsigned long websiteId);
 
 		// URL list functions
-		unsigned long addUrlList(unsigned long websiteId, const std::string& listName, const std::string& listNamespace);
+		unsigned long addUrlList(unsigned long websiteId, const crawlservpp::Struct::UrlListProperties& listProperties);
 		std::vector<std::pair<unsigned long, std::string>> getUrlLists(unsigned long websiteId);
 		std::string getUrlListNamespace(unsigned long listId);
 		std::pair<unsigned long, std::string> getUrlListNamespaceFromParsedTable(unsigned long listId);
 		std::pair<unsigned long, std::string> getUrlListNamespaceFromExtractedTable(unsigned long listId);
 		std::pair<unsigned long, std::string> getUrlListNamespaceFromAnalyzedTable(unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
-		void updateUrlList(unsigned long listId, const std::string& listName, const std::string& listNamespace);
+		void updateUrlList(unsigned long listId, const crawlservpp::Struct::UrlListProperties& listProperties);
 		void deleteUrlList(unsigned long listId);
 		void resetParsingStatus(unsigned long listId);
 		void resetExtractingStatus(unsigned long listId);
 		void resetAnalyzingStatus(unsigned long listId);
 
 		// query functions
-		unsigned long addQuery(unsigned long websiteId, const std::string& queryName, const std::string& queryText,
-				const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti,
-				bool queryTextOnly);
-		void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo,
-				bool& queryResultBoolTo, bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
-		void updateQuery(unsigned long queryId, const std::string& queryName, const std::string& queryText,
-				const std::string& queryType, bool queryResultBool, bool queryResultSingle, bool queryResultMulti,
-				bool queryTextOnly);
+		unsigned long addQuery(unsigned long websiteId, const crawlservpp::Struct::QueryProperties& queryProperties);
+		void getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo);
+		void updateQuery(unsigned long queryId, const crawlservpp::Struct::QueryProperties& queryProperties);
 		void deleteQuery(unsigned long queryId);
 		unsigned long duplicateQuery(unsigned long queryId);
 
 		// configuration functions
-		unsigned long addConfiguration(unsigned long websiteId, const std::string& configModule, const std::string& configName,
-				const std::string& config);
+		unsigned long addConfiguration(unsigned long websiteId, const crawlservpp::Struct::ConfigProperties& configProperties);
 		const std::string getConfiguration(unsigned long configId);
-		void updateConfiguration(unsigned long configId, const std::string& configName,	const std::string& config);
+		void updateConfiguration(unsigned long configId, const crawlservpp::Struct::ConfigProperties& configProperties);
 		void deleteConfiguration(unsigned long configId);
 		unsigned long duplicateConfiguration(unsigned long configId);
 
@@ -173,14 +169,15 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFields& data);
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
-		// structure for table columns
+		// sub-structure for table columns
 		struct Column {
 			std::string _name;				// name of the column
 			std::string _type;				// type of the column
 			std::string _referenceTable;	// name of the referenced table
 			std::string _referenceColumn;	// name of the referenced column
 
-			Column(const std::string& name, const std::string& type, const std::string& referenceTable, const std::string& referenceColumn) {
+			Column(const std::string& name, const std::string& type, const std::string& referenceTable,
+					const std::string& referenceColumn) {
 				this->_name = name;
 				this->_type = type;
 				this->_referenceTable = referenceTable;
@@ -189,7 +186,7 @@ namespace crawlservpp::Main {
 			Column(const std::string& name, const std::string& type) : Column(name, type, "", "") {}
 		};
 
-		// class for database exceptions
+		// sub-class for database exceptions
 		class Exception : public std::exception {
 		public:
 			Exception(const std::string& description) { this->_description = description; }
@@ -200,7 +197,7 @@ namespace crawlservpp::Main {
 		};
 
 	protected:
-		// structure for prepared SQL statements
+		// sub-structure for prepared SQL statements
 		struct PreparedSqlStatement {
 			std::string string;
 			std::shared_ptr<sql::PreparedStatement> statement;

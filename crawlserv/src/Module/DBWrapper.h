@@ -15,6 +15,7 @@
 
 #include "../Main/Data.h"
 #include "../Struct/DatabaseSettings.h"
+#include "../Struct/QueryProperties.h"
 
 #include <cppconn/prepared_statement.h>
 
@@ -51,8 +52,7 @@ namespace crawlservpp::Module {
 		void resetAnalyzingStatus(unsigned long listId);
 
 		// wrapper for query function
-		void getQueryProperties(unsigned long queryId, std::string& queryTextTo, std::string& queryTypeTo, bool& queryResultBoolTo,
-				bool& queryResultSingleTo, bool& queryResultMultiTo, bool& queryTextOnlyTo);
+		void getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo);
 
 		// wrapper for configuration function
 		std::string getConfiguration(unsigned long configId);

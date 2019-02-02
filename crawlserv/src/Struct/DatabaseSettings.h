@@ -19,6 +19,17 @@ namespace crawlservpp::Struct {
 		std::string user; // user name for database
 		std::string password; // user password for database
 		std::string name; // name/schema of database
+
+		// constructors
+		DatabaseSettings() { this->port = 0; }
+		DatabaseSettings(const std::string& setHost, unsigned short setPort, const std::string& setUser,
+				const std::string& setPassword, const std::string& setName) {
+			this->host = setHost;
+			this->port = setPort;
+			this->user = setUser;
+			this->password = setPassword;
+			this->name = setName;
+		}
 	};
 }
 
