@@ -12,12 +12,27 @@
 
 namespace crawlservpp::Main {
 
+App * App::instance = NULL;
+
 // constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 App::App(int argc, char * argv[]) noexcept {
 	try {
 		crawlservpp::Struct::DatabaseSettings dbSettings;
 		crawlservpp::Struct::ServerSettings serverSettings;
 		std::string error;
+
+		// save instance and register signals
+		App::instance = this;
+		struct sigaction sigIntHandler;
+		sigIntHandler.sa_handler = App::signal;
+		sigemptyset(&sigIntHandler.sa_mask);
+		sigIntHandler.sa_flags = 0;
+		sigaction(SIGINT, &sigIntHandler, NULL);
+		sigaction(SIGABRT, &sigIntHandler, NULL);
+		sigaction(SIGFPE, &sigIntHandler, NULL);
+		sigaction(SIGILL, &sigIntHandler, NULL);
+		sigaction(SIGSEGV, &sigIntHandler, NULL);
+		sigaction(SIGTERM, &sigIntHandler, NULL);
 
 		// show header
 		this->outputHeader();
@@ -61,7 +76,7 @@ App::~App() {
 int App::run() noexcept {
 	if(this->server && this->running) {
 		try {
-			while(this->server->tick()) {}
+			while(this->server->tick() && this->running) {}
 			return EXIT_SUCCESS;
 		}
 		catch(const std::exception& e) {
@@ -72,6 +87,40 @@ int App::run() noexcept {
 		}
 	}
 	return EXIT_FAILURE;
+}
+
+// static signal handler (forward the signal to the class)
+void App::signal(int num) {
+	if(App::instance) App::instance->shutdown(num);
+}
+
+// in-class signal handler
+void App::shutdown(int num) {
+	std::cout << std::endl << "[CANCEL] ";
+	switch(num) {
+	case SIGINT:
+		std::cout << "Interruption request signal (SIGINT)";
+		break;
+	case SIGABRT:
+		std::cout << "Abnormal termination signal (SIGABRT)";
+		break;
+	case SIGFPE:
+		std::cout << "Arithmetic error or overflow signal (SIGFPE)";
+		break;
+	case SIGILL:
+		std::cout << "Illegal instruction signal (SIGILL)";
+		break;
+	case SIGSEGV:
+		std::cout << "Invalid access to storage signal (SIGSEGV)";
+		break;
+	case SIGTERM:
+		std::cout << "Termination request signal (SIGTERM)";
+		break;
+	default:
+		std::cout << "Unknown signal (#" << num << ")";
+	}
+	std::cout << " received." << std::flush;
+	this->running = false;
 }
 
 // static helper function: show version (and library versions)
