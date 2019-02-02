@@ -82,10 +82,14 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 
 The following custom structures are globally used (to be found in [`crawlserv/src/Struct`](crawlserv/src/Struct)):
 
+* **[`Struct::ConfigProperties`](crawlserv/src/Struct/ConfigProperties.h)**: Basic configuration properties (module, name, configuration).
 * **[`Struct::DatabaseSettings`](crawlserv/src/Struct/DatabaseSettings.h)**: Basic database settings (host, port, user, password, schema).
+* **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.h)**: Basic query properties (name, text, type, result type).
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.h)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
 * **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.h)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.h)**: Basic thread options (IDs of website, URL list and configuration).
+* **[`Struct::UrlListProperties`](crawlserv/src/Struct/UrlListProperties.h)**: Basic URL list properties (namespace, name).
+* **[`Struct::WebsiteProperties`](crawlserv/src/Struct/WebsiteProperties.h)**: Basic website properties (domain, namespace, name).
 
 The following custom enumerations are used:
 
