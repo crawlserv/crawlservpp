@@ -88,7 +88,7 @@ namespace crawlservpp::Module::Crawler {
 		std::string linkTable;
 
 	private:
-		// prepared SQL statements
+		// IDs of prepared SQL statements
 		unsigned short psIsUrlExists;
 		unsigned short psIsUrlHashExists;
 		unsigned short psGetUrlId;

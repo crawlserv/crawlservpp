@@ -36,7 +36,7 @@ namespace crawlservpp::Module {
 		void setThreadLast(unsigned long threadId, unsigned long threadLast);
 
 	private:
-		// ids of prepared SQL statements
+		// IDs of prepared SQL statements
 		unsigned short psSetThreadStatusMessage;
 		unsigned short psSetThreadProgress;
 		unsigned short psSetThreadLast;

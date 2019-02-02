@@ -240,7 +240,7 @@ namespace crawlservpp::Main {
 		bool run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
 
-		// ids of prepared SQL statements
+		// IDs of prepared SQL statements
 		unsigned short psLog;
 		unsigned short psLastId;
 		unsigned short psSetThreadStatus;
