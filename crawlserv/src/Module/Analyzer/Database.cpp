@@ -171,39 +171,39 @@ bool Database::prepare() {
 	try {
 		// prepare SQL statements for analyzer
 		if(!(this->psGetCorpus)) {
-			if(verbose) this->log("analyzer", "[#" + this->idString + "] prepares getCorpus()...");
+			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares getCorpus()...");
 			this->psGetCorpus = this->addPreparedStatement("SELECT corpus, datemap, sources FROM crawlserv_corpora WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ?"
 					" AND source_field = ? ORDER BY created DESC LIMIT 1");
 		}
 		if(!(this->psIsCorpusChanged)) {
-			if(verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [1/4]...");
+			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [1/4]...");
 			this->psIsCorpusChanged = this->addPreparedStatement("SELECT EXISTS (SELECT 1 FROM crawlserv_corpora WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ?"
 					" AND source_field = ? AND created > ?) AS result");
 		}
 		if(!(this->psIsCorpusChangedParsing)) {
-			if(verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [2/4]...");
+			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [2/4]...");
 			this->psIsCorpusChangedParsing = this->addPreparedStatement("SELECT updated FROM crawlserv_parsedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
 		if(!(this->psIsCorpusChangedExtracting)) {
-			if(verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [3/4]...");
+			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [3/4]...");
 			this->psIsCorpusChangedExtracting = this->addPreparedStatement("SELECT updated FROM crawlserv_extractedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
 		if(!(this->psIsCorpusChangedAnalyzing)) {
-			if(verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [4/4]...");
+			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [4/4]...");
 			this->psIsCorpusChangedAnalyzing = this->addPreparedStatement("SELECT updated FROM crawlserv_analyzedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
 		if(!(this->psDeleteCorpus)) {
-			if(verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [1/2]...");
+			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [1/2]...");
 			this->psDeleteCorpus = this->addPreparedStatement("DELETE FROM crawlserv_corpora WHERE website = " + this->websiteIdString
 					+ " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ? AND source_field = ? LIMIT 1");
 		}
 		if(!(this->psAddCorpus)) {
-			if(verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [2/2]...");
+			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [2/2]...");
 			this->psAddCorpus = this->addPreparedStatement("INSERT INTO crawlserv_corpora(website, urllist, source_type, source_table,"
 					" source_field, corpus, datemap, sources) VALUES (" + this->websiteIdString + ", " + this->listIdString
 					+ ", ?, ?, ?, ?, ?, ?)");
@@ -213,6 +213,38 @@ bool Database::prepare() {
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		this->errorMessage = errorStrStr.str();
+		return false;
+	}
+
+	return true;
+}
+
+// prepare SQL statements for algorithm
+bool Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned long>& idsTo) {
+	// check connection to database
+	if(!(this->checkConnection())) {
+		this->errorMessage = this->getDatabaseErrorMessage();
+		return false;
+	}
+
+	// reserve memory
+	this->reservePreparedStatements(statements.size());
+
+	try {
+		// prepare SQL statements for algorithm
+		if(this->verbose) {
+			std::ostringstream logStrStr;
+			logStrStr << "[#" << this->idString << "] prepares " << statements.size() << " SQL statements for algorithm...";
+			this->log("analyzer", logStrStr.str());
+		}
+		for(auto i = statements.begin(); i != statements.end(); ++i)
+			idsTo.push_back(this->addPreparedStatement(*i));
+	}
+	catch(sql::SQLException &e) {
+		// set error message
+		std::ostringstream errorStrStr;
+		errorStrStr << "prepareAlgo() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		this->errorMessage = errorStrStr.str();
 		return false;
 	}

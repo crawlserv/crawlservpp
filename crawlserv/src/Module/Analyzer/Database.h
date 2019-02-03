@@ -67,6 +67,9 @@ namespace crawlservpp::Module::Analyzer {
 		bool initTargetTable(bool compressed);
 		bool prepare();
 
+		// prepare custom SQL statements for algorithm
+		bool prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned long>& idsTo);
+
 		// corpus functions
 		void getCorpus(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField, std::string& corpusTo,
 				unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo);
