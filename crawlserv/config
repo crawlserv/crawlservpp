@@ -6,3 +6,4 @@ server_port=8080
 server_allow=127.0.0.1,::1
 server_logs_deletable=1
 server_data_deletable=1
+server_client_compress=0

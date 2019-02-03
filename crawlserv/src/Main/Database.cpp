@@ -32,7 +32,10 @@ Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings) : se
 	this->psStrlen = 0;
 
 	// get driver instance if necessary
-	if(!Database::driver) Database::driver = get_driver_instance();
+	if(!Database::driver) {
+		Database::driver = get_driver_instance();
+		if(!Database::driver) throw std::runtime_error("Could not get database instance");
+	}
 }
 
 // destructor
@@ -82,15 +85,17 @@ bool Database::connect() {
 	try {
 		// set options for connecting
 		sql::ConnectOptionsMap connectOptions;
-		connectOptions["hostName"] = this->settings.host;
-		connectOptions["userName"] = this->settings.user;
-		connectOptions["password"] = this->settings.password;
-		connectOptions["schema"] = this->settings.name;
-		connectOptions["port"] = this->settings.port;
+		connectOptions["hostName"] = this->settings.host; // set host
+		connectOptions["userName"] = this->settings.user; // set username
+		connectOptions["password"] = this->settings.password; // set password
+		connectOptions["schema"] = this->settings.name; // set schema
+		connectOptions["port"] = this->settings.port; // set port
 		connectOptions["OPT_RECONNECT"] = false; // do not automatically reconnect (need to manually recover prepared statements instead)
-		connectOptions["OPT_CHARSET_NAME"] = "utf8mb4";
-		connectOptions["characterSetResults"] = "utf8mb4";
-		connectOptions["preInit"] = "SET NAMES utf8mb4";
+		connectOptions["OPT_CHARSET_NAME"] = "utf8mb4"; // set charset
+		connectOptions["characterSetResults"] = "utf8mb4"; // set charset for results
+		connectOptions["preInit"] = "SET NAMES utf8mb4"; // set charset for names
+		connectOptions["OPT_MAX_ALLOWED_PACKET"] = 1073741824; // set max_allowed_packet to highest possible value (1 GiB)
+		if(this->settings.compression) connectOptions["CLIENT_COMPRESS"] = true; // enable server-client compression
 
 		// get driver if necessary
 		if(!Database::Database::driver) {
@@ -108,10 +113,6 @@ bool Database::connect() {
 			this->errorMessage = "Connection to database is invalid";
 			return false;
 		}
-
-		// set max_allowed_packet to highest possible value (1 GiB)
-		int maxAllowedPacket = 1073741824;
-		this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", (void *) &maxAllowedPacket);
 
 		// run initializing session commands
 		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
@@ -261,6 +262,7 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "log() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
+		errorStrStr << " [DEBUG: " << this->preparedStatements.at(this->psLog - 1).string << "]";
 		throw Database::Exception(errorStrStr.str());
 	}
 }

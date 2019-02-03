@@ -1,7 +1,7 @@
 /*
  * DatabaseSettings.h
  *
- * Basic database settings (host, port, user, password, schema).
+ * Basic database settings (host, port, user, password, schema, compression).
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
@@ -19,16 +19,18 @@ namespace crawlservpp::Struct {
 		std::string user; // user name for database
 		std::string password; // user password for database
 		std::string name; // name/schema of database
+		bool compression; // use compression protocol
 
 		// constructors
-		DatabaseSettings() { this->port = 0; }
+		DatabaseSettings() { this->port = 0; this->compression = false; }
 		DatabaseSettings(const std::string& setHost, unsigned short setPort, const std::string& setUser,
-				const std::string& setPassword, const std::string& setName) {
+				const std::string& setPassword, const std::string& setName, bool setCompression) {
 			this->host = setHost;
 			this->port = setPort;
 			this->user = setUser;
 			this->password = setPassword;
 			this->name = setName;
+			this->compression = setCompression;
 		}
 	};
 }

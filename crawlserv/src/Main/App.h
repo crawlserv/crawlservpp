@@ -49,12 +49,14 @@ namespace crawlservpp::Main {
 		std::atomic<bool> running;
 		std::unique_ptr<Server> server;
 
+		// helper function
+		bool getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings);
+
 		// static helper functions
 		static void outputHeader();
 		static void checkArgumentNumber(int argc);
 		static void loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
 				crawlservpp::Struct::ServerSettings& serverSettings);
-		static bool getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings);
 	};
 }
 
