@@ -221,7 +221,7 @@ bool Database::prepare() {
 }
 
 // prepare SQL statements for algorithm
-bool Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned long>& idsTo) {
+bool Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo) {
 	// check connection to database
 	if(!(this->checkConnection())) {
 		this->errorMessage = this->getDatabaseErrorMessage();
@@ -250,6 +250,11 @@ bool Database::prepareAlgo(const std::vector<std::string>& statements, std::vect
 	}
 
 	return true;
+}
+
+// get prepared SQL statement for algorithm (wraps protected parent member function to the public)
+sql::PreparedStatement& Database::getPreparedAlgoStatement(unsigned short sqlStatementId) {
+	return this->getPreparedStatement(sqlStatementId);
 }
 
 // get text corpus and save it to corpusTo - the corpus will be created if it is out-of-date or does not exist
