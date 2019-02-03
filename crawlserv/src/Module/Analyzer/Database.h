@@ -96,7 +96,7 @@ namespace crawlservpp::Module::Analyzer {
 				std::string& corpusTo, std::string& dateMapTo, unsigned long& sourcesTo);
 
 	private:
-		// IDs prepared SQL statements
+		// IDs of prepared SQL statements
 		unsigned short psGetCorpus;
 		unsigned short psIsCorpusChanged;
 		unsigned short psIsCorpusChangedParsing;
