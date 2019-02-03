@@ -995,9 +995,9 @@ Server::ServerCommandResponse Server::cmdStartAnalyzer(const rapidjson::Document
 		errStrStr << "Algorithm #" << algo << " not found.";
 		return Server::ServerCommandResponse(true, errStrStr.str());
 	}
-	this->analyzers.push_back(std::move(newAnalyzer));
-	newAnalyzer->crawlservpp::Module::Thread::start();
-	unsigned long id = newAnalyzer->crawlservpp::Module::Thread::getId();
+	this->analyzers.push_back(std::move(newAnalyzer)); // do not use newAnalyzer after that! (got swap()ed to vector)
+	this->analyzers.back()->crawlservpp::Module::Thread::start();
+	unsigned long id = this->analyzers.back()->crawlservpp::Module::Thread::getId();
 
 	// startanalyzer is a logged command
 	std::ostringstream logStrStr;
