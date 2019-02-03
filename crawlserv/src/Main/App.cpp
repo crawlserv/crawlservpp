@@ -21,6 +21,9 @@ App::App(int argc, char * argv[]) noexcept {
 		crawlservpp::Struct::ServerSettings serverSettings;
 		std::string error;
 
+		// set running state
+		this->running = true;
+
 		// save instance and register signals
 		App::instance = this;
 		struct sigaction sigIntHandler;
@@ -31,7 +34,6 @@ App::App(int argc, char * argv[]) noexcept {
 		sigaction(SIGABRT, &sigIntHandler, NULL);
 		sigaction(SIGFPE, &sigIntHandler, NULL);
 		sigaction(SIGILL, &sigIntHandler, NULL);
-		sigaction(SIGSEGV, &sigIntHandler, NULL);
 		sigaction(SIGTERM, &sigIntHandler, NULL);
 
 		// show header
@@ -44,12 +46,12 @@ App::App(int argc, char * argv[]) noexcept {
 		this->loadConfig(argv[1], dbSettings, serverSettings);
 
 		// get password
-		if(this->getPassword(dbSettings)) {
+		if(this->getPassword(dbSettings) && this->running) {
 			// create server and run!
 			this->server = std::make_unique<Server>(dbSettings, serverSettings);
-			this->running = true;
 			std::cout << "Server is up and running." << std::flush;
 		}
+		else this->running = false;
 	}
 	catch(const std::exception& e) {
 		std::cout << "[ERROR] " << e.what() << std::endl;
@@ -110,9 +112,6 @@ void App::shutdown(int num) {
 	case SIGILL:
 		std::cout << "Illegal instruction signal (SIGILL)";
 		break;
-	case SIGSEGV:
-		std::cout << "Invalid access to storage signal (SIGSEGV)";
-		break;
 	case SIGTERM:
 		std::cout << "Termination request signal (SIGTERM)";
 		break;
@@ -123,61 +122,7 @@ void App::shutdown(int num) {
 	this->running = false;
 }
 
-// static helper function: show version (and library versions)
-void App::outputHeader() {
-	std::cout << "crawlserv++ v0.1 by Ans using" << std::endl;
-	std::cout << crawlservpp::Helper::Versions::getLibraryVersions(" ") << std::endl;
-}
-
-// static helper function: check number of command line arguments, throws std::runtime_error
-void App::checkArgumentNumber(int argc) {
-	if(argc != 2) throw std::runtime_error("USAGE: crawlserv <config_file>");
-}
-
-// static helper function: load database and server settings from configuration file, throws std::runtime_error
-void App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
-		crawlservpp::Struct::ServerSettings& serverSettings) {
-	ConfigFile configFile(fileName);
-
-	dbSettings.host = configFile.getValue("db_host");
-
-	try {
-		dbSettings.port = boost::lexical_cast<unsigned short>(configFile.getValue("db_port"));
-	}
-	catch(const boost::bad_lexical_cast& e) {
-		throw(std::runtime_error(fileName + ": Could not convert config file entry \"db_port\" (=\""
-				+ configFile.getValue("db_port") + "\") to numeric value"));
-	}
-
-	dbSettings.user = configFile.getValue("db_user");
-	dbSettings.name = configFile.getValue("db_name");
-	serverSettings.port = configFile.getValue("server_port");
-	serverSettings.allowedClients = configFile.getValue("server_allow");
-
-	if(!configFile.getValue("server_logs_deletable").empty()) {
-		try {
-			serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
-		}
-		catch(const boost::bad_lexical_cast& e) {
-			throw std::runtime_error(fileName + ": Could not convert config file entry \"server_logs_deletable\" (=\""
-					+ configFile.getValue("server_logs_deletable") + "\") to boolean value");
-		}
-	}
-	else serverSettings.logsDeletable = false;
-
-	if(!configFile.getValue("server_data_deletable").empty()) {
-		try {
-			serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
-		}
-		catch(const boost::bad_lexical_cast& e) {
-			throw std::runtime_error(fileName + ": Could not convert config file entry \"server_data_deletable\" (=\""
-					+ configFile.getValue("server_data_deletable") + "\") to boolean value");
-		}
-	}
-	else serverSettings.dataDeletable = false;
-}
-
-// static helper function: get database password from user, return false on cancel
+// helper function: get database password from user, return false on cancel
 bool App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
 	// prompt password for database
 	std::cout << "Enter password for " << dbSettings.user << "@" << dbSettings.host << ":" << dbSettings.port << ": ";
@@ -210,11 +155,76 @@ bool App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
 		}
 
 	}
-	while(inputLoop);
+	while(inputLoop && this->running);
 	std::cout << std::endl;
 
 	if(inputCancel) return false;
 	return true;
+}
+
+// static helper function: show version (and library versions)
+void App::outputHeader() {
+	std::cout << "crawlserv++ v0.1 by Ans using" << std::endl;
+	std::cout << crawlservpp::Helper::Versions::getLibraryVersions(" ") << std::endl;
+}
+
+// static helper function: check number of command line arguments, throws std::runtime_error
+void App::checkArgumentNumber(int argc) {
+	if(argc != 2) throw std::runtime_error("USAGE: crawlserv <config_file>");
+}
+
+// static helper function: load database and server settings from configuration file, throws std::runtime_error
+void App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
+		crawlservpp::Struct::ServerSettings& serverSettings) {
+	ConfigFile configFile(fileName);
+
+	dbSettings.host = configFile.getValue("db_host");
+
+	try {
+		dbSettings.port = boost::lexical_cast<unsigned short>(configFile.getValue("db_port"));
+	}
+	catch(const boost::bad_lexical_cast& e) {
+		throw(std::runtime_error(fileName + ": Could not convert config file entry \"db_port\" (=\""
+				+ configFile.getValue("db_port") + "\") to numeric value"));
+	}
+
+	dbSettings.user = configFile.getValue("db_user");
+	dbSettings.name = configFile.getValue("db_name");
+
+	if(!configFile.getValue("server_client_compress").empty()) {
+		try {
+			dbSettings.compression = boost::lexical_cast<bool>(configFile.getValue("server_client_compress"));
+		}
+		catch(const boost::bad_lexical_cast& e) {
+			throw std::runtime_error(fileName + ": Could not convert config file entry \"server_client_compress\" (=\""
+					+ configFile.getValue("server_client_compress") + "\") to boolean value");
+		}
+	}
+
+	serverSettings.port = configFile.getValue("server_port");
+	serverSettings.allowedClients = configFile.getValue("server_allow");
+
+	if(!configFile.getValue("server_logs_deletable").empty()) {
+		try {
+			serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
+		}
+		catch(const boost::bad_lexical_cast& e) {
+			throw std::runtime_error(fileName + ": Could not convert config file entry \"server_logs_deletable\" (=\""
+					+ configFile.getValue("server_logs_deletable") + "\") to boolean value");
+		}
+	}
+	else serverSettings.logsDeletable = false;
+
+	if(!configFile.getValue("server_data_deletable").empty()) {
+		try {
+			serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
+		}
+		catch(const boost::bad_lexical_cast& e) {
+			throw std::runtime_error(fileName + ": Could not convert config file entry \"server_data_deletable\" (=\""
+					+ configFile.getValue("server_data_deletable") + "\") to boolean value");
+		}
+	}
+	else serverSettings.dataDeletable = false;
 }
 
 }
