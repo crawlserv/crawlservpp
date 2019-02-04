@@ -64,24 +64,108 @@ namespace crawlservpp::Network {
 		};
 
 	private:
-		CURL * curl;
 		CURLcode curlCode;
 		std::string content;
 		std::string contentType;
 		unsigned int responseCode;
-		const Config * config;
 		bool limitedSettings;
 
+		// const pointer to network configuration
+		const Network::Config * config;
+
+		// RAII wrapper sub-class for cURL pointer, also handles global instance if necessary (does NOT have ownership of the pointer!)
+		class CurlWrapper {
+		public:
+			// constructor: set pointer to NULL
+			CurlWrapper() {
+				// initialize global instance if necessary
+				if(CurlWrapper::globalInit) this->localInit = false;
+				else {
+					CurlWrapper::globalInit = true;
+					this->localInit = true;
+					curl_global_init(CURL_GLOBAL_ALL);
+				}
+
+				// initialize cURL
+				this->ptr = NULL;
+				this->init();
+			}
+
+			// destructor: cleanup cURL if necessary
+			virtual ~CurlWrapper() {
+				this->reset();
+
+				// cleanup global instance if necessary
+				if(CurlWrapper::globalInit && this->localInit) {
+					curl_global_cleanup();
+					CurlWrapper::globalInit = false;
+					this->localInit = false;
+				}
+			}
+
+			// get const pointer to query list
+			const CURL * get() const { return this->ptr; }
+
+			// get non-const pointer to query list
+			CURL * get() { return this->ptr; }
+
+			// get non-const pointer to pointer to query list
+			CURL ** getPtr() { return &(this->ptr); }
+
+			// control functions
+			void init() { this->ptr = curl_easy_init();	if(!(this->ptr)) throw Curl::Exception("Could not initialize cURL"); }
+			void reset() { if(this->ptr) curl_easy_cleanup(this->ptr); this->ptr = NULL; }
+
+			// rule of five
+			CurlWrapper(CurlWrapper const&) = delete;
+			CurlWrapper(CurlWrapper&&) = delete;
+			CurlWrapper& operator=(CurlWrapper const&) = delete;
+			CurlWrapper& operator=(CurlWrapper&&) = delete;
+
+		private:
+			CURL * ptr;
+			bool localInit;
+			static bool globalInit;
+		} curl;
+
+		// RAII wrapper sub-class for cURL list (does NOT have ownership of the pointer!)
+		class CurlListWrapper {
+		public:
+			// constructor: set pointer to NULL
+			CurlListWrapper() { this->ptr = NULL; }
+
+			// destructor: free query list if necessary
+			virtual ~CurlListWrapper() { this->reset(); }
+
+			// get const pointer to query list
+			const struct curl_slist * get() const { return this->ptr; }
+
+			// get non-const pointer to query list
+			struct curl_slist * get() { return this->ptr; }
+
+			// get non-const pointer to pointer to query list
+			struct curl_slist ** getPtr() { return &(this->ptr); }
+
+			// list functions
+			void append(const std::string& newElement) { this->ptr = curl_slist_append(this->ptr, newElement.c_str()); }
+			void reset() { if(this->ptr) curl_slist_free_all(this->ptr); this->ptr = NULL; }
+
+			// rule of five
+			CurlListWrapper(CurlListWrapper const&) = delete;
+			CurlListWrapper(CurlListWrapper&&) = delete;
+			CurlListWrapper& operator=(CurlListWrapper const&) = delete;
+			CurlListWrapper& operator=(CurlListWrapper&&) = delete;
+
+		private:
+			struct curl_slist * ptr;
+		} dnsResolves, headers, http200Aliases, proxyHeaders;
+
+		// helper function for cURL strings
+		static std::string curlStringToString(char * curlString);
+
+		// static and in-class writer functions
 		static int writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer);
 		int writerInClass(char * data, unsigned long size, unsigned long nmemb);
-
-		static bool globalInit;
-		bool localInit;
-
-		struct curl_slist * dnsResolves;
-		struct curl_slist * headers;
-		struct curl_slist * http200Aliases;
-		struct curl_slist * proxyHeaders;
 	};
 }
 
