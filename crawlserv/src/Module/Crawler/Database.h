@@ -44,7 +44,7 @@ namespace crawlservpp::Module::Crawler {
 		void setVerbose(bool isVerbose);
 
 		// prepare SQL statements for crawler
-		bool prepare();
+		void prepare();
 
 		// table function
 		void lockUrlList();

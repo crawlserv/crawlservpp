@@ -64,11 +64,11 @@ namespace crawlservpp::Module::Analyzer {
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
 
 		// prepare target table and SQL statements for analyzer
-		bool initTargetTable(bool compressed);
-		bool prepare();
+		void initTargetTable(bool compressed);
+		void prepare();
 
 		// prepare and get custom SQL statements for algorithm
-		bool prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo);
+		void prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo);
 		sql::PreparedStatement& getPreparedAlgoStatement(unsigned short sqlStatementId);
 
 		// corpus functions

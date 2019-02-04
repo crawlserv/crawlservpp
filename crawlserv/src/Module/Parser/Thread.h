@@ -49,8 +49,8 @@ namespace crawlservpp::Module::Parser {
 		Database database;
 
 		// implemented thread functions
-		bool onInit(bool resumed) override;
-		bool onTick() override;
+		void onInit(bool resumed) override;
+		void onTick() override;
 		void onPause() override;
 		void onUnpause() override;
 		void onClear(bool interrupted) override;

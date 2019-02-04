@@ -25,27 +25,20 @@ Thread::Thread(Main::Database& dbBase, const crawlservpp::Struct::ThreadOptions&
 // destructor stub
 Thread::~Thread() {}
 
-// initialize parser
-bool Thread::onInit(bool resumed) {
+// initialize parser, throws std::runtime_error
+void Thread::onInit(bool resumed) {
 	std::vector<std::string> configWarnings;
 	std::vector<std::string> fields;
-	bool verbose = false;
 
 	// get configuration and show warnings if necessary
-	if(!(this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings))) {
-		this->log(this->config.getErrorMessage());
-		return false;
-	}
+	this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 	if(this->config.generalLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
-	verbose = config.generalLogging == Config::generalLoggingVerbose;
 
 	// check configuration
+	bool verbose = config.generalLogging == Config::generalLoggingVerbose;
 	if(verbose) this->log("checks configuration...");
-	if(this->config.generalResultTable.empty()) {
-		if(this->config.generalLogging) this->log("ERROR: No target table specified.");
-		return false;
-	}
+	if(this->config.generalResultTable.empty()) throw std::runtime_error("No target table specified.");
 
 	// set database configuration
 	if(verbose) this->log("sets database configuration...");
@@ -61,21 +54,17 @@ bool Thread::onInit(bool resumed) {
 
 	// prepare SQL queries
 	if(verbose) this->log("prepares SQL statements...");
-	if(!(this->database.prepare())) {
-		if(this->config.generalLogging) this->log(this->database.getModuleErrorMessage());
-		return false;
-	}
+	this->database.prepare();
 
 	// initialize algorithm
 	if(verbose) this->log("initializes algorithm...");
 	this->onAlgoInit(resumed);
-	return true;
 }
 
 // analyzer tick
-bool Thread::onTick() {
+void Thread::onTick() {
 	// algorithm tick
-	return this->onAlgoTick();
+	this->onAlgoTick();
 }
 
 // analyzer paused

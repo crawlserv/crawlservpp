@@ -12,6 +12,7 @@
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -25,12 +26,9 @@ namespace crawlservpp::Module {
 		const std::string& getErrorMessage() const;
 
 		// configuration loader
-		bool loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo);
+		void loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo);
 
 	protected:
-		// error message
-		std::string errorMessage;
-
 		// load module-specific configuration from parsed JSON document
 		virtual void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) = 0;
 	};

@@ -74,18 +74,15 @@ void Database::setVerbose(bool isVerbose) {
 	this->verbose = isVerbose;
 }
 
-// prepare SQL statements for crawler
-bool Database::prepare() {
+// prepare SQL statements for crawler, throws crawlservpp::Main::Database::Exception
+void Database::prepare() {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
 	this->linkTable = this->urlListTable + "_links";
 	std::string crawledTable = this->urlListTable + "_crawled";
 
 	// check connection to database
-	if(!(this->checkConnection())) {
-		this->errorMessage = this->getDatabaseErrorMessage();
-		return false;
-	}
+	this->checkConnection();
 
 	// reserve memory
 	this->reservePreparedStatements(20);
@@ -196,11 +193,8 @@ bool Database::prepare() {
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-		return false;
+		throw DatabaseException(errorStrStr.str());
 	}
-
-	return true;
 }
 
 // check whether URL exists in database (uses hash check to first check probably existence of URL)
@@ -215,7 +209,7 @@ bool Database::isUrlExists(const std::string& urlString) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsUrlExists);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// check URL existence in database
 	try {
@@ -259,7 +253,7 @@ unsigned long Database::getUrlId(const std::string& urlString) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetUrlId);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get ID of URL from database
 	try {
@@ -289,7 +283,7 @@ bool Database::isUrlCrawled(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsUrlCrawled);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get next URL from database
 	try {
@@ -319,7 +313,7 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetNextUrl);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get next URL from database
 	try {
@@ -352,7 +346,7 @@ unsigned long Database::addUrl(const std::string& urlString, bool manual) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psAddUrl);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// add URL to database and get resulting ID
 	try {
@@ -385,7 +379,7 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetUrlPosition);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get URL position of URL from database
 	try {
@@ -415,7 +409,7 @@ unsigned long Database::getNumberOfUrls() {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetNumberOfUrls);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get number of URLs from database
 	try {
@@ -446,7 +440,7 @@ void Database::addLinkIfNotExists(unsigned long from, unsigned long to, bool arc
 			this->getPreparedStatement(this->psAddLinkArchived) : this->getPreparedStatement(this->psAddLink);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// check existence of link and add it to database if it does not exist there already
 	try {
@@ -481,7 +475,7 @@ bool Database::isUrlLockable(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsUrlLockable);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// check URL lock in database
 	try {
@@ -511,7 +505,7 @@ std::string Database::getUrlLock(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetUrlLock);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get URL lock from database
 	try {
@@ -541,7 +535,7 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psCheckUrlLock);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// check URL lock in database
 	try {
@@ -570,7 +564,7 @@ std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psLockUrl);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// lock URL in database
 	try {
@@ -596,7 +590,7 @@ void Database::unLockUrl(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUnLockUrl);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// unlock URL in database
 	try {
@@ -620,7 +614,7 @@ void Database::saveContent(unsigned long urlId, unsigned int response, const std
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSaveContent);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// save content to database
 	try {
@@ -666,7 +660,7 @@ void Database::saveArchivedContent(unsigned long urlId, const std::string& timeS
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSaveArchivedContent);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// save archived content to database if possible
@@ -712,7 +706,7 @@ void Database::setUrlFinished(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetUrlFinished);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->getDatabaseErrorMessage());
+	this->checkConnection();
 
 	// get ID of URL from database
 	try {
@@ -737,7 +731,7 @@ bool Database::isArchivedContentExists(unsigned long urlId, const std::string& t
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsArchivedContentExists);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get next URL from database
 	try {

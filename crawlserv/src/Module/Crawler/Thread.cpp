@@ -57,25 +57,19 @@ Thread::Thread(crawlservpp::Main::Database& dbBase,
 // destructor stub
 Thread::~Thread() {}
 
-// initialize crawler
-bool Thread::onInit(bool resumed) {
+// initialize crawler, throws std::runtime_error
+void Thread::onInit(bool resumed) {
 	std::vector<std::string> configWarnings;
 	bool verbose = false;
 
 	// get configuration and show warnings if necessary
-	if(!(this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings))) {
-		this->log(this->config.getErrorMessage());
-		return false;
-	}
+	this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
 	verbose = config.crawlerLogging == Config::crawlerLoggingVerbose;
 
 	// check for link extraction queries
-	if(this->config.crawlerQueriesLinks.empty()) {
-		this->log("ERROR: No link extraction query specified.");
-		return false;
-	}
+	if(this->config.crawlerQueriesLinks.empty()) throw std::runtime_error("ERROR: No link extraction query specified.");
 
 	// set database options
 	if(verbose) this->log("sets database options...");
@@ -89,10 +83,7 @@ bool Thread::onInit(bool resumed) {
 
 	// prepare SQL statements for crawler
 	if(verbose) this->log("prepares SQL statements...");
-	if(!(this->database.prepare())) {
-		if(this->config.crawlerLogging) this->log(this->database.getModuleErrorMessage());
-		return false;
-	}
+	this->database.prepare();
 
 	// get domain
 	if(verbose) this->log("gets website domain...");
@@ -108,10 +99,7 @@ bool Thread::onInit(bool resumed) {
 	configWarnings.clear();
 	if(config.crawlerLogging == Config::crawlerLoggingVerbose)
 		this->log("sets global network configuration...");
-	if(!(this->networking.setConfigGlobal(this->config.network, false, &configWarnings))) {
-		if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
-		return false;
-	}
+	this->networking.setConfigGlobal(this->config.network, false, &configWarnings);
 	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 		this->log("WARNING: " + *i);
 	configWarnings.clear();
@@ -128,10 +116,7 @@ bool Thread::onInit(bool resumed) {
 	if(this->config.crawlerArchives && !(this->networkingArchives)) {
 		if(verbose) this->log("initializes networking for archives...");
 		this->networkingArchives = std::make_unique<crawlservpp::Network::Curl>();
-		if(!(this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings))) {
-			if(this->config.crawlerLogging) this->log(this->networking.getErrorMessage());
-			return false;
-		}
+		this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings);
 		if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
 			this->log("WARNING: " + *i);
 	}
@@ -140,11 +125,10 @@ bool Thread::onInit(bool resumed) {
 	this->startTime = std::chrono::steady_clock::now();
 	this->pauseTime = std::chrono::steady_clock::time_point::min();
 	this->tickCounter = 0;
-	return true;
 }
 
 // crawler tick
-bool Thread::onTick() {
+void Thread::onTick() {
 	std::pair<unsigned long, std::string> url;
 	crawlservpp::Timer::StartStop timerSelect;
 	crawlservpp::Timer::StartStop timerArchives;
@@ -233,8 +217,6 @@ bool Thread::onTick() {
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.crawlerSleepIdle));
 	}
-
-	return true;
 }
 
 // crawler paused
@@ -651,13 +633,17 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 		}
 	}
 
-	// set local networking options
-	if(this->networking.setConfigCurrent(this->config.network)) {
+	try {
+		// set local networking options
+		this->networking.setConfigCurrent(this->config.network);
 
-		// get content
+		// start HTTP timer
 		if(this->config.crawlerTiming) httpTimer.start();
 		if(this->config.crawlerSleepHttp) this->httpTime = std::chrono::steady_clock::now();
-		if(this->networking.getContent("https://" + this->domain + url.second, content, this->config.crawlerRetryHttp)) {
+
+		try {
+			// get content
+			this->networking.getContent("https://" + this->domain + url.second, content, this->config.crawlerRetryHttp);
 
 			// check response code
 			unsigned int responseCode = this->networking.getResponseCode();
@@ -780,15 +766,15 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 				return false;
 			}
 		}
-		else {
+		catch(const CurlException& e) {
 			// error while getting content: check type of error i.e. last cURL code
 			if(this->crawlingCheckCurlCode(this->networking.getCurlCode(), url.second)) {
 				// reset connection and retry
 				if(this->config.crawlerLogging) {
-					this->log(this->networking.getErrorMessage() + " [" + url.second + "].");
+					this->log(e.whatStr() + " [" + url.second + "].");
 					this->log("resets connection...");
 				}
-				this->setStatusMessage("ERROR " + this->networking.getErrorMessage() + " [" + url.second + "]");
+				this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
 				this->networking.resetConnection(this->config.crawlerSleepError);
 				this->crawlingRetry(url, false);
 			}
@@ -799,13 +785,13 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 			return false;
 		}
 	}
-	else {
+	catch(const CurlException& e) {
 		// error while setting up network
 		if(this->config.crawlerLogging) {
-			this->log(this->networking.getErrorMessage() + " [" + url.second + "].");
+			this->log(e.whatStr() + " [" + url.second + "].");
 			this->log("resets connection...");
 		}
-		this->setStatusMessage("ERROR " + this->networking.getErrorMessage() + " [" + url.second + "]");
+		this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
 		this->networking.resetConnection(this->config.crawlerSleepError);
 		this->crawlingRetry(url, false);
 		return false;
@@ -1221,7 +1207,8 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 			while(success && this->isRunning()) {
 				// get memento content
 				archivedContent = "";
-				if(this->networkingArchives->getContent(archivedUrl, archivedContent, this->config.crawlerRetryHttp)) {
+				try {
+					this->networkingArchives->getContent(archivedUrl, archivedContent, this->config.crawlerRetryHttp);
 
 					// check response code
 					if(this->crawlingCheckResponseCode(archivedUrl, this->networkingArchives->getResponseCode())) {
@@ -1274,8 +1261,9 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 
 												// get archived content
 												archivedContent = "";
-												if(this->networkingArchives->getContent(i->url, archivedContent,
-														this->config.crawlerRetryHttp)) {
+												try {
+													this->networkingArchives->getContent(i->url, archivedContent,
+														this->config.crawlerRetryHttp);
 
 													// check response code
 													if(!(this->crawlingCheckResponseCode(i->url,
@@ -1338,21 +1326,19 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 														}
 													}
 												}
-												else {
+												catch(const CurlException& e) {
 													if(this->config.crawlerRetryArchive) {
 														// error while getting content: check type of error i.e. last cURL code
 														if(this->crawlingCheckCurlCode(this->networkingArchives->getCurlCode(), i->url)) {
 															// log error
 															if(this->config.crawlerLogging) {
-																this->log(this->networkingArchives->getErrorMessage()
-																		+ " [" + i->url + "].");
+																this->log(e.whatStr() + " [" + i->url + "].");
 																this->log("resets connection to "
 																		+ this->config.crawlerArchivesNames.at(n) + "...");
 															}
 
 															// reset connection
-															this->setStatusMessage("ERROR " + this->networkingArchives->getErrorMessage()
-																	+ " [" + i->url + "]");
+															this->setStatusMessage("ERROR " + e.whatStr() + " [" + i->url + "]");
 															this->networkingArchives->resetConnection(this->config.crawlerSleepError);
 
 															// retry
@@ -1361,7 +1347,7 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 													}
 													else if(this->config.crawlerLogging)
 														// log error and skip
-														this->log(this->networkingArchives->getErrorMessage() + " - skips...");
+														this->log(e.whatStr() + " - skips...");
 												}
 											}
 
@@ -1393,16 +1379,16 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 						skip = true;
 					}
 				}
-				else {
+				catch(const CurlException& e) {
 					// error while getting content: check type of error i.e. last cURL code
 					if(this->crawlingCheckCurlCode(this->networkingArchives->getCurlCode(), archivedUrl)) {
 						// reset connection and retry
 						if(this->config.crawlerLogging) {
-							this->log(this->networkingArchives->getErrorMessage() + " [" + archivedUrl + "].");
+							this->log(e.whatStr() + " [" + archivedUrl + "].");
 							this->log("resets connection to " + this->config.crawlerArchivesNames.at(n) + "...");
 						}
 
-						this->setStatusMessage("ERROR " + this->networkingArchives->getErrorMessage() + " [" + archivedUrl + "]");
+						this->setStatusMessage("ERROR " + e.whatStr() + " [" + archivedUrl + "]");
 						this->networkingArchives->resetConnection(this->config.crawlerSleepError);
 						success = false;
 					}

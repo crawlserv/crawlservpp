@@ -310,115 +310,122 @@ bool Thread::isUnpaused() const {
 // main function of the thread
 void Thread::main() {
 	// connect to database and prepare logging
-	if(this->database.connect() && this->database.prepare()) {
+	this->database.connect();
+	this->database.prepare();
+
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
-		try
+	try
 #endif
-		{
-			// get previous run and pause times (in seconds)
-			this->runTime = std::chrono::seconds(this->database.getThreadRunTime(this->id));
-			this->pauseTime = std::chrono::seconds(this->database.getThreadPauseTime(this->id));
+	{
+		// get previous run and pause times (in seconds)
+		this->runTime = std::chrono::seconds(this->database.getThreadRunTime(this->id));
+		this->pauseTime = std::chrono::seconds(this->database.getThreadPauseTime(this->id));
 
+		try {
 			// notify thread for initialization
-			if(this->onInit(this->resumed)) {
-				// save new start time point
-				this->startTimePoint = std::chrono::steady_clock::now();
+			this->onInit(this->resumed);
 
-				// run thread
-				while(this->running) {
-					// run a tick if thread is not paused
-					if(this->paused) {
-						// update run time and save new pause time point
-						this->updateRunTime();
-						this->pauseTimePoint = std::chrono::steady_clock::now();
+			// save new start time point
+			this->startTimePoint = std::chrono::steady_clock::now();
 
-						// notify thread for pausing
-						this->onPause();
+			// run thread
+			while(this->running) {
+				// run a tick if thread is not paused
+				if(this->paused) {
+					// update run time and save new pause time point
+					this->updateRunTime();
+					this->pauseTimePoint = std::chrono::steady_clock::now();
 
-						// wait for unpausing
-						std::unique_lock<std::mutex> pause(this->pauseLock);
-						this->pauseCondition.wait(pause, std::bind(&Thread::isUnpaused, this));
+					// notify thread for pausing
+					this->onPause();
 
-						// notify thread for unpausing
-						if(this->running) this->onUnpause();
+					// wait for unpausing
+					std::unique_lock<std::mutex> pause(this->pauseLock);
+					this->pauseCondition.wait(pause, std::bind(&Thread::isUnpaused, this));
 
-						// update pause time and save new start time point
-						this->updatePauseTime();
-						this->startTimePoint = std::chrono::steady_clock::now();
+					// notify thread for unpausing
+					if(this->running) this->onUnpause();
+
+					// update pause time and save new start time point
+					this->updatePauseTime();
+					this->startTimePoint = std::chrono::steady_clock::now();
+				}
+				// run thread tick
+				else {
+					try {
+						this->onTick();
 					}
-					// run thread tick
-					else {
-						try {
-							if(!(this->onTick())) this->running = false;
-						}
-						// handle database exceptions by trying to pause thread
-						catch(const crawlservpp::Main::Database::Exception &dbException) {
-							// release table locks
-							this->database.releaseLocks();
+					// handle database exceptions by trying to pause thread
+					catch(const crawlservpp::Main::Database::Exception& dbException) {
+						// release table locks
+						this->database.releaseLocks();
 
-							// log error
-							std::ostringstream logStrStr;
-							logStrStr << "failed - " << dbException.whatStr() << ".";
-							this->log(logStrStr.str());
+						// log error
+						std::ostringstream logStrStr;
+						logStrStr << "failed - " << dbException.whatStr() << ".";
+						this->log(logStrStr.str());
 
-							// try to set status
-							this->setStatusMessage("ERROR " + dbException.whatStr());
+						// try to set status
+						this->setStatusMessage("ERROR " + dbException.whatStr());
 
-							// try to pause thread
-							this->pauseByThread();
-						}
+						// try to pause thread
+						this->pauseByThread();
+					}
+					// handle other exception by terminating thread
+					catch(...) {
+						this->running = false;
 					}
 				}
 			}
-			else this->terminated = true;
-
-			// update run time
-			this->updateRunTime();
-
-			// notify thread for clearing
-			this->onClear(this->interrupted);
-
-			// update status
-			if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
-			else {
-				// log timing statistic
-				std::string logStr = "stopped after "
-						+ crawlservpp::Helper::DateTime::secondsToString(this->runTime.count()) + " running";
-				if(this->pauseTime.count())
-					logStr += " and " + crawlservpp::Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
-				logStr += ".";
-				this->log(logStr);
-			}
 		}
-
-#ifndef MODULE_THREAD_DEBUG_NOCATCH
-		// handle exceptions by thread
-		catch(const std::exception& e) {
-			try {
-				// release table locks
-				this->database.releaseLocks();
-
-				// log error
-				std::ostringstream logStrStr;
-				logStrStr << "failed - " << std::string(e.what()) << ".";
-				this->log(logStrStr.str());
-
-				// update run or pause time if necessary
-				this->updateRunTime();
-				this->updatePauseTime();
-			}
-			catch(const std::exception& e2) {
-				// log exceptions -> send to stdout
-				std::cout << std::endl << "Failed - " << e.what() << ".";
-				std::cout << std::endl << "Failed to write to log - " << e2.what() << ".";
-			}
-
+		catch(...) {
 			this->terminated = true;
 		}
-#endif
 
+		// update run time
+		this->updateRunTime();
+
+		// notify thread for clearing
+		this->onClear(this->interrupted);
+
+		// update status
+		if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
+		else {
+			// log timing statistic
+			std::string logStr = "stopped after "
+					+ crawlservpp::Helper::DateTime::secondsToString(this->runTime.count()) + " running";
+			if(this->pauseTime.count())
+				logStr += " and " + crawlservpp::Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
+			logStr += ".";
+			this->log(logStr);
+		}
 	}
-	else throw std::runtime_error(this->database.getErrorMessage());
+
+#ifndef MODULE_THREAD_DEBUG_NOCATCH
+	// handle exceptions by thread
+	catch(const std::exception& e) {
+		try {
+			// release table locks
+			this->database.releaseLocks();
+
+			// log error
+			std::ostringstream logStrStr;
+			logStrStr << "failed - " << std::string(e.what()) << ".";
+			this->log(logStrStr.str());
+
+			// update run or pause time if necessary
+			this->updateRunTime();
+			this->updatePauseTime();
+		}
+		catch(const std::exception& e2) {
+			// log exceptions -> send to stdout
+			std::cout << std::endl << "Failed - " << e.what() << ".";
+			std::cout << std::endl << "Failed to write to log - " << e2.what() << ".";
+		}
+
+		this->terminated = true;
+	}
+#endif
 }
 
 }

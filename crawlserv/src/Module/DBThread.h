@@ -28,7 +28,7 @@ namespace crawlservpp::Module {
 		DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings);
 		virtual ~DBThread();
 
-		bool prepare();
+		void prepare();
 
 		// thread functions
 		void setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);

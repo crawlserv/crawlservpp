@@ -48,15 +48,15 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTable;
 
 		// implemented thread functions
-		bool onInit(bool resumed) override;
-		bool onTick() override;
+		void onInit(bool resumed) override;
+		void onTick() override;
 		void onPause() override;
 		void onUnpause() override;
 		void onClear(bool interrupted) override;
 
 		// functions to be implemented by algorithm class
-		virtual bool onAlgoInit(bool resumed) = 0;
-		virtual bool onAlgoTick() = 0;
+		virtual void onAlgoInit(bool resumed) = 0;
+		virtual void onAlgoTick() = 0;
 		virtual void onAlgoPause() = 0;
 		virtual void onAlgoUnpause() = 0;
 		virtual void onAlgoClear(bool interrupted) = 0;

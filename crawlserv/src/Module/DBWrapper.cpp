@@ -19,15 +19,6 @@ DBWrapper::DBWrapper(DBThread& dbRef) : database(dbRef) {}
 DBWrapper::~DBWrapper() {}
 
 /*
- * GETTER
- */
-
-// get module error message
-const std::string& DBWrapper::getModuleErrorMessage() const {
-	return this->errorMessage;
-}
-
-/*
  * WRAPPER FOR SETTER
  */
 
@@ -187,11 +178,6 @@ void DBWrapper::updateCustomData(const crawlservpp::Main::Data::UpdateFieldsMixe
  * WRAPPERS FOR GETTERS (protected)
  */
 
-// get the database error message
-const std::string& DBWrapper::getDatabaseErrorMessage() const {
-	return this->database.getErrorMessage();
-}
-
 // get the maximum allowed packet size
 unsigned long DBWrapper::getMaxAllowedPacketSize() const {
 	return this->database.getMaxAllowedPacketSize();
@@ -225,8 +211,8 @@ sql::PreparedStatement& DBWrapper::getPreparedStatement(unsigned short sqlStatem
  */
 
 // check whether the connection to the database is still valid and try to reconnect if necesssary (set error message on failure)
-bool DBWrapper::checkConnection() {
-	return this->database.checkConnection();
+void DBWrapper::checkConnection() {
+	this->database.checkConnection();
 }
 
 // get the last inserted ID from the database

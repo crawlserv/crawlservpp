@@ -43,8 +43,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		virtual ~MarkovText();
 
 		// implemented algorithm functions
-		bool onAlgoInit(bool resumed);
-		bool onAlgoTick();
+		void onAlgoInit(bool resumed);
+		void onAlgoTick();
 		void onAlgoPause();
 		void onAlgoUnpause();
 		void onAlgoClear(bool interrupted);

@@ -54,7 +54,7 @@ namespace crawlservpp::Module::Parser {
 
 		// prepare target table and SQL statements for parser
 		void initTargetTable();
-		bool prepare();
+		void prepare();
 
 		// table function
 		void lockUrlList();
