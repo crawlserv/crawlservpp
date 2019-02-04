@@ -146,6 +146,7 @@ namespace crawlservpp::Main {
 		void releaseLocks();
 
 		// validation functions
+		void checkConnection();
 		bool isWebsite(unsigned long websiteId);
 		bool isUrlList(unsigned long urlListId);
 		bool isUrlList(unsigned long websiteId, unsigned long urlListId);
@@ -214,7 +215,6 @@ namespace crawlservpp::Main {
 		unsigned long getMaxAllowedPacketSize() const;
 
 		// database helper functions
-		void checkConnection();
 		unsigned long getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const std::string& tableName);
