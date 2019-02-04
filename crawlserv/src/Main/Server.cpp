@@ -218,7 +218,14 @@ Server::~Server() {
 // server tick
 bool Server::tick() {
 	// poll web server
-	this->webServer.poll(1000);
+	try {
+		this->webServer.poll(1000);
+	}
+	catch(const Database::Exception& e) {
+		// try to re-connect once on database exception
+		this->database.checkConnection();
+		this->database.log("server", "re-connected to database after error: " + e.whatStr());
+	}
 
 	// check whether a thread was terminated
 	for(unsigned long n = 1; n <= this->crawlers.size(); n++) {
@@ -413,8 +420,8 @@ void Server::onAccept(const std::string& ip) {
 	// check authorization
 	if(this->allowed != "*") {
 		if(this->allowed.find(ip) == std::string::npos) {
+			this->database.log("server", "rejected client " + ip + ".");
 			this->webServer.close();
-			this->database.log("server", "refused client " + ip + ".");
 		}
 		else this->database.log("server", "accepted client " + ip + ".");
 	}
@@ -425,8 +432,8 @@ void Server::onRequest(const std::string& ip, const std::string& method, const s
 	// check authorization
 	if(this->allowed != "*") {
 		if(this->allowed.find(ip) == std::string::npos) {
+			this->database.log("server", "Client " + ip + " rejected.");
 			this->webServer.close();
-			this->database.log("server", "Client " + ip + " refused.");
 		}
 	}
 

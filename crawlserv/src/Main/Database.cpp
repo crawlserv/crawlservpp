@@ -2478,6 +2478,44 @@ void Database::releaseLocks() {
  * VALIDATION FUNCTIONS
  */
 
+// check whether the connection to the database is still valid and try to re-connect if necesssary, throws Database::Exception
+void Database::checkConnection() {
+	// check driver
+	if(!(this->driver)) throw Database::Exception("MySQL driver not loaded");
+
+	// check connection
+	if(!(this->connection)) throw Database::Exception("No connection to database");
+
+	try {
+		// check whether connection is valid
+		if(this->connection->isValid()) return;
+
+		// try to re-connect
+		if(!(this->connection->reconnect())) {
+			// simple reconnect failed: try to reset connection after sleeping over it for some time
+			this->connection.reset();
+
+			try {
+				this->connect();
+			}
+			catch(const Database::Exception& e) {
+				if(this->sleepOnError) std::this_thread::sleep_for(std::chrono::seconds(this->sleepOnError));
+				this->connect();
+			}
+		}
+
+		// recover prepared SQL statements
+		for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i)
+			i->statement.reset(this->connection->prepareStatement(i->string));
+	}
+	catch(sql::SQLException &e) {
+		// SQL error while recovering prepared statements
+		std::ostringstream errorStrStr;
+		errorStrStr << "checkConnection() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw Database::Exception(errorStrStr.str());
+	}
+}
+
 // check whether a website ID is valid
 bool Database::isWebsite(unsigned long websiteId) {
 	bool result = false;
@@ -3726,44 +3764,6 @@ unsigned long Database::getMaxAllowedPacketSize() const {
 /*
  * DATABASE HELPER FUNCTIONS (protected)
  */
-
-// check whether the connection to the database is still valid and try to reconnect if necesssary (set error message on failure)
-void Database::checkConnection() {
-	// check driver
-	if(!(this->driver)) throw Database::Exception("MySQL driver not loaded");
-
-	// check connection
-	if(!(this->connection)) throw Database::Exception("No connection to database");
-
-	try {
-		// check whether connection is valid
-		if(this->connection->isValid()) return;
-
-		// try to re-connect
-		if(!(this->connection->reconnect())) {
-			// simple reconnect failed: try to reset connection after sleeping over it for some time
-			this->connection.reset();
-
-			try {
-				this->connect();
-			}
-			catch(const Database::Exception& e) {
-				if(this->sleepOnError) std::this_thread::sleep_for(std::chrono::seconds(this->sleepOnError));
-				this->connect();
-			}
-		}
-
-		// recover prepared SQL statements
-		for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i)
-			i->statement.reset(this->connection->prepareStatement(i->string));
-	}
-	catch(sql::SQLException &e) {
-		// SQL error while recovering prepared statements
-		std::ostringstream errorStrStr;
-		errorStrStr << "checkConnection() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw Database::Exception(errorStrStr.str());
-	}
-}
 
 // get the last inserted ID from the database
 unsigned long Database::getLastInsertedId() {
