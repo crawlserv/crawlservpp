@@ -83,7 +83,7 @@ void Database::connect() {
 		connectOptions["password"] = this->settings.password; // set password
 		connectOptions["schema"] = this->settings.name; // set schema
 		connectOptions["port"] = this->settings.port; // set port
-		connectOptions["OPT_RECONNECT"] = false; // do not automatically reconnect to manually recover prepared statements
+		connectOptions["OPT_RECONNECT"] = false; // do not automatically re-connect to manually recover prepared statements
 		connectOptions["OPT_CHARSET_NAME"] = "utf8mb4"; // set charset
 		connectOptions["characterSetResults"] = "utf8mb4"; // set charset for results
 		connectOptions["preInit"] = "SET NAMES utf8mb4"; // set charset for names
@@ -2492,7 +2492,7 @@ void Database::checkConnection() {
 
 		// try to re-connect
 		if(!(this->connection->reconnect())) {
-			// simple reconnect failed: try to reset connection after sleeping over it for some time
+			// simple re-connect failed: try to reset connection after sleeping over it for some time
 			this->connection.reset();
 
 			try {

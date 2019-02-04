@@ -210,7 +210,7 @@ sql::PreparedStatement& DBWrapper::getPreparedStatement(unsigned short sqlStatem
  * WRAPPERS FOR DATABASE HELPER FUNCTIONS (protected)
  */
 
-// check whether the connection to the database is still valid and try to reconnect if necesssary (set error message on failure)
+// check whether the connection to the database is still valid and try to re-connect if necesssary (set error message on failure)
 void DBWrapper::checkConnection() {
 	this->database.checkConnection();
 }
