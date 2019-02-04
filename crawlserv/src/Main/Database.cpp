@@ -51,7 +51,7 @@ Database::~Database() {
 }
 
 /*
- * SETTERS
+ * SETTER
  */
 
 // set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
@@ -60,7 +60,7 @@ void Database::setSleepOnError(unsigned long seconds) {
 }
 
 /*
- * GETTERS
+ * GETTER
  */
 
 // get settings of the database
@@ -68,19 +68,12 @@ const crawlservpp::Struct::DatabaseSettings& Database::getSettings() const {
 	return this->settings;
 }
 
-// get the last error message
-const std::string& Database::getErrorMessage() const {
-	return this->errorMessage;
-}
-
 /*
  * INITIALIZING FUNCTIONS
  */
 
 // connect to the database
-bool Database::connect() {
-	bool success = true;
-
+void Database::connect() {
 	// connect to database
 	try {
 		// set options for connecting
@@ -90,7 +83,7 @@ bool Database::connect() {
 		connectOptions["password"] = this->settings.password; // set password
 		connectOptions["schema"] = this->settings.name; // set schema
 		connectOptions["port"] = this->settings.port; // set port
-		connectOptions["OPT_RECONNECT"] = false; // do not automatically reconnect (need to manually recover prepared statements instead)
+		connectOptions["OPT_RECONNECT"] = false; // do not automatically reconnect to manually recover prepared statements
 		connectOptions["OPT_CHARSET_NAME"] = "utf8mb4"; // set charset
 		connectOptions["characterSetResults"] = "utf8mb4"; // set charset for results
 		connectOptions["preInit"] = "SET NAMES utf8mb4"; // set charset for names
@@ -98,28 +91,16 @@ bool Database::connect() {
 		if(this->settings.compression) connectOptions["CLIENT_COMPRESS"] = true; // enable server-client compression
 
 		// get driver if necessary
-		if(!Database::Database::driver) {
-			this->errorMessage = "MySQL driver not loaded";
-			return false;
-		}
+		if(!Database::Database::driver) throw Database::Exception("MySQL driver not loaded");
 
 		// connect
 		this->connection.reset(this->driver->connect(connectOptions));
-		if(!(this->connection)) {
-			this->errorMessage = "Could not connect to database";
-			return false;
-		}
-		if(!(this->connection->isValid())) {
-			this->errorMessage = "Connection to database is invalid";
-			return false;
-		}
+		if(!(this->connection)) throw Database::Exception("Could not connect to database");
+		if(!(this->connection->isValid())) throw Database::Exception("Connection to database is invalid");
 
 		// run initializing session commands
 		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
-		if(!sqlStatement) {
-			this->errorMessage = "Could not create SQL statement";
-			return false;
-		}
+		if(!sqlStatement) throw Database::Exception("Could not create SQL statement");
 
 		// set lock timeout to 10min
 		sqlStatement->execute("SET SESSION innodb_lock_wait_timeout = 600");
@@ -128,50 +109,32 @@ bool Database::connect() {
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery("SHOW VARIABLES LIKE 'max_allowed_packet'"));
 		if(sqlResultSet && sqlResultSet->next()){
 			this->maxAllowedPacketSize = sqlResultSet->getUInt64("Value");
-			if(!(this->maxAllowedPacketSize)) {
-				this->errorMessage = "\'max_allowed_packet\' is zero";
-				success = false;
-			}
+			if(!(this->maxAllowedPacketSize)) throw Database::Exception("\'max_allowed_packet\' is zero");
 		}
-		else {
-			this->errorMessage = "Could not get \'max_allowed_packet\'";
-			success = false;
-		}
+		else throw Database::Exception("Could not get \'max_allowed_packet\'");
 	}
 	catch(sql::SQLException &e) {
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "connect() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-
-		return false;
+		throw Database::Exception(errorStrStr.str());
 	}
-
-	return success;
 }
 
 // run initializing SQL commands by processing all .sql files in the "sql" sub-folder
-bool Database::initializeSql() {
+void Database::initializeSql() {
 	// read 'sql' directory
 	std::vector<std::string> sqlFiles;
-	try {
-		sqlFiles = crawlservpp::Helper::FileSystem::listFilesInPath("sql", ".sql");
-	}
-	catch(std::exception& e) {
-		this->errorMessage = e.what();
-		return false;
-	}
+	sqlFiles = crawlservpp::Helper::FileSystem::listFilesInPath("sql", ".sql");
 
 	// execute all SQL files
-	for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i)
-		if(!(this->run(*i))) return false;
-	return true;
+	for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i) this->run(*i);
 }
 
 // prepare basic SQL statements (getting last id, logging, thread status and strlen)
-bool Database::prepare() {
+void Database::prepare() {
 	// check connection
-	if(!(this->checkConnection())) return false;
+	this->checkConnection();
 
 	// reserve memory for SQL statements
 	this->preparedStatements.reserve(5);
@@ -222,11 +185,8 @@ bool Database::prepare() {
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-		return false;
+		throw Database::Exception(errorStrStr.str());
 	}
-
-	return true;
 }
 
 /*
@@ -247,7 +207,7 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 	sql::PreparedStatement& sqlStatement = *(this->preparedStatements.at(this->psLog - 1).statement);
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// add entry to database
 	try {
@@ -272,7 +232,7 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 	unsigned long result = 0;
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// create SQL query string
 	std::string sqlQuery = "SELECT COUNT(*) FROM crawlserv_log";
@@ -302,7 +262,7 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 // remove the log entries of a specific module from the database (or all log entries if logModule is an empty string)
 void Database::clearLogs(const std::string& logModule) {
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// create SQL query string
 	std::string sqlQuery = "DELETE FROM crawlserv_log";
@@ -334,7 +294,7 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> Database::getThreads() {
 	std::vector<crawlservpp::Struct::ThreadDatabaseEntry> result;
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -382,7 +342,7 @@ unsigned long Database::addThread(const std::string& threadModule, const crawlse
 	if(!threadOptions.config) throw Database::Exception("addThread(): No configuration specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -417,7 +377,7 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 	if(!threadId) throw Database::Exception("getThreadRunTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -449,7 +409,7 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 	if(!threadId) throw Database::Exception("getThreadPauseTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -479,7 +439,7 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 	if(!threadId) throw Database::Exception("setThreadStatus(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadStatus)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
@@ -514,7 +474,7 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 	if(!threadId) throw Database::Exception("setThreadStatus(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadStatusMessage))
@@ -545,7 +505,7 @@ void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunT
 	if(!threadId) throw Database::Exception("setThreadRunTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -571,7 +531,7 @@ void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPa
 	if(!threadId) throw Database::Exception("setThreadPauseTime(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -597,7 +557,7 @@ void Database::deleteThread(unsigned long threadId) {
 	if(!threadId) throw Database::Exception("deleteThread(): No thread ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -637,7 +597,7 @@ unsigned long Database::addWebsite(const crawlservpp::Struct::WebsiteProperties&
 	if(this->isWebsiteNamespace(websiteProperties.nameSpace)) throw Database::Exception("Website namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for adding website
@@ -674,7 +634,7 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 	if(!websiteId) throw Database::Exception("getWebsiteDomain(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -706,7 +666,7 @@ std::string Database::getWebsiteNamespace(unsigned long int websiteId) {
 	if(!websiteId) throw Database::Exception("getWebsiteNamespace(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -738,7 +698,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromUrlList(u
 	if(!listId) throw Database::Exception("getWebsiteNamespaceFromUrlList(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -771,7 +731,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(un
 	if(!configId) throw Database::Exception("getWebsiteNamespaceFromConfig(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -804,7 +764,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromParsedTab
 	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -837,7 +797,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromExtracted
 	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromExtractedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -870,7 +830,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromAnalyzedT
 	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -903,7 +863,7 @@ bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 	if(nameSpace.empty()) throw Database::Exception("isWebsiteNamespace(): No namespace specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -985,7 +945,7 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 			throw Database::Exception("Website namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// check whether namespace has changed
@@ -1076,7 +1036,7 @@ void Database::deleteWebsite(unsigned long websiteId) {
 		}
 
 		// check connection
-		if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+		this->checkConnection();
 
 		// create SQL statement for deletion of website
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
@@ -1105,7 +1065,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 	if(!websiteId) throw Database::Exception("duplicateWebsite(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for geting website info
@@ -1209,7 +1169,7 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 		throw Database::Exception("URL list namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for adding URL list
@@ -1268,7 +1228,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getUrlLists(unsigne
 	if(!websiteId) throw Database::Exception("getUrlLists(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1304,7 +1264,7 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 	if(!listId) throw Database::Exception("getUrlListNamespace(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1336,7 +1296,7 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromParsedTab
 	if(!tableId) throw Database::Exception("getUrlListNamespaceFromParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1369,7 +1329,7 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromExtracted
 	if(!tableId) throw Database::Exception("getUrlListNamespaceFromExtractedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1402,7 +1362,7 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromAnalyzedT
 	if(!tableId) throw Database::Exception("getUrlListNamespaceFromAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1436,7 +1396,7 @@ bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& na
 	if(nameSpace.empty()) throw Database::Exception("isUrlListNamespace(): No namespace specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1478,7 +1438,7 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 			throw Database::Exception("URL list namespace already exists");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		if(listProperties.nameSpace != oldListNamespace) {
@@ -1572,7 +1532,7 @@ void Database::deleteUrlList(unsigned long listId) {
 			this->deleteParsedTable(taI->first);
 
 		// check connection
-		if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+		this->checkConnection();
 
 		// create SQL statement for deleting URL list
 		std::unique_ptr<sql::PreparedStatement> deleteStatement(this->connection->prepareStatement(
@@ -1699,7 +1659,7 @@ unsigned long Database::addQuery(unsigned long websiteId, const crawlservpp::Str
 	if(queryProperties.type.empty()) throw Database::Exception("addQuery(): No query type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for adding query
@@ -1738,7 +1698,7 @@ void Database::getQueryProperties(unsigned long queryId, crawlservpp::Struct::Qu
 	if(!queryId) throw Database::Exception("getQueryProperties(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1787,7 +1747,7 @@ void Database::updateQuery(unsigned long queryId, const crawlservpp::Struct::Que
 	if(queryProperties.type.empty()) throw Database::Exception("updateQuery(): No query type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for updating
@@ -1820,7 +1780,7 @@ void Database::deleteQuery(unsigned long queryId) {
 	if(!queryId) throw Database::Exception("deleteQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1850,7 +1810,7 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 	if(!queryId) throw Database::Exception("duplicateQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for getting query info
@@ -1896,7 +1856,7 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const crawlser
 	if(configProperties.config.empty()) throw Database::Exception("addConfiguration(): No configuration specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for adding configuration
@@ -1931,7 +1891,7 @@ const std::string Database::getConfiguration(unsigned long configId) {
 	if(!configId) throw Database::Exception("getConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -1963,7 +1923,7 @@ void Database::updateConfiguration(unsigned long configId, const crawlservpp::St
 	if(configProperties.config.empty()) throw Database::Exception("updateConfiguration(): No configuration specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for updating
@@ -1990,7 +1950,7 @@ void Database::deleteConfiguration(unsigned long configId) {
 	if(!configId) throw Database::Exception("deleteConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2020,7 +1980,7 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 	if(!configId) throw Database::Exception("duplicateConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for getting configuration info
@@ -2061,7 +2021,7 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 	if(tableName.empty()) throw Database::Exception("addParsedTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for checking for entry
@@ -2103,7 +2063,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getParsedTables(uns
 	if(!listId) throw Database::Exception("getParsedTables(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2139,7 +2099,7 @@ std::string Database::getParsedTable(unsigned long tableId) {
 	if(!tableId) throw Database::Exception("getParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2174,7 +2134,7 @@ void Database::deleteParsedTable(unsigned long tableId) {
 	if(!tableId) throw Database::Exception("deleteParsedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for deletion
@@ -2212,7 +2172,7 @@ void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 	if(tableName.empty()) throw Database::Exception("addExtractedTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for checking for entry
@@ -2254,7 +2214,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getExtractedTables(
 	if(!listId) throw Database::Exception("getExtractedTables(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2290,7 +2250,7 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 	if(!tableId) throw Database::Exception("getExtractedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2325,7 +2285,7 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 	std::string tableName = this->getExtractedTable(tableId);
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for deletion
@@ -2363,7 +2323,7 @@ void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 	if(tableName.empty()) throw Database::Exception("addAnalyzedTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for checking for entry
@@ -2405,7 +2365,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzedTables(u
 	if(!listId) throw Database::Exception("getAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2441,7 +2401,7 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 	if(!tableId) throw Database::Exception("getAnalyzedTable(): No table ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2476,7 +2436,7 @@ void Database::deleteAnalyzedTable(unsigned long tableId) {
 	std::string tableName = this->getParsedTable(tableId);
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement for deletion
@@ -2526,7 +2486,7 @@ bool Database::isWebsite(unsigned long websiteId) {
 	if(!websiteId) throw Database::Exception("isWebsite(): No website ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2558,7 +2518,7 @@ bool Database::isUrlList(unsigned long urlListId) {
 	if(!urlListId) throw Database::Exception("isUrlList(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2591,7 +2551,7 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 	if(!urlListId) throw Database::Exception("isUrlList(): No URL list ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2624,7 +2584,7 @@ bool Database::isQuery(unsigned long queryId) {
 	if(!queryId) throw Database::Exception("isQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2656,7 +2616,7 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 	if(!queryId) throw Database::Exception("isQuery(): No query ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2689,7 +2649,7 @@ bool Database::isConfiguration(unsigned long configId) {
 	if(!configId) throw Database::Exception("isConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2721,7 +2681,7 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 	if(!configId) throw Database::Exception("isConfiguration(): No configuration ID specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2757,7 +2717,7 @@ void Database::getCustomData(Data::GetValue& data) {
 	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("getCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2818,7 +2778,7 @@ void Database::getCustomData(Data::GetFields& data) {
 	data.values.reserve(data.columns.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2898,7 +2858,7 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 	data.values.reserve(data.columns_types.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -2969,7 +2929,7 @@ void Database::getCustomData(Data::GetColumn& data) {
 	data.values.clear();
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3038,7 +2998,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 	data.values.reserve(data.columns.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3120,7 +3080,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 	data.values.reserve(data.columns_types.size());
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3199,7 +3159,7 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("insertCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3278,7 +3238,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("insertCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL query
@@ -3391,7 +3351,7 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 	if(data.columns_types_values.empty()) throw Database::Exception("insertCustomData(): No columns specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL query
@@ -3482,7 +3442,7 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("updateCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3561,7 +3521,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 	if(data.type == crawlservpp::Main::Data::Type::_unknown) throw Database::Exception("updateCustomData(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL query
@@ -3672,7 +3632,7 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 	if(data.columns_types_values.empty()) throw Database::Exception("updateCustomData(): No columns specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL query
@@ -3768,33 +3728,28 @@ unsigned long Database::getMaxAllowedPacketSize() const {
  */
 
 // check whether the connection to the database is still valid and try to reconnect if necesssary (set error message on failure)
-bool Database::checkConnection() {
+void Database::checkConnection() {
 	// check driver
-	if(!(this->driver)) {
-		this->errorMessage = "MySQL driver not loaded";
-		return false;
-	}
+	if(!(this->driver)) throw Database::Exception("MySQL driver not loaded");
 
 	// check connection
-	if(!(this->connection)) {
-		this->errorMessage = "No connection to database";
-		return false;
-	}
+	if(!(this->connection)) throw Database::Exception("No connection to database");
 
 	try {
 		// check whether connection is valid
-		if(this->connection->isValid()) return true;
+		if(this->connection->isValid()) return;
 
-		// try to reconnect
+		// try to re-connect
 		if(!(this->connection->reconnect())) {
 			// simple reconnect failed: try to reset connection after sleeping over it for some time
 			this->connection.reset();
-			if(!(this->connect())) {
+
+			try {
+				this->connect();
+			}
+			catch(const Database::Exception& e) {
 				if(this->sleepOnError) std::this_thread::sleep_for(std::chrono::seconds(this->sleepOnError));
-				if(!(this->connect())) {
-					this->errorMessage = "Could not re-connect to mySQL database after connection loss";
-					return false;
-				}
+				this->connect();
 			}
 		}
 
@@ -3806,11 +3761,8 @@ bool Database::checkConnection() {
 		// SQL error while recovering prepared statements
 		std::ostringstream errorStrStr;
 		errorStrStr << "checkConnection() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-		return false;
+		throw Database::Exception(errorStrStr.str());
 	}
-
-	return true;
 }
 
 // get the last inserted ID from the database
@@ -3822,7 +3774,7 @@ unsigned long Database::getLastInsertedId() {
 	sql::PreparedStatement& sqlStatement = *(this->preparedStatements.at(this->psLastId - 1).statement);
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// execute SQL statement
@@ -3847,7 +3799,7 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 	if(tableName.empty()) throw Database::Exception("resetAutoIncrement(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3873,7 +3825,7 @@ void Database::lockTable(const std::string& tableName) {
 	if(this->tablesLocked) this->unlockTables();
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3901,7 +3853,7 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 	if(this->tablesLocked) this->unlockTables();
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3923,7 +3875,7 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 // unlock tables in the database
 void Database::unlockTables() {
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3949,7 +3901,7 @@ bool Database::isTableEmpty(const std::string& tableName) {
 	if(tableName.empty()) throw Database::Exception("isTableEmpty(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -3980,7 +3932,7 @@ bool Database::isTableExists(const std::string& tableName) {
 	if(tableName.empty()) throw Database::Exception("isTableExists(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create and execute SQL statement
@@ -4013,7 +3965,7 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 	if(columnName.empty()) throw Database::Exception("isColumnExists(): No column name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create and execute SQL statement
@@ -4045,7 +3997,7 @@ void Database::createTable(const std::string& tableName, const std::vector<Colum
 	if(columns.empty()) throw Database::Exception("addTable(): No columns specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL query
@@ -4090,7 +4042,7 @@ void Database::addColumn(const std::string& tableName, const Column& column) {
 	if(column._type.empty()) throw Database::Exception("addColumn(): No column type specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL query
@@ -4124,7 +4076,7 @@ void Database::compressTable(const std::string& tableName) {
 	if(tableName.empty()) throw Database::Exception("compressTable(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -4156,7 +4108,7 @@ void Database::deleteTableIfExists(const std::string& tableName) {
 	if(tableName.empty()) throw Database::Exception("deleteTableIfExists(): No table name specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement
@@ -4178,7 +4130,7 @@ void Database::deleteTableIfExists(const std::string& tableName) {
  */
 
 // run file with SQL commands
-bool Database::run(const std::string& sqlFile) {
+void Database::run(const std::string& sqlFile) {
 	// check argument
 	if(sqlFile.empty()) throw Database::Exception("run(): No SQL file specified");
 
@@ -4187,16 +4139,13 @@ bool Database::run(const std::string& sqlFile) {
 
 	if(initSQLFile.is_open()) {
 		// check connection
-		if(!(this->checkConnection())) return false;
+		this->checkConnection();
 
 		// create SQL statement
 		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
 		std::string line;
 
-		if(!sqlStatement) {
-			this->errorMessage = "Could not create SQL statement";
-			return false;
-		}
+		if(!sqlStatement) throw Database::Exception("Could not create SQL statement");
 
 		// execute lines in SQL file
 		unsigned long lineCounter = 1;
@@ -4210,20 +4159,14 @@ bool Database::run(const std::string& sqlFile) {
 				std::ostringstream errorStrStr;
 				errorStrStr << "run() SQL Error #" << e.getErrorCode() << " on line #" << lineCounter
 						<< " (State " << e.getSQLState() << "): " << e.what();
-				this->errorMessage = errorStrStr.str();
-				return false;
+				throw Database::Exception(errorStrStr.str());
 			}
 		}
 
 		// close SQL file
 		initSQLFile.close();
 	}
-	else {
-		this->errorMessage = "Could not open \'" + sqlFile + "\' for reading";
-		return false;
-	}
-
-	return true;
+	else throw Database::Exception("Could not open \'" + sqlFile + "\' for reading");
 }
 
 // execute a SQL query
@@ -4232,7 +4175,7 @@ void Database::execute(const std::string& sqlQuery) {
 	if(sqlQuery.empty()) throw Database::Exception("execute(): No SQL query specified");
 
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// create SQL statement

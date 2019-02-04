@@ -34,9 +34,6 @@ namespace crawlservpp::Module {
 		DBWrapper(DBThread& dbRef);
 		virtual ~DBWrapper() = 0;
 
-		// getter
-		const std::string& getModuleErrorMessage() const;
-
 		// wrapper for setter
 		void setSleepOnError(unsigned long seconds);
 
@@ -83,11 +80,7 @@ namespace crawlservpp::Module {
 		// reference to the database connection by the thread
 		DBThread& database;
 
-		// module error message
-		std::string errorMessage;
-
 		// wrapper for getters
-		const std::string& getDatabaseErrorMessage() const;
 		unsigned long getMaxAllowedPacketSize() const;
 
 		// wrappers for managing prepared SQL statements
@@ -96,7 +89,7 @@ namespace crawlservpp::Module {
 		sql::PreparedStatement& getPreparedStatement(unsigned short sqlStatementId);
 
 		// wrappers for database helper functions
-		bool checkConnection();
+		void checkConnection();
 		unsigned long getLastInsertedId();
 		void lockTable(const std::string& tableName);
 		void lockTables(const std::string& tableName1, const std::string tableName2);

@@ -87,20 +87,12 @@ void Database::setTargetFields(const std::vector<std::string>& fields, const std
 
 // create target table if it does not exists or add field columns if they do not exist
 // 	NOTE: Needs to be called by algorithm class in order to get the required field names!
-bool Database::initTargetTable(bool compressed) {
+//  throws crawlservpp::Main::Database::Exception
+void Database::initTargetTable(bool compressed) {
 	// check options
-	if(this->websiteName.empty()) {
-		if(this->logging) this->log("analyzer", "[#" + this->idString + "] ERROR: No website specified.");
-		return false;
-	}
-	if(this->urlListName.empty()) {
-		if(this->logging) this->log("analyzer", "[#" + this->idString + "] ERROR: No URL list specified.");
-		return false;
-	}
-	if(this->targetTableName.empty()) {
-		if(this->logging) this->log("analyzer", "[#" + this->idString + "] ERROR: Name of result table is empty.");
-		return false;
-	}
+	if(this->websiteName.empty()) throw DatabaseException("No website specified");
+	if(this->urlListName.empty()) throw DatabaseException("No URL list specified");
+	if(this->targetTableName.empty()) throw DatabaseException("Name of result table is empty");
 
 	bool emptyFields = true;
 	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
@@ -109,11 +101,7 @@ bool Database::initTargetTable(bool compressed) {
 			break;
 		}
 	}
-
-	if(emptyFields) {
-		if(this->logging) this->log("analyzer", "[#" + this->idString + "] ERROR: No target fields specified (only empty strings).");
-		return false;
-	}
+	if(emptyFields) throw DatabaseException("No target fields specified (only empty strings)");
 
 	// create target table name
 	this->targetTableFull = "crawlserv_" + this->websiteName + "_" + this->urlListName + "_analyzed_" + this->targetTableName;
@@ -124,11 +112,7 @@ bool Database::initTargetTable(bool compressed) {
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
 			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "analyzed__" + *i))) {
 				TableColumn column("analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin()));
-				if(column._type.empty()) {
-					if(this->logging)
-						this->log("analyzer", "[#" + this->idString + "] ERROR: No type for target field \'" + *i + "\' specified.");
-					return false;
-				}
+				if(column._type.empty()) throw DatabaseException("No type for target field \'" + *i + "\' specified");
 				this->addColumn(this->targetTableFull, column);
 			}
 		}
@@ -140,30 +124,21 @@ bool Database::initTargetTable(bool compressed) {
 		columns.reserve(targetFieldNames.size());
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
 			columns.push_back(TableColumn("analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin())));
-			if(columns.back()._type.empty()) {
-				if(this->logging)
-					this->log("analyzer", "[#" + this->idString + "] ERROR: No type for target field \'" + *i + "\' specified.");
-				return false;
-			}
+			if(columns.back()._type.empty()) throw DatabaseException("No type for target field \'" + *i + "\' specified");
 		}
 
 		// add target table to index
 		this->addAnalyzedTable(this->website, this->urlList, this->targetTableName);
 	}
-
-	return true;
 }
 
-// prepare SQL statements for analyzer
-bool Database::prepare() {
+// prepare SQL statements for analyzer, throws crawlservpp::Main::Database::Exception
+void Database::prepare() {
 	// create table prefix
 	this->tablePrefix = "crawlserv_" + this->websiteName + "_" + this->urlListName + "_";
 
 	// check connection to database
-	if(!(this->checkConnection())) {
-		this->errorMessage = this->getDatabaseErrorMessage();
-		return false;
-	}
+	this->checkConnection();
 
 	// reserve memory
 	this->reservePreparedStatements(7);
@@ -213,20 +188,14 @@ bool Database::prepare() {
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-		return false;
+		throw DatabaseException(errorStrStr.str());
 	}
-
-	return true;
 }
 
-// prepare SQL statements for algorithm
-bool Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo) {
+// prepare SQL statements for algorithm, throws crawlservpp::Main::Database::Exception
+void Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo) {
 	// check connection to database
-	if(!(this->checkConnection())) {
-		this->errorMessage = this->getDatabaseErrorMessage();
-		return false;
-	}
+	this->checkConnection();
 
 	// reserve memory
 	this->reservePreparedStatements(statements.size());
@@ -245,11 +214,8 @@ bool Database::prepareAlgo(const std::vector<std::string>& statements, std::vect
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "prepareAlgo() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-		return false;
+		throw DatabaseException(errorStrStr.str());
 	}
-
-	return true;
 }
 
 // get prepared SQL statement for algorithm (wraps protected parent member function to the public)
@@ -283,7 +249,7 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetCorpus);
 
 		// check connection
-		if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+		this->checkConnection();
 
 		try {
 			// execute SQL query for getting the corpus
@@ -384,7 +350,7 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 	sql::PreparedStatement& tableStatement = this->getPreparedStatement(sourceStatement);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	try {
 		// execute SQL query for getting the update time of the source table
@@ -466,7 +432,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 	}
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// start timing and write log entry
 	crawlservpp::Timer::Simple timer;

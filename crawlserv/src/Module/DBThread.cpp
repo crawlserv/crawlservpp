@@ -30,12 +30,12 @@ DBThread::~DBThread() {
 }
 
 // prepare SQL statements for thread management
-bool DBThread::prepare() {
+void DBThread::prepare() {
 	// prepare basic functions
 	this->Database::prepare();
 
 	// check connection
-	if(!(this->checkConnection())) return false;
+	this->checkConnection();
 
 	// reserve memory
 	this->preparedStatements.reserve(3);
@@ -69,17 +69,14 @@ bool DBThread::prepare() {
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-		return false;
+		throw Database::Exception(errorStrStr.str());
 	}
-
-	return true;
 }
 
 // set the status message of a thread (and add the pause state)
 void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadStatusMessage))
@@ -112,7 +109,7 @@ void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 // set the progress of a thread to between 0 for 0% and 1 for 100% in database
 void DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadProgress))
@@ -136,7 +133,7 @@ void DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
 // set last id of thread in database
 void DBThread::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 	// check connection
-	if(!(this->checkConnection())) throw Database::Exception(this->errorMessage);
+	this->checkConnection();
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadLast)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadLast(...)");

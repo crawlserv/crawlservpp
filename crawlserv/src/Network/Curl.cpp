@@ -17,8 +17,6 @@ bool Curl::globalInit = false;
 
 // constructor
 Curl::Curl() {
-	bool error = false;
-
 	// set default values
 	this->dnsResolves = NULL;
 	this->headers = NULL;
@@ -39,31 +37,18 @@ Curl::Curl() {
 
 	// initialize cURL
 	this->curl = curl_easy_init();
-	if(!(this->curl)) throw std::runtime_error("Could not initialize cURL");
+	if(!(this->curl)) throw Curl::Exception("Could not initialize cURL");
 
 	// configure cURL (global defaults)
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
-	if(this->curlCode != CURLE_OK) error = true;
-	else {
-		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Curl::writer);
-		if(this->curlCode != CURLE_OK) error = true;
-		else {
-			// set pointer to instance
-			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
-			if(this->curlCode != CURLE_OK) error = true;
-		}
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
-	// error handling
-	if(error) {
-		if(this->curl) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			curl_easy_cleanup(this->curl);
-			this->curl = NULL;
-		}
-		curl_global_cleanup();
-		throw std::runtime_error("Could not configure cURL");
-	}
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Curl::writer);
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+	// set pointer to instance
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 }
 
 // destructor
@@ -101,82 +86,54 @@ Curl::~Curl() {
 }
 
 // set global network options from crawling configuration
-// if limited is set, cookie settings, custom headers, HTTP version and error responses will be ignored
-bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo) {
-	if(!(this->curl)) {
-		this->errorMessage = "cURL not initialized";
-		return false;
-	}
+//  NOTE: if limited is set, cookie settings, custom headers, HTTP version and error responses will be ignored
+//  throws Curl::Exception
+void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo) {
+	if(!(this->curl)) throw Curl::Exception("cURL not initialized");
 
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAXCONNECTS, (long) globalConfig.connectionsMax);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_IGNORE_CONTENT_LENGTH, globalConfig.contentLengthIgnore ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	if(globalConfig.cookies && !limited) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIEFILE, globalConfig.cookiesLoad.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 		if(globalConfig.cookiesSave.c_str()) {
 			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIEJAR, globalConfig.cookiesSave.c_str());
-			if(this->curlCode != CURLE_OK) {
-				this->errorMessage = curl_easy_strerror(this->curlCode);
-				return false;
-			}
+			if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 		}
 	}
 	if(!globalConfig.cookiesSession && !limited) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIESESSION, 1L);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.cookiesSet.empty() && !limited) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_COOKIE, globalConfig.cookiesSet.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_CACHE_TIMEOUT, globalConfig.dnsCacheTimeOut);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	if(!globalConfig.dnsDoH.empty()) {
 #if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 62)
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DOH_URL, globalConfig.dnsDoH.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 #else
 		if(warningsTo) warningsTo->push_back("DNS-over-HTTPS currently not supported, \'network.dns.doh\' ignored.");
 #endif
 	}
 	if(!globalConfig.dnsInterface.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_INTERFACE, globalConfig.dnsInterface.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.dnsResolves.empty()) {
 		for(auto i = globalConfig.dnsResolves.begin(); i != globalConfig.dnsResolves.end(); ++i)
 			this->dnsResolves = curl_slist_append(this->dnsResolves, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_RESOLVE, this->dnsResolves);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.dnsServers.empty()) {
 		std::string serverList;
@@ -184,27 +141,18 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			serverList += *i + ",";
 		serverList.pop_back();
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_SERVERS, serverList.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 #if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 60)
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_DNS_SHUFFLE_ADDRESSES, globalConfig.dnsShuffle ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 #else
 	if(globalConfig.dnsShuffle && warningsTo)
 		warningsTo->push_back("DNS shuffling currently not supported, \'network.dns.shuffle\' ignored.");
 #endif
 	if(globalConfig.encodingBr && globalConfig.encodingDeflate && globalConfig.encodingGZip && globalConfig.encodingIdentity) {
 		this->curlCode = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "");
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	else if(globalConfig.encodingBr || globalConfig.encodingDeflate || globalConfig.encodingGZip || globalConfig.encodingIdentity) {
 		std::string encodingList;
@@ -214,35 +162,23 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 		if(globalConfig.encodingIdentity) encodingList += "identity,";
 		encodingList.pop_back();
 		this->curlCode = curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, encodingList.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(globalConfig.encodingTransfer) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TRANSFER_ENCODING, globalConfig.encodingTransfer ? 1L : 0L);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.headers.empty() && !limited) {
 		for(auto i = globalConfig.headers.begin(); i != globalConfig.headers.end(); ++i)
 			this->headers = curl_slist_append(this->headers, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTPHEADER, this->dnsResolves);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.http200Aliases.empty() && !limited) {
 		for(auto i = globalConfig.http200Aliases.begin(); i != globalConfig.http200Aliases.end(); ++i)
 			this->http200Aliases = curl_slist_append(this->http200Aliases, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTP200ALIASES, this->http200Aliases);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!limited) {
 		switch(globalConfig.httpVersion) {
@@ -271,84 +207,51 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 	}
 	if(!globalConfig.localInterface.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_INTERFACE, globalConfig.localInterface.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOCALPORT, (long) globalConfig.localPort);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOCALPORTRANGE, (long) globalConfig.localPortRange);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	if(!globalConfig.proxy.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY, globalConfig.proxy.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.proxyAuth.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXYUSERPWD , globalConfig.proxyAuth.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.proxyHeaders.empty()) {
 		for(auto i = globalConfig.proxyHeaders.begin(); i != globalConfig.proxyHeaders.end(); ++i)
 			this->headers = curl_slist_append(this->proxyHeaders, i->c_str());
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXYHEADER, this->proxyHeaders);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.proxyPre.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PRE_PROXY, globalConfig.proxyPre.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.proxyTlsSrpPassword.empty() || !globalConfig.proxyTlsSrpUser.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_TLSAUTH_USERNAME, globalConfig.proxyTlsSrpUser.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_TLSAUTH_PASSWORD, globalConfig.proxyTlsSrpPassword.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HTTPPROXYTUNNEL, globalConfig.proxyTunnelling ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_FOLLOWLOCATION, globalConfig.redirect ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAXREDIRS , (long) globalConfig.redirectMax);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	if(globalConfig.redirectPost301 && globalConfig.redirectPost302 && globalConfig.redirectPost303) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	else {
 		long redirectPost = 0;
@@ -356,155 +259,96 @@ bool Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 		if(globalConfig.redirectPost302) redirectPost |= CURL_REDIR_POST_302;
 		if(globalConfig.redirectPost303) redirectPost |= CURL_REDIR_POST_303;
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_POSTREDIR, redirectPost);
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.referer.empty() && !limited) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_REFERER, globalConfig.referer.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_AUTOREFERER, globalConfig.refererAutomatic ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAX_RECV_SPEED_LARGE, (long) globalConfig.speedDownLimit);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOW_SPEED_LIMIT, (long) globalConfig.speedLowLimit);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_LOW_SPEED_TIME, (long) globalConfig.speedLowTime);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_MAX_SEND_SPEED_LARGE, (long) globalConfig.speedUpLimit);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYHOST, globalConfig.sslVerifyHost ? 2L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYPEER, globalConfig.sslVerifyPeer ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_SSL_VERIFYHOST, globalConfig.sslVerifyProxyHost ? 2L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_PROXY_SSL_VERIFYPEER, globalConfig.sslVerifyProxyPeer ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_SSL_VERIFYSTATUS, globalConfig.sslVerifyStatus ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_FASTOPEN, globalConfig.tcpFastOpen ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPALIVE, globalConfig.tcpKeepAlive ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPIDLE, (long) globalConfig.tcpKeepAliveIdle);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_KEEPINTVL, (long) globalConfig.tcpKeepAliveInterval);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TCP_NODELAY, globalConfig.tcpNagle ? 0L : 1L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_CONNECTTIMEOUT, (long) globalConfig.timeOut);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 #if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 59)
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS, (long) globalConfig.timeOutHappyEyeballs);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 #else
 	if(globalConfig.timeOutHappyEyeballs && warningsTo) warningsTo->push_back("Happy Eyeballs globalConfiguration currently not supported,"
 			" \'network.timeout.happyeyeballs\' ignored.");
 #endif
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TIMEOUT, (long) globalConfig.timeOutRequest);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	if(!globalConfig.tlsSrpPassword.empty() || !globalConfig.tlsSrpUser.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TLSAUTH_USERNAME, globalConfig.tlsSrpUser.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_TLSAUTH_PASSWORD, globalConfig.tlsSrpPassword.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	if(!globalConfig.userAgent.empty()) {
 		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_USERAGENT, globalConfig.userAgent.c_str());
-		if(this->curlCode != CURLE_OK) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			return false;
-		}
+		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_VERBOSE, globalConfig.verbose ? 1L : 0L);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 	// save configuration
 	this->config = &globalConfig;
 	this->limitedSettings = limited;
-
-	return true;
 }
 
 // set current network options from crawling configuration
-bool Curl::setConfigCurrent(const Config& currentConfig) {
+void Curl::setConfigCurrent(const Config& currentConfig) {
 	//TODO (e.g. overwrite cookies)
-	return true;
 }
 
 // get remote content
-bool Curl::getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors) {
+void Curl::getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors) {
 	std::string encodedUrl = this->escapeUrl(url);
 	char errorBuffer[CURL_ERROR_SIZE];
 	this->content.clear();
@@ -513,44 +357,27 @@ bool Curl::getContent(const std::string& url, std::string& contentTo, const std:
 
 	// set URL
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_URL, encodedUrl.c_str());
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 	// set error buffer
 	errorBuffer[0] = 0;
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_ERRORBUFFER, errorBuffer);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 	// perform request
 	try {
 		this->curlCode = curl_easy_perform(this->curl);
 	}
 	catch(const std::exception& e) {
-		this->errorMessage = e.what();
-		return false;
+		throw Curl::Exception(e.what());
 	}
-	if(this->curlCode != CURLE_OK) {
-		if(errorBuffer[0] != 0) this->errorMessage = errorBuffer;
-		else this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 	// get response code
 	long responseCodeL = 0;
 	this->curlCode = curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCodeL);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
-	else if(responseCodeL < 0 || responseCodeL > UINT_MAX) {
-		this->errorMessage = "Invalid HTTP response code";
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+	else if(responseCodeL < 0 || responseCodeL > UINT_MAX) throw Curl::Exception("Invalid HTTP response code");
 	this->responseCode = (unsigned int) responseCodeL;
 
 	// check response code
@@ -558,18 +385,15 @@ bool Curl::getContent(const std::string& url, std::string& contentTo, const std:
 		if(this->responseCode == *i) {
 			std::ostringstream errStrStr;
 			errStrStr << "HTTP error " << this->responseCode << " from " << url;
-			this->errorMessage = errStrStr.str();
-			return false;
+			throw Curl::Exception(errStrStr.str());
 		}
 	}
 
 	// get content type
 	char * cString = NULL;
 	this->curlCode = curl_easy_getinfo(this->curl, CURLINFO_CONTENT_TYPE, &cString);
-	if(this->curlCode != CURLE_OK) {
-		this->errorMessage = curl_easy_strerror(this->curlCode);
-		return false;
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
 	if(cString) this->contentType = cString;
 	else this->contentType = "";
 
@@ -581,7 +405,6 @@ bool Curl::getContent(const std::string& url, std::string& contentTo, const std:
 	if(crawlservpp::Helper::Utf8::repairUtf8(this->content, repairedContent)) this->content.swap(repairedContent);
 
 	contentTo.swap(this->content);
-	return true;
 }
 
 // get last response code
@@ -630,27 +453,14 @@ void Curl::resetConnection(unsigned long sleep) {
 	// configure cURL (global defaults)
 	bool error = false;
 	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_NOSIGNAL, 1L);
-	if(this->curlCode != CURLE_OK) error = true;
-	else {
-		this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Curl::writer);
-		if(this->curlCode != CURLE_OK) error = true;
-		else {
-			// set pointer to instance
-			this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
-			if(this->curlCode != CURLE_OK) error = true;
-		}
-	}
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
-	// error handling
-	if(error) {
-		if(this->curl) {
-			this->errorMessage = curl_easy_strerror(this->curlCode);
-			curl_easy_cleanup(this->curl);
-			this->curl = NULL;
-		}
-		curl_global_cleanup();
-		throw std::runtime_error("Could not configure cURL");
-	}
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, Curl::writer);
+	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+	// set pointer to instance
+	this->curlCode = curl_easy_setopt(this->curl, CURLOPT_WRITEDATA, this);
+	if(this->curlCode != CURLE_OK) error = true;
 
 	// set configuration
 	if(this->config) this->setConfigGlobal(*(this->config), this->limitedSettings, NULL);
@@ -659,11 +469,6 @@ void Curl::resetConnection(unsigned long sleep) {
 // get last cURL code
 CURLcode Curl::getCurlCode() const {
 	return this->curlCode;
-}
-
-// get error message
-const std::string& Curl::getErrorMessage() const {
-	return this->errorMessage;
 }
 
 // escape a string

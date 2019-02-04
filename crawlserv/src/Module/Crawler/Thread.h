@@ -44,6 +44,7 @@ namespace crawlservpp::Module::Crawler {
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
 		// for convenience
 		typedef crawlservpp::Query::Container::QueryStruct QueryStruct;
+		typedef crawlservpp::Network::Curl::Exception CurlException;
 
 	public:
 		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
@@ -57,8 +58,8 @@ namespace crawlservpp::Module::Crawler {
 		crawlservpp::Network::Curl networking;
 
 		// implemented thread functions
-		bool onInit(bool resumed) override;
-		bool onTick() override;
+		void onInit(bool resumed) override;
+		void onTick() override;
 		void onPause() override;
 		void onUnpause() override;
 		void onClear(bool interrupted) override;

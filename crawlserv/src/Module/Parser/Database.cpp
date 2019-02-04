@@ -137,12 +137,9 @@ void Database::initTargetTable() {
 }
 
 // prepare SQL statements for parser
-bool Database::prepare() {
+void Database::prepare() {
 	// check connection to database
-	if(!(this->checkConnection())) {
-		this->errorMessage = this->getDatabaseErrorMessage();
-		return false;
-	}
+	this->checkConnection();
 
 	// reserve memory
 	this->reservePreparedStatements(16);
@@ -260,11 +257,8 @@ bool Database::prepare() {
 		// set error message
 		std::ostringstream errorStrStr;
 		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		this->errorMessage = errorStrStr.str();
-		return false;
+		throw DatabaseException(errorStrStr.str());
 	}
-
-	return true;
 }
 
 // lock URL list
@@ -286,7 +280,7 @@ bool Database::isUrlParsed(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsUrlParsed);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get next URL from database
 	try {
@@ -316,7 +310,7 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetNextUrl);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get next URL from database
 	try {
@@ -349,7 +343,7 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetUrlPosition);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get URL position of URL from database
 	try {
@@ -379,7 +373,7 @@ unsigned long Database::getNumberOfUrls() {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetNumberOfUrls);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get number of URLs from database
 	try {
@@ -408,7 +402,7 @@ bool Database::isUrlLockable(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsUrlLockable);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// check URL lock in database
 	try {
@@ -438,7 +432,7 @@ std::string Database::getUrlLock(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetUrlLock);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get URL lock from database
 	try {
@@ -468,7 +462,7 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psCheckUrlLock);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// check URL lock in database
 	try {
@@ -497,7 +491,7 @@ std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psLockUrl);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// lock URL in database
 	try {
@@ -523,7 +517,7 @@ void Database::unLockUrl(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUnLockUrl);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// unlock URL in database
 	try {
@@ -549,7 +543,7 @@ unsigned long Database::getContentIdFromParsedId(const std::string& parsedId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetContentIdFromParsedId);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// check URL lock in database
 	try {
@@ -582,7 +576,7 @@ bool Database::getLatestContent(unsigned long urlId, unsigned long index,
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetLatestContent);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get URL lock from database
 	try {
@@ -622,7 +616,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAllContents(unsi
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetAllContents);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get URL lock from database
 	try {
@@ -703,7 +697,7 @@ void Database::setUrlFinished(unsigned long urlId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetUrlFinished);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get ID of URL from database
 	try {
@@ -728,7 +722,7 @@ unsigned long Database::getEntryId(unsigned long contentId) {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetEntryId);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get URL lock from database
 	try {
@@ -757,7 +751,7 @@ void Database::updateEntry(unsigned long entryId, const std::string& parsedId,
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUpdateEntry);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get ID of URL from database
 	try {
@@ -795,7 +789,7 @@ void Database::addEntry(unsigned long contentId, const std::string& parsedId, co
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psAddEntry);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get ID of URL from database
 	try {
@@ -833,7 +827,7 @@ void Database::updateParsedTable() {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
 
 	// check connection
-	if(!(this->checkConnection())) throw DatabaseException(this->errorMessage);
+	this->checkConnection();
 
 	// get ID of URL from database
 	try {

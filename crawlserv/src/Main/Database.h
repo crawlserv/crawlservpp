@@ -58,17 +58,16 @@ namespace crawlservpp::Main {
 		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings);
 		virtual ~Database();
 
-		// setters
+		// setter
 		void setSleepOnError(unsigned long seconds);
 
-		// getters
+		// getter
 		const crawlservpp::Struct::DatabaseSettings& getSettings() const;
-		const std::string& getErrorMessage() const;
 
 		// initializing functions
-		bool connect();
-		bool initializeSql();
-		bool prepare();
+		void connect();
+		void initializeSql();
+		void prepare();
 
 		// logging functions
 		void log(const std::string& logModule, const std::string& logEntry);
@@ -205,7 +204,6 @@ namespace crawlservpp::Main {
 
 		// shared connection information
 		std::unique_ptr<sql::Connection> connection;
-		std::string errorMessage;
 		static sql::Driver * driver;
 		bool tablesLocked;
 
@@ -216,7 +214,7 @@ namespace crawlservpp::Main {
 		unsigned long getMaxAllowedPacketSize() const;
 
 		// database helper functions
-		bool checkConnection();
+		void checkConnection();
 		unsigned long getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const std::string& tableName);
@@ -237,7 +235,7 @@ namespace crawlservpp::Main {
 		unsigned long sleepOnError;
 
 		// internal helper function
-		bool run(const std::string& sqlFile);
+		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
 
 		// IDs of prepared SQL statements

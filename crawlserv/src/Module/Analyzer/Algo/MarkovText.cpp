@@ -40,25 +40,13 @@ MarkovText::MarkovText(crawlservpp::Main::Database& dbBase,
 // destructor stub
 MarkovText::~MarkovText() {}
 
-// initialize algorithm run
-bool MarkovText::onAlgoInit(bool resumed) {
+// initialize algorithm run, throws std::runtime_error
+void MarkovText::onAlgoInit(bool resumed) {
 	// check options
-	if(this->config.generalInputFields.empty()) {
-		if(this->config.generalLogging) this->log("ERROR: No input sources provided.");
-		return false;
-	}
-	if(this->config.generalResultTable.empty()) {
-		if(this->config.generalLogging) this->log("ERROR: No result table specified.");
-		return false;
-	}
-	if(!(this->config.markovTextDimension)) {
-		if(this->config.generalLogging) this->log("ERROR: Markov chain dimension is zero.");
-		return false;
-	}
-	if(!(this->config.markovTextLength)) {
-		if(this->config.generalLogging) this->log("ERROR: Result text length is zero.");
-		return false;
-	}
+	if(this->config.generalInputFields.empty()) throw std::runtime_error("No input sources provided");
+	if(this->config.generalResultTable.empty()) throw std::runtime_error("No result table specified");
+	if(!(this->config.markovTextDimension)) throw std::runtime_error("Markov chain dimension is zero");
+	if(!(this->config.markovTextLength)) throw std::runtime_error("Result text length is zero");
 
 	// initialize random number generator
 	srand(unsigned(time(NULL)));
@@ -75,7 +63,7 @@ bool MarkovText::onAlgoInit(bool resumed) {
 
 	// initialize target table
 	this->setStatusMessage("Creating result table...");
-	if(!(this->database.initTargetTable(true))) return false;
+	this->database.initTargetTable(true);
 
 	// get text corpus
 	this->setStatusMessage("Getting text corpus...");
@@ -108,15 +96,14 @@ bool MarkovText::onAlgoInit(bool resumed) {
 
 		this->setStatusMessage("Generating texts...");
 	}
-	return true;
 }
 
 // algorithm tick
-bool MarkovText::onAlgoTick() {
+void MarkovText::onAlgoTick() {
 	// check number of texts (internally saved as "last") if necessary
 	if(this->config.markovTextMax && this->getLast() >= this->config.markovTextMax) {
 		this->finished();
-		return true;
+		return;
 	}
 
 	// generate text
@@ -150,8 +137,6 @@ bool MarkovText::onAlgoTick() {
 	if(this->config.markovTextSleep) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.markovTextSleep));
 	}
-
-	return true;
 }
 
 // pause algorithm run

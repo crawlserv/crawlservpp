@@ -35,20 +35,33 @@ namespace crawlservpp::Network {
 		Curl();
 		virtual ~Curl();
 
-		bool setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo);
-		bool setConfigCurrent(const Config& currentConfig);
+		// setters
+		void setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo);
+		void setConfigCurrent(const Config& currentConfig);
 
-		bool getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors);
+		// getters
+		void getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors);
 		unsigned int getResponseCode() const;
 		std::string getContentType() const;
+		CURLcode getCurlCode() const;
+
+		// resetter
 		void resetConnection(unsigned long sleep);
 
-		CURLcode getCurlCode() const;
-		const std::string& getErrorMessage() const;
-
+		// URL escaping
 		std::string escape(const std::string& stringToEscape, bool usePlusForSpace);
 		std::string unescape(const std::string& escapedString, bool usePlusForSpace);
 		std::string escapeUrl(const std::string& urlToEscape);
+
+		// sub-class for cURL exceptions
+		class Exception : public std::exception {
+		public:
+			Exception(const std::string& description) { this->_description = description; }
+			const char * what() const throw() { return this->_description.c_str(); }
+			const std::string& whatStr() const throw() { return this->_description; }
+		private:
+			std::string _description;
+		};
 
 	private:
 		CURL * curl;
@@ -62,7 +75,6 @@ namespace crawlservpp::Network {
 		static int writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer);
 		int writerInClass(char * data, unsigned long size, unsigned long nmemb);
 
-		std::string errorMessage;
 		static bool globalInit;
 		bool localInit;
 

@@ -29,9 +29,9 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	}
 
 	// connect to database and initialize it
-	if(!(this->database.connect())) throw std::runtime_error(this->database.getErrorMessage());
-	if(!(this->database.initializeSql())) throw std::runtime_error(this->database.getErrorMessage());
-	if(!(this->database.prepare())) throw std::runtime_error(this->database.getErrorMessage());
+	this->database.connect();
+	this->database.initializeSql();
+	this->database.prepare();
 
 	// set callbacks (suppressing wrong error messages by Eclipse IDE)
 	this->webServer.setAcceptCallback( // @suppress("Invalid arguments")

@@ -17,27 +17,18 @@ Config::Config() {}
 // destructor stub
 Config::~Config() {}
 
-// get error message
-const std::string& Config::getErrorMessage() const {
-	return this->errorMessage;
-}
-
 // load configuration
-bool Config::loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo) {
+void Config::loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo) {
 	// parse JSON
 	rapidjson::Document json;
-	if(json.Parse(configJson.c_str()).HasParseError()) {
-		this->errorMessage = "Could not parse configuration JSON.";
-		return false;
-	}
-	if(!json.IsArray()) {
-		this->errorMessage = "Invalid configuration JSON (is no array).";
-		return false;
-	}
+	if(json.Parse(configJson.c_str()).HasParseError())
+		throw std::runtime_error("Could not parse configuration JSON.");
+
+	if(!json.IsArray())
+		throw std::runtime_error("Invalid configuration JSON (is no array).");
 
 	// load module-specific configuration
 	this->loadModule(json, warningsTo);
-	return true;
 }
 
 }

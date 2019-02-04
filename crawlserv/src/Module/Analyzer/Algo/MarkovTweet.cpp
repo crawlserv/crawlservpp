@@ -43,25 +43,13 @@ MarkovTweet::MarkovTweet(crawlservpp::Main::Database& dbBase,
 // destructor stub
 MarkovTweet::~MarkovTweet() {}
 
-// initialize algorithm run
-bool MarkovTweet::onAlgoInit(bool resumed) {
+// initialize algorithm run, throws std::runtime_error
+void MarkovTweet::onAlgoInit(bool resumed) {
 	// check options
-	if(this->config.generalInputFields.empty()) {
-		if(this->config.generalLogging) this->log("ERROR: No input sources provided.");
-		return false;
-	}
-	if(this->config.generalResultTable.empty()) {
-		if(this->config.generalLogging) this->log("ERROR: No result table specified.");
-		return false;
-	}
-	if(!(this->config.markovTweetDimension)) {
-		if(this->config.generalLogging) this->log("ERROR: Markov chain dimension is zero.");
-		return false;
-	}
-	if(!(this->config.markovTweetLength)) {
-		if(this->config.generalLogging) this->log("ERROR: Result tweet length is zero.");
-		return false;
-	}
+	if(this->config.generalInputFields.empty()) throw std::runtime_error("No input sources provided");
+	if(this->config.generalResultTable.empty()) throw std::runtime_error("No result table specified");
+	if(!(this->config.markovTweetDimension)) throw std::runtime_error("Markov chain dimension is zero");
+	if(!(this->config.markovTweetLength)) throw std::runtime_error("Result tweet length is zero");
 
 	// set target fields
 	std::vector<std::string> fields, types;
@@ -75,7 +63,7 @@ bool MarkovTweet::onAlgoInit(bool resumed) {
 
 	// initialize target table
 	this->setStatusMessage("Creating result table...");
-	if(!(this->database.initTargetTable(true))) return false;
+	this->database.initTargetTable(true);
 
 	// get text corpus
 	this->setStatusMessage("Getting text corpus...");
@@ -109,24 +97,21 @@ bool MarkovTweet::onAlgoInit(bool resumed) {
 			std::bind(&MarkovTweet::_log, this, std::placeholders::_1));
 
 	// compile text corpus
-	if(this->generator.compile(this->config.markovTweetDimension)) {
-		// re-allow pausing the thread
-		this->allowPausing();
+	if(!(this->generator.compile(this->config.markovTweetDimension)))
+		throw std::runtime_error("Error while compiling corpus for tweet generation");
 
-		this->setStatusMessage("Generating tweets...");
-		return true;
-	}
-	else if(this->config.generalLogging) this->log("ERROR while compiling corpus for tweet generation.");
+	// re-allow pausing the thread
+	this->allowPausing();
 
-	return false;
+	this->setStatusMessage("Generating tweets...");
 }
 
 // algorithm tick
-bool MarkovTweet::onAlgoTick() {
+void MarkovTweet::onAlgoTick() {
 	// check number of tweets (internally saved as "last") if necessary
 	if(this->config.markovTweetMax && this->getLast() >= this->config.markovTweetMax) {
 		this->finished();
-		return true;
+		return;
 	}
 
 	// generate tweet
@@ -154,8 +139,6 @@ bool MarkovTweet::onAlgoTick() {
 	if(this->config.markovTweetSleep) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.markovTweetSleep));
 	}
-
-	return true;
 }
 
 // pause algorithm run

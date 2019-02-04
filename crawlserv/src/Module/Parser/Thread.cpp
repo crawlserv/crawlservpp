@@ -39,26 +39,21 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, const crawlservpp::Struct::T
 Thread::~Thread() {}
 
 // initialize parser
-bool Thread::onInit(bool resumed) {
+void Thread::onInit(bool resumed) {
 	std::vector<std::string> configWarnings;
 	std::vector<std::string> fields;
-	bool verbose = false;
 
 	// get configuration and show warnings if necessary
-	if(!(this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings))) {
-		this->log(this->config.getErrorMessage());
-		return false;
-	}
-	if(this->config.generalLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
-		this->log("WARNING: " + *i);
-	verbose = config.generalLogging == Config::generalLoggingVerbose;
+	this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
+	if(this->config.generalLogging)
+		for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
+			this->log("WARNING: " + *i);
 
 	// check configuration
+	bool verbose = config.generalLogging == Config::generalLoggingVerbose;
 	if(verbose) this->log("checks configuration...");
-	if(this->config.generalResultTable.empty()) {
-		if(this->config.generalLogging) this->log("ERROR: No target table specified.");
-		return false;
-	}
+	if(this->config.generalResultTable.empty())
+		throw std::runtime_error("ERROR: No target table specified.");
 
 	// set database options
 	if(verbose) this->log("sets database options...");
@@ -81,10 +76,7 @@ bool Thread::onInit(bool resumed) {
 
 	// prepare SQL statements for parser
 	if(verbose) this->log("prepares SQL statements...");
-	if(!(this->database.prepare())) {
-		if(this->config.generalLogging) this->log(this->database.getModuleErrorMessage());
-		return false;
-	}
+	this->database.prepare();
 
 	// initialize queries
 	if(verbose) this->log("initializes queries...");
@@ -108,11 +100,10 @@ bool Thread::onInit(bool resumed) {
 	this->startTime = std::chrono::steady_clock::now();
 	this->pauseTime = std::chrono::steady_clock::time_point::min();
 	this->tickCounter = 0;
-	return true;
 }
 
 // parser tick
-bool Thread::onTick() {
+void Thread::onTick() {
 	crawlservpp::Timer::StartStop timerSelect;
 	crawlservpp::Timer::StartStop timerTotal;
 	unsigned long parsed = 0;
@@ -196,8 +187,6 @@ bool Thread::onTick() {
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepIdle));
 	}
-
-	return true;
 }
 
 // parser paused

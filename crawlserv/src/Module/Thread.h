@@ -76,8 +76,8 @@ namespace crawlservpp::Module {
 		void incrementLast();
 		std::string getStatusMessage();
 
-		virtual bool onInit(bool resumed) = 0;
-		virtual bool onTick() = 0;
+		virtual void onInit(bool resumed) = 0;
+		virtual void onTick() = 0;
 		virtual void onPause() = 0;
 		virtual void onUnpause() = 0;
 		virtual void onClear(bool interrupted) = 0;
