@@ -10,10 +10,11 @@
 #ifndef PARSING_HTML_H_
 #define PARSING_HTML_H_
 
+#include "../Main/Exception.h"
+
 #include "tidy.h"
 #include "tidybuffio.h"
 
-#include <stdexcept>
 #include <string>
 
 namespace crawlservpp::Parsing {
@@ -24,6 +25,13 @@ public:
 	virtual ~HTML();
 
 	void tidyAndConvert(std::string& content);
+
+	// sub-class for HTML exceptions
+	class Exception : public crawlservpp::Main::Exception {
+	public:
+		Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+		virtual ~Exception() {}
+	};
 
 private:
 	TidyDoc doc;

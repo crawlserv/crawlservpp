@@ -17,8 +17,8 @@ XML::XML() {}
 // destructor stub
 XML::~XML() {}
 
-// parse XML content, return false on error
-bool XML::parse(const std::string& content) {
+// parse XML content, throws XML::Exception
+void XML::parse(const std::string& content) {
 	// remove whitespaces
 	unsigned long begin = 0;
 	while(content.size() > begin && isspace(content.at(begin))) begin++;
@@ -30,9 +30,8 @@ bool XML::parse(const std::string& content) {
 		try {
 			tidy.tidyAndConvert(xml);
 		}
-		catch(const std::runtime_error& e) {
-			this->errorMessage = e.what();
-			return false;
+		catch(const HTML::Exception& e) {
+			throw XML::Exception("TidyLib error: " + e.whatStr());
 		}
 	}
 
@@ -51,30 +50,18 @@ bool XML::parse(const std::string& content) {
 		else if((long) content.size() > result.offset) errStrStr << "\'[...]" << content.substr(result.offset);
 		else errStrStr << "[end]";
 		errStrStr << ").";
-		this->errorMessage = errStrStr.str();
-		return false;
+		throw XML::Exception(errStrStr.str());
 	}
-
-	return true;
 }
 
-// get content of XML document (saved to resultTo), return false on error
-bool XML::getContent(std::string& resultTo) const {
-	if(!(this->doc)) {
-		this->errorMessage = "XML error: No content parsed.";
-		return false;
-	}
+// get content of XML document (saved to resultTo), throws XML::Exception
+void XML::getContent(std::string& resultTo) const {
+	if(!(this->doc)) throw XML::Exception("No content parsed.");
 
 	std::ostringstream out;
 	resultTo = "";
 	this->doc->print(out, "\t", 0);
 	resultTo += out.str();
-	return true;
-}
-
-// get error string
-std::string XML::getErrorMessage() const {
-	return this->errorMessage;
 }
 
 }

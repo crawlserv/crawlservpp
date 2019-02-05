@@ -12,11 +12,12 @@
 
 #include "HTML.h"
 
+#include "../Main/Exception.h"
+
 #include <pugixml.hpp>
 
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 
 namespace crawlservpp::Query {
@@ -31,14 +32,22 @@ namespace crawlservpp::Parsing {
 		XML();
 		virtual ~XML();
 
-		bool parse(const std::string& content);
+		// getter
+		void getContent(std::string& resultTo) const;
 
-		bool getContent(std::string& resultTo) const;
-		std::string getErrorMessage() const;
+		// parse functionURI
+		void parse(const std::string& content);
+
+		// sub-class for XML exceptions
+		class Exception : public crawlservpp::Main::Exception {
+		public:
+			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
+		// unique pointer to (pugi)XML document
 		std::unique_ptr<pugi::xml_document> doc;
-		mutable std::string errorMessage;
 	};
 }
 
