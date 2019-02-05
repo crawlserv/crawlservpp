@@ -199,7 +199,7 @@ Server::~Server() {
 			+ crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) + ".");
 }
 
-// server tick
+// server tick, return whether server is still running
 bool Server::tick() {
 	// poll web server
 	try {
