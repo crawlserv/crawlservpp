@@ -74,7 +74,9 @@ const crawlservpp::Struct::DatabaseSettings& Database::getSettings() const {
 
 // connect to the database
 void Database::connect() {
-	// connect to database
+	// check driver
+	if(!Database::driver) throw Database::Exception("MySQL driver not loaded");
+
 	try {
 		// set options for connecting
 		sql::ConnectOptionsMap connectOptions;
@@ -87,16 +89,17 @@ void Database::connect() {
 		connectOptions["OPT_CHARSET_NAME"] = "utf8mb4"; // set charset
 		connectOptions["characterSetResults"] = "utf8mb4"; // set charset for results
 		connectOptions["preInit"] = "SET NAMES utf8mb4"; // set charset for names
-		connectOptions["OPT_MAX_ALLOWED_PACKET"] = 1073741824; // set max_allowed_packet to highest possible value (1 GiB)
 		if(this->settings.compression) connectOptions["CLIENT_COMPRESS"] = true; // enable server-client compression
 
-		// get driver if necessary
-		if(!Database::Database::driver) throw Database::Exception("MySQL driver not loaded");
-
 		// connect
-		this->connection.reset(this->driver->connect(connectOptions));
+		this->connection.reset(Database::driver->connect(connectOptions));
 		if(!(this->connection)) throw Database::Exception("Could not connect to database");
 		if(!(this->connection->isValid())) throw Database::Exception("Connection to database is invalid");
+
+		// set max_allowed_packet size to maximum of 1 GiB
+		//  NOTE: needs to be set independently, because setting in connection options somehow leads to invalid read of size 8
+		int maxAllowedPacket = 1073741824;
+		this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", (void *) &maxAllowedPacket);
 
 		// run initializing session commands
 		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
