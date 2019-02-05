@@ -16,14 +16,16 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace crawlservpp::Main {
 
 class WebServer final {
 public:
 	// for convenience
-	typedef std::function<void(const std::string&)> AcceptCallback;
-	typedef std::function<void(const std::string&, const std::string&, const std::string&)> RequestCallback;
+	typedef struct mg_connection * Connection;
+	typedef std::function<void(Connection)> AcceptCallback;
+	typedef std::function<void(Connection, const std::string&, const std::string&)> RequestCallback;
 
 	WebServer();
 	virtual ~WebServer();
@@ -38,12 +40,14 @@ public:
 
 	// server functions
 	void poll(int timeOut);
-	void send(unsigned short code, const std::string& type, const std::string& content);
-	void close();
+	void send(Connection connection, unsigned short code, const std::string& type, const std::string& content);
+	void close(Connection connection);
+
+	// static helper function
+	static std::string getIP(Connection connection);
 
 private:
 	mg_mgr eventManager;
-	mg_connection * lastConnection;
 	std::string cors;
 
 	// callback functions
@@ -51,11 +55,8 @@ private:
 	RequestCallback onRequest;
 
 	// event handler
-	static void eventHandler(struct mg_connection * connection, int event, void * data);
-	void eventHandlerInClass(struct mg_connection * connection, int event, void * data);
-
-	// static helper function for the class
-	static std::string getIP(mg_connection * connection);
+	static void eventHandler(Connection connection, int event, void * data);
+	void eventHandlerInClass(Connection connection, int event, void * data);
 };
 
 }

@@ -13,9 +13,6 @@ namespace crawlservpp::Main {
 
 // constructor: set default value
 WebServer::WebServer() {
-	// set connection pointer to NULL
-	this->lastConnection = NULL;
-
 	// initialize embedded web server
 	mg_mgr_init(&(this->eventManager), NULL);
 }
@@ -28,7 +25,7 @@ WebServer::~WebServer() {
 // initialize embedded web server and bind it to port, throws std::runtime_error
 void WebServer::initHTTP(const std::string& port) {
 	// bind mongoose server to port
-	mg_connection * connection = mg_bind(&(this->eventManager), port.c_str(), WebServer::eventHandler);
+	Connection connection = mg_bind(&(this->eventManager), port.c_str(), WebServer::eventHandler);
 	if(!connection) throw std::runtime_error("Could not bind server to port " + port);
 
 	// set user data (i.e. pointer to class)
@@ -60,9 +57,9 @@ void WebServer::poll(int timeOut) {
 }
 
 // send reply, throws std::runtime_error
-void WebServer::send(unsigned short code, const std::string& type, const std::string& content) {
-	// check for connection
-	if(!(this->lastConnection)) throw std::runtime_error("No connection available");
+void WebServer::send(Connection connection, unsigned short code, const std::string& type, const std::string& content) {
+	// check connection
+	if(!connection) throw std::runtime_error("WebServer::send(): No connection specified");
 
 	// send reply
 	std::string head;
@@ -70,48 +67,48 @@ void WebServer::send(unsigned short code, const std::string& type, const std::st
 	head += "Access-Control-Allow-Origin: " + this->cors + "\r\n"
 			"Access-Control-Allow-Methods: GET, POST\r\n"
 			"Access-Control-Allow-Headers: Content-Type";
-	mg_send_head(this->lastConnection, 200, content.size(), head.c_str());
-	mg_printf(this->lastConnection, "%s", content.c_str());
+	mg_send_head(connection, 200, content.size(), head.c_str());
+	mg_printf(connection, "%s", content.c_str());
 }
 
 // close connection immediately, throws std::runtime_error
-void WebServer::close() {
+void WebServer::close(Connection connection) {
 	// check for connection
-	if(!(this->lastConnection)) throw std::runtime_error("No connection available");
+	if(!connection) throw std::runtime_error("WebServer::close(): No connection specified");
 
 	// set closing flag
-	this->lastConnection->flags |= MG_F_CLOSE_IMMEDIATELY;
+	connection->flags |= MG_F_CLOSE_IMMEDIATELY;
 }
 
 // static event handler
-void WebServer::eventHandler(mg_connection * connection, int event, void * data) {
+void WebServer::eventHandler(Connection connection, int event, void * data) {
 	if(connection->user_data && data)
 		static_cast<WebServer *>(connection->user_data)->eventHandlerInClass(connection, event, data);
 }
 
 // event handler
-void WebServer::eventHandlerInClass(mg_connection * connection, int event, void * data) {
-	// save pointer to connection
-	this->lastConnection = connection;
-
+void WebServer::eventHandlerInClass(Connection connection, int event, void * data) {
 	// get ip
 	std::string ip = WebServer::getIP(connection);
 
-	if(event == MG_EV_ACCEPT) {
+	switch(event) {
+	case MG_EV_ACCEPT:
 		// handle accept event
-		this->onAccept(ip);
-	}
-	else if(event == MG_EV_HTTP_REQUEST) {
+		this->onAccept(connection);
+		break;
+
+	case MG_EV_HTTP_REQUEST:
 		// handle request event
 		http_message * httpMessage = (http_message *) data;
 		std::string method(httpMessage->method.p, httpMessage->method.len);
 		std::string body(httpMessage->body.p, httpMessage->body.len);
-		this->onRequest(ip, method, body);
+		this->onRequest(connection, method, body);
+		break;
 	}
 }
 
 // static helper function: get client IP from connection
-std::string WebServer::getIP(mg_connection * connection) {
+std::string WebServer::getIP(Connection connection) {
 	char ip[INET6_ADDRSTRLEN];
 	mg_sock_to_str(connection->sock, ip, INET6_ADDRSTRLEN, MG_SOCK_STRINGIFY_REMOTE | MG_SOCK_STRINGIFY_IP);
 	return std::string(ip);

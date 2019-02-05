@@ -691,8 +691,10 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 						// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
 						if(this->config.crawlerHTMLCanonicalCheck) {
 							std::string canonical;
-							if(this->getXPathQueryPtr(this->queryCanonicalCheck.index).getFirst(doc, canonical) && !canonical.empty()) {
-								if(!(canonical.length() == (8 + this->domain.length() + url.second.length())
+							try {
+								this->getXPathQueryPtr(this->queryCanonicalCheck.index).getFirst(doc, canonical);
+								if(!canonical.empty()
+										&& !(canonical.length() == (8 + this->domain.length() + url.second.length())
 											&& canonical.substr(0, 8) == "https://"
 											&& canonical.substr(8, this->domain.length()) == this->domain
 											&& canonical.substr(8 + this->domain.length()) == url.second)
@@ -711,8 +713,10 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 									return false;
 								}
 							}
-							else if(this->config.crawlerLogging)
-								this->log("WARNING: Could not perform canonical check for " + url.second + ".");
+							catch(const XPathException& e) {
+								if(this->config.crawlerLogging)
+									this->log("WARNING: Could not perform canonical check for " + url.second + ": " + e.whatStr());
+							}
 						}
 
 						// check content
@@ -756,7 +760,7 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 					}
 					catch(const XMLException& e) {
 						// error while parsing content
-						if(this->config.crawlerLogging) this->log(e.whatStr() + " [" + url.second + "].");
+						if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + url.second + "].");
 						this->crawlingSkip(url);
 						return false;
 					}
@@ -818,10 +822,13 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 		for(auto i = this->queriesWhiteListUrls.begin(); i != this->queriesWhiteListUrls.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				whitelist = true;
-				if(!(this->getRegExQueryPtr(i->index).getBool(url, found)))
-					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-							+ " [" + url + "].");
-				if(found) break;
+				try {
+					found = this->getRegExQueryPtr(i->index).getBool(url);
+					if(found) break;
+				}
+				catch(const RegExException& e) {
+					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
+				}
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone) {
 				whitelist = true;
@@ -839,14 +846,15 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 		// blacklist: do not allow URLs that fit a specified blacklist query
 		for(auto i = this->queriesBlackListUrls.begin(); i != this->queriesBlackListUrls.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-				bool found = false;
-				if(!(this->getRegExQueryPtr(i->index).getBool(url, found)))
-					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-							+ " [" + url + "].");
-				if(found) {
-					if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-						this->log("skipped " + url + " (blacklisted).");
-					return false;
+				try {
+					if(this->getRegExQueryPtr(i->index).getBool(url)) {
+						if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+							this->log("skipped " + url + " (blacklisted).");
+						return false;
+					}
+				}
+				catch(const RegExException& e) {
+					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
@@ -895,10 +903,13 @@ bool Thread::crawlingCheckContentType(const std::pair<unsigned long, std::string
 		bool found = false;
 		for(auto i = this->queriesWhiteListTypes.begin(); i != this->queriesWhiteListTypes.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-				if(!(this->getRegExQueryPtr(i->index).getBool(contentType, found)))
-					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-							+ " [" + url.second + "].");
-				if(found) break;
+				try {
+					found = this->getRegExQueryPtr(i->index).getBool(contentType);
+					if(found) break;
+				}
+				catch(const RegExException& e) {
+					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url.second + "].");
+				}
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx.");
@@ -911,10 +922,13 @@ bool Thread::crawlingCheckContentType(const std::pair<unsigned long, std::string
 		bool found = false;
 		for(auto i = this->queriesBlackListTypes.begin(); i != this->queriesBlackListTypes.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-				if(!(this->getRegExQueryPtr(i->index).getBool(contentType, found)))
-					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-						+ " [" + url.second + "].");
-				if(found) break;
+				try {
+					found = this->getRegExQueryPtr(i->index).getBool(contentType);
+					if(found) break;
+				}
+				catch(const RegExException& e) {
+					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url.second + "].");
+				}
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx.");
@@ -933,16 +947,22 @@ bool Thread::crawlingCheckContent(const std::pair<unsigned long, std::string>& u
 		bool found = false;
 		for(auto i = this->queriesWhiteListContent.begin(); i != this->queriesWhiteListContent.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-				if(!(this->getRegExQueryPtr(i->index).getBool(content, found)))
-					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-						+ " [" + url.second + "].");
-				if(found) break;
+				try {
+					found = this->getRegExQueryPtr(i->index).getBool(content);
+					if(found) break;
+				}
+				catch(const RegExException&e) {
+					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url.second + "].");
+				}
 			}
 			else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
-				if(!(this->getXPathQueryPtr(i->index).getBool(doc, found)))
-					if(this->config.crawlerLogging) this->log(this->getXPathQueryPtr(i->index).getErrorMessage()
-						+ " [" + url.second + "].");
-				if(found) break;
+				try {
+					found = this->getXPathQueryPtr(i->index).getBool(doc);
+					if(found) break;
+				}
+				catch(const XPathException& e) {
+					if(this->config.crawlerLogging) this->log("WARNING: XPath error - " + e.whatStr() + " [" + url.second + "].");
+				}
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx or XPath.");
@@ -955,16 +975,22 @@ bool Thread::crawlingCheckContent(const std::pair<unsigned long, std::string>& u
 		bool found = false;
 		for(auto i = this->queriesBlackListContent.begin(); i != this->queriesBlackListContent.end(); ++i) {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-				if(!(this->getRegExQueryPtr(i->index).getBool(content, found)))
-					if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-						+ " [" + url.second + "].");
-				if(found) break;
+				try {
+					found = this->getRegExQueryPtr(i->index).getBool(content);
+					if(found) break;
+				}
+				catch(const RegExException& e) {
+					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url.second + "].");
+				}
 			}
 			else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
-				if(!(this->getXPathQueryPtr(i->index).getBool(doc, found)))
-					if(this->config.crawlerLogging) this->log(this->getXPathQueryPtr(i->index).getErrorMessage()
-						+ " [" + url.second + "].");
-				if(found) break;
+				try {
+					found = this->getXPathQueryPtr(i->index).getBool(doc);
+					if(found) break;
+				}
+				catch(const XPathException& e) {
+					if(this->config.crawlerLogging) this->log("WARNING: XPath error - " + e.whatStr() + " [" + url.second + "].");
+				}
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx or XPath.");
@@ -998,41 +1024,39 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::pair<unsigned lo
 	std::vector<std::string> urls;
 	for(auto i = this->queriesLinks.begin(); i != this->queriesLinks.end(); ++i) {
 		if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-			if(i->resultMulti) {
-				std::vector<std::string> results;
-				if(this->getRegExQueryPtr(i->index).getAll(content, results)) {
+			try {
+				if(i->resultMulti) {
+					std::vector<std::string> results;
+					this->getRegExQueryPtr(i->index).getAll(content, results);
 					urls.resize(urls.size() + results.size());
 					urls.insert(urls.end(), results.begin(), results.end());
 				}
-				else if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-					+ " [" + url.second + "].");
-			}
-			else {
-				std::string result;
-				if(this->getRegExQueryPtr(i->index).getFirst(content, result)) {
+				else {
+					std::string result;
+					this->getRegExQueryPtr(i->index).getFirst(content, result);
 					urls.push_back(result);
 				}
-				else if(this->config.crawlerLogging) this->log(this->getRegExQueryPtr(i->index).getErrorMessage()
-					+ " [" + url.second + "].");
+			}
+			catch(const RegExException& e) {
+				if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url.second + "].");
 			}
 		}
 		else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
-			if(i->resultMulti) {
-				std::vector<std::string> results;
-				if(this->getXPathQueryPtr(i->index).getAll(doc, results)) {
+			try {
+				if(i->resultMulti) {
+					std::vector<std::string> results;
+					this->getXPathQueryPtr(i->index).getAll(doc, results);
 					urls.resize(urls.size() + results.size());
 					urls.insert(urls.end(), results.begin(), results.end());
 				}
-				else if(this->config.crawlerLogging) this->log(this->getXPathQueryPtr(i->index).getErrorMessage()
-					+ " [" + url.second + "].");
-			}
-			else {
-				std::string result;
-				if(this->getXPathQueryPtr(i->index).getFirst(doc, result)) {
+				else {
+					std::string result;
+					this->getXPathQueryPtr(i->index).getFirst(doc, result);
 					urls.push_back(result);
 				}
-				else if(this->config.crawlerLogging) this->log(this->getXPathQueryPtr(i->index).getErrorMessage()
-					+ " [" + url.second + "].");
+			}
+			catch(const XPathException& e) {
+				if(this->config.crawlerLogging) this->log("WARNING: XPath error - " + e.whatStr() + " [" + url.second + "].");
 			}
 		}
 		else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)

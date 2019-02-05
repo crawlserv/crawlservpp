@@ -315,13 +315,13 @@ bool Thread::parsingUrlSelection() {
 						// check query type
 						if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 							// parse ID by running RegEx query on URL
-							bool queryResult = false;
-							if(this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second, queryResult)) {
-								if(queryResult) {
+							try {
+								if(this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second)) {
 									skip = true;
+									break;
 								}
-								break;
 							}
+							catch(const RegExException& e) {} // ignore query on error
 						}
 						else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 							this->log("WARNING: ID query on URL is not of type RegEx.");
@@ -397,7 +397,11 @@ unsigned long Thread::parsing() {
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse ID by running RegEx query on URL
-				if(this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedId) && !parsedId.empty()) break;
+				try {
+					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedId);
+					if(!parsedId.empty()) break;
+				}
+				catch(const RegExException& e) {} // ignore query on error
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 				this->log("WARNING: ID query on URL is not of type RegEx.");
@@ -474,7 +478,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on URL
-					if(this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, id) && !id.empty()) break;
+					try {
+						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, id);
+						if(!id.empty()) break;
+					}
+					catch(const RegExException& e) {} // ignore query on error
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: ID query on URL is not of type RegEx.");
@@ -483,11 +491,19 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// check query type
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on content string
-					if(this->getRegExQueryPtr(i->index).getFirst(content.second, id) && !id.empty()) break;
+					try {
+						this->getRegExQueryPtr(i->index).getFirst(content.second, id);
+						if(!id.empty()) break;
+					}
+					catch(const RegExException& e) {} // ignore query on error
 				}
 				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 					// parse ID by running XPath query on parsed content
-					if(this->getXPathQueryPtr(i->index).getFirst(parsedContent, id) && !id.empty()) break;
+					try {
+						this->getXPathQueryPtr(i->index).getFirst(parsedContent, id);
+						if(!id.empty()) break;
+					}
+					catch(const RegExException& e) {} // ignore query on error
 				}
 				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: ID query on content is not of type RegEx or XPath.");
@@ -532,7 +548,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on URL
-				querySuccess = this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedDateTime);
+				try {
+					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedDateTime);
+					querySuccess = true;
+				}
+				catch(const RegExException& e) {} // ignore query on error
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 				this->log("WARNING: DateTime query on URL is not of type RegEx.");
@@ -541,11 +561,19 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			// check query type
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on content string
-				querySuccess = this->getRegExQueryPtr(i->index).getFirst(content.second, parsedDateTime);
+				try {
+					this->getRegExQueryPtr(i->index).getFirst(content.second, parsedDateTime);
+					querySuccess = true;
+				}
+				catch(const RegExException& e) {} // ignore query on error
 			}
 			else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
 				// parse date/time by running XPath query on parsed content
-				querySuccess = this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedDateTime);
+				try {
+					this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedDateTime);
+					querySuccess = true;
+				}
+				catch(const RegExException& e) {} // ignore query on error
 			}
 			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 				this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
@@ -596,168 +624,171 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	parsedFields.reserve(this->queriesFields.size());
 
 	for(auto i = this->queriesFields.begin(); i != this->queriesFields.end(); ++i) {
-		// determinate whether to get all or just the first match (as string or as boolean value) from the query result
-		if(i->resultMulti) {
-			// parse multiple elements
-			std::vector<std::string> parsedFieldValues;
+		try {
+			// determinate whether to get all or just the first match (as string or as boolean value) from the query result
+			if(i->resultMulti) {
+				// parse multiple elements
+				std::vector<std::string> parsedFieldValues;
 
-			// check query source
-			if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
-				// parse from URL: check query type
-				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse multiple field elements by running RegEx query on URL
-					this->getRegExQueryPtr(i->index).getAll(this->currentUrl.second, parsedFieldValues);
-				}
-				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-							+ "\' query on URL is not of type RegEx.");
-			}
-			else {
-				// parse from content: check query type
-				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse multiple field elements by running RegEx query on content string
-					this->getRegExQueryPtr(i->index).getAll(content.second, parsedFieldValues);
-				}
-				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
-					// parse multiple field elements by running XPath query on parsed content
-					this->getXPathQueryPtr(i->index).getAll(parsedContent, parsedFieldValues);
-				}
-				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-							+ "\' query on content is not of type RegEx or XPath.");
-			}
-
-			// if necessary, check whether array or all values are empty
-			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter)) {
-				bool empty = true;
-				for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) {
-					if(!(i->empty())) {
-						empty = false;
-						break;
+				// check query source
+				if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
+					// parse from URL: check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse multiple field elements by running RegEx query on URL
+						this->getRegExQueryPtr(i->index).getAll(this->currentUrl.second, parsedFieldValues);
 					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+								+ "\' query on URL is not of type RegEx.");
 				}
-				if(empty) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
-						+ this->currentUrl.second);
-			}
+				else {
+					// parse from content: check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse multiple field elements by running RegEx query on content string
+						this->getRegExQueryPtr(i->index).getAll(content.second, parsedFieldValues);
+					}
+					else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
+						// parse multiple field elements by running XPath query on parsed content
+						this->getXPathQueryPtr(i->index).getAll(parsedContent, parsedFieldValues);
+					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+								+ "\' query on content is not of type RegEx or XPath.");
+				}
 
-			// determine how to save result: JSON array or concatenate using delimiting character
-			if(this->config.parsingFieldJSON.at(fieldCounter)) {
-				// if necessary, tidy texts
-				if(this->config.parsingFieldTidyTexts.at(fieldCounter))
-					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i)
-						crawlservpp::Helper::Strings::utfTidy(*i);
+				// if necessary, check whether array or all values are empty
+				if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter)) {
+					bool empty = true;
+					for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) {
+						if(!(i->empty())) {
+							empty = false;
+							break;
+						}
+					}
+					if(empty) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
+							+ this->currentUrl.second);
+				}
 
-				// stringify and add parsed elements as JSON array
-				parsedFields.push_back(crawlservpp::Helper::Json::stringify(parsedFieldValues));
+				// determine how to save result: JSON array or concatenate using delimiting character
+				if(this->config.parsingFieldJSON.at(fieldCounter)) {
+					// if necessary, tidy texts
+					if(this->config.parsingFieldTidyTexts.at(fieldCounter))
+						for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i)
+							crawlservpp::Helper::Strings::utfTidy(*i);
+
+					// stringify and add parsed elements as JSON array
+					parsedFields.push_back(crawlservpp::Helper::Json::stringify(parsedFieldValues));
+				}
+				else {
+					// concatenate elements
+					std::string result = crawlservpp::Helper::Strings::concat(parsedFieldValues,
+							this->config.parsingFieldDelimiters.at(fieldCounter),
+							this->config.parsingFieldIgnoreEmpty.at(fieldCounter));
+
+					// if necessary, tidy text
+					if(this->config.parsingFieldTidyTexts.at(fieldCounter)) crawlservpp::Helper::Strings::utfTidy(result);
+
+					parsedFields.push_back(result);
+				}
 			}
-			else {
-				// concatenate elements
-				std::string result = crawlservpp::Helper::Strings::concat(parsedFieldValues,
-						this->config.parsingFieldDelimiters.at(fieldCounter),
-						this->config.parsingFieldIgnoreEmpty.at(fieldCounter));
+			else if(i->resultSingle) {
+				// parse first element only (as string)
+				std::string parsedFieldValue;
+
+				// check query source
+				if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
+					// parse from URL: check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse single field element by running RegEx query on URL
+						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedFieldValue);
+					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+								+ "\' query on URL is not of type RegEx.");
+				}
+				else {
+					// parse from content: check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse single field element by running RegEx query on content string
+						this->getRegExQueryPtr(i->index).getFirst(content.second, parsedFieldValue);
+					}
+					else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
+						// parse single field element by running XPath query on parsed content
+						this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedFieldValue);
+					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+								+ "\' query on content is not of type RegEx or XPath.");
+				}
+
+				// if necessary, check whether value is empty
+				if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && parsedFieldValue.empty())
+					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
+											+ this->currentUrl.second);
 
 				// if necessary, tidy text
-				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) crawlservpp::Helper::Strings::utfTidy(result);
+				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) crawlservpp::Helper::Strings::utfTidy(parsedFieldValue);
 
-				parsedFields.push_back(result);
+				// determine how to save result: JSON array or string as is
+				if(this->config.parsingFieldJSON.at(fieldCounter)) {
+					// stringify and add parsed element as JSON array with one element
+					parsedFields.push_back(crawlservpp::Helper::Json::stringify(parsedFieldValue));
+				}
+				else {
+					// save as is
+					parsedFields.push_back(parsedFieldValue);
+				}
 			}
-		}
-		else if(i->resultSingle) {
-			// parse first element only (as string)
-			std::string parsedFieldValue;
+			else if(i->resultBool) {
+				// only save whether a match for the query exists
+				bool parsedBool = false;
 
-			// check query source
-			if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
-				// parse from URL: check query type
-				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse single field element by running RegEx query on URL
-					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedFieldValue);
+				// check query source
+				if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
+					// parse from URL: check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse boolean value by running RegEx query on URL
+						parsedBool = this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second);
+					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+								+ "\' query on URL is not of type RegEx.");
 				}
-				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-							+ "\' query on URL is not of type RegEx.");
-			}
-			else {
-				// parse from content: check query type
-				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse single field element by running RegEx query on content string
-					this->getRegExQueryPtr(i->index).getFirst(content.second, parsedFieldValue);
-				}
-				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
-					// parse single field element by running XPath query on parsed content
-					this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedFieldValue);
-				}
-				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
+				else {
+					// parse from content: check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse boolean value by running RegEx query on content string
+						parsedBool = this->getRegExQueryPtr(i->index).getBool(content.second);
+					}
+					else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
+						// parse boolean value by running XPath query on parsed content
+						parsedBool = this->getXPathQueryPtr(i->index).getBool(parsedContent);
+					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
 							+ "\' query on content is not of type RegEx or XPath.");
-			}
+				}
 
-			// if necessary, check whether value is empty
-			if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && parsedFieldValue.empty())
-				this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
-										+ this->currentUrl.second);
-
-			// if necessary, tidy text
-			if(this->config.parsingFieldTidyTexts.at(fieldCounter)) crawlservpp::Helper::Strings::utfTidy(parsedFieldValue);
-
-			// determine how to save result: JSON array or string as is
-			if(this->config.parsingFieldJSON.at(fieldCounter)) {
-				// stringify and add parsed element as JSON array with one element
-				parsedFields.push_back(crawlservpp::Helper::Json::stringify(parsedFieldValue));
+				// determine how to save result: JSON array or boolean value as string
+				if(this->config.parsingFieldJSON.at(fieldCounter)) {
+					// stringify and add parsed element as JSON array with one boolean value as string
+					parsedFields.push_back(crawlservpp::Helper::Json::stringify(parsedBool ? "true" : "false"));
+				}
+				else {
+					// save boolean value as string
+					parsedFields.push_back(parsedBool ? "true" : "false");
+				}
 			}
 			else {
-				// save as is
-				parsedFields.push_back(parsedFieldValue);
-			}
-		}
-		else if(i->resultBool) {
-			// only save whether a match for the query exists
-			bool parsedBool = false;
-
-			// check query source
-			if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
-				// parse from URL: check query type
-				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse boolean value by running RegEx query on URL
-					this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second, parsedBool);
-				}
-				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-							+ "\' query on URL is not of type RegEx.");
-			}
-			else {
-				// parse from content: check query type
-				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-					// parse boolean value by running RegEx query on content string
-					this->getRegExQueryPtr(i->index).getBool(content.second, parsedBool);
-				}
-				else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
-					// parse boolean value by running XPath query on parsed content
-					this->getXPathQueryPtr(i->index).getBool(parsedContent, parsedBool);
-				}
-				else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
-						+ "\' query on content is not of type RegEx or XPath.");
+				if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+					this->log("WARNING: Ignored \'" + this->config.parsingFieldNames.at(fieldCounter)
+							+ "\' query without specified result type.");
+				parsedFields.push_back("");
 			}
 
-			// determine how to save result: JSON array or boolean value as string
-			if(this->config.parsingFieldJSON.at(fieldCounter)) {
-				// stringify and add parsed element as JSON array with one boolean value as string
-				parsedFields.push_back(crawlservpp::Helper::Json::stringify(parsedBool ? "true" : "false"));
-			}
-			else {
-				// save boolean value as string
-				parsedFields.push_back(parsedBool ? "true" : "false");
-			}
+			fieldCounter++;
 		}
-		else {
-			if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-				this->log("WARNING: Ignored \'" + this->config.parsingFieldNames.at(fieldCounter)
-						+ "\' query without specified result type.");
-			parsedFields.push_back("");
-		}
-
-		fieldCounter++;
+		catch(const RegExException& e) {} // ignore query on error
 	}
 
 	// update or add parsed data to database

@@ -104,7 +104,7 @@ namespace crawlservpp::Module {
 		std::string status; // status message of the thread (without pause state)
 		std::mutex statusLock;
 
-		std::unique_ptr<std::thread> threadPointer; // pointer to the thread
+		std::thread thread; // pointer to the thread
 
 		// timing statistics (in seconds)
 		std::chrono::steady_clock::time_point startTimePoint;

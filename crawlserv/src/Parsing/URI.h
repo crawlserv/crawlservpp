@@ -65,22 +65,18 @@ namespace crawlservpp::Parsing {
 			// constructor stub
 			URIWrapper() {}
 
-			// destructor: free and reset structure
+			// destructor: free and reset URI structure if necessary
 			virtual ~URIWrapper() { this->reset(); }
 
-			// create structure, free old structure if necessary
+			// create URI structure, free old structure if necessary
 			void create() { if(this->ptr) { uriFreeUriMembersA(this->ptr.get()); } this->ptr = std::make_unique<UriUriA>(); }
 
-			// free and reset structure if necessary
+			// free and reset URI structure if necessary
 			void reset() { if(this->ptr) { uriFreeUriMembersA(this->ptr.get()); this->ptr.reset(); } }
 
-			// get const pointer to structure
+			// get pointer to URI structure
 			const UriUriA * get() const { return this->ptr.get(); }
-
-			// get non-const pointer to structure
 			UriUriA * get() { return this->ptr.get(); }
-
-			// check pointer for NULL
 			operator bool() const { return this->ptr.operator bool(); }
 
 			// rule of five
@@ -102,13 +98,9 @@ namespace crawlservpp::Parsing {
 			// destructor: free query list if necessary
 			virtual ~URIQueryListWrapper() { if(this->ptr) uriFreeQueryListA(this->ptr); }
 
-			// get const pointer to query list
+			// get pointer to query list or its pointer
 			const UriQueryListA * get() const { return this->ptr; }
-
-			// get non-const pointer to query list
 			UriQueryListA * get() { return this->ptr; }
-
-			// get non-const pointer to pointer to query list
 			UriQueryListA ** getPtr() { return &(this->ptr); }
 
 			// rule of five

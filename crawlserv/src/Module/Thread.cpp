@@ -69,7 +69,7 @@ Thread::~Thread() {}
 // start the thread (may not be used by the thread itself!)
 void Thread::start() {
 	// run thread
-	this->threadPointer = std::make_unique<std::thread>(&Thread::main, this);
+	this->thread = std::thread(&Thread::main, this);
 }
 
 // pause the thread (may not be used by the thread itself!)
@@ -114,7 +114,7 @@ void Thread::unpause() {
 // stop the thread for good (may not be used by the thread itself!)
 void Thread::stop() {
 	// stop running
-	if(this->threadPointer && this->running) {
+	if(this->running) {
 		this->running = false;
 
 		// check whether thread has to be unpaused
@@ -128,7 +128,7 @@ void Thread::stop() {
 		}
 
 		// wait for thread
-		if(this->threadPointer) this->threadPointer->join();
+		if(this->thread.joinable()) this->thread.join();
 	}
 
 	// remove thread from database
@@ -140,7 +140,7 @@ void Thread::stop() {
 //			This enables the interruption of all threads simultaneously before waiting for their conclusion
 void Thread::sendInterrupt() {
 	// check whether thread exists and is running
-	if(this->threadPointer && this->running) {
+	if(this->running) {
 		// interrupt thread
 		this->interrupted = true;
 		this->running = false;
@@ -162,7 +162,7 @@ void Thread::sendInterrupt() {
 //			This enables the interruption of all threads simultaneously before waiting for their conclusion
 void Thread::finishInterrupt() {
 	// if thread exists and has been interrupted, wait for thread and join
-	if(this->threadPointer && this->interrupted) this->threadPointer->join();
+	if(this->interrupted) this->thread.join();
 }
 
 // get ID of the thread (thread-safe)

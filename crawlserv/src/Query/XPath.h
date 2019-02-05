@@ -11,13 +11,11 @@
 #define QUERY_XPATH_H_
 
 #include "../Helper/Strings.h"
-
+#include "../Main/Exception.h"
 #include "../Parsing/XML.h"
 
 #include <pugixml.hpp>
 
-#include <exception>
-#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -28,12 +26,17 @@ namespace crawlservpp::Query {
 		XPath();
 		virtual ~XPath();
 
-		bool compile(const std::string& xpath, bool textOnly);
-		bool getBool(const crawlservpp::Parsing::XML& doc, bool& resultTo) const;
-		bool getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const;
-		bool getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const;
+		void compile(const std::string& xpath, bool textOnly);
+		bool getBool(const crawlservpp::Parsing::XML& doc) const;
+		void getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const;
+		void getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const;
 
-		std::string getErrorMessage() const;
+		// sub-class for XPath exceptions
+		class Exception : public crawlservpp::Main::Exception {
+		public:
+			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	private:
 		// walker class for text-only conversion
@@ -46,12 +49,11 @@ namespace crawlservpp::Query {
 			std::string result;
 		};
 
-		std::unique_ptr<pugi::xpath_query> query;
+		pugi::xpath_query query;
+		bool compiled;
 		bool isTextOnly;
 
 		static std::string nodeToString(const pugi::xpath_node& node, bool textOnly);
-
-		mutable std::string errorMessage;
 	};
 }
 

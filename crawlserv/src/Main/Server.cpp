@@ -51,11 +51,9 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	for(auto i = threads.begin(); i != threads.end(); ++i) {
 		if(i->module == "crawler") {
 			// load crawler thread
-			std::unique_ptr<crawlservpp::Module::Crawler::Thread> crawler(
-					std::make_unique<crawlservpp::Module::Crawler::Thread>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-			crawler->crawlservpp::Module::Thread::start();
-			this->crawlers.push_back(std::move(crawler));
+			this->crawlers.push_back(std::make_unique<crawlservpp::Module::Crawler::Thread>(
+					this->database, i->id, i->status, i->paused, i->options, i->last));
+			this->crawlers.back()->crawlservpp::Module::Thread::start();
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -64,11 +62,9 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 		}
 		else if(i->module == "parser") {
 			// load parser thread
-			std::unique_ptr<crawlservpp::Module::Parser::Thread> parser(
-					std::make_unique<crawlservpp::Module::Parser::Thread>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-			parser->crawlservpp::Module::Thread::start();
-			this->parsers.push_back(std::move(parser));
+			this->parsers.push_back(std::make_unique<crawlservpp::Module::Parser::Thread>(
+					this->database, i->id, i->status, i->paused, i->options, i->last));
+			this->parsers.back()->crawlservpp::Module::Thread::start();
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -78,11 +74,9 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 		else if(i->module == "extractor") {
 			// load extractor thread
 			/*
-			std::unique_ptr<crawlservpp::Module::Extractor::Thread> parser(
-					std::make_unique<crawlservpp::Module::Extractor::Thread>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-			extractor->crawlservpp::Module::Thread::start();
-			this->extractors.push_back(std::move(extractor));
+			this->extractors.push_back(std::make_unique<crawlservpp::Module::Extractor::Thread>(
+					this->database, i->id, i->status, i->paused, i->options, i->last));
+			this->extractors.back()->crawlservpp::Module::Thread::start();
 			*/
 
 			// write to log
@@ -102,20 +96,18 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 
 			switch(Server::getAlgoFromConfig(configJson)) {
 			case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
-						this->database, i->id, i->status, i->paused, i->options, i->last);
+				this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
+						this->database, i->id, i->status, i->paused, i->options, i->last));
 				break;
 			case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-				analyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
-						this->database, i->id, i->status, i->paused, i->options, i->last);
+				this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
+						this->database, i->id, i->status, i->paused, i->options, i->last));
 				break;
 			default:
 				this->database.log("analyzer", "WARNING: Unknown algorithm ignored when loading threads.");
 				continue;
 			}
-
-			analyzer->crawlservpp::Module::Thread::start();
-			this->analyzers.push_back(std::move(analyzer));
+			this->analyzers.back()->crawlservpp::Module::Thread::start();
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -135,14 +127,10 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 // destructor
 Server::~Server() {
 	// interrupt module threads
-	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
-		if(*i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
-	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
-		if(*i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
-	//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
-	//	if(*i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
-	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
-		if(*i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
+	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
+	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
+	//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
+	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
 
 	// wait for module threads
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) {
@@ -204,11 +192,7 @@ Server::~Server() {
 	}
 
 	// wait for worker threads
-	for(auto i = this->workers.begin(); i != this->workers.end(); ++i) {
-		if(*i) {
-			if((*i)->joinable()) (*i)->join();
-		}
-	}
+	for(auto i = this->workers.begin(); i != this->workers.end(); ++i) if(i->joinable()) i->join();
 
 	// log shutdown message with server up-time
 	this->database.log("server", "shuts down after up-time of "
@@ -257,15 +241,16 @@ bool Server::tick() {
 		}
 	}
 
-	// check whether a worker thread was terminated
-	{
+	// check whether worker threads were terminated
+	if(!(this->workers.empty())) {
 		std::lock_guard<std::mutex> workersLocked(this->workersLock);
 		for(unsigned long n = 1; n <= this->workers.size(); n++) {
-			std::thread& worker = *(this->workers.at(n - 1));
 			if(!(this->workersRunning.at(n - 1))) {
 				// join and remove thread
+				std::thread& worker = this->workers.at(n - 1);
 				if(worker.joinable()) worker.join();
 				this->workers.erase(this->workers.begin() + (n - 1));
+				this->workersRunning.erase(this->workersRunning.begin() + (n - 1));
 				n--;
 			}
 		}
@@ -285,8 +270,12 @@ unsigned long Server::getUpTime() const {
 }
 
 // perform a server command
-std::string Server::cmd(const std::string& msgBody, const std::string& ip, bool& threadStartedTo) {
+std::string Server::cmd(WebServer::Connection connection, const std::string& msgBody, bool& threadStartedTo) {
 	Server::ServerCommandResponse response;
+
+	// check connection and get IP
+	if(!connection) throw std::runtime_error("Server::cmd(): No connection specified");
+	std::string ip(WebServer::getIP(connection));
 
 	// parse JSON
 	rapidjson::Document json;
@@ -346,8 +335,8 @@ std::string Server::cmd(const std::string& msgBody, const std::string& ip, bool&
 						{
 							std::lock_guard<std::mutex> workersLocked(this->workersLock);
 							this->workersRunning.push_back(true);
-							this->workers.push_back(std::make_unique<std::thread>(
-									&Server::cmdTestQuery, this, this->workers.size(), msgBody));
+							this->workers.push_back(std::thread(
+									&Server::cmdTestQuery, this, connection, this->workers.size(), msgBody));
 						}
 						threadStartedTo = true;
 					}
@@ -416,24 +405,33 @@ void Server::setStatus(const std::string& statusMsg) {
 }
 
 // handle accept event
-void Server::onAccept(const std::string& ip) {
+void Server::onAccept(WebServer::Connection connection) {
+	// check connection and get IP
+	if(!connection) throw std::runtime_error("Server::onAccept(): No connection specified");
+	std::string ip(WebServer::getIP(connection));
+
 	// check authorization
 	if(this->allowed != "*") {
 		if(this->allowed.find(ip) == std::string::npos) {
 			this->database.log("server", "rejected client " + ip + ".");
-			this->webServer.close();
+			this->webServer.close(connection);
 		}
 		else this->database.log("server", "accepted client " + ip + ".");
 	}
 }
 
 // handle request event
-void Server::onRequest(const std::string& ip, const std::string& method, const std::string& body) {
+void Server::onRequest(WebServer::Connection connection, const std::string& method,
+		const std::string& body) {
+	// check connection and get IP
+	if(!connection) throw std::runtime_error("Server::onRequest(): No connection specified");
+	std::string ip(WebServer::getIP(connection));
+
 	// check authorization
 	if(this->allowed != "*") {
 		if(this->allowed.find(ip) == std::string::npos) {
 			this->database.log("server", "Client " + ip + " rejected.");
-			this->webServer.close();
+			this->webServer.close(connection);
 		}
 	}
 
@@ -443,18 +441,18 @@ void Server::onRequest(const std::string& ip, const std::string& method, const s
 #endif
 
 	// check for GET request
-	if(method == "GET") this->webServer.send(200, "text/plain", this->getStatus());
+	if(method == "GET") this->webServer.send(connection, 200, "text/plain", this->getStatus());
 	// check for POST request
 	else if(method == "POST") {
 		// parse JSON
 		bool threadStarted = false;
-		std::string reply = this->cmd(body, ip, threadStarted);
+		std::string reply = this->cmd(connection, body, threadStarted);
 
 		// send reply
-		if(!threadStarted) this->webServer.send(200, "application/json", reply);
+		if(!threadStarted) this->webServer.send(connection, 200, "application/json", reply);
 	}
 	else if(method == "OPTIONS") {
-		this->webServer.send(200, "", "");
+		this->webServer.send(connection, 200, "", "");
 	}
 }
 
@@ -1689,7 +1687,7 @@ Server::ServerCommandResponse Server::cmdDuplicateQuery(const rapidjson::Documen
 }
 
 // server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text): test query on text
-void Server::cmdTestQuery(unsigned long index, const std::string& message) {
+void Server::cmdTestQuery(WebServer::Connection connection, unsigned long index, const std::string& message) {
 	Server::ServerCommandResponse response;
 
 	// parse JSON (again for thread)
@@ -1751,37 +1749,31 @@ void Server::cmdTestQuery(unsigned long index, const std::string& message) {
 				std::string result;
 				if(type == "regex") {
 					// test RegEx expression on text
-					Query::RegEx regExTest;
-					Timer::SimpleHR timer;
-					if(!regExTest.compile(query, resultBool || resultSingle, resultMulti))
-						Server::ServerCommandResponse(true, regExTest.getErrorMessage());
-					result = "COMPILING TIME: " + timer.tickStr() + "\n";
-					if(resultBool) {
-						// get boolean result (does at least one match exist?)
-						bool tempResult = false;
-						if(!regExTest.getBool(text, tempResult))
-							response = Server::ServerCommandResponse(true, regExTest.getErrorMessage());
-						else result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-							+ std::string(tempResult ? "true" : "false") + "\n";
-					}
-					if(resultSingle) {
-						// get first result (first full match)
-						std::string tempResult;
-						if(!regExTest.getFirst(text, tempResult))
-							response = Server::ServerCommandResponse(true, regExTest.getErrorMessage());
-						else if(!tempResult.empty())
-							result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
-						else result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
-					}
-					if(resultMulti) {
-						// get all results (all full matches)
-						std::vector<std::string> tempResult;
-						if(!regExTest.getAll(text, tempResult))
-							response = Server::ServerCommandResponse(true, regExTest.getErrorMessage());
-						else {
+					try {
+						Query::RegEx regExTest;
+						Timer::SimpleHR timer;
+						regExTest.compile(query, resultBool || resultSingle, resultMulti);
+						result = "COMPILING TIME: " + timer.tickStr() + "\n";
+						if(resultBool) {
+							// get boolean result (does at least one match exist?)
+							result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
+								+ std::string(regExTest.getBool(text) ? "true" : "false") + "\n";
+						}
+						if(resultSingle) {
+							// get first result (first full match)
+							std::string tempResult;
+							regExTest.getFirst(text, tempResult);
+							if(tempResult.empty()) result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+							else result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
+						}
+						if(resultMulti) {
+							// get all results (all full matches)
+							std::vector<std::string> tempResult;
+							regExTest.getAll(text, tempResult);
 							result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-							if(!tempResult.empty()) {
+							if(tempResult.empty()) result += " [empty]\n";
+							else {
 								unsigned long n = 0;
 								std::ostringstream resultStrStr;
 								resultStrStr << '\n';
@@ -1791,67 +1783,63 @@ void Server::cmdTestQuery(unsigned long index, const std::string& message) {
 								}
 								result += resultStrStr.str();
 							}
-							else result += " [empty]\n";
 						}
+					}
+					catch(const RegExException& e) {
+						response = Server::ServerCommandResponse(true, "RegEx error: " + e.whatStr());
 					}
 				}
 				else {
 					// test XPath expression on text
-					Parsing::XML xmlDocumentTest;
-					Query::XPath xPathTest;
-					Timer::SimpleHR timer;
-					if(!xPathTest.compile(query, textOnly))
-						response = Server::ServerCommandResponse(true, xPathTest.getErrorMessage());
-					else {
+					try {
+						Parsing::XML xmlDocumentTest;
+						Query::XPath xPathTest;
+						Timer::SimpleHR timer;
+						xPathTest.compile(query, textOnly);
 						result = "COMPILING TIME: " + timer.tickStr() + "\n";
 						try {
 							xmlDocumentTest.parse(text);
-
 							result += "PARSING TIME: " + timer.tickStr() + "\n";
+
 							if(resultBool) {
 								// get boolean result (does at least one match exist?)
-								bool tempResult = false;
-								if(!xPathTest.getBool(xmlDocumentTest, tempResult))
-									response = Server::ServerCommandResponse(true, xPathTest.getErrorMessage());
-								else result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-										+ std::string(tempResult ? "true" : "false") + "\n";
+								result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
+										+ std::string(xPathTest.getBool(xmlDocumentTest) ? "true" : "false") + "\n";
 							}
 							if(resultSingle) {
 								// get first result (first full match)
 								std::string tempResult;
 								Timer::SimpleHR timer;
-								if(!xPathTest.getFirst(xmlDocumentTest, tempResult))
-									response = Server::ServerCommandResponse(true, xPathTest.getErrorMessage());
-								else if(!tempResult.empty())
-									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
-								else result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+								xPathTest.getFirst(xmlDocumentTest, tempResult);
+								if(tempResult.empty()) result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+								else result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
 							}
 							if(resultMulti) {
 								// get all results (all full matches)
 								std::vector<std::string> tempResult;
 								Timer::SimpleHR timer;
-								if(!xPathTest.getAll(xmlDocumentTest, tempResult))
-									response = Server::ServerCommandResponse(true, xPathTest.getErrorMessage());
-								else {
-									result += "ALL RESULTS (" + timer.tickStr() + "):";
+								xPathTest.getAll(xmlDocumentTest, tempResult);
+								result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-									if(!tempResult.empty()) {
-										unsigned long n = 0;
-										std::ostringstream resultStrStr;
-										resultStrStr << '\n';
-										for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
-											resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
-											n++;
-										}
-										result += resultStrStr.str();
+								if(tempResult.empty()) result += " [empty]\n";
+								else {
+									unsigned long n = 0;
+									std::ostringstream resultStrStr;
+									resultStrStr << '\n';
+									for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
+										resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
+										n++;
 									}
-									else result += " [empty]\n";
+									result += resultStrStr.str();
 								}
 							}
 						}
 						catch(const XMLException& e) {
-							response = Server::ServerCommandResponse(true, e.what());
+							response = Server::ServerCommandResponse(true, "XML error: " + e.whatStr());
 						}
+					}
+					catch(const XPathException& e) {
+						response = Server::ServerCommandResponse(true, "XPath error - " + e.whatStr());
 					}
 				}
 				if(!response.fail){
@@ -1878,7 +1866,7 @@ void Server::cmdTestQuery(unsigned long index, const std::string& message) {
 	std::string replyString = replyBuffer.GetString();
 
 	// send reply
-	this->webServer.send(200, "application/json", replyString);
+	this->webServer.send(connection, 200, "application/json", replyString);
 
 	// set thread status to not running
 	{
