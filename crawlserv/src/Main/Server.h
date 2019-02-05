@@ -61,6 +61,9 @@
 #endif
 
 namespace crawlservpp::Main {
+	// for convenience
+	typedef crawlservpp::Parsing::XML::Exception XMLException;
+
 	class Server final {
 	public:
 		Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings, const crawlservpp::Struct::ServerSettings& serverSettings);

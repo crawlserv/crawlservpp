@@ -445,10 +445,14 @@ unsigned long Thread::parsing() {
 bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId, bool& skipUrl) {
 	// parse HTML
 	crawlservpp::Parsing::XML parsedContent;
-	if(!parsedContent.parse(content.second)) {
+
+	try {
+		parsedContent.parse(content.second);
+	}
+	catch(const XMLException& e) {
 		if(this->config.generalLogging > Config::generalLoggingDefault) {
 			std::ostringstream logStrStr;
-			logStrStr << "Content #" << content.first << " [" << this->currentUrl.second << "] could not be parsed.";
+			logStrStr << "Content #" << content.first << " [" << this->currentUrl.second << "] could not be parsed: " << e.what();
 			this->log(logStrStr.str());
 		}
 		return false;

@@ -33,19 +33,19 @@ void HTML::tidyAndConvert(std::string& content) {
 			|| !tidyOptSetInt(this->doc, TidyShowErrors, 0)
 			|| !tidyOptSetValue(this->doc, TidyOutCharEncoding, "utf8")
 			|| !tidyOptSetBool(this->doc, TidyForceOutput, yes))
-		throw std::runtime_error("TidyLib error: Could not set options.");
+		throw HTML::Exception("Could not set options");
 
 	// parse content
 	if(tidyParseString(this->doc, content.c_str()) < 0)
-		throw std::runtime_error("TidyLib error: Could not parse HTML content.");
+		throw HTML::Exception("Could not parse HTML content");
 
 	// clean and repair
 	if(tidyCleanAndRepair(this->doc) < 0)
-		throw std::runtime_error("TidyLib error: Could not clean and repair HTML content.");
+		throw HTML::Exception("Could not clean and repair HTML content");
 
 	// save buffer
 	if(tidySaveBuffer(this->doc, &(this->buffer)) < 0)
-		throw std::runtime_error("TidyLib error: Could not save output buffer.");
+		throw HTML::Exception("Could not save output buffer");
 
 	// save output
 	if(this->buffer.bp) content = std::string((char *) this->buffer.bp);

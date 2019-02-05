@@ -46,6 +46,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef crawlservpp::Query::Container::QueryStruct QueryStruct;
 		typedef crawlservpp::Network::Curl::Exception CurlException;
 		typedef crawlservpp::Parsing::URI::Exception URIException;
+		typedef crawlservpp::Parsing::XML::Exception XMLException;
 
 	public:
 		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,

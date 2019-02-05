@@ -1804,9 +1804,9 @@ void Server::cmdTestQuery(unsigned long index, const std::string& message) {
 						response = Server::ServerCommandResponse(true, xPathTest.getErrorMessage());
 					else {
 						result = "COMPILING TIME: " + timer.tickStr() + "\n";
-						if(!xmlDocumentTest.parse(text))
-							response = Server::ServerCommandResponse(true, xmlDocumentTest.getErrorMessage());
-						else {
+						try {
+							xmlDocumentTest.parse(text);
+
 							result += "PARSING TIME: " + timer.tickStr() + "\n";
 							if(resultBool) {
 								// get boolean result (does at least one match exist?)
@@ -1848,6 +1848,9 @@ void Server::cmdTestQuery(unsigned long index, const std::string& message) {
 									else result += " [empty]\n";
 								}
 							}
+						}
+						catch(const XMLException& e) {
+							response = Server::ServerCommandResponse(true, e.what());
 						}
 					}
 				}

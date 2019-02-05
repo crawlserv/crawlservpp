@@ -685,7 +685,8 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 
 					// parse content
 					crawlservpp::Parsing::XML doc;
-					if(doc.parse(content)) {
+					try {
+						doc.parse(content);
 
 						// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
 						if(this->config.crawlerHTMLCanonicalCheck) {
@@ -753,9 +754,9 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 							return false;
 						}
 					}
-					else {
+					catch(const XMLException& e) {
 						// error while parsing content
-						if(this->config.crawlerLogging) this->log(doc.getErrorMessage() + " [" + url.second + "].");
+						if(this->config.crawlerLogging) this->log(e.whatStr() + " [" + url.second + "].");
 						this->crawlingSkip(url);
 						return false;
 					}
@@ -979,11 +980,14 @@ void Thread::crawlingSaveContent(const std::pair<unsigned long, std::string>& ur
 		const std::string& content, const crawlservpp::Parsing::XML& doc) {
 	if(this->config.crawlerXml) {
 		std::string xmlContent;
-		if(doc.getContent(xmlContent)) {
+		try {
+			doc.getContent(xmlContent);
 			this->database.saveContent(url.first, response, type, xmlContent);
 			return;
 		}
-		else if(this->config.crawlerLogging) this->log("WARNING: Could not clean content [" + url.second + "].");
+		catch(const XMLException& e) {
+			this->log("WARNING: Could not clean content [" + url.second + "]: " + e.whatStr());
+		}
 	}
 	this->database.saveContent(url.first, response, type, content);
 }
@@ -1319,7 +1323,8 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 													else {
 														// parse content
 														crawlservpp::Parsing::XML doc;
-														if(doc.parse(archivedContent)) {
+														try {
+															doc.parse(archivedContent);
 
 															// add archived content to database
 															this->database.saveArchivedContent(url.first, i->timeStamp,
@@ -1335,6 +1340,7 @@ bool Thread::crawlingArchive(const std::pair<unsigned long, std::string>& url, u
 																this->crawlingParseAndAddUrls(url, urls, newUrlsTo, true);
 															}
 														}
+														catch(const XMLException& e) {} // ignore parsing errors
 													}
 												}
 												catch(const CurlException& e) {
