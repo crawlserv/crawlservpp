@@ -22,10 +22,10 @@ void Config::loadConfig(const std::string& configJson, std::vector<std::string>&
 	// parse JSON
 	rapidjson::Document json;
 	if(json.Parse(configJson.c_str()).HasParseError())
-		throw std::runtime_error("Could not parse configuration JSON.");
+		throw Config::Exception("Could not parse configuration JSON.");
 
 	if(!json.IsArray())
-		throw std::runtime_error("Invalid configuration JSON (is no array).");
+		throw Config::Exception("Invalid configuration JSON (is no array).");
 
 	// load module-specific configuration
 	this->loadModule(json, warningsTo);

@@ -10,9 +10,10 @@
 #ifndef MODULE_CONFIG_H_
 #define MODULE_CONFIG_H_
 
+#include "../Main/Exception.h"
+
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -22,11 +23,15 @@ namespace crawlservpp::Module {
 		Config();
 		virtual ~Config();
 
-		// get error message
-		const std::string& getErrorMessage() const;
-
 		// configuration loader
 		void loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo);
+
+		// sub-class for configuration exceptions
+		class Exception : public crawlservpp::Main::Exception {
+		public:
+			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// load module-specific configuration from parsed JSON document
