@@ -337,11 +337,17 @@ void Thread::initCustomUrls() {
 		// get ids for custom URLs (and add them to the URL list if necessary)
 		for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
 			// check URI
-			if(this->parser->setCurrentSubUrl(i->second)) {
+			try {
+				this->parser->setCurrentSubUrl(i->second);
 				if(this->database.isUrlExists(i->second)) i->first = this->database.getUrlId(i->second);
 				else i->first = this->database.addUrl(i->second, true);
 			}
-			else if(this->config.crawlerLogging) warnings.push_back("WARNING: Skipped invalid custom URL " + i->second);
+			catch(const URIException& e) {
+				if(this->config.crawlerLogging) {
+					warnings.push_back("URI Parser error: " + e.whatStr());
+					warnings.push_back("Skipped invalid custom URL " + i->second);
+				}
+			}
 		}
 	}
 	catch(...) {
@@ -1039,9 +1045,11 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::pair<unsigned lo
 void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>& url, std::vector<std::string>& urls,
 		unsigned long& newUrlsTo, bool archived) {
 	// set current URL
-	if(!(this->parser->setCurrentSubUrl(url.second))) {
-		if(this->config.crawlerLogging) this->log(this->parser->getErrorMessage());
-		throw std::runtime_error("Could not set current sub-url!");
+	try {
+		this->parser->setCurrentSubUrl(url.second);
+	}
+	catch(const URIException& e) {
+		throw std::runtime_error("Could not set current sub-url because of URI Parser error: " + e.whatStr());
 	}
 
 	// parse URLs
@@ -1080,29 +1088,32 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 			urls.at(n - 1) = processed;
 
 			// parse link
-			if(this->parser->parseLink(urls.at(n - 1))) {
-				if(this->parser->isSameDomain()) {
-					if(!(this->config.crawlerParamsBlackList.empty())) {
-						urls.at(n - 1) = this->parser->getSubUrl(this->config.crawlerParamsBlackList, false);
+			try {
+				if(this->parser->parseLink(urls.at(n - 1))) {
+					if(this->parser->isSameDomain()) {
+						if(!(this->config.crawlerParamsBlackList.empty())) {
+							urls.at(n - 1) = this->parser->getSubUrl(this->config.crawlerParamsBlackList, false);
 
-					}
-					else urls.at(n - 1)
-							= this->parser->getSubUrl(this->config.crawlerParamsWhiteList, true);
-					if(!(this->crawlingCheckUrl(urls.at(n - 1)))) urls.at(n - 1) = "";
+						}
+						else urls.at(n - 1)
+								= this->parser->getSubUrl(this->config.crawlerParamsWhiteList, true);
+						if(!(this->crawlingCheckUrl(urls.at(n - 1)))) urls.at(n - 1) = "";
 
-					if(!urls.at(n - 1).empty()) {
-						if(urls.at(n - 1).at(0) != '/') {
-							throw std::runtime_error(urls.at(n - 1) + " is no sub-URL!");
+						if(!urls.at(n - 1).empty()) {
+							if(urls.at(n - 1).at(0) != '/') {
+								throw std::runtime_error(urls.at(n - 1) + " is no sub-URL!");
+							}
+							if(this->config.crawlerLogging && urls.at(n - 1).length() > 1 && urls.at(n - 1).at(1) == '#') {
+								this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'.");
+							}
+							continue;
 						}
-						if(this->config.crawlerLogging && urls.at(n - 1).length() > 1 && urls.at(n - 1).at(1) == '#') {
-							this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'.");
-						}
-						continue;
 					}
 				}
 			}
-			else if(this->config.crawlerLogging && this->parser->getErrorMessage().length())
-				this->log("WARNING: " + this->parser->getErrorMessage());
+			catch(const URIException& e) {
+				if(this->config.crawlerLogging) this->log("WARNING: URI Parser error - " + e.whatStr());
+			}
 		}
 
 		// delete out-of-domain and empty URLs

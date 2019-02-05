@@ -29,18 +29,31 @@ namespace crawlservpp::Parsing {
 		URI();
 		virtual ~URI();
 
-		bool setCurrentDomain(const std::string& currentDomain);
-		bool setCurrentSubUrl(const std::string& currentSubUrl);
-		bool parseLink(const std::string& linkToParse);
+		// setters
+		void setCurrentDomain(const std::string& currentDomain);
+		void setCurrentSubUrl(const std::string& currentSubUrl);
 
+		// getters
 		bool isSameDomain() const;
 		std::string getSubUrl(const std::vector<std::string>& args, bool whiteList) const;
 
-		std::string getErrorMessage() const;
+		// parser function
+		bool parseLink(const std::string& linkToParse);
 
+		// escape functions
 		static std::string escape(const std::string& string, bool plusSpace);
 		static std::string unescape(const std::string& string, bool plusSpace);
 		static std::string escapeUrl(const std::string& urlToEscape);
+
+		// sub-class for URI exceptions
+		class Exception : public std::exception {
+		public:
+			Exception(const std::string& description) { this->_description = description; }
+			const char * what() const throw() { return this->_description.c_str(); }
+			const std::string& whatStr() const throw() { return this->_description; }
+		private:
+			std::string _description;
+		};
 
 	private:
 		std::string domain;
@@ -111,8 +124,6 @@ namespace crawlservpp::Parsing {
 		private:
 			UriQueryListA * ptr;
 		};
-
-		mutable std::string errorMessage;
 
 		static std::string textRangeToString(const UriTextRangeA * range);
 		static std::string toString(const URI::URIWrapper& uri);
