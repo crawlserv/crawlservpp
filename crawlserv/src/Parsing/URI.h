@@ -11,15 +11,14 @@
 #ifndef PARSING_URI_H_
 #define PARSING_URI_H_
 
+#include "../Main/Exception.h"
 #include "../Helper/Strings.h"
 
 #include <uriparser/Uri.h>
 
 #include <algorithm>
-#include <exception>
 #include <memory>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -46,13 +45,10 @@ namespace crawlservpp::Parsing {
 		static std::string escapeUrl(const std::string& urlToEscape);
 
 		// sub-class for URI exceptions
-		class Exception : public std::exception {
+		class Exception : public crawlservpp::Main::Exception {
 		public:
-			Exception(const std::string& description) { this->_description = description; }
-			const char * what() const throw() { return this->_description.c_str(); }
-			const std::string& whatStr() const throw() { return this->_description; }
-		private:
-			std::string _description;
+			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			virtual ~Exception() {}
 		};
 
 	private:

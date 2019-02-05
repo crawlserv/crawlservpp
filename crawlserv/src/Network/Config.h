@@ -24,6 +24,7 @@ namespace crawlservpp::Network {
 		Config();
 		virtual ~Config();
 
+		// configuration
 		unsigned short connectionsMax;
 		bool contentLengthIgnore;
 		bool cookies;
@@ -91,6 +92,7 @@ namespace crawlservpp::Network {
 		std::string userAgent;
 		bool verbose;
 
+		// setter
 		void setEntry(const std::string& name, const rapidjson::Value::ConstMemberIterator& iterator,
 				std::vector<std::string>& warningsTo);
 	};

@@ -15,6 +15,7 @@
 #include "Config.h"
 
 #include "../Helper/Utf8.h"
+#include "../Main/Exception.h"
 
 #include <curl/curl.h>
 
@@ -22,9 +23,7 @@
 #include <chrono>
 #include <climits>
 #include <cstdio>
-#include <exception>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
@@ -54,13 +53,10 @@ namespace crawlservpp::Network {
 		std::string escapeUrl(const std::string& urlToEscape);
 
 		// sub-class for cURL exceptions
-		class Exception : public std::exception {
+		class Exception : public crawlservpp::Main::Exception {
 		public:
-			Exception(const std::string& description) { this->_description = description; }
-			const char * what() const throw() { return this->_description.c_str(); }
-			const std::string& whatStr() const throw() { return this->_description; }
-		private:
-			std::string _description;
+			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			virtual ~Exception() {}
 		};
 
 	private:
