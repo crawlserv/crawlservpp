@@ -45,6 +45,10 @@ namespace crawlservpp::Main {
 		static void signal(int num);
 		void shutdown(int num);
 
+		// no copying
+		App(App const&) = delete;
+		void operator=(App const&) = delete;
+
 	private:
 		std::atomic<bool> running;
 		std::unique_ptr<Server> server;
