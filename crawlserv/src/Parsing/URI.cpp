@@ -18,31 +18,20 @@ URI::URI() {}
 // destructor stub
 URI::~URI() {}
 
-// set current host
-bool URI::setCurrentDomain(const std::string& currentHost) {
-	if(currentHost.empty()) {
-		this->errorMessage = "URI Parser error: Empty domain.";
-		return false;
-	}
+// set current host, throws URI::Exception
+void URI::setCurrentDomain(const std::string& currentHost) {
+	if(currentHost.empty()) throw URI::Exception("Empty domain");
 	this->domain = URI::escapeUrl(currentHost);
-	return true;
 }
 
-// set current sub-URL (beginning with slash)
-bool URI::setCurrentSubUrl(const std::string& currentSubUrl) {
+// set current sub-URL (beginning with slash), throws URI::Exception
+void URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 	// error checking
-	if(this->domain.empty()) {
-		this->errorMessage = "URI Parser error: No current domain specified.";
-		return false;
-	}
-	if(currentSubUrl.empty()) {
-		this->errorMessage = "URI Parser error: Empty sub-URL.";
-		return false;
-	}
-	if(currentSubUrl.at(0) != '/') {
-		this->errorMessage = "URI Parser error: Sub-URL does not start with slash (\'/\').";
-		return false;
-	}
+	if(this->domain.empty()) throw URI::Exception("No current domain specified");
+	if(currentSubUrl.empty()) throw URI::Exception("Empty sub-URL");
+	if(currentSubUrl.at(0) != '/') throw URI::Exception("Sub-URL does not start with slash (\'/\')");
+
+	// escape and set current sub-URL
 	this->subUrl = URI::escapeUrl(currentSubUrl);
 
 	// create current URI string
@@ -59,103 +48,21 @@ bool URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 		errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
 		if(end.length() < current.length()) errStrStr << current.substr(0, current.length() - end.length()) << "[!!!]" << end;
 		else errStrStr << current << "[!!!]";
-		errStrStr << "\' in URIParser::setCurrentSubUrl().";
-		this->errorMessage = errStrStr.str();
-		return false;
+		errStrStr << "\' in URI::setCurrentSubUrl()";
+		throw URI::Exception(errStrStr.str());
 	}
-	return true;
-}
-
-// parse link to sub-URL (beginning with slash)
-bool URI::parseLink(const std::string& linkToParse) {
-	// reset old URI if necessary
-	this->uri.reset();
-
-	// error checking
-	if(this->domain.empty()) {
-		this->errorMessage = "URI Parser error: No current domain specified.";
-		return false;
-	}
-	if(this->subUrl.empty()) {
-		this->errorMessage = "URI Parser error: No current sub-URL specified.";
-		return false;
-	}
-
-	// copy URL
-	std::string linkCopy(linkToParse);
-
-	// remove anchor if necessary
-	unsigned long end = linkCopy.find('#');
-	if(end != std::string::npos && linkCopy.length() > end) {
-		if(end) linkCopy = linkCopy.substr(0, end);
-		else linkCopy = "";
-	}
-
-	// trim and escape URL
-	crawlservpp::Helper::Strings::trim(linkCopy);
-	linkCopy = URI::escapeUrl(linkCopy);
-
-	// check for empty link
-	if(linkCopy.empty()) {
-		this->errorMessage = "";
-		return false;
-	}
-
-	// create new URI
-	this->uri.create();
-
-	// create temporary URI for relative link
-	URI::URIWrapper relativeSource;
-	relativeSource.create();
-
-	// URL needs to be stored in class BEFORE PARSING to provide long-term access by the parsing library
-	// (otherwise the URL would be out of scope for the library after leaving this member function)
-	this->link.swap(linkCopy);
-
-	// parse relative link
-	this->state.uri = relativeSource.get();
-	if(uriParseUriA(&(this->state), this->link.c_str()) != URI_SUCCESS) {
-		std::ostringstream errStrStr;
-		std::string end(this->state.errorPos);
-		errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
-		if(end.length() < this->link.length())
-			errStrStr << this->link.substr(0, this->link.length() - end.length())	<< "[!!!]" << end;
-		else
-			errStrStr << this->link << "[!!!]";
-		errStrStr << "\' in URIParser::parseLink().";
-		this->errorMessage = errStrStr.str();
-		this->uri.reset();
-		return false;
-	}
-
-	// resolve reference
-	if(uriAddBaseUriExA(this->uri.get(), relativeSource.get(), this->base.get(), URI_RESOLVE_IDENTICAL_SCHEME_COMPAT) != URI_SUCCESS) {
-		this->errorMessage = "URI Parser error: Reference resolving failed for \'" + this->toString(relativeSource) + "\'.";
-		this->uri.reset();
-		return false;
-	}
-
-	// normalize URI
-	const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(this->uri.get());
-	if(uriNormalizeSyntaxExA(this->uri.get(), dirtyParts) != URI_SUCCESS) {
-		this->errorMessage = "URI Parser error: Normalizing failed for \'" + this->toString(this->uri) + "\'.";
-		this->uri.reset();
-		return false;
-	}
-
-	return true;
 }
 
 // check whether parsed link links to current domain
 bool URI::isSameDomain() const {
-	if(this->domain.empty()) throw std::runtime_error("URI Parser error - No current domain specified");
-	if(!(this->uri)) throw std::runtime_error("URI Parser error - No link parsed");
+	if(this->domain.empty()) throw URI::Exception("No current domain specified");
+	if(!(this->uri)) throw URI::Exception("No link parsed");
 	return URI::textRangeToString(&(this->uri.get()->hostText)) == this->domain;
 }
 
 // get sub-URL for link
 std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
-	if(!(this->uri)) throw std::runtime_error("URI Parser error - No link parsed");
+	if(!(this->uri)) throw URI::Exception("No link parsed");
 	URIQueryListWrapper queryList;
 	UriQueryListA * queryNext = NULL;
 	int queryCount = 0;
@@ -194,9 +101,66 @@ std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList)
 	return result;
 }
 
-// get error string
-std::string URI::getErrorMessage() const {
-	return this->errorMessage;
+// parse link to sub-URL (beginning with slash), return false if link is empty, throws URI::Exception
+bool URI::parseLink(const std::string& linkToParse) {
+	// reset old URI if necessary
+	this->uri.reset();
+
+	// error checking
+	if(this->domain.empty()) throw URI::Exception("No current domain specified");
+	if(this->subUrl.empty()) throw URI::Exception("No current sub-URL specified");
+
+	// copy URL
+	std::string linkCopy(linkToParse);
+
+	// remove anchor if necessary
+	unsigned long end = linkCopy.find('#');
+	if(end != std::string::npos && linkCopy.length() > end) {
+		if(end) linkCopy = linkCopy.substr(0, end);
+		else linkCopy = "";
+	}
+
+	// trim and escape URL
+	crawlservpp::Helper::Strings::trim(linkCopy);
+	linkCopy = URI::escapeUrl(linkCopy);
+
+	// check for empty link
+	if(linkCopy.empty()) return false;
+
+	// create new URI
+	this->uri.create();
+
+	// create temporary URI for relative link
+	URI::URIWrapper relativeSource;
+	relativeSource.create();
+
+	// NOTE: URL needs to be stored in class BEFORE PARSING to provide long-term access by the parsing library
+	//  (otherwise the URL would be out of scope for the library after leaving this member function)
+	this->link.swap(linkCopy);
+
+	// parse relative link
+	this->state.uri = relativeSource.get();
+	if(uriParseUriA(&(this->state), this->link.c_str()) != URI_SUCCESS) {
+		std::ostringstream errStrStr;
+		std::string end(this->state.errorPos);
+		errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
+		if(end.length() < this->link.length())
+			errStrStr << this->link.substr(0, this->link.length() - end.length())	<< "[!!!]" << end;
+		else
+			errStrStr << this->link << "[!!!]";
+		errStrStr << "\' in URIParser::parseLink()";
+		throw URI::Exception(errStrStr.str());
+	}
+
+	// resolve reference
+	if(uriAddBaseUriExA(this->uri.get(), relativeSource.get(), this->base.get(), URI_RESOLVE_IDENTICAL_SCHEME_COMPAT) != URI_SUCCESS)
+		throw URI::Exception("Reference resolving failed for \'" + this->toString(relativeSource) + "\'");
+
+	// normalize URI
+	const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(this->uri.get());
+	if(uriNormalizeSyntaxExA(this->uri.get(), dirtyParts) != URI_SUCCESS)
+		throw URI::Exception("Normalizing failed for \'" + this->toString(this->uri) + "\'");
+	return true;
 }
 
 // public static helper function: escape string
@@ -247,11 +211,11 @@ std::string URI::toString(const URI::URIWrapper& uri) {
 	int charsRequired = 0;
 
 	if(uriToStringCharsRequiredA(uri.get(), &charsRequired) != URI_SUCCESS)
-	    throw std::runtime_error("URI Parser error - Could not convert URI to string because uriToStringCharsRequiredA(...) failed");
+	    throw URI::Exception("Could not convert URI to string because uriToStringCharsRequiredA(...) failed");
 
 	std::unique_ptr<char[]> uriCString(std::make_unique<char[]>(charsRequired + 1));
 	if(uriToStringA(uriCString.get(), uri.get(), charsRequired + 1, NULL) != URI_SUCCESS)
-		throw std::runtime_error("URI Parser error - Could not convert URI to string because uriToStringA(...) failed");
+		throw URI::Exception("Could not convert URI to string because uriToStringA(...) failed");
 
 	return std::string(uriCString.get());
 }
