@@ -43,10 +43,12 @@
 namespace crawlservpp::Module::Crawler {
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
 		// for convenience
-		typedef crawlservpp::Query::Container::QueryStruct QueryStruct;
 		typedef crawlservpp::Network::Curl::Exception CurlException;
 		typedef crawlservpp::Parsing::URI::Exception URIException;
 		typedef crawlservpp::Parsing::XML::Exception XMLException;
+		typedef crawlservpp::Query::Container::QueryStruct QueryStruct;
+		typedef crawlservpp::Query::RegEx::Exception RegExException;
+		typedef crawlservpp::Query::XPath::Exception XPathException;
 
 	public:
 		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,

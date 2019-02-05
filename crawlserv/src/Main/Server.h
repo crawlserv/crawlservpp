@@ -48,9 +48,7 @@
 #include <chrono>
 #include <cstring>
 #include <exception>
-#include <functional>
 #include <locale>
-#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <thread>
@@ -63,6 +61,8 @@
 namespace crawlservpp::Main {
 	// for convenience
 	typedef crawlservpp::Parsing::XML::Exception XMLException;
+	typedef crawlservpp::Query::RegEx::Exception RegExException;
+	typedef crawlservpp::Query::XPath::Exception XPathException;
 
 	class Server final {
 	public:
@@ -96,12 +96,12 @@ namespace crawlservpp::Main {
 		std::vector<std::unique_ptr<crawlservpp::Module::Parser::Thread>> parsers;
 		//std::vector<std::unique_ptr<crawlservpp::Module::Extractor::Thread>> extractors;
 		std::vector<std::unique_ptr<crawlservpp::Module::Analyzer::Thread>> analyzers;
-		std::vector<std::unique_ptr<std::thread>> workers;
+		std::vector<std::thread> workers;
 		std::vector<bool> workersRunning;
 		std::mutex workersLock;
 
 		// run server command
-		std::string cmd(const std::string& msgBody, const std::string& ip, bool& threadStartedTo);
+		std::string cmd(WebServer::Connection connection, const std::string& msgBody, bool& threadStartedTo);
 
 		// set server status
 		void setStatus(const std::string& statusString);
@@ -131,8 +131,8 @@ namespace crawlservpp::Main {
 		};
 
 		// event handlers
-		void onAccept(const std::string& ip);
-		void onRequest(const std::string& ip, const std::string& method, const std::string& body);
+		void onAccept(WebServer::Connection connection);
+		void onRequest(WebServer::Connection connection, const std::string& method,	const std::string& body);
 
 		// static helper function for the class
 		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
@@ -178,7 +178,7 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdUpdateQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDeleteQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDuplicateQuery(const rapidjson::Document& json);
-		void cmdTestQuery(unsigned long index, const std::string& message);
+		void cmdTestQuery(WebServer::Connection connection, unsigned long index, const std::string& message);
 
 		ServerCommandResponse cmdAddConfig(const rapidjson::Document& json);
 		ServerCommandResponse cmdUpdateConfig(const rapidjson::Document& json);

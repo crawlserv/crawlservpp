@@ -130,17 +130,12 @@ namespace crawlservpp::Network {
 			// constructor: set pointer to NULL
 			CurlListWrapper() { this->ptr = NULL; }
 
-			// destructor: free query list if necessary
+			// destructor: reset cURL list if necessary
 			virtual ~CurlListWrapper() { this->reset(); }
 
-			// get const pointer to query list
+			// get pointer to cURL list
 			const struct curl_slist * get() const { return this->ptr; }
-
-			// get non-const pointer to query list
 			struct curl_slist * get() { return this->ptr; }
-
-			// get non-const pointer to pointer to query list
-			struct curl_slist ** getPtr() { return &(this->ptr); }
 
 			// list functions
 			void append(const std::string& newElement) { this->ptr = curl_slist_append(this->ptr, newElement.c_str()); }

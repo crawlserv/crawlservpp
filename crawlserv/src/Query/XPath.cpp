@@ -27,102 +27,78 @@ std::string XPath::TextOnlyWalker::getResult() const {
 
 // constructor: set default values
 XPath::XPath() {
+	this->compiled = false;
 	this->isTextOnly = false;
 }
 
 // destructor stub
 XPath::~XPath() {}
 
-// compile a XPath query
-bool XPath::compile(const std::string& xpath, bool textOnly) {
+// compile a XPath query, throws XPath::Exception
+void XPath::compile(const std::string& xpath, bool textOnly) {
 	// reset values
 	this->isTextOnly = false;
 
 	// create new XPath object
 	try {
-		this->query = std::make_unique<pugi::xpath_query>(xpath.c_str());
+		this->query = pugi::xpath_query(xpath.c_str());
+		this->compiled = true;
 	}
 	catch(const pugi::xpath_exception& e) {
-		this->errorMessage = "XPath compiling error: " + std::string(e.what());
-		return false;
+		throw XPath::Exception(e.what());
 	}
 
 	// save XPath option
 	this->isTextOnly = textOnly;
-	return true;
 }
 
-// get boolean value (at least one match?, saved to resultTo), return false on error
-bool XPath::getBool(const crawlservpp::Parsing::XML& doc, bool& resultTo) const {
+// get boolean value (at least one match?), throws XPath::Exception
+bool XPath::getBool(const crawlservpp::Parsing::XML& doc) const {
 	// check query and content
-	if(!(this->query)) {
-		this->errorMessage = "XPath error: No query compiled.";
-		return false;
-	}
-	if(!(doc.doc)) {
-		this->errorMessage = "XPath error: No content parsed.";
-		return false;
-	}
+	if(!(this->compiled)) throw XPath::Exception("No query compiled");
+	if(!(doc.doc)) throw XPath::Exception("No content parsed");
 
 	// evaluate query with boolean result
 	try {
-		resultTo = this->query->evaluate_boolean(*(doc.doc));
+		return this->query.evaluate_boolean(*(doc.doc));
 	}
 	catch(const std::exception& e) {
-		this->errorMessage = "XPath error: " + std::string(e.what());
-		return false;
+		throw XPath::Exception(e.what());
 	}
-
-	return true;
 }
 
-// get first match only (saved to resultTo), return false on error
-bool XPath::getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const {
+// get first match only (saved to resultTo), , throws XPath::Exception
+void XPath::getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const {
 	// check query and content
-	if(!(this->query)) {
-		this->errorMessage = "XPath error: No query compiled.";
-		return false;
-	}
-	if(!(doc.doc)) {
-		this->errorMessage = "XPath error: No content parsed.";
-		return false;
-	}
+	if(!(this->compiled)) throw XPath::Exception("No query compiled");
+	if(!(doc.doc)) throw XPath::Exception("No content parsed");
 
 	// evaluate query with string result
 	try {
-		if(this->query->return_type() == pugi::xpath_type_node_set) {
-			pugi::xpath_node_set nodeSet = this->query->evaluate_node_set(*(doc.doc));
+		if(this->query.return_type() == pugi::xpath_type_node_set) {
+			pugi::xpath_node_set nodeSet = this->query.evaluate_node_set(*(doc.doc));
 			if(!nodeSet.empty()) resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
 			else resultTo = "";
 		}
-		else resultTo = this->query->evaluate_string(*(doc.doc));
+		else resultTo = this->query.evaluate_string(*(doc.doc));
 	}
 	catch(const std::exception& e) {
-		this->errorMessage = "XPath error: " + std::string(e.what());
-		return false;
+		throw XPath::Exception(e.what());
 	}
-
-	return true;
 }
 
-// get all matches as vector (saved to resultTo), return false on error
-bool XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const {
+// get all matches as vector (saved to resultTo), , throws XPath::Exception
+void XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const {
 	std::vector<std::string> resultArray;
 
 	// check query and content
-	if(!(this->query)) {
-		this->errorMessage = "XPath error: No query compiled.";
-		return false;
-	}
-	if(!(doc.doc)) {
-		this->errorMessage = "XPath error: No content parsed.";
-		return false;
-	}
+	if(!(this->compiled)) throw XPath::Exception("No query compiled");
+	if(!(doc.doc)) throw XPath::Exception("No content parsed");
 
 	// evaluate query with multiple string results
 	try {
-		if(this->query->return_type() == pugi::xpath_type_node_set) {
-			pugi::xpath_node_set nodeSet = this->query->evaluate_node_set(*(doc.doc));
+		if(this->query.return_type() == pugi::xpath_type_node_set) {
+			pugi::xpath_node_set nodeSet = this->query.evaluate_node_set(*(doc.doc));
 			resultArray.reserve(resultArray.size() + nodeSet.size());
 			for(auto i = nodeSet.begin(); i != nodeSet.end(); ++i) {
 				std::string result = XPath::nodeToString(*i, this->isTextOnly);
@@ -130,22 +106,15 @@ bool XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string
 			}
 		}
 		else {
-			std::string result = this->query->evaluate_string(*(doc.doc));
+			std::string result = this->query.evaluate_string(*(doc.doc));
 			if(!result.empty()) resultArray.push_back(result);
 		}
 	}
 	catch(const std::exception& e) {
-		this->errorMessage = "XPath error: " + std::string(e.what());
-		return false;
+		throw XPath::Exception(e.what());
 	}
 
 	resultTo = resultArray;
-	return true;
-}
-
-// get error message
-std::string XPath::getErrorMessage() const {
-	return this->errorMessage;
 }
 
 // static helper function: convert node to string

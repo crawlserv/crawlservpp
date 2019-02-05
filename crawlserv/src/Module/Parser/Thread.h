@@ -39,6 +39,7 @@
 namespace crawlservpp::Module::Parser {
 	// for convenience
 	typedef crawlservpp::Parsing::XML::Exception XMLException;
+	typedef crawlservpp::Query::RegEx::Exception RegExException;
 
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
 	public:
