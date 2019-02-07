@@ -12,9 +12,21 @@
 namespace crawlservpp::Query {
 
 // constructor: set default values
-XPath::XPath() {
+XPath::XPath(const std::string& xpath, bool textOnly) {
 	this->compiled = false;
 	this->isTextOnly = false;
+
+	// create new XPath object
+	try {
+		this->query = pugi::xpath_query(xpath.c_str());
+		this->compiled = true;
+	}
+	catch(const pugi::xpath_exception& e) {
+		throw XPath::Exception(e.what());
+	}
+
+	// save XPath option
+	this->isTextOnly = textOnly;
 }
 
 // move constructor
@@ -90,24 +102,6 @@ void XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string
 	}
 
 	resultTo = resultArray;
-}
-
-// compile a XPath query, throws XPath::Exception
-void XPath::compile(const std::string& xpath, bool textOnly) {
-	// reset values
-	this->isTextOnly = false;
-
-	// create new XPath object
-	try {
-		this->query = pugi::xpath_query(xpath.c_str());
-		this->compiled = true;
-	}
-	catch(const pugi::xpath_exception& e) {
-		throw XPath::Exception(e.what());
-	}
-
-	// save XPath option
-	this->isTextOnly = textOnly;
 }
 
 // move operator
