@@ -141,7 +141,7 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reservePreparedStatements(7);
+	this->reserveForPreparedStatements(7);
 
 	try {
 		// prepare SQL statements for analyzer
@@ -194,28 +194,22 @@ void Database::prepare() {
 
 // prepare SQL statements for algorithm, throws crawlservpp::Main::Database::Exception
 void Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo) {
+
+
 	// check connection to database
 	this->checkConnection();
 
 	// reserve memory
-	this->reservePreparedStatements(statements.size());
+	this->reserveForPreparedStatements(statements.size());
 
-	try {
-		// prepare SQL statements for algorithm
-		if(this->verbose) {
-			std::ostringstream logStrStr;
-			logStrStr << "[#" << this->idString << "] prepares " << statements.size() << " SQL statements for algorithm...";
-			this->log("analyzer", logStrStr.str());
-		}
-		for(auto i = statements.begin(); i != statements.end(); ++i)
-			idsTo.push_back(this->addPreparedStatement(*i));
+	// prepare SQL statements for algorithm
+	if(this->verbose) {
+		std::ostringstream logStrStr;
+		logStrStr << "[#" << this->idString << "] prepares " << statements.size() << " SQL statements for algorithm...";
+		this->log("analyzer", logStrStr.str());
 	}
-	catch(sql::SQLException &e) {
-		// set error message
-		std::ostringstream errorStrStr;
-		errorStrStr << "prepareAlgo() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	for(auto i = statements.begin(); i != statements.end(); ++i)
+		idsTo.push_back(this->addPreparedStatement(*i));
 }
 
 // get prepared SQL statement for algorithm (wraps protected parent member function to the public)

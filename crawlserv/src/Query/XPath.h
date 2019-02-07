@@ -16,6 +16,7 @@
 
 #include <pugixml.hpp>
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -37,6 +38,23 @@ namespace crawlservpp::Query {
 			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
+
+		// only moveable, not copyable
+		XPath(XPath&) = delete;
+		XPath(XPath&& other) {
+			this->query = std::move(other.query);
+			this->compiled = std::move(other.compiled);
+			this->isTextOnly = std::move(other.isTextOnly);
+		}
+		XPath& operator=(XPath&) = delete;
+		XPath& operator=(XPath&& other) {
+			if(&other != this) {
+				this->query = std::move(other.query);
+				this->compiled = std::move(other.compiled);
+				this->isTextOnly = std::move(other.isTextOnly);
+			}
+			return *this;
+		}
 
 	private:
 		// walker class for text-only conversion

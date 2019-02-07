@@ -32,15 +32,15 @@ Container::QueryStruct Container::addQuery(const crawlservpp::Struct::QueryPrope
 
 	if(!properties.text.empty()) {
 		if(properties.type == "regex") {
-			std::unique_ptr<RegEx> regex = std::make_unique<RegEx>();
-			regex->compile(properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti);
+			RegEx regex;
+			regex.compile(properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti);
 			newQuery.index = this->queriesRegEx.size();
 			newQuery.type = Container::QueryStruct::typeRegEx;
 			this->queriesRegEx.push_back(std::move(regex));
 		}
 		else if(properties.type == "xpath") {
-			std::unique_ptr<XPath> xpath = std::make_unique<XPath>();
-			xpath->compile(properties.text, properties.textOnly);
+			XPath xpath;
+			xpath.compile(properties.text, properties.textOnly);
 			newQuery.index = this->queriesXPath.size();
 			newQuery.type = Container::QueryStruct::typeXPath;
 			this->queriesXPath.push_back(std::move(xpath));
@@ -53,12 +53,12 @@ Container::QueryStruct Container::addQuery(const crawlservpp::Struct::QueryPrope
 
 // get const pointer to RegEx query by index
 const RegEx& Container::getRegExQueryPtr(unsigned long index) const {
-	return *(this->queriesRegEx.at(index));
+	return this->queriesRegEx.at(index);
 }
 
 // get const pointer to XPath query by index
 const XPath& Container::getXPathQueryPtr(unsigned long index) const {
-	return *(this->queriesXPath.at(index));
+	return this->queriesXPath.at(index);
 }
 
 // clear queries

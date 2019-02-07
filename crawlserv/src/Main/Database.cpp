@@ -29,7 +29,6 @@ Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings) : se
 	this->psLastId = 0;
 	this->psSetThreadStatus = 0;
 	this->psSetThreadStatusMessage = 0;
-	this->psStrlen = 0;
 
 	// get driver instance if necessary
 	if(!Database::driver) {
@@ -134,62 +133,20 @@ void Database::initializeSql() {
 	for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i) this->run(*i);
 }
 
-// prepare basic SQL statements (getting last id, logging, thread status and strlen)
+// prepare basic SQL statements (getting last id, logging and thread status)
 void Database::prepare() {
-	// check connection
-	this->checkConnection();
-
 	// reserve memory for SQL statements
-	this->preparedStatements.reserve(5);
+	this->reserveForPreparedStatements(5);
 
-	try {
-		// prepare basic SQL statements
-		if(!(this->psLastId)) {
-			PreparedSqlStatement statement;
-			statement.string = "SELECT LAST_INSERT_ID() AS id";
-			statement.statement.reset(this->connection->prepareStatement(statement.string));
-			this->preparedStatements.push_back(statement);
-			this->psLastId = this->preparedStatements.size();
-		}
-		if(!(this->psLog)) {
-			PreparedSqlStatement statement;
-			statement.string = "INSERT INTO crawlserv_log(module, entry) VALUES (?, ?)";
-			statement.statement.reset(this->connection->prepareStatement(statement.string));
-			this->preparedStatements.push_back(statement);
-			this->psLog = this->preparedStatements.size();
-		}
+	// prepare basic SQL statements
+	if(!(this->psLastId)) this->psLastId = this->addPreparedStatement("SELECT LAST_INSERT_ID() AS id");
+	if(!(this->psLog)) this->psLog = this->addPreparedStatement("INSERT INTO crawlserv_log(module, entry) VALUES (?, ?)");
 
-		// prepare thread statements
-		if(!(this->psSetThreadStatus)) {
-			PreparedSqlStatement statement;
-			statement.string = "UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1";
-			statement.statement.reset(this->connection->prepareStatement(statement.string));
-			this->preparedStatements.push_back(statement);
-			this->psSetThreadStatus = this->preparedStatements.size();
-		}
-		if(!(this->psSetThreadStatusMessage)) {
-			PreparedSqlStatement statement;
-			statement.string = "UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1";
-			statement.statement.reset(this->connection->prepareStatement(statement.string));
-			this->preparedStatements.push_back(statement);
-			this->psSetThreadStatusMessage = this->preparedStatements.size();
-		}
-		
-		// prepare strlen statement
-		if(!(this->psStrlen)) {
-			PreparedSqlStatement statement;
-			statement.string = "SELECT LENGTH(?) AS l";
-			statement.statement.reset(this->connection->prepareStatement(statement.string));
-			this->preparedStatements.push_back(statement);
-			this->psStrlen = this->preparedStatements.size();
-		}
-	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw Database::Exception(errorStrStr.str());
-	}
+	// prepare thread statements
+	if(!(this->psSetThreadStatus)) this->psSetThreadStatus = this->addPreparedStatement(
+			"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1");
+	if(!(this->psSetThreadStatusMessage)) this->psSetThreadStatusMessage = this->addPreparedStatement(
+			"UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1");
 }
 
 /*
@@ -207,7 +164,7 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 
 	// check prepared SQL statement
 	if(!(this->psLog)) throw Database::Exception("Missing prepared SQL statement for Database::log(...)");
-	sql::PreparedStatement& sqlStatement = *(this->preparedStatements.at(this->psLog - 1).statement);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psLog);
 
 	// check connection
 	this->checkConnection();
@@ -225,7 +182,6 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 		// SQL error
 		std::ostringstream errorStrStr;
 		errorStrStr << "log() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
-		errorStrStr << " [DEBUG: " << this->preparedStatements.at(this->psLog - 1).string << "]";
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -446,7 +402,7 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 
 	// check prepared SQL statement
 	if(!(this->psSetThreadStatus)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
-	sql::PreparedStatement& sqlStatement = *(this->preparedStatements.at(this->psSetThreadStatus - 1).statement);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetThreadStatus);
 
 	// create status message
 	std::string statusMessage;
@@ -482,7 +438,7 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 	// check prepared SQL statement
 	if(!(this->psSetThreadStatusMessage))
 		throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
-	sql::PreparedStatement& sqlStatement = *(this->preparedStatements.at(this->psSetThreadStatusMessage - 1).statement);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetThreadStatusMessage);
 
 	// create status message
 	std::string statusMessage;
@@ -1093,7 +1049,8 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 			result = this->addWebsite(crawlservpp::Struct::WebsiteProperties(websiteDomain, newNamespace, newName));
 
 			// create SQL statement for geting URL list info
-			sqlStatement.reset(this->connection->prepareStatement("SELECT name, namespace FROM crawlserv_urllists WHERE website = ?"));
+			sqlStatement.reset(this->connection->prepareStatement(
+					"SELECT name, namespace FROM crawlserv_urllists WHERE website = ?"));
 
 			// execute SQL statement for geting URL list info
 			sqlStatement->setUInt64(1, websiteId);
@@ -1108,7 +1065,8 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 			}
 
 			// create SQL statement for getting queries
-			sqlStatement.reset(this->connection->prepareStatement("SELECT name, query, type, resultbool, resultsingle, resultmulti,"
+			sqlStatement.reset(this->connection->prepareStatement(
+					"SELECT name, query, type, resultbool, resultsingle, resultmulti,"
 					" textonly FROM crawlserv_queries WHERE website = ?"));
 
 			// execute SQL statement for getting queries
@@ -2040,8 +1998,8 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 
 		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
 			// entry does not exist already: create SQL statement for adding table
-			sqlStatement.reset(this->connection->prepareStatement("INSERT INTO crawlserv_parsedtables(website, urllist, name)"
-							" VALUES (?, ?, ?)"));
+			sqlStatement.reset(this->connection->prepareStatement(
+					"INSERT INTO crawlserv_parsedtables(website, urllist, name) VALUES (?, ?, ?)"));
 
 			// execute SQL statement for adding table
 			sqlStatement->setUInt64(1, websiteId);
@@ -2509,7 +2467,7 @@ void Database::checkConnection() {
 
 		// recover prepared SQL statements
 		for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i)
-			i->statement.reset(this->connection->prepareStatement(i->string));
+			i->refresh(this->connection.get());
 	}
 	catch(sql::SQLException &e) {
 		// SQL error while recovering prepared statements
@@ -3765,6 +3723,47 @@ unsigned long Database::getMaxAllowedPacketSize() const {
 }
 
 /*
+ * HELPER FUNCTIONS FOR PREPARED SQL STATEMENTS (protected)
+ */
+
+// reserve memory for a specific number of SQL statements to additionally prepare
+void Database::reserveForPreparedStatements(unsigned short numberOfAdditionalPreparedStatements) {
+	this->preparedStatements.resize(this->preparedStatements.size() + numberOfAdditionalPreparedStatements);
+}
+
+// prepare additional SQL statement, return ID of newly prepared SQL statement
+unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
+	// check connection
+	this->checkConnection();
+
+	// try to prepare SQL statement
+	try {
+		this->preparedStatements.emplace_back(
+				Database::PreparedSqlStatementWrapper(this->connection.get(), sqlQuery));
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		std::ostringstream errorStrStr;
+		errorStrStr << "addPreparedStatement() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw Database::Exception(errorStrStr.str());
+	}
+
+	return this->preparedStatements.size();
+}
+
+// get reference to prepared SQL statement by its ID
+sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
+	try {
+		return *(this->preparedStatements.at(id - 1).get());
+	}
+	catch(const std::out_of_range& e) {
+		std::ostringstream strStr;
+		strStr << "getPreparedStatement(): No prepared SQL statement for ID " << id << " found";
+		throw Database::Exception(strStr.str());
+	}
+}
+
+/*
  * DATABASE HELPER FUNCTIONS (protected)
  */
 
@@ -3773,8 +3772,8 @@ unsigned long Database::getLastInsertedId() {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!(this->psLastId)) throw Database::Exception("Missing prepared SQL statement for last inserted id");
-	sql::PreparedStatement& sqlStatement = *(this->preparedStatements.at(this->psLastId - 1).statement);
+	if(!(this->psLastId)) throw Database::Exception("Missing prepared SQL statement for last inserted ID");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psLastId);
 
 	// check connection
 	this->checkConnection();

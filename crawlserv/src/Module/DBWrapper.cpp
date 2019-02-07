@@ -188,22 +188,18 @@ unsigned long DBWrapper::getMaxAllowedPacketSize() const {
  */
 
 // reserve memory for prepared SQL statements
-void DBWrapper::reservePreparedStatements(unsigned long numStatements) {
-	this->database.preparedStatements.reserve(this->database.preparedStatements.size() + numStatements);
+void DBWrapper::reserveForPreparedStatements(unsigned long numberOfAdditionalPreparedStatements) {
+	this->database.reserveForPreparedStatements(numberOfAdditionalPreparedStatements);
 }
 
-// add prepared SQL statement to the database and return the ID of the newly added prepared statement
-unsigned short DBWrapper::addPreparedStatement(const std::string& sqlStatementString) {
-	DBThread::PreparedSqlStatement statement;
-	statement.string = sqlStatementString;
-	statement.statement = std::unique_ptr<sql::PreparedStatement>(this->database.connection->prepareStatement(statement.string));
-	this->database.preparedStatements.push_back(std::move(statement));
-	return this->database.preparedStatements.size();
+// add prepared SQL statement and return the ID of the newly added prepared statement
+unsigned short DBWrapper::addPreparedStatement(const std::string& sqlQuery) {
+	return this->database.addPreparedStatement(sqlQuery);
 }
 
-// get prepared SQL statement from database by its ID
-sql::PreparedStatement& DBWrapper::getPreparedStatement(unsigned short sqlStatementId) {
-	return *(this->database.preparedStatements.at(sqlStatementId - 1).statement);
+// get prepared SQL statement by its ID
+sql::PreparedStatement& DBWrapper::getPreparedStatement(unsigned short id) {
+	return this->database.getPreparedStatement(id);
 }
 
 /*

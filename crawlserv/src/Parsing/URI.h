@@ -79,17 +79,21 @@ namespace crawlservpp::Parsing {
 			UriUriA * get() { return this->ptr.get(); }
 			operator bool() const { return this->ptr.operator bool(); }
 
-			// rule of five
-			URIWrapper(URIWrapper const&) = delete;
-			URIWrapper(URIWrapper&&) = delete;
-			URIWrapper& operator=(URIWrapper const&) = delete;
-			URIWrapper& operator=(URIWrapper&&) = delete;
+			// only moveable, not copyable
+			URIWrapper(URIWrapper&) = delete;
+			URIWrapper(URIWrapper&& other) { this->ptr = std::move(other.ptr); }
+			URIWrapper& operator=(URIWrapper&) = delete;
+			URIWrapper& operator=(URIWrapper&& other) {
+				if(&other != this) this->ptr = std::move(other.ptr);
+				return *this;
+			}
 
 		private:
 			std::unique_ptr<UriUriA> ptr;
 		} base, uri;
 
-		// RAII wrapper sub-class for URI query lists (does NOT have ownership of the pointer!)
+		// RAII wrapper sub-class for URI query lists
+		//  NOTE: Does NOT have ownership of the pointer!
 		class URIQueryListWrapper {
 		public:
 			// constructor: set pointer to NULL
@@ -103,11 +107,17 @@ namespace crawlservpp::Parsing {
 			UriQueryListA * get() { return this->ptr; }
 			UriQueryListA ** getPtr() { return &(this->ptr); }
 
-			// rule of five
-			URIQueryListWrapper(URIQueryListWrapper const&) = delete;
-			URIQueryListWrapper(URIQueryListWrapper&&) = delete;
-			URIQueryListWrapper& operator=(URIQueryListWrapper const&) = delete;
-			URIQueryListWrapper& operator=(URIQueryListWrapper&&) = delete;
+			// only moveable, not copyable
+			URIQueryListWrapper(URIQueryListWrapper&) = delete;
+			URIQueryListWrapper(URIQueryListWrapper&& other) { this->ptr = other.ptr; other.ptr = NULL; }
+			URIQueryListWrapper& operator=(URIQueryListWrapper&) = delete;
+			URIQueryListWrapper& operator=(URIQueryListWrapper&& other) {
+				if(&other != this) {
+					this->ptr = other.ptr;
+					other.ptr = NULL;
+				}
+				return *this;
+			}
 
 		private:
 			UriQueryListA * ptr;

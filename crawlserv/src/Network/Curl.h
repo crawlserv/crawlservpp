@@ -69,7 +69,8 @@ namespace crawlservpp::Network {
 		// const pointer to network configuration
 		const Network::Config * config;
 
-		// RAII wrapper sub-class for cURL pointer, also handles global instance if necessary (does NOT have ownership of the pointer!)
+		// RAII wrapper sub-class for cURL pointer, also handles global instance if necessary
+		//  NOTE: Does NOT have ownership of the pointer!
 		class CurlWrapper {
 		public:
 			// constructor: set pointer to NULL
@@ -112,11 +113,24 @@ namespace crawlservpp::Network {
 			void init() { this->ptr = curl_easy_init();	if(!(this->ptr)) throw Curl::Exception("Could not initialize cURL"); }
 			void reset() { if(this->ptr) curl_easy_cleanup(this->ptr); this->ptr = NULL; }
 
-			// rule of five
-			CurlWrapper(CurlWrapper const&) = delete;
-			CurlWrapper(CurlWrapper&&) = delete;
-			CurlWrapper& operator=(CurlWrapper const&) = delete;
-			CurlWrapper& operator=(CurlWrapper&&) = delete;
+			// only moveable, not copyable
+			CurlWrapper(CurlWrapper&) = delete;
+			CurlWrapper(CurlWrapper&& other) {
+				this->ptr = other.ptr;
+				other.ptr = NULL;
+				this->localInit = other.localInit;
+				other.localInit = false;
+			}
+			CurlWrapper& operator=(CurlWrapper&) = delete;
+			CurlWrapper& operator=(CurlWrapper&& other) {
+				if(&other != this) {
+					this->ptr = other.ptr;
+					other.ptr = NULL;
+					this->localInit = other.localInit;
+					other.localInit = false;
+				}
+				return *this;
+			}
 
 		private:
 			CURL * ptr;
@@ -124,7 +138,8 @@ namespace crawlservpp::Network {
 			static bool globalInit;
 		} curl;
 
-		// RAII wrapper sub-class for cURL list (does NOT have ownership of the pointer!)
+		// RAII wrapper sub-class for cURL list
+		//  NOTE: Does NOT have ownership of the pointer!
 		class CurlListWrapper {
 		public:
 			// constructor: set pointer to NULL
@@ -141,11 +156,17 @@ namespace crawlservpp::Network {
 			void append(const std::string& newElement) { this->ptr = curl_slist_append(this->ptr, newElement.c_str()); }
 			void reset() { if(this->ptr) curl_slist_free_all(this->ptr); this->ptr = NULL; }
 
-			// rule of five
-			CurlListWrapper(CurlListWrapper const&) = delete;
-			CurlListWrapper(CurlListWrapper&&) = delete;
-			CurlListWrapper& operator=(CurlListWrapper const&) = delete;
-			CurlListWrapper& operator=(CurlListWrapper&&) = delete;
+			// only moveable, not copyable
+			CurlListWrapper(CurlListWrapper&) = delete;
+			CurlListWrapper(CurlListWrapper&& other) { this->ptr = other.ptr; other.ptr = NULL; }
+			CurlListWrapper& operator=(CurlListWrapper&) = delete;
+			CurlListWrapper& operator=(CurlListWrapper&& other) {
+				if(&other != this) {
+					this->ptr = other.ptr;
+					other.ptr = NULL;
+				}
+				return *this;
+			}
 
 		private:
 			struct curl_slist * ptr;

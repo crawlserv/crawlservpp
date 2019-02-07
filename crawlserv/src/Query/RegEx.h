@@ -17,6 +17,7 @@
 
 #include <pcre2.h>
 
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -39,8 +40,24 @@ namespace crawlservpp::Query {
 			virtual ~Exception() {}
 		};
 
+		// only moveable, not copyable
+		RegEx(RegEx&) = delete;
+		RegEx(RegEx&& other) {
+			this->expressionSingle = std::move(other.expressionSingle);
+			this->expressionMulti = std::move(other.expressionMulti);
+		}
+		RegEx& operator=(RegEx&) = delete;
+		RegEx& operator=(RegEx&& other) {
+			if(&other != this) {
+				this->expressionSingle = std::move(other.expressionSingle);
+				this->expressionMulti = std::move(other.expressionMulti);
+			}
+			return *this;
+		}
+
 	private:
-		// RAII wrapper sub-class for PCRE pointers (does NOT have ownership of the pointer!)
+		// RAII wrapper sub-class for PCRE pointers
+		//  NOTE: Does NOT have ownership of the pointer!
 		class PCREWrapper {
 		public:
 			// constructor: set pointer to NULL
@@ -59,17 +76,24 @@ namespace crawlservpp::Query {
 			void reset() { if(this->ptr) { pcre2_code_free(this->ptr); this->ptr = NULL; } }
 			void reset(pcre2_code * other) { if(this->ptr) { pcre2_code_free(this->ptr); } this->ptr = other; }
 
-			// rule of five
-			PCREWrapper(PCREWrapper const&) = delete;
-			PCREWrapper(PCREWrapper&&) = delete;
-			PCREWrapper& operator=(PCREWrapper const&) = delete;
-			PCREWrapper& operator=(PCREWrapper&&) = delete;
+			// only moveable, not copyable
+			PCREWrapper(PCREWrapper&) = delete;
+			PCREWrapper(PCREWrapper&& other) { this->ptr = other.ptr; other.ptr = NULL; }
+			PCREWrapper& operator=(PCREWrapper&) = delete;
+			PCREWrapper& operator=(PCREWrapper&& other) {
+				if(&other != this) {
+					this->ptr = other.ptr;
+					other.ptr = NULL;
+				}
+				return *this;
+			}
 
 		private:
 			pcre2_code * ptr;
 		} expressionSingle, expressionMulti;
 
-		// RAII wrapper sub-class for PCRE matches (does NOT have ownership of the pointer!)
+		// RAII wrapper sub-class for PCRE matches
+		//  NOTE: Does NOT have ownership of the pointer!
 		class PCREMatchWrapper {
 		public:
 			// constructor: set pointer to NULL
@@ -84,11 +108,17 @@ namespace crawlservpp::Query {
 			operator bool() const { return this->ptr != NULL; }
 			bool operator!() const { return this->ptr == NULL; }
 
-			// rule of five
-			PCREMatchWrapper(PCREMatchWrapper const&) = delete;
-			PCREMatchWrapper(PCREMatchWrapper&&) = delete;
-			PCREMatchWrapper& operator=(PCREMatchWrapper const&) = delete;
-			PCREMatchWrapper& operator=(PCREMatchWrapper&&) = delete;
+			// only moveable, not copyable
+			PCREMatchWrapper(PCREMatchWrapper&) = delete;
+			PCREMatchWrapper(PCREMatchWrapper&& other) { this->ptr = other.ptr; other.ptr = NULL; }
+			PCREMatchWrapper& operator=(PCREMatchWrapper&) = delete;
+			PCREMatchWrapper& operator=(PCREMatchWrapper&& other) {
+				if(&other != this) {
+					this->ptr = other.ptr;
+					other.ptr = NULL;
+				}
+				return *this;
+			}
 
 		private:
 			pcre2_match_data * ptr;

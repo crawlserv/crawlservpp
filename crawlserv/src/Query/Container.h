@@ -58,8 +58,8 @@ namespace crawlservpp::Query {
 
 	private:
 		// queries
-		std::vector<std::unique_ptr<RegEx>> queriesRegEx;
-		std::vector<std::unique_ptr<XPath>> queriesXPath;
+		std::vector<RegEx> queriesRegEx;
+		std::vector<XPath> queriesXPath;
 	};
 }
 

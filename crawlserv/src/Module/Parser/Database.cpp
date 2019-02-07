@@ -142,122 +142,121 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reservePreparedStatements(16);
+	this->reserveForPreparedStatements(16);
 
-	try {
-		// prepare SQL statements for parser
-		if(!(this->psIsUrlParsed)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlParsed()...");
-			this->psIsUrlParsed = this->addPreparedStatement("SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ?"
-					" AND parsed = TRUE) AS result");
-		}
-		if(!(this->psGetNextUrl)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
-			std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
-					" WHERE a.id = b.url AND a.id > ? AND b.response < 400 AND (a.parselock IS NULL OR a.parselock < NOW())";
-			if(!reparse) sqlQuery += " AND a.parsed = FALSE";
-			if(!parseCustom) sqlQuery += " AND a.manual = FALSE";
-			sqlQuery += " ORDER BY a.id LIMIT 1";
-			this->psGetNextUrl = this->addPreparedStatement(sqlQuery);
-		}
-		if(!(this->psGetUrlPosition)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlPosition()...");
-			this->psGetUrlPosition = this->addPreparedStatement("SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
-		}
-		if(!(this->psGetNumberOfUrls)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNumberOfUrls()...");
-			this->psGetNumberOfUrls = this->addPreparedStatement("SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
-		}
-
-		if(!(this->psIsUrlLockable)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlLockable()...");
-			this->psIsUrlLockable = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable
-					+ "` WHERE id = ? AND (parselock IS NULL OR parselock < NOW())) AS result");
-		}
-		if(!(this->psGetUrlLock)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlLock()...");
-			this->psGetUrlLock = this->addPreparedStatement("SELECT parselock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
-		}
-		if(!(this->psCheckUrlLock)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares checkUrlLock()...");
-			this->psCheckUrlLock = this->addPreparedStatement("SELECT EXISTS (SELECT * FROM `" + this->urlListTable
-					+ "` WHERE id = ? AND (parselock < NOW() OR parselock <= ? OR parselock IS NULL)) AS result");
-		}
-		if(!(this->psLockUrl)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares lockUrl()...");
-			this->psLockUrl = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET parselock = NOW() + INTERVAL ? SECOND"
-					" WHERE id = ? LIMIT 1");
-		}
-		if(!(this->psUnLockUrl)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares unLockUrl()...");
-			this->psUnLockUrl = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET parselock = NULL WHERE id = ?"
-					" LIMIT 1");
-		}
-		if(!(this->psGetContentIdFromParsedId)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getContentIdFromParsedId()...");
-			this->psGetContentIdFromParsedId = this->addPreparedStatement("SELECT content FROM `" + this->targetTableFull
-					+ "` WHERE parsed_id = ? LIMIT 1");
-		}
-		if(!(this->psGetLatestContent)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getLatestContent()...");
-			this->psGetLatestContent = this->addPreparedStatement("SELECT id, content FROM `" + this->urlListTable + "_crawled`"
-					" WHERE url = ? ORDER BY crawltime DESC LIMIT ?, 1");
-		}
-		if(!(this->psGetAllContents)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getAllContents()...");
-			this->psGetAllContents = this->addPreparedStatement("SELECT id, content FROM `" + this->urlListTable + "_crawled`"
-					" WHERE url = ?");
-		}
-		if(!(this->psSetUrlFinished)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares setUrlFinished()...");
-			this->psSetUrlFinished = this->addPreparedStatement("UPDATE `" + this->urlListTable + "` SET parsed = TRUE, analyzed = FALSE,"
-					"parselock = NULL WHERE id = ? LIMIT 1");
-		}
-		if(!(this->psGetEntryId)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getEntryId()...");
-			this->psGetEntryId = this->addPreparedStatement("SELECT id FROM `" + this->targetTableFull + "` WHERE content = ? LIMIT 1");
-		}
-		if(!(this->psUpdateEntry)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares updateEntry()...");
-			std::string sqlQuery = "UPDATE `" + this->targetTableFull + "` SET parsed_id = ?, parsed_datetime = ?";
-			for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
-				if(!(i->empty())) sqlQuery += ", `parsed__" + *i + "` = ?";
-			sqlQuery += " WHERE id = ? LIMIT 1";
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
-			this->psUpdateEntry = this->addPreparedStatement(sqlQuery);
-		}
-		if(!(this->psAddEntry)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares addEntry()...");
-			std::string sqlQuery = "INSERT INTO `" + this->targetTableFull + "`(content, parsed_id, parsed_datetime";
-			unsigned long counter = 0;
-			for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
-				if(!(i->empty())) {
-					sqlQuery += ", `parsed__" + *i + "`";
-					counter++;
-				}
-			}
-			sqlQuery += ") VALUES (?, ?, ?";
-			for(unsigned long n = 0; n < counter; n++) sqlQuery += ", ?";
-			sqlQuery += ")";
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
-			this->psAddEntry = this->addPreparedStatement(sqlQuery);
-		}
-		if(!(this->psUpdateParsedTable)) {
-			if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares parsingTableUpdated()...");
-			this->psUpdateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
-					" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1");
-			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
-			sqlStatement.setUInt64(1, this->website);
-			sqlStatement.setUInt64(2, this->urlList);
-			sqlStatement.setString(3, this->targetTableName);
-
-		}
+	// prepare SQL statements for parser
+	if(!(this->psIsUrlParsed)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlParsed()...");
+		this->psIsUrlParsed = this->addPreparedStatement(
+				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ? AND parsed = TRUE) AS result");
 	}
-	catch(sql::SQLException &e) {
-		// set error message
-		std::ostringstream errorStrStr;
-		errorStrStr << "prepare() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw DatabaseException(errorStrStr.str());
+	if(!(this->psGetNextUrl)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
+		std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
+				" WHERE a.id = b.url AND a.id > ? AND b.response < 400 AND (a.parselock IS NULL OR a.parselock < NOW())";
+		if(!reparse) sqlQuery += " AND a.parsed = FALSE";
+		if(!parseCustom) sqlQuery += " AND a.manual = FALSE";
+		sqlQuery += " ORDER BY a.id LIMIT 1";
+		this->psGetNextUrl = this->addPreparedStatement(sqlQuery);
+	}
+	if(!(this->psGetUrlPosition)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlPosition()...");
+		this->psGetUrlPosition = this->addPreparedStatement(
+				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
+	}
+	if(!(this->psGetNumberOfUrls)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNumberOfUrls()...");
+		this->psGetNumberOfUrls = this->addPreparedStatement(
+				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
+	}
+	if(!(this->psIsUrlLockable)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlLockable()...");
+		this->psIsUrlLockable = this->addPreparedStatement(
+				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
+				+ "` WHERE id = ? AND (parselock IS NULL OR parselock < NOW())) AS result");
+	}
+	if(!(this->psGetUrlLock)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlLock()...");
+		this->psGetUrlLock = this->addPreparedStatement(
+				"SELECT parselock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
+	}
+	if(!(this->psCheckUrlLock)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares checkUrlLock()...");
+		this->psCheckUrlLock = this->addPreparedStatement(
+				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
+				+ "` WHERE id = ? AND (parselock < NOW() OR parselock <= ? OR parselock IS NULL)) AS result");
+	}
+	if(!(this->psLockUrl)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares lockUrl()...");
+		this->psLockUrl = this->addPreparedStatement(
+				"UPDATE `"
+				+ this->urlListTable + "` SET parselock = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
+	}
+	if(!(this->psUnLockUrl)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares unLockUrl()...");
+		this->psUnLockUrl = this->addPreparedStatement(
+				"UPDATE `" + this->urlListTable + "` SET parselock = NULL WHERE id = ? LIMIT 1");
+	}
+	if(!(this->psGetContentIdFromParsedId)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getContentIdFromParsedId()...");
+		this->psGetContentIdFromParsedId = this->addPreparedStatement(
+				"SELECT content FROM `" + this->targetTableFull	+ "` WHERE parsed_id = ? LIMIT 1");
+	}
+	if(!(this->psGetLatestContent)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getLatestContent()...");
+		this->psGetLatestContent = this->addPreparedStatement(
+				"SELECT id, content FROM `"
+				+ this->urlListTable + "_crawled` WHERE url = ? ORDER BY crawltime DESC LIMIT ?, 1");
+	}
+	if(!(this->psGetAllContents)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getAllContents()...");
+		this->psGetAllContents = this->addPreparedStatement(
+				"SELECT id, content FROM `" + this->urlListTable + "_crawled` WHERE url = ?");
+	}
+	if(!(this->psSetUrlFinished)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares setUrlFinished()...");
+		this->psSetUrlFinished = this->addPreparedStatement(
+				"UPDATE `" + this->urlListTable
+				+ "` SET parsed = TRUE, analyzed = FALSE, parselock = NULL WHERE id = ? LIMIT 1");
+	}
+	if(!(this->psGetEntryId)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getEntryId()...");
+		this->psGetEntryId = this->addPreparedStatement(
+				"SELECT id FROM `" + this->targetTableFull + "` WHERE content = ? LIMIT 1");
+	}
+	if(!(this->psUpdateEntry)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares updateEntry()...");
+		std::string sqlQuery = "UPDATE `" + this->targetTableFull + "` SET parsed_id = ?, parsed_datetime = ?";
+		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
+			if(!(i->empty())) sqlQuery += ", `parsed__" + *i + "` = ?";
+		sqlQuery += " WHERE id = ? LIMIT 1";
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
+		this->psUpdateEntry = this->addPreparedStatement(sqlQuery);
+	}
+	if(!(this->psAddEntry)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares addEntry()...");
+		std::string sqlQuery = "INSERT INTO `" + this->targetTableFull + "`(content, parsed_id, parsed_datetime";
+		unsigned long counter = 0;
+		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
+			if(!(i->empty())) {
+				sqlQuery += ", `parsed__" + *i + "`";
+				counter++;
+			}
+		}
+		sqlQuery += ") VALUES (?, ?, ?";
+		for(unsigned long n = 0; n < counter; n++) sqlQuery += ", ?";
+		sqlQuery += ")";
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
+		this->psAddEntry = this->addPreparedStatement(sqlQuery);
+	}
+	if(!(this->psUpdateParsedTable)) {
+		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares parsingTableUpdated()...");
+		this->psUpdateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
+				" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1");
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
+		sqlStatement.setUInt64(1, this->website);
+		sqlStatement.setUInt64(2, this->urlList);
+		sqlStatement.setString(3, this->targetTableName);
 	}
 }
 
