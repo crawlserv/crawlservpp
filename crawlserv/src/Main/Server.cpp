@@ -1796,9 +1796,8 @@ void Server::cmdTestQuery(WebServer::Connection connection, unsigned long index,
 				if(type == "regex") {
 					// test RegEx expression on text
 					try {
-						Query::RegEx regExTest;
 						Timer::SimpleHR timer;
-						regExTest.compile(query, resultBool || resultSingle, resultMulti);
+						Query::RegEx regExTest(query, resultBool || resultSingle, resultMulti);
 						result = "COMPILING TIME: " + timer.tickStr() + "\n";
 						if(resultBool) {
 							// get boolean result (does at least one match exist?)
@@ -1839,9 +1838,8 @@ void Server::cmdTestQuery(WebServer::Connection connection, unsigned long index,
 					// test XPath expression on text
 					try {
 						Parsing::XML xmlDocumentTest;
-						Query::XPath xPathTest;
 						Timer::SimpleHR timer;
-						xPathTest.compile(query, textOnly);
+						Query::XPath xPathTest(query, textOnly);
 						result = "COMPILING TIME: " + timer.tickStr() + "\n";
 						try {
 							xmlDocumentTest.parse(text);

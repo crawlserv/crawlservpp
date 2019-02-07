@@ -32,15 +32,13 @@ Container::QueryStruct Container::addQuery(const crawlservpp::Struct::QueryPrope
 
 	if(!properties.text.empty()) {
 		if(properties.type == "regex") {
-			RegEx regex;
-			regex.compile(properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti);
+			RegEx regex(properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti);
 			newQuery.index = this->queriesRegEx.size();
 			newQuery.type = Container::QueryStruct::typeRegEx;
 			this->queriesRegEx.push_back(std::move(regex));
 		}
 		else if(properties.type == "xpath") {
-			XPath xpath;
-			xpath.compile(properties.text, properties.textOnly);
+			XPath xpath(properties.text, properties.textOnly);
 			newQuery.index = this->queriesXPath.size();
 			newQuery.type = Container::QueryStruct::typeXPath;
 			this->queriesXPath.push_back(std::move(xpath));

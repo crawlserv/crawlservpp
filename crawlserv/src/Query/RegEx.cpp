@@ -13,7 +13,45 @@
 namespace crawlservpp::Query {
 
 // constructor stub
-RegEx::RegEx() {}
+RegEx::RegEx(const std::string& expression, bool single, bool multi) {
+	int errorNumber = 0;
+	PCRE2_SIZE errorOffset = 0;
+
+	// delete old expressions if necessary
+	this->expressionSingle.reset();
+	this->expressionMulti.reset();
+
+	// check arguments
+	if(expression.empty()) throw RegEx::Exception("Expression is empty");
+	if(!single && !multi) throw RegEx::Exception("No result type for expression specified");
+
+	// compile expression(s)
+	if(single) {
+		this->expressionSingle.reset(pcre2_compile((PCRE2_SPTR) expression.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
+				&errorNumber, &errorOffset, NULL));
+		if(!(this->expressionSingle)) {
+			// RegEx error
+			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
+			std::ostringstream errorStrStr;
+			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
+			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
+			throw RegEx::Exception(errorStrStr.str());
+		}
+	}
+
+	if(multi) {
+		this->expressionMulti.reset(pcre2_compile((PCRE2_SPTR) expression.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP
+				| PCRE2_MULTILINE, &errorNumber, &errorOffset, NULL));
+		if(!(this->expressionMulti)) {
+			// RegEx error
+			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
+			std::ostringstream errorStrStr;
+			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
+			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
+			throw RegEx::Exception(errorStrStr.str());
+		}
+	}
+}
 
 // move constructor
 RegEx::RegEx(RegEx&& other) {
@@ -183,47 +221,6 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 
 	// copy result
 	resultTo = resultArray;
-}
-
-// compile RegEx expression, throws RegEx::Exception
-void RegEx::compile(const std::string& pattern, bool single, bool multi) {
-	int errorNumber = 0;
-	PCRE2_SIZE errorOffset = 0;
-
-	// delete old expressions if necessary
-	this->expressionSingle.reset();
-	this->expressionMulti.reset();
-
-	// check arguments
-	if(pattern.empty()) throw RegEx::Exception("Expression is empty");
-	if(!single && !multi) throw RegEx::Exception("No result type for expression specified");
-
-	// compile expression(s)
-	if(single) {
-		this->expressionSingle.reset(pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
-				&errorNumber, &errorOffset, NULL));
-		if(!(this->expressionSingle)) {
-			// RegEx error
-			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-			std::ostringstream errorStrStr;
-			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
-			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
-			throw RegEx::Exception(errorStrStr.str());
-		}
-	}
-
-	if(multi) {
-		this->expressionMulti.reset(pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP
-				| PCRE2_MULTILINE, &errorNumber, &errorOffset, NULL));
-		if(!(this->expressionMulti)) {
-			// RegEx error
-			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-			std::ostringstream errorStrStr;
-			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
-			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
-			throw RegEx::Exception(errorStrStr.str());
-		}
-	}
 }
 
 // bool operator
