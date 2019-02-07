@@ -85,9 +85,6 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 			this->database.log("extractor", logStrStr.str());
 		}
 		else if(i->module == "analyzer") {
-			// load analyzer thread
-			std::unique_ptr<crawlservpp::Module::Analyzer::Thread> analyzer;
-
 			// get and parse config JSON to determine algorithm
 			rapidjson::Document configJson;
 			std::string config = this->database.getConfiguration(i->options.config);
@@ -1032,21 +1029,18 @@ Server::ServerCommandResponse Server::cmdStartAnalyzer(const rapidjson::Document
 	if(!algo) return Server::ServerCommandResponse(true, "Analyzing configuration does not include an algorithm.");
 
 	// create and start analyzer
-	std::unique_ptr<crawlservpp::Module::Analyzer::Thread> newAnalyzer;
-
 	switch(algo) {
 	case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-		newAnalyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(this->database, options);
+		this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(this->database, options));
 		break;
 	case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-		newAnalyzer = std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(this->database, options);
+		this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(this->database, options));
 		break;
 	default:
 		std::ostringstream errStrStr;
 		errStrStr << "Algorithm #" << algo << " not found.";
 		return Server::ServerCommandResponse(true, errStrStr.str());
 	}
-	this->analyzers.push_back(std::move(newAnalyzer)); // do not use newAnalyzer after that! (got swap()ed to vector)
 	this->analyzers.back()->crawlservpp::Module::Thread::start();
 	unsigned long id = this->analyzers.back()->crawlservpp::Module::Thread::getId();
 
