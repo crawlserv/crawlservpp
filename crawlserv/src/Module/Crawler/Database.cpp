@@ -1,7 +1,7 @@
 /*
  * Database.cpp
  *
- * This class provides database functionality for a crawler thread by implementing the Module::DBWrapper interface.
+ * This class provides database functionality for a crawler thread by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -12,7 +12,7 @@
 namespace crawlservpp::Module::Crawler {
 
 // constructor: initialize values
-Database::Database(crawlservpp::Module::DBThread& dbThread) : crawlservpp::Module::DBWrapper(dbThread) {
+Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapper::Database(dbThread) {
 	this->recrawl = false;
 	this->logging = false;
 	this->verbose = false;

@@ -1,7 +1,7 @@
 /*
  * Database.h
  *
- * This class provides database functionality for a parser thread by implementing the Module::DBWrapper interface.
+ * This class provides database functionality for a parser thread by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -10,8 +10,9 @@
 #ifndef MODULE_PARSER_DATABASE_H_
 #define MODULE_PARSER_DATABASE_H_
 
-#include "../DBThread.h"
-#include "../DBWrapper.h"
+#include "../Database.h"
+
+#include "../../Wrapper/Database.h"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -34,9 +35,9 @@ namespace crawlservpp::Module::Parser {
 	typedef crawlservpp::Main::Database::Column TableColumn;
 	typedef crawlservpp::Main::Database::Exception DatabaseException;
 
-	class Database : public crawlservpp::Module::DBWrapper {
+	class Database : public crawlservpp::Wrapper::Database {
 	public:
-		Database(crawlservpp::Module::DBThread& dbRef);
+		Database(crawlservpp::Module::Database& dbRef);
 		virtual ~Database();
 
 		// setters

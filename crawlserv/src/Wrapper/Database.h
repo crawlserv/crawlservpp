@@ -1,5 +1,5 @@
 /*
- * DBWrapper.h
+ * Database.h
  *
  * Interface to be inherited by the thread modules.
  * Allows them access to the database by providing basic Database functionality as well as the option to add prepared SQL statements.
@@ -8,12 +8,11 @@
  *      Author: ans
  */
 
-#ifndef MODULE_DBWRAPPER_H_
-#define MODULE_DBWRAPPER_H_
-
-#include "DBThread.h"
+#ifndef WRAPPER_DATABASE_H_
+#define WRAPPER_DATABASE_H_
 
 #include "../Main/Data.h"
+#include "../Module/Database.h"
 #include "../Struct/DatabaseSettings.h"
 #include "../Struct/QueryProperties.h"
 
@@ -24,15 +23,15 @@
 #include <string>
 #include <vector>
 
-namespace crawlservpp::Module {
+namespace crawlservpp::Wrapper {
 
 	// for convenience
 	typedef crawlservpp::Main::Database::Column TableColumn;
 
-	class DBWrapper {
+	class Database {
 	public:
-		DBWrapper(DBThread& dbRef);
-		virtual ~DBWrapper() = 0;
+		Database(crawlservpp::Module::Database& dbRef);
+		virtual ~Database() = 0;
 
 		// wrapper for setter
 		void setSleepOnError(unsigned long seconds);
@@ -78,7 +77,7 @@ namespace crawlservpp::Module {
 
 	protected:
 		// reference to the database connection by the thread
-		DBThread& database;
+		crawlservpp::Module::Database& database;
 
 		// wrapper for getters
 		unsigned long getMaxAllowedPacketSize() const;
@@ -103,4 +102,4 @@ namespace crawlservpp::Module {
 	};
 }
 
-#endif /* MODULE_DBWRAPPER_H_ */
+#endif /* WRAPPER_DATABASE_H_ */

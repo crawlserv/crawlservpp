@@ -1,5 +1,5 @@
 /*
- * DBThread.cpp
+ * Database.cpp
  *
  * Database functionality for a single thread. Only implements module-independent functionality, for module-specific functionality use the
  *  child classes of the DatabaseModule interface instead.
@@ -8,12 +8,12 @@
  *      Author: ans
  */
 
-#include "DBThread.h"
+#include "Database.h"
 
 namespace crawlservpp::Module {
 
 // constructor
-DBThread::DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings)
+Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings)
 		: crawlservpp::Main::Database(dbSettings) {
 	this->psSetThreadStatusMessage = 0;
 	this->psSetThreadProgress = 0;
@@ -24,15 +24,15 @@ DBThread::DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings)
 }
 
 // destructor stub
-DBThread::~DBThread() {
+Database::~Database() {
 	if(crawlservpp::Main::Database::driver)
 		crawlservpp::Main::Database::driver->threadEnd();
 }
 
 // prepare SQL statements for thread management
-void DBThread::prepare() {
+void Database::prepare() {
 	// prepare basic functions
-	this->Database::prepare();
+	this->crawlservpp::Main::Database::prepare();
 
 	// check connection
 	this->checkConnection();
@@ -50,7 +50,7 @@ void DBThread::prepare() {
 }
 
 // set the status message of a thread (and add the pause state)
-void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
+void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check connection
 	this->checkConnection();
 
@@ -83,7 +83,7 @@ void DBThread::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 }
 
 // set the progress of a thread to between 0 for 0% and 1 for 100% in database
-void DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
+void Database::setThreadProgress(unsigned long threadId, float threadProgress) {
 	// check connection
 	this->checkConnection();
 
@@ -107,7 +107,7 @@ void DBThread::setThreadProgress(unsigned long threadId, float threadProgress) {
 }
 
 // set last id of thread in database
-void DBThread::setThreadLast(unsigned long threadId, unsigned long threadLast) {
+void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 	// check connection
 	this->checkConnection();
 

@@ -1,7 +1,7 @@
 /*
  * Database.cpp
  *
- * This class provides database functionality for an analyzer thread by implementing the Module::DBWrapper interface.
+ * This class provides database functionality for an analyzer thread by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -12,8 +12,7 @@
 namespace crawlservpp::Module::Analyzer {
 
 // constructor: initialize database and set default values
-Database::Database(crawlservpp::Module::DBThread& dbThread)
-		: crawlservpp::Module::DBWrapper(dbThread) {
+Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapper::Database(dbThread) {
 	this->website = 0;
 	this->urlList = 0;
 	this->logging = false;

@@ -1,7 +1,7 @@
 /*
  * Database.h
  *
- * This class provides database functionality for an analyzer thread by implementing the Module::DBWrapper interface.
+ * This class provides database functionality for an analyzer thread by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -12,13 +12,13 @@
 
 #include "Config.h"
 
-#include "../DBThread.h"
-#include "../DBWrapper.h"
+#include "../Database.h"
 
 #include "../../Main/Data.h"
 #include "../../Helper/DateTime.h"
 #include "../../Helper/Json.h"
 #include "../../Timer/Simple.h"
+#include "../../Wrapper/Database.h"
 
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
@@ -44,12 +44,13 @@ namespace crawlservpp::Module::Analyzer {
 	typedef crawlservpp::Main::Database::Column TableColumn;
 	typedef crawlservpp::Main::Database::Exception DatabaseException;
 
-	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings (words, dates etc.)
+	// text maps are used to describe certain parts of a text
+	//  defined by their positions and lengths with certain strings (words, dates etc.)
 	typedef std::tuple<std::string, unsigned long, unsigned long> TextMapEntry;
 
-	class Database : public crawlservpp::Module::DBWrapper {
+	class Database : public crawlservpp::Wrapper::Database {
 	public:
-		Database(crawlservpp::Module::DBThread& dbRef);
+		Database(crawlservpp::Module::Database& dbRef);
 		virtual ~Database();
 
 		// setters

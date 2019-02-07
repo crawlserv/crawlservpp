@@ -1,5 +1,5 @@
 /*
- * DBThread.h
+ * Database.h
  *
  * Database functionality for a single thread. Only implements module-independent functionality, for module-specific functionality use the
  *  child classes of the DatabaseModule interface instead.
@@ -8,8 +8,8 @@
  *      Author: ans
  */
 
-#ifndef MODULE_DBTHREAD_H_
-#define MODULE_DBTHREAD_H_
+#ifndef MODULE_DATABASE_H_
+#define MODULE_DATABASE_H_
 
 #include "../Main/Database.h"
 #include "../Struct/DatabaseSettings.h"
@@ -19,14 +19,17 @@
 #include <stdexcept>
 #include <string>
 
-namespace crawlservpp::Module {
-	class DBWrapper;
+namespace crawlservpp::Wrapper {
+	class Database;
+}
 
-	class DBThread : public crawlservpp::Main::Database {
-		friend class DBWrapper;
+namespace crawlservpp::Module {
+
+	class Database : public crawlservpp::Main::Database {
+		friend class crawlservpp::Wrapper::Database;
 	public:
-		DBThread(const crawlservpp::Struct::DatabaseSettings& dbSettings);
-		virtual ~DBThread();
+		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings);
+		virtual ~Database();
 
 		void prepare();
 
@@ -43,4 +46,4 @@ namespace crawlservpp::Module {
 	};
 }
 
-#endif /* MODULE_DBTHREAD_H_ */
+#endif /* MODULE_DATABASE_H_ */

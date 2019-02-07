@@ -1,7 +1,7 @@
 /*
  * Database.h
  *
- * This class provides database functionality for a crawler thread by implementing the Module::DBWrapper interface.
+ * This class provides database functionality for a crawler thread by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -10,8 +10,9 @@
 #ifndef MODULE_CRAWLER_DATABASE_H_
 #define MODULE_CRAWLER_DATABASE_H_
 
-#include "../DBWrapper.h"
-#include "../DBThread.h"
+#include "../Database.h"
+
+#include "../../Wrapper/Database.h"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -30,9 +31,9 @@ namespace crawlservpp::Module::Crawler {
 	// for convenience
 	typedef crawlservpp::Main::Database::Exception DatabaseException;
 
-	class Database : public crawlservpp::Module::DBWrapper {
+	class Database : public crawlservpp::Wrapper::Database {
 	public:
-		Database(crawlservpp::Module::DBThread& dbRef);
+		Database(crawlservpp::Module::Database& dbRef);
 		virtual ~Database();
 
 		// setters

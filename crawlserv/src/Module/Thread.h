@@ -14,7 +14,7 @@
 // do not catch thread errors: use only for debugging!
 //#define MODULE_THREAD_DEBUG_NOCATCH
 
-#include "DBThread.h"
+#include "Database.h"
 
 #include "../Main/Database.h"
 #include "../Helper/DateTime.h"
@@ -57,7 +57,7 @@ namespace crawlservpp::Module {
 		bool isRunning() const;
 
 	protected:
-		DBThread database; // access to the database for the thread
+		Database database; // access to the database for the thread
 
 		std::string websiteNamespace; // namespace of website
 		std::string urlListNamespace; // namespace of URL list
