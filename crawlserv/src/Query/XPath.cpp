@@ -11,46 +11,21 @@
 
 namespace crawlservpp::Query {
 
-// XML walker helper classes
-bool XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
-	if(node.type() == pugi::node_pcdata) {
-		std::string nodeText = node.text().as_string();
-		crawlservpp::Helper::Strings::trim(nodeText);
-		this->result += nodeText;
-		this->result.push_back(' ');
-	}
-	return true;
-}
-std::string XPath::TextOnlyWalker::getResult() const {
-	return this->result;
-}
-
 // constructor: set default values
 XPath::XPath() {
 	this->compiled = false;
 	this->isTextOnly = false;
 }
 
+// move constructor
+XPath::XPath(XPath&& other) {
+	this->query = std::move(other.query);
+	this->compiled = std::move(other.compiled);
+	this->isTextOnly = std::move(other.isTextOnly);
+}
+
 // destructor stub
 XPath::~XPath() {}
-
-// compile a XPath query, throws XPath::Exception
-void XPath::compile(const std::string& xpath, bool textOnly) {
-	// reset values
-	this->isTextOnly = false;
-
-	// create new XPath object
-	try {
-		this->query = pugi::xpath_query(xpath.c_str());
-		this->compiled = true;
-	}
-	catch(const pugi::xpath_exception& e) {
-		throw XPath::Exception(e.what());
-	}
-
-	// save XPath option
-	this->isTextOnly = textOnly;
-}
 
 // get boolean value (at least one match?), throws XPath::Exception
 bool XPath::getBool(const crawlservpp::Parsing::XML& doc) const {
@@ -117,6 +92,34 @@ void XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string
 	resultTo = resultArray;
 }
 
+// compile a XPath query, throws XPath::Exception
+void XPath::compile(const std::string& xpath, bool textOnly) {
+	// reset values
+	this->isTextOnly = false;
+
+	// create new XPath object
+	try {
+		this->query = pugi::xpath_query(xpath.c_str());
+		this->compiled = true;
+	}
+	catch(const pugi::xpath_exception& e) {
+		throw XPath::Exception(e.what());
+	}
+
+	// save XPath option
+	this->isTextOnly = textOnly;
+}
+
+// move operator
+XPath& XPath::operator=(XPath&& other) {
+	if(&other != this) {
+		this->query = std::move(other.query);
+		this->compiled = std::move(other.compiled);
+		this->isTextOnly = std::move(other.isTextOnly);
+	}
+	return *this;
+}
+
 // static helper function: convert node to string
 std::string XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
 	std::string result;
@@ -144,6 +147,20 @@ std::string XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
 		}
 	}
 	return result;
+}
+
+// XML walker helper classes
+bool XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
+	if(node.type() == pugi::node_pcdata) {
+		std::string nodeText = node.text().as_string();
+		crawlservpp::Helper::Strings::trim(nodeText);
+		this->result += nodeText;
+		this->result.push_back(' ');
+	}
+	return true;
+}
+std::string XPath::TextOnlyWalker::getResult() const {
+	return this->result;
 }
 
 }

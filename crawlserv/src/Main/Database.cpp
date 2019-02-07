@@ -3739,7 +3739,7 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 	// try to prepare SQL statement
 	try {
 		this->preparedStatements.emplace_back(
-				Database::PreparedSqlStatementWrapper(this->connection.get(), sqlQuery));
+				crawlservpp::Wrapper::PreparedSqlStatement(this->connection.get(), sqlQuery));
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
@@ -3754,7 +3754,7 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 // get reference to prepared SQL statement by its ID
 sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 	try {
-		return *(this->preparedStatements.at(id - 1).get());
+		return this->preparedStatements.at(id - 1).get();
 	}
 	catch(const std::out_of_range& e) {
 		std::ostringstream strStr;

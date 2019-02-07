@@ -13,6 +13,8 @@
 
 #include "../Main/Exception.h"
 #include "../Helper/Strings.h"
+#include "../Wrapper/URI.h"
+#include "../Wrapper/URIQueryList.h"
 
 #include <uriparser/Uri.h>
 
@@ -59,72 +61,10 @@ namespace crawlservpp::Parsing {
 
 		UriParserStateA state;
 
-		// RAII wrapper sub-class for URI structures
-		class URIWrapper {
-		public:
-			// constructor stub
-			URIWrapper() {}
-
-			// destructor: free and reset URI structure if necessary
-			virtual ~URIWrapper() { this->reset(); }
-
-			// create URI structure, free old structure if necessary
-			void create() { if(this->ptr) { uriFreeUriMembersA(this->ptr.get()); } this->ptr = std::make_unique<UriUriA>(); }
-
-			// free and reset URI structure if necessary
-			void reset() { if(this->ptr) { uriFreeUriMembersA(this->ptr.get()); this->ptr.reset(); } }
-
-			// get pointer to URI structure
-			const UriUriA * get() const { return this->ptr.get(); }
-			UriUriA * get() { return this->ptr.get(); }
-			operator bool() const { return this->ptr.operator bool(); }
-
-			// only moveable, not copyable
-			URIWrapper(URIWrapper&) = delete;
-			URIWrapper(URIWrapper&& other) { this->ptr = std::move(other.ptr); }
-			URIWrapper& operator=(URIWrapper&) = delete;
-			URIWrapper& operator=(URIWrapper&& other) {
-				if(&other != this) this->ptr = std::move(other.ptr);
-				return *this;
-			}
-
-		private:
-			std::unique_ptr<UriUriA> ptr;
-		} base, uri;
-
-		// RAII wrapper sub-class for URI query lists
-		//  NOTE: Does NOT have ownership of the pointer!
-		class URIQueryListWrapper {
-		public:
-			// constructor: set pointer to NULL
-			URIQueryListWrapper() { this->ptr = NULL; }
-
-			// destructor: free query list if necessary
-			virtual ~URIQueryListWrapper() { if(this->ptr) uriFreeQueryListA(this->ptr); }
-
-			// get pointer to query list or its pointer
-			const UriQueryListA * get() const { return this->ptr; }
-			UriQueryListA * get() { return this->ptr; }
-			UriQueryListA ** getPtr() { return &(this->ptr); }
-
-			// only moveable, not copyable
-			URIQueryListWrapper(URIQueryListWrapper&) = delete;
-			URIQueryListWrapper(URIQueryListWrapper&& other) { this->ptr = other.ptr; other.ptr = NULL; }
-			URIQueryListWrapper& operator=(URIQueryListWrapper&) = delete;
-			URIQueryListWrapper& operator=(URIQueryListWrapper&& other) {
-				if(&other != this) {
-					this->ptr = other.ptr;
-					other.ptr = NULL;
-				}
-				return *this;
-			}
-
-		private:
-			UriQueryListA * ptr;
-		};
+		crawlservpp::Wrapper::URI base, uri;
 
 		static std::string textRangeToString(const UriTextRangeA * range);
-		static std::string toString(const URI::URIWrapper& uri);
+		static std::string toString(const crawlservpp::Wrapper::URI& uri);
 	};
 }
 

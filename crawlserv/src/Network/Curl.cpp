@@ -1,9 +1,9 @@
 /*
  * Curl.cpp
  *
- * A class using the cURL library to provide networking functionality.
- * This class is used by both the crawler and the extractor.
- * NOT THREAD-SAFE! Use multiple instances for multiple threads.
+ * Using the cURL library to provide networking functionality.
+ *  This class is used by both the crawler and the extractor.
+ *  NOT THREAD-SAFE! Use multiple instances for multiple threads.
  *
  *  Created on: Oct 8, 2018
  *      Author: ans
@@ -13,8 +13,6 @@
 
 namespace crawlservpp::Network {
 
-bool Curl::CurlWrapper::globalInit = false;
-
 // constructor
 Curl::Curl() {
 	// set default values
@@ -22,6 +20,9 @@ Curl::Curl() {
 	this->responseCode = 0;
 	this->limitedSettings = false;
 	this->config = NULL;
+
+	// check pointer to cURL instance
+	if(!(this->curl)) throw Curl::Exception("Could not initialize cURL");
 
 	// configure cURL (global defaults)
 	this->curlCode = curl_easy_setopt(this->curl.get(), CURLOPT_NOSIGNAL, 1L);
