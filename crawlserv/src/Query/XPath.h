@@ -2,6 +2,7 @@
  * XPath.h
  *
  * Using the pugixml parser library to implement a XPath query with boolean, single and/or multiple results.
+ *  Query is only crated when needed.
  *
  *  Created on: Oct 17, 2018
  *      Author: ans
@@ -24,13 +25,27 @@
 namespace crawlservpp::Query {
 	class XPath {
 	public:
+		// constructors
 		XPath();
+		XPath(XPath&& other);
+
+		// destructor
 		virtual ~XPath();
 
-		void compile(const std::string& xpath, bool textOnly);
+		// getters
 		bool getBool(const crawlservpp::Parsing::XML& doc) const;
 		void getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const;
 		void getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const;
+
+		// control function
+		void compile(const std::string& xpath, bool textOnly);
+
+		// operator
+		XPath& operator=(XPath&& other);
+
+		// not copyable
+		XPath(XPath&) = delete;
+		XPath& operator=(XPath&) = delete;
 
 		// sub-class for XPath exceptions
 		class Exception : public crawlservpp::Main::Exception {
@@ -39,25 +54,15 @@ namespace crawlservpp::Query {
 			virtual ~Exception() {}
 		};
 
-		// only moveable, not copyable
-		XPath(XPath&) = delete;
-		XPath(XPath&& other) {
-			this->query = std::move(other.query);
-			this->compiled = std::move(other.compiled);
-			this->isTextOnly = std::move(other.isTextOnly);
-		}
-		XPath& operator=(XPath&) = delete;
-		XPath& operator=(XPath&& other) {
-			if(&other != this) {
-				this->query = std::move(other.query);
-				this->compiled = std::move(other.compiled);
-				this->isTextOnly = std::move(other.isTextOnly);
-			}
-			return *this;
-		}
-
 	private:
-		// walker class for text-only conversion
+		pugi::xpath_query query;
+		bool compiled;
+		bool isTextOnly;
+
+		// static helper function
+		static std::string nodeToString(const pugi::xpath_node& node, bool textOnly);
+
+		// sub-class for text-only conversion walker
 		class TextOnlyWalker : public pugi::xml_tree_walker {
 		public:
 			virtual bool for_each(pugi::xml_node& node);
@@ -66,12 +71,6 @@ namespace crawlservpp::Query {
 		protected:
 			std::string result;
 		};
-
-		pugi::xpath_query query;
-		bool compiled;
-		bool isTextOnly;
-
-		static std::string nodeToString(const pugi::xpath_node& node, bool textOnly);
 	};
 }
 

@@ -25,6 +25,7 @@
 #include "../Struct/ThreadOptions.h"
 #include "../Struct/UrlListProperties.h"
 #include "../Struct/WebsiteProperties.h"
+#include "../Wrapper/PreparedSqlStatement.h"
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
@@ -230,61 +231,8 @@ namespace crawlservpp::Main {
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
 
-		// RAII wrapper sub-class for prepared SQL statements
-		class PreparedSqlStatementWrapper {
-		public:
-			// constructor
-			PreparedSqlStatementWrapper() { this->connection = NULL; }
-
-			// constructor
-			PreparedSqlStatementWrapper(sql::Connection * setConnection, const std::string& setQuery) {
-				this->connection = setConnection;
-				this->query = setQuery;
-				this->prepare();
-			}
-
-			// destructor: free and close prepared SQL statement if necessary
-			virtual ~PreparedSqlStatementWrapper() { this->reset(); }
-
-			// prepare SQL statement
-			void prepare() { this->reset(); this->ptr.reset(this->connection->prepareStatement(this->query)); }
-
-			// reset SQL statement
-			void reset() { if(this->ptr) { this->ptr->close(); this->ptr.reset(); } }
-
-			// refresh prepared SQL statement
-			void refresh(sql::Connection * newConnection) { this->reset(); this->connection = newConnection; this->prepare(); }
-
-			// get pointer to prepared SQL statement
-			const sql::PreparedStatement * get() const { return this->ptr.get(); }
-			sql::PreparedStatement * get() { return this->ptr.get(); }
-			operator bool() const { return this->ptr.operator bool(); }
-
-			// only moveable, not copyable
-			PreparedSqlStatementWrapper(PreparedSqlStatementWrapper&) = delete;
-			PreparedSqlStatementWrapper(PreparedSqlStatementWrapper&& other) {
-				this->connection = other.connection;
-				this->ptr = std::move(other.ptr);
-				this->query = other.query;
-			}
-			PreparedSqlStatementWrapper& operator=(PreparedSqlStatementWrapper&) = delete;
-			PreparedSqlStatementWrapper& operator=(PreparedSqlStatementWrapper&& other) {
-				if(&other != this) {
-					this->connection = other.connection;
-					this->ptr = std::move(other.ptr);
-					this->query = other.query;
-				}
-				return *this;
-			}
-
-		private:
-			sql::Connection * connection;
-			std::string query;
-			std::unique_ptr<sql::PreparedStatement> ptr;
-		};
-
-		// prepared statements
-		std::vector<PreparedSqlStatementWrapper> preparedStatements;
+		// prepared SQL statements
+		std::vector<crawlservpp::Wrapper::PreparedSqlStatement> preparedStatements;
 
 		// internal helper function
 		void run(const std::string& sqlFile);

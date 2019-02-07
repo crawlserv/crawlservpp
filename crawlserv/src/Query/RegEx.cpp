@@ -2,6 +2,7 @@
  * RegEx.cpp
  *
  * Using the PCRE2 library to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
+ *  Expression is only created when needed.
  *
  *  Created on: Oct 17, 2018
  *      Author: ans
@@ -14,49 +15,14 @@ namespace crawlservpp::Query {
 // constructor stub
 RegEx::RegEx() {}
 
+// move constructor
+RegEx::RegEx(RegEx&& other) {
+	this->expressionSingle = std::move(other.expressionSingle);
+	this->expressionMulti = std::move(other.expressionMulti);
+}
+
 // destructor stub
 RegEx::~RegEx() {}
-
-// compile RegEx expression, throws RegEx::Exception
-void RegEx::compile(const std::string& pattern, bool single, bool multi) {
-	int errorNumber = 0;
-	PCRE2_SIZE errorOffset = 0;
-
-	// delete old expressions if necessary
-	this->expressionSingle.reset();
-	this->expressionMulti.reset();
-
-	// check arguments
-	if(pattern.empty()) throw RegEx::Exception("Expression is empty");
-	if(!single && !multi) throw RegEx::Exception("No result type for expression specified");
-
-	// compile expression(s)
-	if(single) {
-		this->expressionSingle.reset(pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
-				&errorNumber, &errorOffset, NULL));
-		if(!(this->expressionSingle)) {
-			// RegEx error
-			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-			std::ostringstream errorStrStr;
-			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
-			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
-			throw RegEx::Exception(errorStrStr.str());
-		}
-	}
-
-	if(multi) {
-		this->expressionMulti.reset(pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP
-				| PCRE2_MULTILINE, &errorNumber, &errorOffset, NULL));
-		if(!(this->expressionMulti)) {
-			// RegEx error
-			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-			std::ostringstream errorStrStr;
-			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
-			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
-			throw RegEx::Exception(errorStrStr.str());
-		}
-	}
-}
 
 // get boolean result of RegEx expression (at least one match?), throws RegEx::Exception
 bool RegEx::getBool(const std::string& text) const {
@@ -64,7 +30,7 @@ bool RegEx::getBool(const std::string& text) const {
 	if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled.");
 
 	// get first match
-	RegEx::PCREMatchWrapper pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
+	crawlservpp::Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
 	int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
 
 	// check result
@@ -97,7 +63,7 @@ void RegEx::getFirst(const std::string& text, std::string& resultTo) const {
 	if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled");
 
 	// get first match
-	PCREMatchWrapper pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
+	crawlservpp::Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
 	int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
 
 	// check result
@@ -134,7 +100,7 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 	if(!(this->expressionMulti)) throw RegEx::Exception("No multi result expression compiled");
 
 	// get first match
-	PCREMatchWrapper pcreMatch(pcre2_match_data_create_from_pattern(this->expressionMulti.get(), NULL));
+	crawlservpp::Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionMulti.get(), NULL));
 	int result = pcre2_match(this->expressionMulti.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
 
 	// check result
@@ -217,6 +183,61 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 
 	// copy result
 	resultTo = resultArray;
+}
+
+// compile RegEx expression, throws RegEx::Exception
+void RegEx::compile(const std::string& pattern, bool single, bool multi) {
+	int errorNumber = 0;
+	PCRE2_SIZE errorOffset = 0;
+
+	// delete old expressions if necessary
+	this->expressionSingle.reset();
+	this->expressionMulti.reset();
+
+	// check arguments
+	if(pattern.empty()) throw RegEx::Exception("Expression is empty");
+	if(!single && !multi) throw RegEx::Exception("No result type for expression specified");
+
+	// compile expression(s)
+	if(single) {
+		this->expressionSingle.reset(pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
+				&errorNumber, &errorOffset, NULL));
+		if(!(this->expressionSingle)) {
+			// RegEx error
+			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
+			std::ostringstream errorStrStr;
+			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
+			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
+			throw RegEx::Exception(errorStrStr.str());
+		}
+	}
+
+	if(multi) {
+		this->expressionMulti.reset(pcre2_compile((PCRE2_SPTR) pattern.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP
+				| PCRE2_MULTILINE, &errorNumber, &errorOffset, NULL));
+		if(!(this->expressionMulti)) {
+			// RegEx error
+			PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
+			std::ostringstream errorStrStr;
+			pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
+			errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
+			throw RegEx::Exception(errorStrStr.str());
+		}
+	}
+}
+
+// bool operator
+RegEx::operator bool() const {
+	return this->expressionSingle || this->expressionMulti;
+}
+
+// move operator
+RegEx& RegEx::operator=(RegEx&& other) {
+	if(&other != this) {
+		this->expressionSingle = std::move(other.expressionSingle);
+		this->expressionMulti = std::move(other.expressionMulti);
+	}
+	return *this;
 }
 
 }
