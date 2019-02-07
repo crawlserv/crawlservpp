@@ -40,8 +40,7 @@ The source code of the server consists of the following classes (as of February 
 * **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server managing threads and performing server commands.
 * **[`Main::WebServer`](crawlserv/src/Main/WebServer.cpp)**: Implementation of an embedded HTTP server for interaction with the frontend using the [mongoose library](https://github.com/cesanta/mongoose).
 * **[`Module::Config`](crawlserv/src/Module/Config.cpp)**: Abstract class as base for module-specific configuration classes.
-* **[`Module::DBThread`](crawlserv/src/Module/DBThread.cpp)**: Database functionality for threads (child of the [`Main::Database`](crawlserv/src/Main/Database.cpp) class).
-* **[`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp)**: Abstract class for the database access of threads (wraps the [`Module::DBThread`](crawlserv/src/Module/DBThread.cpp) class).
+* **[`Module::Database`](crawlserv/src/Module/Database.cpp)**: Database functionality for threads (child of the [`Main::Database`](crawlserv/src/Main/Database.cpp) class).
 * **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Abstract class for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
 * **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
 * **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
@@ -69,6 +68,14 @@ The source code of the server consists of the following classes (as of February 
 * **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
 * **[`Timer::StartStop`](crawlserv/src/Timer/StartStop.cpp)**: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
 * **[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.cpp)**: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
+* **[`Wrapper::Curl`](crawlserv/src/Wrapper/Curl.cpp)**: [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) wrapper for pointer to cURL instance, also handles global instance if necessary.
+* **[`Wrapper::CurlList`](crawlserv/src/Wrapper/CurlList.cpp)**: RAII wrapper for pointer to URI query list.
+* **[`Wrapper::Database`](crawlserv/src/Wrapper/Database.cpp)**: Abstract class for the database access of threads (wraps the [`Module::Database`](crawlserv/src/Module/Database.cpp) class).
+* **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.cpp)**: Wrapper for pointer to Perl-Compatible Regular Expression.
+* **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.cpp)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
+* **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.cpp)**: RAII wrapper for prepared SQL statement pointer.
+* **[`Wrapper::URI`](crawlserv/src/Wrapper/URI.cpp)**: Wrapper for pointer to URI structure.
+* **[`Wrapper::URIQueryList`](crawlserv/src/Wrapper/URIQueryList.cpp)**: RAII wrapper for pointer to URI query list.
 
 The following additional namespaces are used (to be found in [`crawlserv/src/Helper`](crawlserv/src/Helper)):
 
