@@ -143,8 +143,17 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
-			this->database.log("crawler", logStrStr.str());
+			try {
+				logStrStr << "#" << id << " interrupted.";
+				this->database.log("crawler", logStrStr.str());
+			}
+			catch(const Database::Exception& e) {
+				std::cout << std::endl << logStrStr.str()
+						<< std::endl << "Could not write to log: " << e.what() << std::flush;
+			}
+			catch(...) {
+				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+			}
 		}
 	}
 	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
@@ -157,8 +166,17 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
-			this->database.log("parser", logStrStr.str());
+			try {
+				logStrStr << "#" << id << " interrupted.";
+				this->database.log("parser", logStrStr.str());
+			}
+			catch(const Database::Exception& e) {
+				std::cout << std::endl << logStrStr.str()
+						<< std::endl << "Could not write to log: " << e.what() << std::flush;
+			}
+			catch(...) {
+				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+			}
 		}
 	}
 	this->parsers.clear();
@@ -172,8 +190,17 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
-			this->database.log("extractor", logStrStr.str());
+			try {
+				logStrStr << "#" << id << " interrupted.";
+				this->database.log("extractor", logStrStr.str());
+			}
+			catch(const Database::Exception& e) {
+				std::cout << std::endl << logStrStr.str()
+						<< std::endl << "Could not write to log: " << e.what() << std::flush;
+			}
+			catch(...) {
+				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+			}
 		}
 	}*/
 	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
@@ -186,8 +213,17 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
-			this->database.log("analyzer", logStrStr.str());
+			try {
+				logStrStr << "#" << id << " interrupted.";
+				this->database.log("analyzer", logStrStr.str());
+			}
+			catch(const Database::Exception& e) {
+				std::cout << std::endl << logStrStr.str()
+						<< std::endl << "Could not write to log: " << e.what() << std::flush;
+			}
+			catch(...) {
+				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+			}
 		}
 	}
 
@@ -195,8 +231,18 @@ Server::~Server() {
 	for(auto i = this->workers.begin(); i != this->workers.end(); ++i) if(i->joinable()) i->join();
 
 	// log shutdown message with server up-time
-	this->database.log("server", "shuts down after up-time of "
-			+ crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) + ".");
+	try {
+		this->database.log("server", "shuts down after up-time of "
+				+ crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) + ".");
+	}
+	catch(const Database::Exception& e) {
+		std::cout << "server shuts down after up-time of"
+				<< crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) << "."
+				<< std::endl << "Could not write to log: " << e.what() << std::flush;
+	}
+	catch(...) {
+		std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+	}
 }
 
 // server tick, return whether server is still running
