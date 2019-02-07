@@ -84,9 +84,9 @@ namespace crawlservpp::Module {
 		unsigned long getMaxAllowedPacketSize() const;
 
 		// wrappers for managing prepared SQL statements
-		void reservePreparedStatements(unsigned long numPreparedStatements);
-		unsigned short addPreparedStatement(const std::string& sqlStatementString);
-		sql::PreparedStatement& getPreparedStatement(unsigned short sqlStatementId);
+		void reserveForPreparedStatements(unsigned long numberOfAdditionalPreparedStatements);
+		unsigned short addPreparedStatement(const std::string& sqlQuery);
+		sql::PreparedStatement& getPreparedStatement(unsigned short id);
 
 		// wrappers for database helper functions
 		void checkConnection();

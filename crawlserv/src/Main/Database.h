@@ -197,22 +197,18 @@ namespace crawlservpp::Main {
 		};
 
 	protected:
-		// sub-structure for prepared SQL statements
-		struct PreparedSqlStatement {
-			std::string string;
-			std::shared_ptr<sql::PreparedStatement> statement;
-		};
-
 		// shared connection information
 		std::unique_ptr<sql::Connection> connection;
 		static sql::Driver * driver;
 		bool tablesLocked;
 
-		// prepared statements
-		std::vector<PreparedSqlStatement> preparedStatements;
-
 		// protected getter
 		unsigned long getMaxAllowedPacketSize() const;
+
+		// helper functions for prepared SQL statements
+		void reserveForPreparedStatements(unsigned short numberOfAdditionalPreparedStatements);
+		unsigned short addPreparedStatement(const std::string& sqlQuery);
+		sql::PreparedStatement& getPreparedStatement(unsigned short id);
 
 		// database helper functions
 		unsigned long getLastInsertedId();
@@ -234,6 +230,62 @@ namespace crawlservpp::Main {
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
 
+		// RAII wrapper sub-class for prepared SQL statements
+		class PreparedSqlStatementWrapper {
+		public:
+			// constructor
+			PreparedSqlStatementWrapper() { this->connection = NULL; }
+
+			// constructor
+			PreparedSqlStatementWrapper(sql::Connection * setConnection, const std::string& setQuery) {
+				this->connection = setConnection;
+				this->query = setQuery;
+				this->prepare();
+			}
+
+			// destructor: free and close prepared SQL statement if necessary
+			virtual ~PreparedSqlStatementWrapper() { this->reset(); }
+
+			// prepare SQL statement
+			void prepare() { this->reset(); this->ptr.reset(this->connection->prepareStatement(this->query)); }
+
+			// reset SQL statement
+			void reset() { if(this->ptr) { this->ptr->close(); this->ptr.reset(); } }
+
+			// refresh prepared SQL statement
+			void refresh(sql::Connection * newConnection) { this->reset(); this->connection = newConnection; this->prepare(); }
+
+			// get pointer to prepared SQL statement
+			const sql::PreparedStatement * get() const { return this->ptr.get(); }
+			sql::PreparedStatement * get() { return this->ptr.get(); }
+			operator bool() const { return this->ptr.operator bool(); }
+
+			// only moveable, not copyable
+			PreparedSqlStatementWrapper(PreparedSqlStatementWrapper&) = delete;
+			PreparedSqlStatementWrapper(PreparedSqlStatementWrapper&& other) {
+				this->connection = other.connection;
+				this->ptr = std::move(other.ptr);
+				this->query = other.query;
+			}
+			PreparedSqlStatementWrapper& operator=(PreparedSqlStatementWrapper&) = delete;
+			PreparedSqlStatementWrapper& operator=(PreparedSqlStatementWrapper&& other) {
+				if(&other != this) {
+					this->connection = other.connection;
+					this->ptr = std::move(other.ptr);
+					this->query = other.query;
+				}
+				return *this;
+			}
+
+		private:
+			sql::Connection * connection;
+			std::string query;
+			std::unique_ptr<sql::PreparedStatement> ptr;
+		};
+
+		// prepared statements
+		std::vector<PreparedSqlStatementWrapper> preparedStatements;
+
 		// internal helper function
 		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
@@ -243,7 +295,6 @@ namespace crawlservpp::Main {
 		unsigned short psLastId;
 		unsigned short psSetThreadStatus;
 		unsigned short psSetThreadStatusMessage;
-		unsigned short psStrlen;
 
 		// prevent use of these
 		Database(const Database&);

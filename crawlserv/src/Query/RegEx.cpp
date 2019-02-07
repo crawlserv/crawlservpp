@@ -64,8 +64,8 @@ bool RegEx::getBool(const std::string& text) const {
 	if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled.");
 
 	// get first match
-	pcre2_match_data * pcreMatch = pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL);
-	int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch, NULL);
+	RegEx::PCREMatchWrapper pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
+	int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
 
 	// check result
 	if(result <= 0) {
