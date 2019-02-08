@@ -17,14 +17,7 @@ Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapp
 	this->urlList = 0;
 	this->logging = false;
 	this->verbose = false;
-
-	this->psGetCorpus = 0;
-	this->psIsCorpusChanged = 0;
-	this->psIsCorpusChangedParsing = 0;
-	this->psIsCorpusChangedExtracting = 0;
-	this->psIsCorpusChangedAnalyzing = 0;
-	this->psDeleteCorpus = 0;
-	this->psAddCorpus = 0;
+	this->ps = { 0 };
 }
 
 // destructor stub
@@ -144,41 +137,41 @@ void Database::prepare() {
 
 	try {
 		// prepare SQL statements for analyzer
-		if(!(this->psGetCorpus)) {
+		if(!(this->ps.getCorpus)) {
 			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares getCorpus()...");
-			this->psGetCorpus = this->addPreparedStatement("SELECT corpus, datemap, sources FROM crawlserv_corpora WHERE website = "
+			this->ps.getCorpus = this->addPreparedStatement("SELECT corpus, datemap, sources FROM crawlserv_corpora WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ?"
 					" AND source_field = ? ORDER BY created DESC LIMIT 1");
 		}
-		if(!(this->psIsCorpusChanged)) {
+		if(!(this->ps.isCorpusChanged)) {
 			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [1/4]...");
-			this->psIsCorpusChanged = this->addPreparedStatement("SELECT EXISTS (SELECT 1 FROM crawlserv_corpora WHERE website = "
+			this->ps.isCorpusChanged = this->addPreparedStatement("SELECT EXISTS (SELECT 1 FROM crawlserv_corpora WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ?"
 					" AND source_field = ? AND created > ?) AS result");
 		}
-		if(!(this->psIsCorpusChangedParsing)) {
+		if(!(this->ps.isCorpusChangedParsing)) {
 			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [2/4]...");
-			this->psIsCorpusChangedParsing = this->addPreparedStatement("SELECT updated FROM crawlserv_parsedtables WHERE website = "
+			this->ps.isCorpusChangedParsing = this->addPreparedStatement("SELECT updated FROM crawlserv_parsedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
-		if(!(this->psIsCorpusChangedExtracting)) {
+		if(!(this->ps.isCorpusChangedExtracting)) {
 			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [3/4]...");
-			this->psIsCorpusChangedExtracting = this->addPreparedStatement("SELECT updated FROM crawlserv_extractedtables WHERE website = "
+			this->ps.isCorpusChangedExtracting = this->addPreparedStatement("SELECT updated FROM crawlserv_extractedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
-		if(!(this->psIsCorpusChangedAnalyzing)) {
+		if(!(this->ps.isCorpusChangedAnalyzing)) {
 			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [4/4]...");
-			this->psIsCorpusChangedAnalyzing = this->addPreparedStatement("SELECT updated FROM crawlserv_analyzedtables WHERE website = "
+			this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement("SELECT updated FROM crawlserv_analyzedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
-		if(!(this->psDeleteCorpus)) {
+		if(!(this->ps.deleteCorpus)) {
 			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [1/2]...");
-			this->psDeleteCorpus = this->addPreparedStatement("DELETE FROM crawlserv_corpora WHERE website = " + this->websiteIdString
+			this->ps.deleteCorpus = this->addPreparedStatement("DELETE FROM crawlserv_corpora WHERE website = " + this->websiteIdString
 					+ " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ? AND source_field = ? LIMIT 1");
 		}
-		if(!(this->psAddCorpus)) {
+		if(!(this->ps.addCorpus)) {
 			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [2/2]...");
-			this->psAddCorpus = this->addPreparedStatement("INSERT INTO crawlserv_corpora(website, urllist, source_type, source_table,"
+			this->ps.addCorpus = this->addPreparedStatement("INSERT INTO crawlserv_corpora(website, urllist, source_type, source_table,"
 					" source_field, corpus, datemap, sources) VALUES (" + this->websiteIdString + ", " + this->listIdString
 					+ ", ?, ?, ?, ?, ?, ?)");
 		}
@@ -237,9 +230,9 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 	}
 	else {
 		// check prepared SQL statement
-		if(!(this->psGetCorpus))
+		if(!(this->ps.getCorpus))
 			throw DatabaseException("Missing prepared SQL statement for getting the corpus");
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetCorpus);
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getCorpus);
 
 		// check connection
 		this->checkConnection();
@@ -321,20 +314,20 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 	bool result = true;
 
 	// check prepared SQL statements
-	if(!(this->psIsCorpusChanged))
+	if(!(this->ps.isCorpusChanged))
 		throw DatabaseException("Missing prepared SQL statement for getting the corpus creation time");
-	sql::PreparedStatement& corpusStatement = this->getPreparedStatement(this->psIsCorpusChanged);
+	sql::PreparedStatement& corpusStatement = this->getPreparedStatement(this->ps.isCorpusChanged);
 
 	unsigned short sourceStatement = 0;
 	switch(sourceType) {
 	case Config::generalInputSourcesParsing:
-		sourceStatement = this->psIsCorpusChangedParsing;
+		sourceStatement = this->ps.isCorpusChangedParsing;
 		break;
 	case Config::generalInputSourcesExtracting:
-		sourceStatement = this->psIsCorpusChangedExtracting;
+		sourceStatement = this->ps.isCorpusChangedExtracting;
 		break;
 	case Config::generalInputSourcesAnalyzing:
-		sourceStatement = this->psIsCorpusChangedAnalyzing;
+		sourceStatement = this->ps.isCorpusChangedAnalyzing;
 		break;
 	case Config::generalInputSourcesCrawling:
 		return true; // always re-create corpus for crawling data
@@ -388,12 +381,12 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 	dateMapEntry = std::make_tuple("", 0, 0);
 
 	// check prepared SQL statements
-	if(!(this->psDeleteCorpus))
+	if(!(this->ps.deleteCorpus))
 		throw DatabaseException("Missing prepared SQL statement for deleting text corpus");
-	if(!(this->psAddCorpus))
+	if(!(this->ps.addCorpus))
 		throw DatabaseException("Missing prepared SQL statement for adding text corpus");
-	sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->psDeleteCorpus);
-	sql::PreparedStatement& addStatement = this->getPreparedStatement(this->psAddCorpus);
+	sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->ps.deleteCorpus);
+	sql::PreparedStatement& addStatement = this->getPreparedStatement(this->ps.addCorpus);
 
 	// check source type
 	std::string tableName, columnName;

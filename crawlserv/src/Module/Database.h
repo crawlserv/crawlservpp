@@ -44,9 +44,11 @@ namespace crawlservpp::Module {
 
 	private:
 		// IDs of prepared SQL statements
-		unsigned short psSetThreadStatusMessage;
-		unsigned short psSetThreadProgress;
-		unsigned short psSetThreadLast;
+		struct {
+			unsigned short setThreadStatusMessage;
+			unsigned short setThreadProgress;
+			unsigned short setThreadLast;
+		} ps;
 	};
 }
 

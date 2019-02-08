@@ -102,14 +102,16 @@ namespace crawlservpp::Module::Analyzer {
 
 	private:
 		// IDs of prepared SQL statements
-		unsigned short psGetCorpus;
-		unsigned short psIsCorpusChanged;
-		unsigned short psIsCorpusChangedParsing;
-		unsigned short psIsCorpusChangedExtracting;
-		unsigned short psIsCorpusChangedAnalyzing;
-		unsigned short psDeleteCorpus;
-		unsigned short psAddCorpus;
-		std::vector<unsigned short> psAlgo;
+		struct {
+			unsigned short getCorpus;
+			unsigned short isCorpusChanged;
+			unsigned short isCorpusChangedParsing;
+			unsigned short isCorpusChangedExtracting;
+			unsigned short isCorpusChangedAnalyzing;
+			unsigned short deleteCorpus;
+			unsigned short addCorpus;
+			std::vector<unsigned short> algo;
+		} ps;
 	};
 }
 
