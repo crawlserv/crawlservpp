@@ -104,23 +104,25 @@ namespace crawlservpp::Module::Parser {
 
 	private:
 		// IDs of prepared SQL statements
-		unsigned short psIsUrlParsed;
-		unsigned short psGetNextUrl;
-		unsigned short psGetUrlPosition;
-		unsigned short psGetNumberOfUrls;
-		unsigned short psIsUrlLockable;
-		unsigned short psCheckUrlLock;
-		unsigned short psGetUrlLock;
-		unsigned short psLockUrl;
-		unsigned short psUnLockUrl;
-		unsigned short psGetContentIdFromParsedId;
-		unsigned short psGetLatestContent;
-		unsigned short psGetAllContents;
-		unsigned short psSetUrlFinished;
-		unsigned short psGetEntryId;
-		unsigned short psUpdateEntry;
-		unsigned short psAddEntry;
-		unsigned short psUpdateParsedTable;
+		struct {
+			unsigned short isUrlParsed;
+			unsigned short getNextUrl;
+			unsigned short getUrlPosition;
+			unsigned short getNumberOfUrls;
+			unsigned short isUrlLockable;
+			unsigned short checkUrlLock;
+			unsigned short getUrlLock;
+			unsigned short lockUrl;
+			unsigned short unLockUrl;
+			unsigned short getContentIdFromParsedId;
+			unsigned short getLatestContent;
+			unsigned short getAllContents;
+			unsigned short setUrlFinished;
+			unsigned short getEntryId;
+			unsigned short updateEntry;
+			unsigned short addEntry;
+			unsigned short updateParsedTable;
+		} ps;
 
 		// internal helper functions
 		unsigned long getEntryId(unsigned long contentId);

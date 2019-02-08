@@ -15,9 +15,7 @@ namespace crawlservpp::Module {
 // constructor
 Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings)
 		: crawlservpp::Main::Database(dbSettings) {
-	this->psSetThreadStatusMessage = 0;
-	this->psSetThreadProgress = 0;
-	this->psSetThreadLast = 0;
+	this->ps = { 0 };
 	if(crawlservpp::Main::Database::driver)
 		crawlservpp::Main::Database::driver->threadInit();
 	else throw(Database::Exception("MySQL driver not loaded"));
@@ -41,11 +39,11 @@ void Database::prepare() {
 	this->reserveForPreparedStatements(3);
 
 	// prepare general SQL statements for thread
-	if(!(this->psSetThreadStatusMessage)) this->psSetThreadStatusMessage = this->addPreparedStatement(
+	if(!(this->ps.setThreadStatusMessage)) this->ps.setThreadStatusMessage = this->addPreparedStatement(
 			"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1");
-	if(!(this->psSetThreadProgress)) this->psSetThreadProgress = this->addPreparedStatement(
+	if(!(this->ps.setThreadProgress)) this->ps.setThreadProgress = this->addPreparedStatement(
 			"UPDATE crawlserv_threads SET progress = ? WHERE id = ? LIMIT 1");
-	if(!(this->psSetThreadLast)) this->psSetThreadLast = this->addPreparedStatement(
+	if(!(this->ps.setThreadLast)) this->ps.setThreadLast = this->addPreparedStatement(
 			"UPDATE crawlserv_threads SET last = ? WHERE id = ? LIMIT 1");
 }
 
@@ -55,9 +53,9 @@ void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->psSetThreadStatusMessage))
+	if(!(this->ps.setThreadStatusMessage))
 		throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatusMessage(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetThreadStatusMessage);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
 
 	// create status message
 	std::string statusMessage;
@@ -88,9 +86,9 @@ void Database::setThreadProgress(unsigned long threadId, float threadProgress) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->psSetThreadProgress))
+	if(!(this->ps.setThreadProgress))
 		throw Database::Exception("Missing prepared SQL statement for Database::setThreadProgress(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetThreadProgress);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadProgress);
 
 	try {
 		// execute SQL statement
@@ -112,8 +110,8 @@ void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->psSetThreadLast)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadLast(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetThreadLast);
+	if(!(this->ps.setThreadLast)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadLast(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadLast);
 
 	try {
 		// execute SQL statement

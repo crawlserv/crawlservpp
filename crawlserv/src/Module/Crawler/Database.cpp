@@ -414,9 +414,12 @@ unsigned long Database::getNumberOfUrls() {
 // check whether a link between two websites already exists and add it to the database if not
 void Database::addLinkIfNotExists(unsigned long from, unsigned long to, bool archived) {
 	// check prepared SQL statements
-	if(!(this->ps.isLinkExists)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
-	if(!(this->ps.addLinkArchived)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
-	if(!(this->ps.addLink)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
+	if(!(this->ps.isLinkExists))
+		throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
+	if(!(this->ps.addLinkArchived))
+		throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
+	if(!(this->ps.addLink))
+		throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
 	sql::PreparedStatement& checkStatement = this->getPreparedStatement(this->ps.isLinkExists);
 	sql::PreparedStatement& addStatement = archived ?
 			this->getPreparedStatement(this->ps.addLinkArchived) : this->getPreparedStatement(this->ps.addLink);

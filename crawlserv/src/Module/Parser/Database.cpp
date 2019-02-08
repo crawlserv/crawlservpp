@@ -19,24 +19,7 @@ Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapp
 	this->parseCustom = false;
 	this->logging = false;
 	this->verbose = false;
-
-	this->psIsUrlParsed = 0;
-	this->psGetNextUrl = 0;
-	this->psGetUrlPosition = 0;
-	this->psGetNumberOfUrls = 0;
-	this->psIsUrlLockable = 0;
-	this->psCheckUrlLock = 0;
-	this->psGetUrlLock = 0;
-	this->psLockUrl = 0;
-	this->psUnLockUrl = 0;
-	this->psGetContentIdFromParsedId = 0;
-	this->psGetLatestContent = 0;
-	this->psGetAllContents = 0;
-	this->psSetUrlFinished = 0;
-	this->psGetEntryId = 0;
-	this->psUpdateEntry = 0;
-	this->psAddEntry = 0;
-	this->psUpdateParsedTable = 0;
+	this->ps = { 0 };
 }
 
 // destructor stub
@@ -145,95 +128,95 @@ void Database::prepare() {
 	this->reserveForPreparedStatements(16);
 
 	// prepare SQL statements for parser
-	if(!(this->psIsUrlParsed)) {
+	if(!(this->ps.isUrlParsed)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlParsed()...");
-		this->psIsUrlParsed = this->addPreparedStatement(
+		this->ps.isUrlParsed = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ? AND parsed = TRUE) AS result");
 	}
-	if(!(this->psGetNextUrl)) {
+	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
 		std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
 				" WHERE a.id = b.url AND a.id > ? AND b.response < 400 AND (a.parselock IS NULL OR a.parselock < NOW())";
 		if(!reparse) sqlQuery += " AND a.parsed = FALSE";
 		if(!parseCustom) sqlQuery += " AND a.manual = FALSE";
 		sqlQuery += " ORDER BY a.id LIMIT 1";
-		this->psGetNextUrl = this->addPreparedStatement(sqlQuery);
+		this->ps.getNextUrl = this->addPreparedStatement(sqlQuery);
 	}
-	if(!(this->psGetUrlPosition)) {
+	if(!(this->ps.getUrlPosition)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlPosition()...");
-		this->psGetUrlPosition = this->addPreparedStatement(
+		this->ps.getUrlPosition = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
 	}
-	if(!(this->psGetNumberOfUrls)) {
+	if(!(this->ps.getNumberOfUrls)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNumberOfUrls()...");
-		this->psGetNumberOfUrls = this->addPreparedStatement(
+		this->ps.getNumberOfUrls = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
 	}
-	if(!(this->psIsUrlLockable)) {
+	if(!(this->ps.isUrlLockable)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlLockable()...");
-		this->psIsUrlLockable = this->addPreparedStatement(
+		this->ps.isUrlLockable = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (parselock IS NULL OR parselock < NOW())) AS result");
 	}
-	if(!(this->psGetUrlLock)) {
+	if(!(this->ps.getUrlLock)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlLock()...");
-		this->psGetUrlLock = this->addPreparedStatement(
+		this->ps.getUrlLock = this->addPreparedStatement(
 				"SELECT parselock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
 	}
-	if(!(this->psCheckUrlLock)) {
+	if(!(this->ps.checkUrlLock)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares checkUrlLock()...");
-		this->psCheckUrlLock = this->addPreparedStatement(
+		this->ps.checkUrlLock = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (parselock < NOW() OR parselock <= ? OR parselock IS NULL)) AS result");
 	}
-	if(!(this->psLockUrl)) {
+	if(!(this->ps.lockUrl)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares lockUrl()...");
-		this->psLockUrl = this->addPreparedStatement(
+		this->ps.lockUrl = this->addPreparedStatement(
 				"UPDATE `"
 				+ this->urlListTable + "` SET parselock = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
 	}
-	if(!(this->psUnLockUrl)) {
+	if(!(this->ps.unLockUrl)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares unLockUrl()...");
-		this->psUnLockUrl = this->addPreparedStatement(
+		this->ps.unLockUrl = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable + "` SET parselock = NULL WHERE id = ? LIMIT 1");
 	}
-	if(!(this->psGetContentIdFromParsedId)) {
+	if(!(this->ps.getContentIdFromParsedId)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getContentIdFromParsedId()...");
-		this->psGetContentIdFromParsedId = this->addPreparedStatement(
+		this->ps.getContentIdFromParsedId = this->addPreparedStatement(
 				"SELECT content FROM `" + this->targetTableFull	+ "` WHERE parsed_id = ? LIMIT 1");
 	}
-	if(!(this->psGetLatestContent)) {
+	if(!(this->ps.getLatestContent)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getLatestContent()...");
-		this->psGetLatestContent = this->addPreparedStatement(
+		this->ps.getLatestContent = this->addPreparedStatement(
 				"SELECT id, content FROM `"
 				+ this->urlListTable + "_crawled` WHERE url = ? ORDER BY crawltime DESC LIMIT ?, 1");
 	}
-	if(!(this->psGetAllContents)) {
+	if(!(this->ps.getAllContents)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getAllContents()...");
-		this->psGetAllContents = this->addPreparedStatement(
+		this->ps.getAllContents = this->addPreparedStatement(
 				"SELECT id, content FROM `" + this->urlListTable + "_crawled` WHERE url = ?");
 	}
-	if(!(this->psSetUrlFinished)) {
+	if(!(this->ps.setUrlFinished)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares setUrlFinished()...");
-		this->psSetUrlFinished = this->addPreparedStatement(
+		this->ps.setUrlFinished = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable
 				+ "` SET parsed = TRUE, analyzed = FALSE, parselock = NULL WHERE id = ? LIMIT 1");
 	}
-	if(!(this->psGetEntryId)) {
+	if(!(this->ps.getEntryId)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getEntryId()...");
-		this->psGetEntryId = this->addPreparedStatement(
+		this->ps.getEntryId = this->addPreparedStatement(
 				"SELECT id FROM `" + this->targetTableFull + "` WHERE content = ? LIMIT 1");
 	}
-	if(!(this->psUpdateEntry)) {
+	if(!(this->ps.updateEntry)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares updateEntry()...");
 		std::string sqlQuery = "UPDATE `" + this->targetTableFull + "` SET parsed_id = ?, parsed_datetime = ?";
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 			if(!(i->empty())) sqlQuery += ", `parsed__" + *i + "` = ?";
 		sqlQuery += " WHERE id = ? LIMIT 1";
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
-		this->psUpdateEntry = this->addPreparedStatement(sqlQuery);
+		this->ps.updateEntry = this->addPreparedStatement(sqlQuery);
 	}
-	if(!(this->psAddEntry)) {
+	if(!(this->ps.addEntry)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares addEntry()...");
 		std::string sqlQuery = "INSERT INTO `" + this->targetTableFull + "`(content, parsed_id, parsed_datetime";
 		unsigned long counter = 0;
@@ -247,13 +230,13 @@ void Database::prepare() {
 		for(unsigned long n = 0; n < counter; n++) sqlQuery += ", ?";
 		sqlQuery += ")";
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
-		this->psAddEntry = this->addPreparedStatement(sqlQuery);
+		this->ps.addEntry = this->addPreparedStatement(sqlQuery);
 	}
-	if(!(this->psUpdateParsedTable)) {
+	if(!(this->ps.updateParsedTable)) {
 		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares parsingTableUpdated()...");
-		this->psUpdateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
+		this->ps.updateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
 				" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1");
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateParsedTable);
 		sqlStatement.setUInt64(1, this->website);
 		sqlStatement.setUInt64(2, this->urlList);
 		sqlStatement.setString(3, this->targetTableName);
@@ -275,8 +258,8 @@ bool Database::isUrlParsed(unsigned long urlId) {
 	bool result = false;
 
 	// check prepared SQL statement
-	if(!(this->psIsUrlParsed)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::isUrlParsed(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsUrlParsed);
+	if(!(this->ps.isUrlParsed)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::isUrlParsed(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlParsed);
 
 	// check connection
 	this->checkConnection();
@@ -305,8 +288,8 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 	std::pair<unsigned long, std::string> result;
 
 	// check prepared SQL statement
-	if(!(this->psGetNextUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNextUrl(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetNextUrl);
+	if(!(this->ps.getNextUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNextUrl(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNextUrl);
 
 	// check connection
 	this->checkConnection();
@@ -338,8 +321,8 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!(this->psGetUrlPosition)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlPosition()");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetUrlPosition);
+	if(!(this->ps.getUrlPosition)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlPosition()");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlPosition);
 
 	// check connection
 	this->checkConnection();
@@ -368,8 +351,8 @@ unsigned long Database::getNumberOfUrls() {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!(this->psGetNumberOfUrls)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNumberOfUrls()");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetNumberOfUrls);
+	if(!(this->ps.getNumberOfUrls)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNumberOfUrls()");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNumberOfUrls);
 
 	// check connection
 	this->checkConnection();
@@ -397,8 +380,8 @@ bool Database::isUrlLockable(unsigned long urlId) {
 	bool result = false;
 
 	// check prepared SQL statement
-	if(!(this->psIsUrlLockable)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::isUrlLockable(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psIsUrlLockable);
+	if(!(this->ps.isUrlLockable)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::isUrlLockable(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlLockable);
 
 	// check connection
 	this->checkConnection();
@@ -427,8 +410,8 @@ std::string Database::getUrlLock(unsigned long urlId) {
 	std::string result;
 
 	// check prepared SQL statement
-	if(!(this->psGetUrlLock)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLock(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetUrlLock);
+	if(!(this->ps.getUrlLock)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLock(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLock);
 
 	// check connection
 	this->checkConnection();
@@ -457,8 +440,8 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	bool result = false;
 
 	// check prepared SQL statement
-	if(!(this->psCheckUrlLock)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::checkUrlLock(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psCheckUrlLock);
+	if(!(this->ps.checkUrlLock)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::checkUrlLock(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.checkUrlLock);
 
 	// check connection
 	this->checkConnection();
@@ -486,8 +469,8 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 // lock a URL in the database
 std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 	// check prepared SQL statement
-	if(!(this->psLockUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psLockUrl);
+	if(!(this->ps.lockUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
 
 	// check connection
 	this->checkConnection();
@@ -512,8 +495,8 @@ std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 // unlock a URL in the database
 void Database::unLockUrl(unsigned long urlId) {
 	// check prepared SQL statement
-	if(!(this->psUnLockUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::unLockUrl(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUnLockUrl);
+	if(!(this->ps.unLockUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::unLockUrl(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.unLockUrl);
 
 	// check connection
 	this->checkConnection();
@@ -537,9 +520,9 @@ unsigned long Database::getContentIdFromParsedId(const std::string& parsedId) {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!(this->psGetContentIdFromParsedId))
+	if(!(this->ps.getContentIdFromParsedId))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getContentIdFromParsedId(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetContentIdFromParsedId);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getContentIdFromParsedId);
 
 	// check connection
 	this->checkConnection();
@@ -570,9 +553,9 @@ bool Database::getLatestContent(unsigned long urlId, unsigned long index,
 	bool success = false;
 
 	// check prepared SQL statement
-	if(!(this->psGetLatestContent))
+	if(!(this->ps.getLatestContent))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getLatestContent(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetLatestContent);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLatestContent);
 
 	// check connection
 	this->checkConnection();
@@ -610,9 +593,9 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAllContents(unsi
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check prepared SQL statement
-	if(!(this->psGetAllContents))
+	if(!(this->ps.getAllContents))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getAllContents(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetAllContents);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getAllContents);
 
 	// check connection
 	this->checkConnection();
@@ -691,9 +674,9 @@ void Database::updateOrAddEntry(unsigned long contentId, const std::string& pars
 // set URL as parsed in the database
 void Database::setUrlFinished(unsigned long urlId) {
 	// check prepared SQL statement
-	if(!(this->psSetUrlFinished))
+	if(!(this->ps.setUrlFinished))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::setUrlFinished(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetUrlFinished);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setUrlFinished);
 
 	// check connection
 	this->checkConnection();
@@ -717,8 +700,8 @@ unsigned long Database::getEntryId(unsigned long contentId) {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!(this->psGetEntryId)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getEntryId(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psGetEntryId);
+	if(!(this->ps.getEntryId)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getEntryId(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getEntryId);
 
 	// check connection
 	this->checkConnection();
@@ -746,8 +729,8 @@ unsigned long Database::getEntryId(unsigned long contentId) {
 void Database::updateEntry(unsigned long entryId, const std::string& parsedId,
 		const std::string& parsedDateTime, const std::vector<std::string>& parsedFields) {
 	// check prepared SQL statement
-	if(!(this->psUpdateEntry)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::updateEntry(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUpdateEntry);
+	if(!(this->ps.updateEntry)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::updateEntry(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateEntry);
 
 	// check connection
 	this->checkConnection();
@@ -784,8 +767,8 @@ void Database::updateEntry(unsigned long entryId, const std::string& parsedId,
 void Database::addEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 		const std::vector<std::string>& parsedFields) {
 	// check prepared SQL statement
-	if(!(this->psAddEntry)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::addEntry(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psAddEntry);
+	if(!(this->ps.addEntry)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::addEntry(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addEntry);
 
 	// check connection
 	this->checkConnection();
@@ -821,9 +804,9 @@ void Database::addEntry(unsigned long contentId, const std::string& parsedId, co
 // helper function: update parsing table index
 void Database::updateParsedTable() {
 	// check prepared SQL statement
-	if(!(this->psUpdateParsedTable))
+	if(!(this->ps.updateParsedTable))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::updateParsedTable(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psUpdateParsedTable);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateParsedTable);
 
 	// check connection
 	this->checkConnection();
