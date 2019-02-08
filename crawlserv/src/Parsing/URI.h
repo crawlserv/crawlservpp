@@ -69,7 +69,7 @@ namespace crawlservpp::Parsing {
 
 		crawlservpp::Wrapper::URI base, uri;
 
-		static std::string textRangeToString(const UriTextRangeA * range);
+		static std::string textRangeToString(const UriTextRangeA& range);
 		static std::string toString(const crawlservpp::Wrapper::URI& uri);
 	};
 }

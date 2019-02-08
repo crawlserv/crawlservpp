@@ -57,7 +57,7 @@ void URI::setCurrentSubUrl(const std::string& currentSubUrl) {
 bool URI::isSameDomain() const {
 	if(this->domain.empty()) throw URI::Exception("No current domain specified");
 	if(!(this->uri)) throw URI::Exception("No link parsed");
-	return URI::textRangeToString(&(this->uri.get()->hostText)) == this->domain;
+	return URI::textRangeToString(this->uri.get()->hostText) == this->domain;
 }
 
 // get sub-URL for link
@@ -91,7 +91,7 @@ std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList)
 	UriPathSegmentStructA * nextSegment = this->uri.get()->pathHead;
 	std::string result;
 	while(nextSegment) {
-		result += "/" + URI::unescape(URI::textRangeToString(&(nextSegment->text)), false);
+		result += "/" + URI::unescape(URI::textRangeToString(nextSegment->text), false);
 		nextSegment = nextSegment->next;
 	}
 
@@ -158,7 +158,7 @@ bool URI::parseLink(const std::string& linkToParse) {
 
 	// normalize URI
 	const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(this->uri.get());
-	if(uriNormalizeSyntaxExA(this->uri.get(), dirtyParts) != URI_SUCCESS)
+	if(dirtyParts != URI_NORMALIZED && uriNormalizeSyntaxExA(this->uri.get(), dirtyParts) != URI_SUCCESS)
 		throw URI::Exception("Normalizing failed for \'" + this->toString(this->uri) + "\'");
 	return true;
 }
@@ -198,11 +198,10 @@ std::string URI::escapeUrl(const std::string& urlToEscape) {
 	return result;
 }
 
-// static helper function: convert URITextRangeA to string
-std::string URI::textRangeToString(const UriTextRangeA * range) {
-	if(!range || !(range->first) || range->first == range->afterLast) return "";
-	std::string result = std::string(range->first, 0, range->afterLast - range->first);
-	return result;
+// static helper function: convert URITextRangeA to std::string
+std::string URI::textRangeToString(const UriTextRangeA& range) {
+	if(!(range.first) || *(range.first) == 0 || !(range.afterLast) || range.afterLast <= range.first) return "";
+	return std::string(range.first, range.afterLast - range.first);
 }
 
 // static helper function: convert URI to string
