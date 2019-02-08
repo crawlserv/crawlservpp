@@ -22,7 +22,7 @@
 namespace crawlservpp::Main {
 	class ConfigFile {
 	public:
-		// constructors
+		// constructor
 		ConfigFile(const std::string& name);
 
 		// getter
