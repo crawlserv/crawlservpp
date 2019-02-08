@@ -197,6 +197,12 @@ namespace crawlservpp::Main {
 			std::string _description;
 		};
 
+		// not moveable, not copyable
+		Database(Database&) = delete;
+		Database(Database&&) = delete;
+		Database& operator=(Database&) = delete;
+		Database& operator=(Database&&) = delete;
+
 	protected:
 		// shared connection information
 		std::unique_ptr<sql::Connection> connection;
@@ -243,10 +249,6 @@ namespace crawlservpp::Main {
 		unsigned short psLastId;
 		unsigned short psSetThreadStatus;
 		unsigned short psSetThreadStatusMessage;
-
-		// prevent use of these
-		Database(const Database&);
-		void operator=(Database&);
 	};
 }
 

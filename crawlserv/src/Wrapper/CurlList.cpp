@@ -13,12 +13,12 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: set pointer to NULL
-CurlList::CurlList() {
+CurlList::CurlList() noexcept {
 	this->ptr = NULL;
 }
 
 // move constructor
-CurlList::CurlList(CurlList&& other) {
+CurlList::CurlList(CurlList&& other) noexcept {
 	this->ptr = other.ptr;
 	other.ptr = NULL;
 }
@@ -57,7 +57,7 @@ bool CurlList::operator!() const {
 }
 
 // move assignment operator
-CurlList& CurlList::operator=(CurlList&& other) {
+CurlList& CurlList::operator=(CurlList&& other) noexcept {
 	if(&other != this) {
 		this->ptr = other.ptr;
 		other.ptr = NULL;

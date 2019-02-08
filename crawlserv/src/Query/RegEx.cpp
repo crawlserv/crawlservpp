@@ -54,13 +54,9 @@ RegEx::RegEx(const std::string& expression, bool single, bool multi) {
 }
 
 // move constructor
-RegEx::RegEx(RegEx&& other) {
-	this->expressionSingle = std::move(other.expressionSingle);
-	this->expressionMulti = std::move(other.expressionMulti);
-}
-
-// destructor stub
-RegEx::~RegEx() {}
+RegEx::RegEx(RegEx&& other) noexcept :
+		expressionSingle(std::move(other.expressionSingle)),
+		expressionMulti(std::move(other.expressionMulti)) {}
 
 // get boolean result of RegEx expression (at least one match?), throws RegEx::Exception
 bool RegEx::getBool(const std::string& text) const {
@@ -224,17 +220,8 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 }
 
 // bool operator
-RegEx::operator bool() const {
+RegEx::operator bool() const noexcept {
 	return this->expressionSingle || this->expressionMulti;
-}
-
-// move operator
-RegEx& RegEx::operator=(RegEx&& other) {
-	if(&other != this) {
-		this->expressionSingle = std::move(other.expressionSingle);
-		this->expressionMulti = std::move(other.expressionMulti);
-	}
-	return *this;
 }
 
 }

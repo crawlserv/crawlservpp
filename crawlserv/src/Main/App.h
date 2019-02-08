@@ -45,9 +45,11 @@ namespace crawlservpp::Main {
 		static void signal(int num);
 		void shutdown(int num);
 
-		// no copying
-		App(App const&) = delete;
-		void operator=(App const&) = delete;
+		// not moveable, not copyable
+		App(App&) = delete;
+		App(App&&) = delete;
+		App& operator=(App&) = delete;
+		App& operator=(App&&) = delete;
 
 	private:
 		std::atomic<bool> running;

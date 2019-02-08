@@ -18,9 +18,10 @@
 namespace crawlservpp::Timer {
 	class Simple {
 	public:
+		// constructor
 		Simple();
-		virtual ~Simple();
 
+		// control functions
 		unsigned long long tick();
 		std::string tickStr();
 

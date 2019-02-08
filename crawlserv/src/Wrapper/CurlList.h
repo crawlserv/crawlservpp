@@ -20,8 +20,8 @@ namespace crawlservpp::Wrapper {
 class CurlList {
 public:
 	// constructors
-	CurlList();
-	CurlList(CurlList&& other);
+	CurlList() noexcept;
+	CurlList(CurlList&& other) noexcept;
 
 	// destructor
 	virtual ~CurlList();
@@ -37,7 +37,7 @@ public:
 	// operators
 	operator bool() const;
 	bool operator!() const;
-	CurlList& operator=(CurlList&& other);
+	CurlList& operator=(CurlList&& other) noexcept;
 
 	// not copyable
 	CurlList(CurlList&) = delete;

@@ -18,21 +18,21 @@ namespace crawlservpp::Wrapper {
 class URIQueryList {
 public:
 	// constructors
-	URIQueryList();
-	URIQueryList(URIQueryList&& other);
+	URIQueryList() noexcept;
+	URIQueryList(URIQueryList&& other) noexcept;
 
 	// destructor
 	virtual ~URIQueryList();
 
 	// getters
-	UriQueryListA * get();
-	const UriQueryListA * get() const;
-	UriQueryListA ** getPtr();
+	UriQueryListA * get() noexcept;
+	const UriQueryListA * get() const noexcept;
+	UriQueryListA ** getPtr() noexcept;
 
 	// operators
-	operator bool() const;
-	bool operator!() const;
-	URIQueryList& operator=(URIQueryList&& other);
+	operator bool() const noexcept;
+	bool operator!() const noexcept;
+	URIQueryList& operator=(URIQueryList&& other) noexcept;
 
 	// not copyable
 	URIQueryList(URIQueryList&) = delete;

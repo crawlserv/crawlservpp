@@ -13,26 +13,26 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: set pointer to NULL
-PCRE::PCRE() {
+PCRE::PCRE() noexcept {
 	this->ptr = NULL;
 }
 
 // move constructor
-PCRE::PCRE(PCRE&& other) {
+PCRE::PCRE(PCRE&& other) noexcept {
 	this->ptr = other.ptr;
 	other.ptr = NULL;
 }
 
 // destructor: free Perl-Compatible Regular Expression if necessary
-PCRE::~PCRE() { this->reset(); }
+PCRE::~PCRE() noexcept { this->reset(); }
 
 // get pointer to Perl-Compatible Regular Expression
-pcre2_code * PCRE::get() {
+pcre2_code * PCRE::get() noexcept {
 	return this->ptr;
 }
 
 // get const pointer to Perl-Compatible Regular Expression
-const pcre2_code * PCRE::get() const {
+const pcre2_code * PCRE::get() const noexcept {
 	return this->ptr;
 }
 
@@ -51,17 +51,17 @@ void PCRE::reset(pcre2_code * other) {
 }
 
 // bool operator
-PCRE::operator bool() const {
+PCRE::operator bool() const noexcept {
 	return this->ptr != NULL;
 }
 
 // not operator
-bool PCRE::operator!() const {
+bool PCRE::operator!() const noexcept {
 	return this->ptr == NULL;
 }
 
 // move operator
-PCRE& PCRE::operator=(PCRE&& other) {
+PCRE& PCRE::operator=(PCRE&& other) noexcept {
 	if(&other != this) {
 		this->ptr = other.ptr;
 		other.ptr = NULL;

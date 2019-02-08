@@ -95,6 +95,12 @@ namespace crawlservpp::Network {
 		// setter
 		void setEntry(const std::string& name, const rapidjson::Value::ConstMemberIterator& iterator,
 				std::vector<std::string>& warningsTo);
+
+		// not moveable, not copyable
+		Config(Config&) = delete;
+		Config(Config&&) = delete;
+		Config& operator=(Config&) = delete;
+		Config& operator=(Config&&) = delete;
 	};
 }
 

@@ -66,6 +66,36 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, const std::string& threadMod
 // destructor stub
 Thread::~Thread() {}
 
+// get ID of the thread (thread-safe)
+unsigned long Thread::getId() const {
+	return this->id;
+}
+
+// get ID of the website (thread-safe)
+unsigned long Thread::getWebsite() const {
+	return this->options.website;
+}
+
+// get ID of URL list (thread-safe)
+unsigned long Thread::getUrlList() const {
+	return this->options.urlList;
+}
+
+// get ID of the configuration (thread-safe)
+unsigned long Thread::getConfig() const {
+	return this->options.config;
+}
+
+// get whether thread was terminated due to an exception
+bool Thread::isTerminated() const {
+	return this->terminated;
+}
+
+// get whether thread is still supposed to run
+bool Thread::isRunning() const {
+	return this->running;
+}
+
 // start the thread (may not be used by the thread itself!)
 void Thread::start() {
 	// run thread
@@ -163,36 +193,6 @@ void Thread::sendInterrupt() {
 void Thread::finishInterrupt() {
 	// if thread exists and has been interrupted, wait for thread and join
 	if(this->interrupted) this->thread.join();
-}
-
-// get ID of the thread (thread-safe)
-unsigned long Thread::getId() const {
-	return this->id;
-}
-
-// get ID of the website (thread-safe)
-unsigned long Thread::getWebsite() const {
-	return this->options.website;
-}
-
-// get ID of URL list (thread-safe)
-unsigned long Thread::getUrlList() const {
-	return this->options.urlList;
-}
-
-// get ID of the configuration (thread-safe)
-unsigned long Thread::getConfig() const {
-	return this->options.config;
-}
-
-// get whether thread was terminated due to an exception
-bool Thread::isTerminated() const {
-	return this->terminated;
-}
-
-// get whether thread is still supposed to run
-bool Thread::isRunning() const {
-	return this->running;
 }
 
 // force the thread to pause (to be used by the thread only)

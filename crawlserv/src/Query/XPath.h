@@ -25,24 +25,13 @@
 namespace crawlservpp::Query {
 	class XPath {
 	public:
-		// constructors
+		// constructor
 		XPath(const std::string& xpath, bool textOnly);
-		XPath(XPath&& other);
-
-		// destructor
-		virtual ~XPath();
 
 		// getters
 		bool getBool(const crawlservpp::Parsing::XML& doc) const;
 		void getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const;
 		void getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const;
-
-		// operator
-		XPath& operator=(XPath&& other);
-
-		// not copyable
-		XPath(XPath&) = delete;
-		XPath& operator=(XPath&) = delete;
 
 		// sub-class for XPath exceptions
 		class Exception : public crawlservpp::Main::Exception {

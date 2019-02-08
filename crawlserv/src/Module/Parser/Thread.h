@@ -43,9 +43,12 @@ namespace crawlservpp::Module::Parser {
 
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
 	public:
+		// constructors
 		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
 				const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long crawlerLast);
 		Thread(crawlservpp::Main::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
+
+		// destructor
 		virtual ~Thread();
 
 	protected:

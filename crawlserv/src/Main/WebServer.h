@@ -46,6 +46,12 @@ public:
 	// static helper function
 	static std::string getIP(Connection connection);
 
+	// not moveable, not copyable
+	WebServer(WebServer&) = delete;
+	WebServer(WebServer&&) = delete;
+	WebServer& operator=(WebServer&) = delete;
+	WebServer& operator=(WebServer&&) = delete;
+
 private:
 	mg_mgr eventManager;
 	std::string cors;

@@ -28,23 +28,15 @@ namespace crawlservpp::Query {
 	public:
 		// constructors
 		RegEx(const std::string& expression, bool single, bool multi);
-		RegEx(RegEx&& other);
-
-		// destructor
-		virtual ~RegEx();
+		RegEx(RegEx&& other) noexcept;
 
 		// getters
 		bool getBool(const std::string& text) const;
 		void getFirst(const std::string& text, std::string& resultTo) const;
 		void getAll(const std::string& text, std::vector<std::string>& resultTo) const;
 
-		// operators
-		operator bool() const;
-		RegEx& operator=(RegEx&& other);
-
-		// not copyable
-		RegEx(RegEx&) = delete;
-		RegEx& operator=(RegEx&) = delete;
+		// operator
+		operator bool() const noexcept;
 
 		// sub-class for RegEx exceptions
 		class Exception : public crawlservpp::Main::Exception {

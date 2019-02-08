@@ -21,24 +21,24 @@ namespace crawlservpp::Wrapper {
 class PCRE {
 public:
 	// constructors
-	PCRE();
-	PCRE(PCRE&& other);
+	PCRE() noexcept;
+	PCRE(PCRE&& other) noexcept;
 
 	// destructor
 	virtual ~PCRE();
 
 	// getters
-	pcre2_code * get();
-	const pcre2_code * get() const;
+	pcre2_code * get() noexcept;
+	const pcre2_code * get() const noexcept;
 
 	// control functions
 	void reset();
 	void reset(pcre2_code * other);
 
 	// operators
-	operator bool() const;
-	bool operator!() const;
-	PCRE& operator=(PCRE&& other);
+	operator bool() const noexcept;
+	bool operator!() const noexcept;
+	PCRE& operator=(PCRE&& other) noexcept;
 
 	// not copyable
 	PCRE(PCRE&) = delete;
