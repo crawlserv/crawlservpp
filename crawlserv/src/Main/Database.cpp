@@ -2448,8 +2448,16 @@ void Database::checkConnection() {
 	if(!(this->connection)) throw Database::Exception("No connection to database");
 
 	try {
-		// check whether connection is valid
-		if(this->connection->isValid()) return;
+#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
+		// check whether re-connect should be performed anyway
+		if(this->reconnectTimer.tick() < MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS * 1000) {
+#endif
+			// check whether connection is valid
+			if(this->connection->isValid()) return;
+
+#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
+		}
+#endif
 
 		// try to re-connect
 		if(!(this->connection->reconnect())) {
