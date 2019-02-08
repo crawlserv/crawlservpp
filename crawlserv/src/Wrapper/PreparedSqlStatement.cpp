@@ -37,20 +37,23 @@ PreparedSqlStatement::~PreparedSqlStatement() {
 
 // get reference to prepared SQL statement
 sql::PreparedStatement& PreparedSqlStatement::get() {
-	if(!(this->ptr)) throw std::runtime_error("PreparedSqlStatement::get(): No SQL statement prepared");
+	if(!(this->ptr))
+		throw std::runtime_error("PreparedSqlStatement::get(): No SQL statement prepared");
 	return *(this->ptr);
 }
 
 // get const reference to prepared SQL statement
 const sql::PreparedStatement& PreparedSqlStatement::get() const{
-	if(!(this->ptr)) throw std::runtime_error("PreparedSqlStatement::get(): No SQL statement prepared");
+	if(!(this->ptr))
+		throw std::runtime_error("PreparedSqlStatement::get(): No SQL statement prepared");
 	return *(this->ptr);
 }
 
 // prepare SQL statement
 void PreparedSqlStatement::prepare() {
 	this->reset();
-	this->ptr.reset(this->connection->prepareStatement(this->query));
+	if(!(this->query.empty()))
+		this->ptr.reset(this->connection->prepareStatement(this->query));
 }
 
 // reset SQL statement
