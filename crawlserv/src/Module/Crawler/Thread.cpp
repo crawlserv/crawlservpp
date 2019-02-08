@@ -25,7 +25,7 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long crawlerId,
 	this->manualCounter = 0;
 	this->startCrawled = false;
 	this->manualOff = false;
-	this->archiveRetry = true;
+	this->archiveRetry = false;
 	this->retryCounter = 0;
 	this->httpTime = std::chrono::steady_clock::time_point::min();
 	this->startTime = std::chrono::steady_clock::time_point::min();
@@ -44,7 +44,7 @@ Thread::Thread(crawlservpp::Main::Database& dbBase,
 	this->manualCounter = 0;
 	this->startCrawled = false;
 	this->manualOff = false;
-	this->archiveRetry = true;
+	this->archiveRetry = false;
 	this->retryCounter = 0;
 	this->httpTime = std::chrono::steady_clock::time_point::min();
 	this->startTime = std::chrono::steady_clock::time_point::min();
@@ -521,14 +521,16 @@ bool Thread::crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo) 
 						}
 
 						this->manualUrl = std::pair<unsigned long, std::string>(this->startPageId, this->config.crawlerStart);
-						if((this->config.crawlerReCrawlStart || !(this->database.isUrlCrawled(this->startPageId)))
-								&& this->database.isUrlLockable(this->startPageId)) {
-							this->lockTime = this->database.lockUrl(this->manualUrl.first, this->config.crawlerLock);
-							urlTo = this->manualUrl;
-						}
-						else {
-							// skip locked start page
-							logEntries.push_back("URL lock active - " + this->manualUrl.second + " skipped.");
+						if(this->config.crawlerReCrawlStart || !(this->database.isUrlCrawled(this->startPageId))) {
+							if(this->database.isUrlLockable(this->startPageId)) {
+								this->lockTime = this->database.lockUrl(this->manualUrl.first, this->config.crawlerLock);
+								urlTo = this->manualUrl;
+							}
+							else {
+								// start page is locked
+								logEntries.push_back("URL lock active - " + this->manualUrl.second + " skipped.");
+							}
+
 							this->manualUrl = std::pair<unsigned long, std::string>(0, "");
 							this->startCrawled = true;
 						}
@@ -1172,6 +1174,9 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 				statusStrStr.imbue(std::locale(""));
 				statusStrStr << "[URLs: " << counter << "/" << urls.size() << "] " << statusMessage;
 				this->setStatusMessage(statusStrStr.str());
+
+				// check whether thread is still running
+				if(!this->isRunning()) return;
 
 				// lock tables
 				if(locked) this->database.lockUrlList();
