@@ -37,9 +37,7 @@ const UriUriA * URI::get() const noexcept {
 
 // create URI structure, free old structure if necessary
 void URI::create() {
-	if(this->ptr) {
-		uriFreeUriMembersA(this->ptr.get());
-	}
+	this->reset();
 	this->ptr = std::make_unique<UriUriA>();
 }
 
