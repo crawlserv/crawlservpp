@@ -36,7 +36,7 @@ The source code of the server consists of the following classes (as of February 
 * **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * **[`Main::Database`](crawlserv/src/Main/Database.cpp)**: Database access for the server and its threads (parent class with server-specific and basic functionality only).
-* **[`Main::Exception`](crawlserv/src/Main/Exception.h)**: Class for custom exceptions.
+* **[`Main::Exception`](crawlserv/src/Main/Exception.cpp)**: Class for custom exceptions.
 * **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server managing threads and performing server commands.
 * **[`Main::WebServer`](crawlserv/src/Main/WebServer.cpp)**: Implementation of an embedded HTTP server for interaction with the frontend using the [mongoose library](https://github.com/cesanta/mongoose).
 * **[`Module::Config`](crawlserv/src/Module/Config.cpp)**: Abstract class as base for module-specific configuration classes.
