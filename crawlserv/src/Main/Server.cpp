@@ -140,8 +140,8 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
+			logStrStr << "#" << id << " interrupted.";
 			try {
-				logStrStr << "#" << id << " interrupted.";
 				this->database.log("crawler", logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
@@ -149,7 +149,8 @@ Server::~Server() {
 						<< std::endl << "Could not write to log: " << e.what() << std::flush;
 			}
 			catch(...) {
-				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+				std::cout << std::endl << logStrStr.str()
+						<< "ERROR: Unknown exception in Server::~Server()" << std::flush;
 			}
 		}
 	}
@@ -163,8 +164,8 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
+			logStrStr << "#" << id << " interrupted.";
 			try {
-				logStrStr << "#" << id << " interrupted.";
 				this->database.log("parser", logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
@@ -172,7 +173,8 @@ Server::~Server() {
 						<< std::endl << "Could not write to log: " << e.what() << std::flush;
 			}
 			catch(...) {
-				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+				std::cout << std::endl << logStrStr.str()
+						<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
 			}
 		}
 	}
@@ -187,8 +189,8 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
+			logStrStr << "#" << id << " interrupted.";
 			try {
-				logStrStr << "#" << id << " interrupted.";
 				this->database.log("extractor", logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
@@ -196,7 +198,8 @@ Server::~Server() {
 						<< std::endl << "Could not write to log: " << e.what() << std::flush;
 			}
 			catch(...) {
-				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+				std::cout << std::endl << logStrStr.str()
+						<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
 			}
 		}
 	}*/
@@ -210,8 +213,8 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
+			logStrStr << "#" << id << " interrupted.";
 			try {
-				logStrStr << "#" << id << " interrupted.";
 				this->database.log("analyzer", logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
@@ -219,7 +222,8 @@ Server::~Server() {
 						<< std::endl << "Could not write to log: " << e.what() << std::flush;
 			}
 			catch(...) {
-				std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+				std::cout << std::endl << logStrStr.str()
+						<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
 			}
 		}
 	}
@@ -238,7 +242,9 @@ Server::~Server() {
 				<< std::endl << "Could not write to log: " << e.what() << std::flush;
 	}
 	catch(...) {
-		std::cout << std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+		std::cout << "server shuts down after up-time of"
+				<< crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) << "."
+				<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
 	}
 }
 
@@ -250,8 +256,14 @@ bool Server::tick() {
 	}
 	catch(const Database::Exception& e) {
 		// try to re-connect once on database exception
-		this->database.checkConnection();
-		this->database.log("server", "re-connected to database after error: " + e.whatStr());
+		try {
+			this->database.checkConnection();
+			this->database.log("server", "re-connected to database after error: " + e.whatStr());
+		}
+		catch(const Database::Exception& e) {
+			// database is offline
+			this->offline = true;
+		}
 	}
 
 	// check whether a thread was terminated
@@ -299,6 +311,15 @@ bool Server::tick() {
 		}
 	}
 
+	// try to re-connect to database if it is offline
+	if(this->offline) {
+		try {
+			this->database.checkConnection();
+			this->offline = false;
+		}
+		catch(const Database::Exception &e) {}
+	}
+
 	return this->running;
 }
 
@@ -316,105 +337,100 @@ unsigned long Server::getUpTime() const {
 std::string Server::cmd(WebServer::Connection connection, const std::string& msgBody, bool& threadStartedTo) {
 	Server::ServerCommandResponse response;
 
-	// check connection and get IP
-	if(!connection) throw std::runtime_error("Server::cmd(): No connection specified");
-	std::string ip(WebServer::getIP(connection));
-
-	// parse JSON
-	rapidjson::Document json;
-	if(json.Parse(msgBody.c_str()).HasParseError())
-		response = Server::ServerCommandResponse(true, "Could not parse JSON.");
-	else if(!json.IsObject())
-		response = Server::ServerCommandResponse(true, "Parsed JSON is not an object.");
+	if(this->offline) {
+		// database offline: return error
+		response = Server::ServerCommandResponse(true, "Database is offline.");
+	}
 	else {
-		// get server command
-		if(json.HasMember("cmd")) {
-			if(json["cmd"].IsString()) {
-				try {
-					// handle server commands
-					std::string command = json["cmd"].GetString();
-					if(command == "kill") response = this->cmdKill(json, ip);
-					else if(command == "allow") response = this->cmdAllow(json, ip);
-					else if(command == "disallow") response = this->cmdDisallow(json, ip);
+		// check connection and get IP
+		if(!connection) throw std::runtime_error("Server::cmd(): No connection specified");
+		std::string ip(WebServer::getIP(connection));
 
-					else if(command == "log") response = this->cmdLog(json);
-					else if(command == "clearlogs") response = this->cmdClearLog(json, ip);
-
-					else if(command == "startcrawler") response = this->cmdStartCrawler(json, ip);
-					else if(command == "pausecrawler") response = this->cmdPauseCrawler(json, ip);
-					else if(command == "unpausecrawler") response = this->cmdUnpauseCrawler(json, ip);
-					else if(command == "stopcrawler") response = this->cmdStopCrawler(json, ip);
-
-					else if(command == "startparser") response = this->cmdStartParser(json, ip);
-					else if(command == "pauseparser") response = this->cmdPauseParser(json, ip);
-					else if(command == "unpauseparser") response = this->cmdUnpauseParser(json, ip);
-					else if(command == "stopparser") response = this->cmdStopParser(json, ip);
-					else if(command == "resetparsingstatus") response = this->cmdResetParsingStatus(json);
-
-					//TODO: server commands for extractor
-					else if(command == "resetextractingstatus") response = this->cmdResetExtractingStatus(json);
-
-					else if(command == "startanalyzer") response = this->cmdStartAnalyzer(json, ip);
-					else if(command == "pauseanalyzer") response = this->cmdPauseAnalyzer(json, ip);
-					else if(command == "unpauseanalyzer") response = this->cmdUnpauseAnalyzer(json, ip);
-					else if(command == "stopanalyzer") response = this->cmdStopAnalyzer(json, ip);
-					else if(command == "resetanalyzingstatus") response = this->cmdResetAnalyzingStatus(json);
-
-					else if(command == "addwebsite") response = this->cmdAddWebsite(json);
-					else if(command == "updatewebsite") response = this->cmdUpdateWebsite(json);
-					else if(command == "deletewebsite") response = this->cmdDeleteWebsite(json, ip);
-					else if(command == "duplicatewebsite") response = this->cmdDuplicateWebsite(json);
-
-					else if(command == "addurllist") response = this->cmdAddUrlList(json);
-					else if(command == "updateurllist") response = this->cmdUpdateUrlList(json);
-					else if(command == "deleteurllist") response = this->cmdDeleteUrlList(json, ip);
-
-					else if(command == "addquery") response = this->cmdAddQuery(json);
-					else if(command == "updatequery") response = this->cmdUpdateQuery(json);
-					else if(command == "deletequery") response = this->cmdDeleteQuery(json);
-					else if(command == "duplicatequery") response = this->cmdDuplicateQuery(json);
-					else if(command == "testquery") {
-						// create a worker thread for testing query (so large queries do not block the server)
-						{
-							std::lock_guard<std::mutex> workersLocked(this->workersLock);
-							this->workersRunning.push_back(true);
-							this->workers.push_back(std::thread(
-									&Server::cmdTestQuery, this, connection, this->workers.size(), msgBody));
-						}
-						threadStartedTo = true;
-					}
-
-					else if(command == "addconfig") response = this->cmdAddConfig(json);
-					else if(command == "updateconfig") response = this->cmdUpdateConfig(json);
-					else if(command == "deleteconfig") response = this->cmdDeleteConfig(json);
-					else if(command == "duplicateconfig") response = this->cmdDuplicateConfig(json);
-
-					else if(!command.empty()) {
-						// unknown command: debug the command and its arguments
-						response.fail = true;
-						response.text = "Unknown command \'" + command + "\'.";
-					}
-
-					else {
-						response.fail = true;
-						response.text = "Empty command.";
-					}
-				}
-				catch(std::exception &e) {
-					// exceptions caused by server commands should not kill the server (and are attributed to the frontend)
-					this->database.log("frontend", e.what());
-					response.fail = true;
-					response.text = e.what();
-				}
-			}
-			else {
-				response.fail = true;
-				response.text = "Invalid command: Name is not a string.";
-			}
-		}
+		// parse JSON
+		rapidjson::Document json;
+		if(json.Parse(msgBody.c_str()).HasParseError())
+			response = Server::ServerCommandResponse(true, "Could not parse JSON.");
+		else if(!json.IsObject())
+			response = Server::ServerCommandResponse(true, "Parsed JSON is not an object.");
 		else {
-			response.fail = true;
-			response.text = "No command specified.";
+			// get server command
+			if(json.HasMember("cmd")) {
+				if(json["cmd"].IsString()) {
+					try {
+						// handle server commands
+						std::string command = json["cmd"].GetString();
+						if(command == "kill") response = this->cmdKill(json, ip);
+						else if(command == "allow") response = this->cmdAllow(json, ip);
+						else if(command == "disallow") response = this->cmdDisallow(json, ip);
+
+						else if(command == "log") response = this->cmdLog(json);
+						else if(command == "clearlogs") response = this->cmdClearLog(json, ip);
+
+						else if(command == "startcrawler") response = this->cmdStartCrawler(json, ip);
+						else if(command == "pausecrawler") response = this->cmdPauseCrawler(json, ip);
+						else if(command == "unpausecrawler") response = this->cmdUnpauseCrawler(json, ip);
+						else if(command == "stopcrawler") response = this->cmdStopCrawler(json, ip);
+
+						else if(command == "startparser") response = this->cmdStartParser(json, ip);
+						else if(command == "pauseparser") response = this->cmdPauseParser(json, ip);
+						else if(command == "unpauseparser") response = this->cmdUnpauseParser(json, ip);
+						else if(command == "stopparser") response = this->cmdStopParser(json, ip);
+						else if(command == "resetparsingstatus") response = this->cmdResetParsingStatus(json);
+
+						//TODO: server commands for extractor
+						else if(command == "resetextractingstatus") response = this->cmdResetExtractingStatus(json);
+
+						else if(command == "startanalyzer") response = this->cmdStartAnalyzer(json, ip);
+						else if(command == "pauseanalyzer") response = this->cmdPauseAnalyzer(json, ip);
+						else if(command == "unpauseanalyzer") response = this->cmdUnpauseAnalyzer(json, ip);
+						else if(command == "stopanalyzer") response = this->cmdStopAnalyzer(json, ip);
+						else if(command == "resetanalyzingstatus") response = this->cmdResetAnalyzingStatus(json);
+
+						else if(command == "addwebsite") response = this->cmdAddWebsite(json);
+						else if(command == "updatewebsite") response = this->cmdUpdateWebsite(json);
+						else if(command == "deletewebsite") response = this->cmdDeleteWebsite(json, ip);
+						else if(command == "duplicatewebsite") response = this->cmdDuplicateWebsite(json);
+
+						else if(command == "addurllist") response = this->cmdAddUrlList(json);
+						else if(command == "updateurllist") response = this->cmdUpdateUrlList(json);
+						else if(command == "deleteurllist") response = this->cmdDeleteUrlList(json, ip);
+
+						else if(command == "addquery") response = this->cmdAddQuery(json);
+						else if(command == "updatequery") response = this->cmdUpdateQuery(json);
+						else if(command == "deletequery") response = this->cmdDeleteQuery(json);
+						else if(command == "duplicatequery") response = this->cmdDuplicateQuery(json);
+						else if(command == "testquery") {
+							// create a worker thread for testing query (so large queries do not block the server)
+							{
+								std::lock_guard<std::mutex> workersLocked(this->workersLock);
+								this->workersRunning.push_back(true);
+								this->workers.push_back(std::thread(
+										&Server::cmdTestQuery, this, connection, this->workers.size(), msgBody));
+							}
+							threadStartedTo = true;
+						}
+
+						else if(command == "addconfig") response = this->cmdAddConfig(json);
+						else if(command == "updateconfig") response = this->cmdUpdateConfig(json);
+						else if(command == "deleteconfig") response = this->cmdDeleteConfig(json);
+						else if(command == "duplicateconfig") response = this->cmdDuplicateConfig(json);
+
+						else if(!command.empty())
+							// unknown command: debug the command and its arguments
+							response = Server::ServerCommandResponse(true, "Unknown command \'" + command + "\'.");
+
+						else response = Server::ServerCommandResponse(true, "Empty command.");
+					}
+					catch(std::exception &e) {
+						// exceptions caused by server commands should not kill the server
+						//  (and are attributed to the frontend)
+						this->database.log("frontend", e.what());
+						response = response = Server::ServerCommandResponse(true, e.what());
+					}
+				}
+				else response = Server::ServerCommandResponse(true, "Invalid command: Name is not a string.");
+			}
+			else response = Server::ServerCommandResponse(true, "No command specified.");
 		}
 	}
 
@@ -456,10 +472,44 @@ void Server::onAccept(WebServer::Connection connection) {
 	// check authorization
 	if(this->allowed != "*") {
 		if(this->allowed.find(ip) == std::string::npos) {
-			this->database.log("server", "rejected client " + ip + ".");
 			this->webServer.close(connection);
+			if(this->offline) std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
+			else {
+				try {
+					this->database.log("server", "rejected client " + ip + ".");
+				}
+				catch(const Database::Exception& e) {
+					// try to re-connect once on database exception
+					try {
+						this->database.checkConnection();
+						this->database.log("server", "re-connected to database after error: " + e.whatStr());
+						this->database.log("server", "rejected client " + ip + ".");
+					}
+					catch(const Database::Exception& e) {
+						std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
+						this->offline = true;
+					}
+				}
+			}
 		}
-		else this->database.log("server", "accepted client " + ip + ".");
+		else {
+			if(this->offline) std::cout << std::endl << "server accepted client " + ip + "." << std::flush;
+			else try {
+				this->database.log("server", "accepted client " + ip + ".");
+			}
+			catch(const Database::Exception& e) {
+				// try to re-connect once on database exception
+				try {
+					this->database.checkConnection();
+					this->database.log("server", "re-connected to database after error: " + e.whatStr());
+					this->database.log("server", "accepted client " + ip + ".");
+				}
+				catch(const Database::Exception& e) {
+					std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
+					this->offline = true;
+				}
+			}
+		}
 	}
 }
 
