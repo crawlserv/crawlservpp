@@ -15,6 +15,8 @@
 #ifndef MAIN_DATABASE_H_
 #define MAIN_DATABASE_H_
 
+#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 60 // force re-connect if the connection has been idle that long
+
 #include "Data.h"
 
 #include "../Helper/FileSystem.h"
@@ -25,6 +27,7 @@
 #include "../Struct/ThreadOptions.h"
 #include "../Struct/UrlListProperties.h"
 #include "../Struct/WebsiteProperties.h"
+#include "../Timer/Simple.h"
 #include "../Wrapper/PreparedSqlStatement.h"
 
 #include <cppconn/driver.h>
@@ -236,6 +239,9 @@ namespace crawlservpp::Main {
 		const crawlservpp::Struct::DatabaseSettings settings;
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
+#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
+		crawlservpp::Timer::Simple reconnectTimer;
+#endif
 
 		// prepared SQL statements
 		std::vector<crawlservpp::Wrapper::PreparedSqlStatement> preparedStatements;
