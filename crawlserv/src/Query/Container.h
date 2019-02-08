@@ -56,6 +56,12 @@ namespace crawlservpp::Query {
 		const XPath& getXPathQueryPtr(unsigned long index) const;
 		void clearQueries();
 
+		// not moveable, not copyable
+		Container(Container&) = delete;
+		Container(Container&&) = delete;
+		Container& operator=(Container&) = delete;
+		Container& operator=(Container&&) = delete;
+
 	private:
 		// queries
 		std::vector<RegEx> queriesRegEx;

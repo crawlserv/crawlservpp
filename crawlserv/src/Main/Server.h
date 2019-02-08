@@ -67,13 +67,24 @@ namespace crawlservpp::Main {
 
 	class Server final {
 	public:
+		// constructor
 		Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings, const crawlservpp::Struct::ServerSettings& serverSettings);
+
+		// destructor
 		virtual ~Server();
 
-		bool tick();
-
+		// getters
 		const std::string& getStatus() const;
 		unsigned long getUpTime() const;
+
+		// command function
+		bool tick();
+
+		// not moveable, not copyable
+		Server(Server&) = delete;
+		Server(Server&&) = delete;
+		Server& operator=(Server&) = delete;
+		Server& operator=(Server&&) = delete;
 
 	private:
 		// settings
@@ -83,7 +94,8 @@ namespace crawlservpp::Main {
 		// database
 		Database database;
 
-		// web server (NOTE: needs to be declared after/destroyed before database, because it is doing one last poll!)
+		// web server
+		//  Needs to be declared after/destroyed before database, because it is doing one last poll on destruction!
 		WebServer webServer;
 
 		// status

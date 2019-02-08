@@ -12,15 +12,28 @@
 
 #include <exception>
 #include <string>
+#include <utility>
 
 namespace crawlservpp::Main {
 
 class Exception : public std::exception {
 public:
-	Exception(const std::string& description) { this->_description = description; }
-	virtual ~Exception() {}
-	const char * what() const throw() { return this->_description.c_str(); }
-	const std::string& whatStr() const throw() { return this->_description; }
+	// constructors
+	Exception(const std::string& description);
+	Exception(const Exception& other);
+	Exception(Exception&& other) noexcept;
+
+	// destructor
+	virtual ~Exception();
+
+	// getters
+	const char * what() const noexcept;
+	const std::string& whatStr() const noexcept;
+
+	// operators
+	Exception& operator=(const Exception& other);
+	Exception& operator=(Exception&& other) noexcept;
+
 private:
 	std::string _description;
 };

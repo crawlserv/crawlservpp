@@ -33,7 +33,10 @@ namespace crawlservpp::Module::Crawler {
 
 	class Database : public crawlservpp::Wrapper::Database {
 	public:
+		// constructor
 		Database(crawlservpp::Module::Database& dbRef);
+
+		// destructor
 		virtual ~Database();
 
 		// setters
@@ -90,26 +93,28 @@ namespace crawlservpp::Module::Crawler {
 
 	private:
 		// IDs of prepared SQL statements
-		unsigned short psIsUrlExists;
-		unsigned short psIsUrlHashExists;
-		unsigned short psGetUrlId;
-		unsigned short psIsUrlCrawled;
-		unsigned short psGetNextUrl;
-		unsigned short psAddUrl;
-		unsigned short psGetUrlPosition;
-		unsigned short psGetNumberOfUrls;
-		unsigned short psIsUrlLockable;
-		unsigned short psCheckUrlLock;
-		unsigned short psGetUrlLock;
-		unsigned short psLockUrl;
-		unsigned short psUnLockUrl;
-		unsigned short psSaveContent;
-		unsigned short psSaveArchivedContent;
-		unsigned short psSetUrlFinished;
-		unsigned short psIsArchivedContentExists;
-		unsigned short psIsLinkExists;
-		unsigned short psAddLink;
-		unsigned short psAddLinkArchived;
+		struct {
+			unsigned short isUrlExists;
+			unsigned short isUrlHashExists;
+			unsigned short getUrlId;
+			unsigned short isUrlCrawled;
+			unsigned short getNextUrl;
+			unsigned short addUrl;
+			unsigned short getUrlPosition;
+			unsigned short getNumberOfUrls;
+			unsigned short isUrlLockable;
+			unsigned short checkUrlLock;
+			unsigned short getUrlLock;
+			unsigned short lockUrl;
+			unsigned short unLockUrl;
+			unsigned short saveContent;
+			unsigned short saveArchivedContent;
+			unsigned short setUrlFinished;
+			unsigned short isArchivedContentExists;
+			unsigned short isLinkExists;
+			unsigned short addLink;
+			unsigned short addLinkArchived;
+		} ps;
 	};
 }
 

@@ -18,15 +18,15 @@ ConfigFile::ConfigFile(const std::string& name) {
 
 	if(fileStream.is_open()) {
 		while(std::getline(fileStream, line)) {
-			ConfigFile::NameValueEntry entry;
+			std::pair<std::string, std::string> entry;
 			unsigned long nameEnd = line.find('=');
 			if(nameEnd < line.length()) {
-				entry.name = boost::algorithm::to_lower_copy(line.substr(0, nameEnd));
-				entry.value = line.substr(nameEnd + 1);
+				entry.first = boost::algorithm::to_lower_copy(line.substr(0, nameEnd));
+				entry.second = line.substr(nameEnd + 1);
 			}
 			else {
-				entry.name = line;
-				entry.value = "";
+				entry.first = line;
+				entry.second = "";
 			}
 			this->entries.push_back(entry);
 		}
@@ -37,14 +37,11 @@ ConfigFile::ConfigFile(const std::string& name) {
 	}
 }
 
-// destructor: stub
-ConfigFile::~ConfigFile() {}
-
 // get value of config entry (or empty string if entry does not exist)
 std::string ConfigFile::getValue(const std::string& name) const {
 	for(auto i = entries.begin(); i != entries.end(); ++i) {
-		if(i->name == boost::algorithm::to_lower_copy(name)) {
-			return i->value;
+		if(i->first == boost::algorithm::to_lower_copy(name)) {
+			return i->second;
 		}
 	}
 	return "";

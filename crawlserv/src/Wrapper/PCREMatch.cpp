@@ -13,13 +13,14 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: set pointer to NULL
-PCREMatch::PCREMatch(pcre2_match_data * setPtr) {
+PCREMatch::PCREMatch(pcre2_match_data * setPtr) noexcept {
 	this->ptr = setPtr;
 }
 
 // move constructor
-PCREMatch::PCREMatch(PCREMatch&& other) {
-	this->ptr = other.ptr; other.ptr = NULL;
+PCREMatch::PCREMatch(PCREMatch&& other) noexcept {
+	this->ptr = other.ptr;
+	other.ptr = NULL;
 }
 
 // destructor: free Perl-Compatible Regular Expression match if necessary
@@ -28,27 +29,27 @@ PCREMatch::~PCREMatch() {
 }
 
 // get pointer to Perl-Compatible Regular Expression match
-pcre2_match_data * PCREMatch::get() {
+pcre2_match_data * PCREMatch::get() noexcept {
 	return this->ptr;
 }
 
 // get const pointer to Perl-Compatible Regular Expression match
-const pcre2_match_data * PCREMatch::get() const {
+const pcre2_match_data * PCREMatch::get() const noexcept {
 	return this->ptr;
 }
 
 // bool operator
-PCREMatch::operator bool() const {
+PCREMatch::operator bool() const noexcept {
 	return this->ptr != NULL;
 }
 
 // not operator
-bool PCREMatch::operator!() const {
+bool PCREMatch::operator!() const noexcept {
 	return this->ptr == NULL;
 }
 
 // move operator
-PCREMatch& PCREMatch::operator=(PCREMatch&& other) {
+PCREMatch& PCREMatch::operator=(PCREMatch&& other) noexcept {
 	if(&other != this) {
 		this->ptr = other.ptr;
 		other.ptr = NULL;

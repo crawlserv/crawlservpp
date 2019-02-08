@@ -23,9 +23,9 @@ namespace crawlservpp::Wrapper {
 class PreparedSqlStatement {
 public:
 	// constructors
-	PreparedSqlStatement();
+	PreparedSqlStatement() noexcept;
 	PreparedSqlStatement(sql::Connection * setConnection, const std::string& sqlQuery);
-	PreparedSqlStatement(PreparedSqlStatement&& other);
+	PreparedSqlStatement(PreparedSqlStatement&& other) noexcept;
 
 	// destructor
 	virtual ~PreparedSqlStatement();
@@ -40,9 +40,9 @@ public:
 	void refresh(sql::Connection * newConnection);
 
 	// operators
-	operator bool() const;
-	bool operator!() const;
-	PreparedSqlStatement& operator=(PreparedSqlStatement&& other);
+	operator bool() const noexcept;
+	bool operator!() const noexcept;
+	PreparedSqlStatement& operator=(PreparedSqlStatement&& other) noexcept;
 
 	// not copyable
 	PreparedSqlStatement(PreparedSqlStatement&) = delete;

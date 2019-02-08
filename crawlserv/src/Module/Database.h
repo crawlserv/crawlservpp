@@ -28,9 +28,13 @@ namespace crawlservpp::Module {
 	class Database : public crawlservpp::Main::Database {
 		friend class crawlservpp::Wrapper::Database;
 	public:
+		// constructor
 		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings);
+
+		// destructor
 		virtual ~Database();
 
+		// command function
 		void prepare();
 
 		// thread functions

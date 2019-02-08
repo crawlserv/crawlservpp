@@ -18,9 +18,10 @@
 namespace crawlservpp::Timer {
 	class StartStop {
 	public:
+		// constructor
 		StartStop();
-		virtual ~StartStop();
 
+		// control functions
 		void start();
 		void stop();
 		std::string totalStr();

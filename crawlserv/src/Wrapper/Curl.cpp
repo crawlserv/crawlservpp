@@ -31,7 +31,7 @@ Curl::Curl() {
 }
 
 // move constructor
-Curl::Curl(Curl&& other) {
+Curl::Curl(Curl&& other) noexcept {
 	this->ptr = other.ptr;
 	other.ptr = NULL;
 	this->localInit = other.localInit;
@@ -89,7 +89,7 @@ bool Curl::operator!() const {
 }
 
 // move assignment operator
-Curl& Curl::operator=(Curl&& other) {
+Curl& Curl::operator=(Curl&& other) noexcept {
 	if(&other != this) {
 		this->ptr = other.ptr;
 		other.ptr = NULL;

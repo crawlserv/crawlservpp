@@ -13,10 +13,10 @@
 namespace crawlservpp::Wrapper {
 
 // constructor stub
-URI::URI() {}
+URI::URI() noexcept {}
 
 // move constructor
-URI::URI(URI&& other) {
+URI::URI(URI&& other) noexcept {
 	this->ptr = std::move(other.ptr);
 }
 
@@ -26,12 +26,12 @@ URI::~URI() {
 }
 
 // get pointer to URI structure
-UriUriA * URI::get() {
+UriUriA * URI::get() noexcept {
 	return this->ptr.get();
 }
 
 // get const pointer to URI structure
-const UriUriA * URI::get() const {
+const UriUriA * URI::get() const noexcept {
 	return this->ptr.get();
 }
 
@@ -52,17 +52,17 @@ void URI::reset() {
 }
 
 // bool operator
-URI::operator bool() const {
+URI::operator bool() const noexcept {
 	return this->ptr.operator bool();
 }
 
 // not operator
-bool URI::operator!() const {
+bool URI::operator!() const noexcept {
 	return !(this->ptr);
 }
 
 // move assignment operator
-URI& URI::operator=(URI&& other) {
+URI& URI::operator=(URI&& other) noexcept {
 	if(&other != this) this->ptr = std::move(other.ptr);
 	return *this;
 }

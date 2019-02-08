@@ -16,23 +16,20 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace crawlservpp::Main {
 	class ConfigFile {
 	public:
+		// constructors
 		ConfigFile(const std::string& name);
-		virtual ~ConfigFile();
 
+		// getter
 		std::string getValue(const std::string& name) const;
 
 	protected:
-		struct NameValueEntry {
-			std::string name;
-			std::string value;
-		};
-
-		std::vector<ConfigFile::NameValueEntry> entries;
+		std::vector<std::pair<std::string, std::string>> entries;
 	};
 }
 

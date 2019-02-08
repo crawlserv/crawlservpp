@@ -33,6 +33,12 @@ public:
 		virtual ~Exception() {}
 	};
 
+	// not moveable, not copyable
+	HTML(HTML&) = delete;
+	HTML(HTML&&) = delete;
+	HTML& operator=(HTML&) = delete;
+	HTML& operator=(HTML&&) = delete;
+
 private:
 	TidyDoc doc;
 	TidyBuffer buffer;

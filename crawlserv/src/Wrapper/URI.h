@@ -21,8 +21,8 @@ namespace crawlservpp::Wrapper {
 class URI {
 public:
 	// constructors
-	URI();
-	URI(URI&& other);
+	URI() noexcept;
+	URI(URI&& other) noexcept;
 
 	// destructor
 	virtual ~URI();
@@ -32,13 +32,13 @@ public:
 	void reset();
 
 	// getters
-	const UriUriA * get() const;
-	UriUriA * get();
+	const UriUriA * get() const noexcept;
+	UriUriA * get() noexcept;
 
 	// operators
-	operator bool() const;
-	bool operator!() const;
-	URI& operator=(URI&& other);
+	operator bool() const noexcept;
+	bool operator!() const noexcept;
+	URI& operator=(URI&& other) noexcept;
 
 	// not copyable
 	URI(URI&) = delete;

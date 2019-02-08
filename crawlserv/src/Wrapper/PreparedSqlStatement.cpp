@@ -12,7 +12,7 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: create empty statement for std::vector::resize()
-PreparedSqlStatement::PreparedSqlStatement() {
+PreparedSqlStatement::PreparedSqlStatement() noexcept {
 	this->connection = NULL;
 }
 
@@ -24,7 +24,7 @@ PreparedSqlStatement::PreparedSqlStatement(sql::Connection * setConnection, cons
 }
 
 // move constructor
-PreparedSqlStatement::PreparedSqlStatement(PreparedSqlStatement&& other) {
+PreparedSqlStatement::PreparedSqlStatement(PreparedSqlStatement&& other) noexcept {
 	this->connection = other.connection;
 	this->ptr = std::move(other.ptr);
 	this->query = other.query;
@@ -42,7 +42,7 @@ sql::PreparedStatement& PreparedSqlStatement::get() {
 }
 
 // get const reference to prepared SQL statement
-const sql::PreparedStatement& PreparedSqlStatement::get() const {
+const sql::PreparedStatement& PreparedSqlStatement::get() const{
 	if(!(this->ptr)) throw std::runtime_error("PreparedSqlStatement::get(): No SQL statement prepared");
 	return *(this->ptr);
 }
@@ -69,17 +69,17 @@ void PreparedSqlStatement::refresh(sql::Connection * newConnection) {
 }
 
 // bool operator
-PreparedSqlStatement::operator bool() const {
+PreparedSqlStatement::operator bool() const noexcept {
 	return this->ptr.operator bool();
 }
 
 // not operator
-bool PreparedSqlStatement::operator!() const {
+bool PreparedSqlStatement::operator!() const noexcept {
 	return !(this->ptr);
 }
 
 // move assignment operator
-PreparedSqlStatement& PreparedSqlStatement::operator=(PreparedSqlStatement&& other) {
+PreparedSqlStatement& PreparedSqlStatement::operator=(PreparedSqlStatement&& other) noexcept {
 	if(&other != this) {
 		this->connection = other.connection;
 		this->ptr = std::move(other.ptr);

@@ -45,6 +45,12 @@ namespace crawlservpp::Parsing {
 			virtual ~Exception() {}
 		};
 
+		// not moveable, not copyable
+		XML(XML&) = delete;
+		XML(XML&&) = delete;
+		XML& operator=(XML) = delete;
+		XML& operator=(XML&&) = delete;
+
 	protected:
 		// unique pointer to (pugi)XML document
 		std::unique_ptr<pugi::xml_document> doc;

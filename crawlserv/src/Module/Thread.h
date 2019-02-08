@@ -11,7 +11,7 @@
 #ifndef MODULE_THREAD_H_
 #define MODULE_THREAD_H_
 
-// do not catch thread errors: use only for debugging!
+// do not catch thread exceptions: use only for debugging!
 //#define MODULE_THREAD_DEBUG_NOCATCH
 
 #include "Database.h"
@@ -31,17 +31,30 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <utility>
 
 namespace crawlservpp::Module {
 	class Thread {
 	public:
+		// constructors
 		Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
 				const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
 				unsigned long threadLast);
 		Thread(crawlservpp::Main::Database& dbBase, const std::string& threadModule,
 				const crawlservpp::Struct::ThreadOptions& threadOptions);
+
+		// destructor
 		virtual ~Thread();
 
+		// getters
+		unsigned long getId() const;
+		unsigned long getWebsite() const;
+		unsigned long getUrlList() const;
+		unsigned long getConfig() const;
+		bool isTerminated() const;
+		bool isRunning() const;
+
+		// control functions
 		void start();
 		bool pause();
 		void unpause();
@@ -49,12 +62,11 @@ namespace crawlservpp::Module {
 		void sendInterrupt();
 		void finishInterrupt();
 
-		unsigned long getId() const;
-		unsigned long getWebsite() const;
-		unsigned long getUrlList() const;
-		unsigned long getConfig() const;
-		bool isTerminated() const;
-		bool isRunning() const;
+		// not moveable, not copyable
+		Thread(Thread&) = delete;
+		Thread(Thread&&) = delete;
+		Thread& operator=(Thread&) = delete;
+		Thread& operator=(Thread&&) = delete;
 
 	protected:
 		Database database; // access to the database for the thread

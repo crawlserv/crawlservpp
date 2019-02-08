@@ -61,6 +61,12 @@ namespace crawlservpp::Network {
 			virtual ~Exception() {}
 		};
 
+		// not moveable, not copyable
+		Curl(Curl&) = delete;
+		Curl(Curl&&) = delete;
+		Curl& operator=(Curl&) = delete;
+		Curl& operator=(Curl&&) = delete;
+
 	private:
 		CURLcode curlCode;
 		std::string content;

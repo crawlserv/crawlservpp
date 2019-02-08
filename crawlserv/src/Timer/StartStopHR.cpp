@@ -9,29 +9,31 @@
 
 #include "StartStopHR.h"
 
+namespace crawlservpp::Timer {
+
 // constructor: start timer
-crawlservpp::Timer::StartStopHR::StartStopHR() {
+StartStopHR::StartStopHR() {
 	this->timePoint = std::chrono::high_resolution_clock::time_point::min();
 	this->duration = std::chrono::high_resolution_clock::duration::zero();
 }
 
-// desctructor stub
-crawlservpp::Timer::StartStopHR::~StartStopHR() {}
-
 // start timer
-void crawlservpp::Timer::StartStopHR::start() {
+void StartStopHR::start() {
 	if(this->timePoint != std::chrono::high_resolution_clock::time_point::min()) this->stop();
 	this->timePoint = std::chrono::high_resolution_clock::now();
 }
 
 // stop timer
-void crawlservpp::Timer::StartStopHR::stop() {
+void StartStopHR::stop() {
 	this->duration += std::chrono::high_resolution_clock::now() - this->timePoint;
 	this->timePoint = std::chrono::high_resolution_clock::time_point::min();
 }
 
 // get total duration as string
-std::string crawlservpp::Timer::StartStopHR::totalStr() {
+std::string StartStopHR::totalStr() {
 	if(this->timePoint != std::chrono::high_resolution_clock::time_point::min()) this->stop();
-	return crawlservpp::Helper::DateTime::microsecondsToString(std::chrono::duration_cast<std::chrono::microseconds>(this->duration).count());
+	return crawlservpp::Helper::DateTime::microsecondsToString(
+			std::chrono::duration_cast<std::chrono::microseconds>(this->duration).count());
+}
+
 }

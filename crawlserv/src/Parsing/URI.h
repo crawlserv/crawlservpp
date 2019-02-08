@@ -53,6 +53,12 @@ namespace crawlservpp::Parsing {
 			virtual ~Exception() {}
 		};
 
+		// not moveable, not copyable
+		URI(URI&) = delete;
+		URI(URI&&) = delete;
+		URI& operator=(URI) = delete;
+		URI& operator=(URI&&) = delete;
+
 	private:
 		std::string domain;
 		std::string subUrl;

@@ -21,20 +21,20 @@ namespace crawlservpp::Wrapper {
 class PCREMatch {
 public:
 	// constructors
-	PCREMatch(pcre2_match_data * setPtr);
-	PCREMatch(PCREMatch&& other);
+	PCREMatch(pcre2_match_data * setPtr) noexcept;
+	PCREMatch(PCREMatch&& other) noexcept;
 
 	// destructor
 	virtual ~PCREMatch();
 
 	// getters
-	pcre2_match_data * get();
-	const pcre2_match_data * get() const;
+	pcre2_match_data * get() noexcept;
+	const pcre2_match_data * get() const noexcept;
 
 	// operators
-	operator bool() const;
-	bool operator!() const;
-	PCREMatch& operator=(PCREMatch&& other);
+	operator bool() const noexcept;
+	bool operator!() const noexcept;
+	PCREMatch& operator=(PCREMatch&& other) noexcept;
 
 	// not copyable
 	PCREMatch(PCREMatch&) = delete;

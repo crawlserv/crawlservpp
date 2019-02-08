@@ -20,7 +20,7 @@ class Curl {
 public:
 	// constructors
 	Curl();
-	Curl(Curl&& other);
+	Curl(Curl&& other) noexcept;
 
 	// destructor
 	virtual ~Curl();
@@ -37,7 +37,7 @@ public:
 	// operators
 	operator bool() const;
 	bool operator!() const;
-	Curl& operator=(Curl&& other);
+	Curl& operator=(Curl&& other) noexcept;
 
 	// not copyable
 	Curl(Curl&) = delete;

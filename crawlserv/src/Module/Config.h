@@ -33,6 +33,12 @@ namespace crawlservpp::Module {
 			virtual ~Exception() {}
 		};
 
+		// not moveable, not copyable
+		Config(Config&) = delete;
+		Config(Config&&) = delete;
+		Config& operator=(Config&) = delete;
+		Config& operator=(Config&&) = delete;
+
 	protected:
 		// load module-specific configuration from parsed JSON document
 		virtual void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) = 0;

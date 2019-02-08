@@ -30,7 +30,9 @@ typedef crawlservpp::Main::Database::Column TableColumn;
 
 class Database {
 public:
+	// constructors
 	Database(crawlservpp::Module::Database& dbRef);
+
 	virtual ~Database() = 0;
 
 	// wrapper for setter
@@ -74,6 +76,12 @@ public:
 	void updateCustomData(const crawlservpp::Main::Data::UpdateValue& data);
 	void updateCustomData(const crawlservpp::Main::Data::UpdateFields& data);
 	void updateCustomData(const crawlservpp::Main::Data::UpdateFieldsMixed& data);
+
+	// not moveable, not copyable
+	Database(Database&) = delete;
+	Database(Database&&) = delete;
+	Database& operator=(Database&) = delete;
+	Database& operator=(Database&&) = delete;
 
 protected:
 	// reference to the database connection by the thread

@@ -39,8 +39,6 @@ Thread::Thread(crawlservpp::Main::Database& dbBase,
 			: crawlservpp::Module::Thread(dbBase, "crawler", threadOptions),
 			  database(this->crawlservpp::Module::Thread::database) {
 	// set default values
-	this->parser = NULL;
-	this->networkingArchives = NULL;
 	this->tickCounter = 0;
 	this->startPageId = 0;
 	this->manualCounter = 0;

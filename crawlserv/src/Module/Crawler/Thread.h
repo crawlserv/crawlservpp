@@ -51,9 +51,12 @@ namespace crawlservpp::Module::Crawler {
 		typedef crawlservpp::Query::XPath::Exception XPathException;
 
 	public:
+		// constructors
 		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
 				const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long crawlerLast);
 		Thread(crawlservpp::Main::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
+
+		// destructor
 		virtual ~Thread();
 
 	protected:

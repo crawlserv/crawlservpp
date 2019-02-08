@@ -13,14 +13,15 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: set pointer to NULL
-URIQueryList::URIQueryList() {
+URIQueryList::URIQueryList() noexcept {
 	this->ptr = NULL;
 }
 
 // move constructor
-URIQueryList::URIQueryList(URIQueryList&& other) {
+URIQueryList::URIQueryList(URIQueryList&& other) noexcept {
 	this->ptr = other.ptr;
-	other.ptr = NULL; }
+	other.ptr = NULL;
+}
 
 // destructor: free query list if necessary
 URIQueryList::~URIQueryList() {
@@ -28,32 +29,32 @@ URIQueryList::~URIQueryList() {
 }
 
 // get pointer to URI query list
-UriQueryListA * URIQueryList::get() {
+UriQueryListA * URIQueryList::get() noexcept {
 	return this->ptr;
 }
 
 // get const pointer to URI query list
-const UriQueryListA * URIQueryList::get() const {
+const UriQueryListA * URIQueryList::get() const noexcept {
 	return this->ptr;
 }
 
 // get pointer to pointer to URI query list
-UriQueryListA ** URIQueryList::getPtr() {
+UriQueryListA ** URIQueryList::getPtr() noexcept {
 	return &(this->ptr);
 }
 
 // bool operator
-URIQueryList::operator bool() const {
+URIQueryList::operator bool() const noexcept {
 	return this->ptr != NULL;
 }
 
 // not operator
-bool URIQueryList::operator!() const {
+bool URIQueryList::operator!() const noexcept {
 	return this->ptr == NULL;
 }
 
 // move operator
-URIQueryList& URIQueryList::operator=(URIQueryList&& other) {
+URIQueryList& URIQueryList::operator=(URIQueryList&& other) noexcept {
 	if(&other != this) {
 		this->ptr = other.ptr;
 		other.ptr = NULL;
