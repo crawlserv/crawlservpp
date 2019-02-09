@@ -22,6 +22,7 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	this->settings = serverSettings;
 	this->allowed = serverSettings.allowedClients;
 	this->running = true;
+	this->offline = true;
 
 	// create cookies directory if it does not exist
 	if(!std::experimental::filesystem::is_directory("cookies") || !std::experimental::filesystem::exists("cookies")) {
@@ -32,6 +33,7 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	this->database.connect();
 	this->database.initializeSql();
 	this->database.prepare();
+	this->offline = false;
 
 	// set callbacks (suppressing wrong error messages by Eclipse IDE)
 	this->webServer.setAcceptCallback( // @suppress("Invalid arguments")
