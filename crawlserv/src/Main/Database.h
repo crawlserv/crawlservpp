@@ -15,7 +15,7 @@
 #ifndef MAIN_DATABASE_H_
 #define MAIN_DATABASE_H_
 
-#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 60 // force re-connect if the connection has been idle that long
+#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 300 // force re-connect if the connection has been idle that long
 
 #include "Data.h"
 
@@ -40,6 +40,7 @@
 #include <experimental/filesystem>
 
 #include <chrono>
+#include <cmath>
 #include <ctime>
 #include <exception>
 #include <fstream>
@@ -59,7 +60,7 @@
 namespace crawlservpp::Main {
 	class Database {
 	public:
-		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings);
+		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule);
 		virtual ~Database();
 
 		// setter
@@ -74,6 +75,7 @@ namespace crawlservpp::Main {
 		void prepare();
 
 		// logging functions
+		void log(const std::string& logEntry);
 		void log(const std::string& logModule, const std::string& logEntry);
 		unsigned long getNumberOfLogEntries(const std::string& logModule);
 		void clearLogs(const std::string& logModule);
@@ -239,6 +241,7 @@ namespace crawlservpp::Main {
 		const crawlservpp::Struct::DatabaseSettings settings;
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
+		std::string module;
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 		crawlservpp::Timer::Simple reconnectTimer;
 #endif
@@ -251,10 +254,12 @@ namespace crawlservpp::Main {
 		void execute(const std::string& sqlQuery);
 
 		// IDs of prepared SQL statements
-		unsigned short psLog;
-		unsigned short psLastId;
-		unsigned short psSetThreadStatus;
-		unsigned short psSetThreadStatusMessage;
+		struct {
+			unsigned short log;
+			unsigned short lastId;
+			unsigned short setThreadStatus;
+			unsigned short setThreadStatusMessage;
+		} ps;
 	};
 }
 

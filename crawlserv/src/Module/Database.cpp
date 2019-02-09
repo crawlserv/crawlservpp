@@ -13,8 +13,8 @@
 namespace crawlservpp::Module {
 
 // constructor
-Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings)
-		: crawlservpp::Main::Database(dbSettings) {
+Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule)
+		: crawlservpp::Main::Database(dbSettings, dbModule) {
 	this->ps = { 0 };
 	if(crawlservpp::Main::Database::driver)
 		crawlservpp::Main::Database::driver->threadInit();

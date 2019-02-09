@@ -69,27 +69,27 @@ void Database::prepare() {
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares isUrlExists()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlExists()...");
 		this->ps.isUrlExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE url = ?) AS result");
 	}
 	if(!(this->ps.isUrlHashExists)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares hash check for URLs...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares hash check for URLs...");
 		this->ps.isUrlHashExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE hash = CRC32( ? )) AS result");
 	}
 	if(!(this->ps.getUrlId)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares getUrlId()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlId()...");
 		this->ps.getUrlId = this->addPreparedStatement(
 				"SELECT id FROM `" + this->urlListTable + "` WHERE url = ? LIMIT 1");
 	}
 	if(!(this->ps.isUrlCrawled)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares isUrlCrawled()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlCrawled()...");
 		this->ps.isUrlCrawled = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ? AND crawled = TRUE) AS result");
 	}
 	if(!(this->ps.getNextUrl)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares getNextUrl()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
 		if(this->recrawl) this->ps.getNextUrl = this->addPreparedStatement(
 				"SELECT id, url FROM `" + this->urlListTable
 				+ "` WHERE id > ? AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
@@ -98,82 +98,82 @@ void Database::prepare() {
 				+ "` WHERE id > ? AND crawled = 0 AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
 	}
 	if(!(this->ps.addUrl)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares addUrl()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrl()...");
 		this->ps.addUrl = this->addPreparedStatement(
 				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES(?, CRC32(?), ?)");
 	}
 	if(!(this->ps.getUrlPosition)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares getUrlPosition()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlPosition()...");
 		this->ps.getUrlPosition = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
 	}
 	if(!(this->ps.getNumberOfUrls)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares getNumberOfUrls()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
 		this->ps.getNumberOfUrls = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
 	}
 
 	if(!(this->ps.isUrlLockable)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares isUrlLockable()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlLockable()...");
 		this->ps.isUrlLockable = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (crawllock IS NULL OR crawllock < NOW())) AS result");
 	}
 	if(!(this->ps.getUrlLock)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares getUrlLock()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLock()...");
 		this->ps.getUrlLock = this->addPreparedStatement(
 				"SELECT crawllock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.checkUrlLock)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares checkUrlLock()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares checkUrlLock()...");
 		this->ps.checkUrlLock = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (crawllock < NOW() OR crawllock <= ? OR crawllock IS NULL)) AS result");
 	}
 	if(!(this->ps.lockUrl)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares lockUrl()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl()...");
 		this->ps.lockUrl = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable + "` SET crawllock = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.unLockUrl)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares unLockUrl()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares unLockUrl()...");
 		this->ps.unLockUrl = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable + "` SET crawllock = NULL WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.saveContent)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares saveContent()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares saveContent()...");
 		this->ps.saveContent = this->addPreparedStatement(
 				"INSERT INTO `" + crawledTable + "`(url, response, type, content) VALUES (?, ?, ?, ?)");
 	}
 	if(!(this->ps.saveArchivedContent)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares saveArchivedContent()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares saveArchivedContent()...");
 		this->ps.saveArchivedContent = this->addPreparedStatement(
 				"INSERT INTO `" + crawledTable
 				+ "`(url, crawltime, archived, response, type, content) VALUES (?, ?, TRUE, ?, ?, ?)");
 	}
 	if(!(this->ps.setUrlFinished)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares setUrlFinished()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares setUrlFinished()...");
 		this->ps.setUrlFinished = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable
 				+ "` SET crawled = TRUE, parsed = FALSE, extracted = FALSE, analyzed = FALSE, crawllock = NULL WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.isArchivedContentExists)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares isArchivedContentExists()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares isArchivedContentExists()...");
 		this->ps.isArchivedContentExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + crawledTable + "` WHERE url = ? AND crawltime = ?) AS result");
 	}
 	if(!(this->ps.isLinkExists)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares addLinkIfNotExists() [1/3]...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [1/3]...");
 		this->ps.isLinkExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + linkTable + "` WHERE fromurl = ? AND tourl = ?) AS result");
 	}
 	if(!(this->ps.addLink)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares addLinkIfNotExists() [2/3]...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [2/3]...");
 		this->ps.addLink = this->addPreparedStatement(
 				"INSERT INTO `" + linkTable + "`(fromurl, tourl, archived) VALUES(?, ?, FALSE)");
 	}
 	if(!(this->ps.addLinkArchived)) {
-		if(this->verbose) this->log("crawler", "[#" + this->idString + "] prepares addLinkIfNotExists() [3/3]...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [3/3]...");
 		this->ps.addLinkArchived = this->addPreparedStatement(
 				"INSERT INTO `" + linkTable + "`(fromurl, tourl, archived) VALUES(?, ?, TRUE)");
 	}
@@ -623,9 +623,9 @@ void Database::saveContent(unsigned long urlId, unsigned int response, const std
 				logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
 				adjustServerSettings = true;
 			}
-			this->log("crawler", logStrStr.str());
+			this->log(logStrStr.str());
 			if(adjustServerSettings)
-				this->log("crawler", "[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -670,9 +670,9 @@ void Database::saveArchivedContent(unsigned long urlId, const std::string& timeS
 				logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
 				adjustServerSettings = true;
 			}
-			this->log("crawler", logStrStr.str());
+			this->log(logStrStr.str());
 			if(adjustServerSettings)
-				this->log("crawler", "[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
 		}
 	}
 	catch(sql::SQLException &e) {

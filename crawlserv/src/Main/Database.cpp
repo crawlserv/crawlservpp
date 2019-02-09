@@ -19,16 +19,13 @@ namespace crawlservpp::Main {
 sql::Driver * Database::driver = NULL;
 
 // constructor: save settings and set default values
-Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings) : settings(dbSettings) {
+Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule)
+		: settings(dbSettings), module(dbModule) {
 	// set default values
 	this->tablesLocked = false;
 	this->maxAllowedPacketSize = 0;
 	this->sleepOnError = 0;
-
-	this->psLog = 0;
-	this->psLastId = 0;
-	this->psSetThreadStatus = 0;
-	this->psSetThreadStatusMessage = 0;
+	this->ps = { 0 };
 
 	// get driver instance if necessary
 	if(!Database::driver) {
@@ -139,13 +136,13 @@ void Database::prepare() {
 	this->reserveForPreparedStatements(5);
 
 	// prepare basic SQL statements
-	if(!(this->psLastId)) this->psLastId = this->addPreparedStatement("SELECT LAST_INSERT_ID() AS id");
-	if(!(this->psLog)) this->psLog = this->addPreparedStatement("INSERT INTO crawlserv_log(module, entry) VALUES (?, ?)");
+	if(!(this->ps.lastId)) this->ps.lastId = this->addPreparedStatement("SELECT LAST_INSERT_ID() AS id");
+	if(!(this->ps.log)) this->ps.log = this->addPreparedStatement("INSERT INTO crawlserv_log(module, entry) VALUES (?, ?)");
 
 	// prepare thread statements
-	if(!(this->psSetThreadStatus)) this->psSetThreadStatus = this->addPreparedStatement(
+	if(!(this->ps.setThreadStatus)) this->ps.setThreadStatus = this->addPreparedStatement(
 			"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1");
-	if(!(this->psSetThreadStatusMessage)) this->psSetThreadStatusMessage = this->addPreparedStatement(
+	if(!(this->ps.setThreadStatusMessage)) this->ps.setThreadStatusMessage = this->addPreparedStatement(
 			"UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1");
 }
 
@@ -153,7 +150,7 @@ void Database::prepare() {
  * LOGGING FUNCTIONS
  */
 
-// add a log entry to the database
+// add a log entry to the database (for any module)
 void Database::log(const std::string& logModule, const std::string& logEntry) {
 	// check table lock
 	if(this->tablesLocked) {
@@ -163,8 +160,8 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 	}
 
 	// check prepared SQL statement
-	if(!(this->psLog)) throw Database::Exception("Missing prepared SQL statement for Database::log(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psLog);
+	if(!(this->ps.log)) throw Database::Exception("Missing prepared SQL statement for Database::log(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.log);
 
 	// check connection
 	this->checkConnection();
@@ -184,6 +181,11 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 		errorStrStr << "log() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") - " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
+}
+
+// add a log entry to the database (for the current module)
+void Database::log(const std::string& logEntry) {
+	this->log(this->module, logEntry);
 }
 
 // get the number of log entries for a specific module from the database (or for all modules if logModule is an empty string)
@@ -401,8 +403,8 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->psSetThreadStatus)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetThreadStatus);
+	if(!(this->ps.setThreadStatus)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatus);
 
 	// create status message
 	std::string statusMessage;
@@ -436,9 +438,9 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->psSetThreadStatusMessage))
+	if(!(this->ps.setThreadStatusMessage))
 		throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatus(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psSetThreadStatusMessage);
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
 
 	// create status message
 	std::string statusMessage;
@@ -2450,10 +2452,12 @@ void Database::checkConnection() {
 	try {
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 		// check whether re-connect should be performed anyway
-		if(this->reconnectTimer.tick() < MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS * 1000) {
+		auto milliseconds = this->reconnectTimer.tick();
+		if(milliseconds < MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS * 1000) {
 #endif
 			// check whether connection is valid
 			if(this->connection->isValid()) return;
+			milliseconds = 0;
 
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 		}
@@ -2476,6 +2480,12 @@ void Database::checkConnection() {
 		// recover prepared SQL statements
 		for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i)
 			i->refresh(this->connection.get());
+
+#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
+		// log re-connect on idle
+		if(milliseconds) this->log("re-connected to database after idling for "
+				+ crawlservpp::Helper::DateTime::secondsToString(std::round((float) milliseconds / 1000)) + ".");
+#endif
 	}
 	catch(sql::SQLException &e) {
 		// SQL error while recovering prepared statements
@@ -3780,8 +3790,8 @@ unsigned long Database::getLastInsertedId() {
 	unsigned long result = 0;
 
 	// check prepared SQL statement
-	if(!(this->psLastId)) throw Database::Exception("Missing prepared SQL statement for last inserted ID");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->psLastId);
+	if(!(this->ps.lastId)) throw Database::Exception("Missing prepared SQL statement for last inserted ID");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lastId);
 
 	// check connection
 	this->checkConnection();

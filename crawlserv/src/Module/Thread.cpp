@@ -15,8 +15,8 @@ namespace crawlservpp::Module {
 // constructor A: run previously interrupted thread
 Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
 		const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long threadLast)
-		: database(dbBase.getSettings()), databaseClass(dbBase), module(threadModule), options(threadOptions) {
+		unsigned long threadLast) : database(dbBase.getSettings(), threadModule), databaseClass(dbBase), module(threadModule),
+									options(threadOptions) {
 
 	// set status variables
 	this->pausable = true;
@@ -231,7 +231,7 @@ void Thread::setProgress(float progress) {
 
 // add a log entry for the thread to the database using the module of the thread (to be used by the thread only)
 void Thread::log(const std::string& entry) {
-	this->database.log(this->module, "[#" + this->idString + "] " + entry);
+	this->database.log("[#" + this->idString + "] " + entry);
 }
 
 // allow the thread to be paused (enabled by default)

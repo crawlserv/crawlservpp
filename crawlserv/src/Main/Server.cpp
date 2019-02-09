@@ -16,7 +16,7 @@ namespace crawlservpp::Main {
 
 // constructor
 Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
-		const crawlservpp::Struct::ServerSettings& serverSettings) : database(databaseSettings) {
+		const crawlservpp::Struct::ServerSettings& serverSettings) : database(databaseSettings, "server") {
 	// set default values
 	this->dbSettings = databaseSettings;
 	this->settings = serverSettings;
@@ -57,8 +57,8 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 
 			// write to log
 			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("crawler", logStrStr.str());
+			logStrStr << "crawler #" << i->id << " continued.";
+			this->database.log(logStrStr.str());
 		}
 		else if(i->module == "parser") {
 			// load parser thread
@@ -68,8 +68,8 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 
 			// write to log
 			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("parser", logStrStr.str());
+			logStrStr << "parser #" << i->id << " continued.";
+			this->database.log(logStrStr.str());
 		}
 		else if(i->module == "extractor") {
 			// load extractor thread
@@ -81,8 +81,8 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 
 			// write to log
 			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("extractor", logStrStr.str());
+			logStrStr << "extractor #" << i->id << " continued.";
+			this->database.log(logStrStr.str());
 		}
 		else if(i->module == "analyzer") {
 			// get and parse config JSON to determine algorithm
@@ -101,15 +101,15 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 						this->database, i->id, i->status, i->paused, i->options, i->last));
 				break;
 			default:
-				this->database.log("analyzer", "WARNING: Unknown algorithm ignored when loading threads.");
+				this->database.log("WARNING: Unknown algorithm ignored when loading threads.");
 				continue;
 			}
 			this->analyzers.back()->crawlservpp::Module::Thread::start();
 
 			// write to log
 			std::ostringstream logStrStr;
-			logStrStr << "#" << i->id << " continued.";
-			this->database.log("analyzer", logStrStr.str());
+			logStrStr << "analyzer #" << i->id << " continued.";
+			this->database.log(logStrStr.str());
 		}
 		else throw std::runtime_error("Unknown thread module \'" + i->module + "\'");
 	}
@@ -118,7 +118,7 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	this->uptimeStart = std::chrono::steady_clock::now();
 
 	// start logging
-	this->database.log("server", "started.");
+	this->database.log("started.");
 }
 
 // destructor
@@ -140,9 +140,9 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
+			logStrStr << "crawler #" << id << " interrupted.";
 			try {
-				this->database.log("crawler", logStrStr.str());
+				this->database.log(logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
 				std::cout << std::endl << logStrStr.str()
@@ -164,9 +164,9 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
+			logStrStr << "parser #" << id << " interrupted.";
 			try {
-				this->database.log("parser", logStrStr.str());
+				this->database.log(logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
 				std::cout << std::endl << logStrStr.str()
@@ -189,9 +189,9 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
+			logStrStr << "extractor #" << id << " interrupted.";
 			try {
-				this->database.log("extractor", logStrStr.str());
+				this->database.log(logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
 				std::cout << std::endl << logStrStr.str()
@@ -213,9 +213,9 @@ Server::~Server() {
 
 			// log interruption
 			std::ostringstream logStrStr;
-			logStrStr << "#" << id << " interrupted.";
+			logStrStr << "analyzer #" << id << " interrupted.";
 			try {
-				this->database.log("analyzer", logStrStr.str());
+				this->database.log(logStrStr.str());
 			}
 			catch(const Database::Exception& e) {
 				std::cout << std::endl << logStrStr.str()
@@ -233,7 +233,7 @@ Server::~Server() {
 
 	// log shutdown message with server up-time
 	try {
-		this->database.log("server", "shuts down after up-time of "
+		this->database.log("shuts down after up-time of "
 				+ crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) + ".");
 	}
 	catch(const Database::Exception& e) {
@@ -258,7 +258,7 @@ bool Server::tick() {
 		// try to re-connect once on database exception
 		try {
 			this->database.checkConnection();
-			this->database.log("server", "re-connected to database after error: " + e.whatStr());
+			this->database.log("re-connected to database after error: " + e.whatStr());
 		}
 		catch(const Database::Exception& e) {
 			// database is offline
@@ -476,14 +476,14 @@ void Server::onAccept(WebServer::Connection connection) {
 			if(this->offline) std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
 			else {
 				try {
-					this->database.log("server", "rejected client " + ip + ".");
+					this->database.log("rejected client " + ip + ".");
 				}
 				catch(const Database::Exception& e) {
 					// try to re-connect once on database exception
 					try {
 						this->database.checkConnection();
-						this->database.log("server", "re-connected to database after error: " + e.whatStr());
-						this->database.log("server", "rejected client " + ip + ".");
+						this->database.log("re-connected to database after error: " + e.whatStr());
+						this->database.log("rejected client " + ip + ".");
 					}
 					catch(const Database::Exception& e) {
 						std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
@@ -495,14 +495,14 @@ void Server::onAccept(WebServer::Connection connection) {
 		else {
 			if(this->offline) std::cout << std::endl << "server accepted client " + ip + "." << std::flush;
 			else try {
-				this->database.log("server", "accepted client " + ip + ".");
+				this->database.log("accepted client " + ip + ".");
 			}
 			catch(const Database::Exception& e) {
 				// try to re-connect once on database exception
 				try {
 					this->database.checkConnection();
-					this->database.log("server", "re-connected to database after error: " + e.whatStr());
-					this->database.log("server", "accepted client " + ip + ".");
+					this->database.log("re-connected to database after error: " + e.whatStr());
+					this->database.log("accepted client " + ip + ".");
 				}
 				catch(const Database::Exception& e) {
 					std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
@@ -523,7 +523,7 @@ void Server::onRequest(WebServer::Connection connection, const std::string& meth
 	// check authorization
 	if(this->allowed != "*") {
 		if(this->allowed.find(ip) == std::string::npos) {
-			this->database.log("server", "Client " + ip + " rejected.");
+			this->database.log("Client " + ip + " rejected.");
 			this->webServer.close(connection);
 		}
 	}
@@ -596,7 +596,7 @@ Server::ServerCommandResponse Server::cmdKill(const rapidjson::Document& json,
 		this->running = false;
 
 		// kill is a logged command
-		this->database.log("server", "killed by " + ip + ".");
+		this->database.log("killed by " + ip + ".");
 
 		// send bye message
 		return Server::ServerCommandResponse("Bye bye.");
@@ -624,7 +624,7 @@ Server::ServerCommandResponse Server::cmdAllow(const rapidjson::Document& json,
 	this->allowed += "," + toAllow;
 
 	// allow is a logged command
-	this->database.log("server", toAllow + " allowed by " + ip + ".");
+	this->database.log(toAllow + " allowed by " + ip + ".");
 	return Server::ServerCommandResponse("Allowed IPs: " + this->allowed + ".");
 }
 
@@ -635,7 +635,7 @@ Server::ServerCommandResponse Server::cmdDisallow(const rapidjson::Document& jso
 	this->allowed = this->settings.allowedClients;
 
 	// disallow is a logged command
-	this->database.log("server", "Allowed IPs reset by " + ip + ".");
+	this->database.log("Allowed IPs reset by " + ip + ".");
 
 	return Server::ServerCommandResponse("Allowed IP(s): " + this->allowed + ".");
 }
@@ -677,11 +677,11 @@ Server::ServerCommandResponse Server::cmdClearLog(const rapidjson::Document& jso
 
 	// clearlog is a logged command
 	if(!module.empty()) {
-		this->database.log("server", "Logs of " + module + " cleared by " + ip + ".");
+		this->database.log("Logs of " + module + " cleared by " + ip + ".");
 		return Server::ServerCommandResponse("Logs of " + module + " cleared.");
 	}
 
-	this->database.log("server", "All logs cleared by " + ip + ".");
+	this->database.log("All logs cleared by " + ip + ".");
 	return Server::ServerCommandResponse("All logs cleared.");
 }
 
@@ -732,8 +732,8 @@ Server::ServerCommandResponse Server::cmdStartCrawler(const rapidjson::Document&
 
 	// startcrawler is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] started by " << ip << ".";
-	this->database.log("crawler", logStrStr.str());
+	logStrStr << "crawler #" << id << " started by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Crawler has been started.");
 }
@@ -764,8 +764,8 @@ Server::ServerCommandResponse Server::cmdPauseCrawler(const rapidjson::Document&
 
 	// pausecrawler is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] paused by " << ip << ".";
-	this->database.log("crawler", logStrStr.str());
+	logStrStr << "crawler #" << id << "] paused by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Crawler is pausing.");
 }
@@ -796,8 +796,8 @@ Server::ServerCommandResponse Server::cmdUnpauseCrawler(const rapidjson::Documen
 
 	// unpausecrawler is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] unpaused by " << ip << ".";
-	this->database.log("crawler", logStrStr.str());
+	logStrStr << "crawler #" << id << " unpaused by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Crawler is unpausing.");
 }
@@ -829,8 +829,8 @@ Server::ServerCommandResponse Server::cmdStopCrawler(const rapidjson::Document& 
 
 	// stopcrawler is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] stopped by " << ip << ".";
-	this->database.log("crawler", logStrStr.str());
+	logStrStr << "crawler #" << id << " stopped by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Crawler stopped.");
 }
@@ -882,8 +882,8 @@ Server::ServerCommandResponse Server::cmdStartParser(const rapidjson::Document& 
 
 	// startparser is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] started by " << ip << ".";
-	this->database.log("parser", logStrStr.str());
+	logStrStr << "parser #" << id << " started by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Parser has been started.");
 }
@@ -914,8 +914,8 @@ Server::ServerCommandResponse Server::cmdPauseParser(const rapidjson::Document& 
 
 	// pauseparser is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] paused by " << ip << ".";
-	this->database.log("parser", logStrStr.str());
+	logStrStr << "parser #" << id << " paused by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Parser is pausing.");
 }
@@ -946,8 +946,8 @@ Server::ServerCommandResponse Server::cmdUnpauseParser(const rapidjson::Document
 
 	// unpauseparser is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] unpaused by " << ip << ".";
-	this->database.log("parser", logStrStr.str());
+	logStrStr << "parser #" << id << " unpaused by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Parser is unpausing.");
 }
@@ -979,8 +979,8 @@ Server::ServerCommandResponse Server::cmdStopParser(const rapidjson::Document& j
 
 	// stopparser is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] stopped by " << ip << ".";
-	this->database.log("parser", logStrStr.str());
+	logStrStr << "parser #" << id << " stopped by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Parser stopped.");
 }
@@ -1096,8 +1096,8 @@ Server::ServerCommandResponse Server::cmdStartAnalyzer(const rapidjson::Document
 
 	// startanalyzer is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] started by " << ip << ".";
-	this->database.log("analyzer", logStrStr.str());
+	logStrStr << "analyzer #" << id << " started by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Analyzer has been started.");
 }
@@ -1128,8 +1128,8 @@ Server::ServerCommandResponse Server::cmdPauseAnalyzer(const rapidjson::Document
 
 		// pauseanalyzer is a logged command
 		std::ostringstream logStrStr;
-		logStrStr << "[#" << id << "] paused by " << ip << ".";
-		this->database.log("analyzer", logStrStr.str());
+		logStrStr << "analyzer #" << id << " paused by " << ip << ".";
+		this->database.log(logStrStr.str());
 
 		return Server::ServerCommandResponse("Analyzer is pausing.");
 	}
@@ -1164,8 +1164,8 @@ Server::ServerCommandResponse Server::cmdUnpauseAnalyzer(const rapidjson::Docume
 
 	// unpauseanalyzer is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] unpaused by " << ip << ".";
-	this->database.log("analyzer", logStrStr.str());
+	logStrStr << "analyzer #" << id << " unpaused by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Analyzer is unpausing.");
 }
@@ -1197,8 +1197,8 @@ Server::ServerCommandResponse Server::cmdStopAnalyzer(const rapidjson::Document&
 
 	// stopanalyzer is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "[#" << id << "] stopped by " << ip << ".";
-	this->database.log("analyzer", logStrStr.str());
+	logStrStr << "analyzer #" << id << " stopped by " << ip << ".";
+	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Analyzer stopped.");
 }
@@ -1388,7 +1388,7 @@ Server::ServerCommandResponse Server::cmdDeleteWebsite(const rapidjson::Document
 	// deletewebsite is a logged command
 	std::ostringstream logStrStr;
 	logStrStr << "Website #" << id << " deleted by " << ip << ".";
-	this->database.log("database", logStrStr.str());
+	this->database.log(logStrStr.str());
 	return Server::ServerCommandResponse("Website deleted.");
 }
 
@@ -1554,7 +1554,7 @@ Server::ServerCommandResponse Server::cmdDeleteUrlList(const rapidjson::Document
 	// deleteurllist is a logged command
 	std::ostringstream logStrStr;
 	logStrStr << "URL list #" << id << " deleted by " << ip << ".";
-	this->database.log("database", logStrStr.str());
+	this->database.log(logStrStr.str());
 	return Server::ServerCommandResponse("URL list deleted.");
 }
 
