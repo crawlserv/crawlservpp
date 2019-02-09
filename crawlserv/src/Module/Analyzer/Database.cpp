@@ -229,13 +229,13 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 		this->createCorpus(sourceType, sourceTable, sourceField, corpusTo, dateMap, sourcesTo);
 	}
 	else {
+		// check connection
+		this->checkConnection();
+
 		// check prepared SQL statement
 		if(!(this->ps.getCorpus))
 			throw DatabaseException("Missing prepared SQL statement for getting the corpus");
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getCorpus);
-
-		// check connection
-		this->checkConnection();
 
 		try {
 			// execute SQL query for getting the corpus
@@ -313,6 +313,9 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField) {
 	bool result = true;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statements
 	if(!(this->ps.isCorpusChanged))
 		throw DatabaseException("Missing prepared SQL statement for getting the corpus creation time");
@@ -334,9 +337,6 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 	}
 	if(!sourceStatement) throw DatabaseException("Missing prepared SQL statement for creating text corpus from specified source type");
 	sql::PreparedStatement& tableStatement = this->getPreparedStatement(sourceStatement);
-
-	// check connection
-	this->checkConnection();
 
 	try {
 		// execute SQL query for getting the update time of the source table
@@ -380,6 +380,9 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 	sourcesTo = 0;
 	dateMapEntry = std::make_tuple("", 0, 0);
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statements
 	if(!(this->ps.deleteCorpus))
 		throw DatabaseException("Missing prepared SQL statement for deleting text corpus");
@@ -416,9 +419,6 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 	default:
 		throw DatabaseException("Invalid source type for text corpus");
 	}
-
-	// check connection
-	this->checkConnection();
 
 	// start timing and write log entry
 	crawlservpp::Timer::Simple timer;

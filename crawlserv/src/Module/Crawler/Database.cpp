@@ -183,15 +183,15 @@ void Database::prepare() {
 bool Database::isUrlExists(const std::string& urlString) {
 	bool result = false;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statements
 	if(!(this->ps.isUrlHashExists))
 		throw DatabaseException("Missing prepared SQL statement for URL hash checks");
 	sql::PreparedStatement& hashStatement = this->getPreparedStatement(this->ps.isUrlHashExists);
 	if(!(this->ps.isUrlExists)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::isUrlExists(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlExists);
-
-	// check connection
-	this->checkConnection();
 
 	// check URL existence in database
 	try {
@@ -230,12 +230,12 @@ void Database::lockUrlList() {
 unsigned long Database::getUrlId(const std::string& urlString) {
 	unsigned long result = 0;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.getUrlId)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::getUrlId(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlId);
-
-	// check connection
-	this->checkConnection();
 
 	// get ID of URL from database
 	try {
@@ -260,12 +260,12 @@ unsigned long Database::getUrlId(const std::string& urlString) {
 bool Database::isUrlCrawled(unsigned long urlId) {
 	bool result = false;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.isUrlCrawled)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::isUrlCrawled(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlCrawled);
-
-	// check connection
-	this->checkConnection();
 
 	// get next URL from database
 	try {
@@ -290,12 +290,12 @@ bool Database::isUrlCrawled(unsigned long urlId) {
 std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long currentUrlId) {
 	std::pair<unsigned long, std::string> result;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.getNextUrl)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::getNextUrl(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNextUrl);
-
-	// check connection
-	this->checkConnection();
 
 	// get next URL from database
 	try {
@@ -323,12 +323,12 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 unsigned long Database::addUrl(const std::string& urlString, bool manual) {
 	unsigned long result = 0;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.addUrl)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addUrl(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrl);
-
-	// check connection
-	this->checkConnection();
 
 	// add URL to database and get resulting ID
 	try {
@@ -356,12 +356,12 @@ unsigned long Database::addUrl(const std::string& urlString, bool manual) {
 unsigned long Database::getUrlPosition(unsigned long urlId) {
 	unsigned long result = 0;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.getUrlPosition)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::getUrlPosition()");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlPosition);
-
-	// check connection
-	this->checkConnection();
 
 	// get URL position of URL from database
 	try {
@@ -386,12 +386,12 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 unsigned long Database::getNumberOfUrls() {
 	unsigned long result = 0;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.getNumberOfUrls)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::getNumberOfUrls()");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNumberOfUrls);
-
-	// check connection
-	this->checkConnection();
 
 	// get number of URLs from database
 	try {
@@ -413,6 +413,9 @@ unsigned long Database::getNumberOfUrls() {
 
 // check whether a link between two websites already exists and add it to the database if not
 void Database::addLinkIfNotExists(unsigned long from, unsigned long to, bool archived) {
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statements
 	if(!(this->ps.isLinkExists))
 		throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::addLinkIfNotExists(...)");
@@ -423,9 +426,6 @@ void Database::addLinkIfNotExists(unsigned long from, unsigned long to, bool arc
 	sql::PreparedStatement& checkStatement = this->getPreparedStatement(this->ps.isLinkExists);
 	sql::PreparedStatement& addStatement = archived ?
 			this->getPreparedStatement(this->ps.addLinkArchived) : this->getPreparedStatement(this->ps.addLink);
-
-	// check connection
-	this->checkConnection();
 
 	// check existence of link and add it to database if it does not exist there already
 	try {
@@ -455,12 +455,12 @@ void Database::addLinkIfNotExists(unsigned long from, unsigned long to, bool arc
 bool Database::isUrlLockable(unsigned long urlId) {
 	bool result = false;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.isUrlLockable)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::isUrlLockable(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlLockable);
-
-	// check connection
-	this->checkConnection();
 
 	// check URL lock in database
 	try {
@@ -485,12 +485,12 @@ bool Database::isUrlLockable(unsigned long urlId) {
 std::string Database::getUrlLock(unsigned long urlId) {
 	std::string result;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.getUrlLock)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::getUrlLock(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLock);
-
-	// check connection
-	this->checkConnection();
 
 	// get URL lock from database
 	try {
@@ -515,12 +515,12 @@ std::string Database::getUrlLock(unsigned long urlId) {
 bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	bool result = false;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.checkUrlLock)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::checkUrlLock(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.checkUrlLock);
-
-	// check connection
-	this->checkConnection();
 
 	// check URL lock in database
 	try {
@@ -544,12 +544,12 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 
 // lock a URL in the database
 std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.lockUrl)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::lockUrl(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
-
-	// check connection
-	this->checkConnection();
 
 	// lock URL in database
 	try {
@@ -570,12 +570,12 @@ std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 
 // unlock a URL in the database
 void Database::unLockUrl(unsigned long urlId) {
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.unLockUrl)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::unLockUrl(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.unLockUrl);
-
-	// check connection
-	this->checkConnection();
 
 	// unlock URL in database
 	try {
@@ -594,12 +594,12 @@ void Database::unLockUrl(unsigned long urlId) {
 // save content to database
 void Database::saveContent(unsigned long urlId, unsigned int response, const std::string& type,
 		const std::string& content) {
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.saveContent)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::saveContent(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.saveContent);
-
-	// check connection
-	this->checkConnection();
 
 	// save content to database
 	try {
@@ -639,13 +639,13 @@ void Database::saveContent(unsigned long urlId, unsigned int response, const std
 // save archived content to database
 void Database::saveArchivedContent(unsigned long urlId, const std::string& timeStamp, unsigned int response,
 		const std::string& type, const std::string& content) {
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.saveArchivedContent))
 		throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::saveArchivedContent(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.saveArchivedContent);
-
-	// check connection
-	this->checkConnection();
 
 	try {
 		// save archived content to database if possible
@@ -686,12 +686,12 @@ void Database::saveArchivedContent(unsigned long urlId, const std::string& timeS
 
 // set URL as crawled in the database
 void Database::setUrlFinished(unsigned long urlId) {
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.setUrlFinished)) throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::setUrlFinished(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setUrlFinished);
-
-	// check connection
-	this->checkConnection();
 
 	// get ID of URL from database
 	try {
@@ -710,13 +710,13 @@ void Database::setUrlFinished(unsigned long urlId) {
 bool Database::isArchivedContentExists(unsigned long urlId, const std::string& timeStamp) {
 	bool result = false;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.isArchivedContentExists))
 		throw DatabaseException("Missing prepared SQL statement for DatabaseCrawler::isArchivedContentExists(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isArchivedContentExists);
-
-	// check connection
-	this->checkConnection();
 
 	// get next URL from database
 	try {

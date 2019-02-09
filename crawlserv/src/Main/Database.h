@@ -15,7 +15,7 @@
 #ifndef MAIN_DATABASE_H_
 #define MAIN_DATABASE_H_
 
-#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 300 // force re-connect if the connection has been idle that long
+#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600 // force re-connect if the connection has been idle that long
 
 #include "Data.h"
 
