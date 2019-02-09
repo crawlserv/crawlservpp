@@ -129,12 +129,12 @@ void Database::prepare() {
 
 	// prepare SQL statements for parser
 	if(!(this->ps.isUrlParsed)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlParsed()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlParsed()...");
 		this->ps.isUrlParsed = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ? AND parsed = TRUE) AS result");
 	}
 	if(!(this->ps.getNextUrl)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNextUrl()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
 		std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
 				" WHERE a.id = b.url AND a.id > ? AND b.response < 400 AND (a.parselock IS NULL OR a.parselock < NOW())";
 		if(!reparse) sqlQuery += " AND a.parsed = FALSE";
@@ -143,81 +143,81 @@ void Database::prepare() {
 		this->ps.getNextUrl = this->addPreparedStatement(sqlQuery);
 	}
 	if(!(this->ps.getUrlPosition)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlPosition()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlPosition()...");
 		this->ps.getUrlPosition = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
 	}
 	if(!(this->ps.getNumberOfUrls)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getNumberOfUrls()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
 		this->ps.getNumberOfUrls = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
 	}
 	if(!(this->ps.isUrlLockable)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares isUrlLockable()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlLockable()...");
 		this->ps.isUrlLockable = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (parselock IS NULL OR parselock < NOW())) AS result");
 	}
 	if(!(this->ps.getUrlLock)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getUrlLock()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLock()...");
 		this->ps.getUrlLock = this->addPreparedStatement(
 				"SELECT parselock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.checkUrlLock)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares checkUrlLock()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares checkUrlLock()...");
 		this->ps.checkUrlLock = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (parselock < NOW() OR parselock <= ? OR parselock IS NULL)) AS result");
 	}
 	if(!(this->ps.lockUrl)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares lockUrl()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl()...");
 		this->ps.lockUrl = this->addPreparedStatement(
 				"UPDATE `"
 				+ this->urlListTable + "` SET parselock = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.unLockUrl)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares unLockUrl()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares unLockUrl()...");
 		this->ps.unLockUrl = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable + "` SET parselock = NULL WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.getContentIdFromParsedId)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getContentIdFromParsedId()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getContentIdFromParsedId()...");
 		this->ps.getContentIdFromParsedId = this->addPreparedStatement(
 				"SELECT content FROM `" + this->targetTableFull	+ "` WHERE parsed_id = ? LIMIT 1");
 	}
 	if(!(this->ps.getLatestContent)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getLatestContent()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getLatestContent()...");
 		this->ps.getLatestContent = this->addPreparedStatement(
 				"SELECT id, content FROM `"
 				+ this->urlListTable + "_crawled` WHERE url = ? ORDER BY crawltime DESC LIMIT ?, 1");
 	}
 	if(!(this->ps.getAllContents)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getAllContents()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getAllContents()...");
 		this->ps.getAllContents = this->addPreparedStatement(
 				"SELECT id, content FROM `" + this->urlListTable + "_crawled` WHERE url = ?");
 	}
 	if(!(this->ps.setUrlFinished)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares setUrlFinished()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares setUrlFinished()...");
 		this->ps.setUrlFinished = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable
 				+ "` SET parsed = TRUE, analyzed = FALSE, parselock = NULL WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.getEntryId)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares getEntryId()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getEntryId()...");
 		this->ps.getEntryId = this->addPreparedStatement(
 				"SELECT id FROM `" + this->targetTableFull + "` WHERE content = ? LIMIT 1");
 	}
 	if(!(this->ps.updateEntry)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares updateEntry()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares updateEntry()...");
 		std::string sqlQuery = "UPDATE `" + this->targetTableFull + "` SET parsed_id = ?, parsed_datetime = ?";
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 			if(!(i->empty())) sqlQuery += ", `parsed__" + *i + "` = ?";
 		sqlQuery += " WHERE id = ? LIMIT 1";
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
+		if(this->verbose) this->log("[#" + this->idString + "] > " + sqlQuery);
 		this->ps.updateEntry = this->addPreparedStatement(sqlQuery);
 	}
 	if(!(this->ps.addEntry)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares addEntry()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addEntry()...");
 		std::string sqlQuery = "INSERT INTO `" + this->targetTableFull + "`(content, parsed_id, parsed_datetime";
 		unsigned long counter = 0;
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
@@ -229,11 +229,11 @@ void Database::prepare() {
 		sqlQuery += ") VALUES (?, ?, ?";
 		for(unsigned long n = 0; n < counter; n++) sqlQuery += ", ?";
 		sqlQuery += ")";
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] > " + sqlQuery);
+		if(this->verbose) this->log("[#" + this->idString + "] > " + sqlQuery);
 		this->ps.addEntry = this->addPreparedStatement(sqlQuery);
 	}
 	if(!(this->ps.updateParsedTable)) {
-		if(this->verbose) this->log("parser", "[#" + this->idString + "] prepares parsingTableUpdated()...");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares parsingTableUpdated()...");
 		this->ps.updateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
 				" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1");
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateParsedTable);
@@ -645,9 +645,9 @@ void Database::updateOrAddEntry(unsigned long contentId, const std::string& pars
 				logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
 				adjustServerSettings = true;
 			}
-			this->log("parser", logStrStr.str());
+			this->log(logStrStr.str());
 			if(adjustServerSettings)
-				this->log("parser", "[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
 		}
 		return;
 	}

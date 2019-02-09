@@ -32,8 +32,8 @@ void Database::setSleepOnError(unsigned long seconds) {
  */
 
 // add a log entry to the database
-void Database::log(const std::string& logModule, const std::string& logEntry) {
-	this->database.log(logModule, logEntry);
+void Database::log(const std::string& logEntry) {
+	this->database.log(logEntry);
 }
 
 /*

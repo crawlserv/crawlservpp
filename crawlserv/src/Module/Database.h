@@ -29,7 +29,7 @@ namespace crawlservpp::Module {
 		friend class crawlservpp::Wrapper::Database;
 	public:
 		// constructor
-		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings);
+		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule);
 
 		// destructor
 		virtual ~Database();

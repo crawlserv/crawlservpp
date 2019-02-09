@@ -39,7 +39,7 @@ public:
 	void setSleepOnError(unsigned long seconds);
 
 	// wrapper for logging function
-	void log(const std::string& logModule, const std::string& logEntry);
+	void log(const std::string& logEntry);
 
 	// wrapper for website function
 	std::string getWebsiteDomain(unsigned long websiteId);

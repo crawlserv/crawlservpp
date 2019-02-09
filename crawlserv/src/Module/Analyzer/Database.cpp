@@ -138,39 +138,39 @@ void Database::prepare() {
 	try {
 		// prepare SQL statements for analyzer
 		if(!(this->ps.getCorpus)) {
-			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares getCorpus()...");
+			if(this->verbose) this->log("[#" + this->idString + "] prepares getCorpus()...");
 			this->ps.getCorpus = this->addPreparedStatement("SELECT corpus, datemap, sources FROM crawlserv_corpora WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ?"
 					" AND source_field = ? ORDER BY created DESC LIMIT 1");
 		}
 		if(!(this->ps.isCorpusChanged)) {
-			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [1/4]...");
+			if(this->verbose) this->log("[#" + this->idString + "] prepares isCorpusChanged() [1/4]...");
 			this->ps.isCorpusChanged = this->addPreparedStatement("SELECT EXISTS (SELECT 1 FROM crawlserv_corpora WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ?"
 					" AND source_field = ? AND created > ?) AS result");
 		}
 		if(!(this->ps.isCorpusChangedParsing)) {
-			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [2/4]...");
+			if(this->verbose) this->log("[#" + this->idString + "] prepares isCorpusChanged() [2/4]...");
 			this->ps.isCorpusChangedParsing = this->addPreparedStatement("SELECT updated FROM crawlserv_parsedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
 		if(!(this->ps.isCorpusChangedExtracting)) {
-			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [3/4]...");
+			if(this->verbose) this->log("[#" + this->idString + "] prepares isCorpusChanged() [3/4]...");
 			this->ps.isCorpusChangedExtracting = this->addPreparedStatement("SELECT updated FROM crawlserv_extractedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
 		if(!(this->ps.isCorpusChangedAnalyzing)) {
-			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares isCorpusChanged() [4/4]...");
+			if(this->verbose) this->log("[#" + this->idString + "] prepares isCorpusChanged() [4/4]...");
 			this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement("SELECT updated FROM crawlserv_analyzedtables WHERE website = "
 					+ this->websiteIdString + " AND urllist = " + this->listIdString + " AND name = ?");
 		}
 		if(!(this->ps.deleteCorpus)) {
-			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [1/2]...");
+			if(this->verbose) this->log("[#" + this->idString + "] prepares createCorpus() [1/2]...");
 			this->ps.deleteCorpus = this->addPreparedStatement("DELETE FROM crawlserv_corpora WHERE website = " + this->websiteIdString
 					+ " AND urllist = " + this->listIdString + " AND source_type = ? AND source_table = ? AND source_field = ? LIMIT 1");
 		}
 		if(!(this->ps.addCorpus)) {
-			if(this->verbose) this->log("analyzer", "[#" + this->idString + "] prepares createCorpus() [2/2]...");
+			if(this->verbose) this->log("[#" + this->idString + "] prepares createCorpus() [2/2]...");
 			this->ps.addCorpus = this->addPreparedStatement("INSERT INTO crawlserv_corpora(website, urllist, source_type, source_table,"
 					" source_field, corpus, datemap, sources) VALUES (" + this->websiteIdString + ", " + this->listIdString
 					+ ", ?, ?, ?, ?, ?, ?)");
@@ -198,7 +198,7 @@ void Database::prepareAlgo(const std::vector<std::string>& statements, std::vect
 	if(this->verbose) {
 		std::ostringstream logStrStr;
 		logStrStr << "[#" << this->idString << "] prepares " << statements.size() << " SQL statements for algorithm...";
-		this->log("analyzer", logStrStr.str());
+		this->log(logStrStr.str());
 	}
 	for(auto i = statements.begin(); i != statements.end(); ++i)
 		idsTo.push_back(this->addPreparedStatement(*i));
@@ -216,11 +216,11 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 
 	// check arguments
 	if(sourceTable.empty()) {
-		if(this->logging) this->log("analyzer", "[#" + this->idString + "] WARNING: Name of source table is empty.");
+		if(this->logging) this->log("[#" + this->idString + "] WARNING: Name of source table is empty.");
 		return;
 	}
 	if(sourceField.empty()) {
-		if(this->logging) this->log("analyzer", "[#" + this->idString + "] WARNING: Name of source field is empty.");
+		if(this->logging) this->log("[#" + this->idString + "] WARNING: Name of source field is empty.");
 		return;
 	}
 
@@ -254,7 +254,7 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 					std::ostringstream logStrStr;
 					logStrStr.imbue(std::locale(""));
 					logStrStr << "[#" << this->idString << "] got text corpus of " << corpusTo.size() << " bytes.";
-					this->log("analyzer", logStrStr.str());
+					this->log(logStrStr.str());
 				}
 			}
 		}
@@ -301,7 +301,7 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 				std::ostringstream logStrStr;
 				logStrStr.imbue(std::locale(""));
 				logStrStr << "[#" << this->idString << "] filtered corpus to " << corpusTo.length() << " bytes.";
-				this->log("analyzer", logStrStr.str());
+				this->log(logStrStr.str());
 			}
 		}
 		else throw DatabaseException("getCorpus(): No datemap for corpus found");
@@ -407,10 +407,10 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		tableName = this->tablePrefix + "crawled";
 		columnName = "content";
 		if(this->logging) {
-			this->log("analyzer", "[#" + this->idString + "] WARNING: Corpus will always be re-created when created from raw crawled data.");
-			this->log("analyzer", "[#" + this->idString + "]  It is highly recommended to use parsed data instead!");
-			if(!sourceTable.empty()) this->log("analyzer", "[#" + this->idString + "] WARNING: Source table name ignored.");
-			if(!sourceField.empty()) this->log("analyzer", "[#" + this->idString + "] WARNING: Source field name ignored.");
+			this->log("[#" + this->idString + "] WARNING: Corpus will always be re-created when created from raw crawled data.");
+			this->log("[#" + this->idString + "]  It is highly recommended to use parsed data instead!");
+			if(!sourceTable.empty()) this->log("[#" + this->idString + "] WARNING: Source table name ignored.");
+			if(!sourceField.empty()) this->log("[#" + this->idString + "] WARNING: Source field name ignored.");
 		}
 		break;
 	default:
@@ -422,7 +422,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 	// start timing and write log entry
 	crawlservpp::Timer::Simple timer;
-	if(this->logging) this->log("analyzer", "[#" + this->idString + "] compiles text corpus from " + tableName + "." + columnName + "...");
+	if(this->logging) this->log("[#" + this->idString + "] compiles text corpus from " + tableName + "." + columnName + "...");
 
 	try {
 		// execute SQL query for deleting old text corpus (if it exists)
@@ -531,9 +531,9 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 					logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
 					adjustServerSettings = true;
 				}
-				this->log("analyzer", logStrStr.str());
+				this->log(logStrStr.str());
 				if(adjustServerSettings)
-					this->log("analyzer", "[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+					this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
 			}
 		}
 	}
@@ -549,7 +549,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		std::ostringstream logStrStr;
 		logStrStr.imbue(std::locale(""));
 		logStrStr << "[#" << this->idString << "]  compiled text corpus of " << corpusTo.size() << " bytes in " + timer.tickStr() << ".";
-		this->log("analyzer", logStrStr.str());
+		this->log(logStrStr.str());
 	}
 }
 
