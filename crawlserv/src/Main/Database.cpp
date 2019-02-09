@@ -159,12 +159,12 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 		return;
 	}
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.log)) throw Database::Exception("Missing prepared SQL statement for Database::log(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.log);
-
-	// check connection
-	this->checkConnection();
 
 	// add entry to database
 	try {
@@ -2442,6 +2442,7 @@ void Database::releaseLocks() {
  */
 
 // check whether the connection to the database is still valid and try to re-connect if necesssary, throws Database::Exception
+//  WARNING: afterwards, old references to prepared SQL statements may be invalid!
 void Database::checkConnection() {
 	// check driver
 	if(!(this->driver)) throw Database::Exception("MySQL driver not loaded");
@@ -3770,6 +3771,7 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 }
 
 // get reference to prepared SQL statement by its ID
+//  WARNING: Do not run Database::checkConnection() while using this reference!
 sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 	try {
 		return this->preparedStatements.at(id - 1).get();
@@ -3789,12 +3791,12 @@ sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 unsigned long Database::getLastInsertedId() {
 	unsigned long result = 0;
 
+	// check connection
+	this->checkConnection();
+
 	// check prepared SQL statement
 	if(!(this->ps.lastId)) throw Database::Exception("Missing prepared SQL statement for last inserted ID");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lastId);
-
-	// check connection
-	this->checkConnection();
 
 	try {
 		// execute SQL statement
