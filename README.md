@@ -2,7 +2,7 @@ _**WARNING!** This application is under development. It is neither complete nor 
 
  _~~Strikethrough~~ means a feature is not implemented yet._
 
-_**LEGAL NOTICE**_
+**LEGAL NOTICE**
 
 Before using crawlserv++ for crawling websites and other data, please make sure you are [legally allowed to do so](https://benbernardblog.com/web-scraping-and-crawling-are-perfectly-legal-right/).
 
@@ -74,6 +74,7 @@ The source code of the server consists of the following classes (as of February 
 * **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.cpp)**: Wrapper for pointer to Perl-Compatible Regular Expression.
 * **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.cpp)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
 * **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.cpp)**: RAII wrapper for prepared SQL statement pointer.
+* **[`Wrapper::Thread`](crawlserv/src/Wrapper/Thread.cpp)**: Abstract class for the database access of threads (wraps the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class).
 * **[`Wrapper::URI`](crawlserv/src/Wrapper/URI.cpp)**: Wrapper for pointer to URI structure.
 * **[`Wrapper::URIQueryList`](crawlserv/src/Wrapper/URIQueryList.cpp)**: RAII wrapper for pointer to URI query list.
 
