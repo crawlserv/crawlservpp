@@ -1099,21 +1099,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 
 		if(!urls.at(n - 1).empty()) {
 			// replace &amp; with &
-			unsigned long pos = 0;
-			std::string processed;
-			while(pos < urls.at(n - 1).length()) {
-				unsigned long end = urls.at(n - 1).find("&amp;", pos);
-				if(end == std::string::npos) {
-					if(pos) processed += urls.at(n - 1).substr(pos);
-					else processed = urls.at(n - 1);
-					break;
-				}
-				else {
-					processed += urls.at(n - 1).substr(pos, end + 1);
-					pos += 5;
-				}
-			}
-			urls.at(n - 1) = processed;
+			crawlservpp::Helper::Strings::replaceAll(urls.at(n - 1), "&amp;", "&", true);
 
 			// parse link
 			try {
