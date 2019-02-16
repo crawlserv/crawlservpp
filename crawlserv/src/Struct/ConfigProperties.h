@@ -1,5 +1,5 @@
 /*
- *ConfigProperties.h
+ * ConfigProperties.h
  *
  * Basic configuration properties (module, name and configuration)
  *
