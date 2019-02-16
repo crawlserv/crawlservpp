@@ -91,6 +91,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 The following custom structures are globally used (to be found in [`crawlserv/src/Struct`](crawlserv/src/Struct)):
 
 * **[`Struct::ConfigProperties`](crawlserv/src/Struct/ConfigProperties.h)**: Basic configuration properties (module, name, configuration).
+* **[`Struct::CorpusProperties`](crawlserv/src/Struct/CorpusProperties.h)**: Basic corpus  properties (source type, table and field).
 * **[`Struct::DatabaseSettings`](crawlserv/src/Struct/DatabaseSettings.h)**: Basic database settings (host, port, user, password, schema, compression).
 * **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.h)**: Basic query properties (name, text, type, result type).
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.h)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
