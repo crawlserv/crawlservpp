@@ -24,6 +24,7 @@
 #include "../Thread.h"
 
 #include "../../../Main/Data.h"
+#include "../../../Struct/CorpusProperties.h"
 #include "../../../Timer/Simple.h"
 
 #include "../../../_extern/rawr/rawr.h"
