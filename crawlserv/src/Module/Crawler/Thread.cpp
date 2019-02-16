@@ -653,126 +653,86 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 
 			// check response code
 			unsigned int responseCode = this->networking.getResponseCode();
-			if(this->crawlingCheckResponseCode(url.second, responseCode)) {
-				if(this->config.crawlerTiming) {
-					httpTimer.stop();
-					if(!timerStrTo.empty()) timerStrTo += ", ";
-					timerStrTo += "http: " + httpTimer.totalStr();
-					parseTimer.start();
-				}
+			if(!(this->crawlingCheckResponseCode(url.second, responseCode))) {
+				// skip because of response code
+				this->crawlingSkip(url);
+				return false;
+			}
 
-				// check content type
-				std::string contentType = this->networking.getContentType();
-				if(this->crawlingCheckContentType(url, contentType)) {
+			if(this->config.crawlerTiming) {
+				httpTimer.stop();
+				if(!timerStrTo.empty()) timerStrTo += ", ";
+				timerStrTo += "http: " + httpTimer.totalStr();
+				parseTimer.start();
+			}
 
-					// optional: simple HTML consistency check (not very reliable though, mostly for debugging purposes)
-					if(this->config.crawlerHTMLConsistencyCheck) {
-						unsigned long html = content.find_first_of("<html");
-						if(html != std::string::npos) {
-							if(content.find("<html", html + 5) != std::string::npos) {
-								if(this->config.crawlerLogging) {
-									this->log("ERROR: HTML consistency check failed for " + url.second);
-									std::ofstream out("debug.txt");
-									out << content;
-									out.close();
-									this->log("Wrote content to \"debug.txt\".");
-								}
-								this->crawlingSkip(url);
-								return false;
-							}
-						}
-					}
+			// check content type
+			std::string contentType = this->networking.getContentType();
+			if(!(this->crawlingCheckContentType(url, contentType))) {
+				// skip because of content type (not on whitelist or on blacklist)
+				this->crawlingSkip(url);
+				return false;
+			}
 
-					// parse content
-					crawlservpp::Parsing::XML doc;
-					try {
-						doc.parse(content);
+			// optional: simple HTML consistency check (not very reliable though, mostly for debugging purposes)
+			if(!(this->crawlingCheckConsistency(url, content))) {
+				// skip because of HTML inconsistency
+				this->crawlingSkip(url);
+				return false;
+			}
 
-						// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
-						if(this->config.crawlerHTMLCanonicalCheck) {
-							std::string canonical;
-							try {
-								this->getXPathQueryPtr(this->queryCanonicalCheck.index).getFirst(doc, canonical);
-								if(!canonical.empty()
-										&& !(canonical.length() == (8 + this->domain.length() + url.second.length())
-											&& canonical.substr(0, 8) == "https://"
-											&& canonical.substr(8, this->domain.length()) == this->domain
-											&& canonical.substr(8 + this->domain.length()) == url.second)
-										&& (!(canonical.length() == (7 + this->domain.length() + url.second.length())
-											&& canonical.substr(0, 7) == "http://"
-											&& canonical.substr(7, this->domain.length()) == this->domain
-											&& canonical.substr(7 + this->domain.length()) == url.second))) {
-									if(this->config.crawlerLogging) {
-										this->log("ERROR: HTML canonical check failed for " + url.second + " [ != " + canonical + "].");
-										std::ofstream out("debug.txt");
-										out << content;
-										out.close();
-										this->log("Wrote content to \"debug.txt\".");
-									}
-									this->crawlingSkip(url);
-									return false;
-								}
-							}
-							catch(const XPathException& e) {
-								if(this->config.crawlerLogging)
-									this->log("WARNING: Could not perform canonical check for " + url.second + ": " + e.whatStr());
-							}
-						}
+			// parse content
+			crawlservpp::Parsing::XML doc;
+			try {
+				doc.parse(content);
 
-						// check content
-						if(this->crawlingCheckContent(url, content, doc)) {
-							if(this->config.crawlerTiming) {
-								parseTimer.stop();
-								updateTimer.start();
-							}
-
-							// save content
-							this->crawlingSaveContent(url, responseCode, contentType, content, doc);
-
-							if(this->config.crawlerTiming) {
-								updateTimer.stop();
-								parseTimer.start();
-							}
-
-							// extract URLs
-							std::vector<std::string> urls = this->crawlingExtractUrls(url, content, doc);
-							if(!urls.empty()) {
-								if(this->config.crawlerTiming) {
-									parseTimer.stop();
-									updateTimer.start();
-								}
-
-								// parse and add URLs
-								checkedUrlsTo += urls.size();
-								this->crawlingParseAndAddUrls(url, urls, newUrlsTo, false);
-
-								if(this->config.crawlerTiming) {
-									updateTimer.stop();
-									timerStrTo += ", parse: " + parseTimer.totalStr() + ", update: " + updateTimer.totalStr();
-								}
-							}
-						}
-						else {
-							// skip content (not on whitelist or on blacklist)
-							this->crawlingSkip(url);
-							return false;
-						}
-					}
-					catch(const XMLException& e) {
-						// error while parsing content
-						if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + url.second + "].");
-						this->crawlingSkip(url);
-						return false;
-					}
-				}
-				else {
-					// skip content type (not on whitelist or on blacklist)
+				// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
+				if(!(this->crawlingCheckCanonical(url, doc))) {
 					this->crawlingSkip(url);
 					return false;
 				}
+
+				// check content
+				if(!(this->crawlingCheckContent(url, content, doc))) {
+					// skip because of content (not on whitelist or on blacklist)
+					this->crawlingSkip(url);
+					return false;
+				}
+
+				if(this->config.crawlerTiming) {
+					parseTimer.stop();
+					updateTimer.start();
+				}
+
+				// save content
+				this->crawlingSaveContent(url, responseCode, contentType, content, doc);
+
+				if(this->config.crawlerTiming) {
+					updateTimer.stop();
+					parseTimer.start();
+				}
+
+				// extract URLs
+				std::vector<std::string> urls = this->crawlingExtractUrls(url, content, doc);
+				if(!urls.empty()) {
+					if(this->config.crawlerTiming) {
+						parseTimer.stop();
+						updateTimer.start();
+					}
+
+					// parse and add URLs
+					checkedUrlsTo += urls.size();
+					this->crawlingParseAndAddUrls(url, urls, newUrlsTo, false);
+
+					if(this->config.crawlerTiming) {
+						updateTimer.stop();
+						timerStrTo += ", parse: " + parseTimer.totalStr() + ", update: " + updateTimer.totalStr();
+					}
+				}
 			}
-			else {
-				// response code: skip
+			catch(const XMLException& e) {
+				// error while parsing content
+				if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + url.second + "].");
 				this->crawlingSkip(url);
 				return false;
 			}
@@ -934,6 +894,50 @@ bool Thread::crawlingCheckContentType(const std::pair<unsigned long, std::string
 				this->log("WARNING: Query on content type is not of type RegEx.");
 		}
 		if(found) return false;
+	}
+
+	return true;
+}
+
+// optional HTML consistency check (check whether there is only one opening HTML tag)
+bool Thread::crawlingCheckConsistency(const std::pair<unsigned long, std::string>& url, const std::string& content) {
+	if(this->config.crawlerHTMLConsistencyCheck) {
+		unsigned long html = content.find_first_of("<html");
+		if(html != std::string::npos) {
+			if(content.find("<html", html + 5) != std::string::npos) {
+				if(this->config.crawlerLogging)	this->log("ERROR: HTML consistency check failed for " + url.second);
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+// optional canonical check (validate URL against canonical URL)
+bool Thread::crawlingCheckCanonical(const std::pair<unsigned long, std::string>& url, const crawlservpp::Parsing::XML& doc) {
+	if(this->config.crawlerHTMLCanonicalCheck) {
+		std::string canonical;
+		try {
+			this->getXPathQueryPtr(this->queryCanonicalCheck.index).getFirst(doc, canonical);
+			if(!canonical.empty()
+					&& !(canonical.length() == (8 + this->domain.length() + url.second.length())
+						&& canonical.substr(0, 8) == "https://"
+						&& canonical.substr(8, this->domain.length()) == this->domain
+						&& canonical.substr(8 + this->domain.length()) == url.second)
+					&& (!(canonical.length() == (7 + this->domain.length() + url.second.length())
+						&& canonical.substr(0, 7) == "http://"
+						&& canonical.substr(7, this->domain.length()) == this->domain
+						&& canonical.substr(7 + this->domain.length()) == url.second))) {
+				if(this->config.crawlerLogging)
+					this->log("ERROR: HTML canonical check failed for " + url.second + " [ != " + canonical + "].");
+				return false;
+			}
+		}
+		catch(const XPathException& e) {
+			if(this->config.crawlerLogging)
+				this->log("WARNING: Could not perform canonical check for " + url.second + ": " + e.whatStr());
+		}
 	}
 
 	return true;
