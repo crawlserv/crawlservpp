@@ -75,8 +75,8 @@ void MarkovTweet::onAlgoInit(bool resumed) {
 			dateFrom = this->config.filterDateFrom;
 			dateTo = this->config.filterDateTo;
 		}
-		this->database.getCorpus(this->config.generalInputSources.at(n), this->config.generalInputTables.at(n),
-				this->config.generalInputFields.at(n), corpus, corpusSources, dateFrom, dateTo);
+		this->database.getCorpus(crawlservpp::Struct::CorpusProperties(this->config.generalInputSources.at(n),
+				this->config.generalInputTables.at(n), this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo);
 		this->generator.addCorpus(corpus);
 		this->sources += corpusSources;
 	}

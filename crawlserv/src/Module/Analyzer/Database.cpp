@@ -210,23 +210,23 @@ sql::PreparedStatement& Database::getPreparedAlgoStatement(unsigned short sqlSta
 }
 
 // get text corpus and save it to corpusTo - the corpus will be created if it is out-of-date or does not exist
-void Database::getCorpus(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField, std::string& corpusTo,
+void Database::getCorpus(const crawlservpp::Struct::CorpusProperties& corpusProperties, std::string& corpusTo,
 		unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo) {
 	std::string dateMap;
 
 	// check arguments
-	if(sourceTable.empty()) {
+	if(corpusProperties.sourceTable.empty()) {
 		if(this->logging) this->log("[#" + this->idString + "] WARNING: Name of source table is empty.");
 		return;
 	}
-	if(sourceField.empty()) {
+	if(corpusProperties.sourceField.empty()) {
 		if(this->logging) this->log("[#" + this->idString + "] WARNING: Name of source field is empty.");
 		return;
 	}
 
 	// check whether text corpus needs to be created
-	if(this->isCorpusChanged(sourceType, sourceTable, sourceField)) {
-		this->createCorpus(sourceType, sourceTable, sourceField, corpusTo, dateMap, sourcesTo);
+	if(this->isCorpusChanged(corpusProperties)) {
+		this->createCorpus(corpusProperties, corpusTo, dateMap, sourcesTo);
 	}
 	else {
 		// check connection
@@ -239,9 +239,9 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 
 		try {
 			// execute SQL query for getting the corpus
-			sqlStatement.setUInt(1, sourceType);
-			sqlStatement.setString(2, sourceTable);
-			sqlStatement.setString(3, sourceField);
+			sqlStatement.setUInt(1, corpusProperties.sourceType);
+			sqlStatement.setString(2, corpusProperties.sourceTable);
+			sqlStatement.setString(3, corpusProperties.sourceField);
 			std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 			// get result
@@ -310,7 +310,7 @@ void Database::getCorpus(unsigned short sourceType, const std::string& sourceTab
 
 // helper function: check whether the basis for a specific corpus has changed since its creation, return true if corpus was not created yet
 // NOTE: Corpora from raw crawling data will always be re-created!
-bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField) {
+bool Database::isCorpusChanged(const crawlservpp::Struct::CorpusProperties& corpusProperties) {
 	bool result = true;
 
 	// check connection
@@ -322,7 +322,7 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 	sql::PreparedStatement& corpusStatement = this->getPreparedStatement(this->ps.isCorpusChanged);
 
 	unsigned short sourceStatement = 0;
-	switch(sourceType) {
+	switch(corpusProperties.sourceType) {
 	case Config::generalInputSourcesParsing:
 		sourceStatement = this->ps.isCorpusChangedParsing;
 		break;
@@ -340,7 +340,7 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 
 	try {
 		// execute SQL query for getting the update time of the source table
-		tableStatement.setString(1, sourceTable);
+		tableStatement.setString(1, corpusProperties.sourceTable);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(tableStatement.executeQuery());
 
 		// get result
@@ -348,9 +348,9 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 			std::string updateTime = sqlResultSet->getString("updated");
 
 			// execute SQL query for comparing the creation time of the corpus with the update time of the table
-			corpusStatement.setUInt(1, sourceType);
-			corpusStatement.setString(2, sourceTable);
-			corpusStatement.setString(3, sourceField);
+			corpusStatement.setUInt(1, corpusProperties.sourceType);
+			corpusStatement.setString(2, corpusProperties.sourceTable);
+			corpusStatement.setString(3, corpusProperties.sourceField);
 			corpusStatement.setString(4, updateTime);
 			sqlResultSet = std::unique_ptr<sql::ResultSet>(corpusStatement.executeQuery());
 
@@ -369,7 +369,7 @@ bool Database::isCorpusChanged(unsigned short sourceType, const std::string& sou
 }
 
 // create and add text corpus (old corpus will be deleted if it exists, a datemap will be created when using parsed data)
-void Database::createCorpus(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField,
+void Database::createCorpus(const crawlservpp::Struct::CorpusProperties& corpusProperties,
 		std::string& corpusTo, std::string& dateMapTo, unsigned long& sourcesTo) {
 	std::vector<TextMapEntry> dateMap;
 	TextMapEntry dateMapEntry;
@@ -393,18 +393,18 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 	// check source type
 	std::string tableName, columnName;
-	switch(sourceType) {
+	switch(corpusProperties.sourceType) {
 	case Config::generalInputSourcesParsing:
-		tableName = this->tablePrefix + "parsed_" + sourceTable;
-		columnName = "parsed__" + sourceField;
+		tableName = this->tablePrefix + "parsed_" + corpusProperties.sourceTable;
+		columnName = "parsed__" + corpusProperties.sourceField;
 		break;
 	case Config::generalInputSourcesExtracting:
-		tableName = this->tablePrefix + "extracted_" + sourceTable;
-		columnName = "extracted__" + sourceField;
+		tableName = this->tablePrefix + "extracted_" + corpusProperties.sourceTable;
+		columnName = "extracted__" + corpusProperties.sourceField;
 		break;
 	case Config::generalInputSourcesAnalyzing:
-		tableName = this->tablePrefix + "analyzed_" + sourceTable;
-		columnName = "analyzed__" + sourceField;
+		tableName = this->tablePrefix + "analyzed_" + corpusProperties.sourceTable;
+		columnName = "analyzed__" + corpusProperties.sourceField;
 		break;
 	case Config::generalInputSourcesCrawling:
 		tableName = this->tablePrefix + "crawled";
@@ -412,8 +412,8 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		if(this->logging) {
 			this->log("[#" + this->idString + "] WARNING: Corpus will always be re-created when created from raw crawled data.");
 			this->log("[#" + this->idString + "]  It is highly recommended to use parsed data instead!");
-			if(!sourceTable.empty()) this->log("[#" + this->idString + "] WARNING: Source table name ignored.");
-			if(!sourceField.empty()) this->log("[#" + this->idString + "] WARNING: Source field name ignored.");
+			if(!corpusProperties.sourceTable.empty()) this->log("[#" + this->idString + "] WARNING: Source table name ignored.");
+			if(!corpusProperties.sourceField.empty()) this->log("[#" + this->idString + "] WARNING: Source field name ignored.");
 		}
 		break;
 	default:
@@ -426,9 +426,9 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 	try {
 		// execute SQL query for deleting old text corpus (if it exists)
-		deleteStatement.setUInt(1, sourceType);
-		deleteStatement.setString(2, sourceTable);
-		deleteStatement.setString(3, sourceField);
+		deleteStatement.setUInt(1, corpusProperties.sourceType);
+		deleteStatement.setString(2, corpusProperties.sourceTable);
+		deleteStatement.setString(3, corpusProperties.sourceField);
 		deleteStatement.execute();
 
 		// get texts and possibly parsed datetimes from database
@@ -436,7 +436,7 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 		data.table = tableName;
 		data.columns.reserve(2);
 		data.columns.push_back(columnName);
-		if(sourceType == Config::generalInputSourcesParsing) {
+		if(corpusProperties.sourceType == Config::generalInputSourcesParsing) {
 			data.columns.push_back("parsed_datetime");
 			data.order = "parsed_datetime";
 		}
@@ -507,11 +507,11 @@ void Database::createCorpus(unsigned short sourceType, const std::string& source
 
 			if(corpusTo.size() <= this->getMaxAllowedPacketSize()) {
 				// add corpus to database if possible
-				addStatement.setUInt(1, sourceType);
-				addStatement.setString(2, sourceTable);
-				addStatement.setString(3, sourceField);
+				addStatement.setUInt(1, corpusProperties.sourceType);
+				addStatement.setString(2, corpusProperties.sourceTable);
+				addStatement.setString(3, corpusProperties.sourceField);
 				addStatement.setString(4, corpusTo);
-				if(sourceType == Config::generalInputSourcesParsing) {
+				if(corpusProperties.sourceType == Config::generalInputSourcesParsing) {
 					dateMapTo = crawlservpp::Helper::Json::stringify(dateMap);
 					addStatement.setString(5, dateMapTo);
 				}

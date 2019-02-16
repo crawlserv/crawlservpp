@@ -17,6 +17,7 @@
 #include "../../Main/Data.h"
 #include "../../Helper/DateTime.h"
 #include "../../Helper/Json.h"
+#include "../../Struct/CorpusProperties.h"
 #include "../../Timer/Simple.h"
 #include "../../Wrapper/Database.h"
 
@@ -73,7 +74,7 @@ namespace crawlservpp::Module::Analyzer {
 		sql::PreparedStatement& getPreparedAlgoStatement(unsigned short sqlStatementId);
 
 		// corpus functions
-		void getCorpus(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField, std::string& corpusTo,
+		void getCorpus(const crawlservpp::Struct::CorpusProperties& corpusProperties, std::string& corpusTo,
 				unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo);
 
 	protected:
@@ -96,8 +97,8 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTableFull;
 
 		// corpus helper function
-		bool isCorpusChanged(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField);
-		void createCorpus(unsigned short sourceType, const std::string& sourceTable, const std::string& sourceField,
+		bool isCorpusChanged(const crawlservpp::Struct::CorpusProperties& corpusProperties);
+		void createCorpus(const crawlservpp::Struct::CorpusProperties& corpusProperties,
 				std::string& corpusTo, std::string& dateMapTo, unsigned long& sourcesTo);
 
 	private:
