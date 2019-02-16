@@ -1,7 +1,9 @@
 /*
  * ConfigProperties.h
  *
- * Basic corpus properties (source type, table, field and format).
+ * Basic configuration properties (module, name and configuration).
+ *
+ * NOTE: module will be ignored on update!
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
