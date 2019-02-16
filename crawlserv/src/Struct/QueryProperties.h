@@ -1,7 +1,7 @@
 /*
  * QueryProperties.h
  *
- * Basic query properties (name, text, type and result type)
+ * Basic query properties (name, text, type and result type).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans

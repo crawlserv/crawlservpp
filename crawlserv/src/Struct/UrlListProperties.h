@@ -1,7 +1,7 @@
 /*
  * URLListProperties.h
  *
- * Basic URL list properties (namespace and name)
+ * Basic URL list properties (namespace and name).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
