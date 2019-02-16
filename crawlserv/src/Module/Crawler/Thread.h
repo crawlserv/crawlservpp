@@ -140,6 +140,8 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
 		bool crawlingCheckContentType(const std::pair<unsigned long, std::string>& url, const std::string& contentType);
+		bool crawlingCheckConsistency(const std::pair<unsigned long, std::string>& url, const std::string& content);
+		bool crawlingCheckCanonical(const std::pair<unsigned long, std::string>& url, const crawlservpp::Parsing::XML& doc);
 		bool crawlingCheckContent(const std::pair<unsigned long, std::string>& url, const std::string& content,
 				const crawlservpp::Parsing::XML& doc);
 		void crawlingSaveContent(const std::pair<unsigned long, std::string>& url, unsigned int response, const std::string& type,
