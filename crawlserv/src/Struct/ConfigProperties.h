@@ -1,35 +1,33 @@
 /*
  * ConfigProperties.h
  *
- * Basic configuration properties (module, name and configuration)
- *
- * NOTE: module will be ignored on update!
+ * Basic corpus properties (source type, table, field and format).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
  */
 
-#ifndef STRUCT_CONFIGPROPERTIES_H_
-#define STRUCT_CONFIGPROPERTIES_H_
+#ifndef STRUCT_CORPUSPROPERTIES_H_
+#define STRUCT_CORPUSPROPERTIES_H_
 
 #include <string>
 
 namespace crawlservpp::Struct {
-	struct ConfigProperties {
-		std::string module;
-		std::string name;
-		std::string config;
+	struct ConfigCorpus {
+		unsigned short sourceType;
+		std::string sourceTable;
+		std::string sourceField;
+		std::string sourceFormat;
 
 		// constructors
-		ConfigProperties() {}
-		ConfigProperties(const std::string& setModule, const std::string& setName, const std::string& setConfig) {
-			this->module = setModule;
-			this->name = setName;
-			this->config = setConfig;
+		ConfigCorpus() { this->sourceType = 0; }
+		ConfigCorpus(unsigned short setSourceType, const std::string& setSourceTable, const std::string& setSourceField,
+				const std::string& setSourceFormat) {
+			this->sourceType = setSourceType;
+			this->sourceTable = setSourceTable;
+			this->sourceFormat = setSourceFormat;
 		}
-		ConfigProperties(const std::string& setName, const std::string& setConfig) :
-			ConfigProperties("", setName, setConfig) {}
 	};
 }
 
-#endif /* STRUCT_CONFIGPROPERTIES_H_ */
+#endif /* STRUCT_CORPUSPROPERTIES_H_ */

@@ -1,7 +1,7 @@
 /*
  * WebsiteProperties.h
  *
- * Basic website properties (domain, namespace and name)
+ * Basic website properties (domain, namespace and name).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
