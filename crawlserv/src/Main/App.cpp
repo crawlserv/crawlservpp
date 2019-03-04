@@ -31,9 +31,6 @@ App::App(int argc, char * argv[]) noexcept {
 		sigemptyset(&sigIntHandler.sa_mask);
 		sigIntHandler.sa_flags = 0;
 		sigaction(SIGINT, &sigIntHandler, NULL);
-		sigaction(SIGABRT, &sigIntHandler, NULL);
-		sigaction(SIGFPE, &sigIntHandler, NULL);
-		sigaction(SIGILL, &sigIntHandler, NULL);
 		sigaction(SIGTERM, &sigIntHandler, NULL);
 
 		// show header
@@ -102,15 +99,6 @@ void App::shutdown(int num) {
 	switch(num) {
 	case SIGINT:
 		std::cout << "Interruption request signal (SIGINT)";
-		break;
-	case SIGABRT:
-		std::cout << "Abnormal termination signal (SIGABRT)";
-		break;
-	case SIGFPE:
-		std::cout << "Arithmetic error or overflow signal (SIGFPE)";
-		break;
-	case SIGILL:
-		std::cout << "Illegal instruction signal (SIGILL)";
 		break;
 	case SIGTERM:
 		std::cout << "Termination request signal (SIGTERM)";
