@@ -221,6 +221,7 @@ namespace crawlservpp::Main {
 		bool isTableEmpty(const std::string& tableName);
 		bool isTableExists(const std::string& tableName);
 		bool isColumnExists(const std::string& tableName, const std::string& columnName);
+		std::string getColumnType(const std::string& tableName, const std::string& columnName);
 		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
