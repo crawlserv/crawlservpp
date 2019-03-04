@@ -184,15 +184,20 @@ namespace crawlservpp::Main {
 			std::string _type;				// type of the column
 			std::string _referenceTable;	// name of the referenced table
 			std::string _referenceColumn;	// name of the referenced column
+			bool _indexed;					// is column indexed
 
 			Column(const std::string& name, const std::string& type, const std::string& referenceTable,
-					const std::string& referenceColumn) {
+					const std::string& referenceColumn, bool indexed) {
 				this->_name = name;
 				this->_type = type;
 				this->_referenceTable = referenceTable;
 				this->_referenceColumn = referenceColumn;
+				this->_indexed = indexed;
 			}
-			Column(const std::string& name, const std::string& type) : Column(name, type, "", "") {}
+			Column(const std::string& name, const std::string& type, const std::string& referenceTable,
+					const std::string& referenceColumn) : Column(name, type, referenceTable, referenceColumn, false) {}
+			Column(const std::string& name, const std::string& type, bool indexed) : Column(name, type, "", "", indexed) {}
+			Column(const std::string& name, const std::string& type) : Column(name, type, "", "", false) {}
 		};
 
 		// sub-class for database exceptions
