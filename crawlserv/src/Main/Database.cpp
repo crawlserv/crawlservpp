@@ -1798,8 +1798,14 @@ unsigned long Database::addCustomTable(const CustomTableProperties& properties) 
 				if(!(i->name.empty())) {
 					std::string columnName = properties.type + "_" + i->name;
 					if(this->isColumnExists(properties.fullName, columnName)) {
-						// column does exist: check type
-
+						// column does exist: check types
+						std::string columnType(i->type);
+						std::string targetType(this->getColumnType(properties.fullName, columnName));
+						std::transform(columnType.begin(), columnType.end(), columnType.begin(), ::tolower);
+						std::transform(targetType.begin(), targetType.end(), targetType.begin(), ::tolower);
+						if(columnType != targetType)
+							throw Database::Exception("Main::Database::addCustomTable(): Cannot overwrite column of type \'"
+									+ columnType + "\' with data of type \'" + i->type + "\'");
 					}
 					else {
 						// column does not exist: add column
@@ -3439,19 +3445,52 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 	this->checkConnection();
 
 	try {
-		// create and execute SQL statement
+		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
 				"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS"
 				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"));
 
-		// get result
+		// execute SQL statement
 		sqlStatement->setString(1, this->settings.name);
 		sqlStatement->setString(2, tableName);
 		sqlStatement->setString(3, columnName);
+
+		// get result
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isColumnExists", e); }
+
+	return result;
+}
+
+// get the type of a specific column of a specific table in the database
+std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
+	std::string result;
+
+	// check arguments
+	if(tableName.empty()) throw Database::Exception("Main::Database::getColumnType(): No table name specified");
+	if(columnName.empty()) throw Database::Exception("Main::Database::getColumnType(): No column name specified");
+
+	// check connection
+	this->checkConnection();
+
+	try {
+		// create SQL statement
+		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+				"SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS"
+				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"));
+
+		// execute SQL statement
+		sqlStatement->setString(1, this->settings.name);
+		sqlStatement->setString(2, tableName);
+		sqlStatement->setString(3, columnName);
+
+		// get result
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("DATA_TYPE");
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getColumnType", e); }
 
 	return result;
 }
