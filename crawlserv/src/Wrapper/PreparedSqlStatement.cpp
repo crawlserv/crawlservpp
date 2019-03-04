@@ -22,7 +22,7 @@ PreparedSqlStatement::PreparedSqlStatement(sql::Connection * setConnection, cons
 
 // move constructor
 PreparedSqlStatement::PreparedSqlStatement(PreparedSqlStatement&& other) noexcept
-		: connection(other.connection), ptr(std::move(other.ptr), query(other.query)) {}
+		: connection(other.connection), query(other.query), ptr(std::move(other.ptr)) {}
 
 // destructor: reset prepared SQL statement
 PreparedSqlStatement::~PreparedSqlStatement() {
