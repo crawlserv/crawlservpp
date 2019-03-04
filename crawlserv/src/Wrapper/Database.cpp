@@ -258,7 +258,7 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 	return this->database.isColumnExists(tableName, columnName);
 }
 
-// add a table to the database (the primary key 'id' will be created automatically; WARNING: check existence beforehand!)
+// add a table to the database (the primary key 'id' will be created automatically)
 void Database::createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed) {
 	this->database.createTable(tableName, columns, compressed);
 }
@@ -274,8 +274,8 @@ void Database::compressTable(const std::string& tableName) {
 }
 
 // delete a table from the database if it exists
-void Database::deleteTableIfExists(const std::string& tableName) {
-	this->database.deleteTableIfExists(tableName);
+void Database::deleteTable(const std::string& tableName) {
+	this->database.deleteTable(tableName);
 }
 
 }
