@@ -19,7 +19,7 @@ namespace crawlservpp::Main {
 class Exception : public std::exception {
 public:
 	// constructor
-	Exception(const std::string& description);
+	Exception(const std::string& description) : _description(description) {}
 
 	// getters
 	const char * what() const noexcept;

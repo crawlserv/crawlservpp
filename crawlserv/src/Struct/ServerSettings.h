@@ -21,13 +21,8 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		ServerSettings() { this->logsDeletable = false; this->dataDeletable = false; }
-		ServerSettings(const std::string& setPort, const std::string& setAllowedClients,
-				bool setLogsDeletable, bool setDataDeletable) {
-			this->port = setPort;
-			this->allowedClients = setAllowedClients;
-			this->logsDeletable = setLogsDeletable;
-			this->dataDeletable = setDataDeletable;
-		}
+		ServerSettings(const std::string& setPort, const std::string& setAllowedClients, bool setLogsDeletable, bool setDataDeletable)
+				: port(setPort), allowedClients(setAllowedClients), logsDeletable(setLogsDeletable), dataDeletable(setDataDeletable) {}
 	};
 }
 

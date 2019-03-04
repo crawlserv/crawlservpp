@@ -13,13 +13,10 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: set pointer to NULL
-URIQueryList::URIQueryList() noexcept {
-	this->ptr = NULL;
-}
+URIQueryList::URIQueryList() noexcept : ptr(NULL) {}
 
 // move constructor
-URIQueryList::URIQueryList(URIQueryList&& other) noexcept {
-	this->ptr = other.ptr;
+URIQueryList::URIQueryList(URIQueryList&& other) noexcept : ptr(other.ptr) {
 	other.ptr = NULL;
 }
 

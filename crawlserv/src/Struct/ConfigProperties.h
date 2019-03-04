@@ -23,13 +23,10 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		ConfigProperties() {}
-		ConfigProperties(const std::string& setModule, const std::string& setName, const std::string& setConfig) {
-			this->module = setModule;
-			this->name = setName;
-			this->config = setConfig;
-		}
-		ConfigProperties(const std::string& setName, const std::string& setConfig) :
-			ConfigProperties("", setName, setConfig) {}
+		ConfigProperties(const std::string& setModule, const std::string& setName, const std::string& setConfig)
+				: module(setModule), name(setName), config(setConfig) {}
+		ConfigProperties(const std::string& setName, const std::string& setConfig)
+				: ConfigProperties("", setName, setConfig) {}
 	};
 }
 

@@ -15,35 +15,17 @@
 namespace crawlservpp::Module::Crawler {
 
 // constructor: set default values
-Config::Config() {
-	// crawler entries
-	this->crawlerArchives = false;
+Config::Config() : crawlerArchives(false), crawlerHTMLCanonicalCheck(false), crawlerHTMLConsistencyCheck(false), crawlerLock(300),
+		crawlerLogging(Config::crawlerLoggingDefault), crawlerReCrawl(false), crawlerReCrawlStart(true), crawlerReTries(-1),
+		crawlerRetryArchive(true), crawlerSleepError(5000), crawlerSleepHttp(0), crawlerSleepIdle(500), crawlerSleepMySql(20),
+		crawlerStart("/"), crawlerTiming(false), crawlerWarningsFile(false), crawlerXml(false), customCountersGlobal(true),
+		customReCrawl(true) {
 	this->crawlerArchivesNames.push_back("archives.org");
 	this->crawlerArchivesUrlsMemento.push_back("http://web.archive.org/web/");
 	this->crawlerArchivesUrlsTimemap.push_back("http://web.archive.org/web/timemap/link/");
-	this->crawlerHTMLCanonicalCheck = false;
-	this->crawlerHTMLConsistencyCheck = false;
-	this->crawlerLock = 300;
-	this->crawlerLogging = Config::crawlerLoggingDefault;
-	this->crawlerReCrawl = false;
-	this->crawlerReCrawlStart = true;
-	this->crawlerReTries = -1;
-	this->crawlerRetryArchive = true;
 	this->crawlerRetryHttp.push_back(502);
 	this->crawlerRetryHttp.push_back(503);
 	this->crawlerRetryHttp.push_back(504);
-	this->crawlerSleepError = 5000;
-	this->crawlerSleepHttp = 0;
-	this->crawlerSleepIdle = 500;
-	this->crawlerSleepMySql = 20;
-	this->crawlerStart = "/";
-	this->crawlerTiming = false;
-	this->crawlerWarningsFile = false;
-	this->crawlerXml = false;
-
-	// custom entries
-	this->customCountersGlobal = true;
-	this->customReCrawl = true;
 }
 
 // destructor stub

@@ -13,13 +13,10 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: set pointer to NULL
-CurlList::CurlList() noexcept {
-	this->ptr = NULL;
-}
+CurlList::CurlList() noexcept : ptr(NULL) {}
 
 // move constructor
-CurlList::CurlList(CurlList&& other) noexcept {
-	this->ptr = other.ptr;
+CurlList::CurlList(CurlList&& other) noexcept : ptr(other.ptr) {
 	other.ptr = NULL;
 }
 

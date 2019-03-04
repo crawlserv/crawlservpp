@@ -24,14 +24,8 @@ namespace crawlservpp::Struct {
 		// constructors
 		DatabaseSettings() { this->port = 0; this->compression = false; }
 		DatabaseSettings(const std::string& setHost, unsigned short setPort, const std::string& setUser,
-				const std::string& setPassword, const std::string& setName, bool setCompression) {
-			this->host = setHost;
-			this->port = setPort;
-			this->user = setUser;
-			this->password = setPassword;
-			this->name = setName;
-			this->compression = setCompression;
-		}
+				const std::string& setPassword, const std::string& setName, bool setCompression)
+				: host(setHost), port(setPort), user(setUser), password(setPassword), name(setName), compression(setCompression) {}
 	};
 }
 

@@ -15,47 +15,15 @@
 namespace crawlservpp::Network {
 
 // constructor: set default values
-Config::Config() {
-	this->connectionsMax = 5;
-	this->contentLengthIgnore = false;
-	this->cookies = false;
-	this->cookiesSession = true;
-	this->dnsCacheTimeOut = 60;
-	this->dnsShuffle = false;
-	this->encodingBr = true;
-	this->encodingDeflate = true;
-	this->encodingGZip = true;
-	this->encodingIdentity = true;
-	this->encodingTransfer = false;
-	this->httpVersion = Config::httpVersionV2tls;
-	this->localPort = 0;
-	this->localPortRange = 1;
-	this->proxyTunnelling = false;
-	this->redirect = true;
-	this->redirectMax = 20;
-	this->redirectPost301 = false;
-	this->redirectPost302 = false;
-	this->redirectPost303 = false;
-	this->refererAutomatic = false;
-	this->speedDownLimit = 0;
-	this->speedLowLimit = 0;
-	this->speedLowTime = 0;
-	this->speedUpLimit = 0;
-	this->sslVerifyHost = true;
-	this->sslVerifyPeer = true;
-	this->sslVerifyProxyHost = true;
-	this->sslVerifyProxyPeer = true;
-	this->sslVerifyStatus = false;
-	this->tcpFastOpen = false;
-	this->tcpKeepAlive = false;
-	this->tcpKeepAliveIdle = 60;
-	this->tcpKeepAliveInterval = 60;
-	this->tcpNagle = false;
-	this->timeOut = 300;
-	this->timeOutHappyEyeballs = 0;
-	this->timeOutRequest = 300;
-	this->verbose = false;
-}
+Config::Config() : connectionsMax(5), contentLengthIgnore(false), cookies(false), cookiesSession(true),
+		dnsCacheTimeOut(60), dnsShuffle(false), encodingBr(true), encodingDeflate(true), encodingGZip(true),
+		encodingIdentity(true), encodingTransfer(false), httpVersion(Config::httpVersionV2tls), localPort(0),
+		localPortRange(1), proxyTunnelling(false), redirect(true), redirectMax(20), redirectPost301(false),
+		redirectPost302(false), redirectPost303(false), refererAutomatic(false), speedDownLimit(0),
+		speedLowLimit(0), speedLowTime(0), speedUpLimit(0), sslVerifyHost(true), sslVerifyPeer(true),
+		sslVerifyProxyHost(true), sslVerifyProxyPeer(true), sslVerifyStatus(false), tcpFastOpen(false),
+		tcpKeepAlive(false), tcpKeepAliveIdle(60), tcpKeepAliveInterval(60), tcpNagle(false), timeOut(300),
+		timeOutHappyEyeballs(0), timeOutRequest(300), verbose(false) {}
 
 // destructor stub
 Config::~Config() {}

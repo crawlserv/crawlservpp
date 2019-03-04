@@ -13,13 +13,10 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: set pointer to NULL
-PCREMatch::PCREMatch(pcre2_match_data * setPtr) noexcept {
-	this->ptr = setPtr;
-}
+PCREMatch::PCREMatch(pcre2_match_data * setPtr) noexcept : ptr(setPtr) {}
 
 // move constructor
-PCREMatch::PCREMatch(PCREMatch&& other) noexcept {
-	this->ptr = other.ptr;
+PCREMatch::PCREMatch(PCREMatch&& other) noexcept : ptr(other.ptr) {
 	other.ptr = NULL;
 }
 

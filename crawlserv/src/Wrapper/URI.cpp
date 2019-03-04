@@ -16,9 +16,7 @@ namespace crawlservpp::Wrapper {
 URI::URI() noexcept {}
 
 // move constructor
-URI::URI(URI&& other) noexcept {
-	this->ptr = std::move(other.ptr);
-}
+URI::URI(URI&& other) noexcept : ptr(std::move(other.ptr)) {}
 
 // destructor: free and reset URI structure if necessary
 URI::~URI() {
