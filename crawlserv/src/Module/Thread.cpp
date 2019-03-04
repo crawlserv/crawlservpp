@@ -323,7 +323,29 @@ void Thread::main() {
 
 		try {
 			// notify thread for initialization
-			this->onInit(this->resumed);
+			try {
+				this->onInit(this->resumed);
+			}
+			// handle database exceptions by trying to pause thread
+			catch(const crawlservpp::Main::Database::Exception& dbException) {
+				// release table locks
+				this->database.releaseLocks();
+
+				// log error
+				std::ostringstream logStrStr;
+				logStrStr << "failed - " << dbException.whatStr() << ".";
+				this->log(logStrStr.str());
+
+				// try to set status
+				this->setStatusMessage("ERROR " + dbException.whatStr());
+
+				// try to pause thread
+				this->pauseByThread();
+			}
+			// handle other exception by terminating thread
+			catch(...) {
+				this->running = false;
+			}
 
 			// save new start time point
 			this->startTimePoint = std::chrono::steady_clock::now();
