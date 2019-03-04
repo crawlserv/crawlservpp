@@ -12,23 +12,17 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: create empty statement for std::vector::resize()
-PreparedSqlStatement::PreparedSqlStatement() noexcept {
-	this->connection = NULL;
-}
+PreparedSqlStatement::PreparedSqlStatement() noexcept : connection(NULL) {}
 
 // constructor: create prepared SQL statement for specified connection and SQL query
-PreparedSqlStatement::PreparedSqlStatement(sql::Connection * setConnection, const std::string& sqlQuery) {
-	this->connection = setConnection;
-	this->query = sqlQuery;
+PreparedSqlStatement::PreparedSqlStatement(sql::Connection * setConnection, const std::string& sqlQuery)
+		: connection(setConnection), query(sqlQuery) {
 	this->prepare();
 }
 
 // move constructor
-PreparedSqlStatement::PreparedSqlStatement(PreparedSqlStatement&& other) noexcept {
-	this->connection = other.connection;
-	this->ptr = std::move(other.ptr);
-	this->query = other.query;
-}
+PreparedSqlStatement::PreparedSqlStatement(PreparedSqlStatement&& other) noexcept
+		: connection(other.connection), ptr(std::move(other.ptr), query(other.query)) {}
 
 // destructor: reset prepared SQL statement
 PreparedSqlStatement::~PreparedSqlStatement() {

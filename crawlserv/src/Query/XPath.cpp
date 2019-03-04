@@ -12,10 +12,7 @@
 namespace crawlservpp::Query {
 
 // constructor: set default values
-XPath::XPath(const std::string& xpath, bool textOnly) {
-	this->compiled = false;
-	this->isTextOnly = false;
-
+XPath::XPath(const std::string& xpath, bool textOnly) : compiled(false), isTextOnly(false) {
 	// create new XPath object
 	try {
 		this->query = pugi::xpath_query(xpath.c_str());

@@ -11,11 +11,6 @@
 
 namespace crawlservpp::Main {
 
-// constructor: set description
-Exception::Exception(const std::string& description) {
-	this->_description = description;
-}
-
 // get description as C string
 const char * Exception::what() const noexcept {
 	return this->_description.c_str();

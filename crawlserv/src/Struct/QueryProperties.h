@@ -23,22 +23,11 @@ namespace crawlservpp::Struct {
 		bool textOnly;
 
 		// constructors
-		QueryProperties() {
-			this->resultBool = false;
-			this->resultSingle = false;
-			this->resultMulti = false;
-			this->textOnly = false;
-		}
+		QueryProperties() : resultBool(false), resultSingle(false), resultMulti(false), textOnly(false) {}
 		QueryProperties(const std::string& setName, const std::string& setText, const std::string& setType,
-				bool setResultBool, bool setResultSingle, bool setResultMulti, bool setTextOnly) {
-			this->name = setName;
-			this->text = setText;
-			this->type = setType;
-			this->resultBool = setResultBool;
-			this->resultSingle = setResultSingle;
-			this->resultMulti = setResultMulti;
-			this->textOnly = setTextOnly;
-		}
+				bool setResultBool, bool setResultSingle, bool setResultMulti, bool setTextOnly)
+				: name(setName), text(setText), type(setType), resultBool(setResultBool), resultSingle(setResultSingle),
+				  resultMulti(setResultMulti), textOnly(setTextOnly) {}
 		QueryProperties(const std::string& setText, const std::string& setType,
 				bool setResultBool, bool setResultSingle, bool setResultMulti, bool setTextOnly) :
 					QueryProperties("", setText, setType, setResultBool, setResultSingle, setResultMulti, setTextOnly) {}

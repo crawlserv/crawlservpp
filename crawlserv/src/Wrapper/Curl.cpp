@@ -16,7 +16,7 @@ namespace crawlservpp::Wrapper {
 bool Curl::globalInit = false;
 
 // constructor: set pointer to NULL
-Curl::Curl() {
+Curl::Curl() : ptr(NULL) {
 	// initialize global instance if necessary
 	if(Curl::globalInit) this->localInit = false;
 	else {
@@ -26,7 +26,6 @@ Curl::Curl() {
 	}
 
 	// initialize cURL
-	this->ptr = NULL;
 	this->init();
 }
 

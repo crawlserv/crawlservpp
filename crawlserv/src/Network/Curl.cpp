@@ -14,13 +14,7 @@
 namespace crawlservpp::Network {
 
 // constructor
-Curl::Curl() {
-	// set default values
-	this->curlCode = CURLE_OK;
-	this->responseCode = 0;
-	this->limitedSettings = false;
-	this->config = NULL;
-
+Curl::Curl() : curlCode(CURLE_OK), responseCode(0), limitedSettings(false), config(NULL) {
 	// check pointer to cURL instance
 	if(!(this->curl)) throw Curl::Exception("Could not initialize cURL");
 

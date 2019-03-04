@@ -20,11 +20,8 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		WebsiteProperties() {}
-		WebsiteProperties(const std::string& setDomain, const std::string& setNameSpace, const std::string& setName) {
-			this->domain = setDomain;
-			this->nameSpace = setNameSpace;
-			this->name = setName;
-		}
+		WebsiteProperties(const std::string& setDomain, const std::string& setNameSpace, const std::string& setName)
+				: domain(setDomain), nameSpace(setNameSpace), name(setName) {}
 	};
 }
 
