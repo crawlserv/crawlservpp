@@ -103,12 +103,6 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<QueryStruct> queriesWhiteListUrls;
 		QueryStruct queryCanonicalCheck;
 
-		// timing
-		unsigned long long tickCounter;
-		std::chrono::steady_clock::time_point startTime;
-		std::chrono::steady_clock::time_point pauseTime;
-		std::chrono::steady_clock::time_point idleTime;
-
 		// custom URLs
 		unsigned long startPageId;
 		std::vector<std::pair<unsigned long, std::string>> customPages;
@@ -123,6 +117,12 @@ namespace crawlservpp::Module::Crawler {
 		std::string crawledContent;						// crawled content
 		unsigned long retryCounter;						// number of retries
 		bool archiveRetry;								// archive needs to be retried
+
+		// timing
+		unsigned long long tickCounter;
+		std::chrono::steady_clock::time_point startTime;
+		std::chrono::steady_clock::time_point pauseTime;
+		std::chrono::steady_clock::time_point idleTime;
 		std::chrono::steady_clock::time_point httpTime;	// time of last HTTP request (only used when HTTP sleep is enabled)
 
 		// initializing functions

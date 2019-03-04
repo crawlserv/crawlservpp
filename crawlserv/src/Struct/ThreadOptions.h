@@ -20,11 +20,8 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		ThreadOptions() { this->website = 0; this->urlList = 0; this->config = 0; }
-		ThreadOptions(unsigned long setWebsite, unsigned long setUrlList, unsigned long setConfig) {
-			this->website = setWebsite;
-			this->urlList = setUrlList;
-			this->config = setConfig;
-		}
+		ThreadOptions(unsigned long setWebsite, unsigned long setUrlList, unsigned long setConfig)
+				: website(setWebsite), urlList(setUrlList), config(setConfig) {}
 	};
 }
 

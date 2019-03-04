@@ -26,16 +26,10 @@ namespace crawlservpp::Struct {
 		unsigned long last; // last id
 
 		// constructors
-		ThreadDatabaseEntry() { this->id = 0; this->paused = false; this->last = 0; }
+		ThreadDatabaseEntry() : id(0), paused(false), last(0) {}
 		ThreadDatabaseEntry(unsigned long setId, const std::string& setModule, const std::string& setStatus,
-				bool setPaused,	const ThreadOptions& setOptions, unsigned long setLast) {
-			this->id = setId;
-			this->module = setModule;
-			this->status = setStatus;
-			this->paused = setPaused;
-			this->options = setOptions;
-			this->last = setLast;
-		}
+				bool setPaused,	const ThreadOptions& setOptions, unsigned long setLast)
+				: id(setId), module(setModule), status(setStatus), paused(setPaused), options(setOptions), last(setLast) {}
 	};
 }
 

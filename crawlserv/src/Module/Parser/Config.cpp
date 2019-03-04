@@ -15,18 +15,9 @@
 namespace crawlservpp::Module::Parser {
 
 // constructor: set default values
-Config::Config() {
-	// parser entries
-	this->generalLock = 300;
-	this->generalLogging = Config::generalLoggingDefault;
-	this->generalNewestOnly = true;
-	this->generalParseCustom = false;
-	this->generalReParse = false;
-	this->generalResetOnFinish = false;
-	this->generalSleepIdle = 500;
-	this->generalSleepMySql = 20;
-	this->generalTiming = false;
-}
+Config::Config() : generalLock(300), generalLogging(Config::generalLoggingDefault), generalNewestOnly(true),
+		generalParseCustom(false), generalReParse(false), generalResetOnFinish(false), generalSleepIdle(500),
+		generalSleepMySql(20), generalTimeoutTargetLock(30), generalTiming(false) {}
 
 // destructor stub
 Config::~Config() {}
@@ -134,6 +125,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 						}
 						else if(name == "sleep.mysql") {
 							if(j->value.IsUint64()) this->generalSleepMySql = j->value.GetUint64();
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
+						}
+						else if(name == "timeout.target.lock") {
+							if(j->value.IsUint64()) this->generalTimeoutTargetLock = j->value.GetUint64();
 							else warningsTo.push_back("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}

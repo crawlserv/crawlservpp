@@ -12,6 +12,8 @@
 
 #include "../Database.h"
 
+#include "../../Struct/CustomTableProperties.h"
+#include "../../Struct/TableColumn.h"
 #include "../../Wrapper/Database.h"
 
 #include <cppconn/exception.h>
@@ -30,12 +32,12 @@
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
-
-	// for convenience
-	typedef crawlservpp::Main::Database::Column TableColumn;
-	typedef crawlservpp::Main::Database::Exception DatabaseException;
-
 	class Database : public crawlservpp::Wrapper::Database {
+		// for convenience
+		typedef crawlservpp::Main::Database::Exception DatabaseException;
+		typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
+		typedef crawlservpp::Struct::TableColumn TableColumn;
+
 	public:
 		Database(crawlservpp::Module::Database& dbRef);
 		virtual ~Database();
@@ -52,6 +54,7 @@ namespace crawlservpp::Module::Parser {
 		void setVerbose(bool isVerbose);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields);
+		void setTimeoutTargetLock(unsigned long timeOut);
 
 		// prepare target table and SQL statements for parser
 		void initTargetTable();
@@ -97,6 +100,7 @@ namespace crawlservpp::Module::Parser {
 		bool verbose;
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
+		unsigned long timeoutTargetLock;
 
 		// table names and target table ID
 		std::string urlListTable;

@@ -79,6 +79,14 @@
 			"min": 100,
 			"description": "Time (in ms) to wait each tick when finished.",
 			"simple": false
+		},
+		"timeout.target.lock": {
+			"id": 8,
+			"type": "number",
+			"default": 30,
+			"min": 1,
+			"description": "Time-out (in s) of target table locks.",
+			"simple": false
 		}
 	},
 	"markov-text": {

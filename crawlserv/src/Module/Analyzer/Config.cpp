@@ -15,12 +15,8 @@
 namespace crawlservpp::Module::Analyzer {
 
 // constructor: set default values
-Config::Config() {
-	// general entries
-	this->generalLogging = Config::generalLoggingDefault;
-	this->generalSleepMySql = 20;
-	this->generalSleepWhenFinished = 1000;
-
+Config::Config() : generalLogging(Config::generalLoggingDefault), generalSleepMySql(20), generalSleepWhenFinished(1000),
+		generalTimeoutTargetLock(30), filterDateEnable(false) {
 	// markov-text entries
 	this->markovTextDimension = 3;
 	this->markovTextLength = 400;
@@ -40,9 +36,6 @@ Config::Config() {
 	this->markovTweetSleep = 0;
 	this->markovTweetSpellcheck = true;
 	this->markovTweetTiming = true;
-
-	// filter by date entries
-	this->filterDateEnable = false;
 }
 
 // destructor stub
@@ -166,6 +159,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 						}
 						else if(name == "sleep.when.finished") {
 							if(j->value.IsUint64()) this->generalSleepWhenFinished = j->value.GetUint64();
+							else warningsTo.push_back("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
+						}
+						else if(name == "timeout.target.lock") {
+							if(j->value.IsUint64()) this->generalTimeoutTargetLock = j->value.GetUint64();
 							else warningsTo.push_back("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}

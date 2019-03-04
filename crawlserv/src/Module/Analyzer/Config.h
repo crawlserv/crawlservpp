@@ -47,6 +47,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::string generalResultTable;
 		unsigned long generalSleepMySql;
 		unsigned long generalSleepWhenFinished;
+		unsigned long generalTimeoutTargetLock;
 
 		// markov-text entries
 		unsigned char markovTextDimension;

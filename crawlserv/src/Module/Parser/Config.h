@@ -45,6 +45,7 @@ namespace crawlservpp::Module::Parser {
 		std::vector<unsigned long> generalSkip;
 		unsigned long generalSleepIdle;
 		unsigned long generalSleepMySql;
+		unsigned long generalTimeoutTargetLock;
 		bool generalTiming;
 
 		// parsing entries

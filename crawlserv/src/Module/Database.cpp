@@ -14,8 +14,7 @@ namespace crawlservpp::Module {
 
 // constructor
 Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule)
-		: crawlservpp::Main::Database(dbSettings, dbModule) {
-	this->ps = { 0 };
+		: crawlservpp::Main::Database(dbSettings, dbModule), ps({0}) {
 	if(crawlservpp::Main::Database::driver)
 		crawlservpp::Main::Database::driver->threadInit();
 	else throw(Database::Exception("MySQL driver not loaded"));
@@ -54,7 +53,7 @@ void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 
 	// check prepared SQL statement
 	if(!(this->ps.setThreadStatusMessage))
-		throw Database::Exception("Missing prepared SQL statement for Database::setThreadStatusMessage(...)");
+		throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadStatusMessage(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
 
 	// create status message
@@ -72,12 +71,7 @@ void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 		sqlStatement.setUInt64(3, threadId);
 		sqlStatement.execute();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "setThreadStatusMessage() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw Database::Exception(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadStatusMessage", e); }
 }
 
 // set the progress of a thread to between 0 for 0% and 1 for 100% in database
@@ -87,7 +81,7 @@ void Database::setThreadProgress(unsigned long threadId, float threadProgress) {
 
 	// check prepared SQL statement
 	if(!(this->ps.setThreadProgress))
-		throw Database::Exception("Missing prepared SQL statement for Database::setThreadProgress(...)");
+		throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadProgress(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadProgress);
 
 	try {
@@ -96,12 +90,7 @@ void Database::setThreadProgress(unsigned long threadId, float threadProgress) {
 		sqlStatement.setUInt64(2, threadId);
 		sqlStatement.execute();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "setThreadProgress() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw Database::Exception(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadProgress", e); }
 }
 
 // set last id of thread in database
@@ -110,7 +99,8 @@ void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.setThreadLast)) throw Database::Exception("Missing prepared SQL statement for Database::setThreadLast(...)");
+	if(!(this->ps.setThreadLast))
+		throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadLast(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadLast);
 
 	try {
@@ -119,12 +109,7 @@ void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 		sqlStatement.setUInt64(2, threadId);
 		sqlStatement.execute();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "setThreadLast() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
-		throw Database::Exception(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadLast", e); }
 }
 
 }

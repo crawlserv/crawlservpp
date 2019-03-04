@@ -21,19 +21,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 // constructor A: run previously interrupted algorithm run
 MarkovText::MarkovText(crawlservpp::Main::Database& dbBase, unsigned long analyzerId,
 		const std::string& analyzerStatus, bool analyzerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long analyzerLast)
-	: crawlservpp::Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused, threadOptions, analyzerLast) {
-	this->sources = 0;
-
+		unsigned long analyzerLast) : crawlservpp::Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused,
+				threadOptions, analyzerLast), sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
 // constructor B: start a new algorithm run
 MarkovText::MarkovText(crawlservpp::Main::Database& dbBase,
 		const crawlservpp::Struct::ThreadOptions& threadOptions)
-	: crawlservpp::Module::Analyzer::Thread(dbBase, threadOptions) {
-	this->sources = 0;
-
+	: crawlservpp::Module::Analyzer::Thread(dbBase, threadOptions), sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
@@ -194,11 +190,14 @@ void MarkovText::createDictionary() {
 
 // create text (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator)
 std::string MarkovText::createText() {
+	if(!dictionary.size()) throw std::runtime_error("Dictionary is empty");
+
 	std::string key, first, second, result;
 	size_t next = 0;
 	std::map<std::string, std::vector<std::string> >::iterator it = dictionary.begin();
 	result.reserve(this->config.markovTextLength * 10); // guess average word length
 	int w = this->config.markovTextLength - this->config.markovTextDimension;
+	std::cout << std::endl << dictionary.size() << std::flush;
 	std::advance( it, rand() % dictionary.size() );
 	key = ( *it ).first;
 	result += key;

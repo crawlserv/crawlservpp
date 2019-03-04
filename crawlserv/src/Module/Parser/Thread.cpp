@@ -15,25 +15,15 @@ namespace crawlservpp::Module::Parser {
 Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long parserId, const std::string& parserStatus, bool parserPaused,
 		const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long parserLast)
 	: crawlservpp::Module::Thread(dbBase, parserId, "parser", parserStatus, parserPaused, threadOptions, parserLast),
-	  	  database(this->crawlservpp::Module::Thread::database) {
-	// set default values
-	this->tickCounter = 0;
-	this->idFromUrl = false;
-	this->startTime = std::chrono::steady_clock::time_point::min();
-	this->pauseTime = std::chrono::steady_clock::time_point::min();
-	this->idleTime = std::chrono::steady_clock::time_point::min();
-}
+	  	  database(this->crawlservpp::Module::Thread::database), idFromUrl(false), tickCounter(0),
+		  startTime(std::chrono::steady_clock::time_point::min()), pauseTime(std::chrono::steady_clock::time_point::min()),
+		  idleTime(std::chrono::steady_clock::time_point::min()) {}
 
 // constructor B: start a new parser
 Thread::Thread(crawlservpp::Main::Database& dbBase, const crawlservpp::Struct::ThreadOptions& threadOptions)
-	: crawlservpp::Module::Thread(dbBase, "parser", threadOptions), database(this->crawlservpp::Module::Thread::database) {
-	// set default values
-	this->tickCounter = 0;
-	this->idFromUrl = false;
-	this->startTime = std::chrono::steady_clock::time_point::min();
-	this->pauseTime = std::chrono::steady_clock::time_point::min();
-	this->idleTime = std::chrono::steady_clock::time_point::min();
-}
+	: crawlservpp::Module::Thread(dbBase, "parser", threadOptions), database(this->crawlservpp::Module::Thread::database),
+	  idFromUrl(false), tickCounter(0), startTime(std::chrono::steady_clock::time_point::min()),
+	  pauseTime(std::chrono::steady_clock::time_point::min()), idleTime(std::chrono::steady_clock::time_point::min()) {}
 
 // destructor stub
 Thread::~Thread() {}
@@ -69,6 +59,7 @@ void Thread::onInit(bool resumed) {
 	this->database.setLogging(this->config.generalLogging);
 	this->database.setVerbose(verbose);
 	this->database.setSleepOnError(this->config.generalSleepMySql);
+	this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
 	// initialize target table
 	if(verbose) this->log("initializes target table...");
@@ -139,10 +130,12 @@ void Thread::onTick() {
 
 		// update URL list if possible, release URL lock
 		this->database.lockUrlList();
-		try { if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime) && parsed)
-			this->database.setUrlFinished(this->currentUrl.first); }
+		try {
+			if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime) && parsed)
+				this->database.setUrlFinished(this->currentUrl.first);
+		}
+		// any exception: try to release table lock and re-throw
 		catch(...) {
-			// any exception: try to release table locks and re-throw
 			try { this->database.releaseLocks(); }
 			catch(...) {}
 			throw;
@@ -170,9 +163,12 @@ void Thread::onTick() {
 
 		// remove URL lock if necessary
 		this->database.lockUrlList();
-		try { if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime)) this->database.unLockUrl(this->currentUrl.first); }
+		try {
+			if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime))
+				this->database.unLockUrl(this->currentUrl.first);
+		}
+		// any exception: try to release table lock and re-throw
 		catch(...) {
-			// any exception: try to release table locks and re-throw
 			try { this->database.releaseLocks(); }
 			catch(...) {}
 			throw;
@@ -294,11 +290,11 @@ bool Thread::parsingUrlSelection() {
 	// lock URL list and crawling table
 	this->database.lockUrlListAndCrawledTable();
 
-	// get ID and name of next URL (skip locked URLs)
-	bool skip = false;
-	unsigned long skipped = 0;
-
 	try {
+		// get ID and name of next URL (skip locked URLs)
+		bool skip = false;
+		unsigned long skipped = 0;
+
 		while(true) {
 			if(skip) this->currentUrl = this->database.getNextUrl(skipped);
 			else this->currentUrl = this->database.getNextUrl(this->getLast());
@@ -355,8 +351,8 @@ bool Thread::parsingUrlSelection() {
 			}
 		}
 	}
+	// any exception: try to release table lock and re-throw
 	catch(...) {
-		// any exception: try to release table locks and re-throw
 		try { this->database.releaseLocks(); }
 		catch(...) {}
 		throw;
@@ -364,7 +360,8 @@ bool Thread::parsingUrlSelection() {
 
 	// unlock URL list and write to log if necessary
 	this->database.releaseLocks();
-	if(this->config.generalLogging) for(auto i = logEntries.begin(); i != logEntries.end(); ++i) this->log(*i);
+	if(this->config.generalLogging)
+		for(auto i = logEntries.begin(); i != logEntries.end(); ++i) this->log(*i);
 
 	// set thread status
 	if(result) this->setStatusMessage(this->currentUrl.second);

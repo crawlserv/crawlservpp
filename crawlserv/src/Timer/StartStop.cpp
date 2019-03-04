@@ -12,10 +12,8 @@
 namespace crawlservpp::Timer {
 
 // constructor: start timer
-StartStop::StartStop() {
-	this->timePoint = std::chrono::steady_clock::time_point::min();
-	this->duration = std::chrono::steady_clock::duration::zero();
-}
+StartStop::StartStop() : timePoint(std::chrono::steady_clock::time_point::min()),
+						 duration(std::chrono::steady_clock::duration::zero()) {}
 
 // start timer
 void StartStop::start() {

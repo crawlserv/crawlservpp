@@ -12,9 +12,7 @@
 namespace crawlservpp::Timer {
 
 // constructor: start timer
-Simple::Simple() {
-	this->timePoint = std::chrono::steady_clock::now();
-}
+Simple::Simple() : timePoint(std::chrono::steady_clock::now()) {}
 
 // tick: get time since start (in milliseconds) and restart timer
 unsigned long long Simple::tick() {

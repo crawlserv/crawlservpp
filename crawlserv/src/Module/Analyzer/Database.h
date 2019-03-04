@@ -18,6 +18,8 @@
 #include "../../Helper/DateTime.h"
 #include "../../Helper/Json.h"
 #include "../../Struct/CorpusProperties.h"
+#include "../../Struct/CustomTableProperties.h"
+#include "../../Struct/TableColumn.h"
 #include "../../Timer/Simple.h"
 #include "../../Wrapper/Database.h"
 
@@ -39,17 +41,17 @@
 #include <vector>
 
 namespace crawlservpp::Module::Analyzer {
-
-	// for convenience
-	typedef crawlservpp::Main::Data::Type DataType;
-	typedef crawlservpp::Main::Database::Column TableColumn;
-	typedef crawlservpp::Main::Database::Exception DatabaseException;
-
 	// text maps are used to describe certain parts of a text
 	//  defined by their positions and lengths with certain strings (words, dates etc.)
 	typedef std::tuple<std::string, unsigned long, unsigned long> TextMapEntry;
 
 	class Database : public crawlservpp::Wrapper::Database {
+		// for convenience
+		typedef crawlservpp::Main::Data::Type DataType;
+		typedef crawlservpp::Main::Database::Exception DatabaseException;
+		typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
+		typedef crawlservpp::Struct::TableColumn TableColumn;
+
 	public:
 		Database(crawlservpp::Module::Database& dbRef);
 		virtual ~Database();
@@ -64,6 +66,7 @@ namespace crawlservpp::Module::Analyzer {
 		void setVerbose(bool isVerbose);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
+		void setTimeoutTargetLock(unsigned long timeOut);
 
 		// prepare target table and SQL statements for analyzer
 		void initTargetTable(bool compressed);
@@ -91,6 +94,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
+		unsigned long timeoutTargetLock;
 
 		// table prefix, target table ID and name
 		std::string tablePrefix;
