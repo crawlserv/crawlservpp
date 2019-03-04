@@ -159,7 +159,8 @@ void Thread::onTick() {
 			if(this->config.generalTiming) logStrStr << " in " << timerTotal.totalStr();
 			this->log(logStrStr.str());
 		}
-		else if(this->config.generalLogging && !parsed) this->log("skipped " + this->currentUrl.second);
+		else if(this->config.generalLogging > Config::generalLoggingDefault && !parsed)
+			this->log("skipped " + this->currentUrl.second);
 
 		// remove URL lock if necessary
 		this->database.lockUrlList();
