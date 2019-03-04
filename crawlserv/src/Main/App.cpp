@@ -15,14 +15,11 @@ namespace crawlservpp::Main {
 App * App::instance = NULL;
 
 // constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
-App::App(int argc, char * argv[]) noexcept {
+App::App(int argc, char * argv[]) noexcept : running(true) {
 	try {
 		crawlservpp::Struct::DatabaseSettings dbSettings;
 		crawlservpp::Struct::ServerSettings serverSettings;
 		std::string error;
-
-		// set running state
-		this->running = true;
 
 		// save instance and register signals
 		App::instance = this;
