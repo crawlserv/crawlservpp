@@ -98,8 +98,9 @@ namespace crawlservpp::Module::Parser {
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 
-		// table names
+		// table names and target table ID
 		std::string urlListTable;
+		unsigned long targetTableId;
 		std::string targetTableFull;
 
 	private:
@@ -125,6 +126,7 @@ namespace crawlservpp::Module::Parser {
 		} ps;
 
 		// internal helper functions
+		unsigned long getTargetTableId();
 		unsigned long getEntryId(unsigned long contentId);
 		void updateEntry(unsigned long entryId, const std::string& parsedId, const std::string& parsedDateTime,
 				const std::vector<std::string>& parsedFields);
