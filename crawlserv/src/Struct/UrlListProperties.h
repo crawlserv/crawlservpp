@@ -19,10 +19,7 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		UrlListProperties() {}
-		UrlListProperties(const std::string& setNameSpace, const std::string& setName) {
-			this->nameSpace = setNameSpace;
-			this->name = setName;
-		}
+		UrlListProperties(const std::string& setNameSpace, const std::string& setName) : nameSpace(setNameSpace), name(setName) {}
 	};
 }
 
