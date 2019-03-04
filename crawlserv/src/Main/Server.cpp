@@ -16,21 +16,15 @@ namespace crawlservpp::Main {
 
 // constructor
 Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
-		const crawlservpp::Struct::ServerSettings& serverSettings) : database(databaseSettings, "server") {
-	// set default values
-	this->dbSettings = databaseSettings;
-	this->settings = serverSettings;
-	this->allowed = serverSettings.allowedClients;
-	this->running = true;
-	this->offline = true;
-
+		const crawlservpp::Struct::ServerSettings& serverSettings) : settings(serverSettings), dbSettings(databaseSettings),
+				database(databaseSettings, "server"), allowed(serverSettings.allowedClients), running(true), offline(true) {
 	// create cookies directory if it does not exist
 	if(!std::experimental::filesystem::is_directory("cookies") || !std::experimental::filesystem::exists("cookies")) {
 		std::experimental::filesystem::create_directory("cookies");
 	}
 
 	// connect to database and initialize it
-	this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR);
+	this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SECONDS);
 	this->database.connect();
 	this->database.initializeSql();
 	this->database.prepare();
@@ -337,7 +331,7 @@ unsigned long Server::getUpTime() const {
 }
 
 // perform a server command
-std::string Server::cmd(WebServer::Connection connection, const std::string& msgBody, bool& threadStartedTo) {
+std::string Server::cmd(ConnectionPtr connection, const std::string& msgBody, bool& threadStartedTo) {
 	Server::ServerCommandResponse response;
 
 	if(this->offline) {
@@ -467,7 +461,7 @@ void Server::setStatus(const std::string& statusMsg) {
 }
 
 // handle accept event
-void Server::onAccept(WebServer::Connection connection) {
+void Server::onAccept(ConnectionPtr connection) {
 	// check connection and get IP
 	if(!connection) throw std::runtime_error("Server::onAccept(): No connection specified");
 	std::string ip(WebServer::getIP(connection));
@@ -517,7 +511,7 @@ void Server::onAccept(WebServer::Connection connection) {
 }
 
 // handle request event
-void Server::onRequest(WebServer::Connection connection, const std::string& method,
+void Server::onRequest(ConnectionPtr connection, const std::string& method,
 		const std::string& body) {
 	// check connection and get IP
 	if(!connection) throw std::runtime_error("Server::onRequest(): No connection specified");
@@ -1780,7 +1774,7 @@ Server::ServerCommandResponse Server::cmdDuplicateQuery(const rapidjson::Documen
 }
 
 // server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text): test query on text
-void Server::cmdTestQuery(WebServer::Connection connection, unsigned long index, const std::string& message) {
+void Server::cmdTestQuery(ConnectionPtr connection, unsigned long index, const std::string& message) {
 	Server::ServerCommandResponse response;
 
 	// parse JSON (again for thread)

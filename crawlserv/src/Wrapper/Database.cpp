@@ -86,34 +86,40 @@ std::string Database::getConfiguration(unsigned long configId) {
  * WRAPPERS FOR TABLE INDEXING FUNCTIONS
  */
 
-// add a parsing table to the database if a such a table does not exist already, return parsing table ID
-unsigned long Database::addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	return this->database.addParsingTable(websiteId, listId, tableName);
+// lock custom tables of the specified type
+void Database::lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut) {
+	this->database.lockCustomTables(type, websiteId, listId, timeOut);
 }
 
-// get the ID of a parsing table from the database by its website ID, URL list ID and table name
-unsigned long Database::getParsingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	return this->database.getParsingTableId(websiteId, listId, tableName);
+// add a custom table of the specified type to the database if such a table does not exist already, return table ID
+unsigned long Database::addCustomTable(const CustomTableProperties& properties) {
+	return this->database.addCustomTable(properties);
 }
 
-// add an extracting table to the database if such a table does not exist already, return extracting table ID
-unsigned long Database::addExtractingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	return this->database.addExtractingTable(websiteId, listId, tableName);
+// get custom tables of the specified type for an ID-specified URL list from the database
+std::vector<std::pair<unsigned long, std::string>> Database::getCustomTables(const std::string& type, unsigned long listId) {
+	return this->database.getCustomTables(type, listId);
 }
 
-// get the ID of an extracting table from the database by its website ID, URL list ID and table name
-unsigned long Database::getExtractingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	return this->database.getExtractingTableId(websiteId, listId, tableName);
+// get the ID of a custom table of the specified type from the database by its website ID, URL list ID and table name
+unsigned long Database::getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
+		const std::string& tableName) {
+	return this->database.getCustomTableId(type, websiteId, listId, tableName);
 }
 
-// add an analyzing table to the database if such a table does not exist already, return analyzing table ID
-unsigned long Database::addAnalyzingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	return this->database.addAnalyzingTable(websiteId, listId, tableName);
+// get the name of a custom table of the specified type from the database by its ID
+std::string Database::getCustomTableName(const std::string& type, unsigned long tableId) {
+	return this->database.getCustomTableName(type, tableId);
 }
 
-// get the ID of an analyzing table from the database by its website ID, URL list ID and table name
-unsigned long Database::getAnalyzingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	return this->database.getAnalyzingTableId(websiteId, listId, tableName);
+// delete custom table of the specified type from the database by its ID
+void Database::deleteCustomTable(const std::string& type, unsigned long tableId) {
+	this->database.deleteCustomTable(type, tableId);
+}
+
+// unlock custom tables of the specified type
+void Database::unlockCustomTables(const std::string& type) {
+	this->database.unlockCustomTables(type);
 }
 
 /*
@@ -276,6 +282,11 @@ void Database::compressTable(const std::string& tableName) {
 // delete a table from the database if it exists
 void Database::deleteTable(const std::string& tableName) {
 	this->database.deleteTable(tableName);
+}
+
+// catch SQL exception and re-throw it as ConnectionException or Exception
+void Database::sqlException(const std::string& function, const sql::SQLException& e) {
+	this->database.sqlException(function, e);
 }
 
 }

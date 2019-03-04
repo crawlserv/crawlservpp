@@ -14,43 +14,19 @@ namespace crawlservpp::Module::Crawler {
 // constructor A: run previously interrupted crawler
 Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long crawlerId,
 		const std::string& crawlerStatus, bool crawlerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long crawlerLast)
-			: crawlservpp::Module::Thread(dbBase, crawlerId, "crawler", crawlerStatus, crawlerPaused, threadOptions, crawlerLast),
-			  database(this->crawlservpp::Module::Thread::database) {
-	// set default values
-	this->parser = NULL;
-	this->networkingArchives = NULL;
-	this->tickCounter = 0;
-	this->startPageId = 0;
-	this->manualCounter = 0;
-	this->startCrawled = false;
-	this->manualOff = false;
-	this->archiveRetry = false;
-	this->retryCounter = 0;
-	this->httpTime = std::chrono::steady_clock::time_point::min();
-	this->startTime = std::chrono::steady_clock::time_point::min();
-	this->pauseTime = std::chrono::steady_clock::time_point::min();
-	this->idleTime = std::chrono::steady_clock::time_point::min();
-}
+		unsigned long crawlerLast) : crawlservpp::Module::Thread(dbBase, crawlerId, "crawler", crawlerStatus, crawlerPaused,
+				threadOptions, crawlerLast), database(this->crawlservpp::Module::Thread::database), startPageId(0),
+				manualCounter(0), startCrawled(false), manualOff(false), retryCounter(0), archiveRetry(false), tickCounter(0),
+				startTime(std::chrono::steady_clock::time_point::min()), pauseTime(std::chrono::steady_clock::time_point::min()),
+				idleTime(std::chrono::steady_clock::time_point::min()), httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 // constructor B: start a new crawler
-Thread::Thread(crawlservpp::Main::Database& dbBase,
-		const crawlservpp::Struct::ThreadOptions& threadOptions)
-			: crawlservpp::Module::Thread(dbBase, "crawler", threadOptions),
-			  database(this->crawlservpp::Module::Thread::database) {
-	// set default values
-	this->tickCounter = 0;
-	this->startPageId = 0;
-	this->manualCounter = 0;
-	this->startCrawled = false;
-	this->manualOff = false;
-	this->archiveRetry = false;
-	this->retryCounter = 0;
-	this->httpTime = std::chrono::steady_clock::time_point::min();
-	this->startTime = std::chrono::steady_clock::time_point::min();
-	this->pauseTime = std::chrono::steady_clock::time_point::min();
-	this->idleTime = std::chrono::steady_clock::time_point::min();
-}
+Thread::Thread(crawlservpp::Main::Database& dbBase, const crawlservpp::Struct::ThreadOptions& threadOptions)
+			: crawlservpp::Module::Thread(dbBase, "crawler", threadOptions), database(this->crawlservpp::Module::Thread::database),
+			  startPageId(0), manualCounter(0), startCrawled(false), manualOff(false), retryCounter(0),
+			  archiveRetry(false), tickCounter(0), startTime(std::chrono::steady_clock::time_point::min()),
+			  pauseTime(std::chrono::steady_clock::time_point::min()), idleTime(std::chrono::steady_clock::time_point::min()),
+			  httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 // destructor stub
 Thread::~Thread() {}

@@ -37,11 +37,11 @@
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
-	// for convenience
-	typedef crawlservpp::Parsing::XML::Exception XMLException;
-	typedef crawlservpp::Query::RegEx::Exception RegExException;
-
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
+		// for convenience
+		typedef crawlservpp::Parsing::XML::Exception XMLException;
+		typedef crawlservpp::Query::RegEx::Exception RegExException;
+
 	public:
 		// constructors
 		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,

@@ -51,6 +51,7 @@ void Thread::onInit(bool resumed) {
 	this->database.setLogging(this->config.generalLogging);
 	this->database.setVerbose(verbose);
 	this->database.setSleepOnError(this->config.generalSleepMySql);
+	this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
 	// prepare SQL queries
 	if(verbose) this->log("prepares SQL statements...");

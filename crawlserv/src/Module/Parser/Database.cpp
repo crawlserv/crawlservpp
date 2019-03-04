@@ -12,16 +12,9 @@
 namespace crawlservpp::Module::Parser {
 
 // constructor: initialize values
-Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapper::Database(dbThread) {
-	this->website = 0;
-	this->urlList = 0;
-	this->reparse = false;
-	this->parseCustom = false;
-	this->logging = false;
-	this->verbose = false;
-	this->targetTableId = 0;
-	this->ps = { 0 };
-}
+Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapper::Database(dbThread),
+		website(0), urlList(0), reparse(false), parseCustom(false), logging(false), verbose(false),
+		timeoutTargetLock(0), targetTableId(0), ps({0}) {}
 
 // destructor stub
 Database::~Database() {}
@@ -89,38 +82,38 @@ void Database::setTargetFields(const std::vector<std::string>& fields) {
 	this->targetFieldNames = fields;
 }
 
+// set time-out for target table lock (in seconds)
+void Database::setTimeoutTargetLock(unsigned long timeOut) {
+	this->timeoutTargetLock = timeOut;
+}
+
 // create target table if it does not exists or add custom field columns if they do not exist
 void Database::initTargetTable() {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
 	this->targetTableFull = this->urlListTable + "_parsed_" + this->targetTableName;
 
-	// check for existence of target table
-	if(this->isTableExists(this->targetTableFull)) {
-		// target table exists: add columns that do not exist
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "parsed__" + *i)))
-				this->addColumn(this->targetTableFull, TableColumn("parsed__" + *i, "LONGTEXT"));
-		this->compressTable(this->targetTableFull);
+	// create table properties
+	CustomTableProperties properties("parsed", this->website, this->urlList, this->targetTableName, this->targetTableFull, true);
+	properties.columns.reserve(this->targetFieldNames.size());
+	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
+		if(!(i->empty())) properties.columns.push_back(TableColumn("parsed__" + *i, "LONGTEXT"));
 
-		// get target table ID
-		this->targetTableId = this->getParsingTableId(this->website, this->urlList, this->targetTableName);
+	// lock parsing tables
+	this->lockCustomTables("parsed", this->website, this->urlList, this->timeoutTargetLock);
+
+	try {
+		// add parsing table if it does not exist already
+		this->targetTableId = this->addCustomTable(properties);
 	}
-	else {
-		// create target table
-		std::vector<TableColumn> columns;
-		columns.reserve(3 + this->targetFieldNames.size());
-		columns.push_back(TableColumn("content", "BIGINT UNSIGNED NOT NULL", this->urlListTable + "_crawled", "id"));
-		columns.push_back(TableColumn("parsed_id", "TEXT NOT NULL"));
-		columns.push_back(TableColumn("parsed_datetime", "DATETIME DEFAULT NULL"));
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-			columns.push_back(TableColumn("parsed__" + *i, "LONGTEXT"));
-
-		this->createTable(this->targetTableFull, columns, true);
-
-		// add target table to index and save target table ID
-		this->targetTableId = this->addParsingTable(this->website, this->urlList, this->targetTableName);
+	// any exception: try to unlock parsing tables and re-throw
+	catch(...) {
+		this->unlockCustomTables("parsed");
+		throw;
 	}
+
+	// unlock parsing tables
+	this->unlockCustomTables("parsed");
 }
 
 // prepare SQL statements for parser
@@ -273,12 +266,7 @@ bool Database::isUrlParsed(unsigned long urlId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "isUrlParsed() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::isUrlParsed", e); }
 
 	return result;
 }
@@ -306,12 +294,7 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 			result.second = sqlResultSet->getString("url");
 		}
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getNextUrl() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getNextUrl", e); }
 
 	return result;
 }
@@ -336,12 +319,7 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getUrlPosition() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlPosition", e); }
 
 	return result;
 }
@@ -365,12 +343,7 @@ unsigned long Database::getNumberOfUrls() {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getNumberOfUrls() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getNumberOfUrls", e); }
 
 	return result;
 }
@@ -395,12 +368,7 @@ bool Database::isUrlLockable(unsigned long urlId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "isUrlLockable() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::isUrlLockable", e); }
 
 	return result;
 }
@@ -425,12 +393,7 @@ std::string Database::getUrlLock(unsigned long urlId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("parselock");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getUrlLock() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLock", e); }
 
 	return result;
 }
@@ -456,12 +419,7 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 		// get (and parse) result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "checkUrlLock() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::checkUrlLock", e); }
 
 	return result;
 }
@@ -482,12 +440,7 @@ std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
 		sqlStatement.setUInt64(2, urlId);
 		sqlStatement.execute();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "lockUrl() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
 
 	return this->getUrlLock(urlId);
 }
@@ -507,12 +460,7 @@ void Database::unLockUrl(unsigned long urlId) {
 		sqlStatement.setUInt64(1, urlId);
 		sqlStatement.execute();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "unLockUrl() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::unLockUrl", e); }
 }
 
 // get content ID from parsed ID
@@ -536,12 +484,7 @@ unsigned long Database::getContentIdFromParsedId(const std::string& parsedId) {
 		// get (and parse) result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("content");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getContentIdFromParsedId() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getContentIdFromParsedId", e); }
 
 	return result;
 }
@@ -573,12 +516,7 @@ bool Database::getLatestContent(unsigned long urlId, unsigned long index,
 			success = true;
 		}
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getLatestContent() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getLatestContent", e); }
 
 	if(success) {
 		contentTo = result;
@@ -613,12 +551,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAllContents(unsi
 				result.push_back(std::pair<unsigned long, std::string>(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content")));
 		}
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getAllContents() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getAllContents", e); }
 
 	return result;
 }
@@ -661,6 +594,7 @@ void Database::updateOrAddEntry(unsigned long contentId, const std::string& pars
 		if(entryId) this->updateEntry(entryId, parsedId, parsedDateTime, parsedFields);
 		else this->addEntry(contentId, parsedId, parsedDateTime, parsedFields);
 	}
+	// any exception: try to unlock table and re-throw
 	catch(...) {
 		try { this->unlockTables(); }
 		catch(...) {}
@@ -687,12 +621,7 @@ void Database::setUrlFinished(unsigned long urlId) {
 		sqlStatement.setUInt64(1, urlId);
 		sqlStatement.execute();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "setUrlFinished() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::setUrlFinished", e); }
 }
 
 // helper function: get ID of parsing entry for ID-specified content, return 0 if no entry exists
@@ -715,12 +644,7 @@ unsigned long Database::getEntryId(unsigned long contentId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "getEntryId() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getEntryId", e); }
 
 	return result;
 }
@@ -755,12 +679,7 @@ void Database::updateEntry(unsigned long entryId, const std::string& parsedId,
 		// update parsing table
 		this->updateParsedTable();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "updateEntry() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::updateEntry", e); }
 }
 
 // helper function: add parsing entry for ID-specified content
@@ -793,12 +712,7 @@ void Database::addEntry(unsigned long contentId, const std::string& parsedId, co
 		// update parsing table
 		this->updateParsedTable();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "addEntry() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::addEntry", e); }
 }
 
 // helper function: update parsing table index
@@ -819,12 +733,7 @@ void Database::updateParsedTable() {
 		// execute SQL query
 		sqlStatement.execute();
 	}
-	catch(sql::SQLException &e) {
-		// SQL error
-		std::ostringstream errorStrStr;
-		errorStrStr << "updateParsedTable() SQL Error #" << e.getErrorCode() << " (SQLState " << e.getSQLState() << ") " << e.what();
-		throw DatabaseException(errorStrStr.str());
-	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::updateParsedTable", e); }
 }
 
 }

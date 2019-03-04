@@ -14,6 +14,9 @@
 // do not catch thread exceptions: use only for debugging!
 //#define MODULE_THREAD_DEBUG_NOCATCH
 
+// hard-coded constant
+#define MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS 10
+
 #include "Database.h"
 
 #include "../Main/Database.h"
@@ -75,11 +78,11 @@ namespace crawlservpp::Module {
 		std::string urlListNamespace; // namespace of URL list
 		std::string configuration; // configuration
 
+		// thread helper functions
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
 		void setProgress(float progress);
 		void log(const std::string& entry);
-
 		void allowPausing();
 		void disallowPausing();
 
@@ -125,6 +128,12 @@ namespace crawlservpp::Module {
 		std::chrono::duration<unsigned long> pauseTime;
 		void updateRunTime();
 		void updatePauseTime();
+
+		// internal thread functions
+		void init();
+		void tick();
+		void wait();
+		void clear();
 
 		// pause checker
 		bool isUnpaused() const;

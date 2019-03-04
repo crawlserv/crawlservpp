@@ -14,6 +14,8 @@
 #include "../Main/Data.h"
 #include "../Module/Database.h"
 #include "../Struct/DatabaseSettings.h"
+#include "../Struct/CustomTableProperties.h"
+#include "../Struct/TableColumn.h"
 #include "../Struct/QueryProperties.h"
 
 #include <cppconn/prepared_statement.h>
@@ -25,10 +27,11 @@
 
 namespace crawlservpp::Wrapper {
 
-// for convenience
-typedef crawlservpp::Main::Database::Column TableColumn;
-
 class Database {
+	// for convenience
+	typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
+	typedef crawlservpp::Struct::TableColumn TableColumn;
+
 public:
 	// constructors
 	Database(crawlservpp::Module::Database& dbRef);
@@ -55,13 +58,15 @@ public:
 	// wrapper for configuration function
 	std::string getConfiguration(unsigned long configId);
 
-	// wrappers for table indexing functions
-	unsigned long addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-	unsigned long getParsingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-	unsigned long addExtractingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-	unsigned long getExtractingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-	unsigned long addAnalyzingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-	unsigned long getAnalyzingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	// wrappers for custom table functions
+	void lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
+	unsigned long addCustomTable(const CustomTableProperties& properties);
+	std::vector<std::pair<unsigned long, std::string>> getCustomTables(const std::string& type, unsigned long listId);
+	unsigned long getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
+			const std::string& tableName);
+	std::string getCustomTableName(const std::string& type, unsigned long tableId);
+	void deleteCustomTable(const std::string& type, unsigned long tableId);
+	void unlockCustomTables(const std::string& type);
 
 	// wrapper for table lock function
 	void releaseLocks();
@@ -110,6 +115,9 @@ protected:
 	void addColumn(const std::string& tableName, const TableColumn& column);
 	void compressTable(const std::string& tableName);
 	void deleteTable(const std::string& tableName);
+
+	// wrapper for exception helper function
+	void sqlException(const std::string& function, const sql::SQLException& e);
 };
 
 }

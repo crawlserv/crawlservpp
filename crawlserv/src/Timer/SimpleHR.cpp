@@ -12,9 +12,7 @@
 namespace crawlservpp::Timer {
 
 // constructor: start timer
-SimpleHR::SimpleHR() {
-	this->timePoint = std::chrono::high_resolution_clock::now();
-}
+SimpleHR::SimpleHR() : timePoint(std::chrono::high_resolution_clock::now()) {}
 
 // tick: get time since start (in microseconds) and restart timer
 unsigned long long SimpleHR::tick() {

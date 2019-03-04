@@ -15,14 +15,19 @@
 #ifndef MAIN_DATABASE_H_
 #define MAIN_DATABASE_H_
 
+// hard-coded options
+#define MAIN_DATABASE_LOCK_TIMEOUT_SECONDS 300 // time-out on table lock
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600 // force re-connect if the connection has been idle that long
+#define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5 // sleep on target table lock
 
 #include "Data.h"
 
 #include "../Helper/FileSystem.h"
 #include "../Struct/ConfigProperties.h"
+#include "../Struct/CustomTableProperties.h"
 #include "../Struct/DatabaseSettings.h"
 #include "../Struct/QueryProperties.h"
+#include "../Struct/TableColumn.h"
 #include "../Struct/ThreadDatabaseEntry.h"
 #include "../Struct/ThreadOptions.h"
 #include "../Struct/UrlListProperties.h"
@@ -39,6 +44,7 @@
 
 #include <experimental/filesystem>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -59,6 +65,10 @@
 
 namespace crawlservpp::Main {
 	class Database {
+		// for convenience
+		typedef crawlservpp::Struct::TableColumn TableColumn;
+		typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
+
 	public:
 		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule);
 		virtual ~Database();
@@ -97,9 +107,7 @@ namespace crawlservpp::Main {
 		std::string getWebsiteNamespace(unsigned long websiteId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromUrlList(unsigned long listId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromConfig(unsigned long configId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromParsingTable(unsigned long tableId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromExtractingTable(unsigned long tableId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromAnalyzingTable(unsigned long tableId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromCustomTable(const std::string& type, unsigned long tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
 		void updateWebsite(unsigned long websiteId, const crawlservpp::Struct::WebsiteProperties& websiteProperties);
@@ -110,9 +118,7 @@ namespace crawlservpp::Main {
 		unsigned long addUrlList(unsigned long websiteId, const crawlservpp::Struct::UrlListProperties& listProperties);
 		std::vector<std::pair<unsigned long, std::string>> getUrlLists(unsigned long websiteId);
 		std::string getUrlListNamespace(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromParsingTable(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromExtractingTable(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromAnalyzingTable(unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromCustomTable(const std::string& type, unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
 		void updateUrlList(unsigned long listId, const crawlservpp::Struct::UrlListProperties& listProperties);
 		void deleteUrlList(unsigned long listId);
@@ -134,22 +140,15 @@ namespace crawlservpp::Main {
 		void deleteConfiguration(unsigned long configId);
 		unsigned long duplicateConfiguration(unsigned long configId);
 
-		// table indexing functions
-		unsigned long addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<std::pair<unsigned long, std::string>> getParsingTables(unsigned long listId);
-		std::string getParsingTable(unsigned long tableId);
-		unsigned long getParsingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		void deleteParsingTable(unsigned long tableId);
-		unsigned long addExtractingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<std::pair<unsigned long, std::string>> getExtractingTables(unsigned long listId);
-		std::string getExtractingTable(unsigned long tableId);
-		unsigned long getExtractingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		void deleteExtractingTable(unsigned long tableId);
-		unsigned long addAnalyzingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<std::pair<unsigned long, std::string>> getAnalyzingTables(unsigned long listId);
-		std::string getAnalyzingTable(unsigned long tableId);
-		unsigned long getAnalyzingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		void deleteAnalyzingTable(unsigned long tableId);
+		// custom table functions
+		void lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
+		unsigned long addCustomTable(const CustomTableProperties& properties);
+		std::vector<std::pair<unsigned long, std::string>> getCustomTables(const std::string& type, unsigned long listId);
+		unsigned long getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
+				const std::string& tableName);
+		std::string getCustomTableName(const std::string& type, unsigned long tableId);
+		void deleteCustomTable(const std::string& type, unsigned long tableId);
+		void unlockCustomTables(const std::string& type);
 
 		// table locking function
 		void releaseLocks();
@@ -178,36 +177,19 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFields& data);
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
-		// sub-structure for table columns
-		struct Column {
-			std::string _name;				// name of the column
-			std::string _type;				// type of the column
-			std::string _referenceTable;	// name of the referenced table
-			std::string _referenceColumn;	// name of the referenced column
-			bool _indexed;					// is column indexed
-
-			Column(const std::string& name, const std::string& type, const std::string& referenceTable,
-					const std::string& referenceColumn, bool indexed) {
-				this->_name = name;
-				this->_type = type;
-				this->_referenceTable = referenceTable;
-				this->_referenceColumn = referenceColumn;
-				this->_indexed = indexed;
-			}
-			Column(const std::string& name, const std::string& type, const std::string& referenceTable,
-					const std::string& referenceColumn) : Column(name, type, referenceTable, referenceColumn, false) {}
-			Column(const std::string& name, const std::string& type, bool indexed) : Column(name, type, "", "", indexed) {}
-			Column(const std::string& name, const std::string& type) : Column(name, type, "", "", false) {}
-		};
-
-		// sub-class for database exceptions
-		class Exception : public std::exception {
+		// sub-classes for database exceptions
+		class Exception : public std::exception { // general Database exception
 		public:
 			Exception(const std::string& description) { this->_description = description; }
 			const char * what() const throw() { return this->_description.c_str(); }
 			const std::string& whatStr() const throw() { return this->_description; }
 		private:
 			std::string _description;
+		};
+
+		class ConnectionException : public Exception { // connection exception
+		public:
+			ConnectionException(const std::string& description) : Exception(description) {}
 		};
 
 		// not moveable, not copyable
@@ -239,10 +221,13 @@ namespace crawlservpp::Main {
 		bool isTableEmpty(const std::string& tableName);
 		bool isTableExists(const std::string& tableName);
 		bool isColumnExists(const std::string& tableName, const std::string& columnName);
-		void createTable(const std::string& tableName, const std::vector<Column>& columns, bool compressed);
-		void addColumn(const std::string& tableName, const Column& column);
+		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
+		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
+
+		// exception helper function
+		void sqlException(const std::string& function, const sql::SQLException& e);
 
 	private:
 		// private connection information
@@ -253,6 +238,7 @@ namespace crawlservpp::Main {
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 		crawlservpp::Timer::Simple reconnectTimer;
 #endif
+		std::vector<std::pair<std::string, unsigned long>> customTableLocks;
 
 		// prepared SQL statements
 		std::vector<crawlservpp::Wrapper::PreparedSqlStatement> preparedStatements;

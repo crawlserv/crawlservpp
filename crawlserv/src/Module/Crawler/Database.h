@@ -28,10 +28,10 @@
 #include <utility>
 
 namespace crawlservpp::Module::Crawler {
-	// for convenience
-	typedef crawlservpp::Main::Database::Exception DatabaseException;
-
 	class Database : public crawlservpp::Wrapper::Database {
+		// for convenience
+		typedef crawlservpp::Main::Database::Exception DatabaseException;
+
 	public:
 		// constructor
 		Database(crawlservpp::Module::Database& dbRef);

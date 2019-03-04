@@ -16,8 +16,8 @@
 // for debug-purposes only: write HTTP requests to console
 //#define MAIN_SERVER_DEBUG_HTTP_REQUEST
 
-// server-side sleep on mySQL error (in seconds)
-#define MAIN_SERVER_SLEEP_ON_SQL_ERROR 5
+// hard-coded constant for server-side sleep on mySQL error
+#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SECONDS 5
 
 #include "Database.h"
 #include "WebServer.h"
@@ -63,12 +63,13 @@
 #endif
 
 namespace crawlservpp::Main {
-	// for convenience
-	typedef crawlservpp::Parsing::XML::Exception XMLException;
-	typedef crawlservpp::Query::RegEx::Exception RegExException;
-	typedef crawlservpp::Query::XPath::Exception XPathException;
-
 	class Server final {
+		// for convenience
+		typedef struct mg_connection * ConnectionPtr;
+		typedef crawlservpp::Parsing::XML::Exception XMLException;
+		typedef crawlservpp::Query::RegEx::Exception RegExException;
+		typedef crawlservpp::Query::XPath::Exception XPathException;
+
 	public:
 		// constructor
 		Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings, const crawlservpp::Struct::ServerSettings& serverSettings);
@@ -118,7 +119,7 @@ namespace crawlservpp::Main {
 		std::mutex workersLock;
 
 		// run server command
-		std::string cmd(WebServer::Connection connection, const std::string& msgBody, bool& threadStartedTo);
+		std::string cmd(ConnectionPtr connection, const std::string& msgBody, bool& threadStartedTo);
 
 		// set server status
 		void setStatus(const std::string& statusString);
@@ -148,8 +149,8 @@ namespace crawlservpp::Main {
 		};
 
 		// event handlers
-		void onAccept(WebServer::Connection connection);
-		void onRequest(WebServer::Connection connection, const std::string& method,	const std::string& body);
+		void onAccept(ConnectionPtr connection);
+		void onRequest(ConnectionPtr connection, const std::string& method,	const std::string& body);
 
 		// static helper function for the class
 		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
@@ -195,7 +196,7 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdUpdateQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDeleteQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDuplicateQuery(const rapidjson::Document& json);
-		void cmdTestQuery(WebServer::Connection connection, unsigned long index, const std::string& message);
+		void cmdTestQuery(ConnectionPtr connection, unsigned long index, const std::string& message);
 
 		ServerCommandResponse cmdAddConfig(const rapidjson::Document& json);
 		ServerCommandResponse cmdUpdateConfig(const rapidjson::Document& json);

@@ -24,19 +24,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 // constructor A: run previously interrupted algorithm run
 MarkovTweet::MarkovTweet(crawlservpp::Main::Database& dbBase, unsigned long analyzerId,
 		const std::string& analyzerStatus, bool analyzerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long analyzerLast)
-	: crawlservpp::Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused, threadOptions, analyzerLast) {
-	this->sources = 0;
-
+		unsigned long analyzerLast) : crawlservpp::Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused,
+				threadOptions, analyzerLast), sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
 // constructor B: start a new algorithm run
 MarkovTweet::MarkovTweet(crawlservpp::Main::Database& dbBase,
 		const crawlservpp::Struct::ThreadOptions& threadOptions)
-	: crawlservpp::Module::Analyzer::Thread(dbBase, threadOptions) {
-	this->sources = 0;
-
+	: crawlservpp::Module::Analyzer::Thread(dbBase, threadOptions), sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
