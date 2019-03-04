@@ -30,6 +30,7 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	}
 
 	// connect to database and initialize it
+	this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR);
 	this->database.connect();
 	this->database.initializeSql();
 	this->database.prepare();
