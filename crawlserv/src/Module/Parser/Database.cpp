@@ -19,6 +19,7 @@ Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapp
 	this->parseCustom = false;
 	this->logging = false;
 	this->verbose = false;
+	this->targetTableId = 0;
 	this->ps = { 0 };
 }
 
