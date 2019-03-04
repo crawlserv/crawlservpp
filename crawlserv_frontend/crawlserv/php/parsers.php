@@ -17,7 +17,7 @@ echo "</span>\n";
 <div class="content-block">
 <div class="entry-row">
 <div class="entry-label">Website:</div><div class="entry-input">
-<select class="entry-input" id="website-select" data-m="<?php echo $m; ?>">
+<select class="entry-input" id="website-select" data-m="<?php echo $m; ?>" data-mode="<?php echo $mode; ?>">
 <?php
 $result = $dbConnection->query("SELECT id,name FROM crawlserv_websites ORDER BY name");
 if(!$result) exit("ERROR: Could not get ids and names of websites.");

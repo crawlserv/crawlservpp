@@ -156,30 +156,17 @@ function hasData(obj, key) {
 }
 
 // disable selection fields with redirects
-function disableSelects() {
-	if($("#website-select")) $("#website-select").prop('disabled', 'disabled');
-	if($("#urllist-select")) $("#urllist-select").prop('disabled', 'disabled');
-	if($("#query-select")) $("#query-select").prop('disabled', 'disabled');
-	if($("#config-select")) $("#config-select").prop('disabled', 'disabled');
-	if($("#module-select")) $("#module-select").prop('disabled', 'disabled');
-	if($("#algo-cat-select")) $("#algo-cat-select").prop('disabled', 'disabled');
-	if($("#algo-select")) $("#algo-select").prop('disabled', 'disabled');
-	if($("#content-last")) $("#content-last").prop("disabled", true);
-	if($("#content-url")) $("#content-url").prop("disabled", true);
-	if($("#content-url-text")) $("#content-url-text").prop("disabled", true);
-	if($("#content-next")) $("#content-next").prop("disabled", true);
-	if($("#content-version")) $("#content-version").prop("disabled", true);
+function disableInputs() {
+	$("select").prop('disabled', 'disabled');
+	$("input").prop('disabled', 'disabled');
+	$("textarea").prop('disabled', 'disabled');
 }
 
 // enable selection fields with redirects
-function enableSelects() {
-	if($("#website-select")) $("#website-select").prop('disabled', false);
-	if($("#urllist-select")) $("#urllist-select").prop('disabled', false);
-	if($("#query-select")) $("#query-select").prop('disabled', false);
-	if($("#config-select")) $("#config-select").prop('disabled', false);
-	if($("#module-select")) $("#module-select").prop('disabled', false);
-	if($("#algo-cat-select")) $("#algo-cat-select").prop('disabled', false);
-	if($("#algo-select")) $("#algo-select").prop('disabled', false);
+function enableInputs() {
+	$("select").prop('disabled', 'disabled', false);
+	$("input").prop('disabled', 'disabled', false);
+	$("textarea").prop('disabled', 'disabled', false);
 }
 
 jQuery(function($) {
@@ -229,7 +216,8 @@ jQuery(function($) {
 	
 // CLICK EVENT: navigation
 	$(document).on("click", "a.post-redirect", function() {
-		reload({ "m" : $(this).data("m") });
+		if(typeof $(this).data("mode") !== "undefined") reload({ "m" : $(this).data("m"), "mode" : $(this).data("mode") });
+		else reload({ "m" : $(this).data("m") });
 		return false;
 	});
 
@@ -337,18 +325,19 @@ jQuery(function($) {
 // CHANGE EVENT: website selected
 	$("#website-select").on("change", function() {
 		$(this).blur();
-		disableSelects();
+		disableInputs();
 		var id = parseInt($(this).val(), 10);
 		var args = { "m" : $(this).data("m"), "website" : id };
 		if($("#query-test-text")) args["test"] = $("#query-test-text").val();
-		if(typeof $(this).data("tab") != "undefined") args["tab"] = $(this).data("tab");
+		if(typeof $(this).data("tab") !== "undefined") args["tab"] = $(this).data("tab");
+		if(typeof $(this).data("mode") !== "undefined") args["mode"] = $(this).data("mode");
 		if(typeof config !== "undefined") {
 			if(config.isConfChanged()) {
 				if(confirm("Do you want to discard the changes to your current configuration?"))
 					reload(args);
 				else {
 					$(this).val(prevConfig);
-					enableSelects();
+					enableInputs();
 				}
 			}
 			else reload(args);
@@ -364,15 +353,15 @@ jQuery(function($) {
 	$("#urllist-select").on("change", function() {
 		$(this).blur();
 		
-		if(typeof config !== "undefined") {
-			disableSelects();
+		if(typeof $(this).data("noreload") === "undefined") {
+			disableInputs();
 			var website = parseInt($("#website-select").val(), 10);
 			var id = parseInt($(this).val(), 10);
 			var args = { "m" : $(this).data("m"), "website" : website, "urllist" : id };
-			if(typeof $(this).data("tab") != "undefined") args["tab"] = $(this).data("tab");
+			if(typeof $(this).data("tab") !== "undefined") args["tab"] = $(this).data("tab");
 			reload(args);
 			return false;
-		} // do not reload in "Threads" menu
+		}
 		return true;
 	});
 
@@ -478,7 +467,7 @@ jQuery(function($) {
 // CHANGE EVENT: query selected
 	$("#query-select").on("change", function() {
 		$(this).blur();
-		disableSelects();
+		disableInputs();
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($(this).val(), 10);
 		reload({ "m" : $(this).data("m"), "website" : website, "query" : id, "test" : $("#query-test-text").val() });
@@ -664,7 +653,7 @@ var prevAlgo;
 	$("#config-select").on("change", function() {
 		$(this).blur();
 		if(typeof config !== "undefined") {
-			disableSelects();
+			disableInputs();
 			var website = parseInt($("#website-select").val(), 10);
 			var id = parseInt($(this).val(), 10);
 			if(config.isConfChanged()) {
@@ -672,7 +661,7 @@ var prevAlgo;
 					reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
 				else {
 					$(this).val(prevConfig);
-					enableSelects();
+					enableInputs();
 				}
 			}
 			else reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
@@ -684,7 +673,7 @@ var prevAlgo;
 // CHANGE EVENT: algorithm category selected (for ANALYZERS only)
 	$("#algo-cat-select").on("change", function() {
 		$(this).blur()
-		disableSelects();
+		disableInputs();
 		var website = parseInt($("#website-select").val(), 10);
 		var config_id = parseInt($("#config-select").val(), 10);
 		var id = parseInt($(this).val(), 10);
@@ -694,7 +683,7 @@ var prevAlgo;
 					"algo-cat" : id });
 			else {
 				$(this).val(prevAlgoCat);
-				enableSelects();
+				enableInputs();
 			}
 		}
 		else reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
@@ -705,7 +694,7 @@ var prevAlgo;
 // CHANGE EVENT: algorithm selected (for ANALYZERS only)
 	$("#algo-select").on("change", function() {
 		$(this).blur()
-		disableSelects()
+		disableInputs()
 		var website = parseInt($("#website-select").val(), 10);
 		var config_id = parseInt($("#config-select").val(), 10);
 		var algo_cat = parseInt($("#algo-cat-select").val(), 10);
@@ -716,7 +705,7 @@ var prevAlgo;
 					"algo-cat" : algo_cat, "algo_id:" : id });
 			else {
 				$(this).val(prevAlgoCat);
-				enableSelects();
+				enableInputs();
 			}
 		}
 		else reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
@@ -824,7 +813,7 @@ var prevAlgo;
 // CHANGE EVENT: module selected
 	$("#module-select").on("change", function() {
 		var website = parseInt($("#website-select").val(), 10);
-		disableSelects();
+		disableInputs();
 		reload({ "m" : $(this).data("m"), "website" : website, "module": $(this).val() });
 		return false;
 	});
