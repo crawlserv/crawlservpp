@@ -19,11 +19,9 @@ namespace crawlservpp::Struct {
 		std::string sourceField;
 
 		// constructors
-		CorpusProperties() { this->sourceType = 0; }
-		CorpusProperties(unsigned short setSourceType, const std::string& setSourceTable, const std::string& setSourceField) {
-			this->sourceType = setSourceType;
-			this->sourceTable = setSourceTable;
-		}
+		CorpusProperties() : sourceType(0) {}
+		CorpusProperties(unsigned short setSourceType, const std::string& setSourceTable, const std::string& setSourceField)
+				: sourceType(setSourceType), sourceTable(setSourceTable), sourceField(setSourceField) {}
 	};
 }
 
