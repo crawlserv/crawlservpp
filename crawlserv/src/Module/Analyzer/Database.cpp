@@ -17,6 +17,7 @@ Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapp
 	this->urlList = 0;
 	this->logging = false;
 	this->verbose = false;
+	this->targetTableId = 0;
 	this->ps = { 0 };
 }
 
@@ -109,6 +110,9 @@ void Database::initTargetTable(bool compressed) {
 			}
 		}
 		if(compressed) this->compressTable(this->targetTableFull);
+
+		// get target table ID
+		this->targetTableId = this->getAnalyzingTableId(this->website, this->urlList, this->targetTableName);
 	}
 	else {
 		// table does not exist already: create table
@@ -119,8 +123,8 @@ void Database::initTargetTable(bool compressed) {
 			if(columns.back()._type.empty()) throw DatabaseException("No type for target field \'" + *i + "\' specified");
 		}
 
-		// add target table to index
-		this->addAnalyzedTable(this->website, this->urlList, this->targetTableName);
+		// add target table to index and save target table ID
+		this->targetTableId = this->addAnalyzingTable(this->website, this->urlList, this->targetTableName);
 	}
 }
 

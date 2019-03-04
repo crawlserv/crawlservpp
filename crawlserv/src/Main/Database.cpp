@@ -925,7 +925,7 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_links`");
 
 				// rename parsing tables
-				std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsedTables(liI->first);
+				std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsingTables(liI->first);
 				for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_parsed_"
 							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
@@ -933,7 +933,7 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 				}
 
 				// rename extracting tables
-				std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractedTables(liI->first);
+				std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractingTables(liI->first);
 				for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_extracted_"
 							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
@@ -941,7 +941,7 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 				}
 
 				// rename analyzing tables
-				std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzedTables(liI->first);
+				std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzingTables(liI->first);
 				for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_analyzed_"
 							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
@@ -1417,7 +1417,7 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 					+ "_links` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_links`");
 
 			// rename parsing tables
-			std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsedTables(listId);
+			std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsingTables(listId);
 			for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_parsed_" + taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
@@ -1425,7 +1425,7 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 			}
 
 			// rename extracting tables
-			std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractedTables(listId);
+			std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractingTables(listId);
 			for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_extracted_"	+ taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
@@ -1433,7 +1433,7 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 			}
 
 			// rename analyzing tables
-			std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzedTables(listId);
+			std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzingTables(listId);
 			for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_analyzed_" + taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
@@ -1480,19 +1480,19 @@ void Database::deleteUrlList(unsigned long listId) {
 
 	try {
 		// delete parsing tables
-		std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsedTables(listId);
+		std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsingTables(listId);
 		for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI)
-			this->deleteParsedTable(taI->first);
+			this->deleteParsingTable(taI->first);
 
 		// delete extracting tables
-		std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractedTables(listId);
+		std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractingTables(listId);
 		for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI)
-			this->deleteParsedTable(taI->first);
+			this->deleteParsingTable(taI->first);
 
 		// delete analyzing tables
-		std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzedTables(listId);
+		std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzingTables(listId);
 		for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI)
-			this->deleteParsedTable(taI->first);
+			this->deleteParsingTable(taI->first);
 
 		// check connection
 		this->checkConnection();
@@ -1976,8 +1976,8 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
  * TABLE INDEXING FUNCTIONS
  */
 
-// add a parsed table to the database if a such a table does not exist already
-void Database::addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+// add a parsing table to the database if a such a table does not exist already
+unsigned long Database::addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	// check arguments
 	if(!websiteId) throw Database::Exception("addParsedTable(): No website ID specified");
 	if(!listId) throw Database::Exception("addParsedTable(): No URL list ID specified");
@@ -1989,8 +1989,7 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 	try {
 		// create SQL statement for checking for entry
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT COUNT(id) AS result FROM crawlserv_parsedtables"
-				" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
+				"SELECT id FROM crawlserv_parsedtables WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
 
 		// execute SQL statement for checking for entry
 		sqlStatement->setUInt64(1, websiteId);
@@ -1998,7 +1997,10 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 		sqlStatement->setString(3, tableName);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
 
-		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
+		if(sqlResultSet && sqlResultSet->next())
+			// entry exists: return ID
+			return sqlResultSet->getUInt64("id");
+		else {
 			// entry does not exist already: create SQL statement for adding table
 			sqlStatement.reset(this->connection->prepareStatement(
 					"INSERT INTO crawlserv_parsedtables(website, urllist, name) VALUES (?, ?, ?)"));
@@ -2008,6 +2010,9 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 			sqlStatement->setUInt64(2, listId);
 			sqlStatement->setString(3, tableName);
 			sqlStatement->execute();
+
+			// return ID of newly inserted table
+			return this->getLastInsertedId();
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -2018,8 +2023,8 @@ void Database::addParsedTable(unsigned long websiteId, unsigned long listId, con
 	}
 }
 
-// get parsed tables for an ID-specified URL list from the database
-std::vector<std::pair<unsigned long, std::string>> Database::getParsedTables(unsigned long listId) {
+// get parsing tables for an ID-specified URL list from the database
+std::vector<std::pair<unsigned long, std::string>> Database::getParsingTables(unsigned long listId) {
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
@@ -2055,7 +2060,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getParsedTables(uns
 }
 
 // get the name of a parsing table from the database by its ID
-std::string Database::getParsedTable(unsigned long tableId) {
+std::string Database::getParsingTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
@@ -2086,12 +2091,48 @@ std::string Database::getParsedTable(unsigned long tableId) {
 	return result;
 }
 
+// get the ID of a parsing table from the database by its website ID, URL list ID and table name
+unsigned long Database::getParsingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	unsigned long result = 0;
+
+	// check arguments
+	if(!websiteId) throw Database::Exception("getParsedTableId(): No website ID specified");
+	if(!listId) throw Database::Exception("getParsedTableId(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("getParsedTableId(): No table name specified");
+
+	// check connection
+	this->checkConnection();
+
+	try {
+		// create SQL statement
+		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+				"SELECT id FROM crawlserv_parsedtables WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
+
+		// execute SQL statement
+		sqlStatement->setUInt64(1, websiteId);
+		sqlStatement->setUInt64(2, listId);
+		sqlStatement->setString(3, tableName);
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		std::ostringstream errorStrStr;
+		errorStrStr << "getParsedTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw Database::Exception(errorStrStr.str());
+	}
+
+	return result;
+}
+
 // delete parsing table from the database by its ID
-void Database::deleteParsedTable(unsigned long tableId) {
+void Database::deleteParsingTable(unsigned long tableId) {
 	// get namespace, URL list name and table name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromParsedTable(tableId);
 	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromParsedTable(tableId);
-	std::string tableName = this->getParsedTable(tableId);
+	std::string tableName = this->getParsingTable(tableId);
 
 	// check argument
 	if(!tableId) throw Database::Exception("deleteParsedTable(): No table ID specified");
@@ -2126,8 +2167,8 @@ void Database::deleteParsedTable(unsigned long tableId) {
 	}
 }
 
-// add an extracted table to the database if such a table does not exist already
-void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
+// add an extracting table to the database if such a table does not exist already, return extracting table ID
+unsigned long Database::addExtractingTable(unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
 	// check arguments
 	if(!websiteId) throw Database::Exception("addExtractedTable(): No website ID specified");
@@ -2140,8 +2181,7 @@ void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 	try {
 		// create SQL statement for checking for entry
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT COUNT(id) AS result FROM crawlserv_extractedtables"
-				" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
+				"SELECT id FROM crawlserv_extractedtables WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
 
 		// execute SQL statement for checking for entry
 		sqlStatement->setUInt64(1, websiteId);
@@ -2149,7 +2189,10 @@ void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 		sqlStatement->setString(3, tableName);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
 
-		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
+		if(sqlResultSet && sqlResultSet->next())
+			// return extracting table ID
+			return this->getExtractingTableId(websiteId, listId, tableName);
+		else {
 			// create SQL statement for adding table
 			sqlStatement.reset(this->connection->prepareStatement(
 					"INSERT INTO crawlserv_extractedtables(website, urllist, name) VALUES (?, ?, ?)"));
@@ -2159,6 +2202,9 @@ void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 			sqlStatement->setUInt64(2, listId);
 			sqlStatement->setString(3, tableName);
 			sqlStatement->execute();
+
+			// return newly created extracting table ID
+			return this->getLastInsertedId();
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -2169,8 +2215,8 @@ void Database::addExtractedTable(unsigned long websiteId, unsigned long listId,
 	}
 }
 
-// get the extracted tables for an ID-specified URL list from the database
-std::vector<std::pair<unsigned long, std::string>> Database::getExtractedTables(unsigned long listId) {
+// get the extracting tables for an ID-specified URL list from the database
+std::vector<std::pair<unsigned long, std::string>> Database::getExtractingTables(unsigned long listId) {
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
@@ -2206,7 +2252,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getExtractedTables(
 }
 
 // get the name of an extracting table from the database by its ID
-std::string Database::getExtractedTable(unsigned long tableId) {
+std::string Database::getExtractingTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
@@ -2237,15 +2283,51 @@ std::string Database::getExtractedTable(unsigned long tableId) {
 	return result;
 }
 
+// get the ID of an extracting table from the database by its website ID, URL list ID and table name
+unsigned long Database::getExtractingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	unsigned long result = 0;
+
+	// check arguments
+	if(!websiteId) throw Database::Exception("getExtractedTableId(): No website ID specified");
+	if(!listId) throw Database::Exception("getExtractedTableId(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("getExtractedTableId(): No table name specified");
+
+	// check connection
+	this->checkConnection();
+
+	try {
+		// create SQL statement
+		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+				"SELECT id FROM crawlserv_extractedtables WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
+
+		// execute SQL statement
+		sqlStatement->setUInt64(1, websiteId);
+		sqlStatement->setUInt64(2, listId);
+		sqlStatement->setString(3, tableName);
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		std::ostringstream errorStrStr;
+		errorStrStr << "getExtractedTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw Database::Exception(errorStrStr.str());
+	}
+
+	return result;
+}
+
 // delete an extracting table from the database by its ID
-void Database::deleteExtractedTable(unsigned long tableId) {
+void Database::deleteExtractingTable(unsigned long tableId) {
 	// check argument
 	if(!tableId) throw Database::Exception("deleteExtractedTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromExtractedTable(tableId);
 	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromExtractedTable(tableId);
-	std::string tableName = this->getExtractedTable(tableId);
+	std::string tableName = this->getExtractingTable(tableId);
 
 	// check connection
 	this->checkConnection();
@@ -2277,8 +2359,8 @@ void Database::deleteExtractedTable(unsigned long tableId) {
 	}
 }
 
-// add an analyzed table to the database if such a table does not exist already
-void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
+// add an analyzing table to the database if such a table does not exist already
+unsigned long Database::addAnalyzingTable(unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
 	// check arguments
 	if(!websiteId) throw Database::Exception("addAnalyzedTable(): No website ID specified");
@@ -2291,8 +2373,7 @@ void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 	try {
 		// create SQL statement for checking for entry
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT COUNT(id) AS result FROM crawlserv_analyzedtables"
-				" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
+				"SELECT id FROM crawlserv_analyzedtables WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
 
 		// execute SQL statement for checking for entry
 		sqlStatement->setUInt64(1, websiteId);
@@ -2300,7 +2381,10 @@ void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 		sqlStatement->setString(3, tableName);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
 
-		if(sqlResultSet && sqlResultSet->next() && !(sqlResultSet->getBoolean("result"))) {
+		if(sqlResultSet && sqlResultSet->next())
+			// return ID of analyzing table
+			return sqlResultSet->getUInt64("id");
+		else {
 			// create SQL statement for adding table
 			sqlStatement.reset(this->connection->prepareStatement(
 					"INSERT INTO crawlserv_analyzedtables(website, urllist, name) VALUES (?, ?, ?)"));
@@ -2310,6 +2394,9 @@ void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 			sqlStatement->setUInt64(2, listId);
 			sqlStatement->setString(3, tableName);
 			sqlStatement->execute();
+
+			// return ID of newly created analyzing table
+			return this->getLastInsertedId();
 		}
 	}
 	catch(sql::SQLException &e) {
@@ -2320,8 +2407,8 @@ void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId,
 	}
 }
 
-// get analyzed tables for an ID-specified URL list from the database
-std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzedTables(unsigned long listId) {
+// get analyzing tables for an ID-specified URL list from the database
+std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzingTables(unsigned long listId) {
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
@@ -2357,7 +2444,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzedTables(u
 }
 
 // get the name of an analyzing table from the database by its ID
-std::string Database::getAnalyzedTable(unsigned long tableId) {
+std::string Database::getAnalyzingTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
@@ -2388,15 +2475,51 @@ std::string Database::getAnalyzedTable(unsigned long tableId) {
 	return result;
 }
 
+// get the ID of an analyzing table from the database by its website ID, URL list ID and table name
+unsigned long Database::getAnalyzingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	unsigned long result = 0;
+
+	// check arguments
+	if(!websiteId) throw Database::Exception("getAnalyzedTableId(): No website ID specified");
+	if(!listId) throw Database::Exception("getAnalyzedTableId(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("getAnalyzedTableId(): No table name specified");
+
+	// check connection
+	this->checkConnection();
+
+	try {
+		// create SQL statement
+		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+				"SELECT id FROM crawlserv_analyzedtables WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
+
+		// execute SQL statement
+		sqlStatement->setUInt64(1, websiteId);
+		sqlStatement->setUInt64(2, listId);
+		sqlStatement->setString(3, tableName);
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+	}
+	catch(sql::SQLException &e) {
+		// SQL error
+		std::ostringstream errorStrStr;
+		errorStrStr << "getAnalyzedTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		throw Database::Exception(errorStrStr.str());
+	}
+
+	return result;
+}
+
 // delete an analyzing table from the database by its ID
-void Database::deleteAnalyzedTable(unsigned long tableId) {
+void Database::deleteAnalyzingTable(unsigned long tableId) {
 	// check argument
 	if(!tableId) throw Database::Exception("deleteAnalyzedTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromAnalyzedTable(tableId);
 	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromAnalyzedTable(tableId);
-	std::string tableName = this->getParsedTable(tableId);
+	std::string tableName = this->getParsingTable(tableId);
 
 	// check connection
 	this->checkConnection();

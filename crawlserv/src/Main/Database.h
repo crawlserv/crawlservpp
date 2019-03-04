@@ -135,18 +135,21 @@ namespace crawlservpp::Main {
 		unsigned long duplicateConfiguration(unsigned long configId);
 
 		// table indexing functions
-		void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<std::pair<unsigned long, std::string>> getParsedTables(unsigned long listId);
-		std::string getParsedTable(unsigned long tableId);
-		void deleteParsedTable(unsigned long tableId);
-		void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<std::pair<unsigned long, std::string>> getExtractedTables(unsigned long listId);
-		std::string getExtractedTable(unsigned long tableId);
-		void deleteExtractedTable(unsigned long tableId);
-		void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-		std::vector<std::pair<unsigned long, std::string>> getAnalyzedTables(unsigned long listId);
-		std::string getAnalyzedTable(unsigned long tableId);
-		void deleteAnalyzedTable(unsigned long tableId);
+		unsigned long addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		std::vector<std::pair<unsigned long, std::string>> getParsingTables(unsigned long listId);
+		std::string getParsingTable(unsigned long tableId);
+		unsigned long getParsingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		void deleteParsingTable(unsigned long tableId);
+		unsigned long addExtractingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		std::vector<std::pair<unsigned long, std::string>> getExtractingTables(unsigned long listId);
+		std::string getExtractingTable(unsigned long tableId);
+		unsigned long getExtractingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		void deleteExtractingTable(unsigned long tableId);
+		unsigned long addAnalyzingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		std::vector<std::pair<unsigned long, std::string>> getAnalyzingTables(unsigned long listId);
+		std::string getAnalyzingTable(unsigned long tableId);
+		unsigned long getAnalyzingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+		void deleteAnalyzingTable(unsigned long tableId);
 
 		// table locking function
 		void releaseLocks();

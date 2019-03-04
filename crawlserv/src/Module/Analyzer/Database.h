@@ -92,8 +92,9 @@ namespace crawlservpp::Module::Analyzer {
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
 
-		// table prefix and name
+		// table prefix, target table ID and name
 		std::string tablePrefix;
+		unsigned long targetTableId;
 		std::string targetTableFull;
 
 		// corpus helper function

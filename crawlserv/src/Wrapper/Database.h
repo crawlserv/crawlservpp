@@ -56,9 +56,12 @@ public:
 	std::string getConfiguration(unsigned long configId);
 
 	// wrappers for table indexing functions
-	void addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-	void addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
-	void addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	unsigned long addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	unsigned long getParsingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	unsigned long addExtractingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	unsigned long getExtractingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	unsigned long addAnalyzingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName);
+	unsigned long getAnalyzingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName);
 
 	// wrapper for table lock function
 	void releaseLocks();

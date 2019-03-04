@@ -86,19 +86,34 @@ std::string Database::getConfiguration(unsigned long configId) {
  * WRAPPERS FOR TABLE INDEXING FUNCTIONS
  */
 
-// add a parsed table to the database if a such a table does not exist already
-void Database::addParsedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	this->database.addParsedTable(websiteId, listId, tableName);
+// add a parsing table to the database if a such a table does not exist already, return parsing table ID
+unsigned long Database::addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	return this->database.addParsingTable(websiteId, listId, tableName);
 }
 
-// add an extracted table to the database if such a table does not exist already
-void Database::addExtractedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	this->database.addExtractedTable(websiteId, listId, tableName);
+// get the ID of a parsing table from the database by its website ID, URL list ID and table name
+unsigned long Database::getParsingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	return this->database.getParsingTableId(websiteId, listId, tableName);
 }
 
-// add an analyzed table to the database if such a table does not exist already
-void Database::addAnalyzedTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
-	this->database.addAnalyzedTable(websiteId, listId, tableName);
+// add an extracting table to the database if such a table does not exist already, return extracting table ID
+unsigned long Database::addExtractingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	return this->database.addExtractingTable(websiteId, listId, tableName);
+}
+
+// get the ID of an extracting table from the database by its website ID, URL list ID and table name
+unsigned long Database::getExtractingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	return this->database.getExtractingTableId(websiteId, listId, tableName);
+}
+
+// add an analyzing table to the database if such a table does not exist already, return analyzing table ID
+unsigned long Database::addAnalyzingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	return this->database.addAnalyzingTable(websiteId, listId, tableName);
+}
+
+// get the ID of an analyzing table from the database by its website ID, URL list ID and table name
+unsigned long Database::getAnalyzingTableId(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
+	return this->database.getAnalyzingTableId(websiteId, listId, tableName);
 }
 
 /*

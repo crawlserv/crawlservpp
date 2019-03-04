@@ -101,6 +101,9 @@ void Database::initTargetTable() {
 			if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "parsed__" + *i)))
 				this->addColumn(this->targetTableFull, TableColumn("parsed__" + *i, "LONGTEXT"));
 		this->compressTable(this->targetTableFull);
+
+		// get target table ID
+		this->targetTableId = this->getParsingTableId(this->website, this->urlList, this->targetTableName);
 	}
 	else {
 		// create target table
@@ -114,8 +117,8 @@ void Database::initTargetTable() {
 
 		this->createTable(this->targetTableFull, columns, true);
 
-		// add target table to index
-		this->addParsedTable(this->website, this->urlList, this->targetTableName);
+		// add target table to index and save target table ID
+		this->targetTableId = this->addParsingTable(this->website, this->urlList, this->targetTableName);
 	}
 }
 
