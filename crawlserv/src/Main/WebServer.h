@@ -21,12 +21,12 @@
 namespace crawlservpp::Main {
 
 class WebServer final {
-public:
 	// for convenience
-	typedef struct mg_connection * Connection;
-	typedef std::function<void(Connection)> AcceptCallback;
-	typedef std::function<void(Connection, const std::string&, const std::string&)> RequestCallback;
+	typedef struct mg_connection * ConnectionPtr;
+	typedef std::function<void(ConnectionPtr)> AcceptCallback;
+	typedef std::function<void(ConnectionPtr, const std::string&, const std::string&)> RequestCallback;
 
+public:
 	WebServer();
 	virtual ~WebServer();
 
@@ -40,11 +40,11 @@ public:
 
 	// server functions
 	void poll(int timeOut);
-	void send(Connection connection, unsigned short code, const std::string& type, const std::string& content);
-	void close(Connection connection);
+	void send(ConnectionPtr connection, unsigned short code, const std::string& type, const std::string& content);
+	void close(ConnectionPtr connection);
 
 	// static helper function
-	static std::string getIP(Connection connection);
+	static std::string getIP(ConnectionPtr connection);
 
 	// not moveable, not copyable
 	WebServer(WebServer&) = delete;
@@ -61,8 +61,8 @@ private:
 	RequestCallback onRequest;
 
 	// event handler
-	static void eventHandler(Connection connection, int event, void * data);
-	void eventHandlerInClass(Connection connection, int event, void * data);
+	static void eventHandler(ConnectionPtr connection, int event, void * data);
+	void eventHandlerInClass(ConnectionPtr connection, int event, void * data);
 };
 
 }

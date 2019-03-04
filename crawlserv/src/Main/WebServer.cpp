@@ -25,7 +25,7 @@ WebServer::~WebServer() {
 // initialize embedded web server and bind it to port, throws std::runtime_error
 void WebServer::initHTTP(const std::string& port) {
 	// bind mongoose server to port
-	Connection connection = mg_bind(&(this->eventManager), port.c_str(), WebServer::eventHandler);
+	ConnectionPtr connection = mg_bind(&(this->eventManager), port.c_str(), WebServer::eventHandler);
 	if(!connection) throw std::runtime_error("Could not bind server to port " + port);
 
 	// set user data (i.e. pointer to class)
@@ -57,7 +57,7 @@ void WebServer::poll(int timeOut) {
 }
 
 // send reply, throws std::runtime_error
-void WebServer::send(Connection connection, unsigned short code, const std::string& type, const std::string& content) {
+void WebServer::send(ConnectionPtr connection, unsigned short code, const std::string& type, const std::string& content) {
 	// check connection
 	if(!connection) throw std::runtime_error("WebServer::send(): No connection specified");
 
@@ -72,7 +72,7 @@ void WebServer::send(Connection connection, unsigned short code, const std::stri
 }
 
 // close connection immediately, throws std::runtime_error
-void WebServer::close(Connection connection) {
+void WebServer::close(ConnectionPtr connection) {
 	// check for connection
 	if(!connection) throw std::runtime_error("WebServer::close(): No connection specified");
 
@@ -81,13 +81,13 @@ void WebServer::close(Connection connection) {
 }
 
 // static event handler
-void WebServer::eventHandler(Connection connection, int event, void * data) {
+void WebServer::eventHandler(ConnectionPtr connection, int event, void * data) {
 	if(connection->user_data && data)
 		static_cast<WebServer *>(connection->user_data)->eventHandlerInClass(connection, event, data);
 }
 
 // event handler
-void WebServer::eventHandlerInClass(Connection connection, int event, void * data) {
+void WebServer::eventHandlerInClass(ConnectionPtr connection, int event, void * data) {
 	// get ip
 	std::string ip = WebServer::getIP(connection);
 
@@ -108,7 +108,7 @@ void WebServer::eventHandlerInClass(Connection connection, int event, void * dat
 }
 
 // static helper function: get client IP from connection
-std::string WebServer::getIP(Connection connection) {
+std::string WebServer::getIP(ConnectionPtr connection) {
 	char ip[INET6_ADDRSTRLEN];
 	mg_sock_to_str(connection->sock, ip, INET6_ADDRSTRLEN, MG_SOCK_STRINGIFY_REMOTE | MG_SOCK_STRINGIFY_IP);
 	return std::string(ip);
