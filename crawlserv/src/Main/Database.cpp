@@ -575,7 +575,7 @@ unsigned long Database::addWebsite(const crawlservpp::Struct::WebsiteProperties&
 		result = this->getLastInsertedId();
 
 		// add default URL list
-		this->addUrlList(result, crawlservpp::Struct::UrlListProperties("Default URL list", "default"));
+		this->addUrlList(result, crawlservpp::Struct::UrlListProperties("default", "Default URL list"));
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
@@ -1145,33 +1145,8 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 		sqlStatement->setString(3, listProperties.name);
 		sqlStatement->execute();
 
-		// get id
+		// get ID of newly added URL list
 		result = this->getLastInsertedId();
-
-		// create SQL statement for table creation
-		std::unique_ptr<sql::Statement> createStatement(this->connection->createStatement());
-
-		// execute SQL queries for table creation
-		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace
-				+ "`(id SERIAL, manual BOOLEAN DEFAULT false NOT NULL, url VARCHAR(2000) NOT NULL,"
-				" hash INT UNSIGNED DEFAULT 0 NOT NULL, crawled BOOLEAN DEFAULT false NOT NULL,"
-				" parsed BOOLEAN DEFAULT false NOT NULL, extracted BOOLEAN DEFAULT false NOT NULL,"
-				" analyzed BOOLEAN DEFAULT false NOT NULL, crawllock DATETIME DEFAULT NULL,"
-				" parselock DATETIME DEFAULT NULL, extractlock DATETIME DEFAULT NULL, analyzelock DATETIME DEFAULT NULL,"
-				" PRIMARY KEY(id), INDEX(hash)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace
-				+ "_crawled`(id SERIAL, url BIGINT UNSIGNED NOT NULL,"
-				" crawltime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,"
-				" archived BOOLEAN DEFAULT false NOT NULL, response SMALLINT UNSIGNED NOT NULL DEFAULT 0,"
-				" type TINYTEXT NOT NULL, content LONGTEXT NOT NULL, PRIMARY KEY(id), FOREIGN KEY(url) REFERENCES crawlserv_"
-				+ websiteNamespace + "_" + listProperties.nameSpace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE,"
-				"INDEX(crawltime)) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED");
-		createStatement->execute("CREATE TABLE IF NOT EXISTS `crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace
-				+ "_links`(id SERIAL, fromurl BIGINT UNSIGNED NOT NULL, tourl BIGINT UNSIGNED NOT NULL,"
-				" archived BOOLEAN DEFAULT FALSE NOT NULL, PRIMARY KEY(id), FOREIGN KEY(fromurl) REFERENCES crawlserv_"
-				+ websiteNamespace + "_" + listProperties.nameSpace + "(id) ON UPDATE RESTRICT ON DELETE CASCADE, "
-				"FOREIGN KEY(tourl) REFERENCES crawlserv_" + websiteNamespace + "_"	+ listProperties.nameSpace
-				+ "(id) ON UPDATE RESTRICT ON DELETE CASCADE)");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
@@ -1179,6 +1154,46 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 		errorStrStr << "addUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
+
+	// create table for URL list
+	std::vector<Column> columns;
+	columns.reserve(11);
+	columns.push_back(Column("manual", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.push_back(Column("url", "VARCHAR(2000) NOT NULL"));
+	columns.push_back(Column("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true));
+	columns.push_back(Column("crawled", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.push_back(Column("parsed", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.push_back(Column("extracted", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.push_back(Column("analyzed", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.push_back(Column("crawllock", "DATETIME DEFAULT NULL"));
+	columns.push_back(Column("parselock", "DATETIME DEFAULT NULL"));
+	columns.push_back(Column("extractlock", "DATETIME DEFAULT NULL"));
+	columns.push_back(Column("analyzelock", "DATETIME DEFAULT NULL"));
+	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, columns, false);
+	columns.clear();
+
+	// create table for crawled content
+	columns.reserve(6);
+	columns.push_back(Column("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(Column("crawltime", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL", true));
+	columns.push_back(Column("archived", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.push_back(Column("response", "SMALLINT UNSIGNED NOT NULL DEFAULT 0"));
+	columns.push_back(Column("type", "TINYTEXT NOT NULL"));
+	columns.push_back(Column("content", "LONGTEXT NOT NULL"));
+	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_crawled", columns, true);
+	columns.clear();
+
+	// create table for linkage information
+	columns.reserve(3);
+	columns.push_back(Column("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(Column("fromurl", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(Column("tourl", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_links", columns, false);
+	columns.clear();
 
 	return result;
 }
@@ -1478,43 +1493,32 @@ void Database::deleteUrlList(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
+	// delete parsing tables
+	std::vector<std::pair<unsigned long, std::string>> parsingTables = this->getParsingTables(listId);
+	for(auto taI = parsingTables.begin(); taI != parsingTables.end(); ++taI)
+		this->deleteParsingTable(taI->first);
+
+	// delete extracting tables
+	std::vector<std::pair<unsigned long, std::string>> extractingTables = this->getExtractingTables(listId);
+	for(auto taI = extractingTables.begin(); taI != extractingTables.end(); ++taI)
+		this->deleteExtractingTable(taI->first);
+
+	// delete analyzing tables
+	std::vector<std::pair<unsigned long, std::string>> analyzingTables = this->getAnalyzingTables(listId);
+	for(auto taI = analyzingTables.begin(); taI != analyzingTables.end(); ++taI)
+		this->deleteAnalyzingTable(taI->first);
+
+	// check connection
+	this->checkConnection();
+
 	try {
-		// delete parsing tables
-		std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getParsingTables(listId);
-		for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI)
-			this->deleteParsingTable(taI->first);
-
-		// delete extracting tables
-		std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getExtractingTables(listId);
-		for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI)
-			this->deleteParsingTable(taI->first);
-
-		// delete analyzing tables
-		std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getAnalyzingTables(listId);
-		for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI)
-			this->deleteParsingTable(taI->first);
-
-		// check connection
-		this->checkConnection();
-
 		// create SQL statement for deleting URL list
-		std::unique_ptr<sql::PreparedStatement> deleteStatement(this->connection->prepareStatement(
+		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
 				"DELETE FROM crawlserv_urllists WHERE id = ? LIMIT 1"));
 
 		// execute SQL statement for deleting URL list
-		deleteStatement->setUInt64(1, listId);
-		deleteStatement->execute();
-
-		// create SQL statement for dropping tables
-		std::unique_ptr<sql::Statement> dropStatement(this->connection->createStatement());
-
-		// execute SQL queries for dropping tables
-		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_links`");
-		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawled`");
-		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "`");
-
-		// reset auto-increment if table is empty
-		if(this->isTableEmpty("crawlserv_urllists")) this->resetAutoIncrement("crawlserv_urllists");
+		sqlStatement->setUInt64(1, listId);
+		sqlStatement->execute();
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
@@ -1522,6 +1526,14 @@ void Database::deleteUrlList(unsigned long listId) {
 		errorStrStr << "deleteUrlList() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
+
+	// reset auto-increment if table is empty
+	if(this->isTableEmpty("crawlserv_urllists")) this->resetAutoIncrement("crawlserv_urllists");
+
+	// delete tables
+	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_links");
+	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawled");
+	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
 }
 
 // reset parsing status of ID-specified URL list
@@ -4138,31 +4150,34 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 // add a table to the database (the primary key 'id' will be created automatically)
 void Database::createTable(const std::string& tableName, const std::vector<Column>& columns, bool compressed) {
 	// check arguments
-	if(tableName.empty()) throw Database::Exception("addTable(): No table name specified");
-	if(columns.empty()) throw Database::Exception("addTable(): No columns specified");
+	if(tableName.empty()) throw Database::Exception("createTable(): No table name specified");
+	if(columns.empty()) throw Database::Exception("createTable(): No columns specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL query
-		std::string sqlQuery = "CREATE TABLE IF NOT EXISTS `" + tableName + "`(id SERIAL";
-		std::string references;
+		std::string sqlQuery("CREATE TABLE IF NOT EXISTS `" + tableName + "`(id SERIAL");
+		std::string properties;
 		for(auto i = columns.begin(); i != columns.end(); ++i) {
 			// check values
-			if(i->_name.empty()) throw Database::Exception("addTable(): A column is missing its name");
-			if(i->_type.empty()) throw Database::Exception("addTable(): A column is missing its type");
+			if(i->_name.empty()) throw Database::Exception("createTable(): A column is missing its name");
+			if(i->_type.empty()) throw Database::Exception("createTable(): A column is missing its type");
 
 			// add to SQL query
 			sqlQuery += ", `" + i->_name + "` " + i->_type;
+
+			// add indices and references
+			if(i->_indexed) properties += ", INDEX(`" + i->_name + "`)";
 			if(!(i->_referenceTable.empty())) {
 				if(i->_referenceColumn.empty())
-					throw Database::Exception("addTable(): A column reference is missing its source column name");
-				references += ", FOREIGN KEY(`" + i->_name + "`) REFERENCES `" + i->_referenceTable + "`(`" + i->_referenceColumn
+					throw Database::Exception("createTable(): A column reference is missing its source column name");
+				properties += ", FOREIGN KEY(`" + i->_name + "`) REFERENCES `" + i->_referenceTable + "`(`" + i->_referenceColumn
 						+ "`) ON UPDATE RESTRICT ON DELETE CASCADE";
 			}
 		}
-		sqlQuery += ", PRIMARY KEY(id)" + references + ") CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+		sqlQuery += ", PRIMARY KEY(id)" + properties + ") CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
 		if(compressed) sqlQuery += ", ROW_FORMAT=COMPRESSED";
 
 		// create SQL statement
@@ -4174,7 +4189,7 @@ void Database::createTable(const std::string& tableName, const std::vector<Colum
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "addTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "createTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -4260,7 +4275,7 @@ void Database::deleteTable(const std::string& tableName) {
 		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute("DELETE TABLE IF EXISTS `" + tableName + "`");
+		sqlStatement->execute("DROP TABLE IF EXISTS `" + tableName + "`");
 	}
 	catch(sql::SQLException &e) {
 		// SQL error
