@@ -16,6 +16,9 @@
 // for debug-purposes only: write HTTP requests to console
 //#define MAIN_SERVER_DEBUG_HTTP_REQUEST
 
+// server-side sleep on mySQL error (in seconds)
+#define MAIN_SERVER_SLEEP_ON_SQL_ERROR 5
+
 #include "Database.h"
 #include "WebServer.h"
 
