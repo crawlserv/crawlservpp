@@ -304,7 +304,7 @@ void Thread::init() {
 	try {
 		this->onInit(this->resumed);
 	}
-	// handle exceptions by trying to log, set status and pause thread
+	// handle exceptions by trying to log and set status
 	catch(const std::exception& e) {
 		// release table locks
 		this->database.releaseLocks();
@@ -317,8 +317,8 @@ void Thread::init() {
 		// try to set status
 		this->setStatusMessage("ERROR " + std::string(e.what()));
 
-		// try to pause thread
-		this->pauseByThread();
+		// interrupt thread
+		this->interrupted = true;
 	}
 
 	// save new start time point
@@ -435,7 +435,7 @@ void Thread::main() {
 		this->init();
 
 		// run thread
-		while(this->running) {
+		while(this->running && !(this->interrupted)) {
 			// check pause state
 			if(this->paused) {
 				// thread paused: wait for pause to be released
