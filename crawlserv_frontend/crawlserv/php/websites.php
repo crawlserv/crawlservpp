@@ -146,35 +146,35 @@ if($website) {
         $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."`");
         if(!$result) exit("ERROR: Could not get size of URL list from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
-        $urllistSize = $row[0];
+        if($row) $urllistSize = $row[0];
         $result->close();
         
         // get number of crawled URLs
         $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE crawled = TRUE");
         if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
-        $urllistCrawled = $row[0];
+        if($row) $urllistCrawled = $row[0];
         $result->close();
         
         // get number of parsed URLs
         $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE parsed = TRUE");
         if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
-        $urllistParsed = $row[0];
+        if($row) $urllistParsed = $row[0];
         $result->close();
         
         // get number of extracted URLs
         $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE extracted = TRUE");
         if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
-        $urllistExtracted = $row[0];
+        if($row) $urllistExtracted = $row[0];
         $result->close();
         
         // get number of analyzed URLs
         $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE analyzed = TRUE");
         if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
         $row = $result->fetch_row();
-        $urllistAnalyzed = $row[0];
+        if($row) $urllistAnalyzed = $row[0];
         $result->close();
         
         // get last update of selected URL list
@@ -246,7 +246,7 @@ if($website) {
             echo " (";
             echo number_format((float) $urllistCrawled / $urllistSize * 100, 1);
             echo "%";
-            if($urllistUpdate) {
+            if(isset($urllistUpdate) && $urllistUpdate) {
                 echo ", ";
                 echo time_elapsed_string($urllistUpdate);
             }
@@ -263,7 +263,7 @@ if($website) {
             echo " (";
             echo number_format((float) $urllistParsed / $urllistSize * 100, 1);
             echo "%";
-            if($parsedUpdate) {
+            if(isset($parsedUpdate) && $parsedUpdate) {
                 echo ", ";
                 echo time_elapsed_string($parsedUpdate);
             }
@@ -280,7 +280,7 @@ if($website) {
             echo " (";
             echo number_format((float) $urllistExtracted / $urllistParsed * 100, 1);
             echo "%";
-            if($extractedUpdate) {
+            if(isset($extractedUpdate) && $extractedUpdate) {
                 echo ", ";
                 echo time_elapsed_string($extractedUpdate);
             }
@@ -297,7 +297,7 @@ if($website) {
             echo " (";
             echo number_format((float) $urllistAnalyzed / $urllistParsed * 100, 1);
             echo "%";
-            if($analyzedUpdate) {
+            if(isset($analyzedUpdate) && $analyzedUpdate) {
                 echo ", ";
                 echo time_elapsed_string($analyzedUpdate);
             }

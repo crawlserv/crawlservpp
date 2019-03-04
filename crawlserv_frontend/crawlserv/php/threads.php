@@ -114,7 +114,7 @@ if(isset($website)) {
 <div class="action-link-box">
 <div class="action-link">
 <?php if(isset($website))
-    echo "<a href=\"#\" class=\"action-link thread-start\" data-module=\"$module\">Start thread</a>\n"; ?>
+    echo "<a href=\"#\" class=\"action-link thread-start\" data-module=\"$module\" data-noreload>Start thread</a>\n"; ?>
 </div>
 </div>
 </div>
