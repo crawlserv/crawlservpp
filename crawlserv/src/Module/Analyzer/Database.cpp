@@ -190,8 +190,6 @@ void Database::prepare() {
 
 // prepare SQL statements for algorithm, throws crawlservpp::Main::Database::Exception
 void Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo) {
-
-
 	// check connection to database
 	this->checkConnection();
 
