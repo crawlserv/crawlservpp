@@ -97,9 +97,9 @@ namespace crawlservpp::Main {
 		std::string getWebsiteNamespace(unsigned long websiteId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromUrlList(unsigned long listId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromConfig(unsigned long configId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromParsedTable(unsigned long tableId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromExtractedTable(unsigned long tableId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromAnalyzedTable(unsigned long tableId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromParsingTable(unsigned long tableId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromExtractingTable(unsigned long tableId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromAnalyzingTable(unsigned long tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
 		void updateWebsite(unsigned long websiteId, const crawlservpp::Struct::WebsiteProperties& websiteProperties);
@@ -110,9 +110,9 @@ namespace crawlservpp::Main {
 		unsigned long addUrlList(unsigned long websiteId, const crawlservpp::Struct::UrlListProperties& listProperties);
 		std::vector<std::pair<unsigned long, std::string>> getUrlLists(unsigned long websiteId);
 		std::string getUrlListNamespace(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromParsedTable(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromExtractedTable(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromAnalyzedTable(unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromParsingTable(unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromExtractingTable(unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromAnalyzingTable(unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
 		void updateUrlList(unsigned long listId, const crawlservpp::Struct::UrlListProperties& listProperties);
 		void deleteUrlList(unsigned long listId);
@@ -237,7 +237,7 @@ namespace crawlservpp::Main {
 		void createTable(const std::string& tableName, const std::vector<Column>& columns, bool compressed);
 		void addColumn(const std::string& tableName, const Column& column);
 		void compressTable(const std::string& tableName);
-		void deleteTableIfExists(const std::string& tableName);
+		void deleteTable(const std::string& tableName);
 
 	private:
 		// private connection information

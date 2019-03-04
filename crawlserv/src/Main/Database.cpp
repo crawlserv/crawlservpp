@@ -718,11 +718,11 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(un
 }
 
 // get ID and namespace of website from the database by parsing table ID
-std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromParsedTable(unsigned long tableId) {
+std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromParsingTable(unsigned long tableId) {
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromParsingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -742,7 +742,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromParsedTab
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getWebsiteNamespaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+		errorStrStr << "getWebsiteNamespaceFromParsingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
@@ -751,11 +751,11 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromParsedTab
 }
 
 // get ID and namespace of website from the database by extracting table ID
-std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromExtractedTable(unsigned long tableId) {
+std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromExtractingTable(unsigned long tableId) {
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromExtractingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -775,7 +775,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromExtracted
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getWebsiteNamespaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+		errorStrStr << "getWebsiteNamespaceFromExtractingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
@@ -784,11 +784,11 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromExtracted
 }
 
 // get ID and namespace of website from the database by analyzing table ID
-std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromAnalyzedTable(unsigned long tableId) {
+std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromAnalyzingTable(unsigned long tableId) {
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getWebsiteNamespaceFromAnalyzingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -808,7 +808,7 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromAnalyzedT
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getWebsiteNamespaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+		errorStrStr << "getWebsiteNamespaceFromAnalyzingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
@@ -1136,14 +1136,14 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 
 	try {
 		// create SQL statement for adding URL list
-		std::unique_ptr<sql::PreparedStatement> addStatement(this->connection->prepareStatement(
+		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
 				"INSERT INTO crawlserv_urllists(website, namespace, name) VALUES (?, ?, ?)"));
 
 		// execute SQL query for adding URL list
-		addStatement->setUInt64(1, websiteId);
-		addStatement->setString(2, listProperties.nameSpace);
-		addStatement->setString(3, listProperties.name);
-		addStatement->execute();
+		sqlStatement->setUInt64(1, websiteId);
+		sqlStatement->setString(2, listProperties.nameSpace);
+		sqlStatement->setString(3, listProperties.name);
+		sqlStatement->execute();
 
 		// get id
 		result = this->getLastInsertedId();
@@ -1252,11 +1252,11 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 }
 
 // get ID and namespace of URL list from the database using a parsing table ID
-std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromParsedTable(unsigned long tableId) {
+std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromParsingTable(unsigned long tableId) {
 	unsigned long urlListId = 0;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getUrlListNamespaceFromParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getUrlListNamespaceFromParsingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -1276,7 +1276,7 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromParsedTab
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getUrlListNamespaceFromParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+		errorStrStr << "getUrlListNamespaceFromParsingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
@@ -1285,11 +1285,11 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromParsedTab
 }
 
 // get ID and namespace of URL list from the database using an extracting table ID
-std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromExtractedTable(unsigned long tableId) {
+std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromExtractingTable(unsigned long tableId) {
 	unsigned long urlListId = 0;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getUrlListNamespaceFromExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getUrlListNamespaceFromExtractingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -1309,7 +1309,7 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromExtracted
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getUrlListNamespaceFromExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+		errorStrStr << "getUrlListNamespaceFromExtractingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
@@ -1318,11 +1318,11 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromExtracted
 }
 
 // get ID and namespace of URL list from the database using an analyzing table ID
-std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromAnalyzedTable(unsigned long tableId) {
+std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromAnalyzingTable(unsigned long tableId) {
 	unsigned long urlListId = 0;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getUrlListNamespaceFromAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getUrlListNamespaceFromAnalyzingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -1342,7 +1342,7 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromAnalyzedT
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getUrlListNamespaceFromAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
+		errorStrStr << "getUrlListNamespaceFromAnalyzingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState()
 				<< "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
@@ -1979,9 +1979,9 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 // add a parsing table to the database if a such a table does not exist already
 unsigned long Database::addParsingTable(unsigned long websiteId, unsigned long listId, const std::string& tableName) {
 	// check arguments
-	if(!websiteId) throw Database::Exception("addParsedTable(): No website ID specified");
-	if(!listId) throw Database::Exception("addParsedTable(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("addParsedTable(): No table name specified");
+	if(!websiteId) throw Database::Exception("addParsingTable(): No website ID specified");
+	if(!listId) throw Database::Exception("addParsingTable(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("addParsingTable(): No table name specified");
 
 	// check connection
 	this->checkConnection();
@@ -2018,7 +2018,7 @@ unsigned long Database::addParsingTable(unsigned long websiteId, unsigned long l
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "addParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addParsingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -2028,7 +2028,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getParsingTables(un
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
-	if(!listId) throw Database::Exception("getParsedTables(): No URL list ID specified");
+	if(!listId) throw Database::Exception("getParsingTables(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2052,7 +2052,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getParsingTables(un
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getParsedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getParsingTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2064,7 +2064,7 @@ std::string Database::getParsingTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getParsingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2084,7 +2084,7 @@ std::string Database::getParsingTable(unsigned long tableId) {
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getParsingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2096,9 +2096,9 @@ unsigned long Database::getParsingTableId(unsigned long websiteId, unsigned long
 	unsigned long result = 0;
 
 	// check arguments
-	if(!websiteId) throw Database::Exception("getParsedTableId(): No website ID specified");
-	if(!listId) throw Database::Exception("getParsedTableId(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("getParsedTableId(): No table name specified");
+	if(!websiteId) throw Database::Exception("getParsingTableId(): No website ID specified");
+	if(!listId) throw Database::Exception("getParsingTableId(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("getParsingTableId(): No table name specified");
 
 	// check connection
 	this->checkConnection();
@@ -2120,7 +2120,7 @@ unsigned long Database::getParsingTableId(unsigned long websiteId, unsigned long
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getParsedTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getParsingTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2130,12 +2130,12 @@ unsigned long Database::getParsingTableId(unsigned long websiteId, unsigned long
 // delete parsing table from the database by its ID
 void Database::deleteParsingTable(unsigned long tableId) {
 	// get namespace, URL list name and table name
-	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromParsedTable(tableId);
-	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromParsedTable(tableId);
+	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromParsingTable(tableId);
+	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromParsingTable(tableId);
 	std::string tableName = this->getParsingTable(tableId);
 
 	// check argument
-	if(!tableId) throw Database::Exception("deleteParsedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("deleteParsingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2162,7 +2162,7 @@ void Database::deleteParsingTable(unsigned long tableId) {
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "deleteParsedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteParsingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -2171,9 +2171,9 @@ void Database::deleteParsingTable(unsigned long tableId) {
 unsigned long Database::addExtractingTable(unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
 	// check arguments
-	if(!websiteId) throw Database::Exception("addExtractedTable(): No website ID specified");
-	if(!listId) throw Database::Exception("addExtractedTable(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("addExtractedTable(): No table name specified");
+	if(!websiteId) throw Database::Exception("addExtractingTable(): No website ID specified");
+	if(!listId) throw Database::Exception("addExtractingTable(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("addExtractingTable(): No table name specified");
 
 	// check connection
 	this->checkConnection();
@@ -2210,7 +2210,7 @@ unsigned long Database::addExtractingTable(unsigned long websiteId, unsigned lon
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "addExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addExtractingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -2220,7 +2220,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getExtractingTables
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
-	if(!listId) throw Database::Exception("getExtractedTables(): No URL list ID specified");
+	if(!listId) throw Database::Exception("getExtractingTables(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2244,7 +2244,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getExtractingTables
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getExtractedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getExtractingTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2256,7 +2256,7 @@ std::string Database::getExtractingTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getExtractingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2276,7 +2276,7 @@ std::string Database::getExtractingTable(unsigned long tableId) {
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getExtractingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2288,9 +2288,9 @@ unsigned long Database::getExtractingTableId(unsigned long websiteId, unsigned l
 	unsigned long result = 0;
 
 	// check arguments
-	if(!websiteId) throw Database::Exception("getExtractedTableId(): No website ID specified");
-	if(!listId) throw Database::Exception("getExtractedTableId(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("getExtractedTableId(): No table name specified");
+	if(!websiteId) throw Database::Exception("getExtractingTableId(): No website ID specified");
+	if(!listId) throw Database::Exception("getExtractingTableId(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("getExtractingTableId(): No table name specified");
 
 	// check connection
 	this->checkConnection();
@@ -2312,7 +2312,7 @@ unsigned long Database::getExtractingTableId(unsigned long websiteId, unsigned l
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getExtractedTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getExtractingTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2322,11 +2322,11 @@ unsigned long Database::getExtractingTableId(unsigned long websiteId, unsigned l
 // delete an extracting table from the database by its ID
 void Database::deleteExtractingTable(unsigned long tableId) {
 	// check argument
-	if(!tableId) throw Database::Exception("deleteExtractedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("deleteExtractingTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
-	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromExtractedTable(tableId);
-	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromExtractedTable(tableId);
+	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromExtractingTable(tableId);
+	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromExtractingTable(tableId);
 	std::string tableName = this->getExtractingTable(tableId);
 
 	// check connection
@@ -2354,7 +2354,7 @@ void Database::deleteExtractingTable(unsigned long tableId) {
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "deleteExtractedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteExtractingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -2363,9 +2363,9 @@ void Database::deleteExtractingTable(unsigned long tableId) {
 unsigned long Database::addAnalyzingTable(unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
 	// check arguments
-	if(!websiteId) throw Database::Exception("addAnalyzedTable(): No website ID specified");
-	if(!listId) throw Database::Exception("addAnalyzedTable(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("addAnalyzedTable(): No table name specified");
+	if(!websiteId) throw Database::Exception("addAnalyzingTable(): No website ID specified");
+	if(!listId) throw Database::Exception("addAnalyzingTable(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("addAnalyzingTable(): No table name specified");
 
 	// check connection
 	this->checkConnection();
@@ -2402,7 +2402,7 @@ unsigned long Database::addAnalyzingTable(unsigned long websiteId, unsigned long
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "addAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "addAnalyzingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -2412,7 +2412,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzingTables(
 	std::vector<std::pair<unsigned long, std::string>> result;
 
 	// check argument
-	if(!listId) throw Database::Exception("getAnalyzedTable(): No table ID specified");
+	if(!listId) throw Database::Exception("getAnalyzingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2436,7 +2436,7 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAnalyzingTables(
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getAnalyzedTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getAnalyzingTables() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2448,7 +2448,7 @@ std::string Database::getAnalyzingTable(unsigned long tableId) {
 	std::string result;
 
 	// check argument
-	if(!tableId) throw Database::Exception("getAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("getAnalyzingTable(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2468,7 +2468,7 @@ std::string Database::getAnalyzingTable(unsigned long tableId) {
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getAnalyzingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2480,9 +2480,9 @@ unsigned long Database::getAnalyzingTableId(unsigned long websiteId, unsigned lo
 	unsigned long result = 0;
 
 	// check arguments
-	if(!websiteId) throw Database::Exception("getAnalyzedTableId(): No website ID specified");
-	if(!listId) throw Database::Exception("getAnalyzedTableId(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("getAnalyzedTableId(): No table name specified");
+	if(!websiteId) throw Database::Exception("getAnalyzingTableId(): No website ID specified");
+	if(!listId) throw Database::Exception("getAnalyzingTableId(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("getAnalyzingTableId(): No table name specified");
 
 	// check connection
 	this->checkConnection();
@@ -2504,7 +2504,7 @@ unsigned long Database::getAnalyzingTableId(unsigned long websiteId, unsigned lo
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "getAnalyzedTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "getAnalyzingTableId() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 
@@ -2514,11 +2514,11 @@ unsigned long Database::getAnalyzingTableId(unsigned long websiteId, unsigned lo
 // delete an analyzing table from the database by its ID
 void Database::deleteAnalyzingTable(unsigned long tableId) {
 	// check argument
-	if(!tableId) throw Database::Exception("deleteAnalyzedTable(): No table ID specified");
+	if(!tableId) throw Database::Exception("deleteAnalyzingTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
-	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromAnalyzedTable(tableId);
-	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromAnalyzedTable(tableId);
+	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromAnalyzingTable(tableId);
+	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromAnalyzingTable(tableId);
 	std::string tableName = this->getParsingTable(tableId);
 
 	// check connection
@@ -2546,7 +2546,7 @@ void Database::deleteAnalyzingTable(unsigned long tableId) {
 	catch(sql::SQLException &e) {
 		// SQL error
 		std::ostringstream errorStrStr;
-		errorStrStr << "deleteAnalyzedTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
+		errorStrStr << "deleteAnalyzingTable() SQL Error #" << e.getErrorCode() << " (State " << e.getSQLState() << "): " << e.what();
 		throw Database::Exception(errorStrStr.str());
 	}
 }
@@ -4135,7 +4135,7 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 	return result;
 }
 
-// add a table to the database (the primary key 'id' will be created automatically; WARNING: check existence beforehand!)
+// add a table to the database (the primary key 'id' will be created automatically)
 void Database::createTable(const std::string& tableName, const std::vector<Column>& columns, bool compressed) {
 	// check arguments
 	if(tableName.empty()) throw Database::Exception("addTable(): No table name specified");
@@ -4146,7 +4146,7 @@ void Database::createTable(const std::string& tableName, const std::vector<Colum
 
 	try {
 		// create SQL query
-		std::string sqlQuery = "CREATE TABLE `" + tableName + "`(id SERIAL";
+		std::string sqlQuery = "CREATE TABLE IF NOT EXISTS `" + tableName + "`(id SERIAL";
 		std::string references;
 		for(auto i = columns.begin(); i != columns.end(); ++i) {
 			// check values
@@ -4248,7 +4248,7 @@ void Database::compressTable(const std::string& tableName) {
 }
 
 // delete a table from the database if it exists
-void Database::deleteTableIfExists(const std::string& tableName) {
+void Database::deleteTable(const std::string& tableName) {
 	// check arguments
 	if(tableName.empty()) throw Database::Exception("deleteTableIfExists(): No table name specified");
 
