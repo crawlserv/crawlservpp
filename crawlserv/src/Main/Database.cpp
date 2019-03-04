@@ -1807,37 +1807,14 @@ unsigned long Database::addCustomTable(const CustomTableProperties& properties) 
 					}
 				}
 			}
-		}
 
-		/*
-		 // check existence of target table
-		if(this->isTableExists(this->targetTableFull)) {
-			// table exists already: add columns that do not exist yet
-			for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-				if(!(i->empty()) && !(this->isColumnExists(this->targetTableFull, "analyzed__" + *i))) {
-					TableColumn column("analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin()));
-					if(column._type.empty()) throw DatabaseException("No type for target field \'" + *i + "\' specified");
-					this->addColumn(this->targetTableFull, column);
-				}
-			}
-			if(compressed) this->compressTable(this->targetTableFull);
-
-			// get target table ID
-			this->targetTableId = this->getAnalyzingTableId(this->website, this->urlList, this->targetTableName);
+			// compress table if necessary
+			if(properties.compressed) this->compressTable(properties.fullName);
 		}
 		else {
-			// table does not exist already: create table
-			std::vector<TableColumn> columns;
-			columns.reserve(targetFieldNames.size());
-			for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-				columns.push_back(TableColumn("analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin())));
-				if(columns.back()._type.empty()) throw DatabaseException("No type for target field \'" + *i + "\' specified");
-			}
-
-			// add target table to index and save target table ID
-			this->targetTableId = this->addAnalyzingTable(this->website, this->urlList, this->targetTableName);
+			// table does not exist: create table
+			this->createTable(properties.fullName, properties.columns, properties.compressed);
 		}
-		 */
 
 		// create SQL statement for checking for entry
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
