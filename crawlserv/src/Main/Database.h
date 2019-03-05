@@ -21,6 +21,7 @@
 #define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5 // sleep on target table lock
 
 #include "Data.h"
+#include "Exception.h"
 
 #include "../Helper/FileSystem.h"
 #include "../Struct/ConfigProperties.h"
@@ -178,16 +179,12 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
 		// sub-classes for database exceptions
-		class Exception : public std::exception { // general Database exception
+		class Exception : public crawlservpp::Main::Exception { // general Database exception
 		public:
-			Exception(const std::string& description) { this->_description = description; }
-			const char * what() const throw() { return this->_description.c_str(); }
-			const std::string& whatStr() const throw() { return this->_description; }
-		private:
-			std::string _description;
+			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
 		};
 
-		class ConnectionException : public Exception { // connection exception
+		class ConnectionException : public Exception { // connection exception (used to handle a lost database connection)
 		public:
 			ConnectionException(const std::string& description) : Exception(description) {}
 		};
