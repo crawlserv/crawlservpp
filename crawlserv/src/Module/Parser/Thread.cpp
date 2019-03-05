@@ -156,7 +156,8 @@ void Thread::onTick() {
 			else if(parsed == 1) logStrStr << "parsed ";
 			else logStrStr << "skipped ";
 			logStrStr << std::get<1>(this->currentUrl);
-			if(this->config.generalTiming) logStrStr << " in " << timerTotal.totalStr();
+			if(this->config.generalTiming) logStrStr << " in " << timerTotal.totalStr()
+					<< " (URL selection: " << timerSelect.totalStr() << ")";
 			this->log(logStrStr.str());
 		}
 		else if(this->config.generalLogging > Config::generalLoggingDefault && !parsed)
