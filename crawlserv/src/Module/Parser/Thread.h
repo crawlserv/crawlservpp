@@ -89,8 +89,8 @@ namespace crawlservpp::Module::Parser {
 		std::chrono::steady_clock::time_point idleTime;
 
 		// parsing state
-		std::pair<unsigned long, std::string> currentUrl;	// currently parsed URL
-		std::string lockTime;	// last locking time for currently parsed URL
+		std::tuple<unsigned long, std::string, unsigned long> currentUrl; // currently parsed URL
+		std::string lockTime; // last locking time for currently parsed URL
 
 		// initializing function
 		void initTargetTable();

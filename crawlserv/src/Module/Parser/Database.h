@@ -28,6 +28,7 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -61,21 +62,19 @@ namespace crawlservpp::Module::Parser {
 		void prepare();
 
 		// table function
-		void lockUrlList();
-		void lockUrlListAndCrawledTable();
+		void lockParsingTable();
 
 		// URL functions
-		bool isUrlParsed(unsigned long urlId);
-		std::pair<unsigned long, std::string> getNextUrl(unsigned long currentUrlId);
+		std::tuple<unsigned long, std::string, unsigned long> getNextUrl(unsigned long currentUrlId);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
 
 		// URL locking functions
-		bool isUrlLockable(unsigned long urlId);
-		bool checkUrlLock(unsigned long urlId, const std::string& lockTime);
-		std::string getUrlLock(unsigned long urlId);
-		std::string lockUrl(unsigned long lockTimeout, unsigned long urlId);
-		void unLockUrl(unsigned long urlId);
+		bool isUrlLockable(unsigned long lockId);
+		bool checkUrlLock(unsigned long lockId, const std::string& lockTime);
+		std::string getUrlLock(unsigned long lockId);
+		std::string lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout);
+		void unLockUrl(unsigned long lockId);
 
 		// parsing functions
 		bool getLatestContent(unsigned long urlId, unsigned long index, std::pair<unsigned long, std::string>& contentTo);
@@ -83,7 +82,7 @@ namespace crawlservpp::Module::Parser {
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
 		void updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 				const std::vector<std::string>& parsedFields);
-		void setUrlFinished(unsigned long urlId);
+		void setUrlFinished(unsigned long parsingId);
 
 	protected:
 		// options
@@ -104,6 +103,8 @@ namespace crawlservpp::Module::Parser {
 
 		// table names and target table ID
 		std::string urlListTable;
+		std::string parsingTable;
+		std::string analyzingTable;
 		unsigned long targetTableId;
 		std::string targetTableFull;
 
@@ -118,6 +119,7 @@ namespace crawlservpp::Module::Parser {
 			unsigned short checkUrlLock;
 			unsigned short getUrlLock;
 			unsigned short lockUrl;
+			unsigned short addUrlLock;
 			unsigned short unLockUrl;
 			unsigned short getContentIdFromParsedId;
 			unsigned short getLatestContent;
