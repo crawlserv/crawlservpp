@@ -67,12 +67,12 @@ void Database::prepare() {
 	if(!(this->ps.isUrlExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlExists()...");
 		this->ps.isUrlExists = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE url = ?) AS result");
+				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE url = ?) AS result");
 	}
 	if(!(this->ps.isUrlHashExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares hash check for URLs...");
 		this->ps.isUrlHashExists = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE hash = CRC32( ? )) AS result");
+				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE hash = CRC32( ? )) AS result");
 	}
 	if(!(this->ps.getUrlId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlId()...");
@@ -82,7 +82,7 @@ void Database::prepare() {
 	if(!(this->ps.isUrlCrawled)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlCrawled()...");
 		this->ps.isUrlCrawled = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ? AND crawled = TRUE) AS result");
+				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE id = ? AND crawled = TRUE) AS result");
 	}
 	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
@@ -112,7 +112,7 @@ void Database::prepare() {
 	if(!(this->ps.isUrlLockable)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlLockable()...");
 		this->ps.isUrlLockable = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable
+				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (crawllock IS NULL OR crawllock < NOW())) AS result");
 	}
 	if(!(this->ps.getUrlLock)) {
@@ -123,7 +123,7 @@ void Database::prepare() {
 	if(!(this->ps.checkUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares checkUrlLock()...");
 		this->ps.checkUrlLock = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable
+				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (crawllock < NOW() OR crawllock <= ? OR crawllock IS NULL)) AS result");
 	}
 	if(!(this->ps.lockUrl)) {
@@ -156,12 +156,12 @@ void Database::prepare() {
 	if(!(this->ps.isArchivedContentExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isArchivedContentExists()...");
 		this->ps.isArchivedContentExists = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + crawledTable + "` WHERE url = ? AND crawltime = ?) AS result");
+				"SELECT EXISTS (SELECT * FROM `" + crawledTable + "` WHERE url = ? AND crawltime = ?) AS result");
 	}
 	if(!(this->ps.isLinkExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [1/3]...");
 		this->ps.isLinkExists = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + linkTable + "` WHERE fromurl = ? AND tourl = ?) AS result");
+				"SELECT EXISTS (SELECT * FROM `" + linkTable + "` WHERE fromurl = ? AND tourl = ?) AS result");
 	}
 	if(!(this->ps.addLink)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [2/3]...");

@@ -677,7 +677,7 @@ bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS (SELECT 1 FROM crawlserv_websites WHERE namespace = ? LIMIT 1) AS result"));
+				"SELECT EXISTS (SELECT * FROM crawlserv_websites WHERE namespace = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setString(1, nameSpace);
@@ -992,18 +992,11 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 	columns.push_back(TableColumn("url", "VARCHAR(2000) NOT NULL"));
 	columns.push_back(TableColumn("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true));
 	columns.push_back(TableColumn("crawled", "BOOLEAN DEFAULT FALSE NOT NULL"));
-	columns.push_back(TableColumn("parsed", "BOOLEAN DEFAULT FALSE NOT NULL"));
-	columns.push_back(TableColumn("extracted", "BOOLEAN DEFAULT FALSE NOT NULL"));
-	columns.push_back(TableColumn("analyzed", "BOOLEAN DEFAULT FALSE NOT NULL"));
 	columns.push_back(TableColumn("crawllock", "DATETIME DEFAULT NULL"));
-	columns.push_back(TableColumn("parselock", "DATETIME DEFAULT NULL"));
-	columns.push_back(TableColumn("extractlock", "DATETIME DEFAULT NULL"));
-	columns.push_back(TableColumn("analyzelock", "DATETIME DEFAULT NULL"));
 	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, columns, false);
 	columns.clear();
 
 	// create table for crawled content
-	columns.reserve(6);
 	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
 			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
 	columns.push_back(TableColumn("crawltime", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL", true));
@@ -1014,8 +1007,35 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_crawled", columns, true);
 	columns.clear();
 
+	// create table for parsing
+	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_parsedtables", "id"));
+	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
+	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_parsing", columns, false);
+	columns.clear();
+
+	// create table for extracting
+	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_extractedtables", "id"));
+	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
+	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_extracting", columns, false);
+	columns.clear();
+
+	// create table for analyzing
+	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_analyzedtables", "id"));
+	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(TableColumn("algo", "TINYTEXT NOT NULL"));
+	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
+	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_analyzing", columns, false);
+	columns.clear();
+
 	// create table for linkage information
-	columns.reserve(3);
 	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
 			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
 	columns.push_back(TableColumn("fromurl", "BIGINT UNSIGNED NOT NULL",
@@ -1023,7 +1043,6 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 	columns.push_back(TableColumn("tourl", "BIGINT UNSIGNED NOT NULL",
 			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
 	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_links", columns, false);
-	columns.clear();
 
 	return result;
 }
@@ -1132,7 +1151,7 @@ bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& na
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS (SELECT 1 FROM crawlserv_urllists WHERE website = ? AND namespace = ? LIMIT 1) AS result"));
+				"SELECT EXISTS (SELECT * FROM crawlserv_urllists WHERE website = ? AND namespace = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
@@ -1183,6 +1202,9 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 					+ "_links` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_links`");
 
 			// rename parsing tables
+			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
+					+ "_parsing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+					+ listProperties.nameSpace	+ "_parsing`");
 			std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getCustomTables("parsed", listId);
 			for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
@@ -1191,6 +1213,9 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 			}
 
 			// rename extracting tables
+			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
+					+ "_extracting`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+					+ listProperties.nameSpace	+ "_extracting`");
 			std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getCustomTables("extracted", listId);
 			for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
@@ -1199,6 +1224,9 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 			}
 
 			// rename analyzing tables
+			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
+					+ "_analyzing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+					+ listProperties.nameSpace	+ "_analyzing`");
 			std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getCustomTables("analyzed", listId);
 			for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
@@ -1274,6 +1302,9 @@ void Database::deleteUrlList(unsigned long listId) {
 	// delete tables
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_links");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawled");
+	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing");
+	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting");
+	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
 }
 
@@ -1287,13 +1318,13 @@ void Database::resetParsingStatus(unsigned long listId) {
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
 	// lock URL list
-	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
+	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing");
 
 	try {
 		try {
 			// update URL list
 			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
-					+ "` SET parsed = FALSE, parselock = NULL");
+					+ "_parsing` SET success = FALSE, locktime = NULL");
 		}
 		// any exeption: try to release table lock and re-throw
 		catch(...) {
@@ -1318,13 +1349,13 @@ void Database::resetExtractingStatus(unsigned long listId) {
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
 	// lock URL list
-	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
+	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting");
 
 	try {
 		try {
 			// update URL list
 			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
-					+ "` SET extracted = FALSE, extractlock = NULL");
+					+ "_extracting` SET success = FALSE, locktime = NULL");
 		}
 		// any exeption: try to release table lock and re-throw
 		catch(...) {
@@ -1348,14 +1379,14 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
-	// lock URL list
-	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
+	// lock analyzing table
+	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing");
 
 	try {
 		try {
 			// update URL list
 			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
-					+ "` SET analyzed = FALSE, analyzelock = NULL");
+					+ "_analyzing` SET success = FALSE, locktime = NULL");
 		}
 		// any exeption: try to release table lock and re-throw
 		catch(...) {
@@ -1723,7 +1754,7 @@ void Database::lockCustomTables(const std::string& type, unsigned long websiteId
 			try {
 				// create SQL statement for checking target table lock
 				std::unique_ptr<sql::PreparedStatement> checkStatement(this->connection->prepareStatement(
-						"SELECT EXISTS(SELECT 1 FROM crawlserv_targetlocks"
+						"SELECT EXISTS(SELECT * FROM crawlserv_targetlocks"
 						" WHERE tabletype = ? AND website = ? AND urllist = ? AND locktime > NOW() LIMIT 1"
 						") AS result"));
 
@@ -2088,7 +2119,7 @@ bool Database::isWebsite(unsigned long websiteId) {
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT 1 FROM crawlserv_websites WHERE id = ? LIMIT 1) AS result"));
+				"SELECT EXISTS(SELECT * FROM crawlserv_websites WHERE id = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
@@ -2115,7 +2146,7 @@ bool Database::isUrlList(unsigned long urlListId) {
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT 1 FROM crawlserv_urllists WHERE id = ? LIMIT 1) AS result"));
+				"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE id = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, urlListId);
@@ -2143,7 +2174,7 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT 1 FROM crawlserv_urllists WHERE website = ? AND id = ? LIMIT 1) AS result"));
+				"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE website = ? AND id = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
@@ -2171,7 +2202,7 @@ bool Database::isQuery(unsigned long queryId) {
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT 1 FROM crawlserv_queries WHERE id = ? LIMIT 1) AS result"));
+				"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE id = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, queryId);
@@ -2198,7 +2229,7 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT 1 FROM crawlserv_queries WHERE (website = ? OR website = 0) AND id = ? LIMIT 1) AS result"));
+				"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE (website = ? OR website = 0) AND id = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
@@ -2226,7 +2257,7 @@ bool Database::isConfiguration(unsigned long configId) {
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT 1 FROM crawlserv_configs WHERE id = ? LIMIT 1) AS result"));
+				"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE id = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, configId);
@@ -2253,7 +2284,7 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 	try {
 		// create SQL statement
 		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT 1 FROM crawlserv_configs WHERE website = ? AND id = ? LIMIT 1) AS result"));
+				"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE website = ? AND id = ? LIMIT 1) AS result"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
@@ -3396,7 +3427,7 @@ bool Database::isTableEmpty(const std::string& tableName) {
 
 		// execute SQL statement
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(
-				"SELECT NOT EXISTS (SELECT 1 FROM `" + tableName + "` LIMIT 1) AS result"));
+				"SELECT NOT EXISTS (SELECT * FROM `" + tableName + "` LIMIT 1) AS result"));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
