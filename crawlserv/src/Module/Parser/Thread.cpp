@@ -85,7 +85,7 @@ void Thread::onInit(bool resumed) {
 	}
 
 	// set current URL to last URL
-	this->currentUrl.first = this->getLast();
+	this->currentUrl = std::make_tuple(this->getLast(), "", 0);
 
 	// save start time and initialize counter
 	this->startTime = std::chrono::steady_clock::now();
@@ -120,7 +120,7 @@ void Thread::onTick() {
 
 		// start parsing
 		if(this->config.generalLogging > Config::generalLoggingDefault)
-			this->log("parses " + this->currentUrl.second + "...");
+			this->log("parses " + std::get<1>(this->currentUrl) + "...");
 
 		// parse content(s)
 		parsed = this->parsing();
@@ -128,11 +128,11 @@ void Thread::onTick() {
 		// stop timer
 		if(this->config.generalTiming) timerTotal.stop();
 
-		// update URL list if possible, release URL lock
-		this->database.lockUrlList();
+		// update URL status if possible, release URL lock
+		this->database.lockParsingTable();
 		try {
-			if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime) && parsed)
-				this->database.setUrlFinished(this->currentUrl.first);
+			if(this->database.checkUrlLock(std::get<2>(this->currentUrl), this->lockTime) && parsed)
+				this->database.setUrlFinished(std::get<2>(this->currentUrl));
 		}
 		// any exception: try to release table lock and re-throw
 		catch(...) {
@@ -144,8 +144,8 @@ void Thread::onTick() {
 		this->lockTime = "";
 
 		// update status
-		this->setLast(this->currentUrl.first);
-		this->setProgress((float) (this->database.getUrlPosition(this->currentUrl.first) + 1) / this->database.getNumberOfUrls());
+		this->setLast(std::get<0>(this->currentUrl));
+		this->setProgress((float) (this->database.getUrlPosition(std::get<0>(this->currentUrl)) + 1) / this->database.getNumberOfUrls());
 
 		// write to log if necessary
 		if((this->config.generalLogging > Config::generalLoggingDefault)
@@ -155,18 +155,18 @@ void Thread::onTick() {
 			if(parsed > 1) logStrStr << "parsed " << parsed << " versions of ";
 			else if(parsed == 1) logStrStr << "parsed ";
 			else logStrStr << "skipped ";
-			logStrStr << this->currentUrl.second;
+			logStrStr << std::get<1>(this->currentUrl);
 			if(this->config.generalTiming) logStrStr << " in " << timerTotal.totalStr();
 			this->log(logStrStr.str());
 		}
 		else if(this->config.generalLogging > Config::generalLoggingDefault && !parsed)
-			this->log("skipped " + this->currentUrl.second);
+			this->log("skipped " + std::get<1>(this->currentUrl));
 
 		// remove URL lock if necessary
-		this->database.lockUrlList();
+		this->database.lockParsingTable();
 		try {
-			if(this->database.checkUrlLock(this->currentUrl.first, this->lockTime))
-				this->database.unLockUrl(this->currentUrl.first);
+			if(this->database.checkUrlLock(std::get<2>(this->currentUrl), this->lockTime))
+				this->database.unLockUrl(std::get<2>(this->currentUrl));
 		}
 		// any exception: try to release table lock and re-throw
 		catch(...) {
@@ -286,86 +286,89 @@ void Thread::initQueries() {
 bool Thread::parsingUrlSelection() {
 	std::vector<std::string> logEntries;
 	bool result = true;
-	bool notIdle = this->currentUrl.first > 0;
+	bool notIdle = std::get<0>(this->currentUrl) > 0;
 
-	// lock URL list and crawling table
-	this->database.lockUrlListAndCrawledTable();
+	// get ID and name of next URL (skip locked URLs)
+	bool skip = false;
+	unsigned long skipped = 0;
 
-	try {
-		// get ID and name of next URL (skip locked URLs)
-		bool skip = false;
-		unsigned long skipped = 0;
+	while(true) {
+		if(skip) this->currentUrl = this->database.getNextUrl(skipped);
+		else this->currentUrl = this->database.getNextUrl(this->getLast());
 
-		while(true) {
-			if(skip) this->currentUrl = this->database.getNextUrl(skipped);
-			else this->currentUrl = this->database.getNextUrl(this->getLast());
+		if(std::get<0>(this->currentUrl)) {
+			// check whether to skip URL
+			skip = false;
+			if(!(this->config.generalSkip.empty())) {
+				for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
+					// check result type of query
+					if(!(i->resultBool) && this->config.generalLogging)
+						this->log("WARNING: Invalid result type of skip query (not bool).");
 
-			if(this->currentUrl.first) {
-				// check whether to skip URL
-				skip = false;
-				if(!(this->config.generalSkip.empty())) {
-					for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
-						// check result type of query
-						if(!(i->resultBool) && this->config.generalLogging)
-							this->log("WARNING: Invalid result type of skip query (not bool).");
-
-						// check query type
-						if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
-							// parse ID by running RegEx query on URL
-							try {
-								if(this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second)) {
-									skip = true;
-									break;
-								}
+					// check query type
+					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+						// parse ID by running RegEx query on URL
+						try {
+							if(this->getRegExQueryPtr(i->index).getBool(std::get<1>(this->currentUrl))) {
+								skip = true;
+								break;
 							}
-							catch(const RegExException& e) {} // ignore query on error
 						}
-						else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
-							this->log("WARNING: ID query on URL is not of type RegEx.");
+						catch(const RegExException& e) {} // ignore query on error
 					}
+					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
+						this->log("WARNING: ID query on URL is not of type RegEx.");
 				}
+			}
 
-				if(skip) {
-					// skip URL
-					if(this->config.generalLogging) logEntries.push_back("skipped " + this->currentUrl.second);
-					skipped = this->currentUrl.first;
-				}
-				else {
+			if(skip) {
+				// skip URL
+				if(this->config.generalLogging) logEntries.push_back("skipped " + std::get<1>(this->currentUrl));
+				skipped = std::get<0>(this->currentUrl);
+			}
+			else {
+				// lock parsing table
+				this->database.lockParsingTable();
+
+				try {
 					// lock URL
-					if(this->database.isUrlLockable(this->currentUrl.first)) {
-						this->lockTime = this->database.lockUrl(this->currentUrl.first, this->config.generalLock);
-						// success!
+					if(this->database.isUrlLockable(std::get<2>(this->currentUrl))) {
+						this->lockTime = this->database.lockUrl(this->currentUrl, this->config.generalLock);
+						// success! unlock table and break
+						this->database.releaseLocks();
 						break;
 					}
 					else if(this->config.generalLogging) {
 						// skip locked URL
-						logEntries.push_back("skipped " + this->currentUrl.second + ", because it is locked.");
+						logEntries.push_back("skipped " + std::get<1>(this->currentUrl) + ", because it is locked.");
 						skip = true;
-						skipped = this->currentUrl.first;
+						skipped = std::get<0>(this->currentUrl);
 					}
 				}
-			}
-			else {
-				// no more URLs
-				result = false;
-				break;
+				// any exception: try unlocking the table an re-throw
+				catch(...) {
+					try { this->database.releaseLocks(); }
+					catch(...) {}
+					throw;
+				}
+
+				// unlock table
+				this->database.releaseLocks();
 			}
 		}
-	}
-	// any exception: try to release table lock and re-throw
-	catch(...) {
-		try { this->database.releaseLocks(); }
-		catch(...) {}
-		throw;
+		else {
+			// no more URLs
+			result = false;
+			break;
+		}
 	}
 
-	// unlock URL list and write to log if necessary
-	this->database.releaseLocks();
+	// write to log if necessary
 	if(this->config.generalLogging)
 		for(auto i = logEntries.begin(); i != logEntries.end(); ++i) this->log(*i);
 
 	// set thread status
-	if(result) this->setStatusMessage(this->currentUrl.second);
+	if(result) this->setStatusMessage(std::get<1>(this->currentUrl));
 	else {
 		if(notIdle) {
 			if(this->config.generalResetOnFinish) {
@@ -396,7 +399,7 @@ unsigned long Thread::parsing() {
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse ID by running RegEx query on URL
 				try {
-					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedId);
+					this->getRegExQueryPtr(i->index).getFirst(std::get<1>(this->currentUrl), parsedId);
 					if(!parsedId.empty()) break;
 				}
 				catch(const RegExException& e) {} // ignore query on error
@@ -417,7 +420,7 @@ unsigned long Thread::parsing() {
 		unsigned long index = 0;
 		while(true) {
 			std::pair<unsigned long, std::string> latestContent;
-			if(this->database.getLatestContent(this->currentUrl.first, index, latestContent)) {
+			if(this->database.getLatestContent(std::get<0>(this->currentUrl), index, latestContent)) {
 				bool skipUrl = false;
 				if(this->parsingContent(latestContent, parsedId, skipUrl)) return 1;
 				if(skipUrl) return 0;
@@ -430,7 +433,7 @@ unsigned long Thread::parsing() {
 		// parse all contents of URL
 		unsigned long counter = 0;
 
-		std::vector<std::pair<unsigned long, std::string>> contents = this->database.getAllContents(this->currentUrl.first);
+		std::vector<std::pair<unsigned long, std::string>> contents = this->database.getAllContents(std::get<0>(this->currentUrl));
 		for(auto i = contents.begin(); i != contents.end(); ++i) {
 			bool skipUrl = false;
 			if(this->parsingContent(*i, parsedId, skipUrl)) counter++;
@@ -454,7 +457,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	catch(const XMLException& e) {
 		if(this->config.generalLogging > Config::generalLoggingDefault) {
 			std::ostringstream logStrStr;
-			logStrStr << "Content #" << content.first << " [" << this->currentUrl.second << "] could not be parsed: " << e.what();
+			logStrStr << "Content #" << content.first << " [" << std::get<1>(this->currentUrl) << "] could not be parsed: " << e.what();
 			this->log(logStrStr.str());
 		}
 		return false;
@@ -477,7 +480,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on URL
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, id);
+						this->getRegExQueryPtr(i->index).getFirst(std::get<1>(this->currentUrl), id);
 						if(!id.empty()) break;
 					}
 					catch(const RegExException& e) {} // ignore query on error
@@ -547,7 +550,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on URL
 				try {
-					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedDateTime);
+					this->getRegExQueryPtr(i->index).getFirst(std::get<1>(this->currentUrl), parsedDateTime);
 					querySuccess = true;
 				}
 				catch(const RegExException& e) {} // ignore query on error
@@ -633,7 +636,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 					// parse from URL: check query type
 					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 						// parse multiple field elements by running RegEx query on URL
-						this->getRegExQueryPtr(i->index).getAll(this->currentUrl.second, parsedFieldValues);
+						this->getRegExQueryPtr(i->index).getAll(std::get<1>(this->currentUrl), parsedFieldValues);
 					}
 					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -664,7 +667,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 						}
 					}
 					if(empty) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
-							+ this->currentUrl.second);
+							+ std::get<1>(this->currentUrl));
 				}
 
 				// determine how to save result: JSON array or concatenate using delimiting character
@@ -698,7 +701,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 					// parse from URL: check query type
 					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 						// parse single field element by running RegEx query on URL
-						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.second, parsedFieldValue);
+						this->getRegExQueryPtr(i->index).getFirst(std::get<1>(this->currentUrl), parsedFieldValue);
 					}
 					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -722,7 +725,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// if necessary, check whether value is empty
 				if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && parsedFieldValue.empty())
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
-											+ this->currentUrl.second);
+											+ std::get<1>(this->currentUrl));
 
 				// if necessary, tidy text
 				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) crawlservpp::Helper::Strings::utfTidy(parsedFieldValue);
@@ -746,7 +749,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 					// parse from URL: check query type
 					if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
 						// parse boolean value by running RegEx query on URL
-						parsedBool = this->getRegExQueryPtr(i->index).getBool(this->currentUrl.second);
+						parsedBool = this->getRegExQueryPtr(i->index).getBool(std::get<1>(this->currentUrl));
 					}
 					else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.generalLogging)
 						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)

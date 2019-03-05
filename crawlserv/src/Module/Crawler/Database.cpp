@@ -151,7 +151,7 @@ void Database::prepare() {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares setUrlFinished()...");
 		this->ps.setUrlFinished = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable
-				+ "` SET crawled = TRUE, parsed = FALSE, extracted = FALSE, analyzed = FALSE, crawllock = NULL WHERE id = ? LIMIT 1");
+				+ "` SET crawled = TRUE, crawllock = NULL WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.isArchivedContentExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isArchivedContentExists()...");

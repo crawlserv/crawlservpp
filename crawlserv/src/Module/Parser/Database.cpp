@@ -91,6 +91,7 @@ void Database::setTimeoutTargetLock(unsigned long timeOut) {
 void Database::initTargetTable() {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
+	this->parsingTable = this->urlListTable + "_parsing";
 	this->targetTableFull = this->urlListTable + "_parsed_" + this->targetTableName;
 
 	// create table properties
@@ -102,11 +103,11 @@ void Database::initTargetTable() {
 	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
 		if(!(i->empty())) properties.columns.push_back(TableColumn("parsed__" + *i, "LONGTEXT"));
 
-	// lock parsing tables
+	// lock target tables
 	this->lockCustomTables("parsed", this->website, this->urlList, this->timeoutTargetLock);
 
 	try {
-		// add parsing table if it does not exist already
+		// add target table if it does not exist already
 		this->targetTableId = this->addCustomTable(properties);
 	}
 	// any exception: try to unlock parsing tables and re-throw
@@ -115,7 +116,7 @@ void Database::initTargetTable() {
 		throw;
 	}
 
-	// unlock parsing tables
+	// unlock target tables
 	this->unlockCustomTables("parsed");
 }
 
@@ -125,22 +126,26 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(16);
+	this->reserveForPreparedStatements(18);
 
 	// prepare SQL statements for parser
 	if(!(this->ps.isUrlParsed)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlParsed()...");
 		this->ps.isUrlParsed = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT 1 FROM `" + this->urlListTable + "` WHERE id = ? AND parsed = TRUE) AS result");
+				"SELECT EXISTS (SELECT * FROM `" + this->parsingTable + "` WHERE target = ? AND url = ? AND success = TRUE) AS result");
 	}
 	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
-		std::string sqlQuery = "SELECT a.id, a.url FROM `" + this->urlListTable + "` AS a, `" + this->urlListTable + "_crawled` AS b"
-				" WHERE a.id = b.url AND a.id > ? AND b.response < 400 AND (a.parselock IS NULL OR a.parselock < NOW())";
-		if(!reparse) sqlQuery += " AND a.parsed = FALSE";
-		if(!parseCustom) sqlQuery += " AND a.manual = FALSE";
-		sqlQuery += " ORDER BY a.id LIMIT 1";
-		this->ps.getNextUrl = this->addPreparedStatement(sqlQuery);
+		std::ostringstream sqlQueryStr;
+		sqlQueryStr << "SELECT a.id AS url_id, a.url AS url, c.id AS lock_id FROM `" << this->urlListTable << "` AS a INNER JOIN `"
+				<< this->urlListTable << "_crawled` AS b ON a.id = b.url LEFT OUTER JOIN `" << this->parsingTable
+				<< "` AS c ON a.id = c.url AND c.target = " << this->targetTableId
+				<< " WHERE a.id > ? AND b.response < 400 AND (c.locktime IS NULL OR c.locktime < NOW())";
+		if(!reparse) sqlQueryStr << " AND (c.success IS NULL OR c.success = FALSE)";
+		if(!parseCustom) sqlQueryStr << " AND a.manual = FALSE";
+		sqlQueryStr << " ORDER BY a.id LIMIT 1";
+		if(this->verbose) this->log("[#" + this->idString + "] > " + sqlQueryStr.str());
+		this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStr.str());
 	}
 	if(!(this->ps.getUrlPosition)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlPosition()...");
@@ -154,31 +159,37 @@ void Database::prepare() {
 	}
 	if(!(this->ps.isUrlLockable)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlLockable()...");
-		this->ps.isUrlLockable = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
-				+ "` WHERE id = ? AND (parselock IS NULL OR parselock < NOW())) AS result");
+		std::ostringstream sqlQueryStr;
+		this->ps.isUrlLockable = this->addPreparedStatement("SELECT (locktime IS NULL OR locktime < NOW()) AS result FROM `"
+				+ this->parsingTable + "` WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.getUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLock()...");
 		this->ps.getUrlLock = this->addPreparedStatement(
-				"SELECT parselock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
+				"SELECT locktime FROM `" + this->parsingTable + "` WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.checkUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares checkUrlLock()...");
 		this->ps.checkUrlLock = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
-				+ "` WHERE id = ? AND (parselock < NOW() OR parselock <= ? OR parselock IS NULL)) AS result");
+				"SELECT (locktime < NOW() OR locktime <= ? OR locktime IS NULL) AS result FROM " + this->parsingTable
+				+ " WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.lockUrl)) {
-		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl()...");
-		this->ps.lockUrl = this->addPreparedStatement(
-				"UPDATE `"
-				+ this->urlListTable + "` SET parselock = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl() [1/2]...");
+		this->ps.lockUrl = this->addPreparedStatement("UPDATE `" + this->parsingTable
+				+ "` SET locktime = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
+	}
+	if(!(this->ps.addUrlLock)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl() [2/2]...");
+		std::ostringstream sqlQueryStr;
+		sqlQueryStr << "INSERT INTO `" << this->parsingTable << "` (target, url, locktime, success) VALUES (" << this->targetTableId
+				<< ", ?, NOW() + INTERVAL ? SECOND, FALSE)";
+		this->ps.addUrlLock = this->addPreparedStatement(sqlQueryStr.str());
 	}
 	if(!(this->ps.unLockUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares unLockUrl()...");
-		this->ps.unLockUrl = this->addPreparedStatement(
-				"UPDATE `" + this->urlListTable + "` SET parselock = NULL WHERE id = ? LIMIT 1");
+		this->ps.unLockUrl = this->addPreparedStatement("UPDATE `" + this->parsingTable
+				+ "` SET locktime = NULL WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.getContentIdFromParsedId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getContentIdFromParsedId()...");
@@ -199,8 +210,7 @@ void Database::prepare() {
 	if(!(this->ps.setUrlFinished)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares setUrlFinished()...");
 		this->ps.setUrlFinished = this->addPreparedStatement(
-				"UPDATE `" + this->urlListTable
-				+ "` SET parsed = TRUE, analyzed = FALSE, parselock = NULL WHERE id = ? LIMIT 1");
+				"UPDATE `" + this->parsingTable + "` SET locktime = NULL, success = TRUE WHERE id = ? LIMIT 1");
 	}
 	if(!(this->ps.getEntryId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getEntryId()...");
@@ -235,48 +245,18 @@ void Database::prepare() {
 	if(!(this->ps.updateParsedTable)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares parsingTableUpdated()...");
 		this->ps.updateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
-				" WHERE website = ? AND urllist = ? AND name = ? LIMIT 1");
+				" WHERE id = ? LIMIT 1");
 	}
 }
 
-// lock URL list
-void Database::lockUrlList() {
-	this->lockTable(this->urlListTable);
+// lock parsing table
+void Database::lockParsingTable() {
+	this->lockTable(this->parsingTable);
 }
 
-// lock URL list and table with crawled content (for URL selection)
-void Database::lockUrlListAndCrawledTable() {
-	this->lockTables(this->urlListTable, this->urlListTable + "_crawled");
-}
-
-// check whether an URL has been parsed
-bool Database::isUrlParsed(unsigned long urlId) {
-	bool result = false;
-
-	// check connection
-	this->checkConnection();
-
-	// check prepared SQL statement
-	if(!(this->ps.isUrlParsed)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::isUrlParsed(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlParsed);
-
-	// get next URL from database
-	try {
-		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
-
-		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::isUrlParsed", e); }
-
-	return result;
-}
-
-// get the next URL to parse from database or empty IdString if all URLs have been parsed
-std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long currentUrlId) {
-	std::pair<unsigned long, std::string> result;
+// get the next URL to parse from database, return ID, URL and lock ID of next URL or empty tuple if all URLs have been parsed
+std::tuple<unsigned long, std::string, unsigned long> Database::getNextUrl(unsigned long currentUrlId) {
+	std::tuple<unsigned long, std::string, unsigned long> result;
 
 	// check connection
 	this->checkConnection();
@@ -293,8 +273,11 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			result.first = sqlResultSet->getUInt64("id");
-			result.second = sqlResultSet->getString("url");
+			result = std::make_tuple(
+					sqlResultSet->getUInt64("url_id"),
+					sqlResultSet->getString("url"),
+					sqlResultSet->getUInt64("lock_id")
+			);
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getNextUrl", e); }
@@ -352,8 +335,11 @@ unsigned long Database::getNumberOfUrls() {
 }
 
 // check whether an URL is already locked in database
-bool Database::isUrlLockable(unsigned long urlId) {
+bool Database::isUrlLockable(unsigned long lockId) {
 	bool result = false;
+
+	// check lock ID
+	if(!lockId) return true; // no URL lock exists yet, URL is therefore lockable
 
 	// check connection
 	this->checkConnection();
@@ -365,7 +351,7 @@ bool Database::isUrlLockable(unsigned long urlId) {
 	// check URL lock in database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, lockId);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
@@ -377,7 +363,7 @@ bool Database::isUrlLockable(unsigned long urlId) {
 }
 
 // get the URL lock end time of a specific URL from database
-std::string Database::getUrlLock(unsigned long urlId) {
+std::string Database::getUrlLock(unsigned long lockId) {
 	std::string result;
 
 	// check connection
@@ -390,11 +376,11 @@ std::string Database::getUrlLock(unsigned long urlId) {
 	// get URL lock from database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, lockId);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("parselock");
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("locktime");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLock", e); }
 
@@ -402,7 +388,7 @@ std::string Database::getUrlLock(unsigned long urlId) {
 }
 
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
-bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
+bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	bool result = false;
 
 	// check connection
@@ -415,8 +401,8 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	// check URL lock in database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
-		sqlStatement.setString(2, lockTime);
+		sqlStatement.setString(1, lockTime);
+		sqlStatement.setUInt64(2, lockId);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get (and parse) result
@@ -428,24 +414,45 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 }
 
 // lock a URL in the database
-std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
+std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout) {
 	// check connection
 	this->checkConnection();
 
-	// check prepared SQL statement
-	if(!(this->ps.lockUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
+	if(std::get<2>(urlData)) {
+		// check prepared SQL statement for locking the URL
+		if(!(this->ps.lockUrl))
+			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
 
-	// lock URL in database
-	try {
-		// execute SQL query
-		sqlStatement.setUInt64(1, lockTimeout);
-		sqlStatement.setUInt64(2, urlId);
-		sqlStatement.execute();
+		// lock URL in database
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(1, lockTimeout);
+			sqlStatement.setUInt64(2, std::get<2>(urlData));
+			sqlStatement.execute();
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
+	else {
+		// check prepared SQL statement for adding an URL lock
+		if(!(this->ps.addUrlLock))
+			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLock);
 
-	return this->getUrlLock(urlId);
+		// add URL lock to database
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(1, std::get<0>(urlData));
+			sqlStatement.setUInt64(2, lockTimeout);
+			sqlStatement.execute();
+
+			// get result
+			std::get<2>(urlData) = this->getLastInsertedId();
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
+	}
+
+	return this->getUrlLock(std::get<2>(urlData));
 }
 
 // unlock a URL in the database
@@ -609,20 +616,22 @@ void Database::updateOrAddEntry(unsigned long contentId, const std::string& pars
 }
 
 // set URL as parsed in the database
-void Database::setUrlFinished(unsigned long urlId) {
+void Database::setUrlFinished(unsigned long parsingId) {
 	// check connection
 	this->checkConnection();
 
-	// check prepared SQL statement
+	// check prepared SQL statements
 	if(!(this->ps.setUrlFinished))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::setUrlFinished(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setUrlFinished);
 
 	// get ID of URL from database
 	try {
-		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		// execute SQL query for setting URL to finished
+		sqlStatement.setUInt64(1, parsingId);
 		sqlStatement.execute();
+
+		// TODO: execute SQL query for resetting analyzing status
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::setUrlFinished", e); }
 }
@@ -729,9 +738,7 @@ void Database::updateParsedTable() {
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateParsedTable);
 
 	// get ID of URL from database
-	sqlStatement.setUInt64(1, this->website);
-	sqlStatement.setUInt64(2, this->urlList);
-	sqlStatement.setString(3, this->targetTableName);
+	sqlStatement.setUInt64(1, this->targetTableId);
 	try {
 		// execute SQL query
 		sqlStatement.execute();
