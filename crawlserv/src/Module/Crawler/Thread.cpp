@@ -559,7 +559,7 @@ bool Thread::crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo) 
 		}
 	}
 	catch(...) {
-		// any exception: try to release table locks and re-throw
+		// any exception: try to release table lock and re-throw
 		try { this->database.releaseLocks(); }
 		catch(...) {}
 		throw;
@@ -587,7 +587,6 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 	crawlservpp::Timer::StartStop parseTimer;
 	crawlservpp::Timer::StartStop updateTimer;
 	std::string content;
-	std::string contentType;
 	timerStrTo = "";
 
 	// skip crawling if only archive needs to be retried
@@ -618,119 +617,6 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 	try {
 		// set local networking options
 		this->networking.setConfigCurrent(this->config.network);
-
-		// start HTTP timer
-		if(this->config.crawlerTiming) httpTimer.start();
-		if(this->config.crawlerSleepHttp) this->httpTime = std::chrono::steady_clock::now();
-
-		try {
-			// get content
-			this->networking.getContent("https://" + this->domain + url.second, content, this->config.crawlerRetryHttp);
-
-			// check response code
-			unsigned int responseCode = this->networking.getResponseCode();
-			if(!(this->crawlingCheckResponseCode(url.second, responseCode))) {
-				// skip because of response code
-				this->crawlingSkip(url);
-				return false;
-			}
-
-			if(this->config.crawlerTiming) {
-				httpTimer.stop();
-				if(!timerStrTo.empty()) timerStrTo += ", ";
-				timerStrTo += "http: " + httpTimer.totalStr();
-				parseTimer.start();
-			}
-
-			// check content type
-			std::string contentType = this->networking.getContentType();
-			if(!(this->crawlingCheckContentType(url, contentType))) {
-				// skip because of content type (not on whitelist or on blacklist)
-				this->crawlingSkip(url);
-				return false;
-			}
-
-			// optional: simple HTML consistency check (not very reliable though, mostly for debugging purposes)
-			if(!(this->crawlingCheckConsistency(url, content))) {
-				// skip because of HTML inconsistency
-				this->crawlingSkip(url);
-				return false;
-			}
-
-			// parse content
-			crawlservpp::Parsing::XML doc;
-			try {
-				doc.parse(content);
-
-				// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
-				if(!(this->crawlingCheckCanonical(url, doc))) {
-					this->crawlingSkip(url);
-					return false;
-				}
-
-				// check content
-				if(!(this->crawlingCheckContent(url, content, doc))) {
-					// skip because of content (not on whitelist or on blacklist)
-					this->crawlingSkip(url);
-					return false;
-				}
-
-				if(this->config.crawlerTiming) {
-					parseTimer.stop();
-					updateTimer.start();
-				}
-
-				// save content
-				this->crawlingSaveContent(url, responseCode, contentType, content, doc);
-
-				if(this->config.crawlerTiming) {
-					updateTimer.stop();
-					parseTimer.start();
-				}
-
-				// extract URLs
-				std::vector<std::string> urls = this->crawlingExtractUrls(url, content, doc);
-				if(!urls.empty()) {
-					if(this->config.crawlerTiming) {
-						parseTimer.stop();
-						updateTimer.start();
-					}
-
-					// parse and add URLs
-					checkedUrlsTo += urls.size();
-					this->crawlingParseAndAddUrls(url, urls, newUrlsTo, false);
-
-					if(this->config.crawlerTiming) {
-						updateTimer.stop();
-						timerStrTo += ", parse: " + parseTimer.totalStr() + ", update: " + updateTimer.totalStr();
-					}
-				}
-			}
-			catch(const XMLException& e) {
-				// error while parsing content
-				if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + url.second + "].");
-				this->crawlingSkip(url);
-				return false;
-			}
-		}
-		catch(const CurlException& e) {
-			// error while getting content: check type of error i.e. last cURL code
-			if(this->crawlingCheckCurlCode(this->networking.getCurlCode(), url.second)) {
-				// reset connection and retry
-				if(this->config.crawlerLogging) {
-					this->log(e.whatStr() + " [" + url.second + "].");
-					this->log("resets connection...");
-				}
-				this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
-				this->networking.resetConnection(this->config.crawlerSleepError);
-				this->crawlingRetry(url, false);
-			}
-			else {
-				// skip URL
-				this->crawlingSkip(url);
-			}
-			return false;
-		}
 	}
 	catch(const CurlException& e) {
 		// error while setting up network
@@ -742,6 +628,119 @@ bool Thread::crawlingContent(const std::pair<unsigned long, std::string>& url, u
 		this->networking.resetConnection(this->config.crawlerSleepError);
 		this->crawlingRetry(url, false);
 		return false;
+	}
+
+	// start HTTP timer
+	if(this->config.crawlerTiming) httpTimer.start();
+	if(this->config.crawlerSleepHttp) this->httpTime = std::chrono::steady_clock::now();
+
+	try {
+		// get content
+		this->networking.getContent("https://" + this->domain + url.second, content, this->config.crawlerRetryHttp);
+	}
+	catch(const CurlException& e) {
+		// error while getting content: check type of error i.e. last cURL code
+		if(this->crawlingCheckCurlCode(this->networking.getCurlCode(), url.second)) {
+			// reset connection and retry
+			if(this->config.crawlerLogging) {
+				this->log(e.whatStr() + " [" + url.second + "].");
+				this->log("resets connection...");
+			}
+			this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
+			this->networking.resetConnection(this->config.crawlerSleepError);
+			this->crawlingRetry(url, false);
+		}
+		else {
+			// skip URL
+			this->crawlingSkip(url);
+		}
+		return false;
+	}
+
+	// check response code
+	unsigned int responseCode = this->networking.getResponseCode();
+	if(!(this->crawlingCheckResponseCode(url.second, responseCode))) {
+		// skip because of response code
+		this->crawlingSkip(url);
+		return false;
+	}
+
+	if(this->config.crawlerTiming) {
+		httpTimer.stop();
+		if(!timerStrTo.empty()) timerStrTo += ", ";
+		timerStrTo += "http: " + httpTimer.totalStr();
+		parseTimer.start();
+	}
+
+	// check content type
+	std::string contentType = this->networking.getContentType();
+	if(!(this->crawlingCheckContentType(url, contentType))) {
+		// skip because of content type (not on whitelist or on blacklist)
+		this->crawlingSkip(url);
+		return false;
+	}
+
+	// optional: simple HTML consistency check (not very reliable though, mostly for debugging purposes)
+	if(!(this->crawlingCheckConsistency(url, content))) {
+		// skip because of HTML inconsistency
+		this->crawlingSkip(url);
+		return false;
+	}
+
+	// parse content
+	crawlservpp::Parsing::XML doc;
+	try {
+		doc.parse(content);
+	}
+	catch(const XMLException& e) {
+		// error while parsing content
+		if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + url.second + "].");
+		this->crawlingSkip(url);
+		return false;
+	}
+
+	// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
+	if(!(this->crawlingCheckCanonical(url, doc))) {
+		this->crawlingSkip(url);
+		return false;
+	}
+
+	// check content
+	if(!(this->crawlingCheckContent(url, content, doc))) {
+		// skip because of content (not on whitelist or on blacklist)
+		this->crawlingSkip(url);
+		return false;
+	}
+
+	if(this->config.crawlerTiming) {
+		parseTimer.stop();
+		updateTimer.start();
+	}
+
+	// save content
+	this->crawlingSaveContent(url, responseCode, contentType, content, doc);
+
+	if(this->config.crawlerTiming) {
+		updateTimer.stop();
+		parseTimer.start();
+	}
+
+	// extract URLs
+	std::vector<std::string> urls = this->crawlingExtractUrls(url, content, doc);
+	if(!urls.empty()) {
+		if(this->config.crawlerTiming) {
+			parseTimer.stop();
+			updateTimer.start();
+		}
+
+		// parse and add URLs
+		checkedUrlsTo += urls.size();
+		this->crawlingParseAndAddUrls(url, urls, newUrlsTo, false);
+
+		if(this->config.crawlerTiming) {
+			updateTimer.stop();
+			timerStrTo += ", parse: " + parseTimer.totalStr() + ", update: " + updateTimer.totalStr();
+		}
 	}
 
 	return true;
