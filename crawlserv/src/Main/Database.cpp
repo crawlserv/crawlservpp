@@ -1007,6 +1007,14 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_crawled", columns, true);
 	columns.clear();
 
+	// create table for crawling
+	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
+	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_crawling", columns, false);
+	columns.clear();
+
 	// create table for parsing
 	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_parsedtables", "id"));
 	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
@@ -1201,6 +1209,11 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_links` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_links`");
 
+			// rename parsing table
+			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
+						+ "_crawling`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+						+ listProperties.nameSpace	+ "_crawling`");
+
 			// rename parsing tables
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_parsing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
@@ -1302,6 +1315,7 @@ void Database::deleteUrlList(unsigned long listId) {
 	// delete tables
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_links");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawled");
+	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawling");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing");
