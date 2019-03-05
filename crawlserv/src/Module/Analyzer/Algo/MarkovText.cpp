@@ -197,7 +197,6 @@ std::string MarkovText::createText() {
 	std::map<std::string, std::vector<std::string> >::iterator it = dictionary.begin();
 	result.reserve(this->config.markovTextLength * 10); // guess average word length
 	int w = this->config.markovTextLength - this->config.markovTextDimension;
-	std::cout << std::endl << dictionary.size() << std::flush;
 	std::advance( it, rand() % dictionary.size() );
 	key = ( *it ).first;
 	result += key;
