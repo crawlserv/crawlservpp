@@ -92,7 +92,7 @@ void App::signal(int num) {
 
 // in-class signal handler
 void App::shutdown(int num) {
-	std::cout << std::endl << "[CANCEL] ";
+	std::cout << std::endl << "[SHUTDOWN] ";
 	switch(num) {
 	case SIGINT:
 		std::cout << "Interruption request signal (SIGINT)";
