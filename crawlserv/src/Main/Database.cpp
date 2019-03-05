@@ -1796,16 +1796,16 @@ unsigned long Database::addCustomTable(const CustomTableProperties& properties) 
 			// table exists already: add columns that do not exist yet and check columns that do exist
 			for(auto i = properties.columns.begin(); i != properties.columns.end(); ++i) {
 				if(!(i->name.empty())) {
-					std::string columnName = properties.type + "_" + i->name;
+					std::string columnName = i->name;
 					if(this->isColumnExists(properties.fullName, columnName)) {
-						// column does exist: check types
-						std::string columnType(i->type);
+						// column does exist: check types (does not check specifiers like 'UNSIGNED'!)
+						std::string columnType = i->type.substr(0, i->type.find(' '));
 						std::string targetType(this->getColumnType(properties.fullName, columnName));
 						std::transform(columnType.begin(), columnType.end(), columnType.begin(), ::tolower);
 						std::transform(targetType.begin(), targetType.end(), targetType.begin(), ::tolower);
 						if(columnType != targetType)
 							throw Database::Exception("Main::Database::addCustomTable(): Cannot overwrite column of type \'"
-									+ columnType + "\' with data of type \'" + i->type + "\'");
+									+ columnType + "\' with data of type \'" + targetType + "\'");
 					}
 					else {
 						// column does not exist: add column

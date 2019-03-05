@@ -112,7 +112,7 @@ void Database::initTargetTable(bool compressed) {
 	CustomTableProperties properties("analyzed", this->website, this->urlList, this->targetTableName, this->targetTableFull, false);
 	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
 		if(!(i->empty())) {
-			properties.columns.push_back(TableColumn(*i, this->targetFieldTypes.at(i - this->targetFieldNames.begin())));
+			properties.columns.push_back(TableColumn("analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin())));
 			if(properties.columns.back().type.empty())
 				throw DatabaseException("Analyzer::Database::initTargetTable(): No type for target field \'" + *i + "\' specified");
 		}

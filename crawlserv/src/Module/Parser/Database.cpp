@@ -95,7 +95,10 @@ void Database::initTargetTable() {
 
 	// create table properties
 	CustomTableProperties properties("parsed", this->website, this->urlList, this->targetTableName, this->targetTableFull, true);
-	properties.columns.reserve(this->targetFieldNames.size());
+	properties.columns.reserve(3 + this->targetFieldNames.size());
+	properties.columns.push_back(TableColumn("content", "BIGINT UNSIGNED NOT NULL"));
+	properties.columns.push_back(TableColumn("parsed_id", "TEXT NOT NULL"));
+	properties.columns.push_back(TableColumn("parsed_datetime", "DATETIME DEFAULT NULL"));
 	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
 		if(!(i->empty())) properties.columns.push_back(TableColumn("parsed__" + *i, "LONGTEXT"));
 
