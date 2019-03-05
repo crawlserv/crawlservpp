@@ -61,7 +61,7 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(20);
+	this->reserveForPreparedStatements(17);
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
@@ -69,21 +69,25 @@ void Database::prepare() {
 		this->ps.isUrlExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE url = ?) AS result");
 	}
+
 	if(!(this->ps.isUrlHashExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares hash check for URLs...");
 		this->ps.isUrlHashExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE hash = CRC32( ? )) AS result");
 	}
+
 	if(!(this->ps.getUrlId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlId()...");
 		this->ps.getUrlId = this->addPreparedStatement(
 				"SELECT id FROM `" + this->urlListTable + "` WHERE url = ? LIMIT 1");
 	}
+
 	if(!(this->ps.isUrlCrawled)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlCrawled()...");
 		this->ps.isUrlCrawled = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE id = ? AND crawled = TRUE) AS result");
 	}
+
 	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
 		if(this->recrawl) this->ps.getNextUrl = this->addPreparedStatement(
@@ -93,16 +97,19 @@ void Database::prepare() {
 				"SELECT id, url FROM `" + this->urlListTable
 				+ "` WHERE id > ? AND crawled = 0 AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
 	}
+
 	if(!(this->ps.addUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrl()...");
 		this->ps.addUrl = this->addPreparedStatement(
 				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES(?, CRC32(?), ?)");
 	}
+
 	if(!(this->ps.getUrlPosition)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlPosition()...");
 		this->ps.getUrlPosition = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
 	}
+
 	if(!(this->ps.getNumberOfUrls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
 		this->ps.getNumberOfUrls = this->addPreparedStatement(
@@ -115,63 +122,56 @@ void Database::prepare() {
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (crawllock IS NULL OR crawllock < NOW())) AS result");
 	}
+
 	if(!(this->ps.getUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLock()...");
 		this->ps.getUrlLock = this->addPreparedStatement(
 				"SELECT crawllock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.checkUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares checkUrlLock()...");
 		this->ps.checkUrlLock = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
 				+ "` WHERE id = ? AND (crawllock < NOW() OR crawllock <= ? OR crawllock IS NULL)) AS result");
 	}
+
 	if(!(this->ps.lockUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl()...");
 		this->ps.lockUrl = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable + "` SET crawllock = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.unLockUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares unLockUrl()...");
 		this->ps.unLockUrl = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable + "` SET crawllock = NULL WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.saveContent)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares saveContent()...");
 		this->ps.saveContent = this->addPreparedStatement(
 				"INSERT INTO `" + crawledTable + "`(url, response, type, content) VALUES (?, ?, ?, ?)");
 	}
+
 	if(!(this->ps.saveArchivedContent)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares saveArchivedContent()...");
 		this->ps.saveArchivedContent = this->addPreparedStatement(
 				"INSERT INTO `" + crawledTable
 				+ "`(url, crawltime, archived, response, type, content) VALUES (?, ?, TRUE, ?, ?, ?)");
 	}
+
 	if(!(this->ps.setUrlFinished)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares setUrlFinished()...");
 		this->ps.setUrlFinished = this->addPreparedStatement(
 				"UPDATE `" + this->urlListTable
 				+ "` SET crawled = TRUE, crawllock = NULL WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.isArchivedContentExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isArchivedContentExists()...");
 		this->ps.isArchivedContentExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + crawledTable + "` WHERE url = ? AND crawltime = ?) AS result");
-	}
-	if(!(this->ps.isLinkExists)) {
-		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [1/3]...");
-		this->ps.isLinkExists = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + linkTable + "` WHERE fromurl = ? AND tourl = ?) AS result");
-	}
-	if(!(this->ps.addLink)) {
-		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [2/3]...");
-		this->ps.addLink = this->addPreparedStatement(
-				"INSERT INTO `" + linkTable + "`(fromurl, tourl, archived) VALUES(?, ?, FALSE)");
-	}
-	if(!(this->ps.addLinkArchived)) {
-		if(this->verbose) this->log("[#" + this->idString + "] prepares addLinkIfNotExists() [3/3]...");
-		this->ps.addLinkArchived = this->addPreparedStatement(
-				"INSERT INTO `" + linkTable + "`(fromurl, tourl, archived) VALUES(?, ?, TRUE)");
 	}
 }
 
@@ -369,41 +369,6 @@ unsigned long Database::getNumberOfUrls() {
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getNumberOfUrls", e); }
 
 	return result;
-}
-
-// check whether a link between two websites already exists and add it to the database if not
-void Database::addLinkIfNotExists(unsigned long from, unsigned long to, bool archived) {
-	// check connection
-	this->checkConnection();
-
-	// check prepared SQL statements
-	if(!(this->ps.isLinkExists))
-		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addLinkIfNotExists(...)");
-	if(!(this->ps.addLinkArchived))
-		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addLinkIfNotExists(...)");
-	if(!(this->ps.addLink))
-		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addLinkIfNotExists(...)");
-	sql::PreparedStatement& checkStatement = this->getPreparedStatement(this->ps.isLinkExists);
-	sql::PreparedStatement& addStatement = archived ?
-			this->getPreparedStatement(this->ps.addLinkArchived) : this->getPreparedStatement(this->ps.addLink);
-
-	// check existence of link and add it to database if it does not exist there already
-	try {
-		// execute SQL query for checking existence of link
-		checkStatement.setUInt64(1, from);
-		checkStatement.setUInt64(2, to);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(checkStatement.executeQuery());
-
-		// get result
-		if(sqlResultSet && sqlResultSet->next()) if(!(sqlResultSet->getBoolean("result"))) {
-
-			// link does not exist: execute SQL query for adding link
-			addStatement.setUInt64(1, from);
-			addStatement.setUInt64(2, to);
-			addStatement.execute();
-		}
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addLinkIfNotExists", e); }
 }
 
 // check whether an URL is already locked in database

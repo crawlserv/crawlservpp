@@ -1119,77 +1119,75 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 	std::sort(urls.begin(), urls.end());
 	urls.erase(std::unique(urls.begin(), urls.end()), urls.end());
 
-	// get status message
-	std::string statusMessage = this->getStatusMessage();
-
-	// add non-existing URLs (lock table only if new URls are found)
-	bool locked = false;
+	// remove URLs longer than 2000 characters and already existing URLs
 	bool longUrls = false;
-	unsigned long counter = 0;
-	unsigned long linkUrlId = 0;
-
-	try {
-		for(auto i = urls.begin(); i != urls.end(); ++i) {
-			counter++;
-			if(counter % 500 == 0) {
-				// unlock tables
-				if(locked) this->database.releaseLocks();
-
-				// set status
-				std::ostringstream statusStrStr;
-				statusStrStr.imbue(std::locale(""));
-				statusStrStr << "[URLs: " << counter << "/" << urls.size() << "] " << statusMessage;
-				this->setStatusMessage(statusStrStr.str());
-
-				// check whether thread is still running
-				if(!this->isRunning()) return;
-
-				// lock tables
-				if(locked) this->database.lockUrlList();
-			}
-
-			if(i->size() > 2000) longUrls = true;
-			else {
-				if(this->database.isUrlExists(*i)) {
-					linkUrlId = this->database.getUrlId(*i);
-				}
-				else {
-					if(this->config.crawlerLogging && this->config.crawlerWarningsFile && !(i->empty()) && i->back() != '/') {
-						this->log("WARNING: Found file \'" + *i + "\'.");
-					}
-
-					// check whether URL list is locked already
-					bool add = true;
-					if(!locked) {
-						// lock URL list and add URL only if it still does not exist
-						this->database.lockUrlList();
-						locked = true;
-						add = !(this->database.isUrlExists(*i));
-					}
-					if(add) {
-						// add URL
-						linkUrlId = this->database.addUrl(*i, false);
-						newUrlsTo++;
-					}
-				}
-
-				// add linkage information to database
-				this->database.addLinkIfNotExists(url.first, linkUrlId, archived);
-			}
+	for(unsigned long n = 1; n <= urls.size(); n++) {
+		if(urls.at(n - 1).length() > 2000) {
+			longUrls = true;
+			urls.erase(urls.begin() + (n - 1));
+			n--;
+		}
+		else if(this->database.isUrlExists(urls.at(n - 1))) {
+			urls.erase(urls.begin() + (n - 1));
+			n--;
 		}
 	}
-	catch(...) {
-		// any exception: try to release table locks and re-throw
-		try { if(locked) this->database.releaseLocks(); }
-		catch(...) {}
-		throw;
+
+	if(!urls.empty()) {
+		unsigned long counter = 0;
+		bool locked = true;
+
+		// get status message
+		std::string statusMessage = this->getStatusMessage();
+
+		// lock URL list
+		this->database.lockUrlList();
+
+		// add URLs
+		try {
+			for(auto i = urls.begin(); i != urls.end(); ++i) {
+				counter++;
+				if(counter % 500 == 0) {
+					// unlock URL list
+					this->database.releaseLocks();
+					locked = false;
+
+					// set status
+					std::ostringstream statusStrStr;
+					statusStrStr.imbue(std::locale(""));
+					statusStrStr << "[URLs: " << counter << "/" << urls.size() << "] " << statusMessage;
+					this->setStatusMessage(statusStrStr.str());
+
+					// check whether thread is still running
+					if(!this->isRunning()) return;
+
+					// lock URL list
+					this->database.lockUrlList();
+					locked = true;
+				}
+
+				if(this->config.crawlerLogging && this->config.crawlerWarningsFile && !(i->empty()) && i->back() != '/') {
+					this->log("WARNING: Found file \'" + *i + "\'.");
+				}
+
+				// add URL
+				this->database.addUrl(*i, false);
+				newUrlsTo++;
+			}
+		}
+		catch(...) {
+			// any exception: try to release table locks and re-throw
+			try { if(locked) this->database.releaseLocks(); }
+			catch(...) {}
+			throw;
+		}
+
+		// unlock URL list
+		this->database.releaseLocks();
+
+		// reset status
+		this->setStatusMessage(statusMessage);
 	}
-
-	// unlock URL list
-	this->database.releaseLocks();
-
-	// reset status
-	this->setStatusMessage(statusMessage);
 
 	if(longUrls && this->config.crawlerLogging) this->log("WARNING: URLs longer than 2000 Bytes ignored.");
 }
