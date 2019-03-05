@@ -3285,7 +3285,7 @@ unsigned long Database::getMaxAllowedPacketSize() const {
 
 // reserve memory for a specific number of SQL statements to additionally prepare
 void Database::reserveForPreparedStatements(unsigned short numberOfAdditionalPreparedStatements) {
-	this->preparedStatements.resize(this->preparedStatements.size() + numberOfAdditionalPreparedStatements);
+	this->preparedStatements.reserve(this->preparedStatements.size() + numberOfAdditionalPreparedStatements);
 }
 
 // prepare additional SQL statement, return ID of newly prepared SQL statement

@@ -1007,7 +1007,7 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::pair<unsigned lo
 				if(i->resultMulti) {
 					std::vector<std::string> results;
 					this->getRegExQueryPtr(i->index).getAll(content, results);
-					urls.resize(urls.size() + results.size());
+					urls.reserve(urls.size() + results.size());
 					urls.insert(urls.end(), results.begin(), results.end());
 				}
 				else {
@@ -1025,8 +1025,10 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::pair<unsigned lo
 				if(i->resultMulti) {
 					std::vector<std::string> results;
 					this->getXPathQueryPtr(i->index).getAll(doc, results);
-					urls.resize(urls.size() + results.size());
+
+					urls.reserve(urls.size() + results.size());
 					urls.insert(urls.end(), results.begin(), results.end());
+					std::cout << std::endl << "-> urls: " << urls.size() << std::flush;
 				}
 				else {
 					std::string result;
