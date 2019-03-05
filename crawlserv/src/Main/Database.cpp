@@ -1027,8 +1027,8 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 
 	// create table for analyzing
 	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_analyzedtables", "id"));
-	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
+	columns.push_back(TableColumn("chunk_id", "BIGINT UNSIGNED DEFAULT NULL"));
+	columns.push_back(TableColumn("chunk_label", "TINYTEXT DEFAULT NULL"));
 	columns.push_back(TableColumn("algo", "TINYTEXT NOT NULL"));
 	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
 	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
@@ -3299,7 +3299,7 @@ sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 	try { return this->preparedStatements.at(id - 1).get();	}
 	catch(const sql::SQLException &e) {
 		this->sqlException("Main::Database::getPreparedStatement", e);
-		throw;//will not be used
+		throw;// will not be used
 	}
 }
 
@@ -3704,7 +3704,7 @@ void Database::sqlException(const std::string& function, const sql::SQLException
 		throw Database::ConnectionException(errorStrStr.str());
 
 	default:
-		// throw database exception
+		// throw general database exception
 		throw Database::Exception(errorStrStr.str());
 	}
 }
