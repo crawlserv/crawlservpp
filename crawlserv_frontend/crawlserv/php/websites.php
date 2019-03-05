@@ -150,31 +150,27 @@ if($website) {
         $result->close();
         
         // get number of crawled URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE crawled = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
+        $result = $dbConnection->query("SELECT COUNT(DISTINCT url) FROM `crawlserv_".$namespace."_".$urllistNamespace
+                ."_crawling` WHERE success = TRUE");
+        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."_crawling`");
         $row = $result->fetch_row();
         if($row) $urllistCrawled = $row[0];
         $result->close();
         
         // get number of parsed URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE parsed = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
+        $result = $dbConnection->query("SELECT COUNT(DISTINCT url) FROM `crawlserv_".$namespace."_".$urllistNamespace
+                ."_parsing` WHERE success = TRUE");
+        if(!$result) exit("ERROR: Could not get number of parsed URLs from `crawlserv_".$namespace."_".$urllistNamespace."_parsing`");
         $row = $result->fetch_row();
         if($row) $urllistParsed = $row[0];
         $result->close();
         
         // get number of extracted URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE extracted = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
+        $result = $dbConnection->query("SELECT COUNT(DISTINCT url) FROM `crawlserv_".$namespace."_".$urllistNamespace
+                ."_extracting` WHERE success = TRUE");
+        if(!$result) exit("ERROR: Could not get number of extracted URLs from `crawlserv_".$namespace."_".$urllistNamespace."_extracting`");
         $row = $result->fetch_row();
         if($row) $urllistExtracted = $row[0];
-        $result->close();
-        
-        // get number of analyzed URLs
-        $result = $dbConnection->query("SELECT COUNT(*) FROM `crawlserv_".$namespace."_".$urllistNamespace."` WHERE analyzed = TRUE");
-        if(!$result) exit("ERROR: Could not get number of crawled URLs from `crawlserv_".$namespace."_".$urllistNamespace."`");
-        $row = $result->fetch_row();
-        if($row) $urllistAnalyzed = $row[0];
         $result->close();
         
         // get last update of selected URL list
@@ -197,13 +193,6 @@ if($website) {
         if($result) {
             $row = $result->fetch_assoc();
             if($row) $extractedUpdate = $row["updated"];
-        }
-        
-        // get last update of any analyzing table
-        $result = $dbConnection->query("SELECT updated FROM crawlserv_analyzedtables WHERE urllist=$ulId ORDER BY updated LIMIT 1");
-        if($result) {
-            $row = $result->fetch_assoc();
-            if($row) $analyzedUpdate = $row["updated"];
         }
     }
     else {
@@ -285,23 +274,6 @@ if($website) {
                 echo time_elapsed_string($extractedUpdate);
             }
             echo ") <a href=\"#\" class=\"urllist-reset-extracting entry-value\">[Reset]</a>";
-            echo "</div>\n";
-            echo "</div>\n";
-        }
-        if($urllistAnalyzed) {
-            echo "<div class=\"entry-row\">\n";
-            echo "<div class=\"entry-label\">Analyzed:</div>\n";
-            echo "<div class=\"entry-value\">\n";
-            if($urllistAnalyzed == 1) echo "1 entry";
-            else echo number_format($urllistAnalyzed)." entries";
-            echo " (";
-            echo number_format((float) $urllistAnalyzed / $urllistParsed * 100, 1);
-            echo "%";
-            if(isset($analyzedUpdate) && $analyzedUpdate) {
-                echo ", ";
-                echo time_elapsed_string($analyzedUpdate);
-            }
-            echo ") <a href=\"#\" class=\"urllist-reset-analyzing entry-value\">[Reset]</a>";
             echo "</div>\n";
             echo "</div>\n";
         }
