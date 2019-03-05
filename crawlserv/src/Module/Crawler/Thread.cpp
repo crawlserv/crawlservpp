@@ -1028,7 +1028,6 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::pair<unsigned lo
 
 					urls.reserve(urls.size() + results.size());
 					urls.insert(urls.end(), results.begin(), results.end());
-					std::cout << std::endl << "-> urls: " << urls.size() << std::flush;
 				}
 				else {
 					std::string result;
