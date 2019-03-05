@@ -134,6 +134,7 @@ void Database::prepare() {
 		this->ps.isUrlParsed = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + this->parsingTable + "` WHERE target = ? AND url = ? AND success = TRUE) AS result");
 	}
+
 	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
 		std::ostringstream sqlQueryStr;
@@ -147,38 +148,53 @@ void Database::prepare() {
 		if(this->verbose) this->log("[#" + this->idString + "] > " + sqlQueryStr.str());
 		this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStr.str());
 	}
+
 	if(!(this->ps.getUrlPosition)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlPosition()...");
 		this->ps.getUrlPosition = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?");
 	}
+
 	if(!(this->ps.getNumberOfUrls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
 		this->ps.getNumberOfUrls = this->addPreparedStatement(
 				"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "`");
 	}
+
 	if(!(this->ps.isUrlLockable)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlLockable()...");
 		std::ostringstream sqlQueryStr;
 		this->ps.isUrlLockable = this->addPreparedStatement("SELECT (locktime IS NULL OR locktime < NOW()) AS result FROM `"
 				+ this->parsingTable + "` WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.getUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLock()...");
 		this->ps.getUrlLock = this->addPreparedStatement(
 				"SELECT locktime FROM `" + this->parsingTable + "` WHERE id = ? LIMIT 1");
 	}
+
+	if(!(this->ps.getUrlLockId)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLockId()...");
+		std::ostringstream queryStr;
+		queryStr << "SELECT id FROM `" << this->parsingTable << "` WHERE target = " << this->targetTableId
+				<< " AND url = ? LIMIT 1";
+		this->ps.getUrlLockId = this->addPreparedStatement(queryStr.str());
+	}
+
 	if(!(this->ps.checkUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares checkUrlLock()...");
 		this->ps.checkUrlLock = this->addPreparedStatement(
 				"SELECT (locktime < NOW() OR locktime <= ? OR locktime IS NULL) AS result FROM " + this->parsingTable
 				+ " WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.lockUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl() [1/2]...");
 		this->ps.lockUrl = this->addPreparedStatement("UPDATE `" + this->parsingTable
 				+ "` SET locktime = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.addUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl() [2/2]...");
 		std::ostringstream sqlQueryStr;
@@ -186,37 +202,44 @@ void Database::prepare() {
 				<< ", ?, NOW() + INTERVAL ? SECOND, FALSE)";
 		this->ps.addUrlLock = this->addPreparedStatement(sqlQueryStr.str());
 	}
+
 	if(!(this->ps.unLockUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares unLockUrl()...");
 		this->ps.unLockUrl = this->addPreparedStatement("UPDATE `" + this->parsingTable
 				+ "` SET locktime = NULL WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.getContentIdFromParsedId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getContentIdFromParsedId()...");
 		this->ps.getContentIdFromParsedId = this->addPreparedStatement(
 				"SELECT content FROM `" + this->targetTableFull	+ "` WHERE parsed_id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.getLatestContent)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getLatestContent()...");
 		this->ps.getLatestContent = this->addPreparedStatement(
 				"SELECT id, content FROM `"
 				+ this->urlListTable + "_crawled` WHERE url = ? ORDER BY crawltime DESC LIMIT ?, 1");
 	}
+
 	if(!(this->ps.getAllContents)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getAllContents()...");
 		this->ps.getAllContents = this->addPreparedStatement(
 				"SELECT id, content FROM `" + this->urlListTable + "_crawled` WHERE url = ?");
 	}
+
 	if(!(this->ps.setUrlFinished)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares setUrlFinished()...");
 		this->ps.setUrlFinished = this->addPreparedStatement(
 				"UPDATE `" + this->parsingTable + "` SET locktime = NULL, success = TRUE WHERE id = ? LIMIT 1");
 	}
+
 	if(!(this->ps.getEntryId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getEntryId()...");
 		this->ps.getEntryId = this->addPreparedStatement(
 				"SELECT id FROM `" + this->targetTableFull + "` WHERE content = ? LIMIT 1");
 	}
+
 	if(!(this->ps.updateEntry)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares updateEntry()...");
 		std::string sqlQuery = "UPDATE `" + this->targetTableFull + "` SET parsed_id = ?, parsed_datetime = ?";
@@ -226,6 +249,7 @@ void Database::prepare() {
 		if(this->verbose) this->log("[#" + this->idString + "] > " + sqlQuery);
 		this->ps.updateEntry = this->addPreparedStatement(sqlQuery);
 	}
+
 	if(!(this->ps.addEntry)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addEntry()...");
 		std::string sqlQuery = "INSERT INTO `" + this->targetTableFull + "`(content, parsed_id, parsed_datetime";
@@ -242,6 +266,7 @@ void Database::prepare() {
 		if(this->verbose) this->log("[#" + this->idString + "] > " + sqlQuery);
 		this->ps.addEntry = this->addPreparedStatement(sqlQuery);
 	}
+
 	if(!(this->ps.updateParsedTable)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares parsingTableUpdated()...");
 		this->ps.updateParsedTable = this->addPreparedStatement("UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
@@ -362,7 +387,7 @@ bool Database::isUrlLockable(unsigned long lockId) {
 	return result;
 }
 
-// get the URL lock end time of a specific URL from database
+// get the URL lock end time for a specific URL from database
 std::string Database::getUrlLock(unsigned long lockId) {
 	std::string result;
 
@@ -387,6 +412,32 @@ std::string Database::getUrlLock(unsigned long lockId) {
 	return result;
 }
 
+// get the URL lock ID for a specific URL from database, return zero if no lock exists yet
+unsigned long Database::getUrlLockId(unsigned long urlId) {
+	unsigned long result = 0;
+
+	// check connection
+	this->checkConnection();
+
+	// check prepared SQL statement
+	if(!(this->ps.checkUrlLock))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLockId(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockId);
+
+	// get lock ID from database
+	try {
+		// execute SQL query
+		sqlStatement.setUInt64(1, urlId);
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLockId", e); }
+
+	return result;
+}
+
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
 bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	bool result = false;
@@ -395,7 +446,8 @@ bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.checkUrlLock)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::checkUrlLock(...)");
+	if(!(this->ps.checkUrlLock))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::checkUrlLock(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.checkUrlLock);
 
 	// check URL lock in database
@@ -405,7 +457,7 @@ bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 		sqlStatement.setUInt64(2, lockId);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
-		// get (and parse) result
+		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::checkUrlLock", e); }
