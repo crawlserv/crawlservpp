@@ -1122,8 +1122,8 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 	// remove URLs longer than 2000 characters
 	const auto tmpSize = urls.size();
 	urls.erase(std::remove_if(urls.begin(), urls.end(), [](const std::string& url) {
-		return url.size() > 2000;
-	}));
+		return url.length() > 2000;
+	}), urls.end());
 	if(this->config.crawlerLogging && urls.size() < tmpSize)
 		this->log("WARNING: URLs longer than 2000 Bytes ignored.");
 
@@ -1139,7 +1139,7 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 		// remove already existing URLs
 		urls.erase(std::remove_if(urls.begin(), urls.end(), [&](const std::string& url) {
 			return this->database.isUrlExists(url);
-		}));
+		}), urls.end());
 
 		this->database.addUrls(urls);
 	}
