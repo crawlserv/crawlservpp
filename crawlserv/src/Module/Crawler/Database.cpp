@@ -54,7 +54,6 @@ void Database::setVerbose(bool isVerbose) {
 void Database::prepare() {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
-	this->linkTable = this->urlListTable + "_links";
 	std::string crawledTable = this->urlListTable + "_crawled";
 
 	// check connection to database
@@ -214,7 +213,7 @@ bool Database::isUrlExists(const std::string& urlString) {
 
 // lock URL list
 void Database::lockUrlList() {
-	this->lockTables(this->urlListTable, this->linkTable);
+	this->lockTable(this->urlListTable);
 }
 
 // get the ID of an URL (uses hash check for first checking probable existence of URL)

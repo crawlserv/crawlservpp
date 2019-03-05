@@ -88,7 +88,6 @@ namespace crawlservpp::Module::Crawler {
 		bool logging;
 		bool verbose;
 		std::string urlListTable;
-		std::string linkTable;
 
 	private:
 		// IDs of prepared SQL statements
