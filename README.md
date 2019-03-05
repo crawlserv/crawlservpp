@@ -294,6 +294,7 @@ The following main tables are created and used:
 * **`log`**: Log entries.
 * **`parsedtables`**: Index of result tables for parsing.
 * **`queries`**: RegEx and XPath queries.
+* **`targetlocks`**: Locks for target tables.
 * **`threads`**: Thread status.
 * **`urllists`**: URL lists.
 * **`websites`**: Websites.
@@ -304,10 +305,13 @@ For each website and each URL list a namespace of at least four allowed characte
 
 * **`<namespace of website>_<namespace of URL list>`**: Content of the URL list.
 * **`<namespace of website>_<namespace of URL list>_analyzed_<name of target table>`**: Analyzing results.
+* **`<namespace of website>_<namespace of URL list>_analyzing_<name of target table>`**: Analyzing status.
 * **`<namespace of website>_<namespace of URL list>_crawled`**: Crawled content.
+* **`<namespace of website>_<namespace of URL list>_crawling`**: Crawling status.
 * **~~`<namespace of website>_<namespace of URL list>_extracted_<name of target table>`~~**: Extracting results.
-* **`<namespace of website>_<namespace of URL list>_links`**: Linkage information (which URLs link to which other URLs).
+* **~~`<namespace of website>_<namespace of URL list>_extracting`~~**: Extracting status.
 * **`<namespace of website>_<namespace of URL list>_parsed_<name of target table>`**: Parsing results.
+* **`<namespace of website>_<namespace of URL list>_parsing`**: Parsing status.
 
 See the source code of the `addUrlList(...)` function in [`Main::Database`](crawlserv/src/Main/Database.cpp) for details about the structure of the non-result tables. Most of the columns of the result tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `initTargetTable(...)` functions in [`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp), ~~[`Module::Extractor::Database`](crawlserv/src/Extractor/Database.cpp)~~ and [`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp) accordingly.
 
