@@ -70,6 +70,12 @@ void Database::setTargetTable(const std::string& table) {
 void Database::setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types) {
 	this->targetFieldNames = fields;
 	this->targetFieldTypes = types;
+
+	// replace undefined types with empty strings
+	//  NOTE: This will lead to an error in initTargetTable() if the corresponding names are not empty!
+	while(this->targetFieldTypes.size() < this->targetFieldNames.size()) {
+		this->targetFieldTypes.push_back("");
+	}
 }
 
 // set time-out for target table lock
@@ -104,6 +110,13 @@ void Database::initTargetTable(bool compressed) {
 
 	// create table properties
 	CustomTableProperties properties("analyzed", this->website, this->urlList, this->targetTableName, this->targetTableFull, false);
+	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
+		if(!(i->empty())) {
+			properties.columns.push_back(TableColumn(*i, this->targetFieldTypes.at(i - this->targetFieldNames.begin())));
+			if(properties.columns.back().type.empty())
+				throw DatabaseException("Analyzer::Database::initTargetTable(): No type for target field \'" + *i + "\' specified");
+		}
+	}
 
 	// lock analyzing tables
 	this->lockCustomTables("analyzed", this->website, this->urlList, this->timeoutTargetLock);
