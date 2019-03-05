@@ -114,14 +114,14 @@ void Database::prepare() {
 	if(!(this->ps.add100Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [2/3]...");
 		std::string query = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
-		for(unsigned short n = 0; n < 99; n++) query += ", VALUES(?, CRC32(?))";
+		for(unsigned short n = 0; n < 99; n++) query += ", (?, CRC32(?))";
 		this->ps.add100Urls = this->addPreparedStatement(query);
 	}
 
 	if(!(this->ps.add1000Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [3/3]...");
 		std::string query = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
-		for(unsigned short n = 0; n < 999; n++) query += ", VALUES(?, CRC32(?))";
+		for(unsigned short n = 0; n < 999; n++) query += ", (?, CRC32(?))";
 		this->ps.add1000Urls = this->addPreparedStatement(query);
 	}
 
