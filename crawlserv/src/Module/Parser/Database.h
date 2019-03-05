@@ -73,6 +73,7 @@ namespace crawlservpp::Module::Parser {
 		bool isUrlLockable(unsigned long lockId);
 		bool checkUrlLock(unsigned long lockId, const std::string& lockTime);
 		std::string getUrlLock(unsigned long lockId);
+		unsigned long getUrlLockId(unsigned long urlId);
 		std::string lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout);
 		void unLockUrl(unsigned long lockId);
 
@@ -118,6 +119,7 @@ namespace crawlservpp::Module::Parser {
 			unsigned short isUrlLockable;
 			unsigned short checkUrlLock;
 			unsigned short getUrlLock;
+			unsigned short getUrlLockId;
 			unsigned short lockUrl;
 			unsigned short addUrlLock;
 			unsigned short unLockUrl;
