@@ -272,7 +272,7 @@ void Thread::initCustomUrls() {
 	try {
 		// get id for start page (and add it to URL list if necessary)
 		if(this->database.isUrlExists(this->config.crawlerStart)) this->startPageId = this->database.getUrlId(this->config.crawlerStart);
-		else this->startPageId = this->database.addUrl(this->config.crawlerStart, true);
+		else this->startPageId = this->database.addUrlGetId(this->config.crawlerStart, true);
 
 		if(!(this->config.customCounters.empty())) {
 			// run custom counters
@@ -314,7 +314,7 @@ void Thread::initCustomUrls() {
 			try {
 				this->parser->setCurrentSubUrl(i->second);
 				if(this->database.isUrlExists(i->second)) i->first = this->database.getUrlId(i->second);
-				else i->first = this->database.addUrl(i->second, true);
+				else i->first = this->database.addUrlGetId(i->second, true);
 			}
 			catch(const URIException& e) {
 				if(this->config.crawlerLogging) {
@@ -1119,77 +1119,42 @@ void Thread::crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>
 	std::sort(urls.begin(), urls.end());
 	urls.erase(std::unique(urls.begin(), urls.end()), urls.end());
 
-	// remove URLs longer than 2000 characters and already existing URLs
-	bool longUrls = false;
-	for(unsigned long n = 1; n <= urls.size(); n++) {
-		if(urls.at(n - 1).length() > 2000) {
-			longUrls = true;
-			urls.erase(urls.begin() + (n - 1));
-			n--;
-		}
-		else if(this->database.isUrlExists(urls.at(n - 1))) {
-			urls.erase(urls.begin() + (n - 1));
-			n--;
-		}
+	// remove URLs longer than 2000 characters
+	const auto tmpSize = urls.size();
+	urls.erase(std::remove_if(urls.begin(), urls.end(), [](const std::string& url) {
+		return url.size() > 2000;
+	}));
+	if(this->config.crawlerLogging && urls.size() < tmpSize)
+		this->log("WARNING: URLs longer than 2000 Bytes ignored.");
+
+	// if necessary, check for file (i.e. non-slash) endings and show warnings
+	if(this->config.crawlerLogging && this->config.crawlerWarningsFile)
+		for(auto i = urls.begin(); i != urls.end(); i++)
+			if(i->back() != '/') this->log("WARNING: Found file \'" + *i + "\'.");
+
+	// lock URL list
+	this->database.lockUrlList();
+
+	try {
+		// remove already existing URLs
+		urls.erase(std::remove_if(urls.begin(), urls.end(), [&](const std::string& url) {
+			return this->database.isUrlExists(url);
+		}));
+
+		this->database.addUrls(urls);
+	}
+	catch(...) {
+		// any exception: try to release table lock and re-throw
+		try { this->database.releaseLocks(); }
+		catch(...) {}
+		throw;
 	}
 
-	if(!urls.empty()) {
-		unsigned long counter = 0;
-		bool locked = true;
+	// unlock URL list
+	this->database.releaseLocks();
 
-		// get status message
-		std::string statusMessage = this->getStatusMessage();
-
-		// lock URL list
-		this->database.lockUrlList();
-
-		// add URLs
-		try {
-			for(auto i = urls.begin(); i != urls.end(); ++i) {
-				counter++;
-				if(counter % 500 == 0) {
-					// unlock URL list
-					this->database.releaseLocks();
-					locked = false;
-
-					// set status
-					std::ostringstream statusStrStr;
-					statusStrStr.imbue(std::locale(""));
-					statusStrStr << "[URLs: " << counter << "/" << urls.size() << "] " << statusMessage;
-					this->setStatusMessage(statusStrStr.str());
-
-					// check whether thread is still running
-					if(!this->isRunning()) return;
-
-					// lock URL list
-					this->database.lockUrlList();
-					locked = true;
-				}
-
-				if(this->config.crawlerLogging && this->config.crawlerWarningsFile && !(i->empty()) && i->back() != '/') {
-					this->log("WARNING: Found file \'" + *i + "\'.");
-				}
-
-				// add URL
-				this->database.addUrl(*i, false);
-				newUrlsTo++;
-			}
-		}
-		catch(...) {
-			// any exception: try to release table locks and re-throw
-			try { if(locked) this->database.releaseLocks(); }
-			catch(...) {}
-			throw;
-		}
-
-		// unlock URL list
-		this->database.releaseLocks();
-
-		// reset status
-		this->setStatusMessage(statusMessage);
-	}
-
-	if(longUrls && this->config.crawlerLogging) this->log("WARNING: URLs longer than 2000 Bytes ignored.");
+	// save number of added URLs
+	newUrlsTo = urls.size();
 }
 
 // crawl archives

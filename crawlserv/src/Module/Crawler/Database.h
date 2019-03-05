@@ -58,7 +58,9 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long getUrlId(const std::string& urlString);
 		bool isUrlCrawled(unsigned long urlId);
 		std::pair<unsigned long, std::string> getNextUrl(unsigned long currentUrlId);
-		unsigned long addUrl(const std::string& urlString, bool manual);
+		void addUrl(const std::string& urlString, bool manual);
+		void addUrls(const std::vector<std::string>& urls);
+		unsigned long addUrlGetId(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
 
@@ -98,6 +100,9 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short isUrlCrawled;
 			unsigned short getNextUrl;
 			unsigned short addUrl;
+			unsigned short add10Urls;
+			unsigned short add100Urls;
+			unsigned short add1000Urls;
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
 			unsigned short isUrlLockable;

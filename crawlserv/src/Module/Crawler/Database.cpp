@@ -60,7 +60,7 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(17);
+	this->reserveForPreparedStatements(20);
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
@@ -101,6 +101,28 @@ void Database::prepare() {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrl()...");
 		this->ps.addUrl = this->addPreparedStatement(
 				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES(?, CRC32(?), ?)");
+	}
+
+	if(!(this->ps.add10Urls)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [1/3]...");
+		this->ps.add10Urls = this->addPreparedStatement(
+				"INSERT INTO `" + this->urlListTable + "`(url, hash)"
+				 " VALUES(?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)),"
+				 " (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?))");
+	}
+
+	if(!(this->ps.add100Urls)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [2/3]...");
+		std::string query = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
+		for(unsigned short n = 0; n < 99; n++) query += ", VALUES(?, CRC32(?))";
+		this->ps.add100Urls = this->addPreparedStatement(query);
+	}
+
+	if(!(this->ps.add1000Urls)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [3/3]...");
+		std::string query = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
+		for(unsigned short n = 0; n < 999; n++) query += ", VALUES(?, CRC32(?))";
+		this->ps.add1000Urls = this->addPreparedStatement(query);
 	}
 
 	if(!(this->ps.getUrlPosition)) {
@@ -294,10 +316,8 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 	return result;
 }
 
-// add URL to database and return ID of newly added URL
-unsigned long Database::addUrl(const std::string& urlString, bool manual) {
-	unsigned long result = 0;
-
+// add URL to database
+void Database::addUrl(const std::string& urlString, bool manual) {
 	// check connection
 	this->checkConnection();
 
@@ -312,12 +332,82 @@ unsigned long Database::addUrl(const std::string& urlString, bool manual) {
 		sqlStatement.setString(2, urlString);
 		sqlStatement.setBoolean(3, manual);
 		sqlStatement.execute();
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrl", e); }
+}
 
+// add URLs to the database
+void Database::addUrls(const std::vector<std::string>& urls) {
+	unsigned long pos = 0;
+
+	// check argument
+	if(urls.empty()) return;
+
+	// check connection
+	this->checkConnection();
+
+	// check prepared SQL statements
+	if(!(this->ps.add10Urls)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrls(...)");
+	sql::PreparedStatement& sqlStatement10 = this->getPreparedStatement(this->ps.add10Urls);
+	if(!(this->ps.add100Urls)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrls(...)");
+	sql::PreparedStatement& sqlStatement100 = this->getPreparedStatement(this->ps.add100Urls);
+	if(!(this->ps.add1000Urls)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrls(...)");
+	sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.add1000Urls);
+
+	try {
+		// add 1.000 URLs at once
+		while(urls.size() - pos >= 1000) {
+			for(unsigned long n = 0; n < 1000; n++) {
+				sqlStatement1000.setString((n * 2) + 1, urls.at(pos + n));
+				sqlStatement1000.setString((n * 2) + 2, urls.at(pos + n));
+			}
+			sqlStatement1000.execute();
+			pos += 1000;
+		}
+
+		// add 100 URLs at once
+		while(urls.size() - pos >= 100) {
+			for(unsigned long n = 0; n < 100; n++) {
+				sqlStatement100.setString((n * 2) + 1, urls.at(pos + n));
+				sqlStatement100.setString((n * 2) + 2, urls.at(pos + n));
+			}
+			sqlStatement100.execute();
+			pos += 100;
+		}
+
+		// add 10 URLs at once
+		while(urls.size() - pos >= 10) {
+			for(unsigned long n = 0; n < 10; n++) {
+				sqlStatement10.setString((n * 2) + 1, urls.at(pos + n));
+				sqlStatement10.setString((n * 2) + 2, urls.at(pos + n));
+			}
+			sqlStatement10.execute();
+			pos += 10;
+		}
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrls", e); }
+
+	// add remaining URLs
+	while(urls.size() - pos) {
+		this->addUrl(urls.at(pos), false);
+		pos++;
+	}
+}
+
+
+// add URL to database and return ID of newly added URL
+unsigned long Database::addUrlGetId(const std::string& urlString, bool manual) {
+	unsigned long result = 0;
+
+	// add URL to database
+	this->addUrl(urlString, manual);
+
+	// get resulting ID
+	try {
 		// get result
 		result = this->getLastInsertedId();
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrl", e); }
-
+	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlGetId", e); }
 	return result;
 }
 
