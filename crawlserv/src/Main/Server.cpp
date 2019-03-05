@@ -761,7 +761,7 @@ Server::ServerCommandResponse Server::cmdPauseCrawler(const rapidjson::Document&
 
 	// pausecrawler is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "crawler #" << id << "] paused by " << ip << ".";
+	logStrStr << "crawler #" << id << " paused by " << ip << ".";
 	this->database.log(logStrStr.str());
 
 	return Server::ServerCommandResponse("Crawler is pausing.");
@@ -1384,7 +1384,7 @@ Server::ServerCommandResponse Server::cmdDeleteWebsite(const rapidjson::Document
 
 	// deletewebsite is a logged command
 	std::ostringstream logStrStr;
-	logStrStr << "Website #" << id << " deleted by " << ip << ".";
+	logStrStr << "website #" << id << " deleted by " << ip << ".";
 	this->database.log(logStrStr.str());
 	return Server::ServerCommandResponse("Website deleted.");
 }
