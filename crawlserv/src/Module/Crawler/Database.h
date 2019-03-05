@@ -61,7 +61,6 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long addUrl(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
-		void addLinkIfNotExists(unsigned long from, unsigned long to, bool archived);
 
 		// URL locking functions
 		bool isUrlLockable(unsigned long urlId);
@@ -111,9 +110,6 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short saveArchivedContent;
 			unsigned short setUrlFinished;
 			unsigned short isArchivedContentExists;
-			unsigned short isLinkExists;
-			unsigned short addLink;
-			unsigned short addLinkArchived;
 		} ps;
 	};
 }

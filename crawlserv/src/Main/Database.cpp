@@ -768,10 +768,14 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "`");
 				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_crawled` RENAME TO "
 						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_crawled`");
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_links` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_links`");
+
+				// rename crawling table
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_crawling` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_crawling`");
 
 				// rename parsing tables
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_parsing` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_parsing`");
 				std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getCustomTables("parsed", liI->first);
 				for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_parsed_"
@@ -780,6 +784,8 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 				}
 
 				// rename extracting tables
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_extracting` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_extracting`");
 				std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getCustomTables("extracted", liI->first);
 				for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_extracted_"
@@ -788,6 +794,8 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 				}
 
 				// rename analyzing tables
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_analyzing` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_analyzing`");
 				std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getCustomTables("analyzed", liI->first);
 				for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_analyzed_"
@@ -1043,15 +1051,6 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_analyzing", columns, false);
 	columns.clear();
 
-	// create table for linkage information
-	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
-	columns.push_back(TableColumn("fromurl", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
-	columns.push_back(TableColumn("tourl", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
-	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_links", columns, false);
-
 	return result;
 }
 
@@ -1206,8 +1205,6 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 					+ "` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "`");
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_crawled` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_crawled`");
-			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "_links` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_links`");
 
 			// rename parsing table
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
@@ -1313,7 +1310,6 @@ void Database::deleteUrlList(unsigned long listId) {
 	if(this->isTableEmpty("crawlserv_urllists")) this->resetAutoIncrement("crawlserv_urllists");
 
 	// delete tables
-	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_links");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawled");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawling");
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing");
