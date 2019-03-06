@@ -999,8 +999,6 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 	columns.push_back(TableColumn("manual", "BOOLEAN DEFAULT FALSE NOT NULL"));
 	columns.push_back(TableColumn("url", "VARCHAR(2000) NOT NULL"));
 	columns.push_back(TableColumn("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true));
-	columns.push_back(TableColumn("crawled", "BOOLEAN DEFAULT FALSE NOT NULL"));
-	columns.push_back(TableColumn("crawllock", "DATETIME DEFAULT NULL"));
 	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, columns, false);
 	columns.clear();
 
