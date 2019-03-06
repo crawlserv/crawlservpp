@@ -9,7 +9,7 @@
 
 #include "Portability.h"
 
-namespace crawlservpp::Helper::Portability {
+namespace Helper::Portability {
 
 // portable getch
 static struct termios oldT, newT;

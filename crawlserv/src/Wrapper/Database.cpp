@@ -13,7 +13,7 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: initialize database
-Database::Database(crawlservpp::Module::Database& dbRef) : database(dbRef) {}
+Database::Database(Module::Database& dbRef) : database(dbRef) {}
 
 // destructor stub
 Database::~Database() {}
@@ -69,7 +69,7 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
  */
 
 // get the properties of a query from the database by its ID
-void Database::getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo) {
+void Database::getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo) {
 	this->database.getQueryProperties(queryId, queryPropertiesTo);
 }
 
@@ -97,7 +97,7 @@ unsigned long Database::addCustomTable(const CustomTableProperties& properties) 
 }
 
 // get custom tables of the specified type for an ID-specified URL list from the database
-std::vector<std::pair<unsigned long, std::string>> Database::getCustomTables(const std::string& type, unsigned long listId) {
+std::queue<Database::IdString> Database::getCustomTables(const std::string& type, unsigned long listId) {
 	return this->database.getCustomTables(type, listId);
 }
 
@@ -136,62 +136,62 @@ void Database::releaseLocks() {
  */
 
 // get one custom value from one field of a row in the database
-void Database::getCustomData(crawlservpp::Main::Data::GetValue& data) {
+void Database::getCustomData(Main::Data::GetValue& data) {
 	this->database.getCustomData(data);
 }
 
 // get custom values from multiple fields of a row in the database
-void Database::getCustomData(crawlservpp::Main::Data::GetFields& data) {
+void Database::getCustomData(Main::Data::GetFields& data) {
 	this->database.getCustomData(data);
 }
 
 // get custom values from multiple fields of a row with different types in the database
-void Database::getCustomData(crawlservpp::Main::Data::GetFieldsMixed& data) {
+void Database::getCustomData(Main::Data::GetFieldsMixed& data) {
 	this->database.getCustomData(data);
 }
 
 // get custom values from one column in the database
-void Database::getCustomData(crawlservpp::Main::Data::GetColumn& data) {
+void Database::getCustomData(Main::Data::GetColumn& data) {
 	this->database.getCustomData(data);
 }
 
 // get custom values from multiple columns of the same type in the database
-void Database::getCustomData(crawlservpp::Main::Data::GetColumns& data) {
+void Database::getCustomData(Main::Data::GetColumns& data) {
 	this->database.getCustomData(data);
 }
 
 // get custom values from multiple columns of different types in the database
-void Database::getCustomData(crawlservpp::Main::Data::GetColumnsMixed& data) {
+void Database::getCustomData(Main::Data::GetColumnsMixed& data) {
 	this->database.getCustomData(data);
 }
 
 // insert one custom value into a row in the database
-void Database::insertCustomData(const crawlservpp::Main::Data::InsertValue& data) {
+void Database::insertCustomData(const Main::Data::InsertValue& data) {
 	this->database.insertCustomData(data);
 }
 
 // insert custom values into multiple fields of the same type into a row in the database
-void Database::insertCustomData(const crawlservpp::Main::Data::InsertFields& data) {
+void Database::insertCustomData(const Main::Data::InsertFields& data) {
 	this->database.insertCustomData(data);
 }
 
 // insert custom values into multiple fields of different types into a row in the database
-void Database::insertCustomData(const crawlservpp::Main::Data::InsertFieldsMixed& data) {
+void Database::insertCustomData(const Main::Data::InsertFieldsMixed& data) {
 	this->database.insertCustomData(data);
 }
 
 // update one custom value in one field of a row in the database
-void Database::updateCustomData(const crawlservpp::Main::Data::UpdateValue& data) {
+void Database::updateCustomData(const Main::Data::UpdateValue& data) {
 	this->database.updateCustomData(data);
 }
 
 // update custom values in multiple fields of a row with the same type in the database
-void Database::updateCustomData(const crawlservpp::Main::Data::UpdateFields& data) {
+void Database::updateCustomData(const Main::Data::UpdateFields& data) {
 	this->database.updateCustomData(data);
 }
 
 // update custom values in multiple fields of a row with different types in the database
-void Database::updateCustomData(const crawlservpp::Main::Data::UpdateFieldsMixed& data) {
+void Database::updateCustomData(const Main::Data::UpdateFieldsMixed& data) {
 	this->database.updateCustomData(data);
 }
 

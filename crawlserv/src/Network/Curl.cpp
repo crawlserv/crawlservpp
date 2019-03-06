@@ -36,7 +36,7 @@ Curl::~Curl() {}
 // set global network options from crawling configuration
 //  NOTE: if limited is set, cookie settings, custom headers, HTTP version and error responses will be ignored
 //  throws Curl::Exception
-void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo) {
+void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string> * warningsTo) {
 	if(!(this->curl.get())) throw Curl::Exception("cURL not initialized");
 
 	this->curlCode = curl_easy_setopt(this->curl.get(), CURLOPT_MAXCONNECTS, (long) globalConfig.connectionsMax);
@@ -70,7 +70,7 @@ void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 		this->curlCode = curl_easy_setopt(this->curl.get(), CURLOPT_DOH_URL, globalConfig.dnsDoH.c_str());
 		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 #else
-		if(warningsTo) warningsTo->push_back("DNS-over-HTTPS currently not supported, \'network.dns.doh\' ignored.");
+		if(warningsTo) warningsTo->emplace("DNS-over-HTTPS currently not supported, \'network.dns.doh\' ignored.");
 #endif
 	}
 	if(!globalConfig.dnsInterface.empty()) {
@@ -95,7 +95,7 @@ void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 #else
 	if(globalConfig.dnsShuffle && warningsTo)
-		warningsTo->push_back("DNS shuffling currently not supported, \'network.dns.shuffle\' ignored.");
+		warningsTo->emplace("DNS shuffling currently not supported, \'network.dns.shuffle\' ignored.");
 #endif
 	if(globalConfig.encodingBr && globalConfig.encodingDeflate && globalConfig.encodingGZip && globalConfig.encodingIdentity) {
 		this->curlCode = curl_easy_setopt(this->curl.get(), CURLOPT_ACCEPT_ENCODING, "");
@@ -146,7 +146,7 @@ void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 			this->curlCode = curl_easy_setopt(this->curl.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2TLS);
 			break;
 		default:
-			if(warningsTo) warningsTo->push_back("Enum value for HTTP version not recognized, \'network.http.version\' ignored.");
+			if(warningsTo) warningsTo->emplace("Enum value for HTTP version not recognized, \'network.http.version\' ignored.");
 			this->curlCode = CURLE_OK;
 		}
 	}
@@ -261,7 +261,8 @@ void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::vector
 	this->curlCode = curl_easy_setopt(this->curl.get(), CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS, (long) globalConfig.timeOutHappyEyeballs);
 	if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 #else
-	if(globalConfig.timeOutHappyEyeballs && warningsTo) warningsTo->push_back("Happy Eyeballs globalConfiguration currently not supported,"
+	if(globalConfig.timeOutHappyEyeballs)
+		if(warningsTo) warningsTo->emplace("Happy Eyeballs globalConfiguration currently not supported,"
 			" \'network.timeout.happyeyeballs\' ignored.");
 #endif
 	this->curlCode = curl_easy_setopt(this->curl.get(), CURLOPT_TIMEOUT, (long) globalConfig.timeOutRequest);
@@ -345,8 +346,8 @@ void Curl::getContent(const std::string& url, std::string& contentTo, const std:
 	std::string repairedContent;
 	std::transform(this->contentType.begin(), this->contentType.end(), this->contentType.begin(), ::tolower);
 	this->contentType.erase(std::remove_if(this->contentType.begin(), this->contentType.end(), isspace), this->contentType.end());
-	if(this->contentType.find("charset=iso-8859-1") != std::string::npos) this->content = crawlservpp::Helper::Utf8::iso88591ToUtf8(this->content);
-	if(crawlservpp::Helper::Utf8::repairUtf8(this->content, repairedContent)) this->content.swap(repairedContent);
+	if(this->contentType.find("charset=iso-8859-1") != std::string::npos) this->content = Helper::Utf8::iso88591ToUtf8(this->content);
+	if(Helper::Utf8::repairUtf8(this->content, repairedContent)) this->content.swap(repairedContent);
 
 	contentTo.swap(this->content);
 }

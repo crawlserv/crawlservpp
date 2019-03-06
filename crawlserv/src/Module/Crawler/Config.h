@@ -20,12 +20,13 @@
 
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
+#include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
 
 namespace crawlservpp::Module::Crawler {
-class Config : public crawlservpp::Module::Config {
+class Config : public Module::Config {
 public:
 	Config();
 	virtual ~Config();
@@ -77,11 +78,11 @@ public:
 	std::vector<std::string> customUrls;
 
 	// network entries
-	crawlservpp::Network::Config network;
+	Network::Config network;
 
 protected:
 	// load crawling-specific configuration from parsed JSON document
-	void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
+	void loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) override;
 
 private:
 	// rudimentary check for sub-URL or curl-supported URL protocol beginning - adds a slash in the beginning if no protocol is found

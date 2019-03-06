@@ -21,12 +21,13 @@
 
 #include "../../_extern/date/include/date/date.h"
 
+#include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
 
 namespace crawlservpp::Module::Analyzer {
-	class Config : public crawlservpp::Module::Config {
+	class Config : public Module::Config {
 	public:
 		Config();
 		virtual ~Config();
@@ -76,7 +77,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	protected:
 		// configuration functions
-		void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
+		void loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) override;
 	};
 }
 

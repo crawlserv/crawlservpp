@@ -21,6 +21,9 @@
 #include <vector>
 
 namespace crawlservpp::Query {
+	// for convenience
+	typedef Struct::QueryProperties QueryProperties;
+
 	class Container {
 	public:
 		Container();
@@ -51,7 +54,7 @@ namespace crawlservpp::Query {
 		// query functions
 		virtual void initQueries() = 0;
 		void reserveForQueries(unsigned long numOfAdditionalQueries);
-		Container::QueryStruct addQuery(const crawlservpp::Struct::QueryProperties& properties);
+		Container::QueryStruct addQuery(const QueryProperties& properties);
 		const RegEx& getRegExQueryPtr(unsigned long index) const;
 		const XPath& getXPathQueryPtr(unsigned long index) const;
 		void clearQueries();

@@ -38,13 +38,16 @@
 
 namespace crawlservpp::Module {
 	class Thread {
+		// for convenience
+		typedef Main::Database::ConnectionException ConnectionException;
+		typedef Struct::ThreadOptions ThreadOptions;
+
 	public:
 		// constructors
-		Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
-				const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
+		Thread(Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
+				const std::string& threadStatus, bool threadPaused, const ThreadOptions& threadOptions,
 				unsigned long threadLast);
-		Thread(crawlservpp::Main::Database& dbBase, const std::string& threadModule,
-				const crawlservpp::Struct::ThreadOptions& threadOptions);
+		Thread(Main::Database& dbBase, const std::string& threadModule, const ThreadOptions& threadOptions);
 
 		// destructor
 		virtual ~Thread();
@@ -98,7 +101,7 @@ namespace crawlservpp::Module {
 		virtual void onClear(bool interrupted) = 0;
 
 	private:
-		crawlservpp::Main::Database& databaseClass; // access to the database for the class
+		Main::Database& databaseClass; // access to the database for the class
 
 		std::atomic<bool> pausable; // thread is pausable
  		std::atomic<bool> running; // thread is running (or paused)
@@ -109,7 +112,7 @@ namespace crawlservpp::Module {
 
 		const std::string module; // the module of the thread (used for logging)
 		std::atomic<unsigned long> id; //  of the thread in the database
-		const crawlservpp::Struct::ThreadOptions options; // options for the thread
+		const ThreadOptions options; // options for the thread
 		unsigned long last; // last  for the thread
 		std::string idString; //  of the thread as string (used for logging, ONLY for threads!)
 

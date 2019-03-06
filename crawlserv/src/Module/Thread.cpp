@@ -13,8 +13,8 @@
 namespace crawlservpp::Module {
 
 // constructor A: run previously interrupted thread
-Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
-		const std::string& threadStatus, bool threadPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
+Thread::Thread(Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
+		const std::string& threadStatus, bool threadPaused, const ThreadOptions& threadOptions,
 		unsigned long threadLast) : database(dbBase.getSettings(), threadModule), databaseClass(dbBase),
 									pausable(true), running(true), paused(threadPaused), interrupted(false),
 									resumed(true), terminated(false), module(threadModule), options(threadOptions),
@@ -46,8 +46,8 @@ Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long threadId, cons
 }
 
 // constructor B: start new thread (using constructor A to initialize values)
-Thread::Thread(crawlservpp::Main::Database& dbBase, const std::string& threadModule,
-		const crawlservpp::Struct::ThreadOptions& threadOptions) : Thread(dbBase, 0, threadModule, "", false, threadOptions, 0) {
+Thread::Thread(Main::Database& dbBase, const std::string& threadModule, const ThreadOptions& threadOptions)
+			: Thread(dbBase, 0, threadModule, "", false, threadOptions, 0) {
 	// add thread to database and save ID
 	this->id = this->databaseClass.addThread(threadModule, threadOptions);
 	std::ostringstream idStrStr;
@@ -331,8 +331,9 @@ void Thread::tick() {
 		this->onTick();
 	}
 	// handle connection exception by sleeping
-	catch(const crawlservpp::Main::Database::ConnectionException& e) {
-		std::cout << std::endl << e.what() << " - sleeps for " << MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS << "s" << std::flush;
+	catch(const ConnectionException& e) {
+		std::cout << std::endl << e.what()
+				<< " - sleeps for " << MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS << "s" << std::flush;
 		std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS));
 	}
 	// handle other exceptions by trying to log, set status and pause thread
@@ -390,7 +391,7 @@ void Thread::wait() {
 		this->startTimePoint = std::chrono::steady_clock::now();
 	}
 	// handle connection exception by sleeping
-	catch(const crawlservpp::Main::Database::ConnectionException& e) {
+	catch(const ConnectionException& e) {
 		std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS));
 	}
 }
@@ -408,9 +409,9 @@ void Thread::clear() {
 	else {
 		// log timing statistic
 		std::string logStr = "stopped after "
-				+ crawlservpp::Helper::DateTime::secondsToString(this->runTime.count()) + " running";
+				+ Helper::DateTime::secondsToString(this->runTime.count()) + " running";
 		if(this->pauseTime.count())
-			logStr += " and " + crawlservpp::Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
+			logStr += " and " + Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
 		logStr += ".";
 		this->log(logStr);
 	}

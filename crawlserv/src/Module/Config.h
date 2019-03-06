@@ -14,8 +14,8 @@
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
+#include <queue>
 #include <string>
-#include <vector>
 
 namespace crawlservpp::Module {
 	class Config {
@@ -24,12 +24,12 @@ namespace crawlservpp::Module {
 		virtual ~Config();
 
 		// configuration loader
-		void loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo);
+		void loadConfig(const std::string& configJson, std::queue<std::string>& warningsTo);
 
 		// sub-class for configuration exceptions
-		class Exception : public crawlservpp::Main::Exception {
+		class Exception : public Main::Exception {
 		public:
-			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
 
@@ -41,7 +41,7 @@ namespace crawlservpp::Module {
 
 	protected:
 		// load module-specific configuration from parsed JSON document
-		virtual void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) = 0;
+		virtual void loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) = 0;
 	};
 }
 

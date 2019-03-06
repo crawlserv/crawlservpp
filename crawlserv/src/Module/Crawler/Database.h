@@ -12,6 +12,7 @@
 
 #include "../Database.h"
 
+#include "../../Struct/UrlProperties.h"
 #include "../../Wrapper/Database.h"
 
 #include <cppconn/exception.h>
@@ -28,13 +29,14 @@
 #include <utility>
 
 namespace crawlservpp::Module::Crawler {
-	class Database : public crawlservpp::Wrapper::Database {
+	class Database : public Wrapper::Database {
 		// for convenience
-		typedef crawlservpp::Main::Database::Exception DatabaseException;
+		typedef Main::Database::Exception DatabaseException;
+		typedef Struct::UrlProperties UrlProperties;
 
 	public:
 		// constructor
-		Database(crawlservpp::Module::Database& dbRef);
+		Database(Module::Database& dbRef);
 
 		// destructor
 		virtual ~Database();
@@ -57,9 +59,9 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL functions
 		bool isUrlExists(const std::string& urlString);
-		void getUrlIdLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData);
+		void getUrlIdLockId(UrlProperties& urlProperties);
 		bool isUrlCrawled(unsigned long crawlingId);
-		std::tuple<unsigned long, std::string, unsigned long> getNextUrl(unsigned long currentUrlId);
+		UrlProperties getNextUrl(unsigned long currentUrlId);
 		void addUrl(const std::string& urlString, bool manual);
 		void addUrls(const std::vector<std::string>& urls);
 		unsigned long addUrlGetId(const std::string& urlString, bool manual);
@@ -70,8 +72,8 @@ namespace crawlservpp::Module::Crawler {
 		bool isUrlLockable(unsigned long lockId);
 		bool checkUrlLock(unsigned long lockId, const std::string& lockTime);
 		std::string getUrlLock(unsigned long lockId);
-		void getUrlLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData);
-		std::string lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout);
+		void getUrlLockId(UrlProperties& urlProperties);
+		std::string lockUrl(UrlProperties& urlProperties, unsigned long lockTimeout);
 		void unLockUrl(unsigned long lockId);
 
 		// crawling functions
@@ -82,7 +84,7 @@ namespace crawlservpp::Module::Crawler {
 		bool isArchivedContentExists(unsigned long urlId, const std::string& timeStamp);
 
 		// helper functions (using multiple database commands)
-		bool renewUrlLock(unsigned long lockTimeout, std::tuple<unsigned long, std::string, unsigned long>& urlData,
+		bool renewUrlLock(unsigned long lockTimeout, UrlProperties& urlProperties,
 				std::string& lockTime);
 
 	protected:

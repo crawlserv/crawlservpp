@@ -9,7 +9,7 @@
 
 #include "DateTime.h"
 
-namespace crawlservpp::Helper::DateTime {
+namespace Helper::DateTime {
 
 // convert time stamp from WEEKDAY[short], DD MONTH[short] YYYY HH:MM:SS TIMEZONE[short] to YYYY-MM-DD HH:MM:SS
 bool convertLongDateTimeToSQLTimeStamp(std::string& dateTime) {

@@ -34,14 +34,17 @@
 #include <vector>
 
 namespace crawlservpp::Module::Analyzer::Algo {
-	typedef crawlservpp::Main::Data::Type DataType;
-	typedef crawlservpp::Main::Data::Value DataValue;
+	class MarkovText: public Module::Analyzer::Thread {
+		// for convenience
+		typedef Main::Data::Type DataType;
+		typedef Main::Data::Value DataValue;
+		typedef Struct::CorpusProperties CorpusProperties;
+		typedef Struct::ThreadOptions ThreadOptions;
 
-	class MarkovText: public crawlservpp::Module::Analyzer::Thread {
 	public:
-		MarkovText(crawlservpp::Main::Database& dbBase, unsigned long analyzerId, const std::string& analyzerStatus,
-						bool analyzerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long analyzerLast);
-		MarkovText(crawlservpp::Main::Database& dbBase, const crawlservpp::Struct::ThreadOptions& threadOptions);
+		MarkovText(Main::Database& dbBase, unsigned long analyzerId, const std::string& analyzerStatus,
+						bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast);
+		MarkovText(Main::Database& dbBase, const ThreadOptions& threadOptions);
 		virtual ~MarkovText();
 
 		// implemented algorithm functions

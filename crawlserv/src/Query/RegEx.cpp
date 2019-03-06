@@ -64,7 +64,7 @@ bool RegEx::getBool(const std::string& text) const {
 	if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled.");
 
 	// get first match
-	crawlservpp::Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
+	Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
 	int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
 
 	// check result
@@ -97,7 +97,7 @@ void RegEx::getFirst(const std::string& text, std::string& resultTo) const {
 	if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled");
 
 	// get first match
-	crawlservpp::Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
+	Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
 	int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
 
 	// check result
@@ -134,7 +134,7 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 	if(!(this->expressionMulti)) throw RegEx::Exception("No multi result expression compiled");
 
 	// get first match
-	crawlservpp::Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionMulti.get(), NULL));
+	Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionMulti.get(), NULL));
 	int result = pcre2_match(this->expressionMulti.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
 
 	// check result
@@ -160,7 +160,7 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 
 	// at least one match found -> save first match
 	PCRE2_SIZE * pcreOVector = pcre2_get_ovector_pointer(pcreMatch.get());
-	resultArray.push_back(text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]));
+	resultArray.emplace_back(text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]));
 
 	// get RegEx options
 	uint32_t pcreOptions = 0;
@@ -212,7 +212,7 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 		if(!result) throw RegEx::Exception("Result vector unexpectedly too small");
 
 		// get resulting match
-		resultArray.push_back(text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]));
+		resultArray.emplace_back(text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]));
 	}
 
 	// copy result

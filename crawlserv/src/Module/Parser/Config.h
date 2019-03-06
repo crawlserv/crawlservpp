@@ -20,12 +20,13 @@
 
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
+#include <queue>
 #include <sstream>
 #include <string>
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
-	class Config : public crawlservpp::Module::Config {
+	class Config : public Module::Config {
 	public:
 		Config();
 		virtual ~Config();
@@ -69,7 +70,7 @@ namespace crawlservpp::Module::Parser {
 
 	protected:
 		// load parsing-specific configuration from parsed JSON document
-		void loadModule(const rapidjson::Document& jsonDocument, std::vector<std::string>& warningsTo) override;
+		void loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) override;
 	};
 }
 

@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-namespace crawlservpp::Helper::Algos {
+namespace Helper::Algos {
 	// return the lowest of the three values
 	template<class T> const T& min(const T& a, const T& b, const T& c) { return std::min(a, std::min(b, c)); }
 

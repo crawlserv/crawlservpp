@@ -29,7 +29,7 @@
 #include <sstream>
 #include <string>
 
-namespace crawlservpp::Helper::Versions {
+namespace Helper::Versions {
 	std::string getLibraryVersions(const std::string& indent);
 }
 

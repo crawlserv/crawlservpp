@@ -17,8 +17,8 @@ App * App::instance = NULL;
 // constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 App::App(int argc, char * argv[]) noexcept : running(true) {
 	try {
-		crawlservpp::Struct::DatabaseSettings dbSettings;
-		crawlservpp::Struct::ServerSettings serverSettings;
+		DatabaseSettings dbSettings;
+		ServerSettings serverSettings;
 		std::string error;
 
 		// save instance and register signals
@@ -59,7 +59,7 @@ App::App(int argc, char * argv[]) noexcept : running(true) {
 App::~App() {
 	if(this->server) {
 		// server up-time message
-		std::cout << std::endl << "Up-time: " << crawlservpp::Helper::DateTime::secondsToString(server->getUpTime()) << ".";
+		std::cout << std::endl << "Up-time: " << Helper::DateTime::secondsToString(server->getUpTime()) << ".";
 		std::cout << std::endl << "> Waiting for threads..." << std::flush;
 		this->server.reset();
 	}
@@ -108,7 +108,7 @@ void App::shutdown(int num) {
 }
 
 // helper function: get database password from user, return false on cancel
-bool App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
+bool App::getPassword(DatabaseSettings& dbSettings) {
 	// prompt password for database
 	std::cout << "Enter password for " << dbSettings.user << "@" << dbSettings.host << ":" << dbSettings.port << ": ";
 	char input = 0;
@@ -116,7 +116,7 @@ bool App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
 	bool inputCancel = false;
 
 	do {
-		switch(input = crawlservpp::Helper::Portability::getch()) {
+		switch(input = Helper::Portability::getch()) {
 		case '\r':
 			// ignore carriage return
 			break;
@@ -150,7 +150,7 @@ bool App::getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings) {
 // static helper function: show version (and library versions)
 void App::outputHeader() {
 	std::cout << "crawlserv++ v0.1 by Ans using" << std::endl;
-	std::cout << crawlservpp::Helper::Versions::getLibraryVersions(" ") << std::endl;
+	std::cout << Helper::Versions::getLibraryVersions(" ") << std::endl;
 }
 
 // static helper function: check number of command line arguments, throws std::runtime_error
@@ -159,8 +159,7 @@ void App::checkArgumentNumber(int argc) {
 }
 
 // static helper function: load database and server settings from configuration file, throws std::runtime_error
-void App::loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
-		crawlservpp::Struct::ServerSettings& serverSettings) {
+void App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings,	ServerSettings& serverSettings) {
 	ConfigFile configFile(fileName);
 
 	dbSettings.host = configFile.getValue("db_host");

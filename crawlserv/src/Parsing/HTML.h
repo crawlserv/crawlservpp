@@ -27,9 +27,9 @@ public:
 	void tidyAndConvert(std::string& content);
 
 	// sub-class for HTML exceptions
-	class Exception : public crawlservpp::Main::Exception {
+	class Exception : public Main::Exception {
 	public:
-		Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+		Exception(const std::string& description) : Main::Exception(description) {}
 		virtual ~Exception() {}
 	};
 

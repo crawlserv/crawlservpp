@@ -41,19 +41,20 @@
 #include <vector>
 
 namespace crawlservpp::Module::Analyzer {
-	// text maps are used to describe certain parts of a text
-	//  defined by their positions and lengths with certain strings (words, dates etc.)
-	typedef std::tuple<std::string, unsigned long, unsigned long> TextMapEntry;
-
-	class Database : public crawlservpp::Wrapper::Database {
+	class Database : public Wrapper::Database {
 		// for convenience
-		typedef crawlservpp::Main::Data::Type DataType;
-		typedef crawlservpp::Main::Database::Exception DatabaseException;
-		typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
-		typedef crawlservpp::Struct::TableColumn TableColumn;
+		typedef Main::Data::Type DataType;
+		typedef Main::Database::Exception DatabaseException;
+		typedef Struct::CustomTableProperties CustomTableProperties;
+		typedef Struct::CorpusProperties CorpusProperties;
+		typedef Struct::TableColumn TableColumn;
+
+		// text maps are used to describe certain parts of a text
+		//  defined by their positions and lengths with certain strings (words, dates etc.)
+		typedef std::tuple<std::string, unsigned long, unsigned long> TextMapEntry;
 
 	public:
-		Database(crawlservpp::Module::Database& dbRef);
+		Database(Module::Database& dbRef);
 		virtual ~Database();
 
 		// setters
@@ -77,7 +78,7 @@ namespace crawlservpp::Module::Analyzer {
 		sql::PreparedStatement& getPreparedAlgoStatement(unsigned short sqlStatementId);
 
 		// corpus functions
-		void getCorpus(const crawlservpp::Struct::CorpusProperties& corpusProperties, std::string& corpusTo,
+		void getCorpus(const CorpusProperties& corpusProperties, std::string& corpusTo,
 				unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo);
 
 	protected:
@@ -102,8 +103,8 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTableFull;
 
 		// corpus helper function
-		bool isCorpusChanged(const crawlservpp::Struct::CorpusProperties& corpusProperties);
-		void createCorpus(const crawlservpp::Struct::CorpusProperties& corpusProperties,
+		bool isCorpusChanged(const CorpusProperties& corpusProperties);
+		void createCorpus(const CorpusProperties& corpusProperties,
 				std::string& corpusTo, std::string& dateMapTo, unsigned long& sourcesTo);
 
 	private:

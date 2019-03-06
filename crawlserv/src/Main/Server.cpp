@@ -15,9 +15,9 @@
 namespace crawlservpp::Main {
 
 // constructor
-Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
-		const crawlservpp::Struct::ServerSettings& serverSettings) : settings(serverSettings), dbSettings(databaseSettings),
-				database(databaseSettings, "server"), allowed(serverSettings.allowedClients), running(true), offline(true) {
+Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& serverSettings)
+		: settings(serverSettings), dbSettings(databaseSettings), database(databaseSettings, "server"),
+		  allowed(serverSettings.allowedClients), running(true), offline(true) {
 	// create cookies directory if it does not exist
 	if(!std::experimental::filesystem::is_directory("cookies") || !std::experimental::filesystem::exists("cookies")) {
 		std::experimental::filesystem::create_directory("cookies");
@@ -48,9 +48,9 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 	for(auto i = threads.begin(); i != threads.end(); ++i) {
 		if(i->module == "crawler") {
 			// load crawler thread
-			this->crawlers.push_back(std::make_unique<crawlservpp::Module::Crawler::Thread>(
+			this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(
 					this->database, i->id, i->status, i->paused, i->options, i->last));
-			this->crawlers.back()->crawlservpp::Module::Thread::start();
+			this->crawlers.back()->Module::Thread::start();
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -59,9 +59,9 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 		}
 		else if(i->module == "parser") {
 			// load parser thread
-			this->parsers.push_back(std::make_unique<crawlservpp::Module::Parser::Thread>(
+			this->parsers.push_back(std::make_unique<Module::Parser::Thread>(
 					this->database, i->id, i->status, i->paused, i->options, i->last));
-			this->parsers.back()->crawlservpp::Module::Thread::start();
+			this->parsers.back()->Module::Thread::start();
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -71,9 +71,9 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 		else if(i->module == "extractor") {
 			// load extractor thread
 			/*
-			this->extractors.push_back(std::make_unique<crawlservpp::Module::Extractor::Thread>(
+			this->extractors.push_back(std::make_unique<Module::Extractor::Thread>(
 					this->database, i->id, i->status, i->paused, i->options, i->last));
-			this->extractors.back()->crawlservpp::Module::Thread::start();
+			this->extractors.back()->Module::Thread::start();
 			*/
 
 			// write to log
@@ -89,19 +89,19 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 			if(!configJson.IsArray()) throw std::runtime_error("Parsed configuration JSON is not an array.");
 
 			switch(Server::getAlgoFromConfig(configJson)) {
-			case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-				this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(
+			case Module::Analyzer::Algo::Enum::markovText:
+				this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovText>(
 						this->database, i->id, i->status, i->paused, i->options, i->last));
 				break;
-			case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-				this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(
+			case Module::Analyzer::Algo::Enum::markovTweet:
+				this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovTweet>(
 						this->database, i->id, i->status, i->paused, i->options, i->last));
 				break;
 			default:
 				this->database.log("WARNING: Unknown algorithm ignored when loading threads.");
 				continue;
 			}
-			this->analyzers.back()->crawlservpp::Module::Thread::start();
+			this->analyzers.back()->Module::Thread::start();
 
 			// write to log
 			std::ostringstream logStrStr;
@@ -121,10 +121,14 @@ Server::Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings,
 // destructor
 Server::~Server() {
 	// interrupt module threads
-	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
-	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
-	//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
-	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) (*i)->crawlservpp::Module::Thread::sendInterrupt();
+	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
+		(*i)->Module::Thread::sendInterrupt();
+	for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
+		(*i)->Module::Thread::sendInterrupt();
+	//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
+	//	(*i)->Module::Thread::sendInterrupt();
+	for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
+		(*i)->Module::Thread::sendInterrupt();
 
 	// wait for module threads
 	for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) {
@@ -133,7 +137,7 @@ Server::~Server() {
 			unsigned long id = (*i)->getId();
 
 			// wait for thread
-			(*i)->crawlservpp::Module::Thread::finishInterrupt();
+			(*i)->Module::Thread::finishInterrupt();
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -157,7 +161,7 @@ Server::~Server() {
 			unsigned long id = (*i)->getId();
 
 			// wait for thread
-			(*i)->crawlservpp::Module::Thread::finishInterrupt();
+			(*i)->Module::Thread::finishInterrupt();
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -182,7 +186,7 @@ Server::~Server() {
 			unsigned long id = (*i)->getId();
 
 			// wait for thread
-			(*i)->crawlservpp::Module::Thread::finishInterrupt();
+			(*i)->Module::Thread::finishInterrupt();
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -206,7 +210,7 @@ Server::~Server() {
 			unsigned long id = (*i)->getId();
 
 			// wait for thread
-			(*i)->crawlservpp::Module::Thread::finishInterrupt();
+			(*i)->Module::Thread::finishInterrupt();
 
 			// log interruption
 			std::ostringstream logStrStr;
@@ -231,16 +235,16 @@ Server::~Server() {
 	// log shutdown message with server up-time
 	try {
 		this->database.log("shuts down after up-time of "
-				+ crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) + ".");
+				+ Helper::DateTime::secondsToString(this->getUpTime()) + ".");
 	}
 	catch(const Database::Exception& e) {
 		std::cout << "server shuts down after up-time of"
-				<< crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) << "."
+				<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
 				<< std::endl << "Could not write to log: " << e.what() << std::flush;
 	}
 	catch(...) {
 		std::cout << "server shuts down after up-time of"
-				<< crawlservpp::Helper::DateTime::secondsToString(this->getUpTime()) << "."
+				<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
 				<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
 	}
 }
@@ -266,28 +270,28 @@ bool Server::tick() {
 	// check whether a thread was terminated
 	for(unsigned long n = 1; n <= this->crawlers.size(); n++) {
 		if(this->crawlers.at(n - 1)->isTerminated()) {
-			this->crawlers.at(n - 1)->crawlservpp::Module::Thread::stop();
+			this->crawlers.at(n - 1)->Module::Thread::stop();
 			this->crawlers.erase(this->crawlers.begin() + (n - 1));
 			n--;
 		}
 	}
 	for(unsigned long n = 1; n <= this->parsers.size(); n++) {
 		if(this->parsers.at(n - 1)->isTerminated()) {
-			this->parsers.at(n - 1)->crawlservpp::Module::Thread::stop();
+			this->parsers.at(n - 1)->Module::Thread::stop();
 			this->parsers.erase(this->parsers.begin() + (n - 1));
 			n--;
 		}
 	}
 	/*for(unsigned long n = 1; n <= this->extractors.size(); n++) {
 		if(this->extractors.at(n - 1)->isTerminated()) {
-			this->extractors.at(n - 1)->crawlservpp::Module::Thread::stop();
+			this->extractors.at(n - 1)->Module::Thread::stop();
 			this->extractors.erase(this->extractors.begin() + (n - 1));
 			n--;
 		}
 	}*/
 	for(unsigned long n = 1; n <= this->analyzers.size(); n++) {
 		if(this->analyzers.at(n - 1)->isTerminated()) {
-			this->analyzers.at(n - 1)->crawlservpp::Module::Thread::stop();
+			this->analyzers.at(n - 1)->Module::Thread::stop();
 			this->analyzers.erase(this->analyzers.begin() + (n - 1));
 			n--;
 		}
@@ -401,8 +405,7 @@ std::string Server::cmd(ConnectionPtr connection, const std::string& msgBody, bo
 							{
 								std::lock_guard<std::mutex> workersLocked(this->workersLock);
 								this->workersRunning.push_back(true);
-								this->workers.push_back(std::thread(
-										&Server::cmdTestQuery, this, connection, this->workers.size(), msgBody));
+								this->workers.emplace_back(&Server::cmdTestQuery, this, connection, this->workers.size(), msgBody);
 							}
 							threadStartedTo = true;
 						}
@@ -723,9 +726,9 @@ Server::ServerCommandResponse Server::cmdStartCrawler(const rapidjson::Document&
 	}
 
 	// create and start crawler
-	this->crawlers.push_back(std::make_unique<crawlservpp::Module::Crawler::Thread>(this->database, options));
-	this->crawlers.back()->crawlservpp::Module::Thread::start();
-	unsigned long id = this->crawlers.back()->crawlservpp::Module::Thread::getId();
+	this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(this->database, options));
+	this->crawlers.back()->Module::Thread::start();
+	unsigned long id = this->crawlers.back()->Module::Thread::getId();
 
 	// startcrawler is a logged command
 	std::ostringstream logStrStr;
@@ -747,8 +750,8 @@ Server::ServerCommandResponse Server::cmdPauseCrawler(const rapidjson::Document&
 
 	// find crawler
 	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Crawler::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Crawler::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->crawlers.end()) {
 		std::ostringstream errStrStr;
@@ -757,7 +760,7 @@ Server::ServerCommandResponse Server::cmdPauseCrawler(const rapidjson::Document&
 	}
 
 	// pause crawler
-	(*i)->crawlservpp::Module::Thread::pause();
+	(*i)->Module::Thread::pause();
 
 	// pausecrawler is a logged command
 	std::ostringstream logStrStr;
@@ -779,8 +782,8 @@ Server::ServerCommandResponse Server::cmdUnpauseCrawler(const rapidjson::Documen
 
 	// find crawler
 	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Crawler::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Crawler::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->crawlers.end()) {
 		std::ostringstream errStrStr;
@@ -789,7 +792,7 @@ Server::ServerCommandResponse Server::cmdUnpauseCrawler(const rapidjson::Documen
 	}
 
 	// unpause crawler
-	(*i)->crawlservpp::Module::Thread::unpause();
+	(*i)->Module::Thread::unpause();
 
 	// unpausecrawler is a logged command
 	std::ostringstream logStrStr;
@@ -811,8 +814,8 @@ Server::ServerCommandResponse Server::cmdStopCrawler(const rapidjson::Document& 
 
 	// find crawler
 	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Crawler::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Crawler::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->crawlers.end()) {
 		std::ostringstream errStrStr;
@@ -821,7 +824,7 @@ Server::ServerCommandResponse Server::cmdStopCrawler(const rapidjson::Document& 
 	}
 
 	// stop and delete crawler
-	(*i)->crawlservpp::Module::Thread::stop();
+	(*i)->Module::Thread::stop();
 	this->crawlers.erase(i);
 
 	// stopcrawler is a logged command
@@ -873,9 +876,9 @@ Server::ServerCommandResponse Server::cmdStartParser(const rapidjson::Document& 
 	}
 
 	// create and start parser
-	this->parsers.push_back(std::make_unique<crawlservpp::Module::Parser::Thread>(this->database, options));
-	this->parsers.back()->crawlservpp::Module::Thread::start();
-	unsigned long id = this->parsers.back()->crawlservpp::Module::Thread::getId();
+	this->parsers.push_back(std::make_unique<Module::Parser::Thread>(this->database, options));
+	this->parsers.back()->Module::Thread::start();
+	unsigned long id = this->parsers.back()->Module::Thread::getId();
 
 	// startparser is a logged command
 	std::ostringstream logStrStr;
@@ -897,8 +900,8 @@ Server::ServerCommandResponse Server::cmdPauseParser(const rapidjson::Document& 
 
 	// find parser
 	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Parser::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Parser::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->parsers.end()) {
 		std::ostringstream errStrStr;
@@ -907,7 +910,7 @@ Server::ServerCommandResponse Server::cmdPauseParser(const rapidjson::Document& 
 	}
 
 	// pause parser
-	(*i)->crawlservpp::Module::Thread::pause();
+	(*i)->Module::Thread::pause();
 
 	// pauseparser is a logged command
 	std::ostringstream logStrStr;
@@ -929,8 +932,8 @@ Server::ServerCommandResponse Server::cmdUnpauseParser(const rapidjson::Document
 
 	// find parser
 	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Parser::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Parser::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->parsers.end()) {
 		std::ostringstream errStrStr;
@@ -939,7 +942,7 @@ Server::ServerCommandResponse Server::cmdUnpauseParser(const rapidjson::Document
 	}
 
 	// unpause parser
-	(*i)->crawlservpp::Module::Thread::unpause();
+	(*i)->Module::Thread::unpause();
 
 	// unpauseparser is a logged command
 	std::ostringstream logStrStr;
@@ -961,8 +964,8 @@ Server::ServerCommandResponse Server::cmdStopParser(const rapidjson::Document& j
 
 	// find parser
 	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Parser::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Parser::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->parsers.end()) {
 		std::ostringstream errStrStr;
@@ -971,7 +974,7 @@ Server::ServerCommandResponse Server::cmdStopParser(const rapidjson::Document& j
 	}
 
 	// stop and delete parser
-	(*i)->crawlservpp::Module::Thread::stop();
+	(*i)->Module::Thread::stop();
 	this->parsers.erase(i);
 
 	// stopparser is a logged command
@@ -1077,19 +1080,19 @@ Server::ServerCommandResponse Server::cmdStartAnalyzer(const rapidjson::Document
 
 	// create and start analyzer
 	switch(algo) {
-	case crawlservpp::Module::Analyzer::Algo::Enum::markovText:
-		this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovText>(this->database, options));
+	case Module::Analyzer::Algo::Enum::markovText:
+		this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovText>(this->database, options));
 		break;
-	case crawlservpp::Module::Analyzer::Algo::Enum::markovTweet:
-		this->analyzers.push_back(std::make_unique<crawlservpp::Module::Analyzer::Algo::MarkovTweet>(this->database, options));
+	case Module::Analyzer::Algo::Enum::markovTweet:
+		this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovTweet>(this->database, options));
 		break;
 	default:
 		std::ostringstream errStrStr;
 		errStrStr << "Algorithm #" << algo << " not found.";
 		return Server::ServerCommandResponse(true, errStrStr.str());
 	}
-	this->analyzers.back()->crawlservpp::Module::Thread::start();
-	unsigned long id = this->analyzers.back()->crawlservpp::Module::Thread::getId();
+	this->analyzers.back()->Module::Thread::start();
+	unsigned long id = this->analyzers.back()->Module::Thread::getId();
 
 	// startanalyzer is a logged command
 	std::ostringstream logStrStr;
@@ -1111,8 +1114,8 @@ Server::ServerCommandResponse Server::cmdPauseAnalyzer(const rapidjson::Document
 
 	// find analyzer
 	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Analyzer::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Analyzer::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->analyzers.end()) {
 		std::ostringstream errStrStr;
@@ -1121,7 +1124,7 @@ Server::ServerCommandResponse Server::cmdPauseAnalyzer(const rapidjson::Document
 	}
 
 	// pause analyzer
-	if((*i)->crawlservpp::Module::Thread::pause()) {
+	if((*i)->Module::Thread::pause()) {
 
 		// pauseanalyzer is a logged command
 		std::ostringstream logStrStr;
@@ -1147,8 +1150,8 @@ Server::ServerCommandResponse Server::cmdUnpauseAnalyzer(const rapidjson::Docume
 
 	// find analyzer
 	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Analyzer::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Analyzer::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->analyzers.end()) {
 		std::ostringstream errStrStr;
@@ -1157,7 +1160,7 @@ Server::ServerCommandResponse Server::cmdUnpauseAnalyzer(const rapidjson::Docume
 	}
 
 	// unpause analyzer
-	(*i)->crawlservpp::Module::Thread::unpause();
+	(*i)->Module::Thread::unpause();
 
 	// unpauseanalyzer is a logged command
 	std::ostringstream logStrStr;
@@ -1179,8 +1182,8 @@ Server::ServerCommandResponse Server::cmdStopAnalyzer(const rapidjson::Document&
 
 	// find analyzer
 	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
-			[&id](std::unique_ptr<crawlservpp::Module::Analyzer::Thread>& p) {
-		return p->crawlservpp::Module::Thread::getId() == id;
+			[&id](std::unique_ptr<Module::Analyzer::Thread>& p) {
+		return p->Module::Thread::getId() == id;
 	});
 	if(i == this->analyzers.end()) {
 		std::ostringstream errStrStr;
@@ -1189,7 +1192,7 @@ Server::ServerCommandResponse Server::cmdStopAnalyzer(const rapidjson::Document&
 	}
 
 	// stop and delete analyzer
-	(*i)->crawlservpp::Module::Thread::stop();
+	(*i)->Module::Thread::stop();
 	this->analyzers.erase(i);
 
 	// stopanalyzer is a logged command
@@ -1221,7 +1224,7 @@ Server::ServerCommandResponse Server::cmdResetAnalyzingStatus(const rapidjson::D
 
 // server command addwebsite(domain, namespace, name): add a website
 Server::ServerCommandResponse Server::cmdAddWebsite(const rapidjson::Document& json) {
-	crawlservpp::Struct::WebsiteProperties properties;
+	WebsiteProperties properties;
 
 	// get arguments
 	if(!json.HasMember("domain"))
@@ -1245,7 +1248,7 @@ Server::ServerCommandResponse Server::cmdAddWebsite(const rapidjson::Document& j
 	// check namespace
 	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Website namespace has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
+	if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in website namespace.");
 
 	// check name
@@ -1270,7 +1273,7 @@ Server::ServerCommandResponse Server::cmdAddWebsite(const rapidjson::Document& j
 
 // server command updatewebsite(id, domain, namespace, name): edit a website
 Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
-	crawlservpp::Struct::WebsiteProperties properties;
+	WebsiteProperties properties;
 
 	// get arguments
 	if(!json.HasMember("id"))
@@ -1303,7 +1306,7 @@ Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document
 	// check namespace name
 	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Website namespace has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
+	if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in website namespace.");
 
 	// correct and check domain name (remove protocol from start and slash from the end)
@@ -1414,7 +1417,7 @@ Server::ServerCommandResponse Server::cmdDuplicateWebsite(const rapidjson::Docum
 
 // server command addurllist(website, namespace, name): add a URL list to the ID-specified website
 Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& json) {
-	crawlservpp::Struct::UrlListProperties properties;
+	UrlListProperties properties;
 
 	// get arguments
 	if(!json.HasMember("website"))
@@ -1438,7 +1441,7 @@ Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& j
 	// check namespace
 	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Namespace of URL list has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
+	if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");
 	if(properties.nameSpace == "config")
 		return Server::ServerCommandResponse(true, "Namespace of URL list cannot be \'config\'.");
@@ -1462,7 +1465,7 @@ Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& j
 
 // server command updateurllist(id, namespace, name): edit a URL list
 Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
-	crawlservpp::Struct::UrlListProperties properties;
+	UrlListProperties properties;
 
 	// get arguments
 	if(!json.HasMember("id"))
@@ -1486,7 +1489,7 @@ Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document
 	// check namespace
 	if(properties.nameSpace.length() < 4)
 		return Server::ServerCommandResponse(true, "Namespace of URL list has to be at least 4 characters long.");
-	if(!(crawlservpp::Helper::Strings::checkSQLName(properties.nameSpace)))
+	if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 		return Server::ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");;
 	if(properties.nameSpace == "config")
 		return Server::ServerCommandResponse(true, "Namespace of URL list cannot be \'config\'.");
@@ -1557,7 +1560,7 @@ Server::ServerCommandResponse Server::cmdDeleteUrlList(const rapidjson::Document
 
 // server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, textonly): add a query
 Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& json) {
-	crawlservpp::Struct::QueryProperties properties;
+	QueryProperties properties;
 
 	// get arguments
 	if(!json.HasMember("website"))
@@ -1639,7 +1642,7 @@ Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& jso
 
 // server command updatequery(id, name, query, type, resultbool, resultsingle, resultmulti, textonly): edit a query
 Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
-	crawlservpp::Struct::QueryProperties properties;
+	QueryProperties properties;
 
 	// get arguments
 	if(!json.HasMember("id"))
@@ -1962,7 +1965,7 @@ void Server::cmdTestQuery(ConnectionPtr connection, unsigned long index, const s
 
 // server command addconfig(website, module, name, config): Add configuration to database
 Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& json) {
-	crawlservpp::Struct::ConfigProperties properties;
+	ConfigProperties properties;
 
 	// get arguments
 	if(!json.HasMember("website"))
@@ -2021,7 +2024,7 @@ Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& js
 
 // server command updateconfig(id, name, config): Update a configuration in the database by its ID
 Server::ServerCommandResponse Server::cmdUpdateConfig(const rapidjson::Document& json) {
-	crawlservpp::Struct::ConfigProperties properties;
+	ConfigProperties properties;
 
 	// get arguments
 	if(!json.HasMember("id"))

@@ -9,7 +9,7 @@
 
 #include "Json.h"
 
-namespace crawlservpp::Helper::Json {
+namespace Helper::Json {
 
 // stringify a vector of strings to a JSON array in one string
 std::string stringify(const std::vector<std::string>& vectorToStringify) {

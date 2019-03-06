@@ -9,7 +9,7 @@
 
 #include "Strings.h"
 
-namespace crawlservpp::Helper::Strings {
+namespace Helper::Strings {
 
 // replace all occurences of a string with another string (onlyOnce avoids replacing parts of the replacements)
 void replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce) {

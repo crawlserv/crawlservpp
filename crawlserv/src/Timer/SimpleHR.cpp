@@ -29,7 +29,7 @@ std::string SimpleHR::tickStr() {
 			std::chrono::high_resolution_clock::now()
 		- this->timePoint).count();
 	this->timePoint = std::chrono::high_resolution_clock::now();
-	return crawlservpp::Helper::DateTime::microsecondsToString(result);
+	return Helper::DateTime::microsecondsToString(result);
 }
 
 }

@@ -16,7 +16,7 @@
 #include <sstream>
 #include <string>
 
-namespace crawlservpp::Helper::DateTime {
+namespace Helper::DateTime {
 	// date/time conversions
 	bool convertLongDateTimeToSQLTimeStamp(std::string& dateTime);
 	bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat);

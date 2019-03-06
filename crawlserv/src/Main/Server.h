@@ -65,14 +65,20 @@
 namespace crawlservpp::Main {
 	class Server final {
 		// for convenience
+		typedef Parsing::XML::Exception XMLException;
+		typedef Query::RegEx::Exception RegExException;
+		typedef Query::XPath::Exception XPathException;
+		typedef Struct::ConfigProperties ConfigProperties;
+		typedef Struct::DatabaseSettings DatabaseSettings;
+		typedef Struct::QueryProperties QueryProperties;
+		typedef Struct::ServerSettings ServerSettings;
+		typedef Struct::UrlListProperties UrlListProperties;
+		typedef Struct::WebsiteProperties WebsiteProperties;
 		typedef struct mg_connection * ConnectionPtr;
-		typedef crawlservpp::Parsing::XML::Exception XMLException;
-		typedef crawlservpp::Query::RegEx::Exception RegExException;
-		typedef crawlservpp::Query::XPath::Exception XPathException;
 
 	public:
 		// constructor
-		Server(const crawlservpp::Struct::DatabaseSettings& databaseSettings, const crawlservpp::Struct::ServerSettings& serverSettings);
+		Server(const DatabaseSettings& databaseSettings, const ServerSettings& serverSettings);
 
 		// destructor
 		virtual ~Server();
@@ -92,8 +98,8 @@ namespace crawlservpp::Main {
 
 	private:
 		// settings
-		crawlservpp::Struct::ServerSettings settings;
-		crawlservpp::Struct::DatabaseSettings dbSettings;
+		ServerSettings settings;
+		DatabaseSettings dbSettings;
 
 		// database
 		Database database;
@@ -106,10 +112,10 @@ namespace crawlservpp::Main {
 		bool offline;
 
 		// threads
-		std::vector<std::unique_ptr<crawlservpp::Module::Crawler::Thread>> crawlers;
-		std::vector<std::unique_ptr<crawlservpp::Module::Parser::Thread>> parsers;
-		//std::vector<std::unique_ptr<crawlservpp::Module::Extractor::Thread>> extractors;
-		std::vector<std::unique_ptr<crawlservpp::Module::Analyzer::Thread>> analyzers;
+		std::vector<std::unique_ptr<Module::Crawler::Thread>> crawlers;
+		std::vector<std::unique_ptr<Module::Parser::Thread>> parsers;
+		//std::vector<std::unique_ptr<Module::Extractor::Thread>> extractors;
+		std::vector<std::unique_ptr<Module::Analyzer::Thread>> analyzers;
 		std::vector<std::thread> workers;
 		std::vector<bool> workersRunning;
 		std::mutex workersLock;
@@ -126,21 +132,24 @@ namespace crawlservpp::Main {
 
 		struct ServerCommandResponse {
 			// constructor initializing a successful empty response
-			ServerCommandResponse() { this->fail = false; this->confirm = false; this->id = 0; }
+			ServerCommandResponse()
+					: fail(false), confirm(false), id(0) {}
 
 			// constructor initializing a successful response with text
-			ServerCommandResponse(const std::string& response) : ServerCommandResponse() { this->text = response; }
+			ServerCommandResponse(const std::string& response)
+					: fail(false), confirm(false), text(response), id(0) {}
 
 			// constructor initializing a succesful response with text and id
-			ServerCommandResponse(const std::string& response, unsigned long newId) : ServerCommandResponse(response) { this->id = newId; }
+			ServerCommandResponse(const std::string& response, unsigned long newId)
+					: fail(false), confirm(false), text(response), id(newId) {}
 
 			// constructor initializing a possibly failed response with text
-			ServerCommandResponse(bool failed, const std::string& response) : ServerCommandResponse(response) { this->fail = failed; }
+			ServerCommandResponse(bool failed, const std::string& response)
+					: fail(failed), confirm(false), text(response), id(0) {}
 
 			// constructor initializing a possibly failed or possibly to be confirmed response with text
-			ServerCommandResponse(bool failed, bool toBeConfirmed, const std::string& response) : ServerCommandResponse(failed, response) {
-				this->confirm = toBeConfirmed;
-			}
+			ServerCommandResponse(bool failed, bool toBeConfirmed, const std::string& response)
+					: fail(failed), confirm(toBeConfirmed), text(response), id(0) {}
 
 			bool fail;			// command failed
 			bool confirm;		// command needs to be confirmed

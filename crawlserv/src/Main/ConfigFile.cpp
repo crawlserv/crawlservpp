@@ -28,7 +28,7 @@ ConfigFile::ConfigFile(const std::string& name) {
 				entry.first = line;
 				entry.second = "";
 			}
-			this->entries.push_back(entry);
+			this->entries.emplace_back(entry);
 		}
 		fileStream.close();
 	}

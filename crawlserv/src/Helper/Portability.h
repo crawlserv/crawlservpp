@@ -19,7 +19,7 @@
 	#include <conio.h>
 #endif
 
-namespace crawlservpp::Helper::Portability {
+namespace Helper::Portability {
 #ifdef __unix
 	// portable getch
 	char getch(void);
