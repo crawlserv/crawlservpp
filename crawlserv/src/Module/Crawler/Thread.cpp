@@ -12,17 +12,17 @@
 namespace crawlservpp::Module::Crawler {
 
 // constructor A: run previously interrupted crawler
-Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long crawlerId,
-		const std::string& crawlerStatus, bool crawlerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long crawlerLast) : crawlservpp::Module::Thread(dbBase, crawlerId, "crawler", crawlerStatus, crawlerPaused,
-				threadOptions, crawlerLast), database(this->crawlservpp::Module::Thread::database),	manualCounter(0),
+Thread::Thread(Main::Database& dbBase, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
+		const ThreadOptions& threadOptions, unsigned long crawlerLast)
+			: Module::Thread(dbBase, crawlerId, "crawler", crawlerStatus, crawlerPaused,
+				threadOptions, crawlerLast), database(this->Module::Thread::database),	manualCounter(0),
 				startCrawled(false), manualOff(false), retryCounter(0), archiveRetry(false), tickCounter(0),
 				startTime(std::chrono::steady_clock::time_point::min()), pauseTime(std::chrono::steady_clock::time_point::min()),
 				idleTime(std::chrono::steady_clock::time_point::min()), httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 // constructor B: start a new crawler
-Thread::Thread(crawlservpp::Main::Database& dbBase, const crawlservpp::Struct::ThreadOptions& threadOptions)
-			: crawlservpp::Module::Thread(dbBase, "crawler", threadOptions), database(this->crawlservpp::Module::Thread::database),
+Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
+			: Module::Thread(dbBase, "crawler", threadOptions), database(this->Module::Thread::database),
 			  manualCounter(0), startCrawled(false), manualOff(false), retryCounter(0), archiveRetry(false), tickCounter(0),
 			  startTime(std::chrono::steady_clock::time_point::min()), pauseTime(std::chrono::steady_clock::time_point::min()),
 			  idleTime(std::chrono::steady_clock::time_point::min()), httpTime(std::chrono::steady_clock::time_point::min()) {}
@@ -32,16 +32,19 @@ Thread::~Thread() {}
 
 // initialize crawler
 void Thread::onInit(bool resumed) {
-	std::vector<std::string> configWarnings;
-	bool verbose = false;
+	std::queue<std::string> configWarnings;
 
-	// get configuration and show warnings if necessary
+	// get configuration
 	this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
-	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
-		this->log("WARNING: " + *i);
-	verbose = config.crawlerLogging == Config::crawlerLoggingVerbose;
 
-	// check for link extraction queries
+	// show warnings if necessary
+	while(!configWarnings.empty()) {
+		this->log("WARNING: " + configWarnings.front());
+		configWarnings.pop();
+	}
+
+	// check configuration
+	bool verbose = config.crawlerLogging == Config::crawlerLoggingVerbose;
 	if(this->config.crawlerQueriesLinks.empty()) throw Exception("ERROR: No link extraction query specified.");
 
 	// set database options
@@ -64,18 +67,18 @@ void Thread::onInit(bool resumed) {
 
 	// create URI parser
 	if(verbose) this->log("creates URI parser...");
-	this->parser = std::make_unique<crawlservpp::Parsing::URI>();
+	this->parser = std::make_unique<Parsing::URI>();
 	this->parser->setCurrentDomain(this->domain);
 
 	// set network configuration
 	if(verbose) this->log("sets network configuration...");
-	configWarnings.clear();
 	if(config.crawlerLogging == Config::crawlerLoggingVerbose)
 		this->log("sets global network configuration...");
 	this->networking.setConfigGlobal(this->config.network, false, &configWarnings);
-	if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
-		this->log("WARNING: " + *i);
-	configWarnings.clear();
+	while(!configWarnings.empty()) {
+		this->log("WARNING: " + configWarnings.front());
+		configWarnings.pop();
+	}
 
 	// initialize custom URLs
 	if(verbose) this->log("initializes custom URLs...");
@@ -88,10 +91,16 @@ void Thread::onInit(bool resumed) {
 	// initialize networking for archives if necessary
 	if(this->config.crawlerArchives && !(this->networkingArchives)) {
 		if(verbose) this->log("initializes networking for archives...");
-		this->networkingArchives = std::make_unique<crawlservpp::Network::Curl>();
+		this->networkingArchives = std::make_unique<Network::Curl>();
 		this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings);
-		if(this->config.crawlerLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
-			this->log("WARNING: " + *i);
+
+		// log warnings if necessary
+		if(this->config.crawlerLogging) {
+			while(!configWarnings.empty()) {
+				this->log("WARNING: " + configWarnings.front());
+				configWarnings.pop();
+			}
+		}
 	}
 
 	// save start time and initialize counter
@@ -102,10 +111,10 @@ void Thread::onInit(bool resumed) {
 
 // crawler tick
 void Thread::onTick() {
-	std::tuple<unsigned long, std::string, unsigned long> url;
-	crawlservpp::Timer::StartStop timerSelect;
-	crawlservpp::Timer::StartStop timerArchives;
-	crawlservpp::Timer::StartStop timerTotal;
+	UrlProperties url;
+	Timer::StartStop timerSelect;
+	Timer::StartStop timerArchives;
+	Timer::StartStop timerTotal;
 	std::string timerString;
 	unsigned long checkedUrls = 0;
 	unsigned long newUrls = 0;
@@ -133,14 +142,14 @@ void Thread::onTick() {
 
 		// start crawling
 		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("crawls " + std::get<1>(url) + "...");
+			this->log("crawls " + url.url + "...");
 
 		// get content
 		bool crawled = this->crawlingContent(url, checkedUrls, newUrls, timerString);
 
 		// get archive (also when crawling failed!)
 		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("gets archives of " + std::get<1>(url) + "...");
+			this->log("gets archives of " + url.url + "...");
 		if(this->config.crawlerTiming) timerArchives.start();
 
 		if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive)) {
@@ -157,7 +166,7 @@ void Thread::onTick() {
 						|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
 					std::ostringstream logStrStr;
 					logStrStr.imbue(std::locale(""));
-					logStrStr << "finished " << std::get<1>(url);
+					logStrStr << "finished " << url.url;
 					if(this->config.crawlerTiming) {
 						logStrStr << " after ";
 						logStrStr << timerTotal.totalStr() << " (select: " << timerSelect.totalStr() << ", " << timerString;
@@ -281,13 +290,13 @@ void Thread::initCustomUrls() {
 
 		this->customPages.reserve(newUrls.size());
 		for(auto i = newUrls.begin(); i != newUrls.end(); ++i)
-			this->customPages.push_back(std::make_tuple(0, *i, 0));
+			this->customPages.emplace_back(*i);
 	}
 	else {
 		// no counters: add all custom URLs as is
 		this->customPages.reserve(this->config.customUrls.size());
 		for(auto i = this->config.customUrls.begin(); i != this->config.customUrls.end(); ++i)
-			this->customPages.push_back(std::make_tuple(0, *i, 0));
+			this->customPages.emplace_back(*i);
 	}
 
 	// queue for log entries while URL list is locked
@@ -299,24 +308,24 @@ void Thread::initCustomUrls() {
 	try {
 		// get id for start page (and add it to URL list if necessary)
 		if(this->database.isUrlExists(this->config.crawlerStart)) {
-			std::get<1>(this->startPage) = this->config.crawlerStart;
+			this->startPage.url = this->config.crawlerStart;
 			this->database.getUrlIdLockId(this->startPage);
 		}
-		else std::get<0>(this->startPage) = this->database.addUrlGetId(this->config.crawlerStart, true);
+		else this->startPage.id = this->database.addUrlGetId(this->config.crawlerStart, true);
 
 		// get IDs and lock IDs for custom URLs (and add them to the URL list if necessary)
 		for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
 			// check URI
 			try {
-				this->parser->setCurrentSubUrl(std::get<1>(*i));
-				if(this->database.isUrlExists(std::get<1>(*i)))
+				this->parser->setCurrentSubUrl(i->url);
+				if(this->database.isUrlExists(i->url))
 					this->database.getUrlIdLockId(*i);
-				else std::get<0>(*i) = this->database.addUrlGetId(std::get<1>(*i), true);
+				else i->id = this->database.addUrlGetId(i->url, true);
 			}
 			catch(const URIException& e) {
 				if(this->config.crawlerLogging) {
-					warnings.push("URI Parser error: " + e.whatStr());
-					warnings.push("Skipped invalid custom URL " + std::get<1>(*i));
+					warnings.emplace("URI Parser error: " + e.whatStr());
+					warnings.emplace("Skipped invalid custom URL " + i->url);
 				}
 			}
 		}
@@ -351,8 +360,8 @@ void Thread::initDoGlobalCounting(std::vector<std::string>& urlList, const std::
 				std::string newUrl = *i;
 				std::ostringstream counterStrStr;
 				counterStrStr << counter;
-				crawlservpp::Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
-				newUrlList.push_back(newUrl);
+				Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
+				newUrlList.emplace_back(newUrl);
 				if(start == end) break;
 				counter += step;
 			}
@@ -361,7 +370,7 @@ void Thread::initDoGlobalCounting(std::vector<std::string>& urlList, const std::
 			std::sort(newUrlList.begin(), newUrlList.end());
 			newUrlList.erase(std::unique(newUrlList.begin(), newUrlList.end()), newUrlList.end());
 		}
-		else newUrlList.push_back(*i); // variable not in URL
+		else newUrlList.emplace_back(*i); // variable not in URL
 	}
 	urlList.swap(newUrlList);
 }
@@ -376,8 +385,8 @@ std::vector<std::string> Thread::initDoLocalCounting(const std::string& url, con
 			std::string newUrl = url;
 			std::ostringstream counterStrStr;
 			counterStrStr << counter;
-			crawlservpp::Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
-			newUrlList.push_back(newUrl);
+			Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
+			newUrlList.emplace_back(newUrl);
 			if(start == end) break;
 			counter += step;
 		}
@@ -386,56 +395,56 @@ std::vector<std::string> Thread::initDoLocalCounting(const std::string& url, con
 		std::sort(newUrlList.begin(), newUrlList.end());
 		newUrlList.erase(std::unique(newUrlList.begin(), newUrlList.end()), newUrlList.end());
 	}
-	else newUrlList.push_back(url); // variable not in URL
+	else newUrlList.emplace_back(url); // variable not in URL
 	return newUrlList;
 }
 
 // initialize queries
 void Thread::initQueries() {
 	if(this->config.crawlerHTMLCanonicalCheck) {
-		this->queryCanonicalCheck = this->addQuery(crawlservpp::Struct::QueryProperties(
+		this->queryCanonicalCheck = this->addQuery(QueryProperties(
 				"//link[contains(concat(' ', normalize-space(@rel), ' '), ' canonical ')]/@href", "xpath",
 				false, true, false, true));
 	}
 	for(auto i = this->config.crawlerQueriesBlackListContent.begin(); i != this->config.crawlerQueriesBlackListContent.end(); ++i) {
-		crawlservpp::Struct::QueryProperties properties;
+		QueryProperties properties;
 		this->database.getQueryProperties(*i, properties);
-		this->queriesBlackListContent.push_back(this->addQuery(properties));
+		this->queriesBlackListContent.emplace_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.crawlerQueriesBlackListTypes.begin(); i != this->config.crawlerQueriesBlackListTypes.end(); ++i) {
-		crawlservpp::Struct::QueryProperties properties;
+		QueryProperties properties;
 		this->database.getQueryProperties(*i, properties);
-		this->queriesBlackListTypes.push_back(this->addQuery(properties));
+		this->queriesBlackListTypes.emplace_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.crawlerQueriesBlackListUrls.begin(); i != this->config.crawlerQueriesBlackListUrls.end(); ++i) {
-		crawlservpp::Struct::QueryProperties properties;
+		QueryProperties properties;
 		this->database.getQueryProperties(*i, properties);
-		this->queriesBlackListUrls.push_back(this->addQuery(properties));
+		this->queriesBlackListUrls.emplace_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.crawlerQueriesLinks.begin(); i != this->config.crawlerQueriesLinks.end(); ++i) {
-		crawlservpp::Struct::QueryProperties properties;
+		QueryProperties properties;
 		this->database.getQueryProperties(*i, properties);
-		this->queriesLinks.push_back(this->addQuery(properties));
+		this->queriesLinks.emplace_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.crawlerQueriesWhiteListContent.begin(); i != this->config.crawlerQueriesWhiteListContent.end(); ++i) {
-		crawlservpp::Struct::QueryProperties properties;
+		QueryProperties properties;
 		this->database.getQueryProperties(*i, properties);
-		this->queriesWhiteListContent.push_back(this->addQuery(properties));
+		this->queriesWhiteListContent.emplace_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.crawlerQueriesWhiteListTypes.begin(); i != this->config.crawlerQueriesWhiteListTypes.end(); ++i) {
-		crawlservpp::Struct::QueryProperties properties;
+		QueryProperties properties;
 		this->database.getQueryProperties(*i, properties);
-		this->queriesWhiteListTypes.push_back(this->addQuery(properties));
+		this->queriesWhiteListTypes.emplace_back(this->addQuery(properties));
 	}
 	for(auto i = this->config.crawlerQueriesWhiteListUrls.begin(); i != this->config.crawlerQueriesWhiteListUrls.end(); ++i) {
-		crawlservpp::Struct::QueryProperties properties;
+		QueryProperties properties;
 		this->database.getQueryProperties(*i, properties);
-		this->queriesWhiteListUrls.push_back(this->addQuery(properties));
+		this->queriesWhiteListUrls.emplace_back(this->addQuery(properties));
 	}
 }
 
 // crawling function for URL selection
-bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigned long>& urlTo) {
+bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 	bool result = true;
 
 	// queue for log entries while crawling table is locked
@@ -443,7 +452,7 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 
 	// MANUAL CRAWLING MODE (get URL from configuration)
 	if(!(this->getLast())) {
-		if(std::get<0>(this->manualUrl)) {
+		if(this->manualUrl.id) {
 			// get current lock ID for custom URL or start page if none was received yet
 			this->database.getUrlLockId(this->manualUrl);
 
@@ -453,17 +462,17 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 			}
 			else {
 				// skipped locked URL
-				logEntries.push("URL lock active - " + std::get<1>(this->manualUrl) + " skipped.");
-				this->manualUrl = std::make_tuple(0, "", 0);
+				logEntries.emplace("URL lock active - " + this->manualUrl.url + " skipped.");
+				this->manualUrl = UrlProperties();
 			}
 		}
 
-		if(!std::get<0>(this->manualUrl)) {
+		if(!this->manualUrl.id) {
 			// no retry: check custom URLs
 			if(!(this->customPages.empty())) {
 				if(!(this->manualCounter)) {
 					// start manual crawling with custom URLs
-					logEntries.push("starts crawling in non-recoverable MANUAL mode.");
+					logEntries.emplace("starts crawling in non-recoverable MANUAL mode.");
 				}
 
 				// check for custom URLs to crawl
@@ -481,15 +490,15 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 
 							// check whether custom URL was already crawled
 							if(!(this->config.customReCrawl)) {
-								if(this->database.isUrlCrawled(std::get<2>(this->manualUrl))) {
+								if(this->database.isUrlCrawled(this->manualUrl.lockId)) {
 									this->manualCounter++;
-									this->manualUrl = std::make_tuple(0, "", 0);
+									this->manualUrl = UrlProperties();
 									continue;
 								}
 							}
 
 							// check whether custom URL is lockable
-							if(this->database.isUrlLockable(std::get<2>(this->manualUrl))) {
+							if(this->database.isUrlLockable(this->manualUrl.lockId)) {
 								// lock custom URL
 								this->lockTime = this->database.lockUrl(this->manualUrl, this->config.crawlerLock);
 								urlTo = this->manualUrl;
@@ -497,9 +506,9 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 							}
 
 							// skip locked custom URL
-							logEntries.push("URL lock active - " + std::get<1>(this->manualUrl) + " skipped.");
+							logEntries.emplace("URL lock active - " + this->manualUrl.url + " skipped.");
 							this->manualCounter++;
-							this->manualUrl = std::make_tuple(0, "", 0);
+							this->manualUrl = UrlProperties();
 						}
 					}
 					// any exception: try to release table lock and re-throw
@@ -519,7 +528,7 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 				if(!(this->startCrawled)) {
 					if(this->customPages.empty()) {
 						// start manual crawling with start page
-						logEntries.push("starts crawling in non-recoverable MANUAL mode.");
+						logEntries.emplace("starts crawling in non-recoverable MANUAL mode.");
 					}
 
 					// lock crawling table
@@ -530,9 +539,9 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 						this->database.getUrlLockId(this->startPage);
 
 						// check whether start page was already crawled (or needs to be re-crawled anyway)
-						if(this->config.crawlerReCrawlStart || !(this->database.isUrlCrawled(std::get<2>(this->startPage)))) {
+						if(this->config.crawlerReCrawlStart || !(this->database.isUrlCrawled(this->startPage.lockId))) {
 							// check whether start page is lockable
-							if(this->database.isUrlLockable(std::get<2>(this->startPage))) {
+							if(this->database.isUrlLockable(this->startPage.lockId)) {
 								// lock start page
 								this->lockTime = this->database.lockUrl(this->startPage, this->config.crawlerLock);
 
@@ -542,7 +551,7 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 							}
 							else {
 								// start page is locked: write skip entry to log (if logging is enabled)
-								logEntries.push("URL lock active - " + std::get<1>(this->startPage) + " skipped.");
+								logEntries.emplace("URL lock active - " + this->startPage.url + " skipped.");
 
 								// start page is done
 								this->startCrawled = true;
@@ -564,7 +573,7 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 					this->database.releaseLocks();
 
 					// reset manual URL if start page has been skipped
-					if(this->startCrawled) this->manualUrl = std::make_tuple(0, "", 0);
+					if(this->startCrawled) this->manualUrl = UrlProperties();
 				}
 			}
 
@@ -574,21 +583,21 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 	}
 
 	// AUTOMATIC CRAWLING MODE (get URL directly from database)
-	if(!(std::get<0>(this->manualUrl))) {
+	if(!(this->manualUrl.id)) {
 		// check whether manual crawling mode was already set off
 		if(!(this->manualOff)) {
 			// start manual crawling with start page
-			logEntries.push("switches to recoverable AUTOMATIC mode.");
+			logEntries.emplace("switches to recoverable AUTOMATIC mode.");
 			this->manualOff = true;
 		}
 
 		// check for retry
 		bool retry = false;
-		if(std::get<0>(this->nextUrl)) {
+		if(this->nextUrl.id) {
 			// renew URL lock on automatic URL for retry
 			if(this->database.renewUrlLock(this->config.crawlerLock, this->nextUrl, this->lockTime)) {
 				// log retry
-				logEntries.push("retries " + std::get<1>(this->nextUrl) + "...");
+				logEntries.emplace("retries " + this->nextUrl.url + "...");
 
 				// set URL to last URL
 				urlTo = this->nextUrl;
@@ -600,14 +609,14 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 
 		if(!retry) {
 			// log failed retry if necessary
-			if(std::get<0>(this->nextUrl))
-				logEntries.push("could not retry " + std::get<1>(this->nextUrl) + ", because it is locked.");
+			if(this->nextUrl.id)
+				logEntries.emplace("could not retry " + this->nextUrl.url + ", because it is locked.");
 
 			while(true) {
 				// get next URL
 				this->nextUrl = this->database.getNextUrl(this->getLast());
 
-				if(std::get<0>(this->nextUrl)) {
+				if(this->nextUrl.id) {
 					bool success = false;
 
 					// lock crawling table
@@ -618,7 +627,7 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 						this->database.getUrlLockId(this->nextUrl);
 
 						// check whether next URL is lockable
-						if(this->database.isUrlLockable(std::get<2>(this->nextUrl))) {
+						if(this->database.isUrlLockable(this->nextUrl.lockId)) {
 							// lock next URL
 							this->lockTime = this->database.lockUrl(this->nextUrl, this->config.crawlerLock);
 							urlTo = this->nextUrl;
@@ -626,7 +635,7 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 						}
 						else {
 							// skip locked URL
-							logEntries.push("skipped " + std::get<1>(this->nextUrl) + ", because it is locked.");
+							logEntries.emplace("skipped " + this->nextUrl.url + ", because it is locked.");
 						}
 					}
 					// any exception: try to release table lock and re-throw
@@ -660,7 +669,7 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 	}
 
 	// set thread status
-	if(result) this->setStatusMessage(std::get<1>(urlTo));
+	if(result) this->setStatusMessage(urlTo.url);
 	else {
 		this->setStatusMessage("IDLE Waiting for new URLs to crawl.");
 		this->setProgress(1L);
@@ -670,20 +679,20 @@ bool Thread::crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigne
 }
 
 // crawl content
-bool Thread::crawlingContent(const std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long& checkedUrlsTo,
+bool Thread::crawlingContent(const UrlProperties& urlProperties, unsigned long& checkedUrlsTo,
 		unsigned long& newUrlsTo,
 		std::string& timerStrTo) {
-	crawlservpp::Timer::StartStop sleepTimer;
-	crawlservpp::Timer::StartStop httpTimer;
-	crawlservpp::Timer::StartStop parseTimer;
-	crawlservpp::Timer::StartStop updateTimer;
+	Timer::StartStop sleepTimer;
+	Timer::StartStop httpTimer;
+	Timer::StartStop parseTimer;
+	Timer::StartStop updateTimer;
 	std::string content;
 	timerStrTo = "";
 
 	// skip crawling if only archive needs to be retried
 	if(this->config.crawlerArchives && this->archiveRetry) {
 		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("Retrying archive only [" + std::get<1>(urlData) + "].");
+			this->log("Retrying archive only [" + urlProperties.url + "].");
 		return true;
 	}
 
@@ -712,12 +721,12 @@ bool Thread::crawlingContent(const std::tuple<unsigned long, std::string, unsign
 	catch(const CurlException& e) {
 		// error while setting up network
 		if(this->config.crawlerLogging) {
-			this->log(e.whatStr() + " [" + std::get<1>(urlData) + "].");
+			this->log(e.whatStr() + " [" + urlProperties.url + "].");
 			this->log("resets connection...");
 		}
-		this->setStatusMessage("ERROR " + e.whatStr() + " [" + std::get<1>(urlData) + "]");
+		this->setStatusMessage("ERROR " + e.whatStr() + " [" + urlProperties.url + "]");
 		this->networking.resetConnection(this->config.crawlerSleepError);
-		this->crawlingRetry(urlData, false);
+		this->crawlingRetry(urlProperties, false);
 		return false;
 	}
 
@@ -727,32 +736,32 @@ bool Thread::crawlingContent(const std::tuple<unsigned long, std::string, unsign
 
 	try {
 		// get content
-		this->networking.getContent("https://" + this->domain + std::get<1>(urlData), content, this->config.crawlerRetryHttp);
+		this->networking.getContent("https://" + this->domain + urlProperties.url, content, this->config.crawlerRetryHttp);
 	}
 	catch(const CurlException& e) {
 		// error while getting content: check type of error i.e. last cURL code
-		if(this->crawlingCheckCurlCode(this->networking.getCurlCode(), std::get<1>(urlData))) {
+		if(this->crawlingCheckCurlCode(this->networking.getCurlCode(), urlProperties.url)) {
 			// reset connection and retry
 			if(this->config.crawlerLogging) {
-				this->log(e.whatStr() + " [" + std::get<1>(urlData) + "].");
+				this->log(e.whatStr() + " [" + urlProperties.url + "].");
 				this->log("resets connection...");
 			}
-			this->setStatusMessage("ERROR " + e.whatStr() + " [" + std::get<1>(urlData) + "]");
+			this->setStatusMessage("ERROR " + e.whatStr() + " [" + urlProperties.url + "]");
 			this->networking.resetConnection(this->config.crawlerSleepError);
-			this->crawlingRetry(urlData, false);
+			this->crawlingRetry(urlProperties, false);
 		}
 		else {
 			// skip URL
-			this->crawlingSkip(urlData);
+			this->crawlingSkip(urlProperties);
 		}
 		return false;
 	}
 
 	// check response code
 	unsigned int responseCode = this->networking.getResponseCode();
-	if(!(this->crawlingCheckResponseCode(std::get<1>(urlData), responseCode))) {
+	if(!(this->crawlingCheckResponseCode(urlProperties.url, responseCode))) {
 		// skip because of response code
-		this->crawlingSkip(urlData);
+		this->crawlingSkip(urlProperties);
 		return false;
 	}
 
@@ -765,41 +774,41 @@ bool Thread::crawlingContent(const std::tuple<unsigned long, std::string, unsign
 
 	// check content type
 	std::string contentType = this->networking.getContentType();
-	if(!(this->crawlingCheckContentType(urlData, contentType))) {
+	if(!(this->crawlingCheckContentType(urlProperties, contentType))) {
 		// skip because of content type (not on whitelist or on blacklist)
-		this->crawlingSkip(urlData);
+		this->crawlingSkip(urlProperties);
 		return false;
 	}
 
 	// optional: simple HTML consistency check (not very reliable though, mostly for debugging purposes)
-	if(!(this->crawlingCheckConsistency(std::get<1>(urlData), content))) {
+	if(!(this->crawlingCheckConsistency(urlProperties.url, content))) {
 		// skip because of HTML inconsistency
-		this->crawlingSkip(urlData);
+		this->crawlingSkip(urlProperties);
 		return false;
 	}
 
 	// parse content
-	crawlservpp::Parsing::XML doc;
+	Parsing::XML doc;
 	try {
 		doc.parse(content);
 	}
 	catch(const XMLException& e) {
 		// error while parsing content
-		if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + std::get<1>(urlData) + "].");
-		this->crawlingSkip(urlData);
+		if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + urlProperties.url + "].");
+		this->crawlingSkip(urlProperties);
 		return false;
 	}
 
 	// optional: simple HTML canonical check (not very reliable though, mostly for debugging purposes)
-	if(!(this->crawlingCheckCanonical(std::get<1>(urlData), doc))) {
-		this->crawlingSkip(urlData);
+	if(!(this->crawlingCheckCanonical(urlProperties.url, doc))) {
+		this->crawlingSkip(urlProperties);
 		return false;
 	}
 
 	// check content
-	if(!(this->crawlingCheckContent(std::get<1>(urlData), content, doc))) {
+	if(!(this->crawlingCheckContent(urlProperties.url, content, doc))) {
 		// skip because of content (not on whitelist or on blacklist)
-		this->crawlingSkip(urlData);
+		this->crawlingSkip(urlProperties);
 		return false;
 	}
 
@@ -809,7 +818,7 @@ bool Thread::crawlingContent(const std::tuple<unsigned long, std::string, unsign
 	}
 
 	// save content
-	this->crawlingSaveContent(urlData, responseCode, contentType, content, doc);
+	this->crawlingSaveContent(urlProperties, responseCode, contentType, content, doc);
 
 	if(this->config.crawlerTiming) {
 		updateTimer.stop();
@@ -817,7 +826,7 @@ bool Thread::crawlingContent(const std::tuple<unsigned long, std::string, unsign
 	}
 
 	// extract URLs
-	std::vector<std::string> urls = this->crawlingExtractUrls(urlData, content, doc);
+	std::vector<std::string> urls = this->crawlingExtractUrls(urlProperties, content, doc);
 	if(!urls.empty()) {
 		if(this->config.crawlerTiming) {
 			parseTimer.stop();
@@ -826,7 +835,7 @@ bool Thread::crawlingContent(const std::tuple<unsigned long, std::string, unsign
 
 		// parse and add URLs
 		checkedUrlsTo += urls.size();
-		this->crawlingParseAndAddUrls(std::get<1>(urlData), urls, newUrlsTo, false);
+		this->crawlingParseAndAddUrls(urlProperties.url, urls, newUrlsTo, false);
 
 		if(this->config.crawlerTiming) {
 			updateTimer.stop();
@@ -846,7 +855,7 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 		bool whitelist = false;
 		bool found = false;
 		for(auto i = this->queriesWhiteListUrls.begin(); i != this->queriesWhiteListUrls.end(); ++i) {
-			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+			if(i->type == QueryStruct::typeRegEx) {
 				whitelist = true;
 				try {
 					found = this->getRegExQueryPtr(i->index).getBool(url);
@@ -856,7 +865,7 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
-			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone) {
+			else if(i->type != QueryStruct::typeNone) {
 				whitelist = true;
 				if(this->config.crawlerLogging) this->log("WARNING: Query on URL is not of type RegEx.");
 			}
@@ -871,7 +880,7 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 	if(!(this->queriesBlackListUrls.empty())) {
 		// blacklist: do not allow URLs that fit a specified blacklist query
 		for(auto i = this->queriesBlackListUrls.begin(); i != this->queriesBlackListUrls.end(); ++i) {
-			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+			if(i->type == QueryStruct::typeRegEx) {
 				try {
 					if(this->getRegExQueryPtr(i->index).getBool(url)) {
 						if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -883,7 +892,7 @@ bool Thread::crawlingCheckUrl(const std::string& url) {
 					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
-			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
+			else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on URL is not of type RegEx.");
 		}
 	}
@@ -923,23 +932,23 @@ bool Thread::crawlingCheckResponseCode(const std::string& url, long responseCode
 }
 
 // check whether specific content type should be crawled
-bool Thread::crawlingCheckContentType(const std::tuple<unsigned long, std::string, unsigned long>& urlData,
+bool Thread::crawlingCheckContentType(const UrlProperties& urlProperties,
 		const std::string& contentType) {
 	// check whitelist for content types
 	if(!(this->queriesWhiteListTypes.empty())) {
 		bool found = false;
 		for(auto i = this->queriesWhiteListTypes.begin(); i != this->queriesWhiteListTypes.end(); ++i) {
-			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+			if(i->type == QueryStruct::typeRegEx) {
 				try {
 					found = this->getRegExQueryPtr(i->index).getBool(contentType);
 					if(found) break;
 				}
 				catch(const RegExException& e) {
 					if(this->config.crawlerLogging)
-						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + std::get<1>(urlData) + "].");
+						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + urlProperties.url + "].");
 				}
 			}
-			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
+			else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx.");
 		}
 		if(!found) return false;
@@ -949,17 +958,17 @@ bool Thread::crawlingCheckContentType(const std::tuple<unsigned long, std::strin
 	if(!(this->queriesBlackListTypes.empty())) {
 		bool found = false;
 		for(auto i = this->queriesBlackListTypes.begin(); i != this->queriesBlackListTypes.end(); ++i) {
-			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+			if(i->type == QueryStruct::typeRegEx) {
 				try {
 					found = this->getRegExQueryPtr(i->index).getBool(contentType);
 					if(found) break;
 				}
 				catch(const RegExException& e) {
 					if(this->config.crawlerLogging)
-						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + std::get<1>(urlData) + "].");
+						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + urlProperties.url + "].");
 				}
 			}
-			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
+			else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx.");
 		}
 		if(found) return false;
@@ -984,7 +993,7 @@ bool Thread::crawlingCheckConsistency(const std::string& url, const std::string&
 }
 
 // optional canonical check (validate URL against canonical URL)
-bool Thread::crawlingCheckCanonical(const std::string& url, const crawlservpp::Parsing::XML& doc) {
+bool Thread::crawlingCheckCanonical(const std::string& url, const Parsing::XML& doc) {
 	if(this->config.crawlerHTMLCanonicalCheck) {
 		std::string canonical;
 		try {
@@ -1013,13 +1022,12 @@ bool Thread::crawlingCheckCanonical(const std::string& url, const crawlservpp::P
 }
 
 // check whether specific content should be crawled
-bool Thread::crawlingCheckContent(const std::string& url, const std::string& content,
-		const crawlservpp::Parsing::XML& doc) {
+bool Thread::crawlingCheckContent(const std::string& url, const std::string& content, const Parsing::XML& doc) {
 	// check whitelist for content types
 	if(!(this->queriesWhiteListContent.empty())) {
 		bool found = false;
 		for(auto i = this->queriesWhiteListContent.begin(); i != this->queriesWhiteListContent.end(); ++i) {
-			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+			if(i->type == QueryStruct::typeRegEx) {
 				try {
 					found = this->getRegExQueryPtr(i->index).getBool(content);
 					if(found) break;
@@ -1028,7 +1036,7 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
-			else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
+			else if(i->type == QueryStruct::typeXPath) {
 				try {
 					found = this->getXPathQueryPtr(i->index).getBool(doc);
 					if(found) break;
@@ -1037,7 +1045,7 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 					if(this->config.crawlerLogging) this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
-			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
+			else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 		}
 		if(!found) return false;
@@ -1047,7 +1055,7 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 	if(!(this->queriesBlackListContent.empty())) {
 		bool found = false;
 		for(auto i = this->queriesBlackListContent.begin(); i != this->queriesBlackListContent.end(); ++i) {
-			if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+			if(i->type == QueryStruct::typeRegEx) {
 				try {
 					found = this->getRegExQueryPtr(i->index).getBool(content);
 					if(found) break;
@@ -1056,7 +1064,7 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 					if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
-			else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
+			else if(i->type == QueryStruct::typeXPath) {
 				try {
 					found = this->getXPathQueryPtr(i->index).getBool(doc);
 					if(found) break;
@@ -1065,7 +1073,7 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 					if(this->config.crawlerLogging) this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
-			else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
+			else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 				this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 		}
 		if(found) return false;
@@ -1075,28 +1083,28 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 }
 
 // save content to database
-void Thread::crawlingSaveContent(const std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned int response,
-		const std::string& type, const std::string& content, const crawlservpp::Parsing::XML& doc) {
+void Thread::crawlingSaveContent(const UrlProperties& urlProperties, unsigned int response,
+		const std::string& type, const std::string& content, const Parsing::XML& doc) {
 	if(this->config.crawlerXml) {
 		std::string xmlContent;
 		try {
 			doc.getContent(xmlContent);
-			this->database.saveContent(std::get<0>(urlData), response, type, xmlContent);
+			this->database.saveContent(urlProperties.id, response, type, xmlContent);
 			return;
 		}
 		catch(const XMLException& e) {
-			this->log("WARNING: Could not clean content [" + std::get<1>(urlData) + "]: " + e.whatStr());
+			this->log("WARNING: Could not clean content [" + urlProperties.url + "]: " + e.whatStr());
 		}
 	}
-	this->database.saveContent(std::get<0>(urlData), response, type, content);
+	this->database.saveContent(urlProperties.id, response, type, content);
 }
 
 // extract URLs from content
-std::vector<std::string> Thread::crawlingExtractUrls(const std::tuple<unsigned long, std::string, unsigned long>& urlData,
-		const std::string& content,	const crawlservpp::Parsing::XML& doc) {
+std::vector<std::string> Thread::crawlingExtractUrls(const UrlProperties& urlProperties,
+		const std::string& content,	const Parsing::XML& doc) {
 	std::vector<std::string> urls;
 	for(auto i = this->queriesLinks.begin(); i != this->queriesLinks.end(); ++i) {
-		if(i->type == crawlservpp::Query::Container::QueryStruct::typeRegEx) {
+		if(i->type == QueryStruct::typeRegEx) {
 			try {
 				if(i->resultMulti) {
 					std::vector<std::string> results;
@@ -1107,15 +1115,15 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::tuple<unsigned l
 				else {
 					std::string result;
 					this->getRegExQueryPtr(i->index).getFirst(content, result);
-					urls.push_back(result);
+					urls.emplace_back(result);
 				}
 			}
 			catch(const RegExException& e) {
 				if(this->config.crawlerLogging)
-					this->log("WARNING: RegEx error - " + e.whatStr() + " [" + std::get<1>(urlData) + "].");
+					this->log("WARNING: RegEx error - " + e.whatStr() + " [" + urlProperties.url + "].");
 			}
 		}
-		else if(i->type == crawlservpp::Query::Container::QueryStruct::typeXPath) {
+		else if(i->type == QueryStruct::typeXPath) {
 			try {
 				if(i->resultMulti) {
 					std::vector<std::string> results;
@@ -1127,15 +1135,15 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::tuple<unsigned l
 				else {
 					std::string result;
 					this->getXPathQueryPtr(i->index).getFirst(doc, result);
-					urls.push_back(result);
+					urls.emplace_back(result);
 				}
 			}
 			catch(const XPathException& e) {
 				if(this->config.crawlerLogging)
-					this->log("WARNING: XPath error - " + e.whatStr() + " [" + std::get<1>(urlData) + "].");
+					this->log("WARNING: XPath error - " + e.whatStr() + " [" + urlProperties.url + "].");
 			}
 		}
-		else if(i->type != crawlservpp::Query::Container::QueryStruct::typeNone && this->config.crawlerLogging)
+		else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 			this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 	}
 
@@ -1174,13 +1182,13 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 			}
 			else if(pos1 != std::string::npos) pos = pos1;
 			else if(pos2 != std::string::npos) pos = pos2;
-			if(pos) urls.at(n - 1) = crawlservpp::Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
+			if(pos) urls.at(n - 1) = Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
 			else urls.at(n - 1) = "";
 		}
 
 		if(!urls.at(n - 1).empty()) {
 			// replace &amp; with &
-			crawlservpp::Helper::Strings::replaceAll(urls.at(n - 1), "&amp;", "&", true);
+			Helper::Strings::replaceAll(urls.at(n - 1), "&amp;", "&", true);
 
 			// parse link
 			try {
@@ -1259,7 +1267,7 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 }
 
 // crawl archives
-bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned long>& urlData,
+bool Thread::crawlingArchive(UrlProperties& urlProperties,
 		unsigned long& checkedUrlsTo, unsigned long& newUrlsTo) {
 	if(this->config.crawlerArchives && this->networkingArchives) {
 		bool success = true;
@@ -1272,7 +1280,7 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 					|| (this->config.crawlerArchivesUrlsTimemap.at(n).empty()))
 				continue;
 
-			std::string archivedUrl = this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + std::get<1>(urlData);
+			std::string archivedUrl = this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + urlProperties.url;
 			std::string archivedContent;
 
 			// loop over memento pages
@@ -1292,14 +1300,16 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 							if(!archivedContent.empty()) {
 
 								// parse memento response and get next memento page if available
-								std::vector<Memento> mementos;
-								std::vector<std::string> warnings;
+								std::queue<Memento> mementos;
+								std::queue<std::string> warnings;
 								archivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
 
 								if(this->config.crawlerLogging) {
 									// if there are warnings, just log them (maybe mementos were partially parsed)
-									for(auto i = warnings.begin(); i != warnings.end(); ++i)
-										this->log("Memento parsing WARNING: " + *i + " [" + std::get<1>(urlData) + "]");
+									while(!warnings.empty()) {
+										this->log("Memento parsing WARNING: " + warnings.front() + " [" + urlProperties.url + "]");
+										warnings.pop();
+									}
 								}
 
 								// get status
@@ -1307,8 +1317,8 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 
 								// go through all mementos
 								unsigned long counter = 0;
-								for(auto i = mementos.begin(); i != mementos.end(); ++i) {
-									std::string timeStamp = i->timeStamp;
+								while(!mementos.empty()) {
+									std::string timeStamp = mementos.front().timeStamp;
 
 									// set status
 									counter++;
@@ -1319,13 +1329,13 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 									this->setStatusMessage(statusStrStr.str());
 
 									// renew URL lock to avoid duplicate archived content
-									if(this->database.renewUrlLock(this->config.crawlerLock, urlData, this->lockTime)) {
+									if(this->database.renewUrlLock(this->config.crawlerLock, urlProperties, this->lockTime)) {
 										// loop over references / memento retries
 										// [while checking whether thread is still running]
 										while(this->isRunning()) {
 
 											// check whether archived content already exists in database
-											if(!(this->database.isArchivedContentExists(std::get<0>(urlData), timeStamp))) {
+											if(!(this->database.isArchivedContentExists(urlProperties.id, timeStamp))) {
 
 												// check whether thread is till running
 												if(!(this->isRunning())) break;
@@ -1333,11 +1343,11 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 												// get archived content
 												archivedContent = "";
 												try {
-													this->networkingArchives->getContent(i->url, archivedContent,
+													this->networkingArchives->getContent(mementos.front().url, archivedContent,
 														this->config.crawlerRetryHttp);
 
 													// check response code
-													if(!(this->crawlingCheckResponseCode(i->url,
+													if(!(this->crawlingCheckResponseCode(mementos.front().url,
 															this->networkingArchives->getResponseCode()))) break;
 
 													// check whether thread is still running
@@ -1347,16 +1357,16 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 													if(archivedContent.substr(0, 17) == "found capture at ") {
 
 														// found a reference string: get timestamp
-														if(crawlservpp::Helper::DateTime::convertSQLTimeStampToTimeStamp(timeStamp)) {
-															unsigned long subUrlPos = i->url.find(timeStamp);
+														if(Helper::DateTime::convertSQLTimeStampToTimeStamp(timeStamp)) {
+															unsigned long subUrlPos = mementos.front().url.find(timeStamp);
 															if(subUrlPos != std::string::npos) {
 																subUrlPos += timeStamp.length();
 																timeStamp = archivedContent.substr(17, 14);
 
 																// get URL and validate timestamp
-																i->url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
-																		+ i->url.substr(subUrlPos);
-																if(crawlservpp::Helper::DateTime::convertTimeStampToSQLTimeStamp(
+																mementos.front().url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
+																		+ mementos.front().url.substr(subUrlPos);
+																if(Helper::DateTime::convertTimeStampToSQLTimeStamp(
 																		timeStamp))
 																	// follow reference
 																	continue;
@@ -1364,37 +1374,37 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 																	// log warning (and ignore reference)
 																	this->log("WARNING: Invalid timestamp \'" + timeStamp
 																			+ "\' from " + this->config.crawlerArchivesNames.at(n)
-																			+ " [" + std::get<1>(urlData) + "].");
+																			+ " [" + urlProperties.url + "].");
 															}
 															else if(this->config.crawlerLogging)
 																// log warning (and ignore reference)
-																this->log("WARNING: Could not find timestamp in " + i->url
-																		+ " [" + std::get<1>(urlData) + "].");
+																this->log("WARNING: Could not find timestamp in "
+																		+ mementos.front().url + " [" + urlProperties.url + "].");
 														}
 														else if(this->config.crawlerLogging)
 															// log warning (and ignore reference)
-															this->log("WARNING: Could not convert timestamp in " + i->url
-																	+ " [" + std::get<1>(urlData) + "].");
+															this->log("WARNING: Could not convert timestamp in "
+																	+ mementos.front().url + " [" + urlProperties.url + "].");
 													}
 													else {
 														// parse content
-														crawlservpp::Parsing::XML doc;
+														Parsing::XML doc;
 														try {
 															doc.parse(archivedContent);
 
 															// add archived content to database
-															this->database.saveArchivedContent(std::get<0>(urlData), i->timeStamp,
-															this->networkingArchives->getResponseCode(),
-															this->networkingArchives->getContentType(), archivedContent);
+															this->database.saveArchivedContent(urlProperties.id, mementos.front().timeStamp,
+																		this->networkingArchives->getResponseCode(),
+																		this->networkingArchives->getContentType(), archivedContent);
 
 															// extract URLs
 															std::vector<std::string> urls
-																	= this->crawlingExtractUrls(urlData, archivedContent, doc);
+																	= this->crawlingExtractUrls(urlProperties, archivedContent, doc);
 															if(!urls.empty()) {
 																// parse and add URLs
 																checkedUrlsTo += urls.size();
 																this->crawlingParseAndAddUrls(
-																		std::get<1>(urlData), urls, newUrlsTo, true);
+																		urlProperties.url, urls, newUrlsTo, true);
 															}
 														}
 														catch(const XMLException& e) {} // ignore parsing errors
@@ -1404,16 +1414,17 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 													if(this->config.crawlerRetryArchive) {
 														// error while getting content: check type of error i.e. last cURL code
 														if(this->crawlingCheckCurlCode(
-																this->networkingArchives->getCurlCode(), i->url)) {
+																this->networkingArchives->getCurlCode(), mementos.front().url)) {
 															// log error
 															if(this->config.crawlerLogging) {
-																this->log(e.whatStr() + " [" + i->url + "].");
+																this->log(e.whatStr() + " [" + mementos.front().url + "].");
 																this->log("resets connection to "
 																		+ this->config.crawlerArchivesNames.at(n) + "...");
 															}
 
 															// reset connection
-															this->setStatusMessage("ERROR " + e.whatStr() + " [" + i->url + "]");
+															this->setStatusMessage("ERROR " + e.whatStr()
+																	+ " [" + mementos.front().url + "]");
 															this->networkingArchives->resetConnection(this->config.crawlerSleepError);
 
 															// retry
@@ -1434,6 +1445,9 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 										// check whether thread is till running
 										if(!(this->isRunning())) break;
 									} // [end of check whether URL lock could be renewed]
+
+									// remove memento from queue
+									mementos.pop();
 								} // [end of loop over mementos]
 
 								// check whether thread is till running
@@ -1470,11 +1484,11 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 				}
 
 				if(!success && this->config.crawlerRetryArchive) {
-					if(skip) this->crawlingSkip(urlData);
-					else this->crawlingRetry(urlData, true);
+					if(skip) this->crawlingSkip(urlProperties);
+					else this->crawlingRetry(urlProperties, true);
 					return false;
 				}
-				else if(!success) this->crawlingSkip(urlData);
+				else if(!success) this->crawlingSkip(urlProperties);
 			} // [end of loop over memento pages]
 		} // [end of loop over archives]
 
@@ -1485,15 +1499,15 @@ bool Thread::crawlingArchive(std::tuple<unsigned long, std::string, unsigned lon
 }
 
 // crawling successfull
-void Thread::crawlingSuccess(const std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
 	// lock crawling table
 	this->database.lockCrawlingTable();
 
 	try {
 		// check URL lock
-		if(this->database.checkUrlLock(std::get<2>(urlData), this->lockTime))
+		if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime))
 			// set URL to finished
-			this->database.setUrlFinished(std::get<2>(urlData));
+			this->database.setUrlFinished(urlProperties.lockId);
 	}
 	catch(...) {
 		// any exception: try to release table locks and re-throw
@@ -1508,35 +1522,35 @@ void Thread::crawlingSuccess(const std::tuple<unsigned long, std::string, unsign
 	// reset lock time
 	this->lockTime = "";
 
-	if(std::get<0>(this->manualUrl)) {
+	if(this->manualUrl.id) {
 		// manual mode: disable retry, check for custom URL or start page that has been crawled
-		this->manualUrl = std::make_tuple(0, "", 0);
+		this->manualUrl = UrlProperties();
 		if(this->manualCounter < this->customPages.size()) this->manualCounter++;
 		else this->startCrawled = true;
 	}
 	else {
 		// automatic mode: update thread status
-		this->setLast(std::get<0>(urlData));
-		this->setProgress((float) (this->database.getUrlPosition(std::get<0>(urlData)) + 1) / this->database.getNumberOfUrls());
+		this->setLast(urlProperties.id);
+		this->setProgress((float) (this->database.getUrlPosition(urlProperties.id) + 1) / this->database.getNumberOfUrls());
 	}
 
 	// reset retry counter
 	this->retryCounter = 0;
 
 	// do not retry
-	this->nextUrl = std::make_tuple(0, "", 0);
+	this->nextUrl = UrlProperties();
 }
 
 // skip URL after crawling problem
-void Thread::crawlingSkip(const std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+void Thread::crawlingSkip(const UrlProperties& urlProperties) {
 	// lock crawling table
 	this->database.lockCrawlingTable();
 
 	try {
 		// check URL lock
-		if(this->database.checkUrlLock(std::get<2>(urlData), this->lockTime))
+		if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime))
 			// remove URL lock
-			this->database.unLockUrl(std::get<2>(urlData));
+			this->database.unLockUrl(urlProperties.lockId);
 	}
 	catch(...) {
 		// any exception: try to release table locks and re-throw
@@ -1551,35 +1565,35 @@ void Thread::crawlingSkip(const std::tuple<unsigned long, std::string, unsigned 
 	// reset lock time
 	this->lockTime = "";
 
-	if(std::get<0>(this->manualUrl)) {
+	if(this->manualUrl.id) {
 		// manual mode: disable retry, check for custom URL or start page that has been crawled
-		this->manualUrl = std::make_tuple(0, "", 0);
+		this->manualUrl = UrlProperties();
 		if(this->manualCounter < this->customPages.size()) this->manualCounter++;
 		else this->startCrawled = true;
 	}
 	else {
 		// automatic mode: update thread status
-		this->setLast(std::get<0>(urlData));
-		this->setProgress((float) (this->database.getUrlPosition(std::get<0>(urlData)) + 1) / this->database.getNumberOfUrls());
+		this->setLast(urlProperties.id);
+		this->setProgress((float) (this->database.getUrlPosition(urlProperties.id) + 1) / this->database.getNumberOfUrls());
 	}
 
 	// reset retry counter
 	this->retryCounter = 0;
 
 	// do not retry
-	this->nextUrl = std::make_tuple(0, "", 0);
+	this->nextUrl = UrlProperties();
 	this->archiveRetry = false;
 }
 
 // retry URL (completely or achives-only) after crawling problem
 //  NOTE: leaves the URL lock active for retry
-void Thread::crawlingRetry(const std::tuple<unsigned long, std::string, unsigned long>& urlData, bool archiveOnly) {
+void Thread::crawlingRetry(const UrlProperties& urlProperties, bool archiveOnly) {
 	if(this->config.crawlerReTries > -1) {
 		// increment and check retry counter
 		this->retryCounter++;
 		if(this->retryCounter > (unsigned long) this->config.crawlerReTries) {
 			// do not retry, but skip
-			this->crawlingSkip(urlData);
+			this->crawlingSkip(urlProperties);
 			return;
 		}
 	}
@@ -1587,8 +1601,8 @@ void Thread::crawlingRetry(const std::tuple<unsigned long, std::string, unsigned
 }
 
 // parse memento reply, get mementos and link to next page if one exists (also convert timestamps to YYYYMMDD HH:MM:SS)
-std::string Thread::parseMementos(std::string mementoContent, std::vector<std::string>& warningsTo,
-		std::vector<Memento>& mementosTo) {
+std::string Thread::parseMementos(std::string mementoContent, std::queue<std::string>& warningsTo,
+		std::queue<Memento>& mementosTo) {
 	std::string nextPage;
 	Memento newMemento;
 	std::ostringstream warningStrStr;
@@ -1608,16 +1622,16 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 			end = mementoContent.find('>', pos + 1);
 			if(end == std::string::npos) {
 				warningStrStr << "No '>' after '<' for link at " << pos << ".";
-				warningsTo.push_back(warningStrStr.str());
+				warningsTo.emplace(warningStrStr.str());
 				warningStrStr.clear();
 				warningStrStr.str(std::string());
 				break;
 			}
 			if(mementoStarted) {
 				// memento not finished -> warning
-				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.push_back(newMemento);
+				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.emplace(newMemento);
 				warningStrStr << "New memento started without finishing the old one at " << pos << ".";
-				warningsTo.push_back(warningStrStr.str());
+				warningsTo.emplace(warningStrStr.str());
 				warningStrStr.clear();
 				warningStrStr.str(std::string());
 			}
@@ -1634,7 +1648,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 		// parse end of memento
 		else if(mementoContent.at(pos) == ',') {
 			if(mementoStarted) {
-				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.push_back(newMemento);
+				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.emplace(newMemento);
 				mementoStarted  = false;
 			}
 			pos++;
@@ -1642,7 +1656,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 		else {
 			if(!newField) {
 				warningStrStr << "Field seperator missing for new field at " << pos << ".";
-				warningsTo.push_back(warningStrStr.str());
+				warningsTo.emplace(warningStrStr.str());
 				warningStrStr.clear();
 				warningStrStr.str(std::string());
 			}
@@ -1652,7 +1666,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 				end = mementoContent.find_first_of(",;");
 				if(end == std::string::npos) {
 					warningStrStr << "Cannot find end of field at " << pos << ".";
-					warningsTo.push_back(warningStrStr.str());
+					warningsTo.emplace(warningStrStr.str());
 					warningStrStr.clear();
 					warningStrStr.str(std::string());
 					break;
@@ -1665,7 +1679,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 				pos = mementoContent.find_first_of("\"\'", pos + 1);
 				if(pos == std::string::npos) {
 					warningStrStr << "Cannot find begin of value at " << oldPos << ".";
-					warningsTo.push_back(warningStrStr.str());
+					warningsTo.emplace(warningStrStr.str());
 					warningStrStr.clear();
 					warningStrStr.str(std::string());
 					pos++;
@@ -1674,7 +1688,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 				end = mementoContent.find_first_of("\"\'", pos + 1);
 				if(end == std::string::npos) {
 					warningStrStr << "Cannot find end of value at " << pos << ".";
-					warningsTo.push_back(warningStrStr.str());
+					warningsTo.emplace(warningStrStr.str());
 					warningStrStr.clear();
 					warningStrStr.str(std::string());
 					break;
@@ -1683,11 +1697,11 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 
 				if(fieldName == "datetime") {
 					// parse timestamp
-					if(crawlservpp::Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue))
+					if(Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue))
 						newMemento.timeStamp = fieldValue;
 					else {
 						warningStrStr << "Could not convert timestamp \'" << fieldValue << "\'  at " << pos << ".";
-						warningsTo.push_back(warningStrStr.str());
+						warningsTo.emplace(warningStrStr.str());
 						warningStrStr.clear();
 						warningStrStr.str(std::string());
 					}
@@ -1703,7 +1717,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::vector<std::s
 		}
 	}
 
-	if(mementoStarted && !newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.push_back(newMemento);
+	if(mementoStarted && !newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.emplace(newMemento);
 	return nextPage;
 }
 

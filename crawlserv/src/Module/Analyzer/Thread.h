@@ -25,18 +25,21 @@
 #include <chrono>
 #include <exception>
 #include <locale>
+#include <queue>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include <vector>
 
 namespace crawlservpp::Module::Analyzer {
-	class Thread: public crawlservpp::Module::Thread {
+	class Thread: public Module::Thread {
+		// for convenience
+		typedef Struct::ThreadOptions ThreadOptions;
+
 	public:
-		Thread(crawlservpp::Main::Database& database, unsigned long analyzerId, const std::string& analyzerStatus,
-				bool analyzerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long analyzerLast);
-		Thread(crawlservpp::Main::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
+		Thread(Main::Database& database, unsigned long analyzerId, const std::string& analyzerStatus,
+				bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast);
+		Thread(Main::Database& database, const ThreadOptions& threadOptions);
 		virtual ~Thread();
 
 	protected:

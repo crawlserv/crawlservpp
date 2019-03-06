@@ -9,7 +9,7 @@
 
 #include "Utf8.h"
 
-namespace crawlservpp::Helper::Utf8 {
+namespace Helper::Utf8 {
 
 // convert ISO-8859-1 to UTF-8
 std::string iso88591ToUtf8(const std::string& strIn) {

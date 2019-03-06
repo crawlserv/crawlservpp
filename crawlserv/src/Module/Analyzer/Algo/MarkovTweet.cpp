@@ -22,17 +22,16 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 // constructor A: run previously interrupted algorithm run
-MarkovTweet::MarkovTweet(crawlservpp::Main::Database& dbBase, unsigned long analyzerId,
-		const std::string& analyzerStatus, bool analyzerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long analyzerLast) : crawlservpp::Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused,
-				threadOptions, analyzerLast), sources(0) {
+MarkovTweet::MarkovTweet(Main::Database& dbBase, unsigned long analyzerId, const std::string& analyzerStatus,
+		bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast)
+			: Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused, threadOptions, analyzerLast),
+			  sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
 // constructor B: start a new algorithm run
-MarkovTweet::MarkovTweet(crawlservpp::Main::Database& dbBase,
-		const crawlservpp::Struct::ThreadOptions& threadOptions)
-	: crawlservpp::Module::Analyzer::Thread(dbBase, threadOptions), sources(0) {
+MarkovTweet::MarkovTweet(Main::Database& dbBase, const ThreadOptions& threadOptions)
+			: Module::Analyzer::Thread(dbBase, threadOptions), sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
@@ -51,10 +50,10 @@ void MarkovTweet::onAlgoInit(bool resumed) {
 	std::vector<std::string> fields, types;
 	fields.reserve(2);
 	types.reserve(2);
-	fields.push_back(this->config.markovTweetResultField);
-	fields.push_back(this->config.markovTweetSourcesField);
-	types.push_back("LONGTEXT NOT NULL");
-	types.push_back("BIGINT UNSIGNED NOT NULL");
+	fields.emplace_back(this->config.markovTweetResultField);
+	fields.emplace_back(this->config.markovTweetSourcesField);
+	types.emplace_back("LONGTEXT NOT NULL");
+	types.emplace_back("BIGINT UNSIGNED NOT NULL");
 	this->database.setTargetFields(fields, types);
 
 	// initialize target table
@@ -71,7 +70,7 @@ void MarkovTweet::onAlgoInit(bool resumed) {
 			dateFrom = this->config.filterDateFrom;
 			dateTo = this->config.filterDateTo;
 		}
-		this->database.getCorpus(crawlservpp::Struct::CorpusProperties(this->config.generalInputSources.at(n),
+		this->database.getCorpus(CorpusProperties(this->config.generalInputSources.at(n),
 				this->config.generalInputTables.at(n), this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo);
 		this->generator.addCorpus(corpus);
 		this->sources += corpusSources;
@@ -79,7 +78,7 @@ void MarkovTweet::onAlgoInit(bool resumed) {
 
 	// set options
 	this->generator.setSpellChecking(this->config.markovTweetSpellcheck, this->config.markovTweetLanguage);
-	this->generator.setVerbose(this->config.generalLogging == crawlservpp::Module::Analyzer::Config::generalLoggingVerbose);
+	this->generator.setVerbose(this->config.generalLogging == Module::Analyzer::Config::generalLoggingVerbose);
 	this->generator.setTiming(this->config.markovTweetTiming);
 
 	// set callbacks (suppressing wrong error messages by Eclipse IDE)
@@ -114,15 +113,14 @@ void MarkovTweet::onAlgoTick() {
 	std::string tweet = this->generator.randomSentence(this->config.markovTweetLength);
 
 	// insert tweet into result table in the database
-	crawlservpp::Main::Data::InsertFieldsMixed data;
+	Main::Data::InsertFieldsMixed data;
 	data.columns_types_values.reserve(2);
-	data.table = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
-	data.columns_types_values.push_back(
-			std::make_tuple("analyzed__" + this->config.markovTweetResultField, DataType::_string, DataValue(tweet))
-	);
-	data.columns_types_values.push_back(
-			std::make_tuple("analyzed__" + this->config.markovTweetSourcesField, DataType::_ulong, DataValue(this->sources))
-	);
+	data.table = "crawlserv_" + this->websiteNamespace + "_"
+			+ this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
+	data.columns_types_values.emplace_back("analyzed__"
+			+ this->config.markovTweetResultField, DataType::_string, DataValue(tweet));
+	data.columns_types_values.emplace_back("analyzed__"
+			+ this->config.markovTweetSourcesField, DataType::_ulong, DataValue(this->sources));
 	this->database.insertCustomData(data);
 
 	// increase tweet count (internally saved as "last") and calculate progress if necessary

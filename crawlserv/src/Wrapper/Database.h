@@ -29,12 +29,14 @@ namespace crawlservpp::Wrapper {
 
 class Database {
 	// for convenience
-	typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
-	typedef crawlservpp::Struct::TableColumn TableColumn;
+	typedef Struct::CustomTableProperties CustomTableProperties;
+	typedef Struct::QueryProperties QueryProperties;
+	typedef Struct::TableColumn TableColumn;
+	typedef std::pair<unsigned long, std::string> IdString;
 
 public:
 	// constructors
-	Database(crawlservpp::Module::Database& dbRef);
+	Database(Module::Database& dbRef);
 
 	virtual ~Database() = 0;
 
@@ -53,7 +55,7 @@ public:
 	void resetAnalyzingStatus(unsigned long listId);
 
 	// wrapper for query function
-	void getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo);
+	void getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo);
 
 	// wrapper for configuration function
 	std::string getConfiguration(unsigned long configId);
@@ -61,7 +63,7 @@ public:
 	// wrappers for custom table functions
 	void lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
 	unsigned long addCustomTable(const CustomTableProperties& properties);
-	std::vector<std::pair<unsigned long, std::string>> getCustomTables(const std::string& type, unsigned long listId);
+	std::queue<IdString> getCustomTables(const std::string& type, unsigned long listId);
 	unsigned long getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
 			const std::string& tableName);
 	std::string getCustomTableName(const std::string& type, unsigned long tableId);
@@ -72,18 +74,18 @@ public:
 	void releaseLocks();
 
 	// wrappers for custom data functions used by algorithms
-	void getCustomData(crawlservpp::Main::Data::GetValue& data);
-	void getCustomData(crawlservpp::Main::Data::GetFields& data);
-	void getCustomData(crawlservpp::Main::Data::GetFieldsMixed& data);
-	void getCustomData(crawlservpp::Main::Data::GetColumn& data);
-	void getCustomData(crawlservpp::Main::Data::GetColumns& data);
-	void getCustomData(crawlservpp::Main::Data::GetColumnsMixed& data);
-	void insertCustomData(const crawlservpp::Main::Data::InsertValue& data);
-	void insertCustomData(const crawlservpp::Main::Data::InsertFields& data);
-	void insertCustomData(const crawlservpp::Main::Data::InsertFieldsMixed& data);
-	void updateCustomData(const crawlservpp::Main::Data::UpdateValue& data);
-	void updateCustomData(const crawlservpp::Main::Data::UpdateFields& data);
-	void updateCustomData(const crawlservpp::Main::Data::UpdateFieldsMixed& data);
+	void getCustomData(Main::Data::GetValue& data);
+	void getCustomData(Main::Data::GetFields& data);
+	void getCustomData(Main::Data::GetFieldsMixed& data);
+	void getCustomData(Main::Data::GetColumn& data);
+	void getCustomData(Main::Data::GetColumns& data);
+	void getCustomData(Main::Data::GetColumnsMixed& data);
+	void insertCustomData(const Main::Data::InsertValue& data);
+	void insertCustomData(const Main::Data::InsertFields& data);
+	void insertCustomData(const Main::Data::InsertFieldsMixed& data);
+	void updateCustomData(const Main::Data::UpdateValue& data);
+	void updateCustomData(const Main::Data::UpdateFields& data);
+	void updateCustomData(const Main::Data::UpdateFieldsMixed& data);
 
 	// not moveable, not copyable
 	Database(Database&) = delete;
@@ -93,7 +95,7 @@ public:
 
 protected:
 	// reference to the database connection by the thread
-	crawlservpp::Module::Database& database;
+	Module::Database& database;
 
 	// wrapper for getters
 	unsigned long getMaxAllowedPacketSize() const;

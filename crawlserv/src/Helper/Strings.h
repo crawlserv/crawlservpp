@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace crawlservpp::Helper::Strings {
+namespace Helper::Strings {
 	// Unicode white spaces
 	const std::string utfWhitespaces[] = {
 		"\u0085", // next line (NEL)

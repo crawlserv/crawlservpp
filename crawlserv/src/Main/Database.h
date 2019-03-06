@@ -56,6 +56,7 @@
 #include <iostream>
 #include <locale>
 #include <memory>
+#include <queue>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -67,18 +68,26 @@
 namespace crawlservpp::Main {
 	class Database {
 		// for convenience
-		typedef crawlservpp::Struct::TableColumn TableColumn;
-		typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
+		typedef Struct::ConfigProperties ConfigProperties;
+		typedef Struct::CustomTableProperties CustomTableProperties;
+		typedef Struct::DatabaseSettings DatabaseSettings;
+		typedef Struct::QueryProperties QueryProperties;
+		typedef Struct::TableColumn TableColumn;
+		typedef Struct::ThreadDatabaseEntry ThreadDatabaseEntry;
+		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::UrlListProperties UrlListProperties;
+		typedef Struct::WebsiteProperties WebsiteProperties;
+		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
-		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule);
+		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
 		virtual ~Database();
 
 		// setter
 		void setSleepOnError(unsigned long seconds);
 
 		// getter
-		const crawlservpp::Struct::DatabaseSettings& getSettings() const;
+		const DatabaseSettings& getSettings() const;
 
 		// initializing functions
 		void connect();
@@ -92,8 +101,8 @@ namespace crawlservpp::Main {
 		void clearLogs(const std::string& logModule);
 
 		// thread functions
-		std::vector<crawlservpp::Struct::ThreadDatabaseEntry> getThreads();
-		unsigned long addThread(const std::string& threadModule, const crawlservpp::Struct::ThreadOptions& threadOptions);
+		std::vector<ThreadDatabaseEntry> getThreads();
+		unsigned long addThread(const std::string& threadModule, const ThreadOptions& threadOptions);
 		unsigned long getThreadRunTime(unsigned long threadId);
 		unsigned long getThreadPauseTime(unsigned long threadId);
 		void setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
@@ -103,7 +112,7 @@ namespace crawlservpp::Main {
 		void deleteThread(unsigned long threadId);
 
 		// website functions
-		unsigned long addWebsite(const crawlservpp::Struct::WebsiteProperties& websiteProperties);
+		unsigned long addWebsite(const WebsiteProperties& websiteProperties);
 		std::string getWebsiteDomain(unsigned long id);
 		std::string getWebsiteNamespace(unsigned long websiteId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromUrlList(unsigned long listId);
@@ -111,40 +120,40 @@ namespace crawlservpp::Main {
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromCustomTable(const std::string& type, unsigned long tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
-		void updateWebsite(unsigned long websiteId, const crawlservpp::Struct::WebsiteProperties& websiteProperties);
+		void updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
 		void deleteWebsite(unsigned long websiteId);
 		unsigned long duplicateWebsite(unsigned long websiteId);
 
 		// URL list functions
-		unsigned long addUrlList(unsigned long websiteId, const crawlservpp::Struct::UrlListProperties& listProperties);
-		std::vector<std::pair<unsigned long, std::string>> getUrlLists(unsigned long websiteId);
+		unsigned long addUrlList(unsigned long websiteId, const UrlListProperties& listProperties);
+		std::queue<IdString> getUrlLists(unsigned long websiteId);
 		std::string getUrlListNamespace(unsigned long listId);
 		std::pair<unsigned long, std::string> getUrlListNamespaceFromCustomTable(const std::string& type, unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
-		void updateUrlList(unsigned long listId, const crawlservpp::Struct::UrlListProperties& listProperties);
+		void updateUrlList(unsigned long listId, const UrlListProperties& listProperties);
 		void deleteUrlList(unsigned long listId);
 		void resetParsingStatus(unsigned long listId);
 		void resetExtractingStatus(unsigned long listId);
 		void resetAnalyzingStatus(unsigned long listId);
 
 		// query functions
-		unsigned long addQuery(unsigned long websiteId, const crawlservpp::Struct::QueryProperties& queryProperties);
-		void getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo);
-		void updateQuery(unsigned long queryId, const crawlservpp::Struct::QueryProperties& queryProperties);
+		unsigned long addQuery(unsigned long websiteId, const QueryProperties& queryProperties);
+		void getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo);
+		void updateQuery(unsigned long queryId, const QueryProperties& queryProperties);
 		void deleteQuery(unsigned long queryId);
 		unsigned long duplicateQuery(unsigned long queryId);
 
 		// configuration functions
-		unsigned long addConfiguration(unsigned long websiteId, const crawlservpp::Struct::ConfigProperties& configProperties);
+		unsigned long addConfiguration(unsigned long websiteId, const ConfigProperties& configProperties);
 		const std::string getConfiguration(unsigned long configId);
-		void updateConfiguration(unsigned long configId, const crawlservpp::Struct::ConfigProperties& configProperties);
+		void updateConfiguration(unsigned long configId, const ConfigProperties& configProperties);
 		void deleteConfiguration(unsigned long configId);
 		unsigned long duplicateConfiguration(unsigned long configId);
 
 		// custom table functions
 		void lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
 		unsigned long addCustomTable(const CustomTableProperties& properties);
-		std::vector<std::pair<unsigned long, std::string>> getCustomTables(const std::string& type, unsigned long listId);
+		std::queue<IdString> getCustomTables(const std::string& type, unsigned long listId);
 		unsigned long getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
 				const std::string& tableName);
 		std::string getCustomTableName(const std::string& type, unsigned long tableId);
@@ -179,9 +188,9 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
 		// sub-classes for database exceptions
-		class Exception : public crawlservpp::Main::Exception { // general Database exception
+		class Exception : public Main::Exception { // general Database exception
 		public:
-			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			Exception(const std::string& description) : Main::Exception(description) {}
 		};
 
 		class ConnectionException : public Exception { // connection exception (used to handle a lost database connection)
@@ -229,17 +238,17 @@ namespace crawlservpp::Main {
 
 	private:
 		// private connection information
-		const crawlservpp::Struct::DatabaseSettings settings;
+		const DatabaseSettings settings;
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
 		std::string module;
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
-		crawlservpp::Timer::Simple reconnectTimer;
+		Timer::Simple reconnectTimer;
 #endif
 		std::vector<std::pair<std::string, unsigned long>> customTableLocks;
 
 		// prepared SQL statements
-		std::vector<crawlservpp::Wrapper::PreparedSqlStatement> preparedStatements;
+		std::vector<Wrapper::PreparedSqlStatement> preparedStatements;
 
 		// internal helper function
 		void run(const std::string& sqlFile);

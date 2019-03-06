@@ -25,6 +25,7 @@
 #include <chrono>
 #include <climits>
 #include <cstdio>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -37,7 +38,7 @@ namespace crawlservpp::Network {
 		virtual ~Curl();
 
 		// setters
-		void setConfigGlobal(const Config& globalConfig, bool limited, std::vector<std::string> * warningsTo);
+		void setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string> * warningsTo);
 		void setConfigCurrent(const Config& currentConfig);
 
 		// getters
@@ -55,9 +56,9 @@ namespace crawlservpp::Network {
 		std::string escapeUrl(const std::string& urlToEscape);
 
 		// sub-class for cURL exceptions
-		class Exception : public crawlservpp::Main::Exception {
+		class Exception : public Main::Exception {
 		public:
-			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
 
@@ -77,9 +78,9 @@ namespace crawlservpp::Network {
 		// const pointer to network configuration
 		const Network::Config * config;
 
-		crawlservpp::Wrapper::Curl curl;
+		Wrapper::Curl curl;
 
-		crawlservpp::Wrapper::CurlList dnsResolves, headers, http200Aliases, proxyHeaders;
+		Wrapper::CurlList dnsResolves, headers, http200Aliases, proxyHeaders;
 
 		// helper function for cURL strings
 		static std::string curlStringToString(char * curlString);

@@ -12,28 +12,32 @@
 namespace crawlservpp::Module::Analyzer {
 
 // constructor A: run previously interrupted analyzer
-Thread::Thread(crawlservpp::Main::Database& dbBase, unsigned long analyzerId,
-		const std::string& analyzerStatus, bool analyzerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long analyzerLast)
-	: crawlservpp::Module::Thread(dbBase, analyzerId, "analyzer", analyzerStatus, analyzerPaused, threadOptions, analyzerLast),
-	  	  database(this->crawlservpp::Module::Thread::database) {}
+Thread::Thread(Main::Database& dbBase, unsigned long analyzerId, const std::string& analyzerStatus,
+		bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast)
+			: Module::Thread(dbBase, analyzerId, "analyzer", analyzerStatus, analyzerPaused, threadOptions, analyzerLast),
+			  database(this->Module::Thread::database) {}
 
 // constructor B: start a new analyzer
-Thread::Thread(Main::Database& dbBase, const crawlservpp::Struct::ThreadOptions& threadOptions)
-	: crawlservpp::Module::Thread(dbBase, "analyzer", threadOptions), database(this->crawlservpp::Module::Thread::database) {}
+Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
+			: Module::Thread(dbBase, "analyzer", threadOptions), database(this->Module::Thread::database) {}
 
 // destructor stub
 Thread::~Thread() {}
 
 // initialize parser, throws std::runtime_error
 void Thread::onInit(bool resumed) {
-	std::vector<std::string> configWarnings;
-	std::vector<std::string> fields;
+	std::queue<std::string> configWarnings;
 
-	// get configuration and show warnings if necessary
+	// get configuration
 	this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
-	if(this->config.generalLogging) for(auto i = configWarnings.begin(); i != configWarnings.end(); ++i)
-		this->log("WARNING: " + *i);
+
+	// show warnings if necessary
+	if(this->config.generalLogging) {
+		while(!configWarnings.empty()) {
+			this->log("WARNING: " + configWarnings.front());
+			configWarnings.pop();
+		}
+	}
 
 	// check configuration
 	bool verbose = config.generalLogging == Config::generalLoggingVerbose;

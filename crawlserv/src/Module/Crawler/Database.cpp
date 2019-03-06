@@ -12,7 +12,7 @@
 namespace crawlservpp::Module::Crawler {
 
 // constructor: initialize values
-Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapper::Database(dbThread), recrawl(false),
+Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread), recrawl(false),
 		logging(false), verbose(false), ps({0}) {}
 
 // destructor stub
@@ -50,7 +50,7 @@ void Database::setVerbose(bool isVerbose) {
 	this->verbose = isVerbose;
 }
 
-// prepare SQL statements for crawler, throws crawlservpp::Main::Database::Exception
+// prepare SQL statements for crawler, throws Main::Database::Exception
 void Database::prepare() {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
@@ -271,9 +271,9 @@ void Database::lockUrlListAndCrawlingTable() {
 
 // get the ID and lock ID of an URL (uses hash check for first checking the probable existence of the URL)
 //  NOTE: The second value of the tuple (the URL name) needs already to be set!
-void Database::getUrlIdLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+void Database::getUrlIdLockId(UrlProperties& urlProperties) {
 	// check argument
-	if(std::get<1>(urlData).empty()) throw DatabaseException("Crawler::Database::getUrlIdLockId(): No URL specified");
+	if(urlProperties.url.empty()) throw DatabaseException("Crawler::Database::getUrlIdLockId(): No URL specified");
 
 	// check connection
 	this->checkConnection();
@@ -285,13 +285,13 @@ void Database::getUrlIdLockId(std::tuple<unsigned long, std::string, unsigned lo
 	// get ID of URL from database
 	try {
 		// execute SQL query for getting URL
-		sqlStatement.setString(1, std::get<1>(urlData));
+		sqlStatement.setString(1, urlProperties.url);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next())  {
-			std::get<0>(urlData) = sqlResultSet->getUInt64("url_id");
-			std::get<2>(urlData) = sqlResultSet->getUInt64("lock_id");
+			urlProperties.id = sqlResultSet->getUInt64("url_id");
+			urlProperties.lockId = sqlResultSet->getUInt64("lock_id");
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlIdLockId", e); }
@@ -326,8 +326,8 @@ bool Database::isUrlCrawled(unsigned long crawlingId) {
 }
 
 // get the next URL to crawl from database, return ID, URL and lock ID of next URL or empty tuple if all URLs have been parsed
-std::tuple<unsigned long, std::string, unsigned long> Database::getNextUrl(unsigned long currentUrlId) {
-	std::tuple<unsigned long, std::string, unsigned long> result;
+Database::UrlProperties Database::getNextUrl(unsigned long currentUrlId) {
+	UrlProperties result;
 
 	// check connection
 	this->checkConnection();
@@ -344,10 +344,11 @@ std::tuple<unsigned long, std::string, unsigned long> Database::getNextUrl(unsig
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			result = std::make_tuple(
+			result = UrlProperties(
 					sqlResultSet->getUInt64("url_id"),
 					sqlResultSet->getString("url"),
-					sqlResultSet->getUInt64("lock_id"));
+					sqlResultSet->getUInt64("lock_id")
+			);
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getNextUrl", e); }
@@ -593,10 +594,10 @@ std::string Database::getUrlLock(unsigned long lockId) {
 
 // get the URL lock ID for a specific URL from the database if none has been received yet
 //  NOTE: The first value of the tuple (the URL ID) needs already to be set!
-void Database::getUrlLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+void Database::getUrlLockId(UrlProperties& urlProperties) {
 	// check arguments
-	if(!std::get<0>(urlData)) throw DatabaseException("Parser::Database::getUrlLockId(): No URL ID specified");
-	if(std::get<2>(urlData)) return; // already got lock ID
+	if(!urlProperties.id) throw DatabaseException("Parser::Database::getUrlLockId(): No URL ID specified");
+	if(urlProperties.lockId) return; // already got lock ID
 
 	// check connection
 	this->checkConnection();
@@ -609,25 +610,25 @@ void Database::getUrlLockId(std::tuple<unsigned long, std::string, unsigned long
 	// get lock ID from database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, std::get<0>(urlData));
+		sqlStatement.setUInt64(1, urlProperties.id);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next())
-			std::get<2>(urlData) = sqlResultSet->getUInt64("id");
+			urlProperties.lockId = sqlResultSet->getUInt64("id");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLockId", e); }
 }
 
 // lock a URL in the database
-std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout) {
+std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTimeout) {
 	// check argument
-	if(!std::get<0>(urlData)) throw DatabaseException("Crawler::Database::lockUrl(): No URL ID specified");
+	if(!urlProperties.id) throw DatabaseException("Crawler::Database::lockUrl(): No URL ID specified");
 
 	// check connection
 	this->checkConnection();
 
-	if(std::get<2>(urlData)) {
+	if(urlProperties.lockId) {
 		// check prepared SQL statement for locking the URL
 		if(!(this->ps.lockUrl))
 			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
@@ -637,7 +638,7 @@ std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned lo
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, lockTimeout);
-			sqlStatement.setUInt64(2, std::get<2>(urlData));
+			sqlStatement.setUInt64(2, urlProperties.lockId);
 			sqlStatement.execute();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
@@ -651,17 +652,17 @@ std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned lo
 		// add URL lock to database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, std::get<0>(urlData));
+			sqlStatement.setUInt64(1, urlProperties.id);
 			sqlStatement.setUInt64(2, lockTimeout);
 			sqlStatement.execute();
 
 			// get result
-			std::get<2>(urlData) = this->getLastInsertedId();
+			urlProperties.lockId = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
 	}
 
-	return this->getUrlLock(std::get<2>(urlData));
+	return this->getUrlLock(urlProperties.lockId);
 }
 
 // unlock a URL in the database
@@ -828,22 +829,22 @@ bool Database::isArchivedContentExists(unsigned long urlId, const std::string& t
 
 // helper function: check the current URL lock and re-lock the URL if possible, return whether the re-locking was successful
 //  NOTE: This function locks and unlocks the crawling table by itself
-bool Database::renewUrlLock(unsigned long lockTimeout, std::tuple<unsigned long, std::string, unsigned long>& urlData,
+bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlProperties,
 		std::string& lockTime) {
 	bool result = false;
 
 	// check argument
-	if(!std::get<0>(urlData)) throw DatabaseException("Crawler::Database::renewUrlLock(): No URL ID specified");
+	if(!urlProperties.id) throw DatabaseException("Crawler::Database::renewUrlLock(): No URL ID specified");
 
 	// lock crawling table
 	this->lockCrawlingTable();
 
 	// get lock ID if not already received
-	this->getUrlLockId(urlData);
+	this->getUrlLockId(urlProperties);
 
 	try {
-		if(this->checkUrlLock(std::get<2>(urlData), lockTime)) {
-			lockTime = this->lockUrl(urlData, lockTimeout);
+		if(this->checkUrlLock(urlProperties.lockId, lockTime)) {
+			lockTime = this->lockUrl(urlProperties, lockTimeout);
 			this->releaseLocks();
 			result = true;
 		}

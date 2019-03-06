@@ -9,7 +9,7 @@
 
 #include "Versions.h"
 
-namespace crawlservpp::Helper::Versions {
+namespace Helper::Versions {
 
 std::string getLibraryVersions(const std::string& indent) {
 	std::ostringstream out;

@@ -9,7 +9,7 @@
 
 #include "FileSystem.h"
 
-namespace crawlservpp::Helper::FileSystem {
+namespace Helper::FileSystem {
 
 // list files with specific extension in a directory and its subdirectories
 std::vector<std::string> listFilesInPath(const std::string& pathToDir,
@@ -23,7 +23,7 @@ std::vector<std::string> listFilesInPath(const std::string& pathToDir,
 
 	// iterate through items
 	for(auto& it: std::experimental::filesystem::recursive_directory_iterator(path)) {
-		if(it.path().extension().string() == fileExtension) result.push_back(it.path().string());
+		if(it.path().extension().string() == fileExtension) result.emplace_back(it.path().string());
 	}
 
 	return result;

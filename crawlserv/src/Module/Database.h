@@ -24,12 +24,14 @@ namespace crawlservpp::Wrapper {
 }
 
 namespace crawlservpp::Module {
+	class Database : public Main::Database {
+		friend class Wrapper::Database;
 
-	class Database : public crawlservpp::Main::Database {
-		friend class crawlservpp::Wrapper::Database;
+		// for convenience
+		typedef Struct::DatabaseSettings DatabaseSettings;
 	public:
 		// constructor
-		Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule);
+		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
 
 		// destructor
 		virtual ~Database();

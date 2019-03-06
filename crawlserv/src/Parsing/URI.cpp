@@ -63,7 +63,7 @@ bool URI::isSameDomain() const {
 // get sub-URL for link
 std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
 	if(!(this->uri)) throw URI::Exception("No link parsed");
-	crawlservpp::Wrapper::URIQueryList queryList;
+	Wrapper::URIQueryList queryList;
 	UriQueryListA * queryNext = NULL;
 	int queryCount = 0;
 	std::string queries;
@@ -121,7 +121,7 @@ bool URI::parseLink(const std::string& linkToParse) {
 	}
 
 	// trim and escape URL
-	crawlservpp::Helper::Strings::trim(linkCopy);
+	Helper::Strings::trim(linkCopy);
 	linkCopy = URI::escapeUrl(linkCopy);
 
 	// check for empty link
@@ -131,7 +131,7 @@ bool URI::parseLink(const std::string& linkToParse) {
 	this->uri.create();
 
 	// create temporary URI for relative link
-	crawlservpp::Wrapper::URI relativeSource;
+	Wrapper::URI relativeSource;
 	relativeSource.create();
 
 	// NOTE: URL needs to be stored in class BEFORE PARSING to provide long-term access by the parsing library
@@ -205,7 +205,7 @@ std::string URI::textRangeToString(const UriTextRangeA& range) {
 }
 
 // static helper function: convert URI to string
-std::string URI::toString(const crawlservpp::Wrapper::URI& uri) {
+std::string URI::toString(const Wrapper::URI& uri) {
 	if(!uri) return "";
 	int charsRequired = 0;
 

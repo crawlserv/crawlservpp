@@ -22,6 +22,7 @@
 #include "../../Query/Container.h"
 #include "../../Struct/ThreadOptions.h"
 #include "../../Struct/QueryProperties.h"
+#include "../../Struct/UrlProperties.h"
 #include "../../Timer/StartStop.h"
 
 #include <algorithm>
@@ -29,6 +30,7 @@
 #include <chrono>
 #include <exception>
 #include <locale>
+#include <queue>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -37,16 +39,21 @@
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
-	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
+	class Thread: public Module::Thread, public Query::Container {
 		// for convenience
-		typedef crawlservpp::Parsing::XML::Exception XMLException;
-		typedef crawlservpp::Query::RegEx::Exception RegExException;
+		typedef Parsing::XML::Exception XMLException;
+		typedef Struct::QueryProperties QueryProperties;
+		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::UrlProperties UrlProperties;
+		typedef Query::Container::QueryStruct QueryStruct;
+		typedef Query::RegEx::Exception RegExException;
+		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
 		// constructors
-		Thread(crawlservpp::Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
-				const crawlservpp::Struct::ThreadOptions& threadOptions, unsigned long crawlerLast);
-		Thread(crawlservpp::Main::Database& database, const crawlservpp::Struct::ThreadOptions& threadOptions);
+		Thread(Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
+				const ThreadOptions& threadOptions, unsigned long crawlerLast);
+		Thread(Main::Database& database, const ThreadOptions& threadOptions);
 
 		// destructor
 		virtual ~Thread();
@@ -77,10 +84,10 @@ namespace crawlservpp::Module::Parser {
 		bool idFromUrl;
 
 		// queries
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesSkip;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesId;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesDateTime;
-		std::vector<crawlservpp::Query::Container::QueryStruct> queriesFields;
+		std::vector<QueryStruct> queriesSkip;
+		std::vector<QueryStruct> queriesId;
+		std::vector<QueryStruct> queriesDateTime;
+		std::vector<QueryStruct> queriesFields;
 
 		// timing
 		unsigned long long tickCounter;
@@ -89,7 +96,7 @@ namespace crawlservpp::Module::Parser {
 		std::chrono::steady_clock::time_point idleTime;
 
 		// parsing state
-		std::tuple<unsigned long, std::string, unsigned long> currentUrl; // currently parsed URL
+		UrlProperties currentUrl; // currently parsed URL
 		std::string lockTime; // last locking time for currently parsed URL
 
 		// initializing function
@@ -99,7 +106,7 @@ namespace crawlservpp::Module::Parser {
 		// parsing functions
 		bool parsingUrlSelection();
 		unsigned long parsing();
-		bool parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId, bool& skipUrl);
+		bool parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId);
 	};
 }
 

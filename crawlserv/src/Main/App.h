@@ -34,6 +34,10 @@
 
 namespace crawlservpp::Main {
 	class App {
+		// for convenience
+		typedef Struct::DatabaseSettings DatabaseSettings;
+		typedef Struct::ServerSettings ServerSettings;
+
 	public:
 		App(int argc, char * argv[]) noexcept;
 		virtual ~App();
@@ -56,13 +60,12 @@ namespace crawlservpp::Main {
 		std::unique_ptr<Server> server;
 
 		// helper function
-		bool getPassword(crawlservpp::Struct::DatabaseSettings& dbSettings);
+		bool getPassword(DatabaseSettings& dbSettings);
 
 		// static helper functions
 		static void outputHeader();
 		static void checkArgumentNumber(int argc);
-		static void loadConfig(const std::string& fileName, crawlservpp::Struct::DatabaseSettings& dbSettings,
-				crawlservpp::Struct::ServerSettings& serverSettings);
+		static void loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, ServerSettings& serverSettings);
 	};
 }
 

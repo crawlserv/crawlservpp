@@ -29,7 +29,7 @@ std::string Simple::tickStr() {
 			std::chrono::steady_clock::now()
 		- this->timePoint).count();
 	this->timePoint = std::chrono::steady_clock::now();
-	return crawlservpp::Helper::DateTime::millisecondsToString(result);
+	return Helper::DateTime::millisecondsToString(result);
 }
 
 }

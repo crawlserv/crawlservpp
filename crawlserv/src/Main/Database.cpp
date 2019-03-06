@@ -19,7 +19,7 @@ namespace crawlservpp::Main {
 sql::Driver * Database::driver = NULL;
 
 // constructor: save settings and set default values
-Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule)
+Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 		: tablesLocked(false), settings(dbSettings), maxAllowedPacketSize(0), sleepOnError(0), module(dbModule), ps({0}) {
 	// get driver instance if necessary
 	if(!Database::driver) {
@@ -54,7 +54,7 @@ void Database::setSleepOnError(unsigned long seconds) {
  */
 
 // get settings of the database
-const crawlservpp::Struct::DatabaseSettings& Database::getSettings() const {
+const Database::DatabaseSettings& Database::getSettings() const {
 	return this->settings;
 }
 
@@ -120,7 +120,7 @@ void Database::connect() {
 void Database::initializeSql() {
 	// read 'sql' directory
 	std::vector<std::string> sqlFiles;
-	sqlFiles = crawlservpp::Helper::FileSystem::listFilesInPath("sql", ".sql");
+	sqlFiles = Helper::FileSystem::listFilesInPath("sql", ".sql");
 
 	// execute all SQL files
 	for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i) this->run(*i);
@@ -235,8 +235,8 @@ void Database::clearLogs(const std::string& logModule) {
  */
 
 // get all threads from the database
-std::vector<crawlservpp::Struct::ThreadDatabaseEntry> Database::getThreads() {
-	std::vector<crawlservpp::Struct::ThreadDatabaseEntry> result;
+std::vector<Database::ThreadDatabaseEntry> Database::getThreads() {
+	std::vector<ThreadDatabaseEntry> result;
 
 	// check connection
 	this->checkConnection();
@@ -253,16 +253,18 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> Database::getThreads() {
 		if(sqlResultSet) {
 			result.reserve(sqlResultSet->rowsCount());
 			while(sqlResultSet->next()) {
-				crawlservpp::Struct::ThreadDatabaseEntry entry;
-				entry.id = sqlResultSet->getUInt64("id");
-				entry.module = sqlResultSet->getString("module");
-				entry.status = sqlResultSet->getString("status");
-				entry.paused = sqlResultSet->getBoolean("paused");
-				entry.options.website = sqlResultSet->getUInt64("website");
-				entry.options.urlList = sqlResultSet->getUInt64("urllist");
-				entry.options.config = sqlResultSet->getUInt64("config");
-				entry.last = sqlResultSet->getUInt64("last");
-				result.push_back(entry);
+				result.emplace_back(
+						sqlResultSet->getUInt64("id"),
+						sqlResultSet->getString("module"),
+						sqlResultSet->getString("status"),
+						sqlResultSet->getBoolean("paused"),
+						ThreadOptions(
+								sqlResultSet->getUInt64("website"),
+								sqlResultSet->getUInt64("urllist"),
+								sqlResultSet->getUInt64("config")
+						),
+						sqlResultSet->getUInt64("last")
+				);
 			}
 		}
 	}
@@ -272,7 +274,7 @@ std::vector<crawlservpp::Struct::ThreadDatabaseEntry> Database::getThreads() {
 }
 
 // add a thread to the database and return its new ID
-unsigned long Database::addThread(const std::string& threadModule, const crawlservpp::Struct::ThreadOptions& threadOptions) {
+unsigned long Database::addThread(const std::string& threadModule, const ThreadOptions& threadOptions) {
 	unsigned long result = 0;
 
 	// check arguments
@@ -485,7 +487,7 @@ void Database::deleteThread(unsigned long threadId) {
  */
 
 // add a website to the database and return its new ID
-unsigned long Database::addWebsite(const crawlservpp::Struct::WebsiteProperties& websiteProperties) {
+unsigned long Database::addWebsite(const WebsiteProperties& websiteProperties) {
 	unsigned long result = 0;
 	std::string timeStamp;
 
@@ -519,7 +521,7 @@ unsigned long Database::addWebsite(const crawlservpp::Struct::WebsiteProperties&
 		result = this->getLastInsertedId();
 
 		// add default URL list
-		this->addUrlList(result, crawlservpp::Struct::UrlListProperties("default", "Default URL list"));
+		this->addUrlList(result, UrlListProperties("default", "Default URL list"));
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::addWebsite", e); }
 
@@ -733,7 +735,7 @@ std::string Database::duplicateWebsiteNamespace(const std::string& websiteNamesp
 }
 
 // update website (and all associated tables) in the database
-void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct::WebsiteProperties& websiteProperties) {
+void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties) {
 	// check arguments
 	if(!websiteId)
 		throw Database::Exception("Main::Database::updateWebsite(): No website ID specified");
@@ -758,50 +760,58 @@ void Database::updateWebsite(unsigned long websiteId, const crawlservpp::Struct:
 	try {
 		// check whether namespace has changed
 		if(websiteProperties.nameSpace != oldNamespace) {
+			std::queue<IdString> tables;
+
 			// create SQL statement for renaming
 			std::unique_ptr<sql::Statement> renameStatement(this->connection->createStatement());
 
 			// rename sub tables
-			std::vector<std::pair<unsigned long, std::string>> urlLists = this->getUrlLists(websiteId);
-			for(auto liI = urlLists.begin(); liI != urlLists.end(); ++liI) {
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "`");
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_crawled` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_crawled`");
+			std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+			while(!urlLists.empty()) {
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "`");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawled` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawled`");
 
 				// rename crawling table
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_crawling` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_crawling`");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawling` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawling`");
 
 				// rename parsing tables
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_parsing` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_parsing`");
-				std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getCustomTables("parsed", liI->first);
-				for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
-					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_parsed_"
-							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
-							+ "_parsed_" + taI->second + "`");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsing` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing`");
+				tables = this->getCustomTables("parsed", urlLists.front().first);
+				while(!tables.empty()) {
+					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsed_"
+							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
+							+ urlLists.front().second + "_parsed_" + tables.front().second + "`");
+					tables.pop();
 				}
 
 				// rename extracting tables
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_extracting` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_extracting`");
-				std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getCustomTables("extracted", liI->first);
-				for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
-					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_extracted_"
-							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
-							+ "_extracted_" + taI->second + "`");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracting` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_extracting`");
+				tables = this->getCustomTables("extracted", urlLists.front().first);
+				while(!tables.empty()) {
+					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracted_"
+							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
+							+ urlLists.front().second + "_extracted_" + tables.front().second + "`");
+					tables.pop();
 				}
 
 				// rename analyzing tables
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_analyzing` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + liI->second + "_analyzing`");
-				std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getCustomTables("analyzed", liI->first);
-				for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
-					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + liI->second + "_analyzed_"
-							+ taI->second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_" + liI->second
-							+ "_analyzed_" + taI->second + "`");
+				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzing` RENAME TO "
+						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_analyzing`");
+				tables = this->getCustomTables("analyzed", urlLists.front().first);
+				while(!tables.empty()) {
+					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzed_"
+							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
+							+ urlLists.front().second + "_analyzed_" + tables.front().second + "`");
+					tables.pop();
 				}
+
+				// URL list done
+				urlLists.pop();
 			}
 
 			// create SQL statement for updating
@@ -840,10 +850,11 @@ void Database::deleteWebsite(unsigned long websiteId) {
 
 	try {
 		// delete URL lists
-		std::vector<std::pair<unsigned long, std::string>> urlLists = this->getUrlLists(websiteId);
-		for(auto liI = urlLists.begin(); liI != urlLists.end(); ++liI) {
+		std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+		while(!urlLists.empty()) {
 			// delete URL list
-			this->deleteUrlList(liI->first);
+			this->deleteUrlList(urlLists.front().first);
+			urlLists.pop();
 		}
 
 		// check connection
@@ -893,7 +904,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 			std::string newName = websiteName + " (copy)";
 
 			// add website
-			result = this->addWebsite(crawlservpp::Struct::WebsiteProperties(websiteDomain, newNamespace, newName));
+			result = this->addWebsite(WebsiteProperties(websiteDomain, newNamespace, newName));
 
 			// create SQL statement for geting URL list info
 			sqlStatement.reset(this->connection->prepareStatement(
@@ -908,7 +919,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 				// add URL lists with same name (except for "default", which has already been created)
 				std::string urlListName = sqlResultSet->getString("namespace");
 				if(urlListName != "default")
-					this->addUrlList(result, crawlservpp::Struct::UrlListProperties(sqlResultSet->getString("namespace"), urlListName));
+					this->addUrlList(result, UrlListProperties(sqlResultSet->getString("namespace"), urlListName));
 			}
 
 			// create SQL statement for getting queries
@@ -923,7 +934,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
 				// add query
-				this->addQuery(result, crawlservpp::Struct::QueryProperties(sqlResultSet->getString("name"),
+				this->addQuery(result, QueryProperties(sqlResultSet->getString("name"),
 						sqlResultSet->getString("query"), sqlResultSet->getString("type"),
 						sqlResultSet->getBoolean("resultbool"),	sqlResultSet->getBoolean("resultsingle"),
 						sqlResultSet->getBoolean("resultmulti"), sqlResultSet->getBoolean("textonly")));
@@ -941,7 +952,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
 				// add configuration
-				this->addConfiguration(result, crawlservpp::Struct::ConfigProperties(sqlResultSet->getString("module"),
+				this->addConfiguration(result, ConfigProperties(sqlResultSet->getString("module"),
 						sqlResultSet->getString("name"), sqlResultSet->getString("config")));
 			}
 		}
@@ -956,7 +967,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
  */
 
 // add a URL list to the database and return its new ID
-unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::Struct::UrlListProperties& listProperties) {
+unsigned long Database::addUrlList(unsigned long websiteId, const UrlListProperties& listProperties) {
 	unsigned long result = 0;
 
 	// check arguments
@@ -996,56 +1007,56 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 	// create table for URL list
 	std::vector<TableColumn> columns;
 	columns.reserve(11);
-	columns.push_back(TableColumn("manual", "BOOLEAN DEFAULT FALSE NOT NULL"));
-	columns.push_back(TableColumn("url", "VARCHAR(2000) NOT NULL"));
-	columns.push_back(TableColumn("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true));
+	columns.emplace_back("manual", "BOOLEAN DEFAULT FALSE NOT NULL");
+	columns.emplace_back("url", "VARCHAR(2000) NOT NULL");
+	columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
 	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, columns, false);
 	columns.clear();
 
 	// create table for crawled content
-	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
-	columns.push_back(TableColumn("crawltime", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL", true));
-	columns.push_back(TableColumn("archived", "BOOLEAN DEFAULT FALSE NOT NULL"));
-	columns.push_back(TableColumn("response", "SMALLINT UNSIGNED NOT NULL DEFAULT 0"));
-	columns.push_back(TableColumn("type", "TINYTEXT NOT NULL"));
-	columns.push_back(TableColumn("content", "LONGTEXT NOT NULL"));
+	columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+	columns.emplace_back("crawltime", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL", true);
+	columns.emplace_back("archived", "BOOLEAN DEFAULT FALSE NOT NULL");
+	columns.emplace_back("response", "SMALLINT UNSIGNED NOT NULL DEFAULT 0");
+	columns.emplace_back("type", "TINYTEXT NOT NULL");
+	columns.emplace_back("content", "LONGTEXT NOT NULL");
 	this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_crawled", columns, true);
 	columns.clear();
 
 	// create table for crawling
-	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
-	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
-	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+	columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
+	columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
 	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_crawling", columns, false);
 	columns.clear();
 
 	// create table for parsing
-	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_parsedtables", "id"));
-	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
-	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
-	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.emplace_back("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_parsedtables", "id");
+	columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+	columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
+	columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
 	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_parsing", columns, false);
 	columns.clear();
 
 	// create table for extracting
-	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_extractedtables", "id"));
-	columns.push_back(TableColumn("url", "BIGINT UNSIGNED NOT NULL",
-			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id"));
-	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
-	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.emplace_back("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_extractedtables", "id");
+	columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
+			"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+	columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
+	columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
 	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_extracting", columns, false);
 	columns.clear();
 
 	// create table for analyzing
-	columns.push_back(TableColumn("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_analyzedtables", "id"));
-	columns.push_back(TableColumn("chunk_id", "BIGINT UNSIGNED DEFAULT NULL"));
-	columns.push_back(TableColumn("chunk_label", "TINYTEXT DEFAULT NULL"));
-	columns.push_back(TableColumn("algo", "TINYTEXT NOT NULL"));
-	columns.push_back(TableColumn("locktime", "DATETIME DEFAULT NULL"));
-	columns.push_back(TableColumn("success", "BOOLEAN DEFAULT FALSE NOT NULL"));
+	columns.emplace_back("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_analyzedtables", "id");
+	columns.emplace_back("chunk_id", "BIGINT UNSIGNED DEFAULT NULL");
+	columns.emplace_back("chunk_label", "TINYTEXT DEFAULT NULL");
+	columns.emplace_back("algo", "TINYTEXT NOT NULL");
+	columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
+	columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
 	this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_analyzing", columns, false);
 	columns.clear();
 
@@ -1053,8 +1064,8 @@ unsigned long Database::addUrlList(unsigned long websiteId, const crawlservpp::S
 }
 
 // get URL lists for ID-specified website from the database
-std::vector<std::pair<unsigned long, std::string>> Database::getUrlLists(unsigned long websiteId) {
-	std::vector<std::pair<unsigned long, std::string>> result;
+std::queue<Database::IdString> Database::getUrlLists(unsigned long websiteId) {
+	std::queue<IdString> result;
 
 	// check arguments
 	if(!websiteId) throw Database::Exception("Main::Database::getUrlLists(): No website ID specified");
@@ -1073,9 +1084,8 @@ std::vector<std::pair<unsigned long, std::string>> Database::getUrlLists(unsigne
 
 		// get results
 		if(sqlResultSet) {
-			result.reserve(sqlResultSet->rowsCount());
 			while(sqlResultSet->next())
-				result.push_back(std::pair<unsigned long, std::string>(sqlResultSet->getUInt64("id"), sqlResultSet->getString("namespace")));
+				result.emplace(sqlResultSet->getUInt64("id"), sqlResultSet->getString("namespace"));
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getUrlLists", e); }
@@ -1172,7 +1182,7 @@ bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& na
 }
 
 // update URL list (and all associated tables) in the database
-void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::UrlListProperties& listProperties) {
+void Database::updateUrlList(unsigned long listId, const UrlListProperties& listProperties) {
 	// check arguments
 	if(!listId)
 		throw Database::Exception("Main::Database::updateUrlList(): No website ID specified");
@@ -1195,16 +1205,18 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 
 	try {
 		if(listProperties.nameSpace != oldListNamespace) {
+			std::queue<IdString> tables;
+
 			// create SQL statement for renaming
 			std::unique_ptr<sql::Statement> renameStatement(this->connection->createStatement());
 
-			// rename main tables
+			// rename URL list table
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "`");
+
+			// rename crawling tables
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_crawled` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_crawled`");
-
-			// rename parsing table
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_crawling`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
 						+ listProperties.nameSpace	+ "_crawling`");
@@ -1213,33 +1225,36 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_parsing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
 					+ listProperties.nameSpace	+ "_parsing`");
-			std::vector<std::pair<unsigned long, std::string>> parsedTables = this->getCustomTables("parsed", listId);
-			for(auto taI = parsedTables.begin(); taI != parsedTables.end(); ++taI) {
+			tables = this->getCustomTables("parsed", listId);
+			while(!tables.empty()) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "_parsed_" + taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listProperties.nameSpace	+ "_parsed_" + taI->second + "`");
+						+ "_parsed_" + tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+						+ listProperties.nameSpace	+ "_parsed_" + tables.front().second + "`");
+				tables.pop();
 			}
 
 			// rename extracting tables
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_extracting`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
 					+ listProperties.nameSpace	+ "_extracting`");
-			std::vector<std::pair<unsigned long, std::string>> extractedTables = this->getCustomTables("extracted", listId);
-			for(auto taI = extractedTables.begin(); taI != extractedTables.end(); ++taI) {
+			tables = this->getCustomTables("extracted", listId);
+			while(!tables.empty()) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "_extracted_"	+ taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listProperties.nameSpace + "_extracted_"	+ taI->second + "`");
+						+ "_extracted_"	+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+						+ listProperties.nameSpace + "_extracted_"	+ tables.front().second + "`");
+				tables.pop();
 			}
 
 			// rename analyzing tables
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_analyzing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
 					+ listProperties.nameSpace	+ "_analyzing`");
-			std::vector<std::pair<unsigned long, std::string>> analyzedTables = this->getCustomTables("analyzed", listId);
-			for(auto taI = analyzedTables.begin(); taI != analyzedTables.end(); ++taI) {
+			tables = this->getCustomTables("analyzed", listId);
+			while(!tables.empty()) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "_analyzed_" + taI->second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listProperties.nameSpace + "_analyzed_" + taI->second + "`");
+						+ "_analyzed_" + tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+						+ listProperties.nameSpace + "_analyzed_" + tables.front().second + "`");
+				tables.pop();
 			}
 
 			// create SQL statement for updating
@@ -1268,6 +1283,8 @@ void Database::updateUrlList(unsigned long listId, const crawlservpp::Struct::Ur
 
 // delete URL list (and all associated data) from the database by its ID
 void Database::deleteUrlList(unsigned long listId) {
+	std::queue<IdString> tables;
+
 	// check argument
 	if(!listId) throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
 
@@ -1276,19 +1293,25 @@ void Database::deleteUrlList(unsigned long listId) {
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
 	// delete parsing tables
-	std::vector<std::pair<unsigned long, std::string>> parsingTables = this->getCustomTables("parsed", listId);
-	for(auto taI = parsingTables.begin(); taI != parsingTables.end(); ++taI)
-		this->deleteCustomTable("parsed", taI->first);
+	tables = this->getCustomTables("parsed", listId);
+	while(!tables.empty()) {
+		this->deleteCustomTable("parsed", tables.front().first);
+		tables.pop();
+	}
 
 	// delete extracting tables
-	std::vector<std::pair<unsigned long, std::string>> extractingTables = this->getCustomTables("extracted", listId);
-	for(auto taI = extractingTables.begin(); taI != extractingTables.end(); ++taI)
-		this->deleteCustomTable("extracted", taI->first);
+	tables = this->getCustomTables("extracted", listId);
+	while(!tables.empty()) {
+		this->deleteCustomTable("extracted", tables.front().first);
+		tables.pop();
+		}
 
 	// delete analyzing tables
-	std::vector<std::pair<unsigned long, std::string>> analyzingTables = this->getCustomTables("analyzed", listId);
-	for(auto taI = analyzingTables.begin(); taI != analyzingTables.end(); ++taI)
-		this->deleteCustomTable("analyzed", taI->first);
+	tables = this->getCustomTables("analyzed", listId);
+	while(!tables.empty()) {
+		this->deleteCustomTable("analyzed", tables.front().first);
+		tables.pop();
+	}
 
 	// check connection
 	this->checkConnection();
@@ -1414,7 +1437,7 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
  */
 
 // add a query to the database and return its new ID (add global query when websiteId is zero)
-unsigned long Database::addQuery(unsigned long websiteId, const crawlservpp::Struct::QueryProperties& queryProperties) {
+unsigned long Database::addQuery(unsigned long websiteId, const QueryProperties& queryProperties) {
 	unsigned long result = 0;
 
 	// check arguments
@@ -1455,7 +1478,7 @@ unsigned long Database::addQuery(unsigned long websiteId, const crawlservpp::Str
 }
 
 // get the properties of a query from the database by its ID
-void Database::getQueryProperties(unsigned long queryId, crawlservpp::Struct::QueryProperties& queryPropertiesTo) {
+void Database::getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo) {
 	// check argument
 	if(!queryId) throw Database::Exception("Main::Database::getQueryProperties(): No query ID specified");
 
@@ -1496,7 +1519,7 @@ void Database::getQueryProperties(unsigned long queryId, crawlservpp::Struct::Qu
 }
 
 // edit query in the database
-void Database::updateQuery(unsigned long queryId, const crawlservpp::Struct::QueryProperties& queryProperties) {
+void Database::updateQuery(unsigned long queryId, const QueryProperties& queryProperties) {
 	// check arguments
 	if(!queryId)
 		throw Database::Exception("Main::Database::updateQuery(): No query ID specified");
@@ -1576,7 +1599,7 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
 			// add query
-			result = this->addQuery(sqlResultSet->getUInt64("website"), crawlservpp::Struct::QueryProperties(
+			result = this->addQuery(sqlResultSet->getUInt64("website"), QueryProperties(
 					sqlResultSet->getString("name") + " (copy)", sqlResultSet->getString("query"),
 					sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
 					sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
@@ -1593,7 +1616,7 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
  */
 
 // add a configuration to the database and return its new ID (add global configuration when websiteId is zero)
-unsigned long Database::addConfiguration(unsigned long websiteId, const crawlservpp::Struct::ConfigProperties& configProperties) {
+unsigned long Database::addConfiguration(unsigned long websiteId, const ConfigProperties& configProperties) {
 	unsigned long result = 0;
 
 	// check arguments
@@ -1655,7 +1678,7 @@ const std::string Database::getConfiguration(unsigned long configId) {
 }
 
 // update configuration in the database (NOTE: module will not be updated!)
-void Database::updateConfiguration(unsigned long configId, const crawlservpp::Struct::ConfigProperties& configProperties) {
+void Database::updateConfiguration(unsigned long configId, const ConfigProperties& configProperties) {
 	// check arguments
 	if(!configId)
 		throw Database::Exception("Main::Database::updateConfiguration(): No configuration ID specified");
@@ -1726,7 +1749,7 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
 			// add configuration
-			result = this->addConfiguration(sqlResultSet->getUInt64("website"), crawlservpp::Struct::ConfigProperties(
+			result = this->addConfiguration(sqlResultSet->getUInt64("website"), ConfigProperties(
 					sqlResultSet->getString("module"), sqlResultSet->getString("name") + " (copy)",
 					sqlResultSet->getString("config")));
 		}
@@ -1793,7 +1816,7 @@ void Database::lockCustomTables(const std::string& type, unsigned long websiteId
 				insertStatement->execute();
 
 				// save lock ID
-				this->customTableLocks.push_back(std::pair<std::string, unsigned long>(type, this->getLastInsertedId()));
+				this->customTableLocks.emplace_back(type, this->getLastInsertedId());
 			}
 			// any exception: try to unlock table and re-throw
 			catch(...) {
@@ -1895,8 +1918,8 @@ unsigned long Database::addCustomTable(const CustomTableProperties& properties) 
 }
 
 // get custom tables of the specified type for an ID-specified URL list from the database
-std::vector<std::pair<unsigned long, std::string>> Database::getCustomTables(const std::string& type, unsigned long listId) {
-	std::vector<std::pair<unsigned long, std::string>> result;
+std::queue<Database::IdString> Database::getCustomTables(const std::string& type, unsigned long listId) {
+	std::queue<IdString> result;
 
 	// check arguments
 	if(type.empty()) throw Database::Exception("Main::Database::getCustomTables(): No table type specified");
@@ -1916,10 +1939,8 @@ std::vector<std::pair<unsigned long, std::string>> Database::getCustomTables(con
 
 		// get results
 		if(sqlResultSet) {
-			result.reserve(sqlResultSet->rowsCount());
 			while(sqlResultSet->next())
-				result.push_back(std::pair<unsigned long, std::string>(
-						sqlResultSet->getUInt64("id"), sqlResultSet->getString("name")));
+				result.emplace(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name"));
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomTables", e); }
@@ -2102,7 +2123,7 @@ void Database::checkConnection() {
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 			// log re-connect on idle
 			if(milliseconds) this->log("re-connected to database after idling for "
-					+ crawlservpp::Helper::DateTime::secondsToString(std::round((float) milliseconds / 1000)) + ".");
+					+ Helper::DateTime::secondsToString(std::round((float) milliseconds / 1000)) + ".");
 #endif
 		}
 		else this->connect();
@@ -2316,7 +2337,7 @@ void Database::getCustomData(Data::GetValue& data) {
 	// check argument
 	if(data.column.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 
 	// check connection
@@ -2372,7 +2393,7 @@ void Database::getCustomData(Data::GetFields& data) {
 	// check argument
 	if(data.columns.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No column names specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 	data.values.clear();
 	data.values.reserve(data.columns.size());
@@ -2401,38 +2422,38 @@ void Database::getCustomData(Data::GetFields& data) {
 			switch(data.type) {
 			case Data::Type::_bool:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-					if(sqlResultSet->isNull(*i)) data.values.push_back(Data::Value());
-					else data.values.push_back(Data::Value(sqlResultSet->getBoolean(*i)));
+					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
+					else data.values.emplace_back(sqlResultSet->getBoolean(*i));
 				break;
 			case Data::Type::_double:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-					if(sqlResultSet->isNull(*i)) data.values.push_back(Data::Value());
-					else data.values.push_back(Data::Value((double) sqlResultSet->getDouble(*i)));
+					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
+					else data.values.emplace_back((double) sqlResultSet->getDouble(*i));
 				break;
 			case Data::Type::_int:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-					if(sqlResultSet->isNull(*i)) data.values.push_back(Data::Value());
-					else data.values.push_back(Data::Value((int) sqlResultSet->getInt(*i)));
+					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
+					else data.values.emplace_back((int) sqlResultSet->getInt(*i));
 				break;
 			case Data::Type::_long:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-					if(sqlResultSet->isNull(*i)) data.values.push_back(Data::Value());
-					else data.values.push_back(Data::Value((long) sqlResultSet->getInt64(*i)));
+					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
+					else data.values.emplace_back((long) sqlResultSet->getInt64(*i));
 				break;
 			case Data::Type::_string:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-					if(sqlResultSet->isNull(*i)) data.values.push_back(Data::Value());
-					else data.values.push_back(Data::Value(sqlResultSet->getString(*i)));
+					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
+					else data.values.emplace_back(sqlResultSet->getString(*i));
 				break;
 			case Data::Type::_uint:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-					if(sqlResultSet->isNull(*i)) data.values.push_back(Data::Value());
-					else data.values.push_back(Data::Value((unsigned int) sqlResultSet->getUInt(*i)));
+					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
+					else data.values.emplace_back((unsigned int) sqlResultSet->getUInt(*i));
 				break;
 			case Data::Type::_ulong:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-					if(sqlResultSet->isNull(*i)) data.values.push_back(Data::Value());
-					else data.values.push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(*i)));
+					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
+					else data.values.emplace_back((unsigned long) sqlResultSet->getUInt64(*i));
 				break;
 			default:
 				throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2473,29 +2494,29 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
 			for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
-				if(sqlResultSet->isNull(i->first)) data.values.push_back(Data::Value());
+				if(sqlResultSet->isNull(i->first)) data.values.emplace_back();
 				else {
 					switch(i->second) {
 					case Data::Type::_bool:
-						data.values.push_back(Data::Value(sqlResultSet->getBoolean(i->first)));
+						data.values.emplace_back(sqlResultSet->getBoolean(i->first));
 						break;
 					case Data::Type::_double:
-						data.values.push_back(Data::Value((double) sqlResultSet->getDouble(i->first)));
+						data.values.emplace_back((double) sqlResultSet->getDouble(i->first));
 						break;
 					case Data::Type::_int:
-						data.values.push_back(Data::Value((int) sqlResultSet->getInt(i->first)));
+						data.values.emplace_back((int) sqlResultSet->getInt(i->first));
 						break;
 					case Data::Type::_long:
-						data.values.push_back(Data::Value((long) sqlResultSet->getInt64(i->first)));
+						data.values.emplace_back((long) sqlResultSet->getInt64(i->first));
 						break;
 					case Data::Type::_string:
-						data.values.push_back(Data::Value(sqlResultSet->getString(i->first)));
+						data.values.emplace_back(sqlResultSet->getString(i->first));
 						break;
 					case Data::Type::_uint:
-						data.values.push_back(Data::Value((unsigned int) sqlResultSet->getUInt(i->first)));
+						data.values.emplace_back((unsigned int) sqlResultSet->getUInt(i->first));
 						break;
 					case Data::Type::_ulong:
-						data.values.push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(i->first)));
+						data.values.emplace_back((unsigned long) sqlResultSet->getUInt64(i->first));
 						break;
 					default:
 						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2514,7 +2535,7 @@ void Database::getCustomData(Data::GetColumn& data) {
 	// check argument
 	if(data.column.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No columns specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 	data.values.clear();
 
@@ -2537,29 +2558,29 @@ void Database::getCustomData(Data::GetColumn& data) {
 		if(sqlResultSet) {
 			data.values.reserve(sqlResultSet->rowsCount());
 			while(sqlResultSet->next()) {
-				if(sqlResultSet->isNull(data.column)) data.values.push_back(Data::Value());
+				if(sqlResultSet->isNull(data.column)) data.values.emplace_back();
 				else {
 					switch(data.type) {
 					case Data::Type::_bool:
-						data.values.push_back(Data::Value(sqlResultSet->getBoolean(data.column)));
+						data.values.emplace_back(sqlResultSet->getBoolean(data.column));
 						break;
 					case Data::Type::_double:
-						data.values.push_back(Data::Value((double) sqlResultSet->getDouble(data.column)));
+						data.values.emplace_back((double) sqlResultSet->getDouble(data.column));
 						break;
 					case Data::Type::_int:
-						data.values.push_back(Data::Value((int) sqlResultSet->getInt(data.column)));
+						data.values.emplace_back((int) sqlResultSet->getInt(data.column));
 						break;
 					case Data::Type::_long:
-						data.values.push_back(Data::Value((long) sqlResultSet->getInt64(data.column)));
+						data.values.emplace_back((long) sqlResultSet->getInt64(data.column));
 						break;
 					case Data::Type::_string:
-						data.values.push_back(Data::Value(sqlResultSet->getString(data.column)));
+						data.values.emplace_back(sqlResultSet->getString(data.column));
 						break;
 					case Data::Type::_uint:
-						data.values.push_back(Data::Value((unsigned int) sqlResultSet->getUInt(data.column)));
+						data.values.emplace_back((unsigned int) sqlResultSet->getUInt(data.column));
 						break;
 					case Data::Type::_ulong:
-						data.values.push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(data.column)));
+						data.values.emplace_back((unsigned long) sqlResultSet->getUInt64(data.column));
 						break;
 					default:
 						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2578,7 +2599,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 	// check argument
 	if(data.columns.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 	data.values.clear();
 	data.values.reserve(data.columns.size());
@@ -2596,7 +2617,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 			sqlQuery += "`" + *i + "`, ";
 
 			// add column to result vector
-			data.values.push_back(std::vector<Data::Value>());
+			data.values.emplace_back();
 		}
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
@@ -2615,29 +2636,29 @@ void Database::getCustomData(Data::GetColumns& data) {
 			while(sqlResultSet->next()) {
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i) {
 					auto column = data.values.begin() + (i - data.columns.begin());
-					if(sqlResultSet->isNull(*i)) column->push_back(Data::Value());
+					if(sqlResultSet->isNull(*i)) column->emplace_back();
 					else {
 						switch(data.type) {
 						case Data::Type::_bool:
-							column->push_back(Data::Value(sqlResultSet->getBoolean(*i)));
+							column->emplace_back(sqlResultSet->getBoolean(*i));
 							break;
 						case Data::Type::_double:
-							column->push_back(Data::Value((double) sqlResultSet->getDouble(*i)));
+							column->emplace_back((double) sqlResultSet->getDouble(*i));
 							break;
 						case Data::Type::_int:
-							column->push_back(Data::Value((int) sqlResultSet->getInt(*i)));
+							column->emplace_back((int) sqlResultSet->getInt(*i));
 							break;
 						case Data::Type::_long:
-							column->push_back(Data::Value((long) sqlResultSet->getInt64(*i)));
+							column->emplace_back((long) sqlResultSet->getInt64(*i));
 							break;
 						case Data::Type::_string:
-							column->push_back(Data::Value(sqlResultSet->getString(*i)));
+							column->emplace_back(sqlResultSet->getString(*i));
 							break;
 						case Data::Type::_uint:
-							column->push_back(Data::Value((unsigned int) sqlResultSet->getUInt(*i)));
+							column->emplace_back((unsigned int) sqlResultSet->getUInt(*i));
 							break;
 						case Data::Type::_ulong:
-							column->push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(*i)));
+							column->emplace_back((unsigned long) sqlResultSet->getUInt64(*i));
 							break;
 						default:
 							throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2672,7 +2693,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 			sqlQuery += "`" + i->first + "`, ";
 
 			// add column to result vector
-			data.values.push_back(std::vector<Data::Value>());
+			data.values.emplace_back();
 		}
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
@@ -2691,29 +2712,29 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 			while(sqlResultSet->next()) {
 				for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
 					auto column = data.values.begin() + (i - data.columns_types.begin());
-					if(sqlResultSet->isNull(i->first)) column->push_back(Data::Value());
+					if(sqlResultSet->isNull(i->first)) column->emplace_back();
 					else {
 						switch(i->second) {
 						case Data::Type::_bool:
-							column->push_back(Data::Value(sqlResultSet->getBoolean(i->first)));
+							column->emplace_back(sqlResultSet->getBoolean(i->first));
 							break;
 						case Data::Type::_double:
-							column->push_back(Data::Value((double) sqlResultSet->getDouble(i->first)));
+							column->emplace_back((double) sqlResultSet->getDouble(i->first));
 							break;
 						case Data::Type::_int:
-							column->push_back(Data::Value((int) sqlResultSet->getInt(i->first)));
+							column->emplace_back((int) sqlResultSet->getInt(i->first));
 							break;
 						case Data::Type::_long:
-							column->push_back(Data::Value((long) sqlResultSet->getInt64(i->first)));
+							column->emplace_back((long) sqlResultSet->getInt64(i->first));
 							break;
 						case Data::Type::_string:
-							column->push_back(Data::Value(sqlResultSet->getString(i->first)));
+							column->emplace_back(sqlResultSet->getString(i->first));
 							break;
 						case Data::Type::_uint:
-							column->push_back(Data::Value((unsigned int) sqlResultSet->getUInt(i->first)));
+							column->emplace_back((unsigned int) sqlResultSet->getUInt(i->first));
 							break;
 						case Data::Type::_ulong:
-							column->push_back(Data::Value((unsigned long) sqlResultSet->getUInt64(i->first)));
+							column->emplace_back((unsigned long) sqlResultSet->getUInt64(i->first));
 							break;
 						default:
 							throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2731,7 +2752,7 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 	// check argument
 	if(data.column.empty())
 		throw Database::Exception("Main::Database::insertCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::insertCustomData(): No column type specified");
 
 	// check connection
@@ -2807,7 +2828,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 	// check argument
 	if(data.columns_values.empty())
 		throw Database::Exception("Main::Database::insertCustomData(): No columns specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::insertCustomData(): No column type specified");
 
 	// check connection
@@ -3004,7 +3025,7 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 	// check argument
 	if(data.column.empty())
 		throw Database::Exception("Main::Database::updateCustomData(): No column name specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::updateCustomData(): No column type specified");
 
 	// check connection
@@ -3081,7 +3102,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 	// check argument
 	if(data.columns_values.empty())
 		throw Database::Exception("Main::Database::updateCustomData(): No columns specified");
-	if(data.type == crawlservpp::Main::Data::Type::_unknown)
+	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::updateCustomData(): No column type specified");
 
 	// check connection
@@ -3294,7 +3315,7 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 	// try to prepare SQL statement
 	try {
 		this->preparedStatements.emplace_back(
-				crawlservpp::Wrapper::PreparedSqlStatement(this->connection.get(), sqlQuery));
+				Wrapper::PreparedSqlStatement(this->connection.get(), sqlQuery));
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::addPreparedStatement", e); }
 

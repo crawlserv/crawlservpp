@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace crawlservpp::Helper::FileSystem {
+namespace Helper::FileSystem {
 	// directory listing
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
 }

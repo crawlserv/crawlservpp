@@ -18,7 +18,7 @@
 #include <tuple>
 #include <vector>
 
-namespace crawlservpp::Helper::Json {
+namespace Helper::Json {
 	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings (words, dates etc.)
 	typedef std::vector<std::tuple<std::string, unsigned long, unsigned long>> TextMap;
 

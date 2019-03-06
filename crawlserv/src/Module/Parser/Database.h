@@ -14,6 +14,7 @@
 
 #include "../../Struct/CustomTableProperties.h"
 #include "../../Struct/TableColumn.h"
+#include "../../Struct/UrlProperties.h"
 #include "../../Wrapper/Database.h"
 
 #include <cppconn/exception.h>
@@ -28,19 +29,20 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
-	class Database : public crawlservpp::Wrapper::Database {
+	class Database : public Wrapper::Database {
 		// for convenience
-		typedef crawlservpp::Main::Database::Exception DatabaseException;
-		typedef crawlservpp::Struct::CustomTableProperties CustomTableProperties;
-		typedef crawlservpp::Struct::TableColumn TableColumn;
+		typedef Main::Database::Exception DatabaseException;
+		typedef Struct::CustomTableProperties CustomTableProperties;
+		typedef Struct::TableColumn TableColumn;
+		typedef Struct::UrlProperties UrlProperties;
+		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
-		Database(crawlservpp::Module::Database& dbRef);
+		Database(Module::Database& dbRef);
 		virtual ~Database();
 
 		// setters
@@ -65,7 +67,7 @@ namespace crawlservpp::Module::Parser {
 		void lockParsingTable();
 
 		// URL functions
-		std::tuple<unsigned long, std::string, unsigned long> getNextUrl(unsigned long currentUrlId);
+		UrlProperties getNextUrl(unsigned long currentUrlId);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
 
@@ -73,13 +75,13 @@ namespace crawlservpp::Module::Parser {
 		bool isUrlLockable(unsigned long lockId);
 		bool checkUrlLock(unsigned long lockId, const std::string& lockTime);
 		std::string getUrlLock(unsigned long lockId);
-		void getUrlLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData);
-		std::string lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout);
+		void getUrlLockId(UrlProperties& urlProperties);
+		std::string lockUrl(UrlProperties& urlProperties, unsigned long lockTimeout);
 		void unLockUrl(unsigned long lockId);
 
 		// parsing functions
 		bool getLatestContent(unsigned long urlId, unsigned long index, std::pair<unsigned long, std::string>& contentTo);
-		std::vector<std::pair<unsigned long, std::string>> getAllContents(unsigned long urlId);
+		std::queue<IdString> getAllContents(unsigned long urlId);
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
 		void updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
 				const std::vector<std::string>& parsedFields);

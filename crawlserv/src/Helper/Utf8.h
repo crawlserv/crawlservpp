@@ -14,7 +14,7 @@
 
 #include <string>
 
-namespace crawlservpp::Helper::Utf8 {
+namespace Helper::Utf8 {
 	std::string iso88591ToUtf8(const std::string& strIn);
 	bool repairUtf8(const std::string& strIn, std::string& strOut);
 }

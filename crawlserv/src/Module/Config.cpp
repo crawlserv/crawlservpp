@@ -18,7 +18,7 @@ Config::Config() {}
 Config::~Config() {}
 
 // load configuration
-void Config::loadConfig(const std::string& configJson, std::vector<std::string>& warningsTo) {
+void Config::loadConfig(const std::string& configJson, std::queue<std::string>& warningsTo) {
 	// parse JSON
 	rapidjson::Document json;
 	if(json.Parse(configJson.c_str()).HasParseError())

@@ -47,9 +47,9 @@ namespace crawlservpp::Parsing {
 		static std::string escapeUrl(const std::string& urlToEscape);
 
 		// sub-class for URI exceptions
-		class Exception : public crawlservpp::Main::Exception {
+		class Exception : public Main::Exception {
 		public:
-			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
 
@@ -67,10 +67,10 @@ namespace crawlservpp::Parsing {
 
 		UriParserStateA state;
 
-		crawlservpp::Wrapper::URI base, uri;
+		Wrapper::URI base, uri;
 
 		static std::string textRangeToString(const UriTextRangeA& range);
-		static std::string toString(const crawlservpp::Wrapper::URI& uri);
+		static std::string toString(const Wrapper::URI& uri);
 	};
 }
 

@@ -26,7 +26,7 @@ namespace crawlservpp::Query {
 
 namespace crawlservpp::Parsing {
 	class XML {
-		friend class crawlservpp::Query::XPath;
+		friend class Query::XPath;
 
 	public:
 		XML();
@@ -39,9 +39,9 @@ namespace crawlservpp::Parsing {
 		void parse(const std::string& content);
 
 		// sub-class for XML exceptions
-		class Exception : public crawlservpp::Main::Exception {
+		class Exception : public Main::Exception {
 		public:
-			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
 

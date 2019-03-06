@@ -30,7 +30,7 @@ void StartStopHR::stop() {
 // get total duration as string
 std::string StartStopHR::totalStr() {
 	if(this->timePoint != std::chrono::high_resolution_clock::time_point::min()) this->stop();
-	return crawlservpp::Helper::DateTime::microsecondsToString(
+	return Helper::DateTime::microsecondsToString(
 			std::chrono::duration_cast<std::chrono::microseconds>(this->duration).count());
 }
 

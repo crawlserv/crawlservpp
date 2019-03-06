@@ -19,17 +19,16 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 // constructor A: run previously interrupted algorithm run
-MarkovText::MarkovText(crawlservpp::Main::Database& dbBase, unsigned long analyzerId,
-		const std::string& analyzerStatus, bool analyzerPaused, const crawlservpp::Struct::ThreadOptions& threadOptions,
-		unsigned long analyzerLast) : crawlservpp::Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused,
-				threadOptions, analyzerLast), sources(0) {
+MarkovText::MarkovText(Main::Database& dbBase, unsigned long analyzerId, const std::string& analyzerStatus,
+		bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast)
+			: Module::Analyzer::Thread(dbBase, analyzerId, analyzerStatus, analyzerPaused, threadOptions, analyzerLast),
+			  sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
 // constructor B: start a new algorithm run
-MarkovText::MarkovText(crawlservpp::Main::Database& dbBase,
-		const crawlservpp::Struct::ThreadOptions& threadOptions)
-	: crawlservpp::Module::Analyzer::Thread(dbBase, threadOptions), sources(0) {
+MarkovText::MarkovText(Main::Database& dbBase, const ThreadOptions& threadOptions)
+			: Module::Analyzer::Thread(dbBase, threadOptions), sources(0) {
 	this->disallowPausing(); // disallow pausing while initializing
 }
 
@@ -51,10 +50,10 @@ void MarkovText::onAlgoInit(bool resumed) {
 	std::vector<std::string> fields, types;
 	fields.reserve(2);
 	types.reserve(2);
-	fields.push_back(this->config.markovTextResultField);
-	fields.push_back(this->config.markovTextSourcesField);
-	types.push_back("LONGTEXT NOT NULL");
-	types.push_back("BIGINT UNSIGNED NOT NULL");
+	fields.emplace_back(this->config.markovTextResultField);
+	fields.emplace_back(this->config.markovTextSourcesField);
+	types.emplace_back("LONGTEXT NOT NULL");
+	types.emplace_back("BIGINT UNSIGNED NOT NULL");
 	this->database.setTargetFields(fields, types);
 
 	// initialize target table
@@ -71,8 +70,10 @@ void MarkovText::onAlgoInit(bool resumed) {
 			dateFrom = this->config.filterDateFrom;
 			dateTo = this->config.filterDateTo;
 		}
-		this->database.getCorpus(crawlservpp::Struct::CorpusProperties(this->config.generalInputSources.at(n),
-				this->config.generalInputTables.at(n), this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo);
+		this->database.getCorpus(
+				CorpusProperties(this->config.generalInputSources.at(n), this->config.generalInputTables.at(n),
+				this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo
+		);
 		this->source += corpus;
 		this->source.push_back(' ');
 		this->sources += corpusSources;
@@ -81,8 +82,8 @@ void MarkovText::onAlgoInit(bool resumed) {
 
 	// create dictionary
 	this->setStatusMessage("Creating dictionary...");
-	std::unique_ptr<crawlservpp::Timer::Simple> timer;
-	if(this->config.generalLogging && this->config.markovTextTiming) timer = std::make_unique<crawlservpp::Timer::Simple>();
+	std::unique_ptr<Timer::Simple> timer;
+	if(this->config.generalLogging && this->config.markovTextTiming) timer = std::make_unique<Timer::Simple>();
 	this->createDictionary();
 	if(this->isRunning()) {
 		if(timer) this->log("created dictionary in " + timer->tickStr() + ".");
@@ -103,22 +104,21 @@ void MarkovText::onAlgoTick() {
 	}
 
 	// generate text
-	std::unique_ptr<crawlservpp::Timer::Simple> timer;
-	if(this->config.generalLogging && this->config.markovTextTiming) timer = std::make_unique<crawlservpp::Timer::Simple>();
+	std::unique_ptr<Timer::Simple> timer;
+	if(this->config.generalLogging && this->config.markovTextTiming) timer = std::make_unique<Timer::Simple>();
 	std::string text = this->createText();
 	if(timer) this->log("created text in " + timer->tickStr() + ".");
 
 	// insert text into result table in the database
 	if(!text.empty()) {
-		crawlservpp::Main::Data::InsertFieldsMixed data;
+		Main::Data::InsertFieldsMixed data;
 		data.columns_types_values.reserve(2);
-		data.table = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
-		data.columns_types_values.push_back(
-				std::make_tuple("analyzed__" + this->config.markovTextResultField, DataType::_string, DataValue(text))
-		);
-		data.columns_types_values.push_back(
-				std::make_tuple("analyzed__" + this->config.markovTextSourcesField, DataType::_ulong, DataValue(this->sources))
-		);
+		data.table = "crawlserv_" + this->websiteNamespace + "_"
+				+ this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
+		data.columns_types_values.emplace_back("analyzed__"
+				+ this->config.markovTextResultField, DataType::_string, DataValue(text));
+		data.columns_types_values.emplace_back("analyzed__"
+				+ this->config.markovTextSourcesField, DataType::_ulong, DataValue(this->sources));
 		this->database.insertCustomData(data);
 
 		// increase text count and progress (internally saved as "last") if necessary
@@ -174,7 +174,7 @@ void MarkovText::createDictionary() {
 		w1 = this->source.substr( next, pos - next );
 		if( w1.empty() ) break;
 		if( std::find( dictionary[key].begin(), dictionary[key].end(), w1 ) == dictionary[key].end() )
-			dictionary[key].push_back( w1 );
+			dictionary[key].emplace_back( w1 );
 		key = key.substr( key.find_first_of( 32 ) + 1 ) + " " + w1;
 
 		// *** added: counter + check whether thread is still running + set progress

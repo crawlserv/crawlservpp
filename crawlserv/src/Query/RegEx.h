@@ -39,14 +39,14 @@ namespace crawlservpp::Query {
 		operator bool() const noexcept;
 
 		// sub-class for RegEx exceptions
-		class Exception : public crawlservpp::Main::Exception {
+		class Exception : public Main::Exception {
 		public:
-			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
 
 	private:
-		crawlservpp::Wrapper::PCRE expressionSingle, expressionMulti;
+		Wrapper::PCRE expressionSingle, expressionMulti;
 	};
 }
 

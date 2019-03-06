@@ -27,7 +27,7 @@ XPath::XPath(const std::string& xpath, bool textOnly) : compiled(false), isTextO
 }
 
 // get boolean value (at least one match?), throws XPath::Exception
-bool XPath::getBool(const crawlservpp::Parsing::XML& doc) const {
+bool XPath::getBool(const Parsing::XML& doc) const {
 	// check query and content
 	if(!(this->compiled)) throw XPath::Exception("No query compiled");
 	if(!(doc.doc)) throw XPath::Exception("No content parsed");
@@ -42,7 +42,7 @@ bool XPath::getBool(const crawlservpp::Parsing::XML& doc) const {
 }
 
 // get first match only (saved to resultTo), , throws XPath::Exception
-void XPath::getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const {
+void XPath::getFirst(const Parsing::XML& doc, std::string& resultTo) const {
 	// check query and content
 	if(!(this->compiled)) throw XPath::Exception("No query compiled");
 	if(!(doc.doc)) throw XPath::Exception("No content parsed");
@@ -62,7 +62,7 @@ void XPath::getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo
 }
 
 // get all matches as vector (saved to resultTo), , throws XPath::Exception
-void XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const {
+void XPath::getAll(const Parsing::XML& doc, std::vector<std::string>& resultTo) const {
 	std::vector<std::string> resultArray;
 
 	// check query and content
@@ -76,12 +76,12 @@ void XPath::getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string
 			resultArray.reserve(resultArray.size() + nodeSet.size());
 			for(auto i = nodeSet.begin(); i != nodeSet.end(); ++i) {
 				std::string result = XPath::nodeToString(*i, this->isTextOnly);
-				if(!result.empty()) resultArray.push_back(result);
+				if(!result.empty()) resultArray.emplace_back(result);
 			}
 		}
 		else {
 			std::string result = this->query.evaluate_string(*(doc.doc));
-			if(!result.empty()) resultArray.push_back(result);
+			if(!result.empty()) resultArray.emplace_back(result);
 		}
 	}
 	catch(const std::exception& e) {
@@ -124,7 +124,7 @@ std::string XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
 bool XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
 	if(node.type() == pugi::node_pcdata) {
 		std::string nodeText = node.text().as_string();
-		crawlservpp::Helper::Strings::trim(nodeText);
+		Helper::Strings::trim(nodeText);
 		this->result += nodeText;
 		this->result.push_back(' ');
 	}

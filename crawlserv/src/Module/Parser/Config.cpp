@@ -23,8 +23,7 @@ Config::Config() : generalLock(300), generalLogging(Config::generalLoggingDefaul
 Config::~Config() {}
 
 // load parsing-specific configuration from parsed JSON document
-void Config::loadModule(const rapidjson::Document& jsonDocument,
-		std::vector<std::string>& warningsTo) {
+void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) {
 	// go through all array items i.e. configuration entries
 	for(rapidjson::Value::ConstValueIterator i = jsonDocument.Begin(); i != jsonDocument.End(); i++) {
 		if(i->IsObject()) {
@@ -39,28 +38,28 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 					if(itemName == "cat") {
 						// category of item
 						if(j->value.IsString()) cat = j->value.GetString();
-						else warningsTo.push_back("Invalid category name ignored.");
+						else warningsTo.emplace("Invalid category name ignored.");
 					}
 					else if(itemName == "name") {
 						// name
 						if(j->value.IsString()) name = j->value.GetString();
-						else warningsTo.push_back("Invalid option name ignored.");
+						else warningsTo.emplace("Invalid option name ignored.");
 					}
 					else if(itemName != "value") {
-						if(!itemName.empty()) warningsTo.push_back("Unknown configuration item \'" + itemName + "\' ignored.");
-						else warningsTo.push_back("Unnamed configuration item ignored.");
+						if(!itemName.empty()) warningsTo.emplace("Unknown configuration item \'" + itemName + "\' ignored.");
+						else warningsTo.emplace("Unnamed configuration item ignored.");
 					}
 				}
-				else warningsTo.push_back("Configuration item with invalid name ignored.");
+				else warningsTo.emplace("Configuration item with invalid name ignored.");
 			}
 
 			// check item properties
 			if(cat.empty()) {
-				warningsTo.push_back("Configuration item without category ignored");
+				warningsTo.emplace("Configuration item without category ignored");
 				continue;
 			}
 			if(name.empty()) {
-				warningsTo.push_back("Configuration item without name ignored.");
+				warningsTo.emplace("Configuration item without name ignored.");
 				continue;
 			}
 
@@ -72,38 +71,38 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 					if(cat == "general") {
 						if(name == "logging") {
 							if(j->value.IsUint()) this->generalLogging = j->value.GetUint();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned int).");
 						}
 						else if(name == "newest.only") {
 							if(j->value.IsBool()) this->generalNewestOnly = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "parse.custom") {
 							if(j->value.IsBool()) this->generalParseCustom = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "reparse") {
 							if(j->value.IsBool()) this->generalReParse = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "reset.on.finish") {
 							if(j->value.IsBool()) this->generalResetOnFinish = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
 						else if(name == "result.table") {
 							if(j->value.IsString()) {
 								std::string tableName = j->value.GetString();
-								if(crawlservpp::Helper::Strings::checkSQLName(tableName))
+								if(Helper::Strings::checkSQLName(tableName))
 									this->generalResultTable = tableName;
-								else warningsTo.push_back("\'" + tableName + "\' in \'" + cat + "." + name
+								else warningsTo.emplace("\'" + tableName + "\' in \'" + cat + "." + name
 									+ "\' ignored because it contains invalid characters.");
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not string).");
 						}
 						else if(name == "skip") {
@@ -112,33 +111,33 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								this->generalSkip.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->generalSkip.push_back(k->GetUint64());
-									else if(!(k->IsNull())) warningsTo.push_back("Value in \'" + cat + "." + name
+									else if(!(k->IsNull())) warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
+							else warningsTo.emplace("\'" + cat + "." + name + "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "sleep.idle") {
 							if(j->value.IsUint64()) this->generalSleepIdle = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "sleep.mysql") {
 							if(j->value.IsUint64()) this->generalSleepMySql = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "timeout.target.lock") {
 							if(j->value.IsUint64()) this->generalTimeoutTargetLock = j->value.GetUint64();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "timing") {
 							if(j->value.IsBool()) this->generalTiming = j->value.GetBool();
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
-						else warningsTo.push_back("Unknown configuration entry \'" + cat + "." + name + "\' ignored.");
+						else warningsTo.emplace("Unknown configuration entry \'" + cat + "." + name + "\' ignored.");
 					}
 					else if(cat == "parser") {
 						if(name == "datetime.formats") {
@@ -146,12 +145,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								this->parsingDateTimeFormats.clear();
 								this->parsingDateTimeFormats.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parsingDateTimeFormats.push_back(k->GetString());
-									else warningsTo.push_back("Value in \'" + cat + "." + name
+									if(k->IsString()) this->parsingDateTimeFormats.emplace_back(k->GetString());
+									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "datetime.locales") {
@@ -159,12 +158,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								this->parsingDateTimeLocales.clear();
 								this->parsingDateTimeLocales.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parsingDateTimeLocales.push_back(k->GetString());
-									else warningsTo.push_back("Value in \'" + cat + "." + name
+									if(k->IsString()) this->parsingDateTimeLocales.emplace_back(k->GetString());
+									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "datetime.queries") {
@@ -174,11 +173,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingDateTimeQueries.push_back(k->GetUint64());
 									else if(k->IsNull()) this->parsingDateTimeQueries.push_back(0);
-									else warningsTo.push_back("Value in \'" + cat + "." + name
+									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "datetime.sources") {
@@ -187,11 +186,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								this->parsingDateTimeSources.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint()) this->parsingDateTimeSources.push_back(k->GetUint());
-									else warningsTo.push_back("Value in \'" + cat + "." + name
+									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.delimiters") {
@@ -201,16 +200,16 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString())
 										this->parsingFieldDelimiters.push_back(
-												crawlservpp::Helper::Strings::getFirstOrEscapeChar(k->GetString())
+												Helper::Strings::getFirstOrEscapeChar(k->GetString())
 										);
 									else {
 										this->parsingFieldDelimiters.push_back('\n');
-										warningsTo.push_back("Value in \'" + cat + "." + name
+										warningsTo.emplace("Value in \'" + cat + "." + name
 												+ "\' ignored because of wrong type (not string).");
 									}
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.ignore.empty") {
@@ -221,12 +220,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 									if(k->IsBool()) this->parsingFieldIgnoreEmpty.push_back(k->GetBool());
 									else {
 										this->parsingFieldIgnoreEmpty.push_back(true);
-										warningsTo.push_back("Value in \'" + cat + "." + name
+										warningsTo.emplace("Value in \'" + cat + "." + name
 												+ "\' ignored because of wrong type (not bool).");
 									}
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.json") {
@@ -237,12 +236,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 									if(k->IsBool()) this->parsingFieldJSON.push_back(k->GetBool());
 									else {
 										this->parsingFieldJSON.push_back(false);
-										warningsTo.push_back("Value in \'" + cat + "." + name
+										warningsTo.emplace("Value in \'" + cat + "." + name
 												+ "\' ignored because of wrong type (not bool).");
 									}
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.names") {
@@ -252,22 +251,22 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) {
 										std::string fieldName = k->GetString();
-										if(crawlservpp::Helper::Strings::checkSQLName(fieldName))
-											this->parsingFieldNames.push_back(fieldName);
+										if(Helper::Strings::checkSQLName(fieldName))
+											this->parsingFieldNames.emplace_back(fieldName);
 										else {
-											this->parsingFieldNames.push_back("");
-											warningsTo.push_back("\'" + fieldName + "\' in \'" + cat + "." + name
+											this->parsingFieldNames.emplace_back();
+											warningsTo.emplace("\'" + fieldName + "\' in \'" + cat + "." + name
 												+ "\' ignored because it contains invalid characters.");
 										}
 									}
 									else {
-										this->parsingFieldNames.push_back("");
-										warningsTo.push_back("Value in \'" + cat + "." + name
+										this->parsingFieldNames.emplace_back();
+										warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 									}
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.queries") {
@@ -278,12 +277,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 									if(k->IsUint64()) this->parsingFieldQueries.push_back(k->GetUint64());
 									else {
 										this->parsingFieldQueries.push_back(0);
-										if(!(k->IsNull())) warningsTo.push_back("Value in \'" + cat + "." + name
+										if(!(k->IsNull())) warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 									}
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.sources") {
@@ -294,12 +293,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 									if(k->IsUint()) this->parsingFieldSources.push_back(k->GetUint());
 									else {
 										this->parsingFieldSources.push_back(0);
-										warningsTo.push_back("Value in \'" + cat + "." + name
+										warningsTo.emplace("Value in \'" + cat + "." + name
 												+ "\' set to 0 (source: URL) because of wrong type (not unsigned int).");
 									}
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "field.tidy.texts") {
@@ -310,12 +309,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 										if(k->IsBool()) this->parsingFieldTidyTexts.push_back(k->GetBool());
 										else {
 											this->parsingFieldTidyTexts.push_back(false);
-											warningsTo.push_back("Value in \'" + cat + "." + name
+											warningsTo.emplace("Value in \'" + cat + "." + name
 													+ "\' ignored because of wrong type (not bool).");
 										}
 									}
 								}
-								else warningsTo.push_back("\'" + cat + "."
+								else warningsTo.emplace("\'" + cat + "."
 										+ name + "\' ignored because of wrong type (not array).");
 							}
 						else if(name == "field.warnings.empty") {
@@ -326,12 +325,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 									if(k->IsBool()) this->parsingFieldWarningsEmpty.push_back(k->GetBool());
 									else {
 										this->parsingFieldWarningsEmpty.push_back(false);
-										warningsTo.push_back("Value in \'" + cat + "." + name
+										warningsTo.emplace("Value in \'" + cat + "." + name
 												+ "\' ignored because of wrong type (not bool).");
 									}
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "id.ignore") {
@@ -339,12 +338,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								this->parsingIdIgnore.clear();
 								this->parsingIdIgnore.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parsingIdIgnore.push_back(k->GetString());
-									else warningsTo.push_back("Value in \'" + cat + "." + name
+									if(k->IsString()) this->parsingIdIgnore.emplace_back(k->GetString());
+									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "id.queries") {
@@ -354,11 +353,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint64()) this->parsingIdQueries.push_back(k->GetUint64());
 									else if(k->IsNull()) this->parsingIdQueries.push_back(0);
-									else warningsTo.push_back("Value in \'" + cat + "." + name
+									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned long or null).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
 						else if(name == "id.sources") {
@@ -367,23 +366,23 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 								this->parsingIdSources.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsUint()) this->parsingIdSources.push_back(k->GetUint());
-									else warningsTo.push_back("Value in \'" + cat + "." + name
+									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not unsigned int).");
 								}
 							}
-							else warningsTo.push_back("\'" + cat + "." + name
+							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not array).");
 						}
-						else warningsTo.push_back("Unknown configuration entry \'" + cat + "." + name + "\' ignored.");
+						else warningsTo.emplace("Unknown configuration entry \'" + cat + "." + name + "\' ignored.");
 					}
-					else warningsTo.push_back("Configuration entry with unknown category \'" + cat + "\' ignored.");
+					else warningsTo.emplace("Configuration entry with unknown category \'" + cat + "\' ignored.");
 					valueFound = true;
 					break;
 				}
 			}
-			if(!valueFound) warningsTo.push_back("Configuration entry without value ignored.");
+			if(!valueFound) warningsTo.emplace("Configuration entry without value ignored.");
 		}
-		else warningsTo.push_back("Configuration entry that is no object ignored.");
+		else warningsTo.emplace("Configuration entry that is no object ignored.");
 	}
 
 	// check properties of datetime queries (arrays with queries and sources should have the same number of elements)
@@ -396,7 +395,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 	if(this->parsingDateTimeFormats.size() > completeDateTimes) this->parsingDateTimeFormats.resize(completeDateTimes);
 	else {
 		this->parsingDateTimeFormats.reserve(completeDateTimes);
-		while(this->parsingDateTimeFormats.size() < completeDateTimes) this->parsingDateTimeFormats.push_back("%F %T");
+		while(this->parsingDateTimeFormats.size() < completeDateTimes)
+			this->parsingDateTimeFormats.emplace_back("%F %T");
 	}
 
 	// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
@@ -407,7 +407,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 	if(this->parsingDateTimeLocales.size() > completeDateTimes) this->parsingDateTimeLocales.resize(completeDateTimes);
 	else {
 		this->parsingDateTimeLocales.reserve(completeDateTimes);
-		while(this->parsingDateTimeLocales.size() < completeDateTimes) this->parsingDateTimeLocales.push_back("");
+		while(this->parsingDateTimeLocales.size() < completeDateTimes)
+			this->parsingDateTimeLocales.emplace_back();
 	}
 
 	if(this->parsingDateTimeQueries.size() > completeDateTimes) {
@@ -422,12 +423,12 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 	}
 	if(incompleteDateTimes) {
 		// warn about incomplete datetime queries
-		warningsTo.push_back("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
-		warningsTo.push_back("Incomplete datetime queries removed.");
+		warningsTo.emplace("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
+		warningsTo.emplace("Incomplete datetime queries removed.");
 	}
 
 	// check properties of parsing fields (arrays with field names, queries and sources should have the same number of elements)
-	unsigned long completeFields = crawlservpp::Helper::Algos::min(this->parsingFieldNames.size(),
+	unsigned long completeFields = Helper::Algos::min(this->parsingFieldNames.size(),
 			this->parsingFieldQueries.size(), this->parsingFieldSources.size());	// number of complete fields
 																					// (= minimum size of all arrays)
 	bool incompleteFields = false;
@@ -436,35 +437,41 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 	if(this->parsingFieldDelimiters.size() > completeFields) this->parsingFieldDelimiters.resize(completeFields);
 	else {
 		this->parsingFieldDelimiters.reserve(completeFields);
-		while(this->parsingFieldDelimiters.size() < completeFields) this->parsingFieldDelimiters.push_back('\n');
+		while(this->parsingFieldDelimiters.size() < completeFields)
+			this->parsingFieldDelimiters.push_back('\n');
 	}
 
 	// the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
 	if(this->parsingFieldIgnoreEmpty.size() > completeFields) this->parsingFieldIgnoreEmpty.resize(completeFields);
 	else {
 		this->parsingFieldIgnoreEmpty.reserve(completeFields);
-		while(this->parsingFieldIgnoreEmpty.size() < completeFields) this->parsingFieldIgnoreEmpty.push_back(true);
+		while(this->parsingFieldIgnoreEmpty.size() < completeFields)
+			this->parsingFieldIgnoreEmpty.push_back(true);
 	}
 
 	// the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parsingFieldJSON.size() > completeFields) this->parsingFieldJSON.resize(completeFields);
 	else {
 		this->parsingFieldJSON.reserve(completeFields);
-		while(this->parsingFieldJSON.size() < completeFields) this->parsingFieldJSON.push_back(false);
+		while(this->parsingFieldJSON.size() < completeFields)
+			this->parsingFieldJSON.push_back(false);
 	}
 
 	// the 'tidy text' property will be ignored if array is too large or set to 'false' if entry is missing
 	if(this->parsingFieldTidyTexts.size() > completeFields) this->parsingFieldTidyTexts.resize(completeFields);
 	else {
 		this->parsingFieldTidyTexts.reserve(completeFields);
-		while(this->parsingFieldTidyTexts.size() < completeFields) this->parsingFieldTidyTexts.push_back(false);
+		while(this->parsingFieldTidyTexts.size() < completeFields)
+			this->parsingFieldTidyTexts.push_back(false);
 	}
 
 	// the 'warning if empty' property will be ignored if array is too large or set to 'false' if entry is missing
-	if(this->parsingFieldWarningsEmpty.size() > completeFields) this->parsingFieldWarningsEmpty.resize(completeFields);
+	if(this->parsingFieldWarningsEmpty.size() > completeFields)
+		this->parsingFieldWarningsEmpty.resize(completeFields);
 	else {
 		this->parsingFieldWarningsEmpty.reserve(completeFields);
-		while(this->parsingFieldWarningsEmpty.size() < completeFields) this->parsingFieldWarningsEmpty.push_back(false);
+		while(this->parsingFieldWarningsEmpty.size() < completeFields)
+			this->parsingFieldWarningsEmpty.push_back(false);
 	}
 
 	if(this->parsingFieldNames.size() > completeFields) {
@@ -484,8 +491,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 	}
 	if(incompleteFields) {
 		// warn about incomplete parsing fields
-		warningsTo.push_back("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
-		warningsTo.push_back("Incomplete field(s) removed.");
+		warningsTo.emplace("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
+		warningsTo.emplace("Incomplete field(s) removed.");
 	}
 
 	// check properties of id queries (arrays defining queries should have the same number of elements - one for each query)
@@ -505,8 +512,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument,
 	}
 	if(incompleteIds) {
 		// warn about incomplete id queries
-		warningsTo.push_back("\'id.queries\' and \'.sources\' should have the same number of elements.");
-		warningsTo.push_back("Incomplete id queries removed.");
+		warningsTo.emplace("\'id.queries\' and \'.sources\' should have the same number of elements.");
+		warningsTo.emplace("Incomplete id queries removed.");
 	}
 }
 

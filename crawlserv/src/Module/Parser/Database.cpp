@@ -12,7 +12,7 @@
 namespace crawlservpp::Module::Parser {
 
 // constructor: initialize values
-Database::Database(crawlservpp::Module::Database& dbThread) : crawlservpp::Wrapper::Database(dbThread),
+Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread),
 		website(0), urlList(0), reparse(false), parseCustom(false), logging(false), verbose(false),
 		timeoutTargetLock(0), targetTableId(0), ps({0}) {}
 
@@ -97,11 +97,11 @@ void Database::initTargetTable() {
 	// create table properties
 	CustomTableProperties properties("parsed", this->website, this->urlList, this->targetTableName, this->targetTableFull, true);
 	properties.columns.reserve(3 + this->targetFieldNames.size());
-	properties.columns.push_back(TableColumn("content", "BIGINT UNSIGNED NOT NULL"));
-	properties.columns.push_back(TableColumn("parsed_id", "TEXT NOT NULL"));
-	properties.columns.push_back(TableColumn("parsed_datetime", "DATETIME DEFAULT NULL"));
+	properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL");
+	properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
+	properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
 	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-		if(!(i->empty())) properties.columns.push_back(TableColumn("parsed__" + *i, "LONGTEXT"));
+		if(!(i->empty())) properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
 
 	// lock target tables
 	this->lockCustomTables("parsed", this->website, this->urlList, this->timeoutTargetLock);
@@ -280,8 +280,8 @@ void Database::lockParsingTable() {
 }
 
 // get the next URL to parse from database, return ID, URL and lock ID of next URL or empty tuple if all URLs have been parsed
-std::tuple<unsigned long, std::string, unsigned long> Database::getNextUrl(unsigned long currentUrlId) {
-	std::tuple<unsigned long, std::string, unsigned long> result;
+Database::UrlProperties Database::getNextUrl(unsigned long currentUrlId) {
+	UrlProperties result;
 
 	// check connection
 	this->checkConnection();
@@ -298,7 +298,7 @@ std::tuple<unsigned long, std::string, unsigned long> Database::getNextUrl(unsig
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			result = std::make_tuple(
+			result = UrlProperties(
 					sqlResultSet->getUInt64("url_id"),
 					sqlResultSet->getString("url"),
 					sqlResultSet->getUInt64("lock_id")
@@ -414,10 +414,10 @@ std::string Database::getUrlLock(unsigned long lockId) {
 
 // get the URL lock ID for a specific URL from database if none has been received yet
 //  NOTE: The first value of the tuple (the URL ID) needs already to be set!
-void Database::getUrlLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+void Database::getUrlLockId(UrlProperties& urlProperties) {
 	// check arguments
-	if(!std::get<0>(urlData)) throw DatabaseException("Parser::Database::getUrlLockId(): No URL ID specified");
-	if(std::get<2>(urlData)) return; // already got lock ID
+	if(!urlProperties.id) throw DatabaseException("Parser::Database::getUrlLockId(): No URL ID specified");
+	if(urlProperties.lockId) return; // already got lock ID
 
 	// check connection
 	this->checkConnection();
@@ -430,12 +430,12 @@ void Database::getUrlLockId(std::tuple<unsigned long, std::string, unsigned long
 	// get lock ID from database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, std::get<0>(urlData));
+		sqlStatement.setUInt64(1, urlProperties.id);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next())
-			std::get<2>(urlData) = sqlResultSet->getUInt64("id");
+			urlProperties.lockId = sqlResultSet->getUInt64("id");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLockId", e); }
 }
@@ -468,11 +468,11 @@ bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 }
 
 // lock a URL in the database
-std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout) {
+std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTimeout) {
 	// check connection
 	this->checkConnection();
 
-	if(std::get<2>(urlData)) {
+	if(urlProperties.lockId) {
 		// check prepared SQL statement for locking the URL
 		if(!(this->ps.lockUrl))
 			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
@@ -482,7 +482,7 @@ std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned lo
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, lockTimeout);
-			sqlStatement.setUInt64(2, std::get<2>(urlData));
+			sqlStatement.setUInt64(2, urlProperties.lockId);
 			sqlStatement.execute();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
@@ -496,17 +496,17 @@ std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned lo
 		// add URL lock to database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, std::get<0>(urlData));
+			sqlStatement.setUInt64(1, urlProperties.id);
 			sqlStatement.setUInt64(2, lockTimeout);
 			sqlStatement.execute();
 
 			// get result
-			std::get<2>(urlData) = this->getLastInsertedId();
+			urlProperties.lockId = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
 	}
 
-	return this->getUrlLock(std::get<2>(urlData));
+	return this->getUrlLock(urlProperties.lockId);
 }
 
 // unlock a URL in the database
@@ -591,8 +591,8 @@ bool Database::getLatestContent(unsigned long urlId, unsigned long index,
 }
 
 // get all contents for the ID-specified URL
-std::vector<std::pair<unsigned long, std::string>> Database::getAllContents(unsigned long urlId) {
-	std::vector<std::pair<unsigned long, std::string>> result;
+std::queue<Database::IdString> Database::getAllContents(unsigned long urlId) {
+	std::queue<IdString> result;
 
 	// check connection
 	this->checkConnection();
@@ -610,9 +610,8 @@ std::vector<std::pair<unsigned long, std::string>> Database::getAllContents(unsi
 
 		// get result
 		if(sqlResultSet) {
-			result.reserve(sqlResultSet->rowsCount());
 			while(sqlResultSet->next())
-				result.push_back(std::pair<unsigned long, std::string>(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content")));
+				result.emplace(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content"));
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getAllContents", e); }

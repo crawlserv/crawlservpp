@@ -24,7 +24,7 @@ void Container::reserveForQueries(unsigned long numOfAdditionalQueries) {
 }
 
 // add query to internal vectors and return index, throws std::runtime_error
-Container::QueryStruct Container::addQuery(const crawlservpp::Struct::QueryProperties& properties) {
+Container::QueryStruct Container::addQuery(const QueryProperties& properties) {
 	Container::QueryStruct newQuery;
 	newQuery.resultBool = properties.resultBool;
 	newQuery.resultSingle = properties.resultSingle;

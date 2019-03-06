@@ -13,23 +13,21 @@
 namespace crawlservpp::Module {
 
 // constructor
-Database::Database(const crawlservpp::Struct::DatabaseSettings& dbSettings, const std::string& dbModule)
-		: crawlservpp::Main::Database(dbSettings, dbModule), ps({0}) {
-	if(crawlservpp::Main::Database::driver)
-		crawlservpp::Main::Database::driver->threadInit();
+Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
+			: Main::Database(dbSettings, dbModule), ps({0}) {
+	if(Main::Database::driver) Main::Database::driver->threadInit();
 	else throw(Database::Exception("MySQL driver not loaded"));
 }
 
 // destructor stub
 Database::~Database() {
-	if(crawlservpp::Main::Database::driver)
-		crawlservpp::Main::Database::driver->threadEnd();
+	if(Main::Database::driver) Main::Database::driver->threadEnd();
 }
 
 // prepare SQL statements for thread management
 void Database::prepare() {
 	// prepare basic functions
-	this->crawlservpp::Main::Database::prepare();
+	this->Main::Database::prepare();
 
 	// check connection
 	this->checkConnection();

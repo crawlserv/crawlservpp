@@ -29,14 +29,14 @@ namespace crawlservpp::Query {
 		XPath(const std::string& xpath, bool textOnly);
 
 		// getters
-		bool getBool(const crawlservpp::Parsing::XML& doc) const;
-		void getFirst(const crawlservpp::Parsing::XML& doc, std::string& resultTo) const;
-		void getAll(const crawlservpp::Parsing::XML& doc, std::vector<std::string>& resultTo) const;
+		bool getBool(const Parsing::XML& doc) const;
+		void getFirst(const Parsing::XML& doc, std::string& resultTo) const;
+		void getAll(const Parsing::XML& doc, std::vector<std::string>& resultTo) const;
 
 		// sub-class for XPath exceptions
-		class Exception : public crawlservpp::Main::Exception {
+		class Exception : public Main::Exception {
 		public:
-			Exception(const std::string& description) : crawlservpp::Main::Exception(description) {}
+			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
 
