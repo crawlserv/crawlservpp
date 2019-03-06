@@ -333,8 +333,7 @@ bool Thread::parsingUrlSelection() {
 
 				try {
 					// get current URL lock ID if none was received on URL selection
-					if(!std::get<2>(this->currentUrl))
-						std::get<2>(this->currentUrl) = this->database.getUrlLockId(std::get<0>(this->currentUrl));
+					this->database.getUrlLockId(this->currentUrl);
 
 					// lock URL
 					if(this->database.isUrlLockable(std::get<2>(this->currentUrl))) {

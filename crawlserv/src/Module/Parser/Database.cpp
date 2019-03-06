@@ -412,9 +412,12 @@ std::string Database::getUrlLock(unsigned long lockId) {
 	return result;
 }
 
-// get the URL lock ID for a specific URL from database, return zero if no lock exists yet
-unsigned long Database::getUrlLockId(unsigned long urlId) {
-	unsigned long result = 0;
+// get the URL lock ID for a specific URL from database if none has been received yet
+//  NOTE: The first value of the tuple (the URL ID) needs already to be set!
+void Database::getUrlLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+	// check arguments
+	if(!std::get<0>(urlData)) throw DatabaseException("Parser::Database::getUrlLockId(): No URL ID specified");
+	if(std::get<2>(urlData)) return; // already got lock ID
 
 	// check connection
 	this->checkConnection();
@@ -427,15 +430,14 @@ unsigned long Database::getUrlLockId(unsigned long urlId) {
 	// get lock ID from database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, std::get<0>(urlData));
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+		if(sqlResultSet && sqlResultSet->next())
+			std::get<2>(urlData) = sqlResultSet->getUInt64("id");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLockId", e); }
-
-	return result;
 }
 
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
