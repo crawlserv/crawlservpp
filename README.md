@@ -100,6 +100,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.h)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.h)**: Basic thread options (IDs of website, URL list and configuration).
 * **[`Struct::UrlListProperties`](crawlserv/src/Struct/UrlListProperties.h)**: Basic URL list properties (namespace, name).
+* **[`Struct::UrlProperties`](crawlserv/src/Struct/UrlProperties.h)**: Basic URL properties (ID, URL, lock ID).
 * **[`Struct::WebsiteProperties`](crawlserv/src/Struct/WebsiteProperties.h)**: Basic website properties (domain, namespace, name).
 
 The following custom enumerations are used:
