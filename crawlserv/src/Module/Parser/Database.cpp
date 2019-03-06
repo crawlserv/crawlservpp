@@ -176,10 +176,10 @@ void Database::prepare() {
 
 	if(!(this->ps.getUrlLockId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLockId()...");
-		std::ostringstream queryStr;
-		queryStr << "SELECT id FROM `" << this->parsingTable << "` WHERE target = " << this->targetTableId
+		std::ostringstream sqlQueryStr;
+		sqlQueryStr << "SELECT id FROM `" << this->parsingTable << "` WHERE target = " << this->targetTableId
 				<< " AND url = ? LIMIT 1";
-		this->ps.getUrlLockId = this->addPreparedStatement(queryStr.str());
+		this->ps.getUrlLockId = this->addPreparedStatement(sqlQueryStr.str());
 	}
 
 	if(!(this->ps.checkUrlLock)) {
