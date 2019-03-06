@@ -20,7 +20,7 @@ namespace crawlservpp::Struct {
 		bool dataDeletable; // is data deletable by frontend?
 
 		// constructors
-		ServerSettings() { this->logsDeletable = false; this->dataDeletable = false; }
+		ServerSettings() : logsDeletable(false), dataDeletable(false) {}
 		ServerSettings(const std::string& setPort, const std::string& setAllowedClients, bool setLogsDeletable, bool setDataDeletable)
 				: port(setPort), allowedClients(setAllowedClients), logsDeletable(setLogsDeletable), dataDeletable(setDataDeletable) {}
 	};
