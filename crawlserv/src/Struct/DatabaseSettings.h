@@ -22,7 +22,7 @@ namespace crawlservpp::Struct {
 		bool compression; // use compression protocol
 
 		// constructors
-		DatabaseSettings() { this->port = 0; this->compression = false; }
+		DatabaseSettings() : port(0), compression(false) {}
 		DatabaseSettings(const std::string& setHost, unsigned short setPort, const std::string& setUser,
 				const std::string& setPassword, const std::string& setName, bool setCompression)
 				: host(setHost), port(setPort), user(setUser), password(setPassword), name(setName), compression(setCompression) {}
