@@ -98,10 +98,6 @@ namespace crawlservpp::Main {
 		// database
 		Database database;
 
-		// web server
-		//  Needs to be declared after/destroyed before database, because it is doing one last poll on destruction!
-		WebServer webServer;
-
 		// status
 		std::string status;
 		std::string allowed;
@@ -117,6 +113,10 @@ namespace crawlservpp::Main {
 		std::vector<std::thread> workers;
 		std::vector<bool> workersRunning;
 		std::mutex workersLock;
+
+		// web server
+		//  Needs to be declared after/destroyed before database and data, because it is doing one last poll on destruction!
+		WebServer webServer;
 
 		// run server command
 		std::string cmd(ConnectionPtr connection, const std::string& msgBody, bool& threadStartedTo);
