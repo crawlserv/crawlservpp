@@ -126,7 +126,7 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(18);
+	this->reserveForPreparedStatements(19);
 
 	// prepare SQL statements for parser
 	if(!(this->ps.isUrlParsed)) {
