@@ -3,6 +3,9 @@
  *
  * Embedded web server using mongoose.
  *
+ *  NOTE:	The web server does one final poll on destruction.
+ *  		When used inside classes it should therefore declared last/destroyed first, in case it uses other member data.
+ *
  *  Created on: Feb 1, 2019
  *      Author: ans
  */
