@@ -143,34 +143,37 @@ void Thread::onTick() {
 			this->log("gets archives of " + std::get<1>(url) + "...");
 		if(this->config.crawlerTiming) timerArchives.start();
 
-		if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive) && crawled) {
-			// stop timers
-			if(this->config.crawlerTiming) {
-				timerArchives.stop();
-				timerTotal.stop();
-			}
-
-			// success!
-			this->crawlingSuccess(url);
-			if((this->config.crawlerLogging > Config::crawlerLoggingDefault)
-					|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
-				std::ostringstream logStrStr;
-				logStrStr.imbue(std::locale(""));
-				logStrStr << "finished " << std::get<1>(url);
+		if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive)) {
+			if(crawled) {
+				// stop timers
 				if(this->config.crawlerTiming) {
-					logStrStr << " after ";
-					logStrStr << timerTotal.totalStr() << " (select: " << timerSelect.totalStr() << ", " << timerString;
-					if(this->config.crawlerArchives) logStrStr << ", archive: " << timerArchives.totalStr();
-					logStrStr << ")";
+					timerArchives.stop();
+					timerTotal.stop();
 				}
-				logStrStr << " - checked " << checkedUrls;
-				if(checkedUrlsArchive) logStrStr << " (+" << checkedUrlsArchive << " archived)";
-				logStrStr << ", added " << newUrls;
-				if(newUrlsArchive) logStrStr << " (+" << newUrlsArchive << " archived)";
-				logStrStr << " URL(s).";
-				this->log(logStrStr.str());
+
+				// success!
+				this->crawlingSuccess(url);
+				if((this->config.crawlerLogging > Config::crawlerLoggingDefault)
+						|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
+					std::ostringstream logStrStr;
+					logStrStr.imbue(std::locale(""));
+					logStrStr << "finished " << std::get<1>(url);
+					if(this->config.crawlerTiming) {
+						logStrStr << " after ";
+						logStrStr << timerTotal.totalStr() << " (select: " << timerSelect.totalStr() << ", " << timerString;
+						if(this->config.crawlerArchives) logStrStr << ", archive: " << timerArchives.totalStr();
+						logStrStr << ")";
+					}
+					logStrStr << " - checked " << checkedUrls;
+					if(checkedUrlsArchive) logStrStr << " (+" << checkedUrlsArchive << " archived)";
+					logStrStr << ", added " << newUrls;
+					if(newUrlsArchive) logStrStr << " (+" << newUrlsArchive << " archived)";
+					logStrStr << " URL(s).";
+					this->log(logStrStr.str());
+				}
 			}
 		}
+		else if(!crawled) this->archiveRetry = false; // if crawling and getting archives failed, retry both (not only archives)!
 	}
 	else {
 		if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
