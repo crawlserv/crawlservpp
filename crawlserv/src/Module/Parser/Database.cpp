@@ -398,7 +398,7 @@ std::string Database::getUrlLock(unsigned long lockId) {
 	if(!(this->ps.getUrlLock)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLock(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLock);
 
-	// get URL lock from database
+	// get URL lock end time from database
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, lockId);
