@@ -14,14 +14,14 @@
 
 namespace crawlservpp::Struct {
 	struct UrlData {
-		unsigned long id;				// ID of the URL
-		std::string url;				// URL
-    unsigned long lockId;   // ID of the corresponding URL lock
+		unsigned long id;	// ID of the URL
+		std::string url;	// URL
+		unsigned long lockId;	// ID of the corresponding URL lock
 
 		UrlData() : id(0), lockId(0) {}
-    UrlData(const std::string& setUrl) : id(0), url(setUrl), lockId(0) {}
-    UrlData(unsigned long setId, const std::string& setUrl) : id(setId), url(setUrl), lockId(0) {}
-    UrlData(unsigned long setId, const std::string& setUrl, unsigned long setLockId) : id(setId), url(setUrl), lockId(setLockId) {}
+		UrlData(const std::string& setUrl) : id(0), url(setUrl), lockId(0) {}
+		UrlData(unsigned long setId, const std::string& setUrl) : id(setId), url(setUrl), lockId(0) {}
+		UrlData(unsigned long setId, const std::string& setUrl, unsigned long setLockId) : id(setId), url(setUrl), lockId(setLockId) {}
 	};
 }
 
