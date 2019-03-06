@@ -142,8 +142,8 @@ void Database::prepare() {
 				<< this->urlListTable << "_crawled` AS b ON a.id = b.url LEFT OUTER JOIN `" << this->parsingTable
 				<< "` AS c ON a.id = c.url AND c.target = " << this->targetTableId
 				<< " WHERE a.id > ? AND b.response < 400 AND (c.locktime IS NULL OR c.locktime < NOW())";
-		if(!reparse) sqlQueryStr << " AND (c.success IS NULL OR c.success = FALSE)";
-		if(!parseCustom) sqlQueryStr << " AND a.manual = FALSE";
+		if(!(this->reparse)) sqlQueryStr << " AND (c.success IS NULL OR c.success = FALSE)";
+		if(!(this->parseCustom)) sqlQueryStr << " AND a.manual = FALSE";
 		sqlQueryStr << " ORDER BY a.id LIMIT 1";
 		if(this->verbose) this->log("[#" + this->idString + "] > " + sqlQueryStr.str());
 		this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStr.str());
