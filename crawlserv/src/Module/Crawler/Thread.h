@@ -17,6 +17,7 @@
 
 #include "../../Helper/DateTime.h"
 #include "../../Helper/Strings.h"
+#include "../../Main/Exception.h"
 #include "../../Network/Curl.h"
 #include "../../Parsing/URI.h"
 #include "../../Parsing/XML.h"
@@ -29,20 +30,21 @@
 
 #include <algorithm>
 #include <chrono>
-#include <exception>
+#include <queue>
 #include <functional>
 #include <fstream>
 #include <locale>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <utility>
 #include <vector>
 
 namespace crawlservpp::Module::Crawler {
 	class Thread: public crawlservpp::Module::Thread, public crawlservpp::Query::Container {
-		// for convenience
+		// for convenienc
+		typedef crawlservpp::Main::Exception Exception;
 		typedef crawlservpp::Network::Curl::Exception CurlException;
 		typedef crawlservpp::Parsing::URI::Exception URIException;
 		typedef crawlservpp::Parsing::XML::Exception XMLException;
@@ -104,13 +106,13 @@ namespace crawlservpp::Module::Crawler {
 		QueryStruct queryCanonicalCheck;
 
 		// custom URLs
-		unsigned long startPageId;
-		std::vector<std::pair<unsigned long, std::string>> customPages;
+		std::tuple<unsigned long, std::string, unsigned long> startPage;
+		std::vector<std::tuple<unsigned long, std::string, unsigned long>> customPages;
 
 		// crawling state
-		std::pair<unsigned long, std::string> nextUrl;	// next URL (currently crawled URL in automatic mode)
+		std::tuple<unsigned long, std::string, unsigned long> nextUrl; // next URL (currently crawled URL in automatic mode)
 		std::string lockTime;							// last locking time for currently crawled URL
-		std::pair<unsigned long, std::string> manualUrl;// custom URL to be retried
+		std::tuple<unsigned long, std::string, unsigned long> manualUrl;// custom URL to be retried
 		unsigned long manualCounter;					// number of crawled custom URLs
 		bool startCrawled;								// start page has been successfully crawled
 		bool manualOff;									// manual mode has been turned off (after first URL from database is crawled)
@@ -133,28 +135,30 @@ namespace crawlservpp::Module::Crawler {
 		void initQueries() override;
 
 		// crawling functions
-		bool crawlingUrlSelection(std::pair<unsigned long, std::string>& urlTo);
-		bool crawlingContent(const std::pair<unsigned long, std::string>& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo,
-				std::string& timerStrTo);
+		bool crawlingUrlSelection(std::tuple<unsigned long, std::string, unsigned long>& urlTo);
+		bool crawlingContent(const std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long& checkedUrlsTo,
+				unsigned long& newUrlsTo, std::string& timerStrTo);
 		bool crawlingCheckUrl(const std::string& url);
 		bool crawlingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
-		bool crawlingCheckContentType(const std::pair<unsigned long, std::string>& url, const std::string& contentType);
-		bool crawlingCheckConsistency(const std::pair<unsigned long, std::string>& url, const std::string& content);
-		bool crawlingCheckCanonical(const std::pair<unsigned long, std::string>& url, const crawlservpp::Parsing::XML& doc);
-		bool crawlingCheckContent(const std::pair<unsigned long, std::string>& url, const std::string& content,
+		bool crawlingCheckContentType(const std::tuple<unsigned long, std::string, unsigned long>& urlData,
+				const std::string& contentType);
+		bool crawlingCheckConsistency(const std::string& url, const std::string& content);
+		bool crawlingCheckCanonical(const std::string& url,
 				const crawlservpp::Parsing::XML& doc);
-		void crawlingSaveContent(const std::pair<unsigned long, std::string>& url, unsigned int response, const std::string& type,
-				const std::string& content,
+		bool crawlingCheckContent(const std::string& url, const std::string& content, const crawlservpp::Parsing::XML& doc);
+		void crawlingSaveContent(const std::tuple<unsigned long, std::string, unsigned long>& urlData,
+				unsigned int response, const std::string& type,	const std::string& content,
 				const crawlservpp::Parsing::XML& doc);
-		std::vector<std::string> crawlingExtractUrls(const std::pair<unsigned long, std::string>& url, const std::string& content,
-				const crawlservpp::Parsing::XML& doc);
-		void crawlingParseAndAddUrls(const std::pair<unsigned long, std::string>& url, std::vector<std::string>& urls,
+		std::vector<std::string> crawlingExtractUrls(const std::tuple<unsigned long, std::string, unsigned long>& urlData,
+				const std::string& content, const crawlservpp::Parsing::XML& doc);
+		void crawlingParseAndAddUrls(const std::string& url, std::vector<std::string>& urls,
 				unsigned long& newUrlsTo, bool archived);
-		bool crawlingArchive(const std::pair<unsigned long, std::string>& url, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo);
-		void crawlingSuccess(const std::pair<unsigned long, std::string>& url);
-		void crawlingSkip(const std::pair<unsigned long, std::string>& url);
-		void crawlingRetry(const std::pair<unsigned long, std::string>& url, bool archiveOnly);
+		bool crawlingArchive(std::tuple<unsigned long, std::string, unsigned long>& urlData,
+				unsigned long& checkedUrlsTo, unsigned long& newUrlsTo);
+		void crawlingSuccess(const std::tuple<unsigned long, std::string, unsigned long>& urlData);
+		void crawlingSkip(const std::tuple<unsigned long, std::string, unsigned long>& urlData);
+		void crawlingRetry(const std::tuple<unsigned long, std::string, unsigned long>& urlData, bool archiveOnly);
 
 		// helper function for memento crawling
 		static std::string parseMementos(std::string mementoContent, std::vector<std::string>& warningsTo,

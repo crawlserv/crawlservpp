@@ -54,13 +54,14 @@ void Database::setVerbose(bool isVerbose) {
 void Database::prepare() {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
+	this->crawlingTable = this->urlListTable + "_crawling";
 	std::string crawledTable = this->urlListTable + "_crawled";
 
 	// check connection to database
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(20);
+	this->reserveForPreparedStatements(22);
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
@@ -75,26 +76,28 @@ void Database::prepare() {
 				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE hash = CRC32( ? )) AS result");
 	}
 
-	if(!(this->ps.getUrlId)) {
-		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlId()...");
-		this->ps.getUrlId = this->addPreparedStatement(
-				"SELECT id FROM `" + this->urlListTable + "` WHERE url = ? LIMIT 1");
+	if(!(this->ps.getUrlIdLockId)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlIdLockId()...");
+		this->ps.getUrlIdLockId = this->addPreparedStatement(
+				"SELECT a.id AS url_id, b.id AS lock_id FROM `" + this->urlListTable + "` AS a LEFT OUTER JOIN `"
+				+ this->crawlingTable + "` AS b ON a.id = b.url WHERE a.url = ? LIMIT 1");
 	}
 
 	if(!(this->ps.isUrlCrawled)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlCrawled()...");
 		this->ps.isUrlCrawled = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE id = ? AND crawled = TRUE) AS result");
+				"SELECT EXISTS (SELECT * FROM `" + this->crawlingTable + "` WHERE id = ? AND success = TRUE) AS result");
 	}
 
 	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
-		if(this->recrawl) this->ps.getNextUrl = this->addPreparedStatement(
-				"SELECT id, url FROM `" + this->urlListTable
-				+ "` WHERE id > ? AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
-		else this->ps.getNextUrl = this->addPreparedStatement(
-				"SELECT id, url FROM `" + this->urlListTable
-				+ "` WHERE id > ? AND crawled = 0 AND manual = FALSE AND (crawllock IS NULL OR crawllock < NOW()) ORDER BY id LIMIT 1");
+		std::ostringstream sqlQueryStr;
+		sqlQueryStr << "SELECT a.id AS url_id, a.url AS url, b.id AS lock_id FROM `" + this->urlListTable
+				+ "` AS a LEFT OUTER JOIN `" + this->crawlingTable
+				+ "` AS b ON a.id = b.url WHERE a.id > ? AND manual = FALSE";
+		if(!(this->recrawl)) sqlQueryStr << " AND (b.success IS NULL OR b.success = FALSE)";
+		sqlQueryStr << " AND (b.locktime IS NULL OR b.locktime < NOW()) ORDER BY a.id LIMIT 1";
+		this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStr.str());
 	}
 
 	if(!(this->ps.addUrl)) {
@@ -113,16 +116,16 @@ void Database::prepare() {
 
 	if(!(this->ps.add100Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [2/3]...");
-		std::string query = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
-		for(unsigned short n = 0; n < 99; n++) query += ", (?, CRC32(?))";
-		this->ps.add100Urls = this->addPreparedStatement(query);
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
+		for(unsigned short n = 0; n < 99; n++) sqlQuery += ", (?, CRC32(?))";
+		this->ps.add100Urls = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.add1000Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [3/3]...");
-		std::string query = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
-		for(unsigned short n = 0; n < 999; n++) query += ", (?, CRC32(?))";
-		this->ps.add1000Urls = this->addPreparedStatement(query);
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
+		for(unsigned short n = 0; n < 999; n++) sqlQuery += ", (?, CRC32(?))";
+		this->ps.add1000Urls = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.getUrlPosition)) {
@@ -139,34 +142,50 @@ void Database::prepare() {
 
 	if(!(this->ps.isUrlLockable)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlLockable()...");
+		std::ostringstream sqlQueryStr;
 		this->ps.isUrlLockable = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
-				+ "` WHERE id = ? AND (crawllock IS NULL OR crawllock < NOW())) AS result");
+				"SELECT (locktime IS NULL OR locktime < NOW()) AS result FROM `"
+				+ this->crawlingTable + "` WHERE id = ? LIMIT 1");
 	}
 
 	if(!(this->ps.getUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLock()...");
 		this->ps.getUrlLock = this->addPreparedStatement(
-				"SELECT crawllock FROM `" + this->urlListTable + "` WHERE id = ? LIMIT 1");
+				"SELECT locktime FROM `" + this->crawlingTable + "` WHERE id = ? LIMIT 1");
+	}
+
+	if(!(this->ps.getUrlLockId)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLockId()...");
+		std::ostringstream sqlQueryStr;
+		sqlQueryStr << "SELECT id FROM `" << this->crawlingTable << "` WHERE url = ? LIMIT 1";
+		this->ps.getUrlLockId = this->addPreparedStatement(sqlQueryStr.str());
 	}
 
 	if(!(this->ps.checkUrlLock)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares checkUrlLock()...");
 		this->ps.checkUrlLock = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable
-				+ "` WHERE id = ? AND (crawllock < NOW() OR crawllock <= ? OR crawllock IS NULL)) AS result");
+				"SELECT (locktime < NOW() OR locktime <= ? OR locktime IS NULL) AS result FROM "
+				+ this->crawlingTable + " WHERE id = ? LIMIT 1");
 	}
 
 	if(!(this->ps.lockUrl)) {
-		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl()...");
-		this->ps.lockUrl = this->addPreparedStatement(
-				"UPDATE `" + this->urlListTable + "` SET crawllock = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
+		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl() [1/2]...");
+		this->ps.lockUrl = this->addPreparedStatement("UPDATE `" + this->crawlingTable
+				+ "` SET locktime = NOW() + INTERVAL ? SECOND WHERE id = ? LIMIT 1");
+	}
+
+	if(!(this->ps.addUrlLock)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares lockUrl() [2/2]...");
+		std::ostringstream sqlQueryStr;
+		sqlQueryStr << "INSERT INTO `" << this->crawlingTable
+				<< "` (url, locktime, success) VALUES (?, NOW() + INTERVAL ? SECOND, FALSE)";
+		this->ps.addUrlLock = this->addPreparedStatement(sqlQueryStr.str());
 	}
 
 	if(!(this->ps.unLockUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares unLockUrl()...");
-		this->ps.unLockUrl = this->addPreparedStatement(
-				"UPDATE `" + this->urlListTable + "` SET crawllock = NULL WHERE id = ? LIMIT 1");
+		this->ps.unLockUrl = this->addPreparedStatement("UPDATE `" + this->crawlingTable
+				+ "` SET locktime = NULL WHERE id = ? LIMIT 1");
 	}
 
 	if(!(this->ps.saveContent)) {
@@ -185,8 +204,7 @@ void Database::prepare() {
 	if(!(this->ps.setUrlFinished)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares setUrlFinished()...");
 		this->ps.setUrlFinished = this->addPreparedStatement(
-				"UPDATE `" + this->urlListTable
-				+ "` SET crawled = TRUE, crawllock = NULL WHERE id = ? LIMIT 1");
+				"UPDATE `" + this->crawlingTable + "` SET success = TRUE, locktime = NULL WHERE id = ? LIMIT 1");
 	}
 
 	if(!(this->ps.isArchivedContentExists)) {
@@ -199,6 +217,9 @@ void Database::prepare() {
 // check whether URL exists in database (uses hash check to first check probably existence of URL)
 bool Database::isUrlExists(const std::string& urlString) {
 	bool result = false;
+
+	// check argument
+	if(urlString.empty()) throw DatabaseException("Crawler::Database::isUrlExists(): No URL specified");
 
 	// check connection
 	this->checkConnection();
@@ -238,34 +259,50 @@ void Database::lockUrlList() {
 	this->lockTable(this->urlListTable);
 }
 
-// get the ID of an URL (uses hash check for first checking probable existence of URL)
-unsigned long Database::getUrlId(const std::string& urlString) {
-	unsigned long result = 0;
+// lock crawling table
+void Database::lockCrawlingTable() {
+	this->lockTable(this->crawlingTable);
+}
+
+// lock URL list and crawling table
+void Database::lockUrlListAndCrawlingTable() {
+	this->lockTables(this->urlListTable, this->crawlingTable);
+}
+
+// get the ID and lock ID of an URL (uses hash check for first checking the probable existence of the URL)
+//  NOTE: The second value of the tuple (the URL name) needs already to be set!
+void Database::getUrlIdLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+	// check argument
+	if(std::get<1>(urlData).empty()) throw DatabaseException("Crawler::Database::getUrlIdLockId(): No URL specified");
 
 	// check connection
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.getUrlId)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlId(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlId);
+	if(!(this->ps.getUrlIdLockId)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlId(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlIdLockId);
 
 	// get ID of URL from database
 	try {
 		// execute SQL query for getting URL
-		sqlStatement.setString(1, urlString);
+		sqlStatement.setString(1, std::get<1>(urlData));
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+		if(sqlResultSet && sqlResultSet->next())  {
+			std::get<0>(urlData) = sqlResultSet->getUInt64("url_id");
+			std::get<2>(urlData) = sqlResultSet->getUInt64("lock_id");
+		}
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlId", e); }
-
-	return result;
+	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlIdLockId", e); }
 }
 
-// check whether an URL has been crawled
-bool Database::isUrlCrawled(unsigned long urlId) {
+// check whether an URL, specified by its crawling i.e. lock ID, has been crawled
+bool Database::isUrlCrawled(unsigned long crawlingId) {
 	bool result = false;
+
+	// check argument
+	if(!crawlingId) return false;
 
 	// check connection
 	this->checkConnection();
@@ -277,7 +314,7 @@ bool Database::isUrlCrawled(unsigned long urlId) {
 	// get next URL from database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, crawlingId);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
@@ -288,9 +325,9 @@ bool Database::isUrlCrawled(unsigned long urlId) {
 	return result;
 }
 
-// get the next URL to crawl from database or empty IdString if all URLs have been crawled
-std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long currentUrlId) {
-	std::pair<unsigned long, std::string> result;
+// get the next URL to crawl from database, return ID, URL and lock ID of next URL or empty tuple if all URLs have been parsed
+std::tuple<unsigned long, std::string, unsigned long> Database::getNextUrl(unsigned long currentUrlId) {
+	std::tuple<unsigned long, std::string, unsigned long> result;
 
 	// check connection
 	this->checkConnection();
@@ -307,8 +344,10 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			result.first = sqlResultSet->getUInt64("id");
-			result.second = sqlResultSet->getString("url");
+			result = std::make_tuple(
+					sqlResultSet->getUInt64("url_id"),
+					sqlResultSet->getString("url"),
+					sqlResultSet->getUInt64("lock_id"));
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getNextUrl", e); }
@@ -318,6 +357,9 @@ std::pair<unsigned long, std::string> Database::getNextUrl(unsigned long current
 
 // add URL to database
 void Database::addUrl(const std::string& urlString, bool manual) {
+	// check argument
+	if(urlString.empty()) throw DatabaseException("Crawler::Database::addUrl(): No URL specified");
+
 	// check connection
 	this->checkConnection();
 
@@ -415,6 +457,9 @@ unsigned long Database::addUrlGetId(const std::string& urlString, bool manual) {
 unsigned long Database::getUrlPosition(unsigned long urlId) {
 	unsigned long result = 0;
 
+	// check argument
+	if(!urlId) return 0;
+
 	// check connection
 	this->checkConnection();
 
@@ -461,8 +506,11 @@ unsigned long Database::getNumberOfUrls() {
 }
 
 // check whether an URL is already locked in database
-bool Database::isUrlLockable(unsigned long urlId) {
+bool Database::isUrlLockable(unsigned long lockId) {
 	bool result = false;
+
+	// check argument
+	if(!lockId) return true;
 
 	// check connection
 	this->checkConnection();
@@ -474,7 +522,7 @@ bool Database::isUrlLockable(unsigned long urlId) {
 	// check URL lock in database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, lockId);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
@@ -485,34 +533,13 @@ bool Database::isUrlLockable(unsigned long urlId) {
 	return result;
 }
 
-// get the URL lock end time of a specific URL from database
-std::string Database::getUrlLock(unsigned long urlId) {
-	std::string result;
-
-	// check connection
-	this->checkConnection();
-
-	// check prepared SQL statement
-	if(!(this->ps.getUrlLock)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlLock(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLock);
-
-	// get URL lock from database
-	try {
-		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
-
-		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("crawllock");
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlLock", e); }
-
-	return result;
-}
-
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
-bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
+bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	bool result = false;
+
+	// check arguments
+	if(!lockId) throw DatabaseException("Crawler::Database::checkUrlLock(): No URL lock ID specified");
+	if(lockTime.empty()) throw DatabaseException("Crawler::Database::checkUrlLock(): No lock time specified");
 
 	// check connection
 	this->checkConnection();
@@ -524,8 +551,8 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	// check URL lock in database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
-		sqlStatement.setString(2, lockTime);
+		sqlStatement.setString(1, lockTime);
+		sqlStatement.setUInt64(2, lockId);
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get (and parse) result
@@ -536,29 +563,112 @@ bool Database::checkUrlLock(unsigned long urlId, const std::string& lockTime) {
 	return result;
 }
 
-// lock a URL in the database
-std::string Database::lockUrl(unsigned long urlId, unsigned long lockTimeout) {
+// get the URL lock end time of a specific URL from database
+std::string Database::getUrlLock(unsigned long lockId) {
+	std::string result;
+
+	// check argument
+	if(!lockId) throw DatabaseException("Crawler::Database::getUrlLock(): No URL lock ID specified");
+
 	// check connection
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.lockUrl)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::lockUrl(...)");
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
+	if(!(this->ps.getUrlLock)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlLock(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLock);
 
-	// lock URL in database
+	// get URL lock end time from database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, lockTimeout);
-		sqlStatement.setUInt64(2, urlId);
-		sqlStatement.execute();
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrl", e); }
+		sqlStatement.setUInt64(1, lockId);
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
-	return this->getUrlLock(urlId);
+		// get result
+		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("locktime");
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlLock", e); }
+
+	return result;
+}
+
+// get the URL lock ID for a specific URL from the database if none has been received yet
+//  NOTE: The first value of the tuple (the URL ID) needs already to be set!
+void Database::getUrlLockId(std::tuple<unsigned long, std::string, unsigned long>& urlData) {
+	// check arguments
+	if(!std::get<0>(urlData)) throw DatabaseException("Parser::Database::getUrlLockId(): No URL ID specified");
+	if(std::get<2>(urlData)) return; // already got lock ID
+
+	// check connection
+	this->checkConnection();
+
+	// check prepared SQL statement
+	if(!(this->ps.checkUrlLock))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLockId(...)");
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockId);
+
+	// get lock ID from database
+	try {
+		// execute SQL query
+		sqlStatement.setUInt64(1, std::get<0>(urlData));
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next())
+			std::get<2>(urlData) = sqlResultSet->getUInt64("id");
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLockId", e); }
+}
+
+// lock a URL in the database
+std::string Database::lockUrl(std::tuple<unsigned long, std::string, unsigned long>& urlData, unsigned long lockTimeout) {
+	// check argument
+	if(!std::get<0>(urlData)) throw DatabaseException("Crawler::Database::lockUrl(): No URL ID specified");
+
+	// check connection
+	this->checkConnection();
+
+	if(std::get<2>(urlData)) {
+		// check prepared SQL statement for locking the URL
+		if(!(this->ps.lockUrl))
+			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
+
+		// lock URL in database
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(1, lockTimeout);
+			sqlStatement.setUInt64(2, std::get<2>(urlData));
+			sqlStatement.execute();
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
+	}
+	else {
+		// check prepared SQL statement for adding an URL lock
+		if(!(this->ps.addUrlLock))
+			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLock);
+
+		// add URL lock to database
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(1, std::get<0>(urlData));
+			sqlStatement.setUInt64(2, lockTimeout);
+			sqlStatement.execute();
+
+			// get result
+			std::get<2>(urlData) = this->getLastInsertedId();
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
+	}
+
+	return this->getUrlLock(std::get<2>(urlData));
 }
 
 // unlock a URL in the database
-void Database::unLockUrl(unsigned long urlId) {
+void Database::unLockUrl(unsigned long lockId) {
+	// check argument
+	if(!lockId) throw DatabaseException("Crawler::Database::unLockUrl(): No URL lock ID specified");
+
 	// check connection
 	this->checkConnection();
 
@@ -569,20 +679,25 @@ void Database::unLockUrl(unsigned long urlId) {
 	// unlock URL in database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, lockId);
 		sqlStatement.execute();
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::unLockUrl", e); }
 }
 
 // save content to database
-void Database::saveContent(unsigned long urlId, unsigned int response, const std::string& type,
-		const std::string& content) {
+void Database::saveContent(unsigned long urlId, unsigned int response, const std::string& type, const std::string& content) {
+	// check argument
+	if(!urlId) {
+		throw DatabaseException("Crawler::Database::saveContent(): No URL ID specified");
+	}
+
 	// check connection
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.saveContent)) throw DatabaseException("Missing prepared SQL statement for Crawler::Database::saveContent(...)");
+	if(!(this->ps.saveContent))
+		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::saveContent(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.saveContent);
 
 	// save content to database
@@ -600,7 +715,8 @@ void Database::saveContent(unsigned long urlId, unsigned int response, const std
 			bool adjustServerSettings = false;
 			std::ostringstream logStrStr;
 			logStrStr.imbue(std::locale(""));
-			logStrStr << "[#" << this->idString << "] WARNING: Some content could not be saved to the database, because its size ("
+			logStrStr << "[#" << this->idString
+					<< "] WARNING: Some content could not be saved to the database, because its size ("
 					<< content.size() << " bytes) exceeds the ";
 			if(content.size() > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
 			else {
@@ -618,6 +734,9 @@ void Database::saveContent(unsigned long urlId, unsigned int response, const std
 // save archived content to database
 void Database::saveArchivedContent(unsigned long urlId, const std::string& timeStamp, unsigned int response,
 		const std::string& type, const std::string& content) {
+	// check arguments
+	if(!urlId) throw DatabaseException("Crawler::Database::saveArchivedContent(): No URL ID specified");
+
 	// check connection
 	this->checkConnection();
 
@@ -658,7 +777,10 @@ void Database::saveArchivedContent(unsigned long urlId, const std::string& timeS
 }
 
 // set URL as crawled in the database
-void Database::setUrlFinished(unsigned long urlId) {
+void Database::setUrlFinished(unsigned long crawlingId) {
+	// check argument
+	if(!crawlingId) throw DatabaseException("Crawler::Database::setUrlFinished(): No crawling ID specified");
+
 	// check connection
 	this->checkConnection();
 
@@ -669,7 +791,7 @@ void Database::setUrlFinished(unsigned long urlId) {
 	// get ID of URL from database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, crawlingId);
 		sqlStatement.execute();
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::setUrlFinished", e); }
@@ -677,6 +799,9 @@ void Database::setUrlFinished(unsigned long urlId) {
 
 bool Database::isArchivedContentExists(unsigned long urlId, const std::string& timeStamp) {
 	bool result = false;
+
+	// check argument
+	if(!urlId) throw DatabaseException("Crawler::Database::isArchivedContentExists(): No URL ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -702,12 +827,37 @@ bool Database::isArchivedContentExists(unsigned long urlId, const std::string& t
 }
 
 // helper function: check the current URL lock and re-lock the URL if possible, return whether the re-locking was successful
-bool Database::renewUrlLock(unsigned long lockTimeout, unsigned long urlId, std::string& lockTime) {
-	if(this->checkUrlLock(urlId, lockTime)) {
-		lockTime = this->lockUrl(urlId, lockTimeout);
-		return true;
+//  NOTE: This function locks and unlocks the crawling table by itself
+bool Database::renewUrlLock(unsigned long lockTimeout, std::tuple<unsigned long, std::string, unsigned long>& urlData,
+		std::string& lockTime) {
+	bool result = false;
+
+	// check argument
+	if(!std::get<0>(urlData)) throw DatabaseException("Crawler::Database::renewUrlLock(): No URL ID specified");
+
+	// lock crawling table
+	this->lockCrawlingTable();
+
+	// get lock ID if not already received
+	this->getUrlLockId(urlData);
+
+	try {
+		if(this->checkUrlLock(std::get<2>(urlData), lockTime)) {
+			lockTime = this->lockUrl(urlData, lockTimeout);
+			this->releaseLocks();
+			result = true;
+		}
 	}
-	return false;
+	// any exception: try to release table lock and re-throw
+	catch(...) {
+		try { this->database.releaseLocks(); }
+		catch(...) {}
+		throw;
+	}
+
+	// unlock crawling table
+	this->releaseLocks();
+	return result;
 }
 
 }
