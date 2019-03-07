@@ -324,14 +324,14 @@
 			"simple": false
 		},
 		"warnings.file": {
-			"id": 33,
+			"id": 34,
 			"type": "bool",
 			"default": false,
 			"description": "Warn when files are found (instead of folders).",
 			"simple": false
 		},
 		"xml": {
-			"id": 34,
+			"id": 35,
 			"type": "bool",
 			"default": false,
 			"description": "Save crawled content as cleaned XML.",
