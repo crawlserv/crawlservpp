@@ -17,7 +17,7 @@ namespace crawlservpp::Module::Crawler {
 // constructor: set default values
 Config::Config() : crawlerArchives(false), crawlerHTMLCanonicalCheck(false), crawlerHTMLConsistencyCheck(false), crawlerLock(300),
 		crawlerLogging(Config::crawlerLoggingDefault), crawlerReCrawl(false), crawlerReCrawlStart(true), crawlerReTries(-1),
-		crawlerRetryArchive(true), crawlerSleepError(5000), crawlerSleepHttp(0), crawlerSleepIdle(500), crawlerSleepMySql(20),
+		crawlerRetryArchive(true), crawlerSleepError(5000), crawlerSleepHttp(0), crawlerSleepIdle(1000), crawlerSleepMySql(20),
 		crawlerStart("/"), crawlerTiming(false), crawlerUrlCaseSensitive(true), crawlerUrlChunks(5000), crawlerUrlDebug(false),
 		crawlerUrlStartupCheck(true), crawlerWarningsFile(false),	crawlerXml(false), customCountersGlobal(true),
 		customReCrawl(true) {
