@@ -66,8 +66,8 @@ public:
 	unsigned long crawlerSleepMySql;
 	std::string crawlerStart;
 	bool crawlerTiming;
-	unsigned long crawlerUrlChunks;
 	bool crawlerUrlCaseSensitive;
+	unsigned long crawlerUrlChunks;
 	bool crawlerUrlDebug;
 	bool crawlerWarningsFile;
 	bool crawlerXml;
