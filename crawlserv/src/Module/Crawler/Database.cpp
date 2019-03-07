@@ -219,7 +219,8 @@ bool Database::isUrlExists(const std::string& urlString) {
 	bool result = false;
 
 	// check argument
-	if(urlString.empty()) throw DatabaseException("Crawler::Database::isUrlExists(): No URL specified");
+	if(urlString.empty())
+		throw DatabaseException("Crawler::Database::isUrlExists(): No URL specified");
 
 	// check connection
 	this->checkConnection();
@@ -273,7 +274,8 @@ void Database::lockUrlListAndCrawlingTable() {
 //  NOTE: The second value of the tuple (the URL name) needs already to be set!
 void Database::getUrlIdLockId(UrlProperties& urlProperties) {
 	// check argument
-	if(urlProperties.url.empty()) throw DatabaseException("Crawler::Database::getUrlIdLockId(): No URL specified");
+	if(urlProperties.url.empty())
+		throw DatabaseException("Crawler::Database::getUrlIdLockId(): No URL specified");
 
 	// check connection
 	this->checkConnection();
@@ -359,7 +361,8 @@ Database::UrlProperties Database::getNextUrl(unsigned long currentUrlId) {
 // add URL to database
 void Database::addUrl(const std::string& urlString, bool manual) {
 	// check argument
-	if(urlString.empty()) throw DatabaseException("Crawler::Database::addUrl(): No URL specified");
+	if(urlString.empty())
+		throw DatabaseException("Crawler::Database::addUrl(): No URL specified");
 
 	// check connection
 	this->checkConnection();
@@ -535,12 +538,13 @@ bool Database::isUrlLockable(unsigned long lockId) {
 }
 
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
+//  NOTE: if no lock time is specified, the function will return true only if the URL is not locked already
 bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	bool result = false;
 
 	// check arguments
 	if(!lockId) throw DatabaseException("Crawler::Database::checkUrlLock(): No URL lock ID specified");
-	if(lockTime.empty()) throw DatabaseException("Crawler::Database::checkUrlLock(): No lock time specified");
+	if(lockTime.empty()) return this->isUrlLockable(lockId);
 
 	// check connection
 	this->checkConnection();
@@ -588,6 +592,12 @@ std::string Database::getUrlLock(unsigned long lockId) {
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("locktime");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlLock", e); }
+
+	if(result.empty()) {
+		std::ostringstream errStrStr;
+		errStrStr << "Crawler::Database::getUrlLock(): Locking of URL lock #" << lockId << " failed";
+		throw DatabaseException(errStrStr.str());
+	}
 
 	return result;
 }
@@ -656,7 +666,7 @@ std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTi
 			sqlStatement.setUInt64(2, lockTimeout);
 			sqlStatement.execute();
 
-			// get result
+			// get lock ID
 			urlProperties.lockId = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
@@ -829,8 +839,7 @@ bool Database::isArchivedContentExists(unsigned long urlId, const std::string& t
 
 // helper function: check the current URL lock and re-lock the URL if possible, return whether the re-locking was successful
 //  NOTE: This function locks and unlocks the crawling table by itself
-bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlProperties,
-		std::string& lockTime) {
+bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlProperties, std::string& lockTime) {
 	bool result = false;
 
 	// check argument
@@ -839,19 +848,28 @@ bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlPropert
 	// lock crawling table
 	this->lockCrawlingTable();
 
-	// get lock ID if not already received
-	this->getUrlLockId(urlProperties);
-
 	try {
-		if(this->checkUrlLock(urlProperties.lockId, lockTime)) {
-			lockTime = this->lockUrl(urlProperties, lockTimeout);
-			this->releaseLocks();
+		// get lock ID if not already received
+		this->getUrlLockId(urlProperties);
+
+		// check whether URL lock exists
+		if(urlProperties.lockId) {
+			// check URL lock
+			if(this->checkUrlLock(urlProperties.lockId, lockTime)) {
+				// lock URL
+				lockTime = this->lockUrl(urlProperties, lockTimeout);
+				this->releaseLocks();
+				result = true;
+			}
+		}
+		else {
+			lockTime = this->lockUrl(urlProperties, lockTimeout); // add URL lock if none exists
 			result = true;
 		}
 	}
 	// any exception: try to release table lock and re-throw
 	catch(...) {
-		try { this->database.releaseLocks(); }
+		try { this->releaseLocks(); }
 		catch(...) {}
 		throw;
 	}
