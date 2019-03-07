@@ -50,6 +50,7 @@ namespace crawlservpp::Module::Crawler {
 		void setRecrawl(bool isRecrawl);
 		void setLogging(bool isLogging);
 		void setVerbose(bool isVerbose);
+		void setUrlCaseSensitive(bool isUrlCaseSensitive);
 		void setUrlDebug(bool isUrlDebug);
 
 		// prepare SQL statements for crawler
@@ -94,6 +95,7 @@ namespace crawlservpp::Module::Crawler {
 		bool recrawl;
 		bool logging;
 		bool verbose;
+		bool urlCaseSensitive;
 		bool urlDebug;
 
 		// table names
