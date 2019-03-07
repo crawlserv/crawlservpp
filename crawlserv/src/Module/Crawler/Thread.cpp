@@ -1347,7 +1347,7 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties, unsigned long& checke
 
 								// go through all mementos
 								unsigned long counter = 0, total = mementos.size();
-								while(!mementos.empty()) {
+								while(!mementos.empty() && this->isRunning()) {
 									std::string timeStamp = mementos.front().timeStamp;
 
 									// set status
