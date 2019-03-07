@@ -72,7 +72,7 @@ void Thread::onInit(bool resumed) {
 	// initialize target table
 	this->setStatusMessage("Initialiting target table...");
 	if(verbose) this->log("initializes target table...");
-	this->database.initTargetTable();
+	this->database.initTargetTable(std::bind(&Thread::isRunning, this)); // @suppress("Invalid arguments")
 
 	// prepare SQL statements for parser
 	this->setStatusMessage("Preparing SQL statements...");

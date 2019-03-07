@@ -86,7 +86,7 @@ void Database::setTimeoutTargetLock(unsigned long timeOut) {
 // create target table if it does not exists or add field columns if they do not exist
 // 	NOTE: Needs to be called by algorithm class in order to get the required field names!
 //  throws Main::Database::Exception
-void Database::initTargetTable(bool compressed) {
+void Database::initTargetTable(bool compressed, CallbackIsRunning isRunning) {
 	// check options
 	if(this->websiteName.empty())
 		throw DatabaseException("Analyzer::Database::initTargetTable(): No website specified");
@@ -119,7 +119,7 @@ void Database::initTargetTable(bool compressed) {
 	}
 
 	{ // lock analyzing tables
-		TargetTablesLock(*this, "analyzed", this->website, this->urlList, this->timeoutTargetLock);
+		TargetTablesLock(*this, "analyzed", this->website, this->urlList, this->timeoutTargetLock, isRunning);
 		this->addTargetTable(properties);
 	} // analyzing tables unlocked
 }

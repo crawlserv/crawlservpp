@@ -78,6 +78,7 @@ namespace crawlservpp::Main {
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::function<bool()> CallbackIsRunning;
 
 	public:
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
@@ -151,7 +152,8 @@ namespace crawlservpp::Main {
 		unsigned long duplicateConfiguration(unsigned long configId);
 
 		// target table functions
-		void lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
+		void lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
+				unsigned long timeOut, CallbackIsRunning running);
 		unsigned long addTargetTable(const TargetTableProperties& properties);
 		std::queue<IdString> getTargetTables(const std::string& type, unsigned long listId);
 		unsigned long getTargetTableId(const std::string& type, unsigned long websiteId, unsigned long listId,

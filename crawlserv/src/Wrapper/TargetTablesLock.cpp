@@ -13,8 +13,8 @@ namespace crawlservpp::Wrapper {
 
 // constructor: lock the custom table
 TargetTablesLock::TargetTablesLock(Database& db, const std::string &type, unsigned long websiteId,
-		unsigned long listId, unsigned long timeOut) : ref(db), type(type) {
-	this->ref.lockTargetTables(type, websiteId, listId, timeOut);
+		unsigned long listId, unsigned long timeOut, CallbackIsRunning isRunning) : ref(db), type(type) {
+	this->ref.lockTargetTables(type, websiteId, listId, timeOut, isRunning);
 }
 
 // destructor: try to unlock the custom table

@@ -58,7 +58,7 @@ void MarkovText::onAlgoInit(bool resumed) {
 
 	// initialize target table
 	this->setStatusMessage("Creating result table...");
-	this->database.initTargetTable(true);
+	this->database.initTargetTable(true, std::bind(&MarkovText::isRunning, this)); // @suppress("Invalid arguments")
 
 	// get text corpus
 	this->setStatusMessage("Getting text corpus...");

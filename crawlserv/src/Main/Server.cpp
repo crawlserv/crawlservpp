@@ -751,9 +751,10 @@ Server::ServerCommandResponse Server::cmdPauseCrawler(const rapidjson::Document&
 
 	// find crawler
 	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
-			[&id](std::unique_ptr<Module::Crawler::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->crawlers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find crawler #" << id << ".";
@@ -783,9 +784,10 @@ Server::ServerCommandResponse Server::cmdUnpauseCrawler(const rapidjson::Documen
 
 	// find crawler
 	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
-			[&id](std::unique_ptr<Module::Crawler::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->crawlers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find crawler #" << id << ".";
@@ -815,9 +817,10 @@ Server::ServerCommandResponse Server::cmdStopCrawler(const rapidjson::Document& 
 
 	// find crawler
 	auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
-			[&id](std::unique_ptr<Module::Crawler::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->crawlers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find crawler #" << id << ".";
@@ -901,9 +904,10 @@ Server::ServerCommandResponse Server::cmdPauseParser(const rapidjson::Document& 
 
 	// find parser
 	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
-			[&id](std::unique_ptr<Module::Parser::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->parsers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find parser #" << id << ".";
@@ -933,9 +937,10 @@ Server::ServerCommandResponse Server::cmdUnpauseParser(const rapidjson::Document
 
 	// find parser
 	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
-			[&id](std::unique_ptr<Module::Parser::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->parsers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find parser #" << id << ".";
@@ -965,9 +970,10 @@ Server::ServerCommandResponse Server::cmdStopParser(const rapidjson::Document& j
 
 	// find parser
 	auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
-			[&id](std::unique_ptr<Module::Parser::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->parsers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find parser #" << id << ".";
@@ -1115,9 +1121,10 @@ Server::ServerCommandResponse Server::cmdPauseAnalyzer(const rapidjson::Document
 
 	// find analyzer
 	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
-			[&id](std::unique_ptr<Module::Analyzer::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->analyzers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find analyzer #" << id << ".";
@@ -1151,9 +1158,10 @@ Server::ServerCommandResponse Server::cmdUnpauseAnalyzer(const rapidjson::Docume
 
 	// find analyzer
 	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
-			[&id](std::unique_ptr<Module::Analyzer::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->analyzers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find analyzer #" << id << ".";
@@ -1183,9 +1191,10 @@ Server::ServerCommandResponse Server::cmdStopAnalyzer(const rapidjson::Document&
 
 	// find analyzer
 	auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
-			[&id](std::unique_ptr<Module::Analyzer::Thread>& p) {
-		return p->Module::Thread::getId() == id;
-	});
+			[&id](const auto& p) {
+				return p->Module::Thread::getId() == id;
+			}
+	);
 	if(i == this->analyzers.end()) {
 		std::ostringstream errStrStr;
 		errStrStr << "Could not find analyzer #" << id << ".";

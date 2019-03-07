@@ -1272,9 +1272,11 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 				TableLock urlListLock(this->database, this->urlListTable);
 
 				// remove already existing URLs
-				chunk.erase(std::remove_if(chunk.begin(), chunk.end(), [&](const std::string& url) -> bool {
-					return this->database.isUrlExists(url);
-				}), chunk.end());
+				chunk.erase(std::remove_if(chunk.begin(), chunk.end(),
+						[&](const auto& url) {
+							return this->database.isUrlExists(url);
+						}
+				), chunk.end());
 
 				// add URLs
 				this->database.addUrls(chunk);
@@ -1300,9 +1302,11 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 			TableLock urlListLock(this->database, this->urlListTable);
 
 			// remove already existing URLs
-			urls.erase(std::remove_if(urls.begin(), urls.end(), [&](const std::string& url) -> bool {
-				return this->database.isUrlExists(url);
-			}), urls.end());
+			urls.erase(std::remove_if(urls.begin(), urls.end(),
+					[&](const auto& url) {
+						return this->database.isUrlExists(url);
+					}
+			), urls.end());
 
 			// add URLs
 			this->database.addUrls(urls);
