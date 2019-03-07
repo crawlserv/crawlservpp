@@ -53,15 +53,15 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString()) {
 					// check item member
-					std::string itemName = j->name.GetString();
+					std::string itemName(j->name.GetString(), j->name.GetStringLength());
 					if(itemName == "cat") {
 						// category of item
-						if(j->value.IsString()) cat = j->value.GetString();
+						if(j->value.IsString()) cat = std::string(j->value.GetString(), j->value.GetStringLength());
 						else warningsTo.emplace("Invalid category name ignored.");
 					}
 					else if(itemName == "name") {
 						// name
-						if(j->value.IsString()) name = j->value.GetString();
+						if(j->value.IsString()) name = std::string(j->value.GetString(), j->value.GetStringLength());
 						else warningsTo.emplace("Invalid option name ignored.");
 					}
 					else if(itemName != "value") {
@@ -85,7 +85,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 			// get item value
 			bool valueFound = false;
 			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
-				if(j->name.IsString() && std::string(j->name.GetString()) == "value") {
+				if(j->name.IsString() && std::string(j->name.GetString(), j->name.GetStringLength()) == "value") {
 					// save configuration entry
 					if(cat == "general") {
 						if(name == "input.fields") {
@@ -94,7 +94,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->generalInputFields.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) {
-										std::string fieldName = k->GetString();
+										std::string fieldName(k->GetString(), k->GetStringLength());
 										if(Helper::Strings::checkSQLName(fieldName))
 											this->generalInputFields.emplace_back(fieldName);
 										else warningsTo.emplace("\'" + fieldName + "\' in \'" + cat + "." + name
@@ -124,7 +124,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->generalInputTables.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) {
-										std::string fieldName = k->GetString();
+										std::string fieldName(k->GetString(), k->GetStringLength());
 										if(Helper::Strings::checkSQLName(fieldName))
 											this->generalInputTables.emplace_back(fieldName);
 										else warningsTo.emplace("\'" + fieldName + "\' in \'" + cat + "." + name
@@ -143,7 +143,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "result.table") {
 							if(j->value.IsString()) {
-								std::string tableName = j->value.GetString();
+								std::string tableName(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::Strings::checkSQLName(tableName))
 									this->generalResultTable = tableName;
 								else warningsTo.emplace("\'" + tableName + "\' in \'" + cat + "." + name
@@ -175,7 +175,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 									+ "\' ignored because of wrong type (not unsigned char).");
 						}
 						else if(name == "language") {
-							if(j->value.IsString()) this->markovTweetLanguage = j->value.GetString();
+							if(j->value.IsString())
+								this->markovTweetLanguage = std::string(j->value.GetString(), j->value.GetStringLength());
 							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not string).");
 						}
@@ -191,7 +192,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "result.field") {
 							if(j->value.IsString()) {
-								std::string fieldName = j->value.GetString();
+								std::string fieldName(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::Strings::checkSQLName(fieldName))
 									this->markovTweetResultField = fieldName;
 								else warningsTo.emplace("\'" + fieldName + "\' in \'" + cat + "." + name
@@ -205,7 +206,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "sources.field") {
 							if(j->value.IsString()) {
-								std::string fieldName = j->value.GetString();
+								std::string fieldName(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::Strings::checkSQLName(fieldName))
 									this->markovTweetSourcesField = fieldName;
 								else warningsTo.emplace("\'" + fieldName + "\' in \'" + cat + "." + name
@@ -242,7 +243,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "result.field") {
 							if(j->value.IsString()) {
-								std::string fieldName = j->value.GetString();
+								std::string fieldName(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::Strings::checkSQLName(fieldName))
 									this->markovTextResultField = fieldName;
 								else warningsTo.emplace("\'" + fieldName + "\' in \'" + cat + "." + name
@@ -256,7 +257,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "sources.field") {
 							if(j->value.IsString()) {
-								std::string fieldName = j->value.GetString();
+								std::string fieldName(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::Strings::checkSQLName(fieldName))
 									this->markovTextSourcesField = fieldName;
 								else warningsTo.emplace("\'" + fieldName + "\' in \'" + cat + "." + name
@@ -278,7 +279,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "from") {
 							if(j->value.IsString()) {
-								std::string fieldDate = j->value.GetString();
+								std::string fieldDate(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::DateTime::isValidISODate(fieldDate))
 									this->filterDateFrom = fieldDate;
 								else warningsTo.emplace("\'" + fieldDate + "\' in \'" + cat + "." + name
@@ -287,7 +288,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "to") {
 							if(j->value.IsString()) {
-								std::string fieldDate = j->value.GetString();
+								std::string fieldDate(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::DateTime::isValidISODate(fieldDate))
 									this->filterDateTo = fieldDate;
 								else warningsTo.emplace("\'" + fieldDate + "\' in \'" + cat + "." + name

@@ -44,7 +44,8 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not bool).");
 	}
 	else if(name == "cookies.load") {
-		if(iterator->value.IsString()) this->cookiesLoad = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->cookiesLoad = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "cookies.overwrite") {
@@ -52,7 +53,7 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 			this->cookiesOverwrite.clear();
 			this->cookiesOverwrite.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
-				if(k->IsString()) this->cookiesOverwrite.emplace_back(k->GetString());
+				if(k->IsString()) this->cookiesOverwrite.emplace_back(k->GetString(), k->GetStringLength());
 				else warningsTo.emplace("Value in \'networking." + name
 						+ "\' ignored because of wrong type (not string).");
 			}
@@ -60,7 +61,8 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not array).");
 	}
 	else if(name == "cookies.save") {
-		if(iterator->value.IsString()) this->cookiesSave = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->cookiesSave = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "cookies.session") {
@@ -68,7 +70,8 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not bool).");
 	}
 	else if(name == "cookies.set") {
-		if(iterator->value.IsString()) this->cookiesSet = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->cookiesSet = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "dns.cachetimeout") {
@@ -76,11 +79,13 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not long).");
 	}
 	else if(name == "dns.doh") {
-		if(iterator->value.IsString()) this->dnsDoH = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->dnsDoH = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "dns.interface") {
-		if(iterator->value.IsString()) this->dnsInterface = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->dnsInterface = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "dns.resolves") {
@@ -88,7 +93,7 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 			this->dnsResolves.clear();
 			this->dnsResolves.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
-				if(k->IsString()) this->dnsResolves.emplace_back(k->GetString());
+				if(k->IsString()) this->dnsResolves.emplace_back(k->GetString(), k->GetStringLength());
 				else warningsTo.emplace("Value in \'networking." + name
 						+ "\' ignored because of wrong type (not string).");
 			}
@@ -100,7 +105,7 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 			this->dnsServers.clear();
 			this->dnsServers.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
-				if(k->IsString()) this->dnsServers.emplace_back(k->GetString());
+				if(k->IsString()) this->dnsServers.emplace_back(k->GetString(), k->GetStringLength());
 				else warningsTo.emplace("Value in \'networking." + name
 						+ "\' ignored because of wrong type (not string).");
 			}
@@ -136,7 +141,7 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 			this->headers.clear();
 			this->headers.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
-				if(k->IsString()) this->headers.emplace_back(k->GetString());
+				if(k->IsString()) this->headers.emplace_back(k->GetString(), k->GetStringLength());
 				else warningsTo.emplace("Value in \'networking." + name
 						+ "\' ignored because of wrong type (not string).");
 			}
@@ -148,7 +153,7 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 			this->http200Aliases.clear();
 			this->http200Aliases.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
-				if(k->IsString()) this->http200Aliases.emplace_back(k->GetString());
+				if(k->IsString()) this->http200Aliases.emplace_back(k->GetString(), k->GetStringLength());
 				else warningsTo.emplace("Value in \'networking." + name
 						+ "\' ignored because of wrong type (not string).");
 			}
@@ -160,7 +165,8 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not int).");
 	}
 	else if(name == "local.interface") {
-		if(iterator->value.IsString()) this->localInterface = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->localInterface = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "local.port") {
@@ -172,11 +178,13 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not unsigned int).");
 	}
 	else if(name == "proxy") {
-		if(iterator->value.IsString()) this->proxy = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->proxy = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "proxy.auth") {
-		if(iterator->value.IsString()) this->proxyAuth = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->proxyAuth = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "proxy.headers") {
@@ -184,7 +192,7 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 			this->proxyHeaders.clear();
 			this->proxyHeaders.reserve(iterator->value.Size());
 			for(auto k = iterator->value.Begin(); k != iterator->value.End(); ++k) {
-				if(k->IsString()) this->proxyHeaders.emplace_back(k->GetString());
+				if(k->IsString()) this->proxyHeaders.emplace_back(k->GetString(), k->GetStringLength());
 				else warningsTo.emplace("Value in \'networking." + name
 						+ "\' ignored because of wrong type (not string).");
 			}
@@ -192,15 +200,18 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not array).");
 	}
 	else if(name == "proxy.pre") {
-		if(iterator->value.IsString()) this->proxyPre = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->proxyPre = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "proxy.tlssrp.password") {
-		if(iterator->value.IsString()) this->proxyTlsSrpPassword = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->proxyTlsSrpPassword = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "proxy.tlssrp.user") {
-		if(iterator->value.IsString()) this->proxyTlsSrpUser = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->proxyTlsSrpUser = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "proxyy.tunnelling") {
@@ -228,7 +239,8 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not bool).");
 	}
 	else if(name == "referer") {
-		if(iterator->value.IsString()) this->referer = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->referer = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "referer.automatic") {
@@ -304,15 +316,18 @@ void Config::setEntry(const std::string& name, const rapidjson::Value::ConstMemb
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not unsigned long).");
 	}
 	else if(name == "tlssrp.password") {
-		if(iterator->value.IsString()) this->tlsSrpPassword = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->tlsSrpPassword = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "tlssrp.user") {
-		if(iterator->value.IsString()) this->tlsSrpUser = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->tlsSrpUser = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "useragent") {
-		if(iterator->value.IsString()) this->userAgent = iterator->value.GetString();
+		if(iterator->value.IsString())
+			this->userAgent = std::string(iterator->value.GetString(), iterator->value.GetStringLength());
 		else warningsTo.emplace("\'networking." + name + "\' ignored because of wrong type (not string).");
 	}
 	else if(name == "verbose") {

@@ -34,15 +34,17 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString()) {
 					// check item member
-					std::string itemName = j->name.GetString();
+					std::string itemName(j->name.GetString(), j->name.GetStringLength());
 					if(itemName == "cat") {
 						// category of item
-						if(j->value.IsString()) cat = j->value.GetString();
+						if(j->value.IsString())
+							cat = std::string(j->value.GetString(), j->value.GetStringLength());
 						else warningsTo.emplace("Invalid category name ignored.");
 					}
 					else if(itemName == "name") {
 						// name
-						if(j->value.IsString()) name = j->value.GetString();
+						if(j->value.IsString())
+							name = std::string(j->value.GetString(), j->value.GetStringLength());
 						else warningsTo.emplace("Invalid option name ignored.");
 					}
 					else if(itemName != "value") {
@@ -66,7 +68,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 			// get item value
 			bool valueFound = false;
 			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
-				if(j->name.IsString() && std::string(j->name.GetString()) == "value") {
+				if(j->name.IsString() && std::string(j->name.GetString(), j->name.GetStringLength()) == "value") {
 					// save configuration entry
 					if(cat == "general") {
 						if(name == "logging") {
@@ -96,7 +98,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "result.table") {
 							if(j->value.IsString()) {
-								std::string tableName = j->value.GetString();
+								std::string tableName(j->value.GetString(), j->value.GetStringLength());
 								if(Helper::Strings::checkSQLName(tableName))
 									this->generalResultTable = tableName;
 								else warningsTo.emplace("\'" + tableName + "\' in \'" + cat + "." + name
@@ -145,7 +147,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->parsingDateTimeFormats.clear();
 								this->parsingDateTimeFormats.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parsingDateTimeFormats.emplace_back(k->GetString());
+									if(k->IsString())
+										this->parsingDateTimeFormats.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -158,7 +161,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->parsingDateTimeLocales.clear();
 								this->parsingDateTimeLocales.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parsingDateTimeLocales.emplace_back(k->GetString());
+									if(k->IsString())
+										this->parsingDateTimeLocales.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -200,7 +204,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString())
 										this->parsingFieldDelimiters.push_back(
-												Helper::Strings::getFirstOrEscapeChar(k->GetString())
+											Helper::Strings::getFirstOrEscapeChar(std::string(k->GetString(), k->GetStringLength()))
 										);
 									else {
 										this->parsingFieldDelimiters.push_back('\n');
@@ -250,7 +254,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->parsingFieldNames.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
 									if(k->IsString()) {
-										std::string fieldName = k->GetString();
+										std::string fieldName(k->GetString(), k->GetStringLength());
 										if(Helper::Strings::checkSQLName(fieldName))
 											this->parsingFieldNames.emplace_back(fieldName);
 										else {
@@ -338,7 +342,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->parsingIdIgnore.clear();
 								this->parsingIdIgnore.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->parsingIdIgnore.emplace_back(k->GetString());
+									if(k->IsString())
+										this->parsingIdIgnore.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}

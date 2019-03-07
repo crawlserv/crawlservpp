@@ -18,8 +18,8 @@ namespace crawlservpp::Module::Crawler {
 Config::Config() : crawlerArchives(false), crawlerHTMLCanonicalCheck(false), crawlerHTMLConsistencyCheck(false), crawlerLock(300),
 		crawlerLogging(Config::crawlerLoggingDefault), crawlerReCrawl(false), crawlerReCrawlStart(true), crawlerReTries(-1),
 		crawlerRetryArchive(true), crawlerSleepError(5000), crawlerSleepHttp(0), crawlerSleepIdle(500), crawlerSleepMySql(20),
-		crawlerStart("/"), crawlerTiming(false), crawlerWarningsFile(false), crawlerXml(false), customCountersGlobal(true),
-		customReCrawl(true) {
+		crawlerStart("/"), crawlerTiming(false), crawlerUrlChunks(10000), crawlerUrlDebug(false), crawlerWarningsFile(false),
+		crawlerXml(false), customCountersGlobal(true), customReCrawl(true) {
 	this->crawlerArchivesNames.emplace_back("archives.org");
 	this->crawlerArchivesUrlsMemento.emplace_back("http://web.archive.org/web/");
 	this->crawlerArchivesUrlsTimemap.emplace_back("http://web.archive.org/web/timemap/link/");
@@ -43,13 +43,13 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 				if(j->name.IsString()) {
 					// check item member
-					std::string itemName = j->name.GetString();
+					std::string itemName(j->name.GetString(), j->name.GetStringLength());
 					if(itemName == "cat") {
-						if(j->value.IsString()) cat = j->value.GetString();
+						if(j->value.IsString()) cat = std::string(j->value.GetString(), j->value.GetStringLength());
 						else warningsTo.emplace("Invalid category name ignored.");
 					}
 					else if(itemName == "name") {
-						if(j->value.IsString()) name = j->value.GetString();
+						if(j->value.IsString()) name = std::string(j->value.GetString(), j->value.GetStringLength());
 						else warningsTo.emplace("Invalid option name ignored.");
 					}
 					else if(itemName != "value") {
@@ -73,7 +73,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 			// get item value
 			bool valueFound = false;
 			for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
-				if(j->name.IsString() && std::string(j->name.GetString()) == "value") {
+				if(j->name.IsString() && std::string(j->name.GetString(), j->name.GetStringLength()) == "value") {
 					// save configuration entry
 					if(cat == "crawler") {
 						if(name == "archives") {
@@ -85,7 +85,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->crawlerArchivesNames.clear();
 								this->crawlerArchivesNames.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->crawlerArchivesNames.emplace_back(k->GetString());
+									if(k->IsString())
+										this->crawlerArchivesNames.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -98,7 +99,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->crawlerArchivesUrlsMemento.clear();
 								this->crawlerArchivesUrlsMemento.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->crawlerArchivesUrlsMemento.emplace_back(k->GetString());
+									if(k->IsString())
+										this->crawlerArchivesUrlsMemento.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -111,7 +113,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->crawlerArchivesUrlsTimemap.clear();
 								this->crawlerArchivesUrlsTimemap.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->crawlerArchivesUrlsTimemap.emplace_back(k->GetString());
+									if(k->IsString())
+										this->crawlerArchivesUrlsTimemap.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -141,7 +144,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->crawlerParamsBlackList.clear();
 								this->crawlerParamsBlackList.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->crawlerParamsBlackList.emplace_back(k->GetString());
+									if(k->IsString())
+										this->crawlerParamsBlackList.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -154,7 +158,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->crawlerParamsWhiteList.clear();
 								this->crawlerParamsWhiteList.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->crawlerParamsWhiteList.emplace_back(k->GetString());
+									if(k->IsString())
+										this->crawlerParamsWhiteList.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -326,12 +331,24 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}
 						else if(name == "start") {
-							if(j->value.IsString()) this->crawlerStart = Config::makeSubUrl(j->value.GetString());
+							if(j->value.IsString())
+								this->crawlerStart =
+										Config::makeSubUrl(std::string(j->value.GetString(), j->value.GetStringLength()));
 							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not string).");
 						}
 						else if(name == "timing") {
 							if(j->value.IsBool()) this->crawlerTiming = j->value.GetBool();
+							else warningsTo.emplace("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
+						}
+						else if(name == "url.chunks") {
+							if(j->value.IsUint64()) this->crawlerUrlChunks = j->value.GetUint64();
+							else warningsTo.emplace("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
+						}
+						else if(name == "url.debug") {
+							if(j->value.IsBool()) this->crawlerUrlDebug = j->value.GetBool();
 							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
@@ -352,7 +369,8 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->customCounters.clear();
 								this->customCounters.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->customCounters.emplace_back(k->GetString());
+									if(k->IsString())
+										this->customCounters.emplace_back(k->GetString(), k->GetStringLength());
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
@@ -408,7 +426,10 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 								this->customUrls.clear();
 								this->customUrls.reserve(j->value.Size());
 								for(auto k = j->value.Begin(); k != j->value.End(); ++k) {
-									if(k->IsString()) this->customUrls.emplace_back(Config::makeSubUrl(k->GetString()));
+									if(k->IsString())
+										this->customUrls.emplace_back(
+												Config::makeSubUrl(std::string(k->GetString(), k->GetStringLength()))
+										);
 									else warningsTo.emplace("Value in \'" + cat + "." + name
 											+ "\' ignored because of wrong type (not string).");
 								}
