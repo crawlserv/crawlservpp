@@ -823,7 +823,7 @@ bool Database::isArchivedContentExists(unsigned long urlId, const std::string& t
 }
 
 // helper function: check the current URL lock and re-lock the URL if possible, return whether the re-locking was successful
-//  NOTE: This function locks and unlocks the crawling table by itself, writes the lock expiration time to lockTime
+//  NOTE: This function locks and unlocks the crawling table by itself and writes the lock expiration time to lockTime
 bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlProperties, std::string& lockTime) {
 	bool result = false;
 
