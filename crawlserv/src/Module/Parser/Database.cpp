@@ -13,7 +13,7 @@ namespace crawlservpp::Module::Parser {
 
 // constructor: initialize values
 Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread),
-		website(0), urlList(0), reparse(false), parseCustom(false), logging(false), verbose(false),
+		website(0), urlList(0), reparse(false), parseCustom(true), logging(true), verbose(false),
 		timeoutTargetLock(0), targetTableId(0), ps({0}) {}
 
 // destructor stub
