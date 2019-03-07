@@ -63,9 +63,6 @@ namespace crawlservpp::Module::Parser {
 		void initTargetTable();
 		void prepare();
 
-		// table function
-		void lockParsingTable();
-
 		// URL functions
 		UrlProperties getNextUrl(unsigned long currentUrlId);
 		unsigned long getUrlPosition(unsigned long urlId);

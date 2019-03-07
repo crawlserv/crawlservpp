@@ -255,21 +255,6 @@ bool Database::isUrlExists(const std::string& urlString) {
 	return result;
 }
 
-// lock URL list
-void Database::lockUrlList() {
-	this->lockTable(this->urlListTable);
-}
-
-// lock crawling table
-void Database::lockCrawlingTable() {
-	this->lockTable(this->crawlingTable);
-}
-
-// lock URL list and crawling table
-void Database::lockUrlListAndCrawlingTable() {
-	this->lockTables(this->urlListTable, this->crawlingTable);
-}
-
 // get the ID and lock ID of an URL (uses hash check for first checking the probable existence of the URL)
 //  NOTE: The second value of the tuple (the URL name) needs already to be set!
 void Database::getUrlIdLockId(UrlProperties& urlProperties) {
@@ -844,11 +829,9 @@ bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlPropert
 
 	// check argument
 	if(!urlProperties.id) throw DatabaseException("Crawler::Database::renewUrlLock(): No URL ID specified");
+	{ // lock crawling table
+		TableLock crawlingTableLock(*this, this->crawlingTable);
 
-	// lock crawling table
-	this->lockCrawlingTable();
-
-	try {
 		// get lock ID if not already received
 		this->getUrlLockId(urlProperties);
 
@@ -866,16 +849,8 @@ bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlPropert
 			lockTime = this->lockUrl(urlProperties, lockTimeout); // add URL lock if none exists
 			result = true;
 		}
-	}
-	// any exception: try to release table lock and re-throw
-	catch(...) {
-		try { this->releaseLocks(); }
-		catch(...) {}
-		throw;
-	}
+	} // crawling table unlocked
 
-	// unlock crawling table
-	this->releaseLocks();
 	return result;
 }
 
