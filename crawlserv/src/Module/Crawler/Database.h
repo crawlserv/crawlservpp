@@ -50,6 +50,7 @@ namespace crawlservpp::Module::Crawler {
 		void setRecrawl(bool isRecrawl);
 		void setLogging(bool isLogging);
 		void setVerbose(bool isVerbose);
+		void setUrlDebug(bool isUrlDebug);
 
 		// prepare SQL statements for crawler
 		void prepare();
@@ -64,6 +65,7 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long addUrlGetId(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
+		void urlDuplicationCheck();
 
 		// URL locking functions
 		bool isUrlLockable(unsigned long lockId);
@@ -92,6 +94,7 @@ namespace crawlservpp::Module::Crawler {
 		bool recrawl;
 		bool logging;
 		bool verbose;
+		bool urlDebug;
 
 		// table names
 		std::string urlListTable;
@@ -121,6 +124,7 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short saveArchivedContent;
 			unsigned short setUrlFinished;
 			unsigned short isArchivedContentExists;
+			unsigned short urlDuplicationCheck;
 		} ps;
 	};
 }
