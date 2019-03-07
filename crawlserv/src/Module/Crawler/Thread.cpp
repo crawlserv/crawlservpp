@@ -381,9 +381,8 @@ void Thread::initDoGlobalCounting(std::vector<std::string>& urlList, const std::
 				counter += step;
 			}
 
-			// remove duplicates
-			std::sort(newUrlList.begin(), newUrlList.end());
-			newUrlList.erase(std::unique(newUrlList.begin(), newUrlList.end()), newUrlList.end());
+			// sort and remove duplicates
+			Helper::Strings::sortAndRemoveDuplicates(newUrlList, this->config.crawlerUrlCaseSensitive);
 		}
 		else newUrlList.emplace_back(*i); // variable not in URL
 	}
@@ -406,9 +405,8 @@ std::vector<std::string> Thread::initDoLocalCounting(const std::string& url, con
 			counter += step;
 		}
 
-		// remove duplicates
-		std::sort(newUrlList.begin(), newUrlList.end());
-		newUrlList.erase(std::unique(newUrlList.begin(), newUrlList.end()), newUrlList.end());
+		// sort and remove duplicates
+		Helper::Strings::sortAndRemoveDuplicates(newUrlList, this->config.crawlerUrlCaseSensitive);
 	}
 	else newUrlList.emplace_back(url); // variable not in URL
 	return newUrlList;
@@ -1134,9 +1132,8 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::string& url,
 			this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 	}
 
-	// remove duplicates
-	std::sort(urls.begin(), urls.end());
-	urls.erase(std::unique(urls.begin(), urls.end()), urls.end());
+	// sort and remove duplicates
+	Helper::Strings::sortAndRemoveDuplicates(urls, this->config.crawlerUrlCaseSensitive);
 	return urls;
 }
 
@@ -1212,17 +1209,18 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 		n--;
 	}
 
-	// remove duplicates
-	std::sort(urls.begin(), urls.end());
-	urls.erase(std::unique(urls.begin(), urls.end()), urls.end());
+	// sort and remove duplicates
+	Helper::Strings::sortAndRemoveDuplicates(urls, this->config.crawlerUrlCaseSensitive);
 
-	// remove URLs longer than 2000 characters
+	// remove URLs longer than 2,000 characters
 	const auto tmpSize = urls.size();
-	urls.erase(std::remove_if(urls.begin(), urls.end(), [](const std::string& url) -> bool {
-		return url.length() > 2000;
-	}), urls.end());
+	urls.erase(std::remove_if(urls.begin(), urls.end(),
+			[](const auto& url) {
+				return url.length() > 2000;
+			}
+	), urls.end());
 	if(this->config.crawlerLogging && urls.size() < tmpSize)
-		this->log("WARNING: URLs longer than 2000 Bytes ignored.");
+		this->log("WARNING: URLs longer than 2,000 Bytes ignored.");
 
 	// if necessary, check for file (i.e. non-slash) endings and show warnings
 	if(this->config.crawlerLogging && this->config.crawlerWarningsFile)
