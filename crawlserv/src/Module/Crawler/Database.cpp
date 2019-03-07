@@ -13,7 +13,7 @@ namespace crawlservpp::Module::Crawler {
 
 // constructor: initialize values
 Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread), recrawl(false),
-		logging(false), verbose(false), urlCaseSensitive(false), urlDebug(false), ps({0}) {}
+		logging(true), verbose(false), urlCaseSensitive(true), urlDebug(false), urlStartupCheck(true), ps({0}) {}
 
 // destructor stub
 Database::~Database() {}
@@ -55,9 +55,14 @@ void Database::setUrlCaseSensitive(bool isUrlCaseSensitive) {
 	this->urlCaseSensitive = isUrlCaseSensitive;
 }
 
-// enable or disable URL duplication check (for debugging purposes only)
+// enable or disable URL debugging
 void Database::setUrlDebug(bool isUrlDebug) {
 	this->urlDebug = isUrlDebug;
+}
+
+// enable or disable URL check on startup
+void Database::setUrlStartupCheck(bool isUrlStartupCheck) {
+	this->urlStartupCheck = isUrlStartupCheck;
 }
 
 // prepare SQL statements for crawler, throws Main::Database::Exception
@@ -67,25 +72,32 @@ void Database::prepare() {
 	this->crawlingTable = this->urlListTable + "_crawling";
 	std::string crawledTable = this->urlListTable + "_crawled";
 
+	// create SQL string for URL hashing
+	std::string hash("CRC32( ");
+	if(this->urlCaseSensitive) hash += "?";
+	else hash += "LOWER( ? )";
+	hash.push_back(')');
+
 	// check connection to database
 	this->checkConnection();
 
 	// reserve memory
-	if(this->urlDebug) this->reserveForPreparedStatements(22);
-	else this->reserveForPreparedStatements(21);
+	this->reserveForPreparedStatements(23);
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlExists()...");
+
 		std::string sqlQuery(
 				"SELECT EXISTS ("
 					" SELECT * FROM ("
-						" SELECT url FROM `" + this->urlListTable + "` WHERE hash = CRC32( LOWER ( ? ) )"
+						" SELECT url FROM `" + this->urlListTable + "` WHERE hash = " + hash +
 					" ) AS HashResult WHERE ");
 		if(this->urlCaseSensitive) sqlQuery += "url LIKE ?";
 		else sqlQuery += "LOWER( url ) LIKE LOWER( ? )";
 		sqlQuery +=
 				" ) AS result";
+
 		this->ps.isUrlExists = this->addPreparedStatement(sqlQuery);
 	}
 
@@ -104,42 +116,47 @@ void Database::prepare() {
 
 	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
+
 		std::ostringstream sqlQueryStrStr;
 		sqlQueryStrStr << "SELECT a.id AS url_id, a.url AS url, b.id AS lock_id FROM `" + this->urlListTable
 				+ "` AS a LEFT OUTER JOIN `" + this->crawlingTable
 				+ "` AS b ON a.id = b.url WHERE a.id > ? AND manual = FALSE";
 		if(!(this->recrawl)) sqlQueryStrStr << " AND (b.success IS NULL OR b.success = FALSE)";
 		sqlQueryStrStr << " AND (b.locktime IS NULL OR b.locktime < NOW()) ORDER BY a.id LIMIT 1";
+
 		this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStrStr.str());
 	}
 
 	if(!(this->ps.addUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrl()...");
 		this->ps.addUrl = this->addPreparedStatement(
-				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES (?, CRC32( LOWER( ? ) ), ?)");
+				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES (?, " + hash + ", ?)");
 	}
 
 	if(!(this->ps.add10Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [1/3]...");
 		this->ps.add10Urls = this->addPreparedStatement(
-				"INSERT INTO `" + this->urlListTable + "`(url, hash)"
-				 " VALUES (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) ))"
-				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) ))"
-				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) ))"
-				", (?, CRC32( LOWER( ? ) ))");
+				"INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES"
+				 " (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), "
+				 " (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), "
+				 " (?, " + hash + "), (?, " + hash + ")");
 	}
 
 	if(!(this->ps.add100Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [2/3]...");
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, CRC32( LOWER( ? ) ))";
-		for(unsigned short n = 0; n < 99; n++) sqlQuery += ", (?, CRC32( LOWER( ? ) ))";
+
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, " + hash + ")";
+		for(unsigned short n = 0; n < 99; n++) sqlQuery += ", (?, " + hash + ")";
+
 		this->ps.add100Urls = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.add1000Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [3/3]...");
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, CRC32( LOWER( ? ) ))";
-		for(unsigned short n = 0; n < 999; n++) sqlQuery += ", (?, CRC32( LOWER( ? ) ))";
+
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, " + hash + ")";
+		for(unsigned short n = 0; n < 999; n++) sqlQuery += ", (?, " + hash + ")";
+
 		this->ps.add1000Urls = this->addPreparedStatement(sqlQuery);
 	}
 
@@ -157,7 +174,6 @@ void Database::prepare() {
 
 	if(!(this->ps.isUrlLockable)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlLockable()...");
-		std::ostringstream sqlQueryStr;
 		this->ps.isUrlLockable = this->addPreparedStatement(
 				"SELECT (locktime IS NULL OR locktime < NOW()) AS result FROM `"
 				+ this->crawlingTable + "` WHERE id = ? LIMIT 1");
@@ -171,8 +187,10 @@ void Database::prepare() {
 
 	if(!(this->ps.getUrlLockId)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getUrlLockId()...");
+
 		std::ostringstream sqlQueryStr;
 		sqlQueryStr << "SELECT id FROM `" << this->crawlingTable << "` WHERE url = ? LIMIT 1";
+
 		this->ps.getUrlLockId = this->addPreparedStatement(sqlQueryStr.str());
 	}
 
@@ -228,14 +246,29 @@ void Database::prepare() {
 				"SELECT EXISTS (SELECT * FROM `" + crawledTable + "` WHERE url = ? AND crawltime = ?) AS result");
 	}
 
-	if(this->urlDebug && !(this->ps.urlDuplicationCheck)) {
+	if(!(this->ps.urlDuplicationCheck) && (this->urlStartupCheck || this->urlDebug)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares urlDuplicationCheck()...");
+
 		std::string groupBy;
 		if(this->urlCaseSensitive) groupBy = "url";
 		else groupBy = "LOWER(url)";
+
 		this->ps.urlDuplicationCheck = this->addPreparedStatement(
 				" SELECT CAST( " + groupBy + " AS BINARY ) AS url, COUNT( " + groupBy + " ) FROM `" + this->urlListTable
 					+ "` GROUP BY CAST( " + groupBy + " AS BINARY ) HAVING COUNT( " + groupBy + " ) > 1"
+		);
+	}
+
+	if(!(this->ps.urlHashCheck) && this->urlStartupCheck) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares urlHashCheck()...");
+
+		std::string urlHash("CRC32( ");
+		if(this->urlCaseSensitive) urlHash += "url";
+		else urlHash += "LOWER( url )";
+		urlHash.push_back(')');
+
+		this->ps.urlHashCheck = this->addPreparedStatement(
+				"SELECT url FROM `" + this->urlListTable + "` WHERE hash <> " + urlHash + " LIMIT 1"
 		);
 	}
 }
@@ -534,7 +567,7 @@ unsigned long Database::getNumberOfUrls() {
 	return result;
 }
 
-// get the number of URLs in the URL list
+// check the URL list for duplicates, throw DatabaseException if duplicates are found
 void Database::urlDuplicationCheck() {
 	// check connection
 	this->checkConnection();
@@ -558,6 +591,32 @@ void Database::urlDuplicationCheck() {
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
+}
+
+// check the hash values in the URL list, throw DatabaseException if at least one mismatch is found
+void Database::urlHashCheck() {
+	// check connection
+	this->checkConnection();
+
+	// check prepared SQL statement
+	if(!(this->ps.urlDuplicationCheck))
+		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
+
+	// get prepared SQL statement
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlHashCheck);
+
+	// get number of URLs from database
+	try {
+		// execute SQL query
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next()) {
+			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): Corrupted hash for URL \'"
+					+ sqlResultSet->getString("url") + "\" in `" + this->urlListTable + "`");
+		}
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
 }
 
 // check whether an URL is already locked in database
