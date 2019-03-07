@@ -33,6 +33,7 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Config();
 
 		// general entries
+		unsigned long generalCacheSize;
 		unsigned int generalLock;
 		unsigned short generalLogging;
 		static const unsigned short generalLoggingSilent = 0;
