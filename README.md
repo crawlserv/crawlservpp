@@ -62,6 +62,7 @@ The source code of the server consists of the following classes (as of February 
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction using [uriparser](https://github.com/uriparser/uriparser).
 * **[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
 * **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for query management in child classes.
+* **[`Wrapper::CustomTableLock`](crawlserv/src/Wrapper/CustomTableLock.cpp)**: Safe in-scope table lock for custom module tables (using a reference to the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.cpp) class).
 * **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * **[`Query::XPath`](crawlserv/src/Query//XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
 * **[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
@@ -95,6 +96,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::CorpusProperties`](crawlserv/src/Struct/CorpusProperties.h)**: Basic corpus properties (source type, table and field).
 * **[`Struct::CustomTableProperties`](crawlserv/src/Struct/CustomTableProperties.h)**: Custom table properties (type, website, URL list, name and full name, columns, compression).
 * **[`Struct::DatabaseSettings`](crawlserv/src/Struct/DatabaseSettings.h)**: Basic database settings (host, port, user, password, schema, compression).
+* **[`Struct::ParsingEntry`](crawlserv/src/Struct/ParsingEntry.h)**: Parsed data (content ID, parsed ID, parsed date/time, parsed fields).
 * **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.h)**: Basic query properties (name, text, type, result type).
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.h)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
 * **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.h)**: Structure for table columns (name, type, reference, indexed).
