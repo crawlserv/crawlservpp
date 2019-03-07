@@ -46,11 +46,11 @@ void Thread::onInit(bool resumed) {
 
 	// check configuration
 	bool verbose = config.generalLogging == Config::generalLoggingVerbose;
-	if(verbose) this->log("checks configuration...");
 	if(this->config.generalResultTable.empty())
 		throw std::runtime_error("ERROR: No target table specified.");
 
 	// set database options
+	this->setStatusMessage("Setting database options...");
 	if(verbose) this->log("sets database options...");
 	this->database.setId(this->getId());
 	this->database.setWebsite(this->getWebsite());
@@ -70,19 +70,23 @@ void Thread::onInit(bool resumed) {
 	this->parsingTable = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace + "_parsing";
 
 	// initialize target table
+	this->setStatusMessage("Initialiting target table...");
 	if(verbose) this->log("initializes target table...");
 	this->database.initTargetTable();
 
 	// prepare SQL statements for parser
+	this->setStatusMessage("Preparing SQL statements...");
 	if(verbose) this->log("prepares SQL statements...");
 	this->database.prepare();
 
 	// initialize queries
-	if(verbose) this->log("initializes queries...");
+	this->setStatusMessage("Initialiting custom queries...");
+	if(verbose) this->log("initializes custom queries...");
 	this->initQueries();
 
 	// check whether ID can be parsed from URL only
-	if(verbose) this->log("checks for URL-only parsing of content IDs...");
+	this->setStatusMessage("Checking for URL-only parsing...");
+	if(verbose) this->log("checks for URL-only parsing...");
 	this->idFromUrl = true;
 	for(auto i = this->config.parsingIdSources.begin();
 			i != this->config.parsingIdSources.end(); ++i) {
@@ -93,6 +97,7 @@ void Thread::onInit(bool resumed) {
 	}
 
 	// set current URL to last URL
+	this->setStatusMessage("Starting to parse...");
 	this->currentUrl = UrlProperties(this->getLast());
 
 	// save start time and initialize counter
