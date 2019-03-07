@@ -212,7 +212,7 @@
 			"type": "bool",
 			"default": true,
 			"label": "Re-crawl start page",
-			"description": "Re-crawl the start page every time.",
+			"description": "Re-crawl the start page every time to keep the URL list up-to-date.",
 			"simple": true,
 			"position": 2
 		},
@@ -265,7 +265,7 @@
 		"sleep.idle": {
 			"id": 26,
 			"type": "number",
-			"default": 500,
+			"default": 1000,
 			"min": 100,
 			"step": 100,
 			"description": "Time (in ms) that will be waited before checking for new URLs when all URLs have been crawled.",
@@ -276,7 +276,7 @@
 			"type": "number",
 			"default": 10,
 			"min": 1,
-			"description": "Time (in s) to wait before first try to re-connect to the MySQL server. After that the current operation will be lost.",
+			"description": "Time (in s) to wait before the first try to re-connect to the MySQL server. After that the current operation will be lost.",
 			"simple": false
 		},
 		"start": {
@@ -407,7 +407,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Custom URLs:",
-			"description": "List of custom URL for crawling (should start with /).",
+			"description": "Custom URLs for crawling (should all start with /).",
 			"simple": true,
 			"position": 1
 		}
