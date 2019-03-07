@@ -56,6 +56,7 @@ void Thread::onInit(bool resumed) {
 	this->database.setRecrawl(this->config.crawlerReCrawl);
 	this->database.setLogging(this->config.crawlerLogging);
 	this->database.setVerbose(verbose);
+	this->database.setUrlDebug(this->config.crawlerUrlDebug);
 	this->database.setSleepOnError(this->config.crawlerSleepMySql);
 
 	// create table names for table locking
@@ -319,6 +320,9 @@ void Thread::initCustomUrls() {
 				this->database.addUrl(this->startPage.url, true);
 		} // URL list unlocked
 
+		// check for duplicates if URL debugging is active
+		if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
+
 		// get the ID of the start page URL (and of its URL lock if one exists already)
 		this->database.getUrlIdLockId(this->startPage);
 	}
@@ -336,6 +340,9 @@ void Thread::initCustomUrls() {
 				if(!(this->database.isUrlExists(i->url)))
 					this->database.addUrl(i->url, true);
 			} // URL list unlocked
+
+			// check for duplicates if URL debugging is active
+			if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
 
 			// get the ID of the custom URL (and of its URL lock if one exists already)
 			this->database.getUrlIdLockId(*i);
@@ -1247,6 +1254,9 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 				this->database.addUrls(chunk);
 			} // URL list unlocked
 
+			// check for duplicates if URL debugging is active
+			if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
+
 			// save number of added URLs
 			newUrlsTo += chunk.size();
 
@@ -1271,6 +1281,9 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 			// add URLs
 			this->database.addUrls(urls);
 		} // URL list unlocked
+
+		// check for duplicates if URL debugging is active
+		if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
 
 		// save number of added URLs
 		newUrlsTo = urls.size();

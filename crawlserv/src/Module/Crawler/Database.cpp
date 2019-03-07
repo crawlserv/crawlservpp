@@ -13,7 +13,7 @@ namespace crawlservpp::Module::Crawler {
 
 // constructor: initialize values
 Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread), recrawl(false),
-		logging(false), verbose(false), ps({0}) {}
+		logging(false), verbose(false), urlDebug(false), ps({0}) {}
 
 // destructor stub
 Database::~Database() {}
@@ -50,6 +50,11 @@ void Database::setVerbose(bool isVerbose) {
 	this->verbose = isVerbose;
 }
 
+// enable or disable URL duplication check (for debugging purposes only)
+void Database::setUrlDebug(bool isUrlDebug) {
+	this->urlDebug = isUrlDebug;
+}
+
 // prepare SQL statements for crawler, throws Main::Database::Exception
 void Database::prepare() {
 	// create table names
@@ -61,7 +66,8 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(21);
+	if(this->urlDebug) this->reserveForPreparedStatements(22);
+	else this->reserveForPreparedStatements(21);
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
@@ -206,6 +212,14 @@ void Database::prepare() {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isArchivedContentExists()...");
 		this->ps.isArchivedContentExists = this->addPreparedStatement(
 				"SELECT EXISTS (SELECT * FROM `" + crawledTable + "` WHERE url = ? AND crawltime = ?) AS result");
+	}
+
+	if(this->urlDebug && !(this->ps.urlDuplicationCheck)) {
+		if(this->verbose) this->log("[#" + this->idString + "] prepares urlDuplicationCheck()...");
+		this->ps.urlDuplicationCheck = this->addPreparedStatement(
+				"SELECT EXISTS ("
+				" SELECT COUNT(url) FROM `" + this->urlListTable + "` GROUP BY url HAVING COUNT(url) > 1"
+				") AS result;");
 	}
 }
 
@@ -501,6 +515,31 @@ unsigned long Database::getNumberOfUrls() {
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getNumberOfUrls", e); }
 
 	return result;
+}
+
+// get the number of URLs in the URL list
+void Database::urlDuplicationCheck() {
+	// check connection
+	this->checkConnection();
+
+	// check prepared SQL statement
+	if(!(this->ps.urlDuplicationCheck))
+		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlDuplicationCheck()");
+
+	// get prepared SQL statement
+	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);
+
+	// get number of URLs from database
+	try {
+		// execute SQL query
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+
+		// get result
+		if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result"))
+			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): There are duplicates in `"
+					+ this->urlListTable + "`!");
+	}
+	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
 }
 
 // check whether an URL is already locked in database
