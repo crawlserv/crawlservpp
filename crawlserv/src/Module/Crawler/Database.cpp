@@ -1002,7 +1002,6 @@ bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlPropert
 			if(this->checkUrlLock(urlProperties.lockId, lockTime)) {
 				// lock URL
 				lockTime = this->lockUrl(urlProperties, lockTimeout);
-				this->releaseLocks();
 				result = true;
 			}
 		}

@@ -18,9 +18,10 @@
 #include "../../Helper/DateTime.h"
 #include "../../Helper/Json.h"
 #include "../../Struct/CorpusProperties.h"
-#include "../../Struct/CustomTableProperties.h"
 #include "../../Struct/TableColumn.h"
+#include "../../Struct/TargetTableProperties.h"
 #include "../../Timer/Simple.h"
+#include "../../Wrapper/TargetTablesLock.h"
 #include "../../Wrapper/Database.h"
 
 #define RAPIDJSON_HAS_STDSTRING 1
@@ -46,9 +47,10 @@ namespace crawlservpp::Module::Analyzer {
 		// for convenience
 		typedef Main::Data::Type DataType;
 		typedef Main::Database::Exception DatabaseException;
-		typedef Struct::CustomTableProperties CustomTableProperties;
+		typedef Struct::TargetTableProperties CustomTableProperties;
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::TableColumn TableColumn;
+		typedef Wrapper::TargetTablesLock TargetTablesLock;
 
 		// text maps are used to describe certain parts of a text
 		//  defined by their positions and lengths with certain strings (words, dates etc.)

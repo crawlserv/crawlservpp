@@ -1,7 +1,7 @@
 /*
- * CustomTableProperties.h
+ * TargetTableProperties.h
  *
- * Custom table properties (type, website, URL list, table name and full name, columns, compression).
+ * Target table properties (type, website, URL list, table name and full name, columns, compression).
  *
  * NOTE: module will be ignored on update!
  *
@@ -19,7 +19,7 @@
 #include <vector>
 
 namespace crawlservpp::Struct {
-	struct CustomTableProperties {
+	struct TargetTableProperties {
 		std::string type;
 		unsigned long website;
 		unsigned long urlList;
@@ -29,12 +29,12 @@ namespace crawlservpp::Struct {
 		bool compressed;
 
 		// constructors
-		CustomTableProperties() : website(0), urlList(0), compressed(false) {}
-		CustomTableProperties(const std::string& setType, unsigned long setWebsite, unsigned long setUrlList,
+		TargetTableProperties() : website(0), urlList(0), compressed(false) {}
+		TargetTableProperties(const std::string& setType, unsigned long setWebsite, unsigned long setUrlList,
 				const std::string& setName, const std::string& setFullName, bool setCompressed)
 				: type(setType), website(setWebsite), urlList(setUrlList), name(setName), fullName(setFullName),
 				  compressed(setCompressed) {}
-		CustomTableProperties(const std::string& setType, unsigned long setWebsite, unsigned long setUrlList,
+		TargetTableProperties(const std::string& setType, unsigned long setWebsite, unsigned long setUrlList,
 				const std::string& setName,	const std::string& setFullName, const std::vector<TableColumn>& setColumns,
 				bool setCompressed) : type(setType), website(setWebsite), urlList(setUrlList), name(setName), fullName(setFullName),
 						  columns(setColumns), compressed(setCompressed) {}

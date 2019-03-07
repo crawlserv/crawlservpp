@@ -95,7 +95,7 @@ void Database::initTargetTable() {
 	this->targetTableFull = this->urlListTable + "_parsed_" + this->targetTableName;
 
 	// create table properties
-	CustomTableProperties properties("parsed", this->website, this->urlList, this->targetTableName, this->targetTableFull, true);
+	TargetTableProperties properties("parsed", this->website, this->urlList, this->targetTableName, this->targetTableFull, true);
 	properties.columns.reserve(3 + this->targetFieldNames.size());
 	properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL");
 	properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
@@ -103,21 +103,12 @@ void Database::initTargetTable() {
 	for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
 		if(!(i->empty())) properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
 
-	// lock target tables
-	this->lockCustomTables("parsed", this->website, this->urlList, this->timeoutTargetLock);
+	{ // lock parsing tables
+		TargetTablesLock(*this, "parsed", this->website, this->urlList, this->timeoutTargetLock);
 
-	try {
 		// add target table if it does not exist already
-		this->targetTableId = this->addCustomTable(properties);
-	}
-	// any exception: try to unlock parsing tables and re-throw
-	catch(...) {
-		this->unlockCustomTables("parsed");
-		throw;
-	}
-
-	// unlock target tables
-	this->unlockCustomTables("parsed");
+		this->targetTableId = this->addTargetTable(properties);
+	} // parsing tables unlocked
 }
 
 // prepare SQL statements for parser
@@ -652,13 +643,13 @@ std::queue<Database::IdString> Database::getAllContents(unsigned long urlId) {
 }
 
 // add parsed data to database (update if row for ID-specified content already exists
-void Database::updateOrAddEntry(unsigned long contentId, const std::string& parsedId,
-		const std::string& parsedDateTime, const std::vector<std::string>& parsedFields) {
+void Database::updateOrAddEntry(const ParsingEntry& data) {
 	// check data sizes
 	unsigned long tooLarge = 0;
-	if(parsedId.size() > this->getMaxAllowedPacketSize()) tooLarge = parsedId.size();
-	if(parsedDateTime.size() > this->getMaxAllowedPacketSize() && parsedDateTime.size() > tooLarge) tooLarge = parsedDateTime.size();
-	for(auto i = parsedFields.begin(); i != parsedFields.end(); ++i)
+	if(data.parsedId.size() > this->getMaxAllowedPacketSize()) tooLarge = data.parsedId.size();
+	if(data.dateTime.size() > this->getMaxAllowedPacketSize() && data.dateTime.size() > tooLarge)
+		tooLarge = data.dateTime.size();
+	for(auto i = data.fields.begin(); i != data.fields.end(); ++i)
 		if(i->size() > this->getMaxAllowedPacketSize() && i->size() > tooLarge) tooLarge = i->size();
 	if(tooLarge) {
 		if(this->logging) {
@@ -680,24 +671,14 @@ void Database::updateOrAddEntry(unsigned long contentId, const std::string& pars
 		return;
 	}
 
-	// lock target table and parsing table index
-	this->lockTables(this->targetTableFull, "crawlserv_parsedtables");
+	{ // lock target table and parsing index table
+		TableLock targetAndParsingIndexTableLock(*this, this->targetTableFull, "crawlserv_parsedtables");
 
-	try {
 		// update existing or add new entry
-		unsigned long entryId = this->getEntryId(contentId);
-		if(entryId) this->updateEntry(entryId, parsedId, parsedDateTime, parsedFields);
-		else this->addEntry(contentId, parsedId, parsedDateTime, parsedFields);
-	}
-	// any exception: try to unlock table and re-throw
-	catch(...) {
-		try { this->unlockTables(); }
-		catch(...) {}
-		throw;
-	}
-
-	// unlock target table
-	this->unlockTables();
+		unsigned long entryId = this->getEntryId(data.contentId);
+		if(entryId) this->updateEntry(entryId, data.parsedId, data.dateTime, data.fields);
+		else this->addEntry(data.contentId, data.parsedId, data.dateTime, data.fields);
+	} // target table and parsing index table unlocked
 }
 
 // set URL as parsed in the database

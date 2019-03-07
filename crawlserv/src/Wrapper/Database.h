@@ -14,8 +14,8 @@
 #include "../Main/Data.h"
 #include "../Module/Database.h"
 #include "../Struct/DatabaseSettings.h"
-#include "../Struct/CustomTableProperties.h"
 #include "../Struct/TableColumn.h"
+#include "../Struct/TargetTableProperties.h"
 #include "../Struct/QueryProperties.h"
 
 #include <cppconn/prepared_statement.h>
@@ -28,10 +28,11 @@
 namespace crawlservpp::Wrapper {
 
 class TableLock;
+class TargetTablesLock;
 
 class Database {
 	// for convenience
-	typedef Struct::CustomTableProperties CustomTableProperties;
+	typedef Struct::TargetTableProperties TargetTableProperties;
 	typedef Struct::QueryProperties QueryProperties;
 	typedef Struct::TableColumn TableColumn;
 	typedef std::pair<unsigned long, std::string> IdString;
@@ -39,6 +40,7 @@ class Database {
 public:
 	// allow TableLock access to protected locking functions
 	friend class TableLock;
+	friend class TargetTablesLock;
 
 	// constructors
 	Database(Module::Database& dbRef);
@@ -65,18 +67,13 @@ public:
 	// wrapper for configuration function
 	std::string getConfiguration(unsigned long configId);
 
-	// wrappers for custom table functions
-	void lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
-	unsigned long addCustomTable(const CustomTableProperties& properties);
-	std::queue<IdString> getCustomTables(const std::string& type, unsigned long listId);
-	unsigned long getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
+	// wrappers for target table functions
+	unsigned long addTargetTable(const TargetTableProperties& properties);
+	std::queue<IdString> getTargetTables(const std::string& type, unsigned long listId);
+	unsigned long getTargetTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
 			const std::string& tableName);
-	std::string getCustomTableName(const std::string& type, unsigned long tableId);
-	void deleteCustomTable(const std::string& type, unsigned long tableId);
-	void unlockCustomTables(const std::string& type);
-
-	// wrapper for table lock function
-	void releaseLocks();
+	std::string getTargetTableName(const std::string& type, unsigned long tableId);
+	void deleteTargetTable(const std::string& type, unsigned long tableId);
 
 	// wrappers for custom data functions used by algorithms
 	void getCustomData(Main::Data::GetValue& data);
@@ -109,6 +106,10 @@ protected:
 	void reserveForPreparedStatements(unsigned long numberOfAdditionalPreparedStatements);
 	unsigned short addPreparedStatement(const std::string& sqlQuery);
 	sql::PreparedStatement& getPreparedStatement(unsigned short id);
+
+	// wrappers for locking target tables
+	void lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
+	void unlockTargetTables(const std::string& type);
 
 	// wrappers for database helper functions
 	void checkConnection();

@@ -306,9 +306,6 @@ void Thread::init() {
 	}
 	// handle exceptions by trying to log and set status
 	catch(const std::exception& e) {
-		// release table locks
-		this->database.releaseLocks();
-
 		// log error
 		std::ostringstream logStrStr;
 		logStrStr << "failed - " << e.what() << ".";
@@ -338,10 +335,7 @@ void Thread::tick() {
 	}
 	// handle other exceptions by trying to log, set status and pause thread
 	catch(const std::exception& e) {
-		// release table locks
-		this->database.releaseLocks();
-
-		// log error
+		// try to log error
 		std::ostringstream logStrStr;
 		logStrStr << "failed - " << e.what() << "." << std::flush;
 		this->log(logStrStr.str());
@@ -353,10 +347,7 @@ void Thread::tick() {
 		this->pauseByThread();
 	}
 	catch(...) {
-		// release table locks
-		this->database.releaseLocks();
-
-		// log error
+		// try to log error
 		std::ostringstream logStrStr;
 		logStrStr << "failed - Unknown exception" << std::flush;
 		this->log(logStrStr.str());
@@ -480,9 +471,6 @@ void Thread::main() {
 	// handle non-caught exceptions by thread
 	catch(const std::exception& e) {
 		try {
-			// release table locks
-			this->database.releaseLocks();
-
 			// log error
 			std::ostringstream logStrStr;
 			logStrStr << "failed - " << std::string(e.what()) << ".";

@@ -12,10 +12,13 @@
 
 #include "../Database.h"
 
-#include "../../Struct/CustomTableProperties.h"
+#include "../../Struct/ParsingEntry.h"
 #include "../../Struct/TableColumn.h"
+#include "../../Struct/TargetTableProperties.h"
 #include "../../Struct/UrlProperties.h"
 #include "../../Wrapper/Database.h"
+#include "../../Wrapper/TableLock.h"
+#include "../../Wrapper/TargetTablesLock.h"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -36,9 +39,12 @@ namespace crawlservpp::Module::Parser {
 	class Database : public Wrapper::Database {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
-		typedef Struct::CustomTableProperties CustomTableProperties;
+		typedef Struct::TargetTableProperties TargetTableProperties;
+		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::TableColumn TableColumn;
 		typedef Struct::UrlProperties UrlProperties;
+		typedef Wrapper::TableLock TableLock;
+		typedef Wrapper::TargetTablesLock TargetTablesLock;
 		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
@@ -80,8 +86,7 @@ namespace crawlservpp::Module::Parser {
 		bool getLatestContent(unsigned long urlId, unsigned long index, std::pair<unsigned long, std::string>& contentTo);
 		std::queue<IdString> getAllContents(unsigned long urlId);
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
-		void updateOrAddEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
-				const std::vector<std::string>& parsedFields);
+		void updateOrAddEntry(const ParsingEntry& entry);
 		void setUrlFinished(unsigned long parsingId);
 
 	protected:
