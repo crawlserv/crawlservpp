@@ -88,6 +88,7 @@ void Database::setTimeoutTargetLock(unsigned long timeOut) {
 }
 
 // create target table if it does not exists or add custom field columns if they do not exist
+//  NOTE: Waiting for other locks to be released requires a callback function to get the running status of the thread.
 void Database::initTargetTable(CallbackIsRunning isRunning) {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;

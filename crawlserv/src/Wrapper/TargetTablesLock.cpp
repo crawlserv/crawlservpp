@@ -12,6 +12,7 @@
 namespace crawlservpp::Wrapper {
 
 // constructor: lock the custom table
+//  NOTE: Waiting for other locks to be released requires a callback function to get the running status of the thread.
 TargetTablesLock::TargetTablesLock(Database& db, const std::string &type, unsigned long websiteId,
 		unsigned long listId, unsigned long timeOut, CallbackIsRunning isRunning) : ref(db), type(type) {
 	this->ref.lockTargetTables(type, websiteId, listId, timeOut, isRunning);
