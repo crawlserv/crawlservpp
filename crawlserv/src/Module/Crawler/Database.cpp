@@ -523,8 +523,9 @@ void Database::urlDuplicationCheck() {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.urlDuplicationCheck))
+	if(!(this->ps.urlDuplicationCheck)) {
 		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlDuplicationCheck()");
+	}
 
 	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);
