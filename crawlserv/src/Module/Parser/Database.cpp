@@ -418,7 +418,7 @@ void Database::getUrlLockId(UrlProperties& urlProperties) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.checkUrlLock))
+	if(!(this->ps.getUrlLockId))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLockId(...)");
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockId);
 
