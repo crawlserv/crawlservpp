@@ -305,7 +305,7 @@
 		"url.chunks": {
 			"id": 31,
 			"type": "number",
-			"default": 10000,
+			"default": 5000,
 			"description": "Number of crawled URLs to be processed at once without possible interruption.",
 			"simple": false
 		},

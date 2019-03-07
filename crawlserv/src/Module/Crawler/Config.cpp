@@ -18,7 +18,7 @@ namespace crawlservpp::Module::Crawler {
 Config::Config() : crawlerArchives(false), crawlerHTMLCanonicalCheck(false), crawlerHTMLConsistencyCheck(false), crawlerLock(300),
 		crawlerLogging(Config::crawlerLoggingDefault), crawlerReCrawl(false), crawlerReCrawlStart(true), crawlerReTries(-1),
 		crawlerRetryArchive(true), crawlerSleepError(5000), crawlerSleepHttp(0), crawlerSleepIdle(500), crawlerSleepMySql(20),
-		crawlerStart("/"), crawlerTiming(false), crawlerUrlCaseSensitive(true), crawlerUrlChunks(10000), crawlerUrlDebug(false),
+		crawlerStart("/"), crawlerTiming(false), crawlerUrlCaseSensitive(true), crawlerUrlChunks(5000), crawlerUrlDebug(false),
 		crawlerWarningsFile(false),	crawlerXml(false), customCountersGlobal(true), customReCrawl(true) {
 	this->crawlerArchivesNames.emplace_back("archives.org");
 	this->crawlerArchivesUrlsMemento.emplace_back("http://web.archive.org/web/");
