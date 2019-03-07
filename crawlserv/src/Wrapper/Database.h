@@ -27,6 +27,8 @@
 
 namespace crawlservpp::Wrapper {
 
+class TableLock;
+
 class Database {
 	// for convenience
 	typedef Struct::CustomTableProperties CustomTableProperties;
@@ -35,6 +37,9 @@ class Database {
 	typedef std::pair<unsigned long, std::string> IdString;
 
 public:
+	// allow TableLock access to protected locking functions
+	friend class TableLock;
+
 	// constructors
 	Database(Module::Database& dbRef);
 
