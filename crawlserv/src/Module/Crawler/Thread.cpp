@@ -1222,10 +1222,18 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 	if(this->config.crawlerLogging && urls.size() < tmpSize)
 		this->log("WARNING: URLs longer than 2,000 Bytes ignored.");
 
-	// if necessary, check for file (i.e. non-slash) endings and show warnings
+	// if necessary, check for file endings and show warnings
 	if(this->config.crawlerLogging && this->config.crawlerWarningsFile)
 		for(auto i = urls.begin(); i != urls.end(); i++)
-			if(i->back() != '/') this->log("WARNING: Found file \'" + *i + "\'.");
+			if(i->back() != '/'){
+				auto lastSlash = i->rfind('/');
+				if(lastSlash == std::string::npos) {
+					if(i->find('.') != std::string::npos)
+						this->log("WARNING: Found file \'" + *i + "\'.");
+				}
+				else if(i->find('.', lastSlash + 1) != std::string::npos)
+					this->log("WARNING: Found file \'" + *i + "\'.");
+			}
 
 	// save status message
 	std::string statusMessage = this->getStatusMessage();
