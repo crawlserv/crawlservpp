@@ -23,6 +23,7 @@
 #include "../../Timer/Simple.h"
 #include "../../Wrapper/Database.h"
 
+#define RAPIDJSON_HAS_STDSTRING 1
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <cppconn/exception.h>

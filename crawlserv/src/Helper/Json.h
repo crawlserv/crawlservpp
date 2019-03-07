@@ -10,6 +10,7 @@
 #ifndef HELPER_JSON_H_
 #define HELPER_JSON_H_
 
+#define RAPIDJSON_HAS_STDSTRING 1
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/stringbuffer.h"
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
