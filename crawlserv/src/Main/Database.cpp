@@ -643,8 +643,8 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(un
 	return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
 }
 
-// get ID and namespace of website from the database by custom table ID of specified type
-std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromCustomTable(const std::string& type, unsigned long tableId) {
+// get ID and namespace of website from the database by target table ID of specified type
+std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
 	unsigned long websiteId = 0;
 
 	// check argument
@@ -787,7 +787,7 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 				// rename parsing tables
 				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsing` RENAME TO "
 						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing`");
-				tables = this->getCustomTables("parsed", urlLists.front().first);
+				tables = this->getTargetTables("parsed", urlLists.front().first);
 				while(!tables.empty()) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsed_"
 							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
@@ -798,7 +798,7 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 				// rename extracting tables
 				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracting` RENAME TO "
 						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_extracting`");
-				tables = this->getCustomTables("extracted", urlLists.front().first);
+				tables = this->getTargetTables("extracted", urlLists.front().first);
 				while(!tables.empty()) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracted_"
 							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
@@ -809,7 +809,7 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 				// rename analyzing tables
 				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzing` RENAME TO "
 						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_analyzing`");
-				tables = this->getCustomTables("analyzed", urlLists.front().first);
+				tables = this->getTargetTables("analyzed", urlLists.front().first);
 				while(!tables.empty()) {
 					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzed_"
 							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
@@ -1127,8 +1127,8 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 	return result;
 }
 
-// get ID and namespace of URL list from the database using a custom table type and ID
-std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromCustomTable(const std::string& type, unsigned long tableId) {
+// get ID and namespace of URL list from the database using a target table type and ID
+std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
 	unsigned long urlListId = 0;
 
 	// check argument
@@ -1232,7 +1232,7 @@ void Database::updateUrlList(unsigned long listId, const UrlListProperties& list
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_parsing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
 					+ listProperties.nameSpace	+ "_parsing`");
-			tables = this->getCustomTables("parsed", listId);
+			tables = this->getTargetTables("parsed", listId);
 			while(!tables.empty()) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_parsed_" + tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
@@ -1244,7 +1244,7 @@ void Database::updateUrlList(unsigned long listId, const UrlListProperties& list
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_extracting`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
 					+ listProperties.nameSpace	+ "_extracting`");
-			tables = this->getCustomTables("extracted", listId);
+			tables = this->getTargetTables("extracted", listId);
 			while(!tables.empty()) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_extracted_"	+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
@@ -1256,7 +1256,7 @@ void Database::updateUrlList(unsigned long listId, const UrlListProperties& list
 			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 					+ "_analyzing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
 					+ listProperties.nameSpace	+ "_analyzing`");
-			tables = this->getCustomTables("analyzed", listId);
+			tables = this->getTargetTables("analyzed", listId);
 			while(!tables.empty()) {
 				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
 						+ "_analyzed_" + tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
@@ -1300,23 +1300,23 @@ void Database::deleteUrlList(unsigned long listId) {
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
 	// delete parsing tables
-	tables = this->getCustomTables("parsed", listId);
+	tables = this->getTargetTables("parsed", listId);
 	while(!tables.empty()) {
-		this->deleteCustomTable("parsed", tables.front().first);
+		this->deleteTargetTable("parsed", tables.front().first);
 		tables.pop();
 	}
 
 	// delete extracting tables
-	tables = this->getCustomTables("extracted", listId);
+	tables = this->getTargetTables("extracted", listId);
 	while(!tables.empty()) {
-		this->deleteCustomTable("extracted", tables.front().first);
+		this->deleteTargetTable("extracted", tables.front().first);
 		tables.pop();
 		}
 
 	// delete analyzing tables
-	tables = this->getCustomTables("analyzed", listId);
+	tables = this->getTargetTables("analyzed", listId);
 	while(!tables.empty()) {
-		this->deleteCustomTable("analyzed", tables.front().first);
+		this->deleteTargetTable("analyzed", tables.front().first);
 		tables.pop();
 	}
 
@@ -1355,26 +1355,16 @@ void Database::resetParsingStatus(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
-	// lock URL list
-	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing");
+	{ // lock parsing table
+		TableLock parsingTableLock(*this, "crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing");
 
-	try {
 		try {
-			// update URL list
+			// update parsing table
 			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
 					+ "_parsing` SET success = FALSE, locktime = NULL");
 		}
-		// any exeption: try to release table lock and re-throw
-		catch(...) {
-			try { this->releaseLocks(); }
-			catch(...) {}
-			throw;
-		}
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetParsingStatus", e); }
-
-	// release lock
-	this->releaseLocks();
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetParsingStatus", e); }
+	} // parsing table unlocked
 }
 
 // reset extracting status of ID-specified URL list
@@ -1386,26 +1376,16 @@ void Database::resetExtractingStatus(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
-	// lock URL list
-	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting");
+	{ // lock extracting table
+		TableLock extractingTableLock(*this, "crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting");
 
-	try {
 		try {
-			// update URL list
+			// update extracting table
 			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
 					+ "_extracting` SET success = FALSE, locktime = NULL");
 		}
-		// any exeption: try to release table lock and re-throw
-		catch(...) {
-			try { this->releaseLocks(); }
-			catch(...) {}
-			throw;
-		}
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetExtractingStatus", e); }
-
-	// release lock
-	this->releaseLocks();
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetExtractingStatus", e); }
+	} // extracting table unlocked
 }
 
 // reset analyzing status of ID-specified URL list
@@ -1417,26 +1397,16 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
-	// lock analyzing table
-	this->lockTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing");
+	{ // lock analyzing table
+		TableLock analyzingTableLock(*this, "crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing");
 
-	try {
 		try {
 			// update URL list
 			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
 					+ "_analyzing` SET success = FALSE, locktime = NULL");
 		}
-		// any exeption: try to release table lock and re-throw
-		catch(...) {
-			try { this->releaseLocks(); }
-			catch(...) {}
-			throw;
-		}
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAnalyzingStatus", e); }
-
-	// release lock
-	this->releaseLocks();
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAnalyzingStatus", e); }
+	} // analyzing table unlocked
 }
 
 /*
@@ -1767,28 +1737,24 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 }
 
 /*
- * CUSTOM TABLE FUNCTIONS
+ * TARGET TABLE FUNCTIONS
  */
 
-// lock custom tables of the specified type
-void Database::lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut) {
+// lock target tables of the specified type
+void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut) {
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::lockCustomTables(): No table type specified");
-	if(!websiteId) throw Database::Exception("Main::Database::lockCustomTables(): No website ID specified");
-	if(!listId) throw Database::Exception("Main::Database::lockCustomTables(): No website ID specified");
-	if(!timeOut) throw Database::Exception("Main::Database::lockCustomTables(): No lock time-out specified");
-
-	// remove previous lock if necessary
-	this->unlockCustomTables(type);
+	if(type.empty()) throw Database::Exception("Main::Database::lockTargetTables(): No table type specified");
+	if(!websiteId) throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
+	if(!listId) throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
+	if(!timeOut) throw Database::Exception("Main::Database::lockTargetTables(): No lock time-out specified");
 
 	while(true) { // do not continue until lock is gone or time-out occured
 		// check connection
 		this->checkConnection();
 
-		// lock table
-		this->lockTable("crawlserv_targetlocks");
+		{ // lock table
+			TableLock(*this, "crawlserv_targetlocks");
 
-		try {
 			try {
 				// create SQL statement for checking target table lock
 				std::unique_ptr<sql::PreparedStatement> checkStatement(this->connection->prepareStatement(
@@ -1823,16 +1789,10 @@ void Database::lockCustomTables(const std::string& type, unsigned long websiteId
 				insertStatement->execute();
 
 				// save lock ID
-				this->customTableLocks.emplace_back(type, this->getLastInsertedId());
+				this->targetTableLocks.emplace_back(type, this->getLastInsertedId());
 			}
-			// any exception: try to unlock table and re-throw
-			catch(...) {
-				try { this->unlockTables(); }
-				catch(...) {}
-				throw;
-			}
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockCustomTables", e); }
+			catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTargetTables", e); }
+		} // table unlocked
 
 		// unlock table and break
 		this->unlockTables();
@@ -1840,21 +1800,21 @@ void Database::lockCustomTables(const std::string& type, unsigned long websiteId
 	}
 }
 
-// add a custom table of the specified type to the database if such a table does not exist already, return table ID
-unsigned long Database::addCustomTable(const CustomTableProperties& properties) {
+// add a target table of the specified type to the database if such a table does not exist already, return table ID
+unsigned long Database::addTargetTable(const TargetTableProperties& properties) {
 	unsigned long result = 0;
 
 	// check arguments
 	if(properties.type.empty())
-		throw Database::Exception("Main::Database::addCustomTable(): No table type specified");
+		throw Database::Exception("Main::Database::addTargetTable(): No table type specified");
 	if(!properties.website)
-		throw Database::Exception("Main::Database::addCustomTable(): No website ID specified");
+		throw Database::Exception("Main::Database::addTargetTable(): No website ID specified");
 	if(!properties.urlList)
-		throw Database::Exception("Main::Database::addCustomTable(): No URL list ID specified");
+		throw Database::Exception("Main::Database::addTargetTable(): No URL list ID specified");
 	if(properties.name.empty())
-		throw Database::Exception("Main::Database::addCustomTable(): No table name specified");
+		throw Database::Exception("Main::Database::addTargetTable(): No table name specified");
 	if(properties.columns.empty())
-		throw Database::Exception("Main::Database::addCustomTable(): No columns specified");
+		throw Database::Exception("Main::Database::addTargetTable(): No columns specified");
 
 	// check connection
 	this->checkConnection();
@@ -1873,7 +1833,7 @@ unsigned long Database::addCustomTable(const CustomTableProperties& properties) 
 						std::transform(columnType.begin(), columnType.end(), columnType.begin(), ::tolower);
 						std::transform(targetType.begin(), targetType.end(), targetType.begin(), ::tolower);
 						if(columnType != targetType)
-							throw Database::Exception("Main::Database::addCustomTable(): Cannot overwrite column of type \'"
+							throw Database::Exception("Main::Database::addTargetTable(): Cannot overwrite column of type \'"
 									+ columnType + "\' with data of type \'" + targetType + "\'");
 					}
 					else {
@@ -1919,18 +1879,18 @@ unsigned long Database::addCustomTable(const CustomTableProperties& properties) 
 			result = this->getLastInsertedId();
 		}
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::addCustomTable", e); }
+	catch(const sql::SQLException &e) { this->sqlException("Main::Database::addTargetTable", e); }
 
 	return result;
 }
 
-// get custom tables of the specified type for an ID-specified URL list from the database
-std::queue<Database::IdString> Database::getCustomTables(const std::string& type, unsigned long listId) {
+// get target tables of the specified type for an ID-specified URL list from the database
+std::queue<Database::IdString> Database::getTargetTables(const std::string& type, unsigned long listId) {
 	std::queue<IdString> result;
 
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::getCustomTables(): No table type specified");
-	if(!listId) throw Database::Exception("Main::Database::getCustomTables(): No URL list ID specified");
+	if(type.empty()) throw Database::Exception("Main::Database::getTargetTables(): No table type specified");
+	if(!listId) throw Database::Exception("Main::Database::getTargetTables(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -1950,21 +1910,21 @@ std::queue<Database::IdString> Database::getCustomTables(const std::string& type
 				result.emplace(sqlResultSet->getUInt64("id"), sqlResultSet->getString("name"));
 		}
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomTables", e); }
+	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getTargetTables", e); }
 
 	return result;
 }
 
-// get the ID of a custom table of the specified type from the database by its website ID, URL list ID and table name
-unsigned long Database::getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
+// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name
+unsigned long Database::getTargetTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
 	unsigned long result = 0;
 
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::getCustomTableId(): No table type specified");
-	if(!websiteId) throw Database::Exception("Main::Database::getCustomTableId(): No website ID specified");
-	if(!listId) throw Database::Exception("Main::Database::getCustomTableId(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("Main::Database::getCustomTableId(): No table name specified");
+	if(type.empty()) throw Database::Exception("Main::Database::getTargetTableId(): No table type specified");
+	if(!websiteId) throw Database::Exception("Main::Database::getTargetTableId(): No website ID specified");
+	if(!listId) throw Database::Exception("Main::Database::getTargetTableId(): No URL list ID specified");
+	if(tableName.empty()) throw Database::Exception("Main::Database::getTargetTableId(): No table name specified");
 
 	// check connection
 	this->checkConnection();
@@ -1983,18 +1943,18 @@ unsigned long Database::getCustomTableId(const std::string& type, unsigned long 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomTableId", e); }
+	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getTargetTableId", e); }
 
 	return result;
 }
 
-// get the name of a custom table of the specified type from the database by its ID
-std::string Database::getCustomTableName(const std::string& type, unsigned long tableId) {
+// get the name of a target table of the specified type from the database by its ID
+std::string Database::getTargetTableName(const std::string& type, unsigned long tableId) {
 	std::string result;
 
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::getCustomTable(): No table type specified");
-	if(!tableId) throw Database::Exception("Main::Database::getCustomTable(): No table ID specified");
+	if(type.empty()) throw Database::Exception("Main::Database::getTargetTableName(): No table type specified");
+	if(!tableId) throw Database::Exception("Main::Database::getTargetTableName(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2011,21 +1971,21 @@ std::string Database::getCustomTableName(const std::string& type, unsigned long 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomTable", e); }
+	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getTargetTableName", e); }
 
 	return result;
 }
 
-// delete custom table of the specified type from the database by its ID
-void Database::deleteCustomTable(const std::string& type, unsigned long tableId) {
+// delete target table of the specified type from the database by its ID
+void Database::deleteTargetTable(const std::string& type, unsigned long tableId) {
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::deleteCustomTable(): No table type specified");
-	if(!tableId) throw Database::Exception("Main::Database::deleteCustomTable(): No table ID specified");
+	if(type.empty()) throw Database::Exception("Main::Database::deleteTargetTable(): No table type specified");
+	if(!tableId) throw Database::Exception("Main::Database::deleteTargetTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
-	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromCustomTable(type, tableId);
-	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromCustomTable(type, tableId);
-	std::string tableName = this->getCustomTableName(type, tableId);
+	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromTargetTable(type, tableId);
+	std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromTargetTable(type, tableId);
+	std::string tableName = this->getTargetTableName(type, tableId);
 
 	// check connection
 	this->checkConnection();
@@ -2049,16 +2009,19 @@ void Database::deleteCustomTable(const std::string& type, unsigned long tableId)
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_" + type + "tables")) this->resetAutoIncrement("crawlserv_" + type + "tables");
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteCustomTable", e); }
+	catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteTargetTable", e); }
 }
 
-// unlock custom tables of the specified type
-void Database::unlockCustomTables(const std::string& type) {
-	auto lockIt = std::find_if(this->customTableLocks.begin(), this->customTableLocks.end(),
-			[&type](const std::pair<std::string, unsigned long>& element) {
-		return element.first == type;
-	});
-	if(lockIt != this->customTableLocks.end()) {
+// unlock target tables of the specified type
+void Database::unlockTargetTables(const std::string& type) {
+	auto lockIt =
+			std::find_if(this->targetTableLocks.begin(), this->targetTableLocks.end(),
+				[&type](const auto& element) {
+					return element.first == type;
+				}
+			);
+
+	if(lockIt != this->targetTableLocks.end()) {
 		// check connection
 		this->checkConnection();
 
@@ -2071,19 +2034,10 @@ void Database::unlockCustomTables(const std::string& type) {
 			sqlStatement->setUInt64(1, lockIt->second);
 			sqlStatement->execute();
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockParsingTables", e); }
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTargetTables", e); }
 
 		lockIt->second = 0;
 	}
-}
-
-/*
- * TABLE LOCKING FUNCTION
- */
-
-// release table locks in the database (if necessary)
-void Database::releaseLocks() {
-	if(this->tablesLocked) this->unlockTables();
 }
 
 /*
@@ -3387,9 +3341,6 @@ void Database::lockTable(const std::string& tableName) {
 	// check argument
 	if(tableName.empty()) throw Database::Exception("Main::Database::lockTable(): No table name specified");
 
-	// check for lock and unlock if necessary
-	if(this->tablesLocked) this->unlockTables();
-
 	// check connection
 	this->checkConnection();
 
@@ -3398,10 +3349,12 @@ void Database::lockTable(const std::string& tableName) {
 		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		this->tablesLocked = true;
 		sqlStatement->execute("LOCK TABLES `" + tableName + "` WRITE");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTable", e); }
+
+	// set table locking status
+	this->tablesLocked = true;
 }
 
 // lock two tables in the database for writing (plus the alias 'a' for reading the first and the alias 'b' for reading the second table)
@@ -3410,9 +3363,6 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 	if(tableName1.empty()) throw Database::Exception("Main::Database::lockTables(): Table name #1 missing");
 	if(tableName2.empty()) throw Database::Exception("Main::Database::lockTables(): Table name #2 missing");
 
-	// check for lock and unlock if necessary
-	if(this->tablesLocked) this->unlockTables();
-
 	// check connection
 	this->checkConnection();
 
@@ -3421,11 +3371,13 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		this->tablesLocked = true;
 		sqlStatement->execute("LOCK TABLES `" + tableName1 + "` WRITE, `" + tableName1 + "` AS a READ, `" + tableName2 + "` WRITE,"
 				"`" + tableName2 + "` AS b READ");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
+
+	// set table locking status
+	this->tablesLocked = true;
 }
 
 // unlock tables in the database
@@ -3439,9 +3391,11 @@ void Database::unlockTables() {
 
 		// execute SQL statement
 		sqlStatement->execute("UNLOCK TABLES");
-		this->tablesLocked = false;
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTables", e); }
+
+	// set table locking status
+	this->tablesLocked = false;
 }
 
 // check whether a name-specified table in the database is empty
@@ -3685,7 +3639,7 @@ void Database::deleteTable(const std::string& tableName) {
  * EXCEPTION HELPER FUNCTION (protected)
  */
 
-// catch SQL exception and re-throw it as ConnectionException or Exception
+// catch SQL exception and re-throw it as Database::ConnectionException or a Database::Exception
 void Database::sqlException(const std::string& function, const sql::SQLException& e) {
 	// create error string
 	std::ostringstream errorStrStr;

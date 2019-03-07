@@ -83,52 +83,33 @@ std::string Database::getConfiguration(unsigned long configId) {
 }
 
 /*
- * WRAPPERS FOR TABLE INDEXING FUNCTIONS
+ * WRAPPERS FOR TARGET TABLE FUNCTIONS
  */
 
-// lock custom tables of the specified type
-void Database::lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut) {
-	this->database.lockCustomTables(type, websiteId, listId, timeOut);
+// add a target table of the specified type to the database if such a table does not exist already, return table ID
+unsigned long Database::addTargetTable(const TargetTableProperties& properties) {
+	return this->database.addTargetTable(properties);
 }
 
-// add a custom table of the specified type to the database if such a table does not exist already, return table ID
-unsigned long Database::addCustomTable(const CustomTableProperties& properties) {
-	return this->database.addCustomTable(properties);
+// get target tables of the specified type for an ID-specified URL list from the database
+std::queue<Database::IdString> Database::getTargetTables(const std::string& type, unsigned long listId) {
+	return this->database.getTargetTables(type, listId);
 }
 
-// get custom tables of the specified type for an ID-specified URL list from the database
-std::queue<Database::IdString> Database::getCustomTables(const std::string& type, unsigned long listId) {
-	return this->database.getCustomTables(type, listId);
-}
-
-// get the ID of a custom table of the specified type from the database by its website ID, URL list ID and table name
-unsigned long Database::getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
+// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name
+unsigned long Database::getTargetTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
 		const std::string& tableName) {
-	return this->database.getCustomTableId(type, websiteId, listId, tableName);
+	return this->database.getTargetTableId(type, websiteId, listId, tableName);
 }
 
-// get the name of a custom table of the specified type from the database by its ID
-std::string Database::getCustomTableName(const std::string& type, unsigned long tableId) {
-	return this->database.getCustomTableName(type, tableId);
+// get the name of a target table of the specified type from the database by its ID
+std::string Database::getTargetTableName(const std::string& type, unsigned long tableId) {
+	return this->database.getTargetTableName(type, tableId);
 }
 
-// delete custom table of the specified type from the database by its ID
-void Database::deleteCustomTable(const std::string& type, unsigned long tableId) {
-	this->database.deleteCustomTable(type, tableId);
-}
-
-// unlock custom tables of the specified type
-void Database::unlockCustomTables(const std::string& type) {
-	this->database.unlockCustomTables(type);
-}
-
-/*
- * WRAPPER FOR TABLE LOCKING FUNCTION
- */
-
-// release table locks in the database (if necessary)
-void Database::releaseLocks() {
-	this->database.releaseLocks();
+// delete target table of the specified type from the database by its ID
+void Database::deleteTargetTable(const std::string& type, unsigned long tableId) {
+	this->database.deleteTargetTable(type, tableId);
 }
 
 /*
@@ -222,6 +203,20 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 //  WARNING: Do not run Database::checkConnection() while using this reference!
 sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 	return this->database.getPreparedStatement(id);
+}
+
+/*
+ * WRAPPERS FOR LOCKING target tableS (protected)
+ */
+
+// lock target tables of the specified type
+void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut) {
+	this->database.lockTargetTables(type, websiteId, listId, timeOut);
+}
+
+// unlock target tables of the specified type
+void Database::unlockTargetTables(const std::string& type) {
+	this->database.unlockTargetTables(type);
 }
 
 /*

@@ -118,20 +118,10 @@ void Database::initTargetTable(bool compressed) {
 		}
 	}
 
-	// lock analyzing tables
-	this->lockCustomTables("analyzed", this->website, this->urlList, this->timeoutTargetLock);
-
-	try {
-		this->addCustomTable(properties);
-	}
-	// any exception: try to unlock analyzing tables and re-throw
-	catch(...) {
-		this->unlockCustomTables("analyzed");
-		throw;
-	}
-
-	// unlock analyzing tables
-	this->unlockCustomTables("analyzed");
+	{ // lock analyzing tables
+		TargetTablesLock(*this, "analyzed", this->website, this->urlList, this->timeoutTargetLock);
+		this->addTargetTable(properties);
+	} // analyzing tables unlocked
 }
 
 // prepare SQL statements for analyzer, throws Main::Database::Exception

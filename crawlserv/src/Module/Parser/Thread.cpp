@@ -341,8 +341,7 @@ bool Thread::parsingUrlSelection() {
 				// lock URL
 				if(this->database.isUrlLockable(this->currentUrl.lockId)) {
 					this->lockTime = this->database.lockUrl(this->currentUrl, this->config.generalLock);
-					// success! unlock table and break
-					this->database.releaseLocks();
+					// success!
 					break;
 				}
 				else if(this->config.generalLogging) {
@@ -445,9 +444,10 @@ unsigned long Thread::parsing() {
 
 // parse ID-specific content, return whether parsing was successfull (i.e. an ID could be parsed)
 bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId) {
-	// parse HTML
+	ParsingEntry parsedData(content.first);
 	Parsing::XML parsedContent;
 
+	// parse HTML
 	try {
 		parsedContent.parse(content.second);
 	}
@@ -461,8 +461,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	}
 
 	// parse ID (if still necessary)
-	std::string id;
-	if(this->idFromUrl) id = parsedId;
+	if(this->idFromUrl) parsedData.parsedId = parsedId;
 	else {
 		unsigned long idQueryCounter = 0;
 
@@ -477,8 +476,8 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on URL
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, id);
-						if(!id.empty()) break;
+						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, parsedData.parsedId);
+						if(!parsedData.parsedId.empty()) break;
 					}
 					catch(const RegExException& e) {} // ignore query on error
 				}
@@ -490,16 +489,16 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on content string
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(content.second, id);
-						if(!id.empty()) break;
+						this->getRegExQueryPtr(i->index).getFirst(content.second, parsedData.parsedId);
+						if(!parsedData.parsedId.empty()) break;
 					}
 					catch(const RegExException& e) {} // ignore query on error
 				}
 				else if(i->type == QueryStruct::typeXPath) {
 					// parse ID by running XPath query on parsed content
 					try {
-						this->getXPathQueryPtr(i->index).getFirst(parsedContent, id);
-						if(!id.empty()) break;
+						this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedData.parsedId);
+						if(!parsedData.parsedId.empty()) break;
 					}
 					catch(const RegExException& e) {} // ignore query on error
 				}
@@ -512,23 +511,23 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 		}
 	}
 
+	// check whether no ID has been parsed
+	if(parsedData.parsedId.empty()) return false;
+
 	// check whether parsed ID is ought to be ignored
-	if(id.empty()) return false;
-	if(!(this->config.parsingIdIgnore.empty()) && std::find(this->config.parsingIdIgnore.begin(), this->config.parsingIdIgnore.end(),
-		parsedId) != this->config.parsingIdIgnore.end()) {
+	if(!(this->config.parsingIdIgnore.empty()) && std::find(this->config.parsingIdIgnore.begin(),
+			this->config.parsingIdIgnore.end(), parsedData.parsedId) != this->config.parsingIdIgnore.end())
 		return false;
-	}
 
 	// check whether parsed ID already exists and the current content ID differs from the one in the database
-	unsigned long contentId = this->database.getContentIdFromParsedId(parsedId);
+	unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.parsedId);
 	if(contentId && contentId != content.first) {
 		if(this->config.generalLogging)
-			this->log("WARNING: Content for parsed ID '" + id + "' already exists.");
+			this->log("WARNING: Content for parsed ID '" + parsedData.parsedId + "' already exists.");
 		return false;
 	}
 
 	// parse date/time
-	std::string parsedDateTime;
 	unsigned long dateTimeQueryCounter = 0;
 	bool dateTimeSuccess = false;
 
@@ -545,7 +544,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			if(i->type == QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on URL
 				try {
-					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, parsedDateTime);
+					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, parsedData.dateTime);
 					querySuccess = true;
 				}
 				catch(const RegExException& e) {} // ignore query on error
@@ -558,7 +557,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			if(i->type == QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on content string
 				try {
-					this->getRegExQueryPtr(i->index).getFirst(content.second, parsedDateTime);
+					this->getRegExQueryPtr(i->index).getFirst(content.second, parsedData.dateTime);
 					querySuccess = true;
 				}
 				catch(const RegExException& e) {} // ignore query on error
@@ -566,7 +565,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			else if(i->type == QueryStruct::typeXPath) {
 				// parse date/time by running XPath query on parsed content
 				try {
-					this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedDateTime);
+					this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedData.dateTime);
 					querySuccess = true;
 				}
 				catch(const RegExException& e) {} // ignore query on error
@@ -575,7 +574,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
 		}
 
-		if(querySuccess && !parsedDateTime.empty()) {
+		if(querySuccess && !parsedData.dateTime.empty()) {
 			// found date/time: try to convert it to SQL time stamp
 			std::string format = this->config.parsingDateTimeFormats.at(dateTimeQueryCounter);
 			std::string locale = this->config.parsingDateTimeLocales.at(dateTimeQueryCounter);
@@ -586,22 +585,26 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			if(!locale.empty()) {
 				// locale hack: The French abbreviation "avr." for April is not stringently supported
 				if(locale.length() > 1 && tolower(locale.at(0) == 'f') && tolower(locale.at(1) == 'r'))
-					Helper::Strings::replaceAll(parsedDateTime, "avr.", "avril", true);
+					Helper::Strings::replaceAll(parsedData.dateTime, "avr.", "avril", true);
 
 				try {
-					dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format,
-							std::locale(locale));
+					dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+							parsedData.dateTime, format, std::locale(locale)
+					);
 				}
 				catch(const std::runtime_error& e) {
 					if(this->config.generalLogging) this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
-					dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
+					dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+							parsedData.dateTime, format
+					);
 				}
 			}
-			else {
-				dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(parsedDateTime, format);
-			}
+			else
+				dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+						parsedData.dateTime, format
+				);
 
-			if(dateTimeSuccess && !parsedDateTime.empty()) break;
+			if(dateTimeSuccess && !parsedData.dateTime.empty()) break;
 		}
 
 		// not successfull: check next query for parsing the date/time (if exists)
@@ -609,15 +612,15 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	}
 
 	// check whether date/time conversion was successful
-	if(!parsedDateTime.empty() && !dateTimeSuccess) {
-		if(this->config.generalLogging) this->log("ERROR: Could not parse date/time \'" + parsedDateTime + "\'!");
-		parsedDateTime = "";
+	if(!parsedData.dateTime.empty() && !dateTimeSuccess) {
+		if(this->config.generalLogging)
+			this->log("ERROR: Could not parse date/time \'" + parsedData.dateTime + "\'!");
+		parsedData.dateTime = "";
 	}
 
 	// parse custom fields
-	std::vector<std::string> parsedFields;
 	unsigned long fieldCounter = 0;
-	parsedFields.reserve(this->queriesFields.size());
+	parsedData.fields.reserve(this->queriesFields.size());
 
 	for(auto i = this->queriesFields.begin(); i != this->queriesFields.end(); ++i) {
 		try {
@@ -673,7 +676,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 							Helper::Strings::utfTidy(*i);
 
 					// stringify and add parsed elements as JSON array
-					parsedFields.emplace_back(Helper::Json::stringify(parsedFieldValues));
+					parsedData.fields.emplace_back(Helper::Json::stringify(parsedFieldValues));
 				}
 				else {
 					// concatenate elements
@@ -684,7 +687,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 					// if necessary, tidy text
 					if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Helper::Strings::utfTidy(result);
 
-					parsedFields.emplace_back(result);
+					parsedData.fields.emplace_back(result);
 				}
 			}
 			else if(i->resultSingle) {
@@ -728,11 +731,11 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// determine how to save result: JSON array or string as is
 				if(this->config.parsingFieldJSON.at(fieldCounter)) {
 					// stringify and add parsed element as JSON array with one element
-					parsedFields.emplace_back(Helper::Json::stringify(parsedFieldValue));
+					parsedData.fields.emplace_back(Helper::Json::stringify(parsedFieldValue));
 				}
 				else {
 					// save as is
-					parsedFields.emplace_back(parsedFieldValue);
+					parsedData.fields.emplace_back(parsedFieldValue);
 				}
 			}
 			else if(i->resultBool) {
@@ -768,18 +771,18 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// determine how to save result: JSON array or boolean value as string
 				if(this->config.parsingFieldJSON.at(fieldCounter)) {
 					// stringify and add parsed element as JSON array with one boolean value as string
-					parsedFields.emplace_back(Helper::Json::stringify(parsedBool ? "true" : "false"));
+					parsedData.fields.emplace_back(Helper::Json::stringify(parsedBool ? "true" : "false"));
 				}
 				else {
 					// save boolean value as string
-					parsedFields.emplace_back(parsedBool ? "true" : "false");
+					parsedData.fields.emplace_back(parsedBool ? "true" : "false");
 				}
 			}
 			else {
 				if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 					this->log("WARNING: Ignored \'" + this->config.parsingFieldNames.at(fieldCounter)
 							+ "\' query without specified result type.");
-				parsedFields.emplace_back();
+				parsedData.fields.emplace_back();
 			}
 
 			fieldCounter++;
@@ -788,7 +791,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	}
 
 	// update or add parsed data to database
-	this->database.updateOrAddEntry(content.first, parsedId, parsedDateTime, parsedFields);
+	this->database.updateOrAddEntry(parsedData);
 	return true;
 }
 

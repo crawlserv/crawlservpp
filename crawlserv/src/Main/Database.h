@@ -25,7 +25,7 @@
 
 #include "../Helper/FileSystem.h"
 #include "../Struct/ConfigProperties.h"
-#include "../Struct/CustomTableProperties.h"
+#include "../Struct/TargetTableProperties.h"
 #include "../Struct/DatabaseSettings.h"
 #include "../Struct/QueryProperties.h"
 #include "../Struct/TableColumn.h"
@@ -69,7 +69,7 @@ namespace crawlservpp::Main {
 	class Database {
 		// for convenience
 		typedef Struct::ConfigProperties ConfigProperties;
-		typedef Struct::CustomTableProperties CustomTableProperties;
+		typedef Struct::TargetTableProperties TargetTableProperties;
 		typedef Struct::DatabaseSettings DatabaseSettings;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::TableColumn TableColumn;
@@ -117,7 +117,7 @@ namespace crawlservpp::Main {
 		std::string getWebsiteNamespace(unsigned long websiteId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromUrlList(unsigned long listId);
 		std::pair<unsigned long, std::string> getWebsiteNamespaceFromConfig(unsigned long configId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromCustomTable(const std::string& type, unsigned long tableId);
+		std::pair<unsigned long, std::string> getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
 		void updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
@@ -128,7 +128,7 @@ namespace crawlservpp::Main {
 		unsigned long addUrlList(unsigned long websiteId, const UrlListProperties& listProperties);
 		std::queue<IdString> getUrlLists(unsigned long websiteId);
 		std::string getUrlListNamespace(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromCustomTable(const std::string& type, unsigned long listId);
+		std::pair<unsigned long, std::string> getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
 		void updateUrlList(unsigned long listId, const UrlListProperties& listProperties);
 		void deleteUrlList(unsigned long listId);
@@ -150,18 +150,15 @@ namespace crawlservpp::Main {
 		void deleteConfiguration(unsigned long configId);
 		unsigned long duplicateConfiguration(unsigned long configId);
 
-		// custom table functions
-		void lockCustomTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
-		unsigned long addCustomTable(const CustomTableProperties& properties);
-		std::queue<IdString> getCustomTables(const std::string& type, unsigned long listId);
-		unsigned long getCustomTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
+		// target table functions
+		void lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
+		unsigned long addTargetTable(const TargetTableProperties& properties);
+		std::queue<IdString> getTargetTables(const std::string& type, unsigned long listId);
+		unsigned long getTargetTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
 				const std::string& tableName);
-		std::string getCustomTableName(const std::string& type, unsigned long tableId);
-		void deleteCustomTable(const std::string& type, unsigned long tableId);
-		void unlockCustomTables(const std::string& type);
-
-		// table locking function
-		void releaseLocks();
+		std::string getTargetTableName(const std::string& type, unsigned long tableId);
+		void deleteTargetTable(const std::string& type, unsigned long tableId);
+		void unlockTargetTables(const std::string& type);
 
 		// validation functions
 		void checkConnection();
@@ -236,6 +233,36 @@ namespace crawlservpp::Main {
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
 
+		// sub-class for safe in-scope table locks
+		class TableLock {
+		public:
+			// constructor A: lock one table
+			TableLock(Database& db, const std::string& tableName) : ref(db) {
+				this->ref.lockTable(tableName);
+			}
+
+			// constructor B: lock two tables (and the aliases 'a' and 'b' for reading access to those tables)
+			TableLock(Database& db, const std::string& tableName1, const std::string& tableName2) : ref(db) {
+				this->ref.lockTables(tableName1, tableName2);
+			}
+
+			// destructor: try to unlock the table(s)
+			~TableLock() {
+				try { this->ref.unlockTables(); }
+				catch(...) {}
+			}
+
+			// not moveable, not copyable
+			TableLock(TableLock&) = delete;
+			TableLock(TableLock&&) = delete;
+			TableLock& operator=(TableLock&) = delete;
+			TableLock& operator=(TableLock&&) = delete;
+
+		private:
+			// internal reference to the database connection of the server
+			Database& ref;
+		};
+
 	private:
 		// private connection information
 		const DatabaseSettings settings;
@@ -245,7 +272,7 @@ namespace crawlservpp::Main {
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 		Timer::Simple reconnectTimer;
 #endif
-		std::vector<std::pair<std::string, unsigned long>> customTableLocks;
+		std::vector<std::pair<std::string, unsigned long>> targetTableLocks;
 
 		// prepared SQL statements
 		std::vector<Wrapper::PreparedSqlStatement> preparedStatements;

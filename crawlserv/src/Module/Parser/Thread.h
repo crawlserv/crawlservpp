@@ -21,6 +21,7 @@
 #include "../../Parsing/XML.h"
 #include "../../Query/Container.h"
 #include "../../Struct/ThreadOptions.h"
+#include "../../Struct/ParsingEntry.h"
 #include "../../Struct/QueryProperties.h"
 #include "../../Struct/UrlProperties.h"
 #include "../../Timer/StartStop.h"
@@ -43,6 +44,7 @@ namespace crawlservpp::Module::Parser {
 	class Thread: public Module::Thread, public Query::Container {
 		// for convenience
 		typedef Parsing::XML::Exception XMLException;
+		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlProperties UrlProperties;
@@ -65,6 +67,10 @@ namespace crawlservpp::Module::Parser {
 
 		// table name for locking
 		std::string parsingTable;
+
+		// cache
+		std::queue<std::string> urls;
+		std::queue<ParsingEntry> results;
 
 		// implemented thread functions
 		void onInit(bool resumed) override;
