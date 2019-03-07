@@ -56,6 +56,7 @@ void Thread::onInit(bool resumed) {
 	this->database.setRecrawl(this->config.crawlerReCrawl);
 	this->database.setLogging(this->config.crawlerLogging);
 	this->database.setVerbose(verbose);
+	this->database.setUrlCaseSensitive(this->config.crawlerUrlCaseSensitive);
 	this->database.setUrlDebug(this->config.crawlerUrlDebug);
 	this->database.setSleepOnError(this->config.crawlerSleepMySql);
 
