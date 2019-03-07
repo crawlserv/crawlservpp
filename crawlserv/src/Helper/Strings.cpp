@@ -60,6 +60,42 @@ std::string concat(const std::vector<std::string>& vectorToConcat, char delimite
 	return result;
 }
 
+// sort vector of strings and remove duplicates (NOTE: Only ASCII supported!)
+void sortAndRemoveDuplicates(std::vector<std::string>& vectorOfStrings, bool caseSensitive) {
+	if(caseSensitive) {
+		// case-sensitive sort
+		std::sort(vectorOfStrings.begin(), vectorOfStrings.end());
+
+		// case-sensitive removal of co-occuring duplicates
+		vectorOfStrings.erase(std::unique(vectorOfStrings.begin(), vectorOfStrings.end()), vectorOfStrings.end());
+	}
+	else {
+		// case-insensitive sort
+		std::sort(vectorOfStrings.begin(), vectorOfStrings.end(),
+				[](const auto& s1, const auto& s2) {
+					const auto result = std::mismatch(s1.cbegin(), s1.cend(), s2.cbegin(), s2.cend(),
+							[](const auto& s1, const auto& s2) {
+								return (s1 == s2) || std::tolower(s1) == std::tolower(s2);
+							}
+					);
+					return result.second != s2.cend()
+							&& (result.first == s1.cend() || std::tolower(*result.first) < std::tolower(*result.second));
+			}
+		);
+
+		// case-insensitive removal of co-orruring duplicates
+		vectorOfStrings.erase(std::unique(vectorOfStrings.begin(), vectorOfStrings.end(),
+				[](const auto& s1, const auto& s2) {
+					return (s1.size() == s2.size()) && std::equal(s1.begin(), s1.end(), s2.begin(),
+							[](const auto& c1, const auto& c2) {
+								return (c1 == c2) || std::tolower(c1) == std::tolower(c2);
+							}
+					);
+				}
+		), vectorOfStrings.end());
+	}
+}
+
 // get the first character of the string or an escaped character (\n, \t or \\) (NOTE: Only ASCII supported!)
 char getFirstOrEscapeChar(const std::string& from) {
 	if(!from.empty()) {

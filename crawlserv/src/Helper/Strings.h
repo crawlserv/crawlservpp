@@ -10,6 +10,7 @@
 #ifndef HELPER_STRINGS_H_
 #define HELPER_STRINGS_H_
 
+
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -44,6 +45,7 @@ namespace Helper::Strings {
 	bool stringToBool(std::string inputString);
 	void trim(std::string& stringToTrim);
 	std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty);
+	void sortAndRemoveDuplicates(std::vector<std::string>& vectorOfStrings, bool caseSensitive);
 	char getFirstOrEscapeChar(const std::string& from);
 	void utfTidy(std::string& stringToTidy);
 	bool checkSQLName(const std::string& name);
