@@ -18,8 +18,8 @@ namespace crawlservpp::Module::Crawler {
 Config::Config() : crawlerArchives(false), crawlerHTMLCanonicalCheck(false), crawlerHTMLConsistencyCheck(false), crawlerLock(300),
 		crawlerLogging(Config::crawlerLoggingDefault), crawlerReCrawl(false), crawlerReCrawlStart(true), crawlerReTries(-1),
 		crawlerRetryArchive(true), crawlerSleepError(5000), crawlerSleepHttp(0), crawlerSleepIdle(500), crawlerSleepMySql(20),
-		crawlerStart("/"), crawlerTiming(false), crawlerUrlChunks(10000), crawlerUrlDebug(false), crawlerWarningsFile(false),
-		crawlerXml(false), customCountersGlobal(true), customReCrawl(true) {
+		crawlerStart("/"), crawlerTiming(false), crawlerUrlCaseSensitive(false), crawlerUrlChunks(10000), crawlerUrlDebug(false),
+		crawlerWarningsFile(false),	crawlerXml(false), customCountersGlobal(true), customReCrawl(true) {
 	this->crawlerArchivesNames.emplace_back("archives.org");
 	this->crawlerArchivesUrlsMemento.emplace_back("http://web.archive.org/web/");
 	this->crawlerArchivesUrlsTimemap.emplace_back("http://web.archive.org/web/timemap/link/");
@@ -339,6 +339,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 						}
 						else if(name == "timing") {
 							if(j->value.IsBool()) this->crawlerTiming = j->value.GetBool();
+							else warningsTo.emplace("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not bool).");
+						}
+						else if(name == "url.case.sensitive") {
+							if(j->value.IsBool()) this->crawlerUrlCaseSensitive = j->value.GetBool();
 							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not bool).");
 						}
