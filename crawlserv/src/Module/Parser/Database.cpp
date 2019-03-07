@@ -382,7 +382,7 @@ bool Database::isUrlLockable(unsigned long lockId) {
 	return result;
 }
 
-// get the URL lock end time for a specific URL from database
+// get the URL lock expiration time for a specific URL from database
 std::string Database::getUrlLock(unsigned long lockId) {
 	std::string result;
 
