@@ -50,6 +50,11 @@ void Database::setVerbose(bool isVerbose) {
 	this->verbose = isVerbose;
 }
 
+// enable or disable case-sensitive URLs
+void Database::setUrlCaseSensitive(bool isUrlCaseSensitive) {
+	this->urlCaseSensitive = isUrlCaseSensitive;
+}
+
 // enable or disable URL duplication check (for debugging purposes only)
 void Database::setUrlDebug(bool isUrlDebug) {
 	this->urlDebug = isUrlDebug;
@@ -72,9 +77,16 @@ void Database::prepare() {
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlExists()...");
-		this->ps.isUrlExists = this->addPreparedStatement(
-				"SELECT EXISTS ( SELECT * FROM ( SELECT url FROM `"	+ this->urlListTable
-				+ "` WHERE hash = CRC32( LOWER ( ? ) ) ) AS HashResult WHERE url LIKE ? ) AS result");
+		std::string sqlQuery(
+				"SELECT EXISTS ("
+					" SELECT * FROM ("
+						" SELECT url FROM `" + this->urlListTable + "` WHERE hash = CRC32( LOWER ( ? ) )"
+					" ) AS HashResult WHERE ");
+		if(this->urlCaseSensitive) sqlQuery += "url LIKE ?";
+		else sqlQuery += "LOWER( url ) LIKE LOWER( ? )";
+		sqlQuery +=
+				" ) AS result";
+		this->ps.isUrlExists = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.getUrlIdLockId)) {
@@ -92,13 +104,13 @@ void Database::prepare() {
 
 	if(!(this->ps.getNextUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares getNextUrl()...");
-		std::ostringstream sqlQueryStr;
-		sqlQueryStr << "SELECT a.id AS url_id, a.url AS url, b.id AS lock_id FROM `" + this->urlListTable
+		std::ostringstream sqlQueryStrStr;
+		sqlQueryStrStr << "SELECT a.id AS url_id, a.url AS url, b.id AS lock_id FROM `" + this->urlListTable
 				+ "` AS a LEFT OUTER JOIN `" + this->crawlingTable
 				+ "` AS b ON a.id = b.url WHERE a.id > ? AND manual = FALSE";
-		if(!(this->recrawl)) sqlQueryStr << " AND (b.success IS NULL OR b.success = FALSE)";
-		sqlQueryStr << " AND (b.locktime IS NULL OR b.locktime < NOW()) ORDER BY a.id LIMIT 1";
-		this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStr.str());
+		if(!(this->recrawl)) sqlQueryStrStr << " AND (b.success IS NULL OR b.success = FALSE)";
+		sqlQueryStrStr << " AND (b.locktime IS NULL OR b.locktime < NOW()) ORDER BY a.id LIMIT 1";
+		this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStrStr.str());
 	}
 
 	if(!(this->ps.addUrl)) {
@@ -218,10 +230,14 @@ void Database::prepare() {
 
 	if(this->urlDebug && !(this->ps.urlDuplicationCheck)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares urlDuplicationCheck()...");
-		this->ps.urlDuplicationCheck = this->addPreparedStatement(
+		std::string sqlQuery(
 				"SELECT EXISTS ("
-				" SELECT COUNT(url) FROM `" + this->urlListTable + "` GROUP BY url HAVING COUNT(url) > 1"
-				") AS result;");
+				" SELECT COUNT(url) FROM `" + this->urlListTable + "` GROUP BY ");
+		if(this->urlCaseSensitive) sqlQuery += "url";
+		else sqlQuery += "LOWER(url)";
+		sqlQuery += " HAVING COUNT(url) > 1"
+				") AS result;";
+		this->ps.urlDuplicationCheck = this->addPreparedStatement(sqlQuery);
 	}
 }
 
