@@ -69,6 +69,7 @@ public:
 	bool crawlerUrlCaseSensitive;
 	unsigned long crawlerUrlChunks;
 	bool crawlerUrlDebug;
+	bool crawlerUrlStartupCheck;
 	bool crawlerWarningsFile;
 	bool crawlerXml;
 

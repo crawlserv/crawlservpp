@@ -316,6 +316,13 @@
 			"description": "Perform additional check for duplicates after URL insertion (for debugging purposes only).",
 			"simple": false
 		},
+		"url.startup.check": {
+			"id": 33,
+			"type": "bool",
+			"default": true,
+			"description": "Check the URL list before starting to crawl.",
+			"simple": false,
+		},
 		"warnings.file": {
 			"id": 33,
 			"type": "bool",
