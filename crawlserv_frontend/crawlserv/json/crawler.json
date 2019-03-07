@@ -321,7 +321,7 @@
 			"type": "bool",
 			"default": true,
 			"description": "Check the URL list before starting to crawl.",
-			"simple": false,
+			"simple": false
 		},
 		"warnings.file": {
 			"id": 33,
