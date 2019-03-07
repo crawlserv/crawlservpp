@@ -612,7 +612,7 @@ void Database::urlHashCheck() {
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): Corrupted hash for URL \'"
+			throw DatabaseException("Crawler::Database::urlHashCheck(): Corrupted hash for URL \'"
 					+ sqlResultSet->getString("url") + "\" in `" + this->urlListTable + "`");
 		}
 	}
