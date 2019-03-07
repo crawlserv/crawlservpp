@@ -24,7 +24,7 @@ std::string stringify(const std::vector<std::string>& vectorToStringify) {
 	// write vector elements as string values to array
 	for(auto i = vectorToStringify.begin(); i != vectorToStringify.end(); ++i) {
 		rapidjson::Value stringValue;
-		stringValue.SetString(i->c_str(), i->size(), allocator);
+		stringValue.SetString(*i, allocator);
 		document.PushBack(stringValue, allocator);
 	}
 
@@ -48,7 +48,7 @@ std::string stringify(const std::string& stringToStringify) {
 
 	// write string as string element to array
 	rapidjson::Value stringValue;
-	stringValue.SetString(stringToStringify.c_str(), stringToStringify.size(), allocator);
+	stringValue.SetString(stringToStringify, allocator);
 	document.PushBack(stringValue, allocator);
 
 	// create string buffer and writer
@@ -82,11 +82,11 @@ std::string stringify(const std::vector<std::vector<std::pair<std::string, std::
 		for(auto j = i->begin(); j != i->end(); j++) {
 			// create key
 			rapidjson::Value key;
-			key.SetString(j->first.c_str(), j->first.size(), allocator);
+			key.SetString(j->first, allocator);
 
 			// create value
 			rapidjson::Value value;
-			value.SetString(j->second.c_str(), j->second.size(), allocator);
+			value.SetString(j->second, allocator);
 
 			// add [key, value] pair to object
 			objectValue.AddMember(key, value, allocator);
@@ -127,7 +127,7 @@ std::string stringify(const TextMap& textmapToStringify) {
 		rapidjson::Value keyValue;
 		keyValue.SetString("v", 1, allocator);
 		rapidjson::Value valueValue;
-		valueValue.SetString(std::get<0>(*i).c_str(), std::get<0>(*i).size(), allocator);
+		valueValue.SetString(std::get<0>(*i), allocator);
 		objectValue.AddMember(keyValue, valueValue, allocator);
 
 		// create and add [key, value] pair for position
