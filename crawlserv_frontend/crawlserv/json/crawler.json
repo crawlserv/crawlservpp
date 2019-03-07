@@ -299,7 +299,7 @@
 			"id": 30,
 			"type": "bool",
 			"default": true,
-			"description": "URLs are case-sensitive.",
+			"description": "URLs are case-sensitive. WARNING: Changing invalidates the hashs of existing URLs!",
 			"simple": false
 		},
 		"url.chunks": {
