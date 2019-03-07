@@ -234,10 +234,8 @@ void Database::prepare() {
 		if(this->urlCaseSensitive) groupBy = "url";
 		else groupBy = "LOWER(url)";
 		this->ps.urlDuplicationCheck = this->addPreparedStatement(
-				"SELECT EXISTS ("
-					" SELECT COUNT( " + groupBy + " ) FROM `" + this->urlListTable
-						+ "` GROUP BY CAST(" + groupBy + " AS BINARY) HAVING COUNT( " + groupBy + " ) > 1"
-				") AS result"
+				" SELECT CAST( " + groupBy + " AS BINARY ) AS url, COUNT( " + groupBy + " ) FROM `" + this->urlListTable
+					+ "` GROUP BY CAST( " + groupBy + " AS BINARY ) HAVING COUNT( " + groupBy + " ) > 1"
 		);
 	}
 }
@@ -554,9 +552,9 @@ void Database::urlDuplicationCheck() {
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
-			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): There are duplicates in `"
-					+ this->urlListTable + "`!");
+		if(sqlResultSet && sqlResultSet->next()) {
+			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): Duplicates URL \'"
+					+ sqlResultSet->getString("url") + "\" in `" + this->urlListTable + "`");
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
