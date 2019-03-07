@@ -67,6 +67,7 @@ public:
 	std::string crawlerStart;
 	bool crawlerTiming;
 	unsigned long crawlerUrlChunks;
+	bool crawlerUrlCaseSensitive;
 	bool crawlerUrlDebug;
 	bool crawlerWarningsFile;
 	bool crawlerXml;
