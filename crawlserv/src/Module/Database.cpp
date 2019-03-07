@@ -52,6 +52,8 @@ void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 	// check prepared SQL statement
 	if(!(this->ps.setThreadStatusMessage))
 		throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadStatusMessage(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
 
 	// create status message
@@ -80,6 +82,8 @@ void Database::setThreadProgress(unsigned long threadId, float threadProgress) {
 	// check prepared SQL statement
 	if(!(this->ps.setThreadProgress))
 		throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadProgress(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadProgress);
 
 	try {
@@ -99,6 +103,8 @@ void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 	// check prepared SQL statement
 	if(!(this->ps.setThreadLast))
 		throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadLast(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadLast);
 
 	try {

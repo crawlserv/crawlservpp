@@ -238,6 +238,8 @@ void Database::getCorpus(const CorpusProperties& corpusProperties, std::string& 
 		// check prepared SQL statement
 		if(!(this->ps.getCorpus))
 			throw DatabaseException("Analyzer::Database::getCorpus(): Missing prepared SQL statement for getting the corpus");
+
+		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getCorpus);
 
 		try {
@@ -321,6 +323,8 @@ bool Database::isCorpusChanged(const CorpusProperties& corpusProperties) {
 	if(!(this->ps.isCorpusChanged))
 		throw DatabaseException("Analyzer::Database::isCorpusChanged():"
 				" Missing prepared SQL statement for getting the corpus creation time");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& corpusStatement = this->getPreparedStatement(this->ps.isCorpusChanged);
 
 	unsigned short sourceStatement = 0;
@@ -386,6 +390,8 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 		throw DatabaseException("Analyzer::Database::createCorpus(): Missing prepared SQL statement for deleting text corpus");
 	if(!(this->ps.addCorpus))
 		throw DatabaseException("Analyzer::Database::createCorpus(): Missing prepared SQL statement for adding text corpus");
+
+	// get prepared SQL statements
 	sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->ps.deleteCorpus);
 	sql::PreparedStatement& addStatement = this->getPreparedStatement(this->ps.addCorpus);
 

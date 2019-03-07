@@ -162,7 +162,10 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.log)) throw Database::Exception("Missing prepared SQL statement for Main::Database::log(...)");
+	if(!(this->ps.log))
+		throw Database::Exception("Missing prepared SQL statement for Main::Database::log(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.log);
 
 	// add entry to database
@@ -371,6 +374,8 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 	// check prepared SQL statement
 	if(!(this->ps.setThreadStatus))
 		throw Database::Exception("Missing prepared SQL statement for Main::Database::setThreadStatus(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatus);
 
 	// create status message
@@ -402,6 +407,8 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 	// check prepared SQL statement
 	if(!(this->ps.setThreadStatusMessage))
 		throw Database::Exception("Missing prepared SQL statement for Main::Database::setThreadStatus(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
 
 	// create status message
@@ -3341,6 +3348,8 @@ unsigned long Database::getLastInsertedId() {
 	// check prepared SQL statement
 	if(!(this->ps.lastId))
 		throw Database::Exception("Main::Database::getLastInsertedId: Missing prepared SQL statement for last inserted ID");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lastId);
 
 	try {
