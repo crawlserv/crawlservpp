@@ -523,9 +523,8 @@ void Database::urlDuplicationCheck() {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.urlDuplicationCheck)) {
+	if(!(this->ps.urlDuplicationCheck))
 		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlDuplicationCheck()");
-	}
 
 	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);
@@ -536,9 +535,10 @@ void Database::urlDuplicationCheck() {
 		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result"))
+		if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
 			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): There are duplicates in `"
 					+ this->urlListTable + "`!");
+		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
 }
