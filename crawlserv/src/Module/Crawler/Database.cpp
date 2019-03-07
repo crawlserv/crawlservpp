@@ -104,29 +104,29 @@ void Database::prepare() {
 	if(!(this->ps.addUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrl()...");
 		this->ps.addUrl = this->addPreparedStatement(
-				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES(?, CRC32( LOWER( ? ) ), ?)");
+				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES (?, CRC32( LOWER( ? ) ), ?)");
 	}
 
 	if(!(this->ps.add10Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [1/3]...");
 		this->ps.add10Urls = this->addPreparedStatement(
 				"INSERT INTO `" + this->urlListTable + "`(url, hash)"
-				 " VALUES(?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )),"
-				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )),"
-				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )),"
+				 " VALUES (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) ))"
+				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) ))"
+				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) ))"
 				", (?, CRC32( LOWER( ? ) ))");
 	}
 
 	if(!(this->ps.add100Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [2/3]...");
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32( LOWER( ? ) ))";
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, CRC32( LOWER( ? ) ))";
 		for(unsigned short n = 0; n < 99; n++) sqlQuery += ", (?, CRC32( LOWER( ? ) ))";
 		this->ps.add100Urls = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.add1000Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [3/3]...");
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32( LOWER( ? ) ))";
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, CRC32( LOWER( ? ) ))";
 		for(unsigned short n = 0; n < 999; n++) sqlQuery += ", (?, CRC32( LOWER( ? ) ))";
 		this->ps.add1000Urls = this->addPreparedStatement(sqlQuery);
 	}
