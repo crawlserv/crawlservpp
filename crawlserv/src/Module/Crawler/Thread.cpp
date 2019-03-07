@@ -1136,10 +1136,10 @@ std::vector<std::string> Thread::crawlingExtractUrls(const std::string& url,
 // parse URLs and add them as sub-links to the database if they do not already exist
 void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::string>& urls,
 		unsigned long& newUrlsTo, bool archived) {
-	// check argument
-	if(url.empty()) {
+	// check and initialize arguments
+	if(url.empty())
 		throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): No URL specified");
-	}
+	newUrlsTo = 0;
 
 	// set current URL
 	try {
@@ -1222,20 +1222,62 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 		for(auto i = urls.begin(); i != urls.end(); i++)
 			if(i->back() != '/') this->log("WARNING: Found file \'" + *i + "\'.");
 
-	{ // lock URL list
-		TableLock urlListLock(this->database, this->urlListTable);
+	// save status message
+	std::string statusMessage = this->getStatusMessage();
+	unsigned long pos = 0;
 
-		// remove already existing URLs
-		urls.erase(std::remove_if(urls.begin(), urls.end(), [&](const std::string& url) -> bool {
-			return this->database.isUrlExists(url);
-		}), urls.end());
+	// check and add URLs in chunks of config-defined size
+	if(urls.size() > this->config.crawlerUrlChunks) {
+		while(pos < urls.size() && this->isRunning()) {
+			std::vector<std::string>::const_iterator begin = urls.begin() + pos;
+			std::vector<std::string>::const_iterator end =
+					urls.begin() + pos + std::min(this->config.crawlerUrlChunks, urls.size() - pos);
+			std::vector<std::string> chunk(begin, end);
+			pos += this->config.crawlerUrlChunks;
 
-		// add URLs
-		this->database.addUrls(urls);
-	} // URL list unlocked
+			{ // lock URL list
+				TableLock urlListLock(this->database, this->urlListTable);
 
-	// save number of added URLs
-	newUrlsTo = urls.size();
+				// remove already existing URLs
+				chunk.erase(std::remove_if(chunk.begin(), chunk.end(), [&](const std::string& url) -> bool {
+					return this->database.isUrlExists(url);
+				}), chunk.end());
+
+				// add URLs
+				this->database.addUrls(chunk);
+			} // URL list unlocked
+
+			// save number of added URLs
+			newUrlsTo += chunk.size();
+
+			// update status
+			if(urls.size() > this->config.crawlerUrlChunks) {
+				std::ostringstream statusStrStr;
+				statusStrStr.imbue(std::locale(""));
+				statusStrStr << "[URLs: " << pos << "/" << urls.size() << "] " << statusMessage;
+				this->setStatusMessage(statusStrStr.str());
+			}
+		}
+	}
+	else {
+		{ // lock URL list
+			TableLock urlListLock(this->database, this->urlListTable);
+
+			// remove already existing URLs
+			urls.erase(std::remove_if(urls.begin(), urls.end(), [&](const std::string& url) -> bool {
+				return this->database.isUrlExists(url);
+			}), urls.end());
+
+			// add URLs
+			this->database.addUrls(urls);
+		} // URL list unlocked
+
+		// save number of added URLs
+		newUrlsTo = urls.size();
+	}
+
+	// reset status message
+	this->setStatusMessage(statusMessage);
 }
 
 // crawl archives
