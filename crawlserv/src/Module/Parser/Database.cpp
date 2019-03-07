@@ -282,7 +282,10 @@ Database::UrlProperties Database::getNextUrl(unsigned long currentUrlId) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.getNextUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNextUrl(...)");
+	if(!(this->ps.getNextUrl))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNextUrl(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNextUrl);
 
 	// get next URL from database
@@ -313,7 +316,10 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.getUrlPosition)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlPosition()");
+	if(!(this->ps.getUrlPosition))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlPosition()");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlPosition);
 
 	// get URL position of URL from database
@@ -338,7 +344,10 @@ unsigned long Database::getNumberOfUrls() {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.getNumberOfUrls)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNumberOfUrls()");
+	if(!(this->ps.getNumberOfUrls))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getNumberOfUrls()");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNumberOfUrls);
 
 	// get number of URLs from database
@@ -365,7 +374,10 @@ bool Database::isUrlLockable(unsigned long lockId) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.isUrlLockable)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::isUrlLockable(...)");
+	if(!(this->ps.isUrlLockable))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::isUrlLockable(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlLockable);
 
 	// check URL lock in database
@@ -390,7 +402,10 @@ std::string Database::getUrlLock(unsigned long lockId) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.getUrlLock)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLock(...)");
+	if(!(this->ps.getUrlLock))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLock(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLock);
 
 	// get URL lock end time from database
@@ -420,6 +435,8 @@ void Database::getUrlLockId(UrlProperties& urlProperties) {
 	// check prepared SQL statement
 	if(!(this->ps.getUrlLockId))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getUrlLockId(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockId);
 
 	// get lock ID from database
@@ -450,6 +467,8 @@ bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	// check prepared SQL statement
 	if(!(this->ps.checkUrlLock))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::checkUrlLock(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.checkUrlLock);
 
 	// check URL lock in database
@@ -476,6 +495,8 @@ std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTi
 		// check prepared SQL statement for locking the URL
 		if(!(this->ps.lockUrl))
 			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
+
+		// get prepared SQL statement for locking the URL
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
 
 		// lock URL in database
@@ -491,6 +512,8 @@ std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTi
 		// check prepared SQL statement for adding an URL lock
 		if(!(this->ps.addUrlLock))
 			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::lockUrl(...)");
+
+		// get prepared SQL statement for adding an URL lock
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLock);
 
 		// add URL lock to database
@@ -515,7 +538,10 @@ void Database::unLockUrl(unsigned long lockId) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.unLockUrl)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::unLockUrl(...)");
+	if(!(this->ps.unLockUrl))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::unLockUrl(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.unLockUrl);
 
 	// unlock URL in database
@@ -537,6 +563,8 @@ unsigned long Database::getContentIdFromParsedId(const std::string& parsedId) {
 	// check prepared SQL statement
 	if(!(this->ps.getContentIdFromParsedId))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getContentIdFromParsedId(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getContentIdFromParsedId);
 
 	// check URL lock in database
@@ -565,6 +593,8 @@ bool Database::getLatestContent(unsigned long urlId, unsigned long index,
 	// check prepared SQL statement
 	if(!(this->ps.getLatestContent))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getLatestContent(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLatestContent);
 
 	// get URL lock from database
@@ -600,6 +630,8 @@ std::queue<Database::IdString> Database::getAllContents(unsigned long urlId) {
 	// check prepared SQL statement
 	if(!(this->ps.getAllContents))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getAllContents(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getAllContents);
 
 	// get URL lock from database
@@ -676,6 +708,8 @@ void Database::setUrlFinished(unsigned long parsingId) {
 	// check prepared SQL statements
 	if(!(this->ps.setUrlFinished))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::setUrlFinished(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setUrlFinished);
 
 	// get ID of URL from database
@@ -697,7 +731,10 @@ unsigned long Database::getEntryId(unsigned long contentId) {
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.getEntryId)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getEntryId(...)");
+	if(!(this->ps.getEntryId))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::getEntryId(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getEntryId);
 
 	// get URL lock from database
@@ -721,7 +758,10 @@ void Database::updateEntry(unsigned long entryId, const std::string& parsedId,
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.updateEntry)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::updateEntry(...)");
+	if(!(this->ps.updateEntry))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::updateEntry(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateEntry);
 
 	// get ID of URL from database
@@ -754,7 +794,10 @@ void Database::addEntry(unsigned long contentId, const std::string& parsedId, co
 	this->checkConnection();
 
 	// check prepared SQL statement
-	if(!(this->ps.addEntry)) throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::addEntry(...)");
+	if(!(this->ps.addEntry))
+		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::addEntry(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addEntry);
 
 	// get ID of URL from database
@@ -788,6 +831,8 @@ void Database::updateParsedTable() {
 	// check prepared SQL statement
 	if(!(this->ps.updateParsedTable))
 		throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::updateParsedTable(...)");
+
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateParsedTable);
 
 	// get ID of URL from database
