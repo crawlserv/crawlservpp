@@ -4,8 +4,20 @@
 		"label": "General",
 		"open": true,
 		
-		"lock": {
+		"cache.size": {
 			"id": 1,
+			"type": "number",
+			"default": 1000,
+			"min": 0,
+			"step": 500,
+			"label": "Maximum cache size:",
+			"description": "Number of URLs to parse before saving results (0=infinite).",
+			"simple": true,
+			"position": 7
+		},
+		
+		"lock": {
+			"id": 2,
 			"type": "number",
 			"default": 300,
 			"min": 1,
@@ -14,7 +26,7 @@
 			"simple": false
 		},
 		"logging": {
-			"id": 2,
+			"id": 3,
 			"type": "enum",
 			"default": 1,
 			"enum-values": [
@@ -29,14 +41,14 @@
 			"position": 6
 		},
 		"newest.only": {
-			"id": 3,
+			"id": 4,
 			"type": "bool",
 			"default": true,
 			"description": "Parse only the newest content for each URL.",
 			"simple": false
 		},
 		"parse.custom": {
-			"id": 4,
+			"id": 5,
 			"type": "bool",
 			"default": false,
 			"label": "Parse custom URLs",
@@ -45,7 +57,7 @@
 			"position": 4
 		},
 		"reparse": {
-			"id": 5,
+			"id": 6,
 			"type": "bool",
 			"default": false,
 			"label": "Re-parse content",
@@ -54,7 +66,7 @@
 			"position": 2
 		},
 		"reset.on.finish": {
-			"id": 6,
+			"id": 7,
 			"type": "bool",
 			"default": false,
 			"label": "Reset status when finished",
@@ -63,7 +75,7 @@
 			"position": 3
 		},
 		"result.table": {
-			"id": 7,
+			"id": 8,
 			"type": "string",
 			"default": "",
 			"label": "Result table:",
@@ -72,7 +84,7 @@
 			"position": 1
 		},
 		"skip": {
-			"id": 8,
+			"id": 9,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -88,7 +100,7 @@
 			"position": 5
 		},
 		"sleep.idle": {
-			"id": 9,
+			"id": 10,
 			"type": "number",
 			"default": 500,
 			"min": 100,
@@ -97,7 +109,7 @@
 			"simple": false
 		},
 		"sleep.mysql": {
-			"id": 10,
+			"id": 11,
 			"type": "number",
 			"default": 10,
 			"min": 1,
@@ -105,7 +117,7 @@
 			"simple": false
 		},
 		"timeout.target.lock": {
-			"id": 11,
+			"id": 12,
 			"type": "number",
 			"default": 30,
 			"min": 1,
@@ -113,7 +125,7 @@
 			"simple": false
 		},
 		"timing": {
-			"id": 12,
+			"id": 13,
 			"type": "bool",
 			"default": false,
 			"description": "Calculate timing statistics.",

@@ -15,7 +15,7 @@
 namespace crawlservpp::Module::Parser {
 
 // constructor: set default values
-Config::Config() : generalLock(300), generalLogging(Config::generalLoggingDefault), generalNewestOnly(true),
+Config::Config() : generalCacheSize(1000), generalLock(300), generalLogging(Config::generalLoggingDefault), generalNewestOnly(true),
 		generalParseCustom(false), generalReParse(false), generalResetOnFinish(false), generalSleepIdle(500),
 		generalSleepMySql(20), generalTimeoutTargetLock(30), generalTiming(false) {}
 
@@ -71,6 +71,11 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 				if(j->name.IsString() && std::string(j->name.GetString(), j->name.GetStringLength()) == "value") {
 					// save configuration entry
 					if(cat == "general") {
+						if(name == "cache.size") {
+							if(j->value.IsUint64()) this->generalCacheSize = j->value.GetUint64();
+							else warningsTo.emplace("\'" + cat + "." + name
+									+ "\' ignored because of wrong type (not unsigned long).");
+						}
 						if(name == "logging") {
 							if(j->value.IsUint()) this->generalLogging = j->value.GetUint();
 							else warningsTo.emplace("\'" + cat + "." + name
