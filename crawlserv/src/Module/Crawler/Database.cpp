@@ -61,19 +61,14 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(22);
+	this->reserveForPreparedStatements(21);
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlExists()...");
 		this->ps.isUrlExists = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE url = ?) AS result");
-	}
-
-	if(!(this->ps.isUrlHashExists)) {
-		if(this->verbose) this->log("[#" + this->idString + "] prepares hash check for URLs...");
-		this->ps.isUrlHashExists = this->addPreparedStatement(
-				"SELECT EXISTS (SELECT * FROM `" + this->urlListTable + "` WHERE hash = CRC32( ? )) AS result");
+				"SELECT EXISTS ( SELECT * FROM ( SELECT url FROM `"	+ this->urlListTable
+				+ "` WHERE hash = CRC32( ? ) ) AS HashResult WHERE url LIKE ? ) AS result");
 	}
 
 	if(!(this->ps.getUrlIdLockId)) {
@@ -225,33 +220,22 @@ bool Database::isUrlExists(const std::string& urlString) {
 	// check connection
 	this->checkConnection();
 
-	// check prepared SQL statements
-	if(!(this->ps.isUrlHashExists))
-		throw DatabaseException("Missing prepared SQL statement for URL hash checks");
+	// check prepared SQL statement
 	if(!(this->ps.isUrlExists))
 		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::isUrlExists(...)");
 
-	// get prepared SQL statements
-	sql::PreparedStatement& hashStatement = this->getPreparedStatement(this->ps.isUrlHashExists);
+	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlExists);
 
 	// check URL existence in database
 	try {
-		// execute SQL query for hash check
-		hashStatement.setString(1, urlString);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(hashStatement.executeQuery());
+		// execute SQL query
+		sqlStatement.setString(1, urlString);
+		sqlStatement.setString(2, urlString);
+		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
-
-		if(result) { // hash found -> perform real comparison
-			// execute SQL query for checking URL
-			sqlStatement.setString(1, urlString);
-			sqlResultSet = std::unique_ptr<sql::ResultSet>(sqlStatement.executeQuery());
-
-			// get result
-			if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
-		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isUrlExists", e); }
 
@@ -444,7 +428,6 @@ void Database::addUrls(const std::vector<std::string>& urls) {
 		pos++;
 	}
 }
-
 
 // add URL to database and return ID of newly added URL
 unsigned long Database::addUrlGetId(const std::string& urlString, bool manual) {

@@ -101,7 +101,6 @@ namespace crawlservpp::Module::Crawler {
 		// IDs of prepared SQL statements
 		struct {
 			unsigned short isUrlExists;
-			unsigned short isUrlHashExists;
 			unsigned short getUrlIdLockId;
 			unsigned short isUrlCrawled;
 			unsigned short getNextUrl;
