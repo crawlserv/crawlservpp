@@ -1,7 +1,7 @@
 /*
  * TargetTableLock.h
  *
- * Safe in-scope table lock for target tables.
+ * Safe in-scope lock for target tables.
  *
  *  Created on: Mar 7, 2019
  *      Author: ans
