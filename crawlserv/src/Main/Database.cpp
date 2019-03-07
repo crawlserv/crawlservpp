@@ -2086,6 +2086,8 @@ void Database::releaseLocks() {
 // check whether the connection to the database is still valid and try to re-connect if necesssary, throws Database::Exception
 //  WARNING: afterwards, old references to prepared SQL statements may be invalid!
 void Database::checkConnection() {
+	unsigned long long milliseconds = 0;
+
 	// check driver
 	if(!(this->driver))
 		throw Database::Exception("Main::Database::checkConnection(): MySQL driver not loaded");
@@ -2093,18 +2095,13 @@ void Database::checkConnection() {
 	try {
 		// check connection
 		if(this->connection) {
-#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 			// check whether re-connect should be performed anyway
-			auto milliseconds = this->reconnectTimer.tick();
+			milliseconds = this->reconnectTimer.tick();
 			if(milliseconds < MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS * 1000) {
-#endif
 				// check whether connection is valid
 				if(this->connection->isValid()) return;
 				milliseconds = 0;
-
-#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 			}
-#endif
 
 			// try to re-connect
 			if(!(this->connection->reconnect())) {
@@ -2119,18 +2116,16 @@ void Database::checkConnection() {
 					this->connect();
 				}
 			}
-
-#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
-			// log re-connect on idle
-			if(milliseconds) this->log("re-connected to database after idling for "
-					+ Helper::DateTime::secondsToString(std::round((float) milliseconds / 1000)) + ".");
-#endif
 		}
 		else this->connect();
 
 		// recover prepared SQL statements
 		for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i)
 			i->refresh(this->connection.get());
+
+		// log re-connect on idle if necessary
+		if(milliseconds) this->log("re-connected to database after idling for "
+				+ Helper::DateTime::secondsToString(std::round((float) milliseconds / 1000)) + ".");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkConnection", e); }
 }

@@ -43,7 +43,7 @@ namespace crawlservpp::Query {
 
 			// constructor: set default values
 			QueryStruct() {
-				this->type = Container::QueryStruct::typeNone;
+				this->type = QueryStruct::typeNone;
 				this->index = 0;
 				this->resultBool = false;
 				this->resultSingle = false;
@@ -54,7 +54,7 @@ namespace crawlservpp::Query {
 		// query functions
 		virtual void initQueries() = 0;
 		void reserveForQueries(unsigned long numOfAdditionalQueries);
-		Container::QueryStruct addQuery(const QueryProperties& properties);
+		QueryStruct addQuery(const QueryProperties& properties);
 		const RegEx& getRegExQueryPtr(unsigned long index) const;
 		const XPath& getXPathQueryPtr(unsigned long index) const;
 		void clearQueries();

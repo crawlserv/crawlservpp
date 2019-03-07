@@ -35,13 +35,13 @@ Container::QueryStruct Container::addQuery(const QueryProperties& properties) {
 			this->queriesRegEx.emplace_back(
 					RegEx(properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti));
 			newQuery.index = this->queriesRegEx.size() - 1;
-			newQuery.type = Container::QueryStruct::typeRegEx;
+			newQuery.type = QueryStruct::typeRegEx;
 
 		}
 		else if(properties.type == "xpath") {
 			this->queriesXPath.emplace_back(XPath(properties.text, properties.textOnly));
 			newQuery.index = this->queriesXPath.size() - 1;
-			newQuery.type = Container::QueryStruct::typeXPath;
+			newQuery.type = QueryStruct::typeXPath;
 		}
 		else throw std::runtime_error("Unknown query type \'" + properties.type + "\'");
 	}
