@@ -52,6 +52,7 @@ namespace crawlservpp::Module::Crawler {
 		void setVerbose(bool isVerbose);
 		void setUrlCaseSensitive(bool isUrlCaseSensitive);
 		void setUrlDebug(bool isUrlDebug);
+		void setUrlStartupCheck(bool isUrlStartupCheck);
 
 		// prepare SQL statements for crawler
 		void prepare();
@@ -66,7 +67,10 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long addUrlGetId(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
+
+		// URL checking functions
 		void urlDuplicationCheck();
+		void urlHashCheck();
 
 		// URL locking functions
 		bool isUrlLockable(unsigned long lockId);
@@ -97,6 +101,7 @@ namespace crawlservpp::Module::Crawler {
 		bool verbose;
 		bool urlCaseSensitive;
 		bool urlDebug;
+		bool urlStartupCheck;
 
 		// table names
 		std::string urlListTable;
@@ -127,6 +132,7 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short setUrlFinished;
 			unsigned short isArchivedContentExists;
 			unsigned short urlDuplicationCheck;
+			unsigned short urlHashCheck;
 		} ps;
 	};
 }
