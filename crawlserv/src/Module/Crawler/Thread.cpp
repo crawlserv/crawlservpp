@@ -307,33 +307,46 @@ void Thread::initCustomUrls() {
 	// queue for log entries while URL list is locked
 	std::queue<std::string> warnings;
 
-	{ // lock URL list and crawling table
-		TableLock urlListAndCrawlingTableLock(this->database, this->urlListTable, this->crawlingTable);
+	if(!(this->config.crawlerStart.empty())) {
+		// set URL of start page
+		this->startPage.url = this->config.crawlerStart;
 
-		// get id for start page (and add it to URL list if necessary)
-		if(this->database.isUrlExists(this->config.crawlerStart)) {
-			this->startPage.url = this->config.crawlerStart;
-			this->database.getUrlIdLockId(this->startPage);
-		}
-		else this->startPage.id = this->database.addUrlGetId(this->config.crawlerStart, true);
+		// if start page URL does not exist yet, lock the URL list, re-check the existence and add it to the URL list
+		if(!(this->database.isUrlExists(this->startPage.url)))
+		{ // lock URL list
+			TableLock urlListLock(this->database, this->urlListTable);
+			if(!(this->database.isUrlExists(this->startPage.url)))
+				this->database.addUrl(this->startPage.url, true);
+		} // URL list unlocked
 
-		// get IDs and lock IDs for custom URLs (and add them to the URL list if necessary)
-		for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
+		// get the ID of the start page URL (and of its URL lock if one exists already)
+		this->database.getUrlIdLockId(this->startPage);
+	}
+
+	// get IDs and lock IDs for custom URLs (and add them to the URL list if necessary)
+	for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
+		try {
 			// check URI
-			try {
-				this->parser->setCurrentSubUrl(i->url);
-				if(this->database.isUrlExists(i->url))
-					this->database.getUrlIdLockId(*i);
-				else i->id = this->database.addUrlGetId(i->url, true);
-			}
-			catch(const URIException& e) {
-				if(this->config.crawlerLogging) {
-					warnings.emplace("URI Parser error: " + e.whatStr());
-					warnings.emplace("Skipped invalid custom URL " + i->url);
-				}
+			this->parser->setCurrentSubUrl(i->url);
+
+			// if custom URL does not exist yet, lock the URL list, re-check the existence and add it to the URL list
+			if(!(this->database.isUrlExists(i->url)))
+			{ // lock URL list
+				TableLock urlListLock(this->database, this->urlListTable);
+				if(!(this->database.isUrlExists(i->url)))
+					this->database.addUrl(i->url, true);
+			} // URL list unlocked
+
+			// get the ID of the custom URL (and of its URL lock if one exists already)
+			this->database.getUrlIdLockId(*i);
+		}
+		catch(const URIException& e) {
+			if(this->config.crawlerLogging) {
+				warnings.emplace("URI Parser error: " + e.whatStr());
+				warnings.emplace("Skipped invalid custom URL " + i->url);
 			}
 		}
-	} // URL list and crawling table unlocked
+	}
 
 	// log warnings if necessary
 	if(this->config.crawlerLogging) {
@@ -1187,7 +1200,7 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 			}
 		}
 
-		// delete out-of-domain and empty URLs
+		// delete out-of-domain or empty URL
 		urls.erase(urls.begin() + (n - 1));
 		n--;
 	}
