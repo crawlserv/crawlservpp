@@ -276,7 +276,7 @@
 			"type": "number",
 			"default": 10,
 			"min": 1,
-			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
+			"description": "Time (in s) to wait before first try to re-connect to the MySQL server.",
 			"simple": false
 		},
 		"start": {
