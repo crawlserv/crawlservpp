@@ -13,7 +13,7 @@ namespace crawlservpp::Module::Crawler {
 
 // constructor: initialize values
 Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread), recrawl(false),
-		logging(false), verbose(false), urlDebug(false), ps({0}) {}
+		logging(false), verbose(false), urlCaseSensitive(false), urlDebug(false), ps({0}) {}
 
 // destructor stub
 Database::~Database() {}
