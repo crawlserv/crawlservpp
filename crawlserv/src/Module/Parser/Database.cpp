@@ -436,8 +436,13 @@ void Database::getUrlLockId(UrlProperties& urlProperties) {
 }
 
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
+//  NOTE: if no lock time is specified, the function will return true only if the URL is not locked already
 bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	bool result = false;
+
+	// check arguments
+	if(!lockId) throw DatabaseException("Parser::Database::checkUrlLock(): No URL lock ID specified");
+	if(lockTime.empty()) return this->isUrlLockable(lockId);
 
 	// check connection
 	this->checkConnection();
