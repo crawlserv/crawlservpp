@@ -45,7 +45,6 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlProperties UrlProperties;
-		typedef Query::Container::QueryStruct QueryStruct;
 		typedef Query::RegEx::Exception RegExException;
 		typedef std::pair<unsigned long, std::string> IdString;
 

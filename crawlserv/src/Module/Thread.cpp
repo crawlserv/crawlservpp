@@ -398,22 +398,46 @@ void Thread::wait() {
 
 // clear thread
 void Thread::clear() {
-	// update run time
-	this->updateRunTime();
+	// try to update run time
+	try {
+		this->updateRunTime();
+	}
+	catch(std::exception& e) {
+		std::cout << std::endl << "WARNING: Exception in Thread::updateRunTime() - " << e.what() << std::flush;
+	}
+	catch(...) {
+		std::cout << std::endl << "WARNING: Unknown exception in Thread::updateRunTime()" << std::flush;
+	}
 
-	// notify thread for clearing
-	this->onClear(this->interrupted);
+	// try to notify thread for clearing
+	try {
+		this->onClear(this->interrupted);
+	}
+	catch(std::exception& e) {
+		std::cout << std::endl << "WARNING: Exception in Thread::onClear() - " << e.what() << std::flush;
+	}
+	catch(...) {
+		std::cout << std::endl << "WARNING: Unknown exception in Thread::onClear()" << std::flush;
+	}
 
-	// update status
-	if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
-	else {
-		// log timing statistic
-		std::string logStr = "stopped after "
-				+ Helper::DateTime::secondsToString(this->runTime.count()) + " running";
-		if(this->pauseTime.count())
-			logStr += " and " + Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
-		logStr += ".";
-		this->log(logStr);
+	// try to update status
+	try {
+		if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
+		else {
+			// log timing statistic
+			std::string logStr = "stopped after "
+					+ Helper::DateTime::secondsToString(this->runTime.count()) + " running";
+			if(this->pauseTime.count())
+				logStr += " and " + Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
+			logStr += ".";
+			this->log(logStr);
+		}
+	}
+	catch(std::exception& e) {
+		std::cout << std::endl << "WARNING: Exception when setting thread status to INTERRUPTED - " << e.what() << std::flush;
+	}
+	catch(...) {
+		std::cout << std::endl << "WARNING: Unknown exception when setting thread status to INTERRUPTED" << std::flush;
 	}
 }
 
