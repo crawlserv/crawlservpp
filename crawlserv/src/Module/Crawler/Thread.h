@@ -26,6 +26,7 @@
 #include "../../Struct/ThreadOptions.h"
 #include "../../Struct/UrlProperties.h"
 #include "../../Timer/StartStop.h"
+#include "../../Wrapper/TableLock.h"
 
 #include <curl/curl.h>
 
@@ -53,6 +54,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Struct::UrlProperties UrlProperties;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
+		typedef Wrapper::TableLock TableLock;
 
 	public:
 		// constructors
@@ -67,6 +69,10 @@ namespace crawlservpp::Module::Crawler {
 		// database and networking for thread
 		Database database;
 		Network::Curl networking;
+
+		// table names for locking
+		std::string urlListTable;
+		std::string crawlingTable;
 
 		// implemented thread functions
 		void onInit(bool resumed) override;

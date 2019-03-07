@@ -66,6 +66,9 @@ void Thread::onInit(bool resumed) {
 	this->database.setSleepOnError(this->config.generalSleepMySql);
 	this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
+	// create name of parsing table for locking
+	this->parsingTable = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace + "_parsing";
+
 	// initialize target table
 	if(verbose) this->log("initializes target table...");
 	this->database.initTargetTable();
@@ -133,19 +136,15 @@ void Thread::onTick() {
 		// stop timer
 		if(this->config.generalTiming) timerTotal.stop();
 
-		// update URL status if possible, release URL lock
-		this->database.lockParsingTable();
-		try {
+		{ // lock parsing table
+			TableLock parsingTableLock(this->database, this->parsingTable);
+
+			// update URL status and release URL lock if possible
 			if(this->database.checkUrlLock(this->currentUrl.lockId, this->lockTime) && parsed)
 				this->database.setUrlFinished(this->currentUrl.lockId);
-		}
-		// any exception: try to release table lock and re-throw
-		catch(...) {
-			try { this->database.releaseLocks(); }
-			catch(...) {}
-			throw;
-		}
-		this->database.releaseLocks();
+			else this->database.unLockUrl(this->currentUrl.lockId);
+		} // parsing table unlocked
+
 		this->lockTime = "";
 
 		// update status
@@ -169,18 +168,13 @@ void Thread::onTick() {
 			this->log("skipped " + this->currentUrl.url);
 
 		// remove URL lock if necessary
-		this->database.lockParsingTable();
-		try {
+		{ // lock parsing table
+			TableLock parsingTableLock(this->database, this->parsingTable);
+
 			if(this->database.checkUrlLock(this->currentUrl.lockId, this->lockTime))
 				this->database.unLockUrl(this->currentUrl.lockId);
-		}
-		// any exception: try to release table lock and re-throw
-		catch(...) {
-			try { this->database.releaseLocks(); }
-			catch(...) {}
-			throw;
-		}
-		this->database.releaseLocks();
+		} // parsing table unlocked
+
 		this->lockTime = "";
 	}
 	else {
@@ -332,38 +326,27 @@ bool Thread::parsingUrlSelection() {
 				if(this->config.generalLogging) logEntries.emplace("skipped " + this->currentUrl.url);
 				skipped = this->currentUrl.id;
 			}
-			else {
-				// lock parsing table
-				this->database.lockParsingTable();
+			else
+			{ // lock parsing table
+				TableLock parsingTableLock(this->database, this->parsingTable);
 
-				try {
-					// get current URL lock ID if none was received on URL selection
-					this->database.getUrlLockId(this->currentUrl);
+				// get current URL lock ID if none was received on URL selection
+				this->database.getUrlLockId(this->currentUrl);
 
-					// lock URL
-					if(this->database.isUrlLockable(this->currentUrl.lockId)) {
-						this->lockTime = this->database.lockUrl(this->currentUrl, this->config.generalLock);
-						// success! unlock table and break
-						this->database.releaseLocks();
-						break;
-					}
-					else if(this->config.generalLogging) {
-						// skip locked URL
-						logEntries.emplace("skipped " + this->currentUrl.url + ", because it is locked.");
-						skip = true;
-						skipped = this->currentUrl.id;
-					}
+				// lock URL
+				if(this->database.isUrlLockable(this->currentUrl.lockId)) {
+					this->lockTime = this->database.lockUrl(this->currentUrl, this->config.generalLock);
+					// success! unlock table and break
+					this->database.releaseLocks();
+					break;
 				}
-				// any exception: try unlocking the table an re-throw
-				catch(...) {
-					try { this->database.releaseLocks(); }
-					catch(...) {}
-					throw;
+				else if(this->config.generalLogging) {
+					// skip locked URL
+					logEntries.emplace("skipped " + this->currentUrl.url + ", because it is locked.");
+					skip = true;
+					skipped = this->currentUrl.id;
 				}
-
-				// unlock table
-				this->database.releaseLocks();
-			}
+			} // parsing table unlocked
 		}
 		else {
 			// no more URLs

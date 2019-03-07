@@ -274,11 +274,6 @@ void Database::prepare() {
 	}
 }
 
-// lock parsing table
-void Database::lockParsingTable() {
-	this->lockTable(this->parsingTable);
-}
-
 // get the next URL to parse from database, return ID, URL and lock ID of next URL or empty tuple if all URLs have been parsed
 Database::UrlProperties Database::getNextUrl(unsigned long currentUrlId) {
 	UrlProperties result;
@@ -510,7 +505,7 @@ std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTi
 }
 
 // unlock a URL in the database
-void Database::unLockUrl(unsigned long urlId) {
+void Database::unLockUrl(unsigned long lockId) {
 	// check connection
 	this->checkConnection();
 
@@ -521,7 +516,7 @@ void Database::unLockUrl(unsigned long urlId) {
 	// unlock URL in database
 	try {
 		// execute SQL query
-		sqlStatement.setUInt64(1, urlId);
+		sqlStatement.setUInt64(1, lockId);
 		sqlStatement.execute();
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::unLockUrl", e); }

@@ -14,6 +14,7 @@
 
 #include "../../Struct/UrlProperties.h"
 #include "../../Wrapper/Database.h"
+#include "../../Wrapper/TableLock.h"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -33,6 +34,7 @@ namespace crawlservpp::Module::Crawler {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
 		typedef Struct::UrlProperties UrlProperties;
+		typedef Wrapper::TableLock TableLock;
 
 	public:
 		// constructor
@@ -51,11 +53,6 @@ namespace crawlservpp::Module::Crawler {
 
 		// prepare SQL statements for crawler
 		void prepare();
-
-		// table functions
-		void lockUrlList();
-		void lockCrawlingTable();
-		void lockUrlListAndCrawlingTable();
 
 		// URL functions
 		bool isUrlExists(const std::string& urlString);

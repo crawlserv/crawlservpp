@@ -24,6 +24,7 @@
 #include "../../Struct/QueryProperties.h"
 #include "../../Struct/UrlProperties.h"
 #include "../../Timer/StartStop.h"
+#include "../../Wrapper/TableLock.h"
 
 #include <algorithm>
 #include <cctype>
@@ -46,6 +47,7 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlProperties UrlProperties;
 		typedef Query::RegEx::Exception RegExException;
+		typedef Wrapper::TableLock TableLock;
 		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
@@ -60,6 +62,9 @@ namespace crawlservpp::Module::Parser {
 	protected:
 		// database for the thread
 		Database database;
+
+		// table name for locking
+		std::string parsingTable;
 
 		// implemented thread functions
 		void onInit(bool resumed) override;
