@@ -16,7 +16,7 @@ TableLock::TableLock(Database& db, const std::string& tableName) : ref(db) {
 	this->ref.lockTable(tableName);
 }
 
-// constructor B: lock two tables (and the aliases 'a' and 'b' for reading those tables)
+// constructor B: lock two tables (and the aliases 'a' and 'b' for reading access to those tables)
 TableLock::TableLock(Database& db, const std::string& tableName1, const std::string& tableName2) : ref(db) {
 	this->ref.lockTables(tableName1, tableName2);
 }
