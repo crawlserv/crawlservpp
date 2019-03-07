@@ -41,10 +41,10 @@ void Thread::onInit(bool resumed) {
 
 	// check configuration
 	bool verbose = config.generalLogging == Config::generalLoggingVerbose;
-	if(verbose) this->log("checks configuration...");
 	if(this->config.generalResultTable.empty()) throw std::runtime_error("No target table specified.");
 
 	// set database configuration
+	this->setStatusMessage("Setting database configuration...");
 	if(verbose) this->log("sets database configuration...");
 	this->database.setId(this->getId());
 	this->database.setWebsite(this->getWebsite());
@@ -58,12 +58,16 @@ void Thread::onInit(bool resumed) {
 	this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
 	// prepare SQL queries
+	this->setStatusMessage("Preparing SQL statements...");
 	if(verbose) this->log("prepares SQL statements...");
 	this->database.prepare();
 
 	// initialize algorithm
+	this->setStatusMessage("Initializing algorithm...");
 	if(verbose) this->log("initializes algorithm...");
 	this->onAlgoInit(resumed);
+
+	this->setStatusMessage("Starting algorithm...");
 }
 
 // analyzer tick

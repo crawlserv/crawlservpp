@@ -49,6 +49,7 @@ void Thread::onInit(bool resumed) {
 		throw Exception("Crawler::Thread::onInit(): No link extraction query specified");
 
 	// set database options
+	this->setStatusMessage("Setting database options...");
 	if(verbose) this->log("sets database options...");
 	this->database.setId(this->getId());
 	this->database.setWebsiteNamespace(this->websiteNamespace);
@@ -58,6 +59,7 @@ void Thread::onInit(bool resumed) {
 	this->database.setVerbose(verbose);
 	this->database.setUrlCaseSensitive(this->config.crawlerUrlCaseSensitive);
 	this->database.setUrlDebug(this->config.crawlerUrlDebug);
+	this->database.setUrlStartupCheck(this->config.crawlerUrlStartupCheck);
 	this->database.setSleepOnError(this->config.crawlerSleepMySql);
 
 	// create table names for table locking
@@ -65,19 +67,31 @@ void Thread::onInit(bool resumed) {
 	this->crawlingTable = this->urlListTable + "_crawling";
 
 	// prepare SQL statements for crawler
+	this->setStatusMessage("Preparing SQL statements...");
 	if(verbose) this->log("prepares SQL statements...");
 	this->database.prepare();
 
+	// optional startup check of URL list
+	if(this->config.crawlerUrlStartupCheck) {
+		this->setStatusMessage("Checking URL list...");
+		if(verbose) this->log("checks URL list...");
+		this->database.urlHashCheck();
+		this->database.urlDuplicationCheck();
+	}
+
 	// get domain
+	this->setStatusMessage("Getting website domain...");
 	if(verbose) this->log("gets website domain...");
 	this->domain = this->database.getWebsiteDomain(this->getWebsite());
 
 	// create URI parser
+	this->setStatusMessage("Creating URI parser...");
 	if(verbose) this->log("creates URI parser...");
 	this->parser = std::make_unique<Parsing::URI>();
 	this->parser->setCurrentDomain(this->domain);
 
 	// set network configuration
+	this->setStatusMessage("Setting network configuration...");
 	if(verbose) this->log("sets network configuration...");
 	if(config.crawlerLogging == Config::crawlerLoggingVerbose)
 		this->log("sets global network configuration...");
@@ -88,16 +102,20 @@ void Thread::onInit(bool resumed) {
 	}
 
 	// initialize custom URLs
+	this->setStatusMessage("Initializing custom URLs...");
 	if(verbose) this->log("initializes custom URLs...");
 	this->initCustomUrls();
 
 	// initialize queries
-	if(verbose) this->log("initializes queries...");
+	this->setStatusMessage("Initializing custom queries...");
+	if(verbose) this->log("initializes custom queries...");
 	this->initQueries();
 
 	// initialize networking for archives if necessary
 	if(this->config.crawlerArchives && !(this->networkingArchives)) {
+		this->setStatusMessage("Initialiting networking for archives...");
 		if(verbose) this->log("initializes networking for archives...");
+
 		this->networkingArchives = std::make_unique<Network::Curl>();
 		this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings);
 
@@ -111,6 +129,7 @@ void Thread::onInit(bool resumed) {
 	}
 
 	// save start time and initialize counter
+	this->setStatusMessage("Starting to crawl...");
 	this->startTime = std::chrono::steady_clock::now();
 	this->pauseTime = std::chrono::steady_clock::time_point::min();
 	this->tickCounter = 0;
