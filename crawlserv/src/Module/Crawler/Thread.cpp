@@ -45,7 +45,8 @@ void Thread::onInit(bool resumed) {
 
 	// check configuration
 	bool verbose = config.crawlerLogging == Config::crawlerLoggingVerbose;
-	if(this->config.crawlerQueriesLinks.empty()) throw Exception("ERROR: No link extraction query specified.");
+	if(this->config.crawlerQueriesLinks.empty())
+		throw Exception("Crawler::Thread::onInit(): No link extraction query specified");
 
 	// set database options
 	if(verbose) this->log("sets database options...");
@@ -144,7 +145,7 @@ void Thread::onTick() {
 		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("crawls " + url.url + "...");
 
-		// get content
+		// crawl content
 		bool crawled = this->crawlingContent(url, checkedUrls, newUrls, timerString);
 
 		// get archive (also when crawling failed!)
@@ -330,8 +331,8 @@ void Thread::initCustomUrls() {
 			}
 		}
 	}
+	// any exception: try to release table locks and re-throw
 	catch(...) {
-		// any exception: try to release table locks and re-throw
 		try { this->database.releaseLocks(); }
 		catch(...) {}
 		throw;
@@ -453,9 +454,6 @@ bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 	// MANUAL CRAWLING MODE (get URL from configuration)
 	if(!(this->getLast())) {
 		if(this->manualUrl.id) {
-			// get current lock ID for custom URL or start page if none was received yet
-			this->database.getUrlLockId(this->manualUrl);
-
 			// renew URL lock on manual URL (custom URL or start page) for retry
 			if(this->database.renewUrlLock(this->config.crawlerLock, this->manualUrl, this->lockTime)) {
 				urlTo = this->manualUrl;
@@ -619,34 +617,16 @@ bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 				if(this->nextUrl.id) {
 					bool success = false;
 
-					// lock crawling table
-					this->database.lockCrawlingTable();
-
-					try {
-						// get current lock ID for next URL if none has been received yet
-						this->database.getUrlLockId(this->nextUrl);
-
-						// check whether next URL is lockable
-						if(this->database.isUrlLockable(this->nextUrl.lockId)) {
-							// lock next URL
-							this->lockTime = this->database.lockUrl(this->nextUrl, this->config.crawlerLock);
-							urlTo = this->nextUrl;
-							success = true;
-						}
-						else {
-							// skip locked URL
-							logEntries.emplace("skipped " + this->nextUrl.url + ", because it is locked.");
-						}
+					// try to lock next URL
+					this->lockTime = "";
+					if(this->database.renewUrlLock(this->config.crawlerLock, this->nextUrl, this->lockTime)) {
+						urlTo = this->nextUrl;
+						success = true;
 					}
-					// any exception: try to release table lock and re-throw
-					catch(...) {
-						try { this->database.releaseLocks(); }
-						catch(...) {}
-						throw;
+					else {
+						// skip locked URL
+						logEntries.emplace("skipped " + this->nextUrl.url + ", because it is locked.");
 					}
-
-					// unlock crawling table
-					this->database.releaseLocks();
 
 					// exit loop on success
 					if(success) break;
@@ -680,14 +660,19 @@ bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 
 // crawl content
 bool Thread::crawlingContent(const UrlProperties& urlProperties, unsigned long& checkedUrlsTo,
-		unsigned long& newUrlsTo,
-		std::string& timerStrTo) {
+		unsigned long& newUrlsTo, std::string& timerStrTo) {
 	Timer::StartStop sleepTimer;
 	Timer::StartStop httpTimer;
 	Timer::StartStop parseTimer;
 	Timer::StartStop updateTimer;
 	std::string content;
 	timerStrTo = "";
+
+	// check arguments
+	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingContent(): No URL ID specified");
+	if(urlProperties.url.empty()) {
+		throw Exception("Crawler::Thread::crawlingContent(): No URL specified");
+	}
 
 	// skip crawling if only archive needs to be retried
 	if(this->config.crawlerArchives && this->archiveRetry) {
@@ -774,7 +759,7 @@ bool Thread::crawlingContent(const UrlProperties& urlProperties, unsigned long& 
 
 	// check content type
 	std::string contentType = this->networking.getContentType();
-	if(!(this->crawlingCheckContentType(urlProperties, contentType))) {
+	if(!(this->crawlingCheckContentType(urlProperties.url, contentType))) {
 		// skip because of content type (not on whitelist or on blacklist)
 		this->crawlingSkip(urlProperties);
 		return false;
@@ -826,7 +811,7 @@ bool Thread::crawlingContent(const UrlProperties& urlProperties, unsigned long& 
 	}
 
 	// extract URLs
-	std::vector<std::string> urls = this->crawlingExtractUrls(urlProperties, content, doc);
+	std::vector<std::string> urls = this->crawlingExtractUrls(urlProperties.url, content, doc);
 	if(!urls.empty()) {
 		if(this->config.crawlerTiming) {
 			parseTimer.stop();
@@ -932,8 +917,7 @@ bool Thread::crawlingCheckResponseCode(const std::string& url, long responseCode
 }
 
 // check whether specific content type should be crawled
-bool Thread::crawlingCheckContentType(const UrlProperties& urlProperties,
-		const std::string& contentType) {
+bool Thread::crawlingCheckContentType(const std::string& url, const std::string& contentType) {
 	// check whitelist for content types
 	if(!(this->queriesWhiteListTypes.empty())) {
 		bool found = false;
@@ -945,7 +929,7 @@ bool Thread::crawlingCheckContentType(const UrlProperties& urlProperties,
 				}
 				catch(const RegExException& e) {
 					if(this->config.crawlerLogging)
-						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + urlProperties.url + "].");
+						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
 			else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
@@ -965,7 +949,7 @@ bool Thread::crawlingCheckContentType(const UrlProperties& urlProperties,
 				}
 				catch(const RegExException& e) {
 					if(this->config.crawlerLogging)
-						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + urlProperties.url + "].");
+						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 				}
 			}
 			else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
@@ -994,6 +978,9 @@ bool Thread::crawlingCheckConsistency(const std::string& url, const std::string&
 
 // optional canonical check (validate URL against canonical URL)
 bool Thread::crawlingCheckCanonical(const std::string& url, const Parsing::XML& doc) {
+	// check argument
+	if(url.empty()) throw Exception("Crawler::Thread::crawlingCheckCanonical(): No URL specified");
+
 	if(this->config.crawlerHTMLCanonicalCheck) {
 		std::string canonical;
 		try {
@@ -1023,6 +1010,9 @@ bool Thread::crawlingCheckCanonical(const std::string& url, const Parsing::XML& 
 
 // check whether specific content should be crawled
 bool Thread::crawlingCheckContent(const std::string& url, const std::string& content, const Parsing::XML& doc) {
+	// check argument
+	if(url.empty()) throw Exception("Crawler::Thread::crawlingCheckCanonical(): No URL specified");
+
 	// check whitelist for content types
 	if(!(this->queriesWhiteListContent.empty())) {
 		bool found = false;
@@ -1085,6 +1075,10 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 // save content to database
 void Thread::crawlingSaveContent(const UrlProperties& urlProperties, unsigned int response,
 		const std::string& type, const std::string& content, const Parsing::XML& doc) {
+	// check arguments
+	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingSaveContent(): No URL ID specified");
+	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingSaveContent(): No URL specified");
+
 	if(this->config.crawlerXml) {
 		std::string xmlContent;
 		try {
@@ -1100,8 +1094,11 @@ void Thread::crawlingSaveContent(const UrlProperties& urlProperties, unsigned in
 }
 
 // extract URLs from content
-std::vector<std::string> Thread::crawlingExtractUrls(const UrlProperties& urlProperties,
-		const std::string& content,	const Parsing::XML& doc) {
+std::vector<std::string> Thread::crawlingExtractUrls(const std::string& url,
+		const std::string& content, const Parsing::XML& doc) {
+	// check argument
+	if(url.empty()) throw Exception("Crawler::Thread::crawlingExtractUrls(): No URL specified");
+
 	std::vector<std::string> urls;
 	for(auto i = this->queriesLinks.begin(); i != this->queriesLinks.end(); ++i) {
 		if(i->type == QueryStruct::typeRegEx) {
@@ -1120,7 +1117,7 @@ std::vector<std::string> Thread::crawlingExtractUrls(const UrlProperties& urlPro
 			}
 			catch(const RegExException& e) {
 				if(this->config.crawlerLogging)
-					this->log("WARNING: RegEx error - " + e.whatStr() + " [" + urlProperties.url + "].");
+					this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 			}
 		}
 		else if(i->type == QueryStruct::typeXPath) {
@@ -1140,7 +1137,7 @@ std::vector<std::string> Thread::crawlingExtractUrls(const UrlProperties& urlPro
 			}
 			catch(const XPathException& e) {
 				if(this->config.crawlerLogging)
-					this->log("WARNING: XPath error - " + e.whatStr() + " [" + urlProperties.url + "].");
+					this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
 			}
 		}
 		else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
@@ -1158,7 +1155,7 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 		unsigned long& newUrlsTo, bool archived) {
 	// check argument
 	if(url.empty()) {
-		throw Exception("Thread::crawlingParseAndAddUrls(): No URL specified");
+		throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): No URL specified");
 	}
 
 	// set current URL
@@ -1166,7 +1163,8 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 		this->parser->setCurrentSubUrl(url);
 	}
 	catch(const URIException& e) {
-		throw Exception("Could not set current sub-url because of URI Parser error: " + e.whatStr());
+		throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): Could not set current sub-url because of URI Parser error: "
+				+ e.whatStr());
 	}
 
 	// parse URLs
@@ -1204,7 +1202,7 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 
 						if(!urls.at(n - 1).empty()) {
 							if(urls.at(n - 1).at(0) != '/') {
-								throw Exception(urls.at(n - 1) + " is no sub-URL!");
+								throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): " + urls.at(n - 1) + " is no sub-URL!");
 							}
 							if(this->config.crawlerLogging && urls.at(n - 1).length() > 1 && urls.at(n - 1).at(1) == '#') {
 								this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'.");
@@ -1252,8 +1250,8 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 
 		this->database.addUrls(urls);
 	}
+	// any exception: try to release table lock and re-throw
 	catch(...) {
-		// any exception: try to release table lock and re-throw
 		try { this->database.releaseLocks(); }
 		catch(...) {}
 		throw;
@@ -1267,15 +1265,19 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 }
 
 // crawl archives
-bool Thread::crawlingArchive(UrlProperties& urlProperties,
-		unsigned long& checkedUrlsTo, unsigned long& newUrlsTo) {
+bool Thread::crawlingArchive(UrlProperties& urlProperties, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo) {
+	// check arguments
+	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingArchive(): No URL ID specified");
+	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingArchive(): No URL specified");
+
 	if(this->config.crawlerArchives && this->networkingArchives) {
 		bool success = true;
 		bool skip = false;
+		bool newUrlLock = false;
 
 		// loop over different archives
 		for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); n++) {
-			// skip empty URLs
+			// skip empty archive and timemap URLs
 			if((this->config.crawlerArchivesUrlsMemento.at(n).empty())
 					|| (this->config.crawlerArchivesUrlsTimemap.at(n).empty()))
 				continue;
@@ -1298,7 +1300,6 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties,
 						std::string contentType = this->networkingArchives->getContentType();
 						if(contentType == "application/link-format") {
 							if(!archivedContent.empty()) {
-
 								// parse memento response and get next memento page if available
 								std::queue<Memento> mementos;
 								std::queue<std::string> warnings;
@@ -1316,7 +1317,7 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties,
 								std::string statusMessage = this->getStatusMessage();
 
 								// go through all mementos
-								unsigned long counter = 0;
+								unsigned long counter = 0, total = mementos.size();
 								while(!mementos.empty()) {
 									std::string timeStamp = mementos.front().timeStamp;
 
@@ -1325,126 +1326,132 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties,
 									std::ostringstream statusStrStr;
 									statusStrStr.imbue(std::locale(""));
 									statusStrStr << "[" + this->config.crawlerArchivesNames.at(n) + ": " << counter << "/"
-											<< mementos.size() << "] " << statusMessage;
+											<< total << "] " << statusMessage;
 									this->setStatusMessage(statusStrStr.str());
 
 									// renew URL lock to avoid duplicate archived content
-									if(this->database.renewUrlLock(this->config.crawlerLock, urlProperties, this->lockTime)) {
-										// loop over references / memento retries
-										// [while checking whether thread is still running]
-										while(this->isRunning()) {
+									if(this->lockTime.empty()) newUrlLock = true;
+									if(!(this->database.renewUrlLock(this->config.crawlerLock, urlProperties, this->lockTime))) {
+										success = false;
+										skip = true;
+										break;
+									}
 
-											// check whether archived content already exists in database
-											if(!(this->database.isArchivedContentExists(urlProperties.id, timeStamp))) {
+									// loop over references / memento retries
+									// [while checking whether thread is still running]
+									while(this->isRunning()) {
 
-												// check whether thread is till running
+										// check whether archived content already exists in database
+										if(!(this->database.isArchivedContentExists(urlProperties.id, timeStamp))) {
+
+											// check whether thread is till running
+											if(!(this->isRunning())) break;
+
+											// get archived content
+											archivedContent = "";
+											try {
+												this->networkingArchives->getContent(mementos.front().url, archivedContent,
+													this->config.crawlerRetryHttp);
+
+												// check response code
+												if(!(this->crawlingCheckResponseCode(mementos.front().url,
+														this->networkingArchives->getResponseCode()))) break;
+
+												// check whether thread is still running
 												if(!(this->isRunning())) break;
 
-												// get archived content
-												archivedContent = "";
-												try {
-													this->networkingArchives->getContent(mementos.front().url, archivedContent,
-														this->config.crawlerRetryHttp);
+												// check archived content
+												if(archivedContent.substr(0, 17) == "found capture at ") {
 
-													// check response code
-													if(!(this->crawlingCheckResponseCode(mementos.front().url,
-															this->networkingArchives->getResponseCode()))) break;
+													// found a reference string: get timestamp
+													if(Helper::DateTime::convertSQLTimeStampToTimeStamp(timeStamp)) {
+														unsigned long subUrlPos = mementos.front().url.find(timeStamp);
+														if(subUrlPos != std::string::npos) {
+															subUrlPos += timeStamp.length();
+															timeStamp = archivedContent.substr(17, 14);
 
-													// check whether thread is still running
-													if(!(this->isRunning())) break;
-
-													// check archived content
-													if(archivedContent.substr(0, 17) == "found capture at ") {
-
-														// found a reference string: get timestamp
-														if(Helper::DateTime::convertSQLTimeStampToTimeStamp(timeStamp)) {
-															unsigned long subUrlPos = mementos.front().url.find(timeStamp);
-															if(subUrlPos != std::string::npos) {
-																subUrlPos += timeStamp.length();
-																timeStamp = archivedContent.substr(17, 14);
-
-																// get URL and validate timestamp
-																mementos.front().url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
-																		+ mementos.front().url.substr(subUrlPos);
-																if(Helper::DateTime::convertTimeStampToSQLTimeStamp(
-																		timeStamp))
-																	// follow reference
-																	continue;
-																else if(this->config.crawlerLogging)
-																	// log warning (and ignore reference)
-																	this->log("WARNING: Invalid timestamp \'" + timeStamp
-																			+ "\' from " + this->config.crawlerArchivesNames.at(n)
-																			+ " [" + urlProperties.url + "].");
-															}
+															// get URL and validate timestamp
+															mementos.front().url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
+																	+ mementos.front().url.substr(subUrlPos);
+															if(Helper::DateTime::convertTimeStampToSQLTimeStamp(
+																	timeStamp))
+																// follow reference
+																continue;
 															else if(this->config.crawlerLogging)
 																// log warning (and ignore reference)
-																this->log("WARNING: Could not find timestamp in "
-																		+ mementos.front().url + " [" + urlProperties.url + "].");
+																this->log("WARNING: Invalid timestamp \'" + timeStamp
+																		+ "\' from " + this->config.crawlerArchivesNames.at(n)
+																		+ " [" + urlProperties.url + "].");
 														}
 														else if(this->config.crawlerLogging)
 															// log warning (and ignore reference)
-															this->log("WARNING: Could not convert timestamp in "
+															this->log("WARNING: Could not find timestamp in "
 																	+ mementos.front().url + " [" + urlProperties.url + "].");
 													}
-													else {
-														// parse content
-														Parsing::XML doc;
-														try {
-															doc.parse(archivedContent);
-
-															// add archived content to database
-															this->database.saveArchivedContent(urlProperties.id, mementos.front().timeStamp,
-																		this->networkingArchives->getResponseCode(),
-																		this->networkingArchives->getContentType(), archivedContent);
-
-															// extract URLs
-															std::vector<std::string> urls
-																	= this->crawlingExtractUrls(urlProperties, archivedContent, doc);
-															if(!urls.empty()) {
-																// parse and add URLs
-																checkedUrlsTo += urls.size();
-																this->crawlingParseAndAddUrls(
-																		urlProperties.url, urls, newUrlsTo, true);
-															}
-														}
-														catch(const XMLException& e) {} // ignore parsing errors
-													}
-												}
-												catch(const CurlException& e) {
-													if(this->config.crawlerRetryArchive) {
-														// error while getting content: check type of error i.e. last cURL code
-														if(this->crawlingCheckCurlCode(
-																this->networkingArchives->getCurlCode(), mementos.front().url)) {
-															// log error
-															if(this->config.crawlerLogging) {
-																this->log(e.whatStr() + " [" + mementos.front().url + "].");
-																this->log("resets connection to "
-																		+ this->config.crawlerArchivesNames.at(n) + "...");
-															}
-
-															// reset connection
-															this->setStatusMessage("ERROR " + e.whatStr()
-																	+ " [" + mementos.front().url + "]");
-															this->networkingArchives->resetConnection(this->config.crawlerSleepError);
-
-															// retry
-															continue;
-														}
-													}
 													else if(this->config.crawlerLogging)
-														// log error and skip
-														this->log(e.whatStr() + " - skips...");
+														// log warning (and ignore reference)
+														this->log("WARNING: Could not convert timestamp in "
+																+ mementos.front().url + " [" + urlProperties.url + "].");
+												}
+												else {
+													// parse content
+													Parsing::XML doc;
+													try {
+														doc.parse(archivedContent);
+
+														// add archived content to database
+														this->database.saveArchivedContent(urlProperties.id, mementos.front().timeStamp,
+																	this->networkingArchives->getResponseCode(),
+																	this->networkingArchives->getContentType(), archivedContent);
+
+														// extract URLs
+														std::vector<std::string> urls = this->crawlingExtractUrls(
+																urlProperties.url, archivedContent, doc);
+														if(!urls.empty()) {
+															// parse and add URLs
+															checkedUrlsTo += urls.size();
+															this->crawlingParseAndAddUrls(
+																	urlProperties.url, urls, newUrlsTo, true);
+														}
+													}
+													catch(const XMLException& e) {} // ignore parsing errors
 												}
 											}
+											catch(const CurlException& e) {
+												if(this->config.crawlerRetryArchive) {
+													// error while getting content: check type of error i.e. last cURL code
+													if(this->crawlingCheckCurlCode(
+															this->networkingArchives->getCurlCode(), mementos.front().url)) {
+														// log error
+														if(this->config.crawlerLogging) {
+															this->log(e.whatStr() + " [" + mementos.front().url + "].");
+															this->log("resets connection to "
+																	+ this->config.crawlerArchivesNames.at(n) + "...");
+														}
 
-											// exit loop over references/memento retries
-											break;
+														// reset connection
+														this->setStatusMessage("ERROR " + e.whatStr()
+																+ " [" + mementos.front().url + "]");
+														this->networkingArchives->resetConnection(this->config.crawlerSleepError);
 
-										} // [end of loop over references/memento retries]
+														// retry
+														continue;
+													}
+												}
+												else if(this->config.crawlerLogging) {
+													// log error and skip
+													this->log(e.whatStr() + " - skips...");
+												}
+											}
+										}
 
-										// check whether thread is till running
-										if(!(this->isRunning())) break;
-									} // [end of check whether URL lock could be renewed]
+										// exit loop over references/memento retries
+										break;
+
+									} // [end of loop over references/memento retries]
+
+									// check whether thread is till running
+									if(!(this->isRunning())) break;
 
 									// remove memento from queue
 									mementos.pop();
@@ -1492,6 +1499,32 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties,
 			} // [end of loop over memento pages]
 		} // [end of loop over archives]
 
+		// unlock URL if necessary
+		if(newUrlLock) {
+			// lock crawling table
+			this->database.lockCrawlingTable();
+
+			try {
+				// check URL lock
+				if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime)) {
+					// remove URL lock
+					this->database.unLockUrl(urlProperties.lockId);
+				}
+			}
+			// any exception: try to release table locks and re-throw
+			catch(...) {
+				try { this->database.releaseLocks(); }
+				catch(...) {}
+				throw;
+			}
+
+			// unlock crawling table
+			this->database.releaseLocks();
+
+			// reset lock time
+			this->lockTime = "";
+		}
+
 		if(success || !(this->config.crawlerRetryArchive)) this->archiveRetry = false;
 	}
 
@@ -1500,6 +1533,11 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties,
 
 // crawling successfull
 void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
+	// check argument
+	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
+	if(!urlProperties.lockId) throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
+	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
+
 	// lock crawling table
 	this->database.lockCrawlingTable();
 
@@ -1509,8 +1547,8 @@ void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
 			// set URL to finished
 			this->database.setUrlFinished(urlProperties.lockId);
 	}
+	// any exception: try to release table locks and re-throw
 	catch(...) {
-		// any exception: try to release table locks and re-throw
 		try { this->database.releaseLocks(); }
 		catch(...) {}
 		throw;
@@ -1537,12 +1575,20 @@ void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
 	// reset retry counter
 	this->retryCounter = 0;
 
-	// do not retry
+	// do not retry (only archive if necessary)
 	this->nextUrl = UrlProperties();
 }
 
 // skip URL after crawling problem
 void Thread::crawlingSkip(const UrlProperties& urlProperties) {
+	// check argument
+	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
+	if(!urlProperties.lockId) throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
+	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
+
+	// reset retry counter
+	this->retryCounter = 0;
+
 	// lock crawling table
 	this->database.lockCrawlingTable();
 
@@ -1552,8 +1598,8 @@ void Thread::crawlingSkip(const UrlProperties& urlProperties) {
 			// remove URL lock
 			this->database.unLockUrl(urlProperties.lockId);
 	}
+	// any exception: try to release table locks and re-throw
 	catch(...) {
-		// any exception: try to release table locks and re-throw
 		try { this->database.releaseLocks(); }
 		catch(...) {}
 		throw;
@@ -1577,9 +1623,6 @@ void Thread::crawlingSkip(const UrlProperties& urlProperties) {
 		this->setProgress((float) (this->database.getUrlPosition(urlProperties.id) + 1) / this->database.getNumberOfUrls());
 	}
 
-	// reset retry counter
-	this->retryCounter = 0;
-
 	// do not retry
 	this->nextUrl = UrlProperties();
 	this->archiveRetry = false;
@@ -1588,6 +1631,11 @@ void Thread::crawlingSkip(const UrlProperties& urlProperties) {
 // retry URL (completely or achives-only) after crawling problem
 //  NOTE: leaves the URL lock active for retry
 void Thread::crawlingRetry(const UrlProperties& urlProperties, bool archiveOnly) {
+	// check argument
+	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingRetry(): No URL ID specified");
+	if(!urlProperties.lockId) throw Exception("Crawler::Thread::crawlingRetry(): No URL lock ID specified");
+	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingRetry(): No URL specified");
+
 	if(this->config.crawlerReTries > -1) {
 		// increment and check retry counter
 		this->retryCounter++;
