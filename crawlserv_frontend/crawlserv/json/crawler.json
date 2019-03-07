@@ -295,15 +295,29 @@
 			"description": "Calculate timing statistics.",
 			"simple": false
 		},
-		"warnings.file": {
+		"url.chunks": {
 			"id": 30,
+			"type": "number",
+			"default": 10000,
+			"description": "Number of crawled URLs to be processed at once without possible interruption.",
+			"simple": false
+		},
+		"url.debug": {
+			"id": 31,
+			"type": "bool",
+			"default": false,
+			"description": "Perform additional check for duplicates after URL insertion (for debugging purposes only).",
+			"simple": false
+		},
+		"warnings.file": {
+			"id": 32,
 			"type": "bool",
 			"default": false,
 			"description": "Warn when files are found (instead of folders).",
 			"simple": false
 		},
 		"xml": {
-			"id": 31,
+			"id": 33,
 			"type": "bool",
 			"default": false,
 			"description": "Save crawled content as cleaned XML.",
