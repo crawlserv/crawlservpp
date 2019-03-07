@@ -20,6 +20,12 @@ public:
 	TableLock(Database& db, const std::string& tableName1, const std::string& tableName2);
 	virtual ~TableLock();
 
+	// not moveable, not copyable
+	TableLock(TableLock&) = delete;
+	TableLock(TableLock&&) = delete;
+	TableLock& operator=(TableLock&) = delete;
+	TableLock& operator=(TableLock&&) = delete;
+
 private:
 	// internal reference to the database connection of the thread
 	Database& ref;
