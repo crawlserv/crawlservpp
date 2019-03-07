@@ -51,7 +51,6 @@ namespace crawlservpp::Module::Crawler {
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlProperties UrlProperties;
-		typedef Query::Container::QueryStruct QueryStruct;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
 
@@ -144,14 +143,13 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingCheckUrl(const std::string& url);
 		bool crawlingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
-		bool crawlingCheckContentType(const UrlProperties& urlProperties, const std::string& contentType);
+		bool crawlingCheckContentType(const std::string& url, const std::string& contentType);
 		bool crawlingCheckConsistency(const std::string& url, const std::string& content);
 		bool crawlingCheckCanonical(const std::string& url,	const Parsing::XML& doc);
 		bool crawlingCheckContent(const std::string& url, const std::string& content, const Parsing::XML& doc);
 		void crawlingSaveContent(const UrlProperties& urlProperties,
 				unsigned int response, const std::string& type,	const std::string& content, const Parsing::XML& doc);
-		std::vector<std::string> crawlingExtractUrls(const UrlProperties& urlProperties, const std::string& content,
-				const Parsing::XML& doc);
+		std::vector<std::string> crawlingExtractUrls(const std::string& url, const std::string& content, const Parsing::XML& doc);
 		void crawlingParseAndAddUrls(const std::string& url, std::vector<std::string>& urls,
 				unsigned long& newUrlsTo, bool archived);
 		bool crawlingArchive(UrlProperties& urlProperties,
