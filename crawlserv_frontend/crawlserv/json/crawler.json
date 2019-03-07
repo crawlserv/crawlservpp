@@ -298,7 +298,7 @@
 		"url.case.sensitive": {
 			"id": 30,
 			"type": "bool",
-			"default": false,
+			"default": true,
 			"description": "URLs are case-sensitive.",
 			"simple": false
 		},
