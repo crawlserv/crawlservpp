@@ -230,14 +230,15 @@ void Database::prepare() {
 
 	if(this->urlDebug && !(this->ps.urlDuplicationCheck)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares urlDuplicationCheck()...");
-		std::string sqlQuery(
+		std::string groupBy;
+		if(this->urlCaseSensitive) groupBy = "url";
+		else groupBy = "LOWER(url)";
+		this->ps.urlDuplicationCheck = this->addPreparedStatement(
 				"SELECT EXISTS ("
-				" SELECT COUNT(url) FROM `" + this->urlListTable + "` GROUP BY ");
-		if(this->urlCaseSensitive) sqlQuery += "url";
-		else sqlQuery += "LOWER(url)";
-		sqlQuery += " HAVING COUNT(url) > 1"
-				") AS result;";
-		this->ps.urlDuplicationCheck = this->addPreparedStatement(sqlQuery);
+					" SELECT COUNT( " + groupBy + " ) FROM `" + this->urlListTable
+						+ "` GROUP BY CAST(" + groupBy + " AS BINARY) HAVING COUNT( " + groupBy + " ) > 1"
+				") AS result"
+		);
 	}
 }
 
