@@ -88,7 +88,7 @@ void Database::setTimeoutTargetLock(unsigned long timeOut) {
 }
 
 // create target table if it does not exists or add custom field columns if they do not exist
-void Database::initTargetTable() {
+void Database::initTargetTable(CallbackIsRunning isRunning) {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
 	this->parsingTable = this->urlListTable + "_parsing";
@@ -104,7 +104,7 @@ void Database::initTargetTable() {
 		if(!(i->empty())) properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
 
 	{ // lock parsing tables
-		TargetTablesLock(*this, "parsed", this->website, this->urlList, this->timeoutTargetLock);
+		TargetTablesLock(*this, "parsed", this->website, this->urlList, this->timeoutTargetLock, isRunning);
 
 		// add target table if it does not exist already
 		this->targetTableId = this->addTargetTable(properties);

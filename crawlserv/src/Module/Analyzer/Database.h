@@ -35,6 +35,7 @@
 #include <mysql_connection.h>
 
 #include <chrono>
+#include <functional>
 #include <locale>
 #include <fstream>
 #include <sstream>
@@ -51,6 +52,7 @@ namespace crawlservpp::Module::Analyzer {
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::TableColumn TableColumn;
 		typedef Wrapper::TargetTablesLock TargetTablesLock;
+		typedef std::function<bool()> CallbackIsRunning;
 
 		// text maps are used to describe certain parts of a text
 		//  defined by their positions and lengths with certain strings (words, dates etc.)
@@ -73,7 +75,7 @@ namespace crawlservpp::Module::Analyzer {
 		void setTimeoutTargetLock(unsigned long timeOut);
 
 		// prepare target table and SQL statements for analyzer
-		void initTargetTable(bool compressed);
+		void initTargetTable(bool compressed, CallbackIsRunning isRunning);
 		void prepare();
 
 		// prepare and get custom SQL statements for algorithm

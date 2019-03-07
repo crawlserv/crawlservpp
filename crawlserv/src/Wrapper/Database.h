@@ -22,6 +22,7 @@
 
 #include <mysql_connection.h>
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,7 @@ class Database {
 	typedef Struct::QueryProperties QueryProperties;
 	typedef Struct::TableColumn TableColumn;
 	typedef std::pair<unsigned long, std::string> IdString;
+	typedef std::function<bool()> CallbackIsRunning;
 
 public:
 	// allow TableLock access to protected locking functions
@@ -108,7 +110,8 @@ protected:
 	sql::PreparedStatement& getPreparedStatement(unsigned short id);
 
 	// wrappers for locking target tables
-	void lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut);
+	void lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
+			unsigned long timeOut, CallbackIsRunning isRunning);
 	void unlockTargetTables(const std::string& type);
 
 	// wrappers for database helper functions

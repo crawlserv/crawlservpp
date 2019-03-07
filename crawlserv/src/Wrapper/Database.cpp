@@ -210,8 +210,9 @@ sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
  */
 
 // lock target tables of the specified type
-void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut) {
-	this->database.lockTargetTables(type, websiteId, listId, timeOut);
+void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
+		unsigned long timeOut, CallbackIsRunning isRunning) {
+	this->database.lockTargetTables(type, websiteId, listId, timeOut, isRunning);
 }
 
 // unlock target tables of the specified type

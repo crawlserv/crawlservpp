@@ -12,12 +12,18 @@
 
 #include "Database.h"
 
+#include <functional>
+#include <string>
+
 namespace crawlservpp::Wrapper {
 
 class TargetTablesLock {
+	// for convenience
+	typedef std::function<bool()> CallbackIsRunning;
+
 public:
 	TargetTablesLock(Database& db, const std::string& type, unsigned long websiteId,
-			unsigned long listId, unsigned long timeOut);
+			unsigned long listId, unsigned long timeOut, CallbackIsRunning isRunning);
 	virtual ~TargetTablesLock();
 
 	// not moveable, not copyable

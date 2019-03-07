@@ -1741,14 +1741,24 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
  */
 
 // lock target tables of the specified type
-void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId, unsigned long timeOut) {
+//  NOTE: Waiting for other locks to be released requires a callback function to get the running status of the thread!
+void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
+		unsigned long timeOut, CallbackIsRunning isRunning) {
+	bool sleep = false;
+
 	// check arguments
 	if(type.empty()) throw Database::Exception("Main::Database::lockTargetTables(): No table type specified");
 	if(!websiteId) throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
 	if(!listId) throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
 	if(!timeOut) throw Database::Exception("Main::Database::lockTargetTables(): No lock time-out specified");
 
-	while(true) { // do not continue until lock is gone or time-out occured
+	while(isRunning()) { // do not continue until lock is gone or thread should not run anymore
+		// check whether thread should be sleeping
+		if(sleep) {
+			std::this_thread::sleep_for(std::chrono::seconds(MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS));
+			sleep = false;
+		}
+
 		// check connection
 		this->checkConnection();
 
@@ -1770,9 +1780,8 @@ void Database::lockTargetTables(const std::string& type, unsigned long websiteId
 
 				// get result
 				if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
-					// target table lock is active: unlock table, sleep and try again
-					this->unlockTables();
-					std::this_thread::sleep_for(std::chrono::seconds(MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS));
+					// target table lock is active: sleep and try again
+					sleep = true;
 					continue;
 				}
 
@@ -1794,8 +1803,7 @@ void Database::lockTargetTables(const std::string& type, unsigned long websiteId
 			catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTargetTables", e); }
 		} // table unlocked
 
-		// unlock table and break
-		this->unlockTables();
+		// finished
 		break;
 	}
 }

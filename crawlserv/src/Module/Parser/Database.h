@@ -29,6 +29,7 @@
 
 #include <chrono>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -46,6 +47,7 @@ namespace crawlservpp::Module::Parser {
 		typedef Wrapper::TableLock TableLock;
 		typedef Wrapper::TargetTablesLock TargetTablesLock;
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::function<bool()> CallbackIsRunning;
 
 	public:
 		Database(Module::Database& dbRef);
@@ -66,7 +68,7 @@ namespace crawlservpp::Module::Parser {
 		void setTimeoutTargetLock(unsigned long timeOut);
 
 		// prepare target table and SQL statements for parser
-		void initTargetTable();
+		void initTargetTable(CallbackIsRunning isRunning);
 		void prepare();
 
 		// URL functions
