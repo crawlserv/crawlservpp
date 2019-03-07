@@ -553,7 +553,7 @@ void Database::urlDuplicationCheck() {
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): Duplicates URL \'"
+			throw DatabaseException("Crawler::Database::urlDuplicationCheck(): Duplicate URL \'"
 					+ sqlResultSet->getString("url") + "\" in `" + this->urlListTable + "`");
 		}
 	}
