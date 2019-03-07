@@ -74,7 +74,7 @@ void Database::prepare() {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares isUrlExists()...");
 		this->ps.isUrlExists = this->addPreparedStatement(
 				"SELECT EXISTS ( SELECT * FROM ( SELECT url FROM `"	+ this->urlListTable
-				+ "` WHERE hash = CRC32( ? ) ) AS HashResult WHERE url LIKE ? ) AS result");
+				+ "` WHERE hash = CRC32( LOWER ( ? ) ) ) AS HashResult WHERE url LIKE ? ) AS result");
 	}
 
 	if(!(this->ps.getUrlIdLockId)) {
@@ -104,28 +104,30 @@ void Database::prepare() {
 	if(!(this->ps.addUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrl()...");
 		this->ps.addUrl = this->addPreparedStatement(
-				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES(?, CRC32(?), ?)");
+				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES(?, CRC32( LOWER( ? ) ), ?)");
 	}
 
 	if(!(this->ps.add10Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [1/3]...");
 		this->ps.add10Urls = this->addPreparedStatement(
 				"INSERT INTO `" + this->urlListTable + "`(url, hash)"
-				 " VALUES(?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)),"
-				 " (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?)), (?, CRC32(?))");
+				 " VALUES(?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )),"
+				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )),"
+				", (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )), (?, CRC32( LOWER( ? ) )),"
+				", (?, CRC32( LOWER( ? ) ))");
 	}
 
 	if(!(this->ps.add100Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [2/3]...");
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
-		for(unsigned short n = 0; n < 99; n++) sqlQuery += ", (?, CRC32(?))";
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32( LOWER( ? ) ))";
+		for(unsigned short n = 0; n < 99; n++) sqlQuery += ", (?, CRC32( LOWER( ? ) ))";
 		this->ps.add100Urls = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.add1000Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [3/3]...");
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32(?))";
-		for(unsigned short n = 0; n < 999; n++) sqlQuery += ", (?, CRC32(?))";
+		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES(?, CRC32( LOWER( ? ) ))";
+		for(unsigned short n = 0; n < 999; n++) sqlQuery += ", (?, CRC32( LOWER( ? ) ))";
 		this->ps.add1000Urls = this->addPreparedStatement(sqlQuery);
 	}
 
