@@ -200,7 +200,7 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 }
 
 // get reference to prepared SQL statement by its ID
-//  WARNING: do not run Database::checkConnection() while using this reference!
+//  WARNING: Do not run Database::checkConnection() while using this reference!
 sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 	return this->database.getPreparedStatement(id);
 }
@@ -226,7 +226,7 @@ void Database::unlockTargetTables(const std::string& type) {
  */
 
 // check whether the connection to the database is still valid and try to re-connect if necesssary, throws Database::Exception
-//  WARNING: afterwards, old references to prepared SQL statements may be invalid!
+//  WARNING: Afterwards, old references to prepared SQL statements may be invalid!
 void Database::checkConnection() {
 	this->database.checkConnection();
 }
