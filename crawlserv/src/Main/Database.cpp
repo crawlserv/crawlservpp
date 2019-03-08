@@ -2094,7 +2094,7 @@ void Database::checkConnection() {
 
 		// log re-connect on idle if necessary
 		if(milliseconds) this->log("re-connected to database after idling for "
-				+ Helper::DateTime::secondsToString(std::round((float) milliseconds / 1000)) + ".");
+				+ Helper::DateTime::secondsToString(std::round(static_cast<float>(milliseconds / 1000))) + ".");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkConnection", e); }
 }
