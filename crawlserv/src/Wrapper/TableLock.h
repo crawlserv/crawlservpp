@@ -1,24 +1,37 @@
 /*
  * TableLock.h
  *
- * Safe in-scope table lock for the module threads.
+ * Template class for safe in-scope table locks.
  *
  *  Created on: Mar 7, 2019
  *      Author: ans
  */
 
-#ifndef MODULE_TABLELOCK_H_
-#define MODULE_TABLELOCK_H_
+#ifndef WRAPPER_TABLELOCK_H_
+#define WRAPPER_TABLELOCK_H_
 
-#include "Database.h"
+#include <string>
 
 namespace crawlservpp::Wrapper {
 
+template<class DB>
 class TableLock {
 public:
-	TableLock(Database& db, const std::string& tableName);
-	TableLock(Database& db, const std::string& tableName1, const std::string& tableName2);
-	virtual ~TableLock();
+	// constructor A: lock one table
+	TableLock(DB& db, const std::string& tableName) : ref(db) {
+		this->ref.lockTable(tableName);
+	}
+
+	// constructor B: lock two tables (and the aliases 'a' and 'b' for reading access to those tables)
+	TableLock(DB& db, const std::string& tableName1, const std::string& tableName2) : ref(db) {
+		this->ref.lockTables(tableName1, tableName2);
+	}
+
+	// destructor: try to unlock the table(s)
+	virtual ~TableLock() {
+		try { this->ref.unlockTables(); }
+		catch(...) {}
+	}
 
 	// not moveable, not copyable
 	TableLock(TableLock&) = delete;
@@ -28,9 +41,9 @@ public:
 
 private:
 	// internal reference to the database connection of the thread
-	Database& ref;
+	DB& ref;
 };
 
 }
 
-#endif /* MODULE_TABLELOCK_H_ */
+#endif /* WRAPPER_TABLELOCK_H_ */
