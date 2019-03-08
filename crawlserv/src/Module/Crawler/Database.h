@@ -34,7 +34,7 @@ namespace crawlservpp::Module::Crawler {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
 		typedef Struct::UrlProperties UrlProperties;
-		typedef Wrapper::TableLock TableLock;
+		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 
 	public:
 		// constructor
