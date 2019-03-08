@@ -33,13 +33,13 @@ Container::QueryStruct Container::addQuery(const QueryProperties& properties) {
 	if(!properties.text.empty()) {
 		if(properties.type == "regex") {
 			this->queriesRegEx.emplace_back(
-					RegEx(properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti));
+					properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti);
 			newQuery.index = this->queriesRegEx.size() - 1;
 			newQuery.type = QueryStruct::typeRegEx;
 
 		}
 		else if(properties.type == "xpath") {
-			this->queriesXPath.emplace_back(XPath(properties.text, properties.textOnly));
+			this->queriesXPath.emplace_back(properties.text, properties.textOnly);
 			newQuery.index = this->queriesXPath.size() - 1;
 			newQuery.type = QueryStruct::typeXPath;
 		}
