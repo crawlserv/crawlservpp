@@ -129,7 +129,6 @@ void Thread::onInit(bool resumed) {
 	}
 
 	// save start time and initialize counter
-	this->setStatusMessage("Starting to crawl...");
 	this->startTime = std::chrono::steady_clock::now();
 	this->pauseTime = std::chrono::steady_clock::time_point::min();
 	this->tickCounter = 0;
