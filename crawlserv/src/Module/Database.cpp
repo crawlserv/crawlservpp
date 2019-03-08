@@ -69,7 +69,7 @@ void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused,
 		sqlStatement.setString(1, statusMessage);
 		sqlStatement.setBoolean(2, threadPaused);
 		sqlStatement.setUInt64(3, threadId);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadStatusMessage", e); }
 }
@@ -90,7 +90,7 @@ void Database::setThreadProgress(unsigned long threadId, float threadProgress) {
 		// execute SQL statement
 		sqlStatement.setDouble(1, threadProgress);
 		sqlStatement.setUInt64(2, threadId);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadProgress", e); }
 }
@@ -111,7 +111,7 @@ void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 		// execute SQL statement
 		sqlStatement.setUInt64(1, threadLast);
 		sqlStatement.setUInt64(2, threadId);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadLast", e); }
 }

@@ -658,7 +658,8 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromUrlList(u
 		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next())
+			websiteId = sqlResultSet->getUInt64("website");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteNamespaceFromUrlList", e); }
 
@@ -748,7 +749,8 @@ bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isWebsiteNamespace", e); }
 
@@ -1187,7 +1189,8 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 	std::string result;
 
 	// check argument
-	if(!listId) throw Database::Exception("Main::Database::getUrlListNamespace(): No URL list ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::getUrlListNamespace(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -1202,7 +1205,8 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("namespace");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getString("namespace");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getUrlListNamespace", e); }
 
@@ -3460,19 +3464,6 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 }
 
 /*
- * INLINE FUNCTION FOR DEBUGGING PURPOSES
- */
-
-// [inline] get database request counter for debugging purposes (or zero if program was compiled without counter)
-inline unsigned long long Database::getRequestCounter() {
-#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-	return Database::requestCounter;
-#else
-	return 0;
-#endif
-}
-
-/*
  * PROTECTED GETTER (protected)
  */
 
@@ -4014,61 +4005,6 @@ void Database::execute(const std::string& sqlQuery) {
 		Database::sqlExecute(sqlStatement, sqlQuery);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::execute", e); }
-}
-
-/*
- * INLINE WRAPPER FUNCTIONS FOR DEBUGGING PURPOSES (private)
- */
-
-// execute prepared SQL statement by reference
-inline void Database::sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
-	sqlPreparedStatement.execute();
-	#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		Database::requestCounter++;
-	#endif
-}
-
-// execute prepared SQL statement by pointer reference
-inline void Database::sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
-	sqlPreparedStatement->execute();
-	#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		Database::requestCounter++;
-	#endif
-}
-
-// execute SQL statement
-inline void Database::sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-	sqlStatement->execute(sqlQuery);
-#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-	Database::requestCounter++;
-#endif
-}
-
-// execute prepared SQL statement by reference and fetch result
-inline sql::ResultSet * Database::sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
-	sql::ResultSet * sqlResultSet = sqlPreparedStatement.executeQuery();
-#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-	Database::requestCounter++;
-#endif
-	return sqlResultSet;
-}
-
-// execute prepared SQL statement by pointer reference and fetch result
-inline sql::ResultSet * Database::sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement) {
-	sql::ResultSet * sqlResultSet = sqlPreparedStatement->executeQuery();
-#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-	Database::requestCounter++;
-#endif
-	return sqlResultSet;
-}
-
-// execute SQL statement and fetch result
-inline sql::ResultSet * Database::sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-	sql::ResultSet * sqlResultSet = sqlStatement->executeQuery(sqlQuery);
-#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-	Database::requestCounter++;
-#endif
-	return sqlResultSet;
 }
 
 }

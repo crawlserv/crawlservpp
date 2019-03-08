@@ -204,8 +204,12 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFields& data);
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
-		// inline function for debugging purposes
-		static unsigned long long getRequestCounter();
+		// static function for debugging purposes
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+		static unsigned long long getRequestCounter() { return Database::requestCounter; }
+#else
+		static unsigned long long getRequestCounter() { return 0; }
+#endif
 
 		// sub-classes for database exceptions
 		class Exception : public Main::Exception { // general Database exception
@@ -256,6 +260,53 @@ namespace crawlservpp::Main {
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
 
+		// static inline wrapper functions for debugging purposes
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
+			sqlPreparedStatement.execute();
+			Database::requestCounter++;
+		}
+		static void sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			sqlPreparedStatement->execute();
+			Database::requestCounter++;
+		}
+		static void sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			sqlStatement->execute(sqlQuery);
+			Database::requestCounter++;
+		}
+		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
+			return sqlPreparedStatement.executeQuery();
+			Database::requestCounter++;
+		}
+		static sql::ResultSet * sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			return sqlPreparedStatement->executeQuery();
+			Database::requestCounter++;
+		}
+		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			return sqlStatement->executeQuery(sqlQuery);
+			Database::requestCounter++;
+		}
+#else
+		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
+			sqlPreparedStatement.execute();
+		}
+		static void sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			sqlPreparedStatement->execute();
+		}
+		static void sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			sqlStatement->execute(sqlQuery);
+		}
+		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
+			return sqlPreparedStatement.executeQuery();
+		}
+		static sql::ResultSet * sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			return sqlPreparedStatement->executeQuery();
+		}
+		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			return sqlStatement->executeQuery(sqlQuery);
+		}
+#endif
+
 	private:
 		// private connection information
 		const DatabaseSettings settings;
@@ -278,14 +329,6 @@ namespace crawlservpp::Main {
 		// internal helper functions
 		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
-
-		// inline wrapper functions for debugging purposes
-		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement);
-		static void sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement);
-		static void sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery);
-		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement);
-		static sql::ResultSet * sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement);
-		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery);
 
 		// IDs of prepared SQL statements
 		struct {
