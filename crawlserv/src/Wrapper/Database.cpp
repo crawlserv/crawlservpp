@@ -200,7 +200,7 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 }
 
 // get reference to prepared SQL statement by its ID
-//  WARNING: Do not run Database::checkConnection() while using this reference!
+//  WARNING: do not run Database::checkConnection() while using this reference!
 sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 	return this->database.getPreparedStatement(id);
 }
