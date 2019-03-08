@@ -393,63 +393,78 @@ void Thread::clear() {
 	try {
 		this->updateRunTime();
 	}
-	// probably no Database connection -> write exception to console
-	catch(std::exception& e) {
-		std::cout << std::endl << "WARNING: Exception in Thread::updateRunTime() - " << e.what() << std::flush;
-	}
-	catch(...) {
-		std::cout << std::endl << "WARNING: Unknown exception in Thread::updateRunTime()" << std::flush;
-	}
+	// continue after exception handling
+	catch(const std::exception& e) { this->clearException(e, "updateRunTime"); }
+	catch(...) { this->clearException("updateRuntime"); }
 
 	// try to notify thread for clearing
 	try {
 		this->onClear(this->interrupted);
 	}
-	// try to log exceptions in Thread::OnClear() as the database connection could well be okay
-	catch(std::exception& e) {
-		try {
-			std::ostringstream logStrStr;
-			logStrStr << "Exception in Thread::onClear() - " << e.what();
-			this->database.log(logStrStr.str());
-		}
-		catch(...) {
-			std::cout << std::endl << "WARNING: Exception in Thread::onClear() - " << e.what() << std::flush;
-		}
-	}
-	catch(...) {
-		try {
-			this->database.log("Unknown exception in Thread::onClear()");
-		}
-		catch(...) {
-			std::cout << std::endl << "WARNING: Unknown exception in Thread::onClear()" << std::flush;
-		}
-	}
+	// continue after exception handling
+	catch(const std::exception& e) { this->clearException(e, "onClear"); }
+	catch(...) { this->clearException("onClear"); }
 
-	// try to update status
+	// try final status update
 	try {
-		if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
-		else {
-			// log timing statistic
-			std::string logStr = "stopped after "
-					+ Helper::DateTime::secondsToString(this->runTime.count()) + " running";
-			if(this->pauseTime.count())
-				logStr += " and " + Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
-			logStr += ".";
-			this->log(logStr);
-		}
+		this->onEnd();
 	}
-	// probably no Database connection -> write exception to console
-	catch(std::exception& e) {
-		std::cout << std::endl << "WARNING: Exception when setting thread status to INTERRUPTED - " << e.what() << std::flush;
-	}
-	catch(...) {
-		std::cout << std::endl << "WARNING: Unknown exception when setting thread status to INTERRUPTED" << std::flush;
-	}
+	// continue after exception handling
+	catch(std::exception& e) { this->clearException(e, "onEnd"); }
+	catch(...) { this->clearException("onEnd"); }
 }
 
 // function for checking whether to unpause the thread (multi-threading safe)
 bool Thread::isUnpaused() const {
 	return !(this->paused);
+}
+
+// helper function: thread finished, set status message if interrupted and log timing statistics
+void Thread::onEnd() {
+	if(this->interrupted) this->setStatusMessage("INTERRUPTED " + this->status);
+	else {
+		// log timing statistic
+		std::string logStr = "stopped after "
+				+ Helper::DateTime::secondsToString(this->runTime.count()) + " running";
+		if(this->pauseTime.count())
+			logStr += " and " + Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
+		logStr += ".";
+		this->log(logStr);
+	}
+}
+
+// helper function for handling known exceptions when clearing the thread
+void Thread::clearException(const std::exception& e, const std::string& inFunction) {
+	// try to log the (known) exception
+	try {
+		std::ostringstream logStrStr;
+		logStrStr
+				<< "[WARNING] Exception in Thread::" << inFunction << "() - "
+				<< e.what();
+		this->database.log(logStrStr.str());
+	}
+	// if that fails too, write the original exception to the console
+	catch(...) {
+		std::cout
+				<< std::endl
+				<< "WARNING: Exception in Thread::" << inFunction << "() - "
+				<< e.what() << std::flush;
+	}
+}
+
+// helper function for handling unknown exceptions when clearing the thread
+void Thread::clearException(const std::string& inFunction) {
+	// try to log the unknown exception
+	try {
+		this->database.log("[WARNING] Unknown exception in Thread::on" + inFunction + "()");
+	}
+	// if that fails too, write the original exception to the console
+	catch(...) {
+		std::cout
+				<< std::endl
+				<< "WARNING: Unknown exception in Thread::" << inFunction << "()"
+				<< std::flush;
+	}
 }
 
 // main function of the thread

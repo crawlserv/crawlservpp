@@ -141,6 +141,11 @@ namespace crawlservpp::Module {
 		// pause checker
 		bool isUnpaused() const;
 
+		// private helper functions
+		void onEnd();
+		void clearException(const std::exception& e, const std::string& inFunction);
+		void clearException(const std::string& inFunction);
+
 		// main function
 		void main();
 	};
