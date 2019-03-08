@@ -856,17 +856,21 @@ void Database::saveContent(unsigned long urlId, unsigned int response, const std
 			bool adjustServerSettings = false;
 			std::ostringstream logStrStr;
 			logStrStr.imbue(std::locale(""));
-			logStrStr << "[#" << this->idString
-					<< "] WARNING: Some content could not be saved to the database, because its size ("
+			logStrStr << "[#" << this->idString << "] WARNING:"
+					" Some content could not be saved to the database, because its size ("
 					<< content.size() << " bytes) exceeds the ";
 			if(content.size() > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
 			else {
-				logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
+				logStrStr << "current mySQL server maximum of "
+						<< this->getMaxAllowedPacketSize() << " bytes.";
 				adjustServerSettings = true;
 			}
 			this->log(logStrStr.str());
 			if(adjustServerSettings)
-				this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				this->log(
+						"[#" + this->idString + "]"
+						" Adjust the server's \'max_allowed_packet\' setting accordingly."
+				);
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveContent", e); }
@@ -905,16 +909,21 @@ void Database::saveArchivedContent(unsigned long urlId, const std::string& timeS
 			bool adjustServerSettings = false;
 			std::ostringstream logStrStr;
 			logStrStr.imbue(std::locale(""));
-			logStrStr << "[#" << this->idString << "] WARNING: Some content could not be saved to the database, because its size ("
+			logStrStr << "[#" << this->idString << "] WARNING:"
+					" Some content could not be saved to the database, because its size ("
 					<< content.size() << " bytes) exceeds the ";
 			if(content.size() > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
 			else {
-				logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
+				logStrStr << "current mySQL server maximum of "
+						<< this->getMaxAllowedPacketSize() << " bytes.";
 				adjustServerSettings = true;
 			}
 			this->log(logStrStr.str());
 			if(adjustServerSettings)
-				this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				this->log(
+						"[#" + this->idString + "]"
+						" Adjust the server's \'max_allowed_packet\' setting accordingly."
+				);
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveArchivedContent", e); }
