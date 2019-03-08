@@ -68,16 +68,16 @@ The source code of the server consists of the following classes (as of February 
 * **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
 * **[`Timer::StartStop`](crawlserv/src/Timer/StartStop.cpp)**: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
 * **[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.cpp)**: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
-* **[`Wrapper::Curl`](crawlserv/src/Wrapper/Curl.cpp)**: [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) wrapper for pointer to cURL instance, also handles global instance if necessary.
-* **[`Wrapper::CurlList`](crawlserv/src/Wrapper/CurlList.cpp)**: RAII wrapper for pointer to URI query list.
-* **[`Wrapper::Database`](crawlserv/src/Wrapper/Database.cpp)**: Abstract class for the database access of threads (wraps the [`Module::Database`](crawlserv/src/Module/Database.cpp) class).
-* **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.cpp)**: Wrapper for pointer to Perl-Compatible Regular Expression.
-* **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.cpp)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
-* **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.cpp)**: RAII wrapper for prepared SQL statement pointer.
-* **[`Wrapper::TableLock`](crawlserv/src/Wrapper/TableLock.cpp)**: Safe in-scope table lock for module threads (using a reference to the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.cpp) class).
-* **[`Wrapper::TargetTablesLock`](crawlserv/src/Wrapper/TargetTablesLock.cpp)**: Safe in-scope table lock for target tables (using a reference to the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.cpp) class).
-* **[`Wrapper::URI`](crawlserv/src/Wrapper/URI.cpp)**: Wrapper for pointer to URI structure.
-* **[`Wrapper::URIQueryList`](crawlserv/src/Wrapper/URIQueryList.cpp)**: RAII wrapper for pointer to URI query list.
+* **[`Wrapper::Curl`](crawlserv/src/Wrapper/Curl.h)**: [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) wrapper for pointer to cURL instance, also handles global instance if necessary.
+* **[`Wrapper::CurlList`](crawlserv/src/Wrapper/CurlList.h)**: RAII wrapper for pointer to URI query list.
+* **[`Wrapper::Database`](crawlserv/src/Wrapper/Database.h)**: Abstract class for the database access of threads (wraps the [`Module::Database`](crawlserv/src/Module/Database.cpp) class).
+* **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.h)**: Wrapper for pointer to Perl-Compatible Regular Expression.
+* **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.h)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
+* **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.h)**: RAII wrapper for prepared SQL statement pointer.
+* **[`Wrapper::TableLock`](crawlserv/src/Wrapper/TableLock.h)**: Template class for safe in-scope table locks.
+* **[`Wrapper::TargetTablesLock`](crawlserv/src/Wrapper/TargetTablesLock.h)**: Safe in-scope table lock for target tables (using a reference to the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.h) class).
+* **[`Wrapper::URI`](crawlserv/src/Wrapper/URI.h)**: Wrapper for pointer to URI structure.
+* **[`Wrapper::URIQueryList`](crawlserv/src/Wrapper/URIQueryList.h)**: RAII wrapper for pointer to URI query list.
 
 The following additional namespaces are used (to be found in [`crawlserv/src/Helper`](crawlserv/src/Helper)):
 

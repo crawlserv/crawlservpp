@@ -17,22 +17,52 @@ namespace crawlservpp::Wrapper {
 
 class URIQueryList {
 public:
-	// constructors
-	URIQueryList() noexcept;
-	URIQueryList(URIQueryList&& other) noexcept;
+	// constructor: set pointer to NULL
+	URIQueryList() noexcept : ptr(NULL) {}
 
-	// destructor
-	virtual ~URIQueryList();
+	// move constructor
+	URIQueryList(URIQueryList&& other) noexcept : ptr(other.ptr) {
+		other.ptr = NULL;
+	}
 
-	// getters
-	UriQueryListA * get() noexcept;
-	const UriQueryListA * get() const noexcept;
-	UriQueryListA ** getPtr() noexcept;
+	// destructor: free query list if necessary
+	~URIQueryList() {
+		if(this->ptr) uriFreeQueryListA(this->ptr);
+	}
 
-	// operators
-	operator bool() const noexcept;
-	bool operator!() const noexcept;
-	URIQueryList& operator=(URIQueryList&& other) noexcept;
+	// get pointer to URI query list
+	UriQueryListA * get() noexcept {
+		return this->ptr;
+	}
+
+	// get const pointer to URI query list
+	const UriQueryListA * get() const noexcept {
+		return this->ptr;
+	}
+
+	// get pointer to pointer to URI query list
+	UriQueryListA ** getPtr() noexcept {
+		return &(this->ptr);
+	}
+
+	// bool operator
+	operator bool() const noexcept {
+		return this->ptr != NULL;
+	}
+
+	// not operator
+	bool operator!() const noexcept {
+		return this->ptr == NULL;
+	}
+
+	// move operator
+	URIQueryList& operator=(URIQueryList&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = NULL;
+		}
+		return *this;
+	}
 
 	// not copyable
 	URIQueryList(URIQueryList&) = delete;
