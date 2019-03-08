@@ -124,7 +124,7 @@ void MarkovText::onAlgoTick() {
 		// increase text count and progress (internally saved as "last") if necessary
 		if(this->config.markovTextMax) {
 			this->incrementLast();
-			this->setProgress((float) this->getLast() / this->config.markovTextMax);
+			this->setProgress(static_cast<float>(this->getLast()) / this->config.markovTextMax);
 		}
 	}
 	else if(this->isRunning() && this->config.generalLogging) this->log("WARNING: Created text was empty.");
@@ -181,7 +181,7 @@ void MarkovText::createDictionary() {
 		counter++;
 		if(counter > 1000000) {
 			if(!(this->isRunning())) return;
-			this->setProgress((float) next / this->source.length());
+			this->setProgress(static_cast<float> next / this->source.length());
 			counter = 0;
 		}
 		// ***
