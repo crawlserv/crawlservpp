@@ -36,8 +36,9 @@ class Database {
 	typedef Struct::TargetTableProperties TargetTableProperties;
 	typedef Struct::QueryProperties QueryProperties;
 	typedef Struct::TableColumn TableColumn;
-	typedef std::pair<unsigned long, std::string> IdString;
+
 	typedef std::function<bool()> CallbackIsRunning;
+	typedef std::pair<unsigned long, std::string> IdString;
 
 public:
 	// allow TableLock access to protected locking functions
