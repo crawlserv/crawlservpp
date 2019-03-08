@@ -660,7 +660,7 @@ bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 	if(result) this->setStatusMessage(urlTo.url);
 	else {
 		this->setStatusMessage("IDLE Waiting for new URLs to crawl.");
-		this->setProgress(1L);
+		this->setProgress(1f);
 	}
 
 	return result;
