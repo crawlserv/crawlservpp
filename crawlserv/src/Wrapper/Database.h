@@ -28,7 +28,6 @@
 
 namespace crawlservpp::Wrapper {
 
-class TableLock;
 class TargetTablesLock;
 
 class Database {
@@ -42,12 +41,13 @@ class Database {
 
 public:
 	// allow TableLock access to protected locking functions
-	friend class TableLock;
+	template<class DB> friend class TableLock;
 	friend class TargetTablesLock;
 
-	// constructors
+	// constructor
 	Database(Module::Database& dbRef);
 
+	// destructor to be implemented by child classes
 	virtual ~Database() = 0;
 
 	// wrapper for setter
