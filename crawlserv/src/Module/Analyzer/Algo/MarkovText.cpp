@@ -127,7 +127,8 @@ void MarkovText::onAlgoTick() {
 			this->setProgress(static_cast<float>(this->getLast()) / this->config.markovTextMax);
 		}
 	}
-	else if(this->isRunning() && this->config.generalLogging) this->log("WARNING: Created text was empty.");
+	else if(this->isRunning() && this->config.generalLogging)
+		this->log("WARNING: Created text was empty.");
 
 	// sleep if necessary
 	if(this->config.markovTextSleep) {
