@@ -16,7 +16,11 @@
 
 namespace crawlservpp::Main {
 
+// initialize static variables
 sql::Driver * Database::driver = NULL;
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+std::atomic<unsigned long long> Database::requestCounter(0);
+#endif
 
 // constructor: save settings and set default values
 Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
@@ -94,7 +98,7 @@ void Database::connect() {
 		this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", (void *) &maxAllowedPacket);
 
 		// run initializing session commands
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 		if(!sqlStatement)
 			throw Database::Exception("Main::Database::connect(): Could not create SQL statement");
 
@@ -102,10 +106,14 @@ void Database::connect() {
 		std::ostringstream executeStr;
 		executeStr << "SET SESSION innodb_lock_wait_timeout = ";
 		executeStr << MAIN_DATABASE_LOCK_TIMEOUT_SECONDS;
-		sqlStatement->execute(executeStr.str());
+		Database::sqlExecute(sqlStatement, executeStr.str());
 
-		// get maximum allowed package size
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery("SHOW VARIABLES LIKE 'max_allowed_packet'"));
+		// request maximum allowed package size
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
+				"SHOW VARIABLES LIKE 'max_allowed_packet'"
+		));
+
+		// get result
 		if(sqlResultSet && sqlResultSet->next()){
 			this->maxAllowedPacketSize = sqlResultSet->getUInt64("Value");
 			if(!(this->maxAllowedPacketSize))
@@ -123,7 +131,8 @@ void Database::initializeSql() {
 	sqlFiles = Helper::FileSystem::listFilesInPath("sql", ".sql");
 
 	// execute all SQL files
-	for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i) this->run(*i);
+	for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i)
+		this->run(*i);
 }
 
 // prepare basic SQL statements (getting last id, logging and thread status)
@@ -133,14 +142,24 @@ void Database::prepare() {
 
 	try {
 		// prepare basic SQL statements
-		if(!(this->ps.lastId)) this->ps.lastId = this->addPreparedStatement("SELECT LAST_INSERT_ID() AS id");
-		if(!(this->ps.log)) this->ps.log = this->addPreparedStatement("INSERT INTO crawlserv_log(module, entry) VALUES (?, ?)");
+		if(!(this->ps.lastId))
+			this->ps.lastId = this->addPreparedStatement(
+					"SELECT LAST_INSERT_ID() AS id"
+			);
+		if(!(this->ps.log))
+			this->ps.log = this->addPreparedStatement(
+					"INSERT INTO crawlserv_log(module, entry) VALUES (?, ?)"
+			);
 
 		// prepare thread statements
-		if(!(this->ps.setThreadStatus)) this->ps.setThreadStatus = this->addPreparedStatement(
-				"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1");
-		if(!(this->ps.setThreadStatusMessage)) this->ps.setThreadStatusMessage = this->addPreparedStatement(
-				"UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1");
+		if(!(this->ps.setThreadStatus))
+			this->ps.setThreadStatus = this->addPreparedStatement(
+				"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1"
+			);
+		if(!(this->ps.setThreadStatusMessage))
+			this->ps.setThreadStatusMessage = this->addPreparedStatement(
+				"UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1"
+			);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::prepare", e); }
 }
@@ -153,8 +172,8 @@ void Database::prepare() {
 void Database::log(const std::string& logModule, const std::string& logEntry) {
 	// check table lock
 	if(this->tablesLocked) {
-		std::cout << std::endl << "[WARNING] Logging not possible while a table is locked - re-routing to stdout:";
-		std::cout << std::endl << " " << logModule << ": " << logEntry << std::flush;
+		std::cout << std::endl << "[WARNING] Logging not possible while a table is locked - re-routing to stdout:"
+				  << std::endl << " " << logModule << ": " << logEntry << std::flush;
 		return;
 	}
 
@@ -175,7 +194,7 @@ void Database::log(const std::string& logModule, const std::string& logEntry) {
 		else sqlStatement.setString(1, logModule);
 		if(logEntry.empty()) sqlStatement.setString(2, "[empty]");
 		else sqlStatement.setString(2, logEntry);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::log", e); }
 }
@@ -198,14 +217,16 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(sqlQuery));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 		// execute SQL statement
-		if(!logModule.empty()) sqlStatement->setString(1, logModule);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		if(!logModule.empty())
+			sqlStatement->setString(1, logModule);
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64(1);
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getUInt64(1);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getNumberOfLogEntries", e); }
 
@@ -223,11 +244,12 @@ void Database::clearLogs(const std::string& logModule) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(sqlQuery));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 		// execute SQL statement
-		if(!logModule.empty()) sqlStatement->setString(1, logModule);
-		sqlStatement->execute();
+		if(!logModule.empty())
+			sqlStatement->setString(1, logModule);
+		Database::sqlExecute(sqlStatement);
 
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::clearLogs", e); }
@@ -246,11 +268,12 @@ std::vector<Database::ThreadDatabaseEntry> Database::getThreads() {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL query
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(
-				"SELECT id, module, status, paused, website, urllist, config, last FROM crawlserv_threads"));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
+				"SELECT id, module, status, paused, website, urllist, config, last FROM crawlserv_threads"
+		));
 
 		// get results
 		if(sqlResultSet) {
@@ -281,25 +304,30 @@ unsigned long Database::addThread(const std::string& threadModule, const ThreadO
 	unsigned long result = 0;
 
 	// check arguments
-	if(threadModule.empty()) throw Database::Exception("Main::Database::addThread(): No thread module specified");
-	if(!threadOptions.website) throw Database::Exception("Main::Database::addThread(): No website specified");
-	if(!threadOptions.urlList) throw Database::Exception("Main::Database::addThread(): No URL list specified");
-	if(!threadOptions.config) throw Database::Exception("Main::Database::addThread(): No configuration specified");
+	if(threadModule.empty())
+		throw Database::Exception("Main::Database::addThread(): No thread module specified");
+	if(!threadOptions.website)
+		throw Database::Exception("Main::Database::addThread(): No website specified");
+	if(!threadOptions.urlList)
+		throw Database::Exception("Main::Database::addThread(): No URL list specified");
+	if(!threadOptions.config)
+		throw Database::Exception("Main::Database::addThread(): No configuration specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"INSERT INTO crawlserv_threads(module, website, urllist, config) VALUES (?, ?, ?, ?)"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"INSERT INTO crawlserv_threads(module, website, urllist, config) VALUES (?, ?, ?, ?)"
+		));
 
 		// execute SQL statement
 		sqlStatement->setString(1, threadModule);
 		sqlStatement->setUInt64(2, threadOptions.website);
 		sqlStatement->setUInt64(3, threadOptions.urlList);
 		sqlStatement->setUInt64(4, threadOptions.config);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// get id
 		result = this->getLastInsertedId();
@@ -314,22 +342,25 @@ unsigned long Database::getThreadRunTime(unsigned long threadId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!threadId) throw Database::Exception("Main::Database::getThreadRunTime(): No thread ID specified");
+	if(!threadId)
+		throw Database::Exception("Main::Database::getThreadRunTime(): No thread ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT runtime FROM crawlserv_threads WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT runtime FROM crawlserv_threads WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, threadId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("runtime");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getUInt64("runtime");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getThreadRunTime", e); }
 
@@ -341,22 +372,25 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!threadId) throw Database::Exception("Main::Database::getThreadPauseTime(): No thread ID specified");
+	if(!threadId)
+		throw Database::Exception("Main::Database::getThreadPauseTime(): No thread ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT pausetime FROM crawlserv_threads WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT pausetime FROM crawlserv_threads WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, threadId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("pausetime");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getUInt64("pausetime");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getThreadPauseTime", e); }
 
@@ -366,7 +400,8 @@ unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 // update thread status in the database (and add the pause state to the status message if necessary)
 void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 	// check argument
-	if(!threadId) throw Database::Exception("Main::Database::setThreadStatus(): No thread ID specified");
+	if(!threadId)
+		throw Database::Exception("Main::Database::setThreadStatus(): No thread ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -391,7 +426,7 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 		sqlStatement.setString(1, statusMessage);
 		sqlStatement.setBoolean(2, threadPaused);
 		sqlStatement.setUInt64(3, threadId);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadStatus", e); }
 }
@@ -399,7 +434,8 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 // update thread status in the database (without using or changing the pause state)
 void Database::setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage) {
 	// check argument
-	if(!threadId) throw Database::Exception("Main::Database::setThreadStatus(): No thread ID specified");
+	if(!threadId)
+		throw Database::Exception("Main::Database::setThreadStatus(): No thread ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -419,7 +455,7 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 		// execute SQL statement
 		sqlStatement.setString(1, statusMessage);
 		sqlStatement.setUInt64(2, threadId);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadStatus", e); }
 }
@@ -427,20 +463,22 @@ void Database::setThreadStatus(unsigned long threadId, const std::string& thread
 // set run time of thread (in seconds) in the database
 void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunTime) {
 	// check argument
-	if(!threadId) throw Database::Exception("Main::Database::setThreadRunTime(): No thread ID specified");
+	if(!threadId)
+		throw Database::Exception("Main::Database::setThreadRunTime(): No thread ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"UPDATE crawlserv_threads SET runtime = ? WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"UPDATE crawlserv_threads SET runtime = ? WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, threadRunTime);
 		sqlStatement->setUInt64(2, threadId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadRunTime", e); }
 }
@@ -448,20 +486,22 @@ void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunT
 // set pause time of thread (in seconds) in the database
 void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPauseTime) {
 	// check argument
-	if(!threadId) throw Database::Exception("Main::Database::setThreadPauseTime(): No thread ID specified");
+	if(!threadId)
+		throw Database::Exception("Main::Database::setThreadPauseTime(): No thread ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"UPDATE crawlserv_threads SET pausetime = ? WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"UPDATE crawlserv_threads SET pausetime = ? WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, threadPauseTime);
 		sqlStatement->setUInt64(2, threadId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadPauseTime", e); }
 }
@@ -469,22 +509,25 @@ void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPa
 // remove thread from the database by its ID
 void Database::deleteThread(unsigned long threadId) {
 	// check argument
-	if(!threadId) throw Database::Exception("Main::Database::deleteThread(): No thread ID specified");
+	if(!threadId)
+		throw Database::Exception("Main::Database::deleteThread(): No thread ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"DELETE FROM crawlserv_threads WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"DELETE FROM crawlserv_threads WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, threadId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// reset auto-increment if table is empty
-		if(this->isTableEmpty("crawlserv_threads")) this->resetAutoIncrement("crawlserv_threads");
+		if(this->isTableEmpty("crawlserv_threads"))
+			this->resetAutoIncrement("crawlserv_threads");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteThread", e); }
 }
@@ -515,14 +558,15 @@ unsigned long Database::addWebsite(const WebsiteProperties& websiteProperties) {
 
 	try {
 		// create SQL statement for adding website
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"INSERT INTO crawlserv_websites(domain, namespace, name) VALUES (?, ?, ?)"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"INSERT INTO crawlserv_websites(domain, namespace, name) VALUES (?, ?, ?)"
+		));
 
 		// execute SQL statement for adding website
 		sqlStatement->setString(1, websiteProperties.domain);
 		sqlStatement->setString(2, websiteProperties.nameSpace);
 		sqlStatement->setString(3, websiteProperties.name);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// get id
 		result = this->getLastInsertedId();
@@ -547,15 +591,17 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT domain FROM crawlserv_websites WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT domain FROM crawlserv_websites WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("domain");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getString("domain");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteDomain", e); }
 
@@ -574,15 +620,17 @@ std::string Database::getWebsiteNamespace(unsigned long int websiteId) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT namespace FROM crawlserv_websites WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT namespace FROM crawlserv_websites WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("namespace");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getString("namespace");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteNamespace", e); }
 
@@ -601,12 +649,13 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromUrlList(u
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT website FROM crawlserv_urllists WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT website FROM crawlserv_urllists WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, listId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
@@ -628,15 +677,17 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(un
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT website FROM crawlserv_configs WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT website FROM crawlserv_configs WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, configId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next())
+			websiteId = sqlResultSet->getUInt64("website");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteNamespaceFromConfig", e); }
 
@@ -658,15 +709,17 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromTargetTab
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT website FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT website FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, tableId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) websiteId = sqlResultSet->getUInt64("website");
+		if(sqlResultSet && sqlResultSet->next())
+			websiteId = sqlResultSet->getUInt64("website");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteNamespaceFromCustomTable", e); }
 
@@ -678,19 +731,21 @@ bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 	bool result = false;
 
 	// check argument
-	if(nameSpace.empty()) throw Database::Exception("Main::Database::isWebsiteNamespace(): No namespace specified");
+	if(nameSpace.empty())
+		throw Database::Exception("Main::Database::isWebsiteNamespace(): No namespace specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS (SELECT * FROM crawlserv_websites WHERE namespace = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS (SELECT * FROM crawlserv_websites WHERE namespace = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setString(1, nameSpace);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
@@ -770,50 +825,68 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 			std::queue<IdString> tables;
 
 			// create SQL statement for renaming
-			std::unique_ptr<sql::Statement> renameStatement(this->connection->createStatement());
+			SqlStatementPtr renameStatement(this->connection->createStatement());
 
 			// rename sub tables
 			std::queue<IdString> urlLists = this->getUrlLists(websiteId);
 			while(!urlLists.empty()) {
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "`");
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawled` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawled`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "` RENAME TO"
+						" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "`"
+				);
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawled` RENAME TO"
+						" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawled`"
+				);
 
 				// rename crawling table
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawling` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawling`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawling` RENAME TO"
+						" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawling`"
+				);
 
 				// rename parsing tables
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsing` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsing` RENAME TO"
+						" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing`"
+				);
 				tables = this->getTargetTables("parsed", urlLists.front().first);
 				while(!tables.empty()) {
-					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsed_"
+					Database::sqlExecute(renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsed_"
 							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
-							+ urlLists.front().second + "_parsed_" + tables.front().second + "`");
+							+ urlLists.front().second + "_parsed_" + tables.front().second + "`"
+					);
 					tables.pop();
 				}
 
 				// rename extracting tables
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracting` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_extracting`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracting` RENAME TO"
+						" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_extracting`"
+				);
 				tables = this->getTargetTables("extracted", urlLists.front().first);
 				while(!tables.empty()) {
-					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracted_"
+					Database::sqlExecute(renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracted_"
 							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
-							+ urlLists.front().second + "_extracted_" + tables.front().second + "`");
+							+ urlLists.front().second + "_extracted_" + tables.front().second + "`"
+					);
 					tables.pop();
 				}
 
 				// rename analyzing tables
-				renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzing` RENAME TO "
-						+ "`crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_analyzing`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzing` RENAME TO"
+						+ " `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_analyzing`"
+				);
 				tables = this->getTargetTables("analyzed", urlLists.front().first);
 				while(!tables.empty()) {
-					renameStatement->execute("ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzed_"
+					Database::sqlExecute(renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzed_"
 							+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
-							+ urlLists.front().second + "_analyzed_" + tables.front().second + "`");
+							+ urlLists.front().second + "_analyzed_" + tables.front().second + "`"
+					);
 					tables.pop();
 				}
 
@@ -822,26 +895,28 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 			}
 
 			// create SQL statement for updating
-			std::unique_ptr<sql::PreparedStatement> updateStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_websites SET domain = ?, namespace = ?, name = ? WHERE id = ? LIMIT 1"));
+			SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
+					"UPDATE crawlserv_websites SET domain = ?, namespace = ?, name = ? WHERE id = ? LIMIT 1"
+			));
 
 			// execute SQL statement for updating
 			updateStatement->setString(1, websiteProperties.domain);
 			updateStatement->setString(2, websiteProperties.nameSpace);
 			updateStatement->setString(3, websiteProperties.name);
 			updateStatement->setUInt64(4, websiteId);
-			updateStatement->execute();
+			Database::sqlExecute(updateStatement);
 		}
 		else {
 			// create SQL statement for updating
-			std::unique_ptr<sql::PreparedStatement> updateStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_websites SET domain = ?, name = ? WHERE id = ? LIMIT 1"));
+			SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
+					"UPDATE crawlserv_websites SET domain = ?, name = ? WHERE id = ? LIMIT 1"
+			));
 
 			// execute SQL statement for updating
 			updateStatement->setString(1, websiteProperties.domain);
 			updateStatement->setString(2, websiteProperties.name);
 			updateStatement->setUInt64(3, websiteId);
-			updateStatement->execute();
+			Database::sqlExecute(updateStatement);
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateWebsite", e); }
@@ -850,7 +925,8 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 // delete website (and all associated data) from the database by its ID
 void Database::deleteWebsite(unsigned long websiteId) {
 	// check argument
-	if(!websiteId) throw Database::Exception("Main::Database::deleteWebsite(): No website ID specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::deleteWebsite(): No website ID specified");
 
 	// get website namespace
 	std::string websiteNamespace = this->getWebsiteNamespace(websiteId);
@@ -868,12 +944,13 @@ void Database::deleteWebsite(unsigned long websiteId) {
 		this->checkConnection();
 
 		// create SQL statement for deletion of website
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"DELETE FROM crawlserv_websites WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"DELETE FROM crawlserv_websites WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statements for deletion of website
 		sqlStatement->setUInt64(1, websiteId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_websites")) this->resetAutoIncrement("crawlserv_websites");
@@ -893,12 +970,13 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 
 	try {
 		// create SQL statement for geting website info
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT name, namespace, domain FROM crawlserv_websites WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT name, namespace, domain FROM crawlserv_websites WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement for geting website info
 		sqlStatement->setUInt64(1, websiteId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -919,7 +997,7 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 
 			// execute SQL statement for geting URL list info
 			sqlStatement->setUInt64(1, websiteId);
-			sqlResultSet.reset(sqlStatement->executeQuery());
+			sqlResultSet.reset(Database::sqlExecuteQuery(sqlStatement));
 
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
@@ -936,25 +1014,28 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 
 			// execute SQL statement for getting queries
 			sqlStatement->setUInt64(1, websiteId);
-			sqlResultSet.reset(sqlStatement->executeQuery());
+			sqlResultSet.reset(Database::sqlExecuteQuery(sqlStatement));
 
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
 				// add query
-				this->addQuery(result, QueryProperties(sqlResultSet->getString("name"),
+				this->addQuery(
+						result, QueryProperties(sqlResultSet->getString("name"),
 						sqlResultSet->getString("query"), sqlResultSet->getString("type"),
 						sqlResultSet->getBoolean("resultbool"),	sqlResultSet->getBoolean("resultsingle"),
-						sqlResultSet->getBoolean("resultmulti"), sqlResultSet->getBoolean("textonly")));
+						sqlResultSet->getBoolean("resultmulti"), sqlResultSet->getBoolean("textonly"))
+				);
 
 			}
 
 			// create SQL statement for getting configurations
 			sqlStatement.reset(this->connection->prepareStatement(
-					"SELECT module, name, config FROM crawlserv_configs WHERE website = ?"));
+					"SELECT module, name, config FROM crawlserv_configs WHERE website = ?"
+			));
 
 			// execute SQL statement for getting configurations
 			sqlStatement->setUInt64(1, websiteId);
-			sqlResultSet.reset(sqlStatement->executeQuery());
+			sqlResultSet.reset(Database::sqlExecuteQuery(sqlStatement));
 
 			// get results
 			while(sqlResultSet && sqlResultSet->next()) {
@@ -997,14 +1078,15 @@ unsigned long Database::addUrlList(unsigned long websiteId, const UrlListPropert
 
 	try {
 		// create SQL statement for adding URL list
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"INSERT INTO crawlserv_urllists(website, namespace, name) VALUES (?, ?, ?)"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"INSERT INTO crawlserv_urllists(website, namespace, name) VALUES (?, ?, ?)"
+		));
 
 		// execute SQL query for adding URL list
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setString(2, listProperties.nameSpace);
 		sqlStatement->setString(3, listProperties.name);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// get ID of newly added URL list
 		result = this->getLastInsertedId();
@@ -1082,12 +1164,12 @@ std::queue<Database::IdString> Database::getUrlLists(unsigned long websiteId) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT id, namespace FROM crawlserv_urllists WHERE website = ?"));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get results
 		if(sqlResultSet) {
@@ -1112,12 +1194,12 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT namespace FROM crawlserv_urllists WHERE id = ? LIMIT 1"));
 
 		// execute SQL query
 		sqlStatement->setUInt64(1, listId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("namespace");
@@ -1128,7 +1210,7 @@ std::string Database::getUrlListNamespace(unsigned long listId) {
 }
 
 // get ID and namespace of URL list from the database using a target table type and ID
-std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
+Database::IdString Database::getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
 	unsigned long urlListId = 0;
 
 	// check argument
@@ -1142,19 +1224,21 @@ std::pair<unsigned long, std::string> Database::getUrlListNamespaceFromTargetTab
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT urllist FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT urllist FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL query
 		sqlStatement->setUInt64(1, tableId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) urlListId = sqlResultSet->getUInt64("urllist");
+		if(sqlResultSet && sqlResultSet->next())
+			urlListId = sqlResultSet->getUInt64("urllist");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getUrlListNamespaceFromCustomTable", e); }
 
-	return std::pair<unsigned long, std::string>(urlListId, this->getUrlListNamespace(urlListId));
+	return IdString(urlListId, this->getUrlListNamespace(urlListId));
 }
 
 // check whether a URL list namespace for an ID-specified website exists in the database
@@ -1172,16 +1256,18 @@ bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& na
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS (SELECT * FROM crawlserv_urllists WHERE website = ? AND namespace = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS (SELECT * FROM crawlserv_urllists WHERE website = ? AND namespace = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setString(2, nameSpace);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isUrlListNamespace", e); }
 
@@ -1215,74 +1301,90 @@ void Database::updateUrlList(unsigned long listId, const UrlListProperties& list
 			std::queue<IdString> tables;
 
 			// create SQL statement for renaming
-			std::unique_ptr<sql::Statement> renameStatement(this->connection->createStatement());
+			SqlStatementPtr renameStatement(this->connection->createStatement());
 
 			// rename URL list table
-			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "`");
+			Database::sqlExecute(renameStatement,
+					"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
+					+ "` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "`"
+			);
 
 			// rename crawling tables
-			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "_crawled` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_crawled`");
-			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "_crawling`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listProperties.nameSpace	+ "_crawling`");
+			Database::sqlExecute(renameStatement,
+					"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_crawled`"
+					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_crawled`"
+			);
+			Database::sqlExecute(renameStatement,
+					"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_crawling`"
+					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace	+ "_crawling`"
+			);
 
 			// rename parsing tables
-			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "_parsing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-					+ listProperties.nameSpace	+ "_parsing`");
+			Database::sqlExecute(renameStatement,
+					"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_parsing`"
+					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_parsing`"
+			);
 			tables = this->getTargetTables("parsed", listId);
 			while(!tables.empty()) {
-				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "_parsed_" + tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listProperties.nameSpace	+ "_parsed_" + tables.front().second + "`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_parsed_"
+						+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+						+ listProperties.nameSpace	+ "_parsed_" + tables.front().second + "`"
+				);
 				tables.pop();
 			}
 
 			// rename extracting tables
-			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "_extracting`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-					+ listProperties.nameSpace	+ "_extracting`");
+			Database::sqlExecute(renameStatement,
+					"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_extracting`"
+					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_extracting`"
+			);
 			tables = this->getTargetTables("extracted", listId);
 			while(!tables.empty()) {
-				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "_extracted_"	+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listProperties.nameSpace + "_extracted_"	+ tables.front().second + "`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_extracted_"
+						+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+						+ listProperties.nameSpace + "_extracted_"	+ tables.front().second + "`"
+				);
 				tables.pop();
 			}
 
 			// rename analyzing tables
-			renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-					+ "_analyzing`" + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-					+ listProperties.nameSpace	+ "_analyzing`");
+			Database::sqlExecute(renameStatement,
+					"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_analyzing`"
+					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace	+ "_analyzing`"
+			);
 			tables = this->getTargetTables("analyzed", listId);
 			while(!tables.empty()) {
-				renameStatement->execute("ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "_analyzed_" + tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-						+ listProperties.nameSpace + "_analyzed_" + tables.front().second + "`");
+				Database::sqlExecute(renameStatement,
+						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_analyzed_"
+						+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+						+ listProperties.nameSpace + "_analyzed_" + tables.front().second + "`"
+				);
 				tables.pop();
 			}
 
 			// create SQL statement for updating
-			std::unique_ptr<sql::PreparedStatement> updateStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_urllists SET namespace = ?, name = ? WHERE id = ? LIMIT 1"));
+			SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
+					"UPDATE crawlserv_urllists SET namespace = ?, name = ? WHERE id = ? LIMIT 1"
+			));
 
 			// execute SQL statement for updating
 			updateStatement->setString(1, listProperties.nameSpace);
 			updateStatement->setString(2, listProperties.name);
 			updateStatement->setUInt64(3, listId);
-			updateStatement->execute();
+			Database::sqlExecute(updateStatement);
 		}
 		else {
 			// create SQL statement for updating
-			std::unique_ptr<sql::PreparedStatement> updateStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_urllists SET name = ? WHERE id = ? LIMIT 1"));
+			SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
+					"UPDATE crawlserv_urllists SET name = ? WHERE id = ? LIMIT 1"
+			));
 
 			// execute SQL statement for updating
 			updateStatement->setString(1, listProperties.name);
 			updateStatement->setUInt64(2, listId);
-			updateStatement->execute();
+			Database::sqlExecute(updateStatement);
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateUrlList", e); }
@@ -1293,7 +1395,8 @@ void Database::deleteUrlList(unsigned long listId) {
 	std::queue<IdString> tables;
 
 	// check argument
-	if(!listId) throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1325,17 +1428,19 @@ void Database::deleteUrlList(unsigned long listId) {
 
 	try {
 		// create SQL statement for deleting URL list
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"DELETE FROM crawlserv_urllists WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"DELETE FROM crawlserv_urllists WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement for deleting URL list
 		sqlStatement->setUInt64(1, listId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteUrlList", e); }
 
 	// reset auto-increment if table is empty
-	if(this->isTableEmpty("crawlserv_urllists")) this->resetAutoIncrement("crawlserv_urllists");
+	if(this->isTableEmpty("crawlserv_urllists"))
+		this->resetAutoIncrement("crawlserv_urllists");
 
 	// delete tables
 	this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_crawled");
@@ -1349,7 +1454,8 @@ void Database::deleteUrlList(unsigned long listId) {
 // reset parsing status of ID-specified URL list
 void Database::resetParsingStatus(unsigned long listId) {
 	// check argument
-	if(!listId) throw Database::Exception("Main::Database::resetParsingStatus(): No URL list ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::resetParsingStatus(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1360,8 +1466,10 @@ void Database::resetParsingStatus(unsigned long listId) {
 
 		try {
 			// update parsing table
-			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
-					+ "_parsing` SET success = FALSE, locktime = NULL");
+			this->execute(
+					"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing`"
+					" SET success = FALSE, locktime = NULL"
+			);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetParsingStatus", e); }
 	} // parsing table unlocked
@@ -1381,8 +1489,10 @@ void Database::resetExtractingStatus(unsigned long listId) {
 
 		try {
 			// update extracting table
-			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
-					+ "_extracting` SET success = FALSE, locktime = NULL");
+			this->execute(
+					"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting`"
+					" SET success = FALSE, locktime = NULL"
+			);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetExtractingStatus", e); }
 	} // extracting table unlocked
@@ -1402,8 +1512,10 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
 
 		try {
 			// update URL list
-			this->execute("UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace
-					+ "_analyzing` SET success = FALSE, locktime = NULL");
+			this->execute(
+					"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing`"
+					" SET success = FALSE, locktime = NULL"
+			);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAnalyzingStatus", e); }
 	} // analyzing table unlocked
@@ -1430,9 +1542,10 @@ unsigned long Database::addQuery(unsigned long websiteId, const QueryProperties&
 
 	try {
 		// create SQL statement for adding query
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"INSERT INTO crawlserv_queries(website, name, query, type, resultbool, resultsingle, resultmulti, textonly)"
-				" VALUES (?, ?, ?, ?, ?, ?, ?, ?)"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"INSERT INTO crawlserv_queries(website, name, query, type, resultbool, resultsingle,"
+					"resultmulti, textonly) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+		));
 
 		// execute SQL query for adding query
 		if(websiteId) sqlStatement->setUInt64(1, websiteId);
@@ -1444,7 +1557,7 @@ unsigned long Database::addQuery(unsigned long websiteId, const QueryProperties&
 		sqlStatement->setBoolean(6, queryProperties.resultSingle);
 		sqlStatement->setBoolean(7, queryProperties.resultMulti);
 		sqlStatement->setBoolean(8, queryProperties.textOnly);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// get id
 		result = this->getLastInsertedId();
@@ -1464,13 +1577,14 @@ void Database::getQueryProperties(unsigned long queryId, QueryProperties& queryP
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
-				" FROM crawlserv_queries WHERE id = ? LIMIT 1"));
+				" FROM crawlserv_queries WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, queryId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -1512,9 +1626,10 @@ void Database::updateQuery(unsigned long queryId, const QueryProperties& queryPr
 
 	try {
 		// create SQL statement for updating
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"UPDATE crawlserv_queries SET name = ?, query = ?, type = ?, resultbool = ?,"
-				" resultsingle = ?, resultmulti = ?, textonly = ? WHERE id = ? LIMIT 1"));
+				" resultsingle = ?, resultmulti = ?, textonly = ? WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement for updating
 		sqlStatement->setString(1, queryProperties.name);
@@ -1525,7 +1640,7 @@ void Database::updateQuery(unsigned long queryId, const QueryProperties& queryPr
 		sqlStatement->setBoolean(6, queryProperties.resultMulti);
 		sqlStatement->setBoolean(7, queryProperties.textOnly);
 		sqlStatement->setUInt64(8, queryId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateQuery", e); }
 }
@@ -1533,19 +1648,21 @@ void Database::updateQuery(unsigned long queryId, const QueryProperties& queryPr
 // delete query from the database by its ID
 void Database::deleteQuery(unsigned long queryId) {
 	// check argument
-	if(!queryId) throw Database::Exception("Main::Database::deleteQuery(): No query ID specified");
+	if(!queryId)
+		throw Database::Exception("Main::Database::deleteQuery(): No query ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"DELETE FROM crawlserv_queries WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"DELETE FROM crawlserv_queries WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, queryId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// reset auto-increment if table is empty
 		if(this->isTableEmpty("crawlserv_queries")) this->resetAutoIncrement("crawlserv_queries");
@@ -1558,20 +1675,22 @@ unsigned long Database::duplicateQuery(unsigned long queryId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!queryId) throw Database::Exception("Main::Database::duplicateQuery(): No query ID specified");
+	if(!queryId)
+		throw Database::Exception("Main::Database::duplicateQuery(): No query ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement for getting query info
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT website, name, query, type, resultbool, resultsingle, resultmulti,"
-				" textonly FROM crawlserv_queries WHERE id = ? LIMIT 1"));
+				" textonly FROM crawlserv_queries WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement for getting query info
 		sqlStatement->setUInt64(1, queryId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -1609,15 +1728,16 @@ unsigned long Database::addConfiguration(unsigned long websiteId, const ConfigPr
 
 	try {
 		// create SQL statement for adding configuration
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"INSERT INTO crawlserv_configs(website, module, name, config) VALUES (?, ?, ?, ?)"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"INSERT INTO crawlserv_configs(website, module, name, config) VALUES (?, ?, ?, ?)"
+		));
 
 		// execute SQL query for adding website
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setString(2, configProperties.module);
 		sqlStatement->setString(3, configProperties.name);
 		sqlStatement->setString(4, configProperties.config);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// get id
 		result = this->getLastInsertedId();
@@ -1632,22 +1752,25 @@ const std::string Database::getConfiguration(unsigned long configId) {
 	std::string result;
 
 	// check argument
-	if(!configId) throw Database::Exception("Main::Database::getConfiguration(): No configuration ID specified");
+	if(!configId)
+		throw Database::Exception("Main::Database::getConfiguration(): No configuration ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT config FROM crawlserv_configs WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT config FROM crawlserv_configs WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, configId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("config");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getString("config");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getConfiguration", e); }
 
@@ -1669,14 +1792,15 @@ void Database::updateConfiguration(unsigned long configId, const ConfigPropertie
 
 	try {
 		// create SQL statement for updating
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"UPDATE crawlserv_configs SET name = ?, config = ? WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"UPDATE crawlserv_configs SET name = ?, config = ? WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement for updating
 		sqlStatement->setString(1, configProperties.name);
 		sqlStatement->setString(2, configProperties.config);
 		sqlStatement->setUInt64(3, configId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateConfiguration", e); }
 }
@@ -1684,22 +1808,25 @@ void Database::updateConfiguration(unsigned long configId, const ConfigPropertie
 // delete configuration from the database by its ID
 void Database::deleteConfiguration(unsigned long configId) {
 	// check argument
-	if(!configId) throw Database::Exception("Main::Database::deleteConfiguration(): No configuration ID specified");
+	if(!configId)
+		throw Database::Exception("Main::Database::deleteConfiguration(): No configuration ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"DELETE FROM crawlserv_configs WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"DELETE FROM crawlserv_configs WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, configId);
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 
 		// reset auto-increment if table is empty
-		if(this->isTableEmpty("crawlserv_configs")) this->resetAutoIncrement("crawlserv_configs");
+		if(this->isTableEmpty("crawlserv_configs"))
+			this->resetAutoIncrement("crawlserv_configs");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteConfiguration", e); }
 }
@@ -1709,26 +1836,30 @@ unsigned long Database::duplicateConfiguration(unsigned long configId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!configId) throw Database::Exception("Main::Database::duplicateConfiguration(): No configuration ID specified");
+	if(!configId)
+		throw Database::Exception("Main::Database::duplicateConfiguration(): No configuration ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement for getting configuration info
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT website, module, name, config FROM crawlserv_configs WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT website, module, name, config FROM crawlserv_configs WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement for getting configuration info
 		sqlStatement->setUInt64(1, configId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
 			// add configuration
-			result = this->addConfiguration(sqlResultSet->getUInt64("website"), ConfigProperties(
-					sqlResultSet->getString("module"), sqlResultSet->getString("name") + " (copy)",
-					sqlResultSet->getString("config")));
+			result = this->addConfiguration(sqlResultSet->getUInt64("website"),
+					ConfigProperties(
+							sqlResultSet->getString("module"), sqlResultSet->getString("name") + " (copy)",
+							sqlResultSet->getString("config")
+					));
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::duplicateConfiguration", e); }
@@ -1747,10 +1878,14 @@ void Database::lockTargetTables(const std::string& type, unsigned long websiteId
 	bool sleep = false;
 
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::lockTargetTables(): No table type specified");
-	if(!websiteId) throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
-	if(!listId) throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
-	if(!timeOut) throw Database::Exception("Main::Database::lockTargetTables(): No lock time-out specified");
+	if(type.empty())
+		throw Database::Exception("Main::Database::lockTargetTables(): No table type specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
+	if(!timeOut)
+		throw Database::Exception("Main::Database::lockTargetTables(): No lock time-out specified");
 
 	while(isRunning()) { // do not continue until lock is gone or thread should not run anymore
 		// check whether thread should be sleeping
@@ -1767,16 +1902,17 @@ void Database::lockTargetTables(const std::string& type, unsigned long websiteId
 
 			try {
 				// create SQL statement for checking target table lock
-				std::unique_ptr<sql::PreparedStatement> checkStatement(this->connection->prepareStatement(
+				SqlPreparedStatementPtr checkStatement(this->connection->prepareStatement(
 						"SELECT EXISTS(SELECT * FROM crawlserv_targetlocks"
 						" WHERE tabletype = ? AND website = ? AND urllist = ? AND locktime > NOW() LIMIT 1"
-						") AS result"));
+						") AS result"
+				));
 
 				// execute SQL statement
 				checkStatement->setString(1, type);
 				checkStatement->setUInt64(2, websiteId);
 				checkStatement->setUInt64(3, listId);
-				std::unique_ptr<sql::ResultSet> sqlResultSet(checkStatement->executeQuery());
+				SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(checkStatement));
 
 				// get result
 				if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
@@ -1786,16 +1922,17 @@ void Database::lockTargetTables(const std::string& type, unsigned long websiteId
 				}
 
 				// create SQL statement for inserting target table lock
-				std::unique_ptr<sql::PreparedStatement> insertStatement(this->connection->prepareStatement(
+				SqlPreparedStatementPtr insertStatement(this->connection->prepareStatement(
 						"INSERT INTO crawlserv_targetlocks(tabletype, website, urllist, locktime)"
-						" VALUES (?, ?, ?, NOW() + INTERVAL ? SECOND)"));
+						" VALUES (?, ?, ?, NOW() + INTERVAL ? SECOND)"
+				));
 
 				// execute SQL statement
 				insertStatement->setString(1, type);
 				insertStatement->setUInt64(2, websiteId);
 				insertStatement->setUInt64(3, listId);
 				insertStatement->setUInt64(4, timeOut);
-				insertStatement->execute();
+				Database::sqlExecute(insertStatement);
 
 				// save lock ID
 				this->targetTableLocks.emplace_back(type, this->getLastInsertedId());
@@ -1860,14 +1997,14 @@ unsigned long Database::addTargetTable(const TargetTableProperties& properties) 
 		}
 
 		// create SQL statement for checking for entry
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT id FROM `crawlserv_" + properties.type + "tables` WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
 
 		// execute SQL statement for checking for entry
 		sqlStatement->setUInt64(1, properties.website);
 		sqlStatement->setUInt64(2, properties.urlList);
 		sqlStatement->setString(3, properties.name);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		if(sqlResultSet && sqlResultSet->next())
 			// entry exists: return ID
@@ -1875,13 +2012,14 @@ unsigned long Database::addTargetTable(const TargetTableProperties& properties) 
 		else {
 			// entry does not exist already: create SQL statement for adding table
 			sqlStatement.reset(this->connection->prepareStatement(
-					"INSERT INTO `crawlserv_" + properties.type + "tables`(website, urllist, name) VALUES (?, ?, ?)"));
+					"INSERT INTO `crawlserv_" + properties.type + "tables`(website, urllist, name) VALUES (?, ?, ?)"
+			));
 
 			// execute SQL statement for adding table
 			sqlStatement->setUInt64(1, properties.website);
 			sqlStatement->setUInt64(2, properties.urlList);
 			sqlStatement->setString(3, properties.name);
-			sqlStatement->execute();
+			Database::sqlExecute(sqlStatement);
 
 			// return ID of newly inserted table
 			result = this->getLastInsertedId();
@@ -1897,20 +2035,23 @@ std::queue<Database::IdString> Database::getTargetTables(const std::string& type
 	std::queue<IdString> result;
 
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::getTargetTables(): No table type specified");
-	if(!listId) throw Database::Exception("Main::Database::getTargetTables(): No URL list ID specified");
+	if(type.empty())
+		throw Database::Exception("Main::Database::getTargetTables(): No table type specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::getTargetTables(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT id, name FROM `crawlserv_" + type + "tables` WHERE urllist = ?"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT id, name FROM `crawlserv_" + type + "tables` WHERE urllist = ?"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, listId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get results
 		if(sqlResultSet) {
@@ -1929,27 +2070,33 @@ unsigned long Database::getTargetTableId(const std::string& type, unsigned long 
 	unsigned long result = 0;
 
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::getTargetTableId(): No table type specified");
-	if(!websiteId) throw Database::Exception("Main::Database::getTargetTableId(): No website ID specified");
-	if(!listId) throw Database::Exception("Main::Database::getTargetTableId(): No URL list ID specified");
-	if(tableName.empty()) throw Database::Exception("Main::Database::getTargetTableId(): No table name specified");
+	if(type.empty())
+		throw Database::Exception("Main::Database::getTargetTableId(): No table type specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::getTargetTableId(): No website ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::getTargetTableId(): No URL list ID specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::getTargetTableId(): No table name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT id FROM `crawlserv_" + type + "tables` WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT id FROM `crawlserv_" + type + "tables` WHERE website = ? AND urllist = ? AND name = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setUInt64(2, listId);
 		sqlStatement->setString(3, tableName);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getUInt64("id");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getTargetTableId", e); }
 
@@ -1961,23 +2108,27 @@ std::string Database::getTargetTableName(const std::string& type, unsigned long 
 	std::string result;
 
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::getTargetTableName(): No table type specified");
-	if(!tableId) throw Database::Exception("Main::Database::getTargetTableName(): No table ID specified");
+	if(type.empty())
+		throw Database::Exception("Main::Database::getTargetTableName(): No table type specified");
+	if(!tableId)
+		throw Database::Exception("Main::Database::getTargetTableName(): No table ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT name FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT name FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, tableId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("name");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getString("name");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getTargetTableName", e); }
 
@@ -1987,8 +2138,10 @@ std::string Database::getTargetTableName(const std::string& type, unsigned long 
 // delete target table of the specified type from the database by its ID
 void Database::deleteTargetTable(const std::string& type, unsigned long tableId) {
 	// check arguments
-	if(type.empty()) throw Database::Exception("Main::Database::deleteTargetTable(): No table type specified");
-	if(!tableId) throw Database::Exception("Main::Database::deleteTargetTable(): No table ID specified");
+	if(type.empty())
+		throw Database::Exception("Main::Database::deleteTargetTable(): No table type specified");
+	if(!tableId)
+		throw Database::Exception("Main::Database::deleteTargetTable(): No table ID specified");
 
 	// get namespace, URL list name and table name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromTargetTable(type, tableId);
@@ -2000,28 +2153,37 @@ void Database::deleteTargetTable(const std::string& type, unsigned long tableId)
 
 	try {
 		// create SQL statement for deletion
-		std::unique_ptr<sql::PreparedStatement> deleteStatement(this->connection->prepareStatement(
-				"DELETE FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"));
+		SqlPreparedStatementPtr deleteStatement(this->connection->prepareStatement(
+				"DELETE FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"
+		));
 
 		// execute SQL statement for deletion
 		deleteStatement->setUInt64(1, tableId);
-		deleteStatement->execute();
+		Database::sqlExecute(deleteStatement);
 
 		// create SQL statement for dropping table
-		std::unique_ptr<sql::Statement> dropStatement(this->connection->createStatement());
+		SqlStatementPtr dropStatement(this->connection->createStatement());
 
 		// execute SQL query for dropping table
-		dropStatement->execute("DROP TABLE IF EXISTS `crawlserv_" + websiteNamespace.second + "_" + listNamespace.second
-				+ "_" + type + "_" + tableName + "`");
+		Database::sqlExecute(dropStatement,
+				"DROP TABLE IF EXISTS"
+					" `crawlserv_" + websiteNamespace.second + "_" + listNamespace.second
+					+ "_" + type + "_" + tableName + "`"
+		);
 
 		// reset auto-increment if table is empty
-		if(this->isTableEmpty("crawlserv_" + type + "tables")) this->resetAutoIncrement("crawlserv_" + type + "tables");
+		if(this->isTableEmpty("crawlserv_" + type + "tables"))
+			this->resetAutoIncrement("crawlserv_" + type + "tables");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteTargetTable", e); }
 }
 
 // unlock target tables of the specified type
 void Database::unlockTargetTables(const std::string& type) {
+	// check argument
+	if(type.empty())
+			throw Database::Exception("Main::Database::unlockTargetTables(): No table type specified");
+
 	auto lockIt =
 			std::find_if(this->targetTableLocks.begin(), this->targetTableLocks.end(),
 				[&type](const auto& element) {
@@ -2035,12 +2197,13 @@ void Database::unlockTargetTables(const std::string& type) {
 
 		try {
 			// create SQL statement
-			std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-					"DELETE FROM crawlserv_targetlocks WHERE id = ? LIMIT 1"));
+			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+					"DELETE FROM crawlserv_targetlocks WHERE id = ? LIMIT 1"
+			));
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, lockIt->second);
-			sqlStatement->execute();
+			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTargetTables", e); }
 
@@ -2068,7 +2231,8 @@ void Database::checkConnection() {
 			milliseconds = this->reconnectTimer.tick();
 			if(milliseconds < MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS * 1000) {
 				// check whether connection is valid
-				if(this->connection->isValid()) return;
+				if(this->connection->isValid())
+					return;
 				milliseconds = 0;
 			}
 
@@ -2081,7 +2245,8 @@ void Database::checkConnection() {
 					this->connect();
 				}
 				catch(const Database::Exception& e) {
-					if(this->sleepOnError) std::this_thread::sleep_for(std::chrono::seconds(this->sleepOnError));
+					if(this->sleepOnError)
+						std::this_thread::sleep_for(std::chrono::seconds(this->sleepOnError));
 					this->connect();
 				}
 			}
@@ -2093,8 +2258,12 @@ void Database::checkConnection() {
 			i->refresh(this->connection.get());
 
 		// log re-connect on idle if necessary
-		if(milliseconds) this->log("re-connected to database after idling for "
-				+ Helper::DateTime::secondsToString(std::round(static_cast<float>(milliseconds / 1000))) + ".");
+		if(milliseconds)
+			this->log(
+					"re-connected to database after idling for "
+					+ Helper::DateTime::secondsToString(std::round(static_cast<float>(milliseconds / 1000)))
+					+ "."
+			);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkConnection", e); }
 }
@@ -2104,22 +2273,25 @@ bool Database::isWebsite(unsigned long websiteId) {
 	bool result = false;
 
 	// check argument
-	if(!websiteId) throw Database::Exception("Main::Database::isWebsite(): No website ID specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::isWebsite(): No website ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT * FROM crawlserv_websites WHERE id = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS(SELECT * FROM crawlserv_websites WHERE id = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isWebsite", e); }
 
@@ -2131,22 +2303,25 @@ bool Database::isUrlList(unsigned long urlListId) {
 	bool result = false;
 
 	// check argument
-	if(!urlListId) throw Database::Exception("Main::Database::isUrlList(): No URL list ID specified");
+	if(!urlListId)
+		throw Database::Exception("Main::Database::isUrlList(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE id = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE id = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, urlListId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isUrlList", e); }
 
@@ -2158,24 +2333,28 @@ bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 	bool result = false;
 
 	// check arguments
-	if(!websiteId) throw Database::Exception("Main::Database::isUrlList(): No website ID specified");
-	if(!urlListId) throw Database::Exception("Main::Database::isUrlList(): No URL list ID specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::isUrlList(): No website ID specified");
+	if(!urlListId)
+		throw Database::Exception("Main::Database::isUrlList(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE website = ? AND id = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE website = ? AND id = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setUInt64(2, urlListId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isUrlList", e); }
 
@@ -2187,22 +2366,25 @@ bool Database::isQuery(unsigned long queryId) {
 	bool result = false;
 
 	// check argument
-	if(!queryId) throw Database::Exception("Main::Database::isQuery(): No query ID specified");
+	if(!queryId)
+		throw Database::Exception("Main::Database::isQuery(): No query ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE id = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE id = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, queryId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isQuery", e); }
 
@@ -2214,23 +2396,26 @@ bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 	bool result = false;
 
 	// check arguments
-	if(!queryId) throw Database::Exception("Main::Database::isQuery(): No query ID specified");
+	if(!queryId)
+		throw Database::Exception("Main::Database::isQuery(): No query ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE (website = ? OR website = 0) AND id = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE (website = ? OR website = 0) AND id = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setUInt64(2, queryId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isQuery", e); }
 
@@ -2242,22 +2427,25 @@ bool Database::isConfiguration(unsigned long configId) {
 	bool result = false;
 
 	// check argument
-	if(!configId) throw Database::Exception("Main::Database::isConfiguration(): No configuration ID specified");
+	if(!configId)
+		throw Database::Exception("Main::Database::isConfiguration(): No configuration ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE id = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE id = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, configId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isConfiguration", e); }
 
@@ -2269,23 +2457,26 @@ bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) 
 	bool result = false;
 
 	// check arguments
-	if(!configId) throw Database::Exception("Main::Database::isConfiguration(): No configuration ID specified");
+	if(!configId)
+		throw Database::Exception("Main::Database::isConfiguration(): No configuration ID specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
-				"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE website = ? AND id = ? LIMIT 1) AS result"));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+				"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE website = ? AND id = ? LIMIT 1) AS result"
+		));
 
 		// execute SQL statement
 		sqlStatement->setUInt64(1, websiteId);
 		sqlStatement->setUInt64(2, configId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isConfiguration", e); }
 
@@ -2309,37 +2500,39 @@ void Database::getCustomData(Data::GetValue& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(
-				"SELECT `" + data.column + "` FROM `" + data.table + "` WHERE (" + data.condition + ")"));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
+				"SELECT `" + data.column + "` FROM `" + data.table + "` WHERE (" + data.condition + ")"
+		));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
-			if(sqlResultSet->isNull(data.column)) data.value = Data::Value();
+			if(sqlResultSet->isNull(data.column))
+				data.value = Data::Value();
 			else {
 				switch(data.type) {
 				case Data::Type::_bool:
 					data.value = Data::Value(sqlResultSet->getBoolean(data.column));
 					break;
 				case Data::Type::_double:
-					data.value = Data::Value((double) sqlResultSet->getDouble(data.column));
+					data.value = Data::Value(static_cast<double>(sqlResultSet->getDouble(data.column)));
 					break;
 				case Data::Type::_int:
-					data.value = Data::Value((int) sqlResultSet->getInt(data.column));
+					data.value = Data::Value(static_cast<int>(sqlResultSet->getInt(data.column)));
 					break;
 				case Data::Type::_long:
-					data.value = Data::Value((long) sqlResultSet->getInt64(data.column));
+					data.value = Data::Value(static_cast<long>(sqlResultSet->getInt64(data.column)));
 					break;
 				case Data::Type::_string:
 					data.value = Data::Value(sqlResultSet->getString(data.column));
 					break;
 				case Data::Type::_uint:
-					data.value = Data::Value((unsigned int) sqlResultSet->getUInt(data.column));
+					data.value = Data::Value(static_cast<unsigned int>(sqlResultSet->getUInt(data.column)));
 					break;
 				case Data::Type::_ulong:
-					data.value = Data::Value((unsigned long) sqlResultSet->getUInt64(data.column));
+					data.value = Data::Value(static_cast<unsigned long>(sqlResultSet->getUInt64(data.column)));
 					break;
 				default:
 					throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2359,6 +2552,8 @@ void Database::getCustomData(Data::GetFields& data) {
 		throw Database::Exception("Main::Database::getCustomData(): No column names specified");
 	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::getCustomData(): No column type specified");
+
+	// clear and reserve memory
 	data.values.clear();
 	data.values.reserve(data.columns.size());
 
@@ -2367,19 +2562,18 @@ void Database::getCustomData(Data::GetFields& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
 		sqlQuery = "SELECT ";
-		for(auto i = data.columns.begin(); i != data.columns.end(); ++i) {
+		for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 			sqlQuery += "`" + *i + "`, ";
-		}
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
 		sqlQuery += " FROM `" + data.table + "` WHERE (" + data.condition + ")";
 
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(sqlQuery));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -2392,17 +2586,17 @@ void Database::getCustomData(Data::GetFields& data) {
 			case Data::Type::_double:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-					else data.values.emplace_back((double) sqlResultSet->getDouble(*i));
+					else data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(*i)));
 				break;
 			case Data::Type::_int:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-					else data.values.emplace_back((int) sqlResultSet->getInt(*i));
+					else data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
 				break;
 			case Data::Type::_long:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-					else data.values.emplace_back((long) sqlResultSet->getInt64(*i));
+					else data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(*i)));
 				break;
 			case Data::Type::_string:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
@@ -2412,12 +2606,12 @@ void Database::getCustomData(Data::GetFields& data) {
 			case Data::Type::_uint:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-					else data.values.emplace_back((unsigned int) sqlResultSet->getUInt(*i));
+					else data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
 				break;
 			case Data::Type::_ulong:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-					else data.values.emplace_back((unsigned long) sqlResultSet->getUInt64(*i));
+					else data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(*i)));
 				break;
 			default:
 				throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2432,7 +2626,10 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_types.empty()) throw Database::Exception("Main::Database::getCustomData(): No columns specified");
+	if(data.columns_types.empty())
+		throw Database::Exception("Main::Database::getCustomData(): No columns specified");
+
+	// clear and reserve memory
 	data.values.clear();
 	data.values.reserve(data.columns_types.size());
 
@@ -2441,19 +2638,18 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
 		sqlQuery = "SELECT ";
-		for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
+		for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i)
 			sqlQuery += "`" + i->first + "`, ";
-		}
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
 		sqlQuery += " FROM `" + data.table + "` WHERE (" + data.condition + ")";
 
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(sqlQuery));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -2465,22 +2661,22 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 						data.values.emplace_back(sqlResultSet->getBoolean(i->first));
 						break;
 					case Data::Type::_double:
-						data.values.emplace_back((double) sqlResultSet->getDouble(i->first));
+						data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(i->first)));
 						break;
 					case Data::Type::_int:
-						data.values.emplace_back((int) sqlResultSet->getInt(i->first));
+						data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(i->first)));
 						break;
 					case Data::Type::_long:
-						data.values.emplace_back((long) sqlResultSet->getInt64(i->first));
+						data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(i->first)));
 						break;
 					case Data::Type::_string:
 						data.values.emplace_back(sqlResultSet->getString(i->first));
 						break;
 					case Data::Type::_uint:
-						data.values.emplace_back((unsigned int) sqlResultSet->getUInt(i->first));
+						data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(i->first)));
 						break;
 					case Data::Type::_ulong:
-						data.values.emplace_back((unsigned long) sqlResultSet->getUInt64(i->first));
+						data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(i->first)));
 						break;
 					default:
 						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2501,6 +2697,8 @@ void Database::getCustomData(Data::GetColumn& data) {
 		throw Database::Exception("Main::Database::getCustomData(): No columns specified");
 	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::getCustomData(): No column type specified");
+
+	// clear memory
 	data.values.clear();
 
 	// check connection
@@ -2508,7 +2706,7 @@ void Database::getCustomData(Data::GetColumn& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
 		sqlQuery = "SELECT `" + data.column + "` FROM `" + data.table + "`";
@@ -2516,7 +2714,7 @@ void Database::getCustomData(Data::GetColumn& data) {
 		if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
 
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(sqlQuery));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
 
 		// get result
 		if(sqlResultSet) {
@@ -2529,22 +2727,22 @@ void Database::getCustomData(Data::GetColumn& data) {
 						data.values.emplace_back(sqlResultSet->getBoolean(data.column));
 						break;
 					case Data::Type::_double:
-						data.values.emplace_back((double) sqlResultSet->getDouble(data.column));
+						data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(data.column)));
 						break;
 					case Data::Type::_int:
-						data.values.emplace_back((int) sqlResultSet->getInt(data.column));
+						data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(data.column)));
 						break;
 					case Data::Type::_long:
-						data.values.emplace_back((long) sqlResultSet->getInt64(data.column));
+						data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(data.column)));
 						break;
 					case Data::Type::_string:
 						data.values.emplace_back(sqlResultSet->getString(data.column));
 						break;
 					case Data::Type::_uint:
-						data.values.emplace_back((unsigned int) sqlResultSet->getUInt(data.column));
+						data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(data.column)));
 						break;
 					case Data::Type::_ulong:
-						data.values.emplace_back((unsigned long) sqlResultSet->getUInt64(data.column));
+						data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(data.column)));
 						break;
 					default:
 						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2565,6 +2763,8 @@ void Database::getCustomData(Data::GetColumns& data) {
 		throw Database::Exception("Main::Database::getCustomData(): No column name specified");
 	if(data.type == Main::Data::Type::_unknown)
 		throw Database::Exception("Main::Database::getCustomData(): No column type specified");
+
+	// clear and reserve memory
 	data.values.clear();
 	data.values.reserve(data.columns.size());
 
@@ -2573,7 +2773,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
 		sqlQuery = "SELECT ";
@@ -2590,7 +2790,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 		if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
 
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(sqlQuery));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
 
 		if(sqlResultSet) {
 			// reserve memory for results
@@ -2607,22 +2807,22 @@ void Database::getCustomData(Data::GetColumns& data) {
 							column->emplace_back(sqlResultSet->getBoolean(*i));
 							break;
 						case Data::Type::_double:
-							column->emplace_back((double) sqlResultSet->getDouble(*i));
+							column->emplace_back(static_cast<double>(sqlResultSet->getDouble(*i)));
 							break;
 						case Data::Type::_int:
-							column->emplace_back((int) sqlResultSet->getInt(*i));
+							column->emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
 							break;
 						case Data::Type::_long:
-							column->emplace_back((long) sqlResultSet->getInt64(*i));
+							column->emplace_back(static_cast<long>(sqlResultSet->getInt64(*i)));
 							break;
 						case Data::Type::_string:
 							column->emplace_back(sqlResultSet->getString(*i));
 							break;
 						case Data::Type::_uint:
-							column->emplace_back((unsigned int) sqlResultSet->getUInt(*i));
+							column->emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
 							break;
 						case Data::Type::_ulong:
-							column->emplace_back((unsigned long) sqlResultSet->getUInt64(*i));
+							column->emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(*i)));
 							break;
 						default:
 							throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2640,7 +2840,10 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_types.empty()) throw Database::Exception("Main::Database::getCustomData(): No columns specified");
+	if(data.columns_types.empty())
+		throw Database::Exception("Main::Database::getCustomData(): No columns specified");
+
+	// clear and reserve memory
 	data.values.clear();
 	data.values.reserve(data.columns_types.size());
 
@@ -2649,7 +2852,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
 		sqlQuery = "SELECT ";
@@ -2666,7 +2869,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 		if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
 
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(sqlQuery));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
 
 		if(sqlResultSet) {
 			// reserve memory for results
@@ -2683,22 +2886,22 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 							column->emplace_back(sqlResultSet->getBoolean(i->first));
 							break;
 						case Data::Type::_double:
-							column->emplace_back((double) sqlResultSet->getDouble(i->first));
+							column->emplace_back(static_cast<double>(sqlResultSet->getDouble(i->first)));
 							break;
 						case Data::Type::_int:
-							column->emplace_back((int) sqlResultSet->getInt(i->first));
+							column->emplace_back(static_cast<int>(sqlResultSet->getInt(i->first)));
 							break;
 						case Data::Type::_long:
-							column->emplace_back((long) sqlResultSet->getInt64(i->first));
+							column->emplace_back(static_cast<long>(sqlResultSet->getInt64(i->first)));
 							break;
 						case Data::Type::_string:
 							column->emplace_back(sqlResultSet->getString(i->first));
 							break;
 						case Data::Type::_uint:
-							column->emplace_back((unsigned int) sqlResultSet->getUInt(i->first));
+							column->emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(i->first)));
 							break;
 						case Data::Type::_ulong:
-							column->emplace_back((unsigned long) sqlResultSet->getUInt64(i->first));
+							column->emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(i->first)));
 							break;
 						default:
 							throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
@@ -2724,7 +2927,7 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"INSERT INTO `" + data.table + "` (`" + data.column + "`) VALUES (?)"));
 
 		// set value
@@ -2780,7 +2983,7 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 		}
 
 		// execute SQL statement
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::insertCustomData", e); }
 }
@@ -2801,15 +3004,17 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 	try {
 		// create SQL query
 		sqlQuery = "INSERT INTO `" + data.table + "` (";
-		for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) sqlQuery += "`" + i->first + "`, ";
+		for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i)
+			sqlQuery += "`" + i->first + "`, ";
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
 		sqlQuery += ") VALUES(";
-		for(unsigned long n = 0; n < data.columns_values.size() - 1; n++) sqlQuery += "?, ";
+		for(unsigned long n = 0; n < data.columns_values.size() - 1; n++)
+			sqlQuery += "?, ";
 		sqlQuery += "?)";
 
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(sqlQuery));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 		// set values
 		unsigned int counter = 1;
@@ -2891,7 +3096,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 		}
 
 		// execute SQL statement
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::insertCustomData", e); }
 }
@@ -2919,7 +3124,7 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 		sqlQuery += "?)";
 
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(sqlQuery));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 		// set values
 		unsigned int counter = 1;
@@ -2979,7 +3184,7 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 		}
 
 		// execute SQL statement
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::insertCustomData", e); }
 }
@@ -2997,7 +3202,7 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"UPDATE `" + data.table + "` SET `" + data.column + "` = ? WHERE (" + data.condition + ")"));
 
 		// set value
@@ -3054,7 +3259,7 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 		}
 
 		// execute SQL statement
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateCustomData", e); }
 }
@@ -3081,7 +3286,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 		sqlQuery += " WHERE (" + data.condition + ")";
 
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(sqlQuery));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 		// set values
 		unsigned int counter = 1;
@@ -3163,7 +3368,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 		}
 
 		// execute SQL statement
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateCustomData", e); }
 }
@@ -3173,7 +3378,8 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 	std::string sqlQuery;
 
 	// check argument
-	if(data.columns_types_values.empty()) throw Database::Exception("Main::Database::updateCustomData(): No columns specified");
+	if(data.columns_types_values.empty())
+		throw Database::Exception("Main::Database::updateCustomData(): No columns specified");
 
 	// check connection
 	this->checkConnection();
@@ -3188,7 +3394,7 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 		sqlQuery += " WHERE (" + data.condition + ")";
 
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(sqlQuery));
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 		// set values
 		unsigned int counter = 1;
@@ -3248,9 +3454,22 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 		}
 
 		// execute SQL statement
-		sqlStatement->execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateCustomData", e); }
+}
+
+/*
+ * INLINE FUNCTION FOR DEBUGGING PURPOSES
+ */
+
+// [inline] get database request counter for debugging purposes (or zero if program was compiled without counter)
+inline unsigned long long Database::getRequestCounter() {
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+	return Database::requestCounter;
+#else
+	return 0;
+#endif
 }
 
 /*
@@ -3278,8 +3497,7 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 
 	// try to prepare SQL statement
 	try {
-		this->preparedStatements.emplace_back(
-				Wrapper::PreparedSqlStatement(this->connection.get(), sqlQuery));
+		this->preparedStatements.emplace_back(this->connection.get(), sqlQuery);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::addPreparedStatement", e); }
 
@@ -3316,10 +3534,11 @@ unsigned long Database::getLastInsertedId() {
 
 	try {
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("id");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getUInt64("id");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getLastInsertedId", e); }
 
@@ -3329,17 +3548,18 @@ unsigned long Database::getLastInsertedId() {
 // reset the auto increment of an (empty) table in the database
 void Database::resetAutoIncrement(const std::string& tableName) {
 	// check argument
-	if(tableName.empty()) throw Database::Exception("Main::Database::resetAutoIncrement(): No table name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::resetAutoIncrement(): No table name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute("ALTER TABLE `" + tableName + "` AUTO_INCREMENT = 1");
+		Database::sqlExecute(sqlStatement, "ALTER TABLE `" + tableName + "` AUTO_INCREMENT = 1");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAutoIncrement", e); }
 }
@@ -3347,17 +3567,18 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 // lock a table in the database for writing
 void Database::lockTable(const std::string& tableName) {
 	// check argument
-	if(tableName.empty()) throw Database::Exception("Main::Database::lockTable(): No table name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::lockTable(): No table name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute("LOCK TABLES `" + tableName + "` WRITE");
+		Database::sqlExecute(sqlStatement, "LOCK TABLES `" + tableName + "` WRITE");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTable", e); }
 
@@ -3368,19 +3589,26 @@ void Database::lockTable(const std::string& tableName) {
 // lock two tables in the database for writing (plus the alias 'a' for reading the first and the alias 'b' for reading the second table)
 void Database::lockTables(const std::string& tableName1, const std::string& tableName2) {
 	// check arguments
-	if(tableName1.empty()) throw Database::Exception("Main::Database::lockTables(): Table name #1 missing");
-	if(tableName2.empty()) throw Database::Exception("Main::Database::lockTables(): Table name #2 missing");
+	if(tableName1.empty())
+		throw Database::Exception("Main::Database::lockTables(): Table name #1 missing");
+	if(tableName2.empty())
+		throw Database::Exception("Main::Database::lockTables(): Table name #2 missing");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute("LOCK TABLES `" + tableName1 + "` WRITE, `" + tableName1 + "` AS a READ, `" + tableName2 + "` WRITE,"
-				"`" + tableName2 + "` AS b READ");
+		Database::sqlExecute(sqlStatement,
+				"LOCK TABLES"
+					" `" + tableName1 + "` WRITE,"
+					" `" + tableName1 + "` AS a READ,"
+					" `" + tableName2 + "` WRITE,"
+					" `" + tableName2 + "` AS b READ"
+		);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
 
@@ -3395,10 +3623,10 @@ void Database::unlockTables() {
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute("UNLOCK TABLES");
+		Database::sqlExecute(sqlStatement, "UNLOCK TABLES");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTables", e); }
 
@@ -3411,21 +3639,24 @@ bool Database::isTableEmpty(const std::string& tableName) {
 	bool result = false;
 
 	// check argument
-	if(tableName.empty()) throw Database::Exception("Main::Database::isTableEmpty(): No table name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::isTableEmpty(): No table name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(
-				"SELECT NOT EXISTS (SELECT * FROM `" + tableName + "` LIMIT 1) AS result"));
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
+				"SELECT NOT EXISTS (SELECT * FROM `" + tableName + "` LIMIT 1) AS result"
+		));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isTableEmpty", e); }
 
@@ -3437,22 +3668,25 @@ bool Database::isTableExists(const std::string& tableName) {
 	bool result = false;
 
 	// check argument
-	if(tableName.empty()) throw Database::Exception("Main::Database::isTableExists(): No table name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::isTableExists(): No table name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create and execute SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.TABLES"
-				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1"));
+				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1"
+		));
 
 		// get result
 		sqlStatement->setString(1, this->settings.name);
 		sqlStatement->setString(2, tableName);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isTableExists", e); }
 
@@ -3464,17 +3698,20 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 	bool result = false;
 
 	// check arguments
-	if(tableName.empty()) throw Database::Exception("Main::Database::isColumnExists(): No table name specified");
-	if(columnName.empty()) throw Database::Exception("Main::Database::isColumnExists(): No column name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::isColumnExists(): No table name specified");
+	if(columnName.empty())
+		throw Database::Exception("Main::Database::isColumnExists(): No column name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS"
-				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"));
+				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"
+		));
 
 		// execute SQL statement
 		sqlStatement->setString(1, this->settings.name);
@@ -3482,8 +3719,9 @@ bool Database::isColumnExists(const std::string& tableName, const std::string& c
 		sqlStatement->setString(3, columnName);
 
 		// get result
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::isColumnExists", e); }
 
@@ -3495,15 +3733,17 @@ std::string Database::getColumnType(const std::string& tableName, const std::str
 	std::string result;
 
 	// check arguments
-	if(tableName.empty()) throw Database::Exception("Main::Database::getColumnType(): No table name specified");
-	if(columnName.empty()) throw Database::Exception("Main::Database::getColumnType(): No column name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::getColumnType(): No table name specified");
+	if(columnName.empty())
+		throw Database::Exception("Main::Database::getColumnType(): No column name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::PreparedStatement> sqlStatement(this->connection->prepareStatement(
+		SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 				"SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS"
 				" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"));
 
@@ -3513,8 +3753,9 @@ std::string Database::getColumnType(const std::string& tableName, const std::str
 		sqlStatement->setString(3, columnName);
 
 		// get result
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery());
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("DATA_TYPE");
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getString("DATA_TYPE");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getColumnType", e); }
 
@@ -3551,18 +3792,18 @@ void Database::createTable(const std::string& tableName, const std::vector<Table
 			if(!(i->referenceTable.empty())) {
 				if(i->referenceColumn.empty())
 					throw Database::Exception("Main::Database::createTable(): A column reference is missing its source column name");
-				properties += ", FOREIGN KEY(`" + i->name + "`) REFERENCES `" + i->referenceTable + "`(`" + i->referenceColumn
-						+ "`) ON UPDATE RESTRICT ON DELETE CASCADE";
+				properties	+= ", FOREIGN KEY(`" + i->name + "`) REFERENCES `" + i->referenceTable + "`(`"
+							+ i->referenceColumn + "`) ON UPDATE RESTRICT ON DELETE CASCADE";
 			}
 		}
 		sqlQuery += ", PRIMARY KEY(id)" + properties + ") CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
 		if(compressed) sqlQuery += ", ROW_FORMAT=COMPRESSED";
 
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute(sqlQuery);
+		Database::sqlExecute(sqlStatement, sqlQuery);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::createTable", e); }
 }
@@ -3570,9 +3811,12 @@ void Database::createTable(const std::string& tableName, const std::vector<Table
 // add a column to a table in the database
 void Database::addColumn(const std::string& tableName, const TableColumn& column) {
 	// check arguments
-	if(tableName.empty()) throw Database::Exception("Main::Database::addColumn(): No table name specified");
-	if(column.name.empty()) throw Database::Exception("Main::Database::addColumn(): No column name specified");
-	if(column.type.empty()) throw Database::Exception("Main::Database::addColumn(): No column type specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::addColumn(): No table name specified");
+	if(column.name.empty())
+		throw Database::Exception("Main::Database::addColumn(): No column name specified");
+	if(column.type.empty())
+		throw Database::Exception("Main::Database::addColumn(): No column type specified");
 
 	// check connection
 	this->checkConnection();
@@ -3588,10 +3832,10 @@ void Database::addColumn(const std::string& tableName, const TableColumn& column
 		}
 
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute(sqlQuery);
+		Database::sqlExecute(sqlStatement, sqlQuery);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::addColumn", e); }
 }
@@ -3601,26 +3845,33 @@ void Database::compressTable(const std::string& tableName) {
 	bool compressed = false;
 
 	// check argument
-	if(tableName.empty()) throw Database::Exception("Main::Database::compressTable(): No table name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::compressTable(): No table name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement for checking whether the table is already compressed
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement->executeQuery(
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
 				"SELECT LOWER(row_format) = 'compressed' AS result FROM information_schema.tables"
-				" WHERE table_schema = '" + this->settings.name + "' AND table_name = '" + tableName + "' LIMIT 1;"));
+				" WHERE table_schema = '" + this->settings.name + "' AND table_name = '" + tableName + "' LIMIT 1;"
+		));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) compressed = sqlResultSet->getBoolean("result");
-		else throw Database::Exception("Main::Database::compressTable(): Could not determine row format of table \'" + tableName + "\'");
+		if(sqlResultSet && sqlResultSet->next())
+			compressed = sqlResultSet->getBoolean("result");
+		else
+			throw Database::Exception(
+					"Main::Database::compressTable(): Could not determine row format of \'" + tableName + "\'"
+			);
 
 		// execute SQL statement for compressing the table if table is not already compressed
-		if(!compressed) sqlStatement->execute("ALTER TABLE `" + tableName + "` ROW_FORMAT=COMPRESSED");
+		if(!compressed)
+			Database::sqlExecute(sqlStatement, "ALTER TABLE `" + tableName + "` ROW_FORMAT=COMPRESSED");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::compressTable", e); }
 }
@@ -3628,17 +3879,18 @@ void Database::compressTable(const std::string& tableName) {
 // delete a table from the database if it exists
 void Database::deleteTable(const std::string& tableName) {
 	// check arguments
-	if(tableName.empty()) throw Database::Exception("Main::Database::deleteTableIfExists(): No table name specified");
+	if(tableName.empty())
+		throw Database::Exception("Main::Database::deleteTableIfExists(): No table name specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute("DROP TABLE IF EXISTS `" + tableName + "`");
+		Database::sqlExecute(sqlStatement, "DROP TABLE IF EXISTS `" + tableName + "`");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteTable", e); }
 }
@@ -3705,13 +3957,14 @@ void Database::sqlException(const std::string& function, const sql::SQLException
 }
 
 /*
- * INTERNAL HELPER FUNCTION (private)
+ * INTERNAL HELPER FUNCTIONS (private)
  */
 
 // run file with SQL commands
 void Database::run(const std::string& sqlFile) {
 	// check argument
-	if(sqlFile.empty()) throw Database::Exception("Main::Database::run(): No SQL file specified");
+	if(sqlFile.empty())
+		throw Database::Exception("Main::Database::run(): No SQL file specified");
 
 	// open SQL file
 	std::ifstream initSQLFile(sqlFile);
@@ -3721,16 +3974,17 @@ void Database::run(const std::string& sqlFile) {
 		this->checkConnection();
 
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 		std::string line;
 
-		if(!sqlStatement) throw Database::Exception("Main::Database::run(): Could not create SQL statement");
+		if(!sqlStatement)
+			throw Database::Exception("Main::Database::run(): Could not create SQL statement");
 
 		// execute lines in SQL file
 		unsigned long lineCounter = 1;
 		while(std::getline(initSQLFile, line)) {
 			try {
-				if(!line.empty()) sqlStatement->execute(line);
+				if(!line.empty()) Database::sqlExecute(sqlStatement, line);
 				lineCounter++;
 			}
 			catch(const sql::SQLException &e) { this->sqlException("Main::Database::run", e); }
@@ -3739,25 +3993,82 @@ void Database::run(const std::string& sqlFile) {
 		// close SQL file
 		initSQLFile.close();
 	}
-	else throw Database::Exception("Main::Database::run(): Could not open \'" + sqlFile + "\' for reading");
+	else
+		throw Database::Exception("Main::Database::run(): Could not open \'" + sqlFile + "\' for reading");
 }
 
 // execute a SQL query
 void Database::execute(const std::string& sqlQuery) {
 	// check argument
-	if(sqlQuery.empty()) throw Database::Exception("Main::Database::execute(): No SQL query specified");
+	if(sqlQuery.empty())
+		throw Database::Exception("Main::Database::execute(): No SQL query specified");
 
 	// check connection
 	this->checkConnection();
 
 	try {
 		// create SQL statement
-		std::unique_ptr<sql::Statement> sqlStatement(this->connection->createStatement());
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		sqlStatement->execute(sqlQuery);
+		Database::sqlExecute(sqlStatement, sqlQuery);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::execute", e); }
+}
+
+/*
+ * INLINE WRAPPER FUNCTIONS FOR DEBUGGING PURPOSES (private)
+ */
+
+// execute prepared SQL statement by reference
+inline void Database::sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
+	sqlPreparedStatement.execute();
+	#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+		Database::requestCounter++;
+	#endif
+}
+
+// execute prepared SQL statement by pointer reference
+inline void Database::sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
+	sqlPreparedStatement->execute();
+	#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+		Database::requestCounter++;
+	#endif
+}
+
+// execute SQL statement
+inline void Database::sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+	sqlStatement->execute(sqlQuery);
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+	Database::requestCounter++;
+#endif
+}
+
+// execute prepared SQL statement by reference and fetch result
+inline sql::ResultSet * Database::sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
+	sql::ResultSet * sqlResultSet = sqlPreparedStatement.executeQuery();
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+	Database::requestCounter++;
+#endif
+	return sqlResultSet;
+}
+
+// execute prepared SQL statement by pointer reference and fetch result
+inline sql::ResultSet * Database::sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement) {
+	sql::ResultSet * sqlResultSet = sqlPreparedStatement->executeQuery();
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+	Database::requestCounter++;
+#endif
+	return sqlResultSet;
+}
+
+// execute SQL statement and fetch result
+inline sql::ResultSet * Database::sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+	sql::ResultSet * sqlResultSet = sqlStatement->executeQuery(sqlQuery);
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+	Database::requestCounter++;
+#endif
+	return sqlResultSet;
 }
 
 }

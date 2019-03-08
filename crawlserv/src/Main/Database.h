@@ -21,7 +21,7 @@
 #define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5 // sleep on target table lock
 
 // optional debugging option
-#define MAIN_DATABASE_DEBUG_CONNECTION_COUNTER // enable connection counter
+#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER // enable database request counter for debugging purposes
 
 #include "Data.h"
 #include "Exception.h"
@@ -68,7 +68,8 @@
 #include <utility>
 #include <vector>
 
-#ifdef MAIN_DATABASE_DEBUG_CONNECTION_COUNTER
+// optional header
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
 #include <atomic>
 #endif
 
@@ -88,6 +89,9 @@ namespace crawlservpp::Main {
 
 		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::unique_ptr<sql::PreparedStatement> SqlPreparedStatementPtr;
+		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
+		typedef std::unique_ptr<sql::Statement> SqlStatementPtr;
 
 	public:
 		// allow TableLock access to protected locking functions
@@ -143,7 +147,7 @@ namespace crawlservpp::Main {
 		unsigned long addUrlList(unsigned long websiteId, const UrlListProperties& listProperties);
 		std::queue<IdString> getUrlLists(unsigned long websiteId);
 		std::string getUrlListNamespace(unsigned long listId);
-		std::pair<unsigned long, std::string> getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long listId);
+		IdString getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
 		void updateUrlList(unsigned long listId, const UrlListProperties& listProperties);
 		void deleteUrlList(unsigned long listId);
@@ -200,6 +204,9 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFields& data);
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
+		// inline function for debugging purposes
+		static unsigned long long getRequestCounter();
+
 		// sub-classes for database exceptions
 		class Exception : public Main::Exception { // general Database exception
 		public:
@@ -249,9 +256,6 @@ namespace crawlservpp::Main {
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
 
-		// debugging helper function
-		static void incrementConnectionCounter();
-
 	private:
 		// private connection information
 		const DatabaseSettings settings;
@@ -264,8 +268,8 @@ namespace crawlservpp::Main {
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 		Timer::Simple reconnectTimer;
 #endif
-#ifdef MAIN_DATABASE_DEBUG_CONNECTION_COUNTER
-		static std::atomic<unsigned long long> connectionCounter;
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+		static std::atomic<unsigned long long> requestCounter;
 #endif
 
 		// prepared SQL statements
@@ -274,6 +278,14 @@ namespace crawlservpp::Main {
 		// internal helper functions
 		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
+
+		// inline wrapper functions for debugging purposes
+		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement);
+		static void sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement);
+		static void sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery);
+		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement);
+		static sql::ResultSet * sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement);
+		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery);
 
 		// IDs of prepared SQL statements
 		struct {
