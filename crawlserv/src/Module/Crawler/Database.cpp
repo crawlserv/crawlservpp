@@ -441,11 +441,7 @@ void Database::addUrls(const std::vector<std::string>& urls) {
 	this->checkConnection();
 
 	// check prepared SQL statements
-	if(!(this->ps.add10Urls))
-		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrls(...)");
-	if(!(this->ps.add100Urls))
-		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrls(...)");
-	if(!(this->ps.add1000Urls))
+	if(!(this->ps.add10Urls) || !(this->ps.add100Urls) || !(this->ps.add1000Urls))
 		throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrls(...)");
 
 	// get prepared SQL statements
