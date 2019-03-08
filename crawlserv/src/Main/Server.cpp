@@ -98,7 +98,7 @@ Server::Server(const DatabaseSettings& databaseSettings, const ServerSettings& s
 						this->database, i->id, i->status, i->paused, i->options, i->last));
 				break;
 			default:
-				this->database.log("WARNING: Unknown algorithm ignored when loading threads.");
+				this->database.log("[WARNING] Unknown algorithm ignored when loading threads.");
 				continue;
 			}
 			this->analyzers.back()->Module::Thread::start();
