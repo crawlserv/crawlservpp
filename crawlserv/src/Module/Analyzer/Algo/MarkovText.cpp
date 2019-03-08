@@ -181,7 +181,7 @@ void MarkovText::createDictionary() {
 		counter++;
 		if(counter > 1000000) {
 			if(!(this->isRunning())) return;
-			this->setProgress(static_cast<float> next / this->source.length());
+			this->setProgress(static_cast<float>(next) / this->source.length());
 			counter = 0;
 		}
 		// ***
