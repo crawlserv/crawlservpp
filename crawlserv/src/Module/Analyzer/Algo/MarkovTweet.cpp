@@ -126,7 +126,7 @@ void MarkovTweet::onAlgoTick() {
 	// increase tweet count (internally saved as "last") and calculate progress if necessary
 	if(this->config.markovTweetMax) {
 		this->incrementLast();
-		this->setProgress((float) this->getLast() / this->config.markovTweetMax);
+		this->setProgress(static_cast<float>(this->getLast()) / this->config.markovTweetMax);
 	}
 
 	// sleep if necessary
