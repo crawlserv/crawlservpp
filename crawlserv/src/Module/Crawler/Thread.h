@@ -54,7 +54,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Struct::UrlProperties UrlProperties;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
-		typedef Wrapper::TableLock TableLock;
+		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 
 	public:
 		// constructors
