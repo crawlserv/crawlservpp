@@ -408,7 +408,9 @@ void Thread::clear() {
 	// try to log exceptions in Thread::OnClear() as the database connection could well be okay
 	catch(std::exception& e) {
 		try {
-			this->database.log("Exception in Thread::onClear() - " + e.what());
+			std::ostringstream logStrStr;
+			logStrStr << "Exception in Thread::onClear() - " << e.what();
+			this->database.log(logStrStr.str());
 		}
 		catch(...) {
 			std::cout << std::endl << "WARNING: Exception in Thread::onClear() - " << e.what() << std::flush;
