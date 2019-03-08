@@ -393,6 +393,7 @@ void Thread::clear() {
 	try {
 		this->updateRunTime();
 	}
+	// probably no Database connection -> write exception to console
 	catch(std::exception& e) {
 		std::cout << std::endl << "WARNING: Exception in Thread::updateRunTime() - " << e.what() << std::flush;
 	}
@@ -404,11 +405,22 @@ void Thread::clear() {
 	try {
 		this->onClear(this->interrupted);
 	}
+	// try to log exceptions in Thread::OnClear() as the database connection could well be okay
 	catch(std::exception& e) {
-		std::cout << std::endl << "WARNING: Exception in Thread::onClear() - " << e.what() << std::flush;
+		try {
+			this->database.log("Exception in Thread::onClear() - " + e.what());
+		}
+		catch(...) {
+			std::cout << std::endl << "WARNING: Exception in Thread::onClear() - " << e.what() << std::flush;
+		}
 	}
 	catch(...) {
-		std::cout << std::endl << "WARNING: Unknown exception in Thread::onClear()" << std::flush;
+		try {
+			this->database.log("Unknown exception in Thread::onClear()");
+		}
+		catch(...) {
+			std::cout << std::endl << "WARNING: Unknown exception in Thread::onClear()" << std::flush;
+		}
 	}
 
 	// try to update status
@@ -424,6 +436,7 @@ void Thread::clear() {
 			this->log(logStr);
 		}
 	}
+	// probably no Database connection -> write exception to console
 	catch(std::exception& e) {
 		std::cout << std::endl << "WARNING: Exception when setting thread status to INTERRUPTED - " << e.what() << std::flush;
 	}
