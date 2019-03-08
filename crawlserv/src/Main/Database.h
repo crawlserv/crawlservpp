@@ -77,8 +77,9 @@ namespace crawlservpp::Main {
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
-		typedef std::pair<unsigned long, std::string> IdString;
+
 		typedef std::function<bool()> CallbackIsRunning;
+		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
