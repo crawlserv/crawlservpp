@@ -238,7 +238,7 @@ void Database::getCorpus(const CorpusProperties& corpusProperties, std::string& 
 			sqlStatement.setUInt(1, corpusProperties.sourceType);
 			sqlStatement.setString(2, corpusProperties.sourceTable);
 			sqlStatement.setString(3, corpusProperties.sourceField);
-			std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
@@ -339,7 +339,7 @@ bool Database::isCorpusChanged(const CorpusProperties& corpusProperties) {
 	try {
 		// execute SQL query for getting the update time of the source table
 		tableStatement.setString(1, corpusProperties.sourceTable);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(tableStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(tableStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -350,10 +350,11 @@ bool Database::isCorpusChanged(const CorpusProperties& corpusProperties) {
 			corpusStatement.setString(2, corpusProperties.sourceTable);
 			corpusStatement.setString(3, corpusProperties.sourceField);
 			corpusStatement.setString(4, updateTime);
-			sqlResultSet = std::unique_ptr<sql::ResultSet>(corpusStatement.executeQuery());
+			sqlResultSet = SqlResultSetPtr(Database::sqlExecuteQuery(corpusStatement));
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next()) result = !(sqlResultSet->getBoolean("result"));
+			if(sqlResultSet && sqlResultSet->next())
+				result = !(sqlResultSet->getBoolean("result"));
 		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::isCorpusChanged", e); }
@@ -426,7 +427,7 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 		deleteStatement.setUInt(1, corpusProperties.sourceType);
 		deleteStatement.setString(2, corpusProperties.sourceTable);
 		deleteStatement.setString(3, corpusProperties.sourceField);
-		deleteStatement.execute();
+		Database::sqlExecute(deleteStatement);
 
 		// get texts and possibly parsed datetimes from database
 		Main::Data::GetColumns data;
@@ -514,7 +515,7 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 				}
 				else addStatement.setNull(5, 0);
 				addStatement.setUInt64(6, sourcesTo);
-				addStatement.execute();
+				Database::sqlExecute(addStatement);
 			}
 			else if(this->logging) {
 				// show warning about text corpus size

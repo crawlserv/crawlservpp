@@ -296,10 +296,11 @@ bool Database::isUrlExists(const std::string& urlString) {
 		// execute SQL query
 		sqlStatement.setString(1, urlString);
 		sqlStatement.setString(2, urlString);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isUrlExists", e); }
 
@@ -327,7 +328,7 @@ void Database::getUrlIdLockId(UrlProperties& urlProperties) {
 	try {
 		// execute SQL query for getting URL
 		sqlStatement.setString(1, urlProperties.url);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next())  {
@@ -343,7 +344,8 @@ bool Database::isUrlCrawled(unsigned long crawlingId) {
 	bool result = false;
 
 	// check argument
-	if(!crawlingId) return false;
+	if(!crawlingId)
+		return false;
 
 	// check connection
 	this->checkConnection();
@@ -359,10 +361,11 @@ bool Database::isUrlCrawled(unsigned long crawlingId) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, crawlingId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isUrlCrawled", e); }
 
@@ -387,7 +390,7 @@ Database::UrlProperties Database::getNextUrl(unsigned long currentUrlId) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, currentUrlId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -425,7 +428,7 @@ void Database::addUrl(const std::string& urlString, bool manual) {
 		sqlStatement.setString(1, urlString);
 		sqlStatement.setString(2, urlString);
 		sqlStatement.setBoolean(3, manual);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrl", e); }
 }
@@ -456,7 +459,7 @@ void Database::addUrls(const std::vector<std::string>& urls) {
 				sqlStatement1000.setString((n * 2) + 1, urls.at(pos + n));
 				sqlStatement1000.setString((n * 2) + 2, urls.at(pos + n));
 			}
-			sqlStatement1000.execute();
+			Database::sqlExecute(sqlStatement1000);
 			pos += 1000;
 		}
 
@@ -466,7 +469,7 @@ void Database::addUrls(const std::vector<std::string>& urls) {
 				sqlStatement100.setString((n * 2) + 1, urls.at(pos + n));
 				sqlStatement100.setString((n * 2) + 2, urls.at(pos + n));
 			}
-			sqlStatement100.execute();
+			Database::sqlExecute(sqlStatement100);
 			pos += 100;
 		}
 
@@ -476,7 +479,7 @@ void Database::addUrls(const std::vector<std::string>& urls) {
 				sqlStatement10.setString((n * 2) + 1, urls.at(pos + n));
 				sqlStatement10.setString((n * 2) + 2, urls.at(pos + n));
 			}
-			sqlStatement10.execute();
+			Database::sqlExecute(sqlStatement10);
 			pos += 10;
 		}
 	}
@@ -510,7 +513,8 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!urlId) return 0;
+	if(!urlId)
+		return 0;
 
 	// check connection
 	this->checkConnection();
@@ -526,10 +530,11 @@ unsigned long Database::getUrlPosition(unsigned long urlId) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, urlId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getUInt64("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlPosition", e); }
 
@@ -553,10 +558,11 @@ unsigned long Database::getNumberOfUrls() {
 	// get number of URLs from database
 	try {
 		// execute SQL query
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getUInt64("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getUInt64("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getNumberOfUrls", e); }
 
@@ -578,7 +584,7 @@ void Database::urlDuplicationCheck() {
 	// get number of URLs from database
 	try {
 		// execute SQL query
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next()) {
@@ -604,13 +610,12 @@ void Database::urlHashCheck() {
 	// get number of URLs from database
 	try {
 		// execute SQL query
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) {
+		if(sqlResultSet && sqlResultSet->next())
 			throw DatabaseException("Crawler::Database::urlHashCheck(): Corrupted hash for URL \'"
 					+ sqlResultSet->getString("url") + "\" in `" + this->urlListTable + "`");
-		}
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
 }
@@ -620,7 +625,8 @@ bool Database::isUrlLockable(unsigned long lockId) {
 	bool result = false;
 
 	// check argument
-	if(!lockId) return true;
+	if(!lockId)
+		return true;
 
 	// check connection
 	this->checkConnection();
@@ -636,10 +642,11 @@ bool Database::isUrlLockable(unsigned long lockId) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, lockId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isUrlLockable", e); }
 
@@ -654,7 +661,8 @@ bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 	// check arguments
 	if(!lockId)
 		throw DatabaseException("Crawler::Database::checkUrlLock(): No URL lock ID specified");
-	if(lockTime.empty()) return this->isUrlLockable(lockId);
+	if(lockTime.empty())
+		return this->isUrlLockable(lockId);
 
 	// check connection
 	this->checkConnection();
@@ -671,10 +679,11 @@ bool Database::checkUrlLock(unsigned long lockId, const std::string& lockTime) {
 		// execute SQL query
 		sqlStatement.setString(1, lockTime);
 		sqlStatement.setUInt64(2, lockId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get (and parse) result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::checkUrlLock", e); }
 
@@ -703,10 +712,11 @@ std::string Database::getUrlLock(unsigned long lockId) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, lockId);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getString("locktime");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getString("locktime");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlLock", e); }
 
@@ -741,7 +751,7 @@ void Database::getUrlLockId(UrlProperties& urlProperties) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, urlProperties.id);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
 		if(sqlResultSet && sqlResultSet->next())
@@ -772,7 +782,7 @@ std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTi
 			// execute SQL query
 			sqlStatement.setUInt64(1, lockTimeout);
 			sqlStatement.setUInt64(2, urlProperties.lockId);
-			sqlStatement.execute();
+			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrl", e); }
 	}
@@ -789,7 +799,7 @@ std::string Database::lockUrl(UrlProperties& urlProperties, unsigned long lockTi
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlProperties.id);
 			sqlStatement.setUInt64(2, lockTimeout);
-			sqlStatement.execute();
+			Database::sqlExecute(sqlStatement);
 
 			// get lock ID
 			urlProperties.lockId = this->getLastInsertedId();
@@ -820,7 +830,7 @@ void Database::unLockUrl(unsigned long lockId) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, lockId);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::unLockUrl", e); }
 }
@@ -849,7 +859,7 @@ void Database::saveContent(unsigned long urlId, unsigned int response, const std
 			sqlStatement.setUInt(2, response);
 			sqlStatement.setString(3, type);
 			sqlStatement.setString(4, content);
-			sqlStatement.execute();
+			Database::sqlExecute(sqlStatement);
 		}
 		else if(this->logging) {
 			// show warning about content size
@@ -902,7 +912,7 @@ void Database::saveArchivedContent(unsigned long urlId, const std::string& timeS
 			sqlStatement.setUInt(3, response);
 			sqlStatement.setString(4, type);
 			sqlStatement.setString(5, content);
-			sqlStatement.execute();
+			Database::sqlExecute(sqlStatement);
 		}
 		else if(this->logging) {
 			// show warning about content size
@@ -949,7 +959,7 @@ void Database::setUrlFinished(unsigned long crawlingId) {
 	try {
 		// execute SQL query
 		sqlStatement.setUInt64(1, crawlingId);
-		sqlStatement.execute();
+		Database::sqlExecute(sqlStatement);
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::setUrlFinished", e); }
 }
@@ -976,10 +986,11 @@ bool Database::isArchivedContentExists(unsigned long urlId, const std::string& t
 		// execute SQL query
 		sqlStatement.setUInt64(1, urlId);
 		sqlStatement.setString(2, timeStamp);
-		std::unique_ptr<sql::ResultSet> sqlResultSet(sqlStatement.executeQuery());
+		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 		// get result
-		if(sqlResultSet && sqlResultSet->next()) result = sqlResultSet->getBoolean("result");
+		if(sqlResultSet && sqlResultSet->next())
+			result = sqlResultSet->getBoolean("result");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isArchivedContentExists", e); }
 

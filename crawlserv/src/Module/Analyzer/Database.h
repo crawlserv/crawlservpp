@@ -54,6 +54,7 @@ namespace crawlservpp::Module::Analyzer {
 		typedef Wrapper::TargetTablesLock TargetTablesLock;
 
 		typedef std::function<bool()> CallbackIsRunning;
+		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
 		// text maps are used to describe certain parts of a text
 		//  defined by their positions and lengths with certain strings (words, dates etc.)

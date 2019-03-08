@@ -36,6 +36,8 @@ namespace crawlservpp::Module::Crawler {
 		typedef Struct::UrlProperties UrlProperties;
 		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 
+		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
+
 	public:
 		// constructor
 		Database(Module::Database& dbRef);
