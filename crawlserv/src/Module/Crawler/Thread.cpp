@@ -1608,7 +1608,7 @@ void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
 	else {
 		// automatic mode: update thread status
 		this->setLast(urlProperties.id);
-		this->setProgress((float) (this->database.getUrlPosition(urlProperties.id) + 1) / this->database.getNumberOfUrls());
+		this->setProgress(static_cast<float>(this->database.getUrlPosition(urlProperties.id) + 1) / this->database.getNumberOfUrls());
 	}
 
 	// reset retry counter
