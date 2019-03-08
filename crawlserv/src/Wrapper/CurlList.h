@@ -19,25 +19,55 @@ namespace crawlservpp::Wrapper {
 
 class CurlList {
 public:
-	// constructors
-	CurlList() noexcept;
-	CurlList(CurlList&& other) noexcept;
+	// constructor: set pointer to NULL
+	CurlList() noexcept : ptr(NULL) {}
 
-	// destructor
-	virtual ~CurlList();
+	// move constructor
+	CurlList(CurlList&& other) noexcept : ptr(other.ptr) {
+		other.ptr = NULL;
+	}
 
-	// getters
-	struct curl_slist * get();
-	const struct curl_slist * get() const;
+	// destructor: reset cURL list if necessary
+	~CurlList() {
+		this->reset();
+	}
 
-	// control functions
-	void append(const std::string& newElement);
-	void reset();
+	// get pointer to cURL list
+	struct curl_slist * get() {
+		return this->ptr;
+	}
 
-	// operators
-	operator bool() const;
-	bool operator!() const;
-	CurlList& operator=(CurlList&& other) noexcept;
+	// get const pointer to cURL list
+	const struct curl_slist * get() const {
+		return this->ptr;
+	}
+
+	// append newElement to cURL list
+	void append(const std::string& newElement) {
+		this->ptr = curl_slist_append(this->ptr, newElement.c_str());
+	}
+
+	// reset cURL list
+	void reset() { if(this->ptr) curl_slist_free_all(this->ptr); this->ptr = NULL; }
+
+	// bool operator
+	operator bool() const {
+		return this->ptr != NULL;
+	}
+
+	// not operator
+	bool operator!() const {
+		return this->ptr == NULL;
+	}
+
+	// move assignment operator
+	CurlList& operator=(CurlList&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = NULL;
+		}
+		return *this;
+	}
 
 	// not copyable
 	CurlList(CurlList&) = delete;

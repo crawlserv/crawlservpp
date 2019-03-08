@@ -18,26 +18,88 @@ namespace crawlservpp::Wrapper {
 
 class Curl {
 public:
-	// constructors
-	Curl();
-	Curl(Curl&& other) noexcept;
+	// constructor: set pointer to NULL
+	Curl() : ptr(NULL) {
+		// initialize global instance if necessary
+		if(globalInit) this->localInit = false;
+		else {
+			globalInit = true;
+			this->localInit = true;
+			curl_global_init(CURL_GLOBAL_ALL);
+		}
 
-	// destructor
-	virtual ~Curl();
+		// initialize cURL
+		this->init();
+	}
 
-	// getters
-	const CURL * get() const;
-	CURL * get();
-	CURL ** getPtr();
+	// move constructor
+	Curl(Curl&& other) noexcept {
+		this->ptr = other.ptr;
+		other.ptr = NULL;
+		this->localInit = other.localInit;
+		other.localInit = false;
+	}
 
-	// control functions
-	void init();
-	void reset();
+	// destructor: cleanup cURL if necessary
+	~Curl() {
+		this->reset();
 
-	// operators
-	operator bool() const;
-	bool operator!() const;
-	Curl& operator=(Curl&& other) noexcept;
+		// cleanup global instance if necessary
+		if(globalInit && this->localInit) {
+			curl_global_cleanup();
+			globalInit = false;
+			this->localInit = false;
+		}
+	}
+
+	// get const pointer to query list
+	const CURL * get() const {
+		return this->ptr;
+	}
+
+	// get non-const pointer to query list
+	CURL * get() {
+		return this->ptr;
+	}
+
+	// get non-const pointer to pointer to query list
+	CURL ** getPtr() {
+		return &(this->ptr);
+	}
+
+	// initialize cURL pointer
+	void init() {
+		this->ptr = curl_easy_init();
+	}
+
+	// reset cURL pointer
+	void reset() {
+		if(this->ptr) {
+			curl_easy_cleanup(this->ptr);
+			this->ptr = NULL;
+		}
+	}
+
+	// bool operator
+	operator bool() const {
+		return this->ptr != NULL;
+	}
+
+	// not operator
+	bool operator!() const {
+		return this->ptr == NULL;
+	}
+
+	// move assignment operator
+	Curl& operator=(Curl&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = NULL;
+			this->localInit = other.localInit;
+			other.localInit = false;
+		}
+		return *this;
+	}
 
 	// not copyable
 	Curl(Curl&) = delete;

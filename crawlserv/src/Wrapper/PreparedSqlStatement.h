@@ -22,35 +22,92 @@ namespace crawlservpp::Wrapper {
 
 class PreparedSqlStatement {
 public:
-	// constructors
-	PreparedSqlStatement() noexcept;
-	PreparedSqlStatement(sql::Connection * setConnection, const std::string& sqlQuery);
-	PreparedSqlStatement(PreparedSqlStatement&& other) noexcept;
+	// constructor: create empty statement for std::vector::resize()
+	PreparedSqlStatement() noexcept : connection(NULL) {}
 
-	// destructor
-	virtual ~PreparedSqlStatement();
+	// constructor: create prepared SQL statement for specified connection and SQL query
+	PreparedSqlStatement(sql::Connection * setConnection, const std::string& sqlQuery)
+			: connection(setConnection), query(sqlQuery) {
+		this->prepare();
+	}
 
-	// getters
-	sql::PreparedStatement& get();
-	const sql::PreparedStatement& get() const;
+	// move constructor
+	PreparedSqlStatement(PreparedSqlStatement&& other) noexcept
+			: connection(other.connection), query(other.query), ptr(std::move(other.ptr)) {}
 
-	// control functions
-	void prepare();
-	void reset();
-	void refresh(sql::Connection * newConnection);
+	// destructor: reset prepared SQL statement
+	~PreparedSqlStatement() {
+		this->reset();
+	}
 
-	// operators
-	operator bool() const noexcept;
-	bool operator!() const noexcept;
-	PreparedSqlStatement& operator=(PreparedSqlStatement&& other) noexcept;
+	// get reference to prepared SQL statement
+	sql::PreparedStatement& get() {
+		if(!(this->ptr))
+			throw std::runtime_error("get(): No SQL statement prepared");
+		return *(this->ptr);
+	}
+
+	// get const reference to prepared SQL statement
+	const sql::PreparedStatement& get() const{
+		if(!(this->ptr))
+			throw std::runtime_error("get(): No SQL statement prepared");
+		return *(this->ptr);
+	}
+
+	// prepare SQL statement
+	void prepare() {
+		this->reset();
+		if(!(this->query.empty()))
+			this->ptr.reset(this->connection->prepareStatement(this->query));
+	}
+
+	// reset SQL statement
+	void reset() {
+		if(this->ptr) {
+			this->ptr->close();
+			this->ptr.reset();
+		}
+	}
+
+	// refresh prepared SQL statement
+	void refresh(sql::Connection * newConnection) {
+		this->reset();
+		this->connection = newConnection;
+		this->prepare();
+	}
+
+	// bool operator
+	operator bool() const noexcept {
+		return this->ptr.operator bool();
+	}
+
+	// not operator
+	bool operator!() const noexcept {
+		return !(this->ptr);
+	}
+
+	// move assignment operator
+	PreparedSqlStatement& operator=(PreparedSqlStatement&& other) noexcept {
+		if(&other != this) {
+			this->connection = other.connection;
+			this->ptr = std::move(other.ptr);
+			this->query = other.query;
+		}
+		return *this;
+	}
 
 	// not copyable
 	PreparedSqlStatement(PreparedSqlStatement&) = delete;
 	PreparedSqlStatement& operator=(PreparedSqlStatement&) = delete;
 
 private:
+	// pointer to connection
 	sql::Connection * connection;
+
+	// internal storage of SQL query string (for recovery on connection loss)
 	std::string query;
+
+	// unique pointer to prepared SQL statement
 	std::unique_ptr<sql::PreparedStatement> ptr;
 };
 

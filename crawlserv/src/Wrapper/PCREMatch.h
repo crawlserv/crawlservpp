@@ -20,21 +20,47 @@ namespace crawlservpp::Wrapper {
 
 class PCREMatch {
 public:
-	// constructors
-	PCREMatch(pcre2_match_data * setPtr) noexcept;
-	PCREMatch(PCREMatch&& other) noexcept;
+	// constructor: set pointer to NULL
+	PCREMatch(pcre2_match_data * setPtr) noexcept : ptr(setPtr) {}
 
-	// destructor
-	virtual ~PCREMatch();
+	// move constructor
+	PCREMatch(PCREMatch&& other) noexcept : ptr(other.ptr) {
+		other.ptr = NULL;
+	}
 
-	// getters
-	pcre2_match_data * get() noexcept;
-	const pcre2_match_data * get() const noexcept;
+	// destructor: free Perl-Compatible Regular Expression match if necessary
+	~PCREMatch() {
+		if(this->ptr) pcre2_match_data_free(this->ptr);
+	}
 
-	// operators
-	operator bool() const noexcept;
-	bool operator!() const noexcept;
-	PCREMatch& operator=(PCREMatch&& other) noexcept;
+	// get pointer to Perl-Compatible Regular Expression match
+	pcre2_match_data * get() noexcept {
+		return this->ptr;
+	}
+
+	// get const pointer to Perl-Compatible Regular Expression match
+	const pcre2_match_data * get() const noexcept {
+		return this->ptr;
+	}
+
+	// bool operator
+	operator bool() const noexcept {
+		return this->ptr != NULL;
+	}
+
+	// not operator
+	bool operator!() const noexcept {
+		return this->ptr == NULL;
+	}
+
+	// move operator
+	PCREMatch& operator=(PCREMatch&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = NULL;
+		}
+		return *this;
+	}
 
 	// not copyable
 	PCREMatch(PCREMatch&) = delete;
