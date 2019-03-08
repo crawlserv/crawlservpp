@@ -52,6 +52,7 @@ namespace crawlservpp::Module::Analyzer {
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::TableColumn TableColumn;
 		typedef Wrapper::TargetTablesLock TargetTablesLock;
+
 		typedef std::function<bool()> CallbackIsRunning;
 
 		// text maps are used to describe certain parts of a text
