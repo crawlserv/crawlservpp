@@ -20,6 +20,9 @@
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600 // force re-connect if the connection has been idle that long
 #define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5 // sleep on target table lock
 
+// optional debugging option
+#define MAIN_DATABASE_DEBUG_CONNECTION_COUNTER // enable connection counter
+
 #include "Data.h"
 #include "Exception.h"
 
@@ -35,6 +38,7 @@
 #include "../Struct/WebsiteProperties.h"
 #include "../Timer/Simple.h"
 #include "../Wrapper/PreparedSqlStatement.h"
+#include "../Wrapper/TableLock.h"
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
@@ -44,7 +48,6 @@
 #include <mysql_connection.h>
 
 #include <experimental/filesystem>
-
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -65,6 +68,10 @@
 #include <utility>
 #include <vector>
 
+#ifdef MAIN_DATABASE_DEBUG_CONNECTION_COUNTER
+#include <atomic>
+#endif
+
 namespace crawlservpp::Main {
 	class Database {
 		// for convenience
@@ -77,11 +84,17 @@ namespace crawlservpp::Main {
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
+		typedef Wrapper::TableLock<Main::Database> TableLock;
 
 		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
+		// allow TableLock access to protected locking functions
+		template<class DB> friend class Wrapper::TableLock;
+		friend class TargetTablesLock;
+
+		// constructor and destructor
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
 		virtual ~Database();
 
@@ -236,35 +249,8 @@ namespace crawlservpp::Main {
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
 
-		// sub-class for safe in-scope table locks
-		class TableLock {
-		public:
-			// constructor A: lock one table
-			TableLock(Database& db, const std::string& tableName) : ref(db) {
-				this->ref.lockTable(tableName);
-			}
-
-			// constructor B: lock two tables (and the aliases 'a' and 'b' for reading access to those tables)
-			TableLock(Database& db, const std::string& tableName1, const std::string& tableName2) : ref(db) {
-				this->ref.lockTables(tableName1, tableName2);
-			}
-
-			// destructor: try to unlock the table(s)
-			~TableLock() {
-				try { this->ref.unlockTables(); }
-				catch(...) {}
-			}
-
-			// not moveable, not copyable
-			TableLock(TableLock&) = delete;
-			TableLock(TableLock&&) = delete;
-			TableLock& operator=(TableLock&) = delete;
-			TableLock& operator=(TableLock&&) = delete;
-
-		private:
-			// internal reference to the database connection of the server
-			Database& ref;
-		};
+		// debugging helper function
+		static void incrementConnectionCounter();
 
 	private:
 		// private connection information
@@ -272,15 +258,20 @@ namespace crawlservpp::Main {
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
 		std::string module;
+		std::vector<std::pair<std::string, unsigned long>> targetTableLocks;
+
+		// optional private variables
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
 		Timer::Simple reconnectTimer;
 #endif
-		std::vector<std::pair<std::string, unsigned long>> targetTableLocks;
+#ifdef MAIN_DATABASE_DEBUG_CONNECTION_COUNTER
+		static std::atomic<unsigned long long> connectionCounter;
+#endif
 
 		// prepared SQL statements
 		std::vector<Wrapper::PreparedSqlStatement> preparedStatements;
 
-		// internal helper function
+		// internal helper functions
 		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
 

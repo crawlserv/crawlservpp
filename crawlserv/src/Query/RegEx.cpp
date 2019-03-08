@@ -160,7 +160,7 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 
 	// at least one match found -> save first match
 	PCRE2_SIZE * pcreOVector = pcre2_get_ovector_pointer(pcreMatch.get());
-	resultArray.emplace_back(text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]));
+	resultArray.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 
 	// get RegEx options
 	uint32_t pcreOptions = 0;
@@ -212,7 +212,7 @@ void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) 
 		if(!result) throw RegEx::Exception("Result vector unexpectedly too small");
 
 		// get resulting match
-		resultArray.emplace_back(text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]));
+		resultArray.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 	}
 
 	// copy result
