@@ -15,6 +15,7 @@
 #include "../Module/Database.h"
 #include "../Struct/DatabaseSettings.h"
 #include "../Struct/TableColumn.h"
+#include "../Struct/TableLockProperties.h"
 #include "../Struct/TargetTableProperties.h"
 #include "../Struct/QueryProperties.h"
 
@@ -32,9 +33,10 @@ class TargetTablesLock;
 
 class Database {
 	// for convenience
-	typedef Struct::TargetTableProperties TargetTableProperties;
 	typedef Struct::QueryProperties QueryProperties;
 	typedef Struct::TableColumn TableColumn;
+	typedef Struct::TableLockProperties TableLockProperties;
+	typedef Struct::TargetTableProperties TargetTableProperties;
 
 	typedef std::function<bool()> CallbackIsRunning;
 	typedef std::pair<unsigned long, std::string> IdString;
@@ -291,14 +293,14 @@ protected:
 		return this->database.getLastInsertedId();
 	}
 
-	// lock a table in the database for writing (and its alias 'a' for reading)
-	void lockTable(const std::string& tableName) {
-		this->database.lockTable(tableName);
+	// lock a table in the database for writing (and its aliases for reading)
+	void lockTable(const TableLockProperties& lockProperties) {
+		this->database.lockTable(lockProperties);
 	}
 
-	// lock two tables in the database for writing (and their aliases 'a' for reading the 1st and 'b' for reading the 2nd table)
-	void lockTables(const std::string& tableName1, const std::string tableName2) {
-		this->database.lockTables(tableName1, tableName2);
+	// lock two tables in the database for writing (and their aliases for reading)
+	void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) {
+		this->database.lockTables(lockProperties1, lockProperties2);
 	}
 
 	// unlock tables in the database
