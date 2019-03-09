@@ -5,8 +5,7 @@
  * Thread-specific functionality is not implemented in this (parent) class.
  *
  * NOT THREAD-SAFE!
- * Use instances of the child class DatabaseThread for thread-specific functionality
- * and child classes of Module::Database for module-specific functionality instead.
+ * Use instances of the child class Module::Database for module-specific functionality instead.
  *
  *  Created on: Sep 29, 2018
  *      Author: ans
