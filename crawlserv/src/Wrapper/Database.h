@@ -293,6 +293,11 @@ protected:
 		return this->database.getLastInsertedId();
 	}
 
+	// get the number of affected rows from the database
+	unsigned long getRowCount() {
+		return this->database.getRowCount();
+	}
+
 	// lock a table in the database for writing (and its aliases for reading)
 	void lockTable(const TableLockProperties& lockProperties) {
 		this->database.lockTable(lockProperties);

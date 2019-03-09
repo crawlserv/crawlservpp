@@ -247,6 +247,7 @@ namespace crawlservpp::Main {
 
 		// database helper functions
 		unsigned long getLastInsertedId();
+		unsigned long getRowCount();
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const TableLockProperties& lockProperties);
 		void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2);
@@ -340,6 +341,7 @@ namespace crawlservpp::Main {
 		struct {
 			unsigned short log;
 			unsigned short lastId;
+			unsigned short rowCount;
 			unsigned short setThreadStatus;
 			unsigned short setThreadStatusMessage;
 		} ps;
