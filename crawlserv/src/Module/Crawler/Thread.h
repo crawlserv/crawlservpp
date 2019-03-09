@@ -23,6 +23,7 @@
 #include "../../Parsing/XML.h"
 #include "../../Query/Container.h"
 #include "../../Struct/QueryProperties.h"
+#include "../../Struct/TableLockProperties.h"
 #include "../../Struct/ThreadOptions.h"
 #include "../../Struct/UrlProperties.h"
 #include "../../Timer/StartStop.h"
@@ -50,6 +51,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Parsing::URI::Exception URIException;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::QueryProperties QueryProperties;
+		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlProperties UrlProperties;
 		typedef Query::RegEx::Exception RegExException;
