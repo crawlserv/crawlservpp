@@ -193,9 +193,9 @@ void Database::prepare() {
 		this->ps.getLockId = this->addPreparedStatement(sqlQueryStr.str());
 	}
 
-	if(!(this->ps.lockUrlIfOk)) {
+	if(!(this->ps.lockUrl)) {
 		if(this->verbose)
-			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/2]...");
+			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/3]...");
 
 		std::string sqlQuery("UPDATE `");
 		sqlQuery += this->parsingTable;
@@ -207,12 +207,12 @@ void Database::prepare() {
 
 		sqlQuery += " LIMIT 1";
 
-		this->ps.lockUrlIfOk = this->addPreparedStatement(sqlQuery);
+		this->ps.lockUrl = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.addUrlLock)) {
 		if(this->verbose)
-			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [2/2]...");
+			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [3/3]...");
 
 		std::ostringstream sqlQueryStr;
 		sqlQueryStr <<	"INSERT INTO `" << this->parsingTable << "` (target, url, locktime, success)"
@@ -497,23 +497,21 @@ std::string Database::lockUrlIfOk(UrlProperties& urlProperties, unsigned long lo
 
 	if(urlProperties.lockId) {
 		// check prepared SQL statement for locking the URL
-		if(!(this->ps.lockUrlIfOk))
+		if(!(this->ps.lockUrl))
 			throw DatabaseException("Missing prepared SQL statement for Parser::Database::lockUrlIfOk(...)");
 
 		// get prepared SQL statement for locking the URL
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrlIfOk);
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
 
 		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, lockTimeout);
 			sqlStatement.setUInt64(2, urlProperties.lockId);
-			Database::sqlExecute(sqlStatement);
+			if(Database::sqlExecuteUpdate(sqlStatement) < 1)
+				return std::string(); // locking query not successful
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrlIfOk", e); }
-
-		// check whether URL lock was updated
-		if(!(this->getRowCount())) return std::string();
 	}
 	else {
 		// check prepared SQL statement for adding an URL lock
