@@ -14,17 +14,27 @@
 
 namespace crawlservpp::Wrapper {
 
-template<class DB>
+template<class DB> // DB needs to be a Database connection class w/ .lockTable(...), .lockTables(...) and .unlockTables()
 class TableLock {
 public:
-	// constructor A: lock one table
+	// constructor A: lock one table (and its alias 'a' for reading)
 	TableLock(DB& db, const std::string& tableName) : ref(db) {
-		this->ref.lockTable(tableName);
+		this->ref.lockTable(tableName, 0);
 	}
 
-	// constructor B: lock two tables (and the aliases 'a' and 'b' for reading access to those tables)
+	// constructor B: lock one table (and its alias 'a' for reading) as well as temporary tables tmp1, tmp2,...
+	TableLock(DB& db, const std::string& tableName, unsigned char numberOfTmpTables) : ref(db) {
+		this->ref.lockTable(tableName, numberOfTmpTables);
+	}
+
+	// constructor C: lock two tables (and their aliases 'a' and 'b' for reading)
 	TableLock(DB& db, const std::string& tableName1, const std::string& tableName2) : ref(db) {
-		this->ref.lockTables(tableName1, tableName2);
+		this->ref.lockTables(tableName1, tableName2, 0);
+	}
+
+	// constructor D: lock two tables (and their aliases 'a' and 'b' for reading) as well as temporary tables tmp1, tmp2,...
+	TableLock(DB& db, const std::string& tableName1, const std::string& tableName2, unsigned char numberOfTmpTables) : ref(db) {
+		this->ref.lockTables(tableName1, tableName2, numberOfTmpTables);
 	}
 
 	// destructor: try to unlock the table(s)
@@ -40,7 +50,7 @@ public:
 	TableLock& operator=(TableLock&&) = delete;
 
 private:
-	// internal reference to the database connection of the thread
+	// internal reference to a database connection
 	DB& ref;
 };
 

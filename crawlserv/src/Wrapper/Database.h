@@ -292,13 +292,13 @@ protected:
 	}
 
 	// lock a table in the database for writing
-	void lockTable(const std::string& tableName) {
-		this->database.lockTable(tableName);
+	void lockTable(const std::string& tableName, unsigned char numberOfTmpTables) {
+		this->database.lockTable(tableName, numberOfTmpTables);
 	}
 
 	// lock two tables in the database for writing (plus the alias 'a' for reading the first and the alias 'b' for reading the second table)
-	void lockTables(const std::string& tableName1, const std::string tableName2) {
-		this->database.lockTables(tableName1, tableName2);
+	void lockTables(const std::string& tableName1, const std::string tableName2, unsigned char numberOfTmpTables) {
+		this->database.lockTables(tableName1, tableName2, numberOfTmpTables);
 	}
 
 	// unlock tables in the database
