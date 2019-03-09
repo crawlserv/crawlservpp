@@ -12,7 +12,7 @@
  *      Author: ans
  */
 
-#include "../Main/Database.h"
+#include "Database.h"
 
 namespace crawlservpp::Main {
 

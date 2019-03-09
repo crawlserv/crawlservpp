@@ -8,7 +8,7 @@
  *      Author: ans
  */
 
-#include "../Main/App.h"
+#include "App.h"
 
 namespace crawlservpp::Main {
 
