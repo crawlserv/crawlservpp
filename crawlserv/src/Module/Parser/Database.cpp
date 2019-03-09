@@ -318,7 +318,7 @@ void Database::prepare() {
 
 	if(!(this->ps.updateTargetTable)) {
 		if(this->verbose)
-			this->log("[#" + this->idString + "] prepares parsingTableUpdated()...");
+			this->log("[#" + this->idString + "] prepares updateTargetTable()...");
 
 		std::ostringstream sqlQueryStrStr;
 		sqlQueryStrStr <<	"UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
