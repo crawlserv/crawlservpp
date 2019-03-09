@@ -293,11 +293,6 @@ protected:
 		return this->database.getLastInsertedId();
 	}
 
-	// get the number of affected rows from the database
-	unsigned long getRowCount() {
-		return this->database.getRowCount();
-	}
-
 	// lock a table in the database for writing (and its aliases for reading)
 	void lockTable(const TableLockProperties& lockProperties) {
 		this->database.lockTable(lockProperties);
@@ -357,13 +352,18 @@ protected:
 	 */
 
 	// execute prepared SQL statement by reference
-	void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
-		Main::Database::sqlExecute(sqlPreparedStatement);
+	bool sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
+		return Main::Database::sqlExecute(sqlPreparedStatement);
 	}
 
 	// execute prepared SQL statement by reference and fetch result
 	sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
 		return Main::Database::sqlExecuteQuery(sqlPreparedStatement);
+	}
+
+	// execute prepared SQL statement by reference and fetch updated rows
+	int sqlExecuteUpdate(sql::PreparedStatement& sqlPreparedStatement) {
+		return Main::Database::sqlExecuteUpdate(sqlPreparedStatement);
 	}
 };
 
