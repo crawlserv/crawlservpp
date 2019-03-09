@@ -138,7 +138,7 @@ void Database::initializeSql() {
 // prepare basic SQL statements (getting last id, logging and thread status)
 void Database::prepare() {
 	// reserve memory for SQL statements
-	this->reserveForPreparedStatements(5);
+	this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
 
 	try {
 		// prepare basic SQL statements
