@@ -187,12 +187,8 @@ void Thread::onTick() {
 		// save URL lock ID and expiration time if parsing was successful or unlock URL if parsing failed
 		if(parsed) this->finished.emplace(this->urls.front().lockId, this->lockTime);
 		else {
-			{ // lock parsing table
-			TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
-
 			// unlock URL if necesssary
 			this->database.unLockUrlIfOk(this->urls.front().lockId, this->lockTime);
-			} // parsing table unlocked
 		}
 
 		// reset lock time
