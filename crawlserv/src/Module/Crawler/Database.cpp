@@ -12,8 +12,9 @@
 namespace crawlservpp::Module::Crawler {
 
 // constructor: initialize values
-Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread), recrawl(false),
-		logging(true), verbose(false), urlCaseSensitive(true), urlDebug(false), urlStartupCheck(true), ps({0}) {}
+Database::Database(Module::Database& dbThread)
+		: Wrapper::Database(dbThread), recrawl(false), logging(true), verbose(false),
+		  urlCaseSensitive(true), urlDebug(false), urlStartupCheck(true), ps({0}) {}
 
 // destructor stub
 Database::~Database() {}
@@ -82,7 +83,7 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(23);
+	this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
 
 	// prepare SQL statements for crawler
 	if(!(this->ps.isUrlExists)) {
@@ -997,7 +998,7 @@ bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlPropert
 		throw DatabaseException("Crawler::Database::renewUrlLock(): No URL ID specified");
 
 	{ // lock crawling table
-		TableLock crawlingTableLock(*this, this->crawlingTable);
+		TableLock crawlingTableLock(*this, TableLockProperties(this->crawlingTable));
 
 		// get lock ID if not already received
 		this->getUrlLockId(urlProperties);
@@ -1038,8 +1039,6 @@ std::string Database::queryAddUrls(unsigned int numberOfUrls, const std::string&
 	sqlQuery.pop_back();
 
 	// return query
-	if(this->verbose)
-		this->log("[#" + this->idString + "] > " + sqlQuery);
 	return sqlQuery;
 }
 
