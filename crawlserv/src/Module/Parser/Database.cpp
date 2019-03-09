@@ -199,7 +199,7 @@ void Database::prepare() {
 		std::string sqlQuery("UPDATE `");
 		sqlQuery += this->parsingTable;
 		sqlQuery += "` SET locktime = NOW() + INTERVAL ? SECOND WHERE id = ?"
-					" AND (locktime IS NULL OR locktime < NOW())";
+						" AND (locktime IS NULL OR locktime < NOW())";
 
 		if(!(this->reparse))
 			sqlQuery += " AND NOT success";
@@ -484,8 +484,8 @@ void Database::getLockId(UrlProperties& urlProperties) {
 	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getLockId", e); }
 }
 
-// lock a URL in the database if it is lockable (and in the case of no retry: not parsed yet)
-//  NOTE: Returns an empty string if URL is not lockable.
+// lock a URL in the database if it is lockable (and in the case of no re-parse: not parsed yet)
+//  NOTE: Returns an empty string if the URL is not lockable or, when re-parsing is deactived, already parsed.
 std::string Database::lockUrlIfOk(UrlProperties& urlProperties, unsigned long lockTimeout) {
 	// check argument
 	if(!urlProperties.id)
@@ -502,7 +502,7 @@ std::string Database::lockUrlIfOk(UrlProperties& urlProperties, unsigned long lo
 		// get prepared SQL statement for locking the URL
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrlIfOk);
 
-		// lock URL in database
+		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, lockTimeout);
