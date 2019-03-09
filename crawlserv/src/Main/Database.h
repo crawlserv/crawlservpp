@@ -260,7 +260,7 @@ namespace crawlservpp::Main {
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
 
-		// static inline wrapper functions for debugging purposes
+		// static inline wrapper functions
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
 		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
 			sqlPreparedStatement.execute();
