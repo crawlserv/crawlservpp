@@ -73,6 +73,7 @@ namespace crawlservpp::Module::Parser {
 
 		// prepare target table and SQL statements for parser
 		void initTargetTable(CallbackIsRunning isRunning);
+		// prepare SQL statements for parser
 		void prepare();
 
 		// URL functions
@@ -81,12 +82,10 @@ namespace crawlservpp::Module::Parser {
 		unsigned long getNumberOfUrls();
 
 		// URL locking functions
-		bool isUrlLockableAndNotParsed(unsigned long lockId);
-		bool checkUrlLock(unsigned long lockId, const std::string& lockTime);
 		std::string getLockTime(unsigned long lockId);
 		void getLockId(UrlProperties& urlProperties);
-		std::string lockUrl(UrlProperties& urlProperties, unsigned long lockTimeout);
-		void unLockUrl(unsigned long lockId);
+		std::string lockUrlIfOk(UrlProperties& urlProperties, unsigned long lockTimeout);
+		void unLockUrlIfOk(unsigned long lockId, const std::string& lockTime);
 
 		// parsing functions
 		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
@@ -127,13 +126,11 @@ namespace crawlservpp::Module::Parser {
 			unsigned short fetchUrls;
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
-			unsigned short isUrlLockableAndNotParsed;
-			unsigned short checkUrlLock;
 			unsigned short getLockTime;
 			unsigned short getLockId;
-			unsigned short lockUrl;
+			unsigned short lockUrlIfOk;
 			unsigned short addUrlLock;
-			unsigned short unLockUrl;
+			unsigned short unLockUrlIfOk;
 			unsigned short getContentIdFromParsedId;
 			unsigned short getLatestContent;
 			unsigned short getAllContents;

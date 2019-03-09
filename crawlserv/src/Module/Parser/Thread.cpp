@@ -145,15 +145,12 @@ void Thread::onTick() {
 	{ // lock parsing table
 		TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
 
-		// get current URL lock ID if none was received on URL selection
+		// get current URL lock ID
 		this->database.getLockId(this->urls.front());
 
-		// lock URL
-		if(this->database.isUrlLockableAndNotParsed(this->urls.front().lockId)) {
-			this->lockTime = this->database.lockUrl(this->urls.front(), this->config.generalLock);
-				// (TODO: combine SQL queries)
-		}
-		else skip = true;
+		// try to lock URL
+		this->lockTime = this->database.lockUrlIfOk(this->urls.front(), this->config.generalLock);
+		skip = this->lockTime.empty();
 	} // parsing table unlocked
 
 	if(skip) {
@@ -194,9 +191,7 @@ void Thread::onTick() {
 			TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
 
 			// unlock URL if necesssary
-			if(this->database.checkUrlLock(this->urls.front().lockId, this->lockTime))
-				this->database.unLockUrl(this->urls.front().lockId);
-					// (TODO: combine SQL  queries)
+			this->database.unLockUrlIfOk(this->urls.front().lockId, this->lockTime);
 			} // parsing table unlocked
 		}
 
@@ -406,7 +401,7 @@ void Thread::parsingUrlSelection() {
 	// done
 	if(this->config.generalTiming && this->config.generalLogging)
 		this->log("checked URLs in " + timer.tickStr());
-	this->setStatusMessage("URLs checked.");
+	this->setStatusMessage("URLs fetched.");
 }
 
 // fetch next URLs from database
