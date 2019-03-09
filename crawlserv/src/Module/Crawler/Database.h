@@ -12,6 +12,7 @@
 
 #include "../Database.h"
 
+#include "../../Struct/TableLockProperties.h"
 #include "../../Struct/UrlProperties.h"
 #include "../../Wrapper/Database.h"
 #include "../../Wrapper/TableLock.h"
@@ -33,6 +34,7 @@ namespace crawlservpp::Module::Crawler {
 	class Database : public Wrapper::Database {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
+		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::UrlProperties UrlProperties;
 		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 
