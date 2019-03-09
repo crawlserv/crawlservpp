@@ -247,7 +247,6 @@ namespace crawlservpp::Main {
 
 		// database helper functions
 		unsigned long getLastInsertedId();
-		unsigned long getRowCount();
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const TableLockProperties& lockProperties);
 		void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2);
@@ -266,17 +265,20 @@ namespace crawlservpp::Main {
 
 		// static inline wrapper functions
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
-			sqlPreparedStatement.execute();
+		static bool sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
+			bool result = sqlPreparedStatement.execute();
 			Database::requestCounter++;
+			return result;
 		}
-		static void sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			sqlPreparedStatement->execute();
+		static bool sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			bool result = sqlPreparedStatement->execute();
 			Database::requestCounter++;
+			return result;
 		}
-		static void sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			sqlStatement->execute(sqlQuery);
+		static bool sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			bool result = sqlStatement->execute(sqlQuery);
 			Database::requestCounter++;
+			return result;
 		}
 		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
 			sql::ResultSet * resultPtr = sqlPreparedStatement.executeQuery();
@@ -293,15 +295,31 @@ namespace crawlservpp::Main {
 			Database::requestCounter++;
 			return resultPtr;
 		}
+		static int sqlExecuteUpdate(sql::PreparedStatement& sqlPreparedStatement) {
+			int result = sqlPreparedStatement.executeUpdate();
+			Database::requestCounter++;
+			return result;
+		}
+		static int sqlExecuteUpdate(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			int result = sqlPreparedStatement->executeUpdate();
+			Database::requestCounter++;
+			return result;
+		}
+		static int sqlExecuteUpdate(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			int result = sqlStatement->executeUpdate(sqlQuery);
+			Database::requestCounter++;
+			return result;
+		}
+
 #else
-		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
-			sqlPreparedStatement.execute();
+		static bool sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
+			return sqlPreparedStatement.execute();
 		}
-		static void sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			sqlPreparedStatement->execute();
+		static bool sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			return sqlPreparedStatement->execute();
 		}
-		static void sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			sqlStatement->execute(sqlQuery);
+		static bool sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			return sqlStatement->execute(sqlQuery);
 		}
 		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
 			return sqlPreparedStatement.executeQuery();
@@ -311,6 +329,15 @@ namespace crawlservpp::Main {
 		}
 		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
 			return sqlStatement->executeQuery(sqlQuery);
+		}
+		static int sqlExecuteUpdate(sql::PreparedStatement& sqlPreparedStatement) {
+			return sqlPreparedStatement.executeUpdate();
+		}
+		static int sqlExecuteUpdate(SqlPreparedStatementPtr& sqlPreparedStatement) {
+			return sqlPreparedStatement->executeUpdate();
+		}
+		static int sqlExecuteUpdate(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
+			return sqlStatement->executeUpdate(sqlQuery);
 		}
 #endif
 
@@ -341,7 +368,6 @@ namespace crawlservpp::Main {
 		struct {
 			unsigned short log;
 			unsigned short lastId;
-			unsigned short rowCount;
 			unsigned short setThreadStatus;
 			unsigned short setThreadStatusMessage;
 		} ps;
