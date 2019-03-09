@@ -19,22 +19,12 @@ class TableLock {
 public:
 	// constructor A: lock one table (and its alias 'a' for reading)
 	TableLock(DB& db, const std::string& tableName) : ref(db) {
-		this->ref.lockTable(tableName, 0);
+		this->ref.lockTable(tableName);
 	}
 
-	// constructor B: lock one table (and its alias 'a' for reading) as well as temporary tables tmp1, tmp2,...
-	TableLock(DB& db, const std::string& tableName, unsigned char numberOfTmpTables) : ref(db) {
-		this->ref.lockTable(tableName, numberOfTmpTables);
-	}
-
-	// constructor C: lock two tables (and their aliases 'a' and 'b' for reading)
+	// constructor B: lock two tables (and their aliases 'a' and 'b' for reading)
 	TableLock(DB& db, const std::string& tableName1, const std::string& tableName2) : ref(db) {
-		this->ref.lockTables(tableName1, tableName2, 0);
-	}
-
-	// constructor D: lock two tables (and their aliases 'a' and 'b' for reading) as well as temporary tables tmp1, tmp2,...
-	TableLock(DB& db, const std::string& tableName1, const std::string& tableName2, unsigned char numberOfTmpTables) : ref(db) {
-		this->ref.lockTables(tableName1, tableName2, numberOfTmpTables);
+		this->ref.lockTables(tableName1, tableName2);
 	}
 
 	// destructor: try to unlock the table(s)
