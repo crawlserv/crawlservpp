@@ -70,13 +70,13 @@ void Database::prepare() {
 	// create table names
 	this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
 	this->crawlingTable = this->urlListTable + "_crawling";
-	std::string crawledTable = this->urlListTable + "_crawled";
+	std::string crawledTable(this->urlListTable + "_crawled");
 
 	// create SQL string for URL hashing
-	std::string hash("CRC32( ");
-	if(this->urlCaseSensitive) hash += "?";
-	else hash += "LOWER( ? )";
-	hash.push_back(')');
+	std::string hashQuery("CRC32( ");
+	if(this->urlCaseSensitive) hashQuery += "?";
+	else hashQuery += "LOWER( ? )";
+	hashQuery += " )";
 
 	// check connection to database
 	this->checkConnection();
@@ -91,7 +91,7 @@ void Database::prepare() {
 		std::string sqlQuery(
 				"SELECT EXISTS ("
 					" SELECT * FROM ("
-						" SELECT url FROM `" + this->urlListTable + "` WHERE hash = " + hash +
+						" SELECT url FROM `" + this->urlListTable + "` WHERE hash = " + hashQuery +
 					" ) AS HashResult WHERE ");
 		if(this->urlCaseSensitive) sqlQuery += "url LIKE ?";
 		else sqlQuery += "LOWER( url ) LIKE LOWER( ? )";
@@ -130,34 +130,24 @@ void Database::prepare() {
 	if(!(this->ps.addUrl)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrl()...");
 		this->ps.addUrl = this->addPreparedStatement(
-				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual) VALUES (?, " + hash + ", ?)");
+				"INSERT INTO `" + this->urlListTable + "`(url, hash, manual)"
+				" VALUES ( ?, " + hashQuery + ", ?)"
+		);
 	}
 
 	if(!(this->ps.add10Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [1/3]...");
-		this->ps.add10Urls = this->addPreparedStatement(
-				"INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES"
-				 " (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), "
-				 " (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), (?, " + hash + "), "
-				 " (?, " + hash + "), (?, " + hash + ")");
+		this->ps.add10Urls = this->addPreparedStatement(this->queryAddUrls(10, hashQuery));
 	}
 
 	if(!(this->ps.add100Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [2/3]...");
-
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, " + hash + ")";
-		for(unsigned short n = 0; n < 99; n++) sqlQuery += ", (?, " + hash + ")";
-
-		this->ps.add100Urls = this->addPreparedStatement(sqlQuery);
+		this->ps.add100Urls = this->addPreparedStatement(this->queryAddUrls(100, hashQuery));
 	}
 
 	if(!(this->ps.add1000Urls)) {
 		if(this->verbose) this->log("[#" + this->idString + "] prepares addUrls() [3/3]...");
-
-		std::string sqlQuery = "INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES (?, " + hash + ")";
-		for(unsigned short n = 0; n < 999; n++) sqlQuery += ", (?, " + hash + ")";
-
-		this->ps.add1000Urls = this->addPreparedStatement(sqlQuery);
+		this->ps.add1000Urls = this->addPreparedStatement(this->queryAddUrls(1000, hashQuery));
 	}
 
 	if(!(this->ps.getUrlPosition)) {
@@ -1028,6 +1018,29 @@ bool Database::renewUrlLock(unsigned long lockTimeout, UrlProperties& urlPropert
 	} // crawling table unlocked
 
 	return result;
+}
+
+// generate a SQL query for adding a specific number of URLs
+std::string Database::queryAddUrls(unsigned int numberOfUrls, const std::string& hashQuery) {
+	// check argument
+	if(!numberOfUrls)
+		throw DatabaseException("Crawler::Database::queryUpdateOrAddUrls(): No number of URLs specified");
+
+	// generate INSERT INTO ... VALUES clause
+	std::string sqlQuery("INSERT INTO `" + this->urlListTable + "`(url, hash) VALUES ");
+
+	// generate placeholders
+	for(unsigned int n = 0; n < numberOfUrls; n++)
+		sqlQuery += "(?, " + hashQuery + "), ";
+
+	// remove last comma and space
+	sqlQuery.pop_back();
+	sqlQuery.pop_back();
+
+	// return query
+	if(this->verbose)
+		this->log("[#" + this->idString + "] > " + sqlQuery);
+	return sqlQuery;
 }
 
 }

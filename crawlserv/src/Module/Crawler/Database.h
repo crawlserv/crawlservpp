@@ -136,6 +136,9 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short urlDuplicationCheck;
 			unsigned short urlHashCheck;
 		} ps;
+
+		// helper function
+		std::string queryAddUrls(unsigned int numberOfUrls, const std::string& hashQuery);
 	};
 }
 
