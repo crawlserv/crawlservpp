@@ -276,16 +276,19 @@ namespace crawlservpp::Main {
 			Database::requestCounter++;
 		}
 		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
-			return sqlPreparedStatement.executeQuery();
+			sql::ResultSet * resultPtr = sqlPreparedStatement.executeQuery();
 			Database::requestCounter++;
+			return resultPtr;
 		}
 		static sql::ResultSet * sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			return sqlPreparedStatement->executeQuery();
+			sql::ResultSet * resultPtr = sqlPreparedStatement->executeQuery();
 			Database::requestCounter++;
+			return resultPtr;
 		}
 		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			return sqlStatement->executeQuery(sqlQuery);
+			sql::ResultSet * resultPtr = sqlStatement->executeQuery(sqlQuery);
 			Database::requestCounter++;
+			return resultPtr;
 		}
 #else
 		static void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
