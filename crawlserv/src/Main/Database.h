@@ -6,7 +6,7 @@
  *
  * NOT THREAD-SAFE!
  * Use instances of the child class Module::Database for thread-specific functionality
- * and child classes of DatabaseModule for module-specific functionality instead.
+ * functionality instead.
  *
  *  Created on: Sep 29, 2018
  *      Author: ans
