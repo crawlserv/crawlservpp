@@ -7,11 +7,11 @@
 		"cache.size": {
 			"id": 1,
 			"type": "number",
-			"default": 1000,
+			"default": 2500,
 			"min": 0,
 			"step": 500,
-			"label": "Maximum cache size:",
-			"description": "Number of URLs to parse before saving results (0=infinite).",
+			"label": "Cache size:",
+			"description": "Number of URLs fetched and parsed before saving results (0=infinite).",
 			"simple": true,
 			"position": 7
 		},

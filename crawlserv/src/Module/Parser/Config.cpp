@@ -76,7 +76,7 @@ void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std:
 							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned long).");
 						}
-						if(name == "logging") {
+						else if(name == "logging") {
 							if(j->value.IsUint()) this->generalLogging = j->value.GetUint();
 							else warningsTo.emplace("\'" + cat + "." + name
 									+ "\' ignored because of wrong type (not unsigned int).");
