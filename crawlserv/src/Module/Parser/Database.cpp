@@ -118,8 +118,9 @@ void Database::initTargetTable(CallbackIsRunning isRunning) {
 	} // parsing tables unlocked
 }
 
-// check connection to database
+// prepare SQL statements for parser
 void Database::prepare() {
+	// check connection to database
 	this->checkConnection();
 
 	// reserve memory

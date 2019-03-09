@@ -73,7 +73,6 @@ namespace crawlservpp::Module::Parser {
 
 		// prepare target table and SQL statements for parser
 		void initTargetTable(CallbackIsRunning isRunning);
-		// prepare SQL statements for parser
 		void prepare();
 
 		// URL functions
