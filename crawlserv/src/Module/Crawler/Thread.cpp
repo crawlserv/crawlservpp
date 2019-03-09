@@ -507,7 +507,7 @@ bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 				// check for custom URLs to crawl
 				if(this->manualCounter < this->customPages.size())
 				{ // lock crawling table
-					TableLock crawlingTableLock(this->database, this->crawlingTable);
+					TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
 
 					while(this->manualCounter < this->customPages.size()) {
 						// get current lock ID for custom URL if none was received yet
@@ -550,7 +550,7 @@ bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 					}
 
 					{ // lock crawling table
-						TableLock crawlingTableLock(this->database, this->crawlingTable);
+						TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
 
 						// get current lock ID for start page if none was received yet
 						this->database.getUrlLockId(this->startPage);
@@ -1560,7 +1560,7 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties, unsigned long& checke
 		// unlock URL if necessary (if it was locked inside this function OR if crawler is not running anymore)
 		if(newUrlLock || !(this->isRunning())) {
 			{ // lock crawling table
-				TableLock crawlingTableLock(this->database, this->crawlingTable);
+				TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
 
 				// check URL lock
 				if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime)) {
@@ -1587,7 +1587,7 @@ void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
 	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
 	{ // lock crawling table
-		TableLock crawlingTableLock(this->database, this->crawlingTable);
+		TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
 
 		// check URL lock
 		if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime))
@@ -1630,7 +1630,7 @@ void Thread::crawlingSkip(const UrlProperties& urlProperties) {
 	this->retryCounter = 0;
 
 	{ // lock crawling table
-		TableLock crawlingTableLock(this->database, this->crawlingTable);
+		TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
 
 		// check URL lock
 		if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime))
