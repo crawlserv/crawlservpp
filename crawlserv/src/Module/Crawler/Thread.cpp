@@ -187,6 +187,8 @@ void Thread::onTick() {
 
 				// success!
 				this->crawlingSuccess(url);
+
+				// log if necessary
 				if((this->config.crawlerLogging > Config::crawlerLoggingDefault)
 						|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
 					std::ostringstream logStrStr;
@@ -207,12 +209,14 @@ void Thread::onTick() {
 				}
 			}
 		}
-		else if(!crawled) this->archiveRetry = false; // if crawling and getting archives failed, retry both (not only archives)!
+		else if(!crawled)
+			this->archiveRetry = false; // if crawling and getting archives failed, retry both (not only archives)!
 	}
 	else {
-		if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
+		// no URLs to crawl: set idle timer and sleep
+		if(this->idleTime == std::chrono::steady_clock::time_point::min())
 			this->idleTime = std::chrono::steady_clock::now();
-		}
+
 		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.crawlerSleepIdle));
 	}
 }
@@ -676,10 +680,10 @@ bool Thread::crawlingContent(const UrlProperties& urlProperties, unsigned long& 
 	timerStrTo = "";
 
 	// check arguments
-	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingContent(): No URL ID specified");
-	if(urlProperties.url.empty()) {
+	if(!urlProperties.id)
+		throw Exception("Crawler::Thread::crawlingContent(): No URL ID specified");
+	if(urlProperties.url.empty())
 		throw Exception("Crawler::Thread::crawlingContent(): No URL specified");
-	}
 
 	// skip crawling if only archive needs to be retried
 	if(this->config.crawlerArchives && this->archiveRetry) {
@@ -986,7 +990,8 @@ bool Thread::crawlingCheckConsistency(const std::string& url, const std::string&
 // optional canonical check (validate URL against canonical URL)
 bool Thread::crawlingCheckCanonical(const std::string& url, const Parsing::XML& doc) {
 	// check argument
-	if(url.empty()) throw Exception("Crawler::Thread::crawlingCheckCanonical(): No URL specified");
+	if(url.empty())
+		throw Exception("Crawler::Thread::crawlingCheckCanonical(): No URL specified");
 
 	if(this->config.crawlerHTMLCanonicalCheck) {
 		std::string canonical;
@@ -1018,7 +1023,8 @@ bool Thread::crawlingCheckCanonical(const std::string& url, const Parsing::XML& 
 // check whether specific content should be crawled
 bool Thread::crawlingCheckContent(const std::string& url, const std::string& content, const Parsing::XML& doc) {
 	// check argument
-	if(url.empty()) throw Exception("Crawler::Thread::crawlingCheckCanonical(): No URL specified");
+	if(url.empty())
+		throw Exception("Crawler::Thread::crawlingCheckCanonical(): No URL specified");
 
 	// check whitelist for content types
 	if(!(this->queriesWhiteListContent.empty())) {
@@ -1083,8 +1089,10 @@ bool Thread::crawlingCheckContent(const std::string& url, const std::string& con
 void Thread::crawlingSaveContent(const UrlProperties& urlProperties, unsigned int response,
 		const std::string& type, const std::string& content, const Parsing::XML& doc) {
 	// check arguments
-	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingSaveContent(): No URL ID specified");
-	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingSaveContent(): No URL specified");
+	if(!urlProperties.id)
+		throw Exception("Crawler::Thread::crawlingSaveContent(): No URL ID specified");
+	if(urlProperties.url.empty())
+		throw Exception("Crawler::Thread::crawlingSaveContent(): No URL specified");
 
 	if(this->config.crawlerXml) {
 		std::string xmlContent;
@@ -1104,7 +1112,8 @@ void Thread::crawlingSaveContent(const UrlProperties& urlProperties, unsigned in
 std::vector<std::string> Thread::crawlingExtractUrls(const std::string& url,
 		const std::string& content, const Parsing::XML& doc) {
 	// check argument
-	if(url.empty()) throw Exception("Crawler::Thread::crawlingExtractUrls(): No URL specified");
+	if(url.empty())
+		throw Exception("Crawler::Thread::crawlingExtractUrls(): No URL specified");
 
 	std::vector<std::string> urls;
 	for(auto i = this->queriesLinks.begin(); i != this->queriesLinks.end(); ++i) {
@@ -1162,7 +1171,6 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 	// check and initialize arguments
 	if(url.empty())
 		throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): No URL specified");
-	newUrlsTo = 0;
 
 	// set current URL
 	try {
@@ -1174,20 +1182,27 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 	}
 
 	// parse URLs
+	newUrlsTo = 0;
 	for(unsigned long n = 1; n <= urls.size(); n++) {
 		// parse archive URLs (only absolute links behind archive links!)
 		if(archived) {
 			unsigned long pos = 0;
 			unsigned long pos1 = urls.at(n - 1).find("https://", 1);
 			unsigned long pos2 = urls.at(n - 1).find("http://", 1);
+
 			if(pos1 != std::string::npos && pos2 != std::string::npos) {
-				if(pos1 < pos2) pos = pos2;
-				else pos = pos1;
+				if(pos1 < pos2)
+					pos = pos2;
+				else
+					pos = pos1;
 			}
 			else if(pos1 != std::string::npos) pos = pos1;
 			else if(pos2 != std::string::npos) pos = pos2;
-			if(pos) urls.at(n - 1) = Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
-			else urls.at(n - 1) = "";
+
+			if(pos)
+				urls.at(n - 1) = Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
+			else
+				urls.at(n - 1) = "";
 		}
 
 		if(!urls.at(n - 1).empty()) {
@@ -1199,20 +1214,22 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 				if(this->parser->parseLink(urls.at(n - 1))) {
 					if(this->parser->isSameDomain()) {
 						if(!(this->config.crawlerParamsBlackList.empty())) {
-							urls.at(n - 1) = this->parser->getSubUrl(this->config.crawlerParamsBlackList, false);
-
+							urls.at(n - 1) = this->parser->getSubUrl(
+									this->config.crawlerParamsBlackList, false
+							);
 						}
-						else urls.at(n - 1)
-								= this->parser->getSubUrl(this->config.crawlerParamsWhiteList, true);
+						else
+							urls.at(n - 1) = this->parser->getSubUrl(
+									this->config.crawlerParamsWhiteList, true
+							);
 						if(!(this->crawlingCheckUrl(urls.at(n - 1)))) urls.at(n - 1) = "";
 
 						if(!urls.at(n - 1).empty()) {
-							if(urls.at(n - 1).at(0) != '/') {
+							if(urls.at(n - 1).at(0) != '/')
 								throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): " + urls.at(n - 1) + " is no sub-URL!");
-							}
-							if(this->config.crawlerLogging && urls.at(n - 1).length() > 1 && urls.at(n - 1).at(1) == '#') {
+							if(this->config.crawlerLogging && urls.at(n - 1).length() > 1
+									&& urls.at(n - 1).at(1) == '#')
 								this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'.");
-							}
 							continue;
 						}
 					}
@@ -1325,8 +1342,10 @@ void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::st
 // crawl archives
 bool Thread::crawlingArchive(UrlProperties& urlProperties, unsigned long& checkedUrlsTo, unsigned long& newUrlsTo) {
 	// check arguments
-	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingArchive(): No URL ID specified");
-	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingArchive(): No URL specified");
+	if(!urlProperties.id)
+		throw Exception("Crawler::Thread::crawlingArchive(): No URL ID specified");
+	if(urlProperties.url.empty())
+		throw Exception("Crawler::Thread::crawlingArchive(): No URL specified");
 
 	if(this->config.crawlerArchives && this->networkingArchives) {
 		bool success = true;
@@ -1366,7 +1385,9 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties, unsigned long& checke
 								if(this->config.crawlerLogging) {
 									// if there are warnings, just log them (maybe mementos were partially parsed)
 									while(!warnings.empty()) {
-										this->log("Memento parsing WARNING: " + warnings.front() + " [" + urlProperties.url + "]");
+										this->log(
+												"Memento parsing WARNING: " + warnings.front() + " [" + urlProperties.url + "]"
+										);
 										warnings.pop();
 									}
 								}
@@ -1429,12 +1450,15 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties, unsigned long& checke
 															timeStamp = archivedContent.substr(17, 14);
 
 															// get URL and validate timestamp
-															mementos.front().url = this->config.crawlerArchivesUrlsMemento.at(n) + timeStamp
+															mementos.front().url =
+																	this->config.crawlerArchivesUrlsMemento.at(n)
+																	+ timeStamp
 																	+ mementos.front().url.substr(subUrlPos);
-															if(Helper::DateTime::convertTimeStampToSQLTimeStamp(
-																	timeStamp))
+
+															if(Helper::DateTime::convertTimeStampToSQLTimeStamp(timeStamp))
 																// follow reference
 																continue;
+
 															else if(this->config.crawlerLogging)
 																// log warning (and ignore reference)
 																this->log("WARNING: Invalid timestamp \'" + timeStamp
@@ -1582,9 +1606,12 @@ bool Thread::crawlingArchive(UrlProperties& urlProperties, unsigned long& checke
 // crawling successfull
 void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
 	// check argument
-	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
-	if(!urlProperties.lockId) throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
-	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
+	if(!urlProperties.id)
+		throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
+	if(!urlProperties.lockId)
+		throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
+	if(urlProperties.url.empty())
+		throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
 	{ // lock crawling table
 		TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
@@ -1622,9 +1649,12 @@ void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
 // skip URL after crawling problem
 void Thread::crawlingSkip(const UrlProperties& urlProperties) {
 	// check argument
-	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
-	if(!urlProperties.lockId) throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
-	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
+	if(!urlProperties.id)
+		throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
+	if(!urlProperties.lockId)
+		throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
+	if(urlProperties.url.empty())
+		throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
 	// reset retry counter
 	this->retryCounter = 0;
@@ -1662,9 +1692,12 @@ void Thread::crawlingSkip(const UrlProperties& urlProperties) {
 //  NOTE: leaves the URL lock active for retry
 void Thread::crawlingRetry(const UrlProperties& urlProperties, bool archiveOnly) {
 	// check argument
-	if(!urlProperties.id) throw Exception("Crawler::Thread::crawlingRetry(): No URL ID specified");
-	if(!urlProperties.lockId) throw Exception("Crawler::Thread::crawlingRetry(): No URL lock ID specified");
-	if(urlProperties.url.empty()) throw Exception("Crawler::Thread::crawlingRetry(): No URL specified");
+	if(!urlProperties.id)
+		throw Exception("Crawler::Thread::crawlingRetry(): No URL ID specified");
+	if(!urlProperties.lockId)
+		throw Exception("Crawler::Thread::crawlingRetry(): No URL lock ID specified");
+	if(urlProperties.url.empty())
+		throw Exception("Crawler::Thread::crawlingRetry(): No URL specified");
 
 	if(this->config.crawlerReTries > -1) {
 		// increment and check retry counter
@@ -1681,72 +1714,76 @@ void Thread::crawlingRetry(const UrlProperties& urlProperties, bool archiveOnly)
 // parse memento reply, get mementos and link to next page if one exists (also convert timestamps to YYYYMMDD HH:MM:SS)
 std::string Thread::parseMementos(std::string mementoContent, std::queue<std::string>& warningsTo,
 		std::queue<Memento>& mementosTo) {
-	std::string nextPage;
-	Memento newMemento;
-	std::ostringstream warningStrStr;
-	unsigned long pos = 0;
-	unsigned long end = 0;
-	bool mementoStarted = false;
-	bool newField = true;
+	Memento newMemento;				// object for new memento
+	bool mementoStarted = false;	// memento has been started
+	std::string nextPage;			// link to next page
+	unsigned long pos = 0;			// position of memento
+	unsigned long end = 0;			// end of memento
+	bool newField = true;			// not in the middle of a field
 
 	while(pos < mementoContent.length()) {
 		// skip wildchars
-		if(mementoContent.at(pos) == ' ' || mementoContent.at(pos) == '\r' || mementoContent.at(pos) == '\n'
-				|| mementoContent.at(pos) == '\t') {
+		if(mementoContent.at(pos) == ' '
+			|| mementoContent.at(pos) == '\r'
+			|| mementoContent.at(pos) == '\n'
+			|| mementoContent.at(pos) == '\t') {
 			pos++;
+			continue;
 		}
-		// parse link
-		else if(mementoContent.at(pos) == '<') {
+
+		if(mementoContent.at(pos) == '<') {
+			// parse link
 			end = mementoContent.find('>', pos + 1);
 			if(end == std::string::npos) {
+				std::ostringstream warningStrStr;
 				warningStrStr << "No '>' after '<' for link at " << pos << ".";
 				warningsTo.emplace(warningStrStr.str());
-				warningStrStr.clear();
-				warningStrStr.str(std::string());
 				break;
 			}
+
 			if(mementoStarted) {
 				// memento not finished -> warning
-				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.emplace(newMemento);
+				if(!newMemento.url.empty() && !newMemento.timeStamp.empty())
+					mementosTo.emplace(newMemento);
+				std::ostringstream warningStrStr;
 				warningStrStr << "New memento started without finishing the old one at " << pos << ".";
 				warningsTo.emplace(warningStrStr.str());
-				warningStrStr.clear();
-				warningStrStr.str(std::string());
 			}
+
 			mementoStarted = true;
 			newMemento.url = mementoContent.substr(pos + 1, end - pos - 1);
 			newMemento.timeStamp = "";
 			pos = end + 1;
 		}
-		// parse field separator
 		else if(mementoContent.at(pos) == ';') {
+			// parse field separator
 			newField = true;
 			pos++;
 		}
-		// parse end of memento
 		else if(mementoContent.at(pos) == ',') {
+			// parse end of memento
 			if(mementoStarted) {
-				if(!newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.emplace(newMemento);
+				if(!newMemento.url.empty() && !newMemento.timeStamp.empty())
+					mementosTo.emplace(newMemento);
 				mementoStarted  = false;
 			}
 			pos++;
 		}
 		else {
-			if(!newField) {
+			if(newField) newField = false;
+			else {
+				std::ostringstream warningStrStr;
 				warningStrStr << "Field seperator missing for new field at " << pos << ".";
 				warningsTo.emplace(warningStrStr.str());
-				warningStrStr.clear();
-				warningStrStr.str(std::string());
 			}
-			else newField = false;
+
 			end = mementoContent.find('=', pos + 1);
 			if(end == std::string::npos) {
 				end = mementoContent.find_first_of(",;");
 				if(end == std::string::npos) {
+					std::ostringstream warningStrStr;
 					warningStrStr << "Cannot find end of field at " << pos << ".";
 					warningsTo.emplace(warningStrStr.str());
-					warningStrStr.clear();
-					warningStrStr.str(std::string());
 					break;
 				}
 				pos = end;
@@ -1755,22 +1792,24 @@ std::string Thread::parseMementos(std::string mementoContent, std::queue<std::st
 				std::string fieldName = mementoContent.substr(pos, end - pos);
 				unsigned long oldPos = pos;
 				pos = mementoContent.find_first_of("\"\'", pos + 1);
+
 				if(pos == std::string::npos) {
+					std::ostringstream warningStrStr;
 					warningStrStr << "Cannot find begin of value at " << oldPos << ".";
 					warningsTo.emplace(warningStrStr.str());
-					warningStrStr.clear();
-					warningStrStr.str(std::string());
 					pos++;
 					continue;
 				}
+
 				end = mementoContent.find_first_of("\"\'", pos + 1);
+
 				if(end == std::string::npos) {
+					std::ostringstream warningStrStr;
 					warningStrStr << "Cannot find end of value at " << pos << ".";
 					warningsTo.emplace(warningStrStr.str());
-					warningStrStr.clear();
-					warningStrStr.str(std::string());
 					break;
 				}
+
 				std::string fieldValue = mementoContent.substr(pos + 1, end - pos - 1);
 
 				if(fieldName == "datetime") {
@@ -1778,6 +1817,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::queue<std::st
 					if(Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue))
 						newMemento.timeStamp = fieldValue;
 					else {
+						std::ostringstream warningStrStr;
 						warningStrStr << "Could not convert timestamp \'" << fieldValue << "\'  at " << pos << ".";
 						warningsTo.emplace(warningStrStr.str());
 						warningStrStr.clear();
@@ -1785,6 +1825,7 @@ std::string Thread::parseMementos(std::string mementoContent, std::queue<std::st
 					}
 				}
 				else if(fieldName == "rel") {
+					// parse link to next page
 					if(fieldValue == "timemap" && !newMemento.url.empty()) {
 						nextPage = newMemento.url;
 						newMemento.url = "";
@@ -1795,7 +1836,11 @@ std::string Thread::parseMementos(std::string mementoContent, std::queue<std::st
 		}
 	}
 
-	if(mementoStarted && !newMemento.url.empty() && !newMemento.timeStamp.empty()) mementosTo.emplace(newMemento);
+	// finish final memento
+	if(mementoStarted && !newMemento.url.empty() && !newMemento.timeStamp.empty())
+		mementosTo.emplace(newMemento);
+
+	// return next page
 	return nextPage;
 }
 
