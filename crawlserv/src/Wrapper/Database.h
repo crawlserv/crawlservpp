@@ -208,6 +208,19 @@ public:
 		this->database.updateCustomData(data);
 	}
 
+	/*
+	 * WRAPPER FOR STATIC INLINE FUNCTION
+	 */
+
+	// get database request counter or return zero if program was compiled without
+	static unsigned long long getRequestCounter() {
+		this->database.getRequestCounter();
+	}
+
+	/*
+	 * DELETED OPERATORS
+	 */
+
 	// not moveable, not copyable
 	Database(Database&) = delete;
 	Database(Database&&) = delete;
@@ -219,7 +232,7 @@ protected:
 	Module::Database& database;
 
 	/*
-	 * WRAPPERS FOR GETTERS (protected)
+	 * WRAPPERS FOR GETTER (protected)
 	 */
 
 	// get the maximum allowed packet size
@@ -323,10 +336,18 @@ protected:
 		this->database.deleteTable(tableName);
 	}
 
+	/*
+	 * WRAPPER FOR EXCEPTION HELPER FUNCTION (protected)
+	 */
+
 	// catch SQL exception and re-throw it as ConnectionException or Exception
 	void sqlException(const std::string& function, const sql::SQLException& e) {
 		this->database.sqlException(function, e);
 	}
+
+	/*
+	/* WRAPPERS FOR STATIC INLINE HELPER FUNCTIONS (protected)
+	*/
 
 	// execute prepared SQL statement by reference
 	void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
