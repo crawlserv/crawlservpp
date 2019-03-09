@@ -261,7 +261,7 @@ protected:
 	}
 
 	/*
-	 * WRAPPERS FOR LOCKING target tables (protected)
+	 * WRAPPERS FOR LOCKING TARGET TABLES (protected)
 	 */
 
 	// lock target tables of the specified type
