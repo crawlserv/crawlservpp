@@ -291,14 +291,14 @@ protected:
 		return this->database.getLastInsertedId();
 	}
 
-	// lock a table in the database for writing
-	void lockTable(const std::string& tableName, unsigned char numberOfTmpTables) {
-		this->database.lockTable(tableName, numberOfTmpTables);
+	// lock a table in the database for writing (and its alias 'a' for reading)
+	void lockTable(const std::string& tableName) {
+		this->database.lockTable(tableName);
 	}
 
-	// lock two tables in the database for writing (plus the alias 'a' for reading the first and the alias 'b' for reading the second table)
-	void lockTables(const std::string& tableName1, const std::string tableName2, unsigned char numberOfTmpTables) {
-		this->database.lockTables(tableName1, tableName2, numberOfTmpTables);
+	// lock two tables in the database for writing (and their aliases 'a' for reading the 1st and 'b' for reading the 2nd table)
+	void lockTables(const std::string& tableName1, const std::string tableName2) {
+		this->database.lockTables(tableName1, tableName2);
 	}
 
 	// unlock tables in the database

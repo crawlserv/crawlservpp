@@ -246,8 +246,8 @@ namespace crawlservpp::Main {
 		// database helper functions
 		unsigned long getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
-		void lockTable(const std::string& tableName, unsigned char numberOfTmpTables);
-		void lockTables(const std::string& tableName1, const std::string& tableName2, unsigned char numberOfTmpTables);
+		void lockTable(const std::string& tableName);
+		void lockTables(const std::string& tableName1, const std::string& tableName2);
 		void unlockTables();
 		bool isTableEmpty(const std::string& tableName);
 		bool isTableExists(const std::string& tableName);
