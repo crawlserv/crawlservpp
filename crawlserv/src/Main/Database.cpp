@@ -147,11 +147,7 @@ void Database::prepare() {
 					"SELECT LAST_INSERT_ID() AS id"
 			);
 		}
-		if(!(this->ps.rowCount)) {
-			this->ps.rowCount = this->addPreparedStatement(
-					"SELECT ROW_COUNT() AS count"
-			);
-		}
+
 		if(!(this->ps.log)) {
 			this->ps.log = this->addPreparedStatement(
 					"INSERT INTO crawlserv_log(module, entry) VALUES (?, ?)"
@@ -164,6 +160,7 @@ void Database::prepare() {
 				"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1"
 			);
 		}
+
 		if(!(this->ps.setThreadStatusMessage)) {
 			this->ps.setThreadStatusMessage = this->addPreparedStatement(
 				"UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1"
@@ -3529,33 +3526,6 @@ unsigned long Database::getLastInsertedId() {
 			result = sqlResultSet->getUInt64("id");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getLastInsertedId", e); }
-
-	return result;
-}
-
-// get the number of affected rows from the database
-unsigned long Database::getRowCount() {
-	unsigned long result = 0;
-
-	// check connection
-	this->checkConnection();
-
-	// check prepared SQL statement
-	if(!(this->ps.rowCount))
-		throw Database::Exception("Main::Database::getRowCount(): Missing prepared SQL statement for last inserted ID");
-
-	// get prepared SQL statement
-	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.rowCount);
-
-	try {
-		// execute SQL statement
-		SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
-
-		// get result
-		if(sqlResultSet && sqlResultSet->next())
-			result = sqlResultSet->getUInt64("count");
-	}
-	catch(const sql::SQLException &e) { this->sqlException("Main::Database::getRowCount", e); }
 
 	return result;
 }
