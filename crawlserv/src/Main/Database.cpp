@@ -212,7 +212,7 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 	this->checkConnection();
 
 	// create SQL query string
-	std::string sqlQuery = "SELECT COUNT(*) FROM crawlserv_log";
+	std::string sqlQuery("SELECT COUNT(*) FROM crawlserv_log");
 	if(!logModule.empty()) sqlQuery += " WHERE module = ?";
 
 	try {
@@ -239,7 +239,7 @@ void Database::clearLogs(const std::string& logModule) {
 	this->checkConnection();
 
 	// create SQL query string
-	std::string sqlQuery = "DELETE FROM crawlserv_log";
+	std::string sqlQuery("DELETE FROM crawlserv_log");
 	if(!logModule.empty()) sqlQuery += " WHERE module = ?";
 
 	try {
@@ -1466,7 +1466,9 @@ void Database::resetParsingStatus(unsigned long listId) {
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
 	{ // lock parsing table
-		TableLock parsingTableLock(*this, "crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing");
+		TableLock parsingTableLock(*this, TableLockProperties(
+				"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing"
+		));
 
 		try {
 			// update parsing table
@@ -1489,7 +1491,9 @@ void Database::resetExtractingStatus(unsigned long listId) {
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
 	{ // lock extracting table
-		TableLock extractingTableLock(*this, "crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting");
+		TableLock extractingTableLock(*this, TableLockProperties(
+				"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting"
+		));
 
 		try {
 			// update extracting table
@@ -1512,7 +1516,9 @@ void Database::resetAnalyzingStatus(unsigned long listId) {
 	std::string listNamespace = this->getUrlListNamespace(listId);
 
 	{ // lock analyzing table
-		TableLock analyzingTableLock(*this, "crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing");
+		TableLock analyzingTableLock(*this, TableLockProperties(
+				"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing"
+		));
 
 		try {
 			// update URL list
@@ -1902,7 +1908,7 @@ void Database::lockTargetTables(const std::string& type, unsigned long websiteId
 		this->checkConnection();
 
 		{ // lock table
-			TableLock(*this, "crawlserv_targetlocks");
+			TableLock(*this, TableLockProperties("crawlserv_targetlocks"));
 
 			try {
 				// create SQL statement for checking target table lock
@@ -2549,8 +2555,6 @@ void Database::getCustomData(Data::GetValue& data) {
 
 // get custom values from multiple fields of a row in the database
 void Database::getCustomData(Data::GetFields& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No column names specified");
@@ -2569,7 +2573,7 @@ void Database::getCustomData(Data::GetFields& data) {
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
-		sqlQuery = "SELECT ";
+		std::string sqlQuery("SELECT ");
 		for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 			sqlQuery += "`" + *i + "`, ";
 		sqlQuery.pop_back();
@@ -2627,8 +2631,6 @@ void Database::getCustomData(Data::GetFields& data) {
 
 // get custom values from multiple fields of a row with different types in the database
 void Database::getCustomData(Data::GetFieldsMixed& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns_types.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No columns specified");
@@ -2645,7 +2647,7 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
-		sqlQuery = "SELECT ";
+		std::string sqlQuery("SELECT ");
 		for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i)
 			sqlQuery += "`" + i->first + "`, ";
 		sqlQuery.pop_back();
@@ -2694,8 +2696,6 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 
 // get custom values from one column in the database
 void Database::getCustomData(Data::GetColumn& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.column.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No columns specified");
@@ -2713,7 +2713,7 @@ void Database::getCustomData(Data::GetColumn& data) {
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
-		sqlQuery = "SELECT `" + data.column + "` FROM `" + data.table + "`";
+		std::string sqlQuery("SELECT `" + data.column + "` FROM `" + data.table + "`");
 		if(!data.condition.empty()) sqlQuery += " WHERE (" + data.condition + ")";
 		if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
 
@@ -2760,8 +2760,6 @@ void Database::getCustomData(Data::GetColumn& data) {
 
 // get custom values from multiple columns of the same type in the database
 void Database::getCustomData(Data::GetColumns& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No column name specified");
@@ -2780,7 +2778,7 @@ void Database::getCustomData(Data::GetColumns& data) {
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
-		sqlQuery = "SELECT ";
+		std::string sqlQuery("SELECT ");
 		for(auto i = data.columns.begin(); i != data.columns.end(); ++i) {
 			sqlQuery += "`" + *i + "`, ";
 
@@ -2841,8 +2839,6 @@ void Database::getCustomData(Data::GetColumns& data) {
 
 // get custom values from multiple columns of different types in the database
 void Database::getCustomData(Data::GetColumnsMixed& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns_types.empty())
 		throw Database::Exception("Main::Database::getCustomData(): No columns specified");
@@ -2859,7 +2855,7 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// create SQL query
-		sqlQuery = "SELECT ";
+		std::string sqlQuery("SELECT ");
 		for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
 			sqlQuery += "`" + i->first + "`, ";
 
@@ -2994,8 +2990,6 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 
 // insert custom values into multiple fields of the same type into a row in the database
 void Database::insertCustomData(const Data::InsertFields& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns_values.empty())
 		throw Database::Exception("Main::Database::insertCustomData(): No columns specified");
@@ -3007,7 +3001,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 
 	try {
 		// create SQL query
-		sqlQuery = "INSERT INTO `" + data.table + "` (";
+		std::string sqlQuery("INSERT INTO `" + data.table + "` (");
 		for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i)
 			sqlQuery += "`" + i->first + "`, ";
 		sqlQuery.pop_back();
@@ -3107,8 +3101,6 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 
 // insert custom values into multiple fields of different types into a row in the database
 void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns_types_values.empty())
 		throw Database::Exception("Main::Database::insertCustomData(): No columns specified");
@@ -3118,7 +3110,7 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 
 	try {
 		// create SQL query
-		sqlQuery = "INSERT INTO `" + data.table + "` (";
+		std::string sqlQuery("INSERT INTO `" + data.table + "` (");
 		for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i)
 			sqlQuery += "`" + std::get<0>(*i) + "`, ";
 		sqlQuery.pop_back();
@@ -3270,8 +3262,6 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 
 // update custom values in multiple fields of a row with the same type in the database
 void Database::updateCustomData(const Data::UpdateFields& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns_values.empty())
 		throw Database::Exception("Main::Database::updateCustomData(): No columns specified");
@@ -3283,7 +3273,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 
 	try {
 		// create SQL query
-		sqlQuery = "UPDATE `" + data.table + "` SET ";
+		std::string sqlQuery("UPDATE `" + data.table + "` SET ");
 		for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) sqlQuery += "`" + i->first + "` = ?, ";
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
@@ -3379,8 +3369,6 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 
 // update custom values in multiple fields of a row with different types in the database
 void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
-	std::string sqlQuery;
-
 	// check argument
 	if(data.columns_types_values.empty())
 		throw Database::Exception("Main::Database::updateCustomData(): No columns specified");
@@ -3390,7 +3378,7 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 
 	try {
 		// create SQL query
-		sqlQuery = "UPDATE `" + data.table + "` SET ";
+		std::string sqlQuery("UPDATE `" + data.table + "` SET ");
 		for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i)
 			sqlQuery += "`" + std::get<0>(*i) + "` = ?, ";
 		sqlQuery.pop_back();
@@ -3555,11 +3543,20 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAutoIncrement", e); }
 }
 
-// lock a table in the database for writing (and its alias 'a' for reading)
-void Database::lockTable(const std::string& tableName) {
+// lock a table in the database for writing (and its aliases for reading)
+void Database::lockTable(const TableLockProperties& lockProperties) {
 	// check argument
-	if(tableName.empty())
+	if(lockProperties.name.empty())
 		throw Database::Exception("Main::Database::lockTable(): No table name specified");
+	if(lockProperties.numberOfAliases && lockProperties.alias.empty())
+		throw Database::Exception("Main::Database::lockTable(): No table alias specified");
+
+	// create SQL query string
+	std::ostringstream sqlQueryStrStr;
+	sqlQueryStrStr << "LOCK TABLES `" << lockProperties.name << "` WRITE";
+	for(unsigned short n = 0; n < lockProperties.numberOfAliases; n++) {
+		sqlQueryStrStr << ", `" << lockProperties.name << "` AS `" << lockProperties.alias << n + 1 << "` READ";
+	}
 
 	// check connection
 	this->checkConnection();
@@ -3569,10 +3566,7 @@ void Database::lockTable(const std::string& tableName) {
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		Database::sqlExecute(sqlStatement,
-				"LOCK TABLES `" + tableName + "` WRITE,"
-				           " `" + tableName + "` AS a READ"
-		);
+		Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTable", e); }
 
@@ -3580,13 +3574,26 @@ void Database::lockTable(const std::string& tableName) {
 	this->tablesLocked = true;
 }
 
-// lock two tables in the database for writing (and their aliases 'a' for reading the 1st and 'b' for reading the 2nd table)
-void Database::lockTables(const std::string& tableName1, const std::string& tableName2) {
+// lock two tables in the database for writing (and their aliases for reading)
+void Database::lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) {
 	// check arguments
-	if(tableName1.empty())
-		throw Database::Exception("Main::Database::lockTables(): Table name #1 missing");
-	if(tableName2.empty())
-		throw Database::Exception("Main::Database::lockTables(): Table name #2 missing");
+	if(lockProperties1.name.empty())
+		throw Database::Exception("Main::Database::lockTable(): No table name specified for table 1");
+	if(lockProperties1.numberOfAliases && lockProperties1.alias.empty())
+		throw Database::Exception("Main::Database::lockTable(): No table alias specified for table 1");
+	if(lockProperties2.name.empty())
+			throw Database::Exception("Main::Database::lockTable(): No table name specified for table 2");
+	if(lockProperties2.numberOfAliases && lockProperties2.alias.empty())
+		throw Database::Exception("Main::Database::lockTable(): No table alias specified for table 2");
+
+	// create SQL query string
+	std::ostringstream sqlQueryStrStr;
+	sqlQueryStrStr << "LOCK TABLES `" << lockProperties1.name << "` WRITE";
+	for(unsigned short n = 0; n < lockProperties1.numberOfAliases; n++)
+		sqlQueryStrStr << ", `" << lockProperties1.name << "` AS `" << lockProperties1.alias << n + 1 << "` READ";
+	sqlQueryStrStr << ", `" << lockProperties2.name << "` WRITE";
+	for(unsigned short n = 0; n < lockProperties2.numberOfAliases; n++)
+		sqlQueryStrStr << ", `" << lockProperties2.name << "` AS `" << lockProperties2.alias << n + 1 << "` READ";
 
 	// check connection
 	this->checkConnection();
@@ -3596,13 +3603,7 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		Database::sqlExecute(sqlStatement,
-				"LOCK TABLES"
-					" `" + tableName1 + "` WRITE,"
-					" `" + tableName1 + "` AS a READ,"
-					" `" + tableName2 + "` WRITE,"
-					" `" + tableName2 + "` AS b READ"
-		);
+		Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
 
@@ -3817,7 +3818,7 @@ void Database::addColumn(const std::string& tableName, const TableColumn& column
 
 	try {
 		// create SQL query
-		std::string sqlQuery = "ALTER TABLE `" + tableName + "` ADD COLUMN `" + column.name + "` " + column.type;
+		std::string sqlQuery("ALTER TABLE `" + tableName + "` ADD COLUMN `" + column.name + "` " + column.type);
 		if(!column.referenceTable.empty()) {
 			if(column.referenceColumn.empty())
 				throw Database::Exception("Main::Database::addColumn(): A column reference is missing its source column name");

@@ -32,6 +32,7 @@
 #include "../Struct/DatabaseSettings.h"
 #include "../Struct/QueryProperties.h"
 #include "../Struct/TableColumn.h"
+#include "../Struct/TableLockProperties.h"
 #include "../Struct/ThreadDatabaseEntry.h"
 #include "../Struct/ThreadOptions.h"
 #include "../Struct/UrlListProperties.h"
@@ -81,6 +82,7 @@ namespace crawlservpp::Main {
 		typedef Struct::DatabaseSettings DatabaseSettings;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::TableColumn TableColumn;
+		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::ThreadDatabaseEntry ThreadDatabaseEntry;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlListProperties UrlListProperties;
@@ -246,8 +248,8 @@ namespace crawlservpp::Main {
 		// database helper functions
 		unsigned long getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
-		void lockTable(const std::string& tableName);
-		void lockTables(const std::string& tableName1, const std::string& tableName2);
+		void lockTable(const TableLockProperties& lockProperties);
+		void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2);
 		void unlockTables();
 		bool isTableEmpty(const std::string& tableName);
 		bool isTableExists(const std::string& tableName);
