@@ -49,9 +49,11 @@ App::App(int argc, char * argv[]) noexcept : running(true) {
 	}
 	catch(const std::exception& e) {
 		std::cout << "[ERROR] " << e.what() << std::endl;
+		this->running = false;
 	}
 	catch(...) {
 		std::cout << "[ERROR] Unknown exception in App::App()" << std::endl;
+		this->running = false;
 	}
 }
 
