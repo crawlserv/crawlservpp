@@ -193,9 +193,9 @@ void Database::prepare() {
 		this->ps.getLockId = this->addPreparedStatement(sqlQueryStr.str());
 	}
 
-	if(!(this->ps.lockUrl)) {
+	if(!(this->ps.lockUrlIfOk)) {
 		if(this->verbose)
-			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/3]...");
+			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/2]...");
 
 		std::string sqlQuery("UPDATE `");
 		sqlQuery += this->parsingTable;
@@ -207,12 +207,12 @@ void Database::prepare() {
 
 		sqlQuery += " LIMIT 1";
 
-		this->ps.lockUrl = this->addPreparedStatement(sqlQuery);
+		this->ps.lockUrlIfOk = this->addPreparedStatement(sqlQuery);
 	}
 
 	if(!(this->ps.addUrlLock)) {
 		if(this->verbose)
-			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [3/3]...");
+			this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/2]...");
 
 		std::ostringstream sqlQueryStr;
 		sqlQueryStr <<	"INSERT INTO `" << this->parsingTable << "` (target, url, locktime, success)"
@@ -497,11 +497,11 @@ std::string Database::lockUrlIfOk(UrlProperties& urlProperties, unsigned long lo
 
 	if(urlProperties.lockId) {
 		// check prepared SQL statement for locking the URL
-		if(!(this->ps.lockUrl))
+		if(!(this->ps.lockUrlIfOk))
 			throw DatabaseException("Missing prepared SQL statement for Parser::Database::lockUrlIfOk(...)");
 
 		// get prepared SQL statement for locking the URL
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrl);
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrlIfOk);
 
 		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
 		try {

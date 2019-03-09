@@ -127,7 +127,7 @@ namespace crawlservpp::Module::Parser {
 			unsigned short getNumberOfUrls;
 			unsigned short getLockTime;
 			unsigned short getLockId;
-			unsigned short lockUrl;
+			unsigned short lockUrlIfOk;
 			unsigned short addUrlLock;
 			unsigned short unLockUrlIfOk;
 			unsigned short getContentIdFromParsedId;
