@@ -33,7 +33,7 @@ void Database::prepare() {
 	this->checkConnection();
 
 	// reserve memory
-	this->reserveForPreparedStatements(3);
+	this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
 
 	// prepare general SQL statements for thread
 	if(!(this->ps.setThreadStatusMessage)) this->ps.setThreadStatusMessage = this->addPreparedStatement(
