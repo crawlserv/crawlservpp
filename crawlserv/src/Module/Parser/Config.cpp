@@ -15,7 +15,7 @@
 namespace crawlservpp::Module::Parser {
 
 // constructor: set default values
-Config::Config() : generalCacheSize(1000), generalLock(300), generalLogging(Config::generalLoggingDefault), generalNewestOnly(true),
+Config::Config() : generalCacheSize(2500), generalLock(300), generalLogging(Config::generalLoggingDefault), generalNewestOnly(true),
 		generalParseCustom(false), generalReParse(false), generalResetOnFinish(false), generalSleepIdle(500),
 		generalSleepMySql(20), generalTimeoutTargetLock(30), generalTiming(false) {}
 
