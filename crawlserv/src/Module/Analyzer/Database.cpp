@@ -274,6 +274,7 @@ void Database::getCorpus(const CorpusProperties& corpusProperties, std::string& 
 				rapidjson::Value::MemberIterator p = i->FindMember("p");
 				rapidjson::Value::MemberIterator l = i->FindMember("l");
 				rapidjson::Value::MemberIterator v = i->FindMember("v");
+
 				if(p == i->MemberEnd() || !(p->value.IsUint64()))
 					throw DatabaseException("Analyzer::Database::getCorpus(): Invalid datemap (could not find valid position)");
 				if(l == i->MemberEnd() || !(l->value.IsUint64()))
@@ -297,7 +298,8 @@ void Database::getCorpus(const CorpusProperties& corpusProperties, std::string& 
 				this->log(logStrStr.str());
 			}
 		}
-		else throw DatabaseException("Analyzer::Database::getCorpus(): No datemap for corpus found");
+		else
+			throw DatabaseException("Analyzer::Database::getCorpus(): No datemap for corpus found");
 	}
 }
 
@@ -323,17 +325,26 @@ bool Database::isCorpusChanged(const CorpusProperties& corpusProperties) {
 	case Config::generalInputSourcesParsing:
 		sourceStatement = this->ps.isCorpusChangedParsing;
 		break;
+
 	case Config::generalInputSourcesExtracting:
 		sourceStatement = this->ps.isCorpusChangedExtracting;
 		break;
+
 	case Config::generalInputSourcesAnalyzing:
 		sourceStatement = this->ps.isCorpusChangedAnalyzing;
 		break;
+
 	case Config::generalInputSourcesCrawling:
 		return true; // always re-create corpus for crawling data
 	}
-	if(!sourceStatement) throw DatabaseException("Analyzer::Database::isCorpusChanged():"
-			" Missing prepared SQL statement for creating text corpus from specified source type");
+
+	if(!sourceStatement) {
+		throw DatabaseException(
+				"Analyzer::Database::isCorpusChanged():"
+				" Missing prepared SQL statement for creating text corpus from specified source type"
+		);
+	}
+
 	sql::PreparedStatement& tableStatement = this->getPreparedStatement(sourceStatement);
 
 	try {
@@ -394,14 +405,17 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 		tableName = this->tablePrefix + "parsed_" + corpusProperties.sourceTable;
 		columnName = "parsed__" + corpusProperties.sourceField;
 		break;
+
 	case Config::generalInputSourcesExtracting:
 		tableName = this->tablePrefix + "extracted_" + corpusProperties.sourceTable;
 		columnName = "extracted__" + corpusProperties.sourceField;
 		break;
+
 	case Config::generalInputSourcesAnalyzing:
 		tableName = this->tablePrefix + "analyzed_" + corpusProperties.sourceTable;
 		columnName = "analyzed__" + corpusProperties.sourceField;
 		break;
+
 	case Config::generalInputSourcesCrawling:
 		tableName = this->tablePrefix + "crawled";
 		columnName = "content";
@@ -414,6 +428,7 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 				this->log("[#" + this->idString + "] WARNING: Source field name ignored.");
 		}
 		break;
+
 	default:
 		throw DatabaseException("Analyzer::Database::createCorpus(): Invalid source type for text corpus");
 	}
@@ -497,8 +512,9 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 			}
 
 			// finish up data
-			if(!corpusTo.empty()) corpusTo.pop_back();	// remove last space
-			if(!std::get<0>(dateMapEntry).empty()) {	// check for unfinished date
+			if(!corpusTo.empty())
+				corpusTo.pop_back(); // remove last space
+			if(!std::get<0>(dateMapEntry).empty()) { // check for unfinished date
 				// conclude last date
 				dateMap.emplace_back(dateMapEntry);
 			}
@@ -509,11 +525,14 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 				addStatement.setString(2, corpusProperties.sourceTable);
 				addStatement.setString(3, corpusProperties.sourceField);
 				addStatement.setString(4, corpusTo);
+
 				if(corpusProperties.sourceType == Config::generalInputSourcesParsing) {
 					dateMapTo = Helper::Json::stringify(dateMap);
 					addStatement.setString(5, dateMapTo);
 				}
-				else addStatement.setNull(5, 0);
+				else
+					addStatement.setNull(5, 0);
+
 				addStatement.setUInt64(6, sourcesTo);
 				Database::sqlExecute(addStatement);
 			}
@@ -522,14 +541,19 @@ void Database::createCorpus(const CorpusProperties& corpusProperties, std::strin
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
 				logStrStr.imbue(std::locale(""));
-				logStrStr << "[#" << this->idString << "] WARNING: The text corpus cannot be saved to the database, because its size ("
+
+				logStrStr << "[#" << this->idString << "] WARNING:"
+						" The text corpus cannot be saved to the database, because its size ("
 						<< corpusTo.size() << " bytes) exceeds the ";
+
 				if(corpusTo.size() > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
 				else {
 					logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
 					adjustServerSettings = true;
 				}
+
 				this->log(logStrStr.str());
+
 				if(adjustServerSettings)
 					this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
 			}
