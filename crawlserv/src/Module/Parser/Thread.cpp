@@ -322,7 +322,8 @@ void Thread::parsingUrlSelection() {
 
 	// fill cache with next URLs
 	this->setStatusMessage("Fetching URLs...");
-	if(this->config.generalLogging) this->log("fetches URLs...");
+	if(this->config.generalLogging > Config::generalLoggingDefault)
+		this->log("fetches URLs...");
 	this->parsingFetchUrls();
 	if(this->config.generalTiming && this->config.generalLogging)
 		this->log("fetched URLs in " + timer.tickStr());
@@ -862,13 +863,11 @@ void Thread::parsingSaveResults() {
 
 	// save results
 	this->setStatusMessage("Saving results...");
-	if(this->config.generalLogging) this->log("saves results...");
+	if(this->config.generalLogging > Config::generalLoggingDefault)
+		this->log("saves results...");
 
-	{ // lock target and parsing tables
-		TableLock targetAndParsingTableLock(this->database,
-				TableLockProperties(this->parsingTable),
-				TableLockProperties(this->targetTable, this->targetTableAlias, 1000)
-		);
+	{ // lock target table
+		TableLock targetTableLock(this->database, TableLockProperties(this->targetTable, this->targetTableAlias, 1000));
 
 		// update or add entries in/to database
 		this->database.updateOrAddEntries(this->results, logEntries);
