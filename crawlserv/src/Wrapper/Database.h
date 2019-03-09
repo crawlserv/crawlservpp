@@ -214,7 +214,7 @@ public:
 
 	// get database request counter or return zero if program was compiled without
 	static unsigned long long getRequestCounter() {
-		this->database.getRequestCounter();
+		return Main::Database::getRequestCounter();
 	}
 
 	/*
@@ -346,8 +346,8 @@ protected:
 	}
 
 	/*
-	/* WRAPPERS FOR STATIC INLINE HELPER FUNCTIONS (protected)
-	*/
+	 * WRAPPERS FOR STATIC INLINE HELPER FUNCTIONS (protected)
+	 */
 
 	// execute prepared SQL statement by reference
 	void sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
