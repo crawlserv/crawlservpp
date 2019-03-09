@@ -413,7 +413,7 @@ std::string Database::getLockTime(unsigned long lockId) {
 
 	// check prepared SQL statement
 	if(!(this->ps.getLockTime))
-		throw DatabaseException("Missing prepared SQL statement for Parser::Database::getUrlLock(...)");
+		throw DatabaseException("Missing prepared SQL statement for Parser::Database::getLockTime(...)");
 
 	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLockTime);
@@ -428,7 +428,7 @@ std::string Database::getLockTime(unsigned long lockId) {
 		if(sqlResultSet && sqlResultSet->next())
 			result = sqlResultSet->getString("locktime");
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLock", e); }
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getLockTime", e); }
 
 	return result;
 }
@@ -438,7 +438,7 @@ std::string Database::getLockTime(unsigned long lockId) {
 void Database::getLockId(UrlProperties& urlProperties) {
 	// check arguments
 	if(!urlProperties.id)
-		throw DatabaseException("Parser::Database::getUrlLockId(): No URL ID specified");
+		throw DatabaseException("Parser::Database::getLockId(): No URL ID specified");
 	if(urlProperties.lockId)
 		return; // already got the lock ID
 
@@ -447,7 +447,7 @@ void Database::getLockId(UrlProperties& urlProperties) {
 
 	// check prepared SQL statement
 	if(!(this->ps.getLockId))
-		throw DatabaseException("Missing prepared SQL statement for Parser::Database::getUrlLockId(...)");
+		throw DatabaseException("Missing prepared SQL statement for Parser::Database::getLockId(...)");
 
 	// get prepared SQL statement
 	sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLockId);
@@ -462,7 +462,7 @@ void Database::getLockId(UrlProperties& urlProperties) {
 		if(sqlResultSet && sqlResultSet->next())
 			urlProperties.lockId = sqlResultSet->getUInt64("id");
 	}
-	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLockId", e); }
+	catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getLockId", e); }
 }
 
 // check whether the URL has not been locked again after a specific lock time (or is not locked anymore)
