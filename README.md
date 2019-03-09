@@ -99,6 +99,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.h)**: Basic query properties (name, text, type, result type).
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.h)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
 * **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.h)**: Structure for table columns (name, type, reference, indexed).
+* **[`Struct::TableLockProperties`](crawlserv/src/Struct/TableLockProperties.h)**: Structure for table locks (table name, alias name, number of aliases).
 * **[`Struct::TargetTableProperties`](crawlserv/src/Struct/TargetTableProperties.h)**: Target table properties (type, website, URL list, name and full name, columns, compression).
 * **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.h)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.h)**: Basic thread options (IDs of website, URL list and configuration).

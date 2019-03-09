@@ -10,21 +10,26 @@
 #ifndef WRAPPER_TABLELOCK_H_
 #define WRAPPER_TABLELOCK_H_
 
+#include "../Struct/TableLockProperties.h"
+
 #include <string>
 
 namespace crawlservpp::Wrapper {
 
 template<class DB> // DB needs to be a Database connection class w/ .lockTable(...), .lockTables(...) and .unlockTables()
 class TableLock {
+	// for convenience
+	typedef Struct::TableLockProperties TableLockProperties;
+
 public:
-	// constructor A: lock one table (and its alias 'a' for reading)
-	TableLock(DB& db, const std::string& tableName) : ref(db) {
-		this->ref.lockTable(tableName);
+	// constructor A: lock one table (and its aliases 'a1', 'a2',... for reading)
+	TableLock(DB& db, const TableLockProperties& lockProperties) : ref(db) {
+		this->ref.lockTable(lockProperties);
 	}
 
-	// constructor B: lock two tables (and their aliases 'a' and 'b' for reading)
-	TableLock(DB& db, const std::string& tableName1, const std::string& tableName2) : ref(db) {
-		this->ref.lockTables(tableName1, tableName2);
+	// constructor B: lock two tables (and their aliases 'a1', 'a2',... and 'b1', 'b2',... for reading)
+	TableLock(DB& db, const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) : ref(db) {
+		this->ref.lockTables(lockProperties1, lockProperties2);
 	}
 
 	// destructor: try to unlock the table(s)
