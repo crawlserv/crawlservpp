@@ -3555,11 +3555,20 @@ void Database::resetAutoIncrement(const std::string& tableName) {
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAutoIncrement", e); }
 }
 
-// lock a table in the database for writing
-void Database::lockTable(const std::string& tableName) {
+// lock a table in the database for writing (and its alias 'a' for reading)
+//  NOTE: If numberOfTmpTables is not zero, additional aliases for temporary tables named tmp1, tmp2,... will be locked.
+void Database::lockTable(const std::string& tableName, unsigned char numberOfTmpTables) {
 	// check argument
 	if(tableName.empty())
 		throw Database::Exception("Main::Database::lockTable(): No table name specified");
+
+	// create SQL query string
+	std::ostringstream sqlQueryStrStr;
+	sqlQueryStrStr << "LOCK TABLES `" + tableName + "` WRITE, `" + tableName + "` AS a READ";
+
+	// optional: add aliases for temporary tables
+	for(unsigned char tmpCounter = 0; tmpCounter < numberOfTmpTables; tmpCounter++)
+		sqlQueryStrStr << ", tmp" << (tmpCounter + 1);
 
 	// check connection
 	this->checkConnection();
@@ -3569,7 +3578,7 @@ void Database::lockTable(const std::string& tableName) {
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		Database::sqlExecute(sqlStatement, "LOCK TABLES `" + tableName + "` WRITE");
+		Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTable", e); }
 
@@ -3577,13 +3586,26 @@ void Database::lockTable(const std::string& tableName) {
 	this->tablesLocked = true;
 }
 
-// lock two tables in the database for writing (plus the alias 'a' for reading the first and the alias 'b' for reading the second table)
-void Database::lockTables(const std::string& tableName1, const std::string& tableName2) {
+// lock two tables in the database for writing (and their aliases 'a' for reading the 1st and 'b' for reading the 2nd table)
+//  NOTE: If numberOfTmpTables is not zero, additional aliases for temporary tables named tmp1, tmp2,... will be locked.
+void Database::lockTables(const std::string& tableName1, const std::string& tableName2, unsigned char numberOfTmpTables) {
 	// check arguments
 	if(tableName1.empty())
 		throw Database::Exception("Main::Database::lockTables(): Table name #1 missing");
 	if(tableName2.empty())
 		throw Database::Exception("Main::Database::lockTables(): Table name #2 missing");
+
+	// create SQL query string
+	std::ostringstream sqlQueryStrStr;
+	sqlQueryStrStr << "LOCK TABLES"
+			" `" << tableName1 << "` WRITE,"
+			" `" << tableName1 << "` AS a READ,"
+			" `" << tableName2 << "` WRITE,"
+			" `" << tableName2 << "` AS b READ";
+
+	// optional: add aliases for temporary tables
+	for(unsigned char c = 1; c <= numberOfTmpTables; c++)
+		sqlQueryStrStr << ", tmp" << c;
 
 	// check connection
 	this->checkConnection();
@@ -3593,13 +3615,7 @@ void Database::lockTables(const std::string& tableName1, const std::string& tabl
 		SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 		// execute SQL statement
-		Database::sqlExecute(sqlStatement,
-				"LOCK TABLES"
-					" `" + tableName1 + "` WRITE,"
-					" `" + tableName1 + "` AS a READ,"
-					" `" + tableName2 + "` WRITE,"
-					" `" + tableName2 + "` AS b READ"
-		);
+		Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
 
