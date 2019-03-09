@@ -7,7 +7,7 @@
  *      Author: ans
  */
 
-#include "../Main/ConfigFile.h"
+#include "ConfigFile.h"
 
 namespace crawlservpp::Main {
 

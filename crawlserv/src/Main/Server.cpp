@@ -10,7 +10,7 @@
  *      Author: ans
  */
 
-#include "../Main/Server.h"
+#include "Server.h"
 
 namespace crawlservpp::Main {
 
