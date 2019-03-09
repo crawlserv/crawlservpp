@@ -205,6 +205,7 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
 		// static inline function
+
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
 		static unsigned long long getRequestCounter() { return Database::requestCounter; }
 #else
