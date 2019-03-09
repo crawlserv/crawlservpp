@@ -27,7 +27,8 @@ Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModu
 	// get driver instance if necessary
 	if(!Database::driver) {
 		Database::driver = get_driver_instance();
-		if(!Database::driver) throw std::runtime_error("Could not get database instance");
+		if(!Database::driver)
+			throw std::runtime_error("Could not get database instance");
 	}
 }
 
@@ -37,7 +38,8 @@ Database::~Database() {
 	this->preparedStatements.clear();
 
 	// clear connection
-	if(this->connection) if(this->connection->isValid()) this->connection->close();
+	if(this->connection)
+		if(this->connection->isValid()) this->connection->close();
 
 	// unset table lock
 	this->tablesLocked = false;
@@ -68,7 +70,8 @@ const Database::DatabaseSettings& Database::getSettings() const {
 // connect to the database
 void Database::connect() {
 	// check driver
-	if(!Database::driver) throw Database::Exception("Main::Database::connect(): MySQL driver not loaded");
+	if(!Database::driver)
+		throw Database::Exception("Main::Database::connect(): MySQL driver not loaded");
 
 	try {
 		// set options for connecting
@@ -118,7 +121,8 @@ void Database::connect() {
 			if(!(this->maxAllowedPacketSize))
 				throw Database::Exception("Main::Database::connect(): \'max_allowed_packet\' is zero");
 		}
-		else throw Database::Exception("Main::Database::connect(): Could not get \'max_allowed_packet\'");
+		else
+			throw Database::Exception("Main::Database::connect(): Could not get \'max_allowed_packet\'");
 	}
 	catch(const sql::SQLException &e) { this->sqlException("Main::Database::connect", e); }
 }
@@ -218,7 +222,8 @@ unsigned long Database::getNumberOfLogEntries(const std::string& logModule) {
 
 	// create SQL query string
 	std::string sqlQuery("SELECT COUNT(*) FROM crawlserv_log");
-	if(!logModule.empty()) sqlQuery += " WHERE module = ?";
+	if(!logModule.empty())
+		sqlQuery += " WHERE module = ?";
 
 	try {
 		// create SQL statement
@@ -245,7 +250,8 @@ void Database::clearLogs(const std::string& logModule) {
 
 	// create SQL query string
 	std::string sqlQuery("DELETE FROM crawlserv_log");
-	if(!logModule.empty()) sqlQuery += " WHERE module = ?";
+	if(!logModule.empty())
+		sqlQuery += " WHERE module = ?";
 
 	try {
 		// create SQL statement
@@ -421,8 +427,10 @@ void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const 
 	// create status message
 	std::string statusMessage;
 	if(threadPaused) {
-		if(!threadStatusMessage.empty()) statusMessage = "PAUSED " + threadStatusMessage;
-		else statusMessage = "PAUSED";
+		if(!threadStatusMessage.empty())
+			statusMessage = "PAUSED " + threadStatusMessage;
+		else
+			statusMessage = "PAUSED";
 	}
 	else statusMessage = threadStatusMessage;
 
@@ -589,7 +597,8 @@ std::string Database::getWebsiteDomain(unsigned long websiteId) {
 	std::string result;
 
 	// check argument
-	if(!websiteId) throw Database::Exception("Main::Database::getWebsiteDomain(): No website ID specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::getWebsiteDomain(): No website ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -618,7 +627,8 @@ std::string Database::getWebsiteNamespace(unsigned long int websiteId) {
 	std::string result;
 
 	// check argument
-	if(!websiteId) throw Database::Exception("Main::Database::getWebsiteNamespace(): No website ID specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::getWebsiteNamespace(): No website ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -647,7 +657,8 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromUrlList(u
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!listId) throw Database::Exception("Main::Database::getWebsiteNamespaceFromUrlList(): No URL list ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::getWebsiteNamespaceFromUrlList(): No URL list ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -676,7 +687,8 @@ std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(un
 	unsigned long websiteId = 0;
 
 	// check argument
-	if(!configId) throw Database::Exception("Main::Database::getWebsiteNamespaceFromConfig(): No configuration ID specified");
+	if(!configId)
+		throw Database::Exception("Main::Database::getWebsiteNamespaceFromConfig(): No configuration ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -858,6 +870,7 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 						" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing`"
 				);
 				tables = this->getTargetTables("parsed", urlLists.front().first);
+
 				while(!tables.empty()) {
 					Database::sqlExecute(renameStatement,
 							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsed_"
@@ -873,6 +886,7 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 						" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_extracting`"
 				);
 				tables = this->getTargetTables("extracted", urlLists.front().first);
+
 				while(!tables.empty()) {
 					Database::sqlExecute(renameStatement,
 							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracted_"
@@ -888,6 +902,7 @@ void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& w
 						+ " `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_analyzing`"
 				);
 				tables = this->getTargetTables("analyzed", urlLists.front().first);
+
 				while(!tables.empty()) {
 					Database::sqlExecute(renameStatement,
 							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzed_"
@@ -970,7 +985,8 @@ unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 	unsigned long result = 0;
 
 	// check argument
-	if(!websiteId) throw Database::Exception("Main::Database::duplicateWebsite(): No website ID specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::duplicateWebsite(): No website ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -1164,7 +1180,8 @@ std::queue<Database::IdString> Database::getUrlLists(unsigned long websiteId) {
 	std::queue<IdString> result;
 
 	// check arguments
-	if(!websiteId) throw Database::Exception("Main::Database::getUrlLists(): No website ID specified");
+	if(!websiteId)
+		throw Database::Exception("Main::Database::getUrlLists(): No website ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -1334,6 +1351,7 @@ void Database::updateUrlList(unsigned long listId, const UrlListProperties& list
 					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_parsing`"
 			);
 			tables = this->getTargetTables("parsed", listId);
+
 			while(!tables.empty()) {
 				Database::sqlExecute(renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_parsed_"
@@ -1349,6 +1367,7 @@ void Database::updateUrlList(unsigned long listId, const UrlListProperties& list
 					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_extracting`"
 			);
 			tables = this->getTargetTables("extracted", listId);
+
 			while(!tables.empty()) {
 				Database::sqlExecute(renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_extracted_"
@@ -1364,6 +1383,7 @@ void Database::updateUrlList(unsigned long listId, const UrlListProperties& list
 					" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace	+ "_analyzing`"
 			);
 			tables = this->getTargetTables("analyzed", listId);
+
 			while(!tables.empty()) {
 				Database::sqlExecute(renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_analyzed_"
@@ -1489,7 +1509,8 @@ void Database::resetParsingStatus(unsigned long listId) {
 // reset extracting status of ID-specified URL list
 void Database::resetExtractingStatus(unsigned long listId) {
 	// check argument
-	if(!listId) throw Database::Exception("Main::Database::resetExtractingStatus(): No URL list ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::resetExtractingStatus(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1514,7 +1535,8 @@ void Database::resetExtractingStatus(unsigned long listId) {
 // reset analyzing status of ID-specified URL list
 void Database::resetAnalyzingStatus(unsigned long listId) {
 	// check argument
-	if(!listId) throw Database::Exception("Main::Database::resetAnalyzingStatus(): No URL list ID specified");
+	if(!listId)
+		throw Database::Exception("Main::Database::resetAnalyzingStatus(): No URL list ID specified");
 
 	// get website namespace and URL list name
 	std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
@@ -1585,7 +1607,8 @@ unsigned long Database::addQuery(unsigned long websiteId, const QueryProperties&
 // get the properties of a query from the database by its ID
 void Database::getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo) {
 	// check argument
-	if(!queryId) throw Database::Exception("Main::Database::getQueryProperties(): No query ID specified");
+	if(!queryId)
+		throw Database::Exception("Main::Database::getQueryProperties(): No query ID specified");
 
 	// check connection
 	this->checkConnection();
@@ -2230,7 +2253,7 @@ void Database::unlockTargetTables(const std::string& type) {
  * VALIDATION FUNCTIONS
  */
 
-// check whether the connection to the database is still valid and try to re-connect if necesssary, throws Database::Exception
+// check whether the connection to the database is still valid and try to re-connect if necesssary
 //  WARNING: afterwards, old references to prepared SQL statements may be invalid!
 void Database::checkConnection() {
 	unsigned long long milliseconds = 0;
@@ -2596,16 +2619,19 @@ void Database::getCustomData(Data::GetFields& data) {
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
 					else data.values.emplace_back(sqlResultSet->getBoolean(*i));
 				break;
+
 			case Data::Type::_double:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
 					else data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(*i)));
 				break;
+
 			case Data::Type::_int:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
 					else data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
 				break;
+
 			case Data::Type::_long:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
@@ -2616,16 +2642,19 @@ void Database::getCustomData(Data::GetFields& data) {
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
 					else data.values.emplace_back(sqlResultSet->getString(*i));
 				break;
+
 			case Data::Type::_uint:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
 					else data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
 				break;
+
 			case Data::Type::_ulong:
 				for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 					if(sqlResultSet->isNull(*i)) data.values.emplace_back();
 					else data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(*i)));
 				break;
+
 			default:
 				throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
 			}
@@ -2671,24 +2700,31 @@ void Database::getCustomData(Data::GetFieldsMixed& data) {
 					case Data::Type::_bool:
 						data.values.emplace_back(sqlResultSet->getBoolean(i->first));
 						break;
+
 					case Data::Type::_double:
 						data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(i->first)));
 						break;
+
 					case Data::Type::_int:
 						data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(i->first)));
 						break;
+
 					case Data::Type::_long:
 						data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(i->first)));
 						break;
+
 					case Data::Type::_string:
 						data.values.emplace_back(sqlResultSet->getString(i->first));
 						break;
+
 					case Data::Type::_uint:
 						data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(i->first)));
 						break;
+
 					case Data::Type::_ulong:
 						data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(i->first)));
 						break;
+
 					default:
 						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
 					}
@@ -2735,24 +2771,31 @@ void Database::getCustomData(Data::GetColumn& data) {
 					case Data::Type::_bool:
 						data.values.emplace_back(sqlResultSet->getBoolean(data.column));
 						break;
+
 					case Data::Type::_double:
 						data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(data.column)));
 						break;
+
 					case Data::Type::_int:
 						data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(data.column)));
 						break;
+
 					case Data::Type::_long:
 						data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(data.column)));
 						break;
+
 					case Data::Type::_string:
 						data.values.emplace_back(sqlResultSet->getString(data.column));
 						break;
+
 					case Data::Type::_uint:
 						data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(data.column)));
 						break;
+
 					case Data::Type::_ulong:
 						data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(data.column)));
 						break;
+
 					default:
 						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
 					}
@@ -2813,21 +2856,27 @@ void Database::getCustomData(Data::GetColumns& data) {
 						case Data::Type::_bool:
 							column->emplace_back(sqlResultSet->getBoolean(*i));
 							break;
+
 						case Data::Type::_double:
 							column->emplace_back(static_cast<double>(sqlResultSet->getDouble(*i)));
 							break;
+
 						case Data::Type::_int:
 							column->emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
 							break;
+
 						case Data::Type::_long:
 							column->emplace_back(static_cast<long>(sqlResultSet->getInt64(*i)));
 							break;
+
 						case Data::Type::_string:
 							column->emplace_back(sqlResultSet->getString(*i));
 							break;
+
 						case Data::Type::_uint:
 							column->emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
 							break;
+
 						case Data::Type::_ulong:
 							column->emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(*i)));
 							break;
@@ -2890,24 +2939,30 @@ void Database::getCustomData(Data::GetColumnsMixed& data) {
 						case Data::Type::_bool:
 							column->emplace_back(sqlResultSet->getBoolean(i->first));
 							break;
+
 						case Data::Type::_double:
 							column->emplace_back(static_cast<double>(sqlResultSet->getDouble(i->first)));
 							break;
+
 						case Data::Type::_int:
 							column->emplace_back(static_cast<int>(sqlResultSet->getInt(i->first)));
 							break;
+
 						case Data::Type::_long:
 							column->emplace_back(static_cast<long>(sqlResultSet->getInt64(i->first)));
 							break;
 						case Data::Type::_string:
 							column->emplace_back(sqlResultSet->getString(i->first));
 							break;
+
 						case Data::Type::_uint:
 							column->emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(i->first)));
 							break;
+
 						case Data::Type::_ulong:
 							column->emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(i->first)));
 							break;
+
 						default:
 							throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
 						}
@@ -2942,27 +2997,34 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 			case Data::Type::_bool:
 				sqlStatement->setBoolean(1, data.value._b);
 				break;
+
 			case Data::Type::_double:
 				sqlStatement->setDouble(1, data.value._d);
 				break;
+
 			case Data::Type::_int:
 				sqlStatement->setInt(1, data.value._i);
 				break;
+
 			case Data::Type::_long:
 				sqlStatement->setInt64(1, data.value._l);
 				break;
+
 			case Data::Type::_string:
 				if(data.value._s.size() > this->getMaxAllowedPacketSize()) {
 					switch(data.value._overflow) {
 					case Data::Value::_if_too_large::_trim:
 						sqlStatement->setString(1, data.value._s.substr(0, this->getMaxAllowedPacketSize()));
 						break;
+
 					case Data::Value::_if_too_large::_empty:
 						sqlStatement->setString(1, "");
 						break;
+
 					case Data::Value::_if_too_large::_null:
 						sqlStatement->setNull(1, 0);
 						break;
+
 					default:
 						std::ostringstream errStrStr;
 						errStrStr.imbue(std::locale(""));
@@ -2976,12 +3038,15 @@ void Database::insertCustomData(const Data::InsertValue& data) {
 				}
 				else sqlStatement->setString(1, data.value._s);
 				break;
+
 			case Data::Type::_uint:
 				sqlStatement->setUInt(1, data.value._ui);
 				break;
+
 			case Data::Type::_ulong:
 				sqlStatement->setUInt64(1, data.value._ul);
 				break;
+
 			default:
 				throw Database::Exception("Main::Database::insertCustomData(): Invalid data type when inserting custom data.");
 			}
@@ -3029,6 +3094,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_double:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3036,6 +3102,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_int:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3043,6 +3110,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_long:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3050,6 +3118,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_string:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3058,21 +3127,26 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 					case Data::Value::_if_too_large::_trim:
 						sqlStatement->setString(1, i->second._s.substr(0, this->getMaxAllowedPacketSize()));
 						break;
+
 					case Data::Value::_if_too_large::_empty:
 						sqlStatement->setString(1, "");
 						break;
+
 					case Data::Value::_if_too_large::_null:
 						sqlStatement->setNull(1, 0);
 						break;
+
 					default:
 						std::ostringstream errStrStr;
 						errStrStr.imbue(std::locale(""));
 						errStrStr << "Main::Database::insertCustomData(): Size (" << i->second._s.size()
 								<< " bytes) of custom value for `" << data.table << "`.`" << i->first
 								<< "` exceeds the ";
-						if(i->second._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
-						else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-								" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
+						if(i->second._s.size() > 1073741824)
+							errStrStr << "mySQL data limit of 1 GiB";
+						else
+							errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
+									" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
 						throw Database::Exception(errStrStr.str());
 					}
 				}
@@ -3080,6 +3154,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_uint:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3087,6 +3162,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_ulong:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3094,6 +3170,7 @@ void Database::insertCustomData(const Data::InsertFields& data) {
 				counter++;
 			}
 			break;
+
 		default:
 			throw Database::Exception("Main::Database::insertCustomData(): Invalid data type when inserting custom data.");
 		}
@@ -3136,27 +3213,33 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 				case Data::Type::_bool:
 					sqlStatement->setBoolean(counter, std::get<2>(*i)._b);
 					break;
+
 				case Data::Type::_double:
 					sqlStatement->setDouble(counter, std::get<2>(*i)._d);
 					break;
+
 				case Data::Type::_int:
 					sqlStatement->setInt(counter, std::get<2>(*i)._i);
 					break;
 				case Data::Type::_long:
 					sqlStatement->setInt64(counter, std::get<2>(*i)._l);
 					break;
+
 				case Data::Type::_string:
 					if(std::get<2>(*i)._s.size() > this->getMaxAllowedPacketSize()) {
 						switch(std::get<2>(*i)._overflow) {
 						case Data::Value::_if_too_large::_trim:
 							sqlStatement->setString(1, std::get<2>(*i)._s.substr(0, this->getMaxAllowedPacketSize()));
 							break;
+
 						case Data::Value::_if_too_large::_empty:
 							sqlStatement->setString(1, "");
 							break;
+
 						case Data::Value::_if_too_large::_null:
 							sqlStatement->setNull(1, 0);
 							break;
+
 						default:
 							std::ostringstream errStrStr;
 							errStrStr.imbue(std::locale(""));
@@ -3171,12 +3254,15 @@ void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 					}
 					else sqlStatement->setString(counter, std::get<2>(*i)._s);
 					break;
+
 				case Data::Type::_uint:
 					sqlStatement->setUInt(counter, std::get<2>(*i)._ui);
 					break;
+
 				case Data::Type::_ulong:
 					sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
 					break;
+
 				default:
 					throw Database::Exception("Main::Database::insertCustomData(): Invalid data type when inserting custom data.");
 				}
@@ -3213,27 +3299,34 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 			case Data::Type::_bool:
 				sqlStatement->setBoolean(1, data.value._b);
 				break;
+
 			case Data::Type::_double:
 				sqlStatement->setDouble(1, data.value._d);
 				break;
+
 			case Data::Type::_int:
 				sqlStatement->setInt(1, data.value._i);
 				break;
+
 			case Data::Type::_long:
 				sqlStatement->setInt64(1, data.value._l);
 				break;
+
 			case Data::Type::_string:
 				if(data.value._s.size() > this->getMaxAllowedPacketSize()) {
 					switch(data.value._overflow) {
 					case Data::Value::_if_too_large::_trim:
 						sqlStatement->setString(1, data.value._s.substr(0, this->getMaxAllowedPacketSize()));
 						break;
+
 					case Data::Value::_if_too_large::_empty:
 						sqlStatement->setString(1, "");
 						break;
+
 					case Data::Value::_if_too_large::_null:
 						sqlStatement->setNull(1, 0);
 						break;
+
 					default:
 						std::ostringstream errStrStr;
 						errStrStr.imbue(std::locale(""));
@@ -3248,12 +3341,15 @@ void Database::updateCustomData(const Data::UpdateValue& data) {
 				}
 				else sqlStatement->setString(1, data.value._s);
 				break;
+
 			case Data::Type::_uint:
 				sqlStatement->setUInt(1, data.value._ui);
 				break;
+
 			case Data::Type::_ulong:
 				sqlStatement->setUInt64(1, data.value._ul);
 				break;
+
 			default:
 				throw Database::Exception("Main::Database::updateCustomData(): Invalid data type when updating custom data.");
 			}
@@ -3279,7 +3375,8 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 	try {
 		// create SQL query
 		std::string sqlQuery("UPDATE `" + data.table + "` SET ");
-		for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) sqlQuery += "`" + i->first + "` = ?, ";
+		for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i)
+			sqlQuery += "`" + i->first + "` = ?, ";
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
 		sqlQuery += " WHERE (" + data.condition + ")";
@@ -3297,6 +3394,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_double:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3304,6 +3402,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_int:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3311,6 +3410,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_long:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3318,6 +3418,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_string:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3326,12 +3427,15 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 					case Data::Value::_if_too_large::_trim:
 						sqlStatement->setString(1, i->second._s.substr(0, this->getMaxAllowedPacketSize()));
 						break;
+
 					case Data::Value::_if_too_large::_empty:
 						sqlStatement->setString(1, "");
 						break;
+
 					case Data::Value::_if_too_large::_null:
 						sqlStatement->setNull(1, 0);
 						break;
+
 					default:
 						std::ostringstream errStrStr;
 						errStrStr.imbue(std::locale(""));
@@ -3344,10 +3448,12 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 						throw Database::Exception(errStrStr.str());
 					}
 				}
-				else sqlStatement->setString(counter, i->second._s);
+				else
+					sqlStatement->setString(counter, i->second._s);
 				counter++;
 			}
 			break;
+
 		case Data::Type::_uint:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3355,6 +3461,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 				counter++;
 			}
 			break;
+
 		case Data::Type::_ulong:
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
 				if(i->second._isnull) sqlStatement->setNull(counter, 0);
@@ -3362,6 +3469,7 @@ void Database::updateCustomData(const Data::UpdateFields& data) {
 				counter++;
 			}
 			break;
+
 		default:
 			throw Database::Exception("Main::Database::updateCustomData(): Invalid data type when updating custom data.");
 		}
@@ -3402,27 +3510,34 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 				case Data::Type::_bool:
 					sqlStatement->setBoolean(counter, std::get<2>(*i)._b);
 					break;
+
 				case Data::Type::_double:
 					sqlStatement->setDouble(counter, std::get<2>(*i)._d);
 					break;
+
 				case Data::Type::_int:
 					sqlStatement->setInt(counter, std::get<2>(*i)._i);
 					break;
+
 				case Data::Type::_long:
 					sqlStatement->setInt64(counter, std::get<2>(*i)._l);
 					break;
+
 				case Data::Type::_string:
 					if(std::get<2>(*i)._s.size() > this->getMaxAllowedPacketSize()) {
 						switch(std::get<2>(*i)._overflow) {
 						case Data::Value::_if_too_large::_trim:
 							sqlStatement->setString(1, std::get<2>(*i)._s.substr(0, this->getMaxAllowedPacketSize()));
 							break;
+
 						case Data::Value::_if_too_large::_empty:
 							sqlStatement->setString(1, "");
 							break;
+
 						case Data::Value::_if_too_large::_null:
 							sqlStatement->setNull(1, 0);
 							break;
+
 						default:
 							std::ostringstream errStrStr;
 							errStrStr.imbue(std::locale(""));
@@ -3437,12 +3552,15 @@ void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 					}
 					else sqlStatement->setString(counter, std::get<2>(*i)._s);
 					break;
+
 				case Data::Type::_uint:
 					sqlStatement->setUInt(counter, std::get<2>(*i)._ui);
 					break;
+
 				case Data::Type::_ulong:
 					sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
 					break;
+
 				default:
 					throw Database::Exception("Main::Database::updateCustomData(): Invalid data type when updating custom data.");
 				}
@@ -3491,7 +3609,9 @@ unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
 // get reference to prepared SQL statement by its ID
 //  WARNING: Do not run Database::checkConnection() while using this reference!
 sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
-	try { return this->preparedStatements.at(id - 1).get();	}
+	try {
+		return this->preparedStatements.at(id - 1).get();
+	}
 	catch(const sql::SQLException &e) {
 		this->sqlException("Main::Database::getPreparedStatement", e);
 		throw;// will not be used
