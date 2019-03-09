@@ -15,15 +15,20 @@ namespace crawlservpp::Module::Parser {
 Thread::Thread(Main::Database& dbBase, unsigned long parserId, const std::string& parserStatus, bool parserPaused,
 		const ThreadOptions& threadOptions, unsigned long parserLast)
 			: Module::Thread(dbBase, parserId, "parser", parserStatus, parserPaused, threadOptions, parserLast),
-			  database(this->Module::Thread::database), idFromUrl(false), tickCounter(0),
-			  startTime(std::chrono::steady_clock::time_point::min()), pauseTime(std::chrono::steady_clock::time_point::min()),
-			  idleTime(std::chrono::steady_clock::time_point::min()) {}
+			  targetTableAlias("a"), database(this->Module::Thread::database, this->targetTableAlias),
+			  idFromUrl(false), tickCounter(0), startTime(std::chrono::steady_clock::time_point::min()),
+			  pauseTime(std::chrono::steady_clock::time_point::min()),
+			  idleTime(std::chrono::steady_clock::time_point::min()),
+			  idle(false), idFirst(0), idDist(0), posFirstF(0.), posDist(0), total(0) {}
 
 // constructor B: start a new parser
 Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-			: Module::Thread(dbBase, "parser", threadOptions), database(this->Module::Thread::database),
+			: Module::Thread(dbBase, "parser", threadOptions), targetTableAlias("a"),
+			  database(this->Module::Thread::database, this->targetTableAlias),
 			  idFromUrl(false), tickCounter(0), startTime(std::chrono::steady_clock::time_point::min()),
-			  pauseTime(std::chrono::steady_clock::time_point::min()), idleTime(std::chrono::steady_clock::time_point::min()) {}
+			  pauseTime(std::chrono::steady_clock::time_point::min()),
+			  idleTime(std::chrono::steady_clock::time_point::min()),
+			  idle(false), idFirst(0), idDist(0), posFirstF(0.), posDist(0), total(0) {}
 
 // destructor stub
 Thread::~Thread() {}
@@ -57,17 +62,20 @@ void Thread::onInit(bool resumed) {
 	this->database.setWebsiteNamespace(this->websiteNamespace);
 	this->database.setUrlList(this->getUrlList());
 	this->database.setUrlListNamespace(this->urlListNamespace);
-	this->database.setTargetTable(this->config.generalResultTable);
-	this->database.setTargetFields(this->config.parsingFieldNames);
+	this->database.setCacheSize(this->config.generalCacheSize);
 	this->database.setReparse(this->config.generalReParse);
 	this->database.setParseCustom(this->config.generalParseCustom);
 	this->database.setLogging(this->config.generalLogging);
 	this->database.setVerbose(verbose);
+	this->database.setTargetTable(this->config.generalResultTable);
+	this->database.setTargetFields(this->config.parsingFieldNames);
 	this->database.setSleepOnError(this->config.generalSleepMySql);
 	this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
-	// create name of parsing table for locking
-	this->parsingTable = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace + "_parsing";
+	// create table names for locking
+	std::string urlListTable("crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace);
+	this->parsingTable = urlListTable + "_parsing";
+	this->targetTable = urlListTable + "_parsed_" + this->config.generalResultTable;
 
 	// initialize target table
 	this->setStatusMessage("Initialiting target table...");
@@ -96,10 +104,6 @@ void Thread::onInit(bool resumed) {
 		}
 	}
 
-	// set current URL to last URL
-	this->setStatusMessage("Starting to parse...");
-	this->currentUrl = UrlProperties(this->getLast());
-
 	// save start time and initialize counter
 	this->startTime = std::chrono::steady_clock::now();
 	this->pauseTime = std::chrono::steady_clock::time_point::min();
@@ -108,53 +112,96 @@ void Thread::onInit(bool resumed) {
 
 // parser tick
 void Thread::onTick() {
-	Timer::StartStop timerSelect;
-	Timer::StartStop timerTotal;
+	bool skip = false;
 	unsigned long parsed = 0;
 
-	// start timers
-	if(this->config.generalTiming) {
-		timerTotal.start();
-		timerSelect.start();
+	// URL selection
+	if(this->urls.empty()) this->parsingUrlSelection();
+	if(this->urls.empty()) {
+		// no URLs left: set timer if just finished, sleep
+		if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
+			this->idleTime = std::chrono::steady_clock::now();
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepIdle));
+		return;
 	}
 
-	// URL selection
-	if(this->parsingUrlSelection()) {
-		if(this->config.generalTiming) timerSelect.stop();
-		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
-			// idling stopped
-			this->startTime += std::chrono::steady_clock::now() - this->idleTime;
-			this->pauseTime = std::chrono::steady_clock::time_point::min();
-			this->idleTime = std::chrono::steady_clock::time_point::min();
+	// update timers
+	if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
+		// idling stopped
+		this->startTime += std::chrono::steady_clock::now() - this->idleTime;
+		this->pauseTime = std::chrono::steady_clock::time_point::min();
+		this->idleTime = std::chrono::steady_clock::time_point::min();
+	}
+
+	// increase tick counter
+	this->tickCounter++;
+
+	// write log entry if necessary
+	if(this->config.generalLogging > Config::generalLoggingExtended)
+		this->log("parses " + this->urls.front().url + "...");
+
+	// check whether URL needs to be skipped because it is locked
+	{ // lock parsing table
+		TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
+
+		// get current URL lock ID if none was received on URL selection
+		this->database.getLockId(this->urls.front());
+
+		// lock URL
+		if(this->database.isUrlLockableAndNotParsed(this->urls.front().lockId)) {
+			this->lockTime = this->database.lockUrl(this->urls.front(), this->config.generalLock);
+				// (TODO: combine SQL queries)
 		}
+		else skip = true;
+	} // parsing table unlocked
 
-		// increase tick counter
-		this->tickCounter++;
-
-		// start parsing
+	if(skip) {
+		// skip locked URL
 		if(this->config.generalLogging > Config::generalLoggingDefault)
-			this->log("parses " + this->currentUrl.url + "...");
+			this->log("skip (locked) " + this->urls.front().url);
+	}
+	else {
+		// set status
+		this->setStatusMessage(this->urls.front().url);
+
+		// approximate progress
+		if(!(this->total)) throw std::runtime_error("Parser::Thread::onTick(): Could not get URL list size");
+		if(this->idDist) {
+			float cacheProgress = static_cast<float>(this->urls.front().id - this->idFirst) / this->idDist;
+				// cache progress = (current ID - first ID) / (last ID - first ID)
+			float approxPosition = this->posFirstF + cacheProgress * this->posDist;
+				// approximate position = first position + cache progress * (last position - first position)
+			this->setProgress(approxPosition / this->total);
+		}
+		else if(this->total) this->setProgress(this->posFirstF / this->total);
+
+		// start timer
+		Timer::Simple timer;
+		std::string timerStr;
 
 		// parse content(s)
-		parsed = this->parsing();
+		parsed = this->parsingNext();
 
 		// stop timer
-		if(this->config.generalTiming) timerTotal.stop();
+		if(this->config.generalTiming && this->config.generalLogging)
+			timerStr = timer.tickStr();
 
-		{ // lock parsing table
-			TableLock parsingTableLock(this->database, this->parsingTable);
+		// save URL lock ID and expiration time if parsing was successful or unlock URL if parsing failed
+		if(parsed) this->finished.emplace(this->urls.front().lockId, this->lockTime);
+		else {
+			{ // lock parsing table
+			TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
 
-			// update URL status and release URL lock if possible
-			if(this->database.checkUrlLock(this->currentUrl.lockId, this->lockTime) && parsed)
-				this->database.setUrlFinished(this->currentUrl.lockId);
-			else this->database.unLockUrl(this->currentUrl.lockId);
-		} // parsing table unlocked
+			// unlock URL if necesssary
+			if(this->database.checkUrlLock(this->urls.front().lockId, this->lockTime))
+				this->database.unLockUrl(this->urls.front().lockId);
+					// (TODO: combine SQL  queries)
+			} // parsing table unlocked
+		}
 
+		// reset lock time
 		this->lockTime = "";
-
-		// update status
-		this->setLast(this->currentUrl.id);
-		this->setProgress((float) (this->database.getUrlPosition(this->currentUrl.id) + 1) / this->database.getNumberOfUrls());
 
 		// write to log if necessary
 		if((this->config.generalLogging > Config::generalLoggingDefault)
@@ -164,37 +211,23 @@ void Thread::onTick() {
 			if(parsed > 1) logStrStr << "parsed " << parsed << " versions of ";
 			else if(parsed == 1) logStrStr << "parsed ";
 			else logStrStr << "skipped ";
-			logStrStr << this->currentUrl.url;
-			if(this->config.generalTiming) logStrStr << " in " << timerTotal.totalStr()
-					<< " (URL selection: " << timerSelect.totalStr() << ")";
+			logStrStr << this->urls.front().url;
+			if(this->config.generalTiming) logStrStr << " in " << timerStr;
 			this->log(logStrStr.str());
 		}
-		else if(this->config.generalLogging > Config::generalLoggingDefault && !parsed)
-			this->log("skipped " + this->currentUrl.url);
-
-		// remove URL lock if necessary
-		{ // lock parsing table
-			TableLock parsingTableLock(this->database, this->parsingTable);
-
-			if(this->database.checkUrlLock(this->currentUrl.lockId, this->lockTime))
-				this->database.unLockUrl(this->currentUrl.lockId);
-		} // parsing table unlocked
-
-		this->lockTime = "";
 	}
-	else {
-		// no URLs left: set timer if just finished, sleep
-		if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
-			this->idleTime = std::chrono::steady_clock::now();
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepIdle));
-	}
+
+	// URL finished
+	this->parsingUrlFinished();
 }
 
 // parser paused
 void Thread::onPause() {
 	// save pause start time
 	this->pauseTime = std::chrono::steady_clock::now();
+
+	// save results if necessary
+	this->parsingSaveResults();
 }
 
 // parser unpaused
@@ -202,12 +235,14 @@ void Thread::onUnpause() {
 	// add pause time to start or idle time to ignore pause
 	if(this->idleTime > std::chrono::steady_clock::time_point::min())
 		this->idleTime += std::chrono::steady_clock::now() - this->pauseTime;
-	else this->startTime += std::chrono::steady_clock::now() - this->pauseTime;
+	else
+		this->startTime += std::chrono::steady_clock::now() - this->pauseTime;
 	this->pauseTime = std::chrono::steady_clock::time_point::min();
 }
 
 // clear parser
 void Thread::onClear(bool interrupted) {
+	// check counter and process timers
 	if(this->tickCounter) {
 		// write ticks per second to log
 		std::ostringstream tpsStrStr;
@@ -227,6 +262,9 @@ void Thread::onClear(bool interrupted) {
 		tpsStrStr << std::setprecision(2) << std::fixed << tps;
 		this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
 	}
+
+	// save results if necessary
+	this->parsingSaveResults();
 
 	// delete queries
 	this->queriesSkip.clear();
@@ -287,105 +325,109 @@ void Thread::initQueries() {
 	}
 }
 
-// parsing function for URL selection
-bool Thread::parsingUrlSelection() {
-	std::queue<std::string> logEntries;
-	bool result = true;
-	bool notIdle = this->currentUrl.id > 0;
+// parsing function for URL selection, return whether there are URLs left to parse
+void Thread::parsingUrlSelection() {
+	Timer::Simple timer;
 
-	// get ID and name of next URL (skip locked URLs)
-	bool skip = false;
-	unsigned long skipped = 0;
+	// fill cache with next URLs
+	this->setStatusMessage("Fetching URLs...");
+	if(this->config.generalLogging) this->log("fetches URLs...");
+	this->parsingFetchUrls();
+	if(this->config.generalTiming && this->config.generalLogging)
+		this->log("fetched URLs in " + timer.tickStr());
 
-	while(true) {
-		if(skip) this->currentUrl = this->database.getNextUrl(skipped);
-		else this->currentUrl = this->database.getNextUrl(this->getLast());
-
-		if(this->currentUrl.id) {
-			// check whether to skip URL
-			skip = false;
-			if(!(this->config.generalSkip.empty())) {
-				for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
-					// check result type of query
-					if(!(i->resultBool) && this->config.generalLogging)
-						this->log("WARNING: Invalid result type of skip query (not bool).");
-
-					// check query type
-					if(i->type == QueryStruct::typeRegEx) {
-						// parse ID by running RegEx query on URL
-						try {
-							if(this->getRegExQueryPtr(i->index).getBool(this->currentUrl.url)) {
-								skip = true;
-								break;
-							}
-						}
-						catch(const RegExException& e) {} // ignore query on error
-					}
-					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-						this->log("WARNING: ID query on URL is not of type RegEx.");
-				}
-			}
-
-			if(skip) {
-				// skip URL
-				if(this->config.generalLogging) logEntries.emplace("skipped " + this->currentUrl.url);
-				skipped = this->currentUrl.id;
-			}
-			else
-			{ // lock parsing table
-				TableLock parsingTableLock(this->database, this->parsingTable);
-
-				// get current URL lock ID if none was received on URL selection
-				this->database.getUrlLockId(this->currentUrl);
-
-				// lock URL
-				if(this->database.isUrlLockable(this->currentUrl.lockId)) {
-					this->lockTime = this->database.lockUrl(this->currentUrl, this->config.generalLock);
-					// success!
-					break;
-				}
-				else if(this->config.generalLogging) {
-					// skip locked URL
-					logEntries.emplace("skipped " + this->currentUrl.url + ", because it is locked.");
-					skip = true;
-					skipped = this->currentUrl.id;
-				}
-			} // parsing table unlocked
-		}
-		else {
-			// no more URLs
-			result = false;
-			break;
-		}
-	}
-
-	// write to log if necessary
-	if(this->config.generalLogging) {
-		while(!logEntries.empty()) {
-			this->log(logEntries.front());
-			logEntries.pop();
-		}
-	}
-
-	// set thread status
-	if(result) this->setStatusMessage(this->currentUrl.url);
-	else {
-		if(notIdle) {
+	// check whether URLs have been fetched
+	this->setStatusMessage("Checking URLs...");
+	if(this->urls.empty()) {
+		// no more URLs to parse
+		if(!(this->idle)) {
 			if(this->config.generalResetOnFinish) {
-				if(this->config.generalLogging) this->log("finished, resetting parsing status.");
+				if(this->config.generalLogging) this->log("finished, resetting parsing status...");
 				this->database.resetParsingStatus(this->getUrlList());
 			}
 			else if(this->config.generalLogging > Config::generalLoggingDefault) this->log("finished.");
+
+			this->setStatusMessage("IDLE Waiting for new URLs to parse.");
+			this->setProgress(1.f);
 		}
-		this->setStatusMessage("IDLE Waiting for new URLs to parse.");
-		this->setProgress(1L);
+		return;
+	}
+	else // reset idling status
+		this->idle = false;
+
+	// check whether next URL(s) need to be skipped
+	while(!(this->urls.empty()) && this->isRunning()) {
+		// check whether URL needs to be skipped because of invalid ID
+		if(!(this->urls.front().id)) {
+			if(this->config.generalLogging)
+				this->log("skip (INVALID ID) " + this->urls.front().url);
+			this->parsingUrlFinished();
+			continue;
+		}
+
+		// check whether URL needs to be skipped because of custom query
+		bool skip = false;
+		if(!(this->config.generalSkip.empty())) {
+			// loop over custom queries
+			for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
+				// check result type of query
+				if(!(i->resultBool) && this->config.generalLogging)
+					this->log("WARNING: Invalid result type of skip query (not bool).");
+
+				// check query type
+				if(i->type == QueryStruct::typeRegEx) {
+					// parse ID by running RegEx query on URL
+					try {
+						if(this->getRegExQueryPtr(i->index).getBool(this->urls.front().url)) {
+							// skip URL
+							skip = true;
+							break; // exit loop over custom queries
+						}
+					}
+					catch(const RegExException& e) {} // ignore query on error
+				}
+				else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
+					this->log("WARNING: ID query on URL is not of type RegEx.");
+			}
+
+			if(skip) {
+				// skip URL because of query
+				if(this->config.generalLogging > Config::generalLoggingDefault)
+					this->log("skip (query) " + urls.front().url);
+
+				this->parsingUrlFinished();
+				continue;
+			}
+		}
+
+		break; // found URL to process
 	}
 
-	return result;
+	// done
+	if(this->config.generalTiming && this->config.generalLogging)
+		this->log("checked URLs in " + timer.tickStr());
+	this->setStatusMessage("URLs checked.");
 }
 
-// parse content(s) of current URL, return number of successfully parsed contents
-unsigned long Thread::parsing() {
+// fetch next URLs from database
+void Thread::parsingFetchUrls() {
+	// fetch URLs from database to cache
+	this->database.fetchUrls(this->getLast(), this->urls);
+
+	// check whether URLs have been fetched
+	if(this->urls.empty()) return;
+
+	// save properties of fetched URLs and URL list for progress calculation
+	this->idFirst = this->urls.front().id;
+	this->idDist = this->urls.back().id - this->idFirst;
+	unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
+	this->posFirstF = static_cast<float>(posFirst);
+	this->posDist = this->database.getUrlPosition(this->urls.back().id) - posFirst;
+	this->total = this->database.getNumberOfUrls();
+}
+
+// parse content(s) of next URL, return number of successfully parsed contents
+unsigned long Thread::parsingNext() {
 	std::string parsedId;
 
 	// parse ID from URL if possible (using RegEx only)
@@ -399,7 +441,7 @@ unsigned long Thread::parsing() {
 			if(i->type == QueryStruct::typeRegEx) {
 				// parse ID by running RegEx query on URL
 				try {
-					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, parsedId);
+					this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedId);
 					if(!parsedId.empty()) break;
 				}
 				catch(const RegExException& e) {} // ignore query on error
@@ -420,7 +462,7 @@ unsigned long Thread::parsing() {
 		unsigned long index = 0;
 		while(true) {
 			std::pair<unsigned long, std::string> latestContent;
-			if(this->database.getLatestContent(this->currentUrl.id, index, latestContent)) {
+			if(this->database.getLatestContent(this->urls.front().id, index, latestContent)) {
 				if(this->parsingContent(latestContent, parsedId)) return 1;
 				index++;
 			}
@@ -430,7 +472,7 @@ unsigned long Thread::parsing() {
 	else {
 		// parse all contents of URL
 		unsigned long counter = 0;
-		std::queue<IdString> contents = this->database.getAllContents(this->currentUrl.id);
+		std::queue<IdString> contents = this->database.getAllContents(this->urls.front().id);
 		while(!contents.empty()) {
 			if(this->parsingContent(contents.front(), parsedId)) counter++;
 			contents.pop();
@@ -454,7 +496,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 	catch(const XMLException& e) {
 		if(this->config.generalLogging > Config::generalLoggingDefault) {
 			std::ostringstream logStrStr;
-			logStrStr << "Content #" << content.first << " [" << this->currentUrl.url << "] could not be parsed: " << e.what();
+			logStrStr << "Content #" << content.first << " [" << this->urls.front().url << "] could not be parsed: " << e.what();
 			this->log(logStrStr.str());
 		}
 		return false;
@@ -476,7 +518,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on URL
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, parsedData.parsedId);
+						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedData.parsedId);
 						if(!parsedData.parsedId.empty()) break;
 					}
 					catch(const RegExException& e) {} // ignore query on error
@@ -544,7 +586,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 			if(i->type == QueryStruct::typeRegEx) {
 				// parse date/time by running RegEx query on URL
 				try {
-					this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, parsedData.dateTime);
+					this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedData.dateTime);
 					querySuccess = true;
 				}
 				catch(const RegExException& e) {} // ignore query on error
@@ -634,7 +676,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 					// parse from URL: check query type
 					if(i->type == QueryStruct::typeRegEx) {
 						// parse multiple field elements by running RegEx query on URL
-						this->getRegExQueryPtr(i->index).getAll(this->currentUrl.url, parsedFieldValues);
+						this->getRegExQueryPtr(i->index).getAll(this->urls.front().url, parsedFieldValues);
 					}
 					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -665,7 +707,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 						}
 					}
 					if(empty) this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
-							+ this->currentUrl.url);
+							+ this->urls.front().url);
 				}
 
 				// determine how to save result: JSON array or concatenate using delimiting character
@@ -699,7 +741,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 					// parse from URL: check query type
 					if(i->type == QueryStruct::typeRegEx) {
 						// parse single field element by running RegEx query on URL
-						this->getRegExQueryPtr(i->index).getFirst(this->currentUrl.url, parsedFieldValue);
+						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedFieldValue);
 					}
 					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -723,7 +765,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 				// if necessary, check whether value is empty
 				if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(fieldCounter) && parsedFieldValue.empty())
 					this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\' is empty for "
-											+ this->currentUrl.url);
+											+ this->urls.front().url);
 
 				// if necessary, tidy text
 				if(this->config.parsingFieldTidyTexts.at(fieldCounter)) Helper::Strings::utfTidy(parsedFieldValue);
@@ -747,7 +789,7 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 					// parse from URL: check query type
 					if(i->type == QueryStruct::typeRegEx) {
 						// parse boolean value by running RegEx query on URL
-						parsedBool = this->getRegExQueryPtr(i->index).getBool(this->currentUrl.url);
+						parsedBool = this->getRegExQueryPtr(i->index).getBool(this->urls.front().url);
 					}
 					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 						this->log("WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)
@@ -790,9 +832,79 @@ bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content
 		catch(const RegExException& e) {} // ignore query on error
 	}
 
-	// update or add parsed data to database
-	this->database.updateOrAddEntry(parsedData);
+	// add parsed data to results
+	this->results.push(parsedData);
 	return true;
+}
+
+// URL has been processed (skipped or parsed)
+void Thread::parsingUrlFinished() {
+	// check whether the finished URL is the last URL in the cache
+	if(this->urls.size() == 1) {
+		// if yes, save results to database
+		this->parsingSaveResults();
+
+		// set current URL as last URL
+		this->setLast(this->urls.back().id);
+
+		// reset URL properties
+		this->idFirst = 0;
+		this->idDist = 0;
+		this->posFirstF = 0;
+		this->posDist = 0;
+	}
+
+	// delete current URL from cache
+	this->urls.pop();
+}
+
+// save results to database
+void Thread::parsingSaveResults() {
+	// check whether there are no results
+	if(this->results.empty()) return;
+
+	// timer
+	Timer::Simple timer;
+
+	// queue for log entries while table is locked
+	std::queue<std::string> logEntries;
+
+	// save results
+	this->setStatusMessage("Saving results...");
+	if(this->config.generalLogging) this->log("saves results...");
+
+	{ // lock target and parsing tables
+		TableLock targetAndParsingTableLock(this->database,
+				TableLockProperties(this->parsingTable),
+				TableLockProperties(this->targetTable, this->targetTableAlias, 1000)
+		);
+
+		// update or add entries in/to database
+		this->database.updateOrAddEntries(this->results, logEntries);
+	} // target and parsing tables unlocked
+
+	// update parsing table
+	this->database.updateTargetTable();
+
+	{ // lock parsing table
+		TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
+
+		// set those URLs to finished whose URL lock is okay (still locked or re-lockable (and not parsed when not re-parsing)
+		this->database.setUrlsFinishedIfLockOk(this->finished);
+	} // parsing table unlocked
+
+	// write log entries if necessary
+	if(this->config.generalLogging) {
+		while(!logEntries.empty()) {
+			this->log(logEntries.front());
+			logEntries.pop();
+		}
+	}
+
+	// update status
+	this->setStatusMessage("Results saved.");
+	if(this->config.generalTiming && this->config.generalLogging)
+		this->log("saved results in " + timer.tickStr());
 }
 
 }

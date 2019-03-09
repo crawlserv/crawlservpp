@@ -31,6 +31,7 @@
 #include <fstream>
 #include <functional>
 #include <memory>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -44,13 +45,15 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::TableColumn TableColumn;
 		typedef Struct::UrlProperties UrlProperties;
-		typedef Wrapper::TableLock TableLock;
+		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 		typedef Wrapper::TargetTablesLock TargetTablesLock;
-		typedef std::pair<unsigned long, std::string> IdString;
+
 		typedef std::function<bool()> CallbackIsRunning;
+		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
 	public:
-		Database(Module::Database& dbRef);
+		Database(Module::Database& dbRef, const std::string& setTargetTableAlias);
 		virtual ~Database();
 
 		// setters
@@ -59,6 +62,7 @@ namespace crawlservpp::Module::Parser {
 		void setWebsiteNamespace(const std::string& websiteNamespace);
 		void setUrlList(unsigned long listId);
 		void setUrlListNamespace(const std::string& urlListNamespace);
+		void setCacheSize(unsigned long setCacheSize);
 		void setReparse(bool isReparse);
 		void setParseCustom(bool isParseCustom);
 		void setLogging(bool isLogging);
@@ -72,24 +76,25 @@ namespace crawlservpp::Module::Parser {
 		void prepare();
 
 		// URL functions
-		UrlProperties getNextUrl(unsigned long currentUrlId);
+		void fetchUrls(unsigned long lastId, std::queue<UrlProperties>& cache);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
 
 		// URL locking functions
-		bool isUrlLockable(unsigned long lockId);
+		bool isUrlLockableAndNotParsed(unsigned long lockId);
 		bool checkUrlLock(unsigned long lockId, const std::string& lockTime);
-		std::string getUrlLock(unsigned long lockId);
-		void getUrlLockId(UrlProperties& urlProperties);
+		std::string getLockTime(unsigned long lockId);
+		void getLockId(UrlProperties& urlProperties);
 		std::string lockUrl(UrlProperties& urlProperties, unsigned long lockTimeout);
 		void unLockUrl(unsigned long lockId);
 
 		// parsing functions
-		bool getLatestContent(unsigned long urlId, unsigned long index, std::pair<unsigned long, std::string>& contentTo);
+		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
 		std::queue<IdString> getAllContents(unsigned long urlId);
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
-		void updateOrAddEntry(const ParsingEntry& entry);
-		void setUrlFinished(unsigned long parsingId);
+		void updateOrAddEntries(std::queue<ParsingEntry>& entries, std::queue<std::string>& logEntriesTo);
+		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
+		void updateTargetTable();
 
 	protected:
 		// options
@@ -100,6 +105,7 @@ namespace crawlservpp::Module::Parser {
 		unsigned long urlList;
 		std::string listIdString;
 		std::string urlListName;
+		unsigned long cacheSize;
 		bool reparse;
 		bool parseCustom;
 		bool logging;
@@ -118,35 +124,37 @@ namespace crawlservpp::Module::Parser {
 	private:
 		// IDs of prepared SQL statements
 		struct {
-			unsigned short isUrlParsed;
-			unsigned short getNextUrl;
+			unsigned short fetchUrls;
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
-			unsigned short isUrlLockable;
+			unsigned short isUrlLockableAndNotParsed;
 			unsigned short checkUrlLock;
-			unsigned short getUrlLock;
-			unsigned short getUrlLockId;
+			unsigned short getLockTime;
+			unsigned short getLockId;
 			unsigned short lockUrl;
 			unsigned short addUrlLock;
 			unsigned short unLockUrl;
 			unsigned short getContentIdFromParsedId;
 			unsigned short getLatestContent;
 			unsigned short getAllContents;
-			unsigned short setUrlFinished;
-			unsigned short getEntryId;
-			unsigned short updateEntry;
-			unsigned short addEntry;
-			unsigned short updateParsedTable;
+			unsigned short setUrlFinishedIfLockOk;
+			unsigned short set10UrlsFinishedIfLockOk;
+			unsigned short set100UrlsFinishedIfLockOk;
+			unsigned short set1000UrlsFinishedIfLockOk;
+			unsigned short updateOrAddEntry;
+			unsigned short updateOrAdd10Entries;
+			unsigned short updateOrAdd100Entries;
+			unsigned short updateOrAdd1000Entries;
+			unsigned short updateTargetTable;
 		} ps;
 
-		// internal helper functions
-		unsigned long getTargetTableId();
-		unsigned long getEntryId(unsigned long contentId);
-		void updateEntry(unsigned long entryId, const std::string& parsedId, const std::string& parsedDateTime,
-				const std::vector<std::string>& parsedFields);
-		void addEntry(unsigned long contentId, const std::string& parsedId, const std::string& parsedDateTime,
-				const std::vector<std::string>& parsedFields);
-		void updateParsedTable();
+		// constant string for table aliases
+		const std::string targetTableAlias;
+
+		// internal helper function
+		bool checkEntry(ParsingEntry& entry, std::queue<std::string>& logEntriesTo);
+		std::string queryUpdateOrAddEntries(unsigned int numberOfEntries);
+		std::string querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls);
 	};
 }
 
