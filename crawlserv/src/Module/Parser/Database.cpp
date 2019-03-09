@@ -129,7 +129,7 @@ void Database::prepare() {
 	// prepare SQL statements for parser
 	if(!(this->ps.fetchUrls)) {
 		if(this->verbose)
-			this->log("[#" + this->idString + "] prepares getNextUrl()...");
+			this->log("[#" + this->idString + "] prepares fetchUrls()...");
 
 		std::ostringstream sqlQueryStr;
 		sqlQueryStr << "SELECT DISTINCT a.id AS url_id, a.url AS url, c.id AS lock_id FROM `"
