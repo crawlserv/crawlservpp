@@ -1,5 +1,5 @@
 /*
- * Portability.h
+ * Portability.hpp
  *
  * Namespace with global portability helper functions.
  *
@@ -7,8 +7,8 @@
  *      Author: ans
  */
 
-#ifndef HELPER_PORTABILITY_H_
-#define HELPER_PORTABILITY_H_
+#ifndef HELPER_PORTABILITY_HPP_
+#define HELPER_PORTABILITY_HPP_
 
 #include <cctype>
 
@@ -17,9 +17,9 @@
 	#include <stdio.h>
 #else
 	#include <conio.h>
-#endif
+#endif /* __unix */
 
-namespace Helper::Portability {
+namespace crawlservpp::Helper::Portability {
 
 	/*
 	 * DEFINITION
@@ -28,7 +28,7 @@ namespace Helper::Portability {
 #ifdef __unix
 	// portable getch
 	char getch(void);
-#endif
+#endif /* __unix */
 
 	static struct termios oldT, newT;
 
@@ -37,7 +37,7 @@ namespace Helper::Portability {
 	 */
 
 	inline char getch() {
-	#ifdef __unix
+#ifdef __unix
 		char ch = 0;
 		tcgetattr(0, &oldT);
 		newT = oldT;
@@ -47,11 +47,11 @@ namespace Helper::Portability {
 		ch = getchar();
 		tcsetattr(0, TCSANOW, &oldT);
 		return ch;
-	#else
+#else
 		return ::getch();
-	#endif
-}
+#endif /* __ unix */
+	}
 
-}
+} /* crawlservpp::Helper::Portability */
 
-#endif /* HELPER_PORTABILITY_H_ */
+#endif /* HELPER_PORTABILITY_HPP_ */

@@ -7,18 +7,17 @@
  *      Author: ans
  */
 
-#ifndef MODULE_PARSER_DATABASE_H_
-#define MODULE_PARSER_DATABASE_H_
+#ifndef MODULE_PARSER_DATABASE_HPP_
+#define MODULE_PARSER_DATABASE_HPP_
 
-#include "../Database.h"
-
-#include "../../Struct/ParsingEntry.h"
-#include "../../Struct/TableColumn.h"
-#include "../../Struct/TargetTableProperties.h"
-#include "../../Struct/UrlProperties.h"
-#include "../../Wrapper/Database.h"
-#include "../../Wrapper/TableLock.h"
-#include "../../Wrapper/TargetTablesLock.h"
+#include "../../Struct/ParsingEntry.hpp"
+#include "../../Struct/TableColumn.hpp"
+#include "../../Struct/TargetTableProperties.hpp"
+#include "../../Struct/UrlProperties.hpp"
+#include "../../Wrapper/Database.hpp"
+#include "../../Wrapper/Database.hpp"
+#include "../../Wrapper/TableLock.hpp"
+#include "../../Wrapper/TargetTablesLock.hpp"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -38,6 +37,7 @@
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
+
 	class Database : public Wrapper::Database {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
@@ -152,6 +152,7 @@ namespace crawlservpp::Module::Parser {
 		std::string queryUpdateOrAddEntries(unsigned int numberOfEntries);
 		std::string querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls);
 	};
-}
 
-#endif /* MODULE_PARSER_DATABASE_H_ */
+} /* crawlservpp::Module::Crawler */
+
+#endif /* MODULE_PARSER_DATABASE_HPP_ */

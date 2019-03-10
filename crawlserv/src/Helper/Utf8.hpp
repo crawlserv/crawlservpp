@@ -1,5 +1,5 @@
 /*
- * Utf8.h
+ * Utf8.hpp
  *
  * Namespace with global UTF-8 helper functions.
  *
@@ -7,24 +7,24 @@
  *      Author: ans
  */
 
-#ifndef HELPER_UTF8_H_
-#define HELPER_UTF8_H_
+#ifndef HELPER_UTF8_HPP_
+#define HELPER_UTF8_HPP_
 
 #include "../_extern/utf8/source/utf8.h"
 
 #include <string>
 
-namespace Helper::Utf8 {
+namespace crawlservpp::Helper::Utf8 {
 
 	/*
-	 * DEFINITIONS
+	 * DECLARATION
 	 */
 
 	std::string iso88591ToUtf8(const std::string& strIn);
 	bool repairUtf8(const std::string& strIn, std::string& strOut);
 
 	/*
-	 * IMPLEMENTATIONS
+	 * IMPLEMENTATION
 	 */
 
 	// convert ISO-8859-1 to UTF-8
@@ -48,6 +48,7 @@ namespace Helper::Utf8 {
 		utf8::replace_invalid(strIn.begin(), strIn.end(), back_inserter(strOut));
 		return true;
 	}
-}
 
-#endif /* HELPER_UTF8_H_ */
+} /* crawlservpp::Helper::Utf8 */
+
+#endif /* HELPER_UTF8_HPP_ */

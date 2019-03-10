@@ -7,22 +7,20 @@
  *      Author: ans
  */
 
-#ifndef MODULE_ANALYZER_DATABASE_H_
-#define MODULE_ANALYZER_DATABASE_H_
+#ifndef MODULE_ANALYZER_DATABASE_HPP_
+#define MODULE_ANALYZER_DATABASE_HPP_
 
-#include "Config.h"
+#include "Config.hpp"
 
-#include "../Database.h"
-
-#include "../../Main/Data.h"
-#include "../../Helper/DateTime.h"
-#include "../../Helper/Json.h"
-#include "../../Struct/CorpusProperties.h"
-#include "../../Struct/TableColumn.h"
-#include "../../Struct/TargetTableProperties.h"
-#include "../../Timer/Simple.h"
-#include "../../Wrapper/TargetTablesLock.h"
-#include "../../Wrapper/Database.h"
+#include "../../Main/Data.hpp"
+#include "../../Helper/DateTime.hpp"
+#include "../../Helper/Json.hpp"
+#include "../../Struct/CorpusProperties.hpp"
+#include "../../Struct/TableColumn.hpp"
+#include "../../Struct/TargetTableProperties.hpp"
+#include "../../Timer/Simple.hpp"
+#include "../../Wrapper/Database.hpp"
+#include "../../Wrapper/TargetTablesLock.hpp"
 
 #define RAPIDJSON_HAS_STDSTRING 1
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
@@ -44,6 +42,7 @@
 #include <vector>
 
 namespace crawlservpp::Module::Analyzer {
+
 	class Database : public Wrapper::Database {
 		// for convenience
 		typedef Main::Data::Type DataType;
@@ -127,6 +126,7 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<unsigned short> algo;
 		} ps;
 	};
-}
 
-#endif /* MODULE_ANALYZER_DATABASE_H_ */
+} /* crawlservpp::Module::Analyzer */
+
+#endif /* MODULE_ANALYZER_DATABASE_HPP_ */

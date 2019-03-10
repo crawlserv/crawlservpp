@@ -7,18 +7,18 @@
  *      Author: ans
  */
 
-#ifndef MODULE_ANALYZER_THREAD_H_
-#define MODULE_ANALYZER_THREAD_H_
+#ifndef MODULE_ANALYZER_THREAD_HPP_
+#define MODULE_ANALYZER_THREAD_HPP_
 
-#include "Config.h"
-#include "Database.h"
+#include "Config.hpp"
+#include "Database.hpp"
 
-#include "../Thread.h"
+#include "../Thread.hpp"
 
-#include "../../Helper/DateTime.h"
-#include "../../Helper/Strings.h"
-#include "../../Struct/ThreadOptions.h"
-#include "../../Timer/StartStop.h"
+#include "../../Helper/DateTime.hpp"
+#include "../../Helper/Strings.hpp"
+#include "../../Struct/ThreadOptions.hpp"
+#include "../../Timer/StartStop.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -32,6 +32,7 @@
 #include <thread>
 
 namespace crawlservpp::Module::Analyzer {
+
 	class Thread: public Module::Thread {
 		// for convenience
 		typedef Struct::ThreadOptions ThreadOptions;
@@ -77,6 +78,7 @@ namespace crawlservpp::Module::Analyzer {
 		void stop();
 		void interrupt();
 	};
-}
 
-#endif /* MODULE_ANALYZER_THREAD_H_ */
+} /* crawlservpp::Module::Analyzer */
+
+#endif /* MODULE_ANALYZER_THREAD_HPP_ */

@@ -1,5 +1,5 @@
 /*
- * Versions.h
+ * Versions.hpp
  *
  * Get the versions of the different libraries used by crawlserv.
  *
@@ -7,12 +7,12 @@
  *      Author: ans
  */
 
-#ifndef HELPER_VERSIONS_H_
-#define HELPER_VERSIONS_H_
-
-#define PCRE2_CODE_UNIT_WIDTH 8
+#ifndef HELPER_VERSIONS_HPP_
+#define HELPER_VERSIONS_HPP_
 
 #include "../_extern/mongoose/mongoose.h"
+
+#define RAPIDJSON_HAS_STDSTRING 1
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 
 #include "tidy.h"
@@ -22,14 +22,17 @@
 #include <cppconn/driver.h>
 
 #include <aspell.h>
+
+#define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
+
 #include <pugixml.hpp>
 #include <uriparser/UriBase.h>
 
 #include <sstream>
 #include <string>
 
-namespace Helper::Versions {
+namespace crawlservpp::Helper::Versions {
 
 	/*
 	 * DEFINITION
@@ -90,6 +93,7 @@ namespace Helper::Versions {
 
 		return out.str();
 	}
-}
 
-#endif /* HELPER_VERSIONS_H_ */
+} /* crawlservpp::Helper::Versions */
+
+#endif /* HELPER_VERSIONS_HPP_ */
