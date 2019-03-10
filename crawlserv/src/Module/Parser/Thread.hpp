@@ -7,26 +7,28 @@
  *      Author: ans
  */
 
-#ifndef MODULE_PARSER_THREAD_H_
-#define MODULE_PARSER_THREAD_H_
+#ifndef MODULE_PARSER_THREAD_HPP_
+#define MODULE_PARSER_THREAD_HPP_
 
-#include "Config.h"
-#include "Database.h"
+#define RAPIDJSON_HAS_STDSTRING 1
 
-#include "../Thread.h"
+#include "Config.hpp"
+#include "Database.hpp"
 
-#include "../../Helper/DateTime.h"
-#include "../../Helper/Json.h"
-#include "../../Helper/Strings.h"
-#include "../../Parsing/XML.h"
-#include "../../Query/Container.h"
-#include "../../Struct/TableLockProperties.h"
-#include "../../Struct/ThreadOptions.h"
-#include "../../Struct/ParsingEntry.h"
-#include "../../Struct/QueryProperties.h"
-#include "../../Struct/UrlProperties.h"
-#include "../../Timer/Simple.h"
-#include "../../Wrapper/TableLock.h"
+#include "../Thread.hpp"
+
+#include "../../Helper/DateTime.hpp"
+#include "../../Helper/Json.hpp"
+#include "../../Helper/Strings.hpp"
+#include "../../Parsing/XML.hpp"
+#include "../../Query/Container.hpp"
+#include "../../Struct/TableLockProperties.hpp"
+#include "../../Struct/ThreadOptions.hpp"
+#include "../../Struct/ParsingEntry.hpp"
+#include "../../Struct/QueryProperties.hpp"
+#include "../../Struct/UrlProperties.hpp"
+#include "../../Timer/Simple.hpp"
+#include "../../Wrapper/TableLock.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -42,6 +44,7 @@
 #include <vector>
 
 namespace crawlservpp::Module::Parser {
+
 	class Thread: public Module::Thread, public Query::Container {
 		// for convenience
 		typedef Parsing::XML::Exception XMLException;
@@ -135,6 +138,7 @@ namespace crawlservpp::Module::Parser {
 		void parsingUrlFinished();
 		void parsingSaveResults();
 	};
-}
 
-#endif /* MODULE_PARSER_THREAD_H_ */
+} /* crawlservpp::Module::Parser */
+
+#endif /* MODULE_PARSER_THREAD_HPP_ */

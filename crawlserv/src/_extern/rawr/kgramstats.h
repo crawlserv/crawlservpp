@@ -5,7 +5,7 @@
 #include "identifier.h"
 #include "prefix_search.h"
 
-#include "../../Timer/Simple.h"
+#include "../../Timer/Simple.hpp"
 
 #include <aspell.h>
 

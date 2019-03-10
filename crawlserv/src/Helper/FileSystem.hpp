@@ -1,5 +1,5 @@
 /*
- * FileSystem.h
+ * FileSystem.hpp
  *
  * Namespace with global helper functions for file system.
  *
@@ -7,15 +7,15 @@
  *      Author: ans
  */
 
-#ifndef HELPER_FILESYSTEM_H_
-#define HELPER_FILESYSTEM_H_
+#ifndef HELPER_FILESYSTEM_HPP_
+#define HELPER_FILESYSTEM_HPP_
 
 #include <experimental/filesystem>
 
 #include <string>
 #include <vector>
 
-namespace Helper::FileSystem {
+namespace crawlservpp::Helper::FileSystem {
 
 	/*
 	 * DECLARATION
@@ -45,6 +45,7 @@ namespace Helper::FileSystem {
 
 		return result;
 	}
-}
 
-#endif /* HELPER_FILESYSTEM_H_ */
+} /* crawlservpp::Helper::FileSystem */
+
+#endif /* HELPER_FILESYSTEM_HPP_ */

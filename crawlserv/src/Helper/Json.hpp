@@ -1,5 +1,5 @@
 /*
- * Json.h
+ * Json.hpp
  *
  * Namespace with global JSON helper functions.
  *
@@ -7,11 +7,10 @@
  *      Author: ans
  */
 
-#ifndef HELPER_JSON_H_
-#define HELPER_JSON_H_
+#ifndef HELPER_JSON_HPP_
+#define HELPER_JSON_HPP_
 
 #define RAPIDJSON_HAS_STDSTRING 1
-
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/stringbuffer.h"
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
@@ -20,9 +19,10 @@
 #include <tuple>
 #include <vector>
 
-namespace Helper::Json {
+namespace crawlservpp::Helper::Json {
+
 	/*
-	 * DECLARATIONS
+	 * DECLARATION
 	 */
 
 	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings (words, dates etc.)
@@ -35,7 +35,7 @@ namespace Helper::Json {
 	std::string stringify(const TextMap& textMapToStringify);
 
 	/*
-	 * IMPLEMENTATIONS
+	 * IMPLEMENTATION
 	 */
 
 	// stringify a vector of strings to a JSON array in one string
@@ -185,6 +185,7 @@ namespace Helper::Json {
 		// return string
 		return std::string(buffer.GetString(), buffer.GetSize());
 	}
-}
 
-#endif /* HELPER_JSON_H_ */
+} /* crawlservpp::Helper::Json */
+
+#endif /* HELPER_JSON_HPP_ */

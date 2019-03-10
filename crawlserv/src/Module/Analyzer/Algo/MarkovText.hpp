@@ -14,14 +14,14 @@
  *      Author: ans
  */
 
-#ifndef MODULE_ANALYZER_ALGO_MARKOVTEXT_H_
-#define MODULE_ANALYZER_ALGO_MARKOVTEXT_H_
+#ifndef MODULE_ANALYZER_ALGO_MARKOVTEXT_HPP_
+#define MODULE_ANALYZER_ALGO_MARKOVTEXT_HPP_
 
-#include "../Thread.h"
+#include "../Thread.hpp"
 
-#include "../../../Main/Data.h"
-#include "../../../Struct/CorpusProperties.h"
-#include "../../../Timer/Simple.h"
+#include "../../../Main/Data.hpp"
+#include "../../../Struct/CorpusProperties.hpp"
+#include "../../../Timer/Simple.hpp"
 
 #include <chrono>
 #include <functional>
@@ -34,6 +34,7 @@
 #include <vector>
 
 namespace crawlservpp::Module::Analyzer::Algo {
+
 	class MarkovText: public Module::Analyzer::Thread {
 		// for convenience
 		typedef Main::Data::Type DataType;
@@ -63,6 +64,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::string createText();
 		void createDictionary();
 	};
-}
 
-#endif /* MODULE_ANALYZER_ALGO_MARKOVTEXT_H_ */
+} /* crawlservpp::Module::Analyzer::Algo */
+
+#endif /* MODULE_ANALYZER_ALGO_MARKOVTEXT_HPP_ */

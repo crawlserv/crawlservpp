@@ -7,15 +7,14 @@
  *      Author: ans
  */
 
-#ifndef MODULE_CRAWLER_DATABASE_H_
-#define MODULE_CRAWLER_DATABASE_H_
+#ifndef MODULE_CRAWLER_DATABASE_HPP_
+#define MODULE_CRAWLER_DATABASE_HPP_
 
-#include "../Database.h"
-
-#include "../../Struct/TableLockProperties.h"
-#include "../../Struct/UrlProperties.h"
-#include "../../Wrapper/Database.h"
-#include "../../Wrapper/TableLock.h"
+#include "../../Struct/TableLockProperties.hpp"
+#include "../../Struct/UrlProperties.hpp"
+#include "../../Wrapper/Database.hpp"
+#include "../../Wrapper/Database.hpp"
+#include "../../Wrapper/TableLock.hpp"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -31,6 +30,7 @@
 #include <utility>
 
 namespace crawlservpp::Module::Crawler {
+
 	class Database : public Wrapper::Database {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
@@ -142,6 +142,7 @@ namespace crawlservpp::Module::Crawler {
 		// helper function
 		std::string queryAddUrls(unsigned int numberOfUrls, const std::string& hashQuery);
 	};
-}
 
-#endif /* MODULE_CRAWLER_DATABASE_H_ */
+	} /* crawlservpp::Module::Crawler */
+
+#endif /* MODULE_CRAWLER_DATABASE_HPP_ */

@@ -12,13 +12,13 @@
  *      Author: ans
  */
 
-#ifndef MODULE_ANALYZER_ALGO_LIST_H_
-#define MODULE_ANALYZER_ALGO_LIST_H_
+#ifndef MODULE_ANALYZER_ALGO_LIST_HPP_
+#define MODULE_ANALYZER_ALGO_LIST_HPP_
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	/*
-	 * DEFINITIONS
+	 * DECLARATION
 	 */
 
 	enum Enum : unsigned char {
@@ -27,7 +27,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		markovTweet = 44
 	};
 
-	bool check(unsigned int value); // checks value for a valid algorithm id
+	bool check(unsigned int value);
 
 	/*
 	 * IMPLEMENTATION
@@ -45,6 +45,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 		return false;
 	}
-}
 
-#endif /* MODULE_ANALYZER_ALGO_LIST_H_ */
+} /* crawlservpp::Module::Analyzer */
+
+#endif /* MODULE_ANALYZER_ALGO_LIST_HPP_ */

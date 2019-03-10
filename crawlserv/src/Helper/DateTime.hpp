@@ -1,5 +1,5 @@
 /*
- * DateTime.h
+ * DateTime.hpp
  *
  * Namespace with global helper functions for date/time and time to string conversion.
  *
@@ -7,8 +7,8 @@
  *      Author: ans
  */
 
-#ifndef HELPER_DATETIME_H_
-#define HELPER_DATETIME_H_
+#ifndef HELPER_DATETIME_HPP_
+#define HELPER_DATETIME_HPP_
 
 #include "../_extern/date/include/date/date.h"
 
@@ -16,10 +16,10 @@
 #include <sstream>
 #include <string>
 
-namespace Helper::DateTime {
+namespace crawlservpp::Helper::DateTime {
 
 	/*
-	 * DECLARATIONS
+	 * DECLARATION
 	 */
 
 	// date/time conversions
@@ -41,7 +41,7 @@ namespace Helper::DateTime {
 	std::string secondsToString(unsigned long long seconds);
 
 	/*
-	 * IMPLEMENTATIONS
+	 * IMPLEMENTATION
 	 */
 
 	// convert time stamp from WEEKDAY[short], DD MONTH[short] YYYY HH:MM:SS TIMEZONE[short] to YYYY-MM-DD HH:MM:SS
@@ -176,6 +176,7 @@ namespace Helper::DateTime {
 		resultStr.pop_back();
 		return resultStr;
 	}
-}
 
-#endif /* HELPER_DATETIME_H_ */
+} /* crawlservpp::Helper::DateTime */
+
+#endif /* HELPER_DATETIME_HPP_ */

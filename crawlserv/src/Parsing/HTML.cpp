@@ -7,45 +7,45 @@
  *      Author: ans
  */
 
-#include "HTML.h"
+#include "HTML.hpp"
 
 namespace crawlservpp::Parsing {
 
-// constructor: create tidy object and fill buffer struct with zeros
-HTML::HTML() : doc(tidyCreate()), buffer({0}) {}
+	// constructor: create tidy object and fill buffer struct with zeros
+	HTML::HTML() : doc(tidyCreate()), buffer({0}) {}
 
-// destructor: free buffer if necessary and release tidy object
-HTML::~HTML() {
-	if(this->buffer.allocated) tidyBufFree(&(this->buffer));
-	tidyRelease(this->doc);
-}
+	// destructor: free buffer if necessary and release tidy object
+	HTML::~HTML() {
+		if(this->buffer.allocated) tidyBufFree(&(this->buffer));
+		tidyRelease(this->doc);
+	}
 
-// tidy HTML and convert it to XML, throws std::runtime_error
-void HTML::tidyAndConvert(std::string& content) {
-	if(!tidyOptSetBool(this->doc, TidyXmlOut, yes)
-			|| !tidyOptSetBool(this->doc, TidyQuiet, yes)
-			|| !tidyOptSetBool(this->doc, TidyNumEntities, yes)
-			|| !tidyOptSetBool(this->doc, TidyMark, no)
-			|| !tidyOptSetBool(this->doc, TidyShowWarnings, no)
-			|| !tidyOptSetInt(this->doc, TidyShowErrors, 0)
-			|| !tidyOptSetValue(this->doc, TidyOutCharEncoding, "utf8")
-			|| !tidyOptSetBool(this->doc, TidyForceOutput, yes))
-		throw HTML::Exception("Could not set options");
+	// tidy HTML and convert it to XML, throws std::runtime_error
+	void HTML::tidyAndConvert(std::string& content) {
+		if(!tidyOptSetBool(this->doc, TidyXmlOut, yes)
+				|| !tidyOptSetBool(this->doc, TidyQuiet, yes)
+				|| !tidyOptSetBool(this->doc, TidyNumEntities, yes)
+				|| !tidyOptSetBool(this->doc, TidyMark, no)
+				|| !tidyOptSetBool(this->doc, TidyShowWarnings, no)
+				|| !tidyOptSetInt(this->doc, TidyShowErrors, 0)
+				|| !tidyOptSetValue(this->doc, TidyOutCharEncoding, "utf8")
+				|| !tidyOptSetBool(this->doc, TidyForceOutput, yes))
+			throw HTML::Exception("Could not set options");
 
-	// parse content
-	if(tidyParseString(this->doc, content.c_str()) < 0)
-		throw HTML::Exception("Could not parse HTML content");
+		// parse content
+		if(tidyParseString(this->doc, content.c_str()) < 0)
+			throw HTML::Exception("Could not parse HTML content");
 
-	// clean and repair
-	if(tidyCleanAndRepair(this->doc) < 0)
-		throw HTML::Exception("Could not clean and repair HTML content");
+		// clean and repair
+		if(tidyCleanAndRepair(this->doc) < 0)
+			throw HTML::Exception("Could not clean and repair HTML content");
 
-	// save buffer
-	if(tidySaveBuffer(this->doc, &(this->buffer)) < 0)
-		throw HTML::Exception("Could not save output buffer");
+		// save buffer
+		if(tidySaveBuffer(this->doc, &(this->buffer)) < 0)
+			throw HTML::Exception("Could not save output buffer");
 
-	// save output
-	if(this->buffer.bp) content = std::string((char *) this->buffer.bp);
-}
+		// save output
+		if(this->buffer.bp) content = std::string((char *) this->buffer.bp);
+	}
 
-}
+} /* crawlservpp::Parsing */

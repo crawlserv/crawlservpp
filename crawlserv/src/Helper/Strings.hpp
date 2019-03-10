@@ -1,5 +1,5 @@
 /*
- * Strings.h
+ * Strings.hpp
  *
  * Namespace with global string helper functions.
  *
@@ -7,8 +7,8 @@
  *      Author: ans
  */
 
-#ifndef HELPER_STRINGS_H_
-#define HELPER_STRINGS_H_
+#ifndef HELPER_STRINGS_HPP_
+#define HELPER_STRINGS_HPP_
 
 
 #include <algorithm>
@@ -17,10 +17,10 @@
 #include <string>
 #include <vector>
 
-namespace Helper::Strings {
+namespace crawlservpp::Helper::Strings {
 
 	/*
-	 * DEFINITIONS
+	 * DECLARATION
 	 */
 
 	void replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce);
@@ -56,7 +56,7 @@ namespace Helper::Strings {
 	};
 
 	/*
-	 * IMPLEMENTATIONS
+	 * IMPLEMENTATION
 	 */
 
 	// replace all occurences of a string with another string (onlyOnce avoids replacing parts of the replacements)
@@ -194,7 +194,8 @@ namespace Helper::Strings {
 	inline bool checkSQLName(const std::string& name) {
 		return name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_") == std::string::npos;
 	}
-}
+
+} // /* crawlservpp::Helper::Strings */
 
 
-#endif /* HELPER_STRINGS_H_ */
+#endif /* HELPER_STRINGS_HPP_ */

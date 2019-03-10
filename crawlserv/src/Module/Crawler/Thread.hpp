@@ -7,27 +7,24 @@
  *      Author: ans
  */
 
-#ifndef MODULE_CRAWLER_THREAD_H_
-#define MODULE_CRAWLER_THREAD_H_
+#ifndef MODULE_CRAWLER_THREAD_HPP_
+#define MODULE_CRAWLER_THREAD_HPP_
 
-#include "Config.h"
-#include "Database.h"
+#include "../Thread.hpp"
 
-#include "../Thread.h"
-
-#include "../../Helper/DateTime.h"
-#include "../../Helper/Strings.h"
-#include "../../Main/Exception.h"
-#include "../../Network/Curl.h"
-#include "../../Parsing/URI.h"
-#include "../../Parsing/XML.h"
-#include "../../Query/Container.h"
-#include "../../Struct/QueryProperties.h"
-#include "../../Struct/TableLockProperties.h"
-#include "../../Struct/ThreadOptions.h"
-#include "../../Struct/UrlProperties.h"
-#include "../../Timer/StartStop.h"
-#include "../../Wrapper/TableLock.h"
+#include "../../Helper/DateTime.hpp"
+#include "../../Helper/Strings.hpp"
+#include "../../Main/Exception.hpp"
+#include "../../Network/Curl.hpp"
+#include "../../Parsing/URI.hpp"
+#include "../../Parsing/XML.hpp"
+#include "../../Query/Container.hpp"
+#include "../../Struct/UrlProperties.hpp"
+#include "../../Struct/QueryProperties.hpp"
+#include "../../Struct/TableLockProperties.hpp"
+#include "../../Struct/ThreadOptions.hpp"
+#include "../../Timer/StartStop.hpp"
+#include "../../Wrapper/TableLock.hpp"
 
 #include <curl/curl.h>
 
@@ -42,8 +39,11 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#include "Config.hpp"
+#include "Database.hpp"
 
 namespace crawlservpp::Module::Crawler {
+
 	class Thread: public Module::Thread, public Query::Container {
 		// for convenienc
 		typedef Main::Exception Exception;
@@ -170,6 +170,7 @@ namespace crawlservpp::Module::Crawler {
 		static std::string parseMementos(std::string mementoContent, std::queue<std::string>& warningsTo,
 				std::queue<Memento>& mementosTo);
 	};
-}
 
-#endif /* MODULE_CRAWLER_THREAD_H_ */
+} /* crawlservpp::Module::Crawler */
+
+#endif /* MODULE_CRAWLER_THREAD_HPP_ */

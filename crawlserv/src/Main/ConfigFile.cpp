@@ -7,44 +7,44 @@
  *      Author: ans
  */
 
-#include "ConfigFile.h"
+#include "ConfigFile.hpp"
 
 namespace crawlservpp::Main {
 
-// constructor: read file
-ConfigFile::ConfigFile(const std::string& name) {
-	std::ifstream fileStream(name);
-	std::string line;
+	// constructor: read file
+	ConfigFile::ConfigFile(const std::string& name) {
+		std::ifstream fileStream(name);
+		std::string line;
 
-	if(fileStream.is_open()) {
-		while(std::getline(fileStream, line)) {
-			std::pair<std::string, std::string> entry;
-			unsigned long nameEnd = line.find('=');
-			if(nameEnd < line.length()) {
-				entry.first = boost::algorithm::to_lower_copy(line.substr(0, nameEnd));
-				entry.second = line.substr(nameEnd + 1);
+		if(fileStream.is_open()) {
+			while(std::getline(fileStream, line)) {
+				std::pair<std::string, std::string> entry;
+				unsigned long nameEnd = line.find('=');
+				if(nameEnd < line.length()) {
+					entry.first = boost::algorithm::to_lower_copy(line.substr(0, nameEnd));
+					entry.second = line.substr(nameEnd + 1);
+				}
+				else {
+					entry.first = line;
+					entry.second = "";
+				}
+				this->entries.emplace_back(entry);
 			}
-			else {
-				entry.first = line;
-				entry.second = "";
-			}
-			this->entries.emplace_back(entry);
+			fileStream.close();
 		}
-		fileStream.close();
-	}
-	else {
-		throw std::runtime_error("Could not open \"" + name + "\" for reading");
-	}
-}
-
-// get value of config entry (or empty string if entry does not exist)
-std::string ConfigFile::getValue(const std::string& name) const {
-	for(auto i = entries.begin(); i != entries.end(); ++i) {
-		if(i->first == boost::algorithm::to_lower_copy(name)) {
-			return i->second;
+		else {
+			throw std::runtime_error("Could not open \"" + name + "\" for reading");
 		}
 	}
-	return "";
-}
 
-}
+	// get value of config entry (or empty string if entry does not exist)
+	std::string ConfigFile::getValue(const std::string& name) const {
+		for(auto i = entries.begin(); i != entries.end(); ++i) {
+			if(i->first == boost::algorithm::to_lower_copy(name)) {
+				return i->second;
+			}
+		}
+		return "";
+	}
+
+} /* crawlservpp::Main */

@@ -18,14 +18,14 @@
  *      Author: ans
  */
 
-#ifndef MODULE_ANALYZER_ALGO_MARKOVTWEET_H_
-#define MODULE_ANALYZER_ALGO_MARKOVTWEET_H_
+#ifndef MODULE_ANALYZER_ALGO_MARKOVTWEET_HPP_
+#define MODULE_ANALYZER_ALGO_MARKOVTWEET_HPP_
 
-#include "../Thread.h"
+#include "../Thread.hpp"
 
-#include "../../../Main/Data.h"
-#include "../../../Struct/CorpusProperties.h"
-#include "../../../Timer/Simple.h"
+#include "../../../Main/Data.hpp"
+#include "../../../Struct/CorpusProperties.hpp"
+#include "../../../Timer/Simple.hpp"
 
 #include "../../../_extern/rawr/rawr.h"
 
@@ -36,7 +36,9 @@
 #include <tuple>
 #include <vector>
 
+
 namespace crawlservpp::Module::Analyzer::Algo {
+
 	class MarkovTweet: public Module::Analyzer::Thread {
 		// for convenience
 		typedef Main::Data::Type DataType;
@@ -67,6 +69,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		rawr generator;
 		unsigned long sources;
 	};
-}
 
-#endif /* MODULE_ANALYZER_ALGO_MARKOVTWEET_H_ */
+}  /* crawlservpp::Module::Analyzer::Algo */
+
+#endif /* MODULE_ANALYZER_ALGO_MARKOVTWEET_HPP_ */

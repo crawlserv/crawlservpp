@@ -9,11 +9,11 @@
  *      Author: ans
  */
 
-#include "Curl.h"
+#include "Curl.hpp"
 
 namespace crawlservpp::Wrapper {
 
-// set cURL to not initialized
-bool Curl::globalInit = false;
+	// set cURL to not initialized
+	bool Curl::globalInit = false;
 
-}
+} /* crawlservpp::Wrapper */
