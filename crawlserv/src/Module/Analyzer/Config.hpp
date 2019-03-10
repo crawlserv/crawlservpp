@@ -79,8 +79,9 @@ namespace crawlservpp::Module::Analyzer {
 		std::string filterDateTo;
 
 	protected:
-		// configuration functions
-		void loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) override;
+		// analyzing-specific configuration parsing
+		void parseOption() override;
+		void checkOptions() override;
 	};
 
 	/*
@@ -116,53 +117,46 @@ namespace crawlservpp::Module::Analyzer {
 	// destructor stub
 	inline Config::~Config() {}
 
-	// load analyzing-specific configuration from parsed JSON document
-	inline void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) {
-		// set logging queue
-		this->setLog(warningsTo);
+	// parse analyzing-specific configuration option
+	inline void Config::parseOption() {
+		this->category("general");
+		this->option("input.fields", this->generalInputFields, StringParsingOption::SQL);
+		this->option("input.sources", this->generalInputSources);
+		this->option("input.tables", this->generalInputTables, StringParsingOption::SQL);
+		this->option("logging", this->generalLogging);
+		this->option("result.table", this->generalResultTable, StringParsingOption::SQL);
+		this->option("sleep.mysql", this->generalSleepMySql);
+		this->option("sleep.when.finished", this->generalSleepWhenFinished);
+		this->option("timeout.target.lock", this->generalTimeoutTargetLock);
 
-		// parse configuration entries
-		for(auto entry = jsonDocument.Begin(); entry != jsonDocument.End(); entry++) {
-			this->begin(entry);
+		this->category("markov-tweet");
+		this->option("dimension", this->markovTweetDimension);
+		this->option("language", this->markovTweetLanguage);
+		this->option("length", this->markovTweetLength);
+		this->option("max", this->markovTweetMax);
+		this->option("result.field", this->markovTweetResultField, StringParsingOption::SQL);
+		this->option("sleep", this->markovTweetSleep);
+		this->option("sources.field", this->markovTweetSourcesField, StringParsingOption::SQL);
+		this->option("spellcheck", this->markovTweetSpellcheck);
+		this->option("timing", this->markovTweetTiming);
 
-			this->category("general");
-			this->option("input.fields", this->generalInputFields, StringParsingOption::SQL);
-			this->option("input.sources", this->generalInputSources);
-			this->option("input.tables", this->generalInputTables, StringParsingOption::SQL);
-			this->option("logging", this->generalLogging);
-			this->option("result.table", this->generalResultTable, StringParsingOption::SQL);
-			this->option("sleep.mysql", this->generalSleepMySql);
-			this->option("sleep.when.finished", this->generalSleepWhenFinished);
-			this->option("timeout.target.lock", this->generalTimeoutTargetLock);
+		this->category("markov-text");
+		this->option("dimension", this->markovTextDimension);
+		this->option("length", this->markovTextLength);
+		this->option("max", this->markovTextMax);
+		this->option("result.field", this->markovTextResultField, StringParsingOption::SQL);
+		this->option("sleep", this->markovTextSleep);
+		this->option("sources.field", this->markovTextSourcesField, StringParsingOption::SQL);
+		this->option("timing", this->markovTextTiming);
 
-			this->category("markov-tweet");
-			this->option("dimension", this->markovTweetDimension);
-			this->option("language", this->markovTweetLanguage);
-			this->option("length", this->markovTweetLength);
-			this->option("max", this->markovTweetMax);
-			this->option("result.field", this->markovTweetResultField, StringParsingOption::SQL);
-			this->option("sleep", this->markovTweetSleep);
-			this->option("sources.field", this->markovTweetSourcesField, StringParsingOption::SQL);
-			this->option("spellcheck", this->markovTweetSpellcheck);
-			this->option("timing", this->markovTweetTiming);
+		this->category("filter-date");
+		this->option("enable", this->filterDateEnable);
+		this->option("from", this->filterDateFrom);
+		this->option("to", this->filterDateTo);
+	}
 
-			this->category("markov-text");
-			this->option("dimension", this->markovTextDimension);
-			this->option("length", this->markovTextLength);
-			this->option("max", this->markovTextMax);
-			this->option("result.field", this->markovTextResultField, StringParsingOption::SQL);
-			this->option("sleep", this->markovTextSleep);
-			this->option("sources.field", this->markovTextSourcesField, StringParsingOption::SQL);
-			this->option("timing", this->markovTextTiming);
-
-			this->category("filter-date");
-			this->option("enable", this->filterDateEnable);
-			this->option("from", this->filterDateFrom);
-			this->option("to", this->filterDateTo);
-
-			this->end();
-		}
-
+	// check analyzing-specific configuration
+	inline void Config::checkOptions() {
 		// check properties of inputs (arrays with fields, sources and tables should have the same number of elements)
 		unsigned long completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
 				this->generalInputFields.size(),
@@ -189,8 +183,11 @@ namespace crawlservpp::Module::Analyzer {
 		}
 		if(incompleteInputs) {
 			// warn about incomplete inputs
-			warningsTo.emplace("\'input.fields\', \'.sources\' and \'.tables\' should have the same number of elements.");
-			warningsTo.emplace("Incomplete inputs removed.");
+			this->warning(
+					"\'input.fields\', \'.sources\' and \'.tables\'"
+					" should have the same number of elements."
+			);
+			this->warning("Incomplete inputs removed.");
 		}
 	}
 

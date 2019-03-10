@@ -72,8 +72,9 @@ namespace crawlservpp::Module::Parser {
 		static const unsigned short parsingSourceContent = 1;
 
 	protected:
-		// load parsing-specific configuration from parsed JSON document
-		void loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) override;
+		// parsing-specific configuration parsing
+		void parseOption() override;
+		void checkOptions() override;
 	};
 
 	/*
@@ -96,49 +97,42 @@ namespace crawlservpp::Module::Parser {
 	// destructor stub
 	inline Config::~Config() {}
 
-	// load parsing-specific configuration from parsed JSON document
-	inline void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) {
-		// set logging queue
-		this->setLog(warningsTo);
+	// parse parsing-specific configuration option
+	inline void Config::parseOption() {
+		this->category("general");
+		this->option("cache.size", this->generalCacheSize);
+		this->option("logging", this->generalLogging);
+		this->option("newest.only", this->generalNewestOnly);
+		this->option("parse.custom", this->generalParseCustom);
+		this->option("reparse", this->generalReParse);
+		this->option("reset.on.finish", this->generalResetOnFinish);
+		this->option("result.table", this->generalResultTable, StringParsingOption::SQL);
+		this->option("skip", this->generalSkip);
+		this->option("sleep.idle", this->generalSleepIdle);
+		this->option("sleep.mysql", this->generalSleepMySql);
+		this->option("timeout.target.lock", this->generalTimeoutTargetLock);
+		this->option("timing", this->generalTiming);
 
-		// parse configuration entries
-		for(rapidjson::Value::ConstValueIterator i = jsonDocument.Begin(); i != jsonDocument.End(); i++) {
-			this->begin(i);
+		this->category("parser");
+		this->option("datetime.formats", this->parsingDateTimeFormats);
+		this->option("datetime.locales", this->parsingDateTimeLocales);
+		this->option("datetime.queries", this->parsingDateTimeQueries);
+		this->option("datetime.sources", this->parsingDateTimeSources);
+		this->option("field.delimiters", this->parsingFieldDelimiters, CharParsingOption::FromString);
+		this->option("field.ignore.empty", this->parsingFieldIgnoreEmpty);
+		this->option("field.json", this->parsingFieldJSON);
+		this->option("field.names", this->parsingFieldNames, StringParsingOption::SQL);
+		this->option("field.queries", this->parsingFieldQueries);
+		this->option("field.sources", this->parsingFieldSources);
+		this->option("field.tidy.texts", this->parsingFieldTidyTexts);
+		this->option("field.warnings.empty", this->parsingFieldWarningsEmpty);
+		this->option("id.ignore", this->parsingIdIgnore);
+		this->option("id.queries", this->parsingIdQueries);
+		this->option("id.sources", this->parsingIdSources);
+	}
 
-			this->category("general");
-			this->option("cache.size", this->generalCacheSize);
-			this->option("logging", this->generalLogging);
-			this->option("newest.only", this->generalNewestOnly);
-			this->option("parse.custom", this->generalParseCustom);
-			this->option("reparse", this->generalReParse);
-			this->option("reset.on.finish", this->generalResetOnFinish);
-			this->option("result.table", this->generalResultTable, StringParsingOption::SQL);
-			this->option("skip", this->generalSkip);
-			this->option("sleep.idle", this->generalSleepIdle);
-			this->option("sleep.mysql", this->generalSleepMySql);
-			this->option("timeout.target.lock", this->generalTimeoutTargetLock);
-			this->option("timing", this->generalTiming);
-
-			this->category("parser");
-			this->option("datetime.formats", this->parsingDateTimeFormats);
-			this->option("datetime.locales", this->parsingDateTimeLocales);
-			this->option("datetime.queries", this->parsingDateTimeQueries);
-			this->option("datetime.sources", this->parsingDateTimeSources);
-			this->option("field.delimiters", this->parsingFieldDelimiters, CharParsingOption::FromString);
-			this->option("field.ignore.empty", this->parsingFieldIgnoreEmpty);
-			this->option("field.json", this->parsingFieldJSON);
-			this->option("field.names", this->parsingFieldNames, StringParsingOption::SQL);
-			this->option("field.queries", this->parsingFieldQueries);
-			this->option("field.sources", this->parsingFieldSources);
-			this->option("field.tidy.texts", this->parsingFieldTidyTexts);
-			this->option("field.warnings.empty", this->parsingFieldWarningsEmpty);
-			this->option("id.ignore", this->parsingIdIgnore);
-			this->option("id.queries", this->parsingIdQueries);
-			this->option("id.sources", this->parsingIdSources);
-
-			this->end();
-		}
-
+	// check parsing-specific configuration
+	inline void Config::checkOptions() {
 		// check properties of datetime queries
 		unsigned long completeDateTimes = std::min( // number of complete datetime queries (= minimum size of all arrays)
 				this->parsingDateTimeQueries.size(),
@@ -179,8 +173,8 @@ namespace crawlservpp::Module::Parser {
 		}
 		if(incompleteDateTimes) {
 			// warn about incomplete datetime queries
-			warningsTo.emplace("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
-			warningsTo.emplace("Incomplete datetime queries removed.");
+			this->warning("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
+			this->warning("Incomplete datetime queries removed.");
 		}
 
 		// check properties of parsing fields (arrays with field names, queries and sources should have the same number of elements)
@@ -249,8 +243,8 @@ namespace crawlservpp::Module::Parser {
 		}
 		if(incompleteFields) {
 			// warn about incomplete parsing fields
-			warningsTo.emplace("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
-			warningsTo.emplace("Incomplete field(s) removed.");
+			this->warning("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
+			this->warning("Incomplete field(s) removed.");
 		}
 
 		// check properties of id queries (arrays defining queries should have the same number of elements - one for each query)
@@ -270,10 +264,11 @@ namespace crawlservpp::Module::Parser {
 		}
 		if(incompleteIds) {
 			// warn about incomplete id queries
-			warningsTo.emplace("\'id.queries\' and \'.sources\' should have the same number of elements.");
-			warningsTo.emplace("Incomplete id queries removed.");
+			this->warning("\'id.queries\' and \'.sources\' should have the same number of elements.");
+			this->warning("Incomplete id queries removed.");
 		}
 	}
+
 
 } /* crawlservpp::Module::Parser */
 
