@@ -105,8 +105,8 @@ namespace crawlservpp::Network {
 		std::string userAgent;
 		bool verbose;
 
-		// setter
-		void parse(Module::Config& parser);
+		// parse configuration option
+		void parseOption(Module::Config& parser);
 
 		// not moveable, not copyable
 		Config(Config&) = delete;
@@ -163,8 +163,8 @@ namespace crawlservpp::Network {
 	// destructor stub
 	inline Config::~Config() {}
 
-	// set network configuration entry from parsed JSON member (set value by iterator)
-	inline void Config::parse(Module::Config& parser) {
+	// parse configuration option
+	inline void Config::parseOption(Module::Config& parser) {
 		parser.option("connections.max", this->connectionsMax);
 		parser.option("contentlength.ignore", this->contentLengthIgnore);
 		parser.option("cookies", this->cookies);

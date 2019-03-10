@@ -62,25 +62,18 @@ namespace crawlservpp::Module {
 		Config& operator=(Config&&) = delete;
 
 	protected:
-		// protected setter
-		void setLog(LogQueue& log);
-
-		// load module-specific configuration from parsed JSON document
-		virtual void loadModule(const rapidjson::Document& jsonDocument, LogQueue& log) = 0;
-
-		// string-parsing options
+		// configuration parsing options
 		enum StringParsingOption {
 			Default = 0,	// none
-			SQL,			// SQL-compatible string
-			SubURL,			// sub-URL
+			SQL,			// require SQL-compatible string
+			SubURL,			// convert to sub-URL
 		};
 		enum CharParsingOption {
-			FromNumber = 0,	// default (get a number)
-			FromString	// get first or escaped first character from string
+			FromNumber = 0,	// get by numeric value
+			FromString		// get first or escaped first character from a string
 		};
 
 		// configuration parsing functions
-		void begin(rapidjson::Value::ConstValueIterator item);
 		void category(const std::string& category);
 		void option(const std::string& name, bool& target);
 		void option(const std::string& name, std::vector<bool>& target);
@@ -100,18 +93,20 @@ namespace crawlservpp::Module {
 		void option(const std::string& name, std::vector<unsigned int>& target);
 		void option(const std::string& name, unsigned long& target);
 		void option(const std::string& name, std::vector<unsigned long>& target);
-		void option(const std::string& name, std::string& target);
-		void option(const std::string& name, std::string &target, StringParsingOption opt);
-		void option(const std::string& name, std::vector<std::string>& target);
-		void option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt);
-		void end();
+		void option(const std::string& name, std::string &target, StringParsingOption opt = Default);
+		void option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt = Default);
+		void warning(const std::string& warning);
+
+		// module-specific parsing functions
+		virtual void parseOption() = 0;
+		virtual void checkOptions() = 0;
 
 	private:
 		// temporary variables for configuration parsing
-		bool started;					// parsing in progress
 		ConfigItem currentItem;			// current configuration item
-		bool foundCategory;				// category of item has been found
-		bool finished;					// configuration item has been saved
+		bool setCategory;				// category has been set
+		bool foundCategory;				// category has been found
+		bool finished;					// item has been found
 		LogPtr logPtr;					// pointer to logging queue
 
 		// private helper function
@@ -124,7 +119,7 @@ namespace crawlservpp::Module {
 	 */
 
 	// constructor stub
-	inline Config::Config() :	started(false),
+	inline Config::Config() :	setCategory(false),
 								foundCategory(false),
 								finished(false),
 								logPtr(nullptr) {}
@@ -134,6 +129,9 @@ namespace crawlservpp::Module {
 
 	// load configuration
 	inline void Config::loadConfig(const std::string& configJson, std::queue<std::string>& warningsTo) {
+		// save pointer to logging queue
+		this->logPtr = &warningsTo;
+
 		// parse JSON
 		rapidjson::Document json;
 		if(json.Parse(configJson.c_str()).HasParseError())
@@ -142,111 +140,122 @@ namespace crawlservpp::Module {
 		if(!json.IsArray())
 			throw Config::Exception("Module::Config::loadConfig(): Invalid configuration JSON (is no array).");
 
-		// load module-specific configuration
-		this->loadModule(json, warningsTo);
-	}
+		// parse configuration entries
+		for(auto entry = json.Begin(); entry != json.End(); entry++) {
+			// check whether configuration item is a JSON object
+			if(!(entry->IsObject())) {
+				warningsTo.emplace("Configuration entry that is no object ignored.");
+				return;
+			}
 
-	// set logging queue
-	inline void Config::setLog(LogQueue& log) {
-		this->logPtr = &log;
-	}
+			// go through all members of the JSON object and find its properties (name, category, value)
+			bool empty = true;
+			bool ignore = false;
+			for(auto member = entry->MemberBegin(); member != entry->MemberEnd(); ++member) {
+				// check the name of the current item member
+				if(member->name.IsString()) {
+					std::string memberName(
+							member->name.GetString(), member->name.GetStringLength()
+					);
 
-	// begin parsing of configuration item
-	inline void Config::begin(rapidjson::Value::ConstValueIterator item) {
-		// check state
-		if(this->started)
-			throw Config::Exception("Module::Config::begin(): Did not finish parsing before");
+					if(memberName == "cat") {
+						// found the category of the configuration item
+						if(member->value.IsString()) {
+							this->currentItem.category =
+									member->value.GetString(), member->value.GetStringLength();
+						}
+						else {
+							warningsTo.emplace("Configuration entry with invalid category name ignored.");
+							ignore = true;
+							break;
+						}
+					}
+					else if(memberName == "name") {
+						// found the name of the configuration item
+						if(member->value.IsString()) {
+							this->currentItem.name = std::string(
+									member->value.GetString(), member->value.GetStringLength()
+							);
+						}
+						else {
+							warningsTo.emplace("Configuration entry with invalid option name ignored.");
+							ignore = true;
+							break;
+						}
 
-		// check whether configuration item is a JSON object
-		if(!(item->IsObject())) {
-			if(this->logPtr)
-				this->logPtr->emplace("Configuration entry that is no object ignored.");
-			return;
-		}
-
-		// go through all members of the JSON object and find its properties
-		bool empty = true;
-		for(auto member = item->MemberBegin(); member != item->MemberEnd(); ++member) {
-			// check the name of the current item member
-			if(member->name.IsString()) {
-				std::string memberName(
-						member->name.GetString(), member->name.GetStringLength()
-				);
-
-				if(memberName == "cat") {
-					// found the category of the configuration item
-					if(member->value.IsString()) {
-						this->currentItem.category =
-								member->value.GetString(), member->value.GetStringLength();
+					}
+					else if(memberName == "value") {
+						// found the value of the configuration item
+						this->currentItem.value = &(member->value);
+						empty = false;
 					}
 					else {
-						if(this->logPtr)
-							this->logPtr->emplace("Invalid category name ignored.");
-						return;
+						// found an unknown member of the configuration member
+						if(memberName.empty()) {
+							warningsTo.emplace("Unnamed configuration entry member ignored.");
+						}
+						else
+							warningsTo.emplace(
+									"Unknown configuration entry member \'" + memberName + "\' ignored."
+							);
+						continue;
 					}
 				}
-				else if(memberName == "name") {
-					// found the name of the configuration item
-					if(member->value.IsString()) {
-						this->currentItem.name =
-								member->value.GetString(), member->value.GetStringLength();
-					}
-					else if(this->logPtr)
-						this->logPtr->emplace("Invalid option name ignored.");
-				}
-				else if(memberName == "value") {
-					// found the value of the configuration item
-					this->currentItem.value = &(member->value);
-					empty = false;
-				}
-				else {
-					// found an unknown member of the configuration member
-					if(memberName.empty()) {
-						this->logPtr->emplace("Unnamed configuration item member ignored.");
-					}
-					else if(this->logPtr)
-						this->logPtr->emplace(
-								"Unknown configuration item member \'" + memberName + "\' ignored."
-						);
-				}
+				else
+					// member has an invalid name (no string)
+					warningsTo.emplace("Configuration entry member with invalid name ignored.");
 			}
-			else {
-				// member has an invalid name (no string)
-				if(this->logPtr)
+
+			// check whether configuration entry should be ignored
+			if(ignore)
+				continue;
+
+			// check configuration item
+			if(this->currentItem.category.empty()) {
+				this->logPtr->emplace("Configuration item without category ignored");
+				return;
+			}
+			if(this->currentItem.name.empty()) {
+				this->logPtr->emplace("Configuration item without name ignored.");
+				return;
+			}
+			if(empty) {
+				this->logPtr->emplace("Configuration entry without value ignored.");
+				return;
+			}
+
+			// parse option by child class
+			this->parseOption();
+
+			// check whether category and item were found
+			if(!this->finished) {
+				if(this->foundCategory)
 					this->logPtr->emplace(
-							"Configuration item member with invalid name ignored."
+							"Unknown configuration entry"
+							" \'" + this->currentItem.str() + "\' ignored."
+					);
+				else
+					this->logPtr->emplace(
+							"Configuration entry with unknown category"
+							" \'" + this->currentItem.category + "\' ignored."
 					);
 			}
-		}
 
-		// check configuration item
-		if(this->currentItem.category.empty()) {
-			if(this->logPtr)
-				this->logPtr->emplace("Configuration item without category ignored");
-			return;
+			// update parsing status
+			this->currentItem = ConfigItem();
+			this->foundCategory = false;
+			this->finished = false;
 		}
-		if(this->currentItem.name.empty()) {
-			if(this->logPtr)
-				this->logPtr->emplace("Configuration item without name ignored.");
-			return;
-		}
-		if(empty) {
-			if(this->logPtr)
-				this->logPtr->emplace("Configuration entry without value ignored.");
-			return;
-		}
-
-		// configuration item is valid
-		this->started = true;
 	}
 
 	// set category of configuration items to parse
 	inline void Config::category(const std::string& category) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::category(): No parsing started");
 		if(this->finished)
 			return;
+
+		// update parsing state
+		this->setCategory = true;
 
 		// compare category with current configuration item
 		this->foundCategory = this->currentItem.category == category;
@@ -255,8 +264,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (bool)
 	inline void Config::option(const std::string& name, bool& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -282,8 +291,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of bools)
 	inline void Config::option(const std::string& name, std::vector<bool>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -325,8 +334,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (char)
 	inline void Config::option(const std::string& name, char& target, CharParsingOption opt) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -382,8 +391,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of chars)
 	inline void Config::option(const std::string& name, std::vector<char>& target, CharParsingOption opt) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -462,8 +471,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (short)
 	inline void Config::option(const std::string& name, short& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -498,8 +507,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of shorts)
 	inline void Config::option(const std::string& name, std::vector<short>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -550,8 +559,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (int)
 	inline void Config::option(const std::string& name, int& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -577,8 +586,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of ints)
 	inline void Config::option(const std::string& name, std::vector<int>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -620,8 +629,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (long)
 	inline void Config::option(const std::string& name, long& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -647,8 +656,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of longs)
 	inline void Config::option(const std::string& name, std::vector<long>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -690,8 +699,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (unsigned char)
 	inline void Config::option(const std::string& name, unsigned char& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -726,8 +735,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of unsigned chars)
 	inline void Config::option(const std::string& name, std::vector<unsigned char>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -778,8 +787,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (unsigned short)
 	inline void Config::option(const std::string& name, unsigned short& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -814,8 +823,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of unsigned shorts)
 	inline void Config::option(const std::string& name, std::vector<unsigned short>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -866,8 +875,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (unsigned int)
 	inline void Config::option(const std::string& name, unsigned int& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -893,8 +902,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of unsigned ints)
 	inline void Config::option(const std::string& name, std::vector<unsigned int>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -936,8 +945,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (unsigned long)
 	inline void Config::option(const std::string& name, unsigned long& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -963,8 +972,8 @@ namespace crawlservpp::Module {
 	// check for a configuration option (array of unsigned longs)
 	inline void Config::option(const std::string& name, std::vector<unsigned long>& target) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -1004,72 +1013,44 @@ namespace crawlservpp::Module {
 	}
 
 	// check for a configuration option (string)
-	inline void Config::option(const std::string& name, std::string& target) {
-		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
-		if(this->finished || !(this->foundCategory))
-			return;
-
-		// compare current configuration item with defined option
-		if(this->currentItem.name != name)
-			return;
-
-		// check value type
-		if(this->currentItem.value->IsString())
-			target = std::string(this->currentItem.value->GetString(), this->currentItem.value->GetStringLength());
-		else if(this->currentItem.value->IsNull())
-			target.clear();
-		else if(this->logPtr)
-			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not string)."
-			);
-
-		// current item is parsed
-		this->finished = true;
-	}
-
-	// check for a configuration option (string with option)
 	inline void Config::option(const std::string& name, std::string &target, StringParsingOption opt) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
 		// compare current configuration item with defined option
 		if(this->currentItem.name != name)
 			return;
-
-		// check whether a SQL string is required
-		if(!opt) {
-			this->option(name, target);
-			return;
-		}
 
 		// check value type
 		if(this->currentItem.value->IsString()) {
-			std::string s(
+			std::string str(
 					this->currentItem.value->GetString(), this->currentItem.value->GetStringLength()
 			);
 
 			switch(opt) {
+			case Default:
+				// get simple string
+				target.swap(str);
+				break;
+
 			case SQL:
 				// check for SQL compatibility
-				if(Helper::Strings::checkSQLName(s))
-					target.swap(s);
+				if(Helper::Strings::checkSQLName(str))
+					target.swap(str);
 				else if(this->logPtr)
 					this->logPtr->emplace(
-							"\'" + s + "\' in \'" + this->currentItem.str() + "\'"
+							"\'" + str + "\' in \'" + this->currentItem.str() + "\'"
 							" ignored because it contains invalid characters."
 					);
 				break;
 
 			case SubURL:
 				// convert to sub-URL
-				Config::makeSubUrl(s);
-				target.swap(s);
+				Config::makeSubUrl(str);
+				target.swap(str);
 				break;
 
 			default:
@@ -1089,65 +1070,16 @@ namespace crawlservpp::Module {
 	}
 
 	// check for a configuration option (array of strings)
-	inline void Config::option(const std::string& name, std::vector<std::string>& target) {
+	inline void Config::option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt) {
 		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
+		if(!(this->setCategory))
+			throw Config::Exception("Module::Config::option(): No category has been set");
 		if(this->finished || !(this->foundCategory))
 			return;
 
 		// compare current configuration item with defined option
 		if(this->currentItem.name != name)
 			return;
-
-		// check value type
-		if(this->currentItem.value->IsArray()) {
-			// clear target and reserve memory
-			target.clear();
-			target.reserve(this->currentItem.value->Size());
-
-			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
-				if(i->IsString())
-					target.emplace_back(i->GetString(), i->GetStringLength());
-				else {
-					target.emplace_back();
-
-					if(!(i->IsNull()) && this->logPtr)
-						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not string)."
-						);
-				}
-			}
-		}
-		else if(this->logPtr)
-			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
-			);
-
-		// current item is parsed
-		this->finished = true;
-	}
-
-	// check for a configuration option (array of SQL strings)
-	inline void Config::option(const std::string& name, std::vector<std::string>& target, StringParsingOption sql) {
-		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::option(): No parsing started");
-		if(this->finished || !(this->foundCategory))
-			return;
-
-		// compare current configuration item with defined option
-		if(this->currentItem.name != name)
-			return;
-
-		// check whether a SQL string is required
-		if(!sql) {
-			this->option(name, target);
-			return;
-		}
 
 		// check value type
 		if(this->currentItem.value->IsArray()) {
@@ -1158,16 +1090,34 @@ namespace crawlservpp::Module {
 			// check and copy array items
 			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
 				if(i->IsString()) {
-					std::string sqlString(i->GetString(), i->GetStringLength());
+					std::string str(i->GetString(), i->GetStringLength());
 
-					// check for SQL compatibility
-					if(Helper::Strings::checkSQLName(sqlString))
-						target.push_back(sqlString);
-					else if(this->logPtr)
-						this->logPtr->emplace(
-								"\'" + sqlString + "\' in \'" + this->currentItem.str() + "\'"
-								" ignored because it contains invalid characters."
-						);
+					switch(opt) {
+					case Default:
+						// get simple string
+						target.emplace_back(str);
+						break;
+
+					case SQL:
+						// check for SQL compatibility
+						if(Helper::Strings::checkSQLName(str))
+							target.emplace_back(str);
+						else if(this->logPtr)
+							this->logPtr->emplace(
+									"\'" + str + "\' in \'" + this->currentItem.str() + "\'"
+									" ignored because it contains invalid characters."
+							);
+						break;
+
+					case SubURL:
+						// convert to sub-URL
+						Config::makeSubUrl(str);
+						target.emplace_back(str);
+						break;
+
+					default:
+						throw Config::Exception("Config::option(): Invalid string parsing option");
+					}
 				}
 				else {
 					target.emplace_back();
@@ -1190,31 +1140,10 @@ namespace crawlservpp::Module {
 		this->finished = true;
 	}
 
-	// end parsing of current configuration item
-	inline void Config::end() {
-		// check parsing state
-		if(!(this->started))
-			throw Config::Exception("Module::Config::end(): No parsing started");
-
-		// check whether category and item were found
-		if(!(this->finished) && (this->logPtr)) {
-			if(this->foundCategory)
-				this->logPtr->emplace(
-						"Unknown configuration entry"
-						" \'" + this->currentItem.str() + "\' ignored."
-				);
-			else
-				this->logPtr->emplace(
-						"Configuration entry with unknown category"
-						" \'" + this->currentItem.category + "\' ignored."
-				);
-		}
-
-		// update parsing status
-		this->started = false;
-		this->currentItem = ConfigItem();
-		this->foundCategory = false;
-		this->finished = false;
+	// log warning
+	inline void Config::warning(const std::string& warning) {
+		if(this->logPtr)
+			this->logPtr->emplace(warning);
 	}
 
 	// check for sub-URL (starting with /) or curl-supported URL protocol

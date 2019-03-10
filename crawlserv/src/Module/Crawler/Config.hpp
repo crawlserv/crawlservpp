@@ -91,8 +91,9 @@ namespace crawlservpp::Module::Crawler {
 		Network::Config network;
 
 	protected:
-		// load crawling-specific configuration from parsed JSON document
-		void loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) override;
+		// crawling-specific configuration parsing
+		void parseOption() override;
+		void checkOptions() override;
 
 	private:
 
@@ -137,67 +138,60 @@ namespace crawlservpp::Module::Crawler {
 	// destructor stub
 	inline Config::~Config() {}
 
-	// load crawling-specific configuration from parsed JSON document
-	inline void Config::loadModule(const rapidjson::Document& jsonDocument, std::queue<std::string>& warningsTo) {
-		// set logging queue
-		this->setLog(warningsTo);
+	// parse crawling-specific configuration option
+	inline void Config::parseOption() {
+		this->category("crawler");
+		this->option("archives", this->crawlerArchives);
+		this->option("archives.names", this->crawlerArchivesNames);
+		this->option("archives.urls.memento", this->crawlerArchivesUrlsMemento);
+		this->option("archives.urls.timemap", this->crawlerArchivesUrlsTimemap);
+		this->option("html.canonical.check", this->crawlerHTMLCanonicalCheck);
+		this->option("html.consistency.check", this->crawlerHTMLConsistencyCheck);
+		this->option("lock", this->crawlerLock);
+		this->option("logging", this->crawlerLogging);
+		this->option("params.blacklist", this->crawlerParamsBlackList);
+		this->option("params.whitelist", this->crawlerParamsWhiteList);
+		this->option("queries.blacklist.content", this->crawlerQueriesBlackListContent);
+		this->option("queries.blacklist.types", this->crawlerQueriesBlackListTypes);
+		this->option("queries.blacklist.urls", this->crawlerQueriesBlackListUrls);
+		this->option("queries.links", this->crawlerQueriesLinks);
+		this->option("queries.whitelist.content", this->crawlerQueriesWhiteListContent);
+		this->option("queries.whitelist.types", this->crawlerQueriesWhiteListTypes);
+		this->option("queries.whitelist.urls", this->crawlerQueriesWhiteListUrls);
+		this->option("recrawl", this->crawlerReCrawl);
+		this->option("recrawl.always", this->crawlerReCrawlAlways);
+		this->option("recrawl.start", this->crawlerReCrawlStart);
+		this->option("retries", this->crawlerReTries);
+		this->option("retry.archive", this->crawlerRetryArchive);
+		this->option("retry.http", this->crawlerRetryHttp);
+		this->option("sleep.error", this->crawlerSleepError);
+		this->option("sleep.http", this->crawlerSleepHttp);
+		this->option("sleep.idle", this->crawlerSleepIdle);
+		this->option("sleep.mysql", this->crawlerSleepMySql);
+		this->option("start", this->crawlerStart, StringParsingOption::SubURL);
+		this->option("timing", this->crawlerTiming);
+		this->option("url.case.sensitive", this->crawlerUrlCaseSensitive);
+		this->option("url.chunks", this->crawlerUrlChunks);
+		this->option("url.debug", this->crawlerUrlDebug);
+		this->option("url.startup.check", this->crawlerUrlStartupCheck);
+		this->option("xml", this->crawlerXml);
+		this->option("warnings.file", this->crawlerWarningsFile);
 
-		// parse. configuration entries
-		for(auto entry = jsonDocument.Begin(); entry != jsonDocument.End(); entry++) {
-			this->begin(entry);
+		this->category("custom");
+		this->option("counters", this->customCounters);
+		this->option("counters.end", this->customCountersEnd);
+		this->option("counters.global", this->customCountersGlobal);
+		this->option("counters.start", this->customCountersStart);
+		this->option("counters.step", this->customCountersStep);
+		this->option("recrawl", this->customReCrawl);
+		this->option("urls", this->customUrls, StringParsingOption::SubURL);
 
-			this->category("crawler");
-			this->option("archives", this->crawlerArchives);
-			this->option("archives.names", this->crawlerArchivesNames);
-			this->option("archives.urls.memento", this->crawlerArchivesUrlsMemento);
-			this->option("archives.urls.timemap", this->crawlerArchivesUrlsTimemap);
-			this->option("html.canonical.check", this->crawlerHTMLCanonicalCheck);
-			this->option("html.consistency.check", this->crawlerHTMLConsistencyCheck);
-			this->option("lock", this->crawlerLock);
-			this->option("logging", this->crawlerLogging);
-			this->option("params.blacklist", this->crawlerParamsBlackList);
-			this->option("params.whitelist", this->crawlerParamsWhiteList);
-			this->option("queries.blacklist.content", this->crawlerQueriesBlackListContent);
-			this->option("queries.blacklist.types", this->crawlerQueriesBlackListTypes);
-			this->option("queries.blacklist.urls", this->crawlerQueriesBlackListUrls);
-			this->option("queries.links", this->crawlerQueriesLinks);
-			this->option("queries.whitelist.content", this->crawlerQueriesWhiteListContent);
-			this->option("queries.whitelist.types", this->crawlerQueriesWhiteListTypes);
-			this->option("queries.whitelist.urls", this->crawlerQueriesWhiteListUrls);
-			this->option("recrawl", this->crawlerReCrawl);
-			this->option("recrawl.always", this->crawlerReCrawlAlways);
-			this->option("recrawl.start", this->crawlerReCrawlStart);
-			this->option("retries", this->crawlerReTries);
-			this->option("retry.archive", this->crawlerRetryArchive);
-			this->option("retry.http", this->crawlerRetryHttp);
-			this->option("sleep.error", this->crawlerSleepError);
-			this->option("sleep.http", this->crawlerSleepHttp);
-			this->option("sleep.idle", this->crawlerSleepIdle);
-			this->option("sleep.mysql", this->crawlerSleepMySql);
-			this->option("start", this->crawlerStart, StringParsingOption::SubURL);
-			this->option("timing", this->crawlerTiming);
-			this->option("url.case.sensitive", this->crawlerUrlCaseSensitive);
-			this->option("url.chunks", this->crawlerUrlChunks);
-			this->option("url.debug", this->crawlerUrlDebug);
-			this->option("url.startup.check", this->crawlerUrlStartupCheck);
-			this->option("xml", this->crawlerXml);
-			this->option("warnings.file", this->crawlerWarningsFile);
+		this->category("network");
+		this->network.parseOption(*this);
+	}
 
-			this->category("custom");
-			this->option("counters", this->customCounters);
-			this->option("counters.end", this->customCountersEnd);
-			this->option("counters.global", this->customCountersGlobal);
-			this->option("counters.start", this->customCountersStart);
-			this->option("counters.step", this->customCountersStep);
-			this->option("recrawl", this->customReCrawl);
-			this->option("urls", this->customUrls, StringParsingOption::SubURL);
-
-			this->category("network");
-			this->network.parse(*this);
-
-			this->end();
-		}
-
+	// check parsing-specific configuration
+	inline void Config::checkOptions() {
 		// check properties of archives
 		unsigned long completeArchives = std::min({ // number of complete archives (= minimum size of all arrays)
 				this->crawlerArchivesNames.size(),
@@ -222,9 +216,11 @@ namespace crawlservpp::Module::Crawler {
 		}
 		if(incompleteArchives) {
 			// warn about incomplete counters
-			warningsTo.emplace("\'archives.names\', \'.urls.memento\' and \'.urls.timemap\'"
-					" should have the same number of elements.");
-			warningsTo.emplace("Incomplete archive(s) removed.");
+			this->warning(
+					"\'archives.names\', \'.urls.memento\' and \'.urls.timemap\'"
+					" should have the same number of elements."
+			);
+			this->warning("Incomplete archive(s) removed.");
 		}
 
 		// check properties of counters
@@ -257,9 +253,11 @@ namespace crawlservpp::Module::Crawler {
 		}
 		if(incompleteCounters) {
 			// warn about incomplete counters
-			warningsTo.emplace("\'custom.counters\', \'.start\', \'.end\' and \'.step\'"
-					" should have the same number of elements.");
-			warningsTo.emplace("Incomplete counter(s) removed.");
+			this->warning(
+					"\'custom.counters\', \'.start\', \'.end\' and \'.step\'"
+					" should have the same number of elements."
+			);
+			this->warning("Incomplete counter(s) removed.");
 		}
 
 		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
@@ -273,7 +271,7 @@ namespace crawlservpp::Module::Crawler {
 				this->customCountersStep.erase(this->customCountersStep.begin() + i);
 				std::ostringstream warningStrStr;
 				warningStrStr << "Counter loop of counter #" << (n + 1) << " would be infinitive, counter removed.";
-				warningsTo.emplace(warningStrStr.str());
+				this->warning(warningStrStr.str());
 				n--;
 			}
 		}
