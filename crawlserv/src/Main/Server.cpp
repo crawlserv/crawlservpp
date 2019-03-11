@@ -1988,7 +1988,7 @@ namespace crawlservpp::Main {
 			return Server::ServerCommandResponse(true, "Invalid arguments (\'module\' is missing).");
 		if(!json["module"].IsString())
 			return Server::ServerCommandResponse(true, "Invalid arguments (\'module\' is not a string).");
-		std::string module(json["module"].GetString(), json["module"].GetStringLength());
+		properties.module = std::string(json["module"].GetString(), json["module"].GetStringLength());
 
 		if(!json.HasMember("name"))
 			return Server::ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
