@@ -16,7 +16,7 @@
 namespace crawlservpp::Main {
 
 	// initialize static variables
-	sql::Driver * Database::driver = NULL;
+	sql::Driver * Database::driver = nullptr;
 	#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
 	std::atomic<unsigned long long> Database::requestCounter(0);
 	#endif
@@ -801,7 +801,7 @@ namespace crawlservpp::Main {
 		unsigned long n = 1;
 		std::string result;
 
-		if(!numberString.empty()) n = std::stoul(numberString, NULL);
+		if(!numberString.empty()) n = std::stoul(numberString, nullptr);
 
 		// check whether number needs to be incremented
 		while(true) {
@@ -2522,6 +2522,138 @@ namespace crawlservpp::Main {
 	}
 
 	/*
+	 * GENERAL TABLE FUNCTIONS
+	 */
+
+	// check whether a name-specified table in the database is empty
+	bool Database::isTableEmpty(const std::string& tableName) {
+		bool result = false;
+
+		// check argument
+		if(tableName.empty())
+			throw Database::Exception("Main::Database::isTableEmpty(): No table name specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
+					"SELECT NOT EXISTS (SELECT * FROM `" + tableName + "` LIMIT 1) AS result"
+			));
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getBoolean("result");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isTableEmpty", e); }
+
+		return result;
+	}
+
+	// check whether a specific table exists in the database
+	bool Database::isTableExists(const std::string& tableName) {
+		bool result = false;
+
+		// check argument
+		if(tableName.empty())
+			throw Database::Exception("Main::Database::isTableExists(): No table name specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create and execute SQL statement
+			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+					"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.TABLES"
+					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1"
+			));
+
+			// get result
+			sqlStatement->setString(1, this->settings.name);
+			sqlStatement->setString(2, tableName);
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getBoolean("result");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isTableExists", e); }
+
+		return result;
+	}
+
+	// check whether a specific column of a specific table exists in the database
+	bool Database::isColumnExists(const std::string& tableName, const std::string& columnName) {
+		bool result = false;
+
+		// check arguments
+		if(tableName.empty())
+			throw Database::Exception("Main::Database::isColumnExists(): No table name specified");
+		if(columnName.empty())
+			throw Database::Exception("Main::Database::isColumnExists(): No column name specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+					"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS"
+					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"
+			));
+
+			// execute SQL statement
+			sqlStatement->setString(1, this->settings.name);
+			sqlStatement->setString(2, tableName);
+			sqlStatement->setString(3, columnName);
+
+			// get result
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getBoolean("result");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isColumnExists", e); }
+
+		return result;
+	}
+
+	// get the type of a specific column of a specific table in the database
+	std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
+		std::string result;
+
+		// check arguments
+		if(tableName.empty())
+			throw Database::Exception("Main::Database::getColumnType(): No table name specified");
+		if(columnName.empty())
+			throw Database::Exception("Main::Database::getColumnType(): No column name specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+					"SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS"
+					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"));
+
+			// execute SQL statement
+			sqlStatement->setString(1, this->settings.name);
+			sqlStatement->setString(2, tableName);
+			sqlStatement->setString(3, columnName);
+
+			// get result
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getString("DATA_TYPE");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getColumnType", e); }
+
+		return result;
+	}
+
+	/*
 	 * CUSTOM DATA FUNCTIONS FOR ALGORITHMS
 	 */
 
@@ -3752,134 +3884,6 @@ namespace crawlservpp::Main {
 
 		// set table locking status
 		this->tablesLocked = false;
-	}
-
-	// check whether a name-specified table in the database is empty
-	bool Database::isTableEmpty(const std::string& tableName) {
-		bool result = false;
-
-		// check argument
-		if(tableName.empty())
-			throw Database::Exception("Main::Database::isTableEmpty(): No table name specified");
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-			// execute SQL statement
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
-					"SELECT NOT EXISTS (SELECT * FROM `" + tableName + "` LIMIT 1) AS result"
-			));
-
-			// get result
-			if(sqlResultSet && sqlResultSet->next())
-				result = sqlResultSet->getBoolean("result");
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isTableEmpty", e); }
-
-		return result;
-	}
-
-	// check whether a specific table exists in the database
-	bool Database::isTableExists(const std::string& tableName) {
-		bool result = false;
-
-		// check argument
-		if(tableName.empty())
-			throw Database::Exception("Main::Database::isTableExists(): No table name specified");
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create and execute SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.TABLES"
-					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1"
-			));
-
-			// get result
-			sqlStatement->setString(1, this->settings.name);
-			sqlStatement->setString(2, tableName);
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
-			if(sqlResultSet && sqlResultSet->next())
-				result = sqlResultSet->getBoolean("result");
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isTableExists", e); }
-
-		return result;
-	}
-
-	// check whether a specific column of a specific table exists in the database
-	bool Database::isColumnExists(const std::string& tableName, const std::string& columnName) {
-		bool result = false;
-
-		// check arguments
-		if(tableName.empty())
-			throw Database::Exception("Main::Database::isColumnExists(): No table name specified");
-		if(columnName.empty())
-			throw Database::Exception("Main::Database::isColumnExists(): No column name specified");
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS"
-					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"
-			));
-
-			// execute SQL statement
-			sqlStatement->setString(1, this->settings.name);
-			sqlStatement->setString(2, tableName);
-			sqlStatement->setString(3, columnName);
-
-			// get result
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
-			if(sqlResultSet && sqlResultSet->next())
-				result = sqlResultSet->getBoolean("result");
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isColumnExists", e); }
-
-		return result;
-	}
-
-	// get the type of a specific column of a specific table in the database
-	std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
-		std::string result;
-
-		// check arguments
-		if(tableName.empty())
-			throw Database::Exception("Main::Database::getColumnType(): No table name specified");
-		if(columnName.empty())
-			throw Database::Exception("Main::Database::getColumnType(): No column name specified");
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS"
-					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"));
-
-			// execute SQL statement
-			sqlStatement->setString(1, this->settings.name);
-			sqlStatement->setString(2, tableName);
-			sqlStatement->setString(3, columnName);
-
-			// get result
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
-			if(sqlResultSet && sqlResultSet->next())
-				result = sqlResultSet->getString("DATA_TYPE");
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getColumnType", e); }
-
-		return result;
 	}
 
 	// add a table to the database (the primary key 'id' will be created automatically)

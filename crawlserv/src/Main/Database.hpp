@@ -192,6 +192,12 @@ namespace crawlservpp::Main {
 		bool isConfiguration(unsigned long configId);
 		bool isConfiguration(unsigned long websiteId, unsigned long configId);
 
+		// general table functions
+		bool isTableEmpty(const std::string& tableName);
+		bool isTableExists(const std::string& tableName);
+		bool isColumnExists(const std::string& tableName, const std::string& columnName);
+		std::string getColumnType(const std::string& tableName, const std::string& columnName);
+
 		// custom data functions for algorithms
 		void getCustomData(Data::GetValue& data);
 		void getCustomData(Data::GetFields& data);
@@ -205,8 +211,6 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateValue& data);
 		void updateCustomData(const Data::UpdateFields& data);
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
-
-		// static inline function
 
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
 		static unsigned long long getRequestCounter() { return Database::requestCounter; }
@@ -251,10 +255,6 @@ namespace crawlservpp::Main {
 		void lockTable(const TableLockProperties& lockProperties);
 		void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2);
 		void unlockTables();
-		bool isTableEmpty(const std::string& tableName);
-		bool isTableExists(const std::string& tableName);
-		bool isColumnExists(const std::string& tableName, const std::string& columnName);
-		std::string getColumnType(const std::string& tableName, const std::string& columnName);
 		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
