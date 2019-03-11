@@ -20,12 +20,12 @@ namespace crawlservpp::Wrapper {
 
 	class PCRE {
 	public:
-		// constructor: set pointer to NULL
-		PCRE() noexcept : ptr(NULL) {}
+		// constructor: set pointer to nullptr
+		PCRE() noexcept : ptr(nullptr) {}
 
 		// move constructor
 		PCRE(PCRE&& other) noexcept : ptr(other.ptr) {
-			other.ptr = NULL;
+			other.ptr = nullptr;
 		}
 
 		// destructor: free Perl-Compatible Regular Expression if necessary
@@ -47,7 +47,7 @@ namespace crawlservpp::Wrapper {
 		void reset() {
 			if(this->ptr) {
 				pcre2_code_free(this->ptr);
-				this->ptr = NULL;
+				this->ptr = nullptr;
 			}
 		}
 
@@ -59,19 +59,19 @@ namespace crawlservpp::Wrapper {
 
 		// bool operator
 		operator bool() const noexcept {
-			return this->ptr != NULL;
+			return this->ptr != nullptr;
 		}
 
 		// not operator
 		bool operator!() const noexcept {
-			return this->ptr == NULL;
+			return this->ptr == nullptr;
 		}
 
 		// move operator
 		PCRE& operator=(PCRE&& other) noexcept {
 			if(&other != this) {
 				this->ptr = other.ptr;
-				other.ptr = NULL;
+				other.ptr = nullptr;
 			}
 			return *this;
 		}

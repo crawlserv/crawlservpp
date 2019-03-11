@@ -28,7 +28,7 @@ namespace crawlservpp::Query {
 		// compile expression(s)
 		if(single) {
 			this->expressionSingle.reset(pcre2_compile((PCRE2_SPTR) expression.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
-					&errorNumber, &errorOffset, NULL));
+					&errorNumber, &errorOffset, nullptr));
 			if(!(this->expressionSingle)) {
 				// RegEx error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
@@ -41,7 +41,7 @@ namespace crawlservpp::Query {
 
 		if(multi) {
 			this->expressionMulti.reset(pcre2_compile((PCRE2_SPTR) expression.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP
-					| PCRE2_MULTILINE, &errorNumber, &errorOffset, NULL));
+					| PCRE2_MULTILINE, &errorNumber, &errorOffset, nullptr));
 			if(!(this->expressionMulti)) {
 				// RegEx error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
@@ -64,8 +64,8 @@ namespace crawlservpp::Query {
 		if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled.");
 
 		// get first match
-		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
-		int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
+		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), nullptr));
+		int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), nullptr);
 
 		// check result
 		if(result <= 0) {
@@ -97,8 +97,8 @@ namespace crawlservpp::Query {
 		if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled");
 
 		// get first match
-		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), NULL));
-		int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
+		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), nullptr));
+		int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), nullptr);
 
 		// check result
 		if(result <= 0) {
@@ -134,8 +134,8 @@ namespace crawlservpp::Query {
 		if(!(this->expressionMulti)) throw RegEx::Exception("No multi result expression compiled");
 
 		// get first match
-		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionMulti.get(), NULL));
-		int result = pcre2_match(this->expressionMulti.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), NULL);
+		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionMulti.get(), nullptr));
+		int result = pcre2_match(this->expressionMulti.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), nullptr);
 
 		// check result
 		if(result <= 0) {
@@ -184,7 +184,7 @@ namespace crawlservpp::Query {
 
 			// get next match
 			result = pcre2_match(this->expressionMulti.get(), (PCRE2_SPTR) text.c_str(), text.length(), pcreOffset, pcreOptions,
-					pcreMatch.get(), NULL);
+					pcreMatch.get(), nullptr);
 
 			// check result
 			if(result == PCRE2_ERROR_NOMATCH) {

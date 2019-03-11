@@ -14,7 +14,7 @@
 namespace crawlservpp::Network {
 
 	// constructor
-	Curl::Curl() : curlCode(CURLE_OK), responseCode(0), limitedSettings(false), config(NULL) {
+	Curl::Curl() : curlCode(CURLE_OK), responseCode(0), limitedSettings(false), config(nullptr) {
 		// check pointer to cURL instance
 		if(!(this->curl)) throw Curl::Exception("Could not initialize cURL");
 
@@ -335,7 +335,7 @@ namespace crawlservpp::Network {
 		}
 
 		// get content type
-		char * cString = NULL;
+		char * cString = nullptr;
 		this->curlCode = curl_easy_getinfo(this->curl.get(), CURLINFO_CONTENT_TYPE, &cString);
 		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
@@ -391,7 +391,7 @@ namespace crawlservpp::Network {
 		if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 		// set configuration
-		if(this->config) this->setConfigGlobal(*(this->config), this->limitedSettings, NULL);
+		if(this->config) this->setConfigGlobal(*(this->config), this->limitedSettings, nullptr);
 	}
 
 	// get last cURL code
@@ -423,7 +423,7 @@ namespace crawlservpp::Network {
 	std::string Curl::unescape(const std::string& escapedString, bool usePlusForSpace) {
 		if(!(this->curl.get()) || escapedString.empty()) return "";
 		std::string result(Curl::curlStringToString(
-				curl_easy_unescape(this->curl.get(), escapedString.c_str(), escapedString.length(), NULL)));
+				curl_easy_unescape(this->curl.get(), escapedString.c_str(), escapedString.length(), nullptr)));
 
 		if(usePlusForSpace) {
 			unsigned long pos = 0;

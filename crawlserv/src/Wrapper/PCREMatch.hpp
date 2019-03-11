@@ -20,12 +20,12 @@ namespace crawlservpp::Wrapper {
 
 	class PCREMatch {
 	public:
-		// constructor: set pointer to NULL
+		// constructor: set pointer to nullptr
 		PCREMatch(pcre2_match_data * setPtr) noexcept : ptr(setPtr) {}
 
 		// move constructor
 		PCREMatch(PCREMatch&& other) noexcept : ptr(other.ptr) {
-			other.ptr = NULL;
+			other.ptr = nullptr;
 		}
 
 		// destructor: free Perl-Compatible Regular Expression match if necessary
@@ -45,19 +45,19 @@ namespace crawlservpp::Wrapper {
 
 		// bool operator
 		operator bool() const noexcept {
-			return this->ptr != NULL;
+			return this->ptr != nullptr;
 		}
 
 		// not operator
 		bool operator!() const noexcept {
-			return this->ptr == NULL;
+			return this->ptr == nullptr;
 		}
 
 		// move operator
 		PCREMatch& operator=(PCREMatch&& other) noexcept {
 			if(&other != this) {
 				this->ptr = other.ptr;
-				other.ptr = NULL;
+				other.ptr = nullptr;
 			}
 			return *this;
 		}
