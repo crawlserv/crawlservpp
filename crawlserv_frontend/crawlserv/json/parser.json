@@ -1,15 +1,12 @@
 {
 	"general": {
-		"id": 1,
 		"label": "General",
 		"open": true,
 		
 		"cache.size": {
-			"id": 1,
 			"type": "number",
 			"default": 2500,
 			"min": 0,
-			"step": 500,
 			"label": "Cache size:",
 			"description": "Number of URLs fetched and parsed before saving results (0=infinite).",
 			"simple": true,
@@ -17,16 +14,13 @@
 		},
 		
 		"lock": {
-			"id": 2,
 			"type": "number",
 			"default": 300,
 			"min": 1,
-			"step": 10,
 			"description": "URL locking time (in s).",
 			"simple": false
 		},
 		"logging": {
-			"id": 3,
 			"type": "enum",
 			"default": 1,
 			"enum-values": [
@@ -41,14 +35,12 @@
 			"position": 6
 		},
 		"newest.only": {
-			"id": 4,
 			"type": "bool",
 			"default": true,
 			"description": "Parse only the newest content for each URL.",
 			"simple": false
 		},
 		"parse.custom": {
-			"id": 5,
 			"type": "bool",
 			"default": false,
 			"label": "Parse custom URLs",
@@ -57,7 +49,6 @@
 			"position": 4
 		},
 		"reparse": {
-			"id": 6,
 			"type": "bool",
 			"default": false,
 			"label": "Re-parse content",
@@ -66,7 +57,6 @@
 			"position": 2
 		},
 		"reset.on.finish": {
-			"id": 7,
 			"type": "bool",
 			"default": false,
 			"label": "Reset status when finished",
@@ -75,7 +65,6 @@
 			"position": 3
 		},
 		"result.table": {
-			"id": 8,
 			"type": "string",
 			"default": "",
 			"label": "Result table:",
@@ -84,7 +73,6 @@
 			"position": 1
 		},
 		"skip": {
-			"id": 9,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -100,16 +88,13 @@
 			"position": 5
 		},
 		"sleep.idle": {
-			"id": 10,
 			"type": "number",
 			"default": 500,
 			"min": 100,
-			"step": 100,
 			"description": "Time (in ms) to wait before checking for new URLs when all URLs have been parsed.",
 			"simple": false
 		},
 		"sleep.mysql": {
-			"id": 11,
 			"type": "number",
 			"default": 10,
 			"min": 1,
@@ -117,7 +102,6 @@
 			"simple": false
 		},
 		"timeout.target.lock": {
-			"id": 12,
 			"type": "number",
 			"default": 30,
 			"min": 1,
@@ -125,7 +109,6 @@
 			"simple": false
 		},
 		"timing": {
-			"id": 13,
 			"type": "bool",
 			"default": false,
 			"description": "Calculate timing statistics.",
@@ -133,12 +116,10 @@
 		}
 	},
 	"parser": {
-		"id": 2,
 		"label": "Parsing",
 		"open": true,
 		
 		"datetime.formats": {
-			"id": 1,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -148,7 +129,6 @@
 			"position": 5
 		},
 		"datetime.locales": {
-			"id": 2,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -158,7 +138,6 @@
 			"position": 6
 		},
 		"datetime.queries": {
-			"id": 3,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -171,7 +150,6 @@
 			"position": 4
 		},
 		"datetime.sources": {
-			"id": 4,
 			"type": "array",
 			"item-type": "enum",
 			"enum-values": [
@@ -185,7 +163,6 @@
 			"position": 3
 		},
 		"field.delimiters": {
-			"id": 5,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -193,7 +170,6 @@
 			"simple": false
 		},
 		"field.ignore.empty": {
-			"id": 6,
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
@@ -201,7 +177,6 @@
 			"simple": false
 		},
 		"field.json": {
-			"id": 7,
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
@@ -211,7 +186,6 @@
 			"position": 10
 		},
 		"field.names": {
-			"id": 8,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -221,7 +195,6 @@
 			"position": 7
 		},
 		"field.queries": {
-			"id": 9,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -235,7 +208,6 @@
 			"position": 9
 		},
 		"field.sources": {
-			"id": 10,
 			"type": "array",
 			"item-type": "enum",
 			"enum-values": [
@@ -249,7 +221,6 @@
 			"position": 8
 		},
 		"field.tidy.texts": {
-			"id": 12,
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
@@ -259,7 +230,6 @@
 			"position": 11
 		},
 		"field.warnings.empty": {
-			"id": 13,
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
@@ -267,7 +237,6 @@
 			"simple": false
 		},
 		"id.ignore": {
-			"id": 14,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -275,7 +244,6 @@
 			"simple": false
 		},
 		"id.queries": {
-			"id": 15,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -288,7 +256,6 @@
 			"position": 2
 		},
 		"id.sources": {
-			"id": 16,
 			"type": "array",
 			"item-type": "enum",
 			"default": [],

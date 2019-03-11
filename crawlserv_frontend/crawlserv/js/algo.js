@@ -9,25 +9,42 @@ class Algo {
 	 * GENERAL FUNCTIONS
 	 */
 	
-	// constructor: get current algorithm category, id and create list of algorithms
-	constructor(newCat, newAlgo, callback_when_finished) {		
+	// constructor: get current algorithm category, ID and create list of algorithms
+	constructor(newCat, newAlgo, callback_when_finished) {
+		console.log("Algo::constructor(): Loading algorithm...");
+		
 		// set filter to show no options
 		this.config_cats = [];
 		
 		// save start time
 		var startTime = +new Date();
 		
+		// get current algorithm ID (if specified)
+		var currentId = 0;
+		for(var key in db_config) {
+			if(db_config[key].name == "_algo") {
+				currentId = db_config[key].value;
+				break;
+			}
+		}
+		
 		// save class pointer
 		let thisClass = this;
 		
 		// parse data from JSON file for algorithms
+		console.log("> json/algos.json")
 		$.getJSON("json/algos.json", function(data) {
-			var id = 0, cat = 0;
+			var id = 0;
+			var cat = 0;
 			
-			if(newAlgo != null) {
-				// overwrite algorithm id: get new algorithm category
+			if(newAlgo !== null) {
+				// overwrite algorithm ID: get new algorithm category
+				thisClass.changed = currentId != newAlgo;
 				id = newAlgo;
-				var cat_count = 0, found = false;
+				
+				var cat_count = 0;
+				var found = false;
+				
 				for(var cat_key in data) {
 					if(data.hasOwnProperty(cat_key)) {
 						for(var algo_key in data[cat_key]) {
@@ -43,18 +60,13 @@ class Algo {
 				}
 				
 			}
-			else if(newCat != null) {
-				// overwrite category id
+			else if(newCat !== null) {
+				// overwrite category ID
 				cat = newCat;
 			}
 			else {			
-				// get current algorithm id (if specified)
-				for(var key in db_config) {
-					if(db_config[key].name == "_algo") {
-						id = db_config[key].value;
-						break;
-					}
-				}
+				// use current algorithm ID
+				id = currentId;
 				
 				if(id) {
 					// get current algorithm category
@@ -100,6 +112,10 @@ class Algo {
 			    			// select current algorithm
 			    			algoitems += " selected";
 			    		}
+			    		else if(algo_id == currentId) {
+			    			// found algorithm that was overwritten: save categories for deletion
+			    			thisClass.old_config_cats = algo_config_cats;
+			    		}
 			    		algoitems += ">" + algo_key + "</option>";
 			    	});
 			    	
@@ -116,13 +132,18 @@ class Algo {
 			$('#algo-cat-select').append(catitems);
 			$('#algo-select').append(algoitems);
 			
-			// save id of selected algorithm
-			this.id = id;
+			// save ID of algorithm (and replaced algorithm) in class
+			thisClass.oldId = currentId;
+			thisClass.id = id;
 			
 			// success!
 			var endTime = +new Date();
-			console.log("Algo::constructor(): Algorithm data loaded after " + msToStr(endTime - startTime) + ".");
-			callback_when_finished(id);
+			console.log(
+					"Algo::constructor(): Algorithm data loaded after "
+					+ msToStr(endTime - startTime) + "."
+			);
+			
+			callback_when_finished();
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) {
 			throw new Error("Algo::constructor(): Could not load algorithm data.\n" + textStatus + ": " + errorThrown);
@@ -132,15 +153,5 @@ class Algo {
 	/*
 	 * DATA FUNCTIONS
 	 */
-	
-	// get id of selected algorithm
-	getId() {
-		return this.id;
-	}
-	
-	// get categories of current algorithm
-	getConfigCats() {
-		return this.config_cats;
-	}
 	
 }

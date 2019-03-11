@@ -94,6 +94,9 @@ function refreshData() {
 
 // redirect
 function reload(args) {
+	console.log("Redirecting...");
+	console.log(args);
+	
 	//args["_redirectstarttime"] = +new Date();
 	args["redirected"] = true;
 	$.redirect("", args);
@@ -101,72 +104,116 @@ function reload(args) {
 
 // run command with arguments
 function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReloadArgTo) {
+	if(cmd === "")
+		return;
+	
 	cmdArgs["cmd"] = cmd;
+	
 	var timerStart = +new Date();
 	
-	$.ajax({ type: "POST", url: "http://localhost:8080", data: JSON.stringify(cmdArgs, null, 1),
-		contentType: "application/json; charset=utf-8", dataType: "json", success: function(data) {
-			var timerEnd = +new Date();
-			if(data["confirm"]) {
-				if(confirm("crawlserv asks (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"])) {
-					cmdArgs["confirmed"] = true;
-					timerStart = +new Date();
-					$.ajax({ type: "POST", url: "http://localhost:8080", data: JSON.stringify(cmdArgs, null, 1),
-						contentType: "application/json; charset=utf-8", dataType: "json", success: function(data) {
-							timerEnd = +new Date();
-							if(data["fail"]) {
-								var errorStr = "crawlserv responded with error (" + msToStr(timerEnd - timerStart) + ")";
-								if(data["text"].length) errorStr += "\n\n" + data["text"];
-								else errorStr += ".";
-								if(data["debug"]) errorStr += "\n\ndebug: " + data["debug"];
-								alert(errorStr);
-							}
-							else {
-								if(getReloadArgFrom && saveReloadArgTo) reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
-								else if(data["text"].length) alert("crawlserv responded (" + msToStr(timerEnd - timerStart)
-										+ ")\n\n" + data["text"]);
-								if(doReload) reload(reloadArgs);
-							}
-						}, failure: function(errMsg) { alert(errMsg); }
-					});
-				}
-			}
-			else if(data["fail"]) {
-				var errorStr = "crawlserv responded with error (" + msToStr(timerEnd - timerStart) + ")";
-				if(data["text"].length) errorStr += "\n\n" + data["text"];
-				else errorStr += ".";
-				if(data["debug"]) errorStr += "\n\ndebug: " + data["debug"];
-				alert(errorStr);
-			}
-			else {
-				if(getReloadArgFrom && saveReloadArgTo) reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
-				else if(data["text"].length) {
-					alert("crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"]);
-				}
-				if(doReload) reload(reloadArgs);
-			}
-		}, failure: function(errMsg) { alert(errMsg); }
+	$.ajax(
+			{
+				type: "POST",
+				url: "http://localhost:8080",
+				data: JSON.stringify(cmdArgs, null, 1),
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function(data) {
+					var timerEnd = +new Date();
+					
+					if(data["confirm"]) {
+						if(confirm("crawlserv asks (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"])) {
+							cmdArgs["confirmed"] = true;
+							
+							timerStart = +new Date();
+							
+							$.ajax(
+									{
+										type: "POST",
+										url: "http://localhost:8080",
+										data: JSON.stringify(cmdArgs, null, 1),
+										contentType: "application/json; charset=utf-8",
+										dataType: "json", success: function(data) {
+											timerEnd = +new Date();
+											
+											if(data["fail"]) {
+												var errorStr = "crawlserv responded with error ("
+													+ msToStr(timerEnd - timerStart) + ")";
+												
+												if(data["text"].length)
+													errorStr += "\n\n" + data["text"];
+												else
+													errorStr += ".";
+												
+												if(data["debug"]) 
+													errorStr += "\n\ndebug: " + data["debug"];
+												
+												alert(errorStr);
+											}
+											else {
+												if(getReloadArgFrom && saveReloadArgTo)
+													reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
+												else if(data["text"].length)
+													alert("crawlserv responded ("
+															+ msToStr(timerEnd - timerStart)
+															+ ")\n\n"
+															+ data["text"]
+													);
+												if(doReload)
+													reload(reloadArgs);
+											}
+										},
+										failure: function(errMsg) { alert(errMsg); }
+							});
+						}
+					}
+					else if(data["fail"]) {
+						var errorStr = "crawlserv responded with error (" + msToStr(timerEnd - timerStart) + ")";
+						
+						if(data["text"].length)
+							errorStr += "\n\n" + data["text"];
+						else
+							errorStr += ".";
+						
+						if(data["debug"])
+							errorStr += "\n\ndebug: " + data["debug"];
+						
+						alert(errorStr);
+					}
+					else {
+						if(getReloadArgFrom && saveReloadArgTo)
+							reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
+						else if(data["text"].length) {
+							alert("crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"]);
+						}
+						
+						if(doReload)
+							reload(reloadArgs);
+					}
+				},
+				failure: function(errMsg) { alert(errMsg); }
 	});
 }
 
 // check whether object has data attribute
 function hasData(obj, key) {
 	var attr = obj.attr("data-" + key);
+	
 	return (typeof attr !== typeof undefined && attr !== false);
 }
 
-// disable selection fields with redirects
+// disable input on redirect
 function disableInputs() {
-	$("select").prop('disabled', 'disabled');
-	$("input").prop('disabled', 'disabled');
-	$("textarea").prop('disabled', 'disabled');
+	$("select").prop("disabled", true);
+	$("input").prop("disabled", true);
+	$("textarea").prop("disabled", true);
 }
 
-// enable selection fields with redirects
+// enable input on cancelling redirect
 function enableInputs() {
-	$("select").prop('disabled', 'disabled', false);
-	$("input").prop('disabled', 'disabled', false);
-	$("textarea").prop('disabled', 'disabled', false);
+	$("select").prop("disabled", false);
+	$("input").prop("disabled", false);
+	$("textarea").prop("disabled", false);
 }
 
 jQuery(function($) {
@@ -178,7 +225,8 @@ jQuery(function($) {
 // DOCUMENT READY
 	$(document).ready(function() {
 		// show redirection time if available
-		if(redirected) $("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
+		if(redirected)
+			$("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
 		
 		// check query type if necessary
 		if($("#query-type-select")) {
@@ -209,36 +257,61 @@ jQuery(function($) {
 
 // CHANGE EVENT: check date
 	$(document).on("change", "input[type='date']", function() {
-		if(isValidDate($(this).val())) return true;
+		if(isValidDate($(this).val()))
+			return true;
+		
 		alert("Please enter an empty or a valid date in the format \'YYYY-MM-DD\'.");
+		
 		return false;
 	});
 	
 // CLICK EVENT: navigation
 	$(document).on("click", "a.post-redirect", function() {
-		if(typeof $(this).data("mode") !== "undefined") reload({ "m" : $(this).data("m"), "mode" : $(this).data("mode") });
-		else reload({ "m" : $(this).data("m") });
+		if(typeof $(this).data("mode") !== "undefined")
+			reload({
+				"m" : $(this).data("m"),
+				"mode" : $(this).data("mode")
+			});
+		else
+			reload({
+				"m" : $(this).data("m")
+			});
+		
 		return false;
 	});
 
 // CLICK EVENT: navigation with filter
 	$(document).on("click", "a.post-redirect-filter", function() {
-		reload({ "m" : $(this).data("m"), "filter" : $(this).data("filter") });
+		reload({
+			"m" : $(this).data("m"),
+			"filter" : $(this).data("filter")
+		});
+		
 		return false;
 	});
 	
 // CLICK EVENT: run command without arguments
 	$(document).on("click", "a.cmd", function() {
-  		runCmd($(this).data("cmd"), {}, hasData($(this), "reload"), { "m" : $(this).data("m") });
+  		runCmd(
+  				$(this).data("cmd"),
+  				{},
+  				hasData($(this), "reload"),
+  				{ "m" : $(this).data("m") }
+  		);
+  		
 		return false;
 	});
 	
 // KEYUP EVENT: exit fullscreen on ESC
 	$(document).on("keyup", function(e) {
-		if(e.keyCode === 27 && $("#content-fullscreen") && fullscreen) {
+		if(e.keyCode === 27
+				&& $("#content-fullscreen")
+				&& fullscreen) {
 			$("#content-fullscreen").click();
+			
 			return false;
 		}
+		
 		return true;
 	});
 
@@ -248,23 +321,37 @@ jQuery(function($) {
 
 // CLICK EVENT: add allowed IP
 	$(document).on("click", "a.cmd-allow", function() {
-	    runCmd("allow", { "ip" : document.getElementById("cmd-allow-form-ip").value }, false, null);
+	    runCmd(
+	    		"allow",
+	    		{ "ip" : document.getElementById("cmd-allow-form-ip").value },
+	    		false,
+	    		null
+	    );
+	    
 		return false;
 	});
 
 // CLICK EVENT: add argument to custom command
 	$(document).on("click", "a.cmd-custom-addarg", function() {
   		var argId = 0;
-  		var argTotal = $("#cmd-args .cmd-custom-arg").length; 
-  		if(argTotal) argId = parseInt($("#cmd-args .cmd-custom-arg").last().data("n"), 10) + 1;
-  		$("#cmd-args").append("<div class=\"cmd-custom-arg entry-row\" data-n=\"" + argId + "\"><div class=\"entry-label\">Argument "
-  				+ "<div class=\"cmd-custom-arg-no\" style=\"display:inline-block\">" + (argTotal + 1) + "</div>:</div>"
-  				+ "<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-name\" /></div>"
-  				+ "<div class=\"entry-separator\">=</div>"
-  				+ "<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-value\" /></div>"
-  				+ "<a href=\"\" class=\"actionlink cmd-custom-remarg\" data-n=\"" + argId + "\">"
-  				+ "<span class=\"remove-entry\">X</div></a></div>");
+  		var argTotal = $("#cmd-args .cmd-custom-arg").length;
+  		
+  		if(argTotal)
+  			argId = parseInt($("#cmd-args .cmd-custom-arg").last().data("n"), 10) + 1;
+  		
+  		$("#cmd-args").append(
+  				"<div class=\"cmd-custom-arg entry-row\" data-n=\"" + argId + "\">" +
+  				"<div class=\"entry-label\">Argument " +
+  				"<div class=\"cmd-custom-arg-no\" style=\"display:inline-block\">" + (argTotal + 1) + "</div>:</div>" +
+  				"<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-name\" /></div>" +
+  				"<div class=\"entry-separator\">=</div>" +
+  				"<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-value\" /></div>" +
+  				"<a href=\"\" class=\"actionlink cmd-custom-remarg\" data-n=\"" + argId + "\">" +
+  				"<span class=\"remove-entry\">X</div></a></div>"
+  		);
+  		
   		$(".cmd-custom-arg-name").last().focus();
+  		
   		return false;
   	});
 
@@ -272,6 +359,7 @@ jQuery(function($) {
 	$(document).on("click", "a.cmd-custom-remarg", function() {
   		var n = parseInt($(this).data("n"), 10);
   		var toRemove = null;
+  		
   		$("#cmd-args .cmd-custom-arg").each(function(i, obj) {
   			var objn = parseInt($(obj).data("n"), 10);
   			if(n == objn) {
@@ -282,6 +370,7 @@ jQuery(function($) {
   				div.text(parseInt(div.text(), 10) - 1);
   			}
   		});
+  		
   		if(toRemove) toRemove.remove();
   		return false;
   	});
@@ -292,11 +381,18 @@ jQuery(function($) {
   		$("#cmd-args .cmd-custom-arg").each(function(i, obj) { 
   			var argname = $(this).find(".cmd-custom-arg-name").val();
   			var argvalue = $(this).find(".cmd-custom-arg-value").val();
-  			if(!isNaN(argvalue)) argvalue = +argvalue;
-  			else if(argvalue == "true") argvalue = true;
-  			else if(argvalue == "false") argvalue = false;
-  			if(argname && argname.length) args[argname] = argvalue;
+  			
+  			if(!isNaN(argvalue))
+  				argvalue = +argvalue;
+  			else if(argvalue == "true")
+  				argvalue = true;
+  			else if(argvalue == "false")
+  				argvalue = false;
+  			
+  			if(argname && argname.length)
+  				args[argname] = argvalue;
   		});
+  		
 		runCmd(document.getElementById("cmd-custom-form-cmd").value, args, false, null);
 		return false;
 	});
@@ -307,14 +403,28 @@ jQuery(function($) {
 
 // CLICK EVENT: navigate log entries
 	$(document).on("click", "a.logs-nav", function() {
-		reload({ "m" : "logs", "filter" : $(this).data("filter"), "offset" : $(this).data("offset"),
-			"limit" : $(this).data("limit") });
+		reload({
+			"m" : "logs",
+			"filter" : $(this).data("filter"),
+			"offset" : $(this).data("offset"),
+			"limit" : $(this).data("limit")
+		});
+		
 		return false;
 	});
 
 // CLICK EVENT: clear log entries
 	$(document).on("click", "a.logs-clear", function() {
-		runCmd("clearlogs", { "module" : $(this).data("filter") }, true, { "m": "logs", "filter" : $(this).data("filter") });
+		runCmd(
+				"clearlogs",
+				{ "module" : $(this).data("filter") },
+				true,
+				{
+					"m": "logs",
+					"filter" : $(this).data("filter")
+				}
+		);
+		
 		return false;
 	});
 
@@ -326,11 +436,16 @@ jQuery(function($) {
 	$("#website-select").on("change", function() {
 		$(this).blur();
 		disableInputs();
+		
 		var id = parseInt($(this).val(), 10);
 		var args = { "m" : $(this).data("m"), "website" : id };
-		if($("#query-test-text")) args["test"] = $("#query-test-text").val();
-		if(typeof $(this).data("tab") !== "undefined") args["tab"] = $(this).data("tab");
-		if(typeof $(this).data("mode") !== "undefined") args["mode"] = $(this).data("mode");
+		
+		if($("#query-test-text"))
+			args["test"] = $("#query-test-text").val();
+		if(typeof $(this).data("tab") !== "undefined")
+			args["tab"] = $(this).data("tab");
+		if(typeof $(this).data("mode") !== "undefined")
+			args["mode"] = $(this).data("mode");
 		if(typeof config !== "undefined") {
 			if(config.isConfChanged()) {
 				if(confirm("Do you want to discard the changes to your current configuration?"))
@@ -355,53 +470,116 @@ jQuery(function($) {
 		
 		if(typeof $(this).data("noreload") === "undefined") {
 			disableInputs();
+			
 			var website = parseInt($("#website-select").val(), 10);
 			var id = parseInt($(this).val(), 10);
-			var args = { "m" : $(this).data("m"), "website" : website, "urllist" : id };
-			if(typeof $(this).data("tab") !== "undefined") args["tab"] = $(this).data("tab");
+			var args = {
+					"m" : $(this).data("m"),
+					"website" : website,
+					"urllist" : id
+			};
+			
+			if(typeof $(this).data("tab") !== "undefined")
+				args["tab"] = $(this).data("tab");
+			
 			reload(args);
+			
 			return false;
 		}
+		
 		return true;
 	});
 
 // CLICK EVENT: add website
 	$(document).on("click", "a.website-add", function() {
-		runCmd("addwebsite", { "name" : $("#website-name").val(), "namespace" : $("#website-namespace").val(),
-			"domain" : $("#website-domain").val() }, true, { "m" : "websites" }, "id", "website");
+		runCmd(
+				"addwebsite",
+				{
+					"name" : $("#website-name").val(),
+					"namespace" : $("#website-namespace").val(),
+					"domain" : $("#website-domain").val()
+				},
+				true,
+				{ "m" : "websites" },
+				"id",
+				"website"
+		);
+		
 		return false;
 	});
 	
 // CLICK EVENT: duplicate website
 	$(document).on("click", "a.website-duplicate", function() {
 		var id = parseInt($("#website-select").val(), 10);
-		runCmd("duplicatewebsite", { "id" : id }, true, { "m" : "websites" }, "id", "website");
+		
+		runCmd(
+				"duplicatewebsite",
+				{ "id" : id },
+				true,
+				{ "m" : "websites" },
+				"id",
+				"website"
+		);
+		
 		return false;
 	});
 	
 // CLICK EVENT: update website
 	$(document).on("click", "a.website-update", function() {
 		var id = parseInt($("#website-select").val(), 10);
-		runCmd("updatewebsite", { "id" : id, "name" : $("#website-name").val(),
-			"namespace" : $("#website-namespace").val(), "domain" : $("#website-domain").val() },
-			true, { "m" : "websites", "website" : id });
+		
+		runCmd(
+				"updatewebsite",
+				{
+					"id" : id,
+					"name" : $("#website-name").val(),
+					"namespace" : $("#website-namespace").val(),
+					"domain" : $("#website-domain").val()
+				},
+				true,
+				{
+					"m" : "websites",
+					"website" : id
+				}
+		);
+		
 		return false;
 	});
 
 // CLICK EVENT: delete website
 	$(document).on("click", "a.website-delete", function() {
 		var id = parseInt($("#website-select").val(), 10);
-		if(id) runCmd("deletewebsite", { "id" : id }, true, { "m" : "websites" });
+		
+		if(id)
+			runCmd(
+					"deletewebsite",
+					{ "id" : id },
+					true,
+					{ "m" : "websites" }
+		);
+		
 		return false;
 	});
 
 // CLICK EVENT: add URL list
 	$(document).on("click", "a.urllist-add", function() {
 		var website = parseInt($("#website-select").val(), 10);
-		runCmd("addurllist", { "website" : website, "name" : $("#urllist-name").val(),
-			"namespace" : $("#urllist-namespace").val() },
-			true,
-			{ "m" : "websites", "website" : website }, "id", "urllist");
+		
+		runCmd(
+				"addurllist",
+				{
+					"website" : website,
+					"name" : $("#urllist-name").val(),
+					"namespace" : $("#urllist-namespace").val()
+				},
+				true,
+				{
+					"m" : "websites",
+					"website" : website
+				},
+				"id",
+				"urllist"
+		);
 		return false;
 	});
 	
@@ -409,9 +587,22 @@ jQuery(function($) {
 	$(document).on("click", "a.urllist-update", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
-		runCmd("updateurllist", { "id" : id, "name" : $("#urllist-name").val(), "namespace" : $("#urllist-namespace").val() },
-			true,
-			{ "m" : "websites", "website" : website, "urllist" : id });
+		
+		runCmd(
+				"updateurllist",
+				{
+					"id" : id,
+					"name" : $("#urllist-name").val(),
+					"namespace" : $("#urllist-namespace").val()
+				},
+				true,
+				{
+					"m" : "websites",
+					"website" : website,
+					"urllist" : id
+				}
+		);
+		
 		return false;
 	});
 
@@ -419,7 +610,16 @@ jQuery(function($) {
 	$(document).on("click", "a.urllist-delete", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
-		if(id) runCmd("deleteurllist", { "id" : id }, true, { "m" : "websites", "website" : website });
+		
+		if(id)
+			runCmd("deleteurllist",
+					{ "id" : id },
+					true,
+					{
+						"m" : "websites",
+						"website" : website
+					}
+			);
 		return false;
 	});
 	
@@ -428,11 +628,20 @@ jQuery(function($) {
 		var ulwebsite = $(this).data("website-namespace");
 		var ulnamespace = $(this).data("namespace");
 		var ulfilename = ulwebsite + "_" + ulnamespace + ".txt";
-		$.post("download/", { "type": "urllist", "namespace": ulnamespace, "website": ulwebsite, "filename": ulfilename },
-			function() {
-				window.open("download/");
-			}
+		
+		$.post(
+				"download/",
+				{
+					"type": "urllist",
+					"namespace": ulnamespace,
+					"website": ulwebsite,
+					"filename": ulfilename
+				},
+				function() {
+					window.open("download/");
+				}
 		);
+		
 		return false;
 	});
 	
@@ -440,7 +649,18 @@ jQuery(function($) {
 	$(document).on("click", "a.urllist-reset-parsing", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
-		if(urllist) runCmd("resetparsingstatus", { "urllist" : urllist }, true, { "m" : "websites", "website" : website });
+		
+		if(urllist)
+			runCmd(
+					"resetparsingstatus",
+					{ "urllist" : urllist },
+					true,
+					{
+						"m" : "websites",
+						"website" : website
+					}
+			);
+		
 		return false;
 	});
 	
@@ -448,7 +668,18 @@ jQuery(function($) {
 	$(document).on("click", "a.urllist-reset-extracting", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
-		if(urllist) runCmd("resetextractingstatus", { "urllist" : urllist }, true, { "m" : "websites", "website" : website });
+		
+		if(urllist)
+			runCmd(
+					"resetextractingstatus",
+					{ "urllist" : urllist },
+					true,
+					{
+						"m" : "websites",
+						"website" : website
+					}
+			);
+		
 		return false;
 	});
 	
@@ -456,7 +687,18 @@ jQuery(function($) {
 	$(document).on("click", "a.urllist-reset-analyzing", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
-		if(urllist) runCmd("resetanalyzingstatus", { "urllist" : urllist }, true, { "m" : "websites", "website" : website });
+		
+		if(urllist)
+			runCmd(
+					"resetanalyzingstatus", 
+					{ "urllist" : urllist },
+					true,
+					{
+						"m" : "websites",
+						"website" : website
+					}
+			);
+		
 		return false;
 	});
 	
@@ -468,9 +710,19 @@ jQuery(function($) {
 	$("#query-select").on("change", function() {
 		$(this).blur();
 		disableInputs();
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($(this).val(), 10);
-		reload({ "m" : $(this).data("m"), "website" : website, "query" : id, "test" : $("#query-test-text").val() });
+		
+		reload(
+				{
+					"m" : $(this).data("m"),
+					"website" : website,
+					"query" : id,
+					"test" : $("#query-test-text").val()
+				}
+		);
+		
 		return false;
 	});
 	
@@ -512,44 +764,75 @@ jQuery(function($) {
 	$(document).on("click", "a.xpath-generate", function() {
 		var query = "";
 		var property = $("input:radio[name='xpath-result']:checked").val() == "property";
+		
 		if(!$("#xpath-element").val().length) {
 			alert("Please enter a tag name into the first input field.");
 			$("#xpath-element").focus();
 			return false;
 		}
+		
 		if(!$("#xpath-property").val().length) {
 			alert("Please enter an attribute name into the second input field.");
 			$("#xpath-property").focus();
 			return false;
 		}
+		
 		if(!$("#xpath-value").val().length) {
 			alert("Please enter an attribute value into the third input field.");
 			$("#xpath-value").focus();
 			return false;
 		}
+		
 		if(property && !$("#xpath-result-property").val().length) {
 			alert("Please enter an attribute name into the fourth input field.");
 			$("#xpath-result-property").focus();
 			return false;
 		}
-		if($("#query-text").val().length && !confirm("Do you want to override the existing query?")) return false;
-		query = "//" + $("#xpath-element").val() + "[contains(concat(' ', normalize-space(@" + $("#xpath-property").val()	+ "), ' '), ' "
+		
+		if($("#query-text").val().length && !confirm("Do you want to override the existing query?"))
+			return false;
+		
+		query = "//"
+				+ $("#xpath-element").val()
+				+ "[contains(concat(' ', normalize-space(@"
+				+ $("#xpath-property").val()
+				+ "), ' '), ' "
 				+ $("#xpath-value").val() + " ')]";
-		if(property) query += "/@" + $("#xpath-result-property").val();
-		$("#query-text").val(query); 
+		
+		if(property)
+			query += "/@" + $("#xpath-result-property").val();
+		
+		$("#query-text").val(query);
+		
 		return false;
 	});
 	
 // CLICK EVENT: add query
 	$(document).on("click", "a.query-add", function() {
 		var website = parseInt($("#website-select").val(), 10);
-		runCmd("addquery", { "website" : website, "name" : $("#query-name").val(),
-			"query" : $("#query-text").val(), "type" : $("#query-type-select").val(),
-			"resultbool": $("#query-result-bool").is(":checked"),
-			"resultsingle" : $("#query-result-single").is(":checked"),
-			"resultmulti" : $("#query-result-multi").is(":checked"),
-			"textonly" : $("#query-text-only").is(":checked") },
-			true, { "m" : "queries", "website" : website, "test" : $("#query-test-text").val() }, "id", "query");
+		
+		runCmd(
+				"addquery",
+				{
+					"website" : website,
+					"name" : $("#query-name").val(),
+					"query" : $("#query-text").val(),
+					"type" : $("#query-type-select").val(),
+					"resultbool": $("#query-result-bool").is(":checked"),
+					"resultsingle" : $("#query-result-single").is(":checked"),
+					"resultmulti" : $("#query-result-multi").is(":checked"),
+					"textonly" : $("#query-text-only").is(":checked") 
+				},
+				true,
+				{
+					"m" : "queries",
+					"website" : website,
+					"test" : $("#query-test-text").val()
+				},
+				"id",
+				"query"
+		);
+		
 		return false;
 	});
 	
@@ -557,8 +840,21 @@ jQuery(function($) {
 	$(document).on("click", "a.query-duplicate", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
-		if(id) runCmd("duplicatequery", { "id" : id }, true,
-				{ "m" : "queries", "website" :  website, "test" : $("#query-test-text").val() }, "id", "query");
+		
+		if(id)
+			runCmd(
+					"duplicatequery",
+					{ "id" : id },
+					true,
+					{
+						"m" : "queries",
+						"website" :  website,
+						"test" : $("#query-test-text").val()
+					},
+					"id",
+					"query"
+			);
+		
 		return false;
 	});
 	
@@ -566,14 +862,28 @@ jQuery(function($) {
 	$(document).on("click", "a.query-update", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
-		runCmd("updatequery", { "id" : id, "name" : $("#query-name").val(),
-			"query" : $("#query-text").val(), "type" : $("#query-type-select").val(),
-			"resultbool": $("#query-result-bool").is(":checked"),
-			"resultsingle" : $("#query-result-single").is(":checked"),
-			"resultmulti" : $("#query-result-multi").is(":checked"),
-			"textonly" : $("#query-text-only").is(":checked") },
-			true,
-			{ "m" : "queries", "website" : website, "query" : id, "test" : $("#query-test-text").val() });
+		
+		runCmd(
+				"updatequery",
+				{
+					"id" : id,
+					"name" : $("#query-name").val(),
+					"query" : $("#query-text").val(),
+					"type" : $("#query-type-select").val(),
+					"resultbool": $("#query-result-bool").is(":checked"),
+					"resultsingle" : $("#query-result-single").is(":checked"),
+					"resultmulti" : $("#query-result-multi").is(":checked"),
+					"textonly" : $("#query-text-only").is(":checked")
+				},
+				true,
+				{
+					"m" : "queries",
+					"website" : website,
+					"query" : id,
+					"test" : $("#query-test-text").val()
+				}
+		);
+		
 		return false;
 	});
 	
@@ -581,10 +891,20 @@ jQuery(function($) {
 	$(document).on("click", "a.query-delete", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
+		
 		if(id) {
-			runCmd("deletequery", { "id" : id }, true,
-					{ "m" : "queries", "website" : website, "test" :  $("#query-test-text").val() });
+			runCmd(
+					"deletequery",
+					{ "id" : id },
+					true,
+					{
+						"m" : "queries",
+						"website" : website,
+						"test" :  $("#query-test-text").val()
+					}
+			);
 		}
+		
 		return false;
 	});
 	
@@ -598,21 +918,37 @@ jQuery(function($) {
 			$("a.query-test").text("Back to text");
 			
 			var timerStart = +new Date();
-			var args = { "cmd" : "testquery", "query" : $("#query-text").val(), "type" : $("#query-type-select").val(),
-					"resultbool": $("#query-result-bool").is(":checked"),
-					"resultsingle" : $("#query-result-single").is(":checked"),
-					"resultmulti" : $("#query-result-multi").is(":checked"),
-					"textonly" : $("#query-text-only").is(":checked"),
-					"text" : $("#query-test-text").val() };
-			$.ajax({ type: "POST", url: "http://localhost:8080", data: JSON.stringify(args, null, 1),
-				contentType: "application/json; charset=utf-8", dataType: "json", success: function(data) {
+			var args = {
+							"cmd" : "testquery",
+							"query" : $("#query-text").val(),
+							"type" : $("#query-type-select").val(),
+							"resultbool": $("#query-result-bool").is(":checked"),
+							"resultsingle" : $("#query-result-single").is(":checked"),
+							"resultmulti" : $("#query-result-multi").is(":checked"),
+							"textonly" : $("#query-text-only").is(":checked"),
+							"text" : $("#query-test-text").val()
+						};
+			
+			$.ajax({
+				type: "POST",
+				url: "http://localhost:8080",
+				data: JSON.stringify(args, null, 1),
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function(data) {
 					var timerEnd = +new Date();
 					var resultText = "crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n";
-					if(data["fail"]) resultText += "ERROR: " + data["text"];
-					else resultText += data["text"];
+					
+					if(data["fail"])
+						resultText += "ERROR: " + data["text"];
+					else
+						resultText += data["text"];
+					
 					$("#query-test-result").val(resultText);
 				}
-			}).fail(function() { $("#query-test-result").val("ERROR: Could not connect to server."); });
+			}).fail(function() {
+				$("#query-test-result").val("ERROR: Could not connect to server.");
+			});
 		}
 		else if($("#query-test-result").is(":visible")) {
 			$("#query-test-label").text("Test text:");
@@ -620,6 +956,7 @@ jQuery(function($) {
 			$("#query-test-text").show();
 			$("a.query-test").text("Test query");
 		}
+		
 		return false;
 	});
 
@@ -652,21 +989,37 @@ var prevAlgo;
 // CHANGE EVENT: configuration selected
 	$("#config-select").on("change", function() {
 		$(this).blur();
+		
 		if(typeof config !== "undefined") {
 			disableInputs();
+			
 			var website = parseInt($("#website-select").val(), 10);
 			var id = parseInt($(this).val(), 10);
+			
 			if(config.isConfChanged()) {
 				if(confirm("Do you want to discard the changes to your current configuration?"))
-					reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
+					reload({
+						"m" : $(this).data("m"),
+						"website" : website,
+						"config" : id,
+						"mode" : $(this).data("mode")
+					});
 				else {
 					$(this).val(prevConfig);
 					enableInputs();
 				}
 			}
-			else reload({ "m" : $(this).data("m"), "website" : website, "config" : id, "mode" : $(this).data("mode") });
+			else
+				reload({
+					"m" : $(this).data("m"),
+					"website" : website,
+					"config" : id,
+					"mode" : $(this).data("mode")
+				});
+			
 			return false;
 		}
+		
 		return true;
 	});
 
@@ -674,20 +1027,37 @@ var prevAlgo;
 	$("#algo-cat-select").on("change", function() {
 		$(this).blur()
 		disableInputs();
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var config_id = parseInt($("#config-select").val(), 10);
 		var id = parseInt($(this).val(), 10);
-		if(config.isConfChanged()) {
-			if(confirm("Do you want to discard the changes to your algorithm?"))
-				reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
-					"algo-cat" : id });
+		
+		if(config.isConfChanged() || config.hasAlgoSettings()) {
+			if(confirm("Do you want to discard the settings of your algorithm?")) {
+				reload({
+					"m" : "analyzers",
+					"website" : website,
+					"config" : config_id,
+					"mode" : $(this).data("mode"),
+					"algo_cat" : id
+				});
+			}
 			else {
 				$(this).val(prevAlgoCat);
 				enableInputs();
 			}
 		}
-		else reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
-			"algo_cat": id });
+		else
+			reload({
+				"m" :
+				"analyzers",
+				"website" : website,
+				"config" : config_id,
+				"mode" : $(this).data("mode"),
+				"algo_cat": id,
+				"algo_changed": id != algo.id
+			});
+		
 		return false;
 	});
 	
@@ -695,21 +1065,37 @@ var prevAlgo;
 	$("#algo-select").on("change", function() {
 		$(this).blur()
 		disableInputs()
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var config_id = parseInt($("#config-select").val(), 10);
 		var algo_cat = parseInt($("#algo-cat-select").val(), 10);
 		var id = parseInt($(this).val(), 10);
-		if(config.isConfChanged()) {
-			if(confirm("Do you want to discard the changes to your algorithm?"))
-				reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
-					"algo-cat" : algo_cat, "algo_id:" : id });
+		
+		if(config.isConfChanged() || config.hasAlgoSettings()) {
+			if(confirm("Do you want to discard the settings of your algorithm?")) {
+				reload({
+					"m" : "analyzers",
+					"website" : website,
+					"config" : config_id, 
+					"mode" : $(this).data("mode"),
+					"algo_cat" : algo_cat,
+					"algo_id" : id,
+					"algo_changed": id != algo.id
+				});
+			}
 			else {
 				$(this).val(prevAlgoCat);
 				enableInputs();
 			}
 		}
-		else reload({ "m" : "analyzers", "website" : website, "config" : config_id, "mode" : $(this).data("mode"),
-			"algo_id": id });
+		else reload({
+			"m" : "analyzers",
+			"website" : website,
+			"config" : config_id,
+			"mode" : $(this).data("mode"),
+			"algo_id": id
+		});
+		
 		return false;
 	});
 
@@ -719,30 +1105,47 @@ var prevAlgo;
 		$("#config-select").prop("disabled", true);
 		$("#algo-select").prop("disabled", true);
 		$("#algo-cat-select").prop("disabled", true);
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
 		var algo_id = parseInt($("#algo-select").val(), 10);
 		var algo_cat = parseInt($("#algo-cat-select").val(), 10);
-		reload({ "m" : $(this).data("m"), "mode" : $(this).data("mode"), "website" : website, "config" : id, "algo_id" : algo_id,
-			"algo_cat" : algo_cat, "current" : JSON.stringify(config.updateConf()), "name" : $("#config-name").val() });
+		
+		reload({
+			"m" : $(this).data("m"),
+			"mode" : $(this).data("mode"),
+			"website" : website,
+			"config" : id,
+			"algo_id" : algo_id,
+			"algo_cat" : algo_cat,
+			"current" : JSON.stringify(config.updateConf()),
+			"name" : $("#config-name").val()
+		});
+		
 		return false;
 	});
 
 // CLICK EVENT: show segment body
 	$(document).on("click", "div.segment-head-closed", function() {
-		var block = $("div.segment-body-closed[data-block=\"" + $(this).data("block") + "\"]");
+		var block = $("div.segment-body-closed[data-block=\""
+				+ $(this).data("block") + "\"]");
 		block.toggleClass("segment-body-closed segment-body-open");
+		
 		$("span.segment-arrow[data-block=\"" + $(this).data("block") + "\"]").html("&dArr;");
 		$(this).toggleClass("segment-head-closed segment-head-open");
+		
 		return true;
 	});
 
 // CLICK EVENT: hide segment body
 	$(document).on("click", "div.segment-head-open", function() {
-		var block = $("div.segment-body-open[data-block=\"" + $(this).data("block") + "\"]");
+		var block = $("div.segment-body-open[data-block=\""
+				+ $(this).data("block") + "\"]");
 		block.toggleClass("segment-body-open segment-body-closed");
+		
 		$("span.segment-arrow[data-block=\"" + $(this).data("block") + "\"]").html("&rArr;");
 		$(this).toggleClass("segment-head-open segment-head-closed");
+		
 		return true;
 	});
 
@@ -751,8 +1154,24 @@ var prevAlgo;
 		var website = parseInt($("#website-select").val(), 10);
 		var name = $("#config-name").val();
 		var json = JSON.stringify(config.updateConf());
-		runCmd("addconfig", { "website" : website, "module" : $(this).data("module"), "name" : name, "config" : json }, true,
-				{ "m" : $(this).data("m"), "website" : website, "mode" : $(this).data("mode") }, "id", "config");
+		
+		runCmd(
+				"addconfig",
+				{
+					"website" : website,
+					"module" : $(this).data("module"),
+					"name" : name,
+					"config" : json
+				},
+				true,
+				{
+					"m" : $(this).data("m"),
+					"website" : website,
+					"mode" : $(this).data("mode")
+				},
+				"id",
+				"config"
+		);
 		return false;
 	})
 	
@@ -761,8 +1180,23 @@ var prevAlgo;
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
 		var json = JSON.stringify(config.updateConf());
-		runCmd("duplicateconfig", { "id" : id }, true,
-				{ "m" : $(this).data("m"), "website" :  website, "mode" : $(this).data("mode"), "current" : json }, "id", "config");
+		
+		runCmd(
+				"duplicateconfig",
+				{
+					"id" : id
+				},
+				true,
+				{
+					"m" : $(this).data("m"),
+					"website" :  website,
+					"mode" : $(this).data("mode"),
+					"current" : json
+				},
+				"id",
+				"config"
+		);
+		
 		return false;
 	});
 	
@@ -772,8 +1206,24 @@ var prevAlgo;
 		var website = parseInt($("#website-select").val(), 10);
 		var name = $("#config-name").val();
 		var json = JSON.stringify(config.updateConf());
-		runCmd("updateconfig", { "id" : id, "website" : website, "module" : $(this).data("module"), "name" : name, "config" : json },
-				true, { "m" : $(this).data("m"), "website" : website, "mode" : $(this).data("mode"), "config" : id });
+		
+		runCmd(
+				"updateconfig",
+				{
+					"id" : id,
+					"website" : website,
+					"module" : $(this).data("module"),
+					"name" : name,
+					"config" : json
+				},
+				true,
+				{
+					"m" : $(this).data("m"),
+					"website" : website,
+					"mode" : $(this).data("mode"),
+					"config" : id
+				}
+		);
 		return false;
 	})
 	
@@ -781,9 +1231,20 @@ var prevAlgo;
 	$(document).on("click", "a.config-delete", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
+		
 		if(id) {
-			runCmd("deleteconfig", { "id" : id }, true,
-					{ "m" : $(this).data("m"), "website" : website, "test" :  $("#query-test-text").val() });
+			runCmd(
+					"deleteconfig",
+					{
+						"id" : id
+					},
+					true,
+					{
+						"m" : $(this).data("m"),
+						"website" : website,
+						"test" :  $("#query-test-text").val()
+					}
+			);
 		}
 		return false;
 	});
@@ -813,16 +1274,29 @@ var prevAlgo;
 // CHANGE EVENT: module selected
 	$("#module-select").on("change", function() {
 		var website = parseInt($("#website-select").val(), 10);
+		
 		disableInputs();
-		reload({ "m" : $(this).data("m"), "website" : website, "module": $(this).val() });
+		
+		reload({
+			"m" : $(this).data("m"),
+			"website" : website,
+			"module": $(this).val()
+		});
+		
 		return false;
 	});
 
 // CLICK EVENT: pause thread
 	$(document).on("click", "a.thread-pause", function() {
 		var id = parseInt($(this).data("id"), 10);
-		var module = $(this).data("module"); 
-		runCmd("pause" + module, { "id" : id }, false);
+		var module = $(this).data("module");
+		
+		runCmd(
+				"pause" + module,
+				{ "id" : id },
+				false
+		);
+		
 		return false;
 	})
 	
@@ -830,15 +1304,26 @@ var prevAlgo;
 	$(document).on("click", "a.thread-unpause", function() {
 		var id = parseInt($(this).data("id"), 10);
 		var module = $(this).data("module"); 
-		runCmd("unpause" + module, { "id" : id }, false);
+		
+		runCmd(
+				"unpause" + module,
+				{ "id" : id },
+				false
+		);
+		
 		return false;
 	})
 	
 // CLICK EVENT: stop thread
 	$(document).on("click", "a.thread-stop", function() {
 		var id = parseInt($(this).data("id"), 10);
-		var module = $(this).data("module"); 
-		runCmd("stop" + module, { "id" : id }, false);
+		var module = $(this).data("module");
+		
+		runCmd(
+				"stop" + module,
+				{ "id" : id },
+				false
+		);
 		return false;
 	})
 
@@ -848,7 +1333,17 @@ var prevAlgo;
 		var module = $("#module-select").val();
 		var config = parseInt($("#config-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
-		runCmd("start" + module, { "website" : website, "config": config, "urllist": urllist }, false);
+		
+		runCmd(
+				"start" + module,
+				{
+					"website" : website,
+					"config": config,
+					"urllist": urllist
+				},
+				false
+		);
+		
 		return false;
 	})
 	
@@ -865,48 +1360,65 @@ var prevAlgo;
 		$("#content-url-text").prop("disabled", true);
 		$("#content-next").prop("disabled", true);
 		$("#content-version").prop("disabled", true);
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var url = parseInt($("#content-url").val(), 10);
-		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url });
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"url": url
+		});
+		
 		return false;
 	});
 	
 // CLICK EVENT: last URL
 	$(document).on("click", "#content-last", function() {
-		$("#website-select").prop("disabled", true);
-		$("#urllist-select").prop("disabled", true);
-		$(this).prop("disabled", true);
-		$("#content-url").prop("disabled", true);
-		$("#content-url-text").prop("disabled", true);
-		$("#content-next").prop("disabled", true);
-		$("#content-version").prop("disabled", true);
+		disableInputs();
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var url = parseInt($("#content-url").val(), 10);
-		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url, "last": true });
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"url": url,
+			"last": true
+		});
+		
 		return false;
 	});
 	
 // CLICK EVENT: next URL
 	$(document).on("click", "#content-next", function() {
-		$("#website-select").prop("disabled", true);
-		$("#urllist-select").prop("disabled", true);
-		$("#content-last").prop("disabled", true);
-		$("#content-url").prop("disabled", true);
-		$("#content-url-text").prop("disabled", true);
-		$(this).prop("disabled", true);
-		$("#content-version").prop("disabled", true);
+		disableInputs();
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var url = parseInt($("#content-url").val(), 10);
-		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url + 1 });
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"url": url + 1
+		});
+		
 		return false;
 	});
 
-// CHANGE EVENT: input URL id (numbers only)
+// CHANGE EVENT: input URL ID (numbers only)
 	$(document).on("input keydown keyup mousedown mouseup select contextmenu drop", "#content-url", function() {
 		var input = $(this).val();
+		
 		if(!input.length || isNormalInteger(input)) {
 	        this.oldValue = this.value;
 	        this.oldSelectionStart = this.selectionStart;
@@ -916,44 +1428,55 @@ var prevAlgo;
 	        this.value = this.oldValue;
 	        this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
 		}
+		
 		return true;
 	});
 	
-// KEYPRESS EVENT: input URL id (ENTER)
+// KEYPRESS EVENT: input URL ID (ENTER)
 	$(document).on("keypress", "#content-url", function(e) {
 		if(e.which == 13) {
-			if(!$(this).val().length) return true;
-			$("#website-select").prop("disabled", true);
-			$("#urllist-select").prop("disabled", true);
-			$("#content-last").prop("disabled", true);
-			$(this).prop("disabled", true);
-			$("#content-url-text").prop("disabled", true);
-			$("#content-next").prop("disabled", true);
-			$("#content-version").prop("disabled", true);
+			if(!$(this).val().length)
+				return true;
+			
+			disableInputs();
+	
 			var website = parseInt($("#website-select").val(), 10);
 			var urllist = parseInt($("#urllist-select").val(), 10);
 			var url = parseInt($(this).val(), 10);
-			reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url });
+			
+			reload({
+				"m" : $(this).data("m"),
+				"tab" : $(this).data("tab"),
+				"website" : website,
+				"urllist" : urllist,
+				"url": url
+			});
+			
 			return false;
 		}
+		
 		return true;
 	});
 	
 // KEYPRESS EVENT: input URL text (ENTER)
 	$(document).on("keypress", "#content-url-text", function(e) {
 		if(e.which == 13) {
-			if(!$(this).val().length) return true;
-			$("#website-select").prop("disabled", true);
-			$("#urllist-select").prop("disabled", true);
-			$("#content-last").prop("disabled", true);
-			$(this).prop("disabled", true);
-			$("#content-url-text").prop("disabled", true);
-			$("#content-next").prop("disabled", true);
-			$("#content-version").prop("disabled", true);
+			if(!$(this).val().length)
+				return true;
+			
+			disableInputs();
+			
 			var website = parseInt($("#website-select").val(), 10);
 			var urllist = parseInt($("#urllist-select").val(), 10);
 			var urltext = $(this).val();
-			reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "urltext": urltext });
+			
+			reload({
+				"m" : $(this).data("m"),
+				"tab" : $(this).data("tab"),
+				"website" : website,
+				"urllist" : urllist,
+				"urltext": urltext
+			});
 			return false;
 		}
 		return true;
@@ -963,16 +1486,35 @@ var prevAlgo;
 	$(document).on("click", "#content-fullscreen", function() {
 		if(fullscreen) {
 			fullscreen = false;
+			
 			var temp = $(".fs-div").detach();
+			
 			temp.insertAfter($(".fs-insert-after"));
-			$(".fs-content").css({ "display" : this.oldDisplay, "width" : this.oldCodeWidth, "height" : this.oldCodeHeight });
-			temp.css({ "position" : this.oldPos, "width" : this.oldWidth, "height" : this.oldHeight, "margin-left": this.oldMargin });
-			$(this).css({ "position" : "absolute", "right" : this.oldBtnPos });
+			
+			$(".fs-content").css({
+				"display" : this.oldDisplay,
+				"width" : this.oldCodeWidth,
+				"height" : this.oldCodeHeight
+			});
+			
+			temp.css({
+				"position" : this.oldPos,
+				"width" : this.oldWidth,
+				"height" : this.oldHeight,
+				"margin-left": this.oldMargin
+			});
+			
+			$(this).css({
+				"position" : "absolute",
+				"right" : this.oldBtnPos
+			});
+			
 			$(this).html("&#9727;");
 			$(this).prop("title", "Show Fullscreen");
 		}
 		else {
 			fullscreen = true;
+			
 			this.oldPos = $(".fs-div").css("position");
 			this.oldWidth = $(".fs-div").css("width");
 			this.oldHeight = $(".fs-div").css("height");
@@ -980,10 +1522,23 @@ var prevAlgo;
 			this.oldCodeWidth = $(".fs-content").css("width");
 			this.oldCodeHeight = $(".fs-content").css("height");
 			this.oldBtnPos = $(this).css("right");
+			
 			var temp = $(".fs-div").detach();
 			temp.appendTo("body");
-			temp.css({ "position" : "absolute", "width" : "100%", "height" : "100%", "margin-left" : "5px", "z-index": "2" });
-			$(".fs-content").css({ "width" : "100%", "height" : "auto" });
+			
+			temp.css({
+				"position" : "absolute",
+				"width" : "100%",
+				"height" : "100%",
+				"margin-left" : "5px",
+				"z-index": "2"
+			});
+			
+			$(".fs-content").css({
+				"width" : "100%",
+				"height" : "auto"
+			});
+			
 			$(this).css({"position" : "fixed", "right" : "30px"});
 			$(this).html("&ultri;");
 			$(this).prop("title", "Exit Fullscreen [ESC]");
@@ -992,19 +1547,22 @@ var prevAlgo;
 	
 // CHANGE EVENT: select content version
 	$(document).on("change", "#content-version", function() {
-		$("#website-select").prop("disabled", true);
-		$("#urllist-select").prop("disabled", true);
-		$("#content-last").prop("disabled", true);
-		$("#content-url").prop("disabled", true);
-		$("#content-url-text").prop("disabled", true);
-		$("#content-next").prop("disabled", true);
-		$(this).prop("disabled", true);
+		disableInputs();
+		
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var url = parseInt($("#content-url").val(), 10);
 		var version = parseInt($(this).val(), 10);
-		reload({ "m" : $(this).data("m"), "tab" : $(this).data("tab"), "website" : website, "urllist" : urllist, "url": url,
-			"version": version });
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"url": url,
+			"version": version
+		});
+		
 		return false;
 	});
 	
@@ -1019,13 +1577,23 @@ var prevAlgo;
 		var contentversion = $(this).data("version");
 		var contenttype = $(this).data("type");
 		var contentfilename = $(this).data("filename");
-		var args = { "type": contenttype, "namespace": contentnamespace, "website": contentwebsite, "version": contentversion,
-				"w_id": contentwebsiteid, "w_name" : contentwebsitename, "u_id": contenturlid, "url": contenturl,
-				"filename": contentfilename };
-		console.log(args);
+		
+		var args = {
+						"type": contenttype,
+						"namespace": contentnamespace,
+						"website": contentwebsite,
+						"version": contentversion,
+						"w_id": contentwebsiteid,
+						"w_name" : contentwebsitename,
+						"u_id": contenturlid,
+						"url": contenturl,
+						"filename": contentfilename
+		};
+		
 		$.post("download/", args, function() {
 			window.open("download/");
 		});
+		
 		return false;
 	});
 	

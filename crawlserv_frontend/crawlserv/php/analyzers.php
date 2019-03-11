@@ -170,16 +170,23 @@ if($website) {
 ?>
 
 var config = null;
+var algoChanged = <?php echo isset($algoChanged) ? "true" : "false"; ?>
 
 // load algorithm
-var algo = new Algo(<?php if(isset($newCat)) echo $newCat; else echo "null"; ?>,
-    <?php if(isset($newAlgo)) echo $newAlgo; else echo "null"; ?>, function(algoId) {
-    	// load configuration after algorithm has been fully loaded (necessary to filter algorithm-specific configuration categories)
-    	config = new Config("analyzer", '<?php echo $current; ?>', "<?php echo $mode; ?>", algo.getId(), algo.getConfigCats(),
-    			function() {
-    				config.setAlgo(algoId);
-    			}
+var algo = new Algo(
+    <?php if(isset($newCat)) echo $newCat; else echo "null"; ?>,
+    <?php if(isset($newAlgo)) echo $newAlgo; else echo "null"; ?>,
+    function() {        
+    	// load configuration after algorithm has been fully loaded
+    	//  (necessary to load algorithm-specific configuration entries)    	
+    	config = new Config(
+    	    "analyzer",
+    	    '<?php echo $current; ?>',
+    	    "<?php echo $mode; ?>",
+    	    algo.config_cats,
+    	    algo.old_config_cats
 		);
-});
+	}
+);
 </script>
 
