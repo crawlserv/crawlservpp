@@ -33,11 +33,6 @@ namespace crawlservpp::Module::Analyzer {
 		this->websiteIdString = idStrStr.str();
 	}
 
-	// set website namespace
-	void Database::setWebsiteNamespace(const std::string& websiteNamespace) {
-		this->websiteName = websiteNamespace;
-	}
-
 	// set URL list ID (and convert it to string for SQL requests)
 	void Database::setUrlList(unsigned long listId) {
 		std::ostringstream idStrStr;
@@ -46,9 +41,11 @@ namespace crawlservpp::Module::Analyzer {
 		this->listIdString = idStrStr.str();
 	}
 
-	// set URL list namespace
-	void Database::setUrlListNamespace(const std::string& urlListNamespace) {
-		this->urlListName = urlListNamespace;
+	// set website and URL list namespace
+	void Database::setNamespaces(const std::string& website, const std::string& urlList) {
+		this->websiteName = website;
+		this->urlListName = urlList;
+		this->tablePrefix = "crawlserv_" + this->websiteName + "_" + this->urlListName + "_";
 	}
 
 	// enable or disable logging
@@ -138,9 +135,6 @@ namespace crawlservpp::Module::Analyzer {
 
 	// prepare SQL statements for analyzer, throws Main::Database::Exception
 	void Database::prepare() {
-		// create table prefix
-		this->tablePrefix = "crawlserv_" + this->websiteName + "_" + this->urlListName + "_";
-
 		// check connection to database
 		this->checkConnection();
 
@@ -366,6 +360,125 @@ namespace crawlservpp::Module::Analyzer {
 		}
 	}
 
+	// public helper function: get the full name of a source table
+	std::string Database::getSourceTableName(unsigned short type, const std::string& name) {
+		std::string tableName;
+
+		switch(type) {
+		case Config::generalInputSourcesParsing:
+			tableName = this->tablePrefix + "parsed_" + name;
+			break;
+
+		case Config::generalInputSourcesExtracting:
+			tableName = this->tablePrefix + "extracted_" + name;
+			break;
+
+		case Config::generalInputSourcesAnalyzing:
+			tableName = this->tablePrefix + "analyzed_" + name;
+			break;
+
+		case Config::generalInputSourcesCrawling:
+			tableName = this->tablePrefix + "crawled";
+			break;
+
+		default:
+			throw DatabaseException("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
+		}
+
+		return tableName;
+	}
+
+	// public helper function: get the full name of a source column
+	std::string Database::getSourceColumnName(unsigned short type, const std::string& name) {
+		std::string columnName;
+
+		switch(type) {
+		case Config::generalInputSourcesParsing:
+			if(name == "id")
+				columnName = "parsed_id";
+			else if(name == "datetime")
+				columnName = "parsed_datetime";
+			else
+				columnName = "parsed__" + name;
+			break;
+
+		case Config::generalInputSourcesExtracting:
+			columnName = "extracted__" + name;
+			break;
+
+		case Config::generalInputSourcesAnalyzing:
+			columnName = "analyzed__" + name;
+			break;
+
+		case Config::generalInputSourcesCrawling:
+			columnName =name;
+			break;
+
+		default:
+			throw DatabaseException("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
+		}
+
+		return columnName;
+	}
+
+	// public helper function: check input tables and columns
+	void Database::checkSources(std::vector<unsigned short>& types,
+								std::vector<std::string>& tables,
+								std::vector<std::string>& columns,
+								bool logging) {
+		// remove invalid sources
+		for(unsigned long n = 1; n <= tables.size(); n++) {
+			if(!this->checkSource(types.at(n - 1), tables.at(n - 1), columns.at(n - 1), logging)) {
+				n--;
+
+				types.erase(types.begin() + n);
+				tables.erase(tables.begin() + n);
+				columns.erase(columns.begin() + n);
+			}
+		}
+
+		// check for valid sources
+		if(types.empty() || tables.empty() || columns.empty())
+			throw DatabaseException("Analyzer::Database::checkSources(): No input sources available");
+	}
+
+	// public helper function: check input table and column
+	bool Database::checkSource(
+			unsigned short type,
+			const std::string& table,
+			const std::string& column,
+			bool logging) {
+		// get full table name
+		std::string tableName(this->getSourceTableName(type, table));
+
+		// check existence of table
+		if(this->database.isTableExists(tableName)) {
+			// get full column name
+			std::string columnName(this->getSourceColumnName(type, column));
+
+			// check existence of column
+			if(!(this->database.isColumnExists(tableName, columnName))) {
+				if(logging)
+					this->log(
+							"WARNING: Non-existing column `" + columnName + "`"
+							" in input table `" + tableName + "` ignored"
+					);
+
+				return false;
+			}
+		}
+		else {
+			if(logging)
+				this->log(
+					"WARNING: Non-existing input table `" + tableName + "` ignored"
+				);
+
+			return false;
+		}
+
+		return true;
+	}
+
 	// helper function: check whether the basis for a specific corpus has changed since its creation,
 	//  return true if corpus was not created yet
 	// NOTE: Corpora from raw crawling data will always be re-created!
@@ -461,49 +574,47 @@ namespace crawlservpp::Module::Analyzer {
 		sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->ps.deleteCorpus);
 		sql::PreparedStatement& addStatement = this->getPreparedStatement(this->ps.addCorpus);
 
-		// check source type
-		std::string tableName, columnName;
-		switch(corpusProperties.sourceType) {
-		case Config::generalInputSourcesParsing:
-			tableName = this->tablePrefix + "parsed_" + corpusProperties.sourceTable;
-			columnName = "parsed__" + corpusProperties.sourceField;
-			break;
+		// check your sources
+		this->checkSource(
+				corpusProperties.sourceType,
+				corpusProperties.sourceTable,
+				corpusProperties.sourceField,
+				this->logging
+		);
 
-		case Config::generalInputSourcesExtracting:
-			tableName = this->tablePrefix + "extracted_" + corpusProperties.sourceTable;
-			columnName = "extracted__" + corpusProperties.sourceField;
-			break;
-
-		case Config::generalInputSourcesAnalyzing:
-			tableName = this->tablePrefix + "analyzed_" + corpusProperties.sourceTable;
-			columnName = "analyzed__" + corpusProperties.sourceField;
-			break;
-
-		case Config::generalInputSourcesCrawling:
-			tableName = this->tablePrefix + "crawled";
-			columnName = "content";
+		// show warning when using raw crawled data and logging is enabled
+		if(corpusProperties.sourceType == Config::generalInputSourcesCrawling
+				&& this->logging) {
 			if(this->logging) {
 				this->log(
 						"[#" + this->idString + "] WARNING: Corpus will always be re-created when created from raw crawled data."
 				);
+
 				this->log(
 						"[#" + this->idString + "]  It is highly recommended to use parsed data instead!"
 				);
+
 				if(!corpusProperties.sourceTable.empty())
 					this->log("[#" + this->idString + "] WARNING: Source table name ignored.");
 				if(!corpusProperties.sourceField.empty())
 					this->log("[#" + this->idString + "] WARNING: Source field name ignored.");
 			}
-			break;
-
-		default:
-			throw DatabaseException("Analyzer::Database::createCorpus(): Invalid source type for text corpus");
 		}
 
 		// start timing and write log entry
 		Timer::Simple timer;
+		std::string tableName(this->getSourceTableName(
+				corpusProperties.sourceType, corpusProperties.sourceTable)
+		);
+		std::string columnName(this->getSourceColumnName(
+				corpusProperties.sourceType, corpusProperties.sourceField)
+		);
+
 		if(this->logging)
-			this->log("[#" + this->idString + "] compiles text corpus from " + tableName + "." + columnName + "...");
+			this->log(
+					"[#" + this->idString + "] compiles text corpus"
+					" from " + tableName + "." + columnName + "..."
+			);
 
 		try {
 			// execute SQL query for deleting old text corpus (if it exists)
