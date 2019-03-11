@@ -19,12 +19,12 @@ namespace crawlservpp::Wrapper {
 
 	class CurlList {
 	public:
-		// constructor: set pointer to NULL
-		CurlList() noexcept : ptr(NULL) {}
+		// constructor: set pointer to nullptr
+		CurlList() noexcept : ptr(nullptr) {}
 
 		// move constructor
 		CurlList(CurlList&& other) noexcept : ptr(other.ptr) {
-			other.ptr = NULL;
+			other.ptr = nullptr;
 		}
 
 		// destructor: reset cURL list if necessary
@@ -48,23 +48,23 @@ namespace crawlservpp::Wrapper {
 		}
 
 		// reset cURL list
-		void reset() { if(this->ptr) curl_slist_free_all(this->ptr); this->ptr = NULL; }
+		void reset() { if(this->ptr) curl_slist_free_all(this->ptr); this->ptr = nullptr; }
 
 		// bool operator
 		operator bool() const {
-			return this->ptr != NULL;
+			return this->ptr != nullptr;
 		}
 
 		// not operator
 		bool operator!() const {
-			return this->ptr == NULL;
+			return this->ptr == nullptr;
 		}
 
 		// move assignment operator
 		CurlList& operator=(CurlList&& other) noexcept {
 			if(&other != this) {
 				this->ptr = other.ptr;
-				other.ptr = NULL;
+				other.ptr = nullptr;
 			}
 			return *this;
 		}

@@ -18,8 +18,8 @@ namespace crawlservpp::Wrapper {
 
 	class Curl {
 	public:
-		// constructor: set pointer to NULL
-		Curl() : ptr(NULL) {
+		// constructor: set pointer to nullptr
+		Curl() : ptr(nullptr) {
 			// initialize global instance if necessary
 			if(globalInit) this->localInit = false;
 			else {
@@ -35,7 +35,7 @@ namespace crawlservpp::Wrapper {
 		// move constructor
 		Curl(Curl&& other) noexcept {
 			this->ptr = other.ptr;
-			other.ptr = NULL;
+			other.ptr = nullptr;
 			this->localInit = other.localInit;
 			other.localInit = false;
 		}
@@ -76,25 +76,25 @@ namespace crawlservpp::Wrapper {
 		void reset() {
 			if(this->ptr) {
 				curl_easy_cleanup(this->ptr);
-				this->ptr = NULL;
+				this->ptr = nullptr;
 			}
 		}
 
 		// bool operator
 		operator bool() const {
-			return this->ptr != NULL;
+			return this->ptr != nullptr;
 		}
 
 		// not operator
 		bool operator!() const {
-			return this->ptr == NULL;
+			return this->ptr == nullptr;
 		}
 
 		// move assignment operator
 		Curl& operator=(Curl&& other) noexcept {
 			if(&other != this) {
 				this->ptr = other.ptr;
-				other.ptr = NULL;
+				other.ptr = nullptr;
 				this->localInit = other.localInit;
 				other.localInit = false;
 			}

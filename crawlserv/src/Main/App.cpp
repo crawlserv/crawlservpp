@@ -12,7 +12,7 @@
 
 namespace crawlservpp::Main {
 
-	App * App::instance = NULL;
+	App * App::instance = nullptr;
 
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 	App::App(int argc, char * argv[]) noexcept : running(true) {
@@ -27,8 +27,8 @@ namespace crawlservpp::Main {
 			sigIntHandler.sa_handler = App::signal;
 			sigemptyset(&sigIntHandler.sa_mask);
 			sigIntHandler.sa_flags = 0;
-			sigaction(SIGINT, &sigIntHandler, NULL);
-			sigaction(SIGTERM, &sigIntHandler, NULL);
+			sigaction(SIGINT, &sigIntHandler, nullptr);
+			sigaction(SIGTERM, &sigIntHandler, nullptr);
 
 			// show header
 			this->outputHeader();

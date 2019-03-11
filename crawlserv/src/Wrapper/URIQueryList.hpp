@@ -17,12 +17,12 @@ namespace crawlservpp::Wrapper {
 
 	class URIQueryList {
 	public:
-		// constructor: set pointer to NULL
-		URIQueryList() noexcept : ptr(NULL) {}
+		// constructor: set pointer to nullptr
+		URIQueryList() noexcept : ptr(nullptr) {}
 
 		// move constructor
 		URIQueryList(URIQueryList&& other) noexcept : ptr(other.ptr) {
-			other.ptr = NULL;
+			other.ptr = nullptr;
 		}
 
 		// destructor: free query list if necessary
@@ -47,19 +47,19 @@ namespace crawlservpp::Wrapper {
 
 		// bool operator
 		operator bool() const noexcept {
-			return this->ptr != NULL;
+			return this->ptr != nullptr;
 		}
 
 		// not operator
 		bool operator!() const noexcept {
-			return this->ptr == NULL;
+			return this->ptr == nullptr;
 		}
 
 		// move operator
 		URIQueryList& operator=(URIQueryList&& other) noexcept {
 			if(&other != this) {
 				this->ptr = other.ptr;
-				other.ptr = NULL;
+				other.ptr = nullptr;
 			}
 			return *this;
 		}

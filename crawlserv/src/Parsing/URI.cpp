@@ -64,7 +64,7 @@ namespace crawlservpp::Parsing {
 	std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
 		if(!(this->uri)) throw URI::Exception("No link parsed");
 		Wrapper::URIQueryList queryList;
-		UriQueryListA * queryNext = NULL;
+		UriQueryListA * queryNext = nullptr;
 		int queryCount = 0;
 		std::string queries;
 
@@ -213,7 +213,7 @@ namespace crawlservpp::Parsing {
 			throw URI::Exception("Could not convert URI to string because uriToStringCharsRequiredA(...) failed");
 
 		std::unique_ptr<char[]> uriCString(std::make_unique<char[]>(charsRequired + 1));
-		if(uriToStringA(uriCString.get(), uri.get(), charsRequired + 1, NULL) != URI_SUCCESS)
+		if(uriToStringA(uriCString.get(), uri.get(), charsRequired + 1, nullptr) != URI_SUCCESS)
 			throw URI::Exception("Could not convert URI to string because uriToStringA(...) failed");
 
 		return std::string(uriCString.get());

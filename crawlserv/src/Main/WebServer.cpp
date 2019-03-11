@@ -14,7 +14,7 @@ namespace crawlservpp::Main {
 	// constructor: set default value
 	WebServer::WebServer() {
 		// initialize embedded web server
-		mg_mgr_init(&(this->eventManager), NULL);
+		mg_mgr_init(&(this->eventManager), nullptr);
 	}
 
 	// destructor: free embedded web server
