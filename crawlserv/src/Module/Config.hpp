@@ -22,10 +22,6 @@
 #include <string>
 #include <vector>
 
-namespace crawlservpp::Network {
-	class Config;
-}
-
 namespace crawlservpp::Module {
 
 	/*
@@ -40,8 +36,6 @@ namespace crawlservpp::Module {
 		typedef std::queue<std::string> * LogPtr;
 
 	public:
-		friend class Network::Config;
-
 		Config();
 		virtual ~Config();
 
@@ -61,7 +55,7 @@ namespace crawlservpp::Module {
 		Config& operator=(Config&) = delete;
 		Config& operator=(Config&&) = delete;
 
-	protected:
+protected:
 		// configuration parsing options
 		enum StringParsingOption {
 			Default = 0,	// none
@@ -97,6 +91,7 @@ namespace crawlservpp::Module {
 		void option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt = Default);
 		void warning(const std::string& warning);
 
+	protected:
 		// module-specific parsing functions
 		virtual void parseOption() = 0;
 		virtual void checkOptions() = 0;
@@ -212,16 +207,17 @@ namespace crawlservpp::Module {
 
 			// check configuration item
 			if(this->currentItem.category.empty()) {
-				this->logPtr->emplace("Configuration item without category ignored");
-				return;
+				if(this->currentItem.name != "_algo") // ignore algorithm ID
+					this->logPtr->emplace("Configuration item without category ignored");
+				continue;
 			}
 			if(this->currentItem.name.empty()) {
 				this->logPtr->emplace("Configuration item without name ignored.");
-				return;
+				continue;
 			}
 			if(empty) {
 				this->logPtr->emplace("Configuration entry without value ignored.");
-				return;
+				continue;
 			}
 
 			// parse option by child class
@@ -246,6 +242,9 @@ namespace crawlservpp::Module {
 			this->foundCategory = false;
 			this->finished = false;
 		}
+
+		// check options
+		this->checkOptions();
 	}
 
 	// set category of configuration items to parse
@@ -413,7 +412,7 @@ namespace crawlservpp::Module {
 				case FromNumber:
 					// get from number
 					if(i->IsInt()) {
-						int value = this->currentItem.value->GetInt();
+						int value = i->GetInt();
 
 						if(value > std::numeric_limits<char>::max())
 							this->logPtr->emplace(
@@ -525,7 +524,7 @@ namespace crawlservpp::Module {
 			// check and copy array items
 			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
 				if(i->IsInt()) {
-					int value = this->currentItem.value->GetInt();
+					int value = i->GetInt();
 
 					if(value > std::numeric_limits<short>::max())
 						this->logPtr->emplace(
@@ -753,7 +752,7 @@ namespace crawlservpp::Module {
 			// check and copy array items
 			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
 				if(i->IsUint()) {
-					unsigned int value = this->currentItem.value->GetUint();
+					unsigned int value = i->GetUint();
 
 					if(value > std::numeric_limits<unsigned char>::max())
 						this->logPtr->emplace(
@@ -841,7 +840,7 @@ namespace crawlservpp::Module {
 			// check and copy array items
 			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
 				if(i->IsUint()) {
-					unsigned int value = this->currentItem.value->GetUint();
+					unsigned int value = i->GetUint();
 
 					if(value > std::numeric_limits<unsigned short>::max())
 						this->logPtr->emplace(

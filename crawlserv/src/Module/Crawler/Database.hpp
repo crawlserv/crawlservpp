@@ -49,7 +49,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// setters
 		void setId(unsigned long crawlerId);
-		void setWebsiteNamespace(const std::string& websiteNamespace);
+		void setNamespaces(const std::string& website, const std::string& urlList);
 		void setUrlListNamespace(const std::string& urlListNamespace);
 		void setRecrawl(bool isRecrawl);
 		void setLogging(bool isLogging);

@@ -53,11 +53,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		virtual ~MarkovTweet();
 
 		// implemented algorithm functions
-		void onAlgoInit(bool resumed);
-		void onAlgoTick();
-		void onAlgoPause();
-		void onAlgoUnpause();
-		void onAlgoClear(bool interrupted);
+		void onAlgoInit(bool resumed) override;
+		void onAlgoTick() override;
+		void onAlgoPause() override;
+		void onAlgoUnpause() override;
+		void onAlgoClear(bool interrupted) override;
+
+		// overwritten configuration functions
+		void parseOption() override;
+		void checkOptions() override;
 
 		// external access to thread functionality for rawr
 		bool _isRunning();
@@ -68,6 +72,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		rawr generator;
 		unsigned long sources;
+
+		// algorithm options
+		unsigned char markovTweetDimension;
+		std::string markovTweetLanguage;
+		unsigned long markovTweetLength;
+		unsigned long markovTweetMax;
+		std::string markovTweetResultField;
+		unsigned long markovTweetSleep;
+		std::string markovTweetSourcesField;
+		bool markovTweetSpellcheck;
+		bool markovTweetTiming;
 	};
 
 }  /* crawlservpp::Module::Analyzer::Algo */

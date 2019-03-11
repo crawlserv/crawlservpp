@@ -30,46 +30,55 @@ namespace crawlservpp::Module::Parser {
 
 	class Config : public Module::Config {
 	public:
-		Config();
-		virtual ~Config();
+		Config() {};
+		virtual ~Config() {};
 
-		// general entries
-		unsigned long generalCacheSize;
-		unsigned int generalLock;
-		unsigned short generalLogging;
+		// configuration constants
 		static const unsigned short generalLoggingSilent = 0;
 		static const unsigned short generalLoggingDefault = 1;
 		static const unsigned short generalLoggingExtended = 2;
 		static const unsigned short generalLoggingVerbose = 3;
-		bool generalNewestOnly;
-		bool generalParseCustom;
-		bool generalReParse;
-		bool generalResetOnFinish;
-		std::string generalResultTable;
-		std::vector<unsigned long> generalSkip;
-		unsigned long generalSleepIdle;
-		unsigned long generalSleepMySql;
-		unsigned long generalTimeoutTargetLock;
-		bool generalTiming;
-
-		// parsing entries
-		std::vector<std::string> parsingDateTimeFormats;
-		std::vector<std::string> parsingDateTimeLocales;
-		std::vector<unsigned long> parsingDateTimeQueries;
-		std::vector<unsigned short> parsingDateTimeSources;
-		std::vector<char> parsingFieldDelimiters;
-		std::vector<bool> parsingFieldIgnoreEmpty;
-		std::vector<bool> parsingFieldJSON;
-		std::vector<std::string> parsingFieldNames;
-		std::vector<unsigned long> parsingFieldQueries;
-		std::vector<unsigned short> parsingFieldSources;
-		std::vector<bool> parsingFieldTidyTexts;
-		std::vector<bool> parsingFieldWarningsEmpty;
-		std::vector<std::string> parsingIdIgnore;
-		std::vector<unsigned long> parsingIdQueries;
-		std::vector<unsigned short> parsingIdSources;
 		static const unsigned short parsingSourceUrl = 0;
 		static const unsigned short parsingSourceContent = 1;
+
+		// configuration entries
+		struct Entries {
+			// constructor with default values
+			Entries();
+
+			// general entries
+			unsigned long generalCacheSize;
+			unsigned int generalLock;
+			unsigned short generalLogging;
+
+			bool generalNewestOnly;
+			bool generalParseCustom;
+			bool generalReParse;
+			bool generalResetOnFinish;
+			std::string generalResultTable;
+			std::vector<unsigned long> generalSkip;
+			unsigned long generalSleepIdle;
+			unsigned long generalSleepMySql;
+			unsigned long generalTimeoutTargetLock;
+			bool generalTiming;
+
+			// parsing entries
+			std::vector<std::string> parsingDateTimeFormats;
+			std::vector<std::string> parsingDateTimeLocales;
+			std::vector<unsigned long> parsingDateTimeQueries;
+			std::vector<unsigned short> parsingDateTimeSources;
+			std::vector<char> parsingFieldDelimiters;
+			std::vector<bool> parsingFieldIgnoreEmpty;
+			std::vector<bool> parsingFieldJSON;
+			std::vector<std::string> parsingFieldNames;
+			std::vector<unsigned long> parsingFieldQueries;
+			std::vector<unsigned short> parsingFieldSources;
+			std::vector<bool> parsingFieldTidyTexts;
+			std::vector<bool> parsingFieldWarningsEmpty;
+			std::vector<std::string> parsingIdIgnore;
+			std::vector<unsigned long> parsingIdQueries;
+			std::vector<unsigned short> parsingIdSources;
+		} config;
 
 	protected:
 		// parsing-specific configuration parsing
@@ -82,93 +91,94 @@ namespace crawlservpp::Module::Parser {
 	 */
 
 	// constructor: set default values
-	inline Config::Config() :	generalCacheSize(2500),
-								generalLock(300),
-								generalLogging(Config::generalLoggingDefault),
-								generalNewestOnly(true),
-								generalParseCustom(false),
-								generalReParse(false),
-								generalResetOnFinish(false),
-								generalSleepIdle(500),
-								generalSleepMySql(20),
-								generalTimeoutTargetLock(30),
-								generalTiming(false) {}
-
-	// destructor stub
-	inline Config::~Config() {}
+	inline Config::Entries::Entries() :	generalCacheSize(2500),
+										generalLock(300),
+										generalLogging(Config::generalLoggingDefault),
+										generalNewestOnly(true),
+										generalParseCustom(false),
+										generalReParse(false),
+										generalResetOnFinish(false),
+										generalSleepIdle(500),
+										generalSleepMySql(20),
+										generalTimeoutTargetLock(30),
+										generalTiming(false) {}
 
 	// parse parsing-specific configuration option
 	inline void Config::parseOption() {
 		this->category("general");
-		this->option("cache.size", this->generalCacheSize);
-		this->option("logging", this->generalLogging);
-		this->option("newest.only", this->generalNewestOnly);
-		this->option("parse.custom", this->generalParseCustom);
-		this->option("reparse", this->generalReParse);
-		this->option("reset.on.finish", this->generalResetOnFinish);
-		this->option("result.table", this->generalResultTable, StringParsingOption::SQL);
-		this->option("skip", this->generalSkip);
-		this->option("sleep.idle", this->generalSleepIdle);
-		this->option("sleep.mysql", this->generalSleepMySql);
-		this->option("timeout.target.lock", this->generalTimeoutTargetLock);
-		this->option("timing", this->generalTiming);
+		this->option("cache.size", this->config.generalCacheSize);
+		this->option("logging", this->config.generalLogging);
+		this->option("newest.only", this->config.generalNewestOnly);
+		this->option("parse.custom", this->config.generalParseCustom);
+		this->option("reparse", this->config.generalReParse);
+		this->option("reset.on.finish", this->config.generalResetOnFinish);
+		this->option("result.table", this->config.generalResultTable, StringParsingOption::SQL);
+		this->option("skip", this->config.generalSkip);
+		this->option("sleep.idle", this->config.generalSleepIdle);
+		this->option("sleep.mysql", this->config.generalSleepMySql);
+		this->option("timeout.target.lock", this->config.generalTimeoutTargetLock);
+		this->option("timing", this->config.generalTiming);
 
 		this->category("parser");
-		this->option("datetime.formats", this->parsingDateTimeFormats);
-		this->option("datetime.locales", this->parsingDateTimeLocales);
-		this->option("datetime.queries", this->parsingDateTimeQueries);
-		this->option("datetime.sources", this->parsingDateTimeSources);
-		this->option("field.delimiters", this->parsingFieldDelimiters, CharParsingOption::FromString);
-		this->option("field.ignore.empty", this->parsingFieldIgnoreEmpty);
-		this->option("field.json", this->parsingFieldJSON);
-		this->option("field.names", this->parsingFieldNames, StringParsingOption::SQL);
-		this->option("field.queries", this->parsingFieldQueries);
-		this->option("field.sources", this->parsingFieldSources);
-		this->option("field.tidy.texts", this->parsingFieldTidyTexts);
-		this->option("field.warnings.empty", this->parsingFieldWarningsEmpty);
-		this->option("id.ignore", this->parsingIdIgnore);
-		this->option("id.queries", this->parsingIdQueries);
-		this->option("id.sources", this->parsingIdSources);
+		this->option("datetime.formats", this->config.parsingDateTimeFormats);
+		this->option("datetime.locales", this->config.parsingDateTimeLocales);
+		this->option("datetime.queries", this->config.parsingDateTimeQueries);
+		this->option("datetime.sources", this->config.parsingDateTimeSources);
+		this->option("field.delimiters", this->config.parsingFieldDelimiters, CharParsingOption::FromString);
+		this->option("field.ignore.empty", this->config.parsingFieldIgnoreEmpty);
+		this->option("field.json", this->config.parsingFieldJSON);
+		this->option("field.names", this->config.parsingFieldNames, StringParsingOption::SQL);
+		this->option("field.queries", this->config.parsingFieldQueries);
+		this->option("field.sources", this->config.parsingFieldSources);
+		this->option("field.tidy.texts", this->config.parsingFieldTidyTexts);
+		this->option("field.warnings.empty", this->config.parsingFieldWarningsEmpty);
+		this->option("id.ignore", this->config.parsingIdIgnore);
+		this->option("id.queries", this->config.parsingIdQueries);
+		this->option("id.sources", this->config.parsingIdSources);
 	}
 
 	// check parsing-specific configuration
 	inline void Config::checkOptions() {
+		// check for result table
+		if(this->config.generalResultTable.empty())
+			throw std::runtime_error("Parser::Config::checkOptions(): No result table specified.");
+		
 		// check properties of datetime queries
 		unsigned long completeDateTimes = std::min( // number of complete datetime queries (= minimum size of all arrays)
-				this->parsingDateTimeQueries.size(),
-				this->parsingDateTimeSources.size()
+				this->config.parsingDateTimeQueries.size(),
+				this->config.parsingDateTimeSources.size()
 		);
 
 		bool incompleteDateTimes = false;
 
 		// the 'date/time format' property will be ignored if array is too large or set to "%F %T" if entry is missing
-		if(this->parsingDateTimeFormats.size() > completeDateTimes) this->parsingDateTimeFormats.resize(completeDateTimes);
+		if(this->config.parsingDateTimeFormats.size() > completeDateTimes) this->config.parsingDateTimeFormats.resize(completeDateTimes);
 		else {
-			this->parsingDateTimeFormats.reserve(completeDateTimes);
-			while(this->parsingDateTimeFormats.size() < completeDateTimes)
-				this->parsingDateTimeFormats.emplace_back("%F %T");
+			this->config.parsingDateTimeFormats.reserve(completeDateTimes);
+			while(this->config.parsingDateTimeFormats.size() < completeDateTimes)
+				this->config.parsingDateTimeFormats.emplace_back("%F %T");
 		}
 
 		// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
-		for(auto i = this->parsingDateTimeFormats.begin(); i != this->parsingDateTimeFormats.end(); ++i)
+		for(auto i = this->config.parsingDateTimeFormats.begin(); i != this->config.parsingDateTimeFormats.end(); ++i)
 			if(i->empty()) *i = "%F %T";
 
 		// the 'locales' property will be ignored if array is too large or set to "" if entry is missing
-		if(this->parsingDateTimeLocales.size() > completeDateTimes) this->parsingDateTimeLocales.resize(completeDateTimes);
+		if(this->config.parsingDateTimeLocales.size() > completeDateTimes) this->config.parsingDateTimeLocales.resize(completeDateTimes);
 		else {
-			this->parsingDateTimeLocales.reserve(completeDateTimes);
-			while(this->parsingDateTimeLocales.size() < completeDateTimes)
-				this->parsingDateTimeLocales.emplace_back();
+			this->config.parsingDateTimeLocales.reserve(completeDateTimes);
+			while(this->config.parsingDateTimeLocales.size() < completeDateTimes)
+				this->config.parsingDateTimeLocales.emplace_back();
 		}
 
-		if(this->parsingDateTimeQueries.size() > completeDateTimes) {
+		if(this->config.parsingDateTimeQueries.size() > completeDateTimes) {
 			// remove queries of incomplete datetime queries
-			this->parsingDateTimeQueries.resize(completeDateTimes);
+			this->config.parsingDateTimeQueries.resize(completeDateTimes);
 			incompleteDateTimes = true;
 		}
-		if(this->parsingDateTimeSources.size() > completeDateTimes) {
+		if(this->config.parsingDateTimeSources.size() > completeDateTimes) {
 			// remove sources of incomplete datetime queries
-			this->parsingDateTimeSources.resize(completeDateTimes);
+			this->config.parsingDateTimeSources.resize(completeDateTimes);
 			incompleteDateTimes = true;
 		}
 		if(incompleteDateTimes) {
@@ -179,66 +189,66 @@ namespace crawlservpp::Module::Parser {
 
 		// check properties of parsing fields (arrays with field names, queries and sources should have the same number of elements)
 		unsigned long completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
-				this->parsingFieldNames.size(),
-				this->parsingFieldQueries.size(),
-				this->parsingFieldSources.size()
+				this->config.parsingFieldNames.size(),
+				this->config.parsingFieldQueries.size(),
+				this->config.parsingFieldSources.size()
 		});
 		bool incompleteFields = false;
 
 		// the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
-		if(this->parsingFieldDelimiters.size() > completeFields) this->parsingFieldDelimiters.resize(completeFields);
+		if(this->config.parsingFieldDelimiters.size() > completeFields) this->config.parsingFieldDelimiters.resize(completeFields);
 		else {
-			this->parsingFieldDelimiters.reserve(completeFields);
-			while(this->parsingFieldDelimiters.size() < completeFields)
-				this->parsingFieldDelimiters.push_back('\n');
+			this->config.parsingFieldDelimiters.reserve(completeFields);
+			while(this->config.parsingFieldDelimiters.size() < completeFields)
+				this->config.parsingFieldDelimiters.push_back('\n');
 		}
 
 		// the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
-		if(this->parsingFieldIgnoreEmpty.size() > completeFields) this->parsingFieldIgnoreEmpty.resize(completeFields);
+		if(this->config.parsingFieldIgnoreEmpty.size() > completeFields) this->config.parsingFieldIgnoreEmpty.resize(completeFields);
 		else {
-			this->parsingFieldIgnoreEmpty.reserve(completeFields);
-			while(this->parsingFieldIgnoreEmpty.size() < completeFields)
-				this->parsingFieldIgnoreEmpty.push_back(true);
+			this->config.parsingFieldIgnoreEmpty.reserve(completeFields);
+			while(this->config.parsingFieldIgnoreEmpty.size() < completeFields)
+				this->config.parsingFieldIgnoreEmpty.push_back(true);
 		}
 
 		// the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->parsingFieldJSON.size() > completeFields) this->parsingFieldJSON.resize(completeFields);
+		if(this->config.parsingFieldJSON.size() > completeFields) this->config.parsingFieldJSON.resize(completeFields);
 		else {
-			this->parsingFieldJSON.reserve(completeFields);
-			while(this->parsingFieldJSON.size() < completeFields)
-				this->parsingFieldJSON.push_back(false);
+			this->config.parsingFieldJSON.reserve(completeFields);
+			while(this->config.parsingFieldJSON.size() < completeFields)
+				this->config.parsingFieldJSON.push_back(false);
 		}
 
 		// the 'tidy text' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->parsingFieldTidyTexts.size() > completeFields) this->parsingFieldTidyTexts.resize(completeFields);
+		if(this->config.parsingFieldTidyTexts.size() > completeFields) this->config.parsingFieldTidyTexts.resize(completeFields);
 		else {
-			this->parsingFieldTidyTexts.reserve(completeFields);
-			while(this->parsingFieldTidyTexts.size() < completeFields)
-				this->parsingFieldTidyTexts.push_back(false);
+			this->config.parsingFieldTidyTexts.reserve(completeFields);
+			while(this->config.parsingFieldTidyTexts.size() < completeFields)
+				this->config.parsingFieldTidyTexts.push_back(false);
 		}
 
 		// the 'warning if empty' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->parsingFieldWarningsEmpty.size() > completeFields)
-			this->parsingFieldWarningsEmpty.resize(completeFields);
+		if(this->config.parsingFieldWarningsEmpty.size() > completeFields)
+			this->config.parsingFieldWarningsEmpty.resize(completeFields);
 		else {
-			this->parsingFieldWarningsEmpty.reserve(completeFields);
-			while(this->parsingFieldWarningsEmpty.size() < completeFields)
-				this->parsingFieldWarningsEmpty.push_back(false);
+			this->config.parsingFieldWarningsEmpty.reserve(completeFields);
+			while(this->config.parsingFieldWarningsEmpty.size() < completeFields)
+				this->config.parsingFieldWarningsEmpty.push_back(false);
 		}
 
-		if(this->parsingFieldNames.size() > completeFields) {
+		if(this->config.parsingFieldNames.size() > completeFields) {
 			// remove names of incomplete parsing fields
-			this->parsingFieldNames.resize(completeFields);
+			this->config.parsingFieldNames.resize(completeFields);
 			incompleteFields = true;
 		}
-		if(this->parsingFieldQueries.size() > completeFields) {
+		if(this->config.parsingFieldQueries.size() > completeFields) {
 			// remove queries of incomplete parsing fields
-			this->parsingFieldQueries.resize(completeFields);
+			this->config.parsingFieldQueries.resize(completeFields);
 			incompleteFields = true;
 		}
-		if(this->parsingFieldSources.size() > completeFields) {
+		if(this->config.parsingFieldSources.size() > completeFields) {
 			// remove sources of incomplete parsing fields
-			this->parsingFieldSources.resize(completeFields);
+			this->config.parsingFieldSources.resize(completeFields);
 			incompleteFields = true;
 		}
 		if(incompleteFields) {
@@ -247,25 +257,27 @@ namespace crawlservpp::Module::Parser {
 			this->warning("Incomplete field(s) removed.");
 		}
 
-		// check properties of id queries (arrays defining queries should have the same number of elements - one for each query)
-		unsigned long completeIds =
-				std::min(this->parsingIdQueries.size(), this->parsingIdSources.size());	// number of complete id queries
-																						// (= minimum size of all arrays)
+		// check properties of ID queries
+		unsigned long completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
+				this->config.parsingIdQueries.size(),
+				this->config.parsingIdSources.size()
+		);
+
 		bool incompleteIds = false;
-		if(this->parsingIdQueries.size() > completeIds) {
-			// remove queries of incomplete id queries
-			this->parsingIdQueries.resize(completeIds);
+		if(this->config.parsingIdQueries.size() > completeIds) {
+			// remove queries of incomplete ID queries
+			this->config.parsingIdQueries.resize(completeIds);
 			incompleteIds = true;
 		}
-		if(this->parsingIdSources.size() > completeIds) {
-			// remove sources of incomplete id queries
-			this->parsingIdSources.resize(completeIds);
+		if(this->config.parsingIdSources.size() > completeIds) {
+			// remove sources of incomplete ID queries
+			this->config.parsingIdSources.resize(completeIds);
 			incompleteIds = true;
 		}
 		if(incompleteIds) {
-			// warn about incomplete id queries
+			// warn about incomplete ID queries
 			this->warning("\'id.queries\' and \'.sources\' should have the same number of elements.");
-			this->warning("Incomplete id queries removed.");
+			this->warning("Incomplete ID queries removed.");
 		}
 	}
 
