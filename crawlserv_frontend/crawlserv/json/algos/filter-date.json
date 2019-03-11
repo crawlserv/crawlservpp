@@ -1,0 +1,29 @@
+{
+	"label": "Filter by date",
+	"open": false,
+	
+	"enable": {
+		"type": "bool",
+		"default": false,
+		"label": "Filter parsed data by date",
+		"description": "Enable filtering source data by date (only applies to parsed data).",
+		"simple": true,
+		"position": 1
+	},
+	"from": {
+		"type": "date",
+		"default": "",
+		"label": "From:",
+		"description": "The date from (including) which to filter the parsed data.",
+		"simple": true,
+		"position": 2
+	},
+	"to": {
+		"type": "date",
+		"default": "",
+		"label": "To:",
+		"description": "The date to (including) which to filter the parsed data.",
+		"simple": true,
+		"position": 3
+	}
+}

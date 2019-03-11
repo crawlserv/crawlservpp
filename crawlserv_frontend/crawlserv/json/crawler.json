@@ -1,11 +1,9 @@
 {
 	"crawler": {
-		"id": 1,
 		"label": "Crawling",
 		"open": true,
 		
 		"archives": {
-			"id": 1,
 			"type": "bool",
 			"default": false,
 			"label": "Crawl archives",
@@ -14,7 +12,6 @@
 			"position": 5
 		},
 		"archives.names": {
-			"id": 2,
 			"type": "array",
 			"item-type": "string",
 			"default": [ "archive.org" ],
@@ -22,7 +19,6 @@
 			"simple": false
 		},
 		"archives.urls.memento": {
-			"id": 3,
 			"type": "array",
 			"item-type": "string",
 			"default": [ "http://web.archive.org/web/" ],
@@ -30,7 +26,6 @@
 			"simple": false
 		},
 		"archives.urls.timemap": {
-			"id": 4,
 			"type": "array",
 			"item-type": "string",
 			"default": [ "http://web.archive.org/web/timemap/link/" ],
@@ -38,30 +33,25 @@
 			"simple": false
 		},
 		"html.canonical.check": {
-			"id": 5,
 			"type": "bool",
 			"default": false,
 			"description": "Simple HTML consistency check comparing canonical link with URL (for debugging only).",
 			"simple": false
 		},
 		"html.consistency.check": {
-			"id": 6,
 			"type": "bool",
 			"default": false,
 			"description": "Simple HTML consistency check looking for two HTML tags (for debugging only).",
 			"simple": false
 		},
 		"lock": {
-			"id": 7,
 			"type": "number",
 			"default": 300,
 			"min": 1,
-			"step": 10,
 			"description": "URL locking time (in s).",
 			"simple": false
 		},
 		"logging": {
-			"id": 8,
 			"type": "enum",
 			"default": 1,
 			"enum-values": [
@@ -76,7 +66,6 @@
 			"position": 11
 		},
 		"params.blacklist": {
-			"id": 9,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -84,7 +73,6 @@
 			"simple": false
 		},
 		"params.whitelist": {
-			"id": 10,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -94,7 +82,6 @@
 			"position": 10
 		},
 		"queries.blacklist.content": {
-			"id": 11,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -105,7 +92,6 @@
 			"simple": false
 		},
 		"queries.blacklist.types": {
-			"id": 12,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -119,7 +105,6 @@
 			"simple": false
 		},
 		"queries.blacklist.urls": {
-			"id": 13,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -135,7 +120,6 @@
 			"position": 8
 		},
 		"queries.links": {
-			"id": 14,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -149,7 +133,6 @@
 			"position": 3
 		},
 		"queries.whitelist.content": {
-			"id": 15,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -160,7 +143,6 @@
 			"simple": false
 		},
 		"queries.whitelist.types": {
-			"id": 16,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -175,7 +157,6 @@
 			"simple": false
 		},
 		"queries.whitelist.urls": {
-			"id": 17,
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -189,7 +170,6 @@
 			"simple": false
 		},
 		"recrawl": {
-			"id": 18,
 			"type": "bool",
 			"default": false,
 			"label": "Re-crawl URLs",
@@ -198,7 +178,6 @@
 			"position": 4
 		},
 		"recrawl.always": {
-			"id": 19,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -208,7 +187,6 @@
 			"position": 7
 		},
 		"recrawl.start": {
-			"id": 20,
 			"type": "bool",
 			"default": true,
 			"label": "Re-crawl start page",
@@ -217,7 +195,6 @@
 			"position": 2
 		},
 		"retries": {
-			"id": 21,
 			"type": "number",
 			"default": -1,
 			"min": -1,
@@ -227,7 +204,6 @@
 			"position": 9
 		},
 		"retry.archive": {
-			"id": 22,
 			"type": "bool",
 			"default": true,
 			"label": "Re-try archives",
@@ -236,7 +212,6 @@
 			"position": 5
 		},
 		"retry.http": {
-			"id": 23,
 			"type": "array",
 			"item-type": "number",
 			"default": [ 502, 503, 504 ],
@@ -246,7 +221,6 @@
 			"simple": false
 		},
 		"sleep.error": {
-			"id": 24,
 			"type": "number",
 			"default": 5000,
 			"min": 0,
@@ -254,25 +228,20 @@
 			"simple": false
 		},
 		"sleep.http": {
-			"id": 25,
 			"type": "number",
 			"default": 0,
 			"min": 0,
-			"step": 100,
 			"description": "Time (in ms) that will be waited between HTTP requests.",
 			"simple": false
 		},
 		"sleep.idle": {
-			"id": 26,
 			"type": "number",
 			"default": 1000,
 			"min": 100,
-			"step": 100,
 			"description": "Time (in ms) that will be waited before checking for new URLs when all URLs have been crawled.",
 			"simple": false
 		},
 		"sleep.mysql": {
-			"id": 27,
 			"type": "number",
 			"default": 10,
 			"min": 1,
@@ -280,7 +249,6 @@
 			"simple": false
 		},
 		"start": {
-			"id": 28,
 			"type": "string",
 			"default": "/",
 			"label": "Start page:",
@@ -289,49 +257,42 @@
 			"position": 1
 		},
 		"timing": {
-			"id": 29,
 			"type": "bool",
 			"default": false,
 			"description": "Calculate timing statistics.",
 			"simple": false
 		},
 		"url.case.sensitive": {
-			"id": 30,
 			"type": "bool",
 			"default": true,
 			"description": "URLs are case-sensitive. WARNING: Changing invalidates the hashs of existing URLs!",
 			"simple": false
 		},
 		"url.chunks": {
-			"id": 31,
 			"type": "number",
 			"default": 5000,
 			"description": "Number of crawled URLs to be processed at once without possible interruption.",
 			"simple": false
 		},
 		"url.debug": {
-			"id": 32,
 			"type": "bool",
 			"default": false,
 			"description": "Perform additional check for duplicates after URL insertion (for debugging purposes only).",
 			"simple": false
 		},
 		"url.startup.check": {
-			"id": 33,
 			"type": "bool",
 			"default": true,
 			"description": "Check the URL list before starting to crawl.",
 			"simple": false
 		},
 		"warnings.file": {
-			"id": 34,
 			"type": "bool",
 			"default": false,
 			"description": "Warn when files are found (instead of folders).",
 			"simple": false
 		},
 		"xml": {
-			"id": 35,
 			"type": "bool",
 			"default": false,
 			"description": "Save crawled content as cleaned XML.",
@@ -339,12 +300,10 @@
 		}
 	},
 	"custom": {
-		"id": 2,
 		"label": "Custom URLs",
 		"open": false,
 		
 		"counters": {
-			"id": 1,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -354,7 +313,6 @@
 			"position": 2
 		},
 		"counters.end": {
-			"id": 2,
 			"type": "array",
 			"item-type": "number",
 			"default": [],
@@ -364,7 +322,6 @@
 			"position": 4
 		},
 		"counters.global": {
-			"id": 3,
 			"type": "bool",
 			"default": true,
 			"label": "Use counters globally",
@@ -373,7 +330,6 @@
 			"position": 6
 		},
 		"counters.start": {
-			"id": 4,
 			"type": "array",
 			"item-type": "number",
 			"default": [],
@@ -383,7 +339,6 @@
 			"position": 3
 		},
 		"counters.step": {
-			"id": 5,
 			"type": "array",
 			"item-type": "number",
 			"default": [],
@@ -393,7 +348,6 @@
 			"position": 5
 		},
 		"recrawl": {
-			"id": 6,
 			"type": "bool",
 			"default": true,
 			"label": "Re-crawl custom URLs",
@@ -402,7 +356,6 @@
 			"position": 7
 		},
 		"urls": {
-			"id": 7,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -413,12 +366,10 @@
 		}
 	},
 	"network": {
-		"id": 3,
 		"label": "Networking",
 		"open": false,
 		
 		"connections.max": {
-			"id": 1,
 			"type": "number",
 			"default": 5,
 			"min": 1,
@@ -427,14 +378,12 @@
 			"simple": false
 		},
 		"contentlength.ignore": {
-			"id": 2,
 			"type": "bool",
 			"default": false,
 			"description": "Ignore Content-Length header.",
 			"simple": false
 		},
 		"cookies": {
-			"id": 3,
 			"type": "bool",
 			"default": false,
 			"label": "Enable cookies",
@@ -443,14 +392,12 @@
 			"position": 6
 		},
 		"cookies.load": {
-			"id": 4,
 			"type": "string",
 			"default": "",
 			"description": "Read cookies from specific server file.",
 			"simple": false
 		},
 		"cookies.overwrite": {
-			"id": 5,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -458,28 +405,24 @@
 			"simple": false
 		},
 		"cookies.save": {
-			"id": 6,
 			"type": "string",
 			"default": "",
 			"description": "Write cookies to specific server file.",
 			"simple": false
 		},
 		"cookies.session": {
-			"id": 7,
 			"type": "bool",
 			"default": true,
 			"description": "Use loaded session cookies.",
 			"simple": false
 		},
 		"cookies.set": {
-			"id": 8,
 			"type": "string",
 			"default": "",
 			"description": "Custom Cookie header independent from internal cookie engine.",
 			"simple": false
 		},
 		"dns.cachetimeout": {
-			"id": 9,
 			"type": "number",
 			"default": 60,
 			"min": -1,
@@ -487,21 +430,18 @@
 			"simple": false
 		},
 		"dns.doh": {
-			"id": 10,
 			"type": "string",
 			"default": "",
 			"description": "URL of custom DNS over HTTP server.",
 			"simple": false
 		},
 		"dns.interface": {
-			"id": 11,
 			"type": "string",
 			"default": "",
 			"description": "Interface for DNS requests.",
 			"simple": false
 		},
 		"dns.resolves": {
-			"id": 12,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -509,7 +449,6 @@
 			"simple": false
 		},
 		"dns.servers": {
-			"id": 13,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -517,49 +456,42 @@
 			"simple": false
 		},
 		"dns.shuffle": {
-			"id": 14,
 			"type": "bool",
 			"default": false,
 			"description": "Shuffle multiple DNS results.",
 			"simple": false
 		},
 		"encoding.br": {
-			"id": 15,
 			"type": "bool",
 			"default": true,
 			"description": "Accept brotli-compressed content.",
 			"simple": false
 		},
 		"encoding.deflate": {
-			"id": 16,
 			"type": "bool",
 			"default": true,
 			"description": "Accept zlib-compressed content.",
 			"simple": false
 		},
 		"encoding.gzip": {
-			"id": 17,
 			"type": "bool",
 			"default": true,
 			"description": "Accept gzip-compressed content.",
 			"simple": false
 		},
 		"encoding.identity": {
-			"id": 18,
 			"type": "bool",
 			"default": true,
 			"description": "Accept non-compressed content.",
 			"simple": false
 		},
 		"encoding.transfer": {
-			"id": 19,
 			"type": "bool",
 			"default": false,
 			"description": "Send transfer encoding header.",
 			"simple": false
 		},
 		"headers": {
-			"id": 20,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -567,7 +499,6 @@
 			"simple": false
 		},
 		"http.200aliases": {
-			"id": 21,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -575,7 +506,6 @@
 			"simple": false
 		},
 		"http.version": {
-			"id": 22,
 			"type": "enum",
 			"enum-values": [
 				"any",
@@ -590,14 +520,12 @@
 			"simple": false
 		},
 		"local.interface": {
-			"id": 23,
 			"type": "string",
 			"default": "",
 			"description": "Source interface for out-going traffic.",
 			"simple": false
 		},
 		"local.port": {
-			"id": 24,
 			"type": "number",
 			"default": 0,
 			"min": 0,
@@ -606,7 +534,6 @@
 			"simple": false
 		},
 		"local.portrange": {
-			"id": 25,
 			"type": "number",
 			"default": 1,
 			"min": 1,
@@ -615,7 +542,6 @@
 			"simple": false
 		},
 		"proxy": {
-			"id": 26,
 			"type": "string",
 			"default": "",
 			"label": "Proxy server:",
@@ -624,14 +550,12 @@
 			"position": 2
 		},
 		"proxy.auth": {
-			"id": 27,
 			"type": "string",
 			"default": "",
 			"description": "Authentification for proxy server (user:password).",
 			"simple": false
 		},
 		"proxy.headers": {
-			"id": 28,
 			"type": "array",
 			"item-type": "string",
 			"default": [],
@@ -639,42 +563,36 @@
 			"simple": false
 		},
 		"proxy.pre": {
-			"id": 29,
 			"type": "string",
 			"default": "",
 			"description": "Pre-proxy server.",
 			"simple": false
 		},
 		"proxy.tlssrp.password": {
-			"id": 30,
 			"type": "string",
 			"default": "",
 			"description": "TSL-SRP password for the proxy.",
 			"simple": false
 		},
 		"proxy.tlssrp.user": {
-			"id": 31,
 			"type": "string",
 			"default": "",
 			"description": "TSL-SRP username for the proxy.",
 			"simple": false
 		},
 		"proxyy.tunnelling": {
-			"id": 32,
 			"type": "bool",
 			"default": false,
 			"description": "Enable proxy tunnelling.",
 			"simple": false
 		},
 		"redirect": {
-			"id": 33,
 			"type": "bool",
 			"default": true,
 			"description": "Follow Location headers for automatic redirect.",
 			"simple": false
 		},
 		"redirect.max": {
-			"id": 34,
 			"type": "number",
 			"default": 20,
 			"min": -1,
@@ -682,60 +600,50 @@
 			"simple": false
 		},
 		"redirect.post301": {
-			"id": 35,
 			"type": "bool",
 			"default": false,
 			"description": "Do not convert POST 301-redirects to GET requests.",
 			"simple": false
 		},
 		"redirect.post302": {
-			"id": 36,
 			"type": "bool",
 			"default": false,
 			"description": "Do not convert POST 302-redirects to GET requests.",
 			"simple": false
 		},
 		"redirect.post303": {
-			"id": 37,
 			"type": "bool",
 			"default": false,
 			"description": "Do not convert POST 303-redirects to GET requests.",
 			"simple": false
 		},
 		"referer": {
-			"id": 38,
 			"type": "string",
 			"default": "",
 			"description": "Custom Referer header.",
 			"simple": false
 		},
 		"referer.automatic": {
-			"id": 39,
 			"type": "bool",
 			"default": false,
 			"description": "Send Referer header when automatically redirected.",
 			"simple": false
 		},
 		"speed.downlimit": {
-			"id": 40,
 			"type": "number",
 			"default": 0,
 			"min": 0,
-			"step": 1000,
 			"description": "Maximum download speed (in B/s, 0=infinite).",
 			"simple": false
 		},
 		"speed.lowlimit": {
-			"id": 41,
 			"type": "number",
 			"default": 0,
 			"min": 0,
-			"step": 100,
 			"description": "Low speed limit (in B/s, 0=none).",
 			"simple": false
 		},
 		"speed.lowtime": {
-			"id": 42,
 			"type": "number",
 			"default": 0,
 			"min": 0,
@@ -743,65 +651,55 @@
 			"simple": false
 		},
 		"speed.uplimit": {
-			"id": 43,
 			"type": "number",
 			"default": 0,
 			"min": 0,
-			"step": 1000,
 			"description": "Maximum upload speed (in B/s, 0=none).",
 			"simple": false
 		},
 		"ssl.verify.host": {
-			"id": 44,
 			"type": "bool",
 			"default": true,
 			"description": "SSL host name verification.",
 			"simple": false
 		},
 		"ssl.verify.peer": {
-			"id": 45,
 			"type": "bool",
 			"default": true,
 			"description": "SSL peer verification.",
 			"simple": false
 		},
 		"ssl.verify.proxy.host": {
-			"id": 46,
 			"type": "bool",
 			"default": true,
 			"description": "SSL host name verification for proxy.",
 			"simple": false
 		},
 		"ssl.verify.proxy.peer": {
-			"id": 47,
 			"type": "bool",
 			"default": true,
 			"description": "SSL peer verification for proxy.",
 			"simple": false
 		},
 		"ssl.verify.status": {
-			"id": 48,
 			"type": "bool",
 			"default": false,
 			"description": "SSL status verification.",
 			"simple": false
 		},
 		"tcp.fastopen": {
-			"id": 49,
 			"type": "bool",
 			"default": false,
 			"description": "Enable TCP Fast Open.",
 			"simple": false
 		},
 		"tcp.keepalive": {
-			"id": 50,
 			"type": "bool",
 			"default": false,
 			"description": "Enable TCP Keep-alive probing.",
 			"simple": false
 		},
 		"tcp.keepalive.idle": {
-			"id": 51,
 			"type": "number",
 			"default": 60,
 			"min": 1,
@@ -809,7 +707,6 @@
 			"simple": false
 		},
 		"tcp.keepalive.interval": {
-			"id": 52,
 			"type": "number",
 			"default": 60,
 			"min": 1,
@@ -817,35 +714,29 @@
 			"simple": false
 		},
 		"tcp.nagle": {
-			"id": 53,
 			"type": "bool",
 			"default": false,
 			"description": "Enable TCP Nagle algorithm.",
 			"simple": false
 		},
 		"timeout": {
-			"id": 54,
 			"type": "number",
 			"default": 300,
 			"min": 1,
-			"step": 10,
 			"label": "Time-out on connect (s):",
 			"description": "Connecting time-out (in s).",
 			"simple": true,
 			"position": 3
 		},
 		"timeout.happyeyeballs": {
-			"id": 55,
 			"type": "number",
 			"default": 0,
 			"min": 0,
 			"max": 65535,
-			"step": 50,
 			"description": "Time-out for IPv6 only using the Happy eyeballs algorithm (0=default).",
 			"simple": false
 		},
 		"timeout.request": {
-			"id": 56,
 			"type": "number",
 			"default": 300,
 			"min": 0,
@@ -855,21 +746,18 @@
 			"position": 4
 		},
 		"tlssrp.password" : {
-			"id": 57,
 			"type": "string",
 			"default": "",
 			"description": "Password for TLS-SRP authentification.",
 			"simple": false
 		},
 		"tlssrp.user": {
-			"id": 58,
 			"type": "string",
 			"default": "",
 			"description": "Username for TLS-SRP authentification.",
 			"simple": false
 		},
 		"useragent": {
-			"id": 59,
 			"type": "string",
 			"default": "",
 			"label": "Custom UserAgent:",
@@ -878,7 +766,6 @@
 			"position": 5
 		},
 		"verbose": {
-			"id": 60,
 			"type": "bool",
 			"default": false,
 			"description": "Show all connection information on server.",

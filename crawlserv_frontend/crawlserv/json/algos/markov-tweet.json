@@ -1,0 +1,78 @@
+{
+	"label": "Markov Tweet Generator",
+	"open": true,
+	
+	"dimension": {
+		"type": "number",
+		"default": 5,
+		"min": 2,
+		"max": 255,
+		"label": "Chain dimension:",
+		"description": "The order of the markov chain used. Higher values mean less random texts.",
+		"simple": true,
+		"position": 3
+	},
+	"language": {
+		"type": "string",
+		"default": "en_US",
+		"label": "Language:",
+		"description": "Language used by the spell-checking (only GNU Aspell language codes are valid).",
+		"simple": true,
+		"position": 7
+	},
+	"length": {
+		"type": "number",
+		"default": 140,
+		"min": 5,
+		"label": "Tweet length:",
+		"description": "Maximum length of generated tweets (in tokens).",
+		"simple": true,
+		"position": 4
+	},
+	"max": {
+		"type": "number",
+		"default": 0,
+		"min": 0,
+		"label": "Maximum tweets:",
+		"description": "Maximum number of tweets to be generated (0=infinite).",
+		"simple": true,
+		"position": 5
+	},
+	"result.field": {
+		"type": "string",
+		"default": "tweet",
+		"label": "Result field:",
+		"description": "Field name to save twets to.",
+		"simple": true,
+		"position": 1
+	},
+	"sleep": {
+		"type": "number",
+		"default": 0,
+		"min": 0,
+		"description": "Optional sleeping time inbetween tweet generation (in ms).",
+		"simple": false
+	},
+	"sources.field": {
+		"type": "string",
+		"default": "sources",
+		"label": "Save no. of sources to:",
+		"description": "Field name to save number of sources to.",
+		"simple": true,
+		"position": 2
+	},
+	"spellcheck": {
+		"type": "bool",
+		"default": true,
+		"label": "Spell-checking",
+		"description": "Spell-check the words used for tweet generation.",
+		"simple": true,
+		"position": 6
+	},
+	"timing": {
+		"type": "bool",
+		"default": true,
+		"description": "Calculate timing statistics.",
+		"simple": false
+	}
+}
