@@ -192,7 +192,9 @@ namespace crawlservpp::Helper::Strings {
 
 	// check whether the name is valid for mySQL purposes (table and field names)
 	inline bool checkSQLName(const std::string& name) {
-		return name.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_") == std::string::npos;
+		return name.find_first_not_of(
+				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_"
+		) == std::string::npos;
 	}
 
 } // /* crawlservpp::Helper::Strings */
