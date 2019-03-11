@@ -1164,7 +1164,7 @@ class Config {
 		}
 		
 		// add or update algorithm if necessary
-		if(algo.id != null) {
+		if(typeof algo !== "undefined" && algo.id != null) {
 			var found = false;
 			
 			for(var key in this.config_current) {
