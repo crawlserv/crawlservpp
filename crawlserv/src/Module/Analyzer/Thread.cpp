@@ -34,8 +34,14 @@ namespace crawlservpp::Module::Analyzer {
 	void Thread::onInit(bool resumed) {
 		std::queue<std::string> configWarnings;
 
-		// get configuration
-		this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
+		// set ID, website and URL list
+		this->database.setId(this->getId());
+		this->database.setWebsite(this->getWebsite());
+		this->database.setUrlList(this->getUrlList());
+		this->database.setNamespaces(this->websiteNamespace, this->urlListNamespace);
+
+		// load configuration
+		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
 		if(this->config.generalLogging) {
@@ -45,32 +51,26 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 
-		// check configuration
-		bool verbose = config.generalLogging == Config::generalLoggingVerbose;
-		if(this->config.generalResultTable.empty()) throw std::runtime_error("No target table specified.");
-
 		// set database configuration
 		this->setStatusMessage("Setting database configuration...");
-		if(verbose) this->log("sets database configuration...");
-		this->database.setId(this->getId());
-		this->database.setWebsite(this->getWebsite());
-		this->database.setUrlList(this->getUrlList());
-		this->database.setWebsiteNamespace(this->websiteNamespace);
-		this->database.setUrlListNamespace(this->urlListNamespace);
+		if(config.generalLogging == Config::generalLoggingVerbose)
+			this->log("sets database configuration...");
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setLogging(this->config.generalLogging);
-		this->database.setVerbose(verbose);
+		this->database.setVerbose(config.generalLogging == Config::generalLoggingVerbose);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 		this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
 		// prepare SQL queries
 		this->setStatusMessage("Preparing SQL statements...");
-		if(verbose) this->log("prepares SQL statements...");
+		if(config.generalLogging == Config::generalLoggingVerbose)
+			this->log("prepares SQL statements...");
 		this->database.prepare();
 
 		// initialize algorithm
 		this->setStatusMessage("Initializing algorithm...");
-		if(verbose) this->log("initializes algorithm...");
+		if(config.generalLogging == Config::generalLoggingVerbose)
+			this->log("initializes algorithm...");
 		this->onAlgoInit(resumed);
 
 		this->setStatusMessage("Starting algorithm...");
