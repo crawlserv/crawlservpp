@@ -44,7 +44,7 @@
 
 namespace crawlservpp::Module::Crawler {
 
-	class Thread: public Module::Thread, public Query::Container {
+	class Thread: public Module::Thread, public Query::Container, public Config {
 		// for convenienc
 		typedef Main::Exception Exception;
 		typedef Network::Curl::Exception CurlException;
@@ -99,8 +99,7 @@ namespace crawlservpp::Module::Crawler {
 			std::string timeStamp;
 		};
 
-		// configuration, domain, URI parser and separate networking for archive.org
-		Config config;
+		// domain, URI parser and separate networking for archive.org
 		std::string domain;
 		std::unique_ptr<Parsing::URI> parser;
 		std::unique_ptr<Network::Curl> networkingArchives;

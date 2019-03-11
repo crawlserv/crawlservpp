@@ -59,9 +59,8 @@ namespace crawlservpp::Module::Parser {
 		// setters
 		void setId(unsigned long analyzerId);
 		void setWebsite(unsigned long websiteId);
-		void setWebsiteNamespace(const std::string& websiteNamespace);
 		void setUrlList(unsigned long listId);
-		void setUrlListNamespace(const std::string& urlListNamespace);
+		void setNamespaces(const std::string& website, const std::string& urlList);
 		void setCacheSize(unsigned long setCacheSize);
 		void setReparse(bool isReparse);
 		void setParseCustom(bool isParseCustom);

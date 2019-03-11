@@ -45,7 +45,7 @@
 
 namespace crawlservpp::Module::Parser {
 
-	class Thread: public Module::Thread, public Query::Container {
+	class Thread: public Module::Thread, public Query::Container, public Config {
 		// for convenience
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::ParsingEntry ParsingEntry;
@@ -100,7 +100,6 @@ namespace crawlservpp::Module::Parser {
 		void interrupt();
 
 		// configuration
-		Config config;
 		bool idFromUrl;
 
 		// queries

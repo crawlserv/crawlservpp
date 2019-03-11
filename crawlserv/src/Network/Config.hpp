@@ -29,7 +29,7 @@ namespace crawlservpp::Network {
 	 * DECLARATION
 	 */
 
-	class Config {
+	class Config : public Module::Config {
 		// for convenience
 		typedef Struct::ConfigItem ConfigItem;
 
@@ -106,13 +106,7 @@ namespace crawlservpp::Network {
 		bool verbose;
 
 		// parse configuration option
-		void parseOption(Module::Config& parser);
-
-		// not moveable, not copyable
-		Config(Config&) = delete;
-		Config(Config&&) = delete;
-		Config& operator=(Config&) = delete;
-		Config& operator=(Config&&) = delete;
+		void parseOption() override;
 	};
 
 	/*
@@ -120,7 +114,8 @@ namespace crawlservpp::Network {
 	 */
 
 	// constructor: set default values
-	inline Config::Config() :	connectionsMax(5),
+	inline Config::Config() :	Module::Config(),
+								connectionsMax(5),
 								contentLengthIgnore(false),
 								cookies(false),
 								cookiesSession(true),
@@ -164,67 +159,68 @@ namespace crawlservpp::Network {
 	inline Config::~Config() {}
 
 	// parse configuration option
-	inline void Config::parseOption(Module::Config& parser) {
-		parser.option("connections.max", this->connectionsMax);
-		parser.option("contentlength.ignore", this->contentLengthIgnore);
-		parser.option("cookies", this->cookies);
-		parser.option("cookies.load", this->cookiesLoad);
-		parser.option("cookies.overwrite", this->cookiesOverwrite);
-		parser.option("cookies.save", this->cookiesSave);
-		parser.option("cookies.session", this->cookiesSession);
-		parser.option("cookies.set", this->cookiesSet);
-		parser.option("dns.cachetimeout", this->dnsCacheTimeOut);
-		parser.option("dns.doh", this->dnsDoH);
-		parser.option("dns.interface", this->dnsInterface);
-		parser.option("dns.resolves", this->dnsResolves);
-		parser.option("dns.servers", this->dnsServers);
-		parser.option("dns.shuffle", this->dnsShuffle);
-		parser.option("encoding.br", this->encodingBr);
-		parser.option("encoding.deflate", this->encodingDeflate);
-		parser.option("encoding.gzip", this->encodingGZip);
-		parser.option("encoding.identity", this->encodingIdentity);
-		parser.option("encoding.transfer", this->encodingTransfer);
-		parser.option("headers", this->headers);
-		parser.option("http.200aliases", this->http200Aliases);
-		parser.option("http.version", this->httpVersion);
-		parser.option("local.interface", this->localInterface);
-		parser.option("local.port", this->localPort);
-		parser.option("local.portrange", this->localPortRange);
-		parser.option("proxy", this->proxy);
-		parser.option("proxy.auth", this->proxyAuth);
-		parser.option("proxy.headers", this->proxyHeaders);
-		parser.option("proxy.pre", this->proxyPre);
-		parser.option("proxy.tlssrp.password", this->proxyTlsSrpPassword);
-		parser.option("proxy.tlssrp.user", this->proxyTlsSrpUser);
-		parser.option("proxy.tunnelling", this->proxyTunnelling);
-		parser.option("redirect", this->redirect);
-		parser.option("redirect.max", this->redirectMax);
-		parser.option("redirect.post301", this->redirectPost301);
-		parser.option("redirect.post302", this->redirectPost302);
-		parser.option("redirect.post303", this->redirectPost303);
-		parser.option("referer", this->referer);
-		parser.option("referer.automatic", this->refererAutomatic);
-		parser.option("speed.downlimit", this->speedDownLimit);
-		parser.option("speed.lowlimit", this->speedLowLimit);
-		parser.option("speed.lowtime", this->speedLowTime);
-		parser.option("speed.uplimit", this->speedUpLimit);
-		parser.option("ssl.verify.host", this->sslVerifyHost);
-		parser.option("ssl.verify.peer", this->sslVerifyPeer);
-		parser.option("ssl.verify.proxy.host", this->sslVerifyProxyHost);
-		parser.option("ssl.verify.proxy.peer", this->sslVerifyProxyPeer);
-		parser.option("ssl.verify.status", this->sslVerifyStatus);
-		parser.option("tcp.fastopen", this->tcpFastOpen);
-		parser.option("tcp.keepalive", this->tcpKeepAlive);
-		parser.option("tcp.keepalive.idle", this->tcpKeepAliveIdle);
-		parser.option("tcp.keepalive.interval", this->tcpKeepAliveInterval);
-		parser.option("tcp.nagle", this->tcpNagle);
-		parser.option("timeout", this->timeOut);
-		parser.option("timeout.happyeyeballs", this->timeOutHappyEyeballs);
-		parser.option("timeout.request", this->timeOutRequest);
-		parser.option("tlssrp.password", this->tlsSrpPassword);
-		parser.option("tlssrp.user", this->tlsSrpUser);
-		parser.option("useragent", this->userAgent);
-		parser.option("verbose", this->verbose);
+	inline void Config::parseOption() {
+		this->category("network");
+		this->option("connections.max", this->connectionsMax);
+		this->option("contentlength.ignore", this->contentLengthIgnore);
+		this->option("cookies", this->cookies);
+		this->option("cookies.load", this->cookiesLoad);
+		this->option("cookies.overwrite", this->cookiesOverwrite);
+		this->option("cookies.save", this->cookiesSave);
+		this->option("cookies.session", this->cookiesSession);
+		this->option("cookies.set", this->cookiesSet);
+		this->option("dns.cachetimeout", this->dnsCacheTimeOut);
+		this->option("dns.doh", this->dnsDoH);
+		this->option("dns.interface", this->dnsInterface);
+		this->option("dns.resolves", this->dnsResolves);
+		this->option("dns.servers", this->dnsServers);
+		this->option("dns.shuffle", this->dnsShuffle);
+		this->option("encoding.br", this->encodingBr);
+		this->option("encoding.deflate", this->encodingDeflate);
+		this->option("encoding.gzip", this->encodingGZip);
+		this->option("encoding.identity", this->encodingIdentity);
+		this->option("encoding.transfer", this->encodingTransfer);
+		this->option("headers", this->headers);
+		this->option("http.200aliases", this->http200Aliases);
+		this->option("http.version", this->httpVersion);
+		this->option("local.interface", this->localInterface);
+		this->option("local.port", this->localPort);
+		this->option("local.portrange", this->localPortRange);
+		this->option("proxy", this->proxy);
+		this->option("proxy.auth", this->proxyAuth);
+		this->option("proxy.headers", this->proxyHeaders);
+		this->option("proxy.pre", this->proxyPre);
+		this->option("proxy.tlssrp.password", this->proxyTlsSrpPassword);
+		this->option("proxy.tlssrp.user", this->proxyTlsSrpUser);
+		this->option("proxy.tunnelling", this->proxyTunnelling);
+		this->option("redirect", this->redirect);
+		this->option("redirect.max", this->redirectMax);
+		this->option("redirect.post301", this->redirectPost301);
+		this->option("redirect.post302", this->redirectPost302);
+		this->option("redirect.post303", this->redirectPost303);
+		this->option("referer", this->referer);
+		this->option("referer.automatic", this->refererAutomatic);
+		this->option("speed.downlimit", this->speedDownLimit);
+		this->option("speed.lowlimit", this->speedLowLimit);
+		this->option("speed.lowtime", this->speedLowTime);
+		this->option("speed.uplimit", this->speedUpLimit);
+		this->option("ssl.verify.host", this->sslVerifyHost);
+		this->option("ssl.verify.peer", this->sslVerifyPeer);
+		this->option("ssl.verify.proxy.host", this->sslVerifyProxyHost);
+		this->option("ssl.verify.proxy.peer", this->sslVerifyProxyPeer);
+		this->option("ssl.verify.status", this->sslVerifyStatus);
+		this->option("tcp.fastopen", this->tcpFastOpen);
+		this->option("tcp.keepalive", this->tcpKeepAlive);
+		this->option("tcp.keepalive.idle", this->tcpKeepAliveIdle);
+		this->option("tcp.keepalive.interval", this->tcpKeepAliveInterval);
+		this->option("tcp.nagle", this->tcpNagle);
+		this->option("timeout", this->timeOut);
+		this->option("timeout.happyeyeballs", this->timeOutHappyEyeballs);
+		this->option("timeout.request", this->timeOutRequest);
+		this->option("tlssrp.password", this->tlsSrpPassword);
+		this->option("tlssrp.user", this->tlsSrpUser);
+		this->option("useragent", this->userAgent);
+		this->option("verbose", this->verbose);
 	}
 
 } /* crawlservpp::Network */

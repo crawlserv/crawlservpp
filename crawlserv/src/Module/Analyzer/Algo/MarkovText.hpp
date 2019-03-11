@@ -49,16 +49,29 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		virtual ~MarkovText();
 
 		// implemented algorithm functions
-		void onAlgoInit(bool resumed);
-		void onAlgoTick();
-		void onAlgoPause();
-		void onAlgoUnpause();
-		void onAlgoClear(bool interrupted);
+		void onAlgoInit(bool resumed) override;
+		void onAlgoTick() override;
+		void onAlgoPause() override;
+		void onAlgoUnpause() override;
+		void onAlgoClear(bool interrupted) override;
+
+		// overwritten configuration functions
+		void parseOption() override;
+		void checkOptions() override;
 
 	private:
 		std::string source;
 		std::map<std::string, std::vector<std::string>> dictionary;
 		unsigned long sources;
+
+		// algorithm options
+		unsigned char markovTextDimension;
+		unsigned long markovTextLength;
+		unsigned long markovTextMax;
+		std::string markovTextResultField;
+		unsigned long markovTextSleep;
+		std::string markovTextSourcesField;
+		bool markovTextTiming;
 
 		// algorithm functions
 		std::string createText();

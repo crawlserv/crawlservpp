@@ -13,6 +13,7 @@
 #include "Config.hpp"
 #include "Database.hpp"
 
+#include "../Config.hpp"
 #include "../Thread.hpp"
 
 #include "../../Helper/DateTime.hpp"
@@ -33,7 +34,7 @@
 
 namespace crawlservpp::Module::Analyzer {
 
-	class Thread: public Module::Thread {
+	class Thread: public Module::Thread, public Config {
 		// for convenience
 		typedef Struct::ThreadOptions ThreadOptions;
 
@@ -45,7 +46,6 @@ namespace crawlservpp::Module::Analyzer {
 
 	protected:
 		// analyzing configuration and database functionality for thread
-		Config config;
 		Database database;
 
 		// target table

@@ -34,8 +34,12 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::onInit(bool resumed) {
 		std::queue<std::string> configWarnings;
 
-		// get configuration
-		this->config.loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
+		// set ID, website and URL list namespace
+		this->database.setId(this->getId());
+		this->database.setNamespaces(this->websiteNamespace, this->urlListNamespace);
+
+		// load configuration
+		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
 		while(!configWarnings.empty()) {
@@ -44,16 +48,13 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check configuration
-		bool verbose = config.crawlerLogging == Config::crawlerLoggingVerbose;
+		bool verbose = this->config.crawlerLogging == Config::crawlerLoggingVerbose;
 		if(this->config.crawlerQueriesLinks.empty())
 			throw Exception("Crawler::Thread::onInit(): No link extraction query specified");
 
 		// set database options
 		this->setStatusMessage("Setting database options...");
 		if(verbose) this->log("sets database options...");
-		this->database.setId(this->getId());
-		this->database.setWebsiteNamespace(this->websiteNamespace);
-		this->database.setUrlListNamespace(this->urlListNamespace);
 		this->database.setRecrawl(this->config.crawlerReCrawl);
 		this->database.setLogging(this->config.crawlerLogging);
 		this->database.setVerbose(verbose);
@@ -95,7 +96,7 @@ namespace crawlservpp::Module::Crawler {
 		if(verbose) this->log("sets network configuration...");
 		if(config.crawlerLogging == Config::crawlerLoggingVerbose)
 			this->log("sets global network configuration...");
-		this->networking.setConfigGlobal(this->config.network, false, &configWarnings);
+		this->networking.setConfigGlobal(*this, false, &configWarnings);
 		while(!configWarnings.empty()) {
 			this->log("WARNING: " + configWarnings.front());
 			configWarnings.pop();
@@ -117,7 +118,7 @@ namespace crawlservpp::Module::Crawler {
 			if(verbose) this->log("initializes networking for archives...");
 
 			this->networkingArchives = std::make_unique<Network::Curl>();
-			this->networkingArchives->setConfigGlobal(this->config.network, true, &configWarnings);
+			this->networkingArchives->setConfigGlobal(*this, true, &configWarnings);
 
 			// log warnings if necessary
 			if(this->config.crawlerLogging) {
@@ -712,7 +713,7 @@ namespace crawlservpp::Module::Crawler {
 
 		try {
 			// set local networking options
-			this->networking.setConfigCurrent(this->config.network);
+			this->networking.setConfigCurrent(*this);
 		}
 		catch(const CurlException& e) {
 			// error while setting up network

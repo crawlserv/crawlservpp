@@ -36,6 +36,7 @@
 #include <functional>
 #include <locale>
 #include <fstream>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -66,9 +67,8 @@ namespace crawlservpp::Module::Analyzer {
 		// setters
 		void setId(unsigned long analyzerId);
 		void setWebsite(unsigned long websiteId);
-		void setWebsiteNamespace(const std::string& websiteNamespace);
 		void setUrlList(unsigned long listId);
-		void setUrlListNamespace(const std::string& urlListNamespace);
+		void setNamespaces(const std::string& website, const std::string& urlList);
 		void setLogging(bool isLogging);
 		void setVerbose(bool isVerbose);
 		void setTargetTable(const std::string& table);
@@ -86,6 +86,18 @@ namespace crawlservpp::Module::Analyzer {
 		// corpus functions
 		void getCorpus(const CorpusProperties& corpusProperties, std::string& corpusTo,
 				unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo);
+
+		// public helper functions
+		std::string getSourceTableName(unsigned short type, const std::string& name);
+		std::string getSourceColumnName(unsigned short type, const std::string& name);
+		void checkSources(	std::vector<unsigned short>& types,
+							std::vector<std::string>& tables,
+							std::vector<std::string>& columns,
+							bool logging);
+		bool checkSource(	unsigned short type,
+							const std::string& table,
+							const std::string& column,
+							bool logging);
 
 	protected:
 		// options

@@ -35,11 +35,6 @@ namespace crawlservpp::Module::Parser {
 		this->websiteIdString = idStrStr.str();
 	}
 
-	// set website namespace
-	void Database::setWebsiteNamespace(const std::string& websiteNamespace) {
-		this->websiteName = websiteNamespace;
-	}
-
 	// set URL list ID (and convert it to string for SQL requests)
 	void Database::setUrlList(unsigned long listId) {
 		std::ostringstream idStrStr;
@@ -48,9 +43,10 @@ namespace crawlservpp::Module::Parser {
 		this->listIdString = idStrStr.str();
 	}
 
-	// set URL list namespace
-	void Database::setUrlListNamespace(const std::string& urlListNamespace) {
-		this->urlListName = urlListNamespace;
+	// set namespaces for website and URL list
+	void Database::setNamespaces(const std::string& website, const std::string& urlList) {
+		this->websiteName = website;
+		this->urlListName = urlList;
 	}
 
 	// set maximum cache size for URLs
@@ -139,11 +135,12 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares fetchUrls()...");
 
 			std::ostringstream sqlQueryStr;
-			sqlQueryStr << "SELECT DISTINCT a.id AS url_id, a.url AS url, c.id AS lock_id FROM `"
-						<< this->urlListTable << "` AS a INNER JOIN `" << this->urlListTable
-						<< "_crawled` AS b ON a.id = b.url LEFT OUTER JOIN `" << this->parsingTable
-						<< "` AS c ON a.id = c.url AND c.target = " << this->targetTableId
-						<< " WHERE a.id > ? AND b.response < 400 AND (c.locktime IS NULL OR c.locktime < NOW())";
+			sqlQueryStr <<		"SELECT DISTINCT a.id AS url_id, a.url AS url, c.id AS lock_id"
+								" FROM `" << this->urlListTable << "` AS a"
+								" INNER JOIN `" << this->urlListTable << "_crawled` AS b"
+								" ON a.id = b.url LEFT OUTER JOIN `" << this->parsingTable << "` AS c"
+								" ON a.id = c.url AND c.target = " << this->targetTableId <<
+								" WHERE a.id > ? AND b.response < 400 AND (c.locktime IS NULL OR c.locktime < NOW())";
 
 			if(!(this->reparse))
 				sqlQueryStr << " AND (c.success IS NULL OR c.success = FALSE)";
@@ -151,10 +148,10 @@ namespace crawlservpp::Module::Parser {
 			if(!(this->parseCustom))
 				sqlQueryStr << " AND a.manual = FALSE";
 
-			sqlQueryStr << " ORDER BY a.id";
+			sqlQueryStr <<		" ORDER BY a.id";
 
 			if(this->cacheSize)
-				sqlQueryStr << " LIMIT " << this->cacheSize;
+				sqlQueryStr <<	" LIMIT " << this->cacheSize;
 
 			if(this->verbose)
 				this->log("[#" + this->idString + "] > " + sqlQueryStr.str());
@@ -167,7 +164,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
-					"SELECT COUNT(id) AS result FROM `" + this->urlListTable + "` WHERE id < ?"
+					"SELECT COUNT(id) AS result"
+					" FROM `" + this->urlListTable + "` WHERE id < ?"
 			);
 		}
 
@@ -176,7 +174,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
-					"SELECT COUNT(id) result FROM `" + this->urlListTable + "`"
+					"SELECT COUNT(id) result"
+					" FROM `" + this->urlListTable + "`"
 			);
 		}
 
@@ -185,7 +184,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares getLockTime()...");
 
 			this->ps.getLockTime = this->addPreparedStatement(
-					"SELECT locktime FROM `" + this->parsingTable + "` WHERE id = ? LIMIT 1"
+					"SELECT locktime"
+					" FROM `" + this->parsingTable + "` WHERE id = ? LIMIT 1"
 			);
 		}
 
@@ -194,7 +194,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares getLockId()...");
 
 			std::ostringstream sqlQueryStr;
-			sqlQueryStr <<	"SELECT id FROM `" << this->parsingTable << "`"
+			sqlQueryStr <<	"SELECT id"
+							" FROM `" << this->parsingTable << "`"
 							" WHERE target = " << this->targetTableId << " AND url = ? LIMIT 1";
 
 			this->ps.getLockId = this->addPreparedStatement(sqlQueryStr.str());
@@ -206,8 +207,8 @@ namespace crawlservpp::Module::Parser {
 
 			std::string sqlQuery("UPDATE `");
 			sqlQuery += this->parsingTable;
-			sqlQuery += "` SET locktime = NOW() + INTERVAL ? SECOND WHERE id = ?"
-							" AND (locktime IS NULL OR locktime < NOW())";
+			sqlQuery +=	"` SET locktime = NOW() + INTERVAL ? SECOND"
+						" WHERE id = ? AND (locktime IS NULL OR locktime < NOW())";
 
 			if(!(this->reparse))
 				sqlQuery += " AND NOT success";
@@ -243,7 +244,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares getContentIdFromParsedId()...");
 
 			this->ps.getContentIdFromParsedId = this->addPreparedStatement(
-					"SELECT content FROM `" + this->targetTableFull + "` WHERE parsed_id = ? LIMIT 1"
+					"SELECT content FROM `" + this->targetTableFull + "`"
+					" WHERE parsed_id = ? LIMIT 1"
 			);
 		}
 
@@ -985,10 +987,10 @@ namespace crawlservpp::Module::Parser {
 
 		// create placeholder list (including existence check)
 		for(unsigned int n = 0; n < numberOfEntries; n++) {
-			sqlQueryStrStr
-				<<	"( (SELECT id FROM `" << this->targetTableFull
-				<<	"` AS `" << this->targetTableAlias << (n + 1) << "`"
-					" WHERE content = ? LIMIT 1), ?, ?, ?";
+			sqlQueryStrStr << "( ("
+						"SELECT id FROM `" << this->targetTableFull << "`"
+						" AS `" << this->targetTableAlias << (n + 1) << "`"
+						" WHERE content = ? LIMIT 1), ?, ?, ?";
 
 			for(unsigned long c = 0; c < counter; c++)
 				sqlQueryStrStr << ", ?";
