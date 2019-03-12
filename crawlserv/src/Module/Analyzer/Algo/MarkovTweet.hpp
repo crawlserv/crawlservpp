@@ -47,9 +47,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		typedef Struct::ThreadOptions ThreadOptions;
 
 	public:
-		MarkovTweet(Main::Database& dbBase, unsigned long analyzerId, const std::string& analyzerStatus,
-						bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast);
-		MarkovTweet(Main::Database& dbBase, const ThreadOptions& threadOptions);
+		MarkovTweet(
+				Main::Database& dbBase,
+				unsigned long analyzerId,
+				const std::string& analyzerStatus,
+				bool analyzerPaused,
+				const ThreadOptions& threadOptions,
+				unsigned long analyzerLast);
+		MarkovTweet(Main::Database& dbBase,
+				const ThreadOptions& threadOptions);
 		virtual ~MarkovTweet();
 
 		// implemented algorithm functions
