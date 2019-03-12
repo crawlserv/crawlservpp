@@ -14,6 +14,7 @@
 #include "../Main/Exception.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Wrapper/URI.hpp"
+#include "../Wrapper/URIQueryList.hpp"
 
 #include <uriparser/Uri.h>
 
@@ -22,7 +23,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "../Wrapper/URIQueryList.hpp"
 
 namespace crawlservpp::Parsing {
 
