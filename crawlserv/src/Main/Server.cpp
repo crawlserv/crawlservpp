@@ -82,21 +82,28 @@ namespace crawlservpp::Main {
 				this->database.log(logStrStr.str());
 			}
 			else if(i->module == "analyzer") {
-				// get and parse config JSON to determine algorithm
+				// get JSON
 				rapidjson::Document configJson;
 				std::string config = this->database.getConfiguration(i->options.config);
-				if(configJson.Parse(config.c_str()).HasParseError()) throw std::runtime_error("Could not parse configuration JSON.");
-				if(!configJson.IsArray()) throw std::runtime_error("Parsed configuration JSON is not an array.");
 
-				this->analyzers.push_back(Module::Analyzer::Algo::initAlgo(
-						false,
-						Server::getAlgoFromConfig(configJson),
-						this->database,
-						i->status,
-						i->paused,
-						i->options,
-						i->last
-				));
+				// parse JSON
+				if(configJson.Parse(config.c_str()).HasParseError())
+					throw std::runtime_error("Could not parse configuration JSON.");
+				if(!configJson.IsArray())
+					throw std::runtime_error("Parsed configuration JSON is not an array.");
+
+				// try to add algorithm according to parsed algorithm ID
+				this->analyzers.push_back(
+						Module::Analyzer::Algo::initAlgo(AlgoThreadProperties(
+								Server::getAlgoFromConfig(configJson),
+								i->id,
+								this->database,
+								i->status,
+								i->paused,
+								i->options,
+								i->last
+						))
+				);
 
 				if(!(this->analyzers.back())) {
 					this->analyzers.pop_back();
@@ -104,7 +111,9 @@ namespace crawlservpp::Main {
 					continue;
 				}
 
+				// start algorithm (and get its ID)
 				this->analyzers.back()->Module::Thread::start();
+
 
 				// write to log
 				std::ostringstream logStrStr;
@@ -1086,18 +1095,13 @@ namespace crawlservpp::Main {
 
 		// get algorithm from configuration
 		unsigned int algo = Server::getAlgoFromConfig(configJson);
-		if(!algo) return Server::ServerCommandResponse(true, "Analyzing configuration does not include an algorithm.");
+		if(!algo)
+			return Server::ServerCommandResponse(true, "Analyzing configuration does not include an algorithm.");
 
-		// create and start analyzer
-		this->analyzers.push_back(Module::Analyzer::Algo::initAlgo(
-				false,
-				algo,
-				this->database,
-				"",
-				false,
-				options,
-				0
-		));
+		// try to create algorithm thread
+		this->analyzers.push_back(
+				Module::Analyzer::Algo::initAlgo(AlgoThreadProperties(algo, this->database, options))
+		);
 
 		if(!(this->analyzers.back())) {
 			this->analyzers.pop_back();
@@ -1108,11 +1112,12 @@ namespace crawlservpp::Main {
 			return Server::ServerCommandResponse(true, errStrStr.str());
 		}
 
+		// start algorithm
 		this->analyzers.back()->Module::Thread::start();
-		unsigned long id = this->analyzers.back()->Module::Thread::getId();
 
 		// startanalyzer is a logged command
 		std::ostringstream logStrStr;
+		unsigned long id = this->analyzers.back()->Module::Thread::getId();
 		logStrStr << "analyzer #" << id << " started by " << ip << ".";
 		this->database.log(logStrStr.str());
 

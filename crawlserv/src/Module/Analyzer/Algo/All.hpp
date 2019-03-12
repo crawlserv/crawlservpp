@@ -14,35 +14,33 @@
 
 #include "../Thread.hpp"
 
-#include "../../../Main/Database.hpp"
-#include "../../../Struct/ThreadOptions.hpp"
+#include "../../../Struct/AlgoThreadProperties.hpp"
 
 #include <memory>
 
 namespace crawlservpp::Module::Analyzer::Algo {
 	// for convenience
+	typedef Struct::AlgoThreadProperties AlgoThreadProperties;
 	typedef std::unique_ptr<Module::Analyzer::Thread> AlgoThreadPtr;
-	typedef Struct::ThreadOptions ThreadOptions;
 
-	AlgoThreadPtr initAlgo(
-			bool recreate,
-			unsigned long id,
-			Main::Database& database,
-			const std::string& status,
-			bool paused,
-			const ThreadOptions& options,
-			unsigned long last
-	);
+	AlgoThreadPtr initAlgo(const AlgoThreadProperties& thread);
 
 } /* crawlservpp::Module::Analyzer */
 
 // macro for algorithm thread creation
 #define REGISTER_ALGORITHM(ID, CLASS) \
-	if(id == (ID)) { \
-		if(recreate) \
-			return std::make_unique<CLASS>(database, id, status, paused, options, last); \
+	if(thread.algoId == (ID)) { \
+		if(thread.recreate) \
+			return std::make_unique<CLASS>(\
+					thread.dbBase, \
+					thread.threadId, \
+					thread.status, \
+					thread.paused, \
+					thread.options, \
+					thread.last \
+			); \
 		else \
-			return std::make_unique<CLASS>(database, options); \
+			return std::make_unique<CLASS>(thread.dbBase, thread.options); \
 	}
 
 #endif /* MODULE_ANALYZER_ALGO_ALL_HPP_ */

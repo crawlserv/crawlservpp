@@ -23,15 +23,7 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	// register algorithms
-	AlgoThreadPtr initAlgo(
-			bool recreate,
-			unsigned long id,
-			Main::Database& database,
-			const std::string& status,
-			bool paused,
-			const ThreadOptions& options,
-			unsigned long last
-	) {
+	AlgoThreadPtr initAlgo(const AlgoThreadProperties& thread) {
 
 		/*
 		 * ALGORITHM REGISTRATION
