@@ -19,28 +19,29 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	// constructor A: run previously interrupted algorithm run
-	MarkovText::MarkovText(	Main::Database& dbBase,
-							unsigned long analyzerId,
-							const std::string& analyzerStatus,
-							bool analyzerPaused,
-							const ThreadOptions& threadOptions,
-							unsigned long analyzerLast)
-								:	Module::Analyzer::Thread(
-										dbBase,
-										analyzerId,
-										analyzerStatus,
-										analyzerPaused,
-										threadOptions,
-										analyzerLast
-									),
-									sources(0),
-									markovTextDimension(3),
-									markovTextLength(400),
-									markovTextMax(0),
-									markovTextResultField("text"),
-									markovTextSleep(0),
-									markovTextSourcesField("sources"),
-									markovTextTiming(true) {
+	MarkovText::MarkovText(
+			Main::Database& dbBase,
+			unsigned long analyzerId,
+			const std::string& analyzerStatus,
+			bool analyzerPaused,
+			const ThreadOptions& threadOptions,
+			unsigned long analyzerLast
+	) : Module::Analyzer::Thread(
+				dbBase,
+				analyzerId,
+				analyzerStatus,
+				analyzerPaused,
+				threadOptions,
+				analyzerLast
+			),
+			sources(0),
+			markovTextDimension(3),
+			markovTextLength(400),
+			markovTextMax(0),
+			markovTextResultField("text"),
+			markovTextSleep(0),
+			markovTextSourcesField("sources"),
+			markovTextTiming(true) {
 		this->disallowPausing(); // disallow pausing while initializing
 	}
 

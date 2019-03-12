@@ -22,30 +22,31 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	// constructor A: run previously interrupted algorithm run
-	MarkovTweet::MarkovTweet(	Main::Database& dbBase,
-								unsigned long analyzerId,
-								const std::string& analyzerStatus,
-								bool analyzerPaused,
-								const ThreadOptions& threadOptions,
-								unsigned long analyzerLast)
-									:	Module::Analyzer::Thread(
-											dbBase,
-											analyzerId,
-											analyzerStatus,
-											analyzerPaused,
-											threadOptions,
-											analyzerLast
-										),
-										sources(0),
-										markovTweetDimension(5),
-										markovTweetLanguage("en_US"),
-										markovTweetLength(140),
-										markovTweetMax(0),
-										markovTweetResultField("tweet"),
-										markovTweetSleep(0),
-										markovTweetSourcesField("sources"),
-										markovTweetSpellcheck(true),
-										markovTweetTiming(true) {
+	MarkovTweet::MarkovTweet(
+			Main::Database& dbBase,
+			unsigned long analyzerId,
+			const std::string& analyzerStatus,
+			bool analyzerPaused,
+			const ThreadOptions& threadOptions,
+			unsigned long analyzerLast
+		) : Module::Analyzer::Thread(
+				dbBase,
+				analyzerId,
+				analyzerStatus,
+				analyzerPaused,
+				threadOptions,
+				analyzerLast
+			),
+			sources(0),
+			markovTweetDimension(5),
+			markovTweetLanguage("en_US"),
+			markovTweetLength(140),
+			markovTweetMax(0),
+			markovTweetResultField("tweet"),
+			markovTweetSleep(0),
+			markovTweetSourcesField("sources"),
+			markovTweetSpellcheck(true),
+			markovTweetTiming(true) {
 		this->disallowPausing(); // disallow pausing while initializing
 	}
 
