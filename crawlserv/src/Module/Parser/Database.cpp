@@ -110,15 +110,16 @@ namespace crawlservpp::Module::Parser {
 		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL");
 		properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
 		properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
+
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
 			if(!(i->empty())) properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
 
-		{ // lock parsing tables
+		{ // lock parsing table
 			TargetTablesLock(*this, "parsed", this->website, this->urlList, this->timeoutTargetLock, isRunning);
 
 			// add target table if it does not exist already
 			this->targetTableId = this->addTargetTable(properties);
-		} // parsing tables unlocked
+		} // parsing table unlocked
 	}
 
 	// prepare SQL statements for parser
