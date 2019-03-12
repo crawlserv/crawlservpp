@@ -300,12 +300,15 @@ namespace crawlservpp::Module {
 		this->runTime = std::chrono::seconds(this->database.getThreadRunTime(this->id));
 		this->pauseTime = std::chrono::seconds(this->database.getThreadPauseTime(this->id));
 
+		// save old thread status
+		std::string oldStatus = this->getStatusMessage();
+
 		try {
 			// initialize thread
 			this->onInit(this->resumed);
 
 			// set status message (useful when the thread is paused on startup)
-			this->setStatusMessage("Ready.");
+			this->setStatusMessage(oldStatus);
 		}
 		// handle exceptions by trying to log and set status
 		catch(const std::exception& e) {
