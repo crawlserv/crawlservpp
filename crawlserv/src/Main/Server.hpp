@@ -31,6 +31,7 @@
 #include "../Query/RegEx.hpp"
 #include "../Query/XPath.hpp"
 #include "../Timer/SimpleHR.hpp"
+#include "../Struct/AlgoThreadProperties.hpp"
 #include "../Struct/ConfigProperties.hpp"
 #include "../Struct/QueryProperties.hpp"
 #include "../Struct/ServerSettings.hpp"
@@ -67,6 +68,7 @@ namespace crawlservpp::Main {
 		typedef Parsing::XML::Exception XMLException;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
+		typedef Struct::AlgoThreadProperties AlgoThreadProperties;
 		typedef Struct::ConfigProperties ConfigProperties;
 		typedef Struct::DatabaseSettings DatabaseSettings;
 		typedef Struct::QueryProperties QueryProperties;
