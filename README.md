@@ -91,6 +91,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 
 The following custom structures are globally used (to be found in [`crawlserv/src/Struct`](crawlserv/src/Struct)):
 
+* **[`Struct::AlgoThreadProperties`](crawlserv/src/Struct/AlgoThreadProperties.hpp)**: Properties of algorithm thread.
 * **[`Struct::ConfigItem`](crawlserv/src/Struct/ConfigItem.hpp)**: Configuration item (category, name, value).
 * **[`Struct::ConfigProperties`](crawlserv/src/Struct/ConfigProperties.hpp)**: Basic configuration properties (module, name, configuration).
 * **[`Struct::CorpusProperties`](crawlserv/src/Struct/CorpusProperties.hpp)**: Basic corpus properties (source type, table and field).
@@ -107,11 +108,9 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::UrlProperties`](crawlserv/src/Struct/UrlProperties.hpp)**: Basic URL properties (ID, URL, lock ID).
 * **[`Struct::WebsiteProperties`](crawlserv/src/Struct/WebsiteProperties.hpp)**: Basic website properties (domain, namespace, name).
 
-The following custom enumerations are used:
+Algorithms are registered in [`crawlserv/src/Module/Analyzer/Algo/All.hpp`](crawlserv/src/Module/Analyzer/Algo/All.hpp).
 
-* **[`Module::Analyzer::Algo::Enum`](crawlserv/src/Module/Algo/Enum.hpp)**: List of implemented algorithms.
-
-Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Main/Data.h`](crawlserv/src/Main/Data.hpp).
+Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Main/Data.hpp`](crawlserv/src/Main/Data.hpp).
 
 The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the [`Main::App`](crawlserv/src/Main/App.cpp) class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
