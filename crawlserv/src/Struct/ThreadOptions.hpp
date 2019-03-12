@@ -10,8 +10,6 @@
 #ifndef STRUCT_THREADOPTIONS_HPP_
 #define STRUCT_THREADOPTIONS_HPP_
 
-#include "../Module/Analyzer/Algo/Enum.hpp"
-
 namespace crawlservpp::Struct {
 
 	struct ThreadOptions {
@@ -20,9 +18,18 @@ namespace crawlservpp::Struct {
 		unsigned long config; // configuration id for the thread
 
 		// constructors
-		ThreadOptions() : website(0), urlList(0), config(0) {}
-		ThreadOptions(unsigned long setWebsite, unsigned long setUrlList, unsigned long setConfig)
-				: website(setWebsite), urlList(setUrlList), config(setConfig) {}
+		ThreadOptions()
+				: website(0),
+				  urlList(0),
+				  config(0) {}
+
+		ThreadOptions(
+				unsigned long setWebsite,
+				unsigned long setUrlList,
+				unsigned long setConfig)
+				: website(setWebsite),
+				  urlList(setUrlList),
+				  config(setConfig) {}
 	};
 
 } /* crawlservpp::Struct */
