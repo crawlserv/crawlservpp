@@ -59,8 +59,14 @@ namespace crawlservpp::Module::Parser {
 
 	public:
 		// constructors
-		Thread(Main::Database& database, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
-				const ThreadOptions& threadOptions, unsigned long crawlerLast);
+		Thread(
+				Main::Database& database,
+				unsigned long crawlerId,
+				const std::string& crawlerStatus,
+				bool crawlerPaused,
+				const ThreadOptions& threadOptions,
+				unsigned long crawlerLast
+		);
 		Thread(Main::Database& database, const ThreadOptions& threadOptions);
 
 		// destructor
