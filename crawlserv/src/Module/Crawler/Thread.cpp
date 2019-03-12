@@ -12,20 +12,49 @@
 namespace crawlservpp::Module::Crawler {
 
 	// constructor A: run previously interrupted crawler
-	Thread::Thread(Main::Database& dbBase, unsigned long crawlerId, const std::string& crawlerStatus, bool crawlerPaused,
-			const ThreadOptions& threadOptions, unsigned long crawlerLast)
-				: Module::Thread(dbBase, crawlerId, "crawler", crawlerStatus, crawlerPaused,
-					threadOptions, crawlerLast), database(this->Module::Thread::database),	manualCounter(0),
-					startCrawled(false), manualOff(false), retryCounter(0), archiveRetry(false), tickCounter(0),
-					startTime(std::chrono::steady_clock::time_point::min()), pauseTime(std::chrono::steady_clock::time_point::min()),
-					idleTime(std::chrono::steady_clock::time_point::min()), httpTime(std::chrono::steady_clock::time_point::min()) {}
+	Thread::Thread(
+			Main::Database& dbBase,
+			unsigned long crawlerId,
+			const std::string& crawlerStatus,
+			bool crawlerPaused,
+			const ThreadOptions& threadOptions,
+			unsigned long crawlerLast
+	)
+				: Module::Thread(
+						dbBase,
+						crawlerId,
+						"crawler",
+						crawlerStatus,
+						crawlerPaused,
+						threadOptions,
+						crawlerLast
+				  ),
+				  database(this->Module::Thread::database),
+				  manualCounter(0),
+				  startCrawled(false),
+				  manualOff(false),
+				  retryCounter(0),
+				  archiveRetry(false),
+				  tickCounter(0),
+				  startTime(std::chrono::steady_clock::time_point::min()),
+				  pauseTime(std::chrono::steady_clock::time_point::min()),
+				  idleTime(std::chrono::steady_clock::time_point::min()),
+				  httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 	// constructor B: start a new crawler
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(dbBase, "crawler", threadOptions), database(this->Module::Thread::database),
-				  manualCounter(0), startCrawled(false), manualOff(false), retryCounter(0), archiveRetry(false), tickCounter(0),
-				  startTime(std::chrono::steady_clock::time_point::min()), pauseTime(std::chrono::steady_clock::time_point::min()),
-				  idleTime(std::chrono::steady_clock::time_point::min()), httpTime(std::chrono::steady_clock::time_point::min()) {}
+				: Module::Thread(dbBase, "crawler", threadOptions),
+				  database(this->Module::Thread::database),
+				  manualCounter(0),
+				  startCrawled(false),
+				  manualOff(false),
+				  retryCounter(0),
+				  archiveRetry(false),
+				  tickCounter(0),
+				  startTime(std::chrono::steady_clock::time_point::min()),
+				  pauseTime(std::chrono::steady_clock::time_point::min()),
+				  idleTime(std::chrono::steady_clock::time_point::min()),
+				  httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 	// destructor stub
 	Thread::~Thread() {}
@@ -49,12 +78,16 @@ namespace crawlservpp::Module::Crawler {
 
 		// check configuration
 		bool verbose = this->config.crawlerLogging == Config::crawlerLoggingVerbose;
+
 		if(this->config.crawlerQueriesLinks.empty())
 			throw Exception("Crawler::Thread::onInit(): No link extraction query specified");
 
 		// set database options
 		this->setStatusMessage("Setting database options...");
-		if(verbose) this->log("sets database options...");
+
+		if(verbose)
+			this->log("sets database options...");
+
 		this->database.setRecrawl(this->config.crawlerReCrawl);
 		this->database.setLogging(this->config.crawlerLogging);
 		this->database.setVerbose(verbose);
@@ -69,34 +102,48 @@ namespace crawlservpp::Module::Crawler {
 
 		// prepare SQL statements for crawler
 		this->setStatusMessage("Preparing SQL statements...");
-		if(verbose) this->log("prepares SQL statements...");
+
+		if(verbose)
+			this->log("prepares SQL statements...");
+
 		this->database.prepare();
 
 		// optional startup check of URL list
 		if(this->config.crawlerUrlStartupCheck) {
 			this->setStatusMessage("Checking URL list...");
-			if(verbose) this->log("checks URL list...");
+
+			if(verbose)
+				this->log("checks URL list...");
+
 			this->database.urlHashCheck();
 			this->database.urlDuplicationCheck();
 		}
 
 		// get domain
 		this->setStatusMessage("Getting website domain...");
-		if(verbose) this->log("gets website domain...");
+
+		if(verbose)
+			this->log("gets website domain...");
+
 		this->domain = this->database.getWebsiteDomain(this->getWebsite());
 
 		// create URI parser
 		this->setStatusMessage("Creating URI parser...");
-		if(verbose) this->log("creates URI parser...");
+
+		if(verbose)
+			this->log("creates URI parser...");
+
 		this->parser = std::make_unique<Parsing::URI>();
 		this->parser->setCurrentDomain(this->domain);
 
 		// set network configuration
 		this->setStatusMessage("Setting network configuration...");
-		if(verbose) this->log("sets network configuration...");
+
 		if(config.crawlerLogging == Config::crawlerLoggingVerbose)
 			this->log("sets global network configuration...");
+
 		this->networking.setConfigGlobal(*this, false, &configWarnings);
+
 		while(!configWarnings.empty()) {
 			this->log("WARNING: " + configWarnings.front());
 			configWarnings.pop();
@@ -104,29 +151,36 @@ namespace crawlservpp::Module::Crawler {
 
 		// initialize custom URLs
 		this->setStatusMessage("Initializing custom URLs...");
-		if(verbose) this->log("initializes custom URLs...");
+
+		if(verbose)
+			this->log("initializes custom URLs...");
+
 		this->initCustomUrls();
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
-		if(verbose) this->log("initializes custom queries...");
+
+		if(verbose)
+			this->log("initializes custom queries...");
+
 		this->initQueries();
 
 		// initialize networking for archives if necessary
 		if(this->config.crawlerArchives && !(this->networkingArchives)) {
 			this->setStatusMessage("Initialiting networking for archives...");
-			if(verbose) this->log("initializes networking for archives...");
+
+			if(verbose)
+				this->log("initializes networking for archives...");
 
 			this->networkingArchives = std::make_unique<Network::Curl>();
 			this->networkingArchives->setConfigGlobal(*this, true, &configWarnings);
 
 			// log warnings if necessary
-			if(this->config.crawlerLogging) {
+			if(this->config.crawlerLogging)
 				while(!configWarnings.empty()) {
 					this->log("WARNING: " + configWarnings.front());
 					configWarnings.pop();
 				}
-			}
 		}
 
 		// save start time and initialize counter
@@ -155,7 +209,9 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL selection
 		if(this->crawlingUrlSelection(url)) {
-			if(this->config.crawlerTiming) timerSelect.stop();
+			if(this->config.crawlerTiming)
+				timerSelect.stop();
+
 			if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 				// idling stopped
 				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
@@ -176,6 +232,7 @@ namespace crawlservpp::Module::Crawler {
 			// get archive (also when crawling failed!)
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 				this->log("gets archives of " + url.url + "...");
+
 			if(this->config.crawlerTiming) timerArchives.start();
 
 			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive)) {
@@ -194,18 +251,32 @@ namespace crawlservpp::Module::Crawler {
 							|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
 						std::ostringstream logStrStr;
 						logStrStr.imbue(std::locale(""));
+
 						logStrStr << "finished " << url.url;
+
 						if(this->config.crawlerTiming) {
-							logStrStr << " after ";
-							logStrStr << timerTotal.totalStr() << " (select: " << timerSelect.totalStr() << ", " << timerString;
-							if(this->config.crawlerArchives) logStrStr << ", archive: " << timerArchives.totalStr();
+							logStrStr	<< " after " << timerTotal.totalStr()
+										<< " (select: " << timerSelect.totalStr() << ", "
+										<< timerString;
+
+							if(this->config.crawlerArchives)
+								logStrStr << ", archive: " << timerArchives.totalStr();
+
 							logStrStr << ")";
 						}
+
 						logStrStr << " - checked " << checkedUrls;
-						if(checkedUrlsArchive) logStrStr << " (+" << checkedUrlsArchive << " archived)";
+
+						if(checkedUrlsArchive)
+							logStrStr << " (+" << checkedUrlsArchive << " archived)";
+
 						logStrStr << ", added " << newUrls;
-						if(newUrlsArchive) logStrStr << " (+" << newUrlsArchive << " archived)";
+
+						if(newUrlsArchive)
+							logStrStr << " (+" << newUrlsArchive << " archived)";
+
 						logStrStr << " URL(s).";
+
 						this->log(logStrStr.str());
 					}
 				}
@@ -233,7 +304,9 @@ namespace crawlservpp::Module::Crawler {
 		// add pause time to start or idle time to ignore pause
 		if(this->idleTime > std::chrono::steady_clock::time_point::min())
 			this->idleTime += std::chrono::steady_clock::now() - this->pauseTime;
-		else this->startTime += std::chrono::steady_clock::now() - this->pauseTime;
+		else
+			this->startTime += std::chrono::steady_clock::now() - this->pauseTime;
+
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 	}
 
@@ -242,20 +315,26 @@ namespace crawlservpp::Module::Crawler {
 		if(this->tickCounter) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
+
 			if(this->pauseTime != std::chrono::steady_clock::time_point::min()) {
 				// add pause time to start time to ignore pause
 				this->startTime += std::chrono::steady_clock::now() - this->pauseTime;
 				this->pauseTime = std::chrono::steady_clock::time_point::min();
 			}
+
 			if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 				// add idle time to start time to ignore idling
 				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
-			long double tps = (long double) this->tickCounter /
-					std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - this->startTime).count();
+
+			long double tps = (long double) this->tickCounter
+					/ std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
+						- this->startTime).count();
+
 			tpsStrStr.imbue(std::locale(""));
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
+
 			this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
 		}
 
@@ -302,29 +381,45 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.customCountersGlobal) {
 				// run each counter over every URL
 				newUrls = this->config.customUrls;
-				for(unsigned long n = 0; n < this->config.customCounters.size(); n++) {
-					this->initDoGlobalCounting(newUrls, this->config.customCounters.at(n), this->config.customCountersStart.at(n),
-							this->config.customCountersEnd.at(n), this->config.customCountersStep.at(n));
-				}
+
+				for(unsigned long n = 0; n < this->config.customCounters.size(); n++)
+					this->initDoGlobalCounting(
+							newUrls,
+							this->config.customCounters.at(n),
+							this->config.customCountersStart.at(n),
+							this->config.customCountersEnd.at(n),
+							this->config.customCountersStep.at(n)
+					);
 			}
 			else {
 				// run each counter over one URL
-				for(unsigned long n = 0; n < std::min(this->config.customCounters.size(), this->config.customUrls.size()); n++) {
-					std::vector<std::string> temp = this->initDoLocalCounting(this->config.customUrls.at(n),
-							this->config.customCounters.at(n), this->config.customCountersStart.at(n),
-							this->config.customCountersEnd.at(n), this->config.customCountersStep.at(n));
+				for(
+						unsigned long n = 0;
+						n < std::min(this->config.customCounters.size(), this->config.customUrls.size());
+						n++
+				) {
+					std::vector<std::string> temp = this->initDoLocalCounting(
+							this->config.customUrls.at(n),
+							this->config.customCounters.at(n),
+							this->config.customCountersStart.at(n),
+							this->config.customCountersEnd.at(n),
+							this->config.customCountersStep.at(n)
+					);
+
 					newUrls.reserve(newUrls.size() + temp.size());
 					newUrls.insert(newUrls.end(), temp.begin(), temp.end());
 				}
 			}
 
 			this->customPages.reserve(newUrls.size());
+
 			for(auto i = newUrls.begin(); i != newUrls.end(); ++i)
 				this->customPages.emplace_back(*i);
 		}
 		else {
 			// no counters: add all custom URLs as is
 			this->customPages.reserve(this->config.customUrls.size());
+
 			for(auto i = this->config.customUrls.begin(); i != this->config.customUrls.end(); ++i)
 				this->customPages.emplace_back(*i);
 		}
@@ -340,12 +435,14 @@ namespace crawlservpp::Module::Crawler {
 			if(!(this->database.isUrlExists(this->startPage.url)))
 			{ // lock URL list
 				TableLock urlListLock(this->database, this->urlListTable);
+
 				if(!(this->database.isUrlExists(this->startPage.url)))
 					this->database.addUrl(this->startPage.url, true);
 			} // URL list unlocked
 
 			// check for duplicates if URL debugging is active
-			if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
+			if(this->config.crawlerUrlDebug)
+				this->database.urlDuplicationCheck();
 
 			// get the ID of the start page URL (and of its URL lock if one exists already)
 			this->database.getUrlIdLockId(this->startPage);
@@ -361,12 +458,14 @@ namespace crawlservpp::Module::Crawler {
 				if(!(this->database.isUrlExists(i->url)))
 				{ // lock URL list
 					TableLock urlListLock(this->database, this->urlListTable);
+
 					if(!(this->database.isUrlExists(i->url)))
 						this->database.addUrl(i->url, true);
 				} // URL list unlocked
 
 				// check for duplicates if URL debugging is active
-				if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
+				if(this->config.crawlerUrlDebug)
+					this->database.urlDuplicationCheck();
 
 				// get the ID of the custom URL (and of its URL lock if one exists already)
 				this->database.getUrlIdLockId(*i);
@@ -383,13 +482,20 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerLogging) {
 			while(!warnings.empty()) {
 				this->log(warnings.front());
+
 				warnings.pop();
 			}
 		}
 	}
 
 	// use a counter to multiply a list of URLs ("global" counting)
-	void Thread::initDoGlobalCounting(std::vector<std::string>& urlList, const std::string& variable, long start, long end, long step) {
+	void Thread::initDoGlobalCounting(
+			std::vector<std::string>& urlList,
+			const std::string& variable,
+			long start,
+			long end,
+			long step
+	) {
 		std::vector<std::string> newUrlList;
 		newUrlList.reserve(urlList.size());
 		for(auto i = urlList.begin(); i != urlList.end(); ++i) {
@@ -398,41 +504,64 @@ namespace crawlservpp::Module::Crawler {
 				while((start > end && counter >= end) || (start < end && counter <= end) || (start == end)) {
 					std::string newUrl = *i;
 					std::ostringstream counterStrStr;
+
 					counterStrStr << counter;
+
 					Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
+
 					newUrlList.emplace_back(newUrl);
-					if(start == end) break;
+
+					if(start == end)
+						break;
+
 					counter += step;
 				}
 
 				// sort and remove duplicates
 				Helper::Strings::sortAndRemoveDuplicates(newUrlList, this->config.crawlerUrlCaseSensitive);
 			}
-			else newUrlList.emplace_back(*i); // variable not in URL
+			else
+				newUrlList.emplace_back(*i); // variable not in URL
 		}
+
 		urlList.swap(newUrlList);
 	}
 
 	// use a counter to multiply a single URL ("local" counting)
-	std::vector<std::string> Thread::initDoLocalCounting(const std::string& url, const std::string& variable, long start, long end,
-			long step) {
+	std::vector<std::string> Thread::initDoLocalCounting(
+			const std::string& url,
+			const std::string& variable,
+			long start,
+			long end,
+			long step
+	) {
 		std::vector<std::string> newUrlList;
+
 		if(url.find(variable) != std::string::npos) {
 			long counter = start;
+
 			while((start > end && counter >= end) || (start < end && counter <= end) || (start == end)) {
 				std::string newUrl = url;
 				std::ostringstream counterStrStr;
+
 				counterStrStr << counter;
+
 				Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
+
 				newUrlList.emplace_back(newUrl);
-				if(start == end) break;
+
+				if(start == end)
+					break;
+
 				counter += step;
 			}
 
 			// sort and remove duplicates
 			Helper::Strings::sortAndRemoveDuplicates(newUrlList, this->config.crawlerUrlCaseSensitive);
 		}
-		else newUrlList.emplace_back(url); // variable not in URL
+		else // variable not in URL
+			newUrlList.emplace_back(url);
+
 		return newUrlList;
 	}
 
@@ -441,41 +570,94 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerHTMLCanonicalCheck) {
 			this->queryCanonicalCheck = this->addQuery(QueryProperties(
 					"//link[contains(concat(' ', normalize-space(@rel), ' '), ' canonical ')]/@href", "xpath",
-					false, true, false, true));
+					false,
+					true,
+					false,
+					true
+			));
 		}
-		for(auto i = this->config.crawlerQueriesBlackListContent.begin(); i != this->config.crawlerQueriesBlackListContent.end(); ++i) {
+		for(
+				auto i = this->config.crawlerQueriesBlackListContent.begin();
+				i != this->config.crawlerQueriesBlackListContent.end();
+				++i
+		) {
 			QueryProperties properties;
+
 			this->database.getQueryProperties(*i, properties);
+
 			this->queriesBlackListContent.emplace_back(this->addQuery(properties));
 		}
-		for(auto i = this->config.crawlerQueriesBlackListTypes.begin(); i != this->config.crawlerQueriesBlackListTypes.end(); ++i) {
+
+		for(
+				auto i = this->config.crawlerQueriesBlackListTypes.begin();
+				i != this->config.crawlerQueriesBlackListTypes.end();
+				++i
+		) {
 			QueryProperties properties;
+
 			this->database.getQueryProperties(*i, properties);
+
 			this->queriesBlackListTypes.emplace_back(this->addQuery(properties));
+
 		}
-		for(auto i = this->config.crawlerQueriesBlackListUrls.begin(); i != this->config.crawlerQueriesBlackListUrls.end(); ++i) {
+
+		for(
+				auto i = this->config.crawlerQueriesBlackListUrls.begin();
+				i != this->config.crawlerQueriesBlackListUrls.end();
+				++i
+		) {
 			QueryProperties properties;
+
 			this->database.getQueryProperties(*i, properties);
+
 			this->queriesBlackListUrls.emplace_back(this->addQuery(properties));
 		}
-		for(auto i = this->config.crawlerQueriesLinks.begin(); i != this->config.crawlerQueriesLinks.end(); ++i) {
+
+		for(
+				auto i = this->config.crawlerQueriesLinks.begin();
+				i != this->config.crawlerQueriesLinks.end();
+				++i
+		) {
 			QueryProperties properties;
+
 			this->database.getQueryProperties(*i, properties);
+
 			this->queriesLinks.emplace_back(this->addQuery(properties));
 		}
-		for(auto i = this->config.crawlerQueriesWhiteListContent.begin(); i != this->config.crawlerQueriesWhiteListContent.end(); ++i) {
+
+		for(
+				auto i = this->config.crawlerQueriesWhiteListContent.begin();
+				i != this->config.crawlerQueriesWhiteListContent.end();
+				++i
+		) {
 			QueryProperties properties;
+
 			this->database.getQueryProperties(*i, properties);
+
 			this->queriesWhiteListContent.emplace_back(this->addQuery(properties));
 		}
-		for(auto i = this->config.crawlerQueriesWhiteListTypes.begin(); i != this->config.crawlerQueriesWhiteListTypes.end(); ++i) {
+
+		for(
+				auto i = this->config.crawlerQueriesWhiteListTypes.begin();
+				i != this->config.crawlerQueriesWhiteListTypes.end();
+				++i
+		) {
 			QueryProperties properties;
+
 			this->database.getQueryProperties(*i, properties);
+
 			this->queriesWhiteListTypes.emplace_back(this->addQuery(properties));
 		}
-		for(auto i = this->config.crawlerQueriesWhiteListUrls.begin(); i != this->config.crawlerQueriesWhiteListUrls.end(); ++i) {
+
+		for(
+				auto i = this->config.crawlerQueriesWhiteListUrls.begin();
+				i != this->config.crawlerQueriesWhiteListUrls.end();
+				++i
+		) {
 			QueryProperties properties;
+
 			this->database.getQueryProperties(*i, properties);
+
 			this->queriesWhiteListUrls.emplace_back(this->addQuery(properties));
 		}
 	}
@@ -491,12 +673,13 @@ namespace crawlservpp::Module::Crawler {
 		if(!(this->getLast())) {
 			if(this->manualUrl.id) {
 				// renew URL lock on manual URL (custom URL or start page) for retry
-				if(this->database.renewUrlLock(this->config.crawlerLock, this->manualUrl, this->lockTime)) {
+				if(this->database.renewUrlLock(this->config.crawlerLock, this->manualUrl, this->lockTime))
 					urlTo = this->manualUrl;
-				}
+
 				else {
 					// skipped locked URL
 					logEntries.emplace("URL lock active - " + this->manualUrl.url + " skipped.");
+
 					this->manualUrl = UrlProperties();
 				}
 			}
@@ -504,10 +687,9 @@ namespace crawlservpp::Module::Crawler {
 			if(!this->manualUrl.id) {
 				// no retry: check custom URLs
 				if(!(this->customPages.empty())) {
-					if(!(this->manualCounter)) {
+					if(!(this->manualCounter))
 						// start manual crawling with custom URLs
 						logEntries.emplace("starts crawling in non-recoverable MANUAL mode.");
-					}
 
 					// check for custom URLs to crawl
 					if(this->manualCounter < this->customPages.size())
@@ -525,7 +707,9 @@ namespace crawlservpp::Module::Crawler {
 							if(!(this->config.customReCrawl)) {
 								if(this->database.isUrlCrawled(this->manualUrl.lockId)) {
 									this->manualCounter++;
+
 									this->manualUrl = UrlProperties();
+
 									continue;
 								}
 							}
@@ -534,12 +718,15 @@ namespace crawlservpp::Module::Crawler {
 							if(this->database.isUrlLockable(this->manualUrl.lockId)) {
 								// lock custom URL
 								this->lockTime = this->database.lockUrl(this->manualUrl, this->config.crawlerLock);
+
 								urlTo = this->manualUrl;
+
 								break;
 							}
 
 							// skip locked custom URL
 							logEntries.emplace("URL lock active - " + this->manualUrl.url + " skipped.");
+
 							this->manualCounter++;
 							this->manualUrl = UrlProperties();
 						}
@@ -569,6 +756,7 @@ namespace crawlservpp::Module::Crawler {
 
 									// select start page
 									urlTo = this->startPage;
+
 									this->manualUrl = this->startPage;
 								}
 								else {
@@ -586,7 +774,8 @@ namespace crawlservpp::Module::Crawler {
 						} // crawling table unlocked
 
 						// reset manual URL if start page has been skipped
-						if(this->startCrawled) this->manualUrl = UrlProperties();
+						if(this->startCrawled)
+							this->manualUrl = UrlProperties();
 					}
 				}
 			}
@@ -598,6 +787,7 @@ namespace crawlservpp::Module::Crawler {
 			if(!(this->manualOff)) {
 				// start manual crawling with start page
 				logEntries.emplace("switches to recoverable AUTOMATIC mode.");
+
 				this->manualOff = true;
 			}
 
@@ -656,12 +846,14 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerLogging) {
 			while(!logEntries.empty()) {
 				this->log(logEntries.front());
+
 				logEntries.pop();
 			}
 		}
 
 		// set thread status
-		if(result) this->setStatusMessage(urlTo.url);
+		if(result)
+			this->setStatusMessage(urlTo.url);
 		else {
 			this->setStatusMessage("IDLE Waiting for new URLs to crawl.");
 			this->setProgress(1.f);
@@ -671,13 +863,18 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawl content
-	bool Thread::crawlingContent(const UrlProperties& urlProperties, unsigned long& checkedUrlsTo,
-			unsigned long& newUrlsTo, std::string& timerStrTo) {
+	bool Thread::crawlingContent(
+			const UrlProperties& urlProperties,
+			unsigned long& checkedUrlsTo,
+			unsigned long& newUrlsTo,
+			std::string& timerStrTo
+	) {
 		Timer::StartStop sleepTimer;
 		Timer::StartStop httpTimer;
 		Timer::StartStop parseTimer;
 		Timer::StartStop updateTimer;
 		std::string content;
+
 		timerStrTo = "";
 
 		// check arguments
@@ -690,6 +887,7 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerArchives && this->archiveRetry) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 				this->log("Retrying archive only [" + urlProperties.url + "].");
+
 			return true;
 		}
 
@@ -697,15 +895,24 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerSleepHttp) {
 			// calculate elapsed time since last HTTP request and sleep if necessary
 			unsigned long httpElapsed =
-					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - this->httpTime).count();
+					std::chrono::duration_cast<std::chrono::milliseconds>(
+							std::chrono::steady_clock::now() - this->httpTime
+					).count();
+
 			if(httpElapsed < this->config.crawlerSleepHttp) {
 				this->idleTime = std::chrono::steady_clock::now();
-				if(this->config.crawlerTiming) sleepTimer.start();
+
+				if(this->config.crawlerTiming)
+					sleepTimer.start();
+
 				std::this_thread::sleep_for(std::chrono::milliseconds(this->config.crawlerSleepHttp - httpElapsed));
+
 				if(this->config.crawlerTiming) {
 					sleepTimer.stop();
+
 					timerStrTo = "sleep: " + sleepTimer.totalStr();
 				}
+
 				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
@@ -721,15 +928,21 @@ namespace crawlservpp::Module::Crawler {
 				this->log(e.whatStr() + " [" + urlProperties.url + "].");
 				this->log("resets connection...");
 			}
+
 			this->setStatusMessage("ERROR " + e.whatStr() + " [" + urlProperties.url + "]");
+
 			this->networking.resetConnection(this->config.crawlerSleepError);
+
 			this->crawlingRetry(urlProperties, false);
+
 			return false;
 		}
 
-		// start HTTP timer
-		if(this->config.crawlerTiming) httpTimer.start();
-		if(this->config.crawlerSleepHttp) this->httpTime = std::chrono::steady_clock::now();
+		// start HTTP timer(s)
+		if(this->config.crawlerTiming)
+			httpTimer.start();
+		if(this->config.crawlerSleepHttp)
+			this->httpTime = std::chrono::steady_clock::now();
 
 		try {
 			// get content
@@ -743,8 +956,11 @@ namespace crawlservpp::Module::Crawler {
 					this->log(e.whatStr() + " [" + urlProperties.url + "].");
 					this->log("resets connection...");
 				}
+
 				this->setStatusMessage("ERROR " + e.whatStr() + " [" + urlProperties.url + "]");
+
 				this->networking.resetConnection(this->config.crawlerSleepError);
+
 				this->crawlingRetry(urlProperties, false);
 			}
 			else {
@@ -756,21 +972,28 @@ namespace crawlservpp::Module::Crawler {
 
 		// check response code
 		unsigned int responseCode = this->networking.getResponseCode();
+
 		if(!(this->crawlingCheckResponseCode(urlProperties.url, responseCode))) {
 			// skip because of response code
 			this->crawlingSkip(urlProperties);
 			return false;
 		}
 
+		// update timer if necessary
 		if(this->config.crawlerTiming) {
 			httpTimer.stop();
-			if(!timerStrTo.empty()) timerStrTo += ", ";
+
+			if(!timerStrTo.empty())
+				timerStrTo += ", ";
+
 			timerStrTo += "http: " + httpTimer.totalStr();
+
 			parseTimer.start();
 		}
 
 		// check content type
 		std::string contentType = this->networking.getContentType();
+
 		if(!(this->crawlingCheckContentType(urlProperties.url, contentType))) {
 			// skip because of content type (not on whitelist or on blacklist)
 			this->crawlingSkip(urlProperties);
@@ -786,12 +1009,15 @@ namespace crawlservpp::Module::Crawler {
 
 		// parse content
 		Parsing::XML doc;
+
 		try {
 			doc.parse(content);
 		}
 		catch(const XMLException& e) {
 			// error while parsing content
-			if(this->config.crawlerLogging) this->log("XML error: " + e.whatStr() + " [" + urlProperties.url + "].");
+			if(this->config.crawlerLogging)
+				this->log("XML error: " + e.whatStr() + " [" + urlProperties.url + "].");
+
 			this->crawlingSkip(urlProperties);
 			return false;
 		}
@@ -824,7 +1050,9 @@ namespace crawlservpp::Module::Crawler {
 
 		// extract URLs
 		std::vector<std::string> urls = this->crawlingExtractUrls(urlProperties.url, content, doc);
+
 		if(!urls.empty()) {
+			// update timer if necessary
 			if(this->config.crawlerTiming) {
 				parseTimer.stop();
 				updateTimer.start();
@@ -832,8 +1060,10 @@ namespace crawlservpp::Module::Crawler {
 
 			// parse and add URLs
 			checkedUrlsTo += urls.size();
+
 			this->crawlingParseAndAddUrls(urlProperties.url, urls, newUrlsTo, false);
 
+			// update timer if necessary
 			if(this->config.crawlerTiming) {
 				updateTimer.stop();
 				timerStrTo += ", parse: " + parseTimer.totalStr() + ", update: " + updateTimer.totalStr();
@@ -845,35 +1075,48 @@ namespace crawlservpp::Module::Crawler {
 
 	// check whether URL should be added
 	bool Thread::crawlingCheckUrl(const std::string& url) {
-		if(url.empty()) return false;
+		// check argument
+		if(url.empty())
+			return false;
 
+		// check for whitelisted URLs
 		if(!(this->queriesWhiteListUrls.empty())) {
 			// whitelist: only allow URLs that fit a specified whitelist query
 			bool whitelist = false;
 			bool found = false;
+
 			for(auto i = this->queriesWhiteListUrls.begin(); i != this->queriesWhiteListUrls.end(); ++i) {
 				if(i->type == QueryStruct::typeRegEx) {
 					whitelist = true;
+
 					try {
 						found = this->getRegExQueryPtr(i->index).getBool(url);
-						if(found) break;
+
+						if(found)
+							break;
 					}
 					catch(const RegExException& e) {
-						if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
+						if(this->config.crawlerLogging)
+							this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 					}
 				}
 				else if(i->type != QueryStruct::typeNone) {
 					whitelist = true;
-					if(this->config.crawlerLogging) this->log("WARNING: Query on URL is not of type RegEx.");
+
+					if(this->config.crawlerLogging)
+						this->log("WARNING: Query on URL is not of type RegEx.");
 				}
 			}
+
 			if(whitelist && !found) {
 				if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 					this->log("skipped " + url + " (not whitelisted).");
+
 				return false;
 			}
 		}
 
+		// check for blacklisted URLs
 		if(!(this->queriesBlackListUrls.empty())) {
 			// blacklist: do not allow URLs that fit a specified blacklist query
 			for(auto i = this->queriesBlackListUrls.begin(); i != this->queriesBlackListUrls.end(); ++i) {
@@ -882,11 +1125,13 @@ namespace crawlservpp::Module::Crawler {
 						if(this->getRegExQueryPtr(i->index).getBool(url)) {
 							if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 								this->log("skipped " + url + " (blacklisted).");
+
 							return false;
 						}
 					}
 					catch(const RegExException& e) {
-						if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
+						if(this->config.crawlerLogging)
+							this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 					}
 				}
 				else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
@@ -901,9 +1146,12 @@ namespace crawlservpp::Module::Crawler {
 	bool Thread::crawlingCheckCurlCode(CURLcode curlCode, const std::string& url) {
 		if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
 			// redirection error: skip URL
-			if(this->config.crawlerLogging) this->log("redirection error at " + url + " - skips...");
+			if(this->config.crawlerLogging)
+				this->log("redirection error at " + url + " - skips...");
+
 			return false;
 		}
+
 		return true;
 	}
 
@@ -912,15 +1160,20 @@ namespace crawlservpp::Module::Crawler {
 		if(responseCode >= 400 && responseCode < 600) {
 			if(this->config.crawlerLogging) {
 				std::ostringstream logStrStr;
+
 				logStrStr << "HTTP error " << responseCode << " from " << url << " - skips...";
+
 				this->log(logStrStr.str());
 			}
+
 			return false;
 		}
 		else if(responseCode != 200 && this->config.crawlerLogging) {
 			if(this->config.crawlerLogging) {
 				std::ostringstream logStrStr;
+
 				logStrStr << "WARNING: HTTP response code " << responseCode << " from " << url << ".";
+
 				this->log(logStrStr.str());
 			}
 		}
@@ -933,11 +1186,14 @@ namespace crawlservpp::Module::Crawler {
 		// check whitelist for content types
 		if(!(this->queriesWhiteListTypes.empty())) {
 			bool found = false;
+
 			for(auto i = this->queriesWhiteListTypes.begin(); i != this->queriesWhiteListTypes.end(); ++i) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
 						found = this->getRegExQueryPtr(i->index).getBool(contentType);
-						if(found) break;
+
+						if(found)
+							break;
 					}
 					catch(const RegExException& e) {
 						if(this->config.crawlerLogging)
@@ -947,17 +1203,22 @@ namespace crawlservpp::Module::Crawler {
 				else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 					this->log("WARNING: Query on content type is not of type RegEx.");
 			}
-			if(!found) return false;
+
+			if(!found)
+				return false;
 		}
 
 		// check blacklist for content types
 		if(!(this->queriesBlackListTypes.empty())) {
 			bool found = false;
+
 			for(auto i = this->queriesBlackListTypes.begin(); i != this->queriesBlackListTypes.end(); ++i) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
 						found = this->getRegExQueryPtr(i->index).getBool(contentType);
-						if(found) break;
+
+						if(found)
+							break;
 					}
 					catch(const RegExException& e) {
 						if(this->config.crawlerLogging)
@@ -967,7 +1228,9 @@ namespace crawlservpp::Module::Crawler {
 				else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 					this->log("WARNING: Query on content type is not of type RegEx.");
 			}
-			if(found) return false;
+
+			if(found)
+				return false;
 		}
 
 		return true;
@@ -977,9 +1240,12 @@ namespace crawlservpp::Module::Crawler {
 	bool Thread::crawlingCheckConsistency(const std::string& url, const std::string& content) {
 		if(this->config.crawlerHTMLConsistencyCheck) {
 			unsigned long html = content.find_first_of("<html");
+
 			if(html != std::string::npos) {
 				if(content.find("<html", html + 5) != std::string::npos) {
-					if(this->config.crawlerLogging)	this->log("ERROR: HTML consistency check failed for " + url);
+					if(this->config.crawlerLogging)
+						this->log("ERROR: HTML consistency check failed for " + url);
+
 					return false;
 				}
 			}
@@ -996,19 +1262,28 @@ namespace crawlservpp::Module::Crawler {
 
 		if(this->config.crawlerHTMLCanonicalCheck) {
 			std::string canonical;
+
 			try {
 				this->getXPathQueryPtr(this->queryCanonicalCheck.index).getFirst(doc, canonical);
-				if(!canonical.empty()
-						&& !(canonical.length() == (8 + this->domain.length() + url.length())
-							&& canonical.substr(0, 8) == "https://"
-							&& canonical.substr(8, this->domain.length()) == this->domain
-							&& canonical.substr(8 + this->domain.length()) == url)
-						&& (!(canonical.length() == (7 + this->domain.length() + url.length())
-							&& canonical.substr(0, 7) == "http://"
-							&& canonical.substr(7, this->domain.length()) == this->domain
-							&& canonical.substr(7 + this->domain.length()) == url))) {
+
+				if(
+						!canonical.empty()
+						&& !(
+								canonical.length() == (8 + this->domain.length() + url.length())
+								&& canonical.substr(0, 8) == "https://"
+								&& canonical.substr(8, this->domain.length()) == this->domain
+								&& canonical.substr(8 + this->domain.length()) == url
+							)
+						&& !(
+								canonical.length() == (7 + this->domain.length() + url.length())
+								&& canonical.substr(0, 7) == "http://"
+								&& canonical.substr(7, this->domain.length()) == this->domain
+								&& canonical.substr(7 + this->domain.length()) == url
+							)
+				) {
 					if(this->config.crawlerLogging)
 						this->log("ERROR: HTML canonical check failed for " + url + " [ != " + canonical + "].");
+
 					return false;
 				}
 			}
@@ -1025,62 +1300,84 @@ namespace crawlservpp::Module::Crawler {
 	bool Thread::crawlingCheckContent(const std::string& url, const std::string& content, const Parsing::XML& doc) {
 		// check argument
 		if(url.empty())
-			throw Exception("Crawler::Thread::crawlingCheckCanonical(): No URL specified");
+			throw Exception("Crawler::Thread::crawlingCheckContent(): No URL specified");
 
 		// check whitelist for content types
 		if(!(this->queriesWhiteListContent.empty())) {
 			bool found = false;
+
 			for(auto i = this->queriesWhiteListContent.begin(); i != this->queriesWhiteListContent.end(); ++i) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
 						found = this->getRegExQueryPtr(i->index).getBool(content);
-						if(found) break;
+
+						if(found)
+							break;
 					}
 					catch(const RegExException&e) {
-						if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
+						if(this->config.crawlerLogging)
+							this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 					}
 				}
+
 				else if(i->type == QueryStruct::typeXPath) {
 					try {
 						found = this->getXPathQueryPtr(i->index).getBool(doc);
-						if(found) break;
+
+						if(found)
+							break;
 					}
 					catch(const XPathException& e) {
-						if(this->config.crawlerLogging) this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
+						if(this->config.crawlerLogging)
+							this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
 					}
 				}
+
 				else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 					this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 			}
-			if(!found) return false;
+
+			if(!found)
+				return false;
 		}
 
 		// check blacklist for content types
 		if(!(this->queriesBlackListContent.empty())) {
 			bool found = false;
+
 			for(auto i = this->queriesBlackListContent.begin(); i != this->queriesBlackListContent.end(); ++i) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
 						found = this->getRegExQueryPtr(i->index).getBool(content);
-						if(found) break;
+
+						if(found)
+							break;
 					}
 					catch(const RegExException& e) {
-						if(this->config.crawlerLogging) this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
+						if(this->config.crawlerLogging)
+							this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
 					}
 				}
+
 				else if(i->type == QueryStruct::typeXPath) {
 					try {
 						found = this->getXPathQueryPtr(i->index).getBool(doc);
-						if(found) break;
+
+						if(found)
+							break;
 					}
 					catch(const XPathException& e) {
-						if(this->config.crawlerLogging) this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
+						if(this->config.crawlerLogging)
+							this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
 					}
 				}
+
 				else if(i->type != QueryStruct::typeNone && this->config.crawlerLogging)
 					this->log("WARNING: Query on content type is not of type RegEx or XPath.");
 			}
-			if(found) return false;
+
+			if(found)
+				return false;
 		}
 
 		return true;
@@ -1167,9 +1464,13 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// parse URLs and add them as sub-links to the database if they do not already exist
-	void Thread::crawlingParseAndAddUrls(const std::string& url, std::vector<std::string>& urls,
-			unsigned long& newUrlsTo, bool archived) {
-		// check and initialize arguments
+	void Thread::crawlingParseAndAddUrls(
+			const std::string& url,
+			std::vector<std::string>& urls,
+			unsigned long& newUrlsTo,
+			bool archived
+	) {
+		// check argument
 		if(url.empty())
 			throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): No URL specified");
 
@@ -1178,12 +1479,16 @@ namespace crawlservpp::Module::Crawler {
 			this->parser->setCurrentSubUrl(url);
 		}
 		catch(const URIException& e) {
-			throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): Could not set current sub-url because of URI Parser error: "
-					+ e.whatStr());
+			throw Exception(
+					"Crawler::Thread::crawlingParseAndAddUrls():"
+					" Could not set current sub-url"
+					" because of URI Parser error: " + e.whatStr()
+			);
 		}
 
 		// parse URLs
 		newUrlsTo = 0;
+
 		for(unsigned long n = 1; n <= urls.size(); n++) {
 			// parse archive URLs (only absolute links behind archive links!)
 			if(archived) {
@@ -1197,8 +1502,10 @@ namespace crawlservpp::Module::Crawler {
 					else
 						pos = pos1;
 				}
-				else if(pos1 != std::string::npos) pos = pos1;
-				else if(pos2 != std::string::npos) pos = pos2;
+				else if(pos1 != std::string::npos)
+					pos = pos1;
+				else if(pos2 != std::string::npos)
+					pos = pos2;
 
 				if(pos)
 					urls.at(n - 1) = Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
@@ -1223,21 +1530,30 @@ namespace crawlservpp::Module::Crawler {
 								urls.at(n - 1) = this->parser->getSubUrl(
 										this->config.crawlerParamsWhiteList, true
 								);
-							if(!(this->crawlingCheckUrl(urls.at(n - 1)))) urls.at(n - 1) = "";
+							if(!(this->crawlingCheckUrl(urls.at(n - 1))))
+								urls.at(n - 1) = "";
 
 							if(!urls.at(n - 1).empty()) {
 								if(urls.at(n - 1).at(0) != '/')
-									throw Exception("Crawler::Thread::crawlingParseAndAddUrls(): " + urls.at(n - 1) + " is no sub-URL!");
-								if(this->config.crawlerLogging && urls.at(n - 1).length() > 1
-										&& urls.at(n - 1).at(1) == '#')
+									throw Exception(
+											"Crawler::Thread::crawlingParseAndAddUrls():"
+											" " + urls.at(n - 1) + " is no sub-URL!"
+									);
+								if(
+										this->config.crawlerLogging
+										&& urls.at(n - 1).length() > 1
+										&& urls.at(n - 1).at(1) == '#'
+								)
 									this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'.");
+
 								continue;
 							}
 						}
 					}
 				}
 				catch(const URIException& e) {
-					if(this->config.crawlerLogging) this->log("WARNING: URI Parser error - " + e.whatStr());
+					if(this->config.crawlerLogging)
+						this->log("WARNING: URI Parser error - " + e.whatStr());
 				}
 			}
 
@@ -1256,6 +1572,7 @@ namespace crawlservpp::Module::Crawler {
 					return url.length() > 2000;
 				}
 		), urls.end());
+
 		if(this->config.crawlerLogging && urls.size() < tmpSize)
 			this->log("WARNING: URLs longer than 2,000 Bytes ignored.");
 
@@ -1264,6 +1581,7 @@ namespace crawlservpp::Module::Crawler {
 			for(auto i = urls.begin(); i != urls.end(); i++)
 				if(i->back() != '/'){
 					auto lastSlash = i->rfind('/');
+
 					if(lastSlash == std::string::npos) {
 						if(i->find('.') != std::string::npos)
 							this->log("WARNING: Found file \'" + *i + "\'.");
@@ -1274,33 +1592,41 @@ namespace crawlservpp::Module::Crawler {
 
 		// save status message
 		std::string statusMessage = this->getStatusMessage();
-		unsigned long pos = 0;
 
 		// check and add URLs in chunks of config-defined size
+		unsigned long pos = 0;
+
 		if(urls.size() > this->config.crawlerUrlChunks) {
 			while(pos < urls.size() && this->isRunning()) {
 				std::vector<std::string>::const_iterator begin = urls.begin() + pos;
 				std::vector<std::string>::const_iterator end =
 						urls.begin() + pos + std::min(this->config.crawlerUrlChunks, urls.size() - pos);
 				std::vector<std::string> chunk(begin, end);
+
 				pos += this->config.crawlerUrlChunks;
 
 				{ // lock URL list
 					TableLock urlListLock(this->database, this->urlListTable);
 
 					// remove already existing URLs
-					chunk.erase(std::remove_if(chunk.begin(), chunk.end(),
-							[&](const auto& url) {
-								return this->database.isUrlExists(url);
-							}
-					), chunk.end());
+					chunk.erase(
+							std::remove_if(
+									chunk.begin(),
+									chunk.end(),
+									[&](const auto& url) {
+										return this->database.isUrlExists(url);
+									}
+							),
+							chunk.end()
+					);
 
 					// add URLs
 					this->database.addUrls(chunk);
 				} // URL list unlocked
 
 				// check for duplicates if URL debugging is active
-				if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
+				if(this->config.crawlerUrlDebug)
+					this->database.urlDuplicationCheck();
 
 				// save number of added URLs
 				newUrlsTo += chunk.size();
@@ -1309,7 +1635,9 @@ namespace crawlservpp::Module::Crawler {
 				if(urls.size() > this->config.crawlerUrlChunks) {
 					std::ostringstream statusStrStr;
 					statusStrStr.imbue(std::locale(""));
+
 					statusStrStr << "[URLs: " << pos << "/" << urls.size() << "] " << statusMessage;
+
 					this->setStatusMessage(statusStrStr.str());
 				}
 			}
@@ -1319,18 +1647,24 @@ namespace crawlservpp::Module::Crawler {
 				TableLock urlListLock(this->database, this->urlListTable);
 
 				// remove already existing URLs
-				urls.erase(std::remove_if(urls.begin(), urls.end(),
-						[&](const auto& url) {
-							return this->database.isUrlExists(url);
-						}
-				), urls.end());
+				urls.erase(
+						std::remove_if(
+								urls.begin(),
+								urls.end(),
+								[&](const auto& url) {
+									return this->database.isUrlExists(url);
+								}
+						),
+						urls.end()
+				);
 
 				// add URLs
 				this->database.addUrls(urls);
 			} // URL list unlocked
 
 			// check for duplicates if URL debugging is active
-			if(this->config.crawlerUrlDebug) this->database.urlDuplicationCheck();
+			if(this->config.crawlerUrlDebug)
+				this->database.urlDuplicationCheck();
 
 			// save number of added URLs
 			newUrlsTo = urls.size();
@@ -1360,7 +1694,8 @@ namespace crawlservpp::Module::Crawler {
 						|| (this->config.crawlerArchivesUrlsTimemap.at(n).empty()))
 					continue;
 
-				std::string archivedUrl = this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + urlProperties.url;
+				std::string archivedUrl =
+						this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + urlProperties.url;
 				std::string archivedContent;
 
 				// loop over memento pages
@@ -1369,26 +1704,36 @@ namespace crawlservpp::Module::Crawler {
 					// get memento content
 					archivedContent = "";
 					try {
-						this->networkingArchives->getContent(archivedUrl, archivedContent, this->config.crawlerRetryHttp);
+						this->networkingArchives->getContent(
+								archivedUrl,
+								archivedContent,
+								this->config.crawlerRetryHttp
+						);
 
 						// check response code
-						if(this->crawlingCheckResponseCode(archivedUrl, this->networkingArchives->getResponseCode())) {
-
+						if(this->crawlingCheckResponseCode(
+								archivedUrl,
+								this->networkingArchives->getResponseCode()
+						)) {
 							// check content type
 							std::string contentType = this->networkingArchives->getContentType();
+
 							if(contentType == "application/link-format") {
 								if(!archivedContent.empty()) {
 									// parse memento response and get next memento page if available
 									std::queue<Memento> mementos;
 									std::queue<std::string> warnings;
+
 									archivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
 
 									if(this->config.crawlerLogging) {
 										// if there are warnings, just log them (maybe mementos were partially parsed)
 										while(!warnings.empty()) {
 											this->log(
-													"Memento parsing WARNING: " + warnings.front() + " [" + urlProperties.url + "]"
+													"Memento parsing WARNING:"
+													" " + warnings.front() + " [" + urlProperties.url + "]"
 											);
+
 											warnings.pop();
 										}
 									}
@@ -1398,47 +1743,67 @@ namespace crawlservpp::Module::Crawler {
 
 									// go through all mementos
 									unsigned long counter = 0, total = mementos.size();
+
 									while(!mementos.empty() && this->isRunning()) {
 										std::string timeStamp = mementos.front().timeStamp;
 
 										// set status
 										counter++;
+
 										std::ostringstream statusStrStr;
 										statusStrStr.imbue(std::locale(""));
-										statusStrStr << "[" + this->config.crawlerArchivesNames.at(n) + ": " << counter << "/"
-												<< total << "] " << statusMessage;
+
+										statusStrStr	<< "[" + this->config.crawlerArchivesNames.at(n) + ": "
+														<< counter << "/" << total << "] " << statusMessage;
+
 										this->setStatusMessage(statusStrStr.str());
 
 										// renew URL lock to avoid duplicate archived content
-										if(this->lockTime.empty()) newUrlLock = true;
-										if(!(this->database.renewUrlLock(this->config.crawlerLock, urlProperties, this->lockTime))) {
+										if(this->lockTime.empty())
+											newUrlLock = true;
+
+										if(!(this->database.renewUrlLock(
+												this->config.crawlerLock,
+												urlProperties, this->lockTime
+										))) {
 											success = false;
 											skip = true;
+
 											break;
 										}
 
 										// loop over references / memento retries
 										// [while checking whether thread is still running]
 										while(this->isRunning()) {
-
 											// check whether archived content already exists in database
-											if(!(this->database.isArchivedContentExists(urlProperties.id, timeStamp))) {
-
+											if(!(this->database.isArchivedContentExists(
+													urlProperties.id,
+													timeStamp)))
+											{
 												// check whether thread is till running
-												if(!(this->isRunning())) break;
+												if(!(this->isRunning()))
+													break;
 
 												// get archived content
 												archivedContent = "";
+
 												try {
-													this->networkingArchives->getContent(mementos.front().url, archivedContent,
-														this->config.crawlerRetryHttp);
+													this->networkingArchives->getContent(
+															mementos.front().url,
+															archivedContent,
+															this->config.crawlerRetryHttp
+													);
 
 													// check response code
-													if(!(this->crawlingCheckResponseCode(mementos.front().url,
-															this->networkingArchives->getResponseCode()))) break;
+													if(!(this->crawlingCheckResponseCode(
+															mementos.front().url,
+															this->networkingArchives->getResponseCode()
+													)))
+														break;
 
 													// check whether thread is still running
-													if(!(this->isRunning())) break;
+													if(!(this->isRunning()))
+														break;
 
 													// check archived content
 													if(archivedContent.substr(0, 17) == "found capture at ") {
@@ -1446,6 +1811,7 @@ namespace crawlservpp::Module::Crawler {
 														// found a reference string: get timestamp
 														if(Helper::DateTime::convertSQLTimeStampToTimeStamp(timeStamp)) {
 															unsigned long subUrlPos = mementos.front().url.find(timeStamp);
+
 															if(subUrlPos != std::string::npos) {
 																subUrlPos += timeStamp.length();
 																timeStamp = archivedContent.substr(17, 14);
@@ -1462,39 +1828,59 @@ namespace crawlservpp::Module::Crawler {
 
 																else if(this->config.crawlerLogging)
 																	// log warning (and ignore reference)
-																	this->log("WARNING: Invalid timestamp \'" + timeStamp
-																			+ "\' from " + this->config.crawlerArchivesNames.at(n)
-																			+ " [" + urlProperties.url + "].");
+																	this->log(
+																			"WARNING: Invalid timestamp"
+																			" \'" + timeStamp + "\'"
+																			" from " + this->config.crawlerArchivesNames.at(n) +
+																			" [" + urlProperties.url + "]."
+																	);
 															}
 															else if(this->config.crawlerLogging)
 																// log warning (and ignore reference)
-																this->log("WARNING: Could not find timestamp in "
-																		+ mementos.front().url + " [" + urlProperties.url + "].");
+																this->log(
+																		"WARNING: Could not find timestamp"
+																		" in " + mementos.front().url +
+																		" [" + urlProperties.url + "].");
 														}
 														else if(this->config.crawlerLogging)
 															// log warning (and ignore reference)
-															this->log("WARNING: Could not convert timestamp in "
-																	+ mementos.front().url + " [" + urlProperties.url + "].");
+															this->log("WARNING: Could not convert timestamp"
+																	" in " + mementos.front().url +
+																	" [" + urlProperties.url + "].");
 													}
 													else {
 														// parse content
 														Parsing::XML doc;
+
 														try {
 															doc.parse(archivedContent);
 
 															// add archived content to database
-															this->database.saveArchivedContent(urlProperties.id, mementos.front().timeStamp,
-																		this->networkingArchives->getResponseCode(),
-																		this->networkingArchives->getContentType(), archivedContent);
+															this->database.saveArchivedContent(
+																	urlProperties.id,
+																	mementos.front().timeStamp,
+																	this->networkingArchives->getResponseCode(),
+																	this->networkingArchives->getContentType(),
+																	archivedContent
+															);
 
 															// extract URLs
 															std::vector<std::string> urls = this->crawlingExtractUrls(
-																	urlProperties.url, archivedContent, doc);
+																	urlProperties.url,
+																	archivedContent,
+																	doc
+															);
+
 															if(!urls.empty()) {
 																// parse and add URLs
 																checkedUrlsTo += urls.size();
+
 																this->crawlingParseAndAddUrls(
-																		urlProperties.url, urls, newUrlsTo, true);
+																		urlProperties.url,
+																		urls,
+																		newUrlsTo,
+																		true
+																);
 															}
 														}
 														catch(const XMLException& e) {} // ignore parsing errors
@@ -1504,18 +1890,31 @@ namespace crawlservpp::Module::Crawler {
 													if(this->config.crawlerRetryArchive) {
 														// error while getting content: check type of error i.e. last cURL code
 														if(this->crawlingCheckCurlCode(
-																this->networkingArchives->getCurlCode(), mementos.front().url)) {
+																this->networkingArchives->getCurlCode(),
+																mementos.front().url
+														)) {
 															// log error
 															if(this->config.crawlerLogging) {
-																this->log(e.whatStr() + " [" + mementos.front().url + "].");
-																this->log("resets connection to "
-																		+ this->config.crawlerArchivesNames.at(n) + "...");
+																this->log(
+																		e.whatStr() +
+																		" [" + mementos.front().url + "]."
+																);
+
+																this->log(
+																		"resets connection"
+																		" to " + this->config.crawlerArchivesNames.at(n) + "..."
+																);
 															}
 
 															// reset connection
-															this->setStatusMessage("ERROR " + e.whatStr()
-																	+ " [" + mementos.front().url + "]");
-															this->networkingArchives->resetConnection(this->config.crawlerSleepError);
+															this->setStatusMessage(
+																	"ERROR " + e.whatStr() +
+																	" [" + mementos.front().url + "]"
+															);
+
+															this->networkingArchives->resetConnection(
+																	this->config.crawlerSleepError
+															);
 
 															// retry
 															continue;
@@ -1534,20 +1933,23 @@ namespace crawlservpp::Module::Crawler {
 										} // [end of loop over references/memento retries]
 
 										// check whether thread is till running
-										if(!(this->isRunning())) break;
+										if(!(this->isRunning()))
+											break;
 
 										// remove memento from queue
 										mementos.pop();
 									} // [end of loop over mementos]
 
 									// check whether thread is till running
-									if(!(this->isRunning())) break;
+									if(!(this->isRunning()))
+										break;
 
 									// reset status message
 									this->setStatusMessage(statusMessage);
 
 									// check for next memento page
-									if(archivedUrl.empty()) break;
+									if(archivedUrl.empty())
+										break;
 								}
 								else break;
 							}
@@ -1564,21 +1966,31 @@ namespace crawlservpp::Module::Crawler {
 							// reset connection and retry
 							if(this->config.crawlerLogging) {
 								this->log(e.whatStr() + " [" + archivedUrl + "].");
-								this->log("resets connection to " + this->config.crawlerArchivesNames.at(n) + "...");
+
+								this->log(
+										"resets connection"
+										" to " + this->config.crawlerArchivesNames.at(n) + "..."
+								);
 							}
 
 							this->setStatusMessage("ERROR " + e.whatStr() + " [" + archivedUrl + "]");
+
 							this->networkingArchives->resetConnection(this->config.crawlerSleepError);
+
 							success = false;
 						}
 					}
 
 					if(!success && this->config.crawlerRetryArchive) {
-						if(skip) this->crawlingSkip(urlProperties);
-						else this->crawlingRetry(urlProperties, true);
+						if(skip)
+							this->crawlingSkip(urlProperties);
+						else
+							this->crawlingRetry(urlProperties, true);
+
 						return false;
 					}
-					else if(!success) this->crawlingSkip(urlProperties);
+					else if(!success)
+						this->crawlingSkip(urlProperties);
 				} // [end of loop over memento pages]
 			} // [end of loop over archives]
 
@@ -1598,7 +2010,8 @@ namespace crawlservpp::Module::Crawler {
 				this->lockTime = "";
 			}
 
-			if(success || !(this->config.crawlerRetryArchive)) this->archiveRetry = false;
+			if(success || !(this->config.crawlerRetryArchive))
+				this->archiveRetry = false;
 		}
 
 		return this->isRunning();
@@ -1629,15 +2042,25 @@ namespace crawlservpp::Module::Crawler {
 		if(this->manualUrl.id) {
 			// manual mode: disable retry, check for custom URL or start page that has been crawled
 			this->manualUrl = UrlProperties();
-			if(this->manualCounter < this->customPages.size()) this->manualCounter++;
-			else this->startCrawled = true;
+
+			if(this->manualCounter < this->customPages.size())
+				this->manualCounter++;
+			else
+				this->startCrawled = true;
 		}
 		else {
 			// automatic mode: update thread status
 			this->setLast(urlProperties.id);
+
 			unsigned long total = this->database.getNumberOfUrls();
-			if(total) this->setProgress(static_cast<float>(this->database.getUrlPosition(urlProperties.id) + 1) / total);
-			else this->setProgress(1.f);
+
+			if(total)
+				this->setProgress(
+						static_cast<float>(this->database.getUrlPosition(urlProperties.id) + 1)
+						/ total
+				);
+			else
+				this->setProgress(1.f);
 		}
 
 		// reset retry counter
@@ -1675,13 +2098,20 @@ namespace crawlservpp::Module::Crawler {
 		if(this->manualUrl.id) {
 			// manual mode: disable retry, check for custom URL or start page that has been crawled
 			this->manualUrl = UrlProperties();
-			if(this->manualCounter < this->customPages.size()) this->manualCounter++;
-			else this->startCrawled = true;
+
+			if(this->manualCounter < this->customPages.size())
+				this->manualCounter++;
+			else
+				this->startCrawled = true;
 		}
 		else {
 			// automatic mode: update thread status
 			this->setLast(urlProperties.id);
-			this->setProgress(static_cast<float>(this->database.getUrlPosition(urlProperties.id) + 1) / this->database.getNumberOfUrls());
+
+			this->setProgress(
+					static_cast<float>(this->database.getUrlPosition(urlProperties.id) + 1)
+					/ this->database.getNumberOfUrls()
+			);
 		}
 
 		// do not retry
@@ -1706,15 +2136,21 @@ namespace crawlservpp::Module::Crawler {
 			if(this->retryCounter > (unsigned long) this->config.crawlerReTries) {
 				// do not retry, but skip
 				this->crawlingSkip(urlProperties);
+
 				return;
 			}
 		}
-		if(archiveOnly) this->archiveRetry = true;
+
+		if(archiveOnly)
+			this->archiveRetry = true;
 	}
 
 	// parse memento reply, get mementos and link to next page if one exists (also convert timestamps to YYYYMMDD HH:MM:SS)
-	std::string Thread::parseMementos(std::string mementoContent, std::queue<std::string>& warningsTo,
-			std::queue<Memento>& mementosTo) {
+	std::string Thread::parseMementos(
+			std::string mementoContent,
+			std::queue<std::string>& warningsTo,
+			std::queue<Memento>& mementosTo
+	) {
 		Memento newMemento;				// object for new memento
 		bool mementoStarted = false;	// memento has been started
 		std::string nextPage;			// link to next page
@@ -1724,21 +2160,27 @@ namespace crawlservpp::Module::Crawler {
 
 		while(pos < mementoContent.length()) {
 			// skip wildchars
-			if(mementoContent.at(pos) == ' '
-				|| mementoContent.at(pos) == '\r'
-				|| mementoContent.at(pos) == '\n'
-				|| mementoContent.at(pos) == '\t') {
+			if(
+					mementoContent.at(pos) == ' '
+					|| mementoContent.at(pos) == '\r'
+					|| mementoContent.at(pos) == '\n'
+					|| mementoContent.at(pos) == '\t'
+			) {
 				pos++;
+
 				continue;
 			}
 
 			if(mementoContent.at(pos) == '<') {
 				// parse link
 				end = mementoContent.find('>', pos + 1);
+
 				if(end == std::string::npos) {
 					std::ostringstream warningStrStr;
+
 					warningStrStr << "No '>' after '<' for link at " << pos << ".";
 					warningsTo.emplace(warningStrStr.str());
+
 					break;
 				}
 
@@ -1746,19 +2188,24 @@ namespace crawlservpp::Module::Crawler {
 					// memento not finished -> warning
 					if(!newMemento.url.empty() && !newMemento.timeStamp.empty())
 						mementosTo.emplace(newMemento);
+
 					std::ostringstream warningStrStr;
+
 					warningStrStr << "New memento started without finishing the old one at " << pos << ".";
 					warningsTo.emplace(warningStrStr.str());
 				}
 
 				mementoStarted = true;
+
 				newMemento.url = mementoContent.substr(pos + 1, end - pos - 1);
 				newMemento.timeStamp = "";
+
 				pos = end + 1;
 			}
 			else if(mementoContent.at(pos) == ';') {
 				// parse field separator
 				newField = true;
+
 				pos++;
 			}
 			else if(mementoContent.at(pos) == ',') {
@@ -1766,39 +2213,52 @@ namespace crawlservpp::Module::Crawler {
 				if(mementoStarted) {
 					if(!newMemento.url.empty() && !newMemento.timeStamp.empty())
 						mementosTo.emplace(newMemento);
+
 					mementoStarted  = false;
 				}
+
 				pos++;
 			}
 			else {
-				if(newField) newField = false;
+				if(newField)
+					newField = false;
 				else {
 					std::ostringstream warningStrStr;
+
 					warningStrStr << "Field seperator missing for new field at " << pos << ".";
 					warningsTo.emplace(warningStrStr.str());
 				}
 
 				end = mementoContent.find('=', pos + 1);
+
 				if(end == std::string::npos) {
 					end = mementoContent.find_first_of(",;");
+
 					if(end == std::string::npos) {
 						std::ostringstream warningStrStr;
+
 						warningStrStr << "Cannot find end of field at " << pos << ".";
 						warningsTo.emplace(warningStrStr.str());
+
 						break;
 					}
+
 					pos = end;
 				}
 				else {
 					std::string fieldName = mementoContent.substr(pos, end - pos);
 					unsigned long oldPos = pos;
+
 					pos = mementoContent.find_first_of("\"\'", pos + 1);
 
 					if(pos == std::string::npos) {
 						std::ostringstream warningStrStr;
+
 						warningStrStr << "Cannot find begin of value at " << oldPos << ".";
 						warningsTo.emplace(warningStrStr.str());
+
 						pos++;
+
 						continue;
 					}
 
@@ -1806,8 +2266,10 @@ namespace crawlservpp::Module::Crawler {
 
 					if(end == std::string::npos) {
 						std::ostringstream warningStrStr;
+
 						warningStrStr << "Cannot find end of value at " << pos << ".";
 						warningsTo.emplace(warningStrStr.str());
+
 						break;
 					}
 
@@ -1819,10 +2281,9 @@ namespace crawlservpp::Module::Crawler {
 							newMemento.timeStamp = fieldValue;
 						else {
 							std::ostringstream warningStrStr;
+
 							warningStrStr << "Could not convert timestamp \'" << fieldValue << "\'  at " << pos << ".";
 							warningsTo.emplace(warningStrStr.str());
-							warningStrStr.clear();
-							warningStrStr.str(std::string());
 						}
 					}
 					else if(fieldName == "rel") {
@@ -1832,13 +2293,18 @@ namespace crawlservpp::Module::Crawler {
 							newMemento.url = "";
 						}
 					}
+
 					pos = end + 1;
 				}
 			}
 		}
 
 		// finish final memento
-		if(mementoStarted && !newMemento.url.empty() && !newMemento.timeStamp.empty())
+		if(
+				mementoStarted
+				&& !newMemento.url.empty()
+				&& !newMemento.timeStamp.empty()
+		)
 			mementosTo.emplace(newMemento);
 
 		// return next page
