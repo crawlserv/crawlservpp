@@ -470,7 +470,7 @@ namespace crawlservpp::Main {
 		return std::string(replyBuffer.GetString(), replyBuffer.GetLength());
 	}
 
-	// set status of server
+	// set status of the server
 	void Server::setStatus(const std::string& statusMsg) {
 		this->status = statusMsg;
 	}
