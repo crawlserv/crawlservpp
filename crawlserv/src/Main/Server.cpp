@@ -88,19 +88,22 @@ namespace crawlservpp::Main {
 				if(configJson.Parse(config.c_str()).HasParseError()) throw std::runtime_error("Could not parse configuration JSON.");
 				if(!configJson.IsArray()) throw std::runtime_error("Parsed configuration JSON is not an array.");
 
-				switch(Server::getAlgoFromConfig(configJson)) {
-				case Module::Analyzer::Algo::Enum::markovText:
-					this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovText>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-					break;
-				case Module::Analyzer::Algo::Enum::markovTweet:
-					this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovTweet>(
-							this->database, i->id, i->status, i->paused, i->options, i->last));
-					break;
-				default:
+				this->analyzers.push_back(Module::Analyzer::Algo::initAlgo(
+						false,
+						Server::getAlgoFromConfig(configJson),
+						this->database,
+						i->status,
+						i->paused,
+						i->options,
+						i->last
+				));
+
+				if(!(this->analyzers.back())) {
+					this->analyzers.pop_back();
 					this->database.log("[WARNING] Unknown algorithm ignored when loading threads.");
 					continue;
 				}
+
 				this->analyzers.back()->Module::Thread::start();
 
 				// write to log
@@ -1086,18 +1089,25 @@ namespace crawlservpp::Main {
 		if(!algo) return Server::ServerCommandResponse(true, "Analyzing configuration does not include an algorithm.");
 
 		// create and start analyzer
-		switch(algo) {
-		case Module::Analyzer::Algo::Enum::markovText:
-			this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovText>(this->database, options));
-			break;
-		case Module::Analyzer::Algo::Enum::markovTweet:
-			this->analyzers.push_back(std::make_unique<Module::Analyzer::Algo::MarkovTweet>(this->database, options));
-			break;
-		default:
+		this->analyzers.push_back(Module::Analyzer::Algo::initAlgo(
+				false,
+				algo,
+				this->database,
+				"",
+				false,
+				options,
+				0
+		));
+
+		if(!(this->analyzers.back())) {
+			this->analyzers.pop_back();
+
 			std::ostringstream errStrStr;
 			errStrStr << "Algorithm #" << algo << " not found.";
+
 			return Server::ServerCommandResponse(true, errStrStr.str());
 		}
+
 		this->analyzers.back()->Module::Thread::start();
 		unsigned long id = this->analyzers.back()->Module::Thread::getId();
 
