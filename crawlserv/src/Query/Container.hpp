@@ -10,14 +10,16 @@
 #ifndef QUERY_CONTAINER_HPP_
 #define QUERY_CONTAINER_HPP_
 
+#include "RegEx.hpp"
+#include "XPath.hpp"
+
+#include "../Struct/QueryProperties.hpp"
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "../Struct/QueryProperties.hpp"
-#include "RegEx.hpp"
-#include "XPath.hpp"
 
 namespace crawlservpp::Query {
 
