@@ -78,7 +78,7 @@ function refreshData() {
 		$("#threads").load("php/_threads.php", function(response, status, xhr) {
 			if(status == "error") {
 				$("#threads").html("<div class='no-server-status'>Failed to load threads.</div>");
-				setTimeout(refreshData, 5000);
+				setTimeout(refreshData, 2500);
 			}
 			else {
 				$("#threads-ping").
