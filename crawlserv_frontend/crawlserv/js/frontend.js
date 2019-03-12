@@ -86,7 +86,7 @@ function refreshData() {
 				$("#_ping1").fadeIn(0).fadeOut(600);
 				$("#_ping2").fadeIn(0).delay(200).fadeOut(500);
 				$("#_ping3").fadeIn(0).delay(300).fadeOut(400);
-				setTimeout(refreshData, 1000);
+				setTimeout(refreshData, 500);
 			}
 		});
 	}
