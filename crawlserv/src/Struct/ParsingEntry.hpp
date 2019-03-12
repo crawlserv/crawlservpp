@@ -1,5 +1,5 @@
 /*
- * ParsingEntry.h
+ * ParsingEntry.hpp
  *
  * Parsed data (content ID, parsed ID, parsed date/time, parsed fields).
  *

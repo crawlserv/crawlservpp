@@ -1,5 +1,5 @@
 /*
- * DatabaseSettings.h
+ * DatabaseSettings.hpp
  *
  * Basic database settings (host, port, user, password, schema, compression).
  *

@@ -1,5 +1,5 @@
 /*
- * URI.h
+ * URI.hpp
  *
  * Encapsulation of the RFC 3986 URI parsing library to parse URLs, checking whether their domain is identical with the current domain
  *  and getting the sub-URL for the current domain.

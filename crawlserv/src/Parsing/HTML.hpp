@@ -1,5 +1,5 @@
 /*
- * HTML.h
+ * HTML.hpp
  *
  * Parse HTML, tidy it up and convert it to XML using libtidy.
  *

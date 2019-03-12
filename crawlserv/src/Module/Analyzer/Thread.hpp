@@ -1,5 +1,5 @@
 /*
- * Thread.h
+ * Thread.hpp
  *
  * Abstract implementation of the Thread interface for analyzer threads to be inherited by the algorithm class.
  *

@@ -1,5 +1,5 @@
 /*
- * Thread.h
+ * Thread.hpp
  *
  * Interface for a thread which implements all module-independent thread functionality like connecting to the database,
  *  managing the thread status (including pausing the thread), run the thread ticks and catching exceptions thrown by the thread.

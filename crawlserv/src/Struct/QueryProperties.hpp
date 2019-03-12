@@ -1,5 +1,5 @@
 /*
- * QueryProperties.h
+ * QueryProperties.hpp
  *
  * Basic query properties (name, text, type and result type).
  *

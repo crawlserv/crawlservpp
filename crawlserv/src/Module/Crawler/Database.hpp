@@ -1,5 +1,5 @@
 /*
- * Database.h
+ * Database.hpp
  *
  * This class provides database functionality for a crawler thread by implementing the Wrapper::Database interface.
  *

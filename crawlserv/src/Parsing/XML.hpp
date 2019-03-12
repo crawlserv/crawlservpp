@@ -1,5 +1,5 @@
 /*
- * XML.h
+ * XML.hpp
  *
  * Encapsulation of the HTML Tidy API implemented by tidy library and the pugixml parser library to parse a HTML document into clean XML.
  *

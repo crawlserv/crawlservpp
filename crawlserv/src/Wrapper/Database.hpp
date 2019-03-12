@@ -1,5 +1,5 @@
 /*
- * Database.h
+ * Database.hpp
  *
  * Interface to be inherited by the thread modules.
  * Allows them access to the database by providing basic Database functionality as well as the option to add prepared SQL statements.

@@ -1,5 +1,5 @@
 /*
- * XPath.h
+ * XPath.hpp
  *
  * Using the pugixml parser library to implement a XPath query with boolean, single and/or multiple results.
  *  Query is only crated when needed.

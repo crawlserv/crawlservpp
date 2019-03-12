@@ -1,5 +1,5 @@
-/*url
- * Thread.h
+/*
+ * Thread.hpp
  *
  * Implementation of the Thread interface for crawler threads.
  *

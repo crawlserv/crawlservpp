@@ -1,5 +1,5 @@
 /*
- * WebsiteProperties.h
+ * WebsiteProperties.hpp
  *
  * Basic website properties (domain, namespace and name).
  *

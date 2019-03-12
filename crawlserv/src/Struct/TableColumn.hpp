@@ -1,5 +1,5 @@
 /*
- * TableColumn.h
+ * TableColumn.hpp
  *
  * Structure for table columns.
  *

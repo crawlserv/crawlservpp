@@ -1,5 +1,5 @@
 /*
- * ThreadDatabaseEntry.h
+ * ThreadDatabaseEntry.hpp
  *
  * Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
  *

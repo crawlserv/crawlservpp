@@ -1,5 +1,5 @@
 /*
- * URI.h
+ * URI.hpp
  *
  * Wrapper for pointer to URI structure.
  *  Structure is only created when needed.

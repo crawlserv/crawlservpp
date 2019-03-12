@@ -1,5 +1,5 @@
 /*
- * PreparedSqlStatement.h
+ * PreparedSqlStatement.hpp
  *
  * RAII wrapper for prepared SQL statement pointer.
  *

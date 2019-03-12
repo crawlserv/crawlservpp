@@ -1,5 +1,5 @@
 /*
- * Config.h
+ * Config.hpp
  *
  * Abstract class as base for module-specific configuration classes.
  *

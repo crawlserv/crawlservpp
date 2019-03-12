@@ -1,5 +1,5 @@
 /*
- * Database.h
+ * Database.hpp
  *
  * Database functionality for a single thread. Only implements module-independent functionality, for module-specific functionality use the
  *  child classes of the DatabaseModule interface instead.

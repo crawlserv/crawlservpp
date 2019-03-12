@@ -1,5 +1,5 @@
 /*
- * UrlData.h
+ * UrlData.hpp
  *
  * Basic URL properties (ID, URL and lock ID).
  *

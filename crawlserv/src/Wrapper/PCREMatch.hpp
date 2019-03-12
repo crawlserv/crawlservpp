@@ -1,5 +1,5 @@
 /*
- * PCREMatch.h
+ * PCREMatch.hpp
  *
  * RAII wrapper for pointer to Perl-Compatible Regular Expression match.
  *  Does NOT have ownership of the pointer!

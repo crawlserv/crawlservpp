@@ -1,5 +1,5 @@
 /*
- * MarkovTweet.h
+ * MarkovTweet.hpp
  *
  *  Markov Chain Tweet Generator algorithm implemented as child of the abstract Analyzer thread class.
  *

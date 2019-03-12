@@ -1,5 +1,5 @@
 /*
- * Curl.h
+ * Curl.hpp
  *
  * Using the cURL library to provide networking functionality.
  *  This class is used by both the crawler and the extractor.

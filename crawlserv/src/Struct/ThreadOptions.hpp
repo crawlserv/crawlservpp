@@ -1,5 +1,5 @@
 /*
- * ThreadOptions.h
+ * ThreadOptions.hpp
  *
  * Basic thread options (IDs of website, URL list and configuration).
  *
