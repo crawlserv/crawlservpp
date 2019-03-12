@@ -12,6 +12,8 @@
 #ifndef NETWORK_CURL_HPP_
 #define NETWORK_CURL_HPP_
 
+#include "Config.hpp"
+
 #include "../Helper/Utf8.hpp"
 #include "../Main/Exception.hpp"
 #include "../Wrapper/Curl.hpp"
@@ -28,7 +30,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-#include "Config.hpp"
 
 namespace crawlservpp::Network {
 
