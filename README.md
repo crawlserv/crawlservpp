@@ -91,7 +91,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 
 The following custom structures are globally used (to be found in [`crawlserv/src/Struct`](crawlserv/src/Struct)):
 
-* **[`Struct::AlgoThreadProperties`](crawlserv/src/Struct/AlgoThreadProperties.hpp)**: Properties of algorithm thread.
+* **[`Struct::AlgoThreadProperties`](crawlserv/src/Struct/AlgoThreadProperties.hpp)**: Properties of an algorithm thread.
 * **[`Struct::ConfigItem`](crawlserv/src/Struct/ConfigItem.hpp)**: Configuration item (category, name, value).
 * **[`Struct::ConfigProperties`](crawlserv/src/Struct/ConfigProperties.hpp)**: Basic configuration properties (module, name, configuration).
 * **[`Struct::CorpusProperties`](crawlserv/src/Struct/CorpusProperties.hpp)**: Basic corpus properties (source type, table and field).
@@ -219,7 +219,7 @@ Analyzers are implemented by their own set of subclasses - algorithm classes. Th
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](crawlserv/src/Main/Database.cpp) class. Additionally, thread connections to the database (instances of [`Module::Database`](crawlserv/src/Module/Database.cpp) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
 
-The parser and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler and ~~extractor~~ threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing and analyzing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected. At the same time, a slow database connection or server can have significant impact on performance in any case.
+The parser and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler and ~~extractor~~ threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing and analyzing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected as well as some blocking because of simultaneous database access. At the same time, a slow database connection or server can have significant impact on performance in any case.
 
 ### Third-party Libraries
 
