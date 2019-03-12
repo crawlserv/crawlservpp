@@ -4018,7 +4018,7 @@ namespace crawlservpp::Main {
 			// execute SQL statement for checking whether the table is already compressed
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
 					"SELECT LOWER(row_format) = 'compressed' AS result FROM information_schema.tables"
-					" WHERE table_schema = '" + this->settings.name + "' AND table_name = '" + tableName + "' LIMIT 1;"
+					" WHERE table_schema = '" + this->settings.name + "' AND table_name = '" + tableName + "' LIMIT 1"
 			));
 
 			// get result
