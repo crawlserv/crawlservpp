@@ -85,6 +85,7 @@ namespace crawlservpp::Module::Parser {
 		void unLockUrlIfOk(unsigned long lockId, const std::string& lockTime);
 
 		// parsing functions
+		unsigned int checkParsingTable();
 		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
 		std::queue<IdString> getAllContents(unsigned long urlId);
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
@@ -140,6 +141,7 @@ namespace crawlservpp::Module::Parser {
 			unsigned short updateOrAdd100Entries;
 			unsigned short updateOrAdd1000Entries;
 			unsigned short updateTargetTable;
+			unsigned short checkParsingTable;
 		} ps;
 
 		// constant string for table aliases

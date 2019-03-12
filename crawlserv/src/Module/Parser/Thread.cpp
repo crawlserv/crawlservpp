@@ -147,6 +147,20 @@ namespace crawlservpp::Module::Parser {
 			}
 		}
 
+		// check parsing table
+		this->setStatusMessage("Checking parsing table...");
+
+		unsigned int deleted = this->database.checkParsingTable();
+
+		if(deleted && this->config.generalLogging) {
+			std::ostringstream logStrStr;
+
+			logStrStr.imbue(std::locale(""));
+			logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+
+			this->log(logStrStr.str());
+		}
+
 		// save start time and initialize counter
 		this->startTime = std::chrono::steady_clock::now();
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
