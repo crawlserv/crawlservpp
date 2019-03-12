@@ -10,6 +10,8 @@
 #ifndef PARSING_XML_HPP_
 #define PARSING_XML_HPP_
 
+#include "HTML.hpp"
+
 #include "../Main/Exception.hpp"
 
 #include <pugixml.hpp>
@@ -17,7 +19,6 @@
 #include <memory>
 #include <sstream>
 #include <string>
-#include "HTML.hpp"
 
 namespace crawlservpp::Query {
 
