@@ -34,18 +34,20 @@ namespace crawlservpp::Main {
 
 	// destructor
 	Database::~Database() {
-		// log SQL request counter (if available)
-		unsigned long long requests = this->getRequestCounter();
-		if(requests) {
-			std::ostringstream logStrStr;
-			logStrStr.imbue(std::locale(""));
-			logStrStr << "performed " << requests << " SQL requests.";
-			try {
-				this->log(logStrStr.str());
-			}
-			catch(...) { // could not log -> write to stdout
-				std::cout.imbue(std::locale(""));
-				std::cout << std::endl << requests << " SQL requests performed." << std::flush;
+		if(typeid(*this) == typeid(Database)) {
+			// log SQL request counter (if available)
+			unsigned long long requests = this->getRequestCounter();
+			if(requests) {
+				std::ostringstream logStrStr;
+				logStrStr.imbue(std::locale(""));
+				logStrStr << "performed " << requests << " SQL requests.";
+				try {
+					this->log(logStrStr.str());
+				}
+				catch(...) { // could not log -> write to stdout
+					std::cout.imbue(std::locale(""));
+					std::cout << std::endl << requests << " SQL requests performed." << std::flush;
+				}
 			}
 		}
 
