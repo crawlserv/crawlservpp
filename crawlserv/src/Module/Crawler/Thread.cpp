@@ -187,15 +187,21 @@ namespace crawlservpp::Module::Crawler {
 		this->startTime = std::chrono::steady_clock::now();
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 		this->tickCounter = 0;
+
+		// DEBUG
+		std::cout << std::endl;
 	}
 
 	// crawler tick
 	void Thread::onTick() {
 		UrlProperties url;
+
 		Timer::StartStop timerSelect;
 		Timer::StartStop timerArchives;
 		Timer::StartStop timerTotal;
+
 		std::string timerString;
+
 		unsigned long checkedUrls = 0;
 		unsigned long newUrls = 0;
 		unsigned long checkedUrlsArchive = 0;
@@ -206,6 +212,9 @@ namespace crawlservpp::Module::Crawler {
 			timerTotal.start();
 			timerSelect.start();
 		}
+
+		// DEBUG
+		Timer::SimpleHR timer1;
 
 		// URL selection
 		if(this->crawlingUrlSelection(url)) {
@@ -292,6 +301,9 @@ namespace crawlservpp::Module::Crawler {
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->config.crawlerSleepIdle));
 		}
+
+		// DEBUG
+		std::cout << std::flush;
 	}
 
 	// crawler paused

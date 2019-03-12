@@ -65,6 +65,7 @@ namespace crawlservpp::Module::Crawler {
 		bool isUrlExists(const std::string& urlString);
 		void getUrlIdLockId(UrlProperties& urlProperties);
 		bool isUrlCrawled(unsigned long crawlingId);
+
 		UrlProperties getNextUrl(unsigned long currentUrlId);
 		void addUrl(const std::string& urlString, bool manual);
 		void addUrls(const std::vector<std::string>& urls);
@@ -117,6 +118,7 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short isUrlExists;
 			unsigned short getUrlIdLockId;
 			unsigned short isUrlCrawled;
+			unsigned short getNextCustomUrl;
 			unsigned short getNextUrl;
 			unsigned short addUrl;
 			unsigned short add10Urls;

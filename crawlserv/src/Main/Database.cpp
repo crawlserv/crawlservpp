@@ -23,10 +23,16 @@ namespace crawlservpp::Main {
 
 	// constructor: save settings and set default values
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
-			: tablesLocked(false), settings(dbSettings), maxAllowedPacketSize(0), sleepOnError(0), module(dbModule), ps({0}) {
+			: tablesLocked(false),
+			  settings(dbSettings),
+			  maxAllowedPacketSize(0),
+			  sleepOnError(0),
+			  module(dbModule),
+			  ps({0}) {
 		// get driver instance if necessary
 		if(!Database::driver) {
 			Database::driver = get_driver_instance();
+
 			if(!Database::driver)
 				throw std::runtime_error("Could not get database instance");
 		}
@@ -34,13 +40,16 @@ namespace crawlservpp::Main {
 
 	// destructor
 	Database::~Database() {
-		if(typeid(*this) == typeid(Database)) {
+		if(this->module == "server") {
 			// log SQL request counter (if available)
 			unsigned long long requests = this->getRequestCounter();
+
 			if(requests) {
 				std::ostringstream logStrStr;
 				logStrStr.imbue(std::locale(""));
+
 				logStrStr << "performed " << requests << " SQL requests.";
+
 				try {
 					this->log(logStrStr.str());
 				}
@@ -56,7 +65,8 @@ namespace crawlservpp::Main {
 
 		// clear connection
 		if(this->connection)
-			if(this->connection->isValid()) this->connection->close();
+			if(this->connection->isValid())
+				this->connection->close();
 
 		// unset table lock
 		this->tablesLocked = false;
@@ -93,6 +103,7 @@ namespace crawlservpp::Main {
 		try {
 			// set options for connecting
 			sql::ConnectOptionsMap connectOptions;
+
 			connectOptions["hostName"] = this->settings.host; // set host
 			connectOptions["userName"] = this->settings.user; // set username
 			connectOptions["password"] = this->settings.password; // set password
@@ -102,10 +113,13 @@ namespace crawlservpp::Main {
 			connectOptions["OPT_CHARSET_NAME"] = "utf8mb4"; // set charset
 			connectOptions["characterSetResults"] = "utf8mb4"; // set charset for results
 			connectOptions["preInit"] = "SET NAMES utf8mb4"; // set charset for names
-			if(this->settings.compression) connectOptions["CLIENT_COMPRESS"] = true; // enable server-client compression
+
+			if(this->settings.compression)
+				connectOptions["CLIENT_COMPRESS"] = true; // enable server-client compression
 
 			// connect
 			this->connection.reset(Database::driver->connect(connectOptions));
+
 			if(!(this->connection))
 				throw Database::Exception("Main::Database::connect(): Could not connect to database");
 			if(!(this->connection->isValid()))
@@ -114,17 +128,21 @@ namespace crawlservpp::Main {
 			// set max_allowed_packet size to maximum of 1 GiB
 			//  NOTE: needs to be set independently, because setting in connection options somehow leads to invalid read of size 8
 			int maxAllowedPacket = 1073741824;
+
 			this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", (void *) &maxAllowedPacket);
 
 			// run initializing session commands
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
 			if(!sqlStatement)
 				throw Database::Exception("Main::Database::connect(): Could not create SQL statement");
 
 			// set lock timeout
 			std::ostringstream executeStr;
+
 			executeStr << "SET SESSION innodb_lock_wait_timeout = ";
 			executeStr << MAIN_DATABASE_LOCK_TIMEOUT_SECONDS;
+
 			Database::sqlExecute(sqlStatement, executeStr.str());
 
 			// request maximum allowed package size
@@ -135,6 +153,7 @@ namespace crawlservpp::Main {
 			// get result
 			if(sqlResultSet && sqlResultSet->next()){
 				this->maxAllowedPacketSize = sqlResultSet->getUInt64("Value");
+
 				if(!(this->maxAllowedPacketSize))
 					throw Database::Exception("Main::Database::connect(): \'max_allowed_packet\' is zero");
 			}

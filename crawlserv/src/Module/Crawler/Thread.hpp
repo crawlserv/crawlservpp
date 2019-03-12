@@ -10,6 +10,9 @@
 #ifndef MODULE_CRAWLER_THREAD_HPP_
 #define MODULE_CRAWLER_THREAD_HPP_
 
+#include "Config.hpp"
+#include "Database.hpp"
+
 #include "../Thread.hpp"
 
 #include "../../Helper/DateTime.hpp"
@@ -26,6 +29,9 @@
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/TableLock.hpp"
 
+// DEBUG
+#include "../../Timer/SimpleHR.hpp"
+
 #include <curl/curl.h>
 
 #include <algorithm>
@@ -39,8 +45,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-#include "Config.hpp"
-#include "Database.hpp"
 
 namespace crawlservpp::Module::Crawler {
 
