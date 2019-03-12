@@ -1173,7 +1173,7 @@ namespace crawlservpp::Main {
 		columns.clear();
 
 		// create table for crawling
-		columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
+		columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL UNQIUE", // 1-to-1 relationship
 				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
 		columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
 		columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
