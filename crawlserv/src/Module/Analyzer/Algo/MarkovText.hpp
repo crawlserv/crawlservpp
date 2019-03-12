@@ -43,9 +43,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		typedef Struct::ThreadOptions ThreadOptions;
 
 	public:
-		MarkovText(Main::Database& dbBase, unsigned long analyzerId, const std::string& analyzerStatus,
-						bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast);
-		MarkovText(Main::Database& dbBase, const ThreadOptions& threadOptions);
+		MarkovText(
+				Main::Database& dbBase,
+				unsigned long analyzerId,
+				const std::string& analyzerStatus,
+				bool analyzerPaused,
+				const ThreadOptions& threadOptions,
+				unsigned long analyzerLast
+		);
+		MarkovText(
+				Main::Database& dbBase,
+				const ThreadOptions& threadOptions
+		);
 		virtual ~MarkovText();
 
 		// implemented algorithm functions
