@@ -15,7 +15,6 @@
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Struct/UrlProperties.hpp"
 #include "../../Wrapper/Database.hpp"
-#include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/TableLock.hpp"
 #include "../../Wrapper/TargetTablesLock.hpp"
 
