@@ -13,9 +13,10 @@
 #ifndef STRUCT_CUSTOMTABLEPROPERTIES_HPP_
 #define STRUCT_CUSTOMTABLEPROPERTIES_HPP_
 
+#include "TableColumn.hpp"
+
 #include <string>
 #include <vector>
-#include "TableColumn.hpp"
 
 namespace crawlservpp::Struct {
 

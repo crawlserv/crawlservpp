@@ -10,9 +10,9 @@
 #ifndef STRUCT_THREADDATABASEENTRY_HPP_
 #define STRUCT_THREADDATABASEENTRY_HPP_
 
-#include <string>
-
 #include "ThreadOptions.hpp"
+
+#include <string>
 
 namespace crawlservpp::Struct {
 
