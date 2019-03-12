@@ -24,7 +24,9 @@
 #include <mysql_connection.h>
 
 #include <chrono>
+#include <deque>
 #include <fstream>
+#include <queue>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -62,13 +64,11 @@ namespace crawlservpp::Module::Crawler {
 		void prepare();
 
 		// URL functions
-		bool isUrlExists(const std::string& urlString);
 		void getUrlIdLockId(UrlProperties& urlProperties);
-		bool isUrlCrawled(unsigned long crawlingId);
 
 		UrlProperties getNextUrl(unsigned long currentUrlId);
-		void addUrl(const std::string& urlString, bool manual);
-		void addUrls(const std::vector<std::string>& urls);
+		bool addUrlIfNotExists(const std::string& urlString, bool manual);
+		unsigned long addUrlsIfNotExist(std::queue<std::string, std::deque<std::string>>& urls);
 		unsigned long addUrlGetId(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
@@ -79,22 +79,17 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL locking functions
 		bool isUrlLockable(unsigned long lockId);
-		bool checkUrlLock(unsigned long lockId, const std::string& lockTime);
 		std::string getUrlLock(unsigned long lockId);
-		void getUrlLockId(UrlProperties& urlProperties);
-		std::string lockUrl(UrlProperties& urlProperties, unsigned long lockTimeout);
-		void unLockUrl(unsigned long lockId);
+		bool getUrlState(UrlProperties& urlProperties);
+		std::string lockUrlIfOk(UrlProperties& urlProperties, const std::string& lockTime, unsigned long lockTimeout);
+		void unLockUrlIfOk(unsigned long lockId, const std::string& lockTime);
+		void setUrlFinishedIfOk(unsigned long crawlingId, const std::string& lockTime);
 
 		// crawling functions
 		void saveContent(unsigned long urlId, unsigned int response, const std::string& type, const std::string& content);
 		void saveArchivedContent(unsigned long urlId, const std::string& timeStamp, unsigned int response, const std::string& type,
 				const std::string& content);
-		void setUrlFinished(unsigned long crawlingId);
 		bool isArchivedContentExists(unsigned long urlId, const std::string& timeStamp);
-
-		// helper functions (using multiple database commands)
-		bool renewUrlLock(unsigned long lockTimeout, UrlProperties& urlProperties,
-				std::string& lockTime);
 
 	protected:
 		// options
@@ -115,34 +110,30 @@ namespace crawlservpp::Module::Crawler {
 	private:
 		// IDs of prepared SQL statements
 		struct {
-			unsigned short isUrlExists;
 			unsigned short getUrlIdLockId;
-			unsigned short isUrlCrawled;
-			unsigned short getNextCustomUrl;
 			unsigned short getNextUrl;
-			unsigned short addUrl;
-			unsigned short add10Urls;
-			unsigned short add100Urls;
-			unsigned short add1000Urls;
+			unsigned short addUrlIfNotExists;
+			unsigned short add10UrlsIfNotExist;
+			unsigned short add100UrlsIfNotExist;
+			unsigned short add1000UrlsIfNotExist;
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
-			unsigned short isUrlLockable;
-			unsigned short checkUrlLock;
 			unsigned short getUrlLock;
-			unsigned short getUrlLockId;
-			unsigned short lockUrl;
+			unsigned short getUrlState;
+			unsigned short renewUrlLockIfOk;
+			unsigned short setUrlLockIfOk;
 			unsigned short addUrlLock;
-			unsigned short unLockUrl;
+			unsigned short unLockUrlIfOk;
+			unsigned short setUrlFinishedIfOk;
 			unsigned short saveContent;
 			unsigned short saveArchivedContent;
-			unsigned short setUrlFinished;
 			unsigned short isArchivedContentExists;
 			unsigned short urlDuplicationCheck;
 			unsigned short urlHashCheck;
 		} ps;
 
 		// helper function
-		std::string queryAddUrls(unsigned int numberOfUrls, const std::string& hashQuery);
+		std::string queryAddUrlsIfNotExist(unsigned int numberOfUrls, const std::string& hashQuery);
 	};
 
 	} /* crawlservpp::Module::Crawler */

@@ -224,7 +224,7 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/2]...");
 
 			std::ostringstream sqlQueryStr;
-			sqlQueryStr <<	"INSERT INTO `" << this->parsingTable << "` (target, url, locktime, success)"
+			sqlQueryStr <<	"INSERT IGNORE INTO `" << this->parsingTable << "` (target, url, locktime, success)"
 							" VALUES (" << this->targetTableId << ", ?, NOW() + INTERVAL ? SECOND, FALSE)";
 
 			this->ps.addUrlLock = this->addPreparedStatement(sqlQueryStr.str());
@@ -335,6 +335,21 @@ namespace crawlservpp::Module::Parser {
 								" WHERE id = " << this->targetTableId << " LIMIT 1";
 
 			this->ps.updateTargetTable = this->addPreparedStatement(sqlQueryStrStr.str());
+		}
+
+		if(!(this->ps.checkParsingTable)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares checkParsingTable()...");
+
+			std::ostringstream sqlQueryStrStr;
+			sqlQueryStrStr <<	"DELETE t1 FROM `" << this->parsingTable + "` t1"
+								" INNER JOIN `" << this->parsingTable + "` t2"
+								" WHERE t1.id < t2.id"
+								" AND t1.url = t2.url"
+								" AND t1.target = t2.target"
+								" AND t1.target = " << this->targetTableId;
+
+			this->ps.checkParsingTable = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
 	}
 
@@ -605,6 +620,31 @@ namespace crawlservpp::Module::Parser {
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getContentIdFromParsedId", e); }
 
 		return result;
+	}
+
+	// check the parsing table, delete duplicate URL locks and return the number of deleted URL locks
+	unsigned int Database::checkParsingTable() {
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement for locking the URL
+		if(!(this->ps.checkParsingTable))
+			throw DatabaseException("Missing prepared SQL statement for Parser::Database::checkParsingTable(...)");
+
+		// get prepared SQL statement for locking the URL
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.checkParsingTable);
+
+		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
+		try {
+			// execute SQL query
+			int result = Database::sqlExecuteUpdate(sqlStatement);
+
+			if(result > 0)
+				return result;
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::checkParsingTable", e); }
+
+		return 0;
 	}
 
 	// get latest content for the ID-specified URL, return false if there is no content

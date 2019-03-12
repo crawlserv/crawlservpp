@@ -29,13 +29,11 @@
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/TableLock.hpp"
 
-// DEBUG
-#include "../../Timer/SimpleHR.hpp"
-
 #include <curl/curl.h>
 
 #include <algorithm>
 #include <chrono>
+#include <deque>
 #include <queue>
 #include <functional>
 #include <fstream>
@@ -137,7 +135,7 @@ namespace crawlservpp::Module::Crawler {
 		bool manualOff;					// manual mode has been turned off (after first URL from database is crawled)
 		std::string crawledContent;		// crawled content
 		unsigned long retryCounter;		// number of retries
-		bool archiveRetry;				// archive needs to be retried
+		bool archiveRetry;				// only archive needs to be retried
 
 		// timing
 		unsigned long long tickCounter;

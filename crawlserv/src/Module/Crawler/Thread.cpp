@@ -187,9 +187,6 @@ namespace crawlservpp::Module::Crawler {
 		this->startTime = std::chrono::steady_clock::now();
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 		this->tickCounter = 0;
-
-		// DEBUG
-		std::cout << std::endl;
 	}
 
 	// crawler tick
@@ -212,9 +209,6 @@ namespace crawlservpp::Module::Crawler {
 			timerTotal.start();
 			timerSelect.start();
 		}
-
-		// DEBUG
-		Timer::SimpleHR timer1;
 
 		// URL selection
 		if(this->crawlingUrlSelection(url)) {
@@ -239,9 +233,6 @@ namespace crawlservpp::Module::Crawler {
 			bool crawled = this->crawlingContent(url, checkedUrls, newUrls, timerString);
 
 			// get archive (also when crawling failed!)
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("gets archives of " + url.url + "...");
-
 			if(this->config.crawlerTiming) timerArchives.start();
 
 			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive)) {
@@ -289,6 +280,10 @@ namespace crawlservpp::Module::Crawler {
 						this->log(logStrStr.str());
 					}
 				}
+
+				// DEBUG
+				if(!this->nextUrl.id && !this->lockTime.empty()) Exception("URL not unlocked");
+				if(this->nextUrl.id && this->lockTime.empty()) Exception("URL not locked");
 			}
 			else if(!crawled)
 				// if crawling and getting archives failed, retry both (not only archives)
@@ -301,9 +296,6 @@ namespace crawlservpp::Module::Crawler {
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->config.crawlerSleepIdle));
 		}
-
-		// DEBUG
-		std::cout << std::flush;
 	}
 
 	// crawler paused
@@ -451,21 +443,14 @@ namespace crawlservpp::Module::Crawler {
 			// set URL of start page
 			this->startPage.url = this->config.crawlerStart;
 
-			// if start page URL does not exist yet, lock the URL list,
-			//  re-check the existence and add it to the URL list
-			if(!(this->database.isUrlExists(this->startPage.url)))
-			{ // lock URL list
-				TableLock urlListLock(this->database, this->urlListTable);
-
-				if(!(this->database.isUrlExists(this->startPage.url)))
-					this->database.addUrl(this->startPage.url, true);
-			} // URL list unlocked
+			// add start page to database (if it does not exists already)
+			this->database.addUrlIfNotExists(this->startPage.url, true);
 
 			// check for duplicates if URL debugging is active
 			if(this->config.crawlerUrlDebug)
 				this->database.urlDuplicationCheck();
 
-			// get the ID of the start page URL (and of its URL lock if one exists already)
+			// get the ID of the start page URL (and of its URL lock if one already exists)
 			this->database.getUrlIdLockId(this->startPage);
 		}
 
@@ -475,21 +460,14 @@ namespace crawlservpp::Module::Crawler {
 				// check URI
 				this->parser->setCurrentSubUrl(i->url);
 
-				// if custom URL does not exist yet, lock the URL list,
-				//  re-check the existence and add it to the URL list
-				if(!(this->database.isUrlExists(i->url)))
-				{ // lock URL list
-					TableLock urlListLock(this->database, this->urlListTable);
-
-					if(!(this->database.isUrlExists(i->url)))
-						this->database.addUrl(i->url, true);
-				} // URL list unlocked
+				// add URL (if it does not exist)
+				this->database.addUrlIfNotExists(i->url, true);
 
 				// check for duplicates if URL debugging is active
 				if(this->config.crawlerUrlDebug)
 					this->database.urlDuplicationCheck();
 
-				// get the ID of the custom URL (and of its URL lock if one exists already)
+				// get the ID of the custom URL (and of its URL lock if one already exists)
 				this->database.getUrlIdLockId(*i);
 			}
 			catch(const URIException& e) {
@@ -707,7 +685,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// crawling function for URL selection
+	// crawling function for URL selection (includes locking the URL)
 	bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
 		bool result = true;
 
@@ -718,16 +696,13 @@ namespace crawlservpp::Module::Crawler {
 		if(!(this->getLast())) {
 			if(this->manualUrl.id) {
 				// renew URL lock on manual URL (custom URL or start page) for retry
-				if(
-						this->database.renewUrlLock(
-							this->config.crawlerLock,
-							this->manualUrl,
-							this->lockTime
-						)
-				)
-					urlTo = this->manualUrl;
+				this->lockTime = this->database.lockUrlIfOk(
+						this->manualUrl,
+						this->lockTime,
+						this->config.crawlerLock
+				);
 
-				else {
+				if(this->lockTime.empty()) {
 					// skipped locked URL
 					logEntries.emplace(
 							"URL lock active - " +
@@ -736,6 +711,8 @@ namespace crawlservpp::Module::Crawler {
 
 					this->manualUrl = UrlProperties();
 				}
+				else
+					urlTo = this->manualUrl;
 			}
 
 			if(!this->manualUrl.id) {
@@ -748,55 +725,50 @@ namespace crawlservpp::Module::Crawler {
 						);
 
 					// check for custom URLs to crawl
-					if(this->manualCounter < this->customPages.size())
-					{ // lock crawling table
-						TableLock crawlingTableLock(
-								this->database,
-								TableLockProperties(this->crawlingTable)
-						);
-
+					if(this->manualCounter < this->customPages.size()) {
 						while(this->manualCounter < this->customPages.size()) {
 							// get current lock ID for custom URL if none was received yet
-							this->database.getUrlLockId(this->customPages.at(this->manualCounter));
+							bool crawled = this->database.getUrlState(this->customPages.at(this->manualCounter));
 
 							// set current manual URL to custom URL
 							this->manualUrl = this->customPages.at(this->manualCounter);
 
 							// check whether custom URL was already crawled
-							if(!(this->config.customReCrawl)) {
-								if(this->database.isUrlCrawled(this->manualUrl.lockId)) {
-									this->manualCounter++;
+							if(!(this->config.customReCrawl) && crawled) {
+								this->manualCounter++;
 
-									this->manualUrl = UrlProperties();
+								this->manualUrl = UrlProperties();
 
-									continue;
-								}
+								continue;
 							}
 
-							// check whether custom URL is lockable
-							if(this->database.isUrlLockable(this->manualUrl.lockId)) {
-								// lock custom URL
-								this->lockTime =
-										this->database.lockUrl(
-												this->manualUrl,
-												this->config.crawlerLock
-										);
+							// lock custom URL if possible
+							this->lockTime = this->database.lockUrlIfOk(
+									this->manualUrl,
+									this->lockTime,
+									this->config.crawlerLock
+							);
 
+							if(this->lockTime.empty()) {
+								// skip locked custom URL
+								logEntries.emplace(
+										"URL lock active - " +
+										this->manualUrl.url + " skipped."
+								);
+
+								this->manualCounter++;
+								this->manualUrl = UrlProperties();
+							}
+							else {
+								// use custom URL
 								urlTo = this->manualUrl;
 
 								break;
 							}
 
-							// skip locked custom URL
-							logEntries.emplace(
-									"URL lock active - " +
-									this->manualUrl.url + " skipped."
-							);
 
-							this->manualCounter++;
-							this->manualUrl = UrlProperties();
 						}
-					} // crawling table unlocked
+					}
 				}
 
 				if(this->manualCounter == this->customPages.size()) {
@@ -807,47 +779,39 @@ namespace crawlservpp::Module::Crawler {
 							logEntries.emplace("starts crawling in non-recoverable MANUAL mode.");
 						}
 
-						{ // lock crawling table
-							TableLock crawlingTableLock(
-									this->database,
-									TableLockProperties(this->crawlingTable)
+						// get current lock ID for start page if none was received yet
+						bool crawled = this->database.getUrlState(this->startPage);
+
+						// check whether start page was already crawled (or needs to be re-crawled anyway)
+						if(this->config.crawlerReCrawlStart	|| !crawled) {
+							// check whether start page is lockable
+							this->lockTime = this->database.lockUrlIfOk(
+									this->startPage,
+									this->lockTime,
+									this->config.crawlerLock
 							);
 
-							// get current lock ID for start page if none was received yet
-							this->database.getUrlLockId(this->startPage);
+							if(this->lockTime.empty()) {
+								// start page is locked: write skipping of entry to log if enabled
+								logEntries.emplace(
+										"URL lock active - " +
+										this->startPage.url + " skipped."
+								);
 
-							// check whether start page was already crawled (or needs to be re-crawled anyway)
-							if(
-									this->config.crawlerReCrawlStart
-									|| !(this->database.isUrlCrawled(this->startPage.lockId))
-							) {
-								// check whether start page is lockable
-								if(this->database.isUrlLockable(this->startPage.lockId)) {
-									// lock start page
-									this->lockTime =
-											this->database.lockUrl(this->startPage, this->config.crawlerLock);
-
-									// select start page
-									urlTo = this->startPage;
-
-									this->manualUrl = this->startPage;
-								}
-								else {
-									// start page is locked: write skipping of entry to log if enabled
-									logEntries.emplace(
-											"URL lock active - " +
-											this->startPage.url + " skipped."
-									);
-
-									// start page is done
-									this->startCrawled = true;
-								}
-							}
-							else {
 								// start page is done
 								this->startCrawled = true;
 							}
-						} // crawling table unlocked
+							else {
+								// select start page
+								urlTo = this->startPage;
+
+								this->manualUrl = this->startPage;
+							}
+						}
+						else {
+							// start page is done
+							this->startCrawled = true;
+						}
 
 						// reset manual URL if start page has been skipped
 						if(this->startCrawled)
@@ -870,8 +834,14 @@ namespace crawlservpp::Module::Crawler {
 			// check for retry
 			bool retry = false;
 			if(this->nextUrl.id) {
-				// renew URL lock on automatic URL for retry
-				if(this->database.renewUrlLock(this->config.crawlerLock, this->nextUrl, this->lockTime)) {
+				// try to renew URL lock on automatic URL for retry
+				this->lockTime = this->database.lockUrlIfOk(
+						this->nextUrl,
+						this->lockTime,
+						this->config.crawlerLock
+				);
+
+				if(!(this->lockTime.empty())) {
 					// log retry
 					logEntries.emplace("retries " + this->nextUrl.url + "...");
 
@@ -896,27 +866,21 @@ namespace crawlservpp::Module::Crawler {
 					this->nextUrl = this->database.getNextUrl(this->getLast());
 
 					if(this->nextUrl.id) {
-						bool success = false;
-
 						// try to lock next URL
-						this->lockTime = "";
+						this->lockTime = this->database.lockUrlIfOk(
+										this->nextUrl,
+										this->lockTime,
+										this->config.crawlerLock
+						);
 
-						if(
-								this->database.renewUrlLock(
-										this->config.crawlerLock,
-										this->nextUrl, this->lockTime
-								)
-						) {
-							urlTo = this->nextUrl;
-							success = true;
-						}
-						else {
+						if(this->lockTime.empty()) {
 							// skip locked URL
 							logEntries.emplace("skipped " + this->nextUrl.url + ", because it is locked.");
 						}
-
-						// exit loop on success
-						if(success) break;
+						else {
+							urlTo = this->nextUrl;
+							break;
+						}
 					}
 					else {
 						// no more URLs
@@ -1793,81 +1757,40 @@ namespace crawlservpp::Module::Crawler {
 		// save status message
 		std::string statusMessage = this->getStatusMessage();
 
-		// check and add URLs in chunks of config-defined size
+		// add URLs that do not exist already in chunks of config-defined size
 		unsigned long pos = 0;
+		unsigned long chunkSize = 0;
 
-		if(urls.size() > this->config.crawlerUrlChunks) {
-			while(pos < urls.size() && this->isRunning()) {
-				std::vector<std::string>::const_iterator begin = urls.begin() + pos;
-				std::vector<std::string>::const_iterator end =
-						urls.begin() + pos + std::min(this->config.crawlerUrlChunks, urls.size() - pos);
-				std::vector<std::string> chunk(begin, end);
+		// check for infinite chunk size
+		if(this->config.crawlerUrlChunks)
+			chunkSize = this->config.crawlerUrlChunks;
+		else
+			chunkSize = urls.size();
 
-				pos += this->config.crawlerUrlChunks;
+		while(pos < urls.size() && this->isRunning()) {
+			std::vector<std::string>::const_iterator begin = urls.begin() + pos;
+			std::vector<std::string>::const_iterator end =
+					urls.begin() + pos + std::min(chunkSize, urls.size() - pos);
+			std::queue<std::string, std::deque<std::string>> chunk(std::deque<std::string>(begin, end));
 
-				{ // lock URL list
-					TableLock urlListLock(this->database, this->urlListTable);
+			pos += this->config.crawlerUrlChunks;
 
-					// remove already existing URLs
-					chunk.erase(
-							std::remove_if(
-									chunk.begin(),
-									chunk.end(),
-									[&](const auto& url) {
-										return this->database.isUrlExists(url);
-									}
-							),
-							chunk.end()
-					);
-
-					// add URLs
-					this->database.addUrls(chunk);
-				} // URL list unlocked
-
-				// check for duplicates if URL debugging is active
-				if(this->config.crawlerUrlDebug)
-					this->database.urlDuplicationCheck();
-
-				// save number of added URLs
-				newUrlsTo += chunk.size();
-
-				// update status
-				if(urls.size() > this->config.crawlerUrlChunks) {
-					std::ostringstream statusStrStr;
-					statusStrStr.imbue(std::locale(""));
-
-					statusStrStr << "[URLs: " << pos << "/" << urls.size() << "] " << statusMessage;
-
-					this->setStatusMessage(statusStrStr.str());
-				}
-			}
-		}
-		else {
-			{ // lock URL list
-				TableLock urlListLock(this->database, this->urlListTable);
-
-				// remove already existing URLs
-				urls.erase(
-						std::remove_if(
-								urls.begin(),
-								urls.end(),
-								[&](const auto& url) {
-									return this->database.isUrlExists(url);
-								}
-						),
-						urls.end()
-				);
-
-				// add URLs
-				this->database.addUrls(urls);
-			} // URL list unlocked
+			// add URLs that do not exist already
+			newUrlsTo += this->database.addUrlsIfNotExist(chunk);
 
 			// check for duplicates if URL debugging is active
 			if(this->config.crawlerUrlDebug)
 				this->database.urlDuplicationCheck();
 
-			// save number of added URLs
-			newUrlsTo = urls.size();
+			// update status
+			if(urls.size() > this->config.crawlerUrlChunks) {
+				std::ostringstream statusStrStr;
+				statusStrStr.imbue(std::locale(""));
+
+				statusStrStr << "[URLs: " << pos << "/" << urls.size() << "] " << statusMessage;
+
+				this->setStatusMessage(statusStrStr.str());
+			}
 		}
 
 		// reset status message
@@ -1889,7 +1812,10 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerArchives && this->networkingArchives) {
 			bool success = true;
 			bool skip = false;
-			bool newUrlLock = false;
+
+			// write to log if necessary
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("gets archives of " + urlProperties.url + "...");
 
 			// loop over different archives
 			for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); n++) {
@@ -1964,13 +1890,16 @@ namespace crawlservpp::Module::Crawler {
 										this->setStatusMessage(statusStrStr.str());
 
 										// renew URL lock to avoid duplicate archived content
-										if(this->lockTime.empty())
-											newUrlLock = true;
+										std::string oldLock = this->lockTime;
 
-										if(!(this->database.renewUrlLock(
-												this->config.crawlerLock,
-												urlProperties, this->lockTime
-										))) {
+										// lock URL if possible
+										this->lockTime = this->database.lockUrlIfOk(
+												urlProperties,
+												this->lockTime,
+												this->config.crawlerLock
+										);
+
+										if(this->lockTime.empty()) {
 											success = false;
 											skip = true;
 
@@ -2206,23 +2135,6 @@ namespace crawlservpp::Module::Crawler {
 				} // [end of loop over memento pages]
 			} // [end of loop over archives]
 
-			// unlock URL if necessary
-			//  (if it was locked inside this function or if the crawler is not running anymore)
-			if(newUrlLock || !(this->isRunning())) {
-				{ // lock crawling table
-					TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
-
-					// check URL lock
-					if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime)) {
-						// remove URL lock
-						this->database.unLockUrl(urlProperties.lockId);
-					}
-				} // crawling table unlocked
-
-				// reset lock time
-				this->lockTime = "";
-			}
-
 			if(success || !(this->config.crawlerRetryArchive))
 				this->archiveRetry = false;
 		}
@@ -2240,14 +2152,8 @@ namespace crawlservpp::Module::Crawler {
 		if(urlProperties.url.empty())
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
-		{ // lock crawling table
-			TableLock crawlingTableLock(this->database, TableLockProperties(this->crawlingTable));
-
-			// check URL lock
-			if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime))
-				// set URL to finished
-				this->database.setUrlFinished(urlProperties.lockId);
-		}
+		// set URL to finished if URL lock is okay
+		this->database.setUrlFinishedIfOk(urlProperties.lockId, this->lockTime);
 
 		// reset lock time
 		this->lockTime = "";
@@ -2296,21 +2202,6 @@ namespace crawlservpp::Module::Crawler {
 		// reset retry counter
 		this->retryCounter = 0;
 
-		{ // lock crawling table
-			TableLock crawlingTableLock(
-					this->database,
-					TableLockProperties(this->crawlingTable)
-			);
-
-			// check URL lock
-			if(this->database.checkUrlLock(urlProperties.lockId, this->lockTime))
-				// remove URL lock
-				this->database.unLockUrl(urlProperties.lockId);
-		} // crawling table unlocked
-
-		// reset lock time
-		this->lockTime = "";
-
 		if(this->manualUrl.id) {
 			// manual mode: disable retry, check for custom URL or start page that has been crawled
 			this->manualUrl = UrlProperties();
@@ -2329,6 +2220,10 @@ namespace crawlservpp::Module::Crawler {
 					/ this->database.getNumberOfUrls()
 			);
 		}
+
+		// unlock URL if it has not been locked by anyone else
+		this->database.unLockUrlIfOk(urlProperties.lockId, this->lockTime);
+		this->lockTime = "";
 
 		// do not retry
 		this->nextUrl = UrlProperties();
