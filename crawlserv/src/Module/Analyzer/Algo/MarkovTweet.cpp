@@ -123,8 +123,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// re-allow pausing the thread
 		this->allowPausing();
-
-		this->setStatusMessage("Generating tweets...");
 	}
 
 	// algorithm tick
@@ -136,6 +134,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// generate tweet
+		this->setStatusMessage("Generating tweet...");
 		std::string tweet = this->generator.randomSentence(this->markovTweetLength);
 
 		// insert tweet into result table in the database
@@ -157,6 +156,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// sleep if necessary
 		if(this->markovTweetSleep) {
+			this->setStatusMessage("Sleeping...");
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->markovTweetSleep));
 		}
 	}
