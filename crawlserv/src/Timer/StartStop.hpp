@@ -1,5 +1,5 @@
 /*
- * StartStop.h
+ * StartStop.hpp
  *
  * Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
  *

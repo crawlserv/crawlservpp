@@ -1,5 +1,5 @@
 /*
- * TargetTableProperties.h
+ * TargetTableProperties.hpp
  *
  * Target table properties (type, website, URL list, table name and full name, columns, compression).
  *

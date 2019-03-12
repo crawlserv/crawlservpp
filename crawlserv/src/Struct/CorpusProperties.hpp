@@ -1,5 +1,5 @@
 /*
- * CorpusProperties.h
+ * CorpusProperties.hpp
  *
  * Basic corpus properties (source type, table and field).
  *

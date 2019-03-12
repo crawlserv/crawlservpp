@@ -1,5 +1,5 @@
 /*
- * Config.h
+ * Config.hpp
  *
  * Network configuration. This class is used by both the crawler and the extractor.
  *

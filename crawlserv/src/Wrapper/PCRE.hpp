@@ -1,5 +1,5 @@
 /*
- * PCRE.h
+ * PCRE.hpp
  *
  * Wrapper for pointer to Perl-Compatible Regular Expression.
  *  Does NOT have ownership of the pointer!

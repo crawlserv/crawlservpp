@@ -1,5 +1,5 @@
 /*
- * MarkovText.h
+ * MarkovText.hpp
  *
  *   Markov Chain Text Generator algorithm implemented as child of the abstract Analyzer thread class.
  *

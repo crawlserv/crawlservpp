@@ -1,5 +1,5 @@
 /*
- * CurlList.h
+ * CurlList.hpp
  *
  * RAII wrapper for pointer to cURL list.
  *  Does NOT have ownership of the pointer!

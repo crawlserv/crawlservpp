@@ -1,5 +1,5 @@
 /*
- * Enum.h
+ * Enum.hpp
  *
  * Enumeration of implemented algorithms.
  *
@@ -7,6 +7,8 @@
  *
  * 			Remember to add new algorithms to Module::Analyzer::Algo::check(), Server::Server() and Server::cmdStartAnalyzer()!
  * 			Also do not forget to add the necessary #include to the 'Server.h' header file.
+ *
+ * NOTE:	Not multi-threading safe! Only to be used by the server.
  *
  *  Created on: Jan 13, 2019
  *      Author: ans
@@ -33,7 +35,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTATION
 	 */
 
-	// checks value for a valid algorithm id
+	// checks value for a valid algorithm ID
 	inline bool check(unsigned int value) {
 		switch(value) {
 		case Enum::markovText:

@@ -1,5 +1,5 @@
 /*
- * TargetTableLock.h
+ * TargetTableLock.hpp
  *
  * Safe in-scope lock for target tables.
  *

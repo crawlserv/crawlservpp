@@ -1,5 +1,5 @@
 /*
- * TableLockProperties.h
+ * TableLockProperties.hpp
  *
  * Structure for table locks (table name, alias name, number of aliases).
  *

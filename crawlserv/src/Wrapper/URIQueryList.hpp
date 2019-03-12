@@ -1,5 +1,5 @@
 /*
- * URIQueryList.h
+ * URIQueryList.hpp
  *
  * RAII wrapper for pointer to URI query list.
  *  Does NOT have ownership of the pointer!

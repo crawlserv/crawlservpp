@@ -1,5 +1,5 @@
 /*
- * TableLock.h
+ * TableLock.hpp
  *
  * Template class for safe in-scope table locks.
  *

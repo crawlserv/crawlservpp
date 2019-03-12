@@ -1,5 +1,5 @@
 /*
- * Config.h
+ * Config.hpp
  *
  * Parsing configuration.
  *

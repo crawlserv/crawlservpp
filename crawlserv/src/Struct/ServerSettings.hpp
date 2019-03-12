@@ -1,5 +1,5 @@
 /*
- * ServerSettings.h
+ * ServerSettings.hpp
  *
  * Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
  *

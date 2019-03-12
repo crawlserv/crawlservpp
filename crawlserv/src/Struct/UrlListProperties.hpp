@@ -1,5 +1,5 @@
 /*
- * URLListProperties.h
+ * URLListProperties.hpp
  *
  * Basic URL list properties (namespace and name).
  *

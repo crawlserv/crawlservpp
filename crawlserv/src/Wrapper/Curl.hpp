@@ -1,5 +1,5 @@
 /*
- * Curl.h
+ * Curl.hpp
  *
  * RAII wrapper for pointer to cURL instance, also handles global instance if necessary.
  * 	Does NOT have ownership of the pointer.

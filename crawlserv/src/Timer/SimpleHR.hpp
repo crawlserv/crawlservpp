@@ -1,5 +1,5 @@
 /*
- * SimpleHR.h
+ * SimpleHR.hpp
  *
  * Simple high resolution timer for getting the time since creation in microseconds.
  *

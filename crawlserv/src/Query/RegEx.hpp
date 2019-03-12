@@ -1,5 +1,5 @@
 /*
- * RegEx.h
+ * RegEx.hpp
  *
  * Using the PCRE2 library to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
  *  Expression is only created when needed.

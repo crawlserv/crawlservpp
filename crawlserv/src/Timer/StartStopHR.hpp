@@ -1,5 +1,5 @@
 /*
- * StartStopHR.h
+ * StartStopHR.hpp
  *
  * High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
  *

@@ -1,5 +1,5 @@
 /*
- * Simple.h
+ * Simple.hpp
  *
  * Simple timer for getting the time since creation in microseconds.
  *
