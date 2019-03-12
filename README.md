@@ -36,7 +36,7 @@ The source code of the server consists of the following classes (as of February 
 * **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * **[`Main::Database`](crawlserv/src/Main/Database.cpp)**: Database access for the server and its threads (parent class with server-specific and basic functionality only).
-* **[`Main::Exception`](crawlserv/src/Main/Exception.cpp)**: Class for custom exceptions.
+* **[`Main::Exception`](crawlserv/src/Main/Exception.hpp)**: Class for custom exceptions.
 * **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server managing threads and performing server commands.
 * **[`Main::WebServer`](crawlserv/src/Main/WebServer.cpp)**: Implementation of an embedded HTTP server for interaction with the frontend using the [mongoose library](https://github.com/cesanta/mongoose).
 * **[`Module::Config`](crawlserv/src/Module/Config.hpp)**: Abstract class as base for module-specific configuration classes.
@@ -45,16 +45,16 @@ The source code of the server consists of the following classes (as of February 
 * **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
 * **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
 * **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.hpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for all configuration entries.
-* **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for analyzers. Abstract class to be inherited by algorithm classes.
 * **[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.hpp)**: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
-* **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for crawlers.
 * **~~[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.hpp)~~**: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
-* **~~[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **~~[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **~~[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for extractors.
 * **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.hpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
-* **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class).
+* **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for parsers.
 * **[`Network::Config`](crawlserv/src/Network/Config.hpp)**: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
 * **[`Network::Curl`](crawlserv/src/Network/Curl.cpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
@@ -217,7 +217,7 @@ Analyzers are implemented by their own set of subclasses - algorithm classes. Th
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
 
-The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](crawlserv/src/Main/Database.cpp) class. Additionally, thread connections to the database (instances of [`Module::DBThread`](crawlserv/src/Module/DBThread.cpp) as child class of `Main::Database`) are wrapped through the [`Module::DBWrapper`](crawlserv/src/Module/DBWrapper.cpp) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
+The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](crawlserv/src/Main/Database.cpp) class. Additionally, thread connections to the database (instances of [`Module::Database`](crawlserv/src/Module/Database.cpp) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
 
 The parser and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler and ~~extractor~~ threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing and analyzing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected. At the same time, a slow database connection or server can have significant impact on performance in any case.
 
