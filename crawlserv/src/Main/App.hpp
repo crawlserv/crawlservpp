@@ -11,8 +11,15 @@
 #ifndef MAIN_APP_HPP_
 #define MAIN_APP_HPP_
 
+#include "ConfigFile.hpp"
+#include "Server.hpp"
+
 #include "../Helper/DateTime.hpp"
 #include "../Helper/Portability.hpp"
+#include "../Helper/Versions.hpp"
+#include "../Struct/DatabaseSettings.hpp"
+#include "../Struct/ServerSettings.hpp"
+
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -24,11 +31,6 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include "../Helper/Versions.hpp"
-#include "../Struct/DatabaseSettings.hpp"
-#include "../Struct/ServerSettings.hpp"
-#include "ConfigFile.hpp"
-#include "Server.hpp"
 
 namespace crawlservpp::Main {
 
