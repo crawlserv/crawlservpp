@@ -100,7 +100,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			this->source.push_back(' ');
 			this->sources += corpusSources;
 		}
-		if(!(this->source.empty())) this->source.pop_back();
+
+		if(!(this->source.empty()))
+			this->source.pop_back();
 
 		// create dictionary
 		this->setStatusMessage("Creating dictionary...");
@@ -112,8 +114,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			// re-allow pausing the thread
 			this->allowPausing();
-
-			this->setStatusMessage("Generating texts...");
 		}
 	}
 
@@ -126,6 +126,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// generate text
+		this->setStatusMessage("Generating text...");
 		std::unique_ptr<Timer::Simple> timer;
 		if(this->config.generalLogging && this->markovTextTiming) timer = std::make_unique<Timer::Simple>();
 		std::string text = this->createText();
@@ -154,6 +155,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// sleep if necessary
 		if(this->markovTextSleep) {
+			this->setStatusMessage("Sleeping...");
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->markovTextSleep));
 		}
 	}
