@@ -11,6 +11,7 @@
 #ifndef WRAPPER_DATABASE_HPP_
 #define WRAPPER_DATABASE_HPP_
 
+
 #include "../Main/Data.hpp"
 #include "../Module/Database.hpp"
 #include "../Struct/DatabaseSettings.hpp"
@@ -347,7 +348,7 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// lock target tables of the specified type
-	//  NOTE: Waiting for other locks to be released requires a callback function to get the running status of the thread.
+	//  NOTE: Waiting for other locks to be released requires a callback function to check the running status of the thread.
 	inline void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
 			unsigned long timeOut, CallbackIsRunning isRunning) {
 		this->database.lockTargetTables(type, websiteId, listId, timeOut, isRunning);

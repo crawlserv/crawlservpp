@@ -1910,7 +1910,7 @@ namespace crawlservpp::Main {
 	 */
 
 	// lock target tables of the specified type
-	//  NOTE: Waiting for other locks to be released requires a callback function to get the running status of the thread.
+	//  NOTE: Waiting for other locks to be released requires a callback function to check the running status of the thread.
 	void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
 			unsigned long timeOut, CallbackIsRunning isRunning) {
 		bool sleep = false;
