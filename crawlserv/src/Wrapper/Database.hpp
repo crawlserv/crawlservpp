@@ -220,7 +220,7 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// get target tables of the specified type for an ID-specified URL list from the database
-	inline std::queue<IdString> Database::getTargetTables(const std::string& type, unsigned long listId) {
+	inline std::queue<Database::IdString> Database::getTargetTables(const std::string& type, unsigned long listId) {
 		return this->database.getTargetTables(type, listId);
 	}
 
