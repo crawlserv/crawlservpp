@@ -873,10 +873,9 @@ namespace crawlservpp::Module::Crawler {
 										this->config.crawlerLock
 						);
 
-						if(this->lockTime.empty()) {
+						if(this->lockTime.empty())
 							// skip locked URL
 							logEntries.emplace("skipped " + this->nextUrl.url + ", because it is locked.");
-						}
 						else {
 							urlTo = this->nextUrl;
 							break;
