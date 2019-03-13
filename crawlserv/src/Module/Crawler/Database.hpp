@@ -26,6 +26,7 @@
 #include <chrono>
 #include <deque>
 #include <fstream>
+#include <iostream>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -76,6 +77,7 @@ namespace crawlservpp::Module::Crawler {
 		// URL checking functions
 		void urlDuplicationCheck();
 		void urlHashCheck();
+		void urlEmptyCheck(const std::vector<std::string>& urlsAdded);
 
 		// URL locking functions
 		bool isUrlLockable(unsigned long lockId);
@@ -130,6 +132,7 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short isArchivedContentExists;
 			unsigned short urlDuplicationCheck;
 			unsigned short urlHashCheck;
+			unsigned short urlEmptyCheck;
 		} ps;
 
 		// helper function

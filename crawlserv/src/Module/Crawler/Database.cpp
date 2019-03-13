@@ -314,6 +314,14 @@ namespace crawlservpp::Module::Crawler {
 					" WHERE hash <> " + urlHash + " LIMIT 1"
 			);
 		}
+
+		if(!(this->ps.urlEmptyCheck) && (this->urlStartupCheck || this->urlDebug)) {
+			if(this->verbose) this->log("[#" + this->idString + "] prepares urlHashCheck()...");
+			this->ps.urlEmptyCheck = this->addPreparedStatement(
+					"SELECT id FROM `" + this->urlListTable + "`"
+					" WHERE url = '' LIMIT 1"
+			);
+		}
 	}
 
 	// get the ID and lock ID of an URL (uses hash check for first checking the probable existence of the URL)
@@ -625,8 +633,47 @@ namespace crawlservpp::Module::Crawler {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
-				throw DatabaseException("Crawler::Database::urlHashCheck(): Corrupted hash for URL \'"
-						+ sqlResultSet->getString("url") + "\" in `" + this->urlListTable + "`");
+				throw DatabaseException(
+						"Crawler::Database::urlHashCheck():"
+						" Corrupted hash for URL \'" + sqlResultSet->getString("url") + "\""
+						" in `" + this->urlListTable + "`"
+				);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
+	}
+
+	// check for empty URLs in the URL list, throw DatabaseException if an empty URL exists
+	void Database::urlEmptyCheck(const std::vector<std::string>& urlsAdded) {
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(!(this->ps.urlEmptyCheck))
+			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlEmptyCheck()");
+
+		// get prepared SQL statement
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlEmptyCheck);
+
+		// get number of URLs from database
+		try {
+			// execute SQL query
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next()) {
+				if(urlsAdded.size()) {
+					std::cout << std::endl << " Empty URL in `" + this->urlListTable + "` after adding:";
+					for(auto i = urlsAdded.begin(); i != urlsAdded.end(); ++i) {
+						std::cout << std::endl << " \'" << *i << "\'";
+					}
+					std::cout << std::flush;
+				}
+
+				throw DatabaseException(
+						"Crawler::Database::urlEmptyCheck():"
+						" Empty URL in `" + this->urlListTable + "`"
+				);
+			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
 	}
