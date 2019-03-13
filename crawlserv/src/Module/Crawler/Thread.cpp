@@ -117,6 +117,7 @@ namespace crawlservpp::Module::Crawler {
 
 			this->database.urlHashCheck();
 			this->database.urlDuplicationCheck();
+			this->database.urlEmptyCheck(std::vector<std::string>());
 		}
 
 		// get domain
@@ -1721,8 +1722,8 @@ namespace crawlservpp::Module::Crawler {
 			}
 
 			// delete out-of-domain or empty URL
-			urls.erase(urls.begin() + (n - 1));
 			n--;
+			urls.erase(urls.begin() + n);
 		}
 
 		// sort and remove duplicates
@@ -1776,6 +1777,9 @@ namespace crawlservpp::Module::Crawler {
 
 			// add URLs that do not exist already
 			newUrlsTo += this->database.addUrlsIfNotExist(chunk);
+
+			// DEBUG: check for empty URLs
+			this->database.urlEmptyCheck(urls);
 
 			// check for duplicates if URL debugging is active
 			if(this->config.crawlerUrlDebug)
