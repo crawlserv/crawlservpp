@@ -13,7 +13,6 @@
 #include "../../Struct/ParsingEntry.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
-#include "../../Struct/UrlProperties.hpp"
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/TableLock.hpp"
 #include "../../Wrapper/TargetTablesLock.hpp"
@@ -40,10 +39,10 @@ namespace crawlservpp::Module::Parser {
 	class Database : public Wrapper::Database {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
+		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::TargetTableProperties TargetTableProperties;
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::TableColumn TableColumn;
-		typedef Struct::UrlProperties UrlProperties;
 		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 		typedef Wrapper::TargetTablesLock TargetTablesLock;
 
@@ -52,7 +51,7 @@ namespace crawlservpp::Module::Parser {
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
 	public:
-		Database(Module::Database& dbRef, const std::string& setTargetTableAlias);
+		Database(Module::Database& dbRef);
 		virtual ~Database();
 
 		// setters
@@ -74,15 +73,14 @@ namespace crawlservpp::Module::Parser {
 		void prepare();
 
 		// URL functions
-		void fetchUrls(unsigned long lastId, std::queue<UrlProperties>& cache);
+		void fetchUrls(unsigned long lastId, std::queue<IdString>& cache);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
 
 		// URL locking functions
-		std::string getLockTime(unsigned long lockId);
-		void getLockId(UrlProperties& urlProperties);
-		std::string lockUrlIfOk(UrlProperties& urlProperties, unsigned long lockTimeout);
-		void unLockUrlIfOk(unsigned long lockId, const std::string& lockTime);
+		std::string getLockTime(unsigned long urlId);
+		std::string lockUrlIfOk(unsigned long urlId, unsigned long lockTimeout);
+		void unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
 
 		// parsing functions
 		unsigned int checkParsingTable();
@@ -125,9 +123,7 @@ namespace crawlservpp::Module::Parser {
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
 			unsigned short getLockTime;
-			unsigned short getLockId;
 			unsigned short lockUrlIfOk;
-			unsigned short addUrlLock;
 			unsigned short unLockUrlIfOk;
 			unsigned short getContentIdFromParsedId;
 			unsigned short getLatestContent;
@@ -145,6 +141,7 @@ namespace crawlservpp::Module::Parser {
 		} ps;
 
 		// constant string for table aliases
+		const std::string parsingTableAlias;
 		const std::string targetTableAlias;
 
 		// internal helper function

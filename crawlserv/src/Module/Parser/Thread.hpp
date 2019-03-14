@@ -22,13 +22,10 @@
 #include "../../Helper/Strings.hpp"
 #include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
-#include "../../Struct/TableLockProperties.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ParsingEntry.hpp"
 #include "../../Struct/QueryProperties.hpp"
-#include "../../Struct/UrlProperties.hpp"
 #include "../../Timer/Simple.hpp"
-#include "../../Wrapper/TableLock.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -50,11 +47,9 @@ namespace crawlservpp::Module::Parser {
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::UrlProperties UrlProperties;
 		typedef Query::RegEx::Exception RegExException;
-		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
+
 		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
@@ -73,9 +68,6 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Thread();
 
 	protected:
-		// constant string for table aliases
-		const std::string targetTableAlias;
-
 		// database for the thread
 		Database database;
 
@@ -84,7 +76,7 @@ namespace crawlservpp::Module::Parser {
 		std::string targetTable;
 
 		// cache
-		std::queue<UrlProperties> urls;
+		std::queue<IdString> urls;
 		std::queue<ParsingEntry> results;
 		std::queue<IdString> finished;
 
@@ -139,7 +131,7 @@ namespace crawlservpp::Module::Parser {
 		void parsingUrlSelection();
 		void parsingFetchUrls();
 		unsigned long parsingNext();
-		bool parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId);
+		bool parsingContent(const IdString& content, const std::string& parsedId);
 		void parsingUrlFinished();
 		void parsingSaveResults();
 	};
