@@ -764,7 +764,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// get the URL lock end time of a specific URL from database
-	std::string Database::getUrlLock(unsigned long urlId) {
+	std::string Database::getUrlLockTime(unsigned long urlId) {
 		// check argument
 		if(!urlId)
 			return std::string();
@@ -888,7 +888,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// get new expiration time of URL lock
-		return this->getUrlLock(urlId);
+		return this->getUrlLockTime(urlId);
 	}
 
 	// unlock a URL in the database

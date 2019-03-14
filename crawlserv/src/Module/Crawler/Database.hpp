@@ -79,7 +79,7 @@ namespace crawlservpp::Module::Crawler {
 		void urlEmptyCheck(const std::vector<std::string>& urlsAdded);
 
 		// URL locking functions
-		std::string getUrlLock(unsigned long urlId);
+		std::string getUrlLockTime(unsigned long urlId);
 		bool isUrlCrawled(unsigned long urlId);
 		std::string lockUrlIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout);
 		void unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
