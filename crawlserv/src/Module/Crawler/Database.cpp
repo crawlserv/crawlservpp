@@ -853,7 +853,7 @@ namespace crawlservpp::Module::Crawler {
 				sqlStatement.setUInt64(3, lockTimeout);
 
 				{ // lock crawling table
-					TableLock(
+					TableLock crawlingTableLock(
 							*this,
 							TableLockProperties(
 									this->crawlingTable,

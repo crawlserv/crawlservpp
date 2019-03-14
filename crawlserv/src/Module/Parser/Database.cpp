@@ -530,7 +530,7 @@ namespace crawlservpp::Module::Parser {
 
 		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
 		try { // lock parsing table
-			TableLock(
+			TableLock parsingTableLock(
 					*this,
 					TableLockProperties(
 							this->parsingTable,
