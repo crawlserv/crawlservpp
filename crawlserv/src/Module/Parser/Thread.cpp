@@ -172,12 +172,12 @@ namespace crawlservpp::Module::Parser {
 		bool skip = false;
 		unsigned long parsed = 0;
 
-		// URL selection
+		// URL selection if no URLs are left to parse
 		if(this->urls.empty())
 			this->parsingUrlSelection();
 
 		if(this->urls.empty()) {
-			// no URLs left: set timer if just finished, sleep
+			// no URLs left in database: set timer if just finished, sleep
 			if(this->idleTime == std::chrono::steady_clock::time_point::min())
 				this->idleTime = std::chrono::steady_clock::now();
 
@@ -185,7 +185,7 @@ namespace crawlservpp::Module::Parser {
 			return;
 		}
 
-		// update timers
+		// update timers if idling just stopped
 		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 			// idling stopped
 			this->startTime += std::chrono::steady_clock::now() - this->idleTime;
@@ -198,35 +198,27 @@ namespace crawlservpp::Module::Parser {
 
 		// write log entry if necessary
 		if(this->config.generalLogging > Config::generalLoggingExtended)
-			this->log("parses " + this->urls.front().url + "...");
+			this->log("parses " + this->urls.front().second + "...");
 
-		// check whether URL needs to be skipped because it is locked
-		{ // lock parsing table
-			TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
-
-			// get current URL lock ID
-			this->database.getLockId(this->urls.front());
-
-			// try to lock URL
-			this->lockTime = this->database.lockUrlIfOk(this->urls.front(), this->config.generalLock);
-			skip = this->lockTime.empty();
-		} // parsing table unlocked
+		// try to lock URL
+		this->lockTime = this->database.lockUrlIfOk(this->urls.front().first, this->config.generalLock);
+		skip = this->lockTime.empty();
 
 		if(skip) {
 			// skip locked URL
 			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log("skip (locked) " + this->urls.front().url);
+				this->log("skip (locked) " + this->urls.front().second);
 		}
 		else {
 			// set status
-			this->setStatusMessage(this->urls.front().url);
+			this->setStatusMessage(this->urls.front().second);
 
 			// approximate progress
 			if(!(this->total))
 				throw std::runtime_error("Parser::Thread::onTick(): Could not get URL list size");
 
 			if(this->idDist) {
-				float cacheProgress = static_cast<float>(this->urls.front().id - this->idFirst) / this->idDist;
+				float cacheProgress = static_cast<float>(this->urls.front().first - this->idFirst) / this->idDist;
 					// cache progress = (current ID - first ID) / (last ID - first ID)
 				float approxPosition = this->posFirstF + cacheProgress * this->posDist;
 					// approximate position = first position + cache progress * (last position - first position)
@@ -246,12 +238,12 @@ namespace crawlservpp::Module::Parser {
 			if(this->config.generalTiming && this->config.generalLogging)
 				timerStr = timer.tickStr();
 
-			// save URL lock ID and expiration time if parsing was successful or unlock URL if parsing failed
+			// save expiration time of URL lock if parsing was successful or unlock URL if parsing failed
 			if(parsed)
-				this->finished.emplace(this->urls.front().lockId, this->lockTime);
+				this->finished.emplace(this->urls.front().first, this->lockTime);
 			else
 				// unlock URL if necesssary
-				this->database.unLockUrlIfOk(this->urls.front().lockId, this->lockTime);
+				this->database.unLockUrlIfOk(this->urls.front().first, this->lockTime);
 
 			// reset lock time
 			this->lockTime = "";
@@ -269,7 +261,7 @@ namespace crawlservpp::Module::Parser {
 				else
 					logStrStr << "skipped ";
 
-				logStrStr << this->urls.front().url;
+				logStrStr << this->urls.front().second;
 
 				if(this->config.generalTiming)
 					logStrStr << " in " << timerStr;
@@ -439,9 +431,9 @@ namespace crawlservpp::Module::Parser {
 		// check whether next URL(s) need to be skipped
 		while(!(this->urls.empty()) && this->isRunning()) {
 			// check whether URL needs to be skipped because of invalid ID
-			if(!(this->urls.front().id)) {
+			if(!(this->urls.front().first)) {
 				if(this->config.generalLogging)
-					this->log("skip (INVALID ID) " + this->urls.front().url);
+					this->log("skip (INVALID ID) " + this->urls.front().second);
 
 				this->parsingUrlFinished();
 				continue;
@@ -461,7 +453,7 @@ namespace crawlservpp::Module::Parser {
 					if(i->type == QueryStruct::typeRegEx) {
 						// parse ID by running RegEx query on URL
 						try {
-							if(this->getRegExQueryPtr(i->index).getBool(this->urls.front().url)) {
+							if(this->getRegExQueryPtr(i->index).getBool(this->urls.front().second)) {
 								// skip URL
 								skip = true;
 								break; // exit loop over custom queries
@@ -476,7 +468,7 @@ namespace crawlservpp::Module::Parser {
 				if(skip) {
 					// skip URL because of query
 					if(this->config.generalLogging > Config::generalLoggingDefault)
-						this->log("skip (query) " + urls.front().url);
+						this->log("skip (query) " + urls.front().second);
 
 					this->parsingUrlFinished();
 					continue;
@@ -503,12 +495,12 @@ namespace crawlservpp::Module::Parser {
 			return;
 
 		// save properties of fetched URLs and URL list for progress calculation
-		this->idFirst = this->urls.front().id;
-		this->idDist = this->urls.back().id - this->idFirst;
+		this->idFirst = this->urls.front().first;
+		this->idDist = this->urls.back().first - this->idFirst;
 
 		unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
 		this->posFirstF = static_cast<float>(posFirst);
-		this->posDist = this->database.getUrlPosition(this->urls.back().id) - posFirst;
+		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
 		this->total = this->database.getNumberOfUrls();
 	}
 
@@ -527,7 +519,7 @@ namespace crawlservpp::Module::Parser {
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on URL
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedId);
+						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedId);
 
 						if(!parsedId.empty())
 							break;
@@ -552,9 +544,9 @@ namespace crawlservpp::Module::Parser {
 			unsigned long index = 0;
 
 			while(true) {
-				std::pair<unsigned long, std::string> latestContent;
+				IdString latestContent;
 
-				if(this->database.getLatestContent(this->urls.front().id, index, latestContent)) {
+				if(this->database.getLatestContent(this->urls.front().first, index, latestContent)) {
 					if(this->parsingContent(latestContent, parsedId))
 						return 1;
 
@@ -568,7 +560,7 @@ namespace crawlservpp::Module::Parser {
 			// parse all contents of URL
 			unsigned long counter = 0;
 
-			std::queue<IdString> contents = this->database.getAllContents(this->urls.front().id);
+			std::queue<IdString> contents = this->database.getAllContents(this->urls.front().first);
 
 			while(!contents.empty()) {
 				if(this->parsingContent(contents.front(), parsedId))
@@ -583,7 +575,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// parse ID-specific content, return whether parsing was successfull (i.e. an ID could be parsed)
-	bool Thread::parsingContent(const std::pair<unsigned long, std::string>& content, const std::string& parsedId) {
+	bool Thread::parsingContent(const IdString& content, const std::string& parsedId) {
 		ParsingEntry parsedData(content.first);
 		Parsing::XML parsedContent;
 
@@ -596,7 +588,7 @@ namespace crawlservpp::Module::Parser {
 				std::ostringstream logStrStr;
 
 				logStrStr	<< "Content #" << content.first
-							<< " [" << this->urls.front().url << "] could not be parsed: "
+							<< " [" << this->urls.front().second << "] could not be parsed: "
 							<< e.what();
 
 				this->log(logStrStr.str());
@@ -606,7 +598,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// parse ID (if still necessary)
-		if(this->idFromUrl) parsedData.parsedId = parsedId;
+		if(this->idFromUrl)
+			parsedData.parsedId = parsedId;
 		else {
 			unsigned long idQueryCounter = 0;
 
@@ -621,7 +614,7 @@ namespace crawlservpp::Module::Parser {
 					if(i->type == QueryStruct::typeRegEx) {
 						// parse ID by running RegEx query on URL
 						try {
-							this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedData.parsedId);
+							this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedData.parsedId);
 
 							if(!parsedData.parsedId.empty())
 								break;
@@ -702,7 +695,7 @@ namespace crawlservpp::Module::Parser {
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse date/time by running RegEx query on URL
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedData.dateTime);
+						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedData.dateTime);
 
 						querySuccess = true;
 					}
@@ -803,7 +796,7 @@ namespace crawlservpp::Module::Parser {
 						// parse from URL: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse multiple field elements by running RegEx query on URL
-							this->getRegExQueryPtr(i->index).getAll(this->urls.front().url, parsedFieldValues);
+							this->getRegExQueryPtr(i->index).getAll(this->urls.front().second, parsedFieldValues);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -841,7 +834,7 @@ namespace crawlservpp::Module::Parser {
 						if(empty)
 							this->log(
 									"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-									" is empty for " + this->urls.front().url
+									" is empty for " + this->urls.front().second
 							);
 					}
 
@@ -879,7 +872,7 @@ namespace crawlservpp::Module::Parser {
 						// parse from URL: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse single field element by running RegEx query on URL
-							this->getRegExQueryPtr(i->index).getFirst(this->urls.front().url, parsedFieldValue);
+							this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedFieldValue);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -910,7 +903,7 @@ namespace crawlservpp::Module::Parser {
 							&& parsedFieldValue.empty())
 						this->log(
 								"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-								" is empty for " + this->urls.front().url
+								" is empty for " + this->urls.front().second
 						);
 
 					// if necessary, tidy text
@@ -935,7 +928,7 @@ namespace crawlservpp::Module::Parser {
 						// parse from URL: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse boolean value by running RegEx query on URL
-							parsedBool = this->getRegExQueryPtr(i->index).getBool(this->urls.front().url);
+							parsedBool = this->getRegExQueryPtr(i->index).getBool(this->urls.front().second);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -998,7 +991,7 @@ namespace crawlservpp::Module::Parser {
 			this->parsingSaveResults();
 
 			// set current URL as last URL
-			this->setLast(this->urls.back().id);
+			this->setLast(this->urls.back().first);
 
 			// reset URL properties
 			this->idFirst = 0;
@@ -1028,22 +1021,14 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.generalLogging > Config::generalLoggingDefault)
 			this->log("saves results...");
 
-		{ // lock target table
-			TableLock targetTableLock(this->database, TableLockProperties(this->targetTable, this->targetTableAlias, 1000));
-
-			// update or add entries in/to database
-			this->database.updateOrAddEntries(this->results, logEntries);
-		} // target and parsing tables unlocked
+		// update or add entries in/to database
+		this->database.updateOrAddEntries(this->results, logEntries);
 
 		// update parsing table
 		this->database.updateTargetTable();
 
-		{ // lock parsing table
-			TableLock parsingTableLock(this->database, TableLockProperties(this->parsingTable));
-
-			// set those URLs to finished whose URL lock is okay (still locked or re-lockable (and not parsed when not re-parsing)
-			this->database.setUrlsFinishedIfLockOk(this->finished);
-		} // parsing table unlocked
+		// set those URLs to finished whose URL lock is okay (still locked or re-lockable (and not parsed when not re-parsing)
+		this->database.setUrlsFinishedIfLockOk(this->finished);
 
 		// write log entries if necessary
 		if(this->config.generalLogging) {

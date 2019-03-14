@@ -11,7 +11,6 @@
 #define MODULE_CRAWLER_DATABASE_HPP_
 
 #include "../../Struct/TableLockProperties.hpp"
-#include "../../Struct/UrlProperties.hpp"
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/TableLock.hpp"
@@ -38,9 +37,9 @@ namespace crawlservpp::Module::Crawler {
 		// for convenience
 		typedef Main::Database::Exception DatabaseException;
 		typedef Struct::TableLockProperties TableLockProperties;
-		typedef Struct::UrlProperties UrlProperties;
 		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 
+		typedef std::pair<unsigned long, std::string> IdString;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
 	public:
@@ -65,9 +64,9 @@ namespace crawlservpp::Module::Crawler {
 		void prepare();
 
 		// URL functions
-		void getUrlIdLockId(UrlProperties& urlProperties);
+		unsigned long getUrlId(const std::string& url);
 
-		UrlProperties getNextUrl(unsigned long currentUrlId);
+		IdString getNextUrl(unsigned long currentUrlId);
 		bool addUrlIfNotExists(const std::string& urlString, bool manual);
 		unsigned long addUrlsIfNotExist(std::queue<std::string, std::deque<std::string>>& urls);
 		unsigned long addUrlGetId(const std::string& urlString, bool manual);
@@ -80,16 +79,24 @@ namespace crawlservpp::Module::Crawler {
 		void urlEmptyCheck(const std::vector<std::string>& urlsAdded);
 
 		// URL locking functions
-		bool isUrlLockable(unsigned long lockId);
-		std::string getUrlLock(unsigned long lockId);
-		bool getUrlState(UrlProperties& urlProperties);
-		std::string lockUrlIfOk(UrlProperties& urlProperties, const std::string& lockTime, unsigned long lockTimeout);
-		void unLockUrlIfOk(unsigned long lockId, const std::string& lockTime);
-		void setUrlFinishedIfOk(unsigned long crawlingId, const std::string& lockTime);
+		std::string getUrlLock(unsigned long urlId);
+		bool isUrlCrawled(unsigned long urlId);
+		std::string lockUrlIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout);
+		void unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
+		void setUrlFinishedIfOk(unsigned long urlId, const std::string& lockTime);
 
 		// crawling functions
-		void saveContent(unsigned long urlId, unsigned int response, const std::string& type, const std::string& content);
-		void saveArchivedContent(unsigned long urlId, const std::string& timeStamp, unsigned int response, const std::string& type,
+		void saveContent(
+				unsigned long urlId,
+				unsigned int response,
+				const std::string& type,
+				const std::string& content
+		);
+		void saveArchivedContent(
+				unsigned long urlId,
+				const std::string& timeStamp,
+				unsigned int response,
+				const std::string& type,
 				const std::string& content);
 		bool isArchivedContentExists(unsigned long urlId, const std::string& timeStamp);
 
@@ -112,7 +119,7 @@ namespace crawlservpp::Module::Crawler {
 	private:
 		// IDs of prepared SQL statements
 		struct {
-			unsigned short getUrlIdLockId;
+			unsigned short getUrlId;
 			unsigned short getNextUrl;
 			unsigned short addUrlIfNotExists;
 			unsigned short add10UrlsIfNotExist;
@@ -121,10 +128,9 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
 			unsigned short getUrlLock;
-			unsigned short getUrlState;
+			unsigned short isUrlCrawled;
+			unsigned short addUrlLockIfOk;
 			unsigned short renewUrlLockIfOk;
-			unsigned short setUrlLockIfOk;
-			unsigned short addUrlLock;
 			unsigned short unLockUrlIfOk;
 			unsigned short setUrlFinishedIfOk;
 			unsigned short saveContent;

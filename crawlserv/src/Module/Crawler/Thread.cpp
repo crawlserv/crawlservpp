@@ -192,7 +192,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// crawler tick
 	void Thread::onTick() {
-		UrlProperties url;
+		IdString url;
 
 		Timer::StartStop timerSelect;
 		Timer::StartStop timerArchives;
@@ -228,7 +228,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// start crawling
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("crawls " + url.url + "...");
+				this->log("crawls " + url.second + "...");
 
 			// crawl content
 			bool crawled = this->crawlingContent(url, checkedUrls, newUrls, timerString);
@@ -253,7 +253,7 @@ namespace crawlservpp::Module::Crawler {
 						std::ostringstream logStrStr;
 						logStrStr.imbue(std::locale(""));
 
-						logStrStr << "finished " << url.url;
+						logStrStr << "finished " << url.second;
 
 						if(this->config.crawlerTiming) {
 							logStrStr	<< " after " << timerTotal.totalStr()
@@ -283,8 +283,8 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				// DEBUG
-				if(!this->nextUrl.id && !this->lockTime.empty()) Exception("URL not unlocked");
-				if(this->nextUrl.id && this->lockTime.empty()) Exception("URL not locked");
+				if(!this->nextUrl.first && !this->lockTime.empty()) Exception("URL not unlocked");
+				if(this->nextUrl.first && this->lockTime.empty()) Exception("URL not locked");
 			}
 			else if(!crawled)
 				// if crawling and getting archives failed, retry both (not only archives)
@@ -423,7 +423,7 @@ namespace crawlservpp::Module::Crawler {
 			this->customPages.reserve(newUrls.size());
 
 			for(auto i = newUrls.begin(); i != newUrls.end(); ++i)
-				this->customPages.emplace_back(*i);
+				this->customPages.emplace_back(0, *i);
 		}
 		else {
 			// no counters: add all custom URLs as is
@@ -434,7 +434,7 @@ namespace crawlservpp::Module::Crawler {
 					i != this->config.customUrls.end();
 					++i
 			)
-				this->customPages.emplace_back(*i);
+				this->customPages.emplace_back(0, *i);
 		}
 
 		// queue for log entries while URL list is locked
@@ -442,39 +442,39 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->config.crawlerStart.empty())) {
 			// set URL of start page
-			this->startPage.url = this->config.crawlerStart;
+			this->startPage.second = this->config.crawlerStart;
 
 			// add start page to database (if it does not exists already)
-			this->database.addUrlIfNotExists(this->startPage.url, true);
+			this->database.addUrlIfNotExists(this->startPage.second, true);
 
 			// check for duplicates if URL debugging is active
 			if(this->config.crawlerUrlDebug)
 				this->database.urlDuplicationCheck();
 
-			// get the ID of the start page URL (and of its URL lock if one already exists)
-			this->database.getUrlIdLockId(this->startPage);
+			// get the ID of the start page URL
+			this->startPage.first = this->database.getUrlId(this->startPage.second);
 		}
 
 		// get IDs and lock IDs for custom URLs (and add them to the URL list if necessary)
 		for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
 			try {
 				// check URI
-				this->parser->setCurrentSubUrl(i->url);
+				this->parser->setCurrentSubUrl(i->second);
 
 				// add URL (if it does not exist)
-				this->database.addUrlIfNotExists(i->url, true);
+				this->database.addUrlIfNotExists(i->second, true);
 
 				// check for duplicates if URL debugging is active
 				if(this->config.crawlerUrlDebug)
 					this->database.urlDuplicationCheck();
 
 				// get the ID of the custom URL (and of its URL lock if one already exists)
-				this->database.getUrlIdLockId(*i);
+				i->first = this->database.getUrlId(i->second);
 			}
 			catch(const URIException& e) {
 				if(this->config.crawlerLogging) {
 					warnings.emplace("URI Parser error: " + e.whatStr());
-					warnings.emplace("Skipped invalid custom URL " + i->url);
+					warnings.emplace("Skipped invalid custom URL " + i->second);
 				}
 			}
 		}
@@ -687,7 +687,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawling function for URL selection (includes locking the URL)
-	bool Thread::crawlingUrlSelection(UrlProperties& urlTo) {
+	bool Thread::crawlingUrlSelection(IdString& urlTo) {
 		bool result = true;
 
 		// queue for log entries while crawling table is locked
@@ -695,28 +695,28 @@ namespace crawlservpp::Module::Crawler {
 
 		// MANUAL CRAWLING MODE (get URL from configuration)
 		if(!(this->getLast())) {
-			if(this->manualUrl.id) {
+			if(this->manualUrl.first) {
 				// renew URL lock on manual URL (custom URL or start page) for retry
 				this->lockTime = this->database.lockUrlIfOk(
-						this->manualUrl,
+						this->manualUrl.first,
 						this->lockTime,
 						this->config.crawlerLock
 				);
 
 				if(this->lockTime.empty()) {
-					// skipped locked URL
+					// skip locked URL
 					logEntries.emplace(
 							"URL lock active - " +
-							this->manualUrl.url + " skipped."
+							this->manualUrl.second + " skipped."
 					);
 
-					this->manualUrl = UrlProperties();
+					this->manualUrl = IdString();
 				}
 				else
 					urlTo = this->manualUrl;
 			}
 
-			if(!this->manualUrl.id) {
+			if(!this->manualUrl.first) {
 				// no retry: check custom URLs
 				if(!(this->customPages.empty())) {
 					if(!(this->manualCounter))
@@ -728,24 +728,21 @@ namespace crawlservpp::Module::Crawler {
 					// check for custom URLs to crawl
 					if(this->manualCounter < this->customPages.size()) {
 						while(this->manualCounter < this->customPages.size()) {
-							// get current lock ID for custom URL if none was received yet
-							bool crawled = this->database.getUrlState(this->customPages.at(this->manualCounter));
-
-							// set current manual URL to custom URL
-							this->manualUrl = this->customPages.at(this->manualCounter);
-
-							// check whether custom URL was already crawled
-							if(!(this->config.customReCrawl) && crawled) {
+							// check whether custom URL was already crawled (except when recrawling is enabled)
+							if(!(this->config.customReCrawl)
+									&& this->database.isUrlCrawled(this->customPages.at(this->manualCounter).first)) {
+								// skip custom URL
 								this->manualCounter++;
-
-								this->manualUrl = UrlProperties();
 
 								continue;
 							}
 
+							// set current manual URL to custom URL
+							this->manualUrl = this->customPages.at(this->manualCounter);
+
 							// lock custom URL if possible
 							this->lockTime = this->database.lockUrlIfOk(
-									this->manualUrl,
+									this->manualUrl.first,
 									this->lockTime,
 									this->config.crawlerLock
 							);
@@ -754,11 +751,11 @@ namespace crawlservpp::Module::Crawler {
 								// skip locked custom URL
 								logEntries.emplace(
 										"URL lock active - " +
-										this->manualUrl.url + " skipped."
+										this->manualUrl.second + " skipped."
 								);
 
 								this->manualCounter++;
-								this->manualUrl = UrlProperties();
+								this->manualUrl = IdString();
 							}
 							else {
 								// use custom URL
@@ -780,14 +777,11 @@ namespace crawlservpp::Module::Crawler {
 							logEntries.emplace("starts crawling in non-recoverable MANUAL mode.");
 						}
 
-						// get current lock ID for start page if none was received yet
-						bool crawled = this->database.getUrlState(this->startPage);
-
 						// check whether start page was already crawled (or needs to be re-crawled anyway)
-						if(this->config.crawlerReCrawlStart	|| !crawled) {
+						if(this->config.crawlerReCrawlStart	|| !(this->database.isUrlCrawled(this->startPage.first))) {
 							// check whether start page is lockable
 							this->lockTime = this->database.lockUrlIfOk(
-									this->startPage,
+									this->startPage.first,
 									this->lockTime,
 									this->config.crawlerLock
 							);
@@ -796,7 +790,7 @@ namespace crawlservpp::Module::Crawler {
 								// start page is locked: write skipping of entry to log if enabled
 								logEntries.emplace(
 										"URL lock active - " +
-										this->startPage.url + " skipped."
+										this->startPage.second + " skipped."
 								);
 
 								// start page is done
@@ -816,14 +810,14 @@ namespace crawlservpp::Module::Crawler {
 
 						// reset manual URL if start page has been skipped
 						if(this->startCrawled)
-							this->manualUrl = UrlProperties();
+							this->manualUrl = IdString();
 					}
 				}
 			}
 		}
 
 		// AUTOMATIC CRAWLING MODE (get URL directly from database)
-		if(!(this->manualUrl.id)) {
+		if(!(this->manualUrl.first)) {
 			// check whether manual crawling mode was already set off
 			if(!(this->manualOff)) {
 				// start manual crawling with start page
@@ -834,17 +828,17 @@ namespace crawlservpp::Module::Crawler {
 
 			// check for retry
 			bool retry = false;
-			if(this->nextUrl.id) {
+			if(this->nextUrl.first) {
 				// try to renew URL lock on automatic URL for retry
 				this->lockTime = this->database.lockUrlIfOk(
-						this->nextUrl,
+						this->nextUrl.first,
 						this->lockTime,
 						this->config.crawlerLock
 				);
 
 				if(!(this->lockTime.empty())) {
 					// log retry
-					logEntries.emplace("retries " + this->nextUrl.url + "...");
+					logEntries.emplace("retries " + this->nextUrl.second + "...");
 
 					// set URL to last URL
 					urlTo = this->nextUrl;
@@ -856,9 +850,9 @@ namespace crawlservpp::Module::Crawler {
 
 			if(!retry) {
 				// log failed retry if necessary
-				if(this->nextUrl.id)
+				if(this->nextUrl.first)
 					logEntries.emplace(
-							"could not retry " + this->nextUrl.url + ","
+							"could not retry " + this->nextUrl.second + ","
 							" because it is locked."
 					);
 
@@ -866,17 +860,17 @@ namespace crawlservpp::Module::Crawler {
 					// get next URL
 					this->nextUrl = this->database.getNextUrl(this->getLast());
 
-					if(this->nextUrl.id) {
+					if(this->nextUrl.first) {
 						// try to lock next URL
 						this->lockTime = this->database.lockUrlIfOk(
-										this->nextUrl,
+										this->nextUrl.first,
 										this->lockTime,
 										this->config.crawlerLock
 						);
 
 						if(this->lockTime.empty())
 							// skip locked URL
-							logEntries.emplace("skipped " + this->nextUrl.url + ", because it is locked.");
+							logEntries.emplace("skipped " + this->nextUrl.second + ", because it is locked.");
 						else {
 							urlTo = this->nextUrl;
 							break;
@@ -902,7 +896,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// set thread status
 		if(result)
-			this->setStatusMessage(urlTo.url);
+			this->setStatusMessage(urlTo.second);
 		else {
 			this->setStatusMessage("IDLE Waiting for new URLs to crawl.");
 			this->setProgress(1.f);
@@ -913,7 +907,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// crawl content
 	bool Thread::crawlingContent(
-			const UrlProperties& urlProperties,
+			const IdString& url,
 			unsigned long& checkedUrlsTo,
 			unsigned long& newUrlsTo,
 			std::string& timerStrTo
@@ -927,15 +921,15 @@ namespace crawlservpp::Module::Crawler {
 		timerStrTo = "";
 
 		// check arguments
-		if(!urlProperties.id)
+		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingContent(): No URL ID specified");
-		if(urlProperties.url.empty())
+		if(url.second.empty())
 			throw Exception("Crawler::Thread::crawlingContent(): No URL specified");
 
 		// skip crawling if only archive needs to be retried
 		if(this->config.crawlerArchives && this->archiveRetry) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("Retrying archive only [" + urlProperties.url + "].");
+				this->log("Retrying archive only [" + url.second + "].");
 
 			return true;
 		}
@@ -976,15 +970,15 @@ namespace crawlservpp::Module::Crawler {
 		catch(const CurlException& e) {
 			// error while setting up network
 			if(this->config.crawlerLogging) {
-				this->log(e.whatStr() + " [" + urlProperties.url + "].");
+				this->log(e.whatStr() + " [" + url.second+ "].");
 				this->log("resets connection...");
 			}
 
-			this->setStatusMessage("ERROR " + e.whatStr() + " [" + urlProperties.url + "]");
+			this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
 
 			this->networking.resetConnection(this->config.crawlerSleepError);
 
-			this->crawlingRetry(urlProperties, false);
+			this->crawlingRetry(url, false);
 
 			return false;
 		}
@@ -998,7 +992,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// get content
 			this->networking.getContent(
-					"https://" + this->domain + urlProperties.url,
+					"https://" + this->domain + url.second,
 					content,
 					this->config.crawlerRetryHttp
 			);
@@ -1007,23 +1001,23 @@ namespace crawlservpp::Module::Crawler {
 			// error while getting content: check type of error i.e. last cURL code
 			if(this->crawlingCheckCurlCode(
 					this->networking.getCurlCode(),
-					urlProperties.url
+					url.second
 			)) {
 				// reset connection and retry
 				if(this->config.crawlerLogging) {
-					this->log(e.whatStr() + " [" + urlProperties.url + "].");
+					this->log(e.whatStr() + " [" + url.second + "].");
 					this->log("resets connection...");
 				}
 
-				this->setStatusMessage("ERROR " + e.whatStr() + " [" + urlProperties.url + "]");
+				this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
 
 				this->networking.resetConnection(this->config.crawlerSleepError);
 
-				this->crawlingRetry(urlProperties, false);
+				this->crawlingRetry(url, false);
 			}
 			else {
 				// skip URL
-				this->crawlingSkip(urlProperties);
+				this->crawlingSkip(url);
 			}
 			return false;
 		}
@@ -1031,9 +1025,9 @@ namespace crawlservpp::Module::Crawler {
 		// check response code
 		unsigned int responseCode = this->networking.getResponseCode();
 
-		if(!(this->crawlingCheckResponseCode(urlProperties.url, responseCode))) {
+		if(!(this->crawlingCheckResponseCode(url.second, responseCode))) {
 			// skip because of response code
-			this->crawlingSkip(urlProperties);
+			this->crawlingSkip(url);
 			return false;
 		}
 
@@ -1052,18 +1046,18 @@ namespace crawlservpp::Module::Crawler {
 		// check content type
 		std::string contentType = this->networking.getContentType();
 
-		if(!(this->crawlingCheckContentType(urlProperties.url, contentType))) {
+		if(!(this->crawlingCheckContentType(url.second, contentType))) {
 			// skip because of content type (not on whitelist or on blacklist)
-			this->crawlingSkip(urlProperties);
+			this->crawlingSkip(url);
 
 			return false;
 		}
 
 		// optional: simple HTML consistency check
 		//  (not very reliable though, mostly for debugging purposes)
-		if(!(this->crawlingCheckConsistency(urlProperties.url, content))) {
+		if(!(this->crawlingCheckConsistency(url.second, content))) {
 			// skip because of HTML inconsistency
-			this->crawlingSkip(urlProperties);
+			this->crawlingSkip(url);
 
 			return false;
 		}
@@ -1079,26 +1073,26 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerLogging)
 				this->log(
 						"XML error:"
-						" " + e.whatStr() + " [" + urlProperties.url + "]."
+						" " + e.whatStr() + " [" + url.second + "]."
 				);
 
-			this->crawlingSkip(urlProperties);
+			this->crawlingSkip(url);
 
 			return false;
 		}
 
 		// optional: simple HTML canonical check
 		//  (not very reliable though, mostly for debugging purposes)
-		if(!(this->crawlingCheckCanonical(urlProperties.url, doc))) {
-			this->crawlingSkip(urlProperties);
+		if(!(this->crawlingCheckCanonical(url.second, doc))) {
+			this->crawlingSkip(url);
 
 			return false;
 		}
 
 		// check content
-		if(!(this->crawlingCheckContent(urlProperties.url, content, doc))) {
+		if(!(this->crawlingCheckContent(url.second, content, doc))) {
 			// skip because of content (not on whitelist or on blacklist)
-			this->crawlingSkip(urlProperties);
+			this->crawlingSkip(url);
 
 			return false;
 		}
@@ -1110,7 +1104,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// save content
-		this->crawlingSaveContent(urlProperties, responseCode, contentType, content, doc);
+		this->crawlingSaveContent(url, responseCode, contentType, content, doc);
 
 		if(this->config.crawlerTiming) {
 			updateTimer.stop();
@@ -1120,7 +1114,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// extract URLs
 		std::vector<std::string> urls =
-				this->crawlingExtractUrls(urlProperties.url, content, doc);
+				this->crawlingExtractUrls(url.second, content, doc);
 
 		if(!urls.empty()) {
 			// update timer if necessary
@@ -1133,7 +1127,7 @@ namespace crawlservpp::Module::Crawler {
 			// parse and add URLs
 			checkedUrlsTo += urls.size();
 
-			this->crawlingParseAndAddUrls(urlProperties.url, urls, newUrlsTo, false);
+			this->crawlingParseAndAddUrls(url.second, urls, newUrlsTo, false);
 
 			// update timer if necessary
 			if(this->config.crawlerTiming) {
@@ -1539,29 +1533,29 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// save content to database
-	void Thread::crawlingSaveContent(const UrlProperties& urlProperties, unsigned int response,
+	void Thread::crawlingSaveContent(const IdString& url, unsigned int response,
 			const std::string& type, const std::string& content, const Parsing::XML& doc) {
 		// check arguments
-		if(!urlProperties.id)
+		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingSaveContent(): No URL ID specified");
-		if(urlProperties.url.empty())
+		if(url.second.empty())
 			throw Exception("Crawler::Thread::crawlingSaveContent(): No URL specified");
 
 		if(this->config.crawlerXml) {
 			std::string xmlContent;
 			try {
 				doc.getContent(xmlContent);
-				this->database.saveContent(urlProperties.id, response, type, xmlContent);
+				this->database.saveContent(url.first, response, type, xmlContent);
 				return;
 			}
 			catch(const XMLException& e) {
 				this->log(
 						"WARNING: Could not clean content"
-						" [" + urlProperties.url + "]: " + e.whatStr()
+						" [" + url.second + "]: " + e.whatStr()
 				);
 			}
 		}
-		this->database.saveContent(urlProperties.id, response, type, content);
+		this->database.saveContent(url.first, response, type, content);
 	}
 
 	// extract URLs from content
@@ -1802,14 +1796,14 @@ namespace crawlservpp::Module::Crawler {
 
 	// crawl archives
 	bool Thread::crawlingArchive(
-			UrlProperties& urlProperties,
+			IdString& url,
 			unsigned long& checkedUrlsTo,
 			unsigned long& newUrlsTo
 	) {
 		// check arguments
-		if(!urlProperties.id)
+		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingArchive(): No URL ID specified");
-		if(urlProperties.url.empty())
+		if(url.second.empty())
 			throw Exception("Crawler::Thread::crawlingArchive(): No URL specified");
 
 		if(this->config.crawlerArchives && this->networkingArchives) {
@@ -1818,7 +1812,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// write to log if necessary
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("gets archives of " + urlProperties.url + "...");
+			this->log("gets archives of " + url.second + "...");
 
 			// loop over different archives
 			for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); n++) {
@@ -1828,7 +1822,7 @@ namespace crawlservpp::Module::Crawler {
 					continue;
 
 				std::string archivedUrl =
-						this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + urlProperties.url;
+						this->config.crawlerArchivesUrlsTimemap.at(n) + this->domain + url.second;
 				std::string archivedContent;
 
 				// loop over memento pages
@@ -1865,7 +1859,7 @@ namespace crawlservpp::Module::Crawler {
 											this->log(
 													"Memento parsing WARNING: " +
 													warnings.front() +
-													" [" + urlProperties.url + "]"
+													" [" + url.second + "]"
 											);
 
 											warnings.pop();
@@ -1897,7 +1891,7 @@ namespace crawlservpp::Module::Crawler {
 
 										// lock URL if possible
 										this->lockTime = this->database.lockUrlIfOk(
-												urlProperties,
+												url.first,
 												this->lockTime,
 												this->config.crawlerLock
 										);
@@ -1914,7 +1908,7 @@ namespace crawlservpp::Module::Crawler {
 										while(this->isRunning()) {
 											// check whether archived content already exists in database
 											if(!(this->database.isArchivedContentExists(
-													urlProperties.id,
+													url.first,
 													timeStamp)))
 											{
 												// check whether thread is till running
@@ -1969,7 +1963,7 @@ namespace crawlservpp::Module::Crawler {
 																			"WARNING: Invalid timestamp"
 																			" \'" + timeStamp + "\'"
 																			" from " + this->config.crawlerArchivesNames.at(n) +
-																			" [" + urlProperties.url + "]."
+																			" [" + url.second + "]."
 																	);
 															}
 															else if(this->config.crawlerLogging)
@@ -1977,13 +1971,13 @@ namespace crawlservpp::Module::Crawler {
 																this->log(
 																		"WARNING: Could not find timestamp"
 																		" in " + mementos.front().url +
-																		" [" + urlProperties.url + "].");
+																		" [" + url.second + "].");
 														}
 														else if(this->config.crawlerLogging)
 															// log warning (and ignore reference)
 															this->log("WARNING: Could not convert timestamp"
 																	" in " + mementos.front().url +
-																	" [" + urlProperties.url + "].");
+																	" [" + url.second + "].");
 													}
 													else {
 														// parse content
@@ -1994,7 +1988,7 @@ namespace crawlservpp::Module::Crawler {
 
 															// add archived content to database
 															this->database.saveArchivedContent(
-																	urlProperties.id,
+																	url.first,
 																	mementos.front().timeStamp,
 																	this->networkingArchives->getResponseCode(),
 																	this->networkingArchives->getContentType(),
@@ -2003,7 +1997,7 @@ namespace crawlservpp::Module::Crawler {
 
 															// extract URLs
 															std::vector<std::string> urls = this->crawlingExtractUrls(
-																	urlProperties.url,
+																	url.second,
 																	archivedContent,
 																	doc
 															);
@@ -2013,7 +2007,7 @@ namespace crawlservpp::Module::Crawler {
 																checkedUrlsTo += urls.size();
 
 																this->crawlingParseAndAddUrls(
-																		urlProperties.url,
+																		url.second,
 																		urls,
 																		newUrlsTo,
 																		true
@@ -2127,14 +2121,14 @@ namespace crawlservpp::Module::Crawler {
 
 					if(!success && this->config.crawlerRetryArchive) {
 						if(skip)
-							this->crawlingSkip(urlProperties);
+							this->crawlingSkip(url);
 						else
-							this->crawlingRetry(urlProperties, true);
+							this->crawlingRetry(url, true);
 
 						return false;
 					}
 					else if(!success)
-						this->crawlingSkip(urlProperties);
+						this->crawlingSkip(url);
 				} // [end of loop over memento pages]
 			} // [end of loop over archives]
 
@@ -2146,24 +2140,22 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawling successfull
-	void Thread::crawlingSuccess(const UrlProperties& urlProperties) {
+	void Thread::crawlingSuccess(const IdString& url) {
 		// check argument
-		if(!urlProperties.id)
+		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
-		if(!urlProperties.lockId)
-			throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
-		if(urlProperties.url.empty())
+		if(url.second.empty())
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
 		// set URL to finished if URL lock is okay
-		this->database.setUrlFinishedIfOk(urlProperties.lockId, this->lockTime);
+		this->database.setUrlFinishedIfOk(url.first, this->lockTime);
 
 		// reset lock time
 		this->lockTime = "";
 
-		if(this->manualUrl.id) {
+		if(this->manualUrl.first) {
 			// manual mode: disable retry, check for custom URL or start page that has been crawled
-			this->manualUrl = UrlProperties();
+			this->manualUrl = IdString();
 
 			if(this->manualCounter < this->customPages.size())
 				this->manualCounter++;
@@ -2172,13 +2164,13 @@ namespace crawlservpp::Module::Crawler {
 		}
 		else {
 			// automatic mode: update thread status
-			this->setLast(urlProperties.id);
+			this->setLast(url.first);
 
 			unsigned long total = this->database.getNumberOfUrls();
 
 			if(total)
 				this->setProgress(
-						static_cast<float>(this->database.getUrlPosition(urlProperties.id) + 1)
+						static_cast<float>(this->database.getUrlPosition(url.first) + 1)
 						/ total
 				);
 			else
@@ -2189,25 +2181,23 @@ namespace crawlservpp::Module::Crawler {
 		this->retryCounter = 0;
 
 		// do not retry (only archive if necessary)
-		this->nextUrl = UrlProperties();
+		this->nextUrl = IdString();
 	}
 
 	// skip URL after crawling problem
-	void Thread::crawlingSkip(const UrlProperties& urlProperties) {
+	void Thread::crawlingSkip(const IdString& url) {
 		// check argument
-		if(!urlProperties.id)
+		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
-		if(!urlProperties.lockId)
-			throw Exception("Crawler::Thread::crawlingSkip(): No URL lock ID specified");
-		if(urlProperties.url.empty())
+		if(url.second.empty())
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
 		// reset retry counter
 		this->retryCounter = 0;
 
-		if(this->manualUrl.id) {
+		if(this->manualUrl.first) {
 			// manual mode: disable retry, check for custom URL or start page that has been crawled
-			this->manualUrl = UrlProperties();
+			this->manualUrl = IdString();
 
 			if(this->manualCounter < this->customPages.size())
 				this->manualCounter++;
@@ -2216,32 +2206,30 @@ namespace crawlservpp::Module::Crawler {
 		}
 		else {
 			// automatic mode: update thread status
-			this->setLast(urlProperties.id);
+			this->setLast(url.first);
 
 			this->setProgress(
-					static_cast<float>(this->database.getUrlPosition(urlProperties.id) + 1)
+					static_cast<float>(this->database.getUrlPosition(url.first) + 1)
 					/ this->database.getNumberOfUrls()
 			);
 		}
 
 		// unlock URL if it has not been locked by anyone else
-		this->database.unLockUrlIfOk(urlProperties.lockId, this->lockTime);
+		this->database.unLockUrlIfOk(url.first, this->lockTime);
 		this->lockTime = "";
 
 		// do not retry
-		this->nextUrl = UrlProperties();
+		this->nextUrl = IdString();
 		this->archiveRetry = false;
 	}
 
 	// retry URL (completely or achives-only) after crawling problem
 	//  NOTE: leaves the URL lock active for retry
-	void Thread::crawlingRetry(const UrlProperties& urlProperties, bool archiveOnly) {
+	void Thread::crawlingRetry(const IdString& url, bool archiveOnly) {
 		// check argument
-		if(!urlProperties.id)
+		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingRetry(): No URL ID specified");
-		if(!urlProperties.lockId)
-			throw Exception("Crawler::Thread::crawlingRetry(): No URL lock ID specified");
-		if(urlProperties.url.empty())
+		if(url.second.empty())
 			throw Exception("Crawler::Thread::crawlingRetry(): No URL specified");
 
 		if(this->config.crawlerReTries > -1) {
@@ -2249,7 +2237,7 @@ namespace crawlservpp::Module::Crawler {
 			this->retryCounter++;
 			if(this->retryCounter > (unsigned long) this->config.crawlerReTries) {
 				// do not retry, but skip
-				this->crawlingSkip(urlProperties);
+				this->crawlingSkip(url);
 
 				return;
 			}
