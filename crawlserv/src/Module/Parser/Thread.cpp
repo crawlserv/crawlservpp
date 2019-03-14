@@ -322,8 +322,14 @@ namespace crawlservpp::Module::Parser {
 			this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
 		}
 
+		// save old status
+		std::string status = this->getStatusMessage();
+
 		// save results if necessary
 		this->parsingSaveResults();
+
+		// recover status before saving
+		this->setStatusMessage(status);
 
 		// delete queries
 		this->queriesSkip.clear();
