@@ -83,7 +83,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->ps.getUrlId)) {
 			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrlIdLockId()...");
+				this->log("[#" + this->idString + "] prepares getUrlId()...");
 
 			this->ps.getUrlId = this->addPreparedStatement(
 					"SELECT a.id AS id FROM `" + this->urlListTable + "` AS a"
@@ -200,7 +200,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->ps.isUrlCrawled)) {
 			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrlState()...");
+				this->log("[#" + this->idString + "] prepares isUrlCrawled()...");
 
 			std::ostringstream sqlQueryStrStr;
 			sqlQueryStrStr <<	"SELECT success"
@@ -213,7 +213,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->ps.renewUrlLockIfOk)) {
 			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/3]...");
+				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/2]...");
 
 			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->crawlingTable + "`"
@@ -235,7 +235,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->ps.addUrlLockIfOk)) {
 			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [3/3]...");
+				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [2/2]...");
 
 			std::ostringstream sqlQueryStrStr;
 			sqlQueryStrStr <<	"INSERT INTO `" << this->crawlingTable << "(id, url, locktime)"
