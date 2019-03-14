@@ -212,7 +212,7 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares lockUrlIfOk()...");
 
 			std::ostringstream sqlQueryStrStr;
-			sqlQueryStrStr <<	"INSERT INTO `" << this->parsingTable << "(id, target, url, locktime)"
+			sqlQueryStrStr <<	"INSERT INTO `" << this->parsingTable << "`(id, target, url, locktime)"
 								" VALUES"
 								" ("
 									" ("
@@ -226,7 +226,7 @@ namespace crawlservpp::Module::Parser {
 									" ?,"
 									" NOW() + INTERVAL ? SECOND"
 								" )"
-								" ON DUPLICATE UPDATE locktime = "
+								" ON DUPLICATE KEY UPDATE locktime = "
 									"IF("
 										" ("
 											" locktime IS NULL"
