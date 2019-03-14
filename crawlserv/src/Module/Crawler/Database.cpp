@@ -793,6 +793,8 @@ namespace crawlservpp::Module::Crawler {
 
 	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful
 	std::string Database::lockUrlIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout) {
+		std::string dbg;
+
 		// check argument
 		if(!urlId)
 			throw DatabaseException("Crawler::Database::lockUrlIfOk(): No URL ID specified");
@@ -801,14 +803,15 @@ namespace crawlservpp::Module::Crawler {
 		this->checkConnection();
 
 		if(lockTime.empty()) {
-			// check prepared SQL statement for setting the URL lock
+			// check prepared SQL statement for adding the URL lock
 			if(!(this->ps.addUrlLockIfOk))
 				throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
 
 			// get prepared SQL statement for locking the URL
 			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLockIfOk);
 
-			// lock URL in database
+			// add URL lock to database
+			dbg = "addUrlLockIfOk";
 			try {
 				// execute SQL query
 				sqlStatement.setUInt64(1, urlId);
@@ -825,10 +828,11 @@ namespace crawlservpp::Module::Crawler {
 			if(!(this->ps.renewUrlLockIfOk))
 				throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
 
-			// get prepared SQL statement for locking the URL
+			// get prepared SQL statement for renewing the URL lock
 			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
 
 			// lock URL in database
+			dbg = "renewUrlLockIfOk";
 			try {
 				// execute SQL query
 				sqlStatement.setUInt64(1, lockTimeout);
@@ -839,7 +843,7 @@ namespace crawlservpp::Module::Crawler {
 				if(Database::sqlExecuteUpdate(sqlStatement) < 1)
 					return std::string(); // locking failed when no entries have been updated
 			}
-			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk", e); }
+			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk > " + dbg, e); }
 		}
 
 		// get new expiration time of URL lock

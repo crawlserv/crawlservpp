@@ -268,7 +268,7 @@ namespace crawlservpp::Module::Parser {
 			this->ps.getContentIdFromParsedId = this->addPreparedStatement(
 					"SELECT content FROM `" + this->targetTableFull + "`"
 					" WHERE parsed_id = ?"
-					" ORDER BY crawltime DESC"
+					" ORDER BY id DESC"
 					" LIMIT 1"
 			);
 		}
