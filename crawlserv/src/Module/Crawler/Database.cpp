@@ -238,7 +238,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [2/2]...");
 
 			std::ostringstream sqlQueryStrStr;
-			sqlQueryStrStr <<	"INSERT INTO `" << this->crawlingTable << "(id, url, locktime)"
+			sqlQueryStrStr <<	"INSERT INTO `" << this->crawlingTable << "`(id, url, locktime)"
 								" VALUES"
 								" ("
 									" ("
@@ -249,14 +249,12 @@ namespace crawlservpp::Module::Crawler {
 									" ?,"
 									" NOW() + INTERVAL ? SECOND"
 								" )"
-								" ON DUPLICATE UPDATE locktime = "
+								" ON DUPLICATE KEY UPDATE locktime = "
 									"IF("
 										" ("
 											" locktime IS NULL"
 											" OR locktime < NOW()"
-										" )";
-
-			sqlQueryStrStr <<			" ,"
+										" ),"
 										" VALUES(locktime),"
 										" locktime"
 									")";
@@ -550,6 +548,7 @@ namespace crawlservpp::Module::Crawler {
 				sqlStatement1.setString(2, urls.front());
 				sqlStatement1.setString(3, urls.front());
 				sqlStatement1.setString(4, urls.front());
+				sqlStatement1.setBoolean(5, false);
 
 				urls.pop();
 
