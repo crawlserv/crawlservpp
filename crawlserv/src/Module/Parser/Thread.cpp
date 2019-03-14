@@ -322,14 +322,8 @@ namespace crawlservpp::Module::Parser {
 			this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
 		}
 
-		// save old status
-		std::string status = this->getStatusMessage();
-
 		// save results if necessary
 		this->parsingSaveResults();
-
-		// recover status before saving
-		this->setStatusMessage(status);
 
 		// delete queries
 		this->queriesSkip.clear();
@@ -1019,6 +1013,9 @@ namespace crawlservpp::Module::Parser {
 		// queue for log entries while table is locked
 		std::queue<std::string> logEntries;
 
+		// save old status
+		std::string status = this->getStatusMessage();
+
 		// save results
 		this->setStatusMessage("Saving results...");
 
@@ -1043,7 +1040,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// update status
-		this->setStatusMessage("Results saved.");
+		this->setStatusMessage("Results saved. [" + status + "]");
 		if(this->config.generalTiming && this->config.generalLogging)
 			this->log("saved results in " + timer.tickStr());
 	}
