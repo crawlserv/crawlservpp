@@ -29,8 +29,7 @@ namespace crawlservpp::Module::Parser {
 						threadOptions,
 						parserLast
 				  ),
-				  targetTableAlias("a"),
-				  database(this->Module::Thread::database, this->targetTableAlias),
+				  database(this->Module::Thread::database),
 				  idFromUrl(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
@@ -46,8 +45,7 @@ namespace crawlservpp::Module::Parser {
 	// constructor B: start a new parser
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
 				: Module::Thread(dbBase, "parser", threadOptions),
-				  targetTableAlias("a"),
-				  database(this->Module::Thread::database, this->targetTableAlias),
+				  database(this->Module::Thread::database),
 				  idFromUrl(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),

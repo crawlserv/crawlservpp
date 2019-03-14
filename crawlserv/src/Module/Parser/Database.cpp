@@ -10,12 +10,21 @@
 #include "Database.hpp"
 
 namespace crawlservpp::Module::Parser {
-
 	// constructor: initialize values
-	Database::Database(Module::Database& dbThread, const std::string& setTargetTableAlias)
-			: Wrapper::Database(dbThread), website(0), urlList(0), cacheSize(2500), reparse(false),
-			  parseCustom(true), logging(true), verbose(false), timeoutTargetLock(0), targetTableId(0),
-			  ps({0}), targetTableAlias(setTargetTableAlias) {}
+	Database::Database(Module::Database& dbThread)
+							: Wrapper::Database(dbThread),
+							  website(0),
+							  urlList(0),
+							  cacheSize(2500),
+							  reparse(false),
+							  parseCustom(true),
+							  logging(true),
+							  verbose(false),
+							  timeoutTargetLock(0),
+							  targetTableId(0),
+							  ps({0}),
+							  parsingTableAlias("a"),
+							  targetTableAlias("b"){}
 
 	// destructor stub
 	Database::~Database() {}
@@ -216,7 +225,7 @@ namespace crawlservpp::Module::Parser {
 								" VALUES"
 								" ("
 									" ("
-										"SELECT id FROM `" << this->parsingTable << "` AS tmp"
+										"SELECT id FROM `" << this->parsingTable << "` AS " << this->parsingTableAlias << "1"
 										" WHERE target = " << this->targetTableId <<
 										" AND url = ?"
 										" ORDER BY id DESC"
@@ -520,14 +529,22 @@ namespace crawlservpp::Module::Parser {
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrlIfOk);
 
 		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
-		try {
+		try { // lock parsing table
+			TableLock(
+					*this,
+					TableLockProperties(
+							this->parsingTable,
+							this->parsingTableAlias, 1
+					)
+			);
+
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setUInt64(2, urlId);
 			sqlStatement.setUInt64(3, lockTimeout);
 			if(Database::sqlExecuteUpdate(sqlStatement) < 1)
 				return std::string(); // locking query not successful
-		}
+		} // parsing table unlocked
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrlIfOk", e); }
 
 		// return new URL lock expiration time
@@ -696,7 +713,6 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// add parsed data to database (update if row for ID-specified content already exists
-	//  NOTE: If tables are locked, both the parsing table (reading access as 'b') AND the target table need to be locked!
 	void Database::updateOrAddEntries(std::queue<ParsingEntry>& entries, std::queue<std::string>& logEntriesTo) {
 		// check argument
 		if(entries.empty())

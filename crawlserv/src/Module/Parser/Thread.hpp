@@ -68,9 +68,6 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Thread();
 
 	protected:
-		// constant string for table aliases
-		const std::string targetTableAlias;
-
 		// database for the thread
 		Database database;
 
