@@ -51,7 +51,7 @@ namespace crawlservpp::Module::Parser {
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
 	public:
-		Database(Module::Database& dbRef, const std::string& setTargetTableAlias);
+		Database(Module::Database& dbRef);
 		virtual ~Database();
 
 		// setters
@@ -141,6 +141,7 @@ namespace crawlservpp::Module::Parser {
 		} ps;
 
 		// constant string for table aliases
+		const std::string parsingTableAlias;
 		const std::string targetTableAlias;
 
 		// internal helper function

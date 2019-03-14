@@ -13,8 +13,16 @@ namespace crawlservpp::Module::Crawler {
 
 	// constructor: initialize values
 	Database::Database(Module::Database& dbThread)
-			: Wrapper::Database(dbThread), recrawl(false), logging(true), verbose(false),
-			  urlCaseSensitive(true), urlDebug(false), urlStartupCheck(true), ps({0}) {}
+						: Wrapper::Database(dbThread),
+						  recrawl(false),
+						  logging(true),
+						  verbose(false),
+						  urlCaseSensitive(true),
+						  urlDebug(false),
+						  urlStartupCheck(true),
+						  ps({0}),
+						  crawlingTableAlias("a"),
+						  urlListTableAlias("b") {}
 
 	// destructor stub
 	Database::~Database() {}
@@ -86,10 +94,15 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares getUrlId()...");
 
 			this->ps.getUrlId = this->addPreparedStatement(
-					"SELECT a.id AS id FROM `" + this->urlListTable + "` AS a"
-					" LEFT OUTER JOIN `" + this->crawlingTable + "` AS b"
-					" ON a.id = b.url"
-					" WHERE a.url = ? LIMIT 1"
+					"SELECT `" + this->urlListTableAlias + "1`.id AS id"
+					" FROM `" + this->urlListTable + "`"
+					" AS `" + this->urlListTableAlias + "1`"
+					" LEFT OUTER JOIN `" + this->crawlingTable + "`"
+					" AS `" + this->crawlingTableAlias + "1`"
+					" ON `" + this->urlListTableAlias + "1`.id"
+					" = `" + this->crawlingTableAlias + "1`.url"
+					" WHERE `" + this->urlListTableAlias + "1`.url = ?"
+					" LIMIT 1"
 			);
 		}
 
@@ -98,25 +111,31 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares getNextUrl()...");
 
 			std::ostringstream sqlQueryStrStr;
-			sqlQueryStrStr <<	"SELECT a.id AS id, a.url AS url FROM `" + this->urlListTable + "` AS a"
-								" LEFT OUTER JOIN `" + this->crawlingTable + "` AS b"
-								" ON a.id = b.url"
-								" WHERE a.id > ?"
+			sqlQueryStrStr <<	"SELECT `" << this->urlListTableAlias << "1`.id AS id,"
+								" `" << this->urlListTableAlias << "1`.url AS url"
+								" FROM `" << this->urlListTable << "`"
+								" AS `" << this->urlListTableAlias << "1`"
+								" LEFT OUTER JOIN `" << this->crawlingTable << "`"
+								" AS `" << this->crawlingTableAlias << "1`"
+								" ON `" << this->urlListTableAlias << "1`.id"
+								" = `" << this->crawlingTableAlias << "1`.url"
+								" WHERE `" << this->urlListTableAlias << "1`.id > ?"
 								" AND manual = FALSE";
 
 			if(!(this->recrawl))
-				sqlQueryStrStr <<	" AND"
-									" ("
-										" b.success IS NULL"
-										" OR b.success = FALSE"
-									")";
+				sqlQueryStrStr <<
+								" AND"
+								" ("
+									" `" << this->crawlingTableAlias << "1`.success IS NULL"
+									" OR `" << this->crawlingTableAlias << "1`.success = FALSE"
+								")";
 
-			sqlQueryStrStr <<		" AND"
-									" ("
-										" b.locktime IS NULL"
-										" OR b.locktime < NOW()"
-									" )"
-								"ORDER BY a.id"
+			sqlQueryStrStr <<	" AND"
+								" ("
+									" `" << this->crawlingTableAlias << "1`.locktime IS NULL"
+									" OR `" << this->crawlingTableAlias << "1`.locktime < NOW()"
+								" )"
+								" ORDER BY `" << this->urlListTableAlias << "1`.id"
 								" LIMIT 1";
 
 			this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStrStr.str());
@@ -132,7 +151,8 @@ namespace crawlservpp::Module::Crawler {
 							" ("
 								"SELECT id FROM"
 								" ("
-									"SELECT id, url FROM `" + this->urlListTable + "` AS tmp1"
+									"SELECT id, url FROM `" + this->urlListTable + "`"
+									" AS `" + this->urlListTableAlias + "1`"
 									" WHERE hash = " + hashQuery +
 								" ) AS tmp2"
 								" WHERE url = ?"
@@ -242,7 +262,8 @@ namespace crawlservpp::Module::Crawler {
 								" VALUES"
 								" ("
 									" ("
-										"SELECT id FROM `" << this->crawlingTable << "` AS tmp"
+										"SELECT id FROM `" << this->crawlingTable << "`"
+										" AS " << this->crawlingTableAlias << "1"
 										" WHERE url = ?"
 										" LIMIT 1"
 									" ),"
@@ -458,7 +479,14 @@ namespace crawlservpp::Module::Crawler {
 			sqlStatement.setBoolean(5, manual);
 
 			{ // lock URL list
-				TableLock urlListLock(*this, TableLockProperties(this->urlListTable, "tmp", 1));
+				TableLock urlListLock(
+						*this,
+						TableLockProperties(
+							this->urlListTable,
+							this->urlListTableAlias,
+							1
+						)
+				);
 
 				return Database::sqlExecuteUpdate(sqlStatement) > 0;
 			} // URL list is unlocked
@@ -495,7 +523,14 @@ namespace crawlservpp::Module::Crawler {
 		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.add1000UrlsIfNotExist);
 
 		try { // lock URL list
-			TableLock urlListLock(*this, TableLockProperties(this->urlListTable, "tmp", 1000));
+			TableLock urlListLock(
+					*this,
+					TableLockProperties(
+							this->urlListTable,
+							this->urlListTableAlias,
+							1000
+					)
+			);
 
 			// add 1.000 URLs at once
 			while(urls.size() >= 1000) {
@@ -802,32 +837,38 @@ namespace crawlservpp::Module::Crawler {
 		// check connection
 		this->checkConnection();
 
-		if(lockTime.empty()) {
-			// check prepared SQL statement for adding the URL lock
-			if(!(this->ps.addUrlLockIfOk))
-				throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
+		// check prepared SQL statements
+		if(!(this->ps.addUrlLockIfOk) || !(this->ps.renewUrlLockIfOk))
+			throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
 
+		if(lockTime.empty()) {
 			// get prepared SQL statement for locking the URL
 			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLockIfOk);
 
 			// add URL lock to database
-			dbg = "addUrlLockIfOk";
 			try {
 				// execute SQL query
 				sqlStatement.setUInt64(1, urlId);
 				sqlStatement.setUInt64(2, urlId);
 				sqlStatement.setUInt64(3, lockTimeout);
 
-				if(Database::sqlExecuteUpdate(sqlStatement) < 1)
-					return std::string(); // locking failed when no entries have been updated
+				{ // lock crawling table
+					TableLock(
+							*this,
+							TableLockProperties(
+									this->crawlingTable,
+									this->crawlingTableAlias,
+									1
+							)
+					);
+
+					if(Database::sqlExecuteUpdate(sqlStatement) < 1)
+						return std::string(); // locking failed when no entries have been updated
+				} // crawling table unlocked
 			}
 			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk", e); }
 		}
 		else {
-			// check prepared SQL statement for renewing the URL lock
-			if(!(this->ps.renewUrlLockIfOk))
-				throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
-
 			// get prepared SQL statement for renewing the URL lock
 			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
 
@@ -1060,7 +1101,8 @@ namespace crawlservpp::Module::Crawler {
 								"SELECT id FROM"
 								" ("
 									"SELECT id, url"
-									" FROM `" << this->urlListTable << "` AS tmp" << n + 1 <<
+									" FROM `" << this->urlListTable << "`"
+									" AS `" << this->urlListTableAlias << n + 1 << "`"
 									" WHERE hash = " << hashQuery <<
 								" ) AS tmp2 WHERE url = ? LIMIT 1"
 							" ),"

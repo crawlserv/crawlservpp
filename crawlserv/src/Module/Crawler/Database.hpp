@@ -141,6 +141,10 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short urlEmptyCheck;
 		} ps;
 
+		// aliases for table locking
+		const std::string crawlingTableAlias;
+		const std::string urlListTableAlias;
+
 		// helper function
 		std::string queryAddUrlsIfNotExist(unsigned int numberOfUrls, const std::string& hashQuery);
 	};
