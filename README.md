@@ -105,7 +105,6 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.hpp)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.hpp)**: Basic thread options (IDs of website, URL list and configuration).
 * **[`Struct::UrlListProperties`](crawlserv/src/Struct/UrlListProperties.hpp)**: Basic URL list properties (namespace, name).
-* **[`Struct::UrlProperties`](crawlserv/src/Struct/UrlProperties.hpp)**: Basic URL properties (ID, URL, lock ID).
 * **[`Struct::WebsiteProperties`](crawlserv/src/Struct/WebsiteProperties.hpp)**: Basic website properties (domain, namespace, name).
 
 Algorithms are registered in [`crawlserv/src/Module/Analyzer/Algo/All.hpp`](crawlserv/src/Module/Analyzer/Algo/All.hpp).
