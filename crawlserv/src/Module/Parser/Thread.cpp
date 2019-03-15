@@ -1031,7 +1031,8 @@ namespace crawlservpp::Module::Parser {
 	// save results to database
 	void Thread::parsingSaveResults() {
 		// check whether there are no results
-		if(this->results.empty()) return;
+		if(this->results.empty())
+			return;
 
 		// timer
 		Timer::Simple timer;
@@ -1065,8 +1066,12 @@ namespace crawlservpp::Module::Parser {
 			}
 		}
 
+		// set new parsing table update time
+		this->database.updateTargetTable();
+
 		// update status
 		this->setStatusMessage("Results saved. [" + status + "]");
+
 		if(this->config.generalTiming && this->config.generalLogging)
 			this->log("saved results in " + timer.tickStr());
 	}
