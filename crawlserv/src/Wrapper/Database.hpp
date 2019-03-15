@@ -146,6 +146,7 @@ namespace crawlservpp::Wrapper {
 				const TableLockProperties& lockProperties1,
 				const TableLockProperties& lockProperties2
 		);
+		void lockTables(const std::vector<TableLockProperties>& lockProperties);
 		void unlockTables();
 		void createTable(
 				const std::string& tableName,
@@ -378,6 +379,11 @@ namespace crawlservpp::Wrapper {
 	// lock two tables in the database for writing (and their aliases for reading)
 	inline void Database::lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) {
 		this->database.lockTables(lockProperties1, lockProperties2);
+	}
+
+	// lock multiple tables in the database for writing (and their aliases for reading)
+	inline void Database::lockTables(const std::vector<TableLockProperties>& lockProperties) {
+		this->database.lockTables(lockProperties);
 	}
 
 	// unlock tables in the database

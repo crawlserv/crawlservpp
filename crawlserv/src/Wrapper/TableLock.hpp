@@ -13,6 +13,7 @@
 #include "../Struct/TableLockProperties.hpp"
 
 #include <string>
+#include <vector>
 
 namespace crawlservpp::Wrapper {
 
@@ -22,19 +23,26 @@ namespace crawlservpp::Wrapper {
 		typedef Struct::TableLockProperties TableLockProperties;
 
 	public:
-		// constructor A: lock one table (and its aliases 'a1', 'a2',... for reading)
+		// constructor A: lock one table (and its aliases for reading)
 		TableLock(DB& db, const TableLockProperties& lockProperties) : ref(db) {
 			this->ref.lockTable(lockProperties);
 		}
 
-		// constructor B: lock two tables (and their aliases 'a1', 'a2',... and 'b1', 'b2',... for reading)
+		// constructor B: lock two tables (and their aliases for reading)
 		TableLock(DB& db, const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) : ref(db) {
 			this->ref.lockTables(lockProperties1, lockProperties2);
 		}
 
+		// constructor C: lock multiple tables (and their aliases for reading)
+		TableLock(DB& db, const std::vector<TableLockProperties>& lockProperties) : ref(db) {
+			this->ref.lockTables(lockProperties);
+		}
+
 		// destructor: try to unlock the table(s)
 		virtual ~TableLock() {
-			try { this->ref.unlockTables(); }
+			try {
+				this->ref.unlockTables();
+			}
 			catch(...) {}
 		}
 

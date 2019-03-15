@@ -174,7 +174,7 @@ namespace crawlservpp::Main {
 			this->run(*i);
 	}
 
-	// prepare basic SQL statements (getting last id, logging and thread status)
+	// prepare basic SQL statements (getting last ID, logging and thread status)
 	void Database::prepare() {
 		// reserve memory for SQL statements
 		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
@@ -235,10 +235,16 @@ namespace crawlservpp::Main {
 		// add entry to database
 		try {
 			// execute SQL query
-			if(logModule.empty()) sqlStatement.setString(1, "[unknown]");
-			else sqlStatement.setString(1, logModule);
-			if(logEntry.empty()) sqlStatement.setString(2, "[empty]");
-			else sqlStatement.setString(2, logEntry);
+			if(logModule.empty())
+				sqlStatement.setString(1, "[unknown]");
+			else
+				sqlStatement.setString(1, logModule);
+
+			if(logEntry.empty())
+				sqlStatement.setString(2, "[empty]");
+			else
+				sqlStatement.setString(2, logEntry);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::log", e); }
@@ -268,6 +274,7 @@ namespace crawlservpp::Main {
 			// execute SQL statement
 			if(!logModule.empty())
 				sqlStatement->setString(1, logModule);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -286,6 +293,7 @@ namespace crawlservpp::Main {
 
 		// create SQL query string
 		std::string sqlQuery("DELETE FROM crawlserv_log");
+
 		if(!logModule.empty())
 			sqlQuery += " WHERE module = ?";
 
@@ -296,6 +304,7 @@ namespace crawlservpp::Main {
 			// execute SQL statement
 			if(!logModule.empty())
 				sqlStatement->setString(1, logModule);
+
 			Database::sqlExecute(sqlStatement);
 
 		}
@@ -325,6 +334,7 @@ namespace crawlservpp::Main {
 			// get results
 			if(sqlResultSet) {
 				result.reserve(sqlResultSet->rowsCount());
+
 				while(sqlResultSet->next()) {
 					result.emplace_back(
 							sqlResultSet->getUInt64("id"),
@@ -374,9 +384,10 @@ namespace crawlservpp::Main {
 			sqlStatement->setUInt64(2, threadOptions.website);
 			sqlStatement->setUInt64(3, threadOptions.urlList);
 			sqlStatement->setUInt64(4, threadOptions.config);
+
 			Database::sqlExecute(sqlStatement);
 
-			// get id
+			// get ID
 			result = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addThread", e); }
@@ -403,6 +414,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, threadId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -433,6 +445,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, threadId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -462,19 +475,22 @@ namespace crawlservpp::Main {
 
 		// create status message
 		std::string statusMessage;
+
 		if(threadPaused) {
 			if(!threadStatusMessage.empty())
 				statusMessage = "PAUSED " + threadStatusMessage;
 			else
 				statusMessage = "PAUSED";
 		}
-		else statusMessage = threadStatusMessage;
+		else
+			statusMessage = threadStatusMessage;
 
 		try {
 			// execute SQL statement
 			sqlStatement.setString(1, statusMessage);
 			sqlStatement.setBoolean(2, threadPaused);
 			sqlStatement.setUInt64(3, threadId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadStatus", e); }
@@ -498,12 +514,14 @@ namespace crawlservpp::Main {
 
 		// create status message
 		std::string statusMessage;
+
 		statusMessage = threadStatusMessage;
 
 		try {
 			// execute SQL statement
 			sqlStatement.setString(1, statusMessage);
 			sqlStatement.setUInt64(2, threadId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadStatus", e); }
@@ -527,6 +545,7 @@ namespace crawlservpp::Main {
 			// execute SQL statement
 			sqlStatement->setUInt64(1, threadRunTime);
 			sqlStatement->setUInt64(2, threadId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadRunTime", e); }
@@ -550,6 +569,7 @@ namespace crawlservpp::Main {
 			// execute SQL statement
 			sqlStatement->setUInt64(1, threadPauseTime);
 			sqlStatement->setUInt64(2, threadId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadPauseTime", e); }
@@ -572,6 +592,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, threadId);
+
 			Database::sqlExecute(sqlStatement);
 
 			// reset auto-increment if table is empty
@@ -615,9 +636,10 @@ namespace crawlservpp::Main {
 			sqlStatement->setString(1, websiteProperties.domain);
 			sqlStatement->setString(2, websiteProperties.nameSpace);
 			sqlStatement->setString(3, websiteProperties.name);
+
 			Database::sqlExecute(sqlStatement);
 
-			// get id
+			// get ID
 			result = this->getLastInsertedId();
 
 			// add default URL list
@@ -647,6 +669,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -677,6 +700,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -707,6 +731,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, listId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -737,6 +762,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, configId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -769,6 +795,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, tableId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -799,6 +826,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setString(1, nameSpace);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -837,16 +865,22 @@ namespace crawlservpp::Main {
 		unsigned long n = 1;
 		std::string result;
 
-		if(!numberString.empty()) n = std::stoul(numberString, nullptr);
+		if(!numberString.empty())
+			n = std::stoul(numberString, nullptr);
 
 		// check whether number needs to be incremented
 		while(true) {
 			// increment number at the end of the string
 			std::ostringstream resultStrStr;
+
 			n++;
+
 			resultStrStr << nameString << n;
+
 			result = resultStrStr.str();
-			if(!(this->isWebsiteNamespace(result))) break;
+
+			if(!(this->isWebsiteNamespace(result)))
+				break;
 		}
 		return result;
 	}
@@ -884,67 +918,86 @@ namespace crawlservpp::Main {
 
 				// rename sub tables
 				std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+
 				while(!urlLists.empty()) {
-					Database::sqlExecute(renameStatement,
-							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "` RENAME TO"
-							" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "`"
+					Database::sqlExecute(
+							renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "`"
+							" RENAME TO `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "`"
 					);
-					Database::sqlExecute(renameStatement,
-							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawled` RENAME TO"
-							" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawled`"
+
+					Database::sqlExecute(
+							renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawled`"
+							" RENAME TO `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawled`"
 					);
 
 					// rename crawling table
-					Database::sqlExecute(renameStatement,
-							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawling` RENAME TO"
-							" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawling`"
+					Database::sqlExecute(
+							renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_crawling`"
+							" RENAME TO `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawling`"
 					);
 
 					// rename parsing tables
-					Database::sqlExecute(renameStatement,
-							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsing` RENAME TO"
-							" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing`"
+					Database::sqlExecute(
+							renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsing`"
+							" RENAME TO `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing`"
 					);
+
 					tables = this->getTargetTables("parsed", urlLists.front().first);
 
 					while(!tables.empty()) {
-						Database::sqlExecute(renameStatement,
+						Database::sqlExecute(
+								renameStatement,
 								"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_parsed_"
-								+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
+								+ tables.front().second + "`"
+								" RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
 								+ urlLists.front().second + "_parsed_" + tables.front().second + "`"
 						);
+
 						tables.pop();
 					}
 
 					// rename extracting tables
 					Database::sqlExecute(renameStatement,
-							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracting` RENAME TO"
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracting`"
+							" RENAME TO"
 							" `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_extracting`"
 					);
+
 					tables = this->getTargetTables("extracted", urlLists.front().first);
 
 					while(!tables.empty()) {
 						Database::sqlExecute(renameStatement,
 								"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_extracted_"
-								+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
+								+ tables.front().second + "`"
+								" RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
 								+ urlLists.front().second + "_extracted_" + tables.front().second + "`"
 						);
+
 						tables.pop();
 					}
 
 					// rename analyzing tables
-					Database::sqlExecute(renameStatement,
-							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzing` RENAME TO"
+					Database::sqlExecute(
+							renameStatement,
+							"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzing`"
+							" RENAME TO"
 							+ " `crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_analyzing`"
 					);
+
 					tables = this->getTargetTables("analyzed", urlLists.front().first);
 
 					while(!tables.empty()) {
 						Database::sqlExecute(renameStatement,
 								"ALTER TABLE `crawlserv_" + oldNamespace + "_" + urlLists.front().second + "_analyzed_"
-								+ tables.front().second + "` RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
+								+ tables.front().second + "`"
+								" RENAME TO `" + "crawlserv_" + websiteProperties.nameSpace + "_"
 								+ urlLists.front().second + "_analyzed_" + tables.front().second + "`"
 						);
+
 						tables.pop();
 					}
 
@@ -953,27 +1006,39 @@ namespace crawlservpp::Main {
 				}
 
 				// create SQL statement for updating
-				SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
-						"UPDATE crawlserv_websites SET domain = ?, namespace = ?, name = ? WHERE id = ? LIMIT 1"
-				));
+				SqlPreparedStatementPtr updateStatement(
+						this->connection->prepareStatement(
+								"UPDATE crawlserv_websites"
+								" SET domain = ?, namespace = ?, name = ?"
+								" WHERE id = ?"
+								" LIMIT 1"
+						)
+				);
 
 				// execute SQL statement for updating
 				updateStatement->setString(1, websiteProperties.domain);
 				updateStatement->setString(2, websiteProperties.nameSpace);
 				updateStatement->setString(3, websiteProperties.name);
 				updateStatement->setUInt64(4, websiteId);
+
 				Database::sqlExecute(updateStatement);
 			}
 			else {
 				// create SQL statement for updating
-				SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
-						"UPDATE crawlserv_websites SET domain = ?, name = ? WHERE id = ? LIMIT 1"
-				));
+				SqlPreparedStatementPtr updateStatement(
+						this->connection->prepareStatement(
+								"UPDATE crawlserv_websites"
+								" SET domain = ?, name = ?"
+								" WHERE id = ?"
+								" LIMIT 1"
+						)
+				);
 
 				// execute SQL statement for updating
 				updateStatement->setString(1, websiteProperties.domain);
 				updateStatement->setString(2, websiteProperties.name);
 				updateStatement->setUInt64(3, websiteId);
+
 				Database::sqlExecute(updateStatement);
 			}
 		}
@@ -992,9 +1057,11 @@ namespace crawlservpp::Main {
 		try {
 			// delete URL lists
 			std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+
 			while(!urlLists.empty()) {
 				// delete URL list
 				this->deleteUrlList(urlLists.front().first);
+
 				urlLists.pop();
 			}
 
@@ -1002,16 +1069,21 @@ namespace crawlservpp::Main {
 			this->checkConnection();
 
 			// create SQL statement for deletion of website
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"DELETE FROM crawlserv_websites WHERE id = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"DELETE FROM crawlserv_websites"
+							" WHERE id = ? LIMIT 1"
+					)
+			);
 
 			// execute SQL statements for deletion of website
 			sqlStatement->setUInt64(1, websiteId);
+
 			Database::sqlExecute(sqlStatement);
 
 			// reset auto-increment if table is empty
-			if(this->isTableEmpty("crawlserv_websites")) this->resetAutoIncrement("crawlserv_websites");
+			if(this->isTableEmpty("crawlserv_websites"))
+				this->resetAutoIncrement("crawlserv_websites");
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteWebsite", e); }
 	}
@@ -1035,6 +1107,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement for geting website info
 			sqlStatement->setUInt64(1, websiteId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -1045,62 +1118,90 @@ namespace crawlservpp::Main {
 
 				// create new namespace and new name
 				std::string newNamespace = Database::duplicateWebsiteNamespace(websiteNamespace);
+
 				std::string newName = websiteName + " (copy)";
 
 				// add website
 				result = this->addWebsite(WebsiteProperties(websiteDomain, newNamespace, newName));
 
 				// create SQL statement for geting URL list info
-				sqlStatement.reset(this->connection->prepareStatement(
-						"SELECT name, namespace FROM crawlserv_urllists WHERE website = ?"));
+				sqlStatement.reset(
+						this->connection->prepareStatement(
+								"SELECT name, namespace"
+								" FROM crawlserv_urllists"
+								" WHERE website = ?"
+						)
+				);
 
 				// execute SQL statement for geting URL list info
 				sqlStatement->setUInt64(1, websiteId);
+
 				sqlResultSet.reset(Database::sqlExecuteQuery(sqlStatement));
 
 				// get results
 				while(sqlResultSet && sqlResultSet->next()) {
 					// add URL lists with same name (except for "default", which has already been created)
 					std::string urlListName = sqlResultSet->getString("namespace");
+
 					if(urlListName != "default")
 						this->addUrlList(result, UrlListProperties(sqlResultSet->getString("namespace"), urlListName));
 				}
 
 				// create SQL statement for getting queries
-				sqlStatement.reset(this->connection->prepareStatement(
-						"SELECT name, query, type, resultbool, resultsingle, resultmulti,"
-						" textonly FROM crawlserv_queries WHERE website = ?"));
+				sqlStatement.reset(
+						this->connection->prepareStatement(
+							"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
+							" FROM crawlserv_queries"
+							" WHERE website = ?"
+						)
+				);
 
 				// execute SQL statement for getting queries
 				sqlStatement->setUInt64(1, websiteId);
+
 				sqlResultSet.reset(Database::sqlExecuteQuery(sqlStatement));
 
 				// get results
 				while(sqlResultSet && sqlResultSet->next()) {
 					// add query
 					this->addQuery(
-							result, QueryProperties(sqlResultSet->getString("name"),
-							sqlResultSet->getString("query"), sqlResultSet->getString("type"),
-							sqlResultSet->getBoolean("resultbool"),	sqlResultSet->getBoolean("resultsingle"),
-							sqlResultSet->getBoolean("resultmulti"), sqlResultSet->getBoolean("textonly"))
+							result,
+							QueryProperties(sqlResultSet->getString("name"),
+							sqlResultSet->getString("query"),
+							sqlResultSet->getString("type"),
+							sqlResultSet->getBoolean("resultbool"),
+							sqlResultSet->getBoolean("resultsingle"),
+							sqlResultSet->getBoolean("resultmulti"),
+							sqlResultSet->getBoolean("textonly"))
 					);
 
 				}
 
 				// create SQL statement for getting configurations
-				sqlStatement.reset(this->connection->prepareStatement(
-						"SELECT module, name, config FROM crawlserv_configs WHERE website = ?"
-				));
+				sqlStatement.reset(
+						this->connection->prepareStatement(
+								"SELECT module, name, config"
+								" FROM crawlserv_configs"
+								" WHERE website = ?"
+						)
+				);
 
 				// execute SQL statement for getting configurations
 				sqlStatement->setUInt64(1, websiteId);
+
 				sqlResultSet.reset(Database::sqlExecuteQuery(sqlStatement));
 
 				// get results
 				while(sqlResultSet && sqlResultSet->next()) {
 					// add configuration
-					this->addConfiguration(result, ConfigProperties(sqlResultSet->getString("module"),
-							sqlResultSet->getString("name"), sqlResultSet->getString("config")));
+					this->addConfiguration(
+							result,
+							ConfigProperties(
+									sqlResultSet->getString("module"),
+									sqlResultSet->getString("name"),
+									sqlResultSet->getString("config")
+							)
+					);
 				}
 			}
 		}
@@ -1137,14 +1238,18 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement for adding URL list
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"INSERT INTO crawlserv_urllists(website, namespace, name) VALUES (?, ?, ?)"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"INSERT INTO crawlserv_urllists(website, namespace, name)"
+							" VALUES (?, ?, ?)"
+					)
+			);
 
 			// execute SQL query for adding URL list
 			sqlStatement->setUInt64(1, websiteId);
 			sqlStatement->setString(2, listProperties.nameSpace);
 			sqlStatement->setString(3, listProperties.name);
+
 			Database::sqlExecute(sqlStatement);
 
 			// get ID of newly added URL list
@@ -1154,48 +1259,95 @@ namespace crawlservpp::Main {
 
 		// create table for URL list
 		std::vector<TableColumn> columns;
+
 		columns.reserve(11);
+
 		columns.emplace_back("manual", "BOOLEAN DEFAULT FALSE NOT NULL");
 		columns.emplace_back("url", "VARCHAR(2000) NOT NULL");
 		columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
-		this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, columns, false);
+
+		this->createTable(
+				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace,
+				columns,
+				false
+		);
+
 		columns.clear();
 
 		// create table for crawled content
-		columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
-				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+		columns.emplace_back(
+				"url", "BIGINT UNSIGNED NOT NULL",
+				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace,
+				"id"
+		);
 		columns.emplace_back("crawltime", "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL", true);
 		columns.emplace_back("archived", "BOOLEAN DEFAULT FALSE NOT NULL");
 		columns.emplace_back("response", "SMALLINT UNSIGNED NOT NULL DEFAULT 0");
 		columns.emplace_back("type", "TINYTEXT NOT NULL");
 		columns.emplace_back("content", "LONGTEXT NOT NULL");
-		this->createTable("crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_crawled", columns, true);
+
+		this->createTable(
+				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace + "_crawled",
+				columns,
+				true
+		);
+
 		columns.clear();
 
 		// create table for crawling
-		columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL UNQIUE", // 1-to-1 relationship
-				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+		columns.emplace_back(
+				"url",
+				"BIGINT UNSIGNED NOT NULL UNQIUE", // 1-to-1 relationship
+				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace,
+				"id"
+		);
 		columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
 		columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
-		this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_crawling", columns, false);
+
+		this->createTable(
+				"crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_crawling",
+				columns,
+				false
+		);
+
 		columns.clear();
 
 		// create table for parsing
 		columns.emplace_back("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_parsedtables", "id");
-		columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
-				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+		columns.emplace_back(
+				"url",
+				"BIGINT UNSIGNED NOT NULL",
+				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace,
+				"id"
+		);
 		columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
 		columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
-		this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_parsing", columns, false);
+
+		this->createTable(
+				"crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_parsing",
+				columns,
+				false
+		);
+
 		columns.clear();
 
 		// create table for extracting
 		columns.emplace_back("target", "BIGINT UNSIGNED NOT NULL", "crawlserv_extractedtables", "id");
-		columns.emplace_back("url", "BIGINT UNSIGNED NOT NULL",
-				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace, "id");
+		columns.emplace_back(
+				"url",
+				"BIGINT UNSIGNED NOT NULL",
+				"crawlserv_" + websiteNamespace + "_" + listProperties.nameSpace,
+				"id"
+		);
 		columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
 		columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
-		this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_extracting", columns, false);
+
+		this->createTable(
+				"crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_extracting",
+				columns,
+				false
+		);
+
 		columns.clear();
 
 		// create table for analyzing
@@ -1205,7 +1357,13 @@ namespace crawlservpp::Main {
 		columns.emplace_back("algo", "TINYTEXT NOT NULL");
 		columns.emplace_back("locktime", "DATETIME DEFAULT NULL");
 		columns.emplace_back("success", "BOOLEAN DEFAULT FALSE NOT NULL");
-		this->createTable("crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_analyzing", columns, false);
+
+		this->createTable(
+				"crawlserv_" + websiteNamespace  + "_" + listProperties.nameSpace + "_analyzing",
+				columns,
+				false
+		);
+
 		columns.clear();
 
 		return result;
@@ -1224,11 +1382,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT id, namespace FROM crawlserv_urllists WHERE website = ?"));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT id, namespace"
+							" FROM crawlserv_urllists"
+							" WHERE website = ?"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get results
@@ -1255,11 +1419,18 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT namespace FROM crawlserv_urllists WHERE id = ? LIMIT 1"));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT namespace"
+							" FROM crawlserv_urllists"
+							" WHERE id = ?"
+							" LIMIT 1"
+					)
+			);
 
 			// execute SQL query
 			sqlStatement->setUInt64(1, listId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -1292,6 +1463,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL query
 			sqlStatement->setUInt64(1, tableId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -1318,13 +1490,23 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS (SELECT * FROM crawlserv_urllists WHERE website = ? AND namespace = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								"SELECT * FROM crawlserv_urllists"
+								" WHERE website = ?"
+								" AND namespace = ?"
+								" LIMIT 1"
+							" )"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
 			sqlStatement->setString(2, nameSpace);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -1366,78 +1548,102 @@ namespace crawlservpp::Main {
 				SqlStatementPtr renameStatement(this->connection->createStatement());
 
 				// rename URL list table
-				Database::sqlExecute(renameStatement,
-						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace
-						+ "` RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "`"
+				Database::sqlExecute(
+						renameStatement,
+						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "`"
+						" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "`"
 				);
 
 				// rename crawling tables
-				Database::sqlExecute(renameStatement,
+				Database::sqlExecute(
+						renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_crawled`"
 						" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_crawled`"
 				);
-				Database::sqlExecute(renameStatement,
+
+				Database::sqlExecute(
+						renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_crawling`"
 						" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace	+ "_crawling`"
 				);
 
 				// rename parsing tables
-				Database::sqlExecute(renameStatement,
+				Database::sqlExecute(
+						renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_parsing`"
 						" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_parsing`"
 				);
+
 				tables = this->getTargetTables("parsed", listId);
 
 				while(!tables.empty()) {
-					Database::sqlExecute(renameStatement,
+					Database::sqlExecute(
+							renameStatement,
 							"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_parsed_"
-							+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-							+ listProperties.nameSpace	+ "_parsed_" + tables.front().second + "`"
+								+ tables.front().second + "`"
+							" RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+								+ listProperties.nameSpace	+ "_parsed_" + tables.front().second + "`"
 					);
+
 					tables.pop();
 				}
 
 				// rename extracting tables
-				Database::sqlExecute(renameStatement,
+				Database::sqlExecute(
+						renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_extracting`"
 						" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_extracting`"
 				);
+
 				tables = this->getTargetTables("extracted", listId);
 
 				while(!tables.empty()) {
-					Database::sqlExecute(renameStatement,
+					Database::sqlExecute(
+							renameStatement,
 							"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_extracted_"
-							+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-							+ listProperties.nameSpace + "_extracted_"	+ tables.front().second + "`"
+								+ tables.front().second + "`"
+							" RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+								+ listProperties.nameSpace + "_extracted_"	+ tables.front().second + "`"
 					);
+
 					tables.pop();
 				}
 
 				// rename analyzing tables
-				Database::sqlExecute(renameStatement,
+				Database::sqlExecute(
+						renameStatement,
 						"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_analyzing`"
 						" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace	+ "_analyzing`"
 				);
+
 				tables = this->getTargetTables("analyzed", listId);
 
 				while(!tables.empty()) {
-					Database::sqlExecute(renameStatement,
+					Database::sqlExecute(
+							renameStatement,
 							"ALTER TABLE `crawlserv_" + websiteNamespace.second + "_" + oldListNamespace + "_analyzed_"
-							+ tables.front().second + "` RENAME TO `crawlserv_" + websiteNamespace.second + "_"
-							+ listProperties.nameSpace + "_analyzed_" + tables.front().second + "`"
+								+ tables.front().second + "`"
+							" RENAME TO `crawlserv_" + websiteNamespace.second + "_"
+								+ listProperties.nameSpace + "_analyzed_" + tables.front().second + "`"
 					);
+
 					tables.pop();
 				}
 
 				// create SQL statement for updating
-				SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
-						"UPDATE crawlserv_urllists SET namespace = ?, name = ? WHERE id = ? LIMIT 1"
+				SqlPreparedStatementPtr updateStatement(
+						this->connection->prepareStatement(
+						"UPDATE crawlserv_urllists"
+						" SET namespace = ?, name = ?"
+						" WHERE id = ?"
+						" LIMIT 1"
 				));
 
 				// execute SQL statement for updating
 				updateStatement->setString(1, listProperties.nameSpace);
 				updateStatement->setString(2, listProperties.name);
 				updateStatement->setUInt64(3, listId);
+
 				Database::sqlExecute(updateStatement);
 			}
 			else {
@@ -1449,6 +1655,7 @@ namespace crawlservpp::Main {
 				// execute SQL statement for updating
 				updateStatement->setString(1, listProperties.name);
 				updateStatement->setUInt64(2, listId);
+
 				Database::sqlExecute(updateStatement);
 			}
 		}
@@ -1469,22 +1676,28 @@ namespace crawlservpp::Main {
 
 		// delete parsing tables
 		tables = this->getTargetTables("parsed", listId);
+
 		while(!tables.empty()) {
 			this->deleteTargetTable("parsed", tables.front().first);
+
 			tables.pop();
 		}
 
 		// delete extracting tables
 		tables = this->getTargetTables("extracted", listId);
+
 		while(!tables.empty()) {
 			this->deleteTargetTable("extracted", tables.front().first);
+
 			tables.pop();
 			}
 
 		// delete analyzing tables
 		tables = this->getTargetTables("analyzed", listId);
+
 		while(!tables.empty()) {
 			this->deleteTargetTable("analyzed", tables.front().first);
+
 			tables.pop();
 		}
 
@@ -1493,12 +1706,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement for deleting URL list
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"DELETE FROM crawlserv_urllists WHERE id = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+						"DELETE FROM crawlserv_urllists"
+						" WHERE id = ?"
+						" LIMIT 1"
+					)
+			);
 
 			// execute SQL statement for deleting URL list
 			sqlStatement->setUInt64(1, listId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteUrlList", e); }
@@ -1527,9 +1745,12 @@ namespace crawlservpp::Main {
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
 		{ // lock parsing table
-			TableLock parsingTableLock(*this, TableLockProperties(
-					"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing"
-			));
+			TableLock parsingTableLock(
+					*this,
+					TableLockProperties(
+							"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing"
+					)
+			);
 
 			try {
 				// update parsing table
@@ -1553,9 +1774,12 @@ namespace crawlservpp::Main {
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
 		{ // lock extracting table
-			TableLock extractingTableLock(*this, TableLockProperties(
-					"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting"
-			));
+			TableLock extractingTableLock(
+					*this,
+					TableLockProperties(
+							"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting"
+					)
+			);
 
 			try {
 				// update extracting table
@@ -1579,9 +1803,12 @@ namespace crawlservpp::Main {
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
 		{ // lock analyzing table
-			TableLock analyzingTableLock(*this, TableLockProperties(
-					"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing"
-			));
+			TableLock analyzingTableLock(
+					*this,
+					TableLockProperties(
+							"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing"
+					)
+			);
 
 			try {
 				// update URL list
@@ -1615,14 +1842,28 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement for adding query
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"INSERT INTO crawlserv_queries(website, name, query, type, resultbool, resultsingle,"
-						"resultmulti, textonly) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"INSERT INTO crawlserv_queries"
+							" ("
+								" website,"
+								" name,"
+								" query,"
+								" type,"
+								" resultbool,"
+								" resultsingle,"
+								" resultmulti,"
+								" textonly"
+							" )"
+							" VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
 			));
 
 			// execute SQL query for adding query
-			if(websiteId) sqlStatement->setUInt64(1, websiteId);
-			else sqlStatement->setNull(1, 0);
+			if(websiteId)
+				sqlStatement->setUInt64(1, websiteId);
+			else
+				sqlStatement->setNull(1, 0);
+
 			sqlStatement->setString(2, queryProperties.name);
 			sqlStatement->setString(3, queryProperties.text);
 			sqlStatement->setString(4, queryProperties.type);
@@ -1630,9 +1871,10 @@ namespace crawlservpp::Main {
 			sqlStatement->setBoolean(6, queryProperties.resultSingle);
 			sqlStatement->setBoolean(7, queryProperties.resultMulti);
 			sqlStatement->setBoolean(8, queryProperties.textOnly);
+
 			Database::sqlExecute(sqlStatement);
 
-			// get id
+			// get ID
 			result = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addQuery", e); }
@@ -1651,13 +1893,15 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
 					"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
 					" FROM crawlserv_queries WHERE id = ? LIMIT 1"
 			));
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, queryId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -1700,10 +1944,21 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement for updating
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"UPDATE crawlserv_queries SET name = ?, query = ?, type = ?, resultbool = ?,"
-					" resultsingle = ?, resultmulti = ?, textonly = ? WHERE id = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+						"UPDATE crawlserv_queries"
+						" SET"
+						" name = ?,"
+						" query = ?,"
+						" type = ?,"
+						" resultbool = ?,"
+						" resultsingle = ?,"
+						" resultmulti = ?,"
+						" textonly = ?"
+						" WHERE id = ?"
+						" LIMIT 1"
+					)
+			);
 
 			// execute SQL statement for updating
 			sqlStatement->setString(1, queryProperties.name);
@@ -1714,6 +1969,7 @@ namespace crawlservpp::Main {
 			sqlStatement->setBoolean(6, queryProperties.resultMulti);
 			sqlStatement->setBoolean(7, queryProperties.textOnly);
 			sqlStatement->setUInt64(8, queryId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateQuery", e); }
@@ -1730,16 +1986,22 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"DELETE FROM crawlserv_queries WHERE id = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"DELETE FROM crawlserv_queries"
+							" WHERE id = ?"
+							" LIMIT 1"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, queryId);
+
 			Database::sqlExecute(sqlStatement);
 
 			// reset auto-increment if table is empty
-			if(this->isTableEmpty("crawlserv_queries")) this->resetAutoIncrement("crawlserv_queries");
+			if(this->isTableEmpty("crawlserv_queries"))
+				this->resetAutoIncrement("crawlserv_queries");
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteQuery", e); }
 	}
@@ -1757,23 +2019,43 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement for getting query info
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT website, name, query, type, resultbool, resultsingle, resultmulti,"
-					" textonly FROM crawlserv_queries WHERE id = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+						"SELECT"
+						" website,"
+						" name,"
+						" query,"
+						" type,"
+						" resultbool,"
+						" resultsingle,"
+						" resultmulti,"
+						" textonly"
+						" FROM crawlserv_queries"
+						" WHERE id = ?"
+						" LIMIT 1"
+					)
+			);
 
 			// execute SQL statement for getting query info
 			sqlStatement->setUInt64(1, queryId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
 				// add query
-				result = this->addQuery(sqlResultSet->getUInt64("website"), QueryProperties(
-						sqlResultSet->getString("name") + " (copy)", sqlResultSet->getString("query"),
-						sqlResultSet->getString("type"), sqlResultSet->getBoolean("resultbool"),
-						sqlResultSet->getBoolean("resultsingle"), sqlResultSet->getBoolean("resultmulti"),
-						sqlResultSet->getBoolean("textonly")));
+				result = this->addQuery(
+						sqlResultSet->getUInt64("website"),
+						QueryProperties(
+								sqlResultSet->getString("name") + " (copy)",
+								sqlResultSet->getString("query"),
+								sqlResultSet->getString("type"),
+								sqlResultSet->getBoolean("resultbool"),
+								sqlResultSet->getBoolean("resultsingle"),
+								sqlResultSet->getBoolean("resultmulti"),
+								sqlResultSet->getBoolean("textonly")
+						)
+				);
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::duplicateQuery", e); }
@@ -1802,18 +2084,22 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement for adding configuration
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"INSERT INTO crawlserv_configs(website, module, name, config) VALUES (?, ?, ?, ?)"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"INSERT INTO crawlserv_configs(website, module, name, config)"
+							" VALUES (?, ?, ?, ?)"
+					)
+			);
 
 			// execute SQL query for adding website
 			sqlStatement->setUInt64(1, websiteId);
 			sqlStatement->setString(2, configProperties.module);
 			sqlStatement->setString(3, configProperties.name);
 			sqlStatement->setString(4, configProperties.config);
+
 			Database::sqlExecute(sqlStatement);
 
-			// get id
+			// get ID
 			result = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addConfiguration", e); }
@@ -2577,9 +2863,18 @@ namespace crawlservpp::Main {
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 			// execute SQL statement
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
-					"SELECT NOT EXISTS (SELECT * FROM `" + tableName + "` LIMIT 1) AS result"
-			));
+			SqlResultSetPtr sqlResultSet(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT NOT EXISTS"
+							" ("
+									" SELECT *"
+									" FROM `" + tableName + "`"
+									" LIMIT 1"
+							" ) "
+							" AS result"
+					)
+			);
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
@@ -2603,15 +2898,23 @@ namespace crawlservpp::Main {
 
 		try {
 			// create and execute SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.TABLES"
-					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT COUNT(*)"
+							" AS result"
+							" FROM INFORMATION_SCHEMA.TABLES"
+							" WHERE TABLE_SCHEMA = ?"
+							" AND TABLE_NAME = ?"
+							" LIMIT 1"
+					)
+			);
 
 			// get result
 			sqlStatement->setString(1, this->settings.name);
 			sqlStatement->setString(2, tableName);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
 			if(sqlResultSet && sqlResultSet->next())
 				result = sqlResultSet->getBoolean("result");
 		}
@@ -2635,10 +2938,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT COUNT(*) AS result FROM INFORMATION_SCHEMA.COLUMNS"
-					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT COUNT(*)"
+							" AS result"
+							" FROM INFORMATION_SCHEMA.COLUMNS"
+							" WHERE TABLE_SCHEMA = ?"
+							" AND TABLE_NAME = ?"
+							" AND COLUMN_NAME = ?"
+							" LIMIT 1"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setString(1, this->settings.name);
@@ -2647,6 +2957,7 @@ namespace crawlservpp::Main {
 
 			// get result
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
 			if(sqlResultSet && sqlResultSet->next())
 				result = sqlResultSet->getBoolean("result");
 		}
@@ -2670,9 +2981,16 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS"
-					" WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1"));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+						"SELECT DATA_TYPE"
+						" FROM INFORMATION_SCHEMA.COLUMNS"
+						" WHERE TABLE_SCHEMA = ?"
+						" AND TABLE_NAME = ?"
+						" AND COLUMN_NAME = ?"
+						" LIMIT 1"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setString(1, this->settings.name);
@@ -2681,6 +2999,7 @@ namespace crawlservpp::Main {
 
 			// get result
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
 			if(sqlResultSet && sqlResultSet->next())
 				result = sqlResultSet->getString("DATA_TYPE");
 		}
@@ -2709,9 +3028,14 @@ namespace crawlservpp::Main {
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 			// execute SQL statement
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
-					"SELECT `" + data.column + "` FROM `" + data.table + "` WHERE (" + data.condition + ")"
-			));
+			SqlResultSetPtr sqlResultSet(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT `" + data.column + "`"
+							" FROM `" + data.table + "`"
+							" WHERE (" + data.condition + ")"
+					)
+			);
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
@@ -2722,24 +3046,31 @@ namespace crawlservpp::Main {
 					case Data::Type::_bool:
 						data.value = Data::Value(sqlResultSet->getBoolean(data.column));
 						break;
+
 					case Data::Type::_double:
 						data.value = Data::Value(static_cast<double>(sqlResultSet->getDouble(data.column)));
 						break;
+
 					case Data::Type::_int:
 						data.value = Data::Value(static_cast<int>(sqlResultSet->getInt(data.column)));
 						break;
+
 					case Data::Type::_long:
 						data.value = Data::Value(static_cast<long>(sqlResultSet->getInt64(data.column)));
 						break;
+
 					case Data::Type::_string:
 						data.value = Data::Value(sqlResultSet->getString(data.column));
 						break;
+
 					case Data::Type::_uint:
 						data.value = Data::Value(static_cast<unsigned int>(sqlResultSet->getUInt(data.column)));
 						break;
+
 					case Data::Type::_ulong:
 						data.value = Data::Value(static_cast<unsigned long>(sqlResultSet->getUInt64(data.column)));
 						break;
+
 					default:
 						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
 					}
@@ -2770,10 +3101,13 @@ namespace crawlservpp::Main {
 
 			// create SQL query
 			std::string sqlQuery("SELECT ");
+
 			for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
 				sqlQuery += "`" + *i + "`, ";
+
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += " FROM `" + data.table + "` WHERE (" + data.condition + ")";
 
 			// execute SQL statement
@@ -2784,43 +3118,57 @@ namespace crawlservpp::Main {
 				switch(data.type) {
 				case Data::Type::_bool:
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-						else data.values.emplace_back(sqlResultSet->getBoolean(*i));
+						if(sqlResultSet->isNull(*i))
+							data.values.emplace_back();
+						else
+							data.values.emplace_back(sqlResultSet->getBoolean(*i));
 					break;
 
 				case Data::Type::_double:
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-						else data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(*i)));
+						if(sqlResultSet->isNull(*i))
+							data.values.emplace_back();
+						else
+							data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(*i)));
 					break;
 
 				case Data::Type::_int:
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-						else data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
+						if(sqlResultSet->isNull(*i))
+							data.values.emplace_back();
+						else
+							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
 					break;
 
 				case Data::Type::_long:
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-						else data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(*i)));
+						if(sqlResultSet->isNull(*i))
+							data.values.emplace_back();
+						else
+							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(*i)));
 					break;
 				case Data::Type::_string:
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-						else data.values.emplace_back(sqlResultSet->getString(*i));
+						if(sqlResultSet->isNull(*i))
+							data.values.emplace_back();
+						else
+							data.values.emplace_back(sqlResultSet->getString(*i));
 					break;
 
 				case Data::Type::_uint:
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-						else data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
+						if(sqlResultSet->isNull(*i))
+							data.values.emplace_back();
+						else
+							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
 					break;
 
 				case Data::Type::_ulong:
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i)) data.values.emplace_back();
-						else data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(*i)));
+						if(sqlResultSet->isNull(*i))
+							data.values.emplace_back();
+						else
+							data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(*i)));
 					break;
 
 				default:
@@ -2852,8 +3200,10 @@ namespace crawlservpp::Main {
 			std::string sqlQuery("SELECT ");
 			for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i)
 				sqlQuery += "`" + i->first + "`, ";
+
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += " FROM `" + data.table + "` WHERE (" + data.condition + ")";
 
 			// execute SQL statement
@@ -2923,8 +3273,12 @@ namespace crawlservpp::Main {
 
 			// create SQL query
 			std::string sqlQuery("SELECT `" + data.column + "` FROM `" + data.table + "`");
-			if(!data.condition.empty()) sqlQuery += " WHERE (" + data.condition + ")";
-			if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
+
+			if(!data.condition.empty())
+				sqlQuery += " WHERE (" + data.condition + ")";
+
+			if(!data.order.empty())
+				sqlQuery += " ORDER BY (" + data.order + ")";
 
 			// execute SQL statement
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
@@ -2933,7 +3287,8 @@ namespace crawlservpp::Main {
 			if(sqlResultSet) {
 				data.values.reserve(sqlResultSet->rowsCount());
 				while(sqlResultSet->next()) {
-					if(sqlResultSet->isNull(data.column)) data.values.emplace_back();
+					if(sqlResultSet->isNull(data.column))
+						data.values.emplace_back();
 					else {
 						switch(data.type) {
 						case Data::Type::_bool:
@@ -2995,6 +3350,7 @@ namespace crawlservpp::Main {
 
 			// create SQL query
 			std::string sqlQuery("SELECT ");
+
 			for(auto i = data.columns.begin(); i != data.columns.end(); ++i) {
 				sqlQuery += "`" + *i + "`, ";
 
@@ -3003,22 +3359,30 @@ namespace crawlservpp::Main {
 			}
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += " FROM `" + data.table + "`";
-			if(!data.condition.empty()) sqlQuery += " WHERE (" + data.condition + ")";
-			if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
+
+			if(!data.condition.empty())
+				sqlQuery += " WHERE (" + data.condition + ")";
+
+			if(!data.order.empty())
+				sqlQuery += " ORDER BY (" + data.order + ")";
 
 			// execute SQL statement
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
 
 			if(sqlResultSet) {
 				// reserve memory for results
-				for(auto i = data.values.begin(); i != data.values.end(); ++i) i->reserve(sqlResultSet->rowsCount());
+				for(auto i = data.values.begin(); i != data.values.end(); ++i)
+					i->reserve(sqlResultSet->rowsCount());
 
 				// get results
 				while(sqlResultSet->next()) {
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i) {
 						auto column = data.values.begin() + (i - data.columns.begin());
-						if(sqlResultSet->isNull(*i)) column->emplace_back();
+
+						if(sqlResultSet->isNull(*i))
+							column->emplace_back();
 						else {
 							switch(data.type) {
 							case Data::Type::_bool:
@@ -3078,6 +3442,7 @@ namespace crawlservpp::Main {
 
 			// create SQL query
 			std::string sqlQuery("SELECT ");
+
 			for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
 				sqlQuery += "`" + i->first + "`, ";
 
@@ -3086,22 +3451,30 @@ namespace crawlservpp::Main {
 			}
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += " FROM `" + data.table + "`";
-			if(!data.condition.empty()) sqlQuery += " WHERE (" + data.condition + ")";
-			if(!data.order.empty()) sqlQuery += " ORDER BY (" + data.order + ")";
+
+			if(!data.condition.empty())
+				sqlQuery += " WHERE (" + data.condition + ")";
+
+			if(!data.order.empty())
+				sqlQuery += " ORDER BY (" + data.order + ")";
 
 			// execute SQL statement
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement, sqlQuery));
 
 			if(sqlResultSet) {
 				// reserve memory for results
-				for(auto i = data.values.begin(); i != data.values.end(); ++i) i->reserve(sqlResultSet->rowsCount());
+				for(auto i = data.values.begin(); i != data.values.end(); ++i)
+					i->reserve(sqlResultSet->rowsCount());
 
 				// get results
 				while(sqlResultSet->next()) {
 					for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
 						auto column = data.values.begin() + (i - data.columns_types.begin());
-						if(sqlResultSet->isNull(i->first)) column->emplace_back();
+
+						if(sqlResultSet->isNull(i->first))
+							column->emplace_back();
 						else {
 							switch(i->second) {
 							case Data::Type::_bool:
@@ -3155,27 +3528,36 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"INSERT INTO `" + data.table + "` (`" + data.column + "`) VALUES (?)"));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"INSERT INTO `" + data.table + "` (`" + data.column + "`)"
+							" VALUES (?)"
+					)
+			);
 
 			// set value
-			if(data.value._isnull) sqlStatement->setNull(1, 0);
+			if(data.value._isnull)
+				sqlStatement->setNull(1, 0);
 			else {
 				switch(data.type) {
 				case Data::Type::_bool:
 					sqlStatement->setBoolean(1, data.value._b);
+
 					break;
 
 				case Data::Type::_double:
 					sqlStatement->setDouble(1, data.value._d);
+
 					break;
 
 				case Data::Type::_int:
 					sqlStatement->setInt(1, data.value._i);
+
 					break;
 
 				case Data::Type::_long:
 					sqlStatement->setInt64(1, data.value._l);
+
 					break;
 
 				case Data::Type::_string:
@@ -3183,36 +3565,51 @@ namespace crawlservpp::Main {
 						switch(data.value._overflow) {
 						case Data::Value::_if_too_large::_trim:
 							sqlStatement->setString(1, data.value._s.substr(0, this->getMaxAllowedPacketSize()));
+
 							break;
 
 						case Data::Value::_if_too_large::_empty:
 							sqlStatement->setString(1, "");
+
 							break;
 
 						case Data::Value::_if_too_large::_null:
 							sqlStatement->setNull(1, 0);
+
 							break;
 
 						default:
 							std::ostringstream errStrStr;
 							errStrStr.imbue(std::locale(""));
-							errStrStr << "Main::Database::insertCustomData(): Size (" << data.value._s.size()
-									<< " bytes) of custom value for `" << data.table << "`.`" << data.column << "` exceeds the ";
-							if(data.value._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
-							else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-									" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
+
+							errStrStr <<	"Main::Database::insertCustomData():"
+											" Size (" << data.value._s.size() << " bytes)"
+											" of custom value for `" << data.table << "`.`" << data.column << "`"
+											" exceeds the ";
+
+							if(data.value._s.size() > 1073741824)
+								errStrStr << "mySQL data limit of 1 GiB";
+							else
+								errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
+											 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
+											 " (to max. 1 GiB).";
+
 							throw Database::Exception(errStrStr.str());
 						}
 					}
-					else sqlStatement->setString(1, data.value._s);
+					else
+						sqlStatement->setString(1, data.value._s);
+
 					break;
 
 				case Data::Type::_uint:
 					sqlStatement->setUInt(1, data.value._ui);
+
 					break;
 
 				case Data::Type::_ulong:
 					sqlStatement->setUInt64(1, data.value._ul);
+
 					break;
 
 				default:
@@ -3240,13 +3637,18 @@ namespace crawlservpp::Main {
 		try {
 			// create SQL query
 			std::string sqlQuery("INSERT INTO `" + data.table + "` (");
+
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i)
 				sqlQuery += "`" + i->first + "`, ";
+
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += ") VALUES(";
+
 			for(unsigned long n = 0; n < data.columns_values.size() - 1; n++)
 				sqlQuery += "?, ";
+
 			sqlQuery += "?)";
 
 			// create SQL statement
@@ -3254,35 +3656,51 @@ namespace crawlservpp::Main {
 
 			// set values
 			unsigned int counter = 1;
+
 			switch(data.type) {
 			case Data::Type::_bool:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setBoolean(counter, i->second._b);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setBoolean(counter, i->second._b);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_double:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setDouble(counter, i->second._d);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setDouble(counter, i->second._d);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_int:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setInt(counter, i->second._i);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setInt(counter, i->second._i);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_long:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setInt64(counter, i->second._l);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setInt64(counter, i->second._l);
+
 					counter++;
 				}
 				break;
@@ -3318,23 +3736,31 @@ namespace crawlservpp::Main {
 							throw Database::Exception(errStrStr.str());
 						}
 					}
-					else sqlStatement->setString(counter, i->second._s);
+					else
+						sqlStatement->setString(counter, i->second._s);
+
 					counter++;
 				}
 				break;
 
 			case Data::Type::_uint:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setUInt(counter, i->second._ui);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setUInt(counter, i->second._ui);
+
 					counter++;
 				}
 				break;
 
 			case Data::Type::_ulong:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setUInt64(counter, i->second._ul);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setUInt64(counter, i->second._ul);
+
 					counter++;
 				}
 				break;
@@ -3361,12 +3787,18 @@ namespace crawlservpp::Main {
 		try {
 			// create SQL query
 			std::string sqlQuery("INSERT INTO `" + data.table + "` (");
+
 			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i)
 				sqlQuery += "`" + std::get<0>(*i) + "`, ";
+
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += ") VALUES(";
-			for(unsigned long n = 0; n < data.columns_types_values.size() - 1; n++) sqlQuery += "?, ";
+
+			for(unsigned long n = 0; n < data.columns_types_values.size() - 1; n++)
+				sqlQuery += "?, ";
+
 			sqlQuery += "?)";
 
 			// create SQL statement
@@ -3374,23 +3806,29 @@ namespace crawlservpp::Main {
 
 			// set values
 			unsigned int counter = 1;
+
 			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i) {
-				if(std::get<2>(*i)._isnull) sqlStatement->setNull(counter, 0);
+				if(std::get<2>(*i)._isnull)
+					sqlStatement->setNull(counter, 0);
 				else {
 					switch(std::get<1>(*i)) {
 					case Data::Type::_bool:
 						sqlStatement->setBoolean(counter, std::get<2>(*i)._b);
+
 						break;
 
 					case Data::Type::_double:
 						sqlStatement->setDouble(counter, std::get<2>(*i)._d);
+
 						break;
 
 					case Data::Type::_int:
 						sqlStatement->setInt(counter, std::get<2>(*i)._i);
+
 						break;
 					case Data::Type::_long:
 						sqlStatement->setInt64(counter, std::get<2>(*i)._l);
+
 						break;
 
 					case Data::Type::_string:
@@ -3398,43 +3836,60 @@ namespace crawlservpp::Main {
 							switch(std::get<2>(*i)._overflow) {
 							case Data::Value::_if_too_large::_trim:
 								sqlStatement->setString(1, std::get<2>(*i)._s.substr(0, this->getMaxAllowedPacketSize()));
+
 								break;
 
 							case Data::Value::_if_too_large::_empty:
 								sqlStatement->setString(1, "");
+
 								break;
 
 							case Data::Value::_if_too_large::_null:
 								sqlStatement->setNull(1, 0);
+
 								break;
 
 							default:
 								std::ostringstream errStrStr;
 								errStrStr.imbue(std::locale(""));
-								errStrStr << "Main::Database::insertCustomData(): Size (" << std::get<2>(*i)._s.size()
-										<< " bytes) of custom value for `" << data.table << "`.`" << std::get<0>(*i)
-										<< "` exceeds the ";
-								if(std::get<2>(*i)._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
-								else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-										" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
+
+								errStrStr <<	"Main::Database::insertCustomData():"
+												" Size (" << std::get<2>(*i)._s.size()<<  " bytes)"
+												" of custom value for `" << data.table << "`.`" << std::get<0>(*i) << "`"
+												" exceeds the ";
+
+								if(std::get<2>(*i)._s.size() > 1073741824)
+									errStrStr << "mySQL data limit of 1 GiB";
+								else
+									errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
+												 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
+												 " (to max. 1 GiB).";
+
 								throw Database::Exception(errStrStr.str());
 							}
 						}
-						else sqlStatement->setString(counter, std::get<2>(*i)._s);
+						else
+							sqlStatement->setString(counter, std::get<2>(*i)._s);
+
 						break;
 
 					case Data::Type::_uint:
 						sqlStatement->setUInt(counter, std::get<2>(*i)._ui);
+
 						break;
 
 					case Data::Type::_ulong:
 						sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
+
 						break;
 
 					default:
-						throw Database::Exception("Main::Database::insertCustomData(): Invalid data type when inserting custom data.");
+						throw Database::Exception(
+								"Main::Database::insertCustomData(): Invalid data type when inserting custom data."
+						);
 					}
 				}
+
 				counter++;
 			}
 
@@ -3457,27 +3912,37 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"UPDATE `" + data.table + "` SET `" + data.column + "` = ? WHERE (" + data.condition + ")"));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"UPDATE `" + data.table + "`"
+							" SET `" + data.column + "` = ?"
+							" WHERE (" + data.condition + ")"
+					)
+			);
 
 			// set value
-			if(data.value._isnull) sqlStatement->setNull(1, 0);
+			if(data.value._isnull)
+				sqlStatement->setNull(1, 0);
 			else {
 				switch(data.type) {
 				case Data::Type::_bool:
 					sqlStatement->setBoolean(1, data.value._b);
+
 					break;
 
 				case Data::Type::_double:
 					sqlStatement->setDouble(1, data.value._d);
+
 					break;
 
 				case Data::Type::_int:
 					sqlStatement->setInt(1, data.value._i);
+
 					break;
 
 				case Data::Type::_long:
 					sqlStatement->setInt64(1, data.value._l);
+
 					break;
 
 				case Data::Type::_string:
@@ -3485,37 +3950,51 @@ namespace crawlservpp::Main {
 						switch(data.value._overflow) {
 						case Data::Value::_if_too_large::_trim:
 							sqlStatement->setString(1, data.value._s.substr(0, this->getMaxAllowedPacketSize()));
+
 							break;
 
 						case Data::Value::_if_too_large::_empty:
 							sqlStatement->setString(1, "");
+
 							break;
 
 						case Data::Value::_if_too_large::_null:
 							sqlStatement->setNull(1, 0);
+
 							break;
 
 						default:
 							std::ostringstream errStrStr;
 							errStrStr.imbue(std::locale(""));
-							errStrStr << "Main::Database::updateCustomData(): Size (" << data.value._s.size()
-									<< " bytes) of custom value for `" << data.table << "`.`" << data.column
-									<< "` exceeds the ";
-							if(data.value._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
-							else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-									" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
+
+							errStrStr <<	"Main::Database::updateCustomData():"
+											" Size (" << data.value._s.size() << " bytes) of custom value"
+											" for `" << data.table << "`.`" << data.column << "`"
+											" exceeds the ";
+
+							if(data.value._s.size() > 1073741824)
+								errStrStr << "mySQL data limit of 1 GiB";
+							else
+								errStrStr << "current mySQL server limit"
+										" of " << this->getMaxAllowedPacketSize() << " bytes"
+										" - adjust the \'max_allowed_packet\' setting on the server accordingly"
+										" (to max. 1 GiB).";
+
 							throw Database::Exception(errStrStr.str());
 						}
 					}
 					else sqlStatement->setString(1, data.value._s);
+
 					break;
 
 				case Data::Type::_uint:
 					sqlStatement->setUInt(1, data.value._ui);
+
 					break;
 
 				case Data::Type::_ulong:
 					sqlStatement->setUInt64(1, data.value._ul);
+
 					break;
 
 				default:
@@ -3543,10 +4022,13 @@ namespace crawlservpp::Main {
 		try {
 			// create SQL query
 			std::string sqlQuery("UPDATE `" + data.table + "` SET ");
+
 			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i)
 				sqlQuery += "`" + i->first + "` = ?, ";
+
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += " WHERE (" + data.condition + ")";
 
 			// create SQL statement
@@ -3554,88 +4036,126 @@ namespace crawlservpp::Main {
 
 			// set values
 			unsigned int counter = 1;
+
 			switch(data.type) {
 			case Data::Type::_bool:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setBoolean(counter, i->second._b);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setBoolean(counter, i->second._b);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_double:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setDouble(counter, i->second._d);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setDouble(counter, i->second._d);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_int:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setInt(counter, i->second._i);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setInt(counter, i->second._i);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_long:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setInt64(counter, i->second._l);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setInt64(counter, i->second._l);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_string:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
 					else if(i->second._s.size() > this->getMaxAllowedPacketSize()) {
 						switch(i->second._overflow) {
 						case Data::Value::_if_too_large::_trim:
 							sqlStatement->setString(1, i->second._s.substr(0, this->getMaxAllowedPacketSize()));
+
 							break;
 
 						case Data::Value::_if_too_large::_empty:
 							sqlStatement->setString(1, "");
+
 							break;
 
 						case Data::Value::_if_too_large::_null:
 							sqlStatement->setNull(1, 0);
+
 							break;
 
 						default:
 							std::ostringstream errStrStr;
 							errStrStr.imbue(std::locale(""));
-							errStrStr << "Main::Database::updateCustomData(): Size (" << i->second._s.size()
-									<< " bytes) of custom value for `" << data.table << "`.`" << i->first
-									<< "` exceeds the ";
-							if(i->second._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
-							else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-									" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
+
+							errStrStr <<	"Main::Database::updateCustomData():"
+											" Size (" << i->second._s.size() << " bytes)"
+											" of custom value for `" << data.table << "`.`" << i->first << "`"
+											" exceeds the ";
+
+							if(i->second._s.size() > 1073741824)
+								errStrStr << "mySQL data limit of 1 GiB";
+							else
+								errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
+											 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
+											 " (to max. 1 GiB).";
+
 							throw Database::Exception(errStrStr.str());
 						}
 					}
 					else
 						sqlStatement->setString(counter, i->second._s);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_uint:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setUInt(counter, i->second._ui);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setUInt(counter, i->second._ui);
+
 					counter++;
 				}
+
 				break;
 
 			case Data::Type::_ulong:
 				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else sqlStatement->setUInt64(counter, i->second._ul);
+					if(i->second._isnull)
+						sqlStatement->setNull(counter, 0);
+					else
+						sqlStatement->setUInt64(counter, i->second._ul);
+
 					counter++;
 				}
+
 				break;
 
 			default:
@@ -3660,10 +4180,13 @@ namespace crawlservpp::Main {
 		try {
 			// create SQL query
 			std::string sqlQuery("UPDATE `" + data.table + "` SET ");
+
 			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i)
 				sqlQuery += "`" + std::get<0>(*i) + "` = ?, ";
+
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
+
 			sqlQuery += " WHERE (" + data.condition + ")";
 
 			// create SQL statement
@@ -3671,24 +4194,30 @@ namespace crawlservpp::Main {
 
 			// set values
 			unsigned int counter = 1;
+
 			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i) {
-				if(std::get<2>(*i)._isnull) sqlStatement->setNull(counter, 0);
+				if(std::get<2>(*i)._isnull)
+					sqlStatement->setNull(counter, 0);
 				else {
 					switch(std::get<1>(*i)) {
 					case Data::Type::_bool:
 						sqlStatement->setBoolean(counter, std::get<2>(*i)._b);
+
 						break;
 
 					case Data::Type::_double:
 						sqlStatement->setDouble(counter, std::get<2>(*i)._d);
+
 						break;
 
 					case Data::Type::_int:
 						sqlStatement->setInt(counter, std::get<2>(*i)._i);
+
 						break;
 
 					case Data::Type::_long:
 						sqlStatement->setInt64(counter, std::get<2>(*i)._l);
+
 						break;
 
 					case Data::Type::_string:
@@ -3696,41 +4225,58 @@ namespace crawlservpp::Main {
 							switch(std::get<2>(*i)._overflow) {
 							case Data::Value::_if_too_large::_trim:
 								sqlStatement->setString(1, std::get<2>(*i)._s.substr(0, this->getMaxAllowedPacketSize()));
+
 								break;
 
 							case Data::Value::_if_too_large::_empty:
 								sqlStatement->setString(1, "");
+
 								break;
 
 							case Data::Value::_if_too_large::_null:
 								sqlStatement->setNull(1, 0);
+
 								break;
 
 							default:
 								std::ostringstream errStrStr;
 								errStrStr.imbue(std::locale(""));
-								errStrStr << "Main::Database::updateCustomData(): Size (" << std::get<2>(*i)._s.size()
-										<< " bytes) of custom value for `" << data.table << "`.`" << std::get<0>(*i)
-										<< "` exceeds the ";
-								if(std::get<2>(*i)._s.size() > 1073741824) errStrStr << "mySQL data limit of 1 GiB";
-								else errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-										" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
+
+								errStrStr <<	"Main::Database::updateCustomData():"
+												" Size (" << std::get<2>(*i)._s.size() << " bytes)"
+												" of custom value for `" << data.table << "`.`" << std::get<0>(*i) << "`"
+												" exceeds the ";
+
+								if(std::get<2>(*i)._s.size() > 1073741824)
+									errStrStr << "mySQL data limit of 1 GiB";
+								else
+									errStrStr << "current mySQL server limit"
+												 " of " << this->getMaxAllowedPacketSize() << " bytes"
+												 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
+												 " (to max. 1 GiB).";
+
 								throw Database::Exception(errStrStr.str());
 							}
 						}
-						else sqlStatement->setString(counter, std::get<2>(*i)._s);
+						else
+							sqlStatement->setString(counter, std::get<2>(*i)._s);
+
 						break;
 
 					case Data::Type::_uint:
 						sqlStatement->setUInt(counter, std::get<2>(*i)._ui);
+
 						break;
 
 					case Data::Type::_ulong:
 						sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
+
 						break;
 
 					default:
-						throw Database::Exception("Main::Database::updateCustomData(): Invalid data type when updating custom data.");
+						throw Database::Exception(
+								"Main::Database::updateCustomData(): Invalid data type when updating custom data."
+						);
 					}
 				}
 				counter++;
@@ -3782,6 +4328,7 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) {
 			this->sqlException("Main::Database::getPreparedStatement", e);
+
 			throw;// will not be used
 		}
 	}
@@ -3846,10 +4393,12 @@ namespace crawlservpp::Main {
 
 		// create SQL query string
 		std::ostringstream sqlQueryStrStr;
+
 		sqlQueryStrStr << "LOCK TABLES `" << lockProperties.name << "` WRITE";
-		for(unsigned short n = 0; n < lockProperties.numberOfAliases; n++) {
-			sqlQueryStrStr << ", `" << lockProperties.name << "` AS `" << lockProperties.alias << n + 1 << "` READ";
-		}
+
+		for(unsigned short n = 1; n <= lockProperties.numberOfAliases; n++)
+			sqlQueryStrStr <<	", `" << lockProperties.name << "`"
+								" AS `" << lockProperties.alias << n << "` READ";
 
 		// check connection
 		this->checkConnection();
@@ -3881,12 +4430,60 @@ namespace crawlservpp::Main {
 
 		// create SQL query string
 		std::ostringstream sqlQueryStrStr;
+
 		sqlQueryStrStr << "LOCK TABLES `" << lockProperties1.name << "` WRITE";
-		for(unsigned short n = 0; n < lockProperties1.numberOfAliases; n++)
-			sqlQueryStrStr << ", `" << lockProperties1.name << "` AS `" << lockProperties1.alias << n + 1 << "` READ";
+
+		for(unsigned short n = 1; n <= lockProperties1.numberOfAliases; n++)
+			sqlQueryStrStr << ", `" << lockProperties1.name << "` AS `" << lockProperties1.alias << n << "` READ";
+
 		sqlQueryStrStr << ", `" << lockProperties2.name << "` WRITE";
-		for(unsigned short n = 0; n < lockProperties2.numberOfAliases; n++)
-			sqlQueryStrStr << ", `" << lockProperties2.name << "` AS `" << lockProperties2.alias << n + 1 << "` READ";
+
+		for(unsigned short n = 1; n <= lockProperties2.numberOfAliases; n++)
+			sqlQueryStrStr << ", `" << lockProperties2.name << "` AS `" << lockProperties2.alias << n << "` READ";
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
+
+		// set table locking status
+		this->tablesLocked = true;
+	}
+
+	// lock multiple tables in the database for writing (and their aliases for reading)
+	void Database::lockTables(const std::vector<TableLockProperties>& lockProperties) {
+		// check arguments
+		if(lockProperties.empty())
+			throw Database::Exception("Main::Database::lockTables(): No lock properties specified");
+
+		// create SQL query string
+		std::ostringstream sqlQueryStrStr;
+
+		sqlQueryStrStr << "LOCK TABLES";
+
+		for(auto i = lockProperties.begin(); i != lockProperties.end(); i++) {
+			// check properties
+			if(i->name.empty())
+				throw Database::Exception("Main::Database::lockTables(): A table name is missing");
+			if(i->numberOfAliases && i->alias.empty())
+				throw Database::Exception("Main::Database::lockTables(): A table alias is missing");
+
+			// add table and its aliases
+			if(i != lockProperties.begin())
+				sqlQueryStrStr << ", ";
+
+			sqlQueryStrStr << "`" << i->name << "` WRITE";
+
+			for(unsigned short n = 1; n <= i->numberOfAliases; n++)
+				sqlQueryStrStr << ", `" << i->name << "` AS `" << i->alias << n << "` READ";
+		}
 
 		// check connection
 		this->checkConnection();
@@ -3937,6 +4534,7 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("CREATE TABLE IF NOT EXISTS `" + tableName + "`(id SERIAL");
 			std::string properties;
+
 			for(auto i = columns.begin(); i != columns.end(); ++i) {
 				// check values
 				if(i->name.empty())
@@ -3948,16 +4546,26 @@ namespace crawlservpp::Main {
 				sqlQuery += ", `" + i->name + "` " + i->type;
 
 				// add indices and references
-				if(i->indexed) properties += ", INDEX(`" + i->name + "`)";
+				if(i->indexed)
+					properties += ", INDEX(`" + i->name + "`)";
+
 				if(!(i->referenceTable.empty())) {
 					if(i->referenceColumn.empty())
-						throw Database::Exception("Main::Database::createTable(): A column reference is missing its source column name");
-					properties	+= ", FOREIGN KEY(`" + i->name + "`) REFERENCES `" + i->referenceTable + "`(`"
-								+ i->referenceColumn + "`) ON UPDATE RESTRICT ON DELETE CASCADE";
+						throw Database::Exception(
+								"Main::Database::createTable(): A column reference is missing its source column name"
+						);
+
+					properties	+=	", FOREIGN KEY(`" + i->name + "`)"
+									" REFERENCES `" + i->referenceTable + "`"
+									" (`" + i->referenceColumn + "`)"
+									" ON UPDATE RESTRICT ON DELETE CASCADE";
 				}
 			}
+
 			sqlQuery += ", PRIMARY KEY(id)" + properties + ") CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-			if(compressed) sqlQuery += ", ROW_FORMAT=COMPRESSED";
+
+			if(compressed)
+				sqlQuery += ", ROW_FORMAT=COMPRESSED";
 
 			// create SQL statement
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
@@ -3984,11 +4592,16 @@ namespace crawlservpp::Main {
 		try {
 			// create SQL query
 			std::string sqlQuery("ALTER TABLE `" + tableName + "` ADD COLUMN `" + column.name + "` " + column.type);
+
 			if(!column.referenceTable.empty()) {
 				if(column.referenceColumn.empty())
-					throw Database::Exception("Main::Database::addColumn(): A column reference is missing its source column name");
-				sqlQuery += ", ADD FOREIGN KEY(`" + column.name + "`) REFERENCES `" + column.referenceTable + "`(`"
-						+ column.referenceColumn + "`) ON UPDATE RESTRICT ON DELETE CASCADE";
+					throw Database::Exception(
+							"Main::Database::addColumn(): A column reference is missing its source column name"
+					);
+
+				sqlQuery += ", ADD FOREIGN KEY(`" + column.name + "`)"
+							" REFERENCES `" + column.referenceTable + "`(`" + column.referenceColumn + "`)"
+							" ON UPDATE RESTRICT ON DELETE CASCADE";
 			}
 
 			// create SQL statement
@@ -4016,10 +4629,16 @@ namespace crawlservpp::Main {
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 			// execute SQL statement for checking whether the table is already compressed
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
-					"SELECT LOWER(row_format) = 'compressed' AS result FROM information_schema.tables"
-					" WHERE table_schema = '" + this->settings.name + "' AND table_name = '" + tableName + "' LIMIT 1"
-			));
+			SqlResultSetPtr sqlResultSet(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT LOWER(row_format) = 'compressed'"
+							" AS result FROM information_schema.tables"
+							" WHERE table_schema = '" + this->settings.name + "'"
+							" AND table_name = '" + tableName + "'"
+							" LIMIT 1"
+					)
+			);
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
@@ -4064,6 +4683,7 @@ namespace crawlservpp::Main {
 		// create error string
 		std::ostringstream errorStrStr;
 		int error = e.getErrorCode();
+
 		errorStrStr << function << "() SQL Error #" << error << " (State " << e.getSQLState() << "): " << e.what();
 
 		// check for connection error
@@ -4142,9 +4762,12 @@ namespace crawlservpp::Main {
 
 			// execute lines in SQL file
 			unsigned long lineCounter = 1;
+
 			while(std::getline(initSQLFile, line)) {
 				try {
-					if(!line.empty()) Database::sqlExecute(sqlStatement, line);
+					if(!line.empty())
+						Database::sqlExecute(sqlStatement, line);
+
 					lineCounter++;
 				}
 				catch(const sql::SQLException &e) { this->sqlException("Main::Database::run", e); }
