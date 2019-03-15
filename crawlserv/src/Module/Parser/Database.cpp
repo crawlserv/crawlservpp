@@ -24,7 +24,7 @@ namespace crawlservpp::Module::Parser {
 							  targetTableId(0),
 							  ps({0}),
 							  parsingTableAlias("a"),
-							  targetTableAlias("b"){}
+							  targetTableAlias("b") {}
 
 	// destructor stub
 	Database::~Database() {}
@@ -116,12 +116,14 @@ namespace crawlservpp::Module::Parser {
 				true
 		);
 		properties.columns.reserve(3 + this->targetFieldNames.size());
+
 		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL");
 		properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
 		properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
 
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-			if(!(i->empty())) properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
+			if(!(i->empty()))
+				properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
 
 		{ // lock parsing table
 			TargetTablesLock(*this, "parsed", this->website, this->urlList, this->timeoutTargetLock, isRunning);
@@ -144,41 +146,88 @@ namespace crawlservpp::Module::Parser {
 			if(this->verbose)
 				this->log("[#" + this->idString + "] prepares fetchUrls()...");
 
-			std::ostringstream sqlQueryStr;
-			sqlQueryStr <<		"SELECT DISTINCT a.id AS id, a.url AS url"
-								" FROM `" << this->urlListTable << "` AS a"
-								" INNER JOIN `" << this->urlListTable << "_crawled` AS b"
-								" ON a.id = b.url"
-								" LEFT OUTER JOIN `" << this->parsingTable << "` AS c"
-								" ON a.id = c.url"
-								" AND c.target = " << this->targetTableId <<
-								" WHERE a.id > ?"
-								" AND b.response < 400"
-								" AND"
-								" ("
-									" c.locktime IS NULL"
-									" OR c.locktime < NOW()"
-								" )";
+			std::ostringstream sqlQueryStrStr;
+
+			sqlQueryStrStr <<		"SELECT tmp1.id, tmp1.url FROM"
+									" ("
+										" SELECT `" << this->urlListTable << "`.id,"
+										" `" << this->urlListTable << "`.url"
+										" FROM `" << this->urlListTable << "`"
+										" WHERE `" << this->urlListTable << "`.id > ?";
+			if(!(this->parseCustom))
+				sqlQueryStrStr <<		" AND `" << this->urlListTable << "`.manual = FALSE";
+
+			sqlQueryStrStr <<			" AND EXISTS"
+										" ("
+											" SELECT *"
+											" FROM `" << this->urlListTable << "_crawled`"
+											" WHERE `" << this->urlListTable << "_crawled`.url"
+											" = `" << this->urlListTable << "`.id"
+											" AND `" <<  this->urlListTable << "_crawled`.response < 400"
+										" )"
+										" ORDER BY `" << this->urlListTable << "`.id"
+									" ) AS tmp1"
+									" LEFT OUTER JOIN "
+									" ("
+										" SELECT url, MAX(locktime) AS locktime";
 
 			if(!(this->reparse))
-				sqlQueryStr <<	" AND"
-								" ("
-									" c.success IS NULL"
-									" OR c.success = FALSE"
-								" )";
+				sqlQueryStrStr <<		", MAX(success) AS success";
 
-			if(!(this->parseCustom))
-				sqlQueryStr <<	" AND a.manual = FALSE";
+			sqlQueryStrStr <<			" FROM `" << this->parsingTable << "`"
+										" WHERE target = " << this->targetTableId <<
+										" AND url > ?"
+										" AND"
+										" ("
+											"locktime >= NOW()";
 
-			sqlQueryStr <<		" ORDER BY a.id";
+			if(!(this->reparse))
+				sqlQueryStrStr <<			" OR success = TRUE";
+
+			sqlQueryStrStr <<			" )"
+										" GROUP BY url"
+									" ) AS tmp2"
+									" ON tmp1.id = tmp2.url"
+									" WHERE tmp2.locktime IS NULL";
+
+			if(!(this->reparse))
+				sqlQueryStrStr <<	" AND tmp2.success IS NULL";
 
 			if(this->cacheSize)
-				sqlQueryStr <<	" LIMIT " << this->cacheSize;
+				sqlQueryStrStr <<	" LIMIT " << this->cacheSize;
 
 			if(this->verbose)
-				this->log("[#" + this->idString + "] > " + sqlQueryStr.str());
+				this->log("[#" + this->idString + "] > " + sqlQueryStrStr.str());
 
-			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryStr.str());
+			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryStrStr.str());
+		}
+
+		if(!(this->ps.lockUrl)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares lockUrls() [1/4]...");
+
+			this->ps.lockUrl = this->addPreparedStatement(this->queryLockUrls(1));
+		}
+
+		if(!(this->ps.lock10Urls)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares lockUrls() [2/4]...");
+
+			this->ps.lock10Urls = this->addPreparedStatement(this->queryLockUrls(10));
+		}
+
+		if(!(this->ps.lock100Urls)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares lockUrls() [3/4]...");
+
+			this->ps.lock100Urls = this->addPreparedStatement(this->queryLockUrls(100));
+		}
+
+		if(!(this->ps.lock1000Urls)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares lockUrls() [4/4]...");
+
+			this->ps.lock1000Urls = this->addPreparedStatement(this->queryLockUrls(1000));
 		}
 
 		if(!(this->ps.getUrlPosition)) {
@@ -205,51 +254,48 @@ namespace crawlservpp::Module::Parser {
 			if(this->verbose)
 				this->log("[#" + this->idString + "] prepares getLockTime()...");
 
+			this->ps.getLockTime = this->addPreparedStatement(
+					"SELECT NOW() + INTERVAL ? SECOND AS locktime"
+			);
+		}
+
+		if(!(this->ps.getUrlLockTime)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares getUrlLockTime()...");
+
 			std::ostringstream sqlQueryStrStr;
-			sqlQueryStrStr <<	"SELECT locktime"
+			sqlQueryStrStr <<	"SELECT MAX(locktime) AS locktime"
 								" FROM `" << this->parsingTable << "`"
 								" WHERE target = " << this->targetTableId <<
 								" AND url = ?"
-								" ORDER BY id DESC"
+								" GROUP BY url"
 								" LIMIT 1";
 
-			this->ps.getLockTime = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.getUrlLockTime = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
 
-		if(!(this->ps.lockUrlIfOk)) {
+		if(!(this->ps.renewUrlLockIfOk)) {
 			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrlIfOk()...");
+				this->log("[#" + this->idString + "] prepares renewUrlLockIfOk()...");
 
 			std::ostringstream sqlQueryStrStr;
-			sqlQueryStrStr <<	"INSERT INTO `" << this->parsingTable << "`(id, target, url, locktime)"
-								" VALUES"
+
+			sqlQueryStrStr <<	"UPDATE `" << this->parsingTable << "`"
+								" SET locktime = GREATEST"
+								"("
+									"?,"
+									"? + INTERVAL 1 SECOND"
+								")"
+								" WHERE target = " << this->targetTableId <<
+								" AND url = ?"
+								" AND"
 								" ("
-									" ("
-										"SELECT id FROM `" << this->parsingTable << "` AS " << this->parsingTableAlias << "1"
-										" WHERE target = " << this->targetTableId <<
-										" AND url = ?"
-										" ORDER BY id DESC"
-										" LIMIT 1"
-									" ),"
-									" " << this->targetTableId << ","
-									" ?,"
-									" NOW() + INTERVAL ? SECOND"
-								" )"
-								" ON DUPLICATE KEY UPDATE locktime = "
-									"IF("
-										" ("
-											" locktime IS NULL"
-											" OR locktime < NOW()"
-										" )";
-			if(!(this->reparse))
-				sqlQueryStrStr <<		" AND NOT success";
+									" locktime <= ?"
+									" OR locktime IS NULL"
+									" OR locktime < NOW()"
+								" )";
 
-			sqlQueryStrStr <<			" ,"
-										" VALUES(locktime),"
-										" locktime"
-									")";
-
-			this->ps.lockUrlIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.renewUrlLockIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
@@ -268,6 +314,21 @@ namespace crawlservpp::Module::Parser {
 								" )";
 
 			this->ps.unLockUrlIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
+		}
+
+		if(!(this->ps.checkParsingTable)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares checkParsingTable()...");
+
+			std::ostringstream sqlQueryStrStr;
+			sqlQueryStrStr <<	"DELETE t1 FROM `" << this->parsingTable + "` t1"
+								" INNER JOIN `" << this->parsingTable + "` t2"
+								" WHERE t1.id < t2.id"
+								" AND t1.url = t2.url"
+								" AND t1.target = t2.target"
+								" AND t1.target = " << this->targetTableId;
+
+			this->ps.checkParsingTable = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
 
 		if(!(this->ps.getContentIdFromParsedId)) {
@@ -370,51 +431,118 @@ namespace crawlservpp::Module::Parser {
 
 			this->ps.updateTargetTable = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
-
-		if(!(this->ps.checkParsingTable)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares checkParsingTable()...");
-
-			std::ostringstream sqlQueryStrStr;
-			sqlQueryStrStr <<	"DELETE t1 FROM `" << this->parsingTable + "` t1"
-								" INNER JOIN `" << this->parsingTable + "` t2"
-								" WHERE t1.id < t2.id"
-								" AND t1.url = t2.url"
-								" AND t1.target = t2.target"
-								" AND t1.target = " << this->targetTableId;
-
-			this->ps.checkParsingTable = this->addPreparedStatement(sqlQueryStrStr.str());
-		}
 	}
 
-	// fetch next URLs to parse from database and add them to cache (i. e. queue)
-	void Database::fetchUrls(unsigned long lastId, std::queue<IdString>& cache) {
+	// fetch and lock next URLs to parse from database, add them to the cache (i. e. queue), return the lock expiration time
+	std::string Database::fetchUrls(unsigned long lastId, std::queue<IdString>& cache, unsigned long lockTimeout) {
+		// queue for locking URLs
+		std::queue<unsigned long> lockingQueue;
+
 		// check connection
 		this->checkConnection();
 
-		// check prepared SQL statement
-		if(!(this->ps.fetchUrls))
+		// check prepared SQL statements
+		if(!(this->ps.fetchUrls)
+				|| !(this->ps.lockUrl)
+				|| !(this->ps.lock10Urls)
+				|| !(this->ps.lock100Urls)
+				|| !(this->ps.lock1000Urls))
 			throw DatabaseException("Missing prepared SQL statement for Parser::Database::fetchUrls(...)");
 
-		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.fetchUrls);
+		// get prepared SQL statements
+		sql::PreparedStatement& sqlStatementFetch = this->getPreparedStatement(this->ps.fetchUrls);
+		sql::PreparedStatement& sqlStatementLock1 = this->getPreparedStatement(this->ps.lockUrl);
+		sql::PreparedStatement& sqlStatementLock10 = this->getPreparedStatement(this->ps.lock10Urls);
+		sql::PreparedStatement& sqlStatementLock100 = this->getPreparedStatement(this->ps.lock100Urls);
+		sql::PreparedStatement& sqlStatementLock1000 = this->getPreparedStatement(this->ps.lock1000Urls);
 
-		try {
-			// execute SQL query
-			sqlStatement.setUInt64(1, lastId);
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+		{ // lock tables
+			std::vector<TableLockProperties> lockProperties;
 
-			// get results
-			if(sqlResultSet) {
-				while(sqlResultSet->next()) {
-					cache.emplace(
-						sqlResultSet->getUInt64("id"),
-						sqlResultSet->getString("url")
-					);
+			lockProperties.emplace_back(this->urlListTable);
+			lockProperties.emplace_back(this->urlListTable + "_crawled");
+			lockProperties.emplace_back(this->parsingTable, this->parsingTableAlias, 1000);
+
+			TableLock multiTableLock(*this, lockProperties);
+
+			// get lock expiration time
+			std::string lockTime = this->getLockTime(lockTimeout);
+
+			try {
+				// execute SQL query for fetching URLs
+				sqlStatementFetch.setUInt64(1, lastId);
+				sqlStatementFetch.setUInt64(2, lastId);
+				SqlResultSetPtr sqlResultSetFetch(Database::sqlExecuteQuery(sqlStatementFetch));
+
+				// get results from fetching URLs
+				if(sqlResultSetFetch) {
+					while(sqlResultSetFetch->next()) {
+						cache.emplace(
+							sqlResultSetFetch->getUInt64("id"),
+							sqlResultSetFetch->getString("url")
+						);
+
+						lockingQueue.push(cache.back().first);
+					}
 				}
+
+				// set 1,000 locks at once
+				while(lockingQueue.size() >= 1000) {
+					for(unsigned long n = 0; n < 1000; n++) {
+						sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
+						sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
+						sqlStatementLock1000.setString(n * 3 + 3, lockTime);
+						lockingQueue.pop();
+					}
+
+					// execute SQL query
+					Database::sqlExecute(sqlStatementLock1000);
+				}
+
+				// set 100 locks at once
+				while(lockingQueue.size() >= 100) {
+					for(unsigned long n = 0; n < 100; n++) {
+						sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
+						sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
+						sqlStatementLock100.setString(n * 3 + 3, lockTime);
+						lockingQueue.pop();
+					}
+
+					// execute SQL query
+					Database::sqlExecute(sqlStatementLock100);
+				}
+
+				// set 10 locks at once
+				while(lockingQueue.size() >= 10) {
+					for(unsigned long n = 0; n < 10; n++) {
+						sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
+						sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
+						sqlStatementLock10.setString(n * 3 + 3, lockTime);
+						lockingQueue.pop();
+					}
+
+					// execute SQL query
+					Database::sqlExecute(sqlStatementLock10);
+				}
+
+				// set remaining locks
+				while(!lockingQueue.empty()) {
+					sqlStatementLock1.setUInt64(1, lockingQueue.front());
+					sqlStatementLock1.setUInt64(2, lockingQueue.front());
+					sqlStatementLock1.setString(3, lockTime);
+					lockingQueue.pop();
+
+					// execute SQL query
+					Database::sqlExecute(sqlStatementLock1);
+				}
+
+				// return the expiration time of all locks
+				return lockTime;
 			}
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
+			catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
+		} // tables are unlocked
+
+		return std::string();
 	}
 
 	// get the position of the URL in the URL list
@@ -478,13 +606,9 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// get the URL lock expiration time for a specific URL from database
-	std::string Database::getLockTime(unsigned long urlId) {
+	// let the database calculate the current URL lock expiration time
+	std::string Database::getLockTime(unsigned long lockTimeout) {
 		std::string result;
-
-		// check argument
-		if(!urlId)
-			return "";
 
 		// check connection
 		this->checkConnection();
@@ -499,7 +623,7 @@ namespace crawlservpp::Module::Parser {
 		// get URL lock end time from database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, urlId);
+			sqlStatement.setUInt64(1, lockTimeout);
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -511,51 +635,83 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// lock a URL in the database if it is lockable (and in the case of no re-parse: not parsed yet)
-	//  NOTE: Returns an empty string if the URL is not lockable or, when re-parsing is deactived, already parsed.
-	std::string Database::lockUrlIfOk(unsigned long urlId, unsigned long lockTimeout) {
+	// get the URL lock expiration time for a specific URL from the database
+	std::string Database::getUrlLockTime(unsigned long urlId) {
+		std::string result;
+
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Parser::Database::lockUrl(): No URL ID specified");
+			return "";
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.lockUrlIfOk))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::lockUrlIfOk(...)");
+		if(!(this->ps.getUrlLockTime))
+			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getUrlLockTime(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lockUrlIfOk);
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockTime);
 
-		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
-		try { // lock parsing table
-			TableLock parsingTableLock(
-					*this,
-					TableLockProperties(
-							this->parsingTable,
-							this->parsingTableAlias, 1
-					)
-			);
-
+		// get URL lock end time from database
+		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
-			sqlStatement.setUInt64(2, urlId);
-			sqlStatement.setUInt64(3, lockTimeout);
-			if(Database::sqlExecuteUpdate(sqlStatement) < 1)
-				return std::string(); // locking query not successful
-		} // parsing table unlocked
-		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::lockUrlIfOk", e); }
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
-		// return new URL lock expiration time
-		return this->getLockTime(urlId);
+			// get result
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getString("locktime");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getUrlLockTime", e); }
+
+		return result;
 	}
 
-	// unlock a URL in the database
-	void Database::unLockUrlIfOk(unsigned long urlId, const std::string& lockTime) {
+	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful
+	std::string Database::renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout) {
+		std::string dbg;
+
 		// check argument
 		if(!urlId)
-			return; // no URL lock to unlock
+			throw DatabaseException("Parser::Database::renewUrlLockIfOk(): No URL ID specified");
+
+		// get lock time
+		std::string newLockTime = this->getLockTime(lockTimeout);
+
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statements
+		if(!(this->ps.renewUrlLockIfOk))
+			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::renewUrlLockIfOk(...)");
+
+		// get prepared SQL statement for renewing the URL lock
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
+
+		// lock URL in database
+		dbg = "renewUrlLockIfOk";
+		try {
+			// execute SQL query
+			sqlStatement.setString(1, newLockTime);
+			sqlStatement.setString(2, lockTime);
+			sqlStatement.setUInt64(3, urlId);
+			sqlStatement.setString(4, lockTime);
+
+			if(Database::sqlExecuteUpdate(sqlStatement) < 1)
+				return std::string(); // locking failed when no entries have been updated
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk > " + dbg, e); }
+
+		// get new expiration time of URL lock
+		return newLockTime;
+	}
+
+	// unlock a URL in the database, return whether unlocking was successful
+	bool Database::unLockUrlIfOk(unsigned long urlId, const std::string& lockTime) {
+		// check argument
+		if(!urlId)
+			return true; // no URL lock to unlock
 
 		// check connection
 		this->checkConnection();
@@ -572,9 +728,11 @@ namespace crawlservpp::Module::Parser {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setString(2, lockTime);
-			Database::sqlExecute(sqlStatement);
+			return Database::sqlExecuteUpdate(sqlStatement) > 0;
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::unLockUrlIfOk", e); }
+
+		return false;
 	}
 
 	// get content ID from parsed ID
@@ -1003,7 +1161,46 @@ namespace crawlservpp::Module::Parser {
 		return true;
 	}
 
-	// generate a SQL query for the updating or adding a specific number of parsed entries
+	// generate a SQL query for locking a specific number of URLs
+	std::string Database::queryLockUrls(unsigned int numberOfUrls) {
+		// check arguments
+		if(!numberOfUrls)
+			throw DatabaseException("Database::queryLockUrls(): No number of URLs specified");
+
+		std::ostringstream sqlQueryStrStr;
+
+		// create INSERT INTO clause
+		sqlQueryStrStr <<		"INSERT INTO `" << this->parsingTable << "`(id, target, url, locktime)"
+								" VALUES";
+
+		// create VALUES clauses
+		for(unsigned int n = 1; n <= numberOfUrls; n++) {
+			sqlQueryStrStr <<	" ("
+									" ("
+										"SELECT id FROM `" << this->parsingTable << "`"
+										" AS `" << this->parsingTableAlias << n << "`"
+										" WHERE target = " << this->targetTableId <<
+										" AND url = ?"
+										" ORDER BY id DESC"
+										" LIMIT 1"
+									" ),"
+									" " << this->targetTableId << ","
+									" ?,"
+									" ?"
+								" )";
+
+			if(n < numberOfUrls)
+				sqlQueryStrStr << ", ";
+		}
+
+		// crate ON DUPLICATE KEY UPDATE clause
+		sqlQueryStrStr <<		" ON DUPLICATE KEY"
+								" UPDATE locktime = VALUES(locktime)";
+
+		return sqlQueryStrStr.str();
+	}
+
+	// generate a SQL query for updating or adding a specific number of parsed entries
 	std::string Database::queryUpdateOrAddEntries(unsigned int numberOfEntries) {
 		// check arguments
 		if(!numberOfEntries)
@@ -1011,43 +1208,57 @@ namespace crawlservpp::Module::Parser {
 
 		// create INSERT INTO clause
 		std::ostringstream sqlQueryStrStr;
-		sqlQueryStrStr << "INSERT INTO `" << this->targetTableFull << "`(id, content, parsed_id, parsed_datetime";
+
+		sqlQueryStrStr << 		"INSERT INTO `" << this->targetTableFull << "`"
+								" ("
+									" id,"
+									" content,"
+									" parsed_id,"
+									" parsed_datetime";
 
 		unsigned long counter = 0;
+
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
 			if(!(i->empty())) {
-				sqlQueryStrStr << ", `parsed__" + *i + "`";
+				sqlQueryStrStr << 	", `parsed__" + *i + "`";
 				counter++;
 			}
 		}
 
-		sqlQueryStrStr << ") VALUES ";
+		sqlQueryStrStr << 		")"
+								" VALUES ";
 
 		// create placeholder list (including existence check)
-		for(unsigned int n = 0; n < numberOfEntries; n++) {
-			sqlQueryStrStr << "( ("
-						"SELECT id FROM `" << this->targetTableFull << "`"
-						" AS `" << this->targetTableAlias << (n + 1) << "`"
-						" WHERE content = ? LIMIT 1), ?, ?, ?";
+		for(unsigned int n = 1; n <= numberOfEntries; n++) {
+			sqlQueryStrStr <<		"( "
+										"("
+											"SELECT id"
+											" FROM `" << this->targetTableFull << "`"
+											" AS `" << this->targetTableAlias << n << "`"
+											" WHERE content = ?"
+											" LIMIT 1"
+										")"
+										", ?, ?, ?";
 
 			for(unsigned long c = 0; c < counter; c++)
-				sqlQueryStrStr << ", ?";
+				sqlQueryStrStr << 		", ?";
 
-			sqlQueryStrStr << ")";
+			sqlQueryStrStr << 		")";
 
-			if((n + 1) < numberOfEntries)
-				sqlQueryStrStr << ", ";
+			if(n < numberOfEntries)
+				sqlQueryStrStr <<	", ";
 		}
 
 		// create ON DUPLICATE KEY UPDATE clause
-		sqlQueryStrStr <<	" ON DUPLICATE KEY UPDATE"
-							" content = VALUES(content),"
-							" parsed_id = VALUES(parsed_id),"
-							" parsed_datetime = VALUES(parsed_datetime)";
+		sqlQueryStrStr <<			" ON DUPLICATE KEY UPDATE"
+									" content = VALUES(content),"
+									" parsed_id = VALUES(parsed_id),"
+									" parsed_datetime = VALUES(parsed_datetime)";
 
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 			if(!(i->empty()))
-				sqlQueryStrStr << ", `parsed__" << *i << "` = VALUES(`parsed__" << *i << "`)";
+				sqlQueryStrStr <<	", `parsed__" << *i << "`"
+									" = VALUES(`parsed__" << *i << "`)";
 
 		// return query
 		return sqlQueryStrStr.str();
@@ -1061,10 +1272,12 @@ namespace crawlservpp::Module::Parser {
 
 		// create UPDATE SET clause
 		std::ostringstream sqlQueryStrStr;
+
 		sqlQueryStrStr << "UPDATE `" << this->parsingTable << "` SET locktime = NULL, success = TRUE";
 
 		// create WHERE clause
 		sqlQueryStrStr << " WHERE ";
+
 		for(unsigned int n = 0; n < numberOfUrls; n++) {
 			if(n > 0)
 				sqlQueryStrStr << " OR ";
@@ -1080,9 +1293,6 @@ namespace crawlservpp::Module::Parser {
 									" )"
 								" )";
 		}
-
-		// add LIMIT
-		sqlQueryStrStr << " LIMIT " << numberOfUrls;
 
 		// return query
 		return sqlQueryStrStr.str();

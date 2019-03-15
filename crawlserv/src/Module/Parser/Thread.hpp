@@ -71,12 +71,13 @@ namespace crawlservpp::Module::Parser {
 		// database for the thread
 		Database database;
 
-		// table name for locking
+		// table names for locking
 		std::string parsingTable;
 		std::string targetTable;
 
 		// cache
 		std::queue<IdString> urls;
+		std::string cacheLockTime;
 		std::queue<ParsingEntry> results;
 		std::queue<IdString> finished;
 

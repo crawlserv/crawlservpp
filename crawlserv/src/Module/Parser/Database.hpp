@@ -73,14 +73,15 @@ namespace crawlservpp::Module::Parser {
 		void prepare();
 
 		// URL functions
-		void fetchUrls(unsigned long lastId, std::queue<IdString>& cache);
+		std::string fetchUrls(unsigned long lastId, std::queue<IdString>& cache, unsigned long lockTimeout);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
 
 		// URL locking functions
-		std::string getLockTime(unsigned long urlId);
-		std::string lockUrlIfOk(unsigned long urlId, unsigned long lockTimeout);
-		void unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
+		std::string getLockTime(unsigned long lockTimeout);
+		std::string getUrlLockTime(unsigned long urlId);
+		std::string renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout);
+		bool unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
 
 		// parsing functions
 		unsigned int checkParsingTable();
@@ -120,24 +121,29 @@ namespace crawlservpp::Module::Parser {
 		// IDs of prepared SQL statements
 		struct {
 			unsigned short fetchUrls;
+			unsigned short lockUrl;
+			unsigned short lock10Urls;
+			unsigned short lock100Urls;
+			unsigned short lock1000Urls;
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
 			unsigned short getLockTime;
-			unsigned short lockUrlIfOk;
+			unsigned short getUrlLockTime;
+			unsigned short renewUrlLockIfOk;
 			unsigned short unLockUrlIfOk;
-			unsigned short getContentIdFromParsedId;
+			unsigned short checkParsingTable;
 			unsigned short getLatestContent;
 			unsigned short getAllContents;
-			unsigned short setUrlFinishedIfLockOk;
-			unsigned short set10UrlsFinishedIfLockOk;
-			unsigned short set100UrlsFinishedIfLockOk;
-			unsigned short set1000UrlsFinishedIfLockOk;
+			unsigned short getContentIdFromParsedId;
 			unsigned short updateOrAddEntry;
 			unsigned short updateOrAdd10Entries;
 			unsigned short updateOrAdd100Entries;
 			unsigned short updateOrAdd1000Entries;
+			unsigned short setUrlFinishedIfLockOk;
+			unsigned short set10UrlsFinishedIfLockOk;
+			unsigned short set100UrlsFinishedIfLockOk;
+			unsigned short set1000UrlsFinishedIfLockOk;
 			unsigned short updateTargetTable;
-			unsigned short checkParsingTable;
 		} ps;
 
 		// constant string for table aliases
@@ -146,6 +152,7 @@ namespace crawlservpp::Module::Parser {
 
 		// internal helper function
 		bool checkEntry(ParsingEntry& entry, std::queue<std::string>& logEntriesTo);
+		std::string queryLockUrls(unsigned int numberOfUrls);
 		std::string queryUpdateOrAddEntries(unsigned int numberOfEntries);
 		std::string querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls);
 	};

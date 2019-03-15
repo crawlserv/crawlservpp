@@ -198,8 +198,12 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.generalLogging > Config::generalLoggingExtended)
 			this->log("parses " + this->urls.front().second + "...");
 
-		// try to lock URL
-		this->lockTime = this->database.lockUrlIfOk(this->urls.front().first, this->config.generalLock);
+		// try to renew URL lock
+		this->lockTime = this->database.renewUrlLockIfOk(
+				this->urls.front().first,
+				this->cacheLockTime,
+				this->config.generalLock
+		);
 		skip = this->lockTime.empty();
 
 		if(skip) {
@@ -325,6 +329,15 @@ namespace crawlservpp::Module::Parser {
 		// save results if necessary
 		this->parsingSaveResults();
 
+		// unlock remaining URLs
+		while(!(this->urls.empty())) {
+			if(!(this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime))
+					&& this->config.generalLogging)
+				this->log("WARNING: Could not unlock " + this->urls.front().second);
+
+			this->urls.pop();
+		}
+
 		// delete queries
 		this->queriesSkip.clear();
 		this->queriesDateTime.clear();
@@ -391,9 +404,23 @@ namespace crawlservpp::Module::Parser {
 	void Thread::parsingUrlSelection() {
 		Timer::Simple timer;
 
-		// fill cache with next URLs
-		this->setStatusMessage("Fetching URLs...");
+		// get number of URLs
+		this->total = this->database.getNumberOfUrls();
 
+		// set status
+		std::ostringstream statusStrStr;
+		statusStrStr.imbue(std::locale(""));
+
+		statusStrStr << "Fetching";
+
+		if(this->config.generalCacheSize)
+			statusStrStr << " " << this->config.generalCacheSize;
+
+		statusStrStr << " from " << this->total << " URLs...";
+
+		this->setStatusMessage(statusStrStr.str());
+
+		// fill cache with next URLs
 		if(this->config.generalLogging > Config::generalLoggingDefault)
 			this->log("fetches URLs...");
 
@@ -486,7 +513,7 @@ namespace crawlservpp::Module::Parser {
 	// fetch next URLs from database
 	void Thread::parsingFetchUrls() {
 		// fetch URLs from database to cache
-		this->database.fetchUrls(this->getLast(), this->urls);
+		this->cacheLockTime = this->database.fetchUrls(this->getLast(), this->urls, this->config.generalLock);
 
 		// check whether URLs have been fetched
 		if(this->urls.empty())
@@ -499,7 +526,6 @@ namespace crawlservpp::Module::Parser {
 		unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
 		this->posFirstF = static_cast<float>(posFirst);
 		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
-		this->total = this->database.getNumberOfUrls();
 	}
 
 	// parse content(s) of next URL, return number of successfully parsed contents
