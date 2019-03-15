@@ -253,6 +253,7 @@ namespace crawlservpp::Main {
 		void resetAutoIncrement(const std::string& tableName);
 		void lockTable(const TableLockProperties& lockProperties);
 		void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2);
+		void lockTables(const std::vector<TableLockProperties>& lockProperties);
 		void unlockTables();
 		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
 		void addColumn(const std::string& tableName, const TableColumn& column);
