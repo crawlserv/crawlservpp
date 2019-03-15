@@ -206,11 +206,11 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.getUrlLock)) {
+		if(!(this->ps.getUrlLockTime)) {
 			if(this->verbose)
 				this->log("[#" + this->idString + "] prepares getUrlLock()...");
 
-			this->ps.getUrlLock = this->addPreparedStatement(
+			this->ps.getUrlLockTime = this->addPreparedStatement(
 					"SELECT locktime"
 					" FROM `" + this->crawlingTable + "`"
 					" WHERE url = ?"
@@ -773,11 +773,11 @@ namespace crawlservpp::Module::Crawler {
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getUrlLock))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlLock(...)");
+		if(!(this->ps.getUrlLockTime))
+			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlLockTime(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLock);
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockTime);
 
 		// get URL lock end time from database
 		try {
@@ -789,7 +789,7 @@ namespace crawlservpp::Module::Crawler {
 			if(sqlResultSet && sqlResultSet->next())
 				return sqlResultSet->getString("locktime");
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlLock", e); }
+		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlLockTime", e); }
 
 		return std::string();
 	}

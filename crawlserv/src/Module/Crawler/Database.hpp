@@ -127,7 +127,7 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short add1000UrlsIfNotExist;
 			unsigned short getUrlPosition;
 			unsigned short getNumberOfUrls;
-			unsigned short getUrlLock;
+			unsigned short getUrlLockTime;
 			unsigned short isUrlCrawled;
 			unsigned short addUrlLockIfOk;
 			unsigned short renewUrlLockIfOk;
