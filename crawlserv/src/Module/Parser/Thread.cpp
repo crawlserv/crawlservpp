@@ -1066,9 +1066,6 @@ namespace crawlservpp::Module::Parser {
 			}
 		}
 
-		// set new parsing table update time
-		this->database.updateTargetTable();
-
 		// update status
 		this->setStatusMessage("Results saved. [" + status + "]");
 
