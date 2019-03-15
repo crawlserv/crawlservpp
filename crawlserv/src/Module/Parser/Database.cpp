@@ -1251,7 +1251,6 @@ namespace crawlservpp::Module::Parser {
 
 		// create ON DUPLICATE KEY UPDATE clause
 		sqlQueryStrStr <<			" ON DUPLICATE KEY UPDATE"
-									" content = VALUES(content),"
 									" parsed_id = VALUES(parsed_id),"
 									" parsed_datetime = VALUES(parsed_datetime)";
 
