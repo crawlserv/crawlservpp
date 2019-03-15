@@ -182,14 +182,14 @@ if($website) {
         }
         
         // get last update of any parsing table
-        $result = $dbConnection->query("SELECT updated FROM crawlserv_parsedtables WHERE urllist=$ulId ORDER BY updated LIMIT 1");
+        $result = $dbConnection->query("SELECT updated FROM crawlserv_parsedtables WHERE urllist=$ulId ORDER BY updated DESC LIMIT 1");
         if($result) {
             $row = $result->fetch_assoc();
             if($row) $parsedUpdate = $row["updated"];
         }
         
         // get last update of any extracting table
-        $result = $dbConnection->query("SELECT updated FROM crawlserv_extractedtables WHERE urllist=$ulId ORDER BY updated LIMIT 1");
+        $result = $dbConnection->query("SELECT updated FROM crawlserv_extractedtables WHERE urllist=$ulId ORDER BY updated  DESC LIMIT 1");
         if($result) {
             $row = $result->fetch_assoc();
             if($row) $extractedUpdate = $row["updated"];
