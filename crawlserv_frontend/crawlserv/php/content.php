@@ -70,7 +70,10 @@ function codeWrapper($str, $limit, $indent_limit) {
                             $out .= substr($line, 0, $cut + 1)."\n";
                             $line = $begin.substr($line, $cut + 1);
                         }
-                        else $out .= $line."\n";
+                        else {
+                            $out .= $line."\n";
+                            $line = "";
+                        }
                     }
                 }
             }
