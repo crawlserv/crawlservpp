@@ -482,9 +482,6 @@ namespace crawlservpp::Module::Parser {
 								// skip URL
 								skip = true;
 
-								// update status
-								this->setStatusMessage("Skipped " + this->urls.front().second);
-
 								break; // exit loop over custom queries
 							}
 						}
