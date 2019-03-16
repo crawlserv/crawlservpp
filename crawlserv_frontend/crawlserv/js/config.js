@@ -613,6 +613,9 @@ class Config {
 	text(cat, id, value, def, array = false) {
 		var result = "";
 		
+		if(value == null)
+			value = "";
+		
 		result += "<input type=\"text\" class=\"opt";
 		
 		if(array) result += " opt-array";
