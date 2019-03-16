@@ -216,7 +216,7 @@ namespace crawlservpp::Module::Parser {
 		if(skip) {
 			// skip locked URL
 			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log("skip (locked) " + this->urls.front().second);
+				this->log("skips (locked) " + this->urls.front().second);
 		}
 		else {
 			// set status
@@ -516,7 +516,7 @@ namespace crawlservpp::Module::Parser {
 
 				if(skip) {
 					// skip URL because of query
-					if(this->config.generalLogging)
+					if(this->config.generalLogging > Config::generalLoggingDefault)
 						this->log("skips (query) " + urls.front().second);
 
 					this->parsingUrlFinished();
