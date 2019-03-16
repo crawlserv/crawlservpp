@@ -209,8 +209,14 @@ function disableInputs() {
 	$("textarea").prop("disabled", true);
 }
 
-// enable input on cancelling redirect
-function enableInputs() {
+// restore values and enable input on cancelling redirect
+function reenableInputs() {
+	$("#website-select").val($("#website-select").data("current"));
+	$("#urllist-select").val($("#urllist-select").data("current"));
+	$("#config-select").val($("#config-select").data("current"));
+	$("#algo-cat-select").val($("#algo-cat-select").data("current"));
+	$("#algo-select").val($("#algo-select").data("current"));
+	
 	$("select").prop("disabled", false);
 	$("input").prop("disabled", false);
 	$("textarea").prop("disabled", false);
@@ -224,6 +230,13 @@ jQuery(function($) {
 	
 // DOCUMENT READY
 	$(document).ready(function() {
+		// save selected values
+		$("#website-select").data("current", $("#website-select").val());
+		$("#urllist-select").data("current", $("#urllist-select").val());
+		$("#config-select").data("current", $("#config-select").val());
+		$("#algo-cat-select").data("current", $("#algo-cat-select").val());
+		$("#algo-select").data("current", $("#algo-select").val());
+		
 		// show redirection time if available
 		if(redirected)
 			$("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
@@ -450,10 +463,8 @@ jQuery(function($) {
 			if(config.isConfChanged()) {
 				if(confirm("Do you want to discard the changes to your current configuration?"))
 					reload(args);
-				else {
-					$(this).val(prevConfig);
-					enableInputs();
-				}
+				else
+					reenableInputs();
 			}
 			else reload(args);
 		}
@@ -964,28 +975,6 @@ jQuery(function($) {
  * EVENTS for CONFIGURATIONS (for CRAWLERS, PARSERS, EXTRACTORS and ANALYZERS)
  */
 
-var prevConfig;
-var prevAlgoCat;
-var prevAlgo;
-
-// FOCUS EVENT: save selected configuration before change
-	$("#config-select").on("focus", function() {
-		prevConfig = $(this).val();
-		return true;
-	})
-	
-// FOCUS EVENT: save selected algorithm category before change (for ANALYZERS only)
-	$("#algo-cat-select").on("focus", function() {
-		prevAlgoCat = $(this).val();
-		return true;
-	})
-
-// FOCUS EVENT: save selected algorithm before change (for ANALYZERS only)
-	$("#algo-select").on("focus", function() {
-		prevAlgo = $(this).val();
-		return true;
-	})
-
 // CHANGE EVENT: configuration selected
 	$("#config-select").on("change", function() {
 		$(this).blur();
@@ -1004,10 +993,8 @@ var prevAlgo;
 						"config" : id,
 						"mode" : $(this).data("mode")
 					});
-				else {
-					$(this).val(prevConfig);
-					enableInputs();
-				}
+				else
+					reenableInputs();
 			}
 			else
 				reload({
@@ -1042,10 +1029,8 @@ var prevAlgo;
 					"algo_cat" : id
 				});
 			}
-			else {
-				$(this).val(prevAlgoCat);
-				enableInputs();
-			}
+			else
+				reenableInputs();
 		}
 		else
 			reload({
@@ -1083,10 +1068,8 @@ var prevAlgo;
 					"algo_changed": id != algo.id
 				});
 			}
-			else {
-				$(this).val(prevAlgoCat);
-				enableInputs();
-			}
+			else
+				reenableInputs();
 		}
 		else reload({
 			"m" : "analyzers",
