@@ -2052,7 +2052,8 @@ namespace crawlservpp::Module::Crawler {
 															);
 
 															// retry
-															continue;
+															this->crawlingRetry(url, true);
+															return false;
 														}
 													}
 													else if(this->config.crawlerLogging) {
@@ -2130,6 +2131,7 @@ namespace crawlservpp::Module::Crawler {
 					else if(!success)
 						this->crawlingSkip(url);
 				} // [end of loop over memento pages]
+
 			} // [end of loop over archives]
 
 			if(success || !(this->config.crawlerRetryArchive))
