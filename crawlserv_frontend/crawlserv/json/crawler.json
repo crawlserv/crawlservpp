@@ -280,6 +280,12 @@
 			"description": "Perform additional check for duplicates after URL insertion (for debugging purposes only).",
 			"simple": false
 		},
+		"url.select.lock": {
+			"type": "bool",
+			"default": false,
+			"description": "Lock tables on URL selection.",
+			"simple": false
+		},
 		"url.startup.check": {
 			"type": "bool",
 			"default": true,

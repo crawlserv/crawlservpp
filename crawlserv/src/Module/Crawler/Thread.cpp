@@ -213,7 +213,8 @@ namespace crawlservpp::Module::Crawler {
 			timerSelect.start();
 		}
 
-		{ // lock URL list and crawling table
+		if(this->config.crawlerUrlSelectionLock) {
+			// lock URL list and crawling table for URL selection
 			TableLock multiTableLock(
 					this->database,
 					TableLockProperties(
@@ -230,8 +231,10 @@ namespace crawlservpp::Module::Crawler {
 
 			// URL selection
 			urlSelection = this->crawlingUrlSelection(url);
-
 		} // URL list and crawling table unlocked
+		else
+			// URL selection without table locking
+			urlSelection = this->crawlingUrlSelection(url);
 
 		if(urlSelection) {
 			if(this->config.crawlerTiming)

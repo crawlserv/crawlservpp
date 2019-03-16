@@ -80,6 +80,7 @@ namespace crawlservpp::Module::Crawler {
 			bool crawlerUrlCaseSensitive;
 			unsigned long crawlerUrlChunks;
 			bool crawlerUrlDebug;
+			bool crawlerUrlSelectionLock;
 			bool crawlerUrlStartupCheck;
 			bool crawlerWarningsFile;
 			bool crawlerXml;
@@ -126,6 +127,7 @@ namespace crawlservpp::Module::Crawler {
 										crawlerUrlCaseSensitive(true),
 										crawlerUrlChunks(5000),
 										crawlerUrlDebug(false),
+										crawlerUrlSelectionLock(false),
 										crawlerUrlStartupCheck(true),
 										crawlerWarningsFile(false),
 										crawlerXml(false),
@@ -178,6 +180,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("url.case.sensitive", this->config.crawlerUrlCaseSensitive);
 		this->option("url.chunks", this->config.crawlerUrlChunks);
 		this->option("url.debug", this->config.crawlerUrlDebug);
+		this->option("url.selection.lock", this->config.crawlerUrlSelectionLock);
 		this->option("url.startup.check", this->config.crawlerUrlStartupCheck);
 		this->option("xml", this->config.crawlerXml);
 		this->option("warnings.file", this->config.crawlerWarningsFile);
