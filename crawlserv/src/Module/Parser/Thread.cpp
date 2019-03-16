@@ -374,7 +374,7 @@ namespace crawlservpp::Module::Parser {
 		this->reserveForQueries(this->config.parsingIdQueries.size() + this->config.parsingDateTimeQueries.size()
 				+ this->config.parsingFieldQueries.size());
 
-		// create queries and get query ids
+		// create queries and get query IDs
 		for(auto i = this->config.generalSkip.begin(); i != this->config.generalSkip.end(); ++i) {
 			QueryProperties properties;
 			this->database.getQueryProperties(*i, properties);
@@ -476,11 +476,15 @@ namespace crawlservpp::Module::Parser {
 
 					// check query type
 					if(i->type == QueryStruct::typeRegEx) {
-						// parse ID by running RegEx query on URL
+						// check URL by running RegEx query on it
 						try {
 							if(this->getRegExQueryPtr(i->index).getBool(this->urls.front().second)) {
 								// skip URL
 								skip = true;
+
+								// update status
+								this->setStatusMessage("Skipped " + this->urls.front().second);
+
 								break; // exit loop over custom queries
 							}
 						}
