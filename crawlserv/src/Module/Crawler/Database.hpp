@@ -100,6 +100,10 @@ namespace crawlservpp::Module::Crawler {
 				const std::string& content);
 		bool isArchivedContentExists(unsigned long urlId, const std::string& timeStamp);
 
+		// constant strings for table aliases (public)
+		const std::string crawlingTableAlias;
+		const std::string urlListTableAlias;
+
 	protected:
 		// options
 		std::string idString;
@@ -140,10 +144,6 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short urlHashCheck;
 			unsigned short urlEmptyCheck;
 		} ps;
-
-		// aliases for table locking
-		const std::string crawlingTableAlias;
-		const std::string urlListTableAlias;
 
 		// helper function
 		std::string queryAddUrlsIfNotExist(unsigned int numberOfUrls, const std::string& hashQuery);

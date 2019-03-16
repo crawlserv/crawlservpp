@@ -13,6 +13,8 @@ namespace crawlservpp::Module::Parser {
 	// constructor: initialize values
 	Database::Database(Module::Database& dbThread)
 							: Wrapper::Database(dbThread),
+							  parsingTableAlias("a"),
+							  targetTableAlias("b"),
 							  website(0),
 							  urlList(0),
 							  cacheSize(2500),
@@ -22,9 +24,7 @@ namespace crawlservpp::Module::Parser {
 							  verbose(false),
 							  timeoutTargetLock(0),
 							  targetTableId(0),
-							  ps({0}),
-							  parsingTableAlias("a"),
-							  targetTableAlias("b") {}
+							  ps({0}) {}
 
 	// destructor stub
 	Database::~Database() {}

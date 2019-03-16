@@ -14,15 +14,15 @@ namespace crawlservpp::Module::Crawler {
 	// constructor: initialize values
 	Database::Database(Module::Database& dbThread)
 						: Wrapper::Database(dbThread),
+						  crawlingTableAlias("a"),
+						  urlListTableAlias("b"),
 						  recrawl(false),
 						  logging(true),
 						  verbose(false),
 						  urlCaseSensitive(true),
 						  urlDebug(false),
 						  urlStartupCheck(true),
-						  ps({0}),
-						  crawlingTableAlias("a"),
-						  urlListTableAlias("b") {}
+						  ps({0}) {}
 
 	// destructor stub
 	Database::~Database() {}

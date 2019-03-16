@@ -92,6 +92,10 @@ namespace crawlservpp::Module::Parser {
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
 
+		// constant strings for table aliases (public)
+		const std::string parsingTableAlias;
+		const std::string targetTableAlias;
+
 	protected:
 		// options
 		std::string idString;
@@ -145,10 +149,6 @@ namespace crawlservpp::Module::Parser {
 			unsigned short set1000UrlsFinishedIfLockOk;
 			unsigned short updateTargetTable;
 		} ps;
-
-		// constant string for table aliases
-		const std::string parsingTableAlias;
-		const std::string targetTableAlias;
 
 		// internal helper function
 		bool checkEntry(ParsingEntry& entry, std::queue<std::string>& logEntriesTo);
