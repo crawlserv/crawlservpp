@@ -407,18 +407,7 @@ namespace crawlservpp::Module::Parser {
 		// get number of URLs
 		this->total = this->database.getNumberOfUrls();
 
-		// set status
-		std::ostringstream statusStrStr;
-		statusStrStr.imbue(std::locale(""));
-
-		statusStrStr << "Fetching";
-
-		if(this->config.generalCacheSize)
-			statusStrStr << " " << this->config.generalCacheSize;
-
-		statusStrStr << " from " << this->total << " URLs...";
-
-		this->setStatusMessage(statusStrStr.str());
+		this->setStatusMessage("Fetching URLs...");
 
 		// fill cache with next URLs
 		if(this->config.generalLogging > Config::generalLoggingDefault)
@@ -471,8 +460,10 @@ namespace crawlservpp::Module::Parser {
 				// loop over custom queries
 				for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
 					// check result type of query
-					if(!(i->resultBool) && this->config.generalLogging)
+					if(!(i->resultBool) && this->config.generalLogging) {
 						this->log("WARNING: Invalid result type of skip query (not bool).");
+						continue;
+					}
 
 					// check query type
 					if(i->type == QueryStruct::typeRegEx) {
@@ -489,11 +480,11 @@ namespace crawlservpp::Module::Parser {
 					}
 					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 						this->log("WARNING: ID query on URL is not of type RegEx.");
-				}
+				} // end of loop over custom queries
 
 				if(skip) {
 					// skip URL because of query
-					if(this->config.generalLogging > Config::generalLoggingDefault)
+					if(this->config.generalLogging)
 						this->log("skip (query) " + urls.front().second);
 
 					this->parsingUrlFinished();
@@ -502,7 +493,7 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			break; // found URL to process
-		}
+		} // end of loop to check whether next URL(s) ought to be ignored
 
 		// done
 		if(this->config.generalTiming && this->config.generalLogging)
