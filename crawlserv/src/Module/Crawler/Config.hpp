@@ -120,7 +120,7 @@ namespace crawlservpp::Module::Crawler {
 										crawlerRetryArchive(true),
 										crawlerSleepError(5000),
 										crawlerSleepHttp(0),
-										crawlerSleepIdle(1000),
+										crawlerSleepIdle(5000),
 										crawlerSleepMySql(20),
 										crawlerStart("/"),
 										crawlerTiming(false),

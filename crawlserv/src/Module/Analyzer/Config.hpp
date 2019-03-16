@@ -80,7 +80,7 @@ namespace crawlservpp::Module::Analyzer {
 	// constructor: set default values
 	inline Config::Entries::Entries() :	generalLogging(Config::generalLoggingDefault),
 										generalSleepMySql(20),
-										generalSleepWhenFinished(1000),
+										generalSleepWhenFinished(5000),
 										generalTimeoutTargetLock(30),
 
 										filterDateEnable(false) {}

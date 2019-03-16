@@ -236,7 +236,7 @@
 		},
 		"sleep.idle": {
 			"type": "number",
-			"default": 1000,
+			"default": 5000,
 			"min": 100,
 			"description": "Time (in ms) that will be waited before checking for new URLs when all URLs have been crawled.",
 			"simple": false

@@ -89,7 +89,7 @@
 		},
 		"sleep.idle": {
 			"type": "number",
-			"default": 500,
+			"default": 5000,
 			"min": 100,
 			"description": "Time (in ms) to wait before checking for new URLs when all URLs have been parsed.",
 			"simple": false

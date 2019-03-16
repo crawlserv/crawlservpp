@@ -67,7 +67,7 @@
 		},
 		"sleep.when.finished": {
 			"type": "number",
-			"default": 1000,
+			"default": 5000,
 			"min": 100,
 			"description": "Time (in ms) to wait each tick when finished.",
 			"simple": false

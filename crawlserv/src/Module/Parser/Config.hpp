@@ -98,7 +98,7 @@ namespace crawlservpp::Module::Parser {
 										generalParseCustom(false),
 										generalReParse(false),
 										generalResetOnFinish(false),
-										generalSleepIdle(500),
+										generalSleepIdle(5000),
 										generalSleepMySql(20),
 										generalTimeoutTargetLock(30),
 										generalTiming(false) {}
