@@ -29,7 +29,8 @@ namespace crawlservpp::Parsing {
 				|| !tidyOptSetBool(this->doc, TidyShowWarnings, no)
 				|| !tidyOptSetInt(this->doc, TidyShowErrors, 0)
 				|| !tidyOptSetValue(this->doc, TidyOutCharEncoding, "utf8")
-				|| !tidyOptSetBool(this->doc, TidyForceOutput, yes))
+				|| !tidyOptSetBool(this->doc, TidyForceOutput, yes)
+				|| !tidyOptSetBool(this->doc, TidyDropEmptyElems, no))
 			throw HTML::Exception("Could not set options");
 
 		// parse content
