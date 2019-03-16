@@ -131,6 +131,7 @@ namespace crawlservpp::Module::Parser {
 		// parsing functions
 		void parsingUrlSelection();
 		void parsingFetchUrls();
+		void parsingCheckUrls();
 		unsigned long parsingNext();
 		bool parsingContent(const IdString& content, const std::string& parsedId);
 		void parsingUrlFinished();

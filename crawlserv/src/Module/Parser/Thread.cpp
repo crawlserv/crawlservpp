@@ -183,6 +183,9 @@ namespace crawlservpp::Module::Parser {
 			return;
 		}
 
+		// check whether next URL(s) are ought not to be skipped
+		this->parsingCheckUrls();
+
 		// update timers if idling just stopped
 		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 			// idling stopped
@@ -193,6 +196,10 @@ namespace crawlservpp::Module::Parser {
 
 		// increase tick counter
 		this->tickCounter++;
+
+		// check whether all URLs in the cache have been skipped
+		if(this->urls.empty())
+			return;
 
 		// write log entry if necessary
 		if(this->config.generalLogging > Config::generalLoggingExtended)
@@ -413,14 +420,17 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.generalLogging > Config::generalLoggingDefault)
 			this->log("fetches URLs...");
 
+		// get next URL(s)
 		this->parsingFetchUrls();
 
+		// write to log if necessary
 		if(this->config.generalTiming && this->config.generalLogging)
 			this->log("fetched URLs in " + timer.tickStr());
 
-		// check whether URLs have been fetched
-		this->setStatusMessage("Checking URLs...");
+		// update status
+		this->setStatusMessage("URLs fetched.");
 
+		// check whether URLs have been fetched
 		if(this->urls.empty()) {
 			// no more URLs to parse
 			if(!(this->idle)) {
@@ -441,13 +451,34 @@ namespace crawlservpp::Module::Parser {
 		}
 		else // reset idling status
 			this->idle = false;
+	}
 
-		// check whether next URL(s) need to be skipped
+	// fetch next URLs from database
+	void Thread::parsingFetchUrls() {
+		// fetch URLs from database to cache
+		this->cacheLockTime = this->database.fetchUrls(this->getLast(), this->urls, this->config.generalLock);
+
+		// check whether URLs have been fetched
+		if(this->urls.empty())
+			return;
+
+		// save properties of fetched URLs and URL list for progress calculation
+		this->idFirst = this->urls.front().first;
+		this->idDist = this->urls.back().first - this->idFirst;
+
+		unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
+		this->posFirstF = static_cast<float>(posFirst);
+		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
+	}
+
+	// check whether next URL(s) ought to be skipped
+	void Thread::parsingCheckUrls() {
+		// loop over next URLs in cache
 		while(!(this->urls.empty()) && this->isRunning()) {
 			// check whether URL needs to be skipped because of invalid ID
 			if(!(this->urls.front().first)) {
 				if(this->config.generalLogging)
-					this->log("skip (INVALID ID) " + this->urls.front().second);
+					this->log("skips (INVALID ID) " + this->urls.front().second);
 
 				this->parsingUrlFinished();
 				continue;
@@ -456,6 +487,7 @@ namespace crawlservpp::Module::Parser {
 			// check whether URL needs to be skipped because of custom query
 			bool skip = false;
 
+			// check for custom queries
 			if(!(this->config.generalSkip.empty())) {
 				// loop over custom queries
 				for(auto i = this->queriesSkip.begin(); i != this->queriesSkip.end(); ++i) {
@@ -485,7 +517,7 @@ namespace crawlservpp::Module::Parser {
 				if(skip) {
 					// skip URL because of query
 					if(this->config.generalLogging)
-						this->log("skip (query) " + urls.front().second);
+						this->log("skips (query) " + urls.front().second);
 
 					this->parsingUrlFinished();
 					continue;
@@ -493,31 +525,7 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			break; // found URL to process
-		} // end of loop to check whether next URL(s) ought to be ignored
-
-		// done
-		if(this->config.generalTiming && this->config.generalLogging)
-			this->log("checked URLs in " + timer.tickStr());
-
-		this->setStatusMessage("URLs fetched.");
-	}
-
-	// fetch next URLs from database
-	void Thread::parsingFetchUrls() {
-		// fetch URLs from database to cache
-		this->cacheLockTime = this->database.fetchUrls(this->getLast(), this->urls, this->config.generalLock);
-
-		// check whether URLs have been fetched
-		if(this->urls.empty())
-			return;
-
-		// save properties of fetched URLs and URL list for progress calculation
-		this->idFirst = this->urls.front().first;
-		this->idDist = this->urls.back().first - this->idFirst;
-
-		unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
-		this->posFirstF = static_cast<float>(posFirst);
-		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
+		} // end of loop over URLs in cache
 	}
 
 	// parse content(s) of next URL, return number of successfully parsed contents
