@@ -205,14 +205,35 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long checkedUrlsArchive = 0;
 		unsigned long newUrlsArchive = 0;
 
+		bool urlSelection = false;
+
 		// start timers
 		if(this->config.crawlerTiming) {
 			timerTotal.start();
 			timerSelect.start();
 		}
 
-		// URL selection
-		if(this->crawlingUrlSelection(url)) {
+		{ // lock URL list and crawling table
+			TableLock multiTableLock(
+					this->database,
+					TableLockProperties(
+							this->urlListTable,
+							this->database.urlListTableAlias,
+							1
+					),
+					TableLockProperties(
+							this->crawlingTable,
+							this->database.crawlingTableAlias,
+							1
+					)
+			);
+
+			// URL selection
+			urlSelection = this->crawlingUrlSelection(url);
+
+		} // URL list and crawling table unlocked
+
+		if(urlSelection) {
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
