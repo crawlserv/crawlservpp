@@ -815,9 +815,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS (SELECT * FROM crawlserv_websites WHERE namespace = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_websites"
+								" WHERE namespace = ?"
+							" )"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setString(1, nameSpace);
@@ -1489,10 +1497,10 @@ namespace crawlservpp::Main {
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
 							" ("
-								"SELECT * FROM crawlserv_urllists"
+								" SELECT *"
+								" FROM crawlserv_urllists"
 								" WHERE website = ?"
 								" AND namespace = ?"
-								" LIMIT 1"
 							" )"
 							" AS result"
 					)
@@ -2257,11 +2265,20 @@ namespace crawlservpp::Main {
 
 				try {
 					// create SQL statement for checking target table lock
-					SqlPreparedStatementPtr checkStatement(this->connection->prepareStatement(
-							"SELECT EXISTS(SELECT * FROM crawlserv_targetlocks"
-							" WHERE tabletype = ? AND website = ? AND urllist = ? AND locktime > NOW() LIMIT 1"
-							") AS result"
-					));
+					SqlPreparedStatementPtr checkStatement(
+							this->connection->prepareStatement(
+									"SELECT EXISTS"
+									" ("
+										" SELECT *"
+										" FROM crawlserv_targetlocks"
+										" WHERE tabletype = ?"
+										" AND website = ?"
+										" AND urllist = ?"
+										" AND locktime > NOW()"
+									" )"
+									" AS result"
+							)
+					);
 
 					// execute SQL statement
 					checkStatement->setString(1, type);
@@ -2520,10 +2537,12 @@ namespace crawlservpp::Main {
 			SqlStatementPtr dropStatement(this->connection->createStatement());
 
 			// execute SQL query for dropping table
-			Database::sqlExecute(dropStatement,
+			Database::sqlExecute(
+					dropStatement,
 					"DROP TABLE IF EXISTS"
-						" `crawlserv_" + websiteNamespace.second + "_" + listNamespace.second
-						+ "_" + type + "_" + tableName + "`"
+					" `crawlserv_" + websiteNamespace.second +
+						"_" + listNamespace.second +
+						"_" + type + "_" + tableName + "`"
 			);
 
 			// reset auto-increment if table is empty
@@ -2636,9 +2655,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS(SELECT * FROM crawlserv_websites WHERE id = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_websites"
+								" WHERE id = ?"
+							" )"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
@@ -2666,9 +2693,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE id = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_urllists"
+								" WHERE id = ?"
+							" )"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, urlListId);
@@ -2698,9 +2733,18 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS(SELECT * FROM crawlserv_urllists WHERE website = ? AND id = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_urllists"
+								" WHERE website = ?"
+								" AND id = ?"
+							")"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
@@ -2729,9 +2773,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE id = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_queries"
+								" WHERE id = ?"
+							" )"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, queryId);
@@ -2759,8 +2811,20 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS(SELECT * FROM crawlserv_queries WHERE (website = ? OR website = 0) AND id = ? LIMIT 1) AS result"
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_queries"
+								" WHERE"
+								" ("
+									" website = ?"
+									" OR website = 0"
+								" )"
+								" AND id = ?"
+							" )"
+							" AS result"
 			));
 
 			// execute SQL statement
@@ -2790,9 +2854,17 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE id = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_configs"
+								" WHERE id = ?"
+							" )"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, configId);
@@ -2820,9 +2892,18 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT EXISTS(SELECT * FROM crawlserv_configs WHERE website = ? AND id = ? LIMIT 1) AS result"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT EXISTS"
+							" ("
+								" SELECT *"
+								" FROM crawlserv_configs"
+								" WHERE website = ?"
+								" AND id = ?"
+							" )"
+							" AS result"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, websiteId);
@@ -2865,7 +2946,6 @@ namespace crawlservpp::Main {
 							" ("
 									" SELECT *"
 									" FROM `" + tableName + "`"
-									" LIMIT 1"
 							" ) "
 							" AS result"
 					)
@@ -4527,7 +4607,10 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL query
-			std::string sqlQuery("CREATE TABLE IF NOT EXISTS `" + tableName + "`(id SERIAL");
+			std::string sqlQuery(
+					"CREATE TABLE IF NOT EXISTS `" + tableName + "`"
+						"(id SERIAL"
+			);
 			std::string properties;
 
 			for(auto i = columns.begin(); i != columns.end(); ++i) {

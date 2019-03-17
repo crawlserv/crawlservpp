@@ -344,11 +344,13 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares isArchivedContentExists()...");
 
 			this->ps.isArchivedContentExists = this->addPreparedStatement(
-					"SELECT EXISTS ("
+					"SELECT EXISTS"
+					" ("
 						"SELECT *"
 						" FROM `" + crawledTable + "`"
 						" WHERE url = ? AND crawltime = ?"
-					") AS result"
+					" )"
+					" AS result"
 			);
 		}
 
