@@ -74,7 +74,7 @@ if($no) {
     echo "<a href=\"#\" class=\"action-link logs-nav\" data-filter=\"$filter\" data-offset=\"0\" data-limit=\"$limit\">";
     echo "&#8635;Refresh</a> &middot; ";
     echo "<a href=\"#\" class=\"action-link logs-clear\" data-filter=\"$filter\">&cross;Clear</a>";
-    echo "<br>Showing ".($offset + 1)." to ".($offset + $no)." of ".$total." entries.<br>\n";
+    echo "<br>Showing ".number_format($offset + 1)." to ".number_format($offset + $no)." of ".number_format($total)." entries.<br>\n";
 }
 else echo "<a href=\"#\" class=\"action-link logs-nav\" data-filter=\"$filter\">&#8635;Refresh</a>";
 ?>
