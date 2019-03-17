@@ -12,6 +12,8 @@
 
 #include "../Struct/TableLockProperties.hpp"
 
+#include <exception>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -43,7 +45,12 @@ namespace crawlservpp::Wrapper {
 			try {
 				this->ref.unlockTables();
 			}
-			catch(...) {}
+			catch(const std::exception& e) {
+				std::cout << std::endl << "WARNING: Could not unlock table(s) - " << e.what() << std::flush;
+			}
+			catch(...) {
+				std::cout << std::endl << "WARNING: Could not unlock table(s)!" << std::flush;
+			}
 		}
 
 		// not moveable, not copyable
