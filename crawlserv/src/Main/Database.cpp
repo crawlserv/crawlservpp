@@ -217,8 +217,7 @@ namespace crawlservpp::Main {
 	void Database::log(const std::string& logModule, const std::string& logEntry) {
 		// check table lock
 		if(this->tablesLocked) {
-			std::cout << std::endl << "[WARNING] Logging not possible while a table is locked - re-routing to stdout:"
-					  << std::endl << " " << logModule << ": " << logEntry << std::flush;
+			std::cout << std::endl << logModule << ": " << logEntry << std::flush;
 			return;
 		}
 
@@ -2620,9 +2619,9 @@ namespace crawlservpp::Main {
 			// log re-connect on idle if necessary
 			if(milliseconds)
 				this->log(
-						"re-connected to database after idling for "
-						+ Helper::DateTime::secondsToString(std::round(static_cast<float>(milliseconds / 1000)))
-						+ "."
+					"re-connected to database after idling for "
+					+ Helper::DateTime::secondsToString(std::round(static_cast<float>(milliseconds / 1000)))
+					+ "."
 				);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkConnection", e); }
@@ -4512,11 +4511,11 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			Database::sqlExecute(sqlStatement, "UNLOCK TABLES");
+
+			// set table locking status
+			this->tablesLocked = false;
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTables", e); }
-
-		// set table locking status
-		this->tablesLocked = false;
 	}
 
 	// add a table to the database (the primary key 'id' will be created automatically)
