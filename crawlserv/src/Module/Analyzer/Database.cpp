@@ -163,13 +163,18 @@ namespace crawlservpp::Module::Analyzer {
 					this->log("[#" + this->idString + "] prepares isCorpusChanged() [1/4]...");
 
 				this->ps.isCorpusChanged = this->addPreparedStatement(
-						"SELECT EXISTS (SELECT * FROM crawlserv_corpora"
-						" WHERE website = "	+ this->websiteIdString + ""
-						" AND urllist = " + this->listIdString +
-						" AND source_type = ?"
-						" AND source_table = ?"
-						" AND source_field = ?"
-						" AND created > ?) AS result"
+						"SELECT EXISTS"
+						" ("
+							" SELECT *"
+							" FROM crawlserv_corpora"
+							" WHERE website = "	+ this->websiteIdString + ""
+							" AND urllist = " + this->listIdString +
+							" AND source_type = ?"
+							" AND source_table = ?"
+							" AND source_field = ?"
+							" AND created > ?"
+						" )"
+						" AS result"
 				);
 			}
 
