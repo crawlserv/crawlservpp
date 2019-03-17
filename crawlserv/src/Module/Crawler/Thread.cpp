@@ -1796,9 +1796,6 @@ namespace crawlservpp::Module::Crawler {
 			// add URLs that do not exist already
 			newUrlsTo += this->database.addUrlsIfNotExist(chunk);
 
-			// DEBUG: check for empty URLs
-			this->database.urlEmptyCheck(urls);
-
 			// check for duplicates if URL debugging is active
 			if(this->config.crawlerUrlDebug)
 				this->database.urlDuplicationCheck();
