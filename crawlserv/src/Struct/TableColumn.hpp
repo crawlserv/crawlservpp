@@ -19,18 +19,41 @@ namespace crawlservpp::Struct {
 		std::string type;				// type of the column
 		std::string referenceTable;		// name of the referenced table
 		std::string referenceColumn;	// name of the referenced column
-		bool indexed;					// is column indexed
+		bool indexed;					// column is indexed
 
-		TableColumn(const std::string& setName, const std::string& setType, const std::string& setReferenceTable,
-				const std::string& setReferenceColumn, bool setIndexed) : name(setName), type(setType),
-						referenceTable(setReferenceTable), referenceColumn(setReferenceColumn), indexed(setIndexed) {}
-		TableColumn(const std::string& setName, const std::string& setType, const std::string& setReferenceTable,
-				const std::string& setReferenceColumn) : TableColumn(setName, setType, setReferenceTable, setReferenceColumn, false) {}
-		TableColumn(const std::string& setName, const std::string& setType, bool setIndexed)
-				: TableColumn(setName, setType, "", "", setIndexed) {}
-		TableColumn(const std::string& setName, const std::string& setType) : TableColumn(setName, setType, "", "", false) {}
+		TableColumn(
+				const std::string& setName,
+				const std::string& setType,
+				const std::string& setReferenceTable,
+				const std::string& setReferenceColumn,
+				bool setIndexed)
+		: name(setName),
+		  type(setType),
+		  referenceTable(setReferenceTable),
+		  referenceColumn(setReferenceColumn),
+		  indexed(setIndexed) {}
+
+		TableColumn(
+				const std::string& setName,
+				const std::string& setType,
+				const std::string& setReferenceTable,
+				const std::string& setReferenceColumn
+		)			: TableColumn(setName, setType, setReferenceTable, setReferenceColumn, false) {}
+
+		TableColumn(
+				const std::string& setName,
+				const std::string& setType,
+				bool setIndexed
+		)			: TableColumn(setName, setType, "", "", setIndexed) {}
+
+		TableColumn(
+				const std::string& setName,
+				const std::string& setType
+		)
+					: TableColumn(setName, setType, "", "", false) {}
+
 		TableColumn(const std::string& newName, const TableColumn& c)
-				: TableColumn(newName, c.type, c.referenceTable, c.referenceColumn, c.indexed) {}
+					: TableColumn(newName, c.type, c.referenceTable, c.referenceColumn, c.indexed) {}
 	};
 
 } /* crawlservpp::Struct */
