@@ -31,6 +31,7 @@ namespace crawlservpp::Module::Parser {
 				  ),
 				  database(this->Module::Thread::database),
 				  idFromUrl(false),
+				  lastUrl(0),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -47,6 +48,7 @@ namespace crawlservpp::Module::Parser {
 				: Module::Thread(dbBase, "parser", threadOptions),
 				  database(this->Module::Thread::database),
 				  idFromUrl(false),
+				  lastUrl(0),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -519,7 +521,9 @@ namespace crawlservpp::Module::Parser {
 					if(this->config.generalLogging > Config::generalLoggingDefault)
 						this->log("skips (query) " + urls.front().second);
 
+					// finish skipped URL
 					this->parsingUrlFinished();
+
 					continue;
 				}
 			}
@@ -1014,15 +1018,15 @@ namespace crawlservpp::Module::Parser {
 			// if yes, save results to database
 			this->parsingSaveResults();
 
-			// set current URL as last URL
-			this->setLast(this->urls.back().first);
-
 			// reset URL properties
 			this->idFirst = 0;
 			this->idDist = 0;
 			this->posFirstF = 0;
 			this->posDist = 0;
 		}
+
+		// save URL ID as last processed URL
+		this->lastUrl = this->urls.front().first;
 
 		// delete current URL from cache
 		this->urls.pop();
@@ -1054,6 +1058,9 @@ namespace crawlservpp::Module::Parser {
 
 		// update parsing table
 		this->database.updateTargetTable();
+
+		// set last URL
+		this->setLast(this->lastUrl);
 
 		// set those URLs to finished whose URL lock is okay (still locked or re-lockable (and not parsed when not re-parsing)
 		this->database.setUrlsFinishedIfLockOk(this->finished);
