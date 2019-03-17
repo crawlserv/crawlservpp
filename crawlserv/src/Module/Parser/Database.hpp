@@ -151,7 +151,7 @@ namespace crawlservpp::Module::Parser {
 		} ps;
 
 		// internal helper function
-		bool checkEntry(ParsingEntry& entry, std::queue<std::string>& logEntriesTo);
+		bool checkEntrySize(ParsingEntry& entry, std::queue<std::string>& logEntriesTo);
 		std::string queryLockUrls(unsigned int numberOfUrls);
 		std::string queryUpdateOrAddEntries(unsigned int numberOfEntries);
 		std::string querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls);
