@@ -456,7 +456,7 @@ namespace crawlservpp::Module::Parser {
 		sql::PreparedStatement& sqlStatementLock100 = this->getPreparedStatement(this->ps.lock100Urls);
 		sql::PreparedStatement& sqlStatementLock1000 = this->getPreparedStatement(this->ps.lock1000Urls);
 
-		{ // lock tables
+		try { // lock URL list and parsing table
 			std::vector<TableLockProperties> lockProperties;
 
 			lockProperties.emplace_back(this->urlListTable);
@@ -468,79 +468,79 @@ namespace crawlservpp::Module::Parser {
 			// get lock expiration time
 			std::string lockTime = this->getLockTime(lockTimeout);
 
-			try {
-				// execute SQL query for fetching URLs
-				sqlStatementFetch.setUInt64(1, lastId);
-				sqlStatementFetch.setUInt64(2, lastId);
-				SqlResultSetPtr sqlResultSetFetch(Database::sqlExecuteQuery(sqlStatementFetch));
+			// execute SQL query for fetching URLs
+			sqlStatementFetch.setUInt64(1, lastId);
+			sqlStatementFetch.setUInt64(2, lastId);
 
-				// get results from fetching URLs
-				if(sqlResultSetFetch) {
-					while(sqlResultSetFetch->next()) {
-						cache.emplace(
-							sqlResultSetFetch->getUInt64("id"),
-							sqlResultSetFetch->getString("url")
-						);
+			SqlResultSetPtr sqlResultSetFetch(Database::sqlExecuteQuery(sqlStatementFetch));
 
-						lockingQueue.push(cache.back().first);
-					}
+			// get results from fetching URLs
+			if(sqlResultSetFetch) {
+				while(sqlResultSetFetch->next()) {
+					cache.emplace(
+						sqlResultSetFetch->getUInt64("id"),
+						sqlResultSetFetch->getString("url")
+					);
+
+					lockingQueue.push(cache.back().first);
 				}
-
-				// set 1,000 locks at once
-				while(lockingQueue.size() >= 1000) {
-					for(unsigned long n = 0; n < 1000; n++) {
-						sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
-						sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
-						sqlStatementLock1000.setString(n * 3 + 3, lockTime);
-						lockingQueue.pop();
-					}
-
-					// execute SQL query
-					Database::sqlExecute(sqlStatementLock1000);
-				}
-
-				// set 100 locks at once
-				while(lockingQueue.size() >= 100) {
-					for(unsigned long n = 0; n < 100; n++) {
-						sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
-						sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
-						sqlStatementLock100.setString(n * 3 + 3, lockTime);
-						lockingQueue.pop();
-					}
-
-					// execute SQL query
-					Database::sqlExecute(sqlStatementLock100);
-				}
-
-				// set 10 locks at once
-				while(lockingQueue.size() >= 10) {
-					for(unsigned long n = 0; n < 10; n++) {
-						sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
-						sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
-						sqlStatementLock10.setString(n * 3 + 3, lockTime);
-						lockingQueue.pop();
-					}
-
-					// execute SQL query
-					Database::sqlExecute(sqlStatementLock10);
-				}
-
-				// set remaining locks
-				while(!lockingQueue.empty()) {
-					sqlStatementLock1.setUInt64(1, lockingQueue.front());
-					sqlStatementLock1.setUInt64(2, lockingQueue.front());
-					sqlStatementLock1.setString(3, lockTime);
-					lockingQueue.pop();
-
-					// execute SQL query
-					Database::sqlExecute(sqlStatementLock1);
-				}
-
-				// return the expiration time of all locks
-				return lockTime;
 			}
-			catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
+
+			// set 1,000 locks at once
+			while(lockingQueue.size() >= 1000) {
+				for(unsigned long n = 0; n < 1000; n++) {
+					sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
+					sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
+					sqlStatementLock1000.setString(n * 3 + 3, lockTime);
+					lockingQueue.pop();
+				}
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatementLock1000);
+			}
+
+			// set 100 locks at once
+			while(lockingQueue.size() >= 100) {
+				for(unsigned long n = 0; n < 100; n++) {
+					sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
+					sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
+					sqlStatementLock100.setString(n * 3 + 3, lockTime);
+					lockingQueue.pop();
+				}
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatementLock100);
+			}
+
+			// set 10 locks at once
+			while(lockingQueue.size() >= 10) {
+				for(unsigned long n = 0; n < 10; n++) {
+					sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
+					sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
+					sqlStatementLock10.setString(n * 3 + 3, lockTime);
+					lockingQueue.pop();
+				}
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatementLock10);
+			}
+
+			// set remaining locks
+			while(!lockingQueue.empty()) {
+				sqlStatementLock1.setUInt64(1, lockingQueue.front());
+				sqlStatementLock1.setUInt64(2, lockingQueue.front());
+				sqlStatementLock1.setString(3, lockTime);
+				lockingQueue.pop();
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatementLock1);
+			}
+
+			// return the expiration time of all locks
+			return lockTime;
+
 		} // tables are unlocked
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
 
 		return std::string();
 	}
@@ -880,8 +880,11 @@ namespace crawlservpp::Module::Parser {
 		this->checkConnection();
 
 		// check prepared SQL statements
-		if(!(this->ps.updateOrAddEntry) || !(this->ps.updateOrAdd10Entries) || !(this->ps.updateOrAdd100Entries)
-				|| !(this->ps.updateOrAdd1000Entries))
+		if(		!(this->ps.updateOrAddEntry)
+				|| !(this->ps.updateOrAdd10Entries)
+				|| !(this->ps.updateOrAdd100Entries)
+				|| !(this->ps.updateOrAdd1000Entries)
+		)
 			throw DatabaseException("Missing prepared SQL statement for Parser::Database::updateOrAddEntries(...)");
 
 		// get prepared SQL statements
@@ -892,6 +895,7 @@ namespace crawlservpp::Module::Parser {
 
 		// count fields
 		unsigned long fields = 4;
+
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 			if(!(i->empty())) fields++;
 
@@ -915,6 +919,7 @@ namespace crawlservpp::Module::Parser {
 					sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement1000.setUInt64(n * fields + 2, entries.front().contentId);
 					sqlStatement1000.setString(n * fields + 3, entries.front().parsedId);
+
 					if(entries.front().dateTime.empty())
 						sqlStatement1000.setNull(n * fields + 4, 0);
 					else
@@ -922,9 +927,11 @@ namespace crawlservpp::Module::Parser {
 
 					// set custom values
 					unsigned int counter = 5;
+
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 							sqlStatement1000.setString(n * fields + counter, *i);
+
 							counter++;
 						}
 					}
@@ -947,6 +954,7 @@ namespace crawlservpp::Module::Parser {
 					sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement100.setUInt64(n * fields + 2, entries.front().contentId);
 					sqlStatement100.setString(n * fields + 3, entries.front().parsedId);
+
 					if(entries.front().dateTime.empty())
 						sqlStatement100.setNull(n * fields + 4, 0);
 					else
@@ -954,9 +962,11 @@ namespace crawlservpp::Module::Parser {
 
 					// set custom values
 					unsigned int counter = 5;
+
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 							sqlStatement100.setString(n * fields + counter, *i);
+
 							counter++;
 						}
 					}
@@ -979,6 +989,7 @@ namespace crawlservpp::Module::Parser {
 					sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement10.setUInt64(n * fields + 2, entries.front().contentId);
 					sqlStatement10.setString(n * fields + 3, entries.front().parsedId);
+
 					if(entries.front().dateTime.empty())
 						sqlStatement10.setNull(n * fields + 4, 0);
 					else
@@ -986,9 +997,11 @@ namespace crawlservpp::Module::Parser {
 
 					// set custom values
 					unsigned int counter = 5;
+
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 							sqlStatement10.setString(n * fields + counter, *i);
+
 							counter++;
 						}
 					}
@@ -1010,6 +1023,7 @@ namespace crawlservpp::Module::Parser {
 				sqlStatement1.setUInt64(1, entries.front().contentId);
 				sqlStatement1.setUInt64(2, entries.front().contentId);
 				sqlStatement1.setString(3, entries.front().parsedId);
+
 				if(entries.front().dateTime.empty())
 					sqlStatement1.setNull(4, 0);
 				else
@@ -1017,9 +1031,11 @@ namespace crawlservpp::Module::Parser {
 
 				// set custom values
 				unsigned int counter = 5;
+
 				for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 					if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 						sqlStatement1.setString(counter, *i);
+
 						counter++;
 					}
 				}
@@ -1029,8 +1045,8 @@ namespace crawlservpp::Module::Parser {
 
 				// execute SQL query
 				Database::sqlExecute(sqlStatement1);
-			} // target table unlocked
-		}
+			}
+		} // target table unlocked
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::updateOrAddEntries", e); }
 	}
 
@@ -1122,17 +1138,23 @@ namespace crawlservpp::Module::Parser {
 	bool Database::checkEntry(ParsingEntry& entry, std::queue<std::string>& logEntriesTo) {
 		// check data sizes
 		unsigned long tooLarge = 0;
+
 		if(entry.parsedId.size() > this->getMaxAllowedPacketSize()) {
 			tooLarge = entry.parsedId.size();
+
 			entry.parsedId.clear();
 		}
+
 		if(entry.dateTime.size() > this->getMaxAllowedPacketSize() && entry.dateTime.size() > tooLarge) {
 			tooLarge = entry.dateTime.size();
+
 			entry.dateTime.clear();
 		}
+
 		for(auto i = entry.fields.begin(); i != entry.fields.end(); ++i) {
 			if(i->size() > this->getMaxAllowedPacketSize() && i->size() > tooLarge) {
 				tooLarge = i->size();
+
 				i->clear();
 			}
 		}
@@ -1142,19 +1164,30 @@ namespace crawlservpp::Module::Parser {
 				// show warning about data size
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
+
 				logStrStr.imbue(std::locale(""));
-				logStrStr << "[#" << this->idString << "] WARNING: An entry could not be saved to the database,"
-						" because the size of a parsed value (" << tooLarge << " bytes) exceeds the ";
-				if(tooLarge > 1073741824) logStrStr << "MySQL maximum of 1 GiB.";
+
+				logStrStr <<	"[#" << this->idString << "]"
+								" WARNING: An entry could not be saved to the database,"
+								" because the size of a parsed value (" << tooLarge << " bytes) exceeds the ";
+
+				if(tooLarge > 1073741824)
+					logStrStr << "MySQL maximum of 1 GiB.";
 				else {
 					logStrStr << "current MySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
+
 					adjustServerSettings = true;
 				}
+
 				logEntriesTo.emplace(logStrStr.str());
+
 				if(adjustServerSettings)
-					logEntriesTo.emplace("[#" + this->idString
-							+ "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+					logEntriesTo.emplace(
+							"[#" + this->idString + "]"
+							" Adjust the server's \'max_allowed_packet\' setting accordingly."
+					);
 			}
+
 			return false;
 		}
 
