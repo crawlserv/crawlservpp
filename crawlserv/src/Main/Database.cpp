@@ -64,12 +64,8 @@ namespace crawlservpp::Main {
 		this->preparedStatements.clear();
 
 		// clear connection
-		if(this->connection)
-			if(this->connection->isValid())
-				this->connection->close();
-
-		// unset table lock
-		this->tablesLocked = false;
+		if(this->connection && this->connection->isValid())
+			this->connection->close();
 	}
 
 	/*
@@ -4408,11 +4404,11 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
+
+			// set table locking status
+			this->tablesLocked = true;
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTable", e); }
-
-		// set table locking status
-		this->tablesLocked = true;
 	}
 
 	// lock two tables in the database for writing (and their aliases for reading)
@@ -4449,11 +4445,11 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
+
+			// set table locking status
+			this->tablesLocked = true;
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
-
-		// set table locking status
-		this->tablesLocked = true;
 	}
 
 	// lock multiple tables in the database for writing (and their aliases for reading)
@@ -4493,11 +4489,11 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
+
+			// set table locking status
+			this->tablesLocked = true;
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
-
-		// set table locking status
-		this->tablesLocked = true;
 	}
 
 	// unlock tables in the database
