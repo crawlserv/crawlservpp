@@ -106,6 +106,7 @@ namespace crawlservpp::Module::Parser {
 		std::vector<QueryStruct> queriesId;
 		std::vector<QueryStruct> queriesDateTime;
 		std::vector<QueryStruct> queriesFields;
+		unsigned long lastUrl;
 
 		// timing
 		unsigned long long tickCounter;
