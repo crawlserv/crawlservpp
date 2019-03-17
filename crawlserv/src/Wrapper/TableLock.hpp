@@ -26,30 +26,39 @@ namespace crawlservpp::Wrapper {
 
 	public:
 		// constructor A: lock one table (and its aliases for reading)
-		TableLock(DB& db, const TableLockProperties& lockProperties) : ref(db) {
+		TableLock(DB& db, const TableLockProperties& lockProperties) : ref(db), locked(false) {
 			this->ref.lockTable(lockProperties);
+
+			this->locked = true;
 		}
 
 		// constructor B: lock two tables (and their aliases for reading)
-		TableLock(DB& db, const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) : ref(db) {
+		TableLock(DB& db, const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2)
+				: ref(db), locked(false) {
 			this->ref.lockTables(lockProperties1, lockProperties2);
+
+			this->locked = true;
 		}
 
 		// constructor C: lock multiple tables (and their aliases for reading)
-		TableLock(DB& db, const std::vector<TableLockProperties>& lockProperties) : ref(db) {
+		TableLock(DB& db, const std::vector<TableLockProperties>& lockProperties) : ref(db), locked(false) {
 			this->ref.lockTables(lockProperties);
+
+			this->locked = true;
 		}
 
 		// destructor: try to unlock the table(s)
 		virtual ~TableLock() {
-			try {
-				this->ref.unlockTables();
-			}
-			catch(const std::exception& e) {
-				std::cout << std::endl << "WARNING: Could not unlock table(s) - " << e.what() << std::flush;
-			}
-			catch(...) {
-				std::cout << std::endl << "WARNING: Could not unlock table(s)!" << std::flush;
+			if(this->locked) {
+				try {
+					this->ref.unlockTables();
+				}
+				catch(const std::exception& e) {
+					std::cout << std::endl << "WARNING: Could not unlock table(s) - " << e.what() << std::flush;
+				}
+				catch(...) {
+					std::cout << std::endl << "WARNING: Could not unlock table(s)!" << std::flush;
+				}
 			}
 		}
 
@@ -62,6 +71,9 @@ namespace crawlservpp::Wrapper {
 	private:
 		// internal reference to a database connection
 		DB& ref;
+
+		// internal lock state
+		bool locked;
 	};
 
 } /* crawlservpp::Wrapper */
