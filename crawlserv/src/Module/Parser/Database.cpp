@@ -117,7 +117,7 @@ namespace crawlservpp::Module::Parser {
 		);
 		properties.columns.reserve(3 + this->targetFieldNames.size());
 
-		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL");
+		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL UNIQUE");
 		properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
 		properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
 
@@ -894,7 +894,7 @@ namespace crawlservpp::Module::Parser {
 		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.updateOrAdd1000Entries);
 
 		// count fields
-		unsigned long fields = 4;
+		unsigned long fields = 3;
 
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 			if(!(i->empty())) fields++;
@@ -913,20 +913,19 @@ namespace crawlservpp::Module::Parser {
 			while(entries.size() >= 1000) {
 				for(unsigned short n = 0; n < 1000; n++) {
 					// check entry
-					this->checkEntry(entries.front(), logEntriesTo);
+					this->checkEntrySize(entries.front(), logEntriesTo);
 
 					// set default values
 					sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement1000.setUInt64(n * fields + 2, entries.front().contentId);
-					sqlStatement1000.setString(n * fields + 3, entries.front().parsedId);
+					sqlStatement1000.setString(n * fields + 2, entries.front().parsedId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement1000.setNull(n * fields + 4, 0);
+						sqlStatement1000.setNull(n * fields + 3, 0);
 					else
-						sqlStatement1000.setString(n * fields + 4, entries.front().dateTime);
+						sqlStatement1000.setString(n * fields + 3, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 5;
+					unsigned int counter = 4;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -948,20 +947,19 @@ namespace crawlservpp::Module::Parser {
 			while(entries.size() >= 100) {
 				for(unsigned char n = 0; n < 100; n++) {
 					// check entry
-					this->checkEntry(entries.front(), logEntriesTo);
+					this->checkEntrySize(entries.front(), logEntriesTo);
 
 					// set default values
 					sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement100.setUInt64(n * fields + 2, entries.front().contentId);
-					sqlStatement100.setString(n * fields + 3, entries.front().parsedId);
+					sqlStatement100.setString(n * fields + 2, entries.front().parsedId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement100.setNull(n * fields + 4, 0);
+						sqlStatement100.setNull(n * fields + 3, 0);
 					else
-						sqlStatement100.setString(n * fields + 4, entries.front().dateTime);
+						sqlStatement100.setString(n * fields + 3, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 5;
+					unsigned int counter = 4;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -983,20 +981,19 @@ namespace crawlservpp::Module::Parser {
 			while(entries.size() >= 10) {
 				for(unsigned char n = 0; n < 10; n++) {
 					// check entry
-					this->checkEntry(entries.front(), logEntriesTo);
+					this->checkEntrySize(entries.front(), logEntriesTo);
 
 					// set default values
 					sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement10.setUInt64(n * fields + 2, entries.front().contentId);
-					sqlStatement10.setString(n * fields + 3, entries.front().parsedId);
+					sqlStatement10.setString(n * fields + 2, entries.front().parsedId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement10.setNull(n * fields + 4, 0);
+						sqlStatement10.setNull(n * fields + 3, 0);
 					else
-						sqlStatement10.setString(n * fields + 4, entries.front().dateTime);
+						sqlStatement10.setString(n * fields + 3, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 5;
+					unsigned int counter = 4;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -1017,20 +1014,19 @@ namespace crawlservpp::Module::Parser {
 			// add remaining entries
 			while(!entries.empty()) {
 				// check entry
-				this->checkEntry(entries.front(), logEntriesTo);
+				this->checkEntrySize(entries.front(), logEntriesTo);
 
 				// set default values
 				sqlStatement1.setUInt64(1, entries.front().contentId);
-				sqlStatement1.setUInt64(2, entries.front().contentId);
-				sqlStatement1.setString(3, entries.front().parsedId);
+				sqlStatement1.setString(2, entries.front().parsedId);
 
 				if(entries.front().dateTime.empty())
-					sqlStatement1.setNull(4, 0);
+					sqlStatement1.setNull(3, 0);
 				else
-					sqlStatement1.setString(4, entries.front().dateTime);
+					sqlStatement1.setString(3, entries.front().dateTime);
 
 				// set custom values
-				unsigned int counter = 5;
+				unsigned int counter = 4;
 
 				for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 					if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -1135,7 +1131,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// check the value sizes in a parsing entry and remove values that are too large for the database
-	bool Database::checkEntry(ParsingEntry& entry, std::queue<std::string>& logEntriesTo) {
+	bool Database::checkEntrySize(ParsingEntry& entry, std::queue<std::string>& logEntriesTo) {
 		// check data sizes
 		unsigned long tooLarge = 0;
 
@@ -1233,7 +1229,7 @@ namespace crawlservpp::Module::Parser {
 		return sqlQueryStrStr.str();
 	}
 
-	// generate a SQL query for updating or adding a specific number of parsed entries
+	// generate SQL query for updating or adding a specific number of parsed entries
 	std::string Database::queryUpdateOrAddEntries(unsigned int numberOfEntries) {
 		// check arguments
 		if(!numberOfEntries)
@@ -1244,7 +1240,6 @@ namespace crawlservpp::Module::Parser {
 
 		sqlQueryStrStr << 		"INSERT INTO `" << this->targetTableFull << "`"
 								" ("
-									" id,"
 									" content,"
 									" parsed_id,"
 									" parsed_datetime";
@@ -1264,14 +1259,7 @@ namespace crawlservpp::Module::Parser {
 		// create placeholder list (including existence check)
 		for(unsigned int n = 1; n <= numberOfEntries; n++) {
 			sqlQueryStrStr <<		"( "
-										"("
-											"SELECT id"
-											" FROM `" << this->targetTableFull << "`"
-											" AS `" << this->targetTableAlias << n << "`"
-											" WHERE content = ?"
-											" LIMIT 1"
-										")"
-										", ?, ?, ?";
+										"?, ?, ?";
 
 			for(unsigned long c = 0; c < counter; c++)
 				sqlQueryStrStr << 		", ?";
