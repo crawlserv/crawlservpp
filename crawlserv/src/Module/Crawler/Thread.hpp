@@ -204,7 +204,7 @@ namespace crawlservpp::Module::Crawler {
 		);
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url);
-		void crawlingRetry(const IdString& url, bool archiveOnly);
+		void crawlingRetry(const IdString& url, bool archiveOnly, const std::string oldLockTime);
 
 		// helper function for memento crawling
 		static std::string parseMementos(

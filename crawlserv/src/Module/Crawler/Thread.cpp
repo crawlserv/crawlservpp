@@ -1010,7 +1010,7 @@ namespace crawlservpp::Module::Crawler {
 
 			this->networking.resetConnection(this->config.crawlerSleepError);
 
-			this->crawlingRetry(url, false);
+			this->crawlingRetry(url, false, this->lockTime);
 
 			return false;
 		}
@@ -1045,7 +1045,7 @@ namespace crawlservpp::Module::Crawler {
 
 				this->networking.resetConnection(this->config.crawlerSleepError);
 
-				this->crawlingRetry(url, false);
+				this->crawlingRetry(url, false, this->lockTime);
 			}
 			else {
 				// skip URL
@@ -1829,6 +1829,9 @@ namespace crawlservpp::Module::Crawler {
 			unsigned long& checkedUrlsTo,
 			unsigned long& newUrlsTo
 	) {
+		// save lock time of non-archived URL
+		std::string oldLockTime = this->lockTime;
+
 		// check arguments
 		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingArchive(): No URL ID specified");
@@ -1914,9 +1917,6 @@ namespace crawlservpp::Module::Crawler {
 													 << counter << "/" << total << "] " << statusMessage;
 
 										this->setStatusMessage(statusStrStr.str());
-
-										// renew URL lock to avoid duplicate archived content
-										std::string oldLock = this->lockTime;
 
 										// lock URL if possible
 										this->lockTime = this->database.lockUrlIfOk(
@@ -2081,7 +2081,7 @@ namespace crawlservpp::Module::Crawler {
 															);
 
 															// retry
-															this->crawlingRetry(url, true);
+															this->crawlingRetry(url, true, oldLockTime);
 															return false;
 														}
 													}
@@ -2153,7 +2153,7 @@ namespace crawlservpp::Module::Crawler {
 						if(skip)
 							this->crawlingSkip(url);
 						else
-							this->crawlingRetry(url, true);
+							this->crawlingRetry(url, true, oldLockTime);
 
 						return false;
 					}
@@ -2256,7 +2256,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// retry URL (completely or achives-only) after crawling problem
 	//  NOTE: leaves the URL lock active for retry
-	void Thread::crawlingRetry(const IdString& url, bool archiveOnly) {
+	void Thread::crawlingRetry(const IdString& url, bool archiveOnly, const std::string oldLockTime) {
 		// check argument
 		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingRetry(): No URL ID specified");
@@ -2276,6 +2276,8 @@ namespace crawlservpp::Module::Crawler {
 
 		if(archiveOnly)
 			this->archiveRetry = true;
+		else
+			this->lockTime = oldLockTime;
 	}
 
 	// parse memento reply, get mementos and link to next page if one exists
