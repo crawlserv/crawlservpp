@@ -20,8 +20,11 @@
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Json.hpp"
 #include "../../Helper/Strings.hpp"
+#include "../../Main/Exception.hpp"
 #include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
+#include "../../Query/RegEx.hpp"
+#include "../../Query/XPath.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ParsingEntry.hpp"
 #include "../../Struct/QueryProperties.hpp"
@@ -44,11 +47,13 @@ namespace crawlservpp::Module::Parser {
 
 	class Thread: public Module::Thread, public Query::Container, public Config {
 		// for convenience
+		typedef Main::Exception Exception;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Query::RegEx::Exception RegExException;
+		typedef Query::XPath::Exception XPathException;
 
 		typedef std::pair<unsigned long, std::string> IdString;
 

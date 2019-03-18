@@ -606,107 +606,115 @@ namespace crawlservpp::Module::Crawler {
 
 	// initialize queries
 	void Thread::initQueries() {
-		if(this->config.crawlerHTMLCanonicalCheck) {
-			this->queryCanonicalCheck =
-					this->addQuery(QueryProperties(
-							"//link[contains("
-								"concat(' ',"
-									"normalize-space(@rel),"
-									"' '"
-								"),"
-								"' canonical '"
-							")]/@href",
-							"xpath",
-							false,
-							true,
-							false,
-							true
-					));
+		try {
+			if(this->config.crawlerHTMLCanonicalCheck) {
+				this->queryCanonicalCheck =
+						this->addQuery(QueryProperties(
+								"//link[contains("
+									"concat(' ',"
+										"normalize-space(@rel),"
+										"' '"
+									"),"
+									"' canonical '"
+								")]/@href",
+								"xpath",
+								false,
+								true,
+								false,
+								true
+						));
+			}
+
+			for(
+					auto i = this->config.crawlerQueriesBlackListContent.begin();
+					i != this->config.crawlerQueriesBlackListContent.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesBlackListContent.emplace_back(this->addQuery(properties));
+			}
+
+			for(
+					auto i = this->config.crawlerQueriesBlackListTypes.begin();
+					i != this->config.crawlerQueriesBlackListTypes.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesBlackListTypes.emplace_back(this->addQuery(properties));
+
+			}
+
+			for(
+					auto i = this->config.crawlerQueriesBlackListUrls.begin();
+					i != this->config.crawlerQueriesBlackListUrls.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesBlackListUrls.emplace_back(this->addQuery(properties));
+			}
+
+			for(
+					auto i = this->config.crawlerQueriesLinks.begin();
+					i != this->config.crawlerQueriesLinks.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesLinks.emplace_back(this->addQuery(properties));
+			}
+
+			for(
+					auto i = this->config.crawlerQueriesWhiteListContent.begin();
+					i != this->config.crawlerQueriesWhiteListContent.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesWhiteListContent.emplace_back(this->addQuery(properties));
+			}
+
+			for(
+					auto i = this->config.crawlerQueriesWhiteListTypes.begin();
+					i != this->config.crawlerQueriesWhiteListTypes.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesWhiteListTypes.emplace_back(this->addQuery(properties));
+			}
+
+			for(
+					auto i = this->config.crawlerQueriesWhiteListUrls.begin();
+					i != this->config.crawlerQueriesWhiteListUrls.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesWhiteListUrls.emplace_back(this->addQuery(properties));
+			}
 		}
-
-		for(
-				auto i = this->config.crawlerQueriesBlackListContent.begin();
-				i != this->config.crawlerQueriesBlackListContent.end();
-				++i
-		) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(*i, properties);
-
-			this->queriesBlackListContent.emplace_back(this->addQuery(properties));
+		catch(const RegExException& e) {
+			throw Exception(std::string("Crawler::Thread::initQueries(): [RegEx] ") + e.what());
 		}
-
-		for(
-				auto i = this->config.crawlerQueriesBlackListTypes.begin();
-				i != this->config.crawlerQueriesBlackListTypes.end();
-				++i
-		) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(*i, properties);
-
-			this->queriesBlackListTypes.emplace_back(this->addQuery(properties));
-
-		}
-
-		for(
-				auto i = this->config.crawlerQueriesBlackListUrls.begin();
-				i != this->config.crawlerQueriesBlackListUrls.end();
-				++i
-		) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(*i, properties);
-
-			this->queriesBlackListUrls.emplace_back(this->addQuery(properties));
-		}
-
-		for(
-				auto i = this->config.crawlerQueriesLinks.begin();
-				i != this->config.crawlerQueriesLinks.end();
-				++i
-		) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(*i, properties);
-
-			this->queriesLinks.emplace_back(this->addQuery(properties));
-		}
-
-		for(
-				auto i = this->config.crawlerQueriesWhiteListContent.begin();
-				i != this->config.crawlerQueriesWhiteListContent.end();
-				++i
-		) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(*i, properties);
-
-			this->queriesWhiteListContent.emplace_back(this->addQuery(properties));
-		}
-
-		for(
-				auto i = this->config.crawlerQueriesWhiteListTypes.begin();
-				i != this->config.crawlerQueriesWhiteListTypes.end();
-				++i
-		) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(*i, properties);
-
-			this->queriesWhiteListTypes.emplace_back(this->addQuery(properties));
-		}
-
-		for(
-				auto i = this->config.crawlerQueriesWhiteListUrls.begin();
-				i != this->config.crawlerQueriesWhiteListUrls.end();
-				++i
-		) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(*i, properties);
-
-			this->queriesWhiteListUrls.emplace_back(this->addQuery(properties));
+		catch(const Query::XPath::Exception& e) {
+			throw Exception(std::string("Crawler::Thread::initQueries(): [XPath] ") + e.what());
 		}
 	}
 

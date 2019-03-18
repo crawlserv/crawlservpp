@@ -22,6 +22,8 @@
 #include "../../Parsing/URI.hpp"
 #include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
+#include "../../Query/RegEx.hpp"
+#include "../../Query/XPath.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/TableLockProperties.hpp"
 #include "../../Struct/ThreadOptions.hpp"

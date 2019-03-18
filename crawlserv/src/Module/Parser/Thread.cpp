@@ -226,7 +226,7 @@ namespace crawlservpp::Module::Parser {
 
 			// approximate progress
 			if(!(this->total))
-				throw std::runtime_error("Parser::Thread::onTick(): Could not get URL list size");
+				throw Exception("Parser::Thread::onTick(): Could not get URL list size");
 
 			if(this->idDist) {
 				float cacheProgress = static_cast<float>(this->urls.front().first - this->idFirst) / this->idDist;
@@ -383,29 +383,37 @@ namespace crawlservpp::Module::Parser {
 		this->reserveForQueries(this->config.parsingIdQueries.size() + this->config.parsingDateTimeQueries.size()
 				+ this->config.parsingFieldQueries.size());
 
-		// create queries and get query IDs
-		for(auto i = this->config.generalSkip.begin(); i != this->config.generalSkip.end(); ++i) {
-			QueryProperties properties;
-			this->database.getQueryProperties(*i, properties);
-			this->queriesSkip.emplace_back(this->addQuery(properties));
-		}
+		try {
+			// create queries and get query IDs
+			for(auto i = this->config.generalSkip.begin(); i != this->config.generalSkip.end(); ++i) {
+				QueryProperties properties;
+				this->database.getQueryProperties(*i, properties);
+				this->queriesSkip.emplace_back(this->addQuery(properties));
+			}
 
-		for(auto i = this->config.parsingIdQueries.begin(); i != this->config.parsingIdQueries.end(); ++i) {
-			QueryProperties properties;
-			this->database.getQueryProperties(*i, properties);
-			this->queriesId.emplace_back(this->addQuery(properties));
-		}
+			for(auto i = this->config.parsingIdQueries.begin(); i != this->config.parsingIdQueries.end(); ++i) {
+				QueryProperties properties;
+				this->database.getQueryProperties(*i, properties);
+				this->queriesId.emplace_back(this->addQuery(properties));
+			}
 
-		for(auto i = this->config.parsingDateTimeQueries.begin(); i != this->config.parsingDateTimeQueries.end(); ++i) {
-			QueryProperties properties;
-			this->database.getQueryProperties(*i, properties);
-			this->queriesDateTime.emplace_back(this->addQuery(properties));
-		}
+			for(auto i = this->config.parsingDateTimeQueries.begin(); i != this->config.parsingDateTimeQueries.end(); ++i) {
+				QueryProperties properties;
+				this->database.getQueryProperties(*i, properties);
+				this->queriesDateTime.emplace_back(this->addQuery(properties));
+			}
 
-		for(auto i = this->config.parsingFieldQueries.begin(); i != this->config.parsingFieldQueries.end(); ++i) {
-			QueryProperties properties;
-			this->database.getQueryProperties(*i, properties);
-			this->queriesFields.emplace_back(this->addQuery(properties));
+			for(auto i = this->config.parsingFieldQueries.begin(); i != this->config.parsingFieldQueries.end(); ++i) {
+				QueryProperties properties;
+				this->database.getQueryProperties(*i, properties);
+				this->queriesFields.emplace_back(this->addQuery(properties));
+			}
+		}
+		catch(const RegExException& e) {
+			throw Exception(std::string("Parser::Thread::initQueries(): [RegEx] ") + e.what());
+		}
+		catch(const Query::XPath::Exception& e) {
+			throw Exception(std::string("Parser::Thread::initQueries(): [XPath] ") + e.what());
 		}
 	}
 
