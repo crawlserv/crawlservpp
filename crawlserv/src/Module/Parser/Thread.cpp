@@ -1035,8 +1035,13 @@ namespace crawlservpp::Module::Parser {
 	// save results to database
 	void Thread::parsingSaveResults() {
 		// check whether there are no results
-		if(this->results.empty())
+		if(this->results.empty()) {
+			// set last URL
+			this->setLast(this->lastUrl);
+
+			// no results: done!
 			return;
+		}
 
 		// timer
 		Timer::Simple timer;
