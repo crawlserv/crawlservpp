@@ -1074,6 +1074,7 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.generalLogging) {
 			while(!logEntries.empty()) {
 				this->log(logEntries.front());
+
 				logEntries.pop();
 			}
 		}
