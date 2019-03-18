@@ -244,6 +244,8 @@ The following additional include path is used (for both C and C++ compiler): `sr
 
 The following libraries need to be installed and manually linked after compiling the source code: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml uriparser aspell`.
 
+When using the MySQL Connector/C++ 8.0 the following include directory has to be added: `/usr/include/mysql-cppconn-8/jdbc`.
+
 ## Frontend
 
 **NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server. You may also want to use the provided JSON files in [`crawlserv_frontend/crawlserv/json`](crawlserv_frontend/crawlserv/json) as keeping them up-to-date will inform you about module-specific configuration changes and the implementation of new algorithms.
