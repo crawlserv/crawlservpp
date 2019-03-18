@@ -395,7 +395,7 @@ namespace crawlservpp::Module {
 			// try to log error
 			std::ostringstream logStrStr;
 
-			logStrStr << "failed - " << e.what() << "." << std::flush;
+			logStrStr << "failed - " << e.what() << ".";
 
 			this->log(logStrStr.str());
 
@@ -409,7 +409,7 @@ namespace crawlservpp::Module {
 			// try to log error
 			std::ostringstream logStrStr;
 
-			logStrStr << "failed - Unknown exception" << std::flush;
+			logStrStr << "failed - Unknown exception";
 
 			this->log(logStrStr.str());
 
