@@ -22,7 +22,7 @@
 
 // optional debugging option
 #define MAIN_DATABASE_DEBUG_REQUEST_COUNTER			// enable database request counter for debugging purposes
-#define MAIN_DATABASE_DEBUG_DEADLOCKS				// enable documentation of deadlocks by writing hashes ('#') to stdout
+//#define MAIN_DATABASE_DEBUG_DEADLOCKS				// enable documentation of deadlocks by writing hashes ('#') to stdout
 
 #include "Data.hpp"
 #include "Exception.hpp"
