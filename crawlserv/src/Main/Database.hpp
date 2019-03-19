@@ -18,6 +18,7 @@
 #define MAIN_DATABASE_LOCK_TIMEOUT_SECONDS 300 // time-out on table lock
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600 // force re-connect if the connection has been idle that long
 #define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5 // sleep on target table lock
+#define MAIN_DATABASE_SLEEP_ON_PREPARING_STATEMENT_SECONDS 1 // sleep while other classes are preparing SQL statements
 
 // optional debugging option
 #define MAIN_DATABASE_DEBUG_REQUEST_COUNTER // enable database request counter for debugging purposes
@@ -49,6 +50,7 @@
 
 #include <experimental/filesystem>
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -348,6 +350,7 @@ namespace crawlservpp::Main {
 		unsigned long sleepOnError;
 		std::string module;
 		std::vector<std::pair<std::string, unsigned long>> targetTableLocks;
+		static std::atomic<bool> preparingStatement;
 
 		// optional private variables
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
