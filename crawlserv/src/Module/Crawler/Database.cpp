@@ -614,7 +614,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// get URL position of URL from database
 		try {
-			// disable locking
+			// disable locking as data consistency is not needed for calculating the approx. progress
 			this->beginNoLock();
 
 			// execute SQL query
@@ -649,7 +649,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// get number of URLs from database
 		try {
-			// disable locking
+			// disable locking as data consistency is not needed for calculating the approx. progress
 			this->beginNoLock();
 
 			// execute SQL query
