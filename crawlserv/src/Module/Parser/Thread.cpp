@@ -490,6 +490,10 @@ namespace crawlservpp::Module::Parser {
 				if(this->config.generalLogging)
 					this->log("skips (INVALID ID) " + this->urls.front().second);
 
+				// unlock URL if necessary
+				this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
+
+				// finish skipped URL
 				this->parsingUrlFinished();
 				continue;
 			}
@@ -527,7 +531,10 @@ namespace crawlservpp::Module::Parser {
 				if(skip) {
 					// skip URL because of query
 					if(this->config.generalLogging > Config::generalLoggingDefault)
-						this->log("skips (query) " + urls.front().second);
+						this->log("skips (query) " + this->urls.front().second);
+
+					// unlock URL if necessary
+					this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
 
 					// finish skipped URL
 					this->parsingUrlFinished();
