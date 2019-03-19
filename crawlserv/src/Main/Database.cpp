@@ -2888,6 +2888,24 @@ namespace crawlservpp::Main {
 	}
 
 	/*
+	 * DATABASE FUNCTIONS
+	 */
+
+	// disable locking
+	void Database::beginNoLock() {
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+		sqlStatement->execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+	}
+
+	// re-enable locking by ending (non-existing) transaction
+	void Database::endNoLock() {
+		SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+		sqlStatement->execute("COMMIT");
+	}
+
+	/*
 	 * GENERAL TABLE FUNCTIONS
 	 */
 

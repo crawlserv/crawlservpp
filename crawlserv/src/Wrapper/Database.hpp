@@ -73,6 +73,10 @@ namespace crawlservpp::Wrapper {
 		// wrapper for configuration function
 		std::string getConfiguration(unsigned long configId);
 
+		// wrappers for database functions
+		void beginNoLock();
+		void endNoLock();
+
 		// wrappers for target table functions
 		unsigned long addTargetTable(const TargetTableProperties& properties);
 		std::queue<IdString> getTargetTables(const std::string& type, unsigned long listId);
@@ -205,6 +209,16 @@ namespace crawlservpp::Wrapper {
 	// get a configuration from the database by its ID
 	inline std::string Database::getConfiguration(unsigned long configId) {
 		return this->database.getConfiguration(configId);
+	}
+
+	// disable locking
+	inline void Database::beginNoLock() {
+		this->database.beginNoLock();
+	}
+
+	// re-enable locking by ending (non-existing) transaction
+	inline void Database::endNoLock() {
+		this->database.endNoLock();
 	}
 
 	// add a target table of the specified type to the database if such a table does not exist already, return table ID

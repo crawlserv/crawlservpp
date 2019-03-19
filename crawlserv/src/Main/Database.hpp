@@ -188,6 +188,10 @@ namespace crawlservpp::Main {
 		bool isConfiguration(unsigned long configId);
 		bool isConfiguration(unsigned long websiteId, unsigned long configId);
 
+		// database functions
+		void beginNoLock();
+		void endNoLock();
+
 		// general table functions
 		bool isTableEmpty(const std::string& tableName);
 		bool isTableExists(const std::string& tableName);
