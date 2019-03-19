@@ -338,6 +338,12 @@ namespace crawlservpp::Module::Parser {
 		// save results if necessary
 		this->parsingSaveResults();
 
+		// save status message
+		std::string oldStatus = this->getStatusMessage();
+
+		// set status message
+		this->setStatusMessage("Finishing up...");
+
 		// unlock remaining URLs
 		while(!(this->urls.empty())) {
 			if(!(this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime))
@@ -353,6 +359,9 @@ namespace crawlservpp::Module::Parser {
 		this->queriesFields.clear();
 		this->queriesId.clear();
 		this->clearQueries();
+
+		// update status message
+		this->setStatusMessage(oldStatus);
 	}
 
 	// shadow pause function not to be used by thread
