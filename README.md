@@ -75,8 +75,6 @@ The source code of the server consists of the following classes (as of February 
 * **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.hpp)**: Wrapper for pointer to Perl-Compatible Regular Expression.
 * **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.hpp)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
 * **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.hpp)**: RAII wrapper for prepared SQL statement pointer.
-* **[`Wrapper::TableLock`](crawlserv/src/Wrapper/TableLock.hpp)**: Template class for safe in-scope table locks.
-* **[`Wrapper::TargetTablesLock`](crawlserv/src/Wrapper/TargetTablesLock.hpp)**: Safe in-scope table lock for target tables (using a reference to the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Wrapper::URI`](crawlserv/src/Wrapper/URI.hpp)**: Wrapper for pointer to URI structure.
 * **[`Wrapper::URIQueryList`](crawlserv/src/Wrapper/URIQueryList.hpp)**: RAII wrapper for pointer to URI query list.
 
@@ -101,7 +99,6 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.hpp)**: Basic query properties (name, text, type, result type).
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.hpp)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
 * **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.hpp)**: Structure for table columns (name, type, reference, indexed).
-* **[`Struct::TableLockProperties`](crawlserv/src/Struct/TableLockProperties.hpp)**: Structure for table locks (table name, alias name, number of aliases).
 * **[`Struct::TargetTableProperties`](crawlserv/src/Struct/TargetTableProperties.hpp)**: Target table properties (type, website, URL list, name and full name, columns, compression).
 * **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.hpp)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.hpp)**: Basic thread options (IDs of website, URL list and configuration).
