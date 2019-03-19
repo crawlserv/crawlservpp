@@ -480,18 +480,7 @@ namespace crawlservpp::Module::Crawler {
 			sqlStatement.setString(4, urlString);
 			sqlStatement.setBoolean(5, manual);
 
-			{ // lock URL list
-				TableLock urlListLock(
-						*this,
-						TableLockProperties(
-							this->urlListTable,
-							this->urlListTableAlias,
-							1
-						)
-				);
-
-				return Database::sqlExecuteUpdate(sqlStatement) > 0;
-			} // URL list is unlocked
+			return Database::sqlExecuteUpdate(sqlStatement) > 0;
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlIfNotExists", e); }
 
@@ -524,16 +513,7 @@ namespace crawlservpp::Module::Crawler {
 		sql::PreparedStatement& sqlStatement100 = this->getPreparedStatement(this->ps.add100UrlsIfNotExist);
 		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.add1000UrlsIfNotExist);
 
-		try { // lock URL list
-			TableLock urlListLock(
-					*this,
-					TableLockProperties(
-							this->urlListTable,
-							this->urlListTableAlias,
-							1000
-					)
-			);
-
+		try {
 			// add 1.000 URLs at once
 			while(urls.size() >= 1000) {
 				for(unsigned long n = 0; n < 1000; n++) {
@@ -592,7 +572,7 @@ namespace crawlservpp::Module::Crawler {
 				if(Database::sqlExecuteUpdate(sqlStatement1) > 0)
 					result++;
 			}
-		} // URl list unlocked
+		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlsIfNotExist", e); }
 
 		return result;
@@ -836,57 +816,53 @@ namespace crawlservpp::Module::Crawler {
 		if(!urlId)
 			throw DatabaseException("Crawler::Database::lockUrlIfOk(): No URL ID specified");
 
-		// check connection
-		this->checkConnection();
-
-		// check prepared SQL statements
-		if(!(this->ps.addUrlLockIfOk) || !(this->ps.renewUrlLockIfOk))
-			throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
-
-		if(lockTime.empty()) {
-			// get prepared SQL statement for locking the URL
-			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLockIfOk);
-
-			// add URL lock to database
+		while(true) { // re-try on deadlock
 			try {
-				// execute SQL query
-				sqlStatement.setUInt64(1, urlId);
-				sqlStatement.setUInt64(2, urlId);
-				sqlStatement.setUInt64(3, lockTimeout);
+				// check connection
+				this->checkConnection();
 
-				{ // lock crawling table
-					TableLock crawlingTableLock(
-							*this,
-							TableLockProperties(
-									this->crawlingTable,
-									this->crawlingTableAlias,
-									1
-							)
-					);
+				// check prepared SQL statements
+				if(!(this->ps.addUrlLockIfOk) || !(this->ps.renewUrlLockIfOk))
+					throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
 
-					if(Database::sqlExecuteUpdate(sqlStatement) < 1)
-						return std::string(); // locking failed when no entries have been updated
-				} // crawling table unlocked
+				if(lockTime.empty()) {
+					// get prepared SQL statement for locking the URL
+					sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLockIfOk);
+
+					// add URL lock to database
+					try {
+						// execute SQL query
+						sqlStatement.setUInt64(1, urlId);
+						sqlStatement.setUInt64(2, urlId);
+						sqlStatement.setUInt64(3, lockTimeout);
+
+						if(Database::sqlExecuteUpdate(sqlStatement) < 1)
+							return std::string(); // locking failed when no entries have been updated
+					}
+					catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk", e); }
+				}
+				else {
+					// get prepared SQL statement for renewing the URL lock
+					sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
+
+					// lock URL in database
+					dbg = "renewUrlLockIfOk";
+					try {
+						// execute SQL query
+						sqlStatement.setUInt64(1, lockTimeout);
+						sqlStatement.setString(2, lockTime);
+						sqlStatement.setUInt64(3, urlId);
+						sqlStatement.setString(4, lockTime);
+
+						if(Database::sqlExecuteUpdate(sqlStatement) < 1)
+							return std::string(); // locking failed when no entries have been updated
+					}
+					catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk > " + dbg, e); }
+				}
+
+				break;
 			}
-			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk", e); }
-		}
-		else {
-			// get prepared SQL statement for renewing the URL lock
-			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
-
-			// lock URL in database
-			dbg = "renewUrlLockIfOk";
-			try {
-				// execute SQL query
-				sqlStatement.setUInt64(1, lockTimeout);
-				sqlStatement.setString(2, lockTime);
-				sqlStatement.setUInt64(3, urlId);
-				sqlStatement.setString(4, lockTime);
-
-				if(Database::sqlExecuteUpdate(sqlStatement) < 1)
-					return std::string(); // locking failed when no entries have been updated
-			}
-			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk > " + dbg, e); }
+			catch(const DeadlockException& e) { /* retry */ }
 		}
 
 		// get new expiration time of URL lock

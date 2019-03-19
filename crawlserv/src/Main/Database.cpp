@@ -4767,7 +4767,7 @@ namespace crawlservpp::Main {
 	 * EXCEPTION HELPER FUNCTION (protected)
 	 */
 
-	// catch SQL exception and re-throw it as Database::ConnectionException or a Database::Exception
+	// catch SQL exception and re-throw it as DeadlockException, ConnectionException or generic Exception
 	void Database::sqlException(const std::string& function, const sql::SQLException& e) {
 		// create error string
 		std::ostringstream errorStrStr;
@@ -4777,6 +4777,10 @@ namespace crawlservpp::Main {
 
 		// check for connection error
 		switch(error) {
+		case 1213: // Deadlock
+			// throw deadlock exception
+			throw Database::DeadlockException(errorStrStr.str());
+
 		case 1027: // Sort aborted
 		case 1040: // Too many connections
 		case 1042: // Can't get hostname for your address

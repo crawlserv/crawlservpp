@@ -231,6 +231,11 @@ namespace crawlservpp::Main {
 			ConnectionException(const std::string& description) : Exception(description) {}
 		};
 
+		class DeadlockException : public Exception { // deadlock exception (used to restart complex queries)
+		public:
+			DeadlockException(const std::string& description) : Exception(description) {}
+		};
+
 		// not moveable, not copyable
 		Database(Database&) = delete;
 		Database(Database&&) = delete;

@@ -456,91 +456,89 @@ namespace crawlservpp::Module::Parser {
 		sql::PreparedStatement& sqlStatementLock100 = this->getPreparedStatement(this->ps.lock100Urls);
 		sql::PreparedStatement& sqlStatementLock1000 = this->getPreparedStatement(this->ps.lock1000Urls);
 
-		try { // lock URL list and parsing table
-			std::vector<TableLockProperties> lockProperties;
+		// get lock expiration time
+		std::string lockTime = this->getLockTime(lockTimeout);
 
-			lockProperties.emplace_back(this->urlListTable);
-			lockProperties.emplace_back(this->urlListTable + "_crawled");
-			lockProperties.emplace_back(this->parsingTable, this->parsingTableAlias, 1000);
+		while(true) { // re-try on deadlock
+			try {
+				try {
+					// execute SQL query for fetching URLs
+					sqlStatementFetch.setUInt64(1, lastId);
+					sqlStatementFetch.setUInt64(2, lastId);
 
-			TableLock multiTableLock(*this, lockProperties);
+					SqlResultSetPtr sqlResultSetFetch(Database::sqlExecuteQuery(sqlStatementFetch));
 
-			// get lock expiration time
-			std::string lockTime = this->getLockTime(lockTimeout);
+					// get results from fetching URLs
+					if(sqlResultSetFetch) {
+						while(sqlResultSetFetch->next()) {
+							cache.emplace(
+								sqlResultSetFetch->getUInt64("id"),
+								sqlResultSetFetch->getString("url")
+							);
 
-			// execute SQL query for fetching URLs
-			sqlStatementFetch.setUInt64(1, lastId);
-			sqlStatementFetch.setUInt64(2, lastId);
-
-			SqlResultSetPtr sqlResultSetFetch(Database::sqlExecuteQuery(sqlStatementFetch));
-
-			// get results from fetching URLs
-			if(sqlResultSetFetch) {
-				while(sqlResultSetFetch->next()) {
-					cache.emplace(
-						sqlResultSetFetch->getUInt64("id"),
-						sqlResultSetFetch->getString("url")
-					);
-
-					lockingQueue.push(cache.back().first);
+							lockingQueue.push(cache.back().first);
+						}
+					}
 				}
+				catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
+
+				break;
 			}
+			catch(const DeadlockException & e) { /* retry */ }
+		}
 
-			// set 1,000 locks at once
-			while(lockingQueue.size() >= 1000) {
-				for(unsigned long n = 0; n < 1000; n++) {
-					sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
-					sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
-					sqlStatementLock1000.setString(n * 3 + 3, lockTime);
-					lockingQueue.pop();
-				}
-
-				// execute SQL query
-				Database::sqlExecute(sqlStatementLock1000);
-			}
-
-			// set 100 locks at once
-			while(lockingQueue.size() >= 100) {
-				for(unsigned long n = 0; n < 100; n++) {
-					sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
-					sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
-					sqlStatementLock100.setString(n * 3 + 3, lockTime);
-					lockingQueue.pop();
-				}
-
-				// execute SQL query
-				Database::sqlExecute(sqlStatementLock100);
-			}
-
-			// set 10 locks at once
-			while(lockingQueue.size() >= 10) {
-				for(unsigned long n = 0; n < 10; n++) {
-					sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
-					sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
-					sqlStatementLock10.setString(n * 3 + 3, lockTime);
-					lockingQueue.pop();
-				}
-
-				// execute SQL query
-				Database::sqlExecute(sqlStatementLock10);
-			}
-
-			// set remaining locks
-			while(!lockingQueue.empty()) {
-				sqlStatementLock1.setUInt64(1, lockingQueue.front());
-				sqlStatementLock1.setUInt64(2, lockingQueue.front());
-				sqlStatementLock1.setString(3, lockTime);
+		// set 1,000 locks at once
+		while(lockingQueue.size() >= 1000) {
+			for(unsigned long n = 0; n < 1000; n++) {
+				sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
+				sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
+				sqlStatementLock1000.setString(n * 3 + 3, lockTime);
 				lockingQueue.pop();
-
-				// execute SQL query
-				Database::sqlExecute(sqlStatementLock1);
 			}
 
-			// return the expiration time of all locks
-			return lockTime;
+			// execute SQL query
+			Database::sqlExecute(sqlStatementLock1000);
+		}
 
-		} // tables are unlocked
-		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
+		// set 100 locks at once
+		while(lockingQueue.size() >= 100) {
+			for(unsigned long n = 0; n < 100; n++) {
+				sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
+				sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
+				sqlStatementLock100.setString(n * 3 + 3, lockTime);
+				lockingQueue.pop();
+			}
+
+			// execute SQL query
+			Database::sqlExecute(sqlStatementLock100);
+		}
+
+		// set 10 locks at once
+		while(lockingQueue.size() >= 10) {
+			for(unsigned long n = 0; n < 10; n++) {
+				sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
+				sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
+				sqlStatementLock10.setString(n * 3 + 3, lockTime);
+				lockingQueue.pop();
+			}
+
+			// execute SQL query
+			Database::sqlExecute(sqlStatementLock10);
+		}
+
+		// set remaining locks
+		while(!lockingQueue.empty()) {
+			sqlStatementLock1.setUInt64(1, lockingQueue.front());
+			sqlStatementLock1.setUInt64(2, lockingQueue.front());
+			sqlStatementLock1.setString(3, lockTime);
+			lockingQueue.pop();
+
+			// execute SQL query
+			Database::sqlExecute(sqlStatementLock1);
+		}
+
+		// return the expiration time of all locks
+		return lockTime;
 
 		return std::string();
 	}
@@ -899,15 +897,7 @@ namespace crawlservpp::Module::Parser {
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 			if(!(i->empty())) fields++;
 
-		try { // lock target table
-			TableLock targetTableLock(
-					*this,
-					TableLockProperties(
-							this->targetTableFull,
-							this->targetTableAlias,
-							1000
-					)
-			);
+		try {
 
 			// add 1,000 entries at once
 			while(entries.size() >= 1000) {
@@ -1042,7 +1032,7 @@ namespace crawlservpp::Module::Parser {
 				// execute SQL query
 				Database::sqlExecute(sqlStatement1);
 			}
-		} // target table unlocked
+		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::updateOrAddEntries", e); }
 	}
 

@@ -38,6 +38,7 @@ namespace crawlservpp::Module::Parser {
 
 	class Database : public Wrapper::Database {
 		// for convenience
+		typedef Main::Database::DeadlockException DeadlockException;
 		typedef Main::Database::Exception DatabaseException;
 		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::TargetTableProperties TargetTableProperties;
