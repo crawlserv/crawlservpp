@@ -191,7 +191,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
-					"SELECT COUNT(id) AS result"
+					"SELECT COUNT(*) AS result"
 					" FROM `" + this->urlListTable + "` WHERE id < ?"
 			);
 		}
@@ -201,7 +201,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
-					"SELECT COUNT(id) AS result"
+					"SELECT COUNT(*) AS result"
 					" FROM `" + this->urlListTable + "`"
 			);
 		}
@@ -614,9 +614,15 @@ namespace crawlservpp::Module::Crawler {
 
 		// get URL position of URL from database
 		try {
+			// disable locking
+			this->beginNoLock();
+
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
+			// re-enable locking
+			this->endNoLock();
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
@@ -643,8 +649,14 @@ namespace crawlservpp::Module::Crawler {
 
 		// get number of URLs from database
 		try {
+			// disable locking
+			this->beginNoLock();
+
 			// execute SQL query
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
+			// re-enable locking
+			this->endNoLock();
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
