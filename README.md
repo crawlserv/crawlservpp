@@ -71,6 +71,7 @@ The source code of the server consists of the following classes (as of February 
 * **[`Wrapper::Curl`](crawlserv/src/Wrapper/Curl.hpp)**: [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) wrapper for pointer to cURL instance, also handles global instance if necessary.
 * **[`Wrapper::CurlList`](crawlserv/src/Wrapper/CurlList.hpp)**: RAII wrapper for pointer to URI query list.
 * **[`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp)**: Abstract class for the database access of threads (wraps the [`Module::Database`](crawlserv/src/Module/Database.cpp) class).
+* **[`Wrapper::DatabaseLock`](crawlserv/src/Wrapper/DatabaseLock.hpp)**: Template class for safe in-scope database locks.
 * **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.hpp)**: Wrapper for pointer to Perl-Compatible Regular Expression.
 * **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.hpp)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
 * **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.hpp)**: RAII wrapper for prepared SQL statement pointer.
