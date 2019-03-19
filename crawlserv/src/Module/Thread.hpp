@@ -22,6 +22,7 @@
 #include "../Main/Database.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Struct/ThreadOptions.hpp"
+#include "../Wrapper/DatabaseLock.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -42,6 +43,7 @@ namespace crawlservpp::Module {
 		// for convenience
 		typedef Main::Database::ConnectionException ConnectionException;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 	public:
 		// constructors

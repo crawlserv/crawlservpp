@@ -20,7 +20,7 @@ namespace crawlservpp::Main {
 	#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
 	std::atomic<unsigned long long> Database::requestCounter(0);
 	#endif
-	std::atomic<bool> Database::preparingStatement(false);
+	std::mutex Database::lock;
 
 	// constructor: save settings and set default values
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
@@ -4387,22 +4387,11 @@ namespace crawlservpp::Main {
 		// check connection
 		this->checkConnection();
 
-		// wait for other threads preparing statements
-		while(Database::preparingStatement) {
-			std::this_thread::sleep_for(std::chrono::seconds(MAIN_DATABASE_SLEEP_ON_PREPARING_STATEMENT_SECONDS));
-		}
-
-		// only allow one class to prepare a SQL statement at once
-		Database::preparingStatement = true;
-
 		// try to prepare SQL statement
 		try {
 			this->preparedStatements.emplace_back(this->connection.get(), sqlQuery);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addPreparedStatement", e); }
-
-		// release lock for preparing statements
-		Database::preparingStatement = false;
 
 		return this->preparedStatements.size();
 	}
@@ -4468,6 +4457,16 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement, "ALTER TABLE `" + tableName + "` AUTO_INCREMENT = 1");
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAutoIncrement", e); }
+	}
+
+	// lock the database
+	void Database::lockDatabase() {
+		Database::lock.lock();
+	}
+
+	// unlock the database
+	void Database::unlockDatabase() {
+		Database::lock.unlock();
 	}
 
 	// lock a table in the database for writing (and its aliases for reading)

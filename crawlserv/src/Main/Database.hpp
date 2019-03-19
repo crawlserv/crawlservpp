@@ -18,7 +18,6 @@
 #define MAIN_DATABASE_LOCK_TIMEOUT_SECONDS 300 // time-out on table lock
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600 // force re-connect if the connection has been idle that long
 #define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5 // sleep on target table lock
-#define MAIN_DATABASE_SLEEP_ON_PREPARING_STATEMENT_SECONDS 1 // sleep while other classes are preparing SQL statements
 
 // optional debugging option
 #define MAIN_DATABASE_DEBUG_REQUEST_COUNTER // enable database request counter for debugging purposes
@@ -38,6 +37,7 @@
 #include "../Struct/UrlListProperties.hpp"
 #include "../Struct/WebsiteProperties.hpp"
 #include "../Timer/Simple.hpp"
+#include "../Wrapper/DatabaseLock.hpp"
 #include "../Wrapper/PreparedSqlStatement.hpp"
 #include "../Wrapper/TableLock.hpp"
 
@@ -50,7 +50,6 @@
 
 #include <experimental/filesystem>
 #include <algorithm>
-#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -61,6 +60,7 @@
 #include <iostream>
 #include <locale>
 #include <memory>
+#include <mutex>
 #include <queue>
 #include <sstream>
 #include <stdexcept>
@@ -97,7 +97,8 @@ namespace crawlservpp::Main {
 		typedef std::unique_ptr<sql::Statement> SqlStatementPtr;
 
 	public:
-		// allow TableLock access to protected locking functions
+		// allow locking classes access to protected locking functions
+		template<class DB> friend class Wrapper::DatabaseLock;
 		template<class DB> friend class Wrapper::TableLock;
 		friend class TargetTablesLock;
 
@@ -253,6 +254,8 @@ namespace crawlservpp::Main {
 		// database helper functions
 		unsigned long getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
+		void lockDatabase();
+		void unlockDatabase();
 		void lockTable(const TableLockProperties& lockProperties);
 		void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2);
 		void lockTables(const std::vector<TableLockProperties>& lockProperties);
@@ -350,7 +353,6 @@ namespace crawlservpp::Main {
 		unsigned long sleepOnError;
 		std::string module;
 		std::vector<std::pair<std::string, unsigned long>> targetTableLocks;
-		static std::atomic<bool> preparingStatement;
 
 		// optional private variables
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
@@ -359,6 +361,9 @@ namespace crawlservpp::Main {
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
 		static std::atomic<unsigned long long> requestCounter;
 #endif
+
+		// locking state
+		static std::mutex lock;
 
 		// prepared SQL statements
 		std::vector<Wrapper::PreparedSqlStatement> preparedStatements;
