@@ -27,7 +27,7 @@ The command-and-control server contains an embedded web server (implemented usin
 
 In the configuration file, access can (and should) be restricted to specific IPs only.
 
-### Classes, Namespaces, Structures and Enums
+### Classes, Namespaces and Structures
 
 **NB!** All non-external classes are part of the namespace `crawlservpp`.
 
