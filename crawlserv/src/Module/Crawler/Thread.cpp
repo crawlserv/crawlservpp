@@ -260,7 +260,7 @@ namespace crawlservpp::Module::Crawler {
 			// get archive (also when crawling failed!)
 			if(this->config.crawlerTiming) timerArchives.start();
 
-			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive)) {
+			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive, crawled)) {
 				if(crawled) {
 					// stop timers
 					if(this->config.crawlerTiming) {
@@ -305,10 +305,6 @@ namespace crawlservpp::Module::Crawler {
 						this->log(logStrStr.str());
 					}
 				}
-
-				// DEBUG
-				if(!this->nextUrl.first && !this->lockTime.empty()) Exception("URL not unlocked");
-				if(this->nextUrl.first && this->lockTime.empty()) Exception("URL not locked");
 			}
 			else if(!crawled)
 				// if crawling and getting archives failed, retry both (not only archives)
@@ -1010,7 +1006,7 @@ namespace crawlservpp::Module::Crawler {
 
 			this->networking.resetConnection(this->config.crawlerSleepError);
 
-			this->crawlingRetry(url, false, this->lockTime);
+			this->crawlingRetry(url, false);
 
 			return false;
 		}
@@ -1045,11 +1041,11 @@ namespace crawlservpp::Module::Crawler {
 
 				this->networking.resetConnection(this->config.crawlerSleepError);
 
-				this->crawlingRetry(url, false, this->lockTime);
+				this->crawlingRetry(url, false);
 			}
 			else {
 				// skip URL
-				this->crawlingSkip(url);
+				this->crawlingSkip(url, !(this->config.crawlerArchives));
 			}
 			return false;
 		}
@@ -1059,7 +1055,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->crawlingCheckResponseCode(url.second, responseCode))) {
 			// skip because of response code
-			this->crawlingSkip(url);
+			this->crawlingSkip(url, !(this->config.crawlerArchives));
 			return false;
 		}
 
@@ -1080,7 +1076,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->crawlingCheckContentType(url.second, contentType))) {
 			// skip because of content type (not on whitelist or on blacklist)
-			this->crawlingSkip(url);
+			this->crawlingSkip(url, !(this->config.crawlerArchives));
 
 			return false;
 		}
@@ -1089,7 +1085,7 @@ namespace crawlservpp::Module::Crawler {
 		//  (not very reliable though, mostly for debugging purposes)
 		if(!(this->crawlingCheckConsistency(url.second, content))) {
 			// skip because of HTML inconsistency
-			this->crawlingSkip(url);
+			this->crawlingSkip(url, !(this->config.crawlerArchives));
 
 			return false;
 		}
@@ -1108,7 +1104,7 @@ namespace crawlservpp::Module::Crawler {
 						" " + e.whatStr() + " [" + url.second + "]."
 				);
 
-			this->crawlingSkip(url);
+			this->crawlingSkip(url, !(this->config.crawlerArchives));
 
 			return false;
 		}
@@ -1116,7 +1112,7 @@ namespace crawlservpp::Module::Crawler {
 		// optional: simple HTML canonical check
 		//  (not very reliable though, mostly for debugging purposes)
 		if(!(this->crawlingCheckCanonical(url.second, doc))) {
-			this->crawlingSkip(url);
+			this->crawlingSkip(url, !(this->config.crawlerArchives));
 
 			return false;
 		}
@@ -1124,7 +1120,7 @@ namespace crawlservpp::Module::Crawler {
 		// check content
 		if(!(this->crawlingCheckContent(url.second, content, doc))) {
 			// skip because of content (not on whitelist or on blacklist)
-			this->crawlingSkip(url);
+			this->crawlingSkip(url, !(this->config.crawlerArchives));
 
 			return false;
 		}
@@ -1827,11 +1823,9 @@ namespace crawlservpp::Module::Crawler {
 	bool Thread::crawlingArchive(
 			IdString& url,
 			unsigned long& checkedUrlsTo,
-			unsigned long& newUrlsTo
+			unsigned long& newUrlsTo,
+			bool unlockUrl
 	) {
-		// save lock time of non-archived URL
-		std::string oldLockTime = this->lockTime;
-
 		// check arguments
 		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingArchive(): No URL ID specified");
@@ -2081,7 +2075,7 @@ namespace crawlservpp::Module::Crawler {
 															);
 
 															// retry
-															this->crawlingRetry(url, true, oldLockTime);
+															this->crawlingRetry(url, true);
 															return false;
 														}
 													}
@@ -2151,14 +2145,14 @@ namespace crawlservpp::Module::Crawler {
 
 					if(!success && this->config.crawlerRetryArchive) {
 						if(skip)
-							this->crawlingSkip(url);
+							this->crawlingSkip(url, unlockUrl);
 						else
-							this->crawlingRetry(url, true, oldLockTime);
+							this->crawlingRetry(url, true);
 
 						return false;
 					}
 					else if(!success)
-						this->crawlingSkip(url);
+						this->crawlingSkip(url, unlockUrl);
 				} // [end of loop over memento pages]
 
 			} // [end of loop over archives]
@@ -2216,7 +2210,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// skip URL after crawling problem
-	void Thread::crawlingSkip(const IdString& url) {
+	void Thread::crawlingSkip(const IdString& url, bool unlockUrl) {
 		// check argument
 		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL ID specified");
@@ -2245,9 +2239,11 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		// unlock URL if it has not been locked by anyone else
-		this->database.unLockUrlIfOk(url.first, this->lockTime);
-		this->lockTime = "";
+		if(unlockUrl) {
+			// unlock URL if it has not been locked by anyone else
+			this->database.unLockUrlIfOk(url.first, this->lockTime);
+			this->lockTime = "";
+		}
 
 		// do not retry
 		this->nextUrl = IdString();
@@ -2256,7 +2252,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// retry URL (completely or achives-only) after crawling problem
 	//  NOTE: leaves the URL lock active for retry
-	void Thread::crawlingRetry(const IdString& url, bool archiveOnly, const std::string oldLockTime) {
+	void Thread::crawlingRetry(const IdString& url, bool archiveOnly) {
 		// check argument
 		if(!url.first)
 			throw Exception("Crawler::Thread::crawlingRetry(): No URL ID specified");
@@ -2268,7 +2264,7 @@ namespace crawlservpp::Module::Crawler {
 			this->retryCounter++;
 			if(this->retryCounter > (unsigned long) this->config.crawlerReTries) {
 				// do not retry, but skip
-				this->crawlingSkip(url);
+				this->crawlingSkip(url, true);
 
 				return;
 			}
@@ -2276,8 +2272,6 @@ namespace crawlservpp::Module::Crawler {
 
 		if(archiveOnly)
 			this->archiveRetry = true;
-		else
-			this->lockTime = oldLockTime;
 	}
 
 	// parse memento reply, get mementos and link to next page if one exists
