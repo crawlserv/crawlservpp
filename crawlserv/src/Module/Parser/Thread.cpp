@@ -345,13 +345,7 @@ namespace crawlservpp::Module::Parser {
 		this->setStatusMessage("Finishing up...");
 
 		// unlock remaining URLs
-		while(!(this->urls.empty())) {
-			if(!(this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime))
-					&& this->config.generalLogging)
-				this->log("WARNING: Could not unlock " + this->urls.front().second);
-
-			this->urls.pop();
-		}
+		this->database.unLockUrlsIfOk(this->urls, this->cacheLockTime);
 
 		// delete queries
 		this->queriesSkip.clear();
@@ -1061,7 +1055,8 @@ namespace crawlservpp::Module::Parser {
 		// check whether there are no results
 		if(this->results.empty()) {
 			// set last URL
-			this->setLast(this->lastUrl);
+			if(this->lastUrl)
+				this->setLast(this->lastUrl);
 
 			// no results: done!
 			return;

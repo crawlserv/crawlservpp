@@ -127,10 +127,8 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 
-		{ // lock analyzing tables
-			TargetTablesLock(*this, "analyzed", this->website, this->urlList, this->timeoutTargetLock, isRunning);
-			this->addTargetTable(properties);
-		} // analyzing tables unlocked
+		// add target table
+		this->addTargetTable(properties);
 	}
 
 	// prepare SQL statements for analyzer, throws Main::Database::Exception

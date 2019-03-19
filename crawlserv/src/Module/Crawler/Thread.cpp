@@ -214,21 +214,6 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(this->config.crawlerUrlSelectionLock) {
-			// lock URL list and crawling table for URL selection
-			TableLock multiTableLock(
-					this->database,
-					TableLockProperties(
-							this->urlListTable,
-							this->database.urlListTableAlias,
-							1
-					),
-					TableLockProperties(
-							this->crawlingTable,
-							this->database.crawlingTableAlias,
-							1
-					)
-			);
-
 			// URL selection
 			urlSelection = this->crawlingUrlSelection(url);
 		} // URL list and crawling table unlocked

@@ -10,10 +10,8 @@
 #ifndef MODULE_CRAWLER_DATABASE_HPP_
 #define MODULE_CRAWLER_DATABASE_HPP_
 
-#include "../../Struct/TableLockProperties.hpp"
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/Database.hpp"
-#include "../../Wrapper/TableLock.hpp"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -35,10 +33,7 @@ namespace crawlservpp::Module::Crawler {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef Main::Database::DeadlockException DeadlockException;
 		typedef Main::Database::Exception DatabaseException;
-		typedef Struct::TableLockProperties TableLockProperties;
-		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;

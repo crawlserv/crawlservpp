@@ -16,7 +16,6 @@
 #include "../Module/Database.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/TableColumn.hpp"
-#include "../Struct/TableLockProperties.hpp"
 #include "../Struct/TargetTableProperties.hpp"
 #include "../Struct/QueryProperties.hpp"
 
@@ -40,7 +39,6 @@ namespace crawlservpp::Wrapper {
 		// for convenience
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::TableColumn TableColumn;
-		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::TargetTableProperties TargetTableProperties;
 
 		typedef std::function<bool()> CallbackIsRunning;
@@ -141,13 +139,6 @@ namespace crawlservpp::Wrapper {
 		// wrappers for database helper functions
 		void checkConnection();
 		unsigned long getLastInsertedId();
-		void lockTable(const TableLockProperties& lockProperties);
-		void lockTables(
-				const TableLockProperties& lockProperties1,
-				const TableLockProperties& lockProperties2
-		);
-		void lockTables(const std::vector<TableLockProperties>& lockProperties);
-		void unlockTables();
 		void createTable(
 				const std::string& tableName,
 				const std::vector<TableColumn>& columns,
@@ -369,26 +360,6 @@ namespace crawlservpp::Wrapper {
 	// get the last inserted ID from the database
 	inline unsigned long Database::getLastInsertedId() {
 		return this->database.getLastInsertedId();
-	}
-
-	// lock a table in the database for writing (and its aliases for reading)
-	inline void Database::lockTable(const TableLockProperties& lockProperties) {
-		this->database.lockTable(lockProperties);
-	}
-
-	// lock two tables in the database for writing (and their aliases for reading)
-	inline void Database::lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) {
-		this->database.lockTables(lockProperties1, lockProperties2);
-	}
-
-	// lock multiple tables in the database for writing (and their aliases for reading)
-	inline void Database::lockTables(const std::vector<TableLockProperties>& lockProperties) {
-		this->database.lockTables(lockProperties);
-	}
-
-	// unlock tables in the database
-	inline void Database::unlockTables() {
-		this->database.unlockTables();
 	}
 
 	// add a table to the database (the primary key 'id' will be created automatically)

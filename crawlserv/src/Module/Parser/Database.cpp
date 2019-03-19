@@ -115,22 +115,19 @@ namespace crawlservpp::Module::Parser {
 				this->targetTableFull,
 				true
 		);
-		properties.columns.reserve(3 + this->targetFieldNames.size());
+		properties.columns.reserve(4 + this->targetFieldNames.size());
 
 		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL UNIQUE");
 		properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
+		properties.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
 		properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
 
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
 			if(!(i->empty()))
 				properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
 
-		{ // lock parsing table
-			TargetTablesLock(*this, "parsed", this->website, this->urlList, this->timeoutTargetLock, isRunning);
-
-			// add target table if it does not exist already
-			this->targetTableId = this->addTargetTable(properties);
-		} // parsing table unlocked
+		// add target table if it does not exist already
+		this->targetTableId = this->addTargetTable(properties);
 	}
 
 	// prepare SQL statements for parser
@@ -336,8 +333,13 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares getContentIdFromParsedId()...");
 
 			this->ps.getContentIdFromParsedId = this->addPreparedStatement(
-					"SELECT content FROM `" + this->targetTableFull + "`"
-					" WHERE parsed_id = ?"
+					"SELECT content FROM"
+					" ("
+						" SELECT id, parsed_id, content FROM "
+						" `" + this->targetTableFull + "`"
+						" WHERE hash = CRC32( ? )"
+					" ) AS tmp"
+					" WHERE parsed_id LIKE ?"
 					" ORDER BY id DESC"
 					" LIMIT 1"
 			);
@@ -459,33 +461,26 @@ namespace crawlservpp::Module::Parser {
 		// get lock expiration time
 		std::string lockTime = this->getLockTime(lockTimeout);
 
-		while(true) { // re-try on deadlock
-			try {
-				try {
-					// execute SQL query for fetching URLs
-					sqlStatementFetch.setUInt64(1, lastId);
-					sqlStatementFetch.setUInt64(2, lastId);
+		try {
+			// execute SQL query for fetching URLs
+			sqlStatementFetch.setUInt64(1, lastId);
+			sqlStatementFetch.setUInt64(2, lastId);
 
-					SqlResultSetPtr sqlResultSetFetch(Database::sqlExecuteQuery(sqlStatementFetch));
+			SqlResultSetPtr sqlResultSetFetch(Database::sqlExecuteQuery(sqlStatementFetch));
 
-					// get results from fetching URLs
-					if(sqlResultSetFetch) {
-						while(sqlResultSetFetch->next()) {
-							cache.emplace(
-								sqlResultSetFetch->getUInt64("id"),
-								sqlResultSetFetch->getString("url")
-							);
+			// get results from fetching URLs
+			if(sqlResultSetFetch) {
+				while(sqlResultSetFetch->next()) {
+					cache.emplace(
+						sqlResultSetFetch->getUInt64("id"),
+						sqlResultSetFetch->getString("url")
+					);
 
-							lockingQueue.push(cache.back().first);
-						}
-					}
+					lockingQueue.push(cache.back().first);
 				}
-				catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
-
-				break;
 			}
-			catch(const DeadlockException & e) { /* retry */ }
 		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::fetchUrls", e); }
 
 		// set 1,000 locks at once
 		while(lockingQueue.size() >= 1000) {
@@ -733,6 +728,44 @@ namespace crawlservpp::Module::Parser {
 		return false;
 	}
 
+	// unlock multiple URLs in the database
+	//  NOTE: creates the prepared statement shortly before query execution as it is only used once (on shutdown)
+	void Database::unLockUrlsIfOk(std::queue<IdString>& urls, const std::string& lockTime) {
+		// check argument
+		if(urls.empty())
+			return; // no URLs to unlock
+
+		// check connection
+		this->checkConnection();
+
+		// create and get prepared SQL statement
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(
+				this->addPreparedStatement(
+						this->queryUnlockUrlsIfOk(urls.size())
+				)
+		);
+
+		// unlock URLs in database
+		try {
+			// set placeholders
+			unsigned long counter = 1;
+
+			while(!urls.empty()) {
+				sqlStatement.setUInt64(counter, urls.front().first);
+
+				urls.pop();
+
+				counter++;
+			}
+
+			sqlStatement.setString(counter, lockTime);
+
+			// execute SQL query
+			Database::sqlExecute(sqlStatement);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::unLockUrlsIfOk", e); }
+	}
+
 	// get content ID from parsed ID
 	unsigned long Database::getContentIdFromParsedId(const std::string& parsedId) {
 		unsigned long result = 0;
@@ -755,6 +788,7 @@ namespace crawlservpp::Module::Parser {
 		try {
 			// execute SQL query
 			sqlStatement.setString(1, parsedId);
+			sqlStatement.setString(2, parsedId);
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get (and parse) result
@@ -892,7 +926,7 @@ namespace crawlservpp::Module::Parser {
 		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.updateOrAdd1000Entries);
 
 		// count fields
-		unsigned long fields = 3;
+		unsigned long fields = 4;
 
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
 			if(!(i->empty())) fields++;
@@ -908,14 +942,15 @@ namespace crawlservpp::Module::Parser {
 					// set default values
 					sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement1000.setString(n * fields + 2, entries.front().parsedId);
+					sqlStatement1000.setString(n * fields + 3, entries.front().parsedId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement1000.setNull(n * fields + 3, 0);
+						sqlStatement1000.setNull(n * fields + 4, 0);
 					else
-						sqlStatement1000.setString(n * fields + 3, entries.front().dateTime);
+						sqlStatement1000.setString(n * fields + 4, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 4;
+					unsigned int counter = 5;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -942,14 +977,15 @@ namespace crawlservpp::Module::Parser {
 					// set default values
 					sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement100.setString(n * fields + 2, entries.front().parsedId);
+					sqlStatement100.setString(n * fields + 3, entries.front().parsedId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement100.setNull(n * fields + 3, 0);
+						sqlStatement100.setNull(n * fields + 4, 0);
 					else
-						sqlStatement100.setString(n * fields + 3, entries.front().dateTime);
+						sqlStatement100.setString(n * fields + 4, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 4;
+					unsigned int counter = 5;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -976,14 +1012,15 @@ namespace crawlservpp::Module::Parser {
 					// set default values
 					sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement10.setString(n * fields + 2, entries.front().parsedId);
+					sqlStatement10.setString(n * fields + 3, entries.front().parsedId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement10.setNull(n * fields + 3, 0);
+						sqlStatement10.setNull(n * fields + 4, 0);
 					else
-						sqlStatement10.setString(n * fields + 3, entries.front().dateTime);
+						sqlStatement10.setString(n * fields + 4, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 4;
+					unsigned int counter = 5;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -1009,14 +1046,15 @@ namespace crawlservpp::Module::Parser {
 				// set default values
 				sqlStatement1.setUInt64(1, entries.front().contentId);
 				sqlStatement1.setString(2, entries.front().parsedId);
+				sqlStatement1.setString(3, entries.front().parsedId);
 
 				if(entries.front().dateTime.empty())
-					sqlStatement1.setNull(3, 0);
+					sqlStatement1.setNull(4, 0);
 				else
-					sqlStatement1.setString(3, entries.front().dateTime);
+					sqlStatement1.setString(4, entries.front().dateTime);
 
 				// set custom values
-				unsigned int counter = 4;
+				unsigned int counter = 5;
 
 				for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 					if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -1226,52 +1264,52 @@ namespace crawlservpp::Module::Parser {
 			throw DatabaseException("Database::queryUpdateOrAddEntries(): No number of entries specified");
 
 		// create INSERT INTO clause
-		std::ostringstream sqlQueryStrStr;
-
-		sqlQueryStrStr << 		"INSERT INTO `" << this->targetTableFull << "`"
+		std::string sqlQueryStr("INSERT INTO `" + this->targetTableFull + "`"
 								" ("
 									" content,"
 									" parsed_id,"
-									" parsed_datetime";
+									" hash,"
+									" parsed_datetime");
 
 		unsigned long counter = 0;
 
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
 			if(!(i->empty())) {
-				sqlQueryStrStr << 	", `parsed__" + *i + "`";
+				sqlQueryStr += 		", `parsed__" + *i + "`";
 				counter++;
 			}
 		}
 
-		sqlQueryStrStr << 		")"
+		sqlQueryStr += 			")"
 								" VALUES ";
 
 		// create placeholder list (including existence check)
 		for(unsigned int n = 1; n <= numberOfEntries; n++) {
-			sqlQueryStrStr <<		"( "
-										"?, ?, ?";
+			sqlQueryStr +=		"( "
+										"?, ?, CRC32( ? ), ?";
 
 			for(unsigned long c = 0; c < counter; c++)
-				sqlQueryStrStr << 		", ?";
+				sqlQueryStr +=	 		", ?";
 
-			sqlQueryStrStr << 		")";
+			sqlQueryStr +=			")";
 
 			if(n < numberOfEntries)
-				sqlQueryStrStr <<	", ";
+				sqlQueryStr +=		", ";
 		}
 
 		// create ON DUPLICATE KEY UPDATE clause
-		sqlQueryStrStr <<			" ON DUPLICATE KEY UPDATE"
+		sqlQueryStr +=				" ON DUPLICATE KEY UPDATE"
 									" parsed_id = VALUES(parsed_id),"
+									" hash = VALUES(hash),"
 									" parsed_datetime = VALUES(parsed_datetime)";
 
-		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
+		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
 			if(!(i->empty()))
-				sqlQueryStrStr <<	", `parsed__" << *i << "`"
-									" = VALUES(`parsed__" << *i << "`)";
+				sqlQueryStr 	+=	", `parsed__" + *i + "`"
+									" = VALUES(`parsed__" + *i + "`)";
 
 		// return query
-		return sqlQueryStrStr.str();
+		return sqlQueryStr;
 	}
 
 	// generate SQL query for setting a specific number of URLs to finished if they haven't been locked since parsing
@@ -1305,6 +1343,33 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// return query
+		return sqlQueryStrStr.str();
+	}
+
+	// generate SQL query for unlocking multiple URls if they haven't been locked since fetching
+	std::string Database::queryUnlockUrlsIfOk(unsigned int numberOfUrls) {
+		std::ostringstream sqlQueryStrStr;
+
+		sqlQueryStrStr <<	"UPDATE `" << this->parsingTable << "`"
+							" SET locktime = NULL"
+							" WHERE target = " << this->targetTableId <<
+							" AND"
+							" (";
+
+		for(unsigned long n = 1; n <= numberOfUrls; n++) {
+			sqlQueryStrStr <<	" url = ?";
+
+			if(n < numberOfUrls)
+				sqlQueryStrStr << " OR";
+		}
+
+		sqlQueryStrStr <<	" )"
+							" AND"
+							" ("
+								" locktime <= ?"
+								" OR locktime <= NOW()"
+							" )";
+
 		return sqlQueryStrStr.str();
 	}
 

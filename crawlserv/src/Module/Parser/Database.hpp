@@ -14,8 +14,6 @@
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Wrapper/Database.hpp"
-#include "../../Wrapper/TableLock.hpp"
-#include "../../Wrapper/TargetTablesLock.hpp"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -38,13 +36,10 @@ namespace crawlservpp::Module::Parser {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef Main::Database::DeadlockException DeadlockException;
 		typedef Main::Database::Exception DatabaseException;
-		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::TargetTableProperties TargetTableProperties;
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::TableColumn TableColumn;
-		typedef Wrapper::TableLock<Wrapper::Database> TableLock;
 		typedef Wrapper::TargetTablesLock TargetTablesLock;
 
 		typedef std::function<bool()> CallbackIsRunning;
@@ -83,6 +78,7 @@ namespace crawlservpp::Module::Parser {
 		std::string getUrlLockTime(unsigned long urlId);
 		std::string renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout);
 		bool unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
+		void unLockUrlsIfOk(std::queue<IdString>& urls, const std::string& lockTime);
 
 		// parsing functions
 		unsigned int checkParsingTable();
@@ -156,6 +152,7 @@ namespace crawlservpp::Module::Parser {
 		std::string queryLockUrls(unsigned int numberOfUrls);
 		std::string queryUpdateOrAddEntries(unsigned int numberOfEntries);
 		std::string querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls);
+		std::string queryUnlockUrlsIfOk(unsigned int numberOfUrls);
 	};
 
 } /* crawlservpp::Module::Crawler */

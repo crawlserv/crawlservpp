@@ -24,8 +24,7 @@ namespace crawlservpp::Main {
 
 	// constructor: save settings and set default values
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
-			: tablesLocked(false),
-			  settings(dbSettings),
+			: settings(dbSettings),
 			  maxAllowedPacketSize(0),
 			  sleepOnError(0),
 			  module(dbModule),
@@ -212,12 +211,6 @@ namespace crawlservpp::Main {
 
 	// add a log entry to the database (for any module)
 	void Database::log(const std::string& logModule, const std::string& logEntry) {
-		// check table lock
-		if(this->tablesLocked) {
-			std::cout << std::endl << logModule << ": " << logEntry << std::flush;
-			return;
-		}
-
 		// check connection
 		this->checkConnection();
 
@@ -243,7 +236,12 @@ namespace crawlservpp::Main {
 
 			Database::sqlExecute(sqlStatement);
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::log", e); }
+		catch(const sql::SQLException &e) {
+			// write log entry to console instead
+			std::cout << std::endl << logModule << ": " << logEntry << std::flush;
+
+			this->sqlException("Main::Database::log", e);
+		}
 	}
 
 	// add a log entry to the database (for the current module)
@@ -1748,23 +1746,14 @@ namespace crawlservpp::Main {
 		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
-		{ // lock parsing table
-			TableLock parsingTableLock(
-					*this,
-					TableLockProperties(
-							"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing"
-					)
+		try {
+			// update parsing table
+			this->execute(
+					"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing`"
+					" SET success = FALSE, locktime = NULL"
 			);
-
-			try {
-				// update parsing table
-				this->execute(
-						"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_parsing`"
-						" SET success = FALSE, locktime = NULL"
-				);
-			}
-			catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetParsingStatus", e); }
-		} // parsing table unlocked
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetParsingStatus", e); }
 	}
 
 	// reset extracting status of ID-specified URL list
@@ -1777,23 +1766,14 @@ namespace crawlservpp::Main {
 		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
-		{ // lock extracting table
-			TableLock extractingTableLock(
-					*this,
-					TableLockProperties(
-							"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting"
-					)
+		try {
+			// update extracting table
+			this->execute(
+					"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting`"
+					" SET success = FALSE, locktime = NULL"
 			);
-
-			try {
-				// update extracting table
-				this->execute(
-						"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_extracting`"
-						" SET success = FALSE, locktime = NULL"
-				);
-			}
-			catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetExtractingStatus", e); }
-		} // extracting table unlocked
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetExtractingStatus", e); }
 	}
 
 	// reset analyzing status of ID-specified URL list
@@ -1806,23 +1786,14 @@ namespace crawlservpp::Main {
 		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
-		{ // lock analyzing table
-			TableLock analyzingTableLock(
-					*this,
-					TableLockProperties(
-							"crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing"
-					)
+		try {
+			// update URL list
+			this->execute(
+					"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing`"
+					" SET success = FALSE, locktime = NULL"
 			);
-
-			try {
-				// update URL list
-				this->execute(
-						"UPDATE `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "_analyzing`"
-						" SET success = FALSE, locktime = NULL"
-				);
-			}
-			catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAnalyzingStatus", e); }
-		} // analyzing table unlocked
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAnalyzingStatus", e); }
 	}
 
 	/*
@@ -2261,57 +2232,53 @@ namespace crawlservpp::Main {
 			// check connection
 			this->checkConnection();
 
-			{ // lock table
-				TableLock(*this, TableLockProperties("crawlserv_targetlocks"));
+			try {
+				// create SQL statement for checking target table lock
+				SqlPreparedStatementPtr checkStatement(
+						this->connection->prepareStatement(
+								"SELECT EXISTS"
+								" ("
+									" SELECT *"
+									" FROM crawlserv_targetlocks"
+									" WHERE tabletype = ?"
+									" AND website = ?"
+									" AND urllist = ?"
+									" AND locktime > NOW()"
+								" )"
+								" AS result"
+						)
+				);
 
-				try {
-					// create SQL statement for checking target table lock
-					SqlPreparedStatementPtr checkStatement(
-							this->connection->prepareStatement(
-									"SELECT EXISTS"
-									" ("
-										" SELECT *"
-										" FROM crawlserv_targetlocks"
-										" WHERE tabletype = ?"
-										" AND website = ?"
-										" AND urllist = ?"
-										" AND locktime > NOW()"
-									" )"
-									" AS result"
-							)
-					);
+				// execute SQL statement
+				checkStatement->setString(1, type);
+				checkStatement->setUInt64(2, websiteId);
+				checkStatement->setUInt64(3, listId);
+				SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(checkStatement));
 
-					// execute SQL statement
-					checkStatement->setString(1, type);
-					checkStatement->setUInt64(2, websiteId);
-					checkStatement->setUInt64(3, listId);
-					SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(checkStatement));
-
-					// get result
-					if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
-						// target table lock is active: sleep and try again
-						sleep = true;
-						continue;
-					}
-
-					// create SQL statement for inserting target table lock
-					SqlPreparedStatementPtr insertStatement(this->connection->prepareStatement(
-							"INSERT INTO crawlserv_targetlocks(tabletype, website, urllist, locktime)"
-							" VALUES (?, ?, ?, NOW() + INTERVAL ? SECOND)"
-					));
-
-					// execute SQL statement
-					insertStatement->setString(1, type);
-					insertStatement->setUInt64(2, websiteId);
-					insertStatement->setUInt64(3, listId);
-					insertStatement->setUInt64(4, timeOut);
-					Database::sqlExecute(insertStatement);
-
-					// save lock ID
-					this->targetTableLocks.emplace_back(type, this->getLastInsertedId());
+				// get result
+				if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
+					// target table lock is active: sleep and try again
+					sleep = true;
+					continue;
 				}
-				catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTargetTables", e); }
-			} // table unlocked
+
+				// create SQL statement for inserting target table lock
+				SqlPreparedStatementPtr insertStatement(this->connection->prepareStatement(
+						"INSERT INTO crawlserv_targetlocks(tabletype, website, urllist, locktime)"
+						" VALUES (?, ?, ?, NOW() + INTERVAL ? SECOND)"
+				));
+
+				// execute SQL statement
+				insertStatement->setString(1, type);
+				insertStatement->setUInt64(2, websiteId);
+				insertStatement->setUInt64(3, listId);
+				insertStatement->setUInt64(4, timeOut);
+				Database::sqlExecute(insertStatement);
+
+				// save lock ID
+				this->targetTableLocks.emplace_back(type, this->getLastInsertedId());
+			}
+			catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTargetTables", e); }
 
 			// finished
 			break;
@@ -4469,142 +4436,6 @@ namespace crawlservpp::Main {
 		Database::lock.unlock();
 	}
 
-	// lock a table in the database for writing (and its aliases for reading)
-	void Database::lockTable(const TableLockProperties& lockProperties) {
-		// check argument
-		if(lockProperties.name.empty())
-			throw Database::Exception("Main::Database::lockTable(): No table name specified");
-		if(lockProperties.numberOfAliases && lockProperties.alias.empty())
-			throw Database::Exception("Main::Database::lockTable(): No table alias specified");
-
-		// create SQL query string
-		std::ostringstream sqlQueryStrStr;
-
-		sqlQueryStrStr << "LOCK TABLES `" << lockProperties.name << "` WRITE";
-
-		for(unsigned short n = 1; n <= lockProperties.numberOfAliases; n++)
-			sqlQueryStrStr <<	", `" << lockProperties.name << "`"
-								" AS `" << lockProperties.alias << n << "` READ";
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-			// execute SQL statement
-			Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
-
-			// set table locking status
-			this->tablesLocked = true;
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTable", e); }
-	}
-
-	// lock two tables in the database for writing (and their aliases for reading)
-	void Database::lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2) {
-		// check arguments
-		if(lockProperties1.name.empty())
-			throw Database::Exception("Main::Database::lockTable(): No table name specified for table 1");
-		if(lockProperties1.numberOfAliases && lockProperties1.alias.empty())
-			throw Database::Exception("Main::Database::lockTable(): No table alias specified for table 1");
-		if(lockProperties2.name.empty())
-				throw Database::Exception("Main::Database::lockTable(): No table name specified for table 2");
-		if(lockProperties2.numberOfAliases && lockProperties2.alias.empty())
-			throw Database::Exception("Main::Database::lockTable(): No table alias specified for table 2");
-
-		// create SQL query string
-		std::ostringstream sqlQueryStrStr;
-
-		sqlQueryStrStr << "LOCK TABLES `" << lockProperties1.name << "` WRITE";
-
-		for(unsigned short n = 1; n <= lockProperties1.numberOfAliases; n++)
-			sqlQueryStrStr << ", `" << lockProperties1.name << "` AS `" << lockProperties1.alias << n << "` READ";
-
-		sqlQueryStrStr << ", `" << lockProperties2.name << "` WRITE";
-
-		for(unsigned short n = 1; n <= lockProperties2.numberOfAliases; n++)
-			sqlQueryStrStr << ", `" << lockProperties2.name << "` AS `" << lockProperties2.alias << n << "` READ";
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-			// execute SQL statement
-			Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
-
-			// set table locking status
-			this->tablesLocked = true;
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
-	}
-
-	// lock multiple tables in the database for writing (and their aliases for reading)
-	void Database::lockTables(const std::vector<TableLockProperties>& lockProperties) {
-		// check arguments
-		if(lockProperties.empty())
-			throw Database::Exception("Main::Database::lockTables(): No lock properties specified");
-
-		// create SQL query string
-		std::ostringstream sqlQueryStrStr;
-
-		sqlQueryStrStr << "LOCK TABLES";
-
-		for(auto i = lockProperties.begin(); i != lockProperties.end(); i++) {
-			// check properties
-			if(i->name.empty())
-				throw Database::Exception("Main::Database::lockTables(): A table name is missing");
-			if(i->numberOfAliases && i->alias.empty())
-				throw Database::Exception("Main::Database::lockTables(): A table alias is missing");
-
-			// add table and its aliases
-			if(i != lockProperties.begin())
-				sqlQueryStrStr << ", ";
-
-			sqlQueryStrStr << "`" << i->name << "` WRITE";
-
-			for(unsigned short n = 1; n <= i->numberOfAliases; n++)
-				sqlQueryStrStr << ", `" << i->name << "` AS `" << i->alias << n << "` READ";
-		}
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-			// execute SQL statement
-			Database::sqlExecute(sqlStatement, sqlQueryStrStr.str());
-
-			// set table locking status
-			this->tablesLocked = true;
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
-	}
-
-	// unlock tables in the database
-	void Database::unlockTables() {
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-			// execute SQL statement
-			Database::sqlExecute(sqlStatement, "UNLOCK TABLES");
-
-			// set table locking status
-			this->tablesLocked = false;
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTables", e); }
-	}
-
 	// add a table to the database (the primary key 'id' will be created automatically)
 	void Database::createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed) {
 		// check arguments
@@ -4767,7 +4598,7 @@ namespace crawlservpp::Main {
 	 * EXCEPTION HELPER FUNCTION (protected)
 	 */
 
-	// catch SQL exception and re-throw it as DeadlockException, ConnectionException or generic Exception
+	// catch SQL exception and re-throw it as ConnectionException or generic Exception
 	void Database::sqlException(const std::string& function, const sql::SQLException& e) {
 		// create error string
 		std::ostringstream errorStrStr;
@@ -4775,12 +4606,8 @@ namespace crawlservpp::Main {
 
 		errorStrStr << function << "() SQL Error #" << error << " (State " << e.getSQLState() << "): " << e.what();
 
-		// check for connection error
 		switch(error) {
-		case 1213: // Deadlock
-			// throw deadlock exception
-			throw Database::DeadlockException(errorStrStr.str());
-
+		// check for connection error
 		case 1027: // Sort aborted
 		case 1040: // Too many connections
 		case 1042: // Can't get hostname for your address

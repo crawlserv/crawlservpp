@@ -25,10 +25,8 @@
 #include "../../Query/RegEx.hpp"
 #include "../../Query/XPath.hpp"
 #include "../../Struct/QueryProperties.hpp"
-#include "../../Struct/TableLockProperties.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Timer/StartStop.hpp"
-#include "../../Wrapper/TableLock.hpp"
 
 #include <curl/curl.h>
 
@@ -54,11 +52,9 @@ namespace crawlservpp::Module::Crawler {
 		typedef Parsing::URI::Exception URIException;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
-		typedef Wrapper::TableLock<Database> TableLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
 

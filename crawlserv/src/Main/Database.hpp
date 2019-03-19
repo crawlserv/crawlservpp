@@ -15,12 +15,12 @@
 #define MAIN_DATABASE_HPP_
 
 // hard-coded options
-#define MAIN_DATABASE_LOCK_TIMEOUT_SECONDS 300 // time-out on table lock
-#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600 // force re-connect if the connection has been idle that long
-#define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5 // sleep on target table lock
+#define MAIN_DATABASE_LOCK_TIMEOUT_SECONDS 300			// time-out on table lock
+#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600	// force re-connect if the connection has been idle for that long
+#define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5			// sleep on target table lock
 
 // optional debugging option
-#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER // enable database request counter for debugging purposes
+#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER				// enable database request counter for debugging purposes
 
 #include "Data.hpp"
 #include "Exception.hpp"
@@ -31,7 +31,6 @@
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/QueryProperties.hpp"
 #include "../Struct/TableColumn.hpp"
-#include "../Struct/TableLockProperties.hpp"
 #include "../Struct/ThreadDatabaseEntry.hpp"
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/UrlListProperties.hpp"
@@ -39,7 +38,6 @@
 #include "../Timer/Simple.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
 #include "../Wrapper/PreparedSqlStatement.hpp"
-#include "../Wrapper/TableLock.hpp"
 
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
@@ -83,12 +81,10 @@ namespace crawlservpp::Main {
 		typedef Struct::DatabaseSettings DatabaseSettings;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::TableColumn TableColumn;
-		typedef Struct::TableLockProperties TableLockProperties;
 		typedef Struct::ThreadDatabaseEntry ThreadDatabaseEntry;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
-		typedef Wrapper::TableLock<Main::Database> TableLock;
 
 		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::pair<unsigned long, std::string> IdString;
@@ -99,8 +95,6 @@ namespace crawlservpp::Main {
 	public:
 		// allow locking classes access to protected locking functions
 		template<class DB> friend class Wrapper::DatabaseLock;
-		template<class DB> friend class Wrapper::TableLock;
-		friend class TargetTablesLock;
 
 		// constructor and destructor
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
@@ -231,11 +225,6 @@ namespace crawlservpp::Main {
 			ConnectionException(const std::string& description) : Exception(description) {}
 		};
 
-		class DeadlockException : public Exception { // deadlock exception (used to restart complex queries)
-		public:
-			DeadlockException(const std::string& description) : Exception(description) {}
-		};
-
 		// not moveable, not copyable
 		Database(Database&) = delete;
 		Database(Database&&) = delete;
@@ -246,7 +235,6 @@ namespace crawlservpp::Main {
 		// shared connection information
 		std::unique_ptr<sql::Connection> connection;
 		static sql::Driver * driver;
-		bool tablesLocked;
 
 		// protected getter
 		unsigned long getMaxAllowedPacketSize() const;
@@ -261,10 +249,6 @@ namespace crawlservpp::Main {
 		void resetAutoIncrement(const std::string& tableName);
 		void lockDatabase();
 		void unlockDatabase();
-		void lockTable(const TableLockProperties& lockProperties);
-		void lockTables(const TableLockProperties& lockProperties1, const TableLockProperties& lockProperties2);
-		void lockTables(const std::vector<TableLockProperties>& lockProperties);
-		void unlockTables();
 		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
@@ -273,83 +257,95 @@ namespace crawlservpp::Main {
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
 
-		// static inline wrapper functions
+		// wrapper template for executing SQL query
+		template<class T, class... Args>
+		static bool sqlExecute(T& statement, Args... args) {
+			bool result = false;
+
+			while(true) { // retry on deadlock
+				try {
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		static bool sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
-			bool result = sqlPreparedStatement.execute();
-			Database::requestCounter++;
-			return result;
-		}
-		static bool sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			bool result = sqlPreparedStatement->execute();
-			Database::requestCounter++;
-			return result;
-		}
-		static bool sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			bool result = sqlStatement->execute(sqlQuery);
-			Database::requestCounter++;
-			return result;
-		}
-		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
-			sql::ResultSet * resultPtr = sqlPreparedStatement.executeQuery();
-			Database::requestCounter++;
-			return resultPtr;
-		}
-		static sql::ResultSet * sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			sql::ResultSet * resultPtr = sqlPreparedStatement->executeQuery();
-			Database::requestCounter++;
-			return resultPtr;
-		}
-		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			sql::ResultSet * resultPtr = sqlStatement->executeQuery(sqlQuery);
-			Database::requestCounter++;
-			return resultPtr;
-		}
-		static int sqlExecuteUpdate(sql::PreparedStatement& sqlPreparedStatement) {
-			int result = sqlPreparedStatement.executeUpdate();
-			Database::requestCounter++;
-			return result;
-		}
-		static int sqlExecuteUpdate(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			int result = sqlPreparedStatement->executeUpdate();
-			Database::requestCounter++;
-			return result;
-		}
-		static int sqlExecuteUpdate(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			int result = sqlStatement->executeUpdate(sqlQuery);
-			Database::requestCounter++;
+					Database::requestCounter++;
+#endif
+
+					result = statement.execute(args...);
+
+					break;
+				}
+				catch(const sql::SQLException &e) {
+					if(e.getErrorCode() != 1213)
+						throw;
+				}
+			}
+
 			return result;
 		}
 
-#else
-		static bool sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
-			return sqlPreparedStatement.execute();
-		}
-		static bool sqlExecute(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			return sqlPreparedStatement->execute();
-		}
-		static bool sqlExecute(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			return sqlStatement->execute(sqlQuery);
-		}
-		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
-			return sqlPreparedStatement.executeQuery();
-		}
-		static sql::ResultSet * sqlExecuteQuery(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			return sqlPreparedStatement->executeQuery();
-		}
-		static sql::ResultSet * sqlExecuteQuery(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			return sqlStatement->executeQuery(sqlQuery);
-		}
-		static int sqlExecuteUpdate(sql::PreparedStatement& sqlPreparedStatement) {
-			return sqlPreparedStatement.executeUpdate();
-		}
-		static int sqlExecuteUpdate(SqlPreparedStatementPtr& sqlPreparedStatement) {
-			return sqlPreparedStatement->executeUpdate();
-		}
-		static int sqlExecuteUpdate(SqlStatementPtr& sqlStatement, const std::string& sqlQuery) {
-			return sqlStatement->executeUpdate(sqlQuery);
-		}
+		// wrapper template for executing SQL query and returning the result
+		template<class T, class... Args>
+		static sql::ResultSet * sqlExecuteQuery(T& statement, Args... args) {
+			sql::ResultSet * resultPtr = nullptr;
+
+			while(true) { // retry on deadlock
+				try {
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+					Database::requestCounter++;
 #endif
+
+					resultPtr = statement.executeQuery(args...);
+
+					break;
+				}
+				catch(const sql::SQLException &e) {
+					if(e.getErrorCode() != 1213)
+						throw;
+				}
+			}
+
+			return resultPtr;
+		}
+
+		// wrapper template for executing SQL query and returning the number of affected rows
+		template<class T, class... Args>
+		static int sqlExecuteUpdate(T& statement, Args... args) {
+			int result = 0;
+
+			while(true) { // retry on deadlock
+				try {
+#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
+					Database::requestCounter++;
+#endif
+
+					result = statement.executeUpdate(args...);
+
+					break;
+				}
+				catch(const sql::SQLException &e) {
+					if(e.getErrorCode() != 1213)
+						throw;
+				}
+			}
+
+			return result;
+		}
+
+		// wrapper template for executing SQL query by unique pointer
+		template<class T, class... Args>
+		static bool sqlExecute(std::unique_ptr<T>& statement, Args... args) {
+			return sqlExecute(*statement, args...);
+		}
+
+		// wrapper template for executing SQL query by unique pointer and returning the result
+		template<class T, class... Args>
+		static sql::ResultSet * sqlExecuteQuery(std::unique_ptr<T>& statement, Args... args) {
+			return sqlExecuteQuery(*statement, args...);
+		}
+
+		// wrapper template for executing SQL query by unique pointer and returning the number of affected rows
+		template<class T, class... Args>
+		static int sqlExecuteUpdate(std::unique_ptr<T>& statement, Args... args) {
+			return sqlExecuteUpdate(*statement, args...);
+		}
 
 	private:
 		// private connection information
