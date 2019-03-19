@@ -15,7 +15,7 @@
 //#define MODULE_THREAD_DEBUG_NOCATCH
 
 // hard-coded constant
-#define MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS 10
+#define MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC 10
 
 #include "Database.hpp"
 

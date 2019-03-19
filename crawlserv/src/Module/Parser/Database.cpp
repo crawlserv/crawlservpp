@@ -718,10 +718,16 @@ namespace crawlservpp::Module::Parser {
 
 		// unlock URL in database
 		try {
+			// disable locking
+			this->database.beginNoLock();
+
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setString(2, lockTime);
 			return Database::sqlExecuteUpdate(sqlStatement) > 0;
+
+			// reenable locking
+			this->database.endNoLock();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::unLockUrlIfOk", e); }
 

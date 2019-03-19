@@ -390,9 +390,9 @@ namespace crawlservpp::Module {
 		// handle connection exception by sleeping
 		catch(const ConnectionException& e) {
 			std::cout << std::endl << e.what()
-					<< " - sleeps for " << MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS << "s" << std::flush;
+					<< " - sleeps for " << MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC << "s" << std::flush;
 
-			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS));
+			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
 		}
 		// handle other exceptions by trying to log, set status and pause thread
 		catch(const std::exception& e) {
@@ -451,7 +451,7 @@ namespace crawlservpp::Module {
 		}
 		// handle connection exception by sleeping
 		catch(const ConnectionException& e) {
-			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SECONDS));
+			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
 		}
 	}
 

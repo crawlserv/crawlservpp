@@ -15,12 +15,13 @@
 #define MAIN_DATABASE_HPP_
 
 // hard-coded options
-#define MAIN_DATABASE_LOCK_TIMEOUT_SECONDS 300			// time-out on table lock
-#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS 600	// force re-connect if the connection has been idle for that long
-#define MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS 5			// sleep on target table lock
+#define MAIN_DATABASE_LOCK_TIMEOUT_SEC 300			// time-out on table lock
+#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC 600	// force re-connect if the connection has been idle for that long
+#define MAIN_DATABASE_SLEEP_ON_LOCK_SEC 5			// sleep on target table lock
 
 // optional debugging option
-#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER				// enable database request counter for debugging purposes
+#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER			// enable database request counter for debugging purposes
+#define MAIN_DATABASE_DEBUG_DEADLOCKS				// enable documentation of deadlocks by writing hashes ('#') to stdout
 
 #include "Data.hpp"
 #include "Exception.hpp"
@@ -280,6 +281,10 @@ namespace crawlservpp::Main {
 					if(e.getErrorCode() != 1213)
 						throw;
 				}
+
+#ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
+				std::cout << "#" << std::flush;
+#endif
 			}
 
 			return result;
@@ -304,6 +309,10 @@ namespace crawlservpp::Main {
 					if(e.getErrorCode() != 1213)
 						throw;
 				}
+
+#ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
+				std::cout << "#" << std::flush;
+#endif
 			}
 
 			return resultPtr;
@@ -328,6 +337,10 @@ namespace crawlservpp::Main {
 					if(e.getErrorCode() != 1213)
 						throw;
 				}
+
+#ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
+				std::cout << "#" << std::flush;
+#endif
 			}
 
 			return result;
@@ -360,7 +373,7 @@ namespace crawlservpp::Main {
 		std::vector<std::pair<std::string, unsigned long>> targetTableLocks;
 
 		// optional private variables
-#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS
+#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC
 		Timer::Simple reconnectTimer;
 #endif
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER

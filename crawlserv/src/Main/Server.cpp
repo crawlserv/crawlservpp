@@ -31,7 +31,7 @@ namespace crawlservpp::Main {
 			std::experimental::filesystem::create_directory("cookies");
 
 		// connect to database and initialize it
-		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SECONDS);
+		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
 		this->database.connect();
 		this->database.initializeSql();
 		this->database.prepare();

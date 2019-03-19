@@ -17,7 +17,7 @@
 //#define MAIN_SERVER_DEBUG_HTTP_REQUEST
 
 // hard-coded constant for server-side sleep on mySQL error
-#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SECONDS 5
+#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5
 
 #include "Database.hpp"
 #include "WebServer.hpp"

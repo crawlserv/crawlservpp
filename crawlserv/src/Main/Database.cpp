@@ -137,7 +137,7 @@ namespace crawlservpp::Main {
 			std::ostringstream executeStr;
 
 			executeStr << "SET SESSION innodb_lock_wait_timeout = ";
-			executeStr << MAIN_DATABASE_LOCK_TIMEOUT_SECONDS;
+			executeStr << MAIN_DATABASE_LOCK_TIMEOUT_SEC;
 
 			Database::sqlExecute(sqlStatement, executeStr.str());
 
@@ -2225,7 +2225,7 @@ namespace crawlservpp::Main {
 		while(isRunning()) { // do not continue until lock is gone or thread should not run anymore
 			// check whether thread should be sleeping
 			if(sleep) {
-				std::this_thread::sleep_for(std::chrono::seconds(MAIN_DATABASE_SLEEP_ON_LOCK_SECONDS));
+				std::this_thread::sleep_for(std::chrono::seconds(MAIN_DATABASE_SLEEP_ON_LOCK_SEC));
 				sleep = false;
 			}
 
@@ -2571,7 +2571,7 @@ namespace crawlservpp::Main {
 			if(this->connection) {
 				// check whether re-connect should be performed anyway
 				milliseconds = this->reconnectTimer.tick();
-				if(milliseconds < MAIN_DATABASE_RECONNECT_AFTER_IDLE_SECONDS * 1000) {
+				if(milliseconds < MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC * 1000) {
 					// check whether connection is valid
 					if(this->connection->isValid())
 						return;
