@@ -18,6 +18,7 @@
 #define MAIN_DATABASE_LOCK_TIMEOUT_SEC 300			// time-out on table lock
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC 600	// force re-connect if the connection has been idle for that long
 #define MAIN_DATABASE_SLEEP_ON_LOCK_SEC 5			// sleep on target table lock
+#define MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS 250		// sleep before re-trying after MySQL deadlock
 
 // optional debugging option
 #define MAIN_DATABASE_DEBUG_REQUEST_COUNTER			// enable database request counter for debugging purposes
@@ -283,7 +284,18 @@ namespace crawlservpp::Main {
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
-				std::cout << "#" << std::flush;
+				unsigned long long counter = Database::getRequestCounter();
+
+				std::cout << "#";
+
+				if(counter)
+					std::cout << counter;
+
+				std::cout << std::flush;
+#endif
+
+#ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
+				std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS));
 #endif
 			}
 
@@ -311,7 +323,18 @@ namespace crawlservpp::Main {
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
-				std::cout << "#" << std::flush;
+				unsigned long long counter = Database::getRequestCounter();
+
+				std::cout << "#";
+
+				if(counter)
+					std::cout << counter;
+
+				std::cout << std::flush;
+#endif
+
+#ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
+				std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS));
 #endif
 			}
 
@@ -339,7 +362,18 @@ namespace crawlservpp::Main {
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
-				std::cout << "#" << std::flush;
+				unsigned long long counter = Database::getRequestCounter();
+
+				std::cout << "#";
+
+				if(counter)
+					std::cout << counter;
+
+				std::cout << std::flush;
+#endif
+
+#ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
+				std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS));
 #endif
 			}
 
