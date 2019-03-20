@@ -1651,7 +1651,8 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception(
 					"Crawler::Thread::crawlingParseAndAddUrls():"
 					" Could not set current sub-url"
-					" because of URI Parser error: " + e.whatStr()
+					" because of URI Parser error: " + e.whatStr() +
+					" [" + url + "]"
 			);
 		}
 
@@ -1692,12 +1693,14 @@ namespace crawlservpp::Module::Crawler {
 						if(this->parser->isSameDomain()) {
 							if(!(this->config.crawlerParamsBlackList.empty())) {
 								urls.at(n - 1) = this->parser->getSubUrl(
-										this->config.crawlerParamsBlackList, false
+										this->config.crawlerParamsBlackList,
+										false
 								);
 							}
 							else
 								urls.at(n - 1) = this->parser->getSubUrl(
-										this->config.crawlerParamsWhiteList, true
+										this->config.crawlerParamsWhiteList,
+										true
 								);
 
 							if(!(this->crawlingCheckUrl(urls.at(n - 1), url)))
@@ -1708,6 +1711,7 @@ namespace crawlservpp::Module::Crawler {
 									throw Exception(
 											"Crawler::Thread::crawlingParseAndAddUrls():"
 											" " + urls.at(n - 1) + " is no sub-URL!"
+											" [" + url + "]"
 									);
 
 								if(
@@ -1715,7 +1719,7 @@ namespace crawlservpp::Module::Crawler {
 										&& urls.at(n - 1).length() > 1
 										&& urls.at(n - 1).at(1) == '#'
 								)
-									this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'.");
+									this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'. [" + url + "]");
 
 								continue;
 							}
@@ -1724,7 +1728,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 				catch(const URIException& e) {
 					if(this->config.crawlerLogging)
-						this->log("WARNING: URI Parser error - " + e.whatStr());
+						this->log("WARNING: URI Parser error - " + e.whatStr() + " [" + url + "]");
 				}
 			}
 
@@ -1745,7 +1749,7 @@ namespace crawlservpp::Module::Crawler {
 		), urls.end());
 
 		if(this->config.crawlerLogging && urls.size() < tmpSize)
-			this->log("WARNING: URLs longer than 2,000 Bytes ignored.");
+			this->log("WARNING: URLs longer than 2,000 Bytes ignored [" + url + "]");
 
 		// if necessary, check for file endings and show warnings
 		if(this->config.crawlerLogging && this->config.crawlerWarningsFile)
@@ -1755,10 +1759,10 @@ namespace crawlservpp::Module::Crawler {
 
 					if(lastSlash == std::string::npos) {
 						if(i->find('.') != std::string::npos)
-							this->log("WARNING: Found file \'" + *i + "\'.");
+							this->log("WARNING: Found file \'" + *i + "\' [" + url + "]");
 					}
 					else if(i->find('.', lastSlash + 1) != std::string::npos)
-						this->log("WARNING: Found file \'" + *i + "\'.");
+						this->log("WARNING: Found file \'" + *i + "\' [" + url + "]");
 				}
 
 		// save status message
