@@ -1156,7 +1156,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// check whether URL should be added
-	bool Thread::crawlingCheckUrl(const std::string& url) {
+	bool Thread::crawlingCheckUrl(const std::string& url, const std::string& from) {
 		// check argument
 		if(url.empty())
 			return false;
@@ -1185,7 +1185,7 @@ namespace crawlservpp::Module::Crawler {
 						if(this->config.crawlerLogging)
 							this->log(
 									"WARNING: RegEx error"
-									" - " + e.whatStr() + " [" + url + "]."
+									" - " + e.whatStr() + " [" + url + " from " + from + "]."
 							);
 					}
 				}
@@ -1229,7 +1229,7 @@ namespace crawlservpp::Module::Crawler {
 						if(this->config.crawlerLogging)
 							this->log(
 									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
+									e.whatStr() + " [" + url + " from " + from + "]."
 							);
 					}
 				}
@@ -1700,7 +1700,7 @@ namespace crawlservpp::Module::Crawler {
 										this->config.crawlerParamsWhiteList, true
 								);
 
-							if(!(this->crawlingCheckUrl(urls.at(n - 1))))
+							if(!(this->crawlingCheckUrl(urls.at(n - 1), url)))
 								urls.at(n - 1) = "";
 
 							if(!urls.at(n - 1).empty()) {
