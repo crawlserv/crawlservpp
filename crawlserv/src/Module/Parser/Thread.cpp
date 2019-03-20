@@ -185,8 +185,17 @@ namespace crawlservpp::Module::Parser {
 			return;
 		}
 
+		// save old status message
+		std::string oldStatus = this->getStatusMessage();
+
+		// set status message
+		this->setStatusMessage("Checking URLs...");
+
 		// check whether next URL(s) are ought not to be skipped
 		this->parsingCheckUrls();
+
+		// update status message
+		this->setStatusMessage(oldStatus);
 
 		// update timers if idling just stopped
 		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
