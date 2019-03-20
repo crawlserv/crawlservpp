@@ -173,9 +173,26 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     // search for matching URL with content
     if(strlen($_POST["urltext"]) > 0 AND substr($_POST["urltext"], 0, 1) == "/")
         $_POST["urltext"] = substr($_POST["urltext"], 1);
-    $result = $dbConnection->query("SELECT a.id AS id, a.url AS url FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a, `crawlserv_"
-        .$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.url LIKE '/".$_POST["urltext"]."%' ORDER BY a.url LIMIT 1");
-    if(!$result) die("ERROR: Could not search for URL.");
+    
+    $sql = "SELECT a.id AS id, a.url AS url FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a, `crawlserv_"
+            .$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.url LIKE ? ORDER BY a.url LIMIT 1";
+    $stmt = $dbConnection->prepare($sql);
+    
+    if(!$stmt)
+        die("ERROR: Could not prepare SQL statement to search for URL");
+    
+    $argument = "/".$_POST["urltext"]."%";
+    
+    $stmt->bind_param("s", $argument);
+    
+    if(!$stmt->execute())
+        die("ERROR: Could not search for URL (execution failed.");
+    
+    $result = $stmt->get_result();
+    
+    if(!$result)
+        die("ERROR: Could not search for URL (getting result failed.");
+    
     $row = $result->fetch_assoc();
     if($row) {
         $url = $row["id"];
@@ -318,7 +335,7 @@ if($website && $urllist) {
     echo "<button id=\"content-next\" class=\"fs-insert-after\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
     
     if($is404) {
-        echo "<br><br><i>URL not found.</i><br><br>\n";
+        echo "<br><br><i>URL not found. Maybe it was not successfully crawled (yet).</i><br><br>\n";
     }
     else {
        // show content dependent on tab
