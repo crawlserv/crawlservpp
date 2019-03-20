@@ -45,10 +45,6 @@ namespace crawlservpp::Wrapper {
 		typedef std::pair<unsigned long, std::string> IdString;
 
 	public:
-		// allow TableLock and TargetTableLock access to protected locking functions
-		template<class DB> friend class TableLock;
-		friend class TargetTablesLock;
-
 		// constructor and destructor
 		Database(Module::Database& dbRef);
 		~Database();
@@ -129,16 +125,6 @@ namespace crawlservpp::Wrapper {
 		void reserveForPreparedStatements(unsigned long numberOfAdditionalPreparedStatements);
 		unsigned short addPreparedStatement(const std::string& sqlQuery);
 		sql::PreparedStatement& getPreparedStatement(unsigned short id);
-
-		// wrappers for locking target tables
-		void lockTargetTables(
-				const std::string& type,
-				unsigned long websiteId,
-				unsigned long listId,
-				unsigned long timeOut,
-				CallbackIsRunning isRunning
-		);
-		void unlockTargetTables(const std::string& type);
 
 		// wrappers for database helper functions
 		void checkConnection();
@@ -351,18 +337,6 @@ namespace crawlservpp::Wrapper {
 	//  WARNING: Do not run checkConnection() while using this reference!
 	inline sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
 		return this->database.getPreparedStatement(id);
-	}
-
-	// lock target tables of the specified type
-	//  NOTE: Waiting for other locks to be released requires a callback function to check the running status of the thread.
-	inline void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
-			unsigned long timeOut, CallbackIsRunning isRunning) {
-		this->database.lockTargetTables(type, websiteId, listId, timeOut, isRunning);
-	}
-
-	// unlock target tables of the specified type
-	inline void Database::unlockTargetTables(const std::string& type) {
-		this->database.unlockTargetTables(type);
 	}
 
 	// check whether the connection to the database is still valid and try to re-connect if necesssary, throws Exception

@@ -65,7 +65,7 @@ namespace crawlservpp::Module::Parser {
 		void setTimeoutTargetLock(unsigned long timeOut);
 
 		// prepare target table and SQL statements for parser
-		void initTargetTable(CallbackIsRunning isRunning);
+		void initTargetTable();
 		void prepare();
 
 		// URL functions

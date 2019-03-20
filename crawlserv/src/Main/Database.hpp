@@ -17,7 +17,6 @@
 // hard-coded options
 #define MAIN_DATABASE_LOCK_TIMEOUT_SEC 300			// time-out on table lock
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC 600	// force re-connect if the connection has been idle for that long
-#define MAIN_DATABASE_SLEEP_ON_LOCK_SEC 5			// sleep on target table lock
 #define MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS 250		// sleep before re-trying after MySQL deadlock
 
 // optional debugging option
@@ -89,7 +88,6 @@ namespace crawlservpp::Main {
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
 
-		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::pair<unsigned long, std::string> IdString;
 		typedef std::unique_ptr<sql::PreparedStatement> SqlPreparedStatementPtr;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
@@ -125,7 +123,11 @@ namespace crawlservpp::Main {
 		unsigned long addThread(const std::string& threadModule, const ThreadOptions& threadOptions);
 		unsigned long getThreadRunTime(unsigned long threadId);
 		unsigned long getThreadPauseTime(unsigned long threadId);
-		void setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
+		void setThreadStatus(
+				unsigned long threadId,
+				bool threadPaused,
+				const std::string& threadStatusMessage
+		);
 		void setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage);
 		void setThreadRunTime(unsigned long threadId, unsigned long threadRunTime);
 		void setThreadPauseTime(unsigned long threadId, unsigned long threadPauseTime);
@@ -135,9 +137,9 @@ namespace crawlservpp::Main {
 		unsigned long addWebsite(const WebsiteProperties& websiteProperties);
 		std::string getWebsiteDomain(unsigned long id);
 		std::string getWebsiteNamespace(unsigned long websiteId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromUrlList(unsigned long listId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromConfig(unsigned long configId);
-		std::pair<unsigned long, std::string> getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId);
+		IdString getWebsiteNamespaceFromUrlList(unsigned long listId);
+		IdString getWebsiteNamespaceFromConfig(unsigned long configId);
+		IdString getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
 		void updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
@@ -164,22 +166,26 @@ namespace crawlservpp::Main {
 		unsigned long duplicateQuery(unsigned long queryId);
 
 		// configuration functions
-		unsigned long addConfiguration(unsigned long websiteId, const ConfigProperties& configProperties);
+		unsigned long addConfiguration(
+				unsigned long websiteId,
+				const ConfigProperties& configProperties
+		);
 		const std::string getConfiguration(unsigned long configId);
 		void updateConfiguration(unsigned long configId, const ConfigProperties& configProperties);
 		void deleteConfiguration(unsigned long configId);
 		unsigned long duplicateConfiguration(unsigned long configId);
 
 		// target table functions
-		void lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
-				unsigned long timeOut, CallbackIsRunning running);
 		unsigned long addTargetTable(const TargetTableProperties& properties);
 		std::queue<IdString> getTargetTables(const std::string& type, unsigned long listId);
-		unsigned long getTargetTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
-				const std::string& tableName);
+		unsigned long getTargetTableId(
+				const std::string& type,
+				unsigned long websiteId,
+				unsigned long listId,
+				const std::string& tableName
+		);
 		std::string getTargetTableName(const std::string& type, unsigned long tableId);
 		void deleteTargetTable(const std::string& type, unsigned long tableId);
-		void unlockTargetTables(const std::string& type);
 
 		// validation functions
 		void checkConnection();
@@ -227,7 +233,8 @@ namespace crawlservpp::Main {
 			Exception(const std::string& description) : Main::Exception(description) {}
 		};
 
-		class ConnectionException : public Exception { // connection exception (used to handle a lost database connection)
+		class ConnectionException : public Exception {	// connection exception
+														// (handles lost database connections)
 		public:
 			ConnectionException(const std::string& description) : Exception(description) {}
 		};
@@ -256,7 +263,11 @@ namespace crawlservpp::Main {
 		void resetAutoIncrement(const std::string& tableName);
 		void lockDatabase();
 		void unlockDatabase();
-		void createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed);
+		void createTable(
+				const std::string& tableName,
+				const std::vector<TableColumn>& columns,
+				bool compressed
+		);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
@@ -296,7 +307,11 @@ namespace crawlservpp::Main {
 #endif
 
 #ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-				std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS));
+				std::this_thread::sleep_for(
+						std::chrono::milliseconds(
+								MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
+						)
+				);
 #endif
 			}
 
@@ -335,7 +350,11 @@ namespace crawlservpp::Main {
 #endif
 
 #ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-				std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS));
+				std::this_thread::sleep_for(
+						std::chrono::milliseconds(
+								MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
+						)
+				);
 #endif
 			}
 
@@ -374,7 +393,11 @@ namespace crawlservpp::Main {
 #endif
 
 #ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-				std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS));
+				std::this_thread::sleep_for(
+						std::chrono::milliseconds(
+								MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
+						)
+				);
 #endif
 			}
 
@@ -405,7 +428,6 @@ namespace crawlservpp::Main {
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
 		std::string module;
-		std::vector<std::pair<std::string, unsigned long>> targetTableLocks;
 
 		// optional private variables
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC

@@ -113,7 +113,7 @@ namespace crawlservpp::Module::Parser {
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("initializes target table...");
 
-		this->database.initTargetTable(std::bind(&Thread::isRunning, this)); // @suppress("Invalid arguments")
+		this->database.initTargetTable();
 
 		// prepare SQL statements for parser
 		this->setStatusMessage("Preparing SQL statements...");

@@ -50,9 +50,7 @@ namespace crawlservpp::Module::Analyzer {
 		typedef Struct::TargetTableProperties CustomTableProperties;
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::TableColumn TableColumn;
-		typedef Wrapper::TargetTablesLock TargetTablesLock;
 
-		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
 		// text maps are used to describe certain parts of a text
@@ -75,7 +73,7 @@ namespace crawlservpp::Module::Analyzer {
 		void setTimeoutTargetLock(unsigned long timeOut);
 
 		// prepare target table and SQL statements for analyzer
-		void initTargetTable(bool compressed, CallbackIsRunning isRunning);
+		void initTargetTable(bool compressed);
 		void prepare();
 
 		// prepare and get custom SQL statements for algorithm

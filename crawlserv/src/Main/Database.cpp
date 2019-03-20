@@ -720,7 +720,7 @@ namespace crawlservpp::Main {
 	}
 
 	// get ID and namespace of website from the database by URL list ID
-	std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromUrlList(unsigned long listId) {
+	Database::IdString Database::getWebsiteNamespaceFromUrlList(unsigned long listId) {
 		unsigned long websiteId = 0;
 
 		// check argument
@@ -747,11 +747,11 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteNamespaceFromUrlList", e); }
 
-		return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
+		return IdString(websiteId, this->getWebsiteNamespace(websiteId));
 	}
 
 	// get ID and namespace of website from the database by configuration ID
-	std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromConfig(unsigned long configId) {
+	Database::IdString Database::getWebsiteNamespaceFromConfig(unsigned long configId) {
 		unsigned long websiteId = 0;
 
 		// check argument
@@ -778,11 +778,11 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteNamespaceFromConfig", e); }
 
-		return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
+		return IdString(websiteId, this->getWebsiteNamespace(websiteId));
 	}
 
 	// get ID and namespace of website from the database by target table ID of specified type
-	std::pair<unsigned long, std::string> Database::getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
+	Database::IdString Database::getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
 		unsigned long websiteId = 0;
 
 		// check argument
@@ -811,7 +811,7 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getWebsiteNamespaceFromCustomTable", e); }
 
-		return std::pair<unsigned long, std::string>(websiteId, this->getWebsiteNamespace(websiteId));
+		return IdString(websiteId, this->getWebsiteNamespace(websiteId));
 	}
 
 	// check whether website namespace exists in the database
@@ -1544,7 +1544,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::updateUrlList(): No URL list name specified");
 
 		// get website namespace and URL list name
-		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
+		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string oldListNamespace = this->getUrlListNamespace(listId);
 
 		// check website namespace if necessary
@@ -1686,7 +1686,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
+		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
 		// delete parsing tables
@@ -1756,7 +1756,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::resetParsingStatus(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
+		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
 		try {
@@ -1776,7 +1776,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::resetExtractingStatus(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
+		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
 		try {
@@ -1796,7 +1796,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::resetAnalyzingStatus(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
+		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
 		std::string listNamespace = this->getUrlListNamespace(listId);
 
 		try {
@@ -2219,85 +2219,6 @@ namespace crawlservpp::Main {
 	 * TARGET TABLE FUNCTIONS
 	 */
 
-	// lock target tables of the specified type
-	//  NOTE: Waiting for other locks to be released requires a callback function to check the running status of the thread.
-	void Database::lockTargetTables(const std::string& type, unsigned long websiteId, unsigned long listId,
-			unsigned long timeOut, CallbackIsRunning isRunning) {
-		bool sleep = false;
-
-		// check arguments
-		if(type.empty())
-			throw Database::Exception("Main::Database::lockTargetTables(): No table type specified");
-		if(!websiteId)
-			throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
-		if(!listId)
-			throw Database::Exception("Main::Database::lockTargetTables(): No website ID specified");
-		if(!timeOut)
-			throw Database::Exception("Main::Database::lockTargetTables(): No lock time-out specified");
-
-		while(isRunning()) { // do not continue until lock is gone or thread should not run anymore
-			// check whether thread should be sleeping
-			if(sleep) {
-				std::this_thread::sleep_for(std::chrono::seconds(MAIN_DATABASE_SLEEP_ON_LOCK_SEC));
-				sleep = false;
-			}
-
-			// check connection
-			this->checkConnection();
-
-			try {
-				// create SQL statement for checking target table lock
-				SqlPreparedStatementPtr checkStatement(
-						this->connection->prepareStatement(
-								"SELECT EXISTS"
-								" ("
-									" SELECT *"
-									" FROM crawlserv_targetlocks"
-									" WHERE tabletype = ?"
-									" AND website = ?"
-									" AND urllist = ?"
-									" AND locktime > NOW()"
-								" )"
-								" AS result"
-						)
-				);
-
-				// execute SQL statement
-				checkStatement->setString(1, type);
-				checkStatement->setUInt64(2, websiteId);
-				checkStatement->setUInt64(3, listId);
-				SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(checkStatement));
-
-				// get result
-				if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
-					// target table lock is active: sleep and try again
-					sleep = true;
-					continue;
-				}
-
-				// create SQL statement for inserting target table lock
-				SqlPreparedStatementPtr insertStatement(this->connection->prepareStatement(
-						"INSERT INTO crawlserv_targetlocks(tabletype, website, urllist, locktime)"
-						" VALUES (?, ?, ?, NOW() + INTERVAL ? SECOND)"
-				));
-
-				// execute SQL statement
-				insertStatement->setString(1, type);
-				insertStatement->setUInt64(2, websiteId);
-				insertStatement->setUInt64(3, listId);
-				insertStatement->setUInt64(4, timeOut);
-				Database::sqlExecute(insertStatement);
-
-				// save lock ID
-				this->targetTableLocks.emplace_back(type, this->getLastInsertedId());
-			}
-			catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTargetTables", e); }
-
-			// finished
-			break;
-		}
-	}
-
 	// add a target table of the specified type to the database if such a table does not exist already, return table ID
 	unsigned long Database::addTargetTable(const TargetTableProperties& properties) {
 		unsigned long result = 0;
@@ -2497,8 +2418,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::deleteTargetTable(): No table ID specified");
 
 		// get namespace, URL list name and table name
-		std::pair<unsigned long, std::string> websiteNamespace = this->getWebsiteNamespaceFromTargetTable(type, tableId);
-		std::pair<unsigned long, std::string> listNamespace = this->getUrlListNamespaceFromTargetTable(type, tableId);
+		IdString websiteNamespace = this->getWebsiteNamespaceFromTargetTable(type, tableId);
+		IdString listNamespace = this->getUrlListNamespaceFromTargetTable(type, tableId);
 		std::string tableName = this->getTargetTableName(type, tableId);
 
 		// check connection
@@ -2531,39 +2452,6 @@ namespace crawlservpp::Main {
 				this->resetAutoIncrement("crawlserv_" + type + "tables");
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteTargetTable", e); }
-	}
-
-	// unlock target tables of the specified type
-	void Database::unlockTargetTables(const std::string& type) {
-		// check argument
-		if(type.empty())
-				throw Database::Exception("Main::Database::unlockTargetTables(): No table type specified");
-
-		auto lockIt =
-				std::find_if(this->targetTableLocks.begin(), this->targetTableLocks.end(),
-					[&type](const auto& element) {
-						return element.first == type;
-					}
-				);
-
-		if(lockIt != this->targetTableLocks.end()) {
-			// check connection
-			this->checkConnection();
-
-			try {
-				// create SQL statement
-				SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-						"DELETE FROM crawlserv_targetlocks WHERE id = ? LIMIT 1"
-				));
-
-				// execute SQL statement
-				sqlStatement->setUInt64(1, lockIt->second);
-				Database::sqlExecute(sqlStatement);
-			}
-			catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTargetTables", e); }
-
-			lockIt->second = 0;
-		}
 	}
 
 	/*

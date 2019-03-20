@@ -80,7 +80,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// initialize target table
 		this->setStatusMessage("Creating result table...");
-		this->database.initTargetTable(true, std::bind(&MarkovText::isRunning, this)); // @suppress("Invalid arguments")
+		this->database.initTargetTable(true);
 
 		// get text corpus
 		this->setStatusMessage("Getting text corpus...");

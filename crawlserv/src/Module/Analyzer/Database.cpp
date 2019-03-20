@@ -82,9 +82,8 @@ namespace crawlservpp::Module::Analyzer {
 
 	// create target table if it does not exists or add field columns if they do not exist
 	// 	NOTE:	Needs to be called by algorithm class in order to get the required field names!
-	//  		Waiting for other locks to be released requires a callback function to get the running status of the thread.
 	//  throws Main::Database::Exception
-	void Database::initTargetTable(bool compressed, CallbackIsRunning isRunning) {
+	void Database::initTargetTable(bool compressed) {
 		// check options
 		if(this->websiteName.empty())
 			throw DatabaseException("Analyzer::Database::initTargetTable(): No website specified");
