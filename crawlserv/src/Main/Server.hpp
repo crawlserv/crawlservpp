@@ -121,8 +121,11 @@ namespace crawlservpp::Main {
 		std::vector<bool> workersRunning;
 		std::mutex workersLock;
 
+		/*  NOTE:	The web server needs to be declared after/destroyed before the database and any data,
+					because it is doing one last poll on destruction!
+		*/
+
 		// web server
-		//  Needs to be declared after/destroyed before database and data, because it is doing one last poll on destruction!
 		WebServer webServer;
 
 		// run server command
