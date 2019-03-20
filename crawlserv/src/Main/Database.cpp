@@ -209,8 +209,17 @@ namespace crawlservpp::Main {
 	 * LOGGING FUNCTIONS
 	 */
 
-	// add a log entry to the database (for any module)
+	// add a log entry to the database (for any module), remove invalid UTF-8 characters if needed
 	void Database::log(const std::string& logModule, const std::string& logEntry) {
+		bool repaired = false;
+		std::string repairedEntry;
+
+		// check argument
+		repaired = Helper::Utf8::repairUtf8(logEntry, repairedEntry);
+
+		if(repaired)
+			repairedEntry += " [invalid UTF-8 characters removed]";
+
 		// check connection
 		this->checkConnection();
 
@@ -231,8 +240,12 @@ namespace crawlservpp::Main {
 
 			if(logEntry.empty())
 				sqlStatement.setString(2, "[empty]");
-			else
-				sqlStatement.setString(2, logEntry);
+			else {
+				if(repaired)
+					sqlStatement.setString(2, repairedEntry);
+				else
+					sqlStatement.setString(2, logEntry);
+			}
 
 			Database::sqlExecute(sqlStatement);
 		}
