@@ -54,7 +54,6 @@ namespace crawlservpp::Module::Parser {
 			bool generalNewestOnly;
 			bool generalParseCustom;
 			bool generalReParse;
-			bool generalResetOnFinish;
 			std::string generalResultTable;
 			std::vector<unsigned long> generalSkip;
 			unsigned long generalSleepIdle;
@@ -97,7 +96,6 @@ namespace crawlservpp::Module::Parser {
 										generalNewestOnly(true),
 										generalParseCustom(false),
 										generalReParse(false),
-										generalResetOnFinish(false),
 										generalSleepIdle(5000),
 										generalSleepMySql(20),
 										generalTimeoutTargetLock(30),
@@ -111,7 +109,6 @@ namespace crawlservpp::Module::Parser {
 		this->option("newest.only", this->config.generalNewestOnly);
 		this->option("parse.custom", this->config.generalParseCustom);
 		this->option("reparse", this->config.generalReParse);
-		this->option("reset.on.finish", this->config.generalResetOnFinish);
 		this->option("result.table", this->config.generalResultTable, StringParsingOption::SQL);
 		this->option("skip", this->config.generalSkip);
 		this->option("sleep.idle", this->config.generalSleepIdle);

@@ -56,14 +56,6 @@
 			"simple": true,
 			"position": 2
 		},
-		"reset.on.finish": {
-			"type": "bool",
-			"default": false,
-			"label": "Reset status when finished",
-			"description": "Reset all URLs to unparsed when parsing is finished.",
-			"simple": true,
-			"position": 3
-		},
 		"result.table": {
 			"type": "string",
 			"default": "",
