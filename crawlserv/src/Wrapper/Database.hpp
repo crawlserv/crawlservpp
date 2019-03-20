@@ -58,11 +58,6 @@ namespace crawlservpp::Wrapper {
 		// wrapper for website function
 		std::string getWebsiteDomain(unsigned long websiteId);
 
-		// wrappers for URL list functions
-		void resetParsingStatus(unsigned long listId);
-		void resetExtractingStatus(unsigned long listId);
-		void resetAnalyzingStatus(unsigned long listId);
-
 		// wrapper for query function
 		void getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo);
 
@@ -170,21 +165,6 @@ namespace crawlservpp::Wrapper {
 	// get website domain from the database by its ID
 	inline std::string Database::getWebsiteDomain(unsigned long websiteId) {
 		return this->database.getWebsiteDomain(websiteId);
-	}
-
-	// reset parsing status of ID-specified URL list
-	inline void Database::resetParsingStatus(unsigned long listId) {
-		this->database.resetParsingStatus(listId);
-	}
-
-	// reset extracting status of ID-specified URL list
-	inline void Database::resetExtractingStatus(unsigned long listId) {
-		this->database.resetExtractingStatus(listId);
-	}
-
-	// reset analyzing status of ID-specified URL list
-	inline void Database::resetAnalyzingStatus(unsigned long listId) {
-		this->database.resetAnalyzingStatus(listId);
 	}
 
 	// get the properties of a query from the database by its ID
