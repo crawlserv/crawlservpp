@@ -73,7 +73,23 @@ function formatTime($seconds) {
 require "../config.php";
 
 $result = $dbConnection->query(
-    "SELECT id, module, status, progress, paused, website, urllist, config, last, runtime FROM crawlserv_threads"
+    "SELECT id,".
+    " module,".
+    " status,".
+    " progress,".
+    " paused,".
+    " website,".
+    " urllist,".
+    " config,".
+    " (".
+        " SELECT (AVG(tmp.runtime) * (1 - a.progress)) / AVG(tmp.progress)".
+        " FROM crawlserv_threads AS tmp".
+        " WHERE tmp.module LIKE a.module".
+        " AND tmp.website = a.website".
+        " AND tmp.urllist = a.urllist".
+        " AND tmp.config = a.config".
+    " ) AS remaining".
+    " FROM crawlserv_threads AS a"
 );
 
 if(!$result)
@@ -126,11 +142,12 @@ if($num) {
         
         // calculate remaining time
         $tooltip = "Estimated time until completion.\n&gt; Click to jump to specific ID.";
-        echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\" data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" data-last=\"".$row["last"]."\">+";
-        if($row["runtime"] && $row[progress] > 0.001)
-            echo formatTime($row["runtime"] / $row["progress"] - $row["runtime"]);
-        else
-            echo "&infin;";
+        echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\" data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" data-last=\"".$row["last"]."\">";
+        
+        if($row["remaining"] === null)
+            echo "+&infin;";
+        else    
+            echo "+".formatTime($row["remaining"]);
             
         echo "</span>";
         echo "</div>\n";
