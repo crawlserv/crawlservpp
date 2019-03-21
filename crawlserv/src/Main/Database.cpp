@@ -888,7 +888,7 @@ namespace crawlservpp::Main {
 			// increment number at the end of the string
 			std::ostringstream resultStrStr;
 
-			n++;
+			++n;
 
 			resultStrStr << nameString << n;
 
@@ -3608,7 +3608,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += ") VALUES(";
 
-			for(unsigned long n = 0; n < data.columns_values.size() - 1; n++)
+			for(unsigned long n = 0; n < data.columns_values.size() - 1; ++n)
 				sqlQuery += "?, ";
 
 			sqlQuery += "?)";
@@ -3758,7 +3758,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += ") VALUES(";
 
-			for(unsigned long n = 0; n < data.columns_types_values.size() - 1; n++)
+			for(unsigned long n = 0; n < data.columns_types_values.size() - 1; ++n)
 				sqlQuery += "?, ";
 
 			sqlQuery += "?)";

@@ -271,7 +271,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
-		for(unsigned long n = 1; n <= this->config.customCounters.size(); n++) {
+		for(unsigned long n = 1; n <= this->config.customCounters.size(); ++n) {
 			unsigned long i = n - 1;
 			if((this->config.customCountersStep.at(i) <= 0
 					&& this->config.customCountersStart.at(i) < this->config.customCountersEnd.at(i))

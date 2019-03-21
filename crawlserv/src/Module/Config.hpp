@@ -306,7 +306,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsBool())
 					target.push_back(i->GetBool());
 				else {
@@ -406,7 +406,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				switch(opt) {
 
 				case FromNumber:
@@ -522,7 +522,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsInt()) {
 					int value = i->GetInt();
 
@@ -601,7 +601,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsInt())
 					target.push_back(i->GetInt());
 				else {
@@ -671,7 +671,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsInt64())
 					target.push_back(i->GetInt64());
 				else {
@@ -750,7 +750,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsUint()) {
 					unsigned int value = i->GetUint();
 
@@ -838,7 +838,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsUint()) {
 					unsigned int value = i->GetUint();
 
@@ -917,7 +917,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsUint())
 					target.push_back(i->GetUint());
 				else {
@@ -987,7 +987,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsUint64())
 					target.push_back(i->GetUint64());
 				else {
@@ -1087,7 +1087,7 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); i++) {
+			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsString()) {
 					std::string str(i->GetString(), i->GetStringLength());
 

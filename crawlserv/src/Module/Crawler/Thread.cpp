@@ -411,7 +411,7 @@ namespace crawlservpp::Module::Crawler {
 				// run each counter over every URL
 				newUrls = this->config.customUrls;
 
-				for(unsigned long n = 0; n < this->config.customCounters.size(); n++)
+				for(unsigned long n = 0; n < this->config.customCounters.size(); ++n)
 					this->initDoGlobalCounting(
 							newUrls,
 							this->config.customCounters.at(n),
@@ -428,7 +428,7 @@ namespace crawlservpp::Module::Crawler {
 								this->config.customCounters.size(),
 								this->config.customUrls.size()
 						);
-						n++
+						++n
 				) {
 					std::vector<std::string> temp = this->initDoLocalCounting(
 							this->config.customUrls.at(n),
@@ -1677,7 +1677,7 @@ namespace crawlservpp::Module::Crawler {
 		// parse URLs
 		newUrlsTo = 0;
 
-		for(unsigned long n = 1; n <= urls.size(); n++) {
+		for(unsigned long n = 1; n <= urls.size(); ++n) {
 			// parse archive URLs (only absolute links behind archive links!)
 			if(archived) {
 				unsigned long pos = 0;
@@ -1771,7 +1771,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// if necessary, check for file endings and show warnings
 		if(this->config.crawlerLogging && this->config.crawlerWarningsFile)
-			for(auto i = urls.begin(); i != urls.end(); i++)
+			for(auto i = urls.begin(); i != urls.end(); ++i)
 				if(i->back() != '/'){
 					auto lastSlash = i->rfind('/');
 
@@ -1848,7 +1848,7 @@ namespace crawlservpp::Module::Crawler {
 			this->log("gets archives of " + url.second + "...");
 
 			// loop over different archives
-			for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); n++) {
+			for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); ++n) {
 				// skip empty archive and timemap URLs
 				if((this->config.crawlerArchivesUrlsMemento.at(n).empty())
 						|| (this->config.crawlerArchivesUrlsTimemap.at(n).empty()))

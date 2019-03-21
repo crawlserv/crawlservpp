@@ -327,7 +327,7 @@ namespace crawlservpp::Main {
 		}
 
 		// check whether a thread was shut down and the shutdown is finished
-		for(unsigned long n = 1; n <= this->crawlers.size(); n++) {
+		for(unsigned long n = 1; n <= this->crawlers.size(); ++n) {
 			if(this->crawlers.at(n - 1)->isShutdown() && this->crawlers.at(n - 1)->isFinished()) {
 				n--;
 
@@ -336,7 +336,7 @@ namespace crawlservpp::Main {
 				this->crawlers.erase(this->crawlers.begin() + n);
 			}
 		}
-		for(unsigned long n = 1; n <= this->parsers.size(); n++) {
+		for(unsigned long n = 1; n <= this->parsers.size(); ++n) {
 			if(this->parsers.at(n - 1)->isShutdown() && this->parsers.at(n - 1)->isFinished()) {
 				n--;
 
@@ -345,7 +345,7 @@ namespace crawlservpp::Main {
 				this->parsers.erase(this->parsers.begin() + n);
 			}
 		}
-		/*for(unsigned long n = 1; n <= this->extractors.size(); n++) {
+		/*for(unsigned long n = 1; n <= this->extractors.size(); ++n) {
 			if(this->extractors.at(n - 1)->isShutdown() && this->extractors.at(n - 1)->isFinished()) {
 
 				this->extractors.at(n - 1)->Module::Thread::finishInterrupt();
@@ -355,7 +355,7 @@ namespace crawlservpp::Main {
 				n--;
 			}
 		}*/
-		for(unsigned long n = 1; n <= this->analyzers.size(); n++) {
+		for(unsigned long n = 1; n <= this->analyzers.size(); ++n) {
 			if(this->analyzers.at(n - 1)->isShutdown() && this->analyzers.at(n - 1)->isFinished()) {
 				n--;
 
@@ -369,7 +369,7 @@ namespace crawlservpp::Main {
 		if(!(this->workers.empty())) {
 			std::lock_guard<std::mutex> workersLocked(this->workersLock);
 
-			for(unsigned long n = 1; n <= this->workers.size(); n++) {
+			for(unsigned long n = 1; n <= this->workers.size(); ++n) {
 				if(!(this->workersRunning.at(n - 1))) {
 					// join and remove thread
 					n--;
@@ -695,7 +695,7 @@ namespace crawlservpp::Main {
 		unsigned int result = 0;
 
 		// go through all array items i.e. configuration entries
-		for(auto i = json.Begin(); i != json.End(); i++) {
+		for(auto i = json.Begin(); i != json.End(); ++i) {
 			bool algoItem = false;
 
 			if(i->IsObject()) {
@@ -2297,7 +2297,7 @@ namespace crawlservpp::Main {
 
 									for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
 										resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
-										n++;
+										++n;
 									}
 
 									result += resultStrStr.str();
@@ -2359,7 +2359,7 @@ namespace crawlservpp::Main {
 
 										for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
 											resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
-											n++;
+											++n;
 										}
 
 										result += resultStrStr.str();

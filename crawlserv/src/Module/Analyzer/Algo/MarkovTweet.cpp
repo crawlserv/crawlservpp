@@ -89,7 +89,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// get text corpus
 		this->setStatusMessage("Getting text corpus...");
 
-		for(unsigned long n = 0; n < this->config.generalInputSources.size(); n++) {
+		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string corpus, dateFrom, dateTo;
 			unsigned long corpusSources = 0;
 			if(this->config.filterDateEnable) {

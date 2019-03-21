@@ -174,7 +174,7 @@ namespace crawlservpp::Parsing {
 	std::string URI::unescape(const std::string& string, bool plusSpace) {
 		if(string.empty()) return "";
 		std::unique_ptr<char[]> cString(std::make_unique<char[]>(string.size() + 1));
-		for(unsigned long n = 0; n < string.length(); n++) cString[n] = string.at(n);
+		for(unsigned long n = 0; n < string.length(); ++n) cString[n] = string.at(n);
 		cString[string.length()] = '\0';
 		uriUnescapeInPlaceExA(cString.get(), plusSpace, URI_BR_DONT_TOUCH);
 		return std::string(cString.get());

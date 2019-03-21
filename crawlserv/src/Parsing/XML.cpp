@@ -21,7 +21,7 @@ namespace crawlservpp::Parsing {
 	void XML::parse(const std::string& content) {
 		// remove whitespaces
 		unsigned long begin = 0;
-		while(content.size() > begin && isspace(content.at(begin))) begin++;
+		while(content.size() > begin && isspace(content.at(begin))) begi++n;
 		std::string xml(content, begin, content.length() - begin);
 
 		// if necessary, try to tidy HTML and convert it to XML

@@ -516,7 +516,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// add 1.000 URLs at once
 			while(urls.size() >= 1000) {
-				for(unsigned long n = 0; n < 1000; n++) {
+				for(unsigned long n = 0; n < 1000; ++n) {
 					sqlStatement1000.setString((n * 4) + 1, urls.front());
 					sqlStatement1000.setString((n * 4) + 2, urls.front());
 					sqlStatement1000.setString((n * 4) + 3, urls.front());
@@ -531,7 +531,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// add 100 URLs at once
 			while(urls.size() >= 100) {
-				for(unsigned long n = 0; n < 100; n++) {
+				for(unsigned long n = 0; n < 100; ++n) {
 					sqlStatement100.setString((n * 4) + 1, urls.front());
 					sqlStatement100.setString((n * 4) + 2, urls.front());
 					sqlStatement100.setString((n * 4) + 3, urls.front());
@@ -546,7 +546,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// add 10 URLs at once
 			while(urls.size() >= 10) {
-				for(unsigned long n = 0; n < 10; n++) {
+				for(unsigned long n = 0; n < 10; ++n) {
 					sqlStatement10.setString((n * 4) + 1, urls.front());
 					sqlStatement10.setString((n * 4) + 2, urls.front());
 					sqlStatement10.setString((n * 4) + 3, urls.front());
@@ -1081,7 +1081,7 @@ namespace crawlservpp::Module::Crawler {
 		sqlQueryStr << "INSERT IGNORE INTO `" << this->urlListTable << "`(id, url, hash) VALUES ";
 
 		// generate placeholders
-		for(unsigned int n = 0; n < numberOfUrls; n++)
+		for(unsigned int n = 0; n < numberOfUrls; ++n)
 			sqlQueryStr << "(" // begin of VALUES arguments
 							" ("
 								"SELECT id FROM"

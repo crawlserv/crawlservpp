@@ -165,7 +165,7 @@ namespace crawlservpp::Helper::Strings {
 	// remove new lines and unnecessary spaces (including Unicode white spaces)
 	inline void utfTidy(std::string& stringToTidy) {
 		// replace Unicode white spaces with spaces
-		for(unsigned long n = 0; n < sizeof(utfWhitespaces) / sizeof(std::string); n++)
+		for(unsigned long n = 0; n < sizeof(utfWhitespaces) / sizeof(std::string); ++n)
 			replaceAll(stringToTidy, utfWhitespaces[n], " ", true);
 
 		// replace special ASCII characters with spaces

@@ -483,7 +483,7 @@ namespace crawlservpp::Module::Parser {
 
 		// set 1,000 locks at once
 		while(lockingQueue.size() >= 1000) {
-			for(unsigned long n = 0; n < 1000; n++) {
+			for(unsigned long n = 0; n < 1000; ++n) {
 				sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock1000.setString(n * 3 + 3, lockTime);
@@ -496,7 +496,7 @@ namespace crawlservpp::Module::Parser {
 
 		// set 100 locks at once
 		while(lockingQueue.size() >= 100) {
-			for(unsigned long n = 0; n < 100; n++) {
+			for(unsigned long n = 0; n < 100; ++n) {
 				sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock100.setString(n * 3 + 3, lockTime);
@@ -509,7 +509,7 @@ namespace crawlservpp::Module::Parser {
 
 		// set 10 locks at once
 		while(lockingQueue.size() >= 10) {
-			for(unsigned long n = 0; n < 10; n++) {
+			for(unsigned long n = 0; n < 10; ++n) {
 				sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock10.setString(n * 3 + 3, lockTime);
@@ -936,7 +936,7 @@ namespace crawlservpp::Module::Parser {
 
 			// add 1,000 entries at once
 			while(entries.size() >= 1000) {
-				for(unsigned short n = 0; n < 1000; n++) {
+				for(unsigned short n = 0; n < 1000; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front(), logEntriesTo);
 
@@ -971,7 +971,7 @@ namespace crawlservpp::Module::Parser {
 
 			// add 100 entries at once
 			while(entries.size() >= 100) {
-				for(unsigned char n = 0; n < 100; n++) {
+				for(unsigned char n = 0; n < 100; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front(), logEntriesTo);
 
@@ -1006,7 +1006,7 @@ namespace crawlservpp::Module::Parser {
 
 			// add 10 entries at once
 			while(entries.size() >= 10) {
-				for(unsigned char n = 0; n < 10; n++) {
+				for(unsigned char n = 0; n < 10; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front(), logEntriesTo);
 
@@ -1100,7 +1100,7 @@ namespace crawlservpp::Module::Parser {
 
 			// set 1,000 URLs at once
 			while(finished.size() > 1000) {
-				for(unsigned long n = 0; n < 1000; n++) {
+				for(unsigned long n = 0; n < 1000; ++n) {
 					sqlStatement1000.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement1000.setString(n * 2 + 2, finished.front().second);
 					finished.pop();
@@ -1110,7 +1110,7 @@ namespace crawlservpp::Module::Parser {
 
 			// set 100 URLs at once
 			while(finished.size() > 100) {
-				for(unsigned long n = 0; n < 100; n++) {
+				for(unsigned long n = 0; n < 100; ++n) {
 					sqlStatement100.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement100.setString(n * 2 + 2, finished.front().second);
 					finished.pop();
@@ -1120,7 +1120,7 @@ namespace crawlservpp::Module::Parser {
 
 			// set 10 URLs at once
 			while(finished.size() > 10) {
-				for(unsigned long n = 0; n < 10; n++) {
+				for(unsigned long n = 0; n < 10; ++n) {
 					sqlStatement10.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement10.setString(n * 2 + 2, finished.front().second);
 					finished.pop();
@@ -1232,7 +1232,7 @@ namespace crawlservpp::Module::Parser {
 								" VALUES";
 
 		// create VALUES clauses
-		for(unsigned int n = 1; n <= numberOfUrls; n++) {
+		for(unsigned int n = 1; n <= numberOfUrls; ++n) {
 			sqlQueryStrStr <<	" ("
 									" ("
 										"SELECT id FROM `" << this->parsingTable << "`"
@@ -1285,7 +1285,7 @@ namespace crawlservpp::Module::Parser {
 								" VALUES ";
 
 		// create placeholder list (including existence check)
-		for(unsigned int n = 1; n <= numberOfEntries; n++) {
+		for(unsigned int n = 1; n <= numberOfEntries; ++n) {
 			sqlQueryStr +=		"( "
 										"?, ?, CRC32( ? ), ?";
 
@@ -1327,7 +1327,7 @@ namespace crawlservpp::Module::Parser {
 		// create WHERE clause
 		sqlQueryStrStr << " WHERE ";
 
-		for(unsigned int n = 0; n < numberOfUrls; n++) {
+		for(unsigned int n = 0; n < numberOfUrls; ++n) {
 			if(n > 0)
 				sqlQueryStrStr << " OR ";
 
@@ -1357,7 +1357,7 @@ namespace crawlservpp::Module::Parser {
 							" AND"
 							" (";
 
-		for(unsigned long n = 1; n <= numberOfUrls; n++) {
+		for(unsigned long n = 1; n <= numberOfUrls; ++n) {
 			sqlQueryStrStr <<	" url = ?";
 
 			if(n < numberOfUrls)
