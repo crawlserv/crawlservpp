@@ -55,7 +55,7 @@ namespace crawlservpp::Main {
 				}
 				catch(...) { // could not log -> write to stdout
 					std::cout.imbue(std::locale(""));
-					std::cout << "\n" << requests << " SQL requests performed." << std::flush;
+					std::cout << '\n' << requests << " SQL requests performed." << std::flush;
 				}
 			}
 		}
@@ -251,7 +251,7 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) {
 			// write log entry to console instead
-			std::cout << "\n" << logModule << ": " << logEntry << std::flush;
+			std::cout << '\n' << logModule << ": " << logEntry << std::flush;
 
 			this->sqlException("Main::Database::log", e);
 		}

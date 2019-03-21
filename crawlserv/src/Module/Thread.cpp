@@ -423,10 +423,11 @@ namespace crawlservpp::Module {
 		}
 		// handle connection exception by sleeping
 		catch(const ConnectionException& e) {
-			std::cout << "\n" << e.what()
-					<< " - sleeps for "
-					<< MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC << "s"
-					<< std::flush;
+			std::cout	<< '\n'
+						<< e.what()
+						<< " - sleeps for "
+						<< MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC << "s"
+						<< std::flush;
 
 			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
 		}
@@ -468,6 +469,7 @@ namespace crawlservpp::Module {
 
 			// change status
 			this->setLast(this->overwriteLast);
+
 			this->overwriteLast = 0;
 			this->warpedOver = this->last - oldId;
 
@@ -499,7 +501,8 @@ namespace crawlservpp::Module {
 			this->pauseCondition.wait(pause, std::bind(&Thread::isUnpaused, this));
 
 			// notify thread for unpausing
-			if(this->running) this->onUnpause();
+			if(this->running)
+				this->onUnpause();
 
 			// update pause time and save new start time point
 			this->updatePauseTime();
@@ -587,17 +590,15 @@ namespace crawlservpp::Module {
 		try {
 			std::ostringstream logStrStr;
 
-			logStrStr
-					<< "[WARNING] Exception in Thread::" << inFunction << "() - "
-					<< e.what();
+			logStrStr	<< "[WARNING] Exception in Thread::" << inFunction << "() - "
+						<< e.what();
 
 			this->database.log(logStrStr.str());
 		}
 		// if that fails too, write the original exception to the console
 		catch(...) {
-			std::cout
-					<< "\nWARNING: Exception in Thread::" << inFunction << "() - "
-					<< e.what() << std::flush;
+			std::cout	<< "\nWARNING: Exception in Thread::" << inFunction << "() - "
+						<< e.what() << std::flush;
 		}
 	}
 
@@ -609,9 +610,8 @@ namespace crawlservpp::Module {
 		}
 		// if that fails too, write the original exception to the console
 		catch(...) {
-			std::cout
-					<< "\nWARNING: Unknown exception in Thread::" << inFunction << "()"
-					<< std::flush;
+			std::cout	<< "\nWARNING: Unknown exception in Thread::" << inFunction << "()"
+						<< std::flush;
 		}
 	}
 

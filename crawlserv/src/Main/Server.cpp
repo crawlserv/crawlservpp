@@ -188,11 +188,11 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
@@ -217,11 +217,11 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
@@ -245,11 +245,11 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
@@ -273,11 +273,11 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< "\n" << logStrStr.str()
+					std::cout	<< '\n' << logStrStr.str()
 								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
@@ -669,7 +669,7 @@ namespace crawlservpp::Main {
 
 	#ifdef MAIN_SERVER_DEBUG_HTTP_REQUEST
 		// debug HTTP request
-		std::cout << "\n" << message << std::endl;
+		std::cout << '\n' << message << std::endl;
 	#endif
 
 		// check for GET request
@@ -2260,12 +2260,12 @@ namespace crawlservpp::Main {
 							Timer::SimpleHR timer;
 							Query::RegEx regExTest(query, resultBool || resultSingle, resultMulti);
 
-							result = "COMPILING TIME: " + timer.tickStr() + "\n";
+							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
 							if(resultBool) {
 								// get boolean result (does at least one match exist?)
 								result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-									+ std::string(regExTest.getBool(text) ? "true" : "false") + "\n";
+									+ std::string(regExTest.getBool(text) ? "true" : "false") + '\n';
 							}
 
 							if(resultSingle) {
@@ -2277,7 +2277,7 @@ namespace crawlservpp::Main {
 								if(tempResult.empty())
 									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
 								else
-									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
+									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 							}
 
 							if(resultMulti) {
@@ -2316,17 +2316,17 @@ namespace crawlservpp::Main {
 
 							Query::XPath xPathTest(query, textOnly);
 
-							result = "COMPILING TIME: " + timer.tickStr() + "\n";
+							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
 							try {
 								xmlDocumentTest.parse(text);
 
-								result += "PARSING TIME: " + timer.tickStr() + "\n";
+								result += "PARSING TIME: " + timer.tickStr() + '\n';
 
 								if(resultBool) {
 									// get boolean result (does at least one match exist?)
 									result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-											+ std::string(xPathTest.getBool(xmlDocumentTest) ? "true" : "false") + "\n";
+											+ std::string(xPathTest.getBool(xmlDocumentTest) ? "true" : "false") + '\n';
 								}
 								if(resultSingle) {
 									// get first result (first full match)
@@ -2338,7 +2338,7 @@ namespace crawlservpp::Main {
 									if(tempResult.empty())
 										result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
 									else
-										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + "\n";
+										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 								}
 								if(resultMulti) {
 									// get all results (all full matches)
