@@ -136,7 +136,7 @@ protected:
 			throw Config::Exception("Module::Config::loadConfig(): Invalid configuration JSON (is no array).");
 
 		// parse configuration entries
-		for(auto entry = json.Begin(); entry != json.End(); entry++) {
+		for(auto entry = json.Begin(); entry != json.End(); ++entry) {
 			// check whether configuration item is a JSON object
 			if(!(entry->IsObject())) {
 				warningsTo.emplace("Configuration entry that is no object ignored.");

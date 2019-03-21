@@ -81,6 +81,7 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.generalLogging) {
 			while(!configWarnings.empty()) {
 				this->log("WARNING: " + configWarnings.front());
+
 				configWarnings.pop();
 			}
 		}
@@ -214,7 +215,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// increase tick counter
-		this->tickCounter++;
+		++(this->tickCounter);
 
 		// check whether all URLs in the cache have been skipped
 		if(this->urls.empty())
@@ -248,8 +249,10 @@ namespace crawlservpp::Module::Parser {
 			if(this->idDist) {
 				float cacheProgress = static_cast<float>(this->urls.front().first - this->idFirst) / this->idDist;
 					// cache progress = (current ID - first ID) / (last ID - first ID)
+
 				float approxPosition = this->posFirstF + cacheProgress * this->posDist;
 					// approximate position = first position + cache progress * (last position - first position)
+
 				this->setProgress(approxPosition / this->total);
 			}
 			else if(this->total)
@@ -277,8 +280,10 @@ namespace crawlservpp::Module::Parser {
 			this->lockTime = "";
 
 			// write to log if necessary
-			if((this->config.generalLogging > Config::generalLoggingDefault)
-					|| (this->config.generalTiming && this->config.generalLogging)) {
+			if(
+					(this->config.generalLogging > Config::generalLoggingDefault)
+					|| (this->config.generalTiming && this->config.generalLogging)
+			) {
 				std::ostringstream logStrStr;
 				logStrStr.imbue(std::locale(""));
 
@@ -407,24 +412,28 @@ namespace crawlservpp::Module::Parser {
 			// create queries and get query IDs
 			for(auto i = this->config.generalSkip.begin(); i != this->config.generalSkip.end(); ++i) {
 				QueryProperties properties;
+
 				this->database.getQueryProperties(*i, properties);
 				this->queriesSkip.emplace_back(this->addQuery(properties));
 			}
 
 			for(auto i = this->config.parsingIdQueries.begin(); i != this->config.parsingIdQueries.end(); ++i) {
 				QueryProperties properties;
+
 				this->database.getQueryProperties(*i, properties);
 				this->queriesId.emplace_back(this->addQuery(properties));
 			}
 
 			for(auto i = this->config.parsingDateTimeQueries.begin(); i != this->config.parsingDateTimeQueries.end(); ++i) {
 				QueryProperties properties;
+
 				this->database.getQueryProperties(*i, properties);
 				this->queriesDateTime.emplace_back(this->addQuery(properties));
 			}
 
 			for(auto i = this->config.parsingFieldQueries.begin(); i != this->config.parsingFieldQueries.end(); ++i) {
 				QueryProperties properties;
+
 				this->database.getQueryProperties(*i, properties);
 				this->queriesFields.emplace_back(this->addQuery(properties));
 			}
@@ -491,6 +500,7 @@ namespace crawlservpp::Module::Parser {
 		this->idDist = this->urls.back().first - this->idFirst;
 
 		unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
+
 		this->posFirstF = static_cast<float>(posFirst);
 		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
 	}
@@ -522,6 +532,7 @@ namespace crawlservpp::Module::Parser {
 					// check result type of query
 					if(!(i->resultBool) && this->config.generalLogging) {
 						this->log("WARNING: Invalid result type of skip query (not bool).");
+
 						continue;
 					}
 
@@ -591,8 +602,14 @@ namespace crawlservpp::Module::Parser {
 			if(parsedId.empty())
 				return 0;
 
-			if(!(this->config.parsingIdIgnore.empty()) && std::find(this->config.parsingIdIgnore.begin(),
-					this->config.parsingIdIgnore.end(),	parsedId) != this->config.parsingIdIgnore.end())
+			if(
+					!(this->config.parsingIdIgnore.empty())
+					&& std::find(
+							this->config.parsingIdIgnore.begin(),
+							this->config.parsingIdIgnore.end(),
+							parsedId
+					) != this->config.parsingIdIgnore.end()
+			)
 				return 0;
 		}
 
@@ -607,7 +624,7 @@ namespace crawlservpp::Module::Parser {
 					if(this->parsingContent(latestContent, parsedId))
 						return 1;
 
-					index++;
+					++index;
 				}
 				else
 					break;
@@ -621,7 +638,8 @@ namespace crawlservpp::Module::Parser {
 
 			while(!contents.empty()) {
 				if(this->parsingContent(contents.front(), parsedId))
-					counter++;
+					++counter;
+
 				contents.pop();
 			}
 
@@ -708,7 +726,7 @@ namespace crawlservpp::Module::Parser {
 				}
 
 				// not successfull: check next query for parsing the ID (if it exists)
-				idQueryCounter++;
+				++idQueryCounter;
 			}
 		}
 
@@ -825,7 +843,7 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			// not successfull: check next query for parsing the date/time (if exists)
-			dateTimeQueryCounter++;
+			++dateTimeQueryCounter;
 		}
 
 		// check whether date/time conversion was successful
@@ -1029,7 +1047,7 @@ namespace crawlservpp::Module::Parser {
 					parsedData.fields.emplace_back();
 				}
 
-				fieldCounter++;
+				++fieldCounter;
 			}
 			catch(const RegExException& e) {} // ignore query on error
 		}

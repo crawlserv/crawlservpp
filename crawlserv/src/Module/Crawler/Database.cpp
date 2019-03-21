@@ -570,7 +570,7 @@ namespace crawlservpp::Module::Crawler {
 				urls.pop();
 
 				if(Database::sqlExecuteUpdate(sqlStatement1) > 0)
-					result++;
+					++result;
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlsIfNotExist", e); }

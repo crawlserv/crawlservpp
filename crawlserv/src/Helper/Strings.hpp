@@ -68,24 +68,34 @@ namespace crawlservpp::Helper::Strings {
 		// avoid infinite loop
 		if(!onlyOnce) {
 			jump = to.find_last_of(from);
-			if(jump == std::string::npos) jump = 0;
-			else jump++;
+
+			if(jump == std::string::npos)
+				jump = 0;
+			else
+				++jump;
 		}
 
 		// replace!
 		while((startPos = strInOut.find(from, startPos)) != std::string::npos) {
 			strInOut.replace(startPos, from.length(), to);
-			if(onlyOnce) startPos += to.length();
-			else startPos += jump;
+
+			if(onlyOnce)
+				startPos += to.length();
+			else
+				startPos += jump;
 		}
 	}
 
 	// convert string to boolean value
 	inline bool stringToBool(std::string inputString) {
 		std::transform(inputString.begin(), inputString.end(), inputString.begin(), ::tolower);
+
 		std::istringstream strStr(inputString);
+
 		bool result;
+
 		strStr >> std::boolalpha >> result;
+
 		return result;
 	}
 
@@ -94,6 +104,7 @@ namespace crawlservpp::Helper::Strings {
 		stringToTrim.erase(stringToTrim.begin(), std::find_if(stringToTrim.begin(), stringToTrim.end(), [](int ch) {
 			return !std::isspace(ch);
 		}));
+
 		stringToTrim.erase(std::find_if(stringToTrim.rbegin(), stringToTrim.rend(), [](int ch) {
 			return !std::isspace(ch);
 		}).base(), stringToTrim.end());
@@ -102,9 +113,13 @@ namespace crawlservpp::Helper::Strings {
 	// concatenate all elements of a vector into a single string
 	inline std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty) {
 		std::string result;
+
 		for(auto i = vectorToConcat.begin(); i != vectorToConcat.end(); ++i)
 			if(!ignoreEmpty || !(i->empty())) result += *i + delimiter;
-		if(!result.empty()) result.pop_back();
+
+		if(!result.empty())
+			result.pop_back();
+
 		return result;
 	}
 
@@ -126,8 +141,12 @@ namespace crawlservpp::Helper::Strings {
 									return (s1 == s2) || std::tolower(s1) == std::tolower(s2);
 								}
 						);
+
 						return result.second != s2.cend()
-								&& (result.first == s1.cend() || std::tolower(*result.first) < std::tolower(*result.second));
+								&& (
+										result.first == s1.cend()
+										|| std::tolower(*result.first) < std::tolower(*result.second)
+								);
 				}
 			);
 
@@ -151,14 +170,18 @@ namespace crawlservpp::Helper::Strings {
 				switch(from.at(1)) {
 				case 'n':
 					return '\n';
+
 				case 't':
 					return '\t';
+
 				case '\\':
 					return '\\';
 				}
 			}
-			else return from.at(0);
+			else
+				return from.at(0);
 		}
+
 		return 0;
 	}
 

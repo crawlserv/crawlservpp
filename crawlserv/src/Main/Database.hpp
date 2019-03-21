@@ -283,7 +283,7 @@ namespace crawlservpp::Main {
 			while(true) { // retry on deadlock
 				try {
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-					Database::requestCounter++;
+					++Database::requestCounter;
 #endif
 
 					result = statement.execute(args...);
@@ -326,7 +326,7 @@ namespace crawlservpp::Main {
 			while(true) { // retry on deadlock
 				try {
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-					Database::requestCounter++;
+					++Database::requestCounter;
 #endif
 
 					resultPtr = statement.executeQuery(args...);
@@ -369,7 +369,7 @@ namespace crawlservpp::Main {
 			while(true) { // retry on deadlock
 				try {
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-					Database::requestCounter++;
+					++Database::requestCounter;
 #endif
 
 					result = statement.executeUpdate(args...);

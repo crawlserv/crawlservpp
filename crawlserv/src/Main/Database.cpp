@@ -3627,7 +3627,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setBoolean(counter, i->second._b);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -3639,7 +3639,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setDouble(counter, i->second._d);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -3651,7 +3651,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setInt(counter, i->second._i);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -3663,7 +3663,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setInt64(counter, i->second._l);
 
-					counter++;
+					++counter;
 				}
 				break;
 
@@ -3701,7 +3701,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setString(counter, i->second._s);
 
-					counter++;
+					++counter;
 				}
 				break;
 
@@ -3712,7 +3712,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setUInt(counter, i->second._ui);
 
-					counter++;
+					++counter;
 				}
 				break;
 
@@ -3723,7 +3723,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setUInt64(counter, i->second._ul);
 
-					counter++;
+					++counter;
 				}
 				break;
 
@@ -3852,7 +3852,7 @@ namespace crawlservpp::Main {
 					}
 				}
 
-				counter++;
+				++counter;
 			}
 
 			// execute SQL statement
@@ -4007,7 +4007,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setBoolean(counter, i->second._b);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -4019,7 +4019,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setDouble(counter, i->second._d);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -4031,7 +4031,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setInt(counter, i->second._i);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -4043,7 +4043,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setInt64(counter, i->second._l);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -4091,7 +4091,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setString(counter, i->second._s);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -4103,7 +4103,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setUInt(counter, i->second._ui);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -4115,7 +4115,7 @@ namespace crawlservpp::Main {
 					else
 						sqlStatement->setUInt64(counter, i->second._ul);
 
-					counter++;
+					++counter;
 				}
 
 				break;
@@ -4241,7 +4241,7 @@ namespace crawlservpp::Main {
 						);
 					}
 				}
-				counter++;
+				++counter;
 			}
 
 			// execute SQL statement
@@ -4607,7 +4607,7 @@ namespace crawlservpp::Main {
 					if(!line.empty())
 						Database::sqlExecute(sqlStatement, line);
 
-					lineCounter++;
+					++lineCounter;
 				}
 				catch(const sql::SQLException &e) { this->sqlException("Main::Database::run", e); }
 			}

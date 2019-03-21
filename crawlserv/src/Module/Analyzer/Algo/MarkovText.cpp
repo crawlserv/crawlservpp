@@ -224,7 +224,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			key += w1 + " ";
 			next = this->source.find_first_not_of( 32, pos + 1 );
 			if( next == std::string::npos ) return;
-			wc++;
+			++wc;
 		}
 		key = key.substr( 0, key.size() - 1 );
 		while( true ) {
@@ -243,7 +243,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			key = key.substr( key.find_first_of( 32 ) + 1 ) + " " + w1;
 
 			// *** added: counter + check whether thread is still running + set progress
-			counter++;
+			++counter;
 			if(counter > 1000000) {
 				if(!(this->isRunning())) return;
 				this->setProgress(static_cast<float>(next) / this->source.length());

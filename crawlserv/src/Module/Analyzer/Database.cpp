@@ -691,7 +691,7 @@ namespace crawlservpp::Module::Analyzer {
 						// concatenate corpus text
 						corpusTo += i->_s;
 						corpusTo.push_back(' ');
-						sourcesTo++;
+						++sourcesTo;
 					}
 				}
 

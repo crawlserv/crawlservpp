@@ -107,7 +107,7 @@ namespace crawlservpp::Helper::Json {
 			objectValue.SetObject();
 
 			// go through the sub-vector elements representing the [key, value] pairs in the object
-			for(auto j = i->begin(); j != i->end(); j++) {
+			for(auto j = i->begin(); j != i->end(); ++j) {
 				// create key
 				rapidjson::Value key;
 				key.SetString(j->first, allocator);

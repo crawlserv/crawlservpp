@@ -251,7 +251,7 @@ namespace crawlservpp::Module::Crawler {
 			}
 
 			// increase tick counter
-			this->tickCounter++;
+			++(this->tickCounter);
 
 			// start crawling
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -763,7 +763,7 @@ namespace crawlservpp::Module::Crawler {
 							if(!(this->config.customReCrawl)
 									&& this->database.isUrlCrawled(this->customPages.at(this->manualCounter).first)) {
 								// skip custom URL
-								this->manualCounter++;
+								++(this->manualCounter);
 
 								continue;
 							}
@@ -785,7 +785,7 @@ namespace crawlservpp::Module::Crawler {
 										this->manualUrl.second + " skipped."
 								);
 
-								this->manualCounter++;
+								++(this->manualCounter);
 								this->manualUrl = IdString();
 							}
 							else {
@@ -1909,7 +1909,7 @@ namespace crawlservpp::Module::Crawler {
 										std::string timeStamp = mementos.front().timeStamp;
 
 										// set status
-										counter++;
+										++counter;
 
 										std::ostringstream statusStrStr;
 										statusStrStr.imbue(std::locale(""));
@@ -2190,7 +2190,7 @@ namespace crawlservpp::Module::Crawler {
 			this->manualUrl = IdString();
 
 			if(this->manualCounter < this->customPages.size())
-				this->manualCounter++;
+				++(this->manualCounter);
 			else
 				this->startCrawled = true;
 		}
@@ -2232,7 +2232,7 @@ namespace crawlservpp::Module::Crawler {
 			this->manualUrl = IdString();
 
 			if(this->manualCounter < this->customPages.size())
-				this->manualCounter++;
+				++(this->manualCounter);
 			else
 				this->startCrawled = true;
 		}
@@ -2268,7 +2268,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(this->config.crawlerReTries > -1) {
 			// increment and check retry counter
-			this->retryCounter++;
+			++(this->retryCounter);
 			if(this->retryCounter > (unsigned long) this->config.crawlerReTries) {
 				// do not retry, but skip
 				this->crawlingSkip(url, true);
@@ -2303,7 +2303,7 @@ namespace crawlservpp::Module::Crawler {
 					|| mementoContent.at(pos) == '\n'
 					|| mementoContent.at(pos) == '\t'
 			) {
-				pos++;
+				++pos;
 
 				continue;
 			}
@@ -2345,7 +2345,7 @@ namespace crawlservpp::Module::Crawler {
 				// parse field separator
 				newField = true;
 
-				pos++;
+				++pos;
 			}
 			else if(mementoContent.at(pos) == ',') {
 				// parse end of memento
@@ -2356,7 +2356,7 @@ namespace crawlservpp::Module::Crawler {
 					mementoStarted  = false;
 				}
 
-				pos++;
+				++pos;
 			}
 			else {
 				if(newField)
@@ -2402,7 +2402,7 @@ namespace crawlservpp::Module::Crawler {
 
 						warningsTo.emplace(warningStrStr.str());
 
-						pos++;
+						++pos;
 
 						continue;
 					}

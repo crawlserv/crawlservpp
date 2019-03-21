@@ -754,7 +754,7 @@ namespace crawlservpp::Module::Parser {
 
 				urls.pop();
 
-				counter++;
+				++counter;
 			}
 
 			sqlStatement.setString(counter, lockTime);
@@ -957,7 +957,7 @@ namespace crawlservpp::Module::Parser {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 							sqlStatement1000.setString(n * fields + counter, *i);
 
-							counter++;
+							++counter;
 						}
 					}
 
@@ -992,7 +992,7 @@ namespace crawlservpp::Module::Parser {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 							sqlStatement100.setString(n * fields + counter, *i);
 
-							counter++;
+							++counter;
 						}
 					}
 
@@ -1027,7 +1027,7 @@ namespace crawlservpp::Module::Parser {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 							sqlStatement10.setString(n * fields + counter, *i);
 
-							counter++;
+							++counter;
 						}
 					}
 
@@ -1061,7 +1061,7 @@ namespace crawlservpp::Module::Parser {
 					if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
 						sqlStatement1.setString(counter, *i);
 
-						counter++;
+						++counter;
 					}
 				}
 
@@ -1277,7 +1277,7 @@ namespace crawlservpp::Module::Parser {
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
 			if(!(i->empty())) {
 				sqlQueryStr += 		", `parsed__" + *i + "`";
-				counter++;
+				++counter;
 			}
 		}
 
@@ -1289,7 +1289,7 @@ namespace crawlservpp::Module::Parser {
 			sqlQueryStr +=		"( "
 										"?, ?, CRC32( ? ), ?";
 
-			for(unsigned long c = 0; c < counter; c++)
+			for(unsigned long c = 0; c < counter; ++c)
 				sqlQueryStr +=	 		", ?";
 
 			sqlQueryStr +=			")";
