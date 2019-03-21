@@ -171,7 +171,7 @@ namespace crawlservpp::Main {
 		// server commands used by Server::cmd(...) only
 		ServerCommandResponse cmdKill(const rapidjson::Document& json, const std::string& ip);
 		ServerCommandResponse cmdAllow(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdDisallow(const rapidjson::Document& json, const std::string& ip);
+		ServerCommandResponse cmdDisallow(const std::string& ip);
 
 		ServerCommandResponse cmdLog(const rapidjson::Document& json);
 		ServerCommandResponse cmdClearLog(const rapidjson::Document& jsonts, const std::string& ip);

@@ -14,7 +14,8 @@ namespace crawlservpp::Module {
 
 	// constructor
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
-				: Main::Database(dbSettings, dbModule), ps({0}) {
+							: Main::Database(dbSettings, dbModule),
+							  ps(_ps()) {
 		if(Main::Database::driver)
 			Main::Database::driver->threadInit();
 		else

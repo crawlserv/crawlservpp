@@ -119,7 +119,7 @@ namespace crawlservpp::Module::Parser {
 
 	private:
 		// IDs of prepared SQL statements
-		struct {
+		struct _ps {
 			unsigned short fetchUrls;
 			unsigned short lockUrl;
 			unsigned short lock10Urls;

@@ -24,7 +24,7 @@ namespace crawlservpp::Module::Parser {
 							  verbose(false),
 							  timeoutTargetLock(0),
 							  targetTableId(0),
-							  ps({0}) {}
+							  ps(_ps()) {}
 
 	// destructor stub
 	Database::~Database() {}

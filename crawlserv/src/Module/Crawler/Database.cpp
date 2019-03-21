@@ -22,7 +22,7 @@ namespace crawlservpp::Module::Crawler {
 						  urlCaseSensitive(true),
 						  urlDebug(false),
 						  urlStartupCheck(true),
-						  ps({0}) {}
+						  ps(_ps()) {}
 
 	// destructor stub
 	Database::~Database() {}

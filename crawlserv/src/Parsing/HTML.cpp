@@ -12,11 +12,13 @@
 namespace crawlservpp::Parsing {
 
 	// constructor: create tidy object and fill buffer struct with zeros
-	HTML::HTML() : doc(tidyCreate()), buffer({0}) {}
+	HTML::HTML() : doc(tidyCreate()), buffer(TidyBuffer()) {}
 
 	// destructor: free buffer if necessary and release tidy object
 	HTML::~HTML() {
-		if(this->buffer.allocated) tidyBufFree(&(this->buffer));
+		if(this->buffer.allocated)
+			tidyBufFree(&(this->buffer));
+
 		tidyRelease(this->doc);
 	}
 
@@ -46,7 +48,8 @@ namespace crawlservpp::Parsing {
 			throw HTML::Exception("Could not save output buffer");
 
 		// save output
-		if(this->buffer.bp) content = std::string((char *) this->buffer.bp);
+		if(this->buffer.bp)
+			content = std::string((char *) this->buffer.bp);
 	}
 
 } /* crawlservpp::Parsing */

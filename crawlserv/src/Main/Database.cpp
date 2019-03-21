@@ -28,7 +28,7 @@ namespace crawlservpp::Main {
 			  maxAllowedPacketSize(0),
 			  sleepOnError(0),
 			  module(dbModule),
-			  ps({0}) {
+			  ps(_ps()) {
 		// get driver instance if necessary
 		if(!Database::driver) {
 			Database::driver = get_driver_instance();

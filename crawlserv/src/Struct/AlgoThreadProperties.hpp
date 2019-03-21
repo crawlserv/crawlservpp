@@ -17,6 +17,10 @@
 
 namespace crawlservpp::Struct {
 	struct AlgoThreadProperties {
+	private:
+		const std::string _emptyString;
+
+	public:
 		bool recreate;
 		unsigned long algoId;
 		unsigned long threadId;
@@ -36,10 +40,11 @@ namespace crawlservpp::Struct {
 					  algoId(setAlgoId),
 					  threadId(0),
 					  dbBase(setDatabase),
-					  status(""),
+					  status(_emptyString),
 					  paused(false),
 					  options(setOptions),
-					  last(0) {}
+					  last(0)
+					  {}
 
 		// properties for previously interrupted thread
 		AlgoThreadProperties(

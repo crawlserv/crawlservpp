@@ -12,8 +12,15 @@
 namespace crawlservpp::Module::Analyzer {
 
 	// constructor: initialize database and set default values
-	Database::Database(Module::Database& dbThread) : Wrapper::Database(dbThread), website(0), urlList(0),
-			logging(false), verbose(false), timeoutTargetLock(0), targetTableId(0), ps({0}) {}
+	Database::Database(Module::Database& dbThread)
+							: Wrapper::Database(dbThread),
+							  website(0),
+							  urlList(0),
+							  logging(false),
+							  verbose(false),
+							  timeoutTargetLock(0),
+							  targetTableId(0),
+							  ps(_ps()) {}
 
 	// destructor stub
 	Database::~Database() {}

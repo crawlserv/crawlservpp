@@ -117,7 +117,7 @@ namespace crawlservpp::Module::Crawler {
 
 	private:
 		// IDs of prepared SQL statements
-		struct {
+		struct _ps {
 			unsigned short getUrlId;
 			unsigned short getNextUrl;
 			unsigned short addUrlIfNotExists;

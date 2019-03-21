@@ -448,7 +448,7 @@ namespace crawlservpp::Main {
 		void execute(const std::string& sqlQuery);
 
 		// IDs of prepared SQL statements
-		struct {
+		struct _ps {
 			unsigned short log;
 			unsigned short lastId;
 			unsigned short setThreadStatus;

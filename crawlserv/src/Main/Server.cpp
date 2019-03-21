@@ -444,7 +444,7 @@ namespace crawlservpp::Main {
 							else if(command == "allow")
 								response = this->cmdAllow(json, ip);
 							else if(command == "disallow")
-								response = this->cmdDisallow(json, ip);
+								response = this->cmdDisallow(ip);
 
 							else if(command == "log")
 								response = this->cmdLog(json);
@@ -783,7 +783,6 @@ namespace crawlservpp::Main {
 
 	// server command disallow: revoke access from all except the initial IP(s) specified by the configuration file
 	Server::ServerCommandResponse Server::cmdDisallow(
-			const rapidjson::Document& json,
 			const std::string& ip
 	) {
 		// reset alled IP(s)
