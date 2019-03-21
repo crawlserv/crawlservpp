@@ -59,15 +59,21 @@ namespace crawlservpp::Main {
 	// send reply, throws std::runtime_error
 	void WebServer::send(ConnectionPtr connection, unsigned short code, const std::string& type, const std::string& content) {
 		// check connection
-		if(!connection) throw std::runtime_error("WebServer::send(): No connection specified");
+		if(!connection)
+			throw std::runtime_error("WebServer::send(): No connection specified");
 
 		// send reply
 		std::string head;
-		if(!type.empty()) head += "Content-Type: " + type + "\r\n";
+
+		if(!type.empty())
+			head += "Content-Type: " + type + "\r\n";
+
 		head += "Access-Control-Allow-Origin: " + this->cors + "\r\n"
 				"Access-Control-Allow-Methods: GET, POST\r\n"
 				"Access-Control-Allow-Headers: Content-Type";
-		mg_send_head(connection, 200, content.size(), head.c_str());
+
+		mg_send_head(connection, code, content.size(), head.c_str());
+
 		mg_printf(connection, "%s", content.c_str());
 	}
 
