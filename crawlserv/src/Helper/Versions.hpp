@@ -18,8 +18,10 @@
 #include "tidy.h"
 
 #include <boost/version.hpp>
+
 #include <curl/curl.h>
-#include <cppconn/driver.h>
+
+#include <jdbc/cppconn/driver.h>
 
 #include <aspell.h>
 
@@ -27,6 +29,7 @@
 #include <pcre2.h>
 
 #include <pugixml.hpp>
+
 #include <uriparser/UriBase.h>
 
 #include <sstream>

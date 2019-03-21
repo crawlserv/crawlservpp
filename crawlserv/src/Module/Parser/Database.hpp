@@ -15,12 +15,11 @@
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Wrapper/Database.hpp"
 
-#include <cppconn/exception.h>
-#include <cppconn/prepared_statement.h>
-#include <cppconn/resultset.h>
-#include <cppconn/statement.h>
-
-#include <mysql_connection.h>
+#include <jdbc/cppconn/exception.h>
+#include <jdbc/cppconn/prepared_statement.h>
+#include <jdbc/cppconn/resultset.h>
+#include <jdbc/cppconn/statement.h>
+#include <jdbc/mysql_connection.h>
 
 #include <chrono>
 #include <fstream>
