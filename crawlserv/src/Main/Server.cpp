@@ -188,15 +188,16 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< std::endl << "Could not write to log: " << e.what() << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< "ERROR: Unknown exception in Server::~Server()" << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
 		}
+
 		this->crawlers.clear();
 
 		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
@@ -216,12 +217,12 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< std::endl << "Could not write to log: " << e.what() << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
 		}
@@ -244,12 +245,12 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< std::endl << "Could not write to log: " << e.what() << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
 		}
@@ -272,12 +273,12 @@ namespace crawlservpp::Main {
 					this->database.log(logStrStr.str());
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< std::endl << "Could not write to log: " << e.what() << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
 				catch(...) {
-					std::cout	<< std::endl << logStrStr.str()
-								<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+					std::cout	<< "\n" << logStrStr.str()
+								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 				}
 			}
 		}
@@ -298,12 +299,12 @@ namespace crawlservpp::Main {
 		catch(const Database::Exception& e) {
 			std::cout << "server shuts down after up-time of"
 					<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
-					<< std::endl << "Could not write to log: " << e.what() << std::flush;
+					<< "\nCould not write to log: " << e.what() << std::flush;
 		}
 		catch(...) {
 			std::cout << "server shuts down after up-time of"
 					<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
-					<< std::endl << "ERROR: Unknown exception in Server::~Server()" << std::flush;
+					<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
 		}
 	}
 
@@ -599,7 +600,7 @@ namespace crawlservpp::Main {
 			if(this->allowed.find(ip) == std::string::npos) {
 				this->webServer.close(connection);
 				if(this->offline)
-						std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
+						std::cout << "\nserver rejected client " + ip + "." << std::flush;
 				else {
 					try {
 						this->database.log("rejected client " + ip + ".");
@@ -613,7 +614,7 @@ namespace crawlservpp::Main {
 							this->database.log("rejected client " + ip + ".");
 						}
 						catch(const Database::Exception& e) {
-							std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
+							std::cout << "\nserver rejected client " + ip + "." << std::flush;
 
 							this->offline = true;
 						}
@@ -622,7 +623,7 @@ namespace crawlservpp::Main {
 			}
 			else {
 				if(this->offline)
-					std::cout << std::endl << "server accepted client " + ip + "." << std::flush;
+					std::cout << "\nserver accepted client " + ip + "." << std::flush;
 				else
 					try {
 						this->database.log("accepted client " + ip + ".");
@@ -636,7 +637,7 @@ namespace crawlservpp::Main {
 							this->database.log("accepted client " + ip + ".");
 						}
 						catch(const Database::Exception& e) {
-							std::cout << std::endl << "server rejected client " + ip + "." << std::flush;
+							std::cout << "\nserver rejected client " + ip + "." << std::flush;
 
 							this->offline = true;
 						}
@@ -668,7 +669,7 @@ namespace crawlservpp::Main {
 
 	#ifdef MAIN_SERVER_DEBUG_HTTP_REQUEST
 		// debug HTTP request
-		std::cout << std::endl << message << std::endl;
+		std::cout << "\n" << message << std::endl;
 	#endif
 
 		// check for GET request

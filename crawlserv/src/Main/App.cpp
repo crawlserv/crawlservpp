@@ -23,10 +23,15 @@ namespace crawlservpp::Main {
 
 			// save instance and register signals
 			App::instance = this;
+
 			struct sigaction sigIntHandler;
+
 			sigIntHandler.sa_handler = App::signal;
+
 			sigemptyset(&sigIntHandler.sa_mask);
+
 			sigIntHandler.sa_flags = 0;
+
 			sigaction(SIGINT, &sigIntHandler, nullptr);
 			sigaction(SIGTERM, &sigIntHandler, nullptr);
 
@@ -43,12 +48,15 @@ namespace crawlservpp::Main {
 			if(this->getPassword(dbSettings) && this->running) {
 				// create server and run!
 				this->server = std::make_unique<Server>(dbSettings, serverSettings);
+
 				std::cout << "Server is up and running." << std::flush;
 			}
-			else this->running = false;
+			else
+				this->running = false;
 		}
 		catch(const std::exception& e) {
 			std::cout << "[ERROR] " << e.what() << std::endl;
+
 			this->running = false;
 		}
 		catch(...) {
@@ -61,13 +69,14 @@ namespace crawlservpp::Main {
 	App::~App() {
 		if(this->server) {
 			// server up-time message
-			std::cout << std::endl << "Up-time: " << Helper::DateTime::secondsToString(server->getUpTime()) << ".";
-			std::cout << std::endl << "> Waiting for threads..." << std::flush;
+			std::cout << "\nUp-time: " << Helper::DateTime::secondsToString(server->getUpTime()) << ".";
+			std::cout << "\n> Waiting for threads..." << std::flush;
+
 			this->server.reset();
 		}
 
 		// quit message
-		std::cout << std::endl << "Bye bye." << std::endl;
+		std::cout << "\nBye bye." << std::endl;
 	}
 
 	// run app
@@ -75,13 +84,14 @@ namespace crawlservpp::Main {
 		if(this->server && this->running) {
 			try {
 				while(this->server->tick() && this->running) {}
+
 				return EXIT_SUCCESS;
 			}
 			catch(const std::exception& e) {
-				std::cout << std::endl << "[ERROR] " << e.what();
+				std::cout << "\n[ERROR] " << e.what() << std::flush;
 			}
 			catch(...) {
-				std::cout << std::endl << "[ERROR] Unknown exception in App::run()";
+				std::cout << "\n[ERROR] Unknown exception in App::run()" << std::flush;
 			}
 		}
 		return EXIT_FAILURE;
@@ -89,23 +99,31 @@ namespace crawlservpp::Main {
 
 	// static signal handler (forward the signal to the class)
 	void App::signal(int num) {
-		if(App::instance) App::instance->shutdown(num);
+		if(App::instance)
+			App::instance->shutdown(num);
 	}
 
 	// in-class signal handler
 	void App::shutdown(int num) {
-		std::cout << std::endl << "[SHUTDOWN] ";
+		std::cout << "\n[SHUTDOWN] ";
+
 		switch(num) {
 		case SIGINT:
 			std::cout << "Interruption request signal (SIGINT)";
+
 			break;
+
 		case SIGTERM:
 			std::cout << "Termination request signal (SIGTERM)";
+
 			break;
+
 		default:
 			std::cout << "Unknown signal (#" << num << ")";
 		}
+
 		std::cout << " received." << std::flush;
+
 		this->running = false;
 	}
 
@@ -113,6 +131,7 @@ namespace crawlservpp::Main {
 	bool App::getPassword(DatabaseSettings& dbSettings) {
 		// prompt password for database
 		std::cout << "Enter password for " << dbSettings.user << "@" << dbSettings.host << ":" << dbSettings.port << ": ";
+
 		char input = 0;
 		bool inputLoop = true;
 		bool inputCancel = false;
@@ -122,20 +141,27 @@ namespace crawlservpp::Main {
 			case '\r':
 				// ignore carriage return
 				break;
+
 			case '\n':
 				// ENTER: end input loop
 				inputLoop = false;
+
 				break;
+
 			case '\b':
 			case 127:
 				// BACKSPACE/DELETE: delete last character from password (if it exists)
-				if(!dbSettings.password.empty()) dbSettings.password.pop_back();
+				if(!dbSettings.password.empty())
+					dbSettings.password.pop_back();
+
 				break;
+
 			case 27:
 				// ESCAPE -> cancel and end input loop
 				inputCancel = true;
 				inputLoop = false;
 				break;
+
 			default:
 				// add other characters to password
 				dbSettings.password.push_back(input);
@@ -143,21 +169,25 @@ namespace crawlservpp::Main {
 
 		}
 		while(inputLoop && this->running);
+
 		std::cout << std::endl;
 
-		if(inputCancel) return false;
+		if(inputCancel)
+			return false;
+
 		return true;
 	}
 
 	// static helper function: show version (and library versions)
 	void App::outputHeader() {
-		std::cout << "crawlserv++ v0.1 by Ans using" << std::endl;
+		std::cout << "crawlserv++ v0.1 by Ans using\n";
 		std::cout << Helper::Versions::getLibraryVersions(" ") << std::endl;
 	}
 
 	// static helper function: check number of command line arguments, throws std::runtime_error
 	void App::checkArgumentNumber(int argc) {
-		if(argc != 2) throw std::runtime_error("USAGE: crawlserv <config_file>");
+		if(argc != 2)
+			throw std::runtime_error("USAGE: crawlserv <config_file>");
 	}
 
 	// static helper function: load database and server settings from configuration file, throws std::runtime_error
@@ -170,8 +200,11 @@ namespace crawlservpp::Main {
 			dbSettings.port = boost::lexical_cast<unsigned short>(configFile.getValue("db_port"));
 		}
 		catch(const boost::bad_lexical_cast& e) {
-			throw(std::runtime_error(fileName + ": Could not convert config file entry \"db_port\" (=\""
-					+ configFile.getValue("db_port") + "\") to numeric value"));
+			throw std::runtime_error(
+							fileName + ":"
+							" Could not convert config file entry \"db_port\""
+							" (=\"" + configFile.getValue("db_port") + "\") to numeric value"
+			);
 		}
 
 		dbSettings.user = configFile.getValue("db_user");
@@ -182,8 +215,12 @@ namespace crawlservpp::Main {
 				dbSettings.compression = boost::lexical_cast<bool>(configFile.getValue("server_client_compress"));
 			}
 			catch(const boost::bad_lexical_cast& e) {
-				throw std::runtime_error(fileName + ": Could not convert config file entry \"server_client_compress\" (=\""
-						+ configFile.getValue("server_client_compress") + "\") to boolean value");
+				throw std::runtime_error(
+						fileName + ":"
+						" Could not convert config file entry"
+						" \"server_client_compress\" (=\"" + configFile.getValue("server_client_compress") + "\")"
+						" to boolean value"
+				);
 			}
 		}
 
@@ -195,22 +232,32 @@ namespace crawlservpp::Main {
 				serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
 			}
 			catch(const boost::bad_lexical_cast& e) {
-				throw std::runtime_error(fileName + ": Could not convert config file entry \"server_logs_deletable\" (=\""
-						+ configFile.getValue("server_logs_deletable") + "\") to boolean value");
+				throw std::runtime_error(
+						fileName + ":"
+						" Could not convert config file entry \"server_logs_deletable\""
+						" (=\""	+ configFile.getValue("server_logs_deletable") + "\")"
+						" to boolean value"
+				);
 			}
 		}
-		else serverSettings.logsDeletable = false;
+		else
+			serverSettings.logsDeletable = false;
 
 		if(!configFile.getValue("server_data_deletable").empty()) {
 			try {
 				serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
 			}
 			catch(const boost::bad_lexical_cast& e) {
-				throw std::runtime_error(fileName + ": Could not convert config file entry \"server_data_deletable\" (=\""
-						+ configFile.getValue("server_data_deletable") + "\") to boolean value");
+				throw std::runtime_error(
+						fileName + ":"
+						" Could not convert config file entry \"server_data_deletable\""
+						" (=\"" + configFile.getValue("server_data_deletable") + "\")"
+						" to boolean value"
+				);
 			}
 		}
-		else serverSettings.dataDeletable = false;
+		else
+			serverSettings.dataDeletable = false;
 	}
 
 } /* crawlservpp::App */

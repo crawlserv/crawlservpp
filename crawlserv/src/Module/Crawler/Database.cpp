@@ -741,10 +741,13 @@ namespace crawlservpp::Module::Crawler {
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
 				if(urlsAdded.size()) {
-					std::cout << std::endl << " Empty URL in `" + this->urlListTable + "` after adding:";
+					// DEBUG
+					std::cout << "\n Empty URL in `" + this->urlListTable + "` after adding:";
+
 					for(auto i = urlsAdded.begin(); i != urlsAdded.end(); ++i) {
-						std::cout << std::endl << " \'" << *i << "\'";
+						std::cout << "\n \'" << *i << "\'";
 					}
+
 					std::cout << std::flush;
 				}
 

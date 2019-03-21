@@ -423,8 +423,10 @@ namespace crawlservpp::Module {
 		}
 		// handle connection exception by sleeping
 		catch(const ConnectionException& e) {
-			std::cout << std::endl << e.what()
-					<< " - sleeps for " << MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC << "s" << std::flush;
+			std::cout << "\n" << e.what()
+					<< " - sleeps for "
+					<< MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC << "s"
+					<< std::flush;
 
 			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
 		}
@@ -594,8 +596,7 @@ namespace crawlservpp::Module {
 		// if that fails too, write the original exception to the console
 		catch(...) {
 			std::cout
-					<< std::endl
-					<< "WARNING: Exception in Thread::" << inFunction << "() - "
+					<< "\nWARNING: Exception in Thread::" << inFunction << "() - "
 					<< e.what() << std::flush;
 		}
 	}
@@ -609,8 +610,7 @@ namespace crawlservpp::Module {
 		// if that fails too, write the original exception to the console
 		catch(...) {
 			std::cout
-					<< std::endl
-					<< "WARNING: Unknown exception in Thread::" << inFunction << "()"
+					<< "\nWARNING: Unknown exception in Thread::" << inFunction << "()"
 					<< std::flush;
 		}
 	}
@@ -662,8 +662,8 @@ namespace crawlservpp::Module {
 			}
 			catch(const std::exception& e2) {
 				// log exceptions -> send to stdout
-				std::cout << std::endl << "> Thread terminated - " << e.what() << "." << std::flush;
-				std::cout << std::endl << "> Thread could not write to log - " << e2.what() << "." << std::flush;
+				std::cout << "\n> Thread terminated - " << e.what() << "." << std::flush;
+				std::cout << "\n> Thread could not write to log - " << e2.what() << "." << std::flush;
 			}
 
 			this->terminated = true;
