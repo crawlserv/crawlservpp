@@ -135,6 +135,7 @@ namespace crawlservpp::Module {
 		std::chrono::steady_clock::time_point pauseTimePoint;
 		std::chrono::duration<unsigned long> runTime;
 		std::chrono::duration<unsigned long> pauseTime;
+		unsigned long getRunTime();
 		void updateRunTime();
 		void updatePauseTime();
 

@@ -15,13 +15,16 @@ namespace crawlservpp::Module {
 	// constructor
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 				: Main::Database(dbSettings, dbModule), ps({0}) {
-		if(Main::Database::driver) Main::Database::driver->threadInit();
-		else throw(Database::Exception("MySQL driver not loaded"));
+		if(Main::Database::driver)
+			Main::Database::driver->threadInit();
+		else
+			throw(Database::Exception("MySQL driver not loaded"));
 	}
 
 	// destructor stub
 	Database::~Database() {
-		if(Main::Database::driver) Main::Database::driver->threadEnd();
+		if(Main::Database::driver)
+			Main::Database::driver->threadEnd();
 	}
 
 	// prepare SQL statements for thread management
@@ -36,12 +39,31 @@ namespace crawlservpp::Module {
 		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
 
 		// prepare general SQL statements for thread
-		if(!(this->ps.setThreadStatusMessage)) this->ps.setThreadStatusMessage = this->addPreparedStatement(
-				"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1");
-		if(!(this->ps.setThreadProgress)) this->ps.setThreadProgress = this->addPreparedStatement(
-				"UPDATE crawlserv_threads SET progress = ? WHERE id = ? LIMIT 1");
-		if(!(this->ps.setThreadLast)) this->ps.setThreadLast = this->addPreparedStatement(
-				"UPDATE crawlserv_threads SET last = ? WHERE id = ? LIMIT 1");
+		if(!(this->ps.setThreadStatusMessage))
+			this->ps.setThreadStatusMessage = this->addPreparedStatement(
+					"UPDATE crawlserv_threads"
+					" SET status = ?,"
+					" paused = ?"
+					" WHERE id = ?"
+					" LIMIT 1"
+			);
+
+		if(!(this->ps.setThreadProgress))
+			this->ps.setThreadProgress = this->addPreparedStatement(
+					"UPDATE crawlserv_threads"
+					" SET progress = ?,"
+					" runtime = ?"
+					" WHERE id = ?"
+					" LIMIT 1"
+			);
+
+		if(!(this->ps.setThreadLast))
+			this->ps.setThreadLast = this->addPreparedStatement(
+					"UPDATE crawlserv_threads"
+					" SET last = ?"
+					" WHERE id = ?"
+					" LIMIT 1"
+			);
 	}
 
 	// set the status message of a thread (and add the pause state)
@@ -58,24 +80,29 @@ namespace crawlservpp::Module {
 
 		// create status message
 		std::string statusMessage;
+
 		if(threadPaused) {
-			if(!threadStatusMessage.empty()) statusMessage = "{PAUSED} " + threadStatusMessage;
-			else statusMessage = "{PAUSED}";
+			if(!threadStatusMessage.empty())
+				statusMessage = "{PAUSED} " + threadStatusMessage;
+			else
+				statusMessage = "{PAUSED}";
 		}
-		else statusMessage = threadStatusMessage;
+		else
+			statusMessage = threadStatusMessage;
 
 		try {
 			// execute SQL statement
 			sqlStatement.setString(1, statusMessage);
 			sqlStatement.setBoolean(2, threadPaused);
 			sqlStatement.setUInt64(3, threadId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadStatusMessage", e); }
 	}
 
-	// set the progress of a thread to between 0 for 0% and 1 for 100% in database
-	void Database::setThreadProgress(unsigned long threadId, float threadProgress) {
+	// set the progress of a thread to between 0 for 0% and 1 for 100% in database (and update runtime)
+	void Database::setThreadProgress(unsigned long threadId, float threadProgress, unsigned long threadRunTime) {
 		// check connection
 		this->checkConnection();
 
@@ -89,7 +116,8 @@ namespace crawlservpp::Module {
 		try {
 			// execute SQL statement
 			sqlStatement.setDouble(1, threadProgress);
-			sqlStatement.setUInt64(2, threadId);
+			sqlStatement.setUInt64(2, threadRunTime);
+			sqlStatement.setUInt64(3, threadId);
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadProgress", e); }
@@ -111,6 +139,7 @@ namespace crawlservpp::Module {
 			// execute SQL statement
 			sqlStatement.setUInt64(1, threadLast);
 			sqlStatement.setUInt64(2, threadId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadLast", e); }

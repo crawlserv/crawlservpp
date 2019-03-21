@@ -41,7 +41,7 @@ namespace crawlservpp::Module {
 
 		// thread functions
 		void setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
-		void setThreadProgress(unsigned long threadId, float threadProgress);
+		void setThreadProgress(unsigned long threadId, float threadProgress, unsigned long threadRunTime);
 		void setThreadLast(unsigned long threadId, unsigned long threadLast);
 
 	private:

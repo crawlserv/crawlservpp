@@ -262,7 +262,7 @@ namespace crawlservpp::Module {
 	// set the progress of the thread (to be used by the thread only)
 	void Thread::setProgress(float progress) {
 		// set progress in database
-		this->database.setThreadProgress(this->id, progress);
+		this->database.setThreadProgress(this->id, progress, this->getRunTime());
 	}
 
 	// add a log entry for the thread to the database using the module of the thread (to be used by the thread only)
@@ -308,6 +308,19 @@ namespace crawlservpp::Module {
 		std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
 		return this->status;
+	}
+
+	// get current run time in seconds
+	unsigned long Thread::getRunTime() {
+		if(this->startTimePoint > std::chrono::steady_clock::time_point::min())
+			return	(
+							this->runTime +
+							std::chrono::duration_cast<std::chrono::seconds>(
+									std::chrono::steady_clock::now() - this->startTimePoint
+							)
+					).count();
+		else
+			return this->runTime.count();
 	}
 
 	// update run time of thread (and save it to database)
