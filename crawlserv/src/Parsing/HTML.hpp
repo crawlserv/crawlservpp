@@ -12,8 +12,8 @@
 
 #include "../Main/Exception.hpp"
 
-#include "tidy.h"
-#include "tidybuffio.h"
+#include <tidy.h>
+#include <tidybuffio.h>
 
 #include <string>
 

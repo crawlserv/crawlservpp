@@ -15,21 +15,16 @@
 #define RAPIDJSON_HAS_STDSTRING 1
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 
-#include "tidy.h"
-
-#include <boost/version.hpp>
-
-#include <curl/curl.h>
-
-#include <jdbc/cppconn/driver.h>
-
 #include <aspell.h>
+#include <boost/version.hpp>
+#include <curl/curl.h>
+#include <jdbc/cppconn/driver.h>
+#include <tidy.h>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
 #include <pugixml.hpp>
-
 #include <uriparser/UriBase.h>
 
 #include <sstream>
