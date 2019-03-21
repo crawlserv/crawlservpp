@@ -449,6 +449,14 @@ span.content {
 	z-index:3;
 }
 
+/* ESTIMATED REMAINING TIME */
+span.remaining {
+	position:absolute;
+	right:5px;
+	color:#AAAFB4;
+	background-color:#ffffff;
+}
+
 /* WRAPPING */
 span.nowrap {
 	display:inline-block;

@@ -6,9 +6,73 @@
 -->
 
 <?php
+// function to format the remainig time
+function formatTime($seconds) {
+    $result = "";
+    $years = 0;
+    $months = 0;
+    $weeks = 0;
+    $days = 0;
+    $hours = 0;
+    $minutes = 0;
+    
+    if($seconds > 31557600) {
+        $years = floor($seconds / 31557600);
+        $result .= $years."y ";
+        $seconds -= $years * 31557600;
+    }
+    
+    if($seconds > 2629746) {
+        $months = floor($seconds / 2629746);
+        $result .= $months."mth ";
+        $seconds -= $months * 2629746;
+    }
+    
+    if($years)
+        return substr($result, 0, strlen($result) - 1);
+    
+    if($seconds > 604800) {
+        $weeks = floor($seconds / 604800);
+        $result .= $weeks."w ";
+        $seconds -= $weeks * 604800;
+    }
+    
+    if($months)
+        return substr($result, 0, strlen($result) - 1);
+    
+    if($seconds > 86400) {
+        $days = floor($seconds / 86400);
+        $result .= $days."d ";
+        $seconds -= $days * 86400;
+    }
+    
+    if($weeks)
+        return substr($result, 0, strlen($result) - 1);
+    
+    if($seconds > 3600) {
+        $hours = floor($seconds / 3600);
+        $result .= $hours."h ";
+        $seconds -= $hours * 3600;
+    }
+    
+    if($days)
+        return substr($result, 0, strlen($result) - 1);
+    
+    if($seconds > 60) {
+        $minutes = floor($seconds / 60);
+        $result .= $minutes."min ";
+        $seconds -= $minutes * 60;
+    }
+    
+    if(strlen($result))
+        return substr($result, 0, strlen($result) - 1);
+    
+    return "<1s";
+}
+
 require "../config.php";
 
-$result = $dbConnection->query("SELECT id, module, status, progress, paused, website, urllist, config FROM crawlserv_threads");
+$result = $dbConnection->query("SELECT id, module, status, progress, paused, website, urllist, config, runtime FROM crawlserv_threads");
 if(!$result) http_response_code(503);
 $num = $result->num_rows;
 $none = true;
@@ -56,7 +120,13 @@ if($num) {
         echo "<div class=\"content-block\">\n";
         echo "<div class=\"entry-row small-text\">\n";
         echo "<b>".$row["module"]." #".$row["id"]."</b> - <i>".$config." on ".$website."_".$urllist."</i>\n";
+        
+        // calculate remaining time
+        $remaining = 1 / ($row["progress"] / $row["runtime"]);
+        echo "<span class=\"remaining\">+".formatTime($remaining)."</span>";
         echo "</div>\n";
+        
+        
         echo "<div class=\"entry-row";
         if($row["paused"]) echo " value";
         echo "\">\n";
