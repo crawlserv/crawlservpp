@@ -29,6 +29,8 @@ namespace crawlservpp::Module {
 
 		// for convenience
 		typedef Struct::DatabaseSettings DatabaseSettings;
+
+		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 	public:
 		// constructor
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);

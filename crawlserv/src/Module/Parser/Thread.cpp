@@ -172,6 +172,23 @@ namespace crawlservpp::Module::Parser {
 		bool skip = false;
 		unsigned long parsed = 0;
 
+		// check for jump in last ID ("time travel")
+		long warpedOver = this->getWarpedOverAndReset();
+
+		if(warpedOver != 0) {
+			// save cached results
+			this->parsingSaveResults(true);
+
+			// unlock and discard old URLs
+			this->database.unLockUrlsIfOk(this->urls, this->cacheLockTime);
+
+			// overwrite last URL ID
+			this->lastUrl = this->getLast();
+
+			// adjust tick counter
+			this->tickCounter += warpedOver;
+		}
+
 		// URL selection if no URLs are left to parse
 		if(this->urls.empty())
 			this->parsingUrlSelection();
@@ -291,7 +308,7 @@ namespace crawlservpp::Module::Parser {
 		this->pauseTime = std::chrono::steady_clock::now();
 
 		// save results if necessary
-		this->parsingSaveResults();
+		this->parsingSaveResults(false);
 	}
 
 	// parser unpaused
@@ -336,7 +353,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// save results if necessary
-		this->parsingSaveResults();
+		this->parsingSaveResults(false);
 
 		// save status message
 		std::string oldStatus = this->getStatusMessage();
@@ -441,7 +458,7 @@ namespace crawlservpp::Module::Parser {
 			this->log("fetched URLs in " + timer.tickStr());
 
 		// update status
-		this->setStatusMessage("URLs fetched.");
+		this->setStatusMessage("Checking URLs...");
 
 		// check whether URLs have been fetched
 		if(this->urls.empty()) {
@@ -1028,7 +1045,7 @@ namespace crawlservpp::Module::Parser {
 		// check whether the finished URL is the last URL in the cache
 		if(this->urls.size() == 1) {
 			// if yes, save results to database
-			this->parsingSaveResults();
+			this->parsingSaveResults(false);
 
 			// reset URL properties
 			this->idFirst = 0;
@@ -1045,11 +1062,11 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// save results to database
-	void Thread::parsingSaveResults() {
+	void Thread::parsingSaveResults(bool warped) {
 		// check whether there are no results
 		if(this->results.empty()) {
 			// set last URL
-			if(this->lastUrl)
+			if(!warped && this->lastUrl)
 				this->setLast(this->lastUrl);
 
 			// no results: done!
@@ -1078,7 +1095,8 @@ namespace crawlservpp::Module::Parser {
 		this->database.updateTargetTable();
 
 		// set last URL
-		this->setLast(this->lastUrl);
+		if(!warped)
+			this->setLast(this->lastUrl);
 
 		// set those URLs to finished whose URL lock is okay (still locked or re-lockable (and not parsed when not re-parsing)
 		this->database.setUrlsFinishedIfLockOk(this->finished);

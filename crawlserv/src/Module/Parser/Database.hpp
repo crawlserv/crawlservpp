@@ -78,7 +78,7 @@ namespace crawlservpp::Module::Parser {
 		std::string getUrlLockTime(unsigned long urlId);
 		std::string renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout);
 		bool unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
-		void unLockUrlsIfOk(std::queue<IdString>& urls, const std::string& lockTime);
+		void unLockUrlsIfOk(std::queue<IdString>& urls, std::string& lockTime);
 
 		// parsing functions
 		unsigned int checkParsingTable();

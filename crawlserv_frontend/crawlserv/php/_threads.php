@@ -72,8 +72,13 @@ function formatTime($seconds) {
 
 require "../config.php";
 
-$result = $dbConnection->query("SELECT id, module, status, progress, paused, website, urllist, config, runtime FROM crawlserv_threads");
-if(!$result) http_response_code(503);
+$result = $dbConnection->query(
+    "SELECT id, module, status, progress, paused, website, urllist, config, last, runtime FROM crawlserv_threads"
+);
+
+if(!$result)
+    http_response_code(503);
+
 $num = $result->num_rows;
 $none = true;
 
@@ -113,8 +118,6 @@ if($num) {
         if(!$row2) http_response_code(503);
         $config = $row2["name"];
         $result2->close();
-     
-        $none = false;
         
         echo "<div class=\"thread\">\n";
         echo "<div class=\"content-block\">\n";
@@ -122,8 +125,14 @@ if($num) {
         echo "<b>".$row["module"]." #".$row["id"]."</b> - <i>".$config." on ".$website."_".$urllist."</i>\n";
         
         // calculate remaining time
-        $remaining = 1 / ($row["progress"] / $row["runtime"]);
-        echo "<span class=\"remaining\">+".formatTime($remaining)."</span>";
+        $tooltip = "Estimated time until completion.\n&gt; Click to jump to specific ID.";
+        echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\" data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" data-last=\"".$row["last"]."\">+";
+        if($row["runtime"] && $row[progress] > 0.001)
+            echo formatTime($row["runtime"] / $row["progress"] - $row["runtime"]);
+        else
+            echo "&infin;";
+            
+        echo "</span>";
         echo "</div>\n";
         
         
@@ -165,7 +174,9 @@ if($num) {
         else {
             echo "<progress value=\"";
             if(floatval($row["progress"]))
-                echo $row["progress"]."\" title=\"".number_format(round(floatval($row["progress"]) * 100, 2), 2)."%\" max=\"1";
+                echo $row["progress"]."\" title=\""
+                        .number_format(round(floatval($row["progress"]) * 100, 2), 2)
+                        ."%\n&gt; #".number_format($row["last"])."\" max=\"1";
             echo "\" />\n";
             echo "<a href=\"#\" class=\"action-link thread-pause\" data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\">";
             echo "Pause</a>\n";

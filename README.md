@@ -155,6 +155,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`updatequery`** (arguments: `id`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Update an existing RegEx or XPath query in the database.
 * **`updateurllist`** (arguments: `id`, `name`, `namespace`): Update an existing URL list in the database.
 * **`updatewebsite`** (arguments: `id`, `name`, `namespace`, `domain`): Update an existing website in the database.
+* **`warp`** (arguments: `thread`, `target`): Let a thread jump to the specified ID.
 
 The commands and their replies are using the JSON format (implemented using the [RapidJSON library](https://github.com/Tencent/rapidjson)).
 

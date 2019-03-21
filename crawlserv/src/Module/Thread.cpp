@@ -35,6 +35,8 @@ namespace crawlservpp::Module {
 			  module(threadModule),
 			  options(threadOptions),
 			  last(threadLast),
+			  overwriteLast(0),
+			  warpedOver(0),
 			  startTimePoint(std::chrono::steady_clock::time_point::min()),
 			  pauseTimePoint(std::chrono::steady_clock::time_point::min()),
 			  runTime(std::chrono::duration<unsigned long>::zero()),
@@ -226,6 +228,16 @@ namespace crawlservpp::Module {
 		}
 	}
 
+	// jump to specified target ID ("time travel")
+	void Thread::warpTo(unsigned long target) {
+		// check argument
+		if(!target)
+			throw Exception("Target ID cannot be zero");
+
+		// set target ID to overwrite
+		this->overwriteLast = target - 1;
+	}
+
 	// force the thread to pause (to be used by the thread only)
 	void Thread::pauseByThread() {
 		// ignore if thread is paused
@@ -308,6 +320,15 @@ namespace crawlservpp::Module {
 		std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
 		return this->status;
+	}
+
+	// return and reset number of IDs that have been jumped over (might be negative, to be used by the thread only)
+	long Thread::getWarpedOverAndReset() {
+		long result = this->warpedOver;
+
+		this->warpedOver = 0;
+
+		return result;
 	}
 
 	// get current run time in seconds
@@ -435,6 +456,27 @@ namespace crawlservpp::Module {
 
 			// try to pause thread
 			this->pauseByThread();
+		}
+
+		// check for "time travel" to another ID
+		if(this->overwriteLast) {
+			// save old values for time calculation
+			unsigned long oldId = this->last;
+			double oldTime = static_cast<double>(this->getRunTime());
+
+			// change status
+			this->setLast(this->overwriteLast);
+			this->overwriteLast = 0;
+			this->warpedOver = this->last - oldId;
+
+			// calculate new starting time
+			if(oldId > 0 && oldTime > 0) {
+				this->runTime += std::chrono::seconds(
+						std::lround(
+								oldTime * (static_cast<double>(this->warpedOver) / oldId)
+						)
+				);
+			}
 		}
 	}
 

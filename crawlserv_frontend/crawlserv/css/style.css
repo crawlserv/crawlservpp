@@ -454,7 +454,8 @@ span.remaining {
 	position:absolute;
 	right:5px;
 	color:#AAAFB4;
-	background-color:#ffffff;
+	background:rgb(255,255,255);
+	cursor:pointer;
 }
 
 /* WRAPPING */

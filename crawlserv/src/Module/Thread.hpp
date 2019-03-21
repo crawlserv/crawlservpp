@@ -20,12 +20,14 @@
 #include "Database.hpp"
 
 #include "../Main/Database.hpp"
+#include "../Main/Exception.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Struct/ThreadOptions.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
 
 #include <atomic>
 #include <chrono>
+#include <cmath>
 #include <condition_variable>
 #include <exception>
 #include <iostream>
@@ -42,14 +44,21 @@ namespace crawlservpp::Module {
 	class Thread {
 		// for convenience
 		typedef Main::Database::ConnectionException ConnectionException;
+		typedef Main::Exception Exception;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 	public:
 		// constructors
-		Thread(Main::Database& dbBase, unsigned long threadId, const std::string& threadModule,
-				const std::string& threadStatus, bool threadPaused, const ThreadOptions& threadOptions,
-				unsigned long threadLast);
+		Thread(
+				Main::Database& dbBase,
+				unsigned long threadId,
+				const std::string& threadModule,
+				const std::string& threadStatus,
+				bool threadPaused,
+				const ThreadOptions& threadOptions,
+				unsigned long threadLast
+		);
 		Thread(Main::Database& dbBase, const std::string& threadModule, const ThreadOptions& threadOptions);
 
 		// destructor
@@ -72,6 +81,9 @@ namespace crawlservpp::Module {
 		void interrupt();
 		void end();
 
+		// time travel
+		void warpTo(unsigned long target);
+
 		// not moveable, not copyable
 		Thread(Thread&) = delete;
 		Thread(Thread&&) = delete;
@@ -79,11 +91,11 @@ namespace crawlservpp::Module {
 		Thread& operator=(Thread&&) = delete;
 
 	protected:
-		Database database; // access to the database for the thread
+		Database database; 							// access to the database for the thread
 
-		std::string websiteNamespace; // namespace of website
-		std::string urlListNamespace; // namespace of URL list
-		std::string configuration; // configuration
+		std::string websiteNamespace; 				// namespace of website
+		std::string urlListNamespace; 				// namespace of URL list
+		std::string configuration; 					// configuration
 
 		// thread helper functions
 		void pauseByThread();
@@ -97,6 +109,7 @@ namespace crawlservpp::Module {
 		void setLast(unsigned long last);
 		void incrementLast();
 		std::string getStatusMessage();
+		long getWarpedOverAndReset();
 
 		virtual void onInit(bool resumed) = 0;
 		virtual void onTick() = 0;
@@ -105,30 +118,32 @@ namespace crawlservpp::Module {
 		virtual void onClear(bool interrupted) = 0;
 
 	private:
-		Main::Database& databaseClass;	// access to the database for the class
+		Main::Database& databaseClass;				// access to the database for the class
 
-		std::atomic<bool> pausable;		// thread is pausable
- 		std::atomic<bool> running;		// thread is running (or paused)
-		std::atomic<bool> paused;		// thread is paused
-		std::atomic<bool> interrupted;	// thread has been interrupted by shutdown
-		std::atomic<bool> resumed;		// thread has been resumed after interruption by shutdown
-		std::atomic<bool> terminated;	// thread has been terminated due to an exception
-		std::atomic<bool> shutdown;		// shutdown in progress
-		std::atomic<bool> finished;		// shutdown is finished
+		std::atomic<bool> pausable;					// thread is pausable
+ 		std::atomic<bool> running;					// thread is running (or paused)
+		std::atomic<bool> paused;					// thread is paused
+		std::atomic<bool> interrupted;				// thread has been interrupted by shutdown
+		std::atomic<bool> resumed;					// thread has been resumed after interruption by shutdown
+		std::atomic<bool> terminated;				// thread has been terminated due to an exception
+		std::atomic<bool> shutdown;					// shutdown in progress
+		std::atomic<bool> finished;					// shutdown is finished
 
-		const std::string module; // the module of the thread (used for logging)
-		std::atomic<unsigned long> id; //  of the thread in the database
-		const ThreadOptions options; // options for the thread
-		unsigned long last; // last  for the thread
-		std::string idString; //  of the thread as string (used for logging, ONLY for threads!)
+		const std::string module;					// the module of the thread (used for logging)
+		std::atomic<unsigned long> id;				// the ID of the thread in the database
+		const ThreadOptions options;				// options for the thread
+		unsigned long last;							// last ID for the thread
+		std::atomic<unsigned long> overwriteLast;	// ID to overwrite last ID with ("time travel")
+		std::string idString;						// ID of the thread as string (used for logging, ONLY for threads!)
+		long warpedOver;							// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
-		std::condition_variable pauseCondition; // condition variable to wait for unpause
+		std::condition_variable pauseCondition; 	// condition variable to wait for unpause
 		std::mutex pauseLock;
 
-		std::string status; // status message of the thread (without pause state)
+		std::string status; 						// status message of the thread (without pause state)
 		std::mutex statusLock;
 
-		std::thread thread; // pointer to the thread
+		std::thread thread;							// pointer to the thread
 
 		// timing statistics (in seconds)
 		std::chrono::steady_clock::time_point startTimePoint;

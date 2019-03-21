@@ -1330,6 +1330,27 @@ jQuery(function($) {
 		return false;
 	})
 	
+// CLICK EVENT: time travel (jump to an ID)
+	$(document).on("click", "span.remaining", function() {
+		var id = $(this).data("id");
+		var module = $(this).data("module");
+		var last = $(this).data("last");
+		
+		if(module != "analyzer") {
+			var target = parseInt(prompt("! WARNING ! Time travel can have unintended consequences.\n\nEnter ID to jump to:", last), 10);
+			
+			if(target)
+				runCmd(
+						"warp",
+						{
+							"thread" : id,
+							"target": target
+						},
+						false
+				);
+		}
+	})
+	
 /*
  * EVENTS for CONTENT
  */

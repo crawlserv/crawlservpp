@@ -123,7 +123,7 @@ namespace crawlservpp::Module {
 		catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadProgress", e); }
 	}
 
-	// set last id of thread in database
+	// set last ID of thread in database
 	void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 		// check connection
 		this->checkConnection();

@@ -215,6 +215,8 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdUpdateConfig(const rapidjson::Document& json);
 		ServerCommandResponse cmdDeleteConfig(const rapidjson::Document& json);
 		ServerCommandResponse cmdDuplicateConfig(const rapidjson::Document& json);
+
+		ServerCommandResponse cmdWarp(const rapidjson::Document& json);
 	};
 
 } /* crawlservpp::Main */

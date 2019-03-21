@@ -141,7 +141,7 @@ namespace crawlservpp::Module::Parser {
 		unsigned long parsingNext();
 		bool parsingContent(const IdString& content, const std::string& parsedId);
 		void parsingUrlFinished();
-		void parsingSaveResults();
+		void parsingSaveResults(bool warped);
 	};
 
 } /* crawlservpp::Module::Parser */

@@ -207,6 +207,24 @@ namespace crawlservpp::Module::Crawler {
 
 		bool urlSelection = false;
 
+		// check for jump in last ID ("time travel")
+		long warpedOver = this->getWarpedOverAndReset();
+
+		if(warpedOver) {
+			// unlock last URL if necessary
+			if(this->manualUrl.first && !(this->lockTime.empty()))
+				this->database.unLockUrlIfOk(this->manualUrl.first, this->lockTime);
+			else if(this->nextUrl.first && !(this->lockTime.empty()))
+				this->database.unLockUrlIfOk(this->nextUrl.first, this->lockTime);
+
+			// no retry
+			this->manualUrl = IdString();
+			this->nextUrl = IdString();
+
+			// adjust tick counter
+			this->tickCounter += warpedOver;
+		}
+
 		// start timers
 		if(this->config.crawlerTiming) {
 			timerTotal.start();

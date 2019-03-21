@@ -727,9 +727,9 @@ namespace crawlservpp::Module::Parser {
 		return false;
 	}
 
-	// unlock multiple URLs in the database
+	// unlock multiple URLs in the database, reset lock time
 	//  NOTE: creates the prepared statement shortly before query execution as it is only used once (on shutdown)
-	void Database::unLockUrlsIfOk(std::queue<IdString>& urls, const std::string& lockTime) {
+	void Database::unLockUrlsIfOk(std::queue<IdString>& urls, std::string& lockTime) {
 		// check argument
 		if(urls.empty())
 			return; // no URLs to unlock
@@ -763,6 +763,8 @@ namespace crawlservpp::Module::Parser {
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::unLockUrlsIfOk", e); }
+
+		lockTime.clear();
 	}
 
 	// get content ID from parsed ID
