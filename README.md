@@ -61,6 +61,8 @@ Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlse
 
 The program will ask you for the password of the chosen MySQL user before it proceeds. When `Server is up and running.` is displayed, switch to the frontend to take control of the command-and-control server.
 
+You can shutdown the server from the terminal by sending a SIGINT signal (`CTRL+X`). It will wait for all threads to avoid any loss of data.
+
 ## Command-and-Control Server
 
 The command-and-control server contains an embedded web server (implemented using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the frontend by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) of JSON code.
