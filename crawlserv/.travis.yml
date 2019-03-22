@@ -45,3 +45,10 @@ before_install:
   - sudo apt-get install -y libpcre2-dev
   - sudo apt-get install -y libmysqlcppconn-dev
   - sudo apt-get install -y libaspell-dev
+  
+  script:
+  - cd crawlserv
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
