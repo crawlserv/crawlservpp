@@ -12,6 +12,7 @@
 
 #include "Config.hpp"
 
+#include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Main/Data.hpp"
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Json.hpp"

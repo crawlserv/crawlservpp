@@ -136,7 +136,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 * **[`Helper::DateTime`](crawlserv/src/Helper/DateTime.hpp)**: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * **[`Helper::FileSystem`](crawlserv/src/Helper/FileSystem.hpp)**: Global helper functions for file system operations using `std::experimental::filesystem`.
 * **[`Helper::Json`](crawlserv/src/Helper/Json.hpp)**: Global helper functions for converting to JSON using the [RapidJSON library](https://github.com/Tencent/rapidjson).
-* **[`Helper::Portability`](crawlserv/src/Helper/Portability.hpp)**: Global helper functions for portability.
+* **[`Helper::Portability`](crawlserv/src/Helper/Portability/)**: Additional headers for portability.
 * **[`Helper::Strings`](crawlserv/src/Helper/Strings.hpp)**: Global helper functions for string processing and manipulation.
 * **[`Helper::Utf8`](crawlserv/src/Helper/Utf8.hpp)**: Global helper functions for UTF-8 conversion using the [UTF8-CPP library](http://utfcpp.sourceforge.net/).
 * **[`Helper::Versions`](crawlserv/src/Helper/Versions.hpp)**: Get the versions of the different libraries used by the server.

@@ -10,6 +10,7 @@
 #ifndef MODULE_CRAWLER_DATABASE_HPP_
 #define MODULE_CRAWLER_DATABASE_HPP_
 
+#include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/Database.hpp"
 

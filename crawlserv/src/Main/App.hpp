@@ -15,7 +15,7 @@
 #include "Server.hpp"
 
 #include "../Helper/DateTime.hpp"
-#include "../Helper/Portability.hpp"
+#include "../Helper/Portability/getch.h"
 #include "../Helper/Versions.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ServerSettings.hpp"

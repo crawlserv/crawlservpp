@@ -11,7 +11,7 @@
 #ifndef WRAPPER_DATABASE_HPP_
 #define WRAPPER_DATABASE_HPP_
 
-
+#include "../Helper/Portability/mysqlcppconn.h"
 #include "../Main/Data.hpp"
 #include "../Module/Database.hpp"
 #include "../Struct/DatabaseSettings.hpp"

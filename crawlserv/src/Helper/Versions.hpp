@@ -10,6 +10,8 @@
 #ifndef HELPER_VERSIONS_HPP_
 #define HELPER_VERSIONS_HPP_
 
+#include "../Helper/Portability/mysqlcppconn.h"
+
 #include "../_extern/mongoose/mongoose.h"
 
 #define RAPIDJSON_HAS_STDSTRING 1

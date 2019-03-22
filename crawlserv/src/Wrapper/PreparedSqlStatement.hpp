@@ -10,6 +10,8 @@
 #ifndef WRAPPER_PREPAREDSQLSTATEMENT_HPP_
 #define WRAPPER_PREPAREDSQLSTATEMENT_HPP_
 
+#include "../Helper/Portability/mysqlcppconn.h"
+
 #include <cppconn/prepared_statement.h>
 #include <mysql_connection.h>
 

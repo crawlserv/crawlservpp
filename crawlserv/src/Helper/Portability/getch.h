@@ -1,14 +1,14 @@
 /*
- * Portability.hpp
+ * getch.hpp
  *
- * Namespace with global portability helper functions.
+ * Plattform-independent getch()
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
  */
 
-#ifndef HELPER_PORTABILITY_HPP_
-#define HELPER_PORTABILITY_HPP_
+#ifndef HELPER_PORTABILITY_GETCH_HPP_
+#define HELPER_PORTABILITY_GETCH_HPP_
 
 #include <cctype>
 
@@ -20,15 +20,6 @@
 #endif /* __unix */
 
 namespace crawlservpp::Helper::Portability {
-
-	/*
-	 * DEFINITION
-	 */
-
-#ifdef __unix
-	// portable getch
-	char getch(void);
-#endif /* __unix */
 
 	static struct termios oldT, newT;
 
@@ -54,4 +45,4 @@ namespace crawlservpp::Helper::Portability {
 
 } /* crawlservpp::Helper::Portability */
 
-#endif /* HELPER_PORTABILITY_HPP_ */
+#endif /* HELPER_PORTABILITY_GETCH_HPP_ */

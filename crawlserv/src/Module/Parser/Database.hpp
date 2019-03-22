@@ -10,6 +10,7 @@
 #ifndef MODULE_PARSER_DATABASE_HPP_
 #define MODULE_PARSER_DATABASE_HPP_
 
+#include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Struct/ParsingEntry.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"

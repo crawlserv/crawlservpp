@@ -27,6 +27,7 @@
 #include "Exception.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Portability/mysqlcppconn.h"
 #include "../Helper/Utf8.hpp"
 #include "../Struct/ConfigProperties.hpp"
 #include "../Struct/TargetTableProperties.hpp"
