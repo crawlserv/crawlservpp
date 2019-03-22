@@ -2,10 +2,12 @@ language: cpp
 matrix: 
  include: 
  - name: "GCC"
+ - compiler: "gcc-7
    addons: 
    apt: 
      packages: 
      - g++-7
+     - cmake
      sources: 
      - ubuntu-toolchain-r-test
    env: 
@@ -13,10 +15,12 @@ matrix:
    os: linux
    dist: xenial
  - name: "clang"
+ - compiler: "clang-5.0"
    addons: 
    apt: 
     packages: 
     - clang-5.0
+    - cmake
     sources: 
     - llvm-toolchain-trusty-5.0
    env: 
