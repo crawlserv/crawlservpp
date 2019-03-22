@@ -53,7 +53,7 @@ else()
 	endif()
 endif()
 
-# find UriParser
+# find uriparser
 find_package(uriparser QUIET)
 
 if(${uriparser_FOUND})
@@ -179,25 +179,6 @@ else()
 		message(WARNING "tidy-html5 library not found.")
 	endif()
 endif()
-
-# find RapidJSON
-# 	NOTE: Build RapidJSON with [sudo] make install to make RapidJSON available system-wide.
-#find_package(RapidJSON QUIET)
-#
-#if(${RapidJSON_FOUND})
-#	message("RapidJSON include directory found: \"${RapidJSON_INCLUDE_DIRS}\"")
-#else()
-#	# find manually
-#	unset(RapidJSON_INCLUDE_DIRS)
-#
-#	find_path(RapidJSON_INCLUDE_DIRS document.h PATH_SUFFIXES rapidjson REQUIRED)
-#
-#	if(RapidJSON_INCLUDE_DIRS)
-#		message("RapidJSON include directory manually found: \"${RapidJSON_INCLUDE_DIRS}\"")
-#	else()
-#		message(WARNING "RapidJSON include directory not found.")
-#	endif()
-#endif()
 
 # source files
 add_executable(${PROJECT_NAME}
