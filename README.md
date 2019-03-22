@@ -279,6 +279,8 @@ The following third-party libraries are used by the command-and-control server:
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern`)
 
+While `date.h`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
+
 ## Frontend
 
 **NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server. You may also want to use the provided JSON files in [`crawlserv_frontend/crawlserv/json`](crawlserv_frontend/crawlserv/json) as keeping them up-to-date will inform you about module-specific configuration changes and the implementation of new algorithms.
