@@ -366,4 +366,4 @@ At the moment, this software has been developed for and tested on **Linux only**
 
 Developed with Eclipse 2018-09 (4.9.0), Eclipse CDT 9.5.4, Eclipse PDT 6.1.0 and Eclipse Web Tools Platform 3.11.0. Compiled and linked with GNU Make 4.1, cmake/ccmake 3.10.2, gcc 7.3.0. Tested with Apache/2.4.29 and MySQL 8.0.15 for Linux on Ubuntu 18.04.1 (64-bit).
 
-The frontend is optimized for current versions of Mozilla Firefox (e.g. v 66.0), but should also run on Chromium (e.g. v 73.0).
+The frontend is optimized for current versions of Mozilla Firefox (e.g. v66.0), but should also run on Chromium (e.g. v73.0).
