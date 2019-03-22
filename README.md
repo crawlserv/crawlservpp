@@ -37,7 +37,7 @@ The following components are required to build crawlserv++ on your system:
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
-After installing these components and downloading the source code (or cloning the repository), use the terminal to go to the `crawlserv` directory inside downloaded files (it has to be the directory where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
+After installing these components and downloading the source code (or cloning the repository), use the terminal to go to the `crawlserv` directory inside the downloaded files (it has to be the directory where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
 ```
 mkdir build
@@ -55,9 +55,9 @@ You can safely ignore the `-Wunused-parameter` warnings as well as warnings from
 
 The program should have been built inside the newly created `build` directory. Leave this directory with `cd ..` before running it.
 
-Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting crawlserv++ with `./build/crawlserv config` or any other configuration file as argument. If you want to change the location of the program, make sure to take the `sql`(crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables).
+Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting crawlserv++ with `./build/crawlserv config` or any other configuration file as argument. If you want to change the location of the program, make sure to take the `sql`(crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables on the first successful connection).
 
-The program will ask you for the password of the chosen MySQL user before it starts. When `Server is up and running.` is displayed, switch to the frontend to take control of the command-and-control server.
+The program will ask you for the password of the chosen MySQL user before it proceeds. When `Server is up and running.` is displayed, switch to the frontend to take control of the command-and-control server.
 
 ## Command-and-Control Server
 
@@ -69,7 +69,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 **NB!** All non-external classes are part of the namespace `crawlservpp`.
 
-The source code of the server consists of the following classes (as of February 2019):
+The source code of the server consists of the following classes (as of March 2019):
 
 * **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
@@ -265,7 +265,7 @@ The following third-party libraries are used by the command-and-control server:
 * [GNU Aspell](http://aspell.net/)
 * [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html) (included in `crawlserv/src/_extern/date.h`)
 * [libcurl](https://curl.haxx.se/libcurl/)
-* [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/_extern/mongoose.*`)
+* [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/_extern/mongoose`)
 * [MySQL Connector/C++ 8.0](https://dev.mysql.com/doc/connector-cpp/8.0/en/)
 * [Perl Compatible Regular Expressions 2](https://www.pcre.org/)
 * [pugixml](https://github.com/zeux/pugixml)
@@ -273,7 +273,7 @@ The following third-party libraries are used by the command-and-control server:
 * [rawr-gen](https://github.com/hatkirby/rawr-ebooks) (included in `crawlserv/src/_extern/rawr`)
 * [HTML Tidy API](http://www.html-tidy.org/)
 * [uriparser](https://github.com/uriparser/uriparser)
-* [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8.h` and `.../utf`)
+* [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern`)
 
 ## Frontend
 
