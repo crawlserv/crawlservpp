@@ -23,7 +23,7 @@ You may _not_ use this software
 
 ## Building crawlserv++ on Linux
 
-You can clone the complete source code into the current folder using `git`(https://git-scm.com/):
+You can clone the complete source code into a sub-folder named `crawlserv` using `git`(https://git-scm.com/):
 
 ```
 git clone https://github.com/crawlserv/crawlservpp crawlserv
