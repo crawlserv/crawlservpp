@@ -18,7 +18,7 @@
 #include <aspell.h>
 #include <boost/version.hpp>
 #include <curl/curl.h>
-#include <jdbc/cppconn/driver.h>
+#include <cppconn/driver.h>
 #include <tidy.h>
 
 #define PCRE2_CODE_UNIT_WIDTH 8

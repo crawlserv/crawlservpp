@@ -24,11 +24,11 @@
 #define RAPIDJSON_HAS_STDSTRING 1
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <jdbc/cppconn/exception.h>
-#include <jdbc/cppconn/prepared_statement.h>
-#include <jdbc/cppconn/resultset.h>
-#include <jdbc/cppconn/statement.h>
-#include <jdbc/mysql_connection.h>
+#include <cppconn/exception.h>
+#include <cppconn/prepared_statement.h>
+#include <cppconn/resultset.h>
+#include <cppconn/statement.h>
+#include <mysql_connection.h>
 
 #include <chrono>
 #include <functional>

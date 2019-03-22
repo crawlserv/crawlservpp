@@ -19,8 +19,8 @@
 #include "../Struct/TargetTableProperties.hpp"
 #include "../Struct/QueryProperties.hpp"
 
-#include <jdbc/cppconn/prepared_statement.h>
-#include <jdbc/mysql_connection.h>
+#include <cppconn/prepared_statement.h>
+#include <mysql_connection.h>
 
 #include <functional>
 #include <string>

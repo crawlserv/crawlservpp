@@ -138,14 +138,14 @@ endif()
 find_package(mysqlcppconn QUIET)
 
 if(${mysqlcppconn_FOUND})
-	message("MySQL C++ Connector include directory manually found: \"${mysqlcppconn_INCLUDE}/\"")
-	message("MySQL C++ Connector library manually found: \"${mysqlcppconn_LIBRARIES}\"")
+	message("MySQL C++ Connector include directory found: \"${mysqlcppconn_INCLUDE}/\"")
+	message("MySQL C++ Connector library found: \"${mysqlcppconn_LIBRARIES}\"")
 else()
 	# find manually
 	unset(mysqlcppconn_INCLUDE)
 	unset(mysqlcppconn_LIBRARIES)
 
-	find_path(mysqlcppconn_INCLUDE jdbc/cppconn/driver.h PATH_SUFFIXES mysql-cppconn-8 mysql-cppconn cppconn include REQUIRED)
+	find_path(mysqlcppconn_INCLUDE mysql_driver.h PATH_SUFFIXES mysql-cppconn-8/jdbc mysql-cppconn-8 mysql-cppconn/jdbc mysql-cppconn cppcon/jdbc cppconn include REQUIRED)
 	find_library(mysqlcppconn_LIBRARIES mysqlcppconn PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
 
 	if(mysqlcppconn_INCLUDE)

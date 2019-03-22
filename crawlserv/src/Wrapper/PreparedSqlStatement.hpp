@@ -10,8 +10,8 @@
 #ifndef WRAPPER_PREPAREDSQLSTATEMENT_HPP_
 #define WRAPPER_PREPAREDSQLSTATEMENT_HPP_
 
-#include <jdbc/cppconn/prepared_statement.h>
-#include <jdbc/mysql_connection.h>
+#include <cppconn/prepared_statement.h>
+#include <mysql_connection.h>
 
 #include <exception>
 #include <memory>
