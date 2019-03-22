@@ -61,7 +61,7 @@ Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlse
 
 The program will ask you for the password of the chosen MySQL user before it proceeds. When `Server is up and running.` is displayed, switch to the frontend to take control of the command-and-control server.
 
-You can shutdown the server from the terminal by sending a SIGINT signal (`CTRL+X`). It will wait for all threads to avoid any loss of data.
+Even without access to the frontend you can shut down the server from the terminal by sending a SIGINT signal (`CTRL+X`). It will wait for all running threads to avoid any loss of data.
 
 ## Command-and-Control Server
 
