@@ -37,7 +37,7 @@ The following components are required to build crawlserv++ on your system:
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
-After installing these components and downloading the source code (or cloning the repository), use the terminal to go to the `crawlserv` directory inside the downloaded files (it has to be the directory where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
+After installing these components and cloning or downloading the source code, use the terminal to go to the `crawlserv` directory inside the downloaded files (it has to be the directory where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
 ```
 mkdir build
