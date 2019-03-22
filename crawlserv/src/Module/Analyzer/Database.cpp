@@ -119,7 +119,7 @@ namespace crawlservpp::Module::Analyzer {
 				this->urlList,
 				this->targetTableName,
 				this->targetTableFull,
-				false
+				compressed
 		);
 
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
