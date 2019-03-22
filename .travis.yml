@@ -31,6 +31,7 @@ matrix:
      - eval "${MATRIX_EVAL}"
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
      - sudo apt-get update -q
+     - sudo apt-get install -y libstdc++6
      - sudo apt-get install -y cmake
      - sudo apt-get install -y libpthread-stubs0-dev
      - sudo apt-get install -y libboost-system-dev
@@ -46,4 +47,4 @@ script:
 - mkdir build
 - cd build
 - cmake ..
-- make
+- make VERBOSE=1
