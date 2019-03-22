@@ -1,8 +1,10 @@
 language: cpp
+
 matrix: 
  include: 
  - name: "GCC7"
-   compiler: "gcc"
+   os: linux
+   dist: xenial
    addons: 
    apt: 
      sources: 
@@ -12,9 +14,9 @@ matrix:
      - cmake
    env:
      - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+ - name: "clang7"
    os: linux
    dist: xenial
- - name: "clang7"
    compiler: "clang"
    addons: 
    apt:
@@ -24,8 +26,6 @@ matrix:
      - cmake
    env: 
    - MATRIX_EVAL="CC=clang && CXX=clang++"
-   os: linux
-   dist: xenial
 before_install:
 - eval "${MATRIX_EVAL}"
 - sudo apt-get update
