@@ -2,7 +2,16 @@ _**WARNING!** This application is under development. It is neither complete nor 
 
  _~~Strikethrough~~ means a feature is not implemented yet._
 
-**LEGAL NOTICE**
+# crawlserv++
+**crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
+
+The architecture of **crawlserv++** consists of three distinct components:
+
+* The **command-and-control server**, written in C++ (source code in [`crawlserv/src`](crawlserv/src)),
+* a web server hosting the (quick 'n' dirty) **frontend** written in HTML, PHP and JavaScript (source code in [`crawlserv_frontend/crawlserv`](crawlserv_frontend/crawlserv)),
+* a mySQL **database** containing all data (i.e. thread status, configurations, logs, crawled content, parsed and extracted data as well as the results of all analyses).
+
+## Legal Notice
 
 Before using crawlserv++ for crawling websites and other data, please make sure you are [legally allowed to do so](https://benbernardblog.com/web-scraping-and-crawling-are-perfectly-legal-right/).
 
@@ -12,14 +21,41 @@ You may _not_ use this software
 * in any way that is unlawful or fraudulent, or has any unlawful or fraudulent purpose or effect;
 * to make unauthorised attempts to access any third party networks.
 
-# crawlserv++
-**crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
+## Building crawlserv++ on Linux
 
-The architecture of **crawlserv++** consists of three distinct components:
+The following components are required to build crawlserv++ on your system:
 
-* The **command-and-control server**, written in C++ (source code in [`crawlserv/src`](crawlserv/src)),
-* a web server hosting the (quick 'n' dirty) **frontend** written in HTML, PHP and JavaScript (source code in [`crawlserv_frontend/crawlserv`](crawlserv_frontend/crawlserv)),
-* a mySQL **database** containing all data (i.e. thread status, configurations, logs, crawled content, parsed and extracted data as well as the results of all analyses).
+* [`cmake`](https://cmake.org/), version 3.8.2 or higher
+* [`gcc`](https://gcc.gnu.org/), version 9 or higher – or any other modern compiler supporting C++ 17
+* a multi-threading library supported by `cmake` like `pthreads` (`libpthread-stubs0-dev` on Ubuntu)
+* the [`Boost.System` library](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) (`libboost-system-dev`)
+* the [`curl` library](https://curl.haxx.se/libcurl/) (e.g. `libcurl4-openssl-dev`)
+* the [`tidy-html5` library](http://www.html-tidy.org/) (`libtidy-dev`)
+* the [`uriparser` library](https://uriparser.github.io/) (`liburiparser-dev`)
+* the [`pugixml` library](https://pugixml.org/) (`libpugixml-dev`)
+* the [`PCRE` library](https://www.pcre.org/), version 2 (`libpcre2-dev`)
+* the [MySQL C++ Connector library](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) (`libmysqlcppconn-dev`)
+* currently also the [GNU ASPELL library](http://aspell.net/) (`libaspell-dev`)
+
+After installing these components and downloading the source code (or cloning the repository), use the terminal to go to the `crawlserv` directory inside downloaded files (it has to be the directory where `CMakeLists.txt`(crawlserv/CMakeLists.txt) is located). Then type:
+
+```
+mkdir build
+cd build
+cmake ..
+```
+
+If `cmake` was successful and shows `Build files have been written to: ...`, proceed with:
+
+```
+make
+```
+
+You can safely ignore the `-Wunused-parameter` warnings as well as warnings from external libraries as long as `make` finished with `[100%] Built target crawlserv`.
+
+The program should have been built inside the newly created `build` directory. Leave this directory with `cd ..` before running the program. Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting crawlserv++ with `./build/crawlserv config` or any other configuration file as argument. If you want to change the location of the program, make sure to take the `sql`(crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables).
+
+The program will ask you for the password of the chosen MySQL user before it starts. When `Server is up and running.` is displayed, switch to the frontend to take control of the command-and-control server.
 
 ## Command-and-Control Server
 
@@ -233,17 +269,9 @@ The following third-party libraries are used by the command-and-control server:
 * [pugixml](https://github.com/zeux/pugixml)
 * [RapidJSON](https://github.com/Tencent/rapidjson) (included in `crawlserv/src/_extern/rapidjson`)
 * [rawr-gen](https://github.com/hatkirby/rawr-ebooks) (included in `crawlserv/src/_extern/rawr`)
-* [HTML Tidy API](http://www.html-tidy.org/) (included in `crawlserv/src/_extern/tidy-html5`)
+* [HTML Tidy API](http://www.html-tidy.org/)
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8.h` and `.../utf`)
-
-The following directory names need to be (recursively) ignored when compiling with submodules: `test*`, `example*`, `samples`, `experimental`, `console`, `src/_extern/mongoose/src`(project-relative path), `src/_extern/date/src` (project-relative path).
-
-The following additional include path is used (for both C and C++ compiler): `src/_extern/tidy-html5/include`.
-
-The following libraries need to be installed and manually linked after compiling the source code: `boost_system mysqlcppconn curl pthread stdc++fs pcre2-8 pugixml uriparser aspell`.
-
-When using the MySQL Connector/C++ 8.0 the following include directory has to be added: `/usr/include/mysql-cppconn-8/jdbc`.
 
 ## Frontend
 
