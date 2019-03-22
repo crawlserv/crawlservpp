@@ -1,26 +1,31 @@
 language: cpp
+
 matrix: 
  include: 
- - name: "GCC"
+ - name: "GCC7"
+   os: linux
+   dist: xenial
    addons: 
    apt: 
-     packages: 
-     - g++-7
      sources: 
      - ubuntu-toolchain-r-test
-   env: 
-   - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+     packages: 
+     - g++-7
+     - cmake
+   env:
+     - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+ - name: "clang7"
    os: linux
- - name: "clang"
+   dist: xenial
+   compiler: "clang"
    addons: 
-   apt: 
-    packages: 
-    - clang-5.0
-    sources: 
-    - llvm-toolchain-trusty-5.0
+   apt:
+     sources: 
+     - ubuntu-toolchain-r-test
+     packages:
+     - cmake
    env: 
-   - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
-   os: linux
+   - MATRIX_EVAL="CC=clang && CXX=clang++"
 before_install:
 - eval "${MATRIX_EVAL}"
 - sudo apt-get update
