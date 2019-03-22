@@ -6,6 +6,7 @@ matrix:
    addons: 
    apt: 
      packages: 
+     - gcc-7
      - g++-7
      - cmake
      sources: 
@@ -15,16 +16,15 @@ matrix:
    os: linux
    dist: xenial
  - name: "clang"
-   compiler: "clang-5.0"
+   compiler: "clang"
    addons: 
    apt: 
-    packages: 
-    - clang-5.0
+    packages:
     - cmake
     sources: 
-    - llvm-toolchain-trusty-5.0
+    - ubuntu-toolchain-r-test
    env: 
-   - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+   - MATRIX_EVAL="CC=clang && CXX=clang++"
    os: linux
    dist: xenial
 before_install:
