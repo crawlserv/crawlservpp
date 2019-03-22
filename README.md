@@ -45,7 +45,7 @@ cd build
 cmake ..
 ```
 
-If `cmake` was successful and shows `Build files have been written to: ...`, proceed with:
+Do not forget the ` ..` begind `cmake`. If `cmake` was successful and shows `Build files have been written to: [...]`, proceed with:
 
 ```
 make
