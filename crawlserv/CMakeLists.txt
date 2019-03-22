@@ -219,7 +219,8 @@ add_executable(${PROJECT_NAME}
 		src/_extern/rawr/prefix_search.cpp
 )
 
-# C++ 17 is required
+# C++ 17 (including corresponding standard library) is required
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
 
