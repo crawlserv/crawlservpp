@@ -26,9 +26,9 @@ namespace crawlservpp::Main {
 			  running(true),
 			  offline(true) {
 		// create cookies directory if it does not exist
-		if(!std::experimental::filesystem::is_directory("cookies")
-			|| !std::experimental::filesystem::exists("cookies"))
-			std::experimental::filesystem::create_directory("cookies");
+		if(!std::filesystem::is_directory("cookies")
+			|| !std::filesystem::exists("cookies"))
+			std::filesystem::create_directory("cookies");
 
 		// connect to database and initialize it
 		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
