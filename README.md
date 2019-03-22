@@ -150,7 +150,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::UrlListProperties`](crawlserv/src/Struct/UrlListProperties.hpp)**: Basic URL list properties (namespace, name).
 * **[`Struct::WebsiteProperties`](crawlserv/src/Struct/WebsiteProperties.hpp)**: Basic website properties (domain, namespace, name).
 
-Algorithms are registered in [`crawlserv/src/Module/Analyzer/Algo/All.hpp`](crawlserv/src/Module/Analyzer/Algo/All.hpp).
+Algorithms are registered in [`crawlserv/src/Module/Analyzer/Algo/All.cpp`](crawlserv/src/Module/Analyzer/Algo/All.cpp).
 
 Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Main/Data.hpp`](crawlserv/src/Main/Data.hpp).
 
