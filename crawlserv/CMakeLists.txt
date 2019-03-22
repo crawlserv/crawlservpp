@@ -64,7 +64,7 @@ else()
 	unset(tidy_INCLUDE)
 	unset(tidy_LIBRARIES)
 
-	find_path(tidy_INCLUDE tidy.h PATH_SUFFIXES tidy-html5 tidy-html5/include tidy tidy/include REQUIRED)
+	find_path(tidy_INCLUDE tidybuffio.h PATH_SUFFIXES tidy-html5 tidy-html5/include tidy tidy/include REQUIRED)
 	find_library(tidy_LIBRARIES tidy PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
 
 	if(tidy_INCLUDE)
