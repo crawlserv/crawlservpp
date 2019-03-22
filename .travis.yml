@@ -1,8 +1,5 @@
 language: cpp
 cache: ccache
-compiler:
-- clang
-- gcc
 matrix: 
  include: 
  - name: "GCC"
