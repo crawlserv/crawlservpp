@@ -7,6 +7,3 @@
 [submodule "crawlserv/src/_extern/date"]
 	path = crawlserv/src/_extern/date
 	url = https://github.com/HowardHinnant/date
-[submodule "crawlserv/src/_extern/rapidjson"]
-	path = crawlserv/src/_extern/rapidjson
-	url = https://github.com/Tencent/rapidjson
