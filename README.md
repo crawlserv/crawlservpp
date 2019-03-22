@@ -39,7 +39,7 @@ The following additional components are required to build crawlserv++ on your sy
 * a multi-threading library supported by `cmake` like `pthreads` (e.g. `libpthread-stubs0-dev` on Ubuntu)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
 * the [`curl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
-* the [`tidy-html5`](http://www.html-tidy.org/) library (`libtidy-dev`)
+* the [`tidy-html5`](http://www.html-tidy.org/) library (`libtidy5`)
 * the [`uriparser`](https://uriparser.github.io/) library (`liburiparser-dev`)
 * the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
 * the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
