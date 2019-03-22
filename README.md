@@ -23,7 +23,15 @@ You may _not_ use this software
 
 ## Building crawlserv++ on Linux
 
-The following components are required to build crawlserv++ on your system:
+You can clone the complete source code into the current folder using `git`(https://git-scm.com/):
+
+```
+git clone https://github.com/crawlserv/crawlservpp crawlserv
+git submodules init
+git submodules update
+```
+
+The following additional components are required to build crawlserv++ on your system:
 
 * [`cmake`](https://cmake.org/), version 3.8.2 or higher
 * [`GNU Make`](https://www.gnu.org/software/make/) or a compatible Makefile parser
