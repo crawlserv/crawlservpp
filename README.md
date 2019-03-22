@@ -28,16 +28,16 @@ The following components are required to build crawlserv++ on your system:
 * [`cmake`](https://cmake.org/), version 3.8.2 or higher
 * [`gcc`](https://gcc.gnu.org/), version 9 or higher – or any other modern compiler supporting C++ 17
 * a multi-threading library supported by `cmake` like `pthreads` (`libpthread-stubs0-dev` on Ubuntu)
-* the [`Boost.System` library](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) (`libboost-system-dev`)
-* the [`curl` library](https://curl.haxx.se/libcurl/) (e.g. `libcurl4-openssl-dev`)
-* the [`tidy-html5` library](http://www.html-tidy.org/) (`libtidy-dev`)
-* the [`uriparser` library](https://uriparser.github.io/) (`liburiparser-dev`)
-* the [`pugixml` library](https://pugixml.org/) (`libpugixml-dev`)
-* the [`PCRE` library](https://www.pcre.org/), version 2 (`libpcre2-dev`)
-* the [MySQL C++ Connector library](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) (`libmysqlcppconn-dev`)
-* currently also the [GNU ASPELL library](http://aspell.net/) (`libaspell-dev`)
+* the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
+* the [`curl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
+* the [`tidy-html5`](http://www.html-tidy.org/) library (`libtidy-dev`)
+* the [`uriparser`](https://uriparser.github.io/) library (`liburiparser-dev`)
+* the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
+* the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
+* the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
+* currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
-After installing these components and downloading the source code (or cloning the repository), use the terminal to go to the `crawlserv` directory inside downloaded files (it has to be the directory where `CMakeLists.txt`(crawlserv/CMakeLists.txt) is located). Then type:
+After installing these components and downloading the source code (or cloning the repository), use the terminal to go to the `crawlserv` directory inside downloaded files (it has to be the directory where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
 ```
 mkdir build
@@ -51,7 +51,7 @@ If `cmake` was successful and shows `Build files have been written to: ...`, pro
 make
 ```
 
-You can safely ignore the `-Wunused-parameter` warnings as well as warnings from external libraries as long as `make` finished with `[100%] Built target crawlserv`.
+You can safely ignore the `-Wunused-parameter` warnings as well as warnings from external libraries as long as `make` finishes with `[100%] Built target crawlserv`.
 
 The program should have been built inside the newly created `build` directory. Leave this directory with `cd ..` before running the program. Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting crawlserv++ with `./build/crawlserv config` or any other configuration file as argument. If you want to change the location of the program, make sure to take the `sql`(crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables).
 
