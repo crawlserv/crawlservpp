@@ -53,6 +53,33 @@ else()
 	endif()
 endif()
 
+# find tidy-html5
+find_package(tidy QUIET)
+
+if(${tidy_FOUND})
+	message("tidy-html5 include directory found: \"${tidy_INCLUDE}\"")
+	message("tidy-html5 library found: \"${tidy_LIBRARIES}\"")
+else()
+	# find manually
+	unset(tidy_INCLUDE)
+	unset(tidy_LIBRARIES)
+
+	find_path(tidy_INCLUDE tidy.h PATH_SUFFIXES tidy-html5 tidy-html5/include tidy tidy/include REQUIRED)
+	find_library(tidy_LIBRARIES tidy PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(tidy_INCLUDE)
+		message("tidy-html5 include directory manually found: \"${tidy_INCLUDE}/\"")
+	else()
+		message(WARNING "tidy-html5 include directory not found.")
+	endif()
+
+	if(tidy_LIBRARIES)
+		message("tidy-html5 library manually found: \"${tidy_LIBRARIES}\"")
+	else()
+		message(WARNING "tidy-html5 library not found.")
+	endif()
+endif()
+
 # find uriparser
 find_package(uriparser QUIET)
 
@@ -68,33 +95,6 @@ else()
 		message("uriparser library manually found: \"${uriparser_LIBRARIES}\"")
 	else()
 		message(WARNING "uriparser library not found.")
-	endif()
-endif()
-
-# find MySQL C++ Connector
-find_package(mysqlcppconn QUIET)
-
-if(${mysqlcppconn_FOUND})
-	message("MySQL C++ Connector include directory manually found: \"${mysqlcppconn_INCLUDE}/\"")
-	message("MySQL C++ Connector library manually found: \"${mysqlcppconn_LIBRARIES}\"")
-else()
-	# find manually
-	unset(mysqlcppconn_INCLUDE)
-	unset(mysqlcppconn_LIBRARIES)
-
-	find_path(mysqlcppconn_INCLUDE jdbc/cppconn/driver.h PATH_SUFFIXES mysql-cppconn-8 mysql-cppconn cppconn include REQUIRED)
-	find_library(mysqlcppconn_LIBRARIES mysqlcppconn PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
-
-	if(mysqlcppconn_INCLUDE)
-		message("MySQL C++ Connector include directory manually found: \"${mysqlcppconn_INCLUDE}/\"")
-	else()
-		message(WARNING "MySQL C++ Connector include directory not found.")
-	endif()
-
-	if(mysqlcppconn_LIBRARIES)
-		message("MySQL C++ Connector library manually found: \"${mysqlcppconn_LIBRARIES}\"")
-	else()
-		message(WARNING "MySQL C++ Connector library not found.")
 	endif()
 endif()
 
@@ -134,6 +134,33 @@ else()
 	endif()
 endif()
 
+# find MySQL C++ Connector
+find_package(mysqlcppconn QUIET)
+
+if(${mysqlcppconn_FOUND})
+	message("MySQL C++ Connector include directory manually found: \"${mysqlcppconn_INCLUDE}/\"")
+	message("MySQL C++ Connector library manually found: \"${mysqlcppconn_LIBRARIES}\"")
+else()
+	# find manually
+	unset(mysqlcppconn_INCLUDE)
+	unset(mysqlcppconn_LIBRARIES)
+
+	find_path(mysqlcppconn_INCLUDE jdbc/cppconn/driver.h PATH_SUFFIXES mysql-cppconn-8 mysql-cppconn cppconn include REQUIRED)
+	find_library(mysqlcppconn_LIBRARIES mysqlcppconn PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(mysqlcppconn_INCLUDE)
+		message("MySQL C++ Connector include directory manually found: \"${mysqlcppconn_INCLUDE}/\"")
+	else()
+		message(WARNING "MySQL C++ Connector include directory not found.")
+	endif()
+
+	if(mysqlcppconn_LIBRARIES)
+		message("MySQL C++ Connector library manually found: \"${mysqlcppconn_LIBRARIES}\"")
+	else()
+		message(WARNING "MySQL C++ Connector library not found.")
+	endif()
+endif()
+
 # find GNU Aspell
 # 	NOTE: Might be removed in the near future.
 find_package(ASPELL QUIET)
@@ -150,33 +177,6 @@ else()
 		message("GNU Aspell library manually found: \"${ASPELL_LIBRARIES}\"")
 	else()
 		message(WARNING "GNU Aspell library not found.")
-	endif()
-endif()
-
-# find tidy-html5
-find_package(tidy QUIET)
-
-if(${tidy_FOUND})
-	message("tidy-html5 include directory found: \"${tidy_INCLUDE}\"")
-	message("tidy-html5 library found: \"${tidy_LIBRARIES}\"")
-else()
-	# find manually
-	unset(tidy_INCLUDE)
-	unset(tidy_LIBRARIES)
-
-	find_path(tidy_INCLUDE tidy.h PATH_SUFFIXES tidy-html5 tidy-html5/include tidy tidy/include REQUIRED)
-	find_library(tidy_LIBRARIES tidy PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
-
-	if(tidy_INCLUDE)
-		message("tidy-html5 include directory manually found: \"${tidy_INCLUDE}/\"")
-	else()
-		message(WARNING "tidy-html5 include directory not found.")
-	endif()
-
-	if(tidy_LIBRARIES)
-		message("tidy-html5 library manually found: \"${tidy_LIBRARIES}\"")
-	else()
-		message(WARNING "tidy-html5 library not found.")
 	endif()
 endif()
 
@@ -234,9 +234,9 @@ target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${curl_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${tidy_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${uriparser_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${mysqlcppconn_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${pugixml_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${PCRE2_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${mysqlcppconn_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 
 # set compiler options
