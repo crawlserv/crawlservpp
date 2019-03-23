@@ -75,6 +75,10 @@
 #include <atomic>
 #endif
 
+namespace crawlservpp::Wrapper {
+	class Database;
+}
+
 namespace crawlservpp::Main {
 
 	class Database {
@@ -95,7 +99,8 @@ namespace crawlservpp::Main {
 		typedef std::unique_ptr<sql::Statement> SqlStatementPtr;
 
 	public:
-		// allow locking classes access to protected locking functions
+		// allow wrapper and locking class access to protected functions
+		friend class Wrapper::Database;
 		template<class DB> friend class Wrapper::DatabaseLock;
 
 		// constructor and destructor
