@@ -1,5 +1,4 @@
 language: cpp
-
 matrix: 
  include: 
  - name: "GCC7"
@@ -22,8 +21,7 @@ matrix:
      - sudo apt-get install -y libpugixml-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libmysqlcppconn-dev
-     - sudo apt-get install -y libaspell-dev
-     
+     - sudo apt-get install -y libaspell-dev  
  - name: "GCC6"
    os: linux
    dist: xenial
@@ -45,7 +43,6 @@ matrix:
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libaspell-dev
-     
  - name: "clang7"
    os: linux
    dist: xenial
@@ -68,7 +65,6 @@ matrix:
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libaspell-dev
-
 - name: "clang6"
    os: linux
    dist: xenial
@@ -91,7 +87,6 @@ matrix:
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libaspell-dev
-     
 - name: "clang5"
    os: linux
    dist: xenial
@@ -114,7 +109,6 @@ matrix:
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libaspell-dev
-     
 - name: "clang4"
    os: linux
    dist: xenial
@@ -137,7 +131,6 @@ matrix:
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libaspell-dev
-     
 script:
 - cd crawlserv
 - mkdir build
