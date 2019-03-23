@@ -1,5 +1,3 @@
-![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master)
-
 _**WARNING!** This application is under development. It is neither complete nor adequately documented or tested._
 
  _~~Strikethrough~~ means a feature is not implemented yet._
@@ -24,6 +22,8 @@ You may _not_ use this software
 * to make unauthorised attempts to access any third party networks.
 
 ## Building crawlserv++ on Linux
+
+![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master) *See [`.travis.yml`](.travis.yml) for example build environments.*
 
 You can clone the complete source code into a sub-folder named `crawlserv` using `git`(https://git-scm.com/):
 
