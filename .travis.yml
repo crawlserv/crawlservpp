@@ -51,14 +51,14 @@ matrix:
    os: linux
    dist: xenial
    env: 
-     - MATRIX_EVAL="CC=clang-7.0 && CXX=clang++-7.0"
+     - MATRIX_EVAL="CC=clang-7 && CXX=clang++-7"
    before_install:
      - eval "${MATRIX_EVAL}"
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
      - sudo add-apt-repository ppa:llvm-toolchain-xenial-7
      - sudo add-apt-repository ppa:ondrej/php -y
      - sudo apt-get update -q
-     - sudo apt-get install -y clang-7.0
+     - sudo apt-get install -y clang-7
      - sudo apt-get install -y libstdc++-7-dev
      - sudo apt-get install -y cmake
      - sudo apt-get install -y libpthread-stubs0-dev
@@ -75,14 +75,14 @@ matrix:
    os: linux
    dist: xenial
    env: 
-     - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
+     - MATRIX_EVAL="CC=clang-6 && CXX=clang++-6"
    before_install:
      - eval "${MATRIX_EVAL}"
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-     - sudo add-apt-repository ppa:llvm-toolchain-xenial-6.0
+     - sudo add-apt-repository ppa:llvm-toolchain-xenial-6
      - sudo add-apt-repository ppa:ondrej/php -y
      - sudo apt-get update -q
-     - sudo apt-get install -y clang-6.0
+     - sudo apt-get install -y clang-6
      - sudo apt-get install -y libstdc++-7-dev
      - sudo apt-get install -y cmake
      - sudo apt-get install -y libpthread-stubs0-dev
@@ -99,14 +99,14 @@ matrix:
    os: linux
    dist: xenial
    env: 
-     - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
+     - MATRIX_EVAL="CC=clang-5 && CXX=clang++-5"
    before_install:
      - eval "${MATRIX_EVAL}"
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-     - sudo add-apt-repository ppa:llvm-toolchain-xenial-5.0
+     - sudo add-apt-repository ppa:llvm-toolchain-xenial-5
      - sudo add-apt-repository ppa:ondrej/php -y
      - sudo apt-get update -q
-     - sudo apt-get install -y clang-5.0
+     - sudo apt-get install -y clang-5
      - sudo apt-get install -y libstdc++-7-dev
      - sudo apt-get install -y cmake
      - sudo apt-get install -y libpthread-stubs0-dev
