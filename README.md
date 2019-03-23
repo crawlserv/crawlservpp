@@ -23,7 +23,7 @@ You may _not_ use this software
 
 ## Building crawlserv++ on Linux
 
-![<img src="https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master">](https://travis-ci.org/crawlserv/crawlservpp) &mdash; *See [`.travis.yml`](.travis.yml) for example build environments.*
+[![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master")](https://travis-ci.org/crawlserv/crawlservpp) &mdash; *See [`.travis.yml`](.travis.yml) for example build environments.*
 
 You can clone the complete source code into a sub-folder named `crawlserv` using `git`(https://git-scm.com/):
 
