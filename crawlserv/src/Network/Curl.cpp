@@ -302,29 +302,50 @@ namespace crawlservpp::Network {
 				break;
 
 			case Config::httpVersionV2:
+	#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 33)
 				this->curlCode = curl_easy_setopt(
 						this->curl.get(),
 						CURLOPT_HTTP_VERSION,
 						CURL_HTTP_VERSION_2_0
 				);
+	#else
+				if(warningsTo)
+					warningsTo->emplace("HTTP 2.0 currently not supported, \'http.version\' ignored.");
+
+				this->curlCode = CURLE_OK;
+	#endif
 
 				break;
 
 			case Config::httpVersionV2only:
+	#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 49)
 				this->curlCode = curl_easy_setopt(
 						this->curl.get(),
 						CURLOPT_HTTP_VERSION,
 						CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE
 				);
+	#else
+				if(warningsTo)
+					warningsTo->emplace("HTTP 2.0 ONLY currently not supported, \'http.version\' ignored.");
+
+				this->curlCode = CURLE_OK;
+	#endif
 
 				break;
 
 			case Config::httpVersionV2tls:
+#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 47)
 				this->curlCode = curl_easy_setopt(
 						this->curl.get(),
 						CURLOPT_HTTP_VERSION,
 						CURL_HTTP_VERSION_2TLS
 				);
+#else
+				if(warningsTo)
+					warningsTo->emplace("HTTP 2.0 OVER TLS ONLY currently not supported, \'http.version\' ignored.");
+
+				this->curlCode = CURLE_OK;
+#endif
 
 				break;
 
@@ -334,6 +355,9 @@ namespace crawlservpp::Network {
 
 				this->curlCode = CURLE_OK;
 			}
+
+			if(this->curlCode != CURLE_OK)
+				throw Curl::Exception(curl_easy_strerror(this->curlCode));
 		}
 
 		if(!globalConfig.localInterface.empty()) {
@@ -402,6 +426,7 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.proxyPre.empty()) {
+	#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 52)
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
 					CURLOPT_PRE_PROXY,
@@ -410,9 +435,14 @@ namespace crawlservpp::Network {
 
 			if(this->curlCode != CURLE_OK)
 				throw Curl::Exception(curl_easy_strerror(this->curlCode));
+	#else
+			if(warningsTo)
+				warningsTo->emplace("Pre-Proxy currently not supported, \' proxy.pre\' ignored.");
+	#endif
 		}
 
 		if(!globalConfig.proxyTlsSrpPassword.empty() || !globalConfig.proxyTlsSrpUser.empty()) {
+	#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 52)
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
 					CURLOPT_PROXY_TLSAUTH_USERNAME,
@@ -428,7 +458,15 @@ namespace crawlservpp::Network {
 					globalConfig.proxyTlsSrpPassword.c_str()
 			);
 
-			if(this->curlCode != CURLE_OK) throw Curl::Exception(curl_easy_strerror(this->curlCode));
+			if(this->curlCode != CURLE_OK)
+				throw Curl::Exception(curl_easy_strerror(this->curlCode));
+	#else
+			if(warningsTo)
+				warningsTo->emplace(
+						"Proxy TLS authentication currently not supported,"
+						" \'proxy.tls.srp.user\' and \'proxy.tls.srp.password\' ignored."
+				);
+	#endif
 		}
 
 		this->curlCode = curl_easy_setopt(
@@ -568,6 +606,7 @@ namespace crawlservpp::Network {
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
+	#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 52)
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_PROXY_SSL_VERIFYHOST,
@@ -585,6 +624,13 @@ namespace crawlservpp::Network {
 
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
+	#else
+		if((globalConfig.sslVerifyProxyHost || globalConfig.sslVerifyProxyPeer) && warningsTo)
+			warningsTo->emplace(
+					"SLL verification of proxy host and peer currently not supported,"
+					" \'ssl.verify.proxy.host\' and  \'ssl.verify.proxy.peer\' ignored."
+			);
+	#endif
 
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
@@ -595,6 +641,7 @@ namespace crawlservpp::Network {
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
+	#if linux && (LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 49))
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_TCP_FASTOPEN,
@@ -603,6 +650,10 @@ namespace crawlservpp::Network {
 
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
+	#else
+		if(globalConfig.tcpFastOpen && warningsTo)
+			warningsTo->emplace("TCP Fast Open currently not supported, \'tcp.fast.open\' ignored.");
+	#endif
 
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
