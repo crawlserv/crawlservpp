@@ -23,7 +23,7 @@ You may _not_ use this software
 
 ## Building crawlserv++ on Linux
 
-![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master) *See [`.travis.yml`](.travis.yml) for example build environments.*
+![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master) &mdash; *See [`.travis.yml`](.travis.yml) for example build environments.*
 
 You can clone the complete source code into a sub-folder named `crawlserv` using `git`(https://git-scm.com/):
 
@@ -268,7 +268,7 @@ As can be seen from the commands, the server also manages threads for performing
 
 Configurations for these modules are saved as JSON arrays in the shared `configs` table.
 
-Analyzers are implemented by their own set of subclasses - algorithm classes. The following algorithms are implemented at the moment (as of February 2019):
+Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of February 2019):
  
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
