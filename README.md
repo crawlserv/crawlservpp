@@ -37,7 +37,7 @@ The following additional components are required to build crawlserv++ on your sy
 
 * [`cmake`](https://cmake.org/), version 3.8.2 or higher
 * [`GNU Make`](https://www.gnu.org/software/make/) or a compatible Makefile parser
-* [`gcc`](https://gcc.gnu.org/), version 7 or higher – or any other modern compiler supporting C++ 17
+* [`gcc`](https://gcc.gnu.org/), version 6 or higher, [`clang`](https://clang.llvm.org/), version 5 or higher – or another modern C++ 17 compiler
 * a multi-threading library supported by `cmake` like `pthreads` (e.g. `libpthread-stubs0-dev` on Ubuntu)
 * a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
