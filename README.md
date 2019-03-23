@@ -1,3 +1,5 @@
+![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master)
+
 _**WARNING!** This application is under development. It is neither complete nor adequately documented or tested._
 
  _~~Strikethrough~~ means a feature is not implemented yet._
@@ -35,16 +37,19 @@ The following additional components are required to build crawlserv++ on your sy
 
 * [`cmake`](https://cmake.org/), version 3.8.2 or higher
 * [`GNU Make`](https://www.gnu.org/software/make/) or a compatible Makefile parser
-* [`gcc`](https://gcc.gnu.org/), version 9 or higher – or any other modern compiler supporting C++ 17
+* [`gcc`](https://gcc.gnu.org/), version 7 or higher – or any other modern compiler supporting C++ 17
 * a multi-threading library supported by `cmake` like `pthreads` (e.g. `libpthread-stubs0-dev` on Ubuntu)
+* a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
 * the [`curl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
-* the [`tidy-html5`](http://www.html-tidy.org/) library (`libtidy5`)
+* the [`tidy-html5`](http://www.html-tidy.org/) library, version 5 or higher (`libtidy-dev`*)
 * the [`uriparser`](https://uriparser.github.io/) library (`liburiparser-dev`)
 * the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
 * the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
+
+*Older Linux distributions might only have `libtidy-dev` v0.9 available. Install it [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the one from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).
 
 After installing these components and cloning or downloading the source code, use the terminal to go to the `crawlserv` directory inside the downloaded files (it has to be where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
