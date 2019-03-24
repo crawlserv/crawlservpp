@@ -62,7 +62,7 @@ If `cmake` was successful and shows `Build files have been written to: [...]`, p
 make
 ```
 
-You can safely ignore the `-Wunused-parameter` warnings as well as warnings from external libraries as long as `make` finishes with `[100%] Built target crawlserv`.
+You can safely ignore warnings from external libraries as long as `make` finishes with `[100%] Built target crawlserv`.
 
 The program should have been built inside the newly created `build` directory.
 
