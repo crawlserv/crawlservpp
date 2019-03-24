@@ -23,6 +23,8 @@ You may _not_ use this software
 
 ## Building crawlserv++ on Linux
 
+[![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master)](https://travis-ci.org/crawlserv/crawlservpp) &mdash; *See [`.travis.yml`](.travis.yml) for example build environments.*
+
 You can clone the complete source code into a sub-folder named `crawlserv` using `git`(https://git-scm.com/):
 
 ```
@@ -35,16 +37,19 @@ The following additional components are required to build crawlserv++ on your sy
 
 * [`cmake`](https://cmake.org/), version 3.8.2 or higher
 * [`GNU Make`](https://www.gnu.org/software/make/) or a compatible Makefile parser
-* [`gcc`](https://gcc.gnu.org/), version 9 or higher – or any other modern compiler supporting C++ 17
+* [`gcc`](https://gcc.gnu.org/), version 6 or higher, or [`clang`](https://clang.llvm.org/), version 5 or higher – or any other modern C++ 17 compiler
 * a multi-threading library supported by `cmake` like `pthreads` (e.g. `libpthread-stubs0-dev` on Ubuntu)
+* a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
 * the [`curl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
-* the [`tidy-html5`](http://www.html-tidy.org/) library (`libtidy5`)
+* the [`tidy-html5`](http://www.html-tidy.org/) library, version 5 or higher (`libtidy-dev`*)
 * the [`uriparser`](https://uriparser.github.io/) library (`liburiparser-dev`)
 * the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
 * the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
+
+*&ast; Older Linux distributions might only have `libtidy-dev` v0.9 available. Install it [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the ones from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).*
 
 After installing these components and cloning or downloading the source code, use the terminal to go to the `crawlserv` directory inside the downloaded files (it has to be where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
@@ -68,7 +73,7 @@ The program should have been built inside the newly created `build` directory.
 
 Leave this directory with `cd ..` before running it.
 
-Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting the server with `./build/crawlserv config` or any other configuration file as argument. If you want to change the location of the program, make sure to take the `sql`(crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables on first connection).
+Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting the server with `./build/crawlserv config` or any other configuration file as argument. If you want to change the location of the program, make sure to take the [`sql`](crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables on first connection).
 
 The program will ask you for the password of the chosen MySQL user before it proceeds. When `Server is up and running.` is displayed, switch to the frontend to take control of the command-and-control server.
 
@@ -263,7 +268,7 @@ As can be seen from the commands, the server also manages threads for performing
 
 Configurations for these modules are saved as JSON arrays in the shared `configs` table.
 
-Analyzers are implemented by their own set of subclasses - algorithm classes. The following algorithms are implemented at the moment (as of February 2019):
+Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of February 2019):
  
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
