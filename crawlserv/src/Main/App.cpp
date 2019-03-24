@@ -42,7 +42,7 @@ namespace crawlservpp::Main {
 			this->checkArgumentNumber(argc);
 
 			// check argument
-			if(argv[1] == "-v") {
+			if(std::string(argv[1]) == "-v") {
 				this->running = false;
 
 				return;
@@ -89,7 +89,7 @@ namespace crawlservpp::Main {
 
 	// run app
 	int App::run() noexcept {
-		if(this->server && this->running) {
+		if(this->server) {
 			try {
 				while(this->server->tick() && this->running) {}
 
