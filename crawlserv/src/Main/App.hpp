@@ -59,6 +59,7 @@ namespace crawlservpp::Main {
 	private:
 		std::atomic<bool> running;
 		std::unique_ptr<Server> server;
+		bool skipLoop;
 
 		// helper function
 		bool getPassword(DatabaseSettings& dbSettings);

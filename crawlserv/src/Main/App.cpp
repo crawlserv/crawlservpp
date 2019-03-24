@@ -15,7 +15,7 @@ namespace crawlservpp::Main {
 	App * App::instance = nullptr;
 
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
-	App::App(int argc, char * argv[]) noexcept : running(true) {
+	App::App(int argc, char * argv[]) noexcept : running(true), skipLoop(false) {
 		try {
 			DatabaseSettings dbSettings;
 			ServerSettings serverSettings;
@@ -43,7 +43,7 @@ namespace crawlservpp::Main {
 
 			// check argument
 			if(std::string(argv[1]) == "-v") {
-				this->running = false;
+				this->skipLoop = true;
 
 				return;
 			}
@@ -89,6 +89,9 @@ namespace crawlservpp::Main {
 
 	// run app
 	int App::run() noexcept {
+		if(this->skipLoop)
+			return EXIT_SUCCESS;
+
 		if(this->server) {
 			try {
 				while(this->server->tick() && this->running) {}
