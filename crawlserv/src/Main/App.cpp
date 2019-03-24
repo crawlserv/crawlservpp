@@ -41,6 +41,13 @@ namespace crawlservpp::Main {
 			// check number of arguments
 			this->checkArgumentNumber(argc);
 
+			// check argument
+			if(argv[1] == "-v") {
+				this->running = false;
+
+				return;
+			}
+
 			// load configuration file
 			this->loadConfig(argv[1], dbSettings, serverSettings);
 
@@ -61,6 +68,7 @@ namespace crawlservpp::Main {
 		}
 		catch(...) {
 			std::cout << "[ERROR] Unknown exception in App::App()" << std::endl;
+
 			this->running = false;
 		}
 	}
@@ -187,7 +195,7 @@ namespace crawlservpp::Main {
 	// static helper function: check number of command line arguments, throws std::runtime_error
 	void App::checkArgumentNumber(int argc) {
 		if(argc != 2)
-			throw std::runtime_error("USAGE: crawlserv <config_file>");
+			throw std::runtime_error("USAGE: crawlserv <config_file> or crawlserv -v");
 	}
 
 	// static helper function: load database and server settings from configuration file, throws std::runtime_error
