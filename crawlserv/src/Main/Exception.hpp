@@ -28,6 +28,7 @@ namespace crawlservpp::Main {
 		// getters
 		const char * what() const noexcept;
 		const std::string& whatStr() const noexcept;
+		void append(const std::string& str);
 
 	private:
 		std::string _description;
@@ -45,6 +46,12 @@ namespace crawlservpp::Main {
 	// get description as std::string
 	inline const std::string& Exception::whatStr() const noexcept {
 		return this->_description;
+	}
+
+	// append description of exception
+	inline void Exception::append(const std::string& str) {
+		this->_description += " " + str;
+
 	}
 
 } /* crawlservpp::Main */
