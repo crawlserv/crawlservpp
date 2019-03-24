@@ -60,7 +60,7 @@ namespace crawlservpp::Module::Crawler {
 	Thread::~Thread() {}
 
 	// initialize crawler
-	void Thread::onInit(bool resumed) {
+	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
 		// set ID, website and URL list namespace
@@ -340,7 +340,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// clear crawler
-	void Thread::onClear(bool interrupted) {
+	void Thread::onClear() {
 		if(this->tickCounter) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
@@ -2180,7 +2180,13 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
 		// set URL to finished if URL lock is okay
-		this->database.setUrlFinishedIfOk(url.first, this->lockTime);
+		try {
+			this->database.setUrlFinishedIfOk(url.first, this->lockTime);
+		}
+		catch(Main::Exception& e) {
+			e.append("[" + url.second + "]");
+			throw e;
+		}
 
 		// reset lock time
 		this->lockTime = "";

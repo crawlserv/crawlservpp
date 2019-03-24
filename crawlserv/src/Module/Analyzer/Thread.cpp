@@ -31,7 +31,7 @@ namespace crawlservpp::Module::Analyzer {
 	Thread::~Thread() {}
 
 	// initialize parser, throws std::runtime_error
-	void Thread::onInit(bool resumed) {
+	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
 		// set ID, website and URL list
@@ -71,7 +71,7 @@ namespace crawlservpp::Module::Analyzer {
 		this->setStatusMessage("Initializing algorithm...");
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("initializes algorithm...");
-		this->onAlgoInit(resumed);
+		this->onAlgoInit();
 
 		this->setStatusMessage("Starting algorithm...");
 	}
@@ -95,9 +95,9 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// clear analyzer
-	void Thread::onClear(bool interrupted) {
+	void Thread::onClear() {
 		// clear algorithm
-		this->onAlgoClear(interrupted);
+		this->onAlgoClear();
 	}
 
 	// algorithm is finished

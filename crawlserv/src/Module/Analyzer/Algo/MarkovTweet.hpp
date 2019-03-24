@@ -52,17 +52,20 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				const std::string& analyzerStatus,
 				bool analyzerPaused,
 				const ThreadOptions& threadOptions,
-				unsigned long analyzerLast);
-		MarkovTweet(Main::Database& dbBase,
-				const ThreadOptions& threadOptions);
+				unsigned long analyzerLast
+		);
+		MarkovTweet(
+				Main::Database& dbBase,
+				const ThreadOptions& threadOptions
+		);
 		virtual ~MarkovTweet();
 
 		// implemented algorithm functions
-		void onAlgoInit(bool resumed) override;
+		void onAlgoInit() override;
 		void onAlgoTick() override;
 		void onAlgoPause() override;
 		void onAlgoUnpause() override;
-		void onAlgoClear(bool interrupted) override;
+		void onAlgoClear() override;
 
 		// overwritten configuration functions
 		void parseOption() override;

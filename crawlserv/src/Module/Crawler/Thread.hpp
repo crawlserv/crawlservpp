@@ -83,11 +83,11 @@ namespace crawlservpp::Module::Crawler {
 		std::string crawlingTable;
 
 		// implemented thread functions
-		void onInit(bool resumed) override;
+		void onInit() override;
 		void onTick() override;
 		void onPause() override;
 		void onUnpause() override;
-		void onClear(bool interrupted) override;
+		void onClear() override;
 
 		// shadow pause function not to be used by thread
 		void pause();

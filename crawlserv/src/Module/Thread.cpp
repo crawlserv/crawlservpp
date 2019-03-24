@@ -238,6 +238,16 @@ namespace crawlservpp::Module {
 		this->overwriteLast = target - 1;
 	}
 
+	// return whether thread has been resumed after an interruption by shutdown
+	bool Thread::isResumed() {
+		return this->resumed;
+	}
+
+	// return whether thread has been interrupted by shutdown
+	bool Thread::isInterrupted() {
+		return this->interrupted;
+	}
+
 	// force the thread to pause (to be used by the thread only)
 	void Thread::pauseByThread() {
 		// ignore if thread is paused
@@ -390,7 +400,7 @@ namespace crawlservpp::Module {
 				DatabaseLock lockDatabase(this->database);
 
 				// initialize thread
-				this->onInit(this->resumed);
+				this->onInit();
 			} // database unlocked
 
 			// set status message (useful when the thread is paused on startup)
@@ -534,7 +544,7 @@ namespace crawlservpp::Module {
 			{ // lock database for clearing
 				DatabaseLock lockDatabase(this->database);
 
-				this->onClear(this->interrupted);
+				this->onClear();
 			} // database unlocked
 		}
 		// continue after exception handling

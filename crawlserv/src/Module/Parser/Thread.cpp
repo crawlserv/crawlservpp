@@ -64,7 +64,7 @@ namespace crawlservpp::Module::Parser {
 	Thread::~Thread() {}
 
 	// initialize parser
-	void Thread::onInit(bool resumed) {
+	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 		std::vector<std::string> fields;
 
@@ -328,7 +328,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// clear parser
-	void Thread::onClear(bool interrupted) {
+	void Thread::onClear() {
 		// check counter and process timers
 		if(this->tickCounter) {
 			// write ticks per second to log

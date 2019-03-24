@@ -98,6 +98,9 @@ namespace crawlservpp::Module {
 		std::string configuration; 					// configuration
 
 		// thread helper functions
+		bool isInterrupted();
+		bool isResumed();
+
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
 		void setProgress(float progress);
@@ -111,11 +114,11 @@ namespace crawlservpp::Module {
 		std::string getStatusMessage();
 		long getWarpedOverAndReset();
 
-		virtual void onInit(bool resumed) = 0;
+		virtual void onInit() = 0;
 		virtual void onTick() = 0;
 		virtual void onPause() = 0;
 		virtual void onUnpause() = 0;
-		virtual void onClear(bool interrupted) = 0;
+		virtual void onClear() = 0;
 
 	private:
 		Main::Database& databaseClass;				// access to the database for the class

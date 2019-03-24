@@ -64,7 +64,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	MarkovText::~MarkovText() {}
 
 	// initialize algorithm run, throws std::runtime_error
-	void MarkovText::onAlgoInit(bool resumed) {
+	void MarkovText::onAlgoInit() {
 		// initialize random number generator
 		srand(unsigned(time(nullptr)));
 
@@ -167,7 +167,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovText::onAlgoUnpause() {}
 
 	// clear algorithm run
-	void MarkovText::onAlgoClear(bool interrupted) {}
+	void MarkovText::onAlgoClear() {}
 
 	// parse configuration option
 	void MarkovText::parseOption() {

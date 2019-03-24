@@ -71,7 +71,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	MarkovTweet::~MarkovTweet() {}
 
 	// initialize algorithm run, throws std::runtime_error
-	void MarkovTweet::onAlgoInit(bool resumed) {
+	void MarkovTweet::onAlgoInit() {
 		// set target fields
 		std::vector<std::string> fields, types;
 		fields.reserve(2);
@@ -168,7 +168,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovTweet::onAlgoUnpause() {}
 
 	// clear algorithm run
-	void MarkovTweet::onAlgoClear(bool interrupted) {}
+	void MarkovTweet::onAlgoClear() {}
 
 	// parse algorithm option
 	void MarkovTweet::parseOption() {
