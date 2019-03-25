@@ -4401,7 +4401,9 @@ namespace crawlservpp::Main {
 				}
 			}
 
-			sqlQuery += ", PRIMARY KEY(id)" + properties + ") CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+			sqlQuery += ", PRIMARY KEY(id)" + properties + ")"
+						" CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,"
+						" ENGINE=InnoDB";
 
 			if(compressed)
 				sqlQuery += ", ROW_FORMAT=COMPRESSED";
