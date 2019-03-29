@@ -77,6 +77,7 @@ $result = $dbConnection->query(
     " module,".
     " status,".
     " progress,".
+    " last,".
     " paused,".
     " website,".
     " urllist,".
