@@ -526,7 +526,9 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				int added = Database::sqlExecuteUpdate(sqlStatement1000);
-				if(added > 0) result += added;
+
+				if(added > 0)
+					result += added;
 			}
 
 			// add 100 URLs at once
@@ -541,7 +543,9 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				int added = Database::sqlExecuteUpdate(sqlStatement100);
-				if(added > 0) result += added;
+
+				if(added > 0)
+					result += added;
 			}
 
 			// add 10 URLs at once
@@ -556,7 +560,9 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				int added = Database::sqlExecuteUpdate(sqlStatement10);
-				if(added > 0) result += added;
+
+				if(added > 0)
+					result += added;
 			}
 
 			// add remaining URLs
