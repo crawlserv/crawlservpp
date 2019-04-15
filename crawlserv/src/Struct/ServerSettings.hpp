@@ -17,13 +17,23 @@ namespace crawlservpp::Struct {
 	struct ServerSettings {
 		std::string port; // server port
 		std::string allowedClients; // list of allowed IP addresses
+		std::string corsOrigins; // allowed origins for CORS requests
 		bool logsDeletable; // are logs deletable by frontend?
 		bool dataDeletable; // is data deletable by frontend?
 
 		// constructors
-		ServerSettings() : logsDeletable(false), dataDeletable(false) {}
-		ServerSettings(const std::string& setPort, const std::string& setAllowedClients, bool setLogsDeletable, bool setDataDeletable)
-				: port(setPort), allowedClients(setAllowedClients), logsDeletable(setLogsDeletable), dataDeletable(setDataDeletable) {}
+		ServerSettings() : logsDeletable(false), dataDeletable(false), corsOrigins("*") {}
+		ServerSettings(
+				const std::string& setPort,
+				const std::string& setAllowedClients,
+				const std::string& setCorsOrigins,
+				bool setLogsDeletable,
+				bool setDataDeletable
+		) : port(setPort),
+			allowedClients(setAllowedClients),
+			corsOrigins(setCorsOrigins),
+			logsDeletable(setLogsDeletable),
+			dataDeletable(setDataDeletable) {}
 	};
 
 } /* crawlservpp::Struct */
