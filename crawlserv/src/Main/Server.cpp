@@ -47,7 +47,7 @@ namespace crawlservpp::Main {
 
 		// initialize mongoose embedded web server, bind it to port and set CORS string
 		this->webServer.initHTTP(serverSettings.port);
-		this->webServer.setCORS("*");
+		this->webServer.setCORS(serverSettings.corsOrigins);
 
 		// set initial status
 		this->setStatus("crawlserv is ready");
