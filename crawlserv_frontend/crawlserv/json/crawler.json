@@ -280,6 +280,14 @@
 			"description": "Perform additional check for duplicates after URL insertion (for debugging purposes only).",
 			"simple": false
 		},
+		"url.max.length": {
+			"type": "number",
+			"default": 2000,
+			"min": 1,
+			"max": 2000,
+			"description": "Maximum length of URLs to add.",
+			"simple": false
+		},
 		"url.select.lock": {
 			"type": "bool",
 			"default": false,
