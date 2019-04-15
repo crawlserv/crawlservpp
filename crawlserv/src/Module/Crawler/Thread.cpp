@@ -1758,11 +1758,11 @@ namespace crawlservpp::Module::Crawler {
 		// sort and remove duplicates
 		Helper::Strings::sortAndRemoveDuplicates(urls, this->config.crawlerUrlCaseSensitive);
 
-		// remove URLs longer than 2,000 characters
+		// remove URLs longer than maximum number of characters
 		const auto tmpSize = urls.size();
 		urls.erase(std::remove_if(urls.begin(), urls.end(),
-				[](const auto& url) {
-					return url.length() > 2000;
+				[&maxLength = this->config.crawlerUrlMaxLength](const auto& url) {
+					return url.length() > maxLength;
 				}
 		), urls.end());
 

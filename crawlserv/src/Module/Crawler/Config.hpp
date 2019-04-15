@@ -80,6 +80,7 @@ namespace crawlservpp::Module::Crawler {
 			bool crawlerUrlCaseSensitive;
 			unsigned long crawlerUrlChunks;
 			bool crawlerUrlDebug;
+			unsigned short crawlerUrlMaxLength;
 			bool crawlerUrlSelectionLock;
 			bool crawlerUrlStartupCheck;
 			bool crawlerWarningsFile;
@@ -127,6 +128,7 @@ namespace crawlservpp::Module::Crawler {
 										crawlerUrlCaseSensitive(true),
 										crawlerUrlChunks(5000),
 										crawlerUrlDebug(false),
+										crawlerUrlMaxLength(2000),
 										crawlerUrlSelectionLock(false),
 										crawlerUrlStartupCheck(true),
 										crawlerWarningsFile(false),
@@ -180,6 +182,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("url.case.sensitive", this->config.crawlerUrlCaseSensitive);
 		this->option("url.chunks", this->config.crawlerUrlChunks);
 		this->option("url.debug", this->config.crawlerUrlDebug);
+		this->option("url.max.length", this->config.crawlerUrlMaxLength);
 		this->option("url.selection.lock", this->config.crawlerUrlSelectionLock);
 		this->option("url.startup.check", this->config.crawlerUrlStartupCheck);
 		this->option("xml", this->config.crawlerXml);
@@ -203,27 +206,31 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Crawler::Config::checkOptions(): No link extraction query specified");
 
 		// check properties of archives
+		bool incompleteArchives = false;
 		unsigned long completeArchives = std::min({ // number of complete archives (= minimum size of all arrays)
 				this->config.crawlerArchivesNames.size(),
 				this->config.crawlerArchivesUrlsMemento.size(),
 				this->config.crawlerArchivesUrlsTimemap.size()
 		});
-		bool incompleteArchives = false;
+
 		if(this->config.crawlerArchivesNames.size() > completeArchives) {
 			// remove names of incomplete archives
 			this->config.crawlerArchivesNames.resize(completeArchives);
 			incompleteArchives = true;
 		}
+
 		if(this->config.crawlerArchivesUrlsMemento.size() > completeArchives) {
 			// remove memento URL templates of incomplete archives
 			this->config.crawlerArchivesUrlsMemento.resize(completeArchives);
 			incompleteArchives = true;
 		}
+
 		if(this->config.crawlerArchivesUrlsTimemap.size() > completeArchives) {
 			// remove timemap URL templates of incomplete archives
 			this->config.crawlerArchivesUrlsTimemap.resize(completeArchives);
 			incompleteArchives = true;
 		}
+
 		if(incompleteArchives) {
 			// warn about incomplete counters
 			this->warning(
@@ -234,33 +241,38 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check properties of counters
+		bool incompleteCounters = false;
 		unsigned long completeCounters = std::min({ // number of complete counters (= minimum size of all arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
 				this->config.customCountersEnd.size(),
 				this->config.customCountersStep.size()
 		});
-		bool incompleteCounters = false;
+
 		if(this->config.customCounters.size() > completeCounters) {
 			// remove counter variables of incomplete counters
 			this->config.customCounters.resize(completeCounters);
 			incompleteCounters = true;
 		}
+
 		if(this->config.customCountersStart.size() > completeCounters) {
 			// remove starting values of incomplete counters
 			this->config.customCountersStart.resize(completeCounters);
 			incompleteCounters = true;
 		}
+
 		if(this->config.customCountersEnd.size() > completeCounters) {
 			// remove ending values of incomplete counters
 			this->config.customCountersEnd.resize(completeCounters);
 			incompleteCounters = true;
 		}
+
 		if(this->config.customCountersStep.size() > completeCounters) {
 			// remove step values of incomplete counters
 			this->config.customCountersStep.resize(completeCounters);
 			incompleteCounters = true;
 		}
+
 		if(incompleteCounters) {
 			// warn about incomplete counters
 			this->warning(
@@ -273,18 +285,28 @@ namespace crawlservpp::Module::Crawler {
 		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
 		for(unsigned long n = 1; n <= this->config.customCounters.size(); ++n) {
 			unsigned long i = n - 1;
-			if((this->config.customCountersStep.at(i) <= 0
-					&& this->config.customCountersStart.at(i) < this->config.customCountersEnd.at(i))
-					|| (this->config.customCountersStep.at(i) >= 0
-							&& this->config.customCountersStart.at(i) > this->config.customCountersEnd.at(i))) {
+			if(
+					(
+							this->config.customCountersStep.at(i) <= 0
+							&& this->config.customCountersStart.at(i) < this->config.customCountersEnd.at(i)
+					)
+					||
+					(
+							this->config.customCountersStep.at(i) >= 0
+							&& this->config.customCountersStart.at(i) > this->config.customCountersEnd.at(i)
+					)
+			) {
 				this->config.customCounters.erase(this->config.customCounters.begin() + i);
 				this->config.customCountersStart.erase(this->config.customCountersStart.begin() + i);
 				this->config.customCountersEnd.erase(this->config.customCountersEnd.begin() + i);
 				this->config.customCountersStep.erase(this->config.customCountersStep.begin() + i);
 
 				std::ostringstream warningStrStr;
+
 				warningStrStr << "Counter loop of counter #" << (n + 1) << " would be infinitive, counter removed.";
+
 				this->warning(warningStrStr.str());
+
 				n--;
 			}
 		}
