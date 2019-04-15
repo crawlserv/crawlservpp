@@ -50,6 +50,7 @@
 #include <chrono>
 #include <cstring>
 #include <exception>
+#include <functional>
 #include <iostream>
 #include <locale>
 #include <mutex>
