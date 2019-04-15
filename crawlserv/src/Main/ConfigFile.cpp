@@ -20,6 +20,7 @@ namespace crawlservpp::Main {
 			while(std::getline(fileStream, line)) {
 				std::pair<std::string, std::string> entry;
 				unsigned long nameEnd = line.find('=');
+
 				if(nameEnd < line.length()) {
 					entry.first = boost::algorithm::to_lower_copy(line.substr(0, nameEnd));
 					entry.second = line.substr(nameEnd + 1);
@@ -28,13 +29,14 @@ namespace crawlservpp::Main {
 					entry.first = line;
 					entry.second = "";
 				}
+
 				this->entries.emplace_back(entry);
 			}
+
 			fileStream.close();
 		}
-		else {
+		else
 			throw std::runtime_error("Could not open \"" + name + "\" for reading");
-		}
 	}
 
 	// get value of config entry (or empty string if entry does not exist)
@@ -44,6 +46,7 @@ namespace crawlservpp::Main {
 				return i->second;
 			}
 		}
+
 		return "";
 	}
 
