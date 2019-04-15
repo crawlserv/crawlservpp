@@ -238,6 +238,9 @@ namespace crawlservpp::Main {
 		serverSettings.port = configFile.getValue("server_port");
 		serverSettings.allowedClients = configFile.getValue("server_allow");
 
+		if(!configFile.getValue("server_cors_origins").empty())
+			serverSettings.corsOrigins = configFile.getValue("server_cors_origins");
+
 		if(!configFile.getValue("server_logs_deletable").empty()) {
 			try {
 				serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
