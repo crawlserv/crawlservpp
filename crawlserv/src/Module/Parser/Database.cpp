@@ -904,7 +904,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// add parsed data to database (update if row for ID-specified content already exists
-	void Database::updateOrAddEntries(std::queue<ParsingEntry>& entries, std::queue<std::string>& logEntriesTo) {
+	void Database::updateOrAddEntries(std::queue<ParsingEntry>& entries) {
 		// check argument
 		if(entries.empty())
 			return;
@@ -930,7 +930,8 @@ namespace crawlservpp::Module::Parser {
 		unsigned long fields = 4;
 
 		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
-			if(!(i->empty())) fields++;
+			if(!(i->empty()))
+				fields++;
 
 		try {
 
@@ -938,7 +939,7 @@ namespace crawlservpp::Module::Parser {
 			while(entries.size() >= 1000) {
 				for(unsigned short n = 0; n < 1000; ++n) {
 					// check entry
-					this->checkEntrySize(entries.front(), logEntriesTo);
+					this->checkEntrySize(entries.front());
 
 					// set default values
 					sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
@@ -973,7 +974,7 @@ namespace crawlservpp::Module::Parser {
 			while(entries.size() >= 100) {
 				for(unsigned char n = 0; n < 100; ++n) {
 					// check entry
-					this->checkEntrySize(entries.front(), logEntriesTo);
+					this->checkEntrySize(entries.front());
 
 					// set default values
 					sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
@@ -1008,7 +1009,7 @@ namespace crawlservpp::Module::Parser {
 			while(entries.size() >= 10) {
 				for(unsigned char n = 0; n < 10; ++n) {
 					// check entry
-					this->checkEntrySize(entries.front(), logEntriesTo);
+					this->checkEntrySize(entries.front());
 
 					// set default values
 					sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
@@ -1042,7 +1043,7 @@ namespace crawlservpp::Module::Parser {
 			// add remaining entries
 			while(!entries.empty()) {
 				// check entry
-				this->checkEntrySize(entries.front(), logEntriesTo);
+				this->checkEntrySize(entries.front());
 
 				// set default values
 				sqlStatement1.setUInt64(1, entries.front().contentId);
@@ -1160,7 +1161,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// check the value sizes in a parsing entry and remove values that are too large for the database
-	bool Database::checkEntrySize(ParsingEntry& entry, std::queue<std::string>& logEntriesTo) {
+	bool Database::checkEntrySize(ParsingEntry& entry) {
 		// check data sizes
 		unsigned long tooLarge = 0;
 
@@ -1204,10 +1205,10 @@ namespace crawlservpp::Module::Parser {
 					adjustServerSettings = true;
 				}
 
-				logEntriesTo.emplace(logStrStr.str());
+				this->log(logStrStr.str());
 
 				if(adjustServerSettings)
-					logEntriesTo.emplace(
+					this->log(
 							"[#" + this->idString + "]"
 							" Adjust the server's \'max_allowed_packet\' setting accordingly."
 					);

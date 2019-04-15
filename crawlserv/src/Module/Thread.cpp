@@ -396,12 +396,8 @@ namespace crawlservpp::Module {
 		std::string oldStatus = this->getStatusMessage();
 
 		try {
-			{ // lock database for initializing
-				DatabaseLock lockDatabase(this->database);
-
-				// initialize thread
-				this->onInit();
-			} // database unlocked
+			// initialize thread
+			this->onInit();
 
 			// set status message (useful when the thread is paused on startup)
 			this->setStatusMessage(oldStatus);
@@ -541,11 +537,7 @@ namespace crawlservpp::Module {
 
 		// try to notify thread for clearing
 		try {
-			{ // lock database for clearing
-				DatabaseLock lockDatabase(this->database);
-
-				this->onClear();
-			} // database unlocked
+			this->onClear();
 		}
 		// continue after exception handling
 		catch(const std::exception& e) {

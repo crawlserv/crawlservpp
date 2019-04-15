@@ -85,7 +85,7 @@ namespace crawlservpp::Module::Parser {
 		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
 		std::queue<IdString> getAllContents(unsigned long urlId);
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
-		void updateOrAddEntries(std::queue<ParsingEntry>& entries, std::queue<std::string>& logEntriesTo);
+		void updateOrAddEntries(std::queue<ParsingEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
 
@@ -148,7 +148,7 @@ namespace crawlservpp::Module::Parser {
 		} ps;
 
 		// internal helper function
-		bool checkEntrySize(ParsingEntry& entry, std::queue<std::string>& logEntriesTo);
+		bool checkEntrySize(ParsingEntry& entry);
 		std::string queryLockUrls(unsigned int numberOfUrls);
 		std::string queryUpdateOrAddEntries(unsigned int numberOfEntries);
 		std::string querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls);

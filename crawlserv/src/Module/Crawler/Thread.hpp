@@ -27,6 +27,7 @@
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Timer/StartStop.hpp"
+#include "../../Wrapper/DatabaseLock.hpp"
 
 #include <curl/curl.h>
 
@@ -55,6 +56,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
+		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
 

@@ -110,6 +110,16 @@ namespace crawlservpp::Module::Crawler {
 
 		// optional startup check of URL list
 		if(this->config.crawlerUrlStartupCheck) {
+			// lock URL list
+			this->setStatusMessage("Waiting for URL list...");
+
+			DatabaseLock urlListLock(
+					this->database,
+					"urlList." + this->websiteNamespace + "_" + this->urlListNamespace,
+					std::bind(&Thread::isRunning, this)
+			);
+
+			// check URL list
 			this->setStatusMessage("Checking URL list...");
 
 			if(verbose)
@@ -721,9 +731,6 @@ namespace crawlservpp::Module::Crawler {
 	bool Thread::crawlingUrlSelection(IdString& urlTo) {
 		bool result = true;
 
-		// queue for log entries while crawling table is locked
-		std::queue<std::string> logEntries;
-
 		// MANUAL CRAWLING MODE (get URL from configuration)
 		if(!(this->getLast())) {
 			if(this->manualUrl.first) {
@@ -736,10 +743,11 @@ namespace crawlservpp::Module::Crawler {
 
 				if(this->lockTime.empty()) {
 					// skip locked URL
-					logEntries.emplace(
-							"URL lock active - " +
-							this->manualUrl.second + " skipped."
-					);
+					if(this->config.crawlerLogging)
+						this->log(
+								"URL lock active - " +
+								this->manualUrl.second + " skipped."
+						);
 
 					this->manualUrl = IdString();
 				}
@@ -750,11 +758,9 @@ namespace crawlservpp::Module::Crawler {
 			if(!this->manualUrl.first) {
 				// no retry: check custom URLs
 				if(!(this->customPages.empty())) {
-					if(!(this->manualCounter))
+					if(!(this->manualCounter) && this->config.crawlerLogging)
 						// start manual crawling with custom URLs
-						logEntries.emplace(
-								"starts crawling in non-recoverable MANUAL mode."
-						);
+						this->log("starts crawling in non-recoverable MANUAL mode.");
 
 					// check for custom URLs to crawl
 					if(this->manualCounter < this->customPages.size()) {
@@ -780,10 +786,11 @@ namespace crawlservpp::Module::Crawler {
 
 							if(this->lockTime.empty()) {
 								// skip locked custom URL
-								logEntries.emplace(
-										"URL lock active - " +
-										this->manualUrl.second + " skipped."
-								);
+								if(this->config.crawlerLogging)
+									this->log(
+											"URL lock active - " +
+											this->manualUrl.second + " skipped."
+									);
 
 								++(this->manualCounter);
 								this->manualUrl = IdString();
@@ -803,9 +810,9 @@ namespace crawlservpp::Module::Crawler {
 				if(this->manualCounter == this->customPages.size()) {
 					// no more custom URLs to go: get start page (if lockable)
 					if(!(this->startCrawled)) {
-						if(this->customPages.empty()) {
+						if(this->customPages.empty() && this->config.crawlerLogging) {
 							// start manual crawling with start page
-							logEntries.emplace("starts crawling in non-recoverable MANUAL mode.");
+							this->log("starts crawling in non-recoverable MANUAL mode.");
 						}
 
 						// check whether start page was already crawled (or needs to be re-crawled anyway)
@@ -819,10 +826,11 @@ namespace crawlservpp::Module::Crawler {
 
 							if(this->lockTime.empty()) {
 								// start page is locked: write skipping of entry to log if enabled
-								logEntries.emplace(
-										"URL lock active - " +
-										this->startPage.second + " skipped."
-								);
+								if(this->config.crawlerLogging)
+									this->log(
+											"URL lock active - " +
+											this->startPage.second + " skipped."
+									);
 
 								// start page is done
 								this->startCrawled = true;
@@ -852,7 +860,8 @@ namespace crawlservpp::Module::Crawler {
 			// check whether manual crawling mode was already set off
 			if(!(this->manualOff)) {
 				// start manual crawling with start page
-				logEntries.emplace("switches to recoverable AUTOMATIC mode.");
+				if(this->config.crawlerLogging)
+					this->log("switches to recoverable AUTOMATIC mode.");
 
 				this->manualOff = true;
 			}
@@ -869,7 +878,8 @@ namespace crawlservpp::Module::Crawler {
 
 				if(!(this->lockTime.empty())) {
 					// log retry
-					logEntries.emplace("retries " + this->nextUrl.second + "...");
+					if(this->config.crawlerLogging)
+						this->log("retries " + this->nextUrl.second + "...");
 
 					// set URL to last URL
 					urlTo = this->nextUrl;
@@ -881,8 +891,8 @@ namespace crawlservpp::Module::Crawler {
 
 			if(!retry) {
 				// log failed retry if necessary
-				if(this->nextUrl.first)
-					logEntries.emplace(
+				if(this->nextUrl.first && this->config.crawlerLogging)
+					this->log(
 							"could not retry " + this->nextUrl.second + ","
 							" because it is locked."
 					);
@@ -899,9 +909,11 @@ namespace crawlservpp::Module::Crawler {
 										this->config.crawlerLock
 						);
 
-						if(this->lockTime.empty())
+						if(this->lockTime.empty()) {
 							// skip locked URL
-							logEntries.emplace("skipped " + this->nextUrl.second + ", because it is locked.");
+							if(this->config.crawlerLogging)
+								this->log("skipped " + this->nextUrl.second + ", because it is locked.");
+						}
 						else {
 							urlTo = this->nextUrl;
 							break;
@@ -913,15 +925,6 @@ namespace crawlservpp::Module::Crawler {
 						break;
 					}
 				}
-			}
-		}
-
-		// write to log if necessary
-		if(this->config.crawlerLogging) {
-			while(!logEntries.empty()) {
-				this->log(logEntries.front());
-
-				logEntries.pop();
 			}
 		}
 

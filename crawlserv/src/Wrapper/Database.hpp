@@ -18,6 +18,7 @@
 #include "../Struct/TableColumn.hpp"
 #include "../Struct/TargetTableProperties.hpp"
 #include "../Struct/QueryProperties.hpp"
+#include "../Wrapper/DatabaseLock.hpp"
 
 #include <cppconn/prepared_statement.h>
 #include <mysql_connection.h>
@@ -40,10 +41,13 @@ namespace crawlservpp::Wrapper {
 		typedef Struct::TableColumn TableColumn;
 		typedef Struct::TargetTableProperties TargetTableProperties;
 
-		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::function<bool()> IsRunningCallback;
 
 	public:
+		// allow locking class access to protected functions
+		template<class DB> friend class Wrapper::DatabaseLock;
+
 		// constructor and destructor
 		Database(Module::Database& dbRef);
 		~Database();
@@ -112,7 +116,10 @@ namespace crawlservpp::Wrapper {
 		// reference to the database connection by the thread
 		Module::Database& database;
 
-		// wrapper for getter
+		// wrapper for validation function (changed from public to protected)
+		void checkConnection();
+
+		// wrapper for protected getter
 		unsigned long getMaxAllowedPacketSize() const;
 
 		// wrappers for managing prepared SQL statements
@@ -121,8 +128,9 @@ namespace crawlservpp::Wrapper {
 		sql::PreparedStatement& getPreparedStatement(unsigned short id);
 
 		// wrappers for database helper functions
-		void checkConnection();
 		unsigned long getLastInsertedId();
+		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
+		void removeDatabaseLock(const std::string& name);
 		void createTable(
 				const std::string& tableName,
 				const std::vector<TableColumn>& columns,
@@ -297,6 +305,12 @@ namespace crawlservpp::Wrapper {
 		return Main::Database::getRequestCounter();
 	}
 
+	// check whether the connection to the database is still valid and try to re-connect if necesssary, throws Exception
+	//  WARNING: Afterwards, old references to prepared SQL statements may be invalid!
+	inline void Database::checkConnection() {
+		this->database.checkConnection();
+	}
+
 	// get the maximum allowed packet size
 	inline unsigned long Database::getMaxAllowedPacketSize() const {
 		return this->database.getMaxAllowedPacketSize();
@@ -318,15 +332,19 @@ namespace crawlservpp::Wrapper {
 		return this->database.getPreparedStatement(id);
 	}
 
-	// check whether the connection to the database is still valid and try to re-connect if necesssary, throws Exception
-	//  WARNING: Afterwards, old references to prepared SQL statements may be invalid!
-	inline void Database::checkConnection() {
-		this->database.checkConnection();
-	}
-
 	// get the last inserted ID from the database
 	inline unsigned long Database::getLastInsertedId() {
 		return this->database.getLastInsertedId();
+	}
+
+	// add a lock with a specific name to the database, wait if lock already exists
+	inline void Database::addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback) {
+		this->database.addDatabaseLock(name, isRunningCallback);
+	}
+
+	// remove lock with specific name from database
+	inline void Database::removeDatabaseLock(const std::string& name) {
+		this->database.removeDatabaseLock(name);
 	}
 
 	// add a table to the database (the primary key 'id' will be created automatically)

@@ -17,10 +17,12 @@ namespace crawlservpp::Main {
 
 	// initialize static variables
 	sql::Driver * Database::driver = nullptr;
+	std::mutex Database::lockAccess;
+	std::vector<std::string> Database::locks;
+
 	#ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-	std::atomic<unsigned long long> Database::requestCounter(0);
+		std::atomic<unsigned long long> Database::requestCounter(0);
 	#endif
-	std::mutex Database::lock;
 
 	// constructor: save settings and set default values
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
@@ -4345,14 +4347,32 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetAutoIncrement", e); }
 	}
 
-	// lock the database
-	void Database::lockDatabase() {
-		Database::lock.lock();
+	// add a lock with a specific name to the database, wait if lock already exists
+	void Database::addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback) {
+		while(isRunningCallback()) {
+			{ // lock access to locks
+				std::lock_guard<std::mutex> accessLock(Database::lockAccess);
+
+				// check whether lock with specified name already exists
+				auto databaseLock = std::find(Database::locks.begin(), Database::locks.end(), name);
+
+				if(databaseLock == Database::locks.end()) {
+					// lock does not exist: add lock and return true
+					Database::locks.emplace_back(name);
+
+					break;
+				}
+			}
+
+			// sleep before re-attempting to add database lock
+			std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_LOCK_MS));
+		}
 	}
 
-	// unlock the database
-	void Database::unlockDatabase() {
-		Database::lock.unlock();
+	// remove lock with specific name from database
+	void Database::removeDatabaseLock(const std::string& name) {
+		std::lock_guard<std::mutex> accessLock(Database::lockAccess);
+		Database::locks.erase(std::remove(Database::locks.begin(), Database::locks.end(), name), Database::locks.end());
 	}
 
 	// add a table to the database (the primary key 'id' will be created automatically)

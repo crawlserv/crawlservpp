@@ -54,6 +54,7 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
+		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
 

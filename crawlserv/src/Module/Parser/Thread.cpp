@@ -148,18 +148,29 @@ namespace crawlservpp::Module::Parser {
 			}
 		}
 
-		// check parsing table
-		this->setStatusMessage("Checking parsing table...");
+		{
+			// wait for parsing table lock
+			this->setStatusMessage("Waiting for parsing table...");
 
-		unsigned int deleted = this->database.checkParsingTable();
+			DatabaseLock(
+					this->database,
+					"parsingTable." + this->parsingTable,
+					std::bind(&Thread::isRunning, this)
+			);
 
-		if(deleted && this->config.generalLogging) {
-			std::ostringstream logStrStr;
+			// check parsing table
+			this->setStatusMessage("Checking parsing table...");
 
-			logStrStr.imbue(std::locale(""));
-			logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+			unsigned int deleted = this->database.checkParsingTable();
 
-			this->log(logStrStr.str());
+			if(deleted && this->config.generalLogging) {
+				std::ostringstream logStrStr;
+
+				logStrStr.imbue(std::locale(""));
+				logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+
+				this->log(logStrStr.str());
+			}
 		}
 
 		// save start time and initialize counter
@@ -1094,23 +1105,30 @@ namespace crawlservpp::Module::Parser {
 		// timer
 		Timer::Simple timer;
 
-		// queue for log entries while table is locked
-		std::queue<std::string> logEntries;
-
 		// save old status
 		std::string status = this->getStatusMessage();
 
-		// save results
-		this->setStatusMessage("Saving results...");
+		this->setStatusMessage("Waiting for target table...");
 
-		if(this->config.generalLogging > Config::generalLoggingDefault)
-			this->log("saves results...");
+		{ // lock target table
+			DatabaseLock(
+					this->database,
+					"targetTable." + this->targetTable,
+					std::bind(&Thread::isRunning, this)
+			);
 
-		// update or add entries in/to database
-		this->database.updateOrAddEntries(this->results, logEntries);
+			// save results
+			this->setStatusMessage("Saving results...");
 
-		// update parsing table
-		this->database.updateTargetTable();
+			if(this->config.generalLogging > Config::generalLoggingDefault)
+				this->log("saves results...");
+
+			// update or add entries in/to database
+			this->database.updateOrAddEntries(this->results);
+
+			// update parsing table
+			this->database.updateTargetTable();
+		} // target table unlocked
 
 		// set last URL
 		if(!warped)
@@ -1118,15 +1136,6 @@ namespace crawlservpp::Module::Parser {
 
 		// set those URLs to finished whose URL lock is okay (still locked or re-lockable (and not parsed when not re-parsing)
 		this->database.setUrlsFinishedIfLockOk(this->finished);
-
-		// write log entries if necessary
-		if(this->config.generalLogging) {
-			while(!logEntries.empty()) {
-				this->log(logEntries.front());
-
-				logEntries.pop();
-			}
-		}
 
 		// update status
 		this->setStatusMessage("Results saved. [" + status + "]");

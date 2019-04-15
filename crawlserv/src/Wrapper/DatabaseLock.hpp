@@ -10,15 +10,21 @@
 #ifndef WRAPPER_DATABASELOCK_HPP_
 #define WRAPPER_DATABASELOCK_HPP_
 
+#include <functional>
+#include <string>
+
 namespace crawlservpp::Wrapper {
 
 	template<class DB> // DB needs to be a Database connection class w/ .lockDatabase(...) and .unlockDatabase()
 	class DatabaseLock {
+		// for convenience
+		typedef std::function<bool()> IsRunningCallback;
 
 	public:
 		// constructor: lock the database
-		DatabaseLock(DB& db) : ref(db), locked(false) {
-			this->ref.lockDatabase();
+		DatabaseLock(DB& db, const std::string& lockName, IsRunningCallback isRunningCallback)
+				: ref(db), name(lockName), locked(false) {
+			this->ref.addDatabaseLock(this->name, isRunningCallback);
 
 			this->locked = true;
 		}
@@ -26,7 +32,7 @@ namespace crawlservpp::Wrapper {
 		// destructor: unlock the database
 		virtual ~DatabaseLock() {
 			if(this->locked)
-				this->ref.unlockDatabase();
+				this->ref.removeDatabaseLock(this->name);
 		}
 
 		// not moveable, not copyable
@@ -40,6 +46,7 @@ namespace crawlservpp::Wrapper {
 		DB& ref;
 
 		// internal lock state
+		std::string name;
 		bool locked;
 	};
 

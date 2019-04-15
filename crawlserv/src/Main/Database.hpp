@@ -18,6 +18,7 @@
 #define MAIN_DATABASE_LOCK_TIMEOUT_SEC 300			// time-out on table lock
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC 600	// force re-connect if the connection has been idle for that long
 #define MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS 250		// sleep before re-trying after MySQL deadlock
+#define MAIN_DATABASE_SLEEP_ON_LOCK_MS 250			// sleep before re-attempting to add database lock
 
 // optional debugging option
 #define MAIN_DATABASE_DEBUG_REQUEST_COUNTER			// enable database request counter for debugging purposes
@@ -94,6 +95,7 @@ namespace crawlservpp::Main {
 		typedef Struct::WebsiteProperties WebsiteProperties;
 
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::function<bool()> IsRunningCallback;
 		typedef std::unique_ptr<sql::PreparedStatement> SqlPreparedStatementPtr;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 		typedef std::unique_ptr<sql::Statement> SqlStatementPtr;
@@ -267,8 +269,8 @@ namespace crawlservpp::Main {
 		// database helper functions
 		unsigned long getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
-		void lockDatabase();
-		void unlockDatabase();
+		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
+		void removeDatabaseLock(const std::string& name);
 		void createTable(
 				const std::string& tableName,
 				const std::vector<TableColumn>& columns,
@@ -444,7 +446,8 @@ namespace crawlservpp::Main {
 #endif
 
 		// locking state
-		static std::mutex lock;
+		static std::mutex lockAccess;
+		static std::vector<std::string> locks;
 
 		// prepared SQL statements
 		std::vector<Wrapper::PreparedSqlStatement> preparedStatements;
