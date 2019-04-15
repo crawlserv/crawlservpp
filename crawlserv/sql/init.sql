@@ -17,3 +17,6 @@ CREATE TABLE IF NOT EXISTS crawlserv_threads(id SERIAL, module TINYTEXT NOT NULL
 
 -- create table for text corpora
 CREATE TABLE IF NOT EXISTS crawlserv_corpora(id SERIAL, website BIGINT UNSIGNED NOT NULL, urllist BIGINT UNSIGNED NOT NULL, source_type TINYINT UNSIGNED NOT NULL, source_table TINYTEXT NOT NULL, source_field TINYTEXT NOT NULL, created DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL, corpus LONGTEXT NOT NULL, datemap JSON DEFAULT NULL, sources BIGINT UNSIGNED DEFAULT 0 NOT NULL, PRIMARY KEY(id), FOREIGN KEY(website) REFERENCES crawlserv_websites(id) ON UPDATE RESTRICT ON DELETE CASCADE, FOREIGN KEY(urllist) REFERENCES crawlserv_urllists(id) ON UPDATE RESTRICT ON DELETE CASCADE) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci, ROW_FORMAT=COMPRESSED, ENGINE=InnoDB
+
+-- add default queries
+INSERT IGNORE INTO crawlserv_queries(id, name, query, type, resultmulti, textonly) VALUES (1, 'Get Links from HTML', '/html/body//a/@href', 'xpath', TRUE, TRUE), (2, 'Get Links from RSS and Sitemap', '//link|//loc', 'xpath', TRUE, TRUE)
