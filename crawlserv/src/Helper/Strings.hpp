@@ -30,6 +30,7 @@ namespace crawlservpp::Helper::Strings {
 	void sortAndRemoveDuplicates(std::vector<std::string>& vectorOfStrings, bool caseSensitive);
 	char getFirstOrEscapeChar(const std::string& from);
 	void utfTidy(std::string& stringToTidy);
+	bool checkDomainName(const std::string& name);
 	bool checkSQLName(const std::string& name);
 
 	// Unicode white spaces
@@ -213,7 +214,12 @@ namespace crawlservpp::Helper::Strings {
 		trim(stringToTidy);
 	}
 
-	// check whether the name is valid for mySQL purposes (table and field names)
+	// check whether the name is valid as domain (checking only for characters that interfere with internal SQL statements)
+	inline bool checkDomainName(const std::string& name) {
+		return name.find_first_of("/\'") == std::string::npos;
+	}
+
+	// check whether the name is valid for MySQL purposes (table and field names)
 	inline bool checkSQLName(const std::string& name) {
 		return name.find_first_not_of(
 				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_"
