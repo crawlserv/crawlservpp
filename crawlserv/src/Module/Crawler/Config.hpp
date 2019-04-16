@@ -33,8 +33,11 @@ namespace crawlservpp::Module::Crawler {
 		typedef Struct::ConfigItem ConfigItem;
 
 	public:
-		Config() {}
+		Config() : crossDomain(false) {}
 		virtual ~Config() {}
+
+		// setter
+		void setCrossDomain(bool isCrossDomain);
 
 		// configuration constants
 		static const unsigned short crawlerLoggingSilent = 0;
@@ -68,6 +71,7 @@ namespace crawlservpp::Module::Crawler {
 			bool crawlerReCrawl;
 			std::vector<std::string> crawlerReCrawlAlways;
 			bool crawlerReCrawlStart;
+			bool crawlerRepairCData;
 			long crawlerReTries;
 			bool crawlerRetryArchive;
 			std::vector<unsigned int> crawlerRetryHttp;
@@ -102,12 +106,17 @@ namespace crawlservpp::Module::Crawler {
 		void checkOptions() override;
 
 	private:
-
+		bool crossDomain;
 	};
 
 	/*
 	 * IMPLEMENTATION
 	 */
+
+	// set whether website is cross-domain
+	inline void Config::setCrossDomain(bool isCrossDomain) {
+		this->crossDomain = isCrossDomain;
+	}
 
 	// configuration constructor: set default values
 	inline Config::Entries::Entries() : crawlerArchives(false),
@@ -117,7 +126,8 @@ namespace crawlservpp::Module::Crawler {
 										crawlerLogging(Config::crawlerLoggingDefault),
 										crawlerReCrawl(false),
 										crawlerReCrawlStart(true),
-										crawlerReTries(-1),
+										crawlerRepairCData(true),
+										crawlerReTries(720),
 										crawlerRetryArchive(true),
 										crawlerSleepError(5000),
 										crawlerSleepHttp(0),
@@ -170,6 +180,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("recrawl", this->config.crawlerReCrawl);
 		this->option("recrawl.always", this->config.crawlerReCrawlAlways);
 		this->option("recrawl.start", this->config.crawlerReCrawlStart);
+		this->option("repair.cdata", this->config.crawlerRepairCData);
 		this->option("retries", this->config.crawlerReTries);
 		this->option("retry.archive", this->config.crawlerRetryArchive);
 		this->option("retry.http", this->config.crawlerRetryHttp);
@@ -177,7 +188,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("sleep.http", this->config.crawlerSleepHttp);
 		this->option("sleep.idle", this->config.crawlerSleepIdle);
 		this->option("sleep.mysql", this->config.crawlerSleepMySql);
-		this->option("start", this->config.crawlerStart, StringParsingOption::SubURL);
+		this->option("start", this->config.crawlerStart, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 		this->option("timing", this->config.crawlerTiming);
 		this->option("url.case.sensitive", this->config.crawlerUrlCaseSensitive);
 		this->option("url.chunks", this->config.crawlerUrlChunks);
@@ -196,7 +207,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("counters.start", this->config.customCountersStart);
 		this->option("counters.step", this->config.customCountersStep);
 		this->option("recrawl", this->config.customReCrawl);
-		this->option("urls", this->config.customUrls, StringParsingOption::SubURL);
+		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 	}
 
 	// check parsing-specific configuration
@@ -307,7 +318,7 @@ namespace crawlservpp::Module::Crawler {
 
 				this->warning(warningStrStr.str());
 
-				n--;
+				--n;
 			}
 		}
 	}
