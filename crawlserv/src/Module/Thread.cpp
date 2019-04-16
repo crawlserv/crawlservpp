@@ -424,8 +424,11 @@ namespace crawlservpp::Module {
 
 	// run thread tick
 	void Thread::tick() {
+#ifndef MODULE_THREAD_DEBUG_NOCATCH
 		try {
+#endif
 			this->onTick();
+#ifndef MODULE_THREAD_DEBUG_NOCATCH
 		}
 		// handle connection exception by sleeping
 		catch(const ConnectionException& e) {
@@ -466,6 +469,7 @@ namespace crawlservpp::Module {
 			// try to pause thread
 			this->pauseByThread();
 		}
+#endif
 
 		// check for "time travel" to another ID
 		if(this->overwriteLast) {
