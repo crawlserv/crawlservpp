@@ -255,7 +255,11 @@ if(MSVC)
 else()
 	target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
-	if(${CMAKE_BUILD_TYPE} AND ${CMAKE_BUILD_TYPE} STREQUAL Debug)
+    if(NOT CMAKE_BUILD_TYPE)
+    	SET(CMAKE_BUILT_TYPE Release ... FORCE)
+    endif()
+
+	if(${CMAKE_BUILD_TYPE} MATCHES Debug)
 		message("Using \"${CMAKE_CXX_COMPILER}\" with minimum optimization and debugging information.")
 		target_compile_options(${PROJECT_NAME} PRIVATE -g3)
 		target_compile_options(${PROJECT_NAME} PRIVATE -Og)
