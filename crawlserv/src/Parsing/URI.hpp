@@ -33,7 +33,7 @@ namespace crawlservpp::Parsing {
 
 		// setters
 		void setCurrentDomain(const std::string& currentDomain);
-		void setCurrentSubUrl(const std::string& currentSubUrl);
+		void setCurrentUrl(const std::string& currentUrl);
 
 		// getters
 		bool isSameDomain() const;
@@ -65,6 +65,8 @@ namespace crawlservpp::Parsing {
 		std::string subUrl;
 		std::string current;
 		std::string link;
+
+		bool crossDomain;
 
 		UriParserStateA state;
 

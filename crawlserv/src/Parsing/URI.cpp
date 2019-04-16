@@ -13,33 +13,56 @@
 namespace crawlservpp::Parsing {
 
 	// constructor stub
-	URI::URI() {}
+	URI::URI() : crossDomain(false) {}
 
 	// destructor stub
 	URI::~URI() {}
 
-	// set current host, throws URI::Exception
+	// set current domain
 	void URI::setCurrentDomain(const std::string& currentHost) {
-		if(currentHost.empty())
-			throw URI::Exception("Empty domain");
+		if(currentHost.empty()) {
+			this->domain.clear();
 
-		this->domain = URI::escapeUrl(currentHost);
+			this->crossDomain = true; // domain needs to be parsed from current URL
+		}
+		else
+			this->domain = URI::escapeUrl(currentHost);
 	}
 
-	// set current sub-URL (beginning with slash), throws URI::Exception
-	void URI::setCurrentSubUrl(const std::string& currentSubUrl) {
+	// set current URL (beginning with slash if sub-URL or domain if the website is cross-domain), throws URI::Exception
+	void URI::setCurrentUrl(const std::string& currentUrl) {
+		std::string parsedSubUrl;
+
+		// if website is cross-domain, get the current domain from the URL
+		if(this->crossDomain) {
+			size_t domainEnd = currentUrl.find('/');
+
+			if(domainEnd == std::string::npos) {
+				this->setCurrentDomain(currentUrl);
+
+				parsedSubUrl = "/";
+			}
+			else {
+				this->setCurrentDomain(currentUrl.substr(0, domainEnd));
+
+				parsedSubUrl = currentUrl.substr(domainEnd);
+			}
+		}
+		else
+			parsedSubUrl = currentUrl;
+
 		// error checking
 		if(this->domain.empty())
-			throw URI::Exception("No current domain specified");
+			throw URI::Exception("No domain specified or parsed");
 
-		if(currentSubUrl.empty())
+		if(parsedSubUrl.empty())
 			throw URI::Exception("Empty sub-URL");
 
-		if(currentSubUrl.at(0) != '/')
+		if(parsedSubUrl.at(0) != '/')
 			throw URI::Exception("Sub-URL does not start with slash (\'/\')");
 
 		// escape and set current sub-URL
-		this->subUrl = URI::escapeUrl(currentSubUrl);
+		this->subUrl = URI::escapeUrl(parsedSubUrl);
 
 		// create current URI string
 		this->current = "https://" + this->domain + this->subUrl;
@@ -67,10 +90,10 @@ namespace crawlservpp::Parsing {
 		}
 	}
 
-	// check whether parsed link links to current domain
+	// check whether parsed link links to current domain, return always true if website is cross-domain
 	bool URI::isSameDomain() const {
-		if(this->domain.empty())
-			throw URI::Exception("No current domain specified");
+		if(this->crossDomain)
+			return true;
 
 		if(!(this->uri))
 			throw URI::Exception("No link parsed");
@@ -78,10 +101,13 @@ namespace crawlservpp::Parsing {
 		return URI::textRangeToString(this->uri.get()->hostText) == this->domain;
 	}
 
-	// get sub-URL for link
+	// get sub-URL for link (including domain if website is cross-domain)
 	std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
 		if(!(this->uri))
 			throw URI::Exception("No link parsed");
+
+		if(this->domain.empty())
+			throw URI::Exception("No domain specified");
 
 		Wrapper::URIQueryList queryList;
 		UriQueryListA * queryNext = nullptr;
@@ -125,10 +151,17 @@ namespace crawlservpp::Parsing {
 		if(!queries.empty())
 			queries.pop_back();
 
-		// construct sub-URL (starting with slash)
+		// construct URL (starting with slash if sub-URL or with domain if website is cross-domain)
 		UriPathSegmentStructA * nextSegment = this->uri.get()->pathHead;
 
 		std::string result;
+
+		if(this->crossDomain) {
+			result = URI::textRangeToString(this->uri.get()->hostText);
+
+			if(result.empty())
+				return "";
+		}
 
 		while(nextSegment) {
 			result += "/" + URI::unescape(URI::textRangeToString(nextSegment->text), false);
@@ -150,7 +183,7 @@ namespace crawlservpp::Parsing {
 
 		// error checking
 		if(this->domain.empty())
-			throw URI::Exception("No current domain specified");
+			throw URI::Exception("No domain specified or parsed");
 
 		if(this->subUrl.empty())
 			throw URI::Exception("No current sub-URL specified");
