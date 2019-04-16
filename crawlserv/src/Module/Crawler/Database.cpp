@@ -77,11 +77,16 @@ namespace crawlservpp::Module::Crawler {
 		this->crawlingTable = this->urlListTable + "_crawling";
 		std::string crawledTable(this->urlListTable + "_crawled");
 
-		// create SQL string for URL hashing
+		// create SQL strings for URL hashing
 		std::string hashQuery("CRC32( ");
 		if(this->urlCaseSensitive) hashQuery += "?";
 		else hashQuery += "LOWER( ? )";
 		hashQuery += " )";
+
+		std::string urlHash("CRC32( ");
+		if(this->urlCaseSensitive) urlHash += "url";
+		else urlHash += "LOWER( url )";
+		urlHash.push_back(')');
 
 		// check connection to database
 		this->checkConnection();
@@ -369,22 +374,34 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.urlHashCheck) && this->urlStartupCheck) {
-			if(this->verbose) this->log("[#" + this->idString + "] prepares urlHashCheck()...");
-
-			std::string urlHash("CRC32( ");
-			if(this->urlCaseSensitive) urlHash += "url";
-			else urlHash += "LOWER( url )";
-			urlHash.push_back(')');
+		if(!(this->ps.urlHashCheck)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares urlHashCheck() [1/2]...");
 
 			this->ps.urlHashCheck = this->addPreparedStatement(
-					"SELECT url FROM `" + this->urlListTable + "`"
-					" WHERE hash <> " + urlHash + " LIMIT 1"
+					"SELECT EXISTS"
+					" ("
+						" SELECT * FROM `" + this->urlListTable + "`"
+						" WHERE hash <> " + urlHash + ""
+					" )"
+					" AS result"
+			);
+		}
+
+		if(!(this->ps.urlHashCorrect)) {
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares urlHashCheck() [1/2]...");
+
+			this->ps.urlHashCorrect = this->addPreparedStatement(
+					"UPDATE `" + this->urlListTable + "`"
+					" SET hash = " + urlHash
 			);
 		}
 
 		if(!(this->ps.urlEmptyCheck) && (this->urlStartupCheck || this->urlDebug)) {
-			if(this->verbose) this->log("[#" + this->idString + "] prepares urlHashCheck()...");
+			if(this->verbose)
+				this->log("[#" + this->idString + "] prepares urlHashCheck()...");
+
 			this->ps.urlEmptyCheck = this->addPreparedStatement(
 					"SELECT id FROM `" + this->urlListTable + "`"
 					" WHERE url = '' LIMIT 1"
@@ -699,30 +716,44 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
 	}
 
-	// check the hash values in the URL list, throw DatabaseException if at least one mismatch is found
+	// check the hash values in the URL list, correct hash mismatches
 	void Database::urlHashCheck() {
 		// check connection
 		this->checkConnection();
 
-		// check prepared SQL statement
-		if(!(this->ps.urlDuplicationCheck))
+		// check prepared SQL statements
+		if(!(this->ps.urlHashCheck))
+			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
+
+		if(!(this->ps.urlHashCorrect))
 			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlHashCheck);
+		sql::PreparedStatement& checkStatement = this->getPreparedStatement(this->ps.urlHashCheck);
 
 		// get number of URLs from database
 		try {
 			// execute SQL query
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(checkStatement));
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next())
-				throw DatabaseException(
-						"Crawler::Database::urlHashCheck():"
-						" Corrupted hash for URL \'" + sqlResultSet->getString("url") + "\""
-						" in `" + this->urlListTable + "`"
-				);
+			if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
+				// correct hash values
+				sql::PreparedStatement& correctStatement = this->getPreparedStatement(this->ps.urlHashCorrect);
+
+				int updated = Database::sqlExecuteUpdate(correctStatement);
+
+				if(updated > 0 && this->logging) {
+					std::ostringstream logStrStr;
+
+					logStrStr.imbue(std::locale(""));
+
+					logStrStr << "corrected hash values for " << updated << " URL(s).";
+
+					this->log(logStrStr.str());
+				}
+			}
+
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
 	}

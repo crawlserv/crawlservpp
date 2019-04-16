@@ -23,6 +23,7 @@
 #include "WebServer.hpp"
 
 #include "../Helper/DateTime.hpp"
+#include "../Helper/FileSystem.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Module/Thread.hpp"
 #include "../Module/Analyzer/Algo/All.hpp"
@@ -66,6 +67,9 @@ namespace crawlservpp::Main {
 
 	class Server final {
 		// for convenience
+		typedef Database::IncorrectPathException IncorrectPathException;
+		typedef Database::PrivilegesException PrivilegesException;
+		typedef Database::StorageEngineException StorageEngineException;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;

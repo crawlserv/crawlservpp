@@ -31,6 +31,7 @@
 #include "../Helper/Portability/mysqlcppconn.h"
 #include "../Helper/Utf8.hpp"
 #include "../Struct/ConfigProperties.hpp"
+#include "../Struct/TableProperties.hpp"
 #include "../Struct/TargetTableProperties.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/QueryProperties.hpp"
@@ -85,6 +86,7 @@ namespace crawlservpp::Main {
 	class Database {
 		// for convenience
 		typedef Struct::ConfigProperties ConfigProperties;
+		typedef Struct::TableProperties TableProperties;
 		typedef Struct::TargetTableProperties TargetTableProperties;
 		typedef Struct::DatabaseSettings DatabaseSettings;
 		typedef Struct::QueryProperties QueryProperties;
@@ -150,6 +152,9 @@ namespace crawlservpp::Main {
 		IdString getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
+		std::string getWebsiteDataDirectory(unsigned long websiteId);
+		unsigned long getChangedUrlsByWebsiteUpdate(unsigned long websiteId, const WebsiteProperties& websiteProperties);
+		unsigned long getLostUrlsByWebsiteUpdate(unsigned long websiteId, const WebsiteProperties& websiteProperties);
 		void updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
 		void deleteWebsite(unsigned long websiteId);
 		unsigned long duplicateWebsite(unsigned long websiteId);
@@ -235,16 +240,30 @@ namespace crawlservpp::Main {
 		static unsigned long long getRequestCounter() { return 0; }
 #endif
 
-		// sub-classes for database exceptions
+		// sub-classes for general and specific database exceptions
 		class Exception : public Main::Exception { // general Database exception
 		public:
 			Exception(const std::string& description) : Main::Exception(description) {}
 		};
 
-		class ConnectionException : public Exception {	// connection exception
-														// (handles lost database connections)
+		class ConnectionException : public Exception { // connection exception (handles lost database connections)
 		public:
 			ConnectionException(const std::string& description) : Exception(description) {}
+		};
+
+		class IncorrectPathException : public Exception { // incorrect path value exception
+		public:
+			IncorrectPathException(const std::string& description) : Exception(description) {}
+		};
+
+		class StorageEngineException : public Exception { // storage engine exception
+		public:
+			StorageEngineException(const std::string& description) : Exception(description) {}
+		};
+
+		class PrivilegesException : public Exception { // insufficient privileges exception
+		public:
+			PrivilegesException(const std::string& description) : Exception(description) {}
 		};
 
 		// not moveable, not copyable
@@ -271,14 +290,11 @@ namespace crawlservpp::Main {
 		void resetAutoIncrement(const std::string& tableName);
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
 		void removeDatabaseLock(const std::string& name);
-		void createTable(
-				const std::string& tableName,
-				const std::vector<TableColumn>& columns,
-				bool compressed
-		);
+		void createTable(const TableProperties& properties);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
+		void checkDirectory(const std::string& dir);
 
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);

@@ -16,6 +16,7 @@
 #include "../Module/Database.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/TableColumn.hpp"
+#include "../Struct/TableProperties.hpp"
 #include "../Struct/TargetTableProperties.hpp"
 #include "../Struct/QueryProperties.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
@@ -39,6 +40,7 @@ namespace crawlservpp::Wrapper {
 		// for convenience
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::TableColumn TableColumn;
+		typedef Struct::TableProperties TableProperties;
 		typedef Struct::TargetTableProperties TargetTableProperties;
 
 		typedef std::pair<unsigned long, std::string> IdString;
@@ -131,11 +133,7 @@ namespace crawlservpp::Wrapper {
 		unsigned long getLastInsertedId();
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
 		void removeDatabaseLock(const std::string& name);
-		void createTable(
-				const std::string& tableName,
-				const std::vector<TableColumn>& columns,
-				bool compressed
-		);
+		void createTable(const TableProperties& properties);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
@@ -348,8 +346,8 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// add a table to the database (the primary key 'id' will be created automatically)
-	inline void Database::createTable(const std::string& tableName, const std::vector<TableColumn>& columns, bool compressed) {
-		this->database.createTable(tableName, columns, compressed);
+	inline void Database::createTable(const TableProperties& properties) {
+		this->database.createTable(properties);
 	}
 
 	// add a column to a table in the database

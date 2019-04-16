@@ -48,6 +48,7 @@ namespace crawlservpp::Module::Crawler {
 
 	class Thread: public Module::Thread, public Query::Container, public Config {
 		// for convenienc
+		typedef Helper::Utf8::Exception Utf8Exception;
 		typedef Main::Exception Exception;
 		typedef Network::Curl::Exception CurlException;
 		typedef Parsing::URI::Exception URIException;

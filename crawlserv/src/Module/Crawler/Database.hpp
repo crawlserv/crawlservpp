@@ -24,6 +24,7 @@
 #include <deque>
 #include <fstream>
 #include <iostream>
+#include <locale>
 #include <queue>
 #include <sstream>
 #include <string>
@@ -138,6 +139,7 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short isArchivedContentExists;
 			unsigned short urlDuplicationCheck;
 			unsigned short urlHashCheck;
+			unsigned short urlHashCorrect;
 			unsigned short urlEmptyCheck;
 		} ps;
 
