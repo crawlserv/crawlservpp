@@ -26,7 +26,7 @@ namespace crawlservpp::Helper::Utf8 {
 	bool repairUtf8(const std::string& strIn, std::string& strOut);
 
 	/*
-	 * SUB-CLASS FOR UTF8 EXCEPTIONS
+	 * CLASS FOR UTF8 EXCEPTIONS
 	 */
 
 	class Exception : public Main::Exception {
