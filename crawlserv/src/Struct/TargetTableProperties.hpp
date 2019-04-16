@@ -1,17 +1,17 @@
 /*
  * TargetTableProperties.hpp
  *
- * Target table properties (type, website, URL list, table name and full name, columns, compression).
+ * Target table properties (type, website, URL list, table name and full name, columns, data directory, compression).
  *
- * NOTE: module will be ignored on update!
+ * NOTE: type will be ignored on update!
  *
  *  Created on: Mar 4, 2019
  *      Author: ans
  */
 
 
-#ifndef STRUCT_CUSTOMTABLEPROPERTIES_HPP_
-#define STRUCT_CUSTOMTABLEPROPERTIES_HPP_
+#ifndef STRUCT_TARGETTABLEPROPERTIES_HPP_
+#define STRUCT_TARGETTABLEPROPERTIES_HPP_
 
 #include "TableColumn.hpp"
 
@@ -31,17 +31,39 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		TargetTableProperties() : website(0), urlList(0), compressed(false) {}
-		TargetTableProperties(const std::string& setType, unsigned long setWebsite, unsigned long setUrlList,
-				const std::string& setName, const std::string& setFullName, bool setCompressed)
-				: type(setType), website(setWebsite), urlList(setUrlList), name(setName), fullName(setFullName),
-				  compressed(setCompressed) {}
-		TargetTableProperties(const std::string& setType, unsigned long setWebsite, unsigned long setUrlList,
-				const std::string& setName,	const std::string& setFullName, const std::vector<TableColumn>& setColumns,
-				bool setCompressed) : type(setType), website(setWebsite), urlList(setUrlList), name(setName), fullName(setFullName),
-						  columns(setColumns), compressed(setCompressed) {}
+
+		TargetTableProperties(
+				const std::string& setType,
+				unsigned long setWebsite,
+				unsigned long setUrlList,
+				const std::string& setName,
+				const std::string& setFullName,
+				bool setCompressed
+		)		:	type(setType),
+					website(setWebsite),
+					urlList(setUrlList),
+					name(setName),
+					fullName(setFullName),
+					compressed(setCompressed) {}
+
+		TargetTableProperties(
+				const std::string& setType,
+				unsigned long setWebsite,
+				unsigned long setUrlList,
+				const std::string& setName,
+				const std::string& setFullName,
+				const std::vector<TableColumn>& setColumns,
+				bool setCompressed
+		)		:	type(setType),
+					website(setWebsite),
+					urlList(setUrlList),
+					name(setName),
+					fullName(setFullName),
+					columns(setColumns),
+					compressed(setCompressed) {}
 	};
 
 } /* crawlservpp::Struct */
 
-#endif /* STRUCT_CUSTOMTABLEPROPERTIES_HPP_ */
+#endif /* STRUCT_TARGETTABLEPROPERTIES_HPP_ */
 
