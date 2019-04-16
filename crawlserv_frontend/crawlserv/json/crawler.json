@@ -194,9 +194,15 @@
 			"simple": true,
 			"position": 2
 		},
+		"repair.cdata": {
+			"type": "bool",
+			"default": true,
+			"description": "Try to repair broken CData.",
+			"simple": false
+		},
 		"retries": {
 			"type": "number",
-			"default": -1,
+			"default": 720,
 			"min": -1,
 			"label": "Re-tries:",
 			"description": "Number of re-tries on connection errors (-1=infinite).",
@@ -252,7 +258,7 @@
 			"type": "string",
 			"default": "/",
 			"label": "Start page:",
-			"description": "Starting point for crawling (should start with /).",
+			"description": "Starting point for crawling (should start with / except for cross-domain websites).",
 			"simple": true,
 			"position": 1
 		},
@@ -374,7 +380,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Custom URLs:",
-			"description": "Custom URLs for crawling (should all start with /).",
+			"description": "Custom URLs for crawling (should all start with / except for cross-domain websites).",
 			"simple": true,
 			"position": 1
 		}

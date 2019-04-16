@@ -61,12 +61,13 @@ $result->close();
 if(isset($website)) {
     if($website) {
         // get namespace and domain of website
-        $result = $dbConnection->query("SELECT namespace,domain FROM crawlserv_websites WHERE id=$website LIMIT 1");
+        $result = $dbConnection->query("SELECT namespace,domain,dir FROM crawlserv_websites WHERE id=$website LIMIT 1");
         if(!$result) exit("ERROR: Could not get namespace and domain of website.");
         $row = $result->fetch_assoc();
         if(!$row) exit("ERROR: Could not get namespace and domain of website.");
         $namespace = $row["namespace"];
         $domain = $row["domain"];
+        $dir = $row["dir"];
         $result->close();
     }
 }
@@ -99,6 +100,29 @@ if($website) echo "<a href=\"#\" class=\"action-link website-duplicate\">Duplica
 <div class="entry-row">
 <div class="entry-label">Domain:</div><div class="entry-input">
 <input type="text" class="entry-input" id="website-domain" value="<?php if($website) echo htmlspecialchars($domain); ?>" />
+</div>
+</div>
+<div class="entry-row">
+<div class="entry-label"></div>
+<div class="entry-input">
+<input type="checkbox" id="website-crossdomain" <?php if($website && !strlen($domain)) echo "checked"; ?> /> cross-domain website
+</div>
+</div>
+<div class="entry-row">
+<div class="entry-label"></div>
+<div class="entry-input">
+<?php
+if(!$website) echo '<input type="checkbox" id="website-externaldir" /> use external directory';
+?>
+</div>
+</div>
+<div class="entry-row">
+<div class="entry-label">Directory:</div>
+<div class="entry-input">
+<input type="text" class="entry-input" <?php
+if($website) echo 'disabled';
+else echo 'id="website-dir"';
+?> value="<?php echo $website && strlen($dir) ? htmlspecialchars($dir) : "[default]"; ?>" />
 </div>
 </div>
 <div class="action-link-box">

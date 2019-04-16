@@ -230,6 +230,10 @@ jQuery(function($) {
 	
 // DOCUMENT READY
 	$(document).ready(function() {
+		// check website inputs
+		$("#website-domain").prop("disabled", $("#website-crossdomain").prop("checked"));
+		$("#website-dir").prop("disabled", !$("#website-externaldir").prop("checked"));
+		
 		// save selected values
 		$("#website-select").data("current", $("#website-select").val());
 		$("#urllist-select").data("current", $("#urllist-select").val());
@@ -500,6 +504,23 @@ jQuery(function($) {
 		
 		return true;
 	});
+	
+// CHANGE EVENT: cross-domain website toggled
+	$("#website-crossdomain").on("change", function() {
+		$("#website-domain").prop("disabled", $(this).prop("checked"));
+	});
+	
+// CHANGE EVENT: external directory toggled
+	$("#website-externaldir").on("change", function() {
+		if($(this).prop("checked")) {
+			$("#website-dir").prop("disabled", false); 
+			$("#website-dir").val("");
+		}
+		else {
+			$("#website-dir").prop("disabled", true);
+			$("#website-dir").val("[default]");
+		}
+	});
 
 // CLICK EVENT: add website
 	$(document).on("click", "a.website-add", function() {
@@ -508,7 +529,9 @@ jQuery(function($) {
 				{
 					"name" : $("#website-name").val(),
 					"namespace" : $("#website-namespace").val(),
-					"domain" : $("#website-domain").val()
+					"domain" : $("#website-crossdomain").prop("checked") ? undefined : $("#website-domain").val(),
+					"crossdomain": $("#website-crossdomain").prop("checked"),
+					"dir" : $("#website-externaldir").prop("checked") ? $("#website-dir").val() : undefined
 				},
 				true,
 				{ "m" : "websites" },
@@ -545,7 +568,8 @@ jQuery(function($) {
 					"id" : id,
 					"name" : $("#website-name").val(),
 					"namespace" : $("#website-namespace").val(),
-					"domain" : $("#website-domain").val()
+					"crossdomain": $("#website-crossdomain").prop("checked"),
+					"domain" : $("#website-crossdomain").prop("checked") ? undefined : $("#website-domain").val()
 				},
 				true,
 				{
