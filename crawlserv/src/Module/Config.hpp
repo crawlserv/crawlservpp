@@ -61,7 +61,9 @@ protected:
 			Default = 0,	// none
 			SQL,			// require SQL-compatible string
 			SubURL,			// convert to sub-URL
+			URL				// convert to URL (without protocol)
 		};
+		
 		enum CharParsingOption {
 			FromNumber = 0,	// get by numeric value
 			FromString		// get first or escaped first character from a string
@@ -69,6 +71,7 @@ protected:
 
 		// configuration parsing functions
 		void category(const std::string& category);
+
 		void option(const std::string& name, bool& target);
 		void option(const std::string& name, std::vector<bool>& target);
 		void option(const std::string& name, char& target, CharParsingOption opt);
@@ -89,6 +92,7 @@ protected:
 		void option(const std::string& name, std::vector<unsigned long>& target);
 		void option(const std::string& name, std::string &target, StringParsingOption opt = Default);
 		void option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt = Default);
+
 		void warning(const std::string& warning);
 
 	protected:
@@ -106,6 +110,7 @@ protected:
 
 		// private helper function
 		static void makeSubUrl(std::string& s);
+		static void makeUrl(std::string& s);
 
 	};
 
@@ -129,6 +134,7 @@ protected:
 
 		// parse JSON
 		rapidjson::Document json;
+
 		if(json.Parse(configJson.c_str()).HasParseError())
 			throw Config::Exception("Module::Config::loadConfig(): Could not parse configuration JSON.");
 
@@ -146,6 +152,7 @@ protected:
 			// go through all members of the JSON object and find its properties (name, category, value)
 			bool empty = true;
 			bool ignore = false;
+
 			for(auto member = entry->MemberBegin(); member != entry->MemberEnd(); ++member) {
 				// check the name of the current item member
 				if(member->name.IsString()) {
@@ -155,10 +162,10 @@ protected:
 
 					if(memberName == "cat") {
 						// found the category of the configuration item
-						if(member->value.IsString()) {
-							this->currentItem.category =
-									member->value.GetString(), member->value.GetStringLength();
-						}
+						if(member->value.IsString())
+							this->currentItem.category = std::string(
+									member->value.GetString(), member->value.GetStringLength()
+							);
 						else {
 							warningsTo.emplace("Configuration entry with invalid category name ignored.");
 							ignore = true;
@@ -167,14 +174,15 @@ protected:
 					}
 					else if(memberName == "name") {
 						// found the name of the configuration item
-						if(member->value.IsString()) {
+						if(member->value.IsString())
 							this->currentItem.name = std::string(
 									member->value.GetString(), member->value.GetStringLength()
 							);
-						}
 						else {
 							warningsTo.emplace("Configuration entry with invalid option name ignored.");
+
 							ignore = true;
+
 							break;
 						}
 
@@ -182,17 +190,20 @@ protected:
 					else if(memberName == "value") {
 						// found the value of the configuration item
 						this->currentItem.value = &(member->value);
+
 						empty = false;
 					}
 					else {
 						// found an unknown member of the configuration member
-						if(memberName.empty()) {
-							warningsTo.emplace("Unnamed configuration entry member ignored.");
-						}
+						if(memberName.empty())
+							warningsTo.emplace(
+									"Unnamed configuration entry member ignored."
+						);
 						else
 							warningsTo.emplace(
 									"Unknown configuration entry member \'" + memberName + "\' ignored."
 							);
+
 						continue;
 					}
 				}
@@ -209,14 +220,17 @@ protected:
 			if(this->currentItem.category.empty()) {
 				if(this->currentItem.name != "_algo") // ignore algorithm ID
 					this->logPtr->emplace("Configuration item without category ignored");
+
 				continue;
 			}
 			if(this->currentItem.name.empty()) {
 				this->logPtr->emplace("Configuration item without name ignored.");
+
 				continue;
 			}
 			if(empty) {
 				this->logPtr->emplace("Configuration entry without value ignored.");
+
 				continue;
 			}
 
@@ -265,6 +279,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -292,6 +307,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -335,6 +351,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -363,6 +380,7 @@ protected:
 						"\'" + this->currentItem.str() + "\'"
 						" ignored because of wrong type (not int)."
 				);
+
 			break;
 
 		case FromString:
@@ -377,6 +395,7 @@ protected:
 						"\'" + this->currentItem.str() + "\'"
 						" ignored because of wrong type (not string)."
 				);
+
 			break;
 
 		default:
@@ -392,6 +411,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -431,6 +451,7 @@ protected:
 									" ignored because of wrong type (not int)."
 							);
 					}
+
 					break;
 
 				case FromString:
@@ -450,6 +471,7 @@ protected:
 									" ignored because of wrong type (not string)."
 							);
 					}
+
 					break;
 
 				default:
@@ -472,6 +494,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -508,6 +531,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -560,6 +584,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -587,6 +612,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -630,6 +656,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -657,6 +684,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -700,6 +728,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -736,6 +765,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -788,6 +818,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -824,6 +855,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -876,6 +908,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -903,6 +936,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -946,6 +980,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -973,6 +1008,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -1016,6 +1052,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -1033,6 +1070,7 @@ protected:
 			case Default:
 				// get simple string
 				target.swap(str);
+
 				break;
 
 			case SQL:
@@ -1044,12 +1082,23 @@ protected:
 							"\'" + str + "\' in \'" + this->currentItem.str() + "\'"
 							" ignored because it contains invalid characters."
 					);
+
 				break;
 
 			case SubURL:
 				// convert to sub-URL
 				Config::makeSubUrl(str);
+
 				target.swap(str);
+
+				break;
+
+			case URL:
+				// convert to URL
+				Config::makeUrl(str);
+
+				target.swap(str);
+
 				break;
 
 			default:
@@ -1073,6 +1122,7 @@ protected:
 		// check parsing state
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
+
 		if(this->finished || !(this->foundCategory))
 			return;
 
@@ -1095,6 +1145,7 @@ protected:
 					case Default:
 						// get simple string
 						target.emplace_back(str);
+
 						break;
 
 					case SQL:
@@ -1106,12 +1157,23 @@ protected:
 									"\'" + str + "\' in \'" + this->currentItem.str() + "\'"
 									" ignored because it contains invalid characters."
 							);
+
 						break;
 
 					case SubURL:
 						// convert to sub-URL
 						Config::makeSubUrl(str);
+
 						target.emplace_back(str);
+
+						break;
+
+					case URL:
+						// convert to URL
+						Config::makeUrl(str);
+
+						target.emplace_back(str);
+
 						break;
 
 					default:
@@ -1145,7 +1207,7 @@ protected:
 			this->logPtr->emplace(warning);
 	}
 
-	// check for sub-URL (starting with /) or curl-supported URL protocol
+	// check for sub-URL (starting with /) or cURL-supported URL protocol
 	//  adds a slash in the beginning if no protocol was found
 	inline void Config::makeSubUrl(std::string& s) {
 		if(!s.empty()) {
@@ -1153,35 +1215,77 @@ protected:
 				return;
 
 			if(s.length() > 5) {
-				if(s.substr(0, 6) == "ftp://") return;
-				if(s.substr(0, 6) == "scp://") return;
-				if(s.substr(0, 6) == "smb://") return;
+				if(s.substr(0, 6) == "ftp://")
+					return;
+
+				if(s.substr(0, 6) == "scp://")
+					return;
+
+				if(s.substr(0, 6) == "smb://")
+					return;
 
 				if(s.length() > 6) {
-					if(s.substr(0, 7) == "http://") return;
-					if(s.substr(0, 7) == "ftps://") return;
-					if(s.substr(0, 7) == "sftp://") return;
-					if(s.substr(0, 7) == "file://") return;
-					if(s.substr(0, 7) == "dict://") return;
-					if(s.substr(0, 7) == "imap://") return;
-					if(s.substr(0, 7) == "ldap://") return;
-					if(s.substr(0, 7) == "pop3://") return;
-					if(s.substr(0, 7) == "rtmp://") return;
-					if(s.substr(0, 7) == "rtsp://") return;
-					if(s.substr(0, 7) == "smbs://") return;
-					if(s.substr(0, 7) == "smtp://") return;
-					if(s.substr(0, 7) == "tftp://") return;
+					if(s.substr(0, 7) == "http://")
+						return;
+
+					if(s.substr(0, 7) == "ftps://")
+						return;
+
+					if(s.substr(0, 7) == "sftp://")
+						return;
+
+					if(s.substr(0, 7) == "file://")
+						return;
+
+					if(s.substr(0, 7) == "dict://")
+						return;
+
+					if(s.substr(0, 7) == "imap://")
+						return;
+
+					if(s.substr(0, 7) == "ldap://")
+						return;
+
+					if(s.substr(0, 7) == "pop3://")
+						return;
+
+					if(s.substr(0, 7) == "rtmp://")
+						return;
+
+					if(s.substr(0, 7) == "rtsp://")
+						return;
+
+					if(s.substr(0, 7) == "smbs://")
+						return;
+
+					if(s.substr(0, 7) == "smtp://")
+						return;
+
+					if(s.substr(0, 7) == "tftp://")
+						return;
 
 					if(s.length() > 7) {
-						if(s.substr(0, 8) == "https://") return;
-						if(s.substr(0, 8) == "imaps://") return;
-						if(s.substr(0, 8) == "ldaps://") return;
-						if(s.substr(0, 8) == "pop3s://") return;
-						if(s.substr(0, 8) == "smtps://") return;
+						if(s.substr(0, 8) == "https://")
+							return;
+
+						if(s.substr(0, 8) == "imaps://")
+							return;
+
+						if(s.substr(0, 8) == "ldaps://")
+							return;
+
+						if(s.substr(0, 8) == "pop3s://")
+							return;
+
+						if(s.substr(0, 8) == "smtps://")
+							return;
 
 						if(s.length() > 8) {
-							if(s.substr(0, 9) == "gopher://") return;
-							if(s.substr(0, 9) == "telnet://") return;
+							if(s.substr(0, 9) == "gopher://")
+								return;
+
+							if(s.substr(0, 9) == "telnet://")
+								return;
 						}
 					}
 				}
@@ -1189,6 +1293,26 @@ protected:
 		}
 
 		s.insert(0, "/");
+	}
+
+	// check for URL
+	//  adds a slash in the end if none was found after protocol
+	inline void Config::makeUrl(std::string& s) {
+		if(!s.empty()) {
+			auto pos = s.find("://");
+
+			if(pos == std::string::npos)
+				pos = 0;
+			else
+				pos += 3;
+
+			pos = s.find('/', pos);
+
+			if(pos != std::string::npos)
+				return;
+		}
+
+		s.append(1, '/');
 	}
 
 } /* crawlservpp::Module */
