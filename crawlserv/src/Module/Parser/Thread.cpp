@@ -667,7 +667,7 @@ namespace crawlservpp::Module::Parser {
 
 		// parse HTML
 		try {
-			parsedContent.parse(content.second);
+			parsedContent.parse(content.second, false);
 		}
 		catch(const XMLException& e) {
 			if(this->config.generalLogging > Config::generalLoggingDefault) {
