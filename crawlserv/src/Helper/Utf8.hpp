@@ -10,6 +10,8 @@
 #ifndef HELPER_UTF8_HPP_
 #define HELPER_UTF8_HPP_
 
+#include "../Main/Exception.hpp"
+
 #include "../_extern/utf8/source/utf8.h"
 
 #include <string>
@@ -22,6 +24,16 @@ namespace crawlservpp::Helper::Utf8 {
 
 	std::string iso88591ToUtf8(const std::string& strIn);
 	bool repairUtf8(const std::string& strIn, std::string& strOut);
+
+	/*
+	 * SUB-CLASS FOR UTF8 EXCEPTIONS
+	 */
+
+	class Exception : public Main::Exception {
+	public:
+		Exception(const std::string& description) : Main::Exception(description) {}
+		virtual ~Exception() {}
+	};
 
 	/*
 	 * IMPLEMENTATION
@@ -42,11 +54,16 @@ namespace crawlservpp::Helper::Utf8 {
 		return strOut;
 	}
 
-	// replace invalid UTF-8 characters, return whether invalid characters occured
+	// replace invalid UTF-8 characters, return whether invalid characters occured, throws Utf8::Exception
 	inline bool repairUtf8(const std::string& strIn, std::string& strOut) {
-		if(utf8::is_valid(strIn.begin(), strIn.end())) return false;
-		utf8::replace_invalid(strIn.begin(), strIn.end(), back_inserter(strOut));
-		return true;
+		try {
+			if(utf8::is_valid(strIn.begin(), strIn.end())) return false;
+			utf8::replace_invalid(strIn.begin(), strIn.end(), back_inserter(strOut));
+			return true;
+		}
+		catch(const utf8::exception& e) {
+			throw Exception("UTF-8 error: " + std::string(e.what()));
+		}
 	}
 
 } /* crawlservpp::Helper::Utf8 */
