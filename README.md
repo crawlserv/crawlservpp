@@ -157,7 +157,8 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.hpp)**: Basic query properties (name, text, type, result type).
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.hpp)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
 * **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.hpp)**: Structure for table columns (name, type, reference, indexed).
-* **[`Struct::TargetTableProperties`](crawlserv/src/Struct/TargetTableProperties.hpp)**: Target table properties (type, website, URL list, name and full name, columns, compression).
+* **[`Struct::TableProperties`](crawlserv/src/Struct/TableProperties.hpp)**: Table properties (name, columns, data directory, compression).
+* **[`Struct::TargetTableProperties`](crawlserv/src/Struct/TargetTableProperties.hpp)**: Target table properties (type, website, URL list, name and full name, columns, data directory, compression).
 * **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.hpp)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.hpp)**: Basic thread options (IDs of website, URL list and configuration).
 * **[`Struct::UrlListProperties`](crawlserv/src/Struct/UrlListProperties.hpp)**: Basic URL list properties (namespace, name).
