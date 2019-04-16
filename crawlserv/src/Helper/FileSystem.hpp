@@ -25,12 +25,30 @@ namespace crawlservpp::Helper::FileSystem {
 	 * DECLARATION
 	 */
 
+	// existence checks
+	bool isValidDirectory(const std::string& path);
+	bool isValidFile(const std::string& path);
+
 	// directory listing
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
 
 	/*
 	 * IMPLEMENTATION
 	 */
+
+	// check whether the specified path points to a valid directory
+	inline bool isValidDirectory(const std::string& path) {
+		std::filesystem::path dir(path);
+
+		return std::filesystem::exists(dir) && std::filesystem::is_directory(dir);
+	}
+
+	// check whether the specified path points to a valid file
+	inline bool isValidFile(const std::string& path) {
+		std::filesystem::path file(path);
+
+		return std::filesystem::exists(file) && std::filesystem::is_regular_file(file);
+	}
 
 	// list files with specific extension in a directory and its subdirectories
 	inline std::vector<std::string> listFilesInPath(const std::string& pathToDir,
