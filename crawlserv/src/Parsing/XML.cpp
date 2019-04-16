@@ -81,11 +81,15 @@ namespace crawlservpp::Parsing {
 
 	// get content of XML document (saved to resultTo), throws XML::Exception
 	void XML::getContent(std::string& resultTo) const {
-		if(!(this->doc)) throw XML::Exception("No content parsed.");
+		if(!(this->doc))
+			throw XML::Exception("No content parsed.");
 
 		std::ostringstream out;
+
 		resultTo = "";
+
 		this->doc->print(out, "\t", 0);
+
 		resultTo += out.str();
 	}
 
