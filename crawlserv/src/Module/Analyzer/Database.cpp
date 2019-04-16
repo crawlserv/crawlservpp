@@ -438,7 +438,7 @@ namespace crawlservpp::Module::Analyzer {
 		// remove invalid sources
 		for(unsigned long n = 1; n <= tables.size(); ++n) {
 			if(!this->checkSource(types.at(n - 1), tables.at(n - 1), columns.at(n - 1), logging)) {
-				n--;
+				--n;
 
 				types.erase(types.begin() + n);
 				tables.erase(tables.begin() + n);
