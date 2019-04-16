@@ -22,7 +22,7 @@ namespace crawlservpp::Parsing {
 		tidyRelease(this->doc);
 	}
 
-	// tidy HTML and convert it to XML, throws std::runtime_error
+	// tidy HTML and convert it to XML, throws HTML::Exception
 	void HTML::tidyAndConvert(std::string& content) {
 		if(!tidyOptSetBool(this->doc, TidyXmlOut, yes)
 				|| !tidyOptSetBool(this->doc, TidyQuiet, yes)
