@@ -2130,13 +2130,20 @@ namespace crawlservpp::Module::Crawler {
 															return false;
 														}
 													}
+													// log cURL error and skip
 													else if(this->config.crawlerLogging)
-														// log error and skip
-														this->log(e.whatStr() + " - skips...");
+														this->log(
+																e.whatStr() + " - skips..."
+																+ " [" + mementos.front().url + "]"
+														);
 												}
 												catch(const Utf8Exception& e) {
+													// log UTF-8 error and skip
 													if(this->config.crawlerLogging)
-														this->log("WARNING: " + e.whatStr() + " - skips...");
+														this->log(
+																"WARNING: " + e.whatStr() + " - skips..."
+																+ " [" + mementos.front().url + "]"
+														);
 												}
 											}
 
