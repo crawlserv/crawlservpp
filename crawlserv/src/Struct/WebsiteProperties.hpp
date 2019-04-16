@@ -18,11 +18,16 @@ namespace crawlservpp::Struct {
 		std::string domain;
 		std::string nameSpace;
 		std::string name;
+		std::string dir;
 
 		// constructors
 		WebsiteProperties() {}
-		WebsiteProperties(const std::string& setDomain, const std::string& setNameSpace, const std::string& setName)
-				: domain(setDomain), nameSpace(setNameSpace), name(setName) {}
+		WebsiteProperties(
+				const std::string& setDomain,
+				const std::string& setNameSpace,
+				const std::string& setName,
+				const std::string& setDir)
+				: domain(setDomain), nameSpace(setNameSpace), name(setName), dir(setDir) {}
 	};
 
 } /* crawlservpp::Struct */
