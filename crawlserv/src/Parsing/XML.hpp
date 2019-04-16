@@ -39,7 +39,7 @@ namespace crawlservpp::Parsing {
 		void getContent(std::string& resultTo) const;
 
 		// parse functionURI
-		void parse(const std::string& content);
+		void parse(const std::string& content, bool repairCData);
 
 		// sub-class for XML exceptions
 		class Exception : public Main::Exception {
@@ -57,6 +57,9 @@ namespace crawlservpp::Parsing {
 	protected:
 		// unique pointer to (pugi)XML document
 		std::unique_ptr<pugi::xml_document> doc;
+
+		// internal static helper function
+		static void cDataRepair(std::string& content);
 	};
 
 } /* crawlservpp::Parsing */

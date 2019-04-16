@@ -18,7 +18,7 @@ namespace crawlservpp::Parsing {
 	XML::~XML() {}
 
 	// parse XML content, throws XML::Exception
-	void XML::parse(const std::string& content) {
+	void XML::parse(const std::string& content, bool repairCData) {
 		// remove whitespaces
 		unsigned long begin = 0;
 
@@ -38,6 +38,10 @@ namespace crawlservpp::Parsing {
 				throw XML::Exception("TidyLib error: " + e.whatStr());
 			}
 		}
+
+		// try to repair CData
+		if(repairCData)
+			cDataRepair(xml);
 
 		// create XML document
 		this->doc = std::make_unique<pugi::xml_document>();
@@ -83,6 +87,41 @@ namespace crawlservpp::Parsing {
 		resultTo = "";
 		this->doc->print(out, "\t", 0);
 		resultTo += out.str();
+	}
+
+	// internal static helper function: try to fix CData error (illegal ']]>' inside CData tag)
+	void XML::cDataRepair(std::string& content) {
+		auto pos = content.find("<![CDATA[");
+
+		if(pos == std::string::npos)
+			return;
+		else
+			pos += 9;
+
+		while(pos < content.size()) {
+			auto next = content.find("<![CDATA[", pos);
+
+			if(next == std::string::npos)
+				break;
+			else {
+				auto last = content.rfind("]]>", next - 3);
+
+				if(last != std::string::npos && last > pos)
+					while(true) {
+						pos = content.find("]]>", pos);
+
+						if(pos < last) {
+							content.insert(pos + 2, 1, ' ');
+
+							pos += 4;
+						}
+						else
+							break;
+					}
+
+				pos = next + 9;
+			}
+		}
 	}
 
 } /* crawlservpp::Parsing */
