@@ -31,6 +31,7 @@ namespace crawlservpp::Helper::Strings {
 	void utfTidy(std::string& stringToTidy);
 	bool checkDomainName(const std::string& name);
 	bool checkSQLName(const std::string& name);
+	std::vector<std::string> split(const std::string& str, const std::string& token);
 
 	// Unicode white spaces
 	const std::string utfWhitespaces[] = {
@@ -63,7 +64,9 @@ namespace crawlservpp::Helper::Strings {
 	inline void replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce) {
 		unsigned long startPos = 0;
 		unsigned long jump = 0;
-		if(from.empty()) return;
+
+		if(from.empty())
+			return;
 
 		// avoid infinite loop
 		if(!onlyOnce) {
@@ -223,6 +226,31 @@ namespace crawlservpp::Helper::Strings {
 		return name.find_first_not_of(
 				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_"
 		) == std::string::npos;
+	}
+
+	// split string into vector of strings
+	inline std::vector<std::string> split(const std::string& str, const std::string& token) {
+		std::string tmp(str);
+		std::vector<std::string> result;
+
+		while(!str.empty()){
+			auto index = tmp.find(token);
+			if(index != std::string::npos) {
+				result.push_back(tmp.substr(0, index));
+
+				tmp = tmp.substr(index + token.size());
+
+				if(tmp.empty())
+					result.push_back(tmp);
+			}
+			else {
+				result.push_back(tmp);
+
+				tmp.clear();
+			}
+		}
+
+		return result;
 	}
 
 } // /* crawlservpp::Helper::Strings */
