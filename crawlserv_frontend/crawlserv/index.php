@@ -36,6 +36,7 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="js/config.js"></script>
 <script>
 var redirected = <?php echo isset($_POST["redirected"]) ? "true" : "false";?>;
+var scrolldown = <?php echo isset($_POST["scrolldown"]) ? "true" : "false"; ?>;
 </script>
 </head>
 <body>

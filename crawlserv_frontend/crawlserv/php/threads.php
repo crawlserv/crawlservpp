@@ -14,7 +14,7 @@ else $module = "crawler";
 <div class="content-block">
 <div class="entry-row">
 <div class="entry-label">Website:</div><div class="entry-input">
-<select class="entry-input" id="website-select" data-m="<?php echo $m; ?>">
+<select class="entry-input" id="website-select" data-m="<?php echo $m; ?>" data-scrolldown >
 <?php
 $result = $dbConnection->query("SELECT id,name FROM crawlserv_websites ORDER BY name");
 if(!$result) exit("ERROR: Could not get ids and names of websites.");
@@ -111,7 +111,7 @@ if(isset($website)) {
     echo "</div>\n";
 }
 ?>
-<div class="action-link-box">
+<div class="action-link-box" id="scroll-to">
 <div class="action-link">
 <?php if(isset($website))
     echo "<a href=\"#\" class=\"action-link thread-start\" data-module=\"$module\" data-noreload>Start thread</a>\n"; ?>

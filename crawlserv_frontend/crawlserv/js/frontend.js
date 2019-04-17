@@ -87,6 +87,12 @@ function refreshData() {
 				$("#_ping2").fadeIn(0).delay(200).fadeOut(500);
 				$("#_ping3").fadeIn(0).delay(300).fadeOut(400);
 				setTimeout(refreshData, 700);
+				
+				if(scrolldown) {
+					console.log("scrollTop(" + $("#scroll-to").offset().top + ")");
+					$("#container").scrollTop($("#scroll-to").offset().top);
+					scrolldown = false;
+				}
 			}
 		});
 	}
@@ -363,7 +369,7 @@ jQuery(function($) {
   				"<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-name\" /></div>" +
   				"<div class=\"entry-separator\">=</div>" +
   				"<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-value\" /></div>" +
-  				"<a href=\"\" class=\"actionlink cmd-custom-remarg\" data-n=\"" + argId + "\">" +
+  				"<a href=\"\" class=\"action-link cmd-custom-remarg\" data-n=\"" + argId + "\">" +
   				"<span class=\"remove-entry\">X</div></a></div>"
   		);
   		
@@ -463,6 +469,8 @@ jQuery(function($) {
 			args["tab"] = $(this).data("tab");
 		if(typeof $(this).data("mode") !== "undefined")
 			args["mode"] = $(this).data("mode");
+		if(typeof $(this).data("scrolldown") !== "undefined")
+			args["scrolldown"] = true;
 		if(typeof config !== "undefined") {
 			if(config.isConfChanged()) {
 				if(confirm("Do you want to discard the changes to your current configuration?"))
@@ -1287,7 +1295,8 @@ jQuery(function($) {
 		reload({
 			"m" : $(this).data("m"),
 			"website" : website,
-			"module": $(this).val()
+			"module": $(this).val(),
+			"scrolldown": $(this).data("scrolldown") !== "undefined"
 		});
 		
 		return false;
