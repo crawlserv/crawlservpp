@@ -210,6 +210,46 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::prepare", e); }
 	}
 
+	// update tables with general information
+	void Database::update() {
+		// drop locale table
+		this->dropTable("crawlserv_locales");
+
+		// create locale table
+		std::vector<TableColumn> columns;
+
+		columns.emplace_back("name", "TEXT NOT NULL");
+
+		this->createTable(
+				TableProperties(
+						"crawlserv_locales",
+						columns,
+						"",
+						false
+				)
+		);
+
+		// get installed locales
+		std::string sqlQuery("INSERT INTO `crawlserv_locales`(name) VALUES");
+		std::vector<std::string> locales = Helper::Portability::enumLocales();
+
+		for(auto i = locales.begin(); i != locales.end(); ++i)
+			sqlQuery += " ('" + *i + "'),";
+
+		if(!locales.empty())
+			sqlQuery.pop_back();
+
+		// write installed locales to database
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			Database::sqlExecute(sqlStatement, sqlQuery);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::dropTable", e); }
+	}
+
 	/*
 	 * LOGGING FUNCTIONS
 	 */
@@ -4957,6 +4997,25 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement, sqlQuery);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::createTable", e); }
+	}
+
+	// delete table from database if it exists
+	void Database::dropTable(const std::string& tableName) {
+		// check argument
+		if(tableName.empty())
+			throw Database::Exception("Main::Database::dropTable(): No table name specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			Database::sqlExecute(sqlStatement, "DROP TABLE IF EXISTS `" + tableName + "`");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::dropTable", e); }
 	}
 
 	// add a column to a table in the database

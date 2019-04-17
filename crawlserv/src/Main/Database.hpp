@@ -28,6 +28,7 @@
 #include "Exception.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Portability/locale.h"
 #include "../Helper/Portability/mysqlcppconn.h"
 #include "../Helper/Utf8.hpp"
 #include "../Struct/ConfigProperties.hpp"
@@ -52,6 +53,7 @@
 #include <mysql_connection.h>
 
 #include <experimental/filesystem>
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -121,6 +123,7 @@ namespace crawlservpp::Main {
 		void connect();
 		void initializeSql();
 		void prepare();
+		void update();
 
 		// logging functions
 		void log(const std::string& logEntry);
@@ -291,6 +294,7 @@ namespace crawlservpp::Main {
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
 		void removeDatabaseLock(const std::string& name);
 		void createTable(const TableProperties& properties);
+		void dropTable(const std::string& name);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
