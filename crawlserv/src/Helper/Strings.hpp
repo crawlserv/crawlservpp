@@ -235,15 +235,13 @@ namespace crawlservpp::Helper::Strings {
 
 		while(!tmp.empty()){
 			auto index = tmp.find(token);
+
 			if(index != std::string::npos) {
 				result.push_back(tmp.substr(0, index));
 
 				tmp = tmp.substr(index + token.size());
-
-				if(tmp.empty())
-					result.push_back(tmp);
 			}
-			else {
+			else if(!tmp.empty()) {
 				result.push_back(tmp);
 
 				tmp.clear();
