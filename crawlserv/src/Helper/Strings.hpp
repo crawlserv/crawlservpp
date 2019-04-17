@@ -233,7 +233,7 @@ namespace crawlservpp::Helper::Strings {
 		std::string tmp(str);
 		std::vector<std::string> result;
 
-		while(!str.empty()){
+		while(!tmp.empty()){
 			auto index = tmp.find(token);
 			if(index != std::string::npos) {
 				result.push_back(tmp.substr(0, index));
