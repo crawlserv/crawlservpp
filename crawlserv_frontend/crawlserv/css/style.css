@@ -132,8 +132,7 @@ div.content-block {
 	padding-left:10px;
 	padding-right:10px;
 	padding-top:6px;
-	padding-bottom:6px;
-	margin-bottom:10px;
+	padding-bottom:2px;
 }
 
 /* SERVER STATUS */
@@ -179,10 +178,11 @@ div.small-text {
 /* ACTION LINKS */
 div.action-link-box {
 	font-size:14px;
-	margin-top:5px;
 }
 div.action-link {
 	text-align:right;
+	padding-top:2px;
+	padding-bottom:1px;
 	padding-right:5px;
 }
 a.action-link {
@@ -496,7 +496,7 @@ div.segment-head-closed {
 	color:#e1efe6;
 	background-color:#6b6a61;
 	margin-top:3px;
-	margin-bottom:10px;
+	margin-bottom:3px;
 	padding:2px;
 	
 	-webkit-user-select: none; /* Safari */        
@@ -522,6 +522,7 @@ span.segment-arrow {
 div.opt-block {
 	width:100%;
 	line-height:20px;
+	padding-bottom:1px;
 }
 div.opt-block-alternate {
 	background-color:#f4f4f4;

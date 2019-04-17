@@ -124,6 +124,18 @@ if(isset($website)) {
     echo "\" />\n";
     echo "</div>\n"; 
     echo "</div>\n";
+    echo "<div class=\"action-link-box\">\n";
+    echo "<div class=\"action-link\">\n";
+    if($config) {
+        echo "<a href=\"#\" class=\"action-link config-update\" data-m=\"$m\" data-mode=\"$mode\">";
+        echo "Change analyzer</a>\n";
+    }
+    else {
+        echo "<a href=\"#\" class=\"action-link config-add\" data-module=\"analyzer\" data-m=\"$m\" data-mode=\"$mode\">";
+        echo "Add analyzer</a>\n";
+    }
+    echo "</div>\n";
+    echo "</div>\n";
     echo "<div id=\"config-view\"></div>\n";
     echo "<div class=\"action-link-box\">\n";
     echo "<div class=\"action-link\">\n";
