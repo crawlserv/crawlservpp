@@ -143,6 +143,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 * **[`Helper::Json`](crawlserv/src/Helper/Json.hpp)**: Global helper functions for converting to JSON using the [RapidJSON library](https://github.com/Tencent/rapidjson).
 * **[`Helper::Portability`](crawlserv/src/Helper/Portability/)**: Additional headers for portability.
 * **[`Helper::Strings`](crawlserv/src/Helper/Strings.hpp)**: Global helper functions for string processing and manipulation.
+* **[`Helper::System`](crawlserv/src/Helper/System.hpp)**: Global system helper function.
 * **[`Helper::Utf8`](crawlserv/src/Helper/Utf8.hpp)**: Global helper functions for UTF-8 conversion using the [UTF8-CPP library](http://utfcpp.sourceforge.net/).
 * **[`Helper::Versions`](crawlserv/src/Helper/Versions.hpp)**: Get the versions of the different libraries used by the server.
 
