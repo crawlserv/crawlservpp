@@ -206,7 +206,7 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     $result->close();
 }
 if(isset($_POST["tab"])) $tab = $_POST["tab"];
-else $tab = "crawled";
+else $tab = "parsed";
 ?>
 <h2>Content<?php 
 echo "<span id=\"opt-mode\">\n";
