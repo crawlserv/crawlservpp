@@ -10,7 +10,6 @@
 #ifndef HELPER_STRINGS_HPP_
 #define HELPER_STRINGS_HPP_
 
-
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
