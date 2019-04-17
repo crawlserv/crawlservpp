@@ -35,6 +35,8 @@ namespace crawlservpp::Main {
 		this->database.connect();
 		this->database.initializeSql();
 		this->database.prepare();
+		this->database.update();
+
 		this->offline = false;
 
 		// set callbacks (suppressing wrong error messages by Eclipse IDE)
