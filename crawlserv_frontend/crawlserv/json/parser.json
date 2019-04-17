@@ -122,7 +122,7 @@
 		},
 		"datetime.locales": {
 			"type": "array",
-			"item-type": "string",
+			"item-type": "locale",
 			"default": [],
 			"label": "Date/time locales:",
 			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",

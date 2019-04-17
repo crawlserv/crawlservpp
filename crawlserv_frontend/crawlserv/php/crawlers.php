@@ -137,9 +137,17 @@ if(isset($website)) {
 }
 ?>
 <script>
-// load queries and configuration
+// load locales, queries and configuration
 <?php 
 if($website) {
+    echo "var db_locales = [\n";
+    $result = $dbConnection->query("SELECT name FROM crawlserv_locales ORDER BY name");
+    if(!$result) exit("ERROR: Could not get locales from database.");
+    $locales = "";
+    while($row = $result->fetch_assoc()) $locales .= " \"".$row["name"]."\",";
+    $locales = substr($locales, 0, -1);
+    echo "$locales];\n";
+        
     echo "var db_queries = [\n";
     $result = $dbConnection->query("SELECT id,name,type,resultbool,resultsingle,resultmulti FROM crawlserv_queries WHERE website="
         .$website." OR website IS NULL ORDER BY name");

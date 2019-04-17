@@ -372,6 +372,12 @@ class Config {
 					obj.default
 			);
 		}
+		else if(obj.type == "locale")
+			result += this.locale(
+					cat,
+					obj.id,
+					value,
+			);
 		else if(obj.type == "query")
 			result += this.query(
 					cat,
@@ -485,6 +491,12 @@ class Config {
 					obj["enum-values"],
 					obj.default
 			);
+		else if(obj.type == "locale")
+			result += this.locale(
+					cat,
+					obj.id,
+					value
+			);			
 		else if(obj.type == "query")
 			result += this.query(
 					cat,
@@ -702,6 +714,44 @@ class Config {
 		return result;
 	}
 	
+	// show locale
+	locale(cat, id, value, array = false) {		
+		var result = "";
+		
+		result += "<select class=\"opt";
+		
+		if(array)
+			result += " opt-array";
+		
+		result += "\"";
+		
+		if(!array)
+			result += " id=\"opt-" + cat + "-" + id + "\"";
+		
+		result += ">\n";
+		
+		// no locale option
+		result += "<option value=\"\"";
+		
+		if(!value)
+			result += " selected";
+		
+		result += ">[none]</option>\n";
+		
+		// get locales from database
+		for(var i = 0; i < db_locales.length; i++) {
+			// show locale as option
+			result += "<option value=\"" + db_locales[i] + "\"";
+			
+			if(value && value.toLowerCase() == db_locales[i].toLowerCase())
+				result += " selected";
+			
+			result += ">" + db_locales[i] + "</option>\n";
+		}
+		
+		return result;
+	}
+	
 	// show query
 	query(cat, id, value, filter, array = false) {		
 		var result = "";
@@ -873,6 +923,8 @@ class Config {
 			else
 				result += this.date(cat, id, value, "", min, max, true);
 		}
+		else if(type == "locale")
+			result += this.locale(cat, id, value, true);
 		else if(type == "query")
 			result += this.query(cat, id, value, filter, true);
 		else if(type == "enum")
@@ -1038,6 +1090,8 @@ class Config {
 					}
 					else if(obj.type == "date")
 						nobj.value = $(element).val();
+					else if(obj.type == "locale")
+						nobj.value = $(element).val();
 					else if(obj.type == "query")
 						nobj.value = parseInt($(element).val(), 10);
 					else if(obj.type == "enum")
@@ -1079,6 +1133,8 @@ class Config {
 										nobj.value[index] = parseInt($(this).val(), 10);
 								}
 								else if(obj["item-type"] == "date")
+									nobj.value[index] = $(this).val();
+								else if(obj["item-type"] == "locale")
 									nobj.value[index] = $(this).val();
 								else if(obj["item-type"] == "query") {
 									var id = parseInt($(this).val(), 10);
