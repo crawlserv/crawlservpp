@@ -145,7 +145,7 @@ if(isset($website)) {
 if($website) {
     echo "var db_queries = [\n";
     $result = $dbConnection->query("SELECT id,name,type,resultbool,resultsingle,resultmulti FROM crawlserv_queries WHERE website="
-        .$website." OR website IS NULL");
+        .$website." OR website IS NULL ORDER BY name");
     if(!$result) exit("ERROR: Could not get ids and names of queries from database.");
     while($row = $result->fetch_assoc()) {
         echo " { \"id\": ".$row["id"].", \"name\": \"".$row["name"]."\", \"type\": \"".$row["type"]."\", \"resultbool\": "
