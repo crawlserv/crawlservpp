@@ -351,6 +351,7 @@ The following main tables are created and used:
 * **`configs`**: Crawling, parsing, extracting and analyzing configurations.
 * **`corpora`**: Generated text corpora.
 * **`extractedtables`**: Index of result tables for extracting.
+* **`locales`**: List of locales installed on the server.
 * **`log`**: Log entries.
 * **`parsedtables`**: Index of result tables for parsing.
 * **`queries`**: RegEx and XPath queries.
