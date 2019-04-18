@@ -219,8 +219,6 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long checkedUrlsArchive = 0;
 		unsigned long newUrlsArchive = 0;
 
-		bool urlSelection = false;
-
 		// check for jump in last ID ("time travel")
 		long warpedOver = this->getWarpedOverAndReset();
 
@@ -245,15 +243,8 @@ namespace crawlservpp::Module::Crawler {
 			timerSelect.start();
 		}
 
-		if(this->config.crawlerUrlSelectionLock) {
-			// URL selection
-			urlSelection = this->crawlingUrlSelection(url);
-		} // URL list and crawling table unlocked
-		else
-			// URL selection without table locking
-			urlSelection = this->crawlingUrlSelection(url);
-
-		if(urlSelection) {
+		// URL selection
+		if(this->crawlingUrlSelection(url)) {
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
@@ -817,8 +808,8 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				if(this->manualCounter == this->customPages.size()) {
-					// no more custom URLs to go: get start page (if lockable)
-					if(!(this->startCrawled)) {
+					// no more custom URLs to go: get start page (if not crawled, not ignored and lockable)
+					if(!(this->config.crawlerStartIgnore) && !(this->startCrawled)) {
 						if(this->customPages.empty() && this->config.crawlerLogging) {
 							// start manual crawling with start page
 							this->log("starts crawling in non-recoverable MANUAL mode.");

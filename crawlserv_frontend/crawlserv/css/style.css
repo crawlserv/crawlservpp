@@ -527,7 +527,7 @@ div.opt-block {
 div.opt-block-alternate {
 	background-color:#f4f4f4;
 }
-div.opt-block-hidden {
+div.opt-hidden {
 	display:none;
 }
 div.opt-label {

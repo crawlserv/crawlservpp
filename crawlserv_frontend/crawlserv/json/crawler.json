@@ -9,7 +9,7 @@
 			"label": "Crawl archives",
 			"description": "Include archived pages from archive.org.",
 			"simple": true,
-			"position": 5
+			"position": 6
 		},
 		"archives.names": {
 			"type": "array",
@@ -63,7 +63,7 @@
 			"label": "Logging mode:",
 			"description": "Level of logging activity.",
 			"simple": true,
-			"position": 11
+			"position": 12
 		},
 		"params.blacklist": {
 			"type": "array",
@@ -79,7 +79,7 @@
 			"label": "URL parameters:",
 			"description": "Parameters in URLs that will not be ignored.",
 			"simple": true,
-			"position": 10
+			"position": 11
 		},
 		"queries.blacklist.content": {
 			"type": "array",
@@ -117,7 +117,7 @@
 			"label": "Always skip:",
 			"description": "Boolean RegEx queries on URLs that will not be crawled.",
 			"simple": true,
-			"position": 8
+			"position": 9
 		},
 		"queries.links": {
 			"type": "array",
@@ -130,7 +130,7 @@
 			"label": "Link extraction:",
 			"description": "Queries on content to find URLs.",
 			"simple": true,
-			"position": 3
+			"position": 4
 		},
 		"queries.whitelist.content": {
 			"type": "array",
@@ -175,7 +175,7 @@
 			"label": "Re-crawl URLs",
 			"description": "Re-crawl already crawled URLs.",
 			"simple": true,
-			"position": 4
+			"position": 5
 		},
 		"recrawl.always": {
 			"type": "array",
@@ -184,7 +184,7 @@
 			"label": "Always re-crawl:",
 			"description": "List of URLs that will always be re-crawled.",
 			"simple": true,
-			"position": 7
+			"position": 8
 		},
 		"recrawl.start": {
 			"type": "bool",
@@ -207,7 +207,7 @@
 			"label": "Re-tries:",
 			"description": "Number of re-tries on connection errors (-1=infinite).",
 			"simple": true,
-			"position": 9
+			"position": 10
 		},
 		"retry.archive": {
 			"type": "bool",
@@ -215,7 +215,7 @@
 			"label": "Re-try archives",
 			"description": "Re-try when getting the archived pages fails.",
 			"simple": true,
-			"position": 5
+			"position": 6
 		},
 		"retry.http": {
 			"type": "array",
@@ -262,6 +262,14 @@
 			"simple": true,
 			"position": 1
 		},
+		"start.ignore": {
+			"type": "bool",
+			"default": false,
+			"label": "Ignore start page",
+			"description": "Do not crawl start page.",
+			"simple": true,
+			"position": 3
+		},
 		"timing": {
 			"type": "bool",
 			"default": false,
@@ -294,12 +302,6 @@
 			"description": "Maximum length of URLs to add.",
 			"simple": false
 		},
-		"url.select.lock": {
-			"type": "bool",
-			"default": false,
-			"description": "Lock tables on URL selection.",
-			"simple": false
-		},
 		"url.startup.check": {
 			"type": "bool",
 			"default": true,
@@ -330,7 +332,7 @@
 			"label": "Counter variables:",
 			"description": "List of counter variables to be replaced in custom URLs.",
 			"simple": true,
-			"position": 2
+			"position": 3
 		},
 		"counters.end": {
 			"type": "array",
@@ -339,7 +341,7 @@
 			"label": "Stop counter at:",
 			"description": "End value for the counter with the same array index.",
 			"simple": true,
-			"position": 4
+			"position": 5
 		},
 		"counters.global": {
 			"type": "bool",
@@ -347,7 +349,7 @@
 			"label": "Use counters globally",
 			"description": "Use every counter for all custom URLs. Otherwise a counters will only be used for URLs with the same array index.",
 			"simple": true,
-			"position": 6
+			"position": 7
 		},
 		"counters.start": {
 			"type": "array",
@@ -356,7 +358,7 @@
 			"label": "Start counter at:",
 			"description": "Start value for the counter with the same array index.",
 			"simple": true,
-			"position": 3
+			"position": 4
 		},
 		"counters.step": {
 			"type": "array",
@@ -365,7 +367,7 @@
 			"label": "Increase counter by:",
 			"description": "Step value for the counter with the same array index.",
 			"simple": true,
-			"position": 5
+			"position": 6
 		},
 		"recrawl": {
 			"type": "bool",
@@ -373,7 +375,7 @@
 			"label": "Re-crawl custom URLs",
 			"description": "Always re-crawl custom URLs.",
 			"simple": true,
-			"position": 7
+			"position": 8
 		},
 		"urls": {
 			"type": "array",

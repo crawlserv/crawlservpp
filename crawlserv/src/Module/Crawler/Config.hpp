@@ -80,12 +80,12 @@ namespace crawlservpp::Module::Crawler {
 			unsigned long crawlerSleepIdle;
 			unsigned long crawlerSleepMySql;
 			std::string crawlerStart;
+			bool crawlerStartIgnore;
 			bool crawlerTiming;
 			bool crawlerUrlCaseSensitive;
 			unsigned long crawlerUrlChunks;
 			bool crawlerUrlDebug;
 			unsigned short crawlerUrlMaxLength;
-			bool crawlerUrlSelectionLock;
 			bool crawlerUrlStartupCheck;
 			bool crawlerWarningsFile;
 			bool crawlerXml;
@@ -134,12 +134,12 @@ namespace crawlservpp::Module::Crawler {
 										crawlerSleepIdle(5000),
 										crawlerSleepMySql(20),
 										crawlerStart("/"),
+										crawlerStartIgnore(false),
 										crawlerTiming(false),
 										crawlerUrlCaseSensitive(true),
 										crawlerUrlChunks(5000),
 										crawlerUrlDebug(false),
 										crawlerUrlMaxLength(2000),
-										crawlerUrlSelectionLock(false),
 										crawlerUrlStartupCheck(true),
 										crawlerWarningsFile(false),
 										crawlerXml(false),
@@ -189,12 +189,12 @@ namespace crawlservpp::Module::Crawler {
 		this->option("sleep.idle", this->config.crawlerSleepIdle);
 		this->option("sleep.mysql", this->config.crawlerSleepMySql);
 		this->option("start", this->config.crawlerStart, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
+		this->option("start.ignore", this->config.crawlerStartIgnore);
 		this->option("timing", this->config.crawlerTiming);
 		this->option("url.case.sensitive", this->config.crawlerUrlCaseSensitive);
 		this->option("url.chunks", this->config.crawlerUrlChunks);
 		this->option("url.debug", this->config.crawlerUrlDebug);
 		this->option("url.max.length", this->config.crawlerUrlMaxLength);
-		this->option("url.selection.lock", this->config.crawlerUrlSelectionLock);
 		this->option("url.startup.check", this->config.crawlerUrlStartupCheck);
 		this->option("xml", this->config.crawlerXml);
 		this->option("warnings.file", this->config.crawlerWarningsFile);
