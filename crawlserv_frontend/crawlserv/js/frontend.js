@@ -89,7 +89,6 @@ function refreshData() {
 				setTimeout(refreshData, 700);
 				
 				if(scrolldown) {
-					console.log("scrollTop(" + $("#scroll-to").offset().top + ")");
 					$("#container").scrollTop($("#scroll-to").offset().top);
 					scrolldown = false;
 				}
@@ -1148,6 +1147,8 @@ jQuery(function($) {
 		
 		$("span.segment-arrow[data-block=\"" + $(this).data("block") + "\"]").html("&dArr;");
 		$(this).toggleClass("segment-head-closed segment-head-open");
+		
+		$("#container").scrollTop(block.offset().top + block.height())
 		
 		return true;
 	});
