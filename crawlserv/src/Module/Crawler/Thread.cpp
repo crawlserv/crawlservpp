@@ -219,6 +219,8 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long checkedUrlsArchive = 0;
 		unsigned long newUrlsArchive = 0;
 
+		bool usePost = false;
+
 		// check for jump in last ID ("time travel")
 		long warpedOver = this->getWarpedOverAndReset();
 
@@ -244,7 +246,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// URL selection
-		if(this->crawlingUrlSelection(url)) {
+		if(this->crawlingUrlSelection(url, usePost)) {
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
@@ -263,7 +265,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("crawls " + url.second + "...");
 
 			// crawl content
-			bool crawled = this->crawlingContent(url, checkedUrls, newUrls, timerString);
+			bool crawled = this->crawlingContent(url, usePost, checkedUrls, newUrls, timerString);
 
 			// get archive (also when crawling failed!)
 			if(this->config.crawlerTiming)
@@ -728,8 +730,11 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawling function for URL selection (includes locking the URL)
-	bool Thread::crawlingUrlSelection(IdString& urlTo) {
+	bool Thread::crawlingUrlSelection(IdString& urlTo, bool& usePostTo) {
 		bool result = true;
+
+		// use GET by default
+		usePostTo = false;
 
 		// MANUAL CRAWLING MODE (get URL from configuration)
 		if(!(this->getLast())) {
@@ -751,8 +756,10 @@ namespace crawlservpp::Module::Crawler {
 
 					this->manualUrl = IdString();
 				}
-				else
+				else {
 					urlTo = this->manualUrl;
+					usePostTo = this->config.customUsePost;
+				}
 			}
 
 			if(!this->manualUrl.first) {
@@ -798,6 +805,7 @@ namespace crawlservpp::Module::Crawler {
 							else {
 								// use custom URL
 								urlTo = this->manualUrl;
+								usePostTo = this->config.customUsePost;
 
 								break;
 							}
@@ -942,6 +950,7 @@ namespace crawlservpp::Module::Crawler {
 	// crawl content
 	bool Thread::crawlingContent(
 			const IdString& url,
+			bool usePost,
 			unsigned long& checkedUrlsTo,
 			unsigned long& newUrlsTo,
 			std::string& timerStrTo
@@ -1028,6 +1037,7 @@ namespace crawlservpp::Module::Crawler {
 			// get content
 			this->networking.getContent(
 					"https://" + this->domain + url.second,
+					usePost,
 					content,
 					this->config.crawlerRetryHttp
 			);
@@ -1901,6 +1911,7 @@ namespace crawlservpp::Module::Crawler {
 					try {
 						this->networkingArchives->getContent(
 								archivedUrl,
+								false,
 								archivedContent,
 								this->config.crawlerRetryHttp
 						);
@@ -1986,6 +1997,7 @@ namespace crawlservpp::Module::Crawler {
 												try {
 													this->networkingArchives->getContent(
 															mementos.front().url,
+															false,
 															archivedContent,
 															this->config.crawlerRetryHttp
 													);

@@ -778,7 +778,7 @@ namespace crawlservpp::Network {
 	}
 
 	// get remote content
-	void Curl::getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors) {
+	void Curl::getContent(const std::string& url, bool usePost, std::string& contentTo, const std::vector<unsigned int>& errors) {
 		std::string encodedUrl = this->escapeUrl(url);
 
 		char errorBuffer[CURL_ERROR_SIZE];
@@ -787,6 +787,67 @@ namespace crawlservpp::Network {
 		this->contentType.clear();
 
 		this->responseCode = 0;
+
+		// check whether setting of method is needed
+		if(usePost) {
+			auto delim = encodedUrl.find('?');
+
+			if(delim == std::string::npos) {
+				if(!(this->post)) {
+					// set POST method
+					this->curlCode = curl_easy_setopt(
+							this->curl.get(),
+							CURLOPT_POST,
+							1L
+					);
+
+					if(this->curlCode != CURLE_OK)
+						throw Curl::Exception(curl_easy_strerror(this->curlCode));
+				}
+			}
+			else {
+				// get POST data
+				std::string postFields = encodedUrl.substr(delim + 1);
+
+				// set POST data size
+				this->curlCode = curl_easy_setopt(
+						this->curl.get(),
+						CURLOPT_POSTFIELDSIZE,
+						postFields.length()
+				);
+
+				if(this->curlCode != CURLE_OK)
+					throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+				// set POST data
+				this->curlCode = curl_easy_setopt(
+						this->curl.get(),
+						CURLOPT_POSTFIELDS,
+						postFields.c_str()
+				);
+
+				if(this->curlCode != CURLE_OK)
+					throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+				// remove POST data from URL
+				encodedUrl = encodedUrl.substr(0, delim);
+			}
+
+			this->post = true;
+		}
+		else if(this->post) {
+			// unset POST method
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_POST,
+					0L
+			);
+
+			if(this->curlCode != CURLE_OK)
+				throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+			this->post = false;
+		}
 
 		// set URL
 		this->curlCode = curl_easy_setopt(

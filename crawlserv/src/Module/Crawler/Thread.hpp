@@ -164,9 +164,10 @@ namespace crawlservpp::Module::Crawler {
 		void initQueries() override;
 
 		// crawling functions
-		bool crawlingUrlSelection(IdString& urlTo);
+		bool crawlingUrlSelection(IdString& urlTo, bool& usePostTo);
 		bool crawlingContent(
 				const IdString& url,
+				bool usePost,
 				unsigned long& checkedUrlsTo,
 				unsigned long& newUrlsTo,
 				std::string& timerStrTo

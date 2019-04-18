@@ -385,6 +385,14 @@
 			"description": "Custom URLs for crawling (should all start with / except for cross-domain websites).",
 			"simple": true,
 			"position": 1
+		},
+		"use.post": {
+			"type": "bool",
+			"default": false,
+			"label": "Use POST for custom URLs",
+			"description": "Use HTTP POST instead of HTTP GET to retrieve custom URLs.",
+			"simple": true,
+			"position": 2
 		}
 	},
 	"network": {

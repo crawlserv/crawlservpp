@@ -98,6 +98,7 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<long> customCountersStep;
 			bool customReCrawl;
 			std::vector<std::string> customUrls;
+			bool customUsePost;
 		} config;
 
 	protected:
@@ -144,7 +145,8 @@ namespace crawlservpp::Module::Crawler {
 										crawlerWarningsFile(false),
 										crawlerXml(false),
 										customCountersGlobal(true),
-										customReCrawl(true)	{
+										customReCrawl(true),
+										customUsePost(false) {
 		this->crawlerArchivesNames.emplace_back("archives.org");
 		this->crawlerArchivesUrlsMemento.emplace_back("http://web.archive.org/web/");
 		this->crawlerArchivesUrlsTimemap.emplace_back("http://web.archive.org/web/timemap/link/");
@@ -208,6 +210,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("counters.step", this->config.customCountersStep);
 		this->option("recrawl", this->config.customReCrawl);
 		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
+		this->option("use.post", this->config.customUsePost);
 	}
 
 	// check parsing-specific configuration

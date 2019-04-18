@@ -43,7 +43,7 @@ namespace crawlservpp::Network {
 		void setConfigCurrent(const Config& currentConfig);
 
 		// getters
-		void getContent(const std::string& url, std::string& contentTo, const std::vector<unsigned int>& errors);
+		void getContent(const std::string& url, bool usePost, std::string& contentTo, const std::vector<unsigned int>& errors);
 		unsigned int getResponseCode() const;
 		std::string getContentType() const;
 		CURLcode getCurlCode() const;
@@ -75,6 +75,7 @@ namespace crawlservpp::Network {
 		std::string contentType;
 		unsigned int responseCode;
 		bool limitedSettings;
+		bool post;
 
 		// const pointer to network configuration
 		const Network::Config * config;
