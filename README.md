@@ -59,8 +59,6 @@ cd build
 cmake ..
 ```
 
-Do not forget the ` ..` behind `cmake`!
-
 If `cmake` was successful and shows `Build files have been written to: [...]`, proceed with:
 
 ```
