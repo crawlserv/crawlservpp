@@ -1,7 +1,7 @@
 /*
  * JSONPointer.cpp
  *
- * Using the rapidjson library to implement a JSON Pointer query with boolean, single and/or multiple results.
+ * Using the rapidjson library to implement a JSONPointer query with boolean, single and/or multiple results.
  *
  *  Created on: Apr 19, 2019
  *      Author: ans
@@ -12,13 +12,13 @@
 namespace crawlservpp::Query {
 
 	// constructor: set default values
-	JSONPointer::JSONPointer(const std::string& pointer) : pointer(pointer) {}
+	JSONPointer::JSONPointer(const std::string& pointerString) : pointer(pointerString) {}
 
 	// get boolean value (at least one match?), throws JSONPointer::Exception
 	bool JSONPointer::getBool(const rapidjson::Document& doc) const {
 		// check document and pointer
 		if(doc.HasParseError()) throw JSONPointer::Exception("JSON parsing error");
-		if(!(this->pointer.IsValid())) throw JSONPointer::Exception("invalid JSON pointer");
+		if(!(this->pointer.IsValid())) throw JSONPointer::Exception("invalid JSONPointer");
 
 		// evaluate query with boolean result
 		return this->pointer.Get(doc) != nullptr;
@@ -28,7 +28,7 @@ namespace crawlservpp::Query {
 	void JSONPointer::getFirst(const rapidjson::Document& doc, std::string& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError()) throw JSONPointer::Exception("JSON parsing error");
-		if(!(this->pointer.IsValid())) throw JSONPointer::Exception("invalid JSON pointer");
+		if(!(this->pointer.IsValid())) throw JSONPointer::Exception("invalid JSONPointer");
 
 		// empty result
 		resultTo.clear();

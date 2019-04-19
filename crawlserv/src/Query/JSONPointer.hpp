@@ -1,7 +1,7 @@
 /*
  * JSONPointer.hpp
  *
- * Using the rapidjson library to implement a JSON Pointer query with boolean, single and/or multiple results.
+ * Using the rapidjson library to implement a JSONPointer query with boolean, single and/or multiple results.
  *
  *  Created on: Apr 19, 2019
  *      Author: ans
@@ -24,7 +24,7 @@ namespace crawlservpp::Query {
 	class JSONPointer {
 	public:
 		// constructor
-		JSONPointer(const std::string& pointer);
+		JSONPointer(const std::string& pointerString);
 
 		// getters
 		bool getBool(const rapidjson::Document& doc) const;

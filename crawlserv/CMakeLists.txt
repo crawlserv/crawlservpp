@@ -204,6 +204,7 @@ add_executable(${PROJECT_NAME}
 		src/Parsing/URI.cpp
 		src/Parsing/XML.cpp
 		src/Query/Container.cpp
+		src/Query/JSONPointer.cpp
 		src/Query/RegEx.cpp
 		src/Query/XPath.cpp
 		src/Timer/Simple.cpp
