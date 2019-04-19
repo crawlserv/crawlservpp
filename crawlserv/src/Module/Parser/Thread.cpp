@@ -551,7 +551,7 @@ namespace crawlservpp::Module::Parser {
 					if(i->type == QueryStruct::typeRegEx) {
 						// check URL by running RegEx query on it
 						try {
-							if(this->getRegExQueryPtr(i->index).getBool(this->urls.front().second)) {
+							if(this->getRegExQuery(i->index).getBool(this->urls.front().second)) {
 								// skip URL
 								skip = true;
 
@@ -598,7 +598,7 @@ namespace crawlservpp::Module::Parser {
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse ID by running RegEx query on URL
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedId);
+						this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedId);
 
 						if(!parsedId.empty())
 							break;
@@ -700,7 +700,7 @@ namespace crawlservpp::Module::Parser {
 					if(i->type == QueryStruct::typeRegEx) {
 						// parse ID by running RegEx query on URL
 						try {
-							this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedData.parsedId);
+							this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedData.parsedId);
 
 							if(!parsedData.parsedId.empty())
 								break;
@@ -715,7 +715,7 @@ namespace crawlservpp::Module::Parser {
 					if(i->type == QueryStruct::typeRegEx) {
 						// parse ID by running RegEx query on content string
 						try {
-							this->getRegExQueryPtr(i->index).getFirst(content.second, parsedData.parsedId);
+							this->getRegExQuery(i->index).getFirst(content.second, parsedData.parsedId);
 
 							if(!parsedData.parsedId.empty())
 								break;
@@ -725,7 +725,7 @@ namespace crawlservpp::Module::Parser {
 					else if(i->type == QueryStruct::typeXPath) {
 						// parse ID by running XPath query on parsed content
 						try {
-							this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedData.parsedId);
+							this->getXPathQuery(i->index).getFirst(parsedContent, parsedData.parsedId);
 
 							if(!parsedData.parsedId.empty())
 								break;
@@ -781,7 +781,7 @@ namespace crawlservpp::Module::Parser {
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse date/time by running RegEx query on URL
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedData.dateTime);
+						this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedData.dateTime);
 
 						querySuccess = true;
 					}
@@ -795,7 +795,7 @@ namespace crawlservpp::Module::Parser {
 				if(i->type == QueryStruct::typeRegEx) {
 					// parse date/time by running RegEx query on content string
 					try {
-						this->getRegExQueryPtr(i->index).getFirst(content.second, parsedData.dateTime);
+						this->getRegExQuery(i->index).getFirst(content.second, parsedData.dateTime);
 
 						querySuccess = true;
 					}
@@ -804,7 +804,7 @@ namespace crawlservpp::Module::Parser {
 				else if(i->type == QueryStruct::typeXPath) {
 					// parse date/time by running XPath query on parsed content
 					try {
-						this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedData.dateTime);
+						this->getXPathQuery(i->index).getFirst(parsedContent, parsedData.dateTime);
 
 						querySuccess = true;
 					}
@@ -882,7 +882,7 @@ namespace crawlservpp::Module::Parser {
 						// parse from URL: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse multiple field elements by running RegEx query on URL
-							this->getRegExQueryPtr(i->index).getAll(this->urls.front().second, parsedFieldValues);
+							this->getRegExQuery(i->index).getAll(this->urls.front().second, parsedFieldValues);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -894,11 +894,11 @@ namespace crawlservpp::Module::Parser {
 						// parse from content: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse multiple field elements by running RegEx query on content string
-							this->getRegExQueryPtr(i->index).getAll(content.second, parsedFieldValues);
+							this->getRegExQuery(i->index).getAll(content.second, parsedFieldValues);
 
 						else if(i->type == QueryStruct::typeXPath)
 							// parse multiple field elements by running XPath query on parsed content
-							this->getXPathQueryPtr(i->index).getAll(parsedContent, parsedFieldValues);
+							this->getXPathQuery(i->index).getAll(parsedContent, parsedFieldValues);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -958,7 +958,7 @@ namespace crawlservpp::Module::Parser {
 						// parse from URL: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse single field element by running RegEx query on URL
-							this->getRegExQueryPtr(i->index).getFirst(this->urls.front().second, parsedFieldValue);
+							this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedFieldValue);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -970,11 +970,11 @@ namespace crawlservpp::Module::Parser {
 						// parse from content: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse single field element by running RegEx query on content string
-							this->getRegExQueryPtr(i->index).getFirst(content.second, parsedFieldValue);
+							this->getRegExQuery(i->index).getFirst(content.second, parsedFieldValue);
 
 						else if(i->type == QueryStruct::typeXPath)
 							// parse single field element by running XPath query on parsed content
-							this->getXPathQueryPtr(i->index).getFirst(parsedContent, parsedFieldValue);
+							this->getXPathQuery(i->index).getFirst(parsedContent, parsedFieldValue);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -1014,7 +1014,7 @@ namespace crawlservpp::Module::Parser {
 						// parse from URL: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse boolean value by running RegEx query on URL
-							parsedBool = this->getRegExQueryPtr(i->index).getBool(this->urls.front().second);
+							parsedBool = this->getRegExQuery(i->index).getBool(this->urls.front().second);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(
@@ -1026,11 +1026,11 @@ namespace crawlservpp::Module::Parser {
 						// parse from content: check query type
 						if(i->type == QueryStruct::typeRegEx)
 							// parse boolean value by running RegEx query on content string
-							parsedBool = this->getRegExQueryPtr(i->index).getBool(content.second);
+							parsedBool = this->getRegExQuery(i->index).getBool(content.second);
 
 						else if(i->type == QueryStruct::typeXPath)
 							// parse boolean value by running XPath query on parsed content
-							parsedBool = this->getXPathQueryPtr(i->index).getBool(parsedContent);
+							parsedBool = this->getXPathQuery(i->index).getBool(parsedContent);
 
 						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
 							this->log(

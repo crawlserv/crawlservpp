@@ -1216,7 +1216,7 @@ namespace crawlservpp::Module::Crawler {
 					whitelist = true;
 
 					try {
-						found = this->getRegExQueryPtr(i->index).getBool(url);
+						found = this->getRegExQuery(i->index).getBool(url);
 
 						if(found)
 							break;
@@ -1258,7 +1258,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
-						if(this->getRegExQueryPtr(i->index).getBool(url)) {
+						if(this->getRegExQuery(i->index).getBool(url)) {
 							if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 								this->log("skipped " + url + " (blacklisted).");
 
@@ -1338,7 +1338,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
-						found = this->getRegExQueryPtr(i->index).getBool(contentType);
+						found = this->getRegExQuery(i->index).getBool(contentType);
 
 						if(found)
 							break;
@@ -1373,7 +1373,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
-						found = this->getRegExQueryPtr(i->index).getBool(contentType);
+						found = this->getRegExQuery(i->index).getBool(contentType);
 
 						if(found)
 							break;
@@ -1431,7 +1431,7 @@ namespace crawlservpp::Module::Crawler {
 			std::string canonical;
 
 			try {
-				this->getXPathQueryPtr(this->queryCanonicalCheck.index).getFirst(doc, canonical);
+				this->getXPathQuery(this->queryCanonicalCheck.index).getFirst(doc, canonical);
 
 				if(
 						!canonical.empty()
@@ -1486,7 +1486,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
-						found = this->getRegExQueryPtr(i->index).getBool(content);
+						found = this->getRegExQuery(i->index).getBool(content);
 
 						if(found)
 							break;
@@ -1502,7 +1502,7 @@ namespace crawlservpp::Module::Crawler {
 
 				else if(i->type == QueryStruct::typeXPath) {
 					try {
-						found = this->getXPathQueryPtr(i->index).getBool(doc);
+						found = this->getXPathQuery(i->index).getBool(doc);
 
 						if(found)
 							break;
@@ -1538,7 +1538,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				if(i->type == QueryStruct::typeRegEx) {
 					try {
-						found = this->getRegExQueryPtr(i->index).getBool(content);
+						found = this->getRegExQuery(i->index).getBool(content);
 
 						if(found)
 							break;
@@ -1554,7 +1554,7 @@ namespace crawlservpp::Module::Crawler {
 
 				else if(i->type == QueryStruct::typeXPath) {
 					try {
-						found = this->getXPathQueryPtr(i->index).getBool(doc);
+						found = this->getXPathQuery(i->index).getBool(doc);
 
 						if(found)
 							break;
@@ -1634,7 +1634,7 @@ namespace crawlservpp::Module::Crawler {
 					if(i->resultMulti) {
 						std::vector<std::string> results;
 
-						this->getRegExQueryPtr(i->index).getAll(content, results);
+						this->getRegExQuery(i->index).getAll(content, results);
 
 						urls.reserve(urls.size() + results.size());
 						urls.insert(urls.end(), results.begin(), results.end());
@@ -1642,7 +1642,7 @@ namespace crawlservpp::Module::Crawler {
 					else {
 						std::string result;
 
-						this->getRegExQueryPtr(i->index).getFirst(content, result);
+						this->getRegExQuery(i->index).getFirst(content, result);
 
 						urls.emplace_back(result);
 					}
@@ -1657,7 +1657,7 @@ namespace crawlservpp::Module::Crawler {
 					if(i->resultMulti) {
 						std::vector<std::string> results;
 
-						this->getXPathQueryPtr(i->index).getAll(doc, results);
+						this->getXPathQuery(i->index).getAll(doc, results);
 
 						urls.reserve(urls.size() + results.size());
 						urls.insert(urls.end(), results.begin(), results.end());
@@ -1665,7 +1665,7 @@ namespace crawlservpp::Module::Crawler {
 					else {
 						std::string result;
 
-						this->getXPathQueryPtr(i->index).getFirst(doc, result);
+						this->getXPathQuery(i->index).getFirst(doc, result);
 
 						urls.emplace_back(result);
 					}
