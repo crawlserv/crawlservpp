@@ -21,6 +21,7 @@ namespace crawlservpp::Query {
 	void Container::reserveForQueries(unsigned long numOfAdditionalQueries) {
 		this->queriesRegEx.reserve(this->queriesRegEx.size() + numOfAdditionalQueries);
 		this->queriesXPath.reserve(this->queriesXPath.size() + numOfAdditionalQueries);
+		this->queriesJSONPointer.reserve(this->queriesJSONPointer.size() + numOfAdditionalQueries);
 	}
 
 	// add query to internal vectors and return index, throws std::runtime_error
@@ -32,16 +33,27 @@ namespace crawlservpp::Query {
 
 		if(!properties.text.empty()) {
 			if(properties.type == "regex") {
+				newQuery.index = this->queriesRegEx.size();
+
 				this->queriesRegEx.emplace_back(
 						properties.text, properties.resultBool || properties.resultSingle, properties.resultMulti);
-				newQuery.index = this->queriesRegEx.size() - 1;
+
 				newQuery.type = QueryStruct::typeRegEx;
 
 			}
 			else if(properties.type == "xpath") {
+				newQuery.index = this->queriesXPath.size();
+
 				this->queriesXPath.emplace_back(properties.text, properties.textOnly);
-				newQuery.index = this->queriesXPath.size() - 1;
+
 				newQuery.type = QueryStruct::typeXPath;
+			}
+			else if(properties.type == "jsonpointer") {
+				newQuery.index = this->queriesJSONPointer.size();
+
+				this->queriesJSONPointer.emplace_back(properties.text);
+
+				newQuery.type = QueryStruct::typeJSONPointer;
 			}
 			else throw std::runtime_error("Unknown query type \'" + properties.type + "\'");
 		}
@@ -49,14 +61,19 @@ namespace crawlservpp::Query {
 		return newQuery;
 	}
 
-	// get const pointer to RegEx query by index
-	const RegEx& Container::getRegExQueryPtr(unsigned long index) const {
+	// get RegEx query by index
+	const RegEx& Container::getRegExQuery(unsigned long index) const {
 		return this->queriesRegEx.at(index);
 	}
 
-	// get const pointer to XPath query by index
-	const XPath& Container::getXPathQueryPtr(unsigned long index) const {
+	// get XPath query by index
+	const XPath& Container::getXPathQuery(unsigned long index) const {
 		return this->queriesXPath.at(index);
+	}
+
+	// get JSONPointer query by index
+	const JSONPointer& Container::getJSONPointerQuery(unsigned long index) const {
+		return this->queriesJSONPointer.at(index);
 	}
 
 	// clear queries
@@ -64,6 +81,7 @@ namespace crawlservpp::Query {
 		// clear queries
 		this->queriesXPath.clear();
 		this->queriesRegEx.clear();
+		this->queriesJSONPointer.clear();
 	}
 
 } /* crawlservpp::Query */
