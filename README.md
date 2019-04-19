@@ -118,8 +118,9 @@ The source code of the server consists of the following classes (as of March 201
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction using [uriparser](https://github.com/uriparser/uriparser).
 * **[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
 * **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for query management in child classes.
+* **[`Query::JSONPointer`](crawlserv/src/Query/JSONPointer.cpp)**: Using the [RapidJSON library](https://github.com/Tencent/rapidjson) to implement a JSONPointer with boolean and/or single result.
 * **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
-* **[`Query::XPath`](crawlserv/src/Query//XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
+* **[`Query::XPath`](crawlserv/src/Query/XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
 * **[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
 * **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
 * **[`Timer::StartStop`](crawlserv/src/Timer/StartStop.cpp)**: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
@@ -174,18 +175,18 @@ The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the appli
 The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of February 2019):
 
 * **`addconfig`** (arguments: `website`, `module`, `name`, `config`): Add a configuration to the database.
-* **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Add a RegEx or XPath query to the database.
+* **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Add a RegEx, XPath or JSONPointer query to the database.
 * **`addurllist`** (arguments: `website`, `name`, `namespace`): Add a URL list to a website in the database.
 * **`addwebsite`** (arguments: `name`, `namespace`, `domain`): Add a website to the database.
 * **`allow`** (argument: `ip`): Allow access for the specified IP(s).
 * **`clearlog`** (optional argument: `module`): Clear the logs of a specified module or all logs if no module is specified.
 * **`deleteconfig`** (argument: `id`): Delete a configuration from the database.
-* **`deletequery`** (argument: `id`): Delete a RegEx or XPath query from the database.
+* **`deletequery`** (argument: `id`): Delete a RegEx, XPath or JSONPpinter query from the database.
 * **`deleteurllist`** (argument: `id`): Delete a URL list (and all associated data) from the database.
 * **`deletewebsite`** (argument: `id`): Delete a website (and all associated data) from the database.
 * **`disallow`**: Revoke access from all except the initial IP(s) specified by the configuration file.
 * **`duplicateconfig`** (argument: `id`): Duplicate the specified configuration.
-* **`duplicatequery`** (argument: `id`): Duplicate the specified RegEx or XPath query.
+* **`duplicatequery`** (argument: `id`): Duplicate the specified RegEx, XPath or JSONPointer query.
 * **`duplicatewebsite`** (argument: `id`): Duplicate the specified website.
 * **`kill`**: kill the server.
 * **`log`** (argument: `entry`): Write a log entry by the frontend into the database.
@@ -210,7 +211,7 @@ The server performs commands and sends back their results. Some commands need to
 * **~~`unpauseextractor`~~** (argument: `id`): Unpause a paused extractor by its ID.
 * **`unpauseparser`** (argument: `id`): Unpause a paused parser by its ID.
 * **`updateconfig`** (arguments: `id`, `name`, `config`): Update an existing configuration in the database.
-* **`updatequery`** (arguments: `id`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Update an existing RegEx or XPath query in the database.
+* **`updatequery`** (arguments: `id`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Update an existing RegEx, XPath or JSONPointer query in the database.
 * **`updateurllist`** (arguments: `id`, `name`, `namespace`): Update an existing URL list in the database.
 * **`updatewebsite`** (arguments: `id`, `name`, `namespace`, `domain`): Update an existing website in the database.
 * **`warp`** (arguments: `thread`, `target`): Let a thread jump to the specified ID.
@@ -262,7 +263,7 @@ For more information on the server commands, see the [source code](crawlserv/src
 As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) template class:
 
 * **crawler**: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://www.mementoweb.org/guide/quick-intro/)).
-* **parser**: Parsing data from URLs and downloaded content using user-defined RegEx and XPath queries.
+* **parser**: Parsing data from URLs and downloaded content using user-defined RegEx, XPath and JSONPointer queries.
 * **~~extractor~~**: Downloading additional data such as comments and social media content.
 * **analyzer**: Analyzing textual data using different methods and algorithms.
 
@@ -307,7 +308,7 @@ It provides the following menu structure:
 
 * **Server**: Authorize additional IPs or revoke authorization for all custom IPs, run custom commands and kill the server.
 * **Websites**: Manage websites and their URL lists including the download of URL lists as text files. 
-* **Queries**: Manage RegEx and XPath queries saved in the database including the test of such queries on custom texts by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
+* **Queries**: Manage RegEx, XPath and JSONPointer queries saved in the database including the test of such queries on custom texts by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
 * **Crawlers**: Manage crawling configurations in simple or advanced mode.
 * **Parsers**: Manage parsing configurations in simple or advanced mode.
 * **~~Extractors~~**: Manage extracting configurations in simple or advanced mode.
@@ -352,7 +353,7 @@ The following main tables are created and used:
 * **`locales`**: List of locales installed on the server.
 * **`log`**: Log entries.
 * **`parsedtables`**: Index of result tables for parsing.
-* **`queries`**: RegEx and XPath queries.
+* **`queries`**: RegEx, XPath and JSONPointer queries.
 * **`targetlocks`**: Locks for target tables.
 * **`threads`**: Thread status.
 * **`urllists`**: URL lists.
