@@ -34,6 +34,7 @@ namespace crawlservpp::Helper::Json {
 	std::string stringify(const std::string& stringToStringify);
 	std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify);
 	std::string stringify(const TextMap& textMapToStringify);
+	std::string stringify(const rapidjson::Value& value);
 
 	/*
 	 * IMPLEMENTATION
@@ -185,6 +186,16 @@ namespace crawlservpp::Helper::Json {
 
 		// return string
 		return std::string(buffer.GetString(), buffer.GetSize());
+	}
+
+	// stringify a JSON value
+	inline std::string stringify(const rapidjson::Value& value) {
+		rapidjson::StringBuffer buffer;
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+
+		value.Accept(writer);
+
+		return buffer.GetString();
 	}
 
 } /* crawlservpp::Helper::Json */
