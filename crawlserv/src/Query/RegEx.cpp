@@ -22,32 +22,57 @@ namespace crawlservpp::Query {
 		this->expressionMulti.reset();
 
 		// check arguments
-		if(expression.empty()) throw RegEx::Exception("Expression is empty");
-		if(!single && !multi) throw RegEx::Exception("No result type for expression specified");
+		if(expression.empty())
+			throw RegEx::Exception("Expression is empty");
+
+		if(!single && !multi)
+			throw RegEx::Exception("No result type for expression specified");
 
 		// compile expression(s)
 		if(single) {
-			this->expressionSingle.reset(pcre2_compile((PCRE2_SPTR) expression.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
-					&errorNumber, &errorOffset, nullptr));
+			this->expressionSingle.reset(
+					pcre2_compile(
+							(PCRE2_SPTR) expression.c_str(),
+							PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
+							&errorNumber,
+							&errorOffset,
+							nullptr
+					)
+			);
+
 			if(!(this->expressionSingle)) {
 				// RegEx error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
 				std::ostringstream errorStrStr;
+
 				pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
+
 				errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
+
 				throw RegEx::Exception(errorStrStr.str());
 			}
 		}
 
 		if(multi) {
-			this->expressionMulti.reset(pcre2_compile((PCRE2_SPTR) expression.c_str(), PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP
-					| PCRE2_MULTILINE, &errorNumber, &errorOffset, nullptr));
+			this->expressionMulti.reset(
+					pcre2_compile(
+							(PCRE2_SPTR) expression.c_str(),
+							PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP | PCRE2_MULTILINE,
+							&errorNumber,
+							&errorOffset,
+							nullptr
+					)
+			);
+
 			if(!(this->expressionMulti)) {
 				// RegEx error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
 				std::ostringstream errorStrStr;
+
 				pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
+
 				errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
+
 				throw RegEx::Exception(errorStrStr.str());
 			}
 		}
@@ -61,11 +86,26 @@ namespace crawlservpp::Query {
 	// get boolean result of RegEx expression (at least one match?), throws RegEx::Exception
 	bool RegEx::getBool(const std::string& text) const {
 		// check compiled expression
-		if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled.");
+		if(!(this->expressionSingle))
+			throw RegEx::Exception("No single result expression compiled.");
 
 		// get first match
-		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), nullptr));
-		int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), nullptr);
+		Wrapper::PCREMatch pcreMatch(
+				pcre2_match_data_create_from_pattern(
+						this->expressionSingle.get(),
+						nullptr
+				)
+		);
+
+		int result = pcre2_match(
+				this->expressionSingle.get(),
+				(PCRE2_SPTR) text.c_str(),
+				text.length(),
+				0,
+				0,
+				pcreMatch.get(),
+				nullptr
+		);
 
 		// check result
 		if(result <= 0) {
@@ -82,7 +122,9 @@ namespace crawlservpp::Query {
 				// match error : set error message and delete match
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
 				std::ostringstream errorStrStr;
+
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
+
 				throw RegEx::Exception((char *) errorBuffer);
 			}
 		}
@@ -94,11 +136,26 @@ namespace crawlservpp::Query {
 	// get single result of RegEx expression (first match), throws RegEx::Exception
 	void RegEx::getFirst(const std::string& text, std::string& resultTo) const {
 		// check compiled expression
-		if(!(this->expressionSingle)) throw RegEx::Exception("No single result expression compiled");
+		if(!(this->expressionSingle))
+			throw RegEx::Exception("No single result expression compiled");
 
 		// get first match
-		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionSingle.get(), nullptr));
-		int result = pcre2_match(this->expressionSingle.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), nullptr);
+		Wrapper::PCREMatch pcreMatch(
+				pcre2_match_data_create_from_pattern(
+						this->expressionSingle.get(),
+						nullptr
+				)
+		);
+
+		int result = pcre2_match(
+				this->expressionSingle.get(),
+				(PCRE2_SPTR) text.c_str(),
+				text.length(),
+				0,
+				0,
+				pcreMatch.get(),
+				nullptr
+		);
 
 		// check result
 		if(result <= 0) {
@@ -106,6 +163,7 @@ namespace crawlservpp::Query {
 			case PCRE2_ERROR_NOMATCH:
 				// no match found -> result is empty string
 				resultTo = "";
+
 				return;
 
 			case 0:
@@ -116,13 +174,16 @@ namespace crawlservpp::Query {
 				// matching error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
 				std::ostringstream errorStrStr;
+
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
+
 				throw RegEx::Exception((char *) errorBuffer);
 			}
 		}
 
 		// at least one match found -> get resulting match
 		PCRE2_SIZE * pcreOVector = pcre2_get_ovector_pointer(pcreMatch.get());
+
 		resultTo = text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 	}
 
@@ -131,11 +192,25 @@ namespace crawlservpp::Query {
 		std::vector<std::string> resultArray;
 
 		// check compiled expression
-		if(!(this->expressionMulti)) throw RegEx::Exception("No multi result expression compiled");
+		if(!(this->expressionMulti))
+			throw RegEx::Exception("No multi result expression compiled");
 
 		// get first match
-		Wrapper::PCREMatch pcreMatch(pcre2_match_data_create_from_pattern(this->expressionMulti.get(), nullptr));
-		int result = pcre2_match(this->expressionMulti.get(), (PCRE2_SPTR) text.c_str(), text.length(), 0, 0, pcreMatch.get(), nullptr);
+		Wrapper::PCREMatch pcreMatch(
+				pcre2_match_data_create_from_pattern(
+						this->expressionMulti.get(),
+						nullptr
+				)
+		);
+
+		int result = pcre2_match(
+				this->expressionMulti.get(),
+				(PCRE2_SPTR) text.c_str(),
+				text.length(),
+				0,
+				0,
+				pcreMatch.get(), nullptr
+		);
 
 		// check result
 		if(result <= 0) {
@@ -143,6 +218,7 @@ namespace crawlservpp::Query {
 			case PCRE2_ERROR_NOMATCH:
 				// no match found -> result is empty array
 				resultTo = resultArray;
+
 				return;
 
 			case 0:
@@ -153,22 +229,29 @@ namespace crawlservpp::Query {
 				// matching error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
 				std::ostringstream errorStrStr;
+
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
+
 				throw RegEx::Exception((char *) errorBuffer);
 			}
 		}
 
 		// at least one match found -> save first match
 		PCRE2_SIZE * pcreOVector = pcre2_get_ovector_pointer(pcreMatch.get());
+
 		resultArray.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 
 		// get RegEx options
 		uint32_t pcreOptions = 0;
 		uint32_t pcreNewLineOption = 0;
+
 		pcre2_pattern_info(this->expressionMulti.get(), PCRE2_INFO_ALLOPTIONS, &pcreOptions);
 		pcre2_pattern_info(this->expressionMulti.get(), PCRE2_INFO_NEWLINE, &pcreNewLineOption);
+
 		int pcreUTF8 = (pcreOptions & PCRE2_UTF) != 0;
-		int pcreNewLine = pcreNewLineOption == PCRE2_NEWLINE_ANY || pcreNewLineOption == PCRE2_NEWLINE_CRLF
+		int pcreNewLine =
+				pcreNewLineOption == PCRE2_NEWLINE_ANY
+				|| pcreNewLineOption == PCRE2_NEWLINE_CRLF
 				|| pcreNewLineOption == PCRE2_NEWLINE_ANYCRLF;
 
 		// get more matches
@@ -178,26 +261,46 @@ namespace crawlservpp::Query {
 
 			// check for empty string (end of matches)
 			if(pcreOVector[0] == pcreOVector[1]) {
-				if(pcreOVector[0] == text.length()) break;
+				if(pcreOVector[0] == text.length())
+					break;
+
 				pcreOptions = PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED;
 			}
 
 			// get next match
-			result = pcre2_match(this->expressionMulti.get(), (PCRE2_SPTR) text.c_str(), text.length(), pcreOffset, pcreOptions,
-					pcreMatch.get(), nullptr);
+			result = pcre2_match(
+					this->expressionMulti.get(),
+					(PCRE2_SPTR) text.c_str(),
+					text.length(),
+					pcreOffset,
+					pcreOptions,
+					pcreMatch.get(),
+					nullptr
+			);
 
 			// check result
 			if(result == PCRE2_ERROR_NOMATCH) {
-				if(!pcreOptions) break;
+				if(!pcreOptions)
+					break;
+
 				pcreOVector[1] = pcreOffset + 1;
-				if(pcreNewLine && pcreOffset < text.length() - 1 && text.at(pcreOffset) == '\r' && text.at(pcreOffset + 1) == '\n')
+
+				if(
+						pcreNewLine
+						&& pcreOffset < text.length() - 1
+						&& text.at(pcreOffset) == '\r'
+						&& text.at(pcreOffset + 1) == '\n'
+				)
 					pcreOVector[1] += 1;
 				else if(pcreUTF8) {
 					while(pcreOVector[1] < text.length()) {
-						if((text.at(pcreOVector[1]) & 0xc0) != 0x80) break;
+						if((text.at(pcreOVector[1]) & 0xc0) != 0x80)
+							break;
+
 						pcreOVector[1] += 1;
 					}
 				}
+
 				continue;
 			}
 
@@ -205,11 +308,14 @@ namespace crawlservpp::Query {
 				// matching error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
 				std::ostringstream errorStrStr;
+
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
+
 				throw RegEx::Exception((char *) errorBuffer);
 			}
 
-			if(!result) throw RegEx::Exception("Result vector unexpectedly too small");
+			if(!result)
+				throw RegEx::Exception("Result vector unexpectedly too small");
 
 			// get resulting match
 			resultArray.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
