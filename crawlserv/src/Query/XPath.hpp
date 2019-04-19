@@ -2,7 +2,7 @@
  * XPath.hpp
  *
  * Using the pugixml parser library to implement a XPath query with boolean, single and/or multiple results.
- *  Query is only crated when needed.
+ *  Query is only created when needed.
  *
  *  Created on: Oct 17, 2018
  *      Author: ans
