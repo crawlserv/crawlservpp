@@ -29,8 +29,11 @@ namespace crawlservpp::Query {
 	// get boolean value (at least one match?), throws XPath::Exception
 	bool XPath::getBool(const Parsing::XML& doc) const {
 		// check query and content
-		if(!(this->compiled)) throw XPath::Exception("No query compiled");
-		if(!(doc.doc)) throw XPath::Exception("No content parsed");
+		if(!(this->compiled))
+			throw XPath::Exception("No query compiled");
+
+		if(!(doc.doc))
+			throw XPath::Exception("No content parsed");
 
 		// evaluate query with boolean result
 		try {
@@ -44,15 +47,21 @@ namespace crawlservpp::Query {
 	// get first match only (saved to resultTo), , throws XPath::Exception
 	void XPath::getFirst(const Parsing::XML& doc, std::string& resultTo) const {
 		// check query and content
-		if(!(this->compiled)) throw XPath::Exception("No query compiled");
-		if(!(doc.doc)) throw XPath::Exception("No content parsed");
+		if(!(this->compiled))
+			throw XPath::Exception("No query compiled");
+
+		if(!(doc.doc))
+			throw XPath::Exception("No content parsed");
 
 		// evaluate query with string result
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
 				pugi::xpath_node_set nodeSet = this->query.evaluate_node_set(*(doc.doc));
-				if(!nodeSet.empty()) resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
-				else resultTo = "";
+
+				if(!nodeSet.empty())
+					resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
+				else
+					resultTo = "";
 			}
 			else resultTo = this->query.evaluate_string(*(doc.doc));
 		}
@@ -66,22 +75,30 @@ namespace crawlservpp::Query {
 		std::vector<std::string> resultArray;
 
 		// check query and content
-		if(!(this->compiled)) throw XPath::Exception("No query compiled");
-		if(!(doc.doc)) throw XPath::Exception("No content parsed");
+		if(!(this->compiled))
+			throw XPath::Exception("No query compiled");
+
+		if(!(doc.doc))
+			throw XPath::Exception("No content parsed");
 
 		// evaluate query with multiple string results
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
 				pugi::xpath_node_set nodeSet = this->query.evaluate_node_set(*(doc.doc));
 				resultArray.reserve(resultArray.size() + nodeSet.size());
+
 				for(auto i = nodeSet.begin(); i != nodeSet.end(); ++i) {
 					std::string result = XPath::nodeToString(*i, this->isTextOnly);
-					if(!result.empty()) resultArray.emplace_back(result);
+
+					if(!result.empty())
+						resultArray.emplace_back(result);
 				}
 			}
 			else {
 				std::string result = this->query.evaluate_string(*(doc.doc));
-				if(!result.empty()) resultArray.emplace_back(result);
+
+				if(!result.empty())
+					resultArray.emplace_back(result);
 			}
 		}
 		catch(const std::exception& e) {
@@ -95,28 +112,41 @@ namespace crawlservpp::Query {
 	std::string XPath::nodeToString(const pugi::xpath_node& node, bool textOnly) {
 		std::string result;
 
-		if(node.attribute()) result = node.attribute().as_string();
+		if(node.attribute())
+			result = node.attribute().as_string();
 		else if(node.node()) {
 			if(textOnly) {
 				XPath::TextOnlyWalker walker;
+
 				node.node().traverse(walker);
+
 				result = walker.getResult();
-				if(!result.empty()) result.pop_back();
+
+				if(!result.empty())
+					result.pop_back();
 			}
 			else {
 				for(auto i = node.node().children().begin(); i != node.node().children().end(); ++i) {
 					std::ostringstream outStrStr;
 					std::string out;
+
 					i->print(outStrStr, "", 0);
+
 					out = outStrStr.str();
 
 					// parse CDATA
-					if(out.length() > 12 && out.substr(0, 9) == "<![CDATA[" && out.substr(out.length() - 3) == "]]>")
+					if(
+							out.length() > 12
+							&& out.substr(0, 9) == "<![CDATA["
+							&& out.substr(out.length() - 3) == "]]>"
+					)
 						out = out.substr(9, out.length() - 12);
+
 					result += out;
 				}
 			}
 		}
+
 		return result;
 	}
 
@@ -124,12 +154,18 @@ namespace crawlservpp::Query {
 	bool XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
 		if(node.type() == pugi::node_pcdata) {
 			std::string nodeText = node.text().as_string();
+
 			Helper::Strings::trim(nodeText);
+
 			this->result += nodeText;
+
 			this->result.push_back(' ');
 		}
+
 		return true;
 	}
+
+	// get result from XML walker
 	std::string XPath::TextOnlyWalker::getResult() const {
 		return this->result;
 	}
