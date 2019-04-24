@@ -2,8 +2,10 @@
 // is page unloading?
 var crawlserv_frontend_unloading = false;
 
-// detached helper
-var helper;
+// helpers
+var helperRegEx = null;
+var helperXPath = null;
+var helperJSONPointer = null;
 
 // fullscreen mode
 var fullscreen = false;
@@ -253,12 +255,34 @@ jQuery(function($) {
 		// check query type if necessary
 		if($("#query-type-select")) {
 			if($("#query-type-select").val() == "regex") {
-				helper = $("#xpath-helper").detach();
+				if(!helperXPath)
+					helperXPath = $("#xpath-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
+				
 				$("#query-text-only").prop("checked", false);
 				$("#query-text-only").prop("disabled", true);
 				$("#query-text-only-label").addClass("check-label-disabled");
 			}
-			else helper = $("#regex-helper").detach();
+			else if($("#query-type-select").val() == "xpath") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
+			}
+			else if($("#query-type-select").val() == "jsonpointer") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperXPath)
+					helperXPath = $("#xpath-helper").detach();
+				
+				$("#query-text-only").prop("checked", false);
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
 		}
 		
 		// set timer
@@ -775,16 +799,43 @@ jQuery(function($) {
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
-			helper.insertAfter("#query-properties");
-			helper = $("#xpath-helper").detach();
+			helperRegEx.insertAfter("#query-properties");
+			helperRegEx = null;
+			
+			if(!helperXPath)
+				helperXPath = $("#xpath-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
 		}
-		else {
+		else if($(this).val() == "xpath") {
 			$("#query-text-only").prop("disabled", false);
 			$("#query-text-only-label").removeClass("check-label-disabled");
 			
-			helper.insertAfter("#query-properties");
-			helper = $("#regex-helper").detach();
+			helperXPath.insertAfter("#query-properties");
+			helperXPath = null;
+			
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
 		}
+		else if($(this).val() == "jsonpointer") {
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
+			
+			helperJSONPointer.insertAfter("#query-properties");
+			helperJSONPointer = null;
+			
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperXPath)
+				helperXPath = $("#xpath-helper").detach();
+		}
+		
 		return true;
 	});
 	
