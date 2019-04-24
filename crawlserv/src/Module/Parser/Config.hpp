@@ -171,11 +171,13 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.parsingDateTimeQueries.size() > completeDateTimes) {
 			// remove queries of incomplete datetime queries
 			this->config.parsingDateTimeQueries.resize(completeDateTimes);
+
 			incompleteDateTimes = true;
 		}
 		if(this->config.parsingDateTimeSources.size() > completeDateTimes) {
 			// remove sources of incomplete datetime queries
 			this->config.parsingDateTimeSources.resize(completeDateTimes);
+
 			incompleteDateTimes = true;
 		}
 		if(incompleteDateTimes) {
@@ -236,16 +238,19 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.parsingFieldNames.size() > completeFields) {
 			// remove names of incomplete parsing fields
 			this->config.parsingFieldNames.resize(completeFields);
+
 			incompleteFields = true;
 		}
 		if(this->config.parsingFieldQueries.size() > completeFields) {
 			// remove queries of incomplete parsing fields
 			this->config.parsingFieldQueries.resize(completeFields);
+
 			incompleteFields = true;
 		}
 		if(this->config.parsingFieldSources.size() > completeFields) {
 			// remove sources of incomplete parsing fields
 			this->config.parsingFieldSources.resize(completeFields);
+
 			incompleteFields = true;
 		}
 		if(incompleteFields) {
@@ -261,16 +266,21 @@ namespace crawlservpp::Module::Parser {
 		);
 
 		bool incompleteIds = false;
+
 		if(this->config.parsingIdQueries.size() > completeIds) {
 			// remove queries of incomplete ID queries
 			this->config.parsingIdQueries.resize(completeIds);
+
 			incompleteIds = true;
 		}
+
 		if(this->config.parsingIdSources.size() > completeIds) {
 			// remove sources of incomplete ID queries
 			this->config.parsingIdSources.resize(completeIds);
+
 			incompleteIds = true;
 		}
+
 		if(incompleteIds) {
 			// warn about incomplete ID queries
 			this->warning("\'id.queries\' and \'.sources\' should have the same number of elements.");
