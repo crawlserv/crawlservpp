@@ -49,7 +49,7 @@ The following additional components are required to build crawlserv++ on your sy
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
-*&ast; Older Linux distributions might only have `libtidy-dev` v0.9 available. Install it [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the ones from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).*
+*&ast; Older Linux distributions may only have `libtidy-dev` v0.9 available. Install it [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the ones from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).*
 
 After installing these components and cloning or downloading the source code, use the terminal to go to the `crawlserv` directory inside the downloaded files (it has to be where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
@@ -87,7 +87,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 **NB!** All non-external classes are part of the namespace `crawlservpp`.
 
-The source code of the server consists of the following classes (as of March 2019):
+The source code of the server consists of the following classes (as of April 2019):
 
 * **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
@@ -357,6 +357,7 @@ The following main tables are created and used:
 * **`targetlocks`**: Locks for target tables.
 * **`threads`**: Thread status.
 * **`urllists`**: URL lists.
+* **`versions`**: Versions of external libraries.
 * **`websites`**: Websites.
 
 If not already existing, these tables will be created on startup of the command-and-control server by executing the SQL commands in [`crawlserv/sql/init.sql`](crawlserv/sql/init.sql). See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
