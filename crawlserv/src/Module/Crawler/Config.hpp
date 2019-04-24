@@ -55,8 +55,6 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> crawlerArchivesNames;
 			std::vector<std::string> crawlerArchivesUrlsMemento;
 			std::vector<std::string> crawlerArchivesUrlsTimemap;
-			bool crawlerHTMLCanonicalCheck;
-			bool crawlerHTMLConsistencyCheck;
 			unsigned int crawlerLock;
 			unsigned short crawlerLogging;
 			std::vector<std::string> crawlerParamsBlackList;
@@ -65,6 +63,12 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<unsigned long> crawlerQueriesBlackListTypes;
 			std::vector<unsigned long> crawlerQueriesBlackListUrls;
 			std::vector<unsigned long> crawlerQueriesLinks;
+			std::vector<unsigned long> crawlerQueriesLinksBlackListContent;
+			std::vector<unsigned long> crawlerQueriesLinksBlackListTypes;
+			std::vector<unsigned long> crawlerQueriesLinksBlackListUrls;
+			std::vector<unsigned long> crawlerQueriesLinksWhiteListContent;
+			std::vector<unsigned long> crawlerQueriesLinksWhiteListTypes;
+			std::vector<unsigned long> crawlerQueriesLinksWhiteListUrls;
 			std::vector<unsigned long> crawlerQueriesWhiteListContent;
 			std::vector<unsigned long> crawlerQueriesWhiteListTypes;
 			std::vector<unsigned long> crawlerQueriesWhiteListUrls;
@@ -97,6 +101,9 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<long> customCountersStart;
 			std::vector<long> customCountersStep;
 			bool customReCrawl;
+			std::vector<std::string> customTokens;
+			std::vector<unsigned long> customTokensQuery;
+			std::vector<std::string> customTokensSource;
 			std::vector<std::string> customUrls;
 			bool customUsePost;
 		} config;
@@ -121,8 +128,6 @@ namespace crawlservpp::Module::Crawler {
 
 	// configuration constructor: set default values
 	inline Config::Entries::Entries() : crawlerArchives(false),
-										crawlerHTMLCanonicalCheck(false),
-										crawlerHTMLConsistencyCheck(false),
 										crawlerLock(300),
 										crawlerLogging(Config::crawlerLoggingDefault),
 										crawlerReCrawl(false),
@@ -166,17 +171,21 @@ namespace crawlservpp::Module::Crawler {
 		this->option("archives.names", this->config.crawlerArchivesNames);
 		this->option("archives.urls.memento", this->config.crawlerArchivesUrlsMemento);
 		this->option("archives.urls.timemap", this->config.crawlerArchivesUrlsTimemap);
-		this->option("html.canonical.check", this->config.crawlerHTMLCanonicalCheck);
-		this->option("html.consistency.check", this->config.crawlerHTMLConsistencyCheck);
 		this->option("lock", this->config.crawlerLock);
 		this->option("logging", this->config.crawlerLogging);
 		this->option("params.blacklist", this->config.crawlerParamsBlackList);
 		this->option("params.whitelist", this->config.crawlerParamsWhiteList);
-		this->option("queries.blacklist.content", this->config.crawlerQueriesBlackListContent);
+		this->option("queries.blacklist.cont", this->config.crawlerQueriesBlackListContent);
 		this->option("queries.blacklist.types", this->config.crawlerQueriesBlackListTypes);
 		this->option("queries.blacklist.urls", this->config.crawlerQueriesBlackListUrls);
 		this->option("queries.links", this->config.crawlerQueriesLinks);
-		this->option("queries.whitelist.content", this->config.crawlerQueriesWhiteListContent);
+		this->option("queries.links.blacklist.cont", this->config.crawlerQueriesLinksBlackListContent);
+		this->option("queries.links.blacklist.types", this->config.crawlerQueriesLinksBlackListTypes);
+		this->option("queries.links.blacklist.urls", this->config.crawlerQueriesLinksBlackListUrls);
+		this->option("queries.links.whitelist.cont", this->config.crawlerQueriesLinksWhiteListContent);
+		this->option("queries.links.whitelist.types", this->config.crawlerQueriesLinksWhiteListTypes);
+		this->option("queries.links.whitelist.urls", this->config.crawlerQueriesLinksWhiteListUrls);
+		this->option("queries.whitelist.cont", this->config.crawlerQueriesWhiteListContent);
 		this->option("queries.whitelist.types", this->config.crawlerQueriesWhiteListTypes);
 		this->option("queries.whitelist.urls", this->config.crawlerQueriesWhiteListUrls);
 		this->option("recrawl", this->config.crawlerReCrawl);
@@ -209,6 +218,9 @@ namespace crawlservpp::Module::Crawler {
 		this->option("counters.start", this->config.customCountersStart);
 		this->option("counters.step", this->config.customCountersStep);
 		this->option("recrawl", this->config.customReCrawl);
+		this->option("tokens", this->config.customTokens);
+		this->option("tokens.query", this->config.customTokensQuery);
+		this->option("tokens.source", this->config.customTokensSource);
 		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 		this->option("use.post", this->config.customUsePost);
 	}
@@ -230,23 +242,26 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerArchivesNames.size() > completeArchives) {
 			// remove names of incomplete archives
 			this->config.crawlerArchivesNames.resize(completeArchives);
+
 			incompleteArchives = true;
 		}
 
 		if(this->config.crawlerArchivesUrlsMemento.size() > completeArchives) {
 			// remove memento URL templates of incomplete archives
 			this->config.crawlerArchivesUrlsMemento.resize(completeArchives);
+
 			incompleteArchives = true;
 		}
 
 		if(this->config.crawlerArchivesUrlsTimemap.size() > completeArchives) {
 			// remove timemap URL templates of incomplete archives
 			this->config.crawlerArchivesUrlsTimemap.resize(completeArchives);
+
 			incompleteArchives = true;
 		}
 
 		if(incompleteArchives) {
-			// warn about incomplete counters
+			// warn about incomplete archives
 			this->warning(
 					"\'archives.names\', \'.urls.memento\' and \'.urls.timemap\'"
 					" should have the same number of elements."
@@ -266,24 +281,28 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.customCounters.size() > completeCounters) {
 			// remove counter variables of incomplete counters
 			this->config.customCounters.resize(completeCounters);
+
 			incompleteCounters = true;
 		}
 
 		if(this->config.customCountersStart.size() > completeCounters) {
 			// remove starting values of incomplete counters
 			this->config.customCountersStart.resize(completeCounters);
+
 			incompleteCounters = true;
 		}
 
 		if(this->config.customCountersEnd.size() > completeCounters) {
 			// remove ending values of incomplete counters
 			this->config.customCountersEnd.resize(completeCounters);
+
 			incompleteCounters = true;
 		}
 
 		if(this->config.customCountersStep.size() > completeCounters) {
 			// remove step values of incomplete counters
 			this->config.customCountersStep.resize(completeCounters);
+
 			incompleteCounters = true;
 		}
 
@@ -323,6 +342,44 @@ namespace crawlservpp::Module::Crawler {
 
 				--n;
 			}
+		}
+
+		// check properties of tokens
+		bool incompleteTokens = false;
+		unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of all arrays)
+				this->config.customTokens.size(),
+				this->config.customTokensSource.size(),
+				this->config.customTokensQuery.size()
+		});
+
+		if(this->config.customTokens.size() > completeTokens) {
+			// remove token variables of incomplete counters
+			this->config.customTokens.resize(completeTokens);
+
+			incompleteTokens = true;
+		}
+
+		if(this->config.customTokensSource.size() > completeTokens) {
+			// remove sources of incomplete counters
+			this->config.customTokensSource.resize(completeTokens);
+
+			incompleteTokens = true;
+		}
+
+		if(this->config.customTokensQuery.size() > completeTokens) {
+			// remove queries of incomplete counters
+			this->config.customTokensQuery.resize(completeTokens);
+
+			incompleteTokens = true;
+		}
+
+		if(incompleteTokens) {
+			// warn about incomplete counters
+			this->warning(
+					"\'custom.tokens\', \'.tokens.source\' and \'.tokens.query\'"
+					" should have the same number of elements."
+			);
+			this->warning("Incomplete token(s) removed.");
 		}
 	}
 
