@@ -22,6 +22,7 @@
 #include "../../Parsing/URI.hpp"
 #include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
+#include "../../Query/JSONPointer.hpp"
 #include "../../Query/RegEx.hpp"
 #include "../../Query/XPath.hpp"
 #include "../../Struct/QueryProperties.hpp"
@@ -55,6 +56,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Query::JSONPointer::Exception JSONPointerException;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
@@ -118,10 +120,16 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<QueryStruct> queriesBlackListTypes;
 		std::vector<QueryStruct> queriesBlackListUrls;
 		std::vector<QueryStruct> queriesLinks;
+		std::vector<QueryStruct> queriesLinksBlackListContent;
+		std::vector<QueryStruct> queriesLinksBlackListTypes;
+		std::vector<QueryStruct> queriesLinksBlackListUrls;
+		std::vector<QueryStruct> queriesLinksWhiteListContent;
+		std::vector<QueryStruct> queriesLinksWhiteListTypes;
+		std::vector<QueryStruct> queriesLinksWhiteListUrls;
 		std::vector<QueryStruct> queriesWhiteListContent;
 		std::vector<QueryStruct> queriesWhiteListTypes;
 		std::vector<QueryStruct> queriesWhiteListUrls;
-		QueryStruct queryCanonicalCheck;
+		std::vector<QueryStruct> queriesTokens;
 
 		// custom URLs
 		IdString startPage;
@@ -150,21 +158,26 @@ namespace crawlservpp::Module::Crawler {
 		void initDoGlobalCounting(
 				std::vector<std::string>& urlList,
 				const std::string& variable,
+				const std::string& alias,
 				long start,
 				long end,
-				long step
+				long step,
+				long aliasAdd
 		);
 		std::vector<std::string> initDoLocalCounting(
 				const std::string& url,
 				const std::string& variable,
+				const std::string& alias,
 				long start,
 				long end,
-				long step
+				long step,
+				long aliasAdd
 		);
 		void initQueries() override;
 
 		// crawling functions
 		bool crawlingUrlSelection(IdString& urlTo, bool& usePostTo);
+		IdString crawlingReplaceTokens(const IdString& url);
 		bool crawlingContent(
 				const IdString& url,
 				bool usePost,
@@ -173,23 +186,37 @@ namespace crawlservpp::Module::Crawler {
 				std::string& timerStrTo
 		);
 		bool crawlingCheckUrl(const std::string& url, const std::string& from);
+		bool crawlingCheckUrlForLinkExtraction(const std::string& url);
 		bool crawlingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
 		bool crawlingCheckContentType(const std::string& url, const std::string& contentType);
-		bool crawlingCheckConsistency(const std::string& url, const std::string& content);
-		bool crawlingCheckCanonical(const std::string& url,	const Parsing::XML& doc);
-		bool crawlingCheckContent(const std::string& url, const std::string& content, const Parsing::XML& doc);
+		bool crawlingCheckContentTypeForLinkExtraction(const std::string& url, const std::string& contentType);
+		bool crawlingCheckContent(
+				const std::string& url,
+				const std::string& content,
+				const Parsing::XML& doc,
+				const std::string& xmlError
+		);
+		bool crawlingCheckContentForLinkExtraction(
+				const std::string& url,
+				const std::string& content,
+				const Parsing::XML& doc,
+				const std::string& xmlError
+		);
 		void crawlingSaveContent(
 				const IdString& url,
 				unsigned int response,
 				const std::string& type,
 				const std::string& content,
-				const Parsing::XML& doc
+				const Parsing::XML& doc,
+				const std::string& xmlError
 		);
 		std::vector<std::string> crawlingExtractUrls(
 				const std::string& url,
+				const std::string& type,
 				const std::string& content,
-				const Parsing::XML& doc
+				const Parsing::XML& doc,
+				const std::string& xmlError
 		);
 		void crawlingParseAndAddUrls(
 				const std::string& url,
