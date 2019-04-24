@@ -11,22 +11,31 @@ if(isset($_POST["query"])) $query = $_POST["query"];
 <option value="0"<?php if(!$website) echo " selected"; ?>>All websites [global]</option>
 <?php
 $result = $dbConnection->query("SELECT id,name FROM crawlserv_websites ORDER BY name");
-if(!$result) exit("ERROR: Could not get ids and names of websites.");
+
+if(!$result)
+    exit("ERROR: Could not get ids and names of websites.");
+
 $first = true;
+
 while($row = $result->fetch_assoc()) {
     $id = $row["id"];
     $name = $row["name"];
     
     if($first) {
-        if(!isset($website)) $website = $id;
+        if(!isset($website))
+            $website = $id;
+        
         $first = false;
     }
+    
     echo "<option value=\"".$id."\"";
-    if($website == $id) {
+    
+    if($website == $id)
         echo " selected";
-    }
+    
     echo ">".htmlspecialchars($name)."</option>\n";
 }
+
 $result->close();
 ?>
 </select>
@@ -36,43 +45,82 @@ $result->close();
 <div class="entry-label">Query:</div><div class="entry-x-input">
 <select class="entry-x-input" id="query-select" data-m="queries">
 <?php
-if(!$website) $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website IS NULL ORDER BY name");
-else $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website=$website ORDER BY name");
-if(!$result) exit("ERROR: Could not get ids and names of queries.");
+$result = $dbConnection->query("SELECT name, version FROM crawlserv_versions");
+
+if(!$result)
+    exit("ERROR: Could not get library versions from database.");
+
+while($row = $result->fetch_assoc()) {
+    if(strtolower($row["name"]) == "pcre2")
+        $pcre_version = $row["version"];
+    else if(strtolower($row["name"]) == "tidy-html5")
+        $tidy_version = $row["version"];
+    else if(strtolower($row["name"]) == "pugixml")
+        $pugixml_version = $row["version"];
+    else if(strtolower($row["name"]) == "rapidjson")
+        $rapidjson_version = $row["version"];
+}
+
+$result->close();
+
+if(!$website)
+    $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website IS NULL ORDER BY name");
+else
+    $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website=$website ORDER BY name");
+
+if(!$result)
+    exit("ERROR: Could not get IDs and names of queries.");
+
 $first = true;
-$found = false;
+
 while($row = $result->fetch_assoc()) {
     $id = $row["id"];
     $name = $row["name"];
     
     if($first) {
         if(!isset($query)) $query = $id;
+        
         $first = false;
     }
+    
     echo "<option value=\"".$id."\"";
+    
     if($query == $id) {
         echo " selected";
+        
         $queryName = $name;
     }
+    
     echo ">".htmlspecialchars($name)."</option>\n";
 }
+
 $result->close();
+
 if(isset($query)) {
     if($query) {
-        $result = $dbConnection->query("SELECT type,query,resultbool,resultsingle,resultmulti,textonly FROM crawlserv_queries".
-            " WHERE id=".$query." LIMIT 1");
-        if(!$result) exit("ERROR: Could not get query properties from database.");
+        $result = $dbConnection->query(
+            "SELECT type,query,resultbool,resultsingle,resultmulti,textonly FROM crawlserv_queries".
+            " WHERE id=".$query." LIMIT 1"
+        );
+        
+        if(!$result)
+            exit("ERROR: Could not get query properties from database.");
+        
         $row = $result->fetch_assoc();
+        
         $queryType = $row["type"];
         $queryText = $row["query"];
         $queryResultBool = $row["resultbool"];
         $queryResultSingle = $row["resultsingle"];
         $queryResultMulti = $row["resultmulti"];
         $queryTextOnly = $row["textonly"];
+        
         $result->close();
     }
 }
-else $query = 0;
+else
+    $query = 0;
+
 ?>
 <option value="0"<?php if(!$query) echo " selected"; ?>>Add new</option>
 </select>
@@ -82,7 +130,8 @@ else $query = 0;
 <div class="action-link-box">
 <div class="action-link">
 <?php
-if($query) echo "<a href=\"#\" class=\"action-link query-duplicate\">Duplicate query</a>\n";
+if($query)
+    echo "<a href=\"#\" class=\"action-link query-duplicate\">Duplicate query</a>\n";
 ?>
 </div>
 </div>
@@ -96,32 +145,48 @@ if($query) echo "<a href=\"#\" class=\"action-link query-duplicate\">Duplicate q
 <div class="entry-row">
 <div class="entry-label">Type:</div><div class="entry-input">
 <select class="entry-input" id="query-type-select">
-<option value="regex"<?php if($query && $queryType == "regex") echo " selected"; ?>>RegEx (PCRE2 v10.31)</option>
-<option value="xpath"<?php if($query && $queryType == "xpath") echo " selected"; ?>>XPath (tidy v5.2, pugixml v1.8)</option>
-<option value="jsonpointer"<?php if($query && $queryType == "jsonpointer") echo " selected"; ?>>JSONPointer (RapidJSON v1.1.0)</option> 
+<option value="regex"<?php
+if($query && $queryType == "regex")
+    echo " selected";
+?>>RegEx (PCRE2 v<?php echo $pcre_version; ?>)</option>
+<option value="xpath"<?php
+if($query && $queryType == "xpath")
+    echo " selected";
+?>>XPath (tidy v<?php echo $tidy_version; ?>, pugixml v<?php echo $pugixml_version; ?>)</option>
+<option value="jsonpointer"<?php
+if($query && $queryType == "jsonpointer")
+    echo " selected";
+?>>JSONPointer (RapidJSON v<?php echo $rapidjson_version; ?>)</option> 
 </select>
 </div>
 </div>
 <div class="entry-row">
 <div class="entry-label">Result:</div><div class="entry-input">
 <input type="checkbox" id="query-result-bool" class="entry-check-first"<?php
-if(!$query || ($query && $queryResultBool)) echo " checked";
+if(!$query || ($query && $queryResultBool))
+    echo " checked";
 ?> /> boolean
 <input type="checkbox" id="query-result-single" class="entry-check-next"<?php
-if($query && $queryResultSingle) echo " checked";
+if($query && $queryResultSingle)
+    echo " checked";
 ?> /> single
 <input type="checkbox" id="query-result-multi" class="entry-check-next"<?php
-if($query && $queryResultMulti) echo " checked";
+if($query && $queryResultMulti)
+    echo " checked";
 ?> /> multiple
 <input type="checkbox" id="query-text-only" class="entry-check-next"<?php
-if($query && $queryTextOnly) echo " checked";
+if($query && $queryTextOnly)
+    echo " checked";
 ?> /> <span id="query-text-only-label">text only</span>
 </div>
 </div>
 <div class="entry-row">
 <div class="entry-label-top">Query text:</div><div class="entry-input">
 <textarea class="entry-input" id="query-text" spellcheck="false" autocomplete="off">
-<?php if($query) echo htmlspecialchars($queryText, ENT_QUOTES); ?>
+<?php
+if($query)
+    echo htmlspecialchars($queryText, ENT_QUOTES);
+?>
 </textarea>
 </div>
 </div>
@@ -130,7 +195,8 @@ if($query && $queryTextOnly) echo " checked";
 <?php
 if($query)
     echo "<a href=\"#\" class=\"action-link query-update\">Change query</a>";
-else echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
+else
+    echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
 ?>
 </div>
 </div>
@@ -183,7 +249,10 @@ for help with your query.</p>
 <div class="entry-row">
 <div class="entry-label-top" id="query-test-label">Test text:</div><div class="entry-input">
 <textarea class="entry-input" id="query-test-text" spellcheck="false" autocomplete="off">
-<?php if(isset($_POST["test"])) echo htmlspecialchars($_POST["test"], ENT_QUOTES); ?>
+<?php 
+if(isset($_POST["test"]))
+    echo htmlspecialchars($_POST["test"], ENT_QUOTES);
+?>
 </textarea>
 <textarea class="entry-input" id="query-test-result" disabled></textarea>
 </div>
