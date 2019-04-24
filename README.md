@@ -87,7 +87,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 **NB!** All non-external classes are part of the namespace `crawlservpp`.
 
-The source code of the server consists of the following classes (as of March 2019):
+The source code of the server consists of the following classes (as of April 2019):
 
 * **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
