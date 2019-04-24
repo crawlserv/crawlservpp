@@ -81,7 +81,7 @@
 			"simple": true,
 			"position": 11
 		},
-		"queries.blacklist.content": {
+		"queries.blacklist.cont": {
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -132,7 +132,82 @@
 			"simple": true,
 			"position": 4
 		},
-		"queries.whitelist.content": {
+		"queries.links.blacklist.cont": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"default": [],
+			"description": "Boolean queries on content that will not be used for link extraction.",
+			"simple": false
+		},
+		"queries.links.blacklist.types": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"description": "Boolean RegEx queries on content types that will not be used for link extraction.",
+			"simple": false
+		},
+		"queries.links.blacklist.urls": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"label": "Always skip:",
+			"description": "Boolean RegEx queries on URLs that will not be used for link extraction.",
+			"simple": true,
+			"position": 9
+		},
+		"queries.links.whitelist.cont": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"default": [],
+			"description": "If not empty, only content according to these boolean queries will be used for link extraction.",
+			"simple": false
+		},
+		"queries.links.whitelist.types": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"label": "",
+			"description": "If not empty, only content types according to these boolean RegEx queries will be used for link extraction.",
+			"simple": false
+		},
+		"queries.links.whitelist.urls": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"description": "If not empty, only URLs according to these boolean RegEx queries will be used for link extraction.",
+			"simple": false
+		},
+		"queries.whitelist.cont": {
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
@@ -376,6 +451,36 @@
 			"description": "Always re-crawl custom URLs.",
 			"simple": true,
 			"position": 8
+		},
+		"tokens": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Token variables:",
+			"description": "List of token variables to be replaced in custom URLs.",
+			"simple": true,
+			"position": 9
+		},
+		"tokens.source": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Token sources:",
+			"description": "Source URL of the token with the same array index (absolute link without protocol).",
+			"simple": true,
+			"position": 10
+		},
+		"tokens.query": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": [],
+			"label": "Token queries:",
+			"description": "Query to extract token with the same array index.",
+			"simple": true,
+			"position": 11
 		},
 		"urls": {
 			"type": "array",
