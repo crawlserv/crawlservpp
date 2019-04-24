@@ -237,21 +237,31 @@ namespace crawlservpp::Main {
 		if(!locales.empty()) {
 			std::string sqlQuery("INSERT INTO `crawlserv_locales`(name) VALUES");
 
-			for(auto i = locales.begin(); i != locales.end(); ++i)
-				sqlQuery += " ('" + sqlEscapeString(*i) + "'),";
+			for(unsigned long n = 0; n < locales.size(); ++n)
+				sqlQuery += " (?),";
 
 			sqlQuery.pop_back();
 
+			// check database connection
+			this->checkConnection();
+
 			// write installed locales to database
 			try {
-				// check database connection
-				this->checkConnection();
-
 				// create SQL statement
-				SqlStatementPtr sqlStatement(this->connection->createStatement());
+				SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+						sqlQuery
+				));
 
 				// execute SQL statement
-				Database::sqlExecute(sqlStatement, sqlQuery);
+				unsigned long counter = 1;
+
+				for(auto i = locales.begin(); i != locales.end(); ++i) {
+					sqlStatement->setString(counter, *i);
+
+					counter++;
+				}
+
+				Database::sqlExecute(sqlStatement);
 			}
 			catch(const sql::SQLException &e) { this->sqlException("Main::Database::update", e); }
 		}
@@ -280,21 +290,33 @@ namespace crawlservpp::Main {
 		if(!versions.empty()) {
 			std::string sqlQuery("INSERT INTO `crawlserv_versions`(name, version) VALUES");
 
-			for(auto i = versions.begin(); i != versions.end(); ++i)
-				sqlQuery += " ('" + sqlEscapeString(i->first) + "', '" + sqlEscapeString(i->second) + "'),";
+			for(unsigned long n = 0; n < versions.size(); ++n)
+				sqlQuery += " (?, ?),";
 
 			sqlQuery.pop_back();
 
+			// check database connection
+			this->checkConnection();
+
 			// write library versions to database
 			try {
-				// check database connection
-				this->checkConnection();
-
 				// create SQL statement
-				SqlStatementPtr sqlStatement(this->connection->createStatement());
+				SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+						sqlQuery
+				));
 
 				// execute SQL statement
-				Database::sqlExecute(sqlStatement, sqlQuery);
+				unsigned long counter = 1;
+
+				for(auto i = versions.begin(); i != versions.end(); ++i) {
+					sqlStatement->setString(counter, i->first);
+					sqlStatement->setString(counter + 1, i->second);
+
+					counter += 2;
+				}
+
+				// execute SQL statement
+				Database::sqlExecute(sqlStatement);
 			}
 			catch(const sql::SQLException &e) { this->sqlException("Main::Database::update", e); }
 		}
