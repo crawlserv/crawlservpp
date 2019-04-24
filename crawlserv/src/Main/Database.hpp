@@ -31,6 +31,7 @@
 #include "../Helper/Portability/locale.h"
 #include "../Helper/Portability/mysqlcppconn.h"
 #include "../Helper/Utf8.hpp"
+#include "../Helper/Versions.hpp"
 #include "../Struct/ConfigProperties.hpp"
 #include "../Struct/TableProperties.hpp"
 #include "../Struct/TargetTableProperties.hpp"
@@ -475,6 +476,7 @@ namespace crawlservpp::Main {
 		// internal helper functions
 		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
+		std::string sqlEscapeString(const std::string& in);
 
 		// IDs of prepared SQL statements
 		struct _ps {

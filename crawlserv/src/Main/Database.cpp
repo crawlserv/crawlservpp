@@ -197,13 +197,13 @@ namespace crawlservpp::Main {
 			// prepare thread statements
 			if(!(this->ps.setThreadStatus)) {
 				this->ps.setThreadStatus = this->addPreparedStatement(
-					"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1"
+						"UPDATE crawlserv_threads SET status = ?, paused = ? WHERE id = ? LIMIT 1"
 				);
 			}
 
 			if(!(this->ps.setThreadStatusMessage)) {
 				this->ps.setThreadStatusMessage = this->addPreparedStatement(
-					"UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1"
+						"UPDATE crawlserv_threads SET status = ? WHERE id = ? LIMIT 1"
 				);
 			}
 		}
@@ -229,25 +229,75 @@ namespace crawlservpp::Main {
 				)
 		);
 
+		columns.clear();
+
 		// get installed locales
-		std::string sqlQuery("INSERT INTO `crawlserv_locales`(name) VALUES");
 		std::vector<std::string> locales = Helper::Portability::enumLocales();
 
-		for(auto i = locales.begin(); i != locales.end(); ++i)
-			sqlQuery += " ('" + *i + "'),";
+		if(!locales.empty()) {
+			std::string sqlQuery("INSERT INTO `crawlserv_locales`(name) VALUES");
 
-		if(!locales.empty())
+			for(auto i = locales.begin(); i != locales.end(); ++i)
+				sqlQuery += " ('" + sqlEscapeString(*i) + "'),";
+
 			sqlQuery.pop_back();
 
-		// write installed locales to database
-		try {
-			// create SQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
+			// write installed locales to database
+			try {
+				// check database connection
+				this->checkConnection();
 
-			// execute SQL statement
-			Database::sqlExecute(sqlStatement, sqlQuery);
+				// create SQL statement
+				SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+				// execute SQL statement
+				Database::sqlExecute(sqlStatement, sqlQuery);
+			}
+			catch(const sql::SQLException &e) { this->sqlException("Main::Database::update", e); }
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::dropTable", e); }
+
+		// drop versions table
+		this->dropTable("crawlserv_versions");
+
+		// create versions table
+		columns.emplace_back("name", "TEXT NOT NULL");
+		columns.emplace_back("version", "TEXT NOT NULL");
+
+		this->createTable(
+				TableProperties(
+						"crawlserv_versions",
+						columns,
+						"",
+						false
+				)
+		);
+
+		columns.clear();
+
+		// get library versions
+		std::vector<std::pair<std::string, std::string>> versions(Helper::Versions::getLibraryVersions());
+
+		if(!versions.empty()) {
+			std::string sqlQuery("INSERT INTO `crawlserv_versions`(name, version) VALUES");
+
+			for(auto i = versions.begin(); i != versions.end(); ++i)
+				sqlQuery += " ('" + sqlEscapeString(i->first) + "', '" + sqlEscapeString(i->second) + "'),";
+
+			sqlQuery.pop_back();
+
+			// write library versions to database
+			try {
+				// check database connection
+				this->checkConnection();
+
+				// create SQL statement
+				SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+				// execute SQL statement
+				Database::sqlExecute(sqlStatement, sqlQuery);
+			}
+			catch(const sql::SQLException &e) { this->sqlException("Main::Database::update", e); }
+		}
 	}
 
 	/*
@@ -5274,6 +5324,13 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement, sqlQuery);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::execute", e); }
+	}
+
+	// escape string for usage in SQL commands
+	std::string Database::sqlEscapeString(const std::string& in) {
+		auto mySqlConnection = dynamic_cast<sql::mysql::MySQL_Connection*>(this->connection.get());
+
+		return mySqlConnection->escapeString(in);
 	}
 
 } /* crawlservpp::Main */

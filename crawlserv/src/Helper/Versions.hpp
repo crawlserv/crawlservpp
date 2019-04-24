@@ -31,6 +31,8 @@
 
 #include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace crawlservpp::Helper::Versions {
 
@@ -38,110 +40,122 @@ namespace crawlservpp::Helper::Versions {
 	 * DEFINITION
 	 */
 
-	std::string getLibraryVersions(const std::string& indent);
+	std::vector<std::pair<std::string, std::string>> getLibraryVersions();
+	std::string getLibraryVersionsStr(const std::string& indent);
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	inline std::string getLibraryVersions(const std::string& indent) {
+	inline std::vector<std::pair<std::string, std::string>> getLibraryVersions() {
+		std::vector<std::pair<std::string, std::string>> result;
 		std::ostringstream out;
 
 		// Boost
-		out	<< indent
-			<< "Boost v"
-			<< BOOST_VERSION / 100000
+		out << BOOST_VERSION / 100000
 			<< '.' << BOOST_VERSION / 100 % 1000
-			<< '.' << BOOST_VERSION % 100
-			<< '\n';
+			<< '.' << BOOST_VERSION % 100;
 
-		// Curl
-		out << indent
-			<< "cURL v"
-			<< curl_version_info(CURLVERSION_NOW)->version
-			<< '\n';
+		result.emplace_back("Boost", out.str());
+
+		out.str("");
+		out.clear();
+
+		// cURL
+		result.emplace_back("cURL", curl_version_info(CURLVERSION_NOW)->version);
 
 		// GNU Aspell
-		out << indent
-			<< "GNU Aspell v"
-			<< aspell_version_string()
-			<< '\n';
+		result.emplace_back("GNU Aspell", aspell_version_string());
 
 		// date.h (no version information available)
-		out << indent
-			<< "Howard E. Hinnant's date.h library\n";
+		result.emplace_back("Howard E. Hinnant's date.h library", "");
 
 		// mongoose
-		out << indent
-			<< "mongoose v"
-			<< MG_VERSION
-			<< '\n';
+		result.emplace_back("mongoose", MG_VERSION);
 
 		// MySQL Connector/C++
 		sql::Driver * driver = get_driver_instance();
 
-		out << indent
-			<< driver->getName()
-			<< " v"
-			<< driver->getMajorVersion()
-			<< '.'
-			<< driver->getMinorVersion()
-			<< '.'
-			<< driver->getPatchVersion()
-			<< '\n';
+		if(driver) {
+			out	<< driver->getMajorVersion()
+				<< '.'
+				<< driver->getMinorVersion()
+				<< '.'
+				<< driver->getPatchVersion();
 
-		// PCRE
-		out << indent
-			<< "PCRE2 v"
-			<< PCRE2_MAJOR
+			result.emplace_back(driver->getName(), out.str());
+
+			out.str("");
+			out.clear();
+		}
+
+		// PCRE2
+		out	<< PCRE2_MAJOR
 			<< '.'
-			<< PCRE2_MINOR
-			<< '\n';
+			<< PCRE2_MINOR;
+
+		result.emplace_back("PCRE2", out.str());
+
+		out.str("");
+		out.clear();
 
 		// pugixml
-		out << indent
-			<< "pugixml v"
-			<< PUGIXML_VERSION / 100
+		out	<< PUGIXML_VERSION / 100
 			<< '.'
 			<< PUGIXML_VERSION % 100 / 10
 			<< '.'
-			<< PUGIXML_VERSION % 10
-			<< '\n';
+			<< PUGIXML_VERSION % 10;
+
+		result.emplace_back("pugixml", out.str());
+
+		out.str("");
+		out.clear();
 
 		// RapidJSON
-		out << indent
-			<< "RapidJSON v"
-			<< RAPIDJSON_VERSION_STRING
-			<< '\n';
+		result.emplace_back("RapidJSON", RAPIDJSON_VERSION_STRING);
 
 		// rawr-gen (no version information available)
-		out << indent
-			<< "rawr-gen by Kelly Rauchenberger\n";
+		result.emplace_back("rawr-gen by Kelly Rauchenberger", "");
 
 		// tidy-html5
-		out << indent
-			<< "tidy-html5 v"
-			<< tidyLibraryVersion()
-			<< '-'
-			<< tidyReleaseDate()
-			<< '\n';
+		result.emplace_back("tidy-html5", tidyLibraryVersion());
 
 		// uriparser
-		out << indent
-			<< "uriparser v"
-			<< URI_VER_MAJOR
+		out	<< URI_VER_MAJOR
 			<< '.' <<
 			URI_VER_MINOR
 			<< '.' <<
 			URI_VER_RELEASE
-			<< URI_VER_SUFFIX_ANSI
-			<< '\n';
+			<< URI_VER_SUFFIX_ANSI;
 
-		// UTF8-CPP
-		out << indent
-			<< "UTF8-CPP v2.1\n";
+		result.emplace_back("uriparser", out.str());
 
-		return out.str();
+		out.str("");
+		out.clear();
+
+		// UTF8-CPP (WARNING: hard-coded version information not necessarily accurate)
+		result.emplace_back("UTF8-CPP", "2.1");
+
+		return result;
+	}
+
+	inline std::string getLibraryVersionsStr(const std::string& indent) {
+		std::vector<std::pair<std::string, std::string>> versions(getLibraryVersions());
+		std::string result;
+
+		for(auto i = versions.begin(); i != versions.end(); ++i) {
+			result += indent;
+			result += i->first;
+
+			if(!(i->second.empty())) {
+				result += " v";
+				result += i->second;
+			}
+
+			result += "\n";
+		}
+
+		return result;
 	}
 
 } /* crawlservpp::Helper::Versions */

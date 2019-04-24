@@ -192,7 +192,7 @@ namespace crawlservpp::Main {
 	// static helper function: show version (and library versions)
 	void App::outputHeader() {
 		std::cout << "crawlserv++ v0.1 by Ans using\n";
-		std::cout << Helper::Versions::getLibraryVersions(" ") << std::endl;
+		std::cout << Helper::Versions::getLibraryVersionsStr(" ") << std::endl;
 	}
 
 	// static helper function: check number of command line arguments, throws std::runtime_error
