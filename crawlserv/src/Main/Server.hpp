@@ -29,6 +29,7 @@
 #include "../Module/Analyzer/Algo/All.hpp"
 #include "../Module/Crawler/Thread.hpp"
 #include "../Module/Parser/Thread.hpp"
+#include "../Query/JSONPointer.hpp"
 #include "../Query/RegEx.hpp"
 #include "../Query/XPath.hpp"
 #include "../Timer/SimpleHR.hpp"
@@ -71,6 +72,7 @@ namespace crawlservpp::Main {
 		typedef Database::PrivilegesException PrivilegesException;
 		typedef Database::StorageEngineException StorageEngineException;
 		typedef Parsing::XML::Exception XMLException;
+		typedef Query::JSONPointer::Exception JSONPointerException;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
 		typedef Struct::AlgoThreadProperties AlgoThreadProperties;
