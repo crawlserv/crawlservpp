@@ -96,6 +96,8 @@ namespace crawlservpp::Module::Crawler {
 
 			// custom entries
 			std::vector<std::string> customCounters;
+			std::vector<std::string> customCountersAlias;
+			std::vector<unsigned long> customCountersAliasAdd;
 			std::vector<long> customCountersEnd;
 			bool customCountersGlobal;
 			std::vector<long> customCountersStart;
@@ -213,6 +215,8 @@ namespace crawlservpp::Module::Crawler {
 		// custom URL options
 		this->category("custom");
 		this->option("counters", this->config.customCounters);
+		this->option("counters.alias", this->config.customCountersAlias);
+		this->option("counters.alias.add", this->config.customCountersAliasAdd);
 		this->option("counters.end", this->config.customCountersEnd);
 		this->option("counters.global", this->config.customCountersGlobal);
 		this->option("counters.start", this->config.customCountersStart);
@@ -372,6 +376,12 @@ namespace crawlservpp::Module::Crawler {
 
 			incompleteTokens = true;
 		}
+
+		// remove aliases that are not used, add empty aliases where none exist
+		this->config.customCountersAlias.resize(completeTokens);
+
+		// remove alias summands that are not used, add zero as summand where none is specified
+		this->config.customCountersAliasAdd.resize(completeTokens, 0);
 
 		if(incompleteTokens) {
 			// warn about incomplete counters
