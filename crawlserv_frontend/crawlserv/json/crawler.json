@@ -409,6 +409,24 @@
 			"simple": true,
 			"position": 3
 		},
+		"counters.alias": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Counter alias:",
+			"description": "Alias for the counter variable with the same array index.",
+			"simple": true,
+			"position": 7
+		},
+		"counters.alias.add": {
+			"type": "array",
+			"item-type": "number",
+			"default": [],
+			"label": "Increase alias value by:",
+			"description": "Value to add to the counter alias with the same array index.",
+			"simple": true,
+			"position": 8
+		},
 		"counters.end": {
 			"type": "array",
 			"item-type": "number",
@@ -424,7 +442,7 @@
 			"label": "Use counters globally",
 			"description": "Use every counter for all custom URLs. Otherwise a counters will only be used for URLs with the same array index.",
 			"simple": true,
-			"position": 7
+			"position": 9
 		},
 		"counters.start": {
 			"type": "array",
@@ -450,7 +468,7 @@
 			"label": "Re-crawl custom URLs",
 			"description": "Always re-crawl custom URLs.",
 			"simple": true,
-			"position": 8
+			"position": 10
 		},
 		"tokens": {
 			"type": "array",
@@ -459,7 +477,7 @@
 			"label": "Token variables:",
 			"description": "List of token variables to be replaced in custom URLs.",
 			"simple": true,
-			"position": 9
+			"position": 11
 		},
 		"tokens.source": {
 			"type": "array",
@@ -468,7 +486,7 @@
 			"label": "Token sources:",
 			"description": "Source URL of the token with the same array index (absolute link without protocol).",
 			"simple": true,
-			"position": 10
+			"position": 12
 		},
 		"tokens.query": {
 			"type": "array",
@@ -480,7 +498,7 @@
 			"label": "Token queries:",
 			"description": "Query to extract token with the same array index.",
 			"simple": true,
-			"position": 11
+			"position": 13
 		},
 		"urls": {
 			"type": "array",
