@@ -112,7 +112,7 @@ namespace crawlservpp::Main {
 				std::string config = this->database.getConfiguration(i->options.config);
 
 				// parse JSON
-				if(configJson.Parse(config.c_str()).HasParseError())
+				if(configJson.Parse(config).HasParseError())
 					throw std::runtime_error("Could not parse configuration JSON.");
 
 				if(!configJson.IsArray())
@@ -430,7 +430,7 @@ namespace crawlservpp::Main {
 
 			// parse JSON
 			rapidjson::Document json;
-			if(json.Parse(msgBody.c_str()).HasParseError())
+			if(json.Parse(msgBody).HasParseError())
 				response = ServerCommandResponse(true, "Could not parse JSON.");
 			else if(!json.IsObject())
 				response = ServerCommandResponse(true, "Parsed JSON is not an object.");
@@ -1365,7 +1365,7 @@ namespace crawlservpp::Main {
 		// check configuration JSON
 		rapidjson::Document configJson;
 
-		if(configJson.Parse(config.c_str()).HasParseError())
+		if(configJson.Parse(config).HasParseError())
 			return ServerCommandResponse(true, "Could not parse analyzing configuration.");
 		else if(!configJson.IsArray())
 			return ServerCommandResponse(true, "Parsed analyzing configuration is not an array.");
@@ -2170,7 +2170,8 @@ namespace crawlservpp::Main {
 		// check query type
 		if(properties.type.empty())
 			return ServerCommandResponse(true, "Query type is empty.");
-		if(properties.type != "regex" && properties.type != "xpath")
+
+		if(properties.type != "regex" && properties.type != "xpath" && properties.type != "jsonpointer")
 			return ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
@@ -2276,7 +2277,7 @@ namespace crawlservpp::Main {
 		if(properties.type.empty())
 			return ServerCommandResponse(true, "Query type is empty.");
 
-		if(properties.type != "regex" && properties.type != "xpath")
+		if(properties.type != "regex" && properties.type != "xpath" && properties.type != "jsonpointer")
 			return ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
@@ -2366,7 +2367,7 @@ namespace crawlservpp::Main {
 		// parse JSON (again for thread)
 		rapidjson::Document json;
 
-		if(json.Parse(message.c_str()).HasParseError())
+		if(json.Parse(message).HasParseError())
 			response = ServerCommandResponse(true, "Could not parse JSON.");
 		else if(!json.IsObject())
 			response = ServerCommandResponse(true, "Parsed JSON is not an object.");
@@ -2414,7 +2415,7 @@ namespace crawlservpp::Main {
 					response = ServerCommandResponse(true, "Query text is empty.");
 				else if(type.empty())
 					response = ServerCommandResponse(true, "Query type is empty.");
-				else if(type != "regex" && type != "xpath")
+				else if(type != "regex" && type != "xpath" && type != "jsonpointer")
 					response = ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
 				else if(!resultBool && !resultSingle && !resultMulti)
 					response = ServerCommandResponse(true, "No result type selected.");
@@ -2475,44 +2476,108 @@ namespace crawlservpp::Main {
 							response = ServerCommandResponse(true, "RegEx error: " + e.whatStr());
 						}
 					}
-					else {
+					else if(type == "xpath") {
 						// test XPath expression on text
 						try {
-							Parsing::XML xmlDocumentTest;
 							Timer::SimpleHR timer;
-
 							Query::XPath xPathTest(query, textOnly);
 
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
-							try {
-								xmlDocumentTest.parse(text, true);
+							Parsing::XML xmlDocumentTest;
 
+							xmlDocumentTest.parse(text, true);
+
+							result += "PARSING TIME: " + timer.tickStr() + '\n';
+
+							if(resultBool) {
+								// get boolean result (does at least one match exist?)
+								result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
+										+ std::string(xPathTest.getBool(xmlDocumentTest) ? "true" : "false") + '\n';
+							}
+
+							if(resultSingle) {
+								// get first result (first full match)
+								std::string tempResult;
+
+								xPathTest.getFirst(xmlDocumentTest, tempResult);
+
+								if(tempResult.empty())
+									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+								else
+									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+							}
+
+							if(resultMulti) {
+								// get all results (all full matches)
+								std::vector<std::string> tempResult;
+
+								xPathTest.getAll(xmlDocumentTest, tempResult);
+
+								result += "ALL RESULTS (" + timer.tickStr() + "):";
+
+								if(tempResult.empty())
+									result += " [empty]\n";
+								else {
+									unsigned long n = 0;
+									std::ostringstream resultStrStr;
+
+									resultStrStr << '\n';
+
+									for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
+										resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
+										++n;
+									}
+
+									result += resultStrStr.str();
+								}
+							}
+						}
+						catch(const XPathException& e) {
+							response = ServerCommandResponse(true, "XPath error - " + e.whatStr());
+						}
+						catch(const XMLException& e) {
+							response = ServerCommandResponse(true, "XML error: " + e.whatStr());
+						}
+					}
+					else {
+						// test JSONPointer query on text
+						try {
+							Timer::SimpleHR timer;
+							Query::JSONPointer JSONPointerTest(query);
+
+							result = "COMPILING TIME: " + timer.tickStr() + '\n';
+
+							rapidjson::Document jsonDocumentTest;
+
+							if(jsonDocumentTest.Parse(text).HasParseError())
+								response = ServerCommandResponse(true, "Could not parse JSON");
+							else {
 								result += "PARSING TIME: " + timer.tickStr() + '\n';
 
 								if(resultBool) {
 									// get boolean result (does at least one match exist?)
 									result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-											+ std::string(xPathTest.getBool(xmlDocumentTest) ? "true" : "false") + '\n';
+											+ std::string(JSONPointerTest.getBool(jsonDocumentTest) ? "true" : "false") + '\n';
 								}
+
 								if(resultSingle) {
 									// get first result (first full match)
 									std::string tempResult;
-									Timer::SimpleHR timer;
 
-									xPathTest.getFirst(xmlDocumentTest, tempResult);
+									JSONPointerTest.getFirst(jsonDocumentTest, tempResult);
 
 									if(tempResult.empty())
 										result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
 									else
 										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 								}
+
 								if(resultMulti) {
 									// get all results (all full matches)
 									std::vector<std::string> tempResult;
-									Timer::SimpleHR timer;
 
-									xPathTest.getAll(xmlDocumentTest, tempResult);
+									JSONPointerTest.getAll(jsonDocumentTest, tempResult);
 
 									result += "ALL RESULTS (" + timer.tickStr() + "):";
 
@@ -2533,14 +2598,12 @@ namespace crawlservpp::Main {
 									}
 								}
 							}
-							catch(const XMLException& e) {
-								response = ServerCommandResponse(true, "XML error: " + e.whatStr());
-							}
 						}
-						catch(const XPathException& e) {
-							response = ServerCommandResponse(true, "XPath error - " + e.whatStr());
+						catch(const JSONPointerException& e) {
+							response = ServerCommandResponse(true, "JSONPointer error: " + e.whatStr());
 						}
 					}
+
 					if(!response.fail){
 						result.pop_back();
 
@@ -2623,7 +2686,7 @@ namespace crawlservpp::Main {
 		// check configuration JSON
 		rapidjson::Document configJson;
 
-		if(configJson.Parse(properties.config.c_str()).HasParseError())
+		if(configJson.Parse(properties.config).HasParseError())
 			return ServerCommandResponse(true, "Could not parse JSON.");
 		else if(!configJson.IsArray())
 			return ServerCommandResponse(true, "Parsed JSON is not an array.");
@@ -2688,7 +2751,7 @@ namespace crawlservpp::Main {
 		// check configuration JSON
 		rapidjson::Document configJson;
 
-		if(configJson.Parse(properties.config.c_str()).HasParseError())
+		if(configJson.Parse(properties.config).HasParseError())
 			return ServerCommandResponse(true, "Could not parse JSON.");
 		else if(!configJson.IsArray())
 			return ServerCommandResponse(true, "Parsed JSON is not an array.");
