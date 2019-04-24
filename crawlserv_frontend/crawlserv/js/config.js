@@ -3,7 +3,7 @@
  * 
  */
 
-// @required: helper function msToStr() from frontend.js !!!
+// @required: helper function msToStr() from frontend.js !
 
 // helper function to compare two configurations
 function areConfigsEqual(config1, config2, logging = false) {
@@ -1318,9 +1318,13 @@ class Config {
 				filter += "X";
 			else
 				filter += "0";
+			
+			if(obj["query-types"].includes("jsonpointer"))
+				filter += "X";
+			else filter += "0";
 		}
 		else
-			filter += "XX";
+			filter += "XXX";
 		
 		return filter;
 	}
@@ -1339,6 +1343,8 @@ class Config {
 		if(filter[3] == "X" && obj.type ==
 			"regex") return true;
 		if(filter[4] == "X" && obj.type == "xpath")
+			return true;
+		if(filter[5] == "X" && obj.type == "jsonpointer")
 			return true;
 		
 		return false;
