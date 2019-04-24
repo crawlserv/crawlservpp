@@ -23,6 +23,7 @@
 #include "../../Main/Exception.hpp"
 #include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
+#include "../../Query/JSONPointer.hpp"
 #include "../../Query/RegEx.hpp"
 #include "../../Query/XPath.hpp"
 #include "../../Struct/ThreadOptions.hpp"
@@ -52,6 +53,7 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Query::JSONPointer::Exception JSONPointerException;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;

@@ -416,8 +416,12 @@ namespace crawlservpp::Module::Parser {
 		this->queriesId.reserve(this->config.parsingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.parsingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.parsingFieldQueries.size());
-		this->reserveForQueries(this->config.parsingIdQueries.size() + this->config.parsingDateTimeQueries.size()
-				+ this->config.parsingFieldQueries.size());
+
+		this->reserveForQueries(
+				this->config.parsingIdQueries.size()
+				+ this->config.parsingDateTimeQueries.size()
+				+ this->config.parsingFieldQueries.size()
+		);
 
 		try {
 			// create queries and get query IDs
@@ -425,6 +429,7 @@ namespace crawlservpp::Module::Parser {
 				QueryProperties properties;
 
 				this->database.getQueryProperties(*i, properties);
+
 				this->queriesSkip.emplace_back(this->addQuery(properties));
 			}
 
@@ -432,6 +437,7 @@ namespace crawlservpp::Module::Parser {
 				QueryProperties properties;
 
 				this->database.getQueryProperties(*i, properties);
+
 				this->queriesId.emplace_back(this->addQuery(properties));
 			}
 
@@ -439,6 +445,7 @@ namespace crawlservpp::Module::Parser {
 				QueryProperties properties;
 
 				this->database.getQueryProperties(*i, properties);
+
 				this->queriesDateTime.emplace_back(this->addQuery(properties));
 			}
 
@@ -446,14 +453,18 @@ namespace crawlservpp::Module::Parser {
 				QueryProperties properties;
 
 				this->database.getQueryProperties(*i, properties);
+
 				this->queriesFields.emplace_back(this->addQuery(properties));
 			}
 		}
 		catch(const RegExException& e) {
-			throw Exception(std::string("Parser::Thread::initQueries(): [RegEx] ") + e.what());
+			throw Exception("Parser::Thread::initQueries(): [RegEx] " + e.whatStr());
 		}
-		catch(const Query::XPath::Exception& e) {
-			throw Exception(std::string("Parser::Thread::initQueries(): [XPath] ") + e.what());
+		catch(const XPathException& e) {
+			throw Exception("Parser::Thread::initQueries(): [XPath] " + e.whatStr());
+		}
+		catch(const JSONPointerException& e) {
+			throw Exception("Parser::Thread::initQueries(): [JSONPointer] " + e.whatStr());
 		}
 	}
 
@@ -548,7 +559,8 @@ namespace crawlservpp::Module::Parser {
 					}
 
 					// check query type
-					if(i->type == QueryStruct::typeRegEx) {
+					switch(i->type) {
+					case QueryStruct::typeRegEx:
 						// check URL by running RegEx query on it
 						try {
 							if(this->getRegExQuery(i->index).getBool(this->urls.front().second)) {
@@ -559,9 +571,16 @@ namespace crawlservpp::Module::Parser {
 							}
 						}
 						catch(const RegExException& e) {} // ignore query on error
+
+						break;
+
+					case QueryStruct::typeNone:
+						break;
+
+					default:
+						if(this->config.generalLogging)
+							this->log("WARNING: ID query on URL is not of type RegEx.");
 					}
-					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-						this->log("WARNING: ID query on URL is not of type RegEx.");
 				} // end of loop over custom queries
 
 				if(skip) {
@@ -595,7 +614,8 @@ namespace crawlservpp::Module::Parser {
 					this->log("WARNING: Invalid result type of ID query (not single).");
 
 				// check query type
-				if(i->type == QueryStruct::typeRegEx) {
+				switch(i->type) {
+				case QueryStruct::typeRegEx:
 					// parse ID by running RegEx query on URL
 					try {
 						this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedId);
@@ -604,9 +624,16 @@ namespace crawlservpp::Module::Parser {
 							break;
 					}
 					catch(const RegExException& e) {} // ignore query on error
+
+					break;
+
+				case QueryStruct::typeNone:
+					break;
+
+				default:
+					if(this->config.generalLogging)
+						this->log("WARNING: ID query on URL is not of type RegEx.");
 				}
-				else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: ID query on URL is not of type RegEx.");
 			}
 
 			// check ID
@@ -697,7 +724,8 @@ namespace crawlservpp::Module::Parser {
 				// check query source
 				if(this->config.parsingIdSources.at(idQueryCounter) == Config::parsingSourceUrl) {
 					// check query type
-					if(i->type == QueryStruct::typeRegEx) {
+					switch(i->type) {
+					case QueryStruct::typeRegEx:
 						// parse ID by running RegEx query on URL
 						try {
 							this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedData.parsedId);
@@ -706,13 +734,21 @@ namespace crawlservpp::Module::Parser {
 								break;
 						}
 						catch(const RegExException& e) {} // ignore query on error
+
+						break;
+
+					case QueryStruct::typeNone:
+						break;
+
+					default:
+						if(this->config.generalLogging)
+							this->log("WARNING: ID query on URL is not of type RegEx.");
 					}
-					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-						this->log("WARNING: ID query on URL is not of type RegEx.");
 				}
 				else {
 					// check query type
-					if(i->type == QueryStruct::typeRegEx) {
+					switch(i->type) {
+					case QueryStruct::typeRegEx:
 						// parse ID by running RegEx query on content string
 						try {
 							this->getRegExQuery(i->index).getFirst(content.second, parsedData.parsedId);
@@ -721,8 +757,10 @@ namespace crawlservpp::Module::Parser {
 								break;
 						}
 						catch(const RegExException& e) {} // ignore query on error
-					}
-					else if(i->type == QueryStruct::typeXPath) {
+
+						break;
+
+					case QueryStruct::typeXPath:
 						// parse ID by running XPath query on parsed content
 						try {
 							this->getXPathQuery(i->index).getFirst(parsedContent, parsedData.parsedId);
@@ -730,10 +768,29 @@ namespace crawlservpp::Module::Parser {
 							if(!parsedData.parsedId.empty())
 								break;
 						}
-						catch(const RegExException& e) {} // ignore query on error
+						catch(const XPathException& e) {} // ignore query on error
+
+						break;
+
+					case QueryStruct::typeJSONPointer:
+						// parse ID by running JSONPointer query on content string
+						try {
+							this->getJSONPointerQuery(i->index).getFirst(content.second, parsedData.parsedId);
+
+							if(!parsedData.parsedId.empty())
+								break;
+						}
+						catch(const JSONPointerException& e) {} // ignore query on error
+
+						break;
+
+					case QueryStruct::typeNone:
+						break;
+
+					default:
+						if(this->config.generalLogging)
+							this->log("WARNING: ID query on content is not of type RegEx, XPath or JSONPointer.");
 					}
-					else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-						this->log("WARNING: ID query on content is not of type RegEx or XPath.");
 				}
 
 				// not successfull: check next query for parsing the ID (if it exists)
@@ -778,7 +835,8 @@ namespace crawlservpp::Module::Parser {
 			// check query source
 			if(this->config.parsingDateTimeSources.at(dateTimeQueryCounter) == Config::parsingSourceUrl) {
 				// check query type
-				if(i->type == QueryStruct::typeRegEx) {
+				switch(i->type) {
+				case QueryStruct::typeRegEx:
 					// parse date/time by running RegEx query on URL
 					try {
 						this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedData.dateTime);
@@ -786,13 +844,21 @@ namespace crawlservpp::Module::Parser {
 						querySuccess = true;
 					}
 					catch(const RegExException& e) {} // ignore query on error
+
+					break;
+
+				case QueryStruct::typeNone:
+					break;
+
+				default:
+					if(this->config.generalLogging)
+						this->log("WARNING: DateTime query on URL is not of type RegEx.");
 				}
-				else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: DateTime query on URL is not of type RegEx.");
 			}
 			else {
 				// check query type
-				if(i->type == QueryStruct::typeRegEx) {
+				switch(i->type) {
+				case QueryStruct::typeRegEx:
 					// parse date/time by running RegEx query on content string
 					try {
 						this->getRegExQuery(i->index).getFirst(content.second, parsedData.dateTime);
@@ -800,18 +866,38 @@ namespace crawlservpp::Module::Parser {
 						querySuccess = true;
 					}
 					catch(const RegExException& e) {} // ignore query on error
-				}
-				else if(i->type == QueryStruct::typeXPath) {
+
+					break;
+
+				case QueryStruct::typeXPath:
 					// parse date/time by running XPath query on parsed content
 					try {
 						this->getXPathQuery(i->index).getFirst(parsedContent, parsedData.dateTime);
 
 						querySuccess = true;
 					}
-					catch(const RegExException& e) {} // ignore query on error
+					catch(const XPathException& e) {} // ignore query on error
+
+					break;
+
+				case QueryStruct::typeJSONPointer:
+					// parse date/time by running JSONPointer query on content string
+					try {
+						this->getJSONPointerQuery(i->index).getFirst(content.second, parsedData.dateTime);
+
+						querySuccess = true;
+					}
+					catch(const JSONPointerException& e) {} // ignore query on error
+
+					break;
+
+				case QueryStruct::typeNone:
+					break;
+
+				default:
+					if(this->config.generalLogging)
+						this->log("WARNING: DateTime query on content is not of type RegEx, XPath or JSONPointer.");
 				}
-				else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-					this->log("WARNING: DateTime query on content is not of type RegEx or XPath.");
 			}
 
 			if(querySuccess && !parsedData.dateTime.empty()) {
@@ -880,31 +966,55 @@ namespace crawlservpp::Module::Parser {
 					// check query source
 					if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
 						// parse from URL: check query type
-						if(i->type == QueryStruct::typeRegEx)
+						switch(i->type) {
+						case QueryStruct::typeRegEx:
 							// parse multiple field elements by running RegEx query on URL
 							this->getRegExQuery(i->index).getAll(this->urls.front().second, parsedFieldValues);
 
-						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-							this->log(
-									"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)	+ "\'"
-									" query on URL is not of type RegEx."
-							);
+							break;
+
+						case QueryStruct::typeNone:
+							break;
+
+						default:
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)	+ "\'"
+										" query on URL is not of type RegEx."
+								);
+						}
 					}
 					else {
 						// parse from content: check query type
-						if(i->type == QueryStruct::typeRegEx)
+						switch(i->type) {
+						case QueryStruct::typeRegEx:
 							// parse multiple field elements by running RegEx query on content string
 							this->getRegExQuery(i->index).getAll(content.second, parsedFieldValues);
 
-						else if(i->type == QueryStruct::typeXPath)
+							break;
+
+						case QueryStruct::typeXPath:
 							// parse multiple field elements by running XPath query on parsed content
 							this->getXPathQuery(i->index).getAll(parsedContent, parsedFieldValues);
 
-						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-							this->log(
-									"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)	+ "\' query"
-									" on content is not of type RegEx or XPath."
-							);
+							break;
+
+						case QueryStruct::typeJSONPointer:
+							// parse multiple field elements by running JSONPointer query on content string
+							this->getJSONPointerQuery(i->index).getAll(content.second, parsedFieldValues);
+
+							break;
+
+						case QueryStruct::typeNone:
+							break;
+
+						default:
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter)	+ "\' query"
+										" on content is not of type RegEx, XPath or JSONPointer."
+								);
+						}
 					}
 
 					// if necessary, check whether array or all values are empty
@@ -914,6 +1024,7 @@ namespace crawlservpp::Module::Parser {
 						for(auto i = parsedFieldValues.begin(); i != parsedFieldValues.end(); ++i) {
 							if(!(i->empty())) {
 								empty = false;
+
 								break;
 							}
 						}
@@ -956,37 +1067,63 @@ namespace crawlservpp::Module::Parser {
 					// check query source
 					if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
 						// parse from URL: check query type
-						if(i->type == QueryStruct::typeRegEx)
+						switch(i->type) {
+						case QueryStruct::typeRegEx:
 							// parse single field element by running RegEx query on URL
 							this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedFieldValue);
 
-						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-							this->log(
-									"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-									" query on URL is not of type RegEx."
-							);
+							break;
+
+						case QueryStruct::typeNone:
+							break;
+
+						default:
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
+										" query on URL is not of type RegEx."
+								);
+						}
 					}
 					else {
 						// parse from content: check query type
-						if(i->type == QueryStruct::typeRegEx)
+						switch(i->type) {
+						case QueryStruct::typeRegEx:
 							// parse single field element by running RegEx query on content string
 							this->getRegExQuery(i->index).getFirst(content.second, parsedFieldValue);
 
-						else if(i->type == QueryStruct::typeXPath)
+							break;
+
+						case QueryStruct::typeXPath:
 							// parse single field element by running XPath query on parsed content
 							this->getXPathQuery(i->index).getFirst(parsedContent, parsedFieldValue);
 
-						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-							this->log(
-									"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-									" query on content is not of type RegEx or XPath."
-							);
+							break;
+
+						case QueryStruct::typeJSONPointer:
+							// parse single field element by running JSONPointer query on content string
+							this->getJSONPointerQuery(i->index).getFirst(content.second, parsedFieldValue);
+
+							break;
+
+						case QueryStruct::typeNone:
+							break;
+
+						default:
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
+										" query on content is not of type RegEx, XPath or JSONPointer."
+								);
+						}
 					}
 
 					// if necessary, check whether value is empty
-					if(this->config.generalLogging
-							&& this->config.parsingFieldWarningsEmpty.at(fieldCounter)
-							&& parsedFieldValue.empty())
+					if(
+							this->config.parsingFieldWarningsEmpty.at(fieldCounter)
+							&& parsedFieldValue.empty()
+							&& this->config.generalLogging
+					)
 						this->log(
 								"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
 								" is empty for " + this->urls.front().second
@@ -1012,31 +1149,55 @@ namespace crawlservpp::Module::Parser {
 					// check query source
 					if(this->config.parsingFieldSources.at(fieldCounter) == Config::parsingSourceUrl) {
 						// parse from URL: check query type
-						if(i->type == QueryStruct::typeRegEx)
+						switch(i->type) {
+						case QueryStruct::typeRegEx:
 							// parse boolean value by running RegEx query on URL
 							parsedBool = this->getRegExQuery(i->index).getBool(this->urls.front().second);
 
-						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-							this->log(
-									"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-									" query on URL is not of type RegEx."
-							);
+							break;
+
+						case QueryStruct::typeNone:
+							break;
+
+						default:
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
+										" query on URL is not of type RegEx."
+								);
+						}
 					}
 					else {
 						// parse from content: check query type
-						if(i->type == QueryStruct::typeRegEx)
+						switch(i->type) {
+						case QueryStruct::typeRegEx:
 							// parse boolean value by running RegEx query on content string
 							parsedBool = this->getRegExQuery(i->index).getBool(content.second);
 
-						else if(i->type == QueryStruct::typeXPath)
+							break;
+
+						case QueryStruct::typeXPath:
 							// parse boolean value by running XPath query on parsed content
 							parsedBool = this->getXPathQuery(i->index).getBool(parsedContent);
 
-						else if(i->type != QueryStruct::typeNone && this->config.generalLogging)
-							this->log(
-									"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-									" query on content is not of type RegEx or XPath."
-							);
+							break;
+
+						case QueryStruct::typeJSONPointer:
+							// parse boolean value by running JSONPointer query on content string
+							parsedBool = this->getJSONPointerQuery(i->index).getBool(content.second);
+
+							break;
+
+						case QueryStruct::typeNone:
+							break;
+
+						default:
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
+										" query on content is not of type RegEx, XPath or JSONPointer."
+								);
+						}
 					}
 
 					// determine how to save result: JSON array or boolean value as string
@@ -1060,7 +1221,9 @@ namespace crawlservpp::Module::Parser {
 
 				++fieldCounter;
 			}
-			catch(const RegExException& e) {} // ignore query on error
+			catch(const RegExException& e) {} // ignore query on RegEx error
+			catch(const XPathException& e) {} // ignore query on XPath error
+			catch(const JSONPointerException& e) {} // ignore query on JSONPointer error
 		}
 
 		// add parsed data to results
