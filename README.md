@@ -49,7 +49,7 @@ The following additional components are required to build crawlserv++ on your sy
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
-*&ast; Older Linux distributions might only have `libtidy-dev` v0.9 available. Install it [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the ones from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).*
+*&ast; Older Linux distributions may only have `libtidy-dev` v0.9 available. Install it [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the ones from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).*
 
 After installing these components and cloning or downloading the source code, use the terminal to go to the `crawlserv` directory inside the downloaded files (it has to be where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
