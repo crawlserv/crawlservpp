@@ -850,7 +850,7 @@ namespace crawlservpp::Module::Crawler {
 
 				if(this->lockTime.empty()) {
 					// skip locked URL
-					if(this->config.crawlerLogging)
+					if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 						this->log(
 								"URL lock active - " +
 								this->manualUrl.second + " skipped."
@@ -896,7 +896,7 @@ namespace crawlservpp::Module::Crawler {
 
 							if(this->lockTime.empty()) {
 								// skip locked custom URL
-								if(this->config.crawlerLogging)
+								if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 									this->log(
 											"URL lock active - " +
 											this->manualUrl.second + " skipped."
@@ -937,7 +937,7 @@ namespace crawlservpp::Module::Crawler {
 
 							if(this->lockTime.empty()) {
 								// start page is locked: write skipping of entry to log if enabled
-								if(this->config.crawlerLogging)
+								if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 									this->log(
 											"URL lock active - " +
 											this->startPage.second + " skipped."
