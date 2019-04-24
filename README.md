@@ -357,6 +357,7 @@ The following main tables are created and used:
 * **`targetlocks`**: Locks for target tables.
 * **`threads`**: Thread status.
 * **`urllists`**: URL lists.
+* **`versions`**: Versions of external libraries.
 * **`websites`**: Websites.
 
 If not already existing, these tables will be created on startup of the command-and-control server by executing the SQL commands in [`crawlserv/sql/init.sql`](crawlserv/sql/init.sql). See this file for details about the structure of these tables. The result tables specified in `crawlserv_parsedtables`, `crawlserv_extractedtables` and `crawlserv_analyzedtables` will be created by the different modules as needed (with the structure needed for the performance of the specified tasks).
