@@ -119,18 +119,24 @@ namespace crawlservpp::Module::Analyzer {
 		if(this->config.generalInputFields.size() > completeInputs) {
 			// remove queries of incomplete datetime queries
 			this->config.generalInputFields.resize(completeInputs);
+
 			incompleteInputs = true;
 		}
+
 		if(this->config.generalInputSources.size() > completeInputs) {
 			// remove queries of incomplete datetime queries
 			this->config.generalInputSources.resize(completeInputs);
+
 			incompleteInputs = true;
 		}
+
 		if(this->config.generalInputTables.size() > completeInputs) {
 			// remove sources of incomplete datetime queries
 			this->config.generalInputTables.resize(completeInputs);
+
 			incompleteInputs = true;
 		}
+
 		if(incompleteInputs) {
 			// warn about incomplete inputs
 			this->warning(
