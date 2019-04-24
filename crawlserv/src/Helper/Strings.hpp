@@ -26,12 +26,12 @@ namespace crawlservpp::Helper::Strings {
 	bool stringToBool(std::string inputString);
 	void trim(std::string& stringToTrim);
 	std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty);
+	std::vector<std::string> split(const std::string& str, const std::string& token);
 	void sortAndRemoveDuplicates(std::vector<std::string>& vectorOfStrings, bool caseSensitive);
 	char getFirstOrEscapeChar(const std::string& from);
 	void utfTidy(std::string& stringToTidy);
 	bool checkDomainName(const std::string& name);
 	bool checkSQLName(const std::string& name);
-	std::vector<std::string> split(const std::string& str, const std::string& token);
 
 	// Unicode white spaces
 	const std::string utfWhitespaces[] = {
@@ -122,6 +122,29 @@ namespace crawlservpp::Helper::Strings {
 
 		if(!result.empty())
 			result.pop_back();
+
+		return result;
+	}
+
+	// split string into vector of strings
+	inline std::vector<std::string> split(const std::string& str, const std::string& token) {
+		std::string tmp(str);
+		std::vector<std::string> result;
+
+		while(!tmp.empty()){
+			auto index = tmp.find(token);
+
+			if(index != std::string::npos) {
+				result.push_back(tmp.substr(0, index));
+
+				tmp = tmp.substr(index + token.size());
+			}
+			else if(!tmp.empty()) {
+				result.push_back(tmp);
+
+				tmp.clear();
+			}
+		}
 
 		return result;
 	}
@@ -226,29 +249,6 @@ namespace crawlservpp::Helper::Strings {
 		return name.find_first_not_of(
 				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_"
 		) == std::string::npos;
-	}
-
-	// split string into vector of strings
-	inline std::vector<std::string> split(const std::string& str, const std::string& token) {
-		std::string tmp(str);
-		std::vector<std::string> result;
-
-		while(!tmp.empty()){
-			auto index = tmp.find(token);
-
-			if(index != std::string::npos) {
-				result.push_back(tmp.substr(0, index));
-
-				tmp = tmp.substr(index + token.size());
-			}
-			else if(!tmp.empty()) {
-				result.push_back(tmp);
-
-				tmp.clear();
-			}
-		}
-
-		return result;
 	}
 
 } // /* crawlservpp::Helper::Strings */
