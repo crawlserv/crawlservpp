@@ -98,6 +98,7 @@ if($query) echo "<a href=\"#\" class=\"action-link query-duplicate\">Duplicate q
 <select class="entry-input" id="query-type-select">
 <option value="regex"<?php if($query && $queryType == "regex") echo " selected"; ?>>RegEx (PCRE2 v10.31)</option>
 <option value="xpath"<?php if($query && $queryType == "xpath") echo " selected"; ?>>XPath (tidy v5.2, pugixml v1.8)</option>
+<option value="jsonpointer"<?php if($query && $queryType == "jsonpointer") echo " selected"; ?>>JSONPointer (RapidJSON v1.1.0)</option> 
 </select>
 </div>
 </div>
@@ -168,6 +169,13 @@ else echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
 <div class="entry-label-top helper">Help?!</div><div class="entry-input">
 <p>Try <a href="https://regexr.com/" target="_blank">RegExr</a> or <a href="https://regex101.com/" target="_blank">regex101</a>
 for help with your query.</p>
+</div>
+</div>
+</div>
+<div class="content-block" id="jsonpointer-helper">
+<div class="entry-row">
+<div class="entry-label-top helper">Note</div><div class="entry-input">
+<p>Use '$$' as placeholder for multiple matches.<br>The placeholder will be replaced by 0...n.</p>
 </div>
 </div>
 </div>
