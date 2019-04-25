@@ -107,13 +107,17 @@ namespace crawlservpp::Main {
 			}
 			else if(i->module == "analyzer") {
 				// get JSON
-				rapidjson::Document configJson;
-
 				std::string config = this->database.getConfiguration(i->options.config);
 
 				// parse JSON
-				if(configJson.Parse(config).HasParseError())
-					throw std::runtime_error("Could not parse configuration JSON.");
+				rapidjson::Document configJson;
+
+				try {
+					configJson = Helper::Json::parseRapid(config);
+				}
+				catch(const JsonException& e) {
+					throw std::runtime_error("Could not parse configuration: " + e.whatStr());
+				}
 
 				if(!configJson.IsArray())
 					throw std::runtime_error("Parsed configuration JSON is not an array.");
@@ -430,11 +434,21 @@ namespace crawlservpp::Main {
 
 			// parse JSON
 			rapidjson::Document json;
-			if(json.Parse(msgBody).HasParseError())
-				response = ServerCommandResponse(true, "Could not parse JSON.");
-			else if(!json.IsObject())
-				response = ServerCommandResponse(true, "Parsed JSON is not an object.");
-			else {
+			bool success = false;
+
+			try {
+				json = Helper::Json::parseRapid(msgBody);
+
+				if(json.IsObject())
+					success = true;
+				else
+					response = ServerCommandResponse(true, "Parsed JSON is not an object.");
+			}
+			catch(const JsonException& e) {
+				response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+			}
+
+			if(success){
 				// get server command
 				if(json.HasMember("cmd")) {
 					if(json["cmd"].IsString()) {
@@ -1365,9 +1379,14 @@ namespace crawlservpp::Main {
 		// check configuration JSON
 		rapidjson::Document configJson;
 
-		if(configJson.Parse(config).HasParseError())
-			return ServerCommandResponse(true, "Could not parse analyzing configuration.");
-		else if(!configJson.IsArray())
+		try {
+			configJson = Helper::Json::parseRapid(config);
+		}
+		catch(const JsonException& e) {
+			return ServerCommandResponse(true, "Could not parse analyzing configuration: " + e.whatStr() + ".");
+		}
+
+		if(!configJson.IsArray())
 			return ServerCommandResponse(true, "Parsed analyzing configuration is not an array.");
 
 		// get algorithm from configuration
@@ -2366,41 +2385,64 @@ namespace crawlservpp::Main {
 
 		// parse JSON (again for thread)
 		rapidjson::Document json;
+		bool success = false;
 
-		if(json.Parse(message).HasParseError())
-			response = ServerCommandResponse(true, "Could not parse JSON.");
-		else if(!json.IsObject())
-			response = ServerCommandResponse(true, "Parsed JSON is not an object.");
-		else {
+		try {
+			json = Helper::Json::parseRapid(message);
+
+			if(json.IsObject())
+				success = true;
+			else
+				response = ServerCommandResponse(true, "Parsed JSON is not an object.");
+		}
+		catch(const JsonException& e) {
+			response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+		}
+
+		if(success) {
 			// get arguments
 			if(!json.HasMember("query"))
 				response = ServerCommandResponse(true, "Invalid arguments (\'query\' is missing).");
+
 			else if(!json["query"].IsString())
 				response = ServerCommandResponse(true, "Invalid arguments (\'query\' is not a string).");
+
 			else if(!json.HasMember("type"))
 				response = ServerCommandResponse(true, "Invalid arguments (\'type\' is missing).");
+
 			else if(!json["type"].IsString())
 				response = ServerCommandResponse(true, "Invalid arguments (\'type\' is not a string).");
+
 			else if(!json.HasMember("resultbool"))
 				response = ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is missing).");
+
 			else if(!json["resultbool"].IsBool())
 				response = ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is not a boolean).");
+
 			else if(!json.HasMember("resultsingle"))
 				response = ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is missing).");
+
 			else if(!json["resultsingle"].IsBool())
 				response = ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is not a boolean).");
+
 			else if(!json.HasMember("resultmulti"))
 				response = ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is missing).");
+
 			else if(!json["resultmulti"].IsBool())
 				response = ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is not a boolean).");
+
 			else if(!json.HasMember("textonly"))
 				response = ServerCommandResponse(true, "Invalid arguments (\'textonly\' is missing).");
+
 			else if(!json["textonly"].IsBool())
 				response = ServerCommandResponse(true, "Invalid arguments (\'textonly\' is not a boolean).");
+
 			else if(!json.HasMember("text"))
 				response = ServerCommandResponse(true, "Invalid arguments (\'text\' is missing).");
+
 			else if(!json["text"].IsString())
 				response = ServerCommandResponse(true, "Invalid arguments (\'text\' is not a string).");
+
 			else {
 				std::string query(json["query"].GetString(), json["query"].GetStringLength());
 				std::string type(json["type"].GetString(), json["type"].GetStringLength());
@@ -2413,15 +2455,20 @@ namespace crawlservpp::Main {
 				// check query text, query type and result type
 				if(query.empty())
 					response = ServerCommandResponse(true, "Query text is empty.");
+
 				else if(type.empty())
 					response = ServerCommandResponse(true, "Query type is empty.");
+
 				else if(type != "regex" && type != "xpath" && type != "jsonpointer")
 					response = ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
+
 				else if(!resultBool && !resultSingle && !resultMulti)
 					response = ServerCommandResponse(true, "No result type selected.");
+
 				else {
 					// test query
 					std::string result;
+
 					if(type == "regex") {
 						// test RegEx expression on text
 						try {
@@ -2549,10 +2596,18 @@ namespace crawlservpp::Main {
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
 							rapidjson::Document jsonDocumentTest;
+							bool success = false;
 
-							if(jsonDocumentTest.Parse(text).HasParseError())
-								response = ServerCommandResponse(true, "Could not parse JSON");
-							else {
+							try {
+								jsonDocumentTest = Helper::Json::parseRapid(text);
+
+								success = true;
+							}
+							catch(const JsonException& e) {
+								response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+							}
+
+							if(success) {
 								result += "PARSING TIME: " + timer.tickStr() + '\n';
 
 								if(resultBool) {
@@ -2686,9 +2741,14 @@ namespace crawlservpp::Main {
 		// check configuration JSON
 		rapidjson::Document configJson;
 
-		if(configJson.Parse(properties.config).HasParseError())
-			return ServerCommandResponse(true, "Could not parse JSON.");
-		else if(!configJson.IsArray())
+		try {
+			configJson = Helper::Json::parseRapid(properties.config);
+		}
+		catch(const JsonException& e) {
+			return ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+		}
+
+		if(!configJson.IsArray())
 			return ServerCommandResponse(true, "Parsed JSON is not an array.");
 
 		// check analyzer configuration for algorithm
@@ -2751,9 +2811,14 @@ namespace crawlservpp::Main {
 		// check configuration JSON
 		rapidjson::Document configJson;
 
-		if(configJson.Parse(properties.config).HasParseError())
+		try {
+			configJson = Helper::Json::parseRapid(properties.config);
+		}
+		catch(const JsonException& e) {
 			return ServerCommandResponse(true, "Could not parse JSON.");
-		else if(!configJson.IsArray())
+		}
+
+		if(!configJson.IsArray())
 			return ServerCommandResponse(true, "Parsed JSON is not an array.");
 
 		// check configuration

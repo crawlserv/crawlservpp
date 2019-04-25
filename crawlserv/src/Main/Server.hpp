@@ -24,6 +24,7 @@
 
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Json.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Module/Thread.hpp"
 #include "../Module/Analyzer/Algo/All.hpp"
@@ -71,6 +72,7 @@ namespace crawlservpp::Main {
 		typedef Database::IncorrectPathException IncorrectPathException;
 		typedef Database::PrivilegesException PrivilegesException;
 		typedef Database::StorageEngineException StorageEngineException;
+		typedef Helper::Json::Exception JsonException;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Query::JSONPointer::Exception JSONPointerException;
 		typedef Query::RegEx::Exception RegExException;
