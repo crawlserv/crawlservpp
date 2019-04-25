@@ -1016,7 +1016,7 @@ namespace crawlservpp::Module::Crawler {
 
 			if(!retry) {
 				// log failed retry if necessary
-				if(this->nextUrl.first && this->config.crawlerLogging)
+				if(this->nextUrl.first && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 					this->log(
 							"could not retry " + this->nextUrl.second + ","
 							" because it is locked."
@@ -1036,7 +1036,7 @@ namespace crawlservpp::Module::Crawler {
 
 						if(this->lockTime.empty()) {
 							// skip locked URL
-							if(this->config.crawlerLogging)
+							if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 								this->log("skipped " + this->nextUrl.second + ", because it is locked.");
 						}
 						else {
