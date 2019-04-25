@@ -76,6 +76,7 @@ namespace crawlservpp::Module::Parser {
 			std::vector<std::string> parsingIdIgnore;
 			std::vector<unsigned long> parsingIdQueries;
 			std::vector<unsigned short> parsingIdSources;
+			bool parsingRepairCData;
 		} config;
 
 	protected:
@@ -97,7 +98,8 @@ namespace crawlservpp::Module::Parser {
 										generalReParse(false),
 										generalSleepIdle(5000),
 										generalSleepMySql(20),
-										generalTiming(false) {}
+										generalTiming(false),
+										parsingRepairCData(true) {}
 
 	// parse parsing-specific configuration option
 	inline void Config::parseOption() {
@@ -129,6 +131,7 @@ namespace crawlservpp::Module::Parser {
 		this->option("id.ignore", this->config.parsingIdIgnore);
 		this->option("id.queries", this->config.parsingIdQueries);
 		this->option("id.sources", this->config.parsingIdSources);
+		this->option("repair.cdata", this->config.parsingRepairCData);
 	}
 
 	// check parsing-specific configuration
