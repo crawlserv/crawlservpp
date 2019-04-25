@@ -62,7 +62,6 @@ namespace crawlservpp::Module::Parser {
 		void setVerbose(bool isVerbose);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields);
-		void setTimeoutTargetLock(unsigned long timeOut);
 
 		// prepare target table and SQL statements for parser
 		void initTargetTable();
@@ -109,7 +108,6 @@ namespace crawlservpp::Module::Parser {
 		bool verbose;
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
-		unsigned long timeoutTargetLock;
 
 		// table names and target table ID
 		std::string urlListTable;

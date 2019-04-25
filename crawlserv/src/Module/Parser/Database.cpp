@@ -22,7 +22,6 @@ namespace crawlservpp::Module::Parser {
 							  parseCustom(true),
 							  logging(true),
 							  verbose(false),
-							  timeoutTargetLock(0),
 							  targetTableId(0),
 							  ps(_ps()) {}
 
@@ -91,11 +90,6 @@ namespace crawlservpp::Module::Parser {
 	// set target table fields
 	void Database::setTargetFields(const std::vector<std::string>& fields) {
 		this->targetFieldNames = fields;
-	}
-
-	// set time-out for target table lock (in seconds)
-	void Database::setTimeoutTargetLock(unsigned long timeOut) {
-		this->timeoutTargetLock = timeOut;
 	}
 
 	// create target table if it does not exists or add custom field columns if they do not exist

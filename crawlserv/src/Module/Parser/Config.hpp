@@ -58,7 +58,6 @@ namespace crawlservpp::Module::Parser {
 			std::vector<unsigned long> generalSkip;
 			unsigned long generalSleepIdle;
 			unsigned long generalSleepMySql;
-			unsigned long generalTimeoutTargetLock;
 			bool generalTiming;
 
 			// parsing entries
@@ -98,7 +97,6 @@ namespace crawlservpp::Module::Parser {
 										generalReParse(false),
 										generalSleepIdle(5000),
 										generalSleepMySql(20),
-										generalTimeoutTargetLock(30),
 										generalTiming(false) {}
 
 	// parse parsing-specific configuration option
@@ -113,7 +111,6 @@ namespace crawlservpp::Module::Parser {
 		this->option("skip", this->config.generalSkip);
 		this->option("sleep.idle", this->config.generalSleepIdle);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
-		this->option("timeout.target.lock", this->config.generalTimeoutTargetLock);
 		this->option("timing", this->config.generalTiming);
 
 		this->category("parser");

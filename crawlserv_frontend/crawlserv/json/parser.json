@@ -93,13 +93,6 @@
 			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
 			"simple": false
 		},
-		"timeout.target.lock": {
-			"type": "number",
-			"default": 30,
-			"min": 1,
-			"description": "Time-out (in s) of target table locks.",
-			"simple": false
-		},
 		"timing": {
 			"type": "bool",
 			"default": false,

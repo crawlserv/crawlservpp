@@ -100,7 +100,6 @@ namespace crawlservpp::Module::Parser {
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setTargetFields(this->config.parsingFieldNames);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
-		this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
 		// create table names for locking
 		std::string urlListTable("crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace);
