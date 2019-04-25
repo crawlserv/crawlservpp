@@ -50,17 +50,6 @@ namespace crawlservpp::Query {
 		return this->pointerFirst.Get(doc) != nullptr;
 	}
 
-	// get boolean value from content (at least one match?), throws JSONPointer::Exception
-	bool JSONPointer::getBool(const std::string& content) const {
-		rapidjson::Document doc;
-
-		// parse JSON
-		if(doc.Parse(content).HasParseError())
-			throw JSONPointer::Exception("JSON parsing error");
-
-		return this->getBool(doc);
-	}
-
 	// get first match from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
 	void JSONPointer::getFirst(const rapidjson::Document& doc, std::string& resultTo) const {
 		// check document and pointer
@@ -84,17 +73,6 @@ namespace crawlservpp::Query {
 				// stringify result
 				resultTo = Helper::Json::stringify(*result);
 		}
-	}
-
-	// get first match from content (saved to resultTo), throws JSONPointer::Exception
-	void JSONPointer::getFirst(const std::string& content, std::string& resultTo) const {
-		rapidjson::Document doc;
-
-		// parse JSON
-		if(doc.Parse(content).HasParseError())
-			throw JSONPointer::Exception("JSON parsing error");
-
-		return this->getFirst(doc, resultTo);
 	}
 
 	// get all matches from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
@@ -152,16 +130,4 @@ namespace crawlservpp::Query {
 			}
 		}
 	}
-
-	// get all matches from content (saved to resultTo), throws JSONPointer::Exception
-	void JSONPointer::getAll(const std::string& content, std::vector<std::string>& resultTo) const {
-		rapidjson::Document doc;
-
-		// parse JSON
-		if(doc.Parse(content).HasParseError())
-			throw JSONPointer::Exception("JSON parsing error");
-
-		return this->getAll(doc, resultTo);
-	}
-
 } /* crawlservpp::Query */
