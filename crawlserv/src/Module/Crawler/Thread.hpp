@@ -30,6 +30,9 @@
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/DatabaseLock.hpp"
 
+#define RAPIDJSON_HAS_STDSTRING 1
+#include "../../_extern/rapidjson/include/rapidjson/document.h"
+
 #include <curl/curl.h>
 
 #include <algorithm>
