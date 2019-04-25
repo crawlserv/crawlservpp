@@ -28,14 +28,18 @@ namespace crawlservpp::Module::Analyzer {
 	// convert thread ID to string for logging
 	void Database::setId(unsigned long analyzerId) {
 		std::ostringstream idStrStr;
+
 		idStrStr << analyzerId;
+
 		this->idString = idStrStr.str();
 	}
 
 	// set website ID (and convert it to string for SQL requests)
 	void Database::setWebsite(unsigned long websiteId) {
 		std::ostringstream idStrStr;
+
 		idStrStr << websiteId;
+
 		this->website = websiteId;
 		this->websiteIdString = idStrStr.str();
 	}
@@ -43,7 +47,9 @@ namespace crawlservpp::Module::Analyzer {
 	// set URL list ID (and convert it to string for SQL requests)
 	void Database::setUrlList(unsigned long listId) {
 		std::ostringstream idStrStr;
+
 		idStrStr << listId;
+
 		this->urlList = listId;
 		this->listIdString = idStrStr.str();
 	}
@@ -77,9 +83,8 @@ namespace crawlservpp::Module::Analyzer {
 
 		// replace undefined types with empty strings
 		//  NOTE: This will lead to an error in initTargetTable() if the corresponding names are not empty!
-		while(this->targetFieldTypes.size() < this->targetFieldNames.size()) {
+		while(this->targetFieldTypes.size() < this->targetFieldNames.size())
 			this->targetFieldTypes.emplace_back();
-		}
 	}
 
 	// set time-out for target table lock
@@ -94,23 +99,35 @@ namespace crawlservpp::Module::Analyzer {
 		// check options
 		if(this->websiteName.empty())
 			throw DatabaseException("Analyzer::Database::initTargetTable(): No website specified");
+
 		if(this->urlListName.empty())
 			throw DatabaseException("Analyzer::Database::initTargetTable(): No URL list specified");
+
 		if(this->targetTableName.empty())
 			throw DatabaseException("Analyzer::Database::initTargetTable(): Name of result table is empty");
 
 		bool emptyFields = true;
+
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
 			if(!(i->empty())) {
 				emptyFields = false;
+
 				break;
 			}
 		}
+
 		if(emptyFields)
-			throw DatabaseException("Analyzer::Database::initTargetTable(): No target fields specified (only empty strings)");
+			throw DatabaseException(
+					"Analyzer::Database::initTargetTable(): No target fields specified (only empty strings)"
+			);
 
 		// create target table name
-		this->targetTableFull = "crawlserv_" + this->websiteName + "_" + this->urlListName + "_analyzed_" + this->targetTableName;
+		this->targetTableFull = "crawlserv_"
+								+ this->websiteName
+								+ "_"
+								+ this->urlListName
+								+ "_analyzed_"
+								+ this->targetTableName;
 
 		// create table properties
 		CustomTableProperties properties(
@@ -257,9 +274,16 @@ namespace crawlservpp::Module::Analyzer {
 		// prepare SQL statements for algorithm
 		if(this->verbose) {
 			std::ostringstream logStrStr;
-			logStrStr << "[#" << this->idString << "] prepares " << statements.size() << " SQL statements for algorithm...";
+
+			logStrStr	<< "[#"
+						<< this->idString
+						<< "] prepares "
+						<< statements.size()
+						<< " SQL statements for algorithm...";
+
 			this->log(logStrStr.str());
 		}
+
 		for(auto i = statements.begin(); i != statements.end(); ++i)
 			idsTo.push_back(this->addPreparedStatement(*i));
 	}
@@ -270,24 +294,33 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// get text corpus and save it to corpusTo - the corpus will be created if it is out-of-date or does not exist
-	void Database::getCorpus(const CorpusProperties& corpusProperties, std::string& corpusTo,
-			unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo) {
+	void Database::getCorpus(
+			const CorpusProperties& corpusProperties,
+			std::string& corpusTo,
+			unsigned long& sourcesTo,
+			const std::string& filterDateFrom,
+			const std::string& filterDateTo
+	) {
 		std::string dateMap;
 
 		// check arguments
 		if(corpusProperties.sourceTable.empty()) {
-			if(this->logging) this->log("[#" + this->idString + "] WARNING: Name of source table is empty.");
+			if(this->logging)
+				this->log("[#" + this->idString + "] WARNING: Name of source table is empty.");
+
 			return;
 		}
+
 		if(corpusProperties.sourceField.empty()) {
-			if(this->logging) this->log("[#" + this->idString + "] WARNING: Name of source field is empty.");
+			if(this->logging)
+				this->log("[#" + this->idString + "] WARNING: Name of source field is empty.");
+
 			return;
 		}
 
 		// check whether text corpus needs to be created
-		if(this->isCorpusChanged(corpusProperties)) {
+		if(this->isCorpusChanged(corpusProperties))
 			this->createCorpus(corpusProperties, corpusTo, dateMap, sourcesTo);
-		}
 		else {
 			// check connection
 			this->checkConnection();
@@ -304,18 +337,29 @@ namespace crawlservpp::Module::Analyzer {
 				sqlStatement.setUInt(1, corpusProperties.sourceType);
 				sqlStatement.setString(2, corpusProperties.sourceTable);
 				sqlStatement.setString(3, corpusProperties.sourceField);
+
 				SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 				// get result
 				if(sqlResultSet && sqlResultSet->next()) {
 					corpusTo = sqlResultSet->getString("corpus");
-					if(!(sqlResultSet->isNull("datemap"))) dateMap = sqlResultSet->getString("datemap");
+
+					if(!(sqlResultSet->isNull("datemap")))
+						dateMap = sqlResultSet->getString("datemap");
+
 					sourcesTo = sqlResultSet->getUInt64("sources");
 
 					if(this->logging) {
 						std::ostringstream logStrStr;
+
 						logStrStr.imbue(std::locale(""));
-						logStrStr << "[#" << this->idString << "] got text corpus of " << corpusTo.size() << " bytes.";
+
+						logStrStr	<< "[#"
+									<< this->idString
+									<< "] got text corpus of "
+									<< corpusTo.size()
+									<< " bytes.";
+
 						this->log(logStrStr.str());
 					}
 				}
@@ -327,12 +371,22 @@ namespace crawlservpp::Module::Analyzer {
 		if(!filterDateFrom.empty()) {
 			if(!dateMap.empty()) {
 				std::string filteredCorpus;
+
 				filteredCorpus.reserve(corpusTo.length());
 
 				// parse datemap
 				rapidjson::Document document;
-				if(document.Parse(dateMap.c_str()).HasParseError())
-					throw DatabaseException("Analyzer::Database::getCorpus(): Could not parse datemap of corpus");
+
+				try {
+					document = Helper::Json::parseRapid(dateMap);
+				}
+				catch(const JsonException& e) {
+					throw DatabaseException(
+							"Analyzer::Database::getCorpus(): Could not parse datemap of corpus - "
+							+ e.whatStr()
+					);
+				}
+
 				if(!document.IsArray())
 					throw DatabaseException("Analyzer::Database::getCorpus(): Invalid datemap (is not an array)");
 
@@ -342,25 +396,43 @@ namespace crawlservpp::Module::Analyzer {
 					rapidjson::Value::MemberIterator v = i->FindMember("v");
 
 					if(p == i->MemberEnd() || !(p->value.IsUint64()))
-						throw DatabaseException("Analyzer::Database::getCorpus(): Invalid datemap (could not find valid position)");
+						throw DatabaseException(
+								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid position)"
+						);
+
 					if(l == i->MemberEnd() || !(l->value.IsUint64()))
-						throw DatabaseException("Analyzer::Database::getCorpus(): Invalid datemap (could not find valid length)");
+						throw DatabaseException(
+								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid length)"
+						);
+
 					if(v == i->MemberEnd() || !(v->value.IsString()))
-						throw DatabaseException("Analyzer::Database::getCorpus(): Invalid datemap (could not find valid value)");
+						throw DatabaseException(
+								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid value)"
+						);
 
 					if(Helper::DateTime::isISODateInRange(v->value.GetString(), filterDateFrom, filterDateTo)) {
 						filteredCorpus += corpusTo.substr(p->value.GetUint64(), l->value.GetUint64());
+
 						filteredCorpus.push_back(' ');
 					}
 				}
 
-				if(!filteredCorpus.empty()) filteredCorpus.pop_back();
+				if(!filteredCorpus.empty())
+					filteredCorpus.pop_back();
+
 				corpusTo.swap(filteredCorpus);
 
 				if(this->logging) {
 					std::ostringstream logStrStr;
+
 					logStrStr.imbue(std::locale(""));
-					logStrStr << "[#" << this->idString << "] filtered corpus to " << corpusTo.length() << " bytes.";
+
+					logStrStr	<< "[#"
+								<< this->idString
+								<< "] filtered corpus to "
+								<< corpusTo.length()
+								<< " bytes.";
+
 					this->log(logStrStr.str());
 				}
 			}
@@ -431,10 +503,12 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// public helper function: check input tables and columns
-	void Database::checkSources(std::vector<unsigned short>& types,
-								std::vector<std::string>& tables,
-								std::vector<std::string>& columns,
-								bool logging) {
+	void Database::checkSources(
+			std::vector<unsigned short>& types,
+			std::vector<std::string>& tables,
+			std::vector<std::string>& columns,
+			bool logging
+	) {
 		// remove invalid sources
 		for(unsigned long n = 1; n <= tables.size(); ++n) {
 			if(!this->checkSource(types.at(n - 1), tables.at(n - 1), columns.at(n - 1), logging)) {
@@ -456,7 +530,8 @@ namespace crawlservpp::Module::Analyzer {
 			unsigned short type,
 			const std::string& table,
 			const std::string& column,
-			bool logging) {
+			bool logging
+	) {
 		// get full table name
 		std::string tableName(this->getSourceTableName(type, table));
 
@@ -506,6 +581,7 @@ namespace crawlservpp::Module::Analyzer {
 		sql::PreparedStatement& corpusStatement = this->getPreparedStatement(this->ps.isCorpusChanged);
 
 		unsigned short sourceStatement = 0;
+
 		switch(corpusProperties.sourceType) {
 		case Config::generalInputSourcesParsing:
 			sourceStatement = this->ps.isCorpusChangedParsing;
@@ -523,18 +599,18 @@ namespace crawlservpp::Module::Analyzer {
 			return true; // always re-create corpus for crawling data
 		}
 
-		if(!sourceStatement) {
+		if(!sourceStatement)
 			throw DatabaseException(
 					"Analyzer::Database::isCorpusChanged():"
 					" Missing prepared SQL statement for creating text corpus from specified source type"
 			);
-		}
 
 		sql::PreparedStatement& tableStatement = this->getPreparedStatement(sourceStatement);
 
 		try {
 			// execute SQL query for getting the update time of the source table
 			tableStatement.setString(1, corpusProperties.sourceTable);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(tableStatement));
 
 			// get result
@@ -546,6 +622,7 @@ namespace crawlservpp::Module::Analyzer {
 				corpusStatement.setString(2, corpusProperties.sourceTable);
 				corpusStatement.setString(3, corpusProperties.sourceField);
 				corpusStatement.setString(4, updateTime);
+
 				sqlResultSet = SqlResultSetPtr(Database::sqlExecuteQuery(corpusStatement));
 
 				// get result
@@ -559,15 +636,21 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// create and add text corpus (old corpus will be deleted if it exists, a datemap will be created when using parsed data)
-	void Database::createCorpus(const CorpusProperties& corpusProperties, std::string& corpusTo,
-			std::string& dateMapTo, unsigned long& sourcesTo) {
+	void Database::createCorpus(
+			const CorpusProperties& corpusProperties,
+			std::string& corpusTo,
+			std::string& dateMapTo,
+			unsigned long& sourcesTo
+	) {
 		std::vector<TextMapEntry> dateMap;
 		TextMapEntry dateMapEntry;
 
 		// initialize values
 		corpusTo.clear();
 		dateMapTo.clear();
+
 		sourcesTo = 0;
+
 		dateMapEntry = std::make_tuple("", 0, 0);
 
 		// check connection
@@ -575,9 +658,14 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check prepared SQL statements
 		if(!(this->ps.deleteCorpus))
-			throw DatabaseException("Analyzer::Database::createCorpus(): Missing prepared SQL statement for deleting text corpus");
+			throw DatabaseException(
+					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for deleting text corpus"
+			);
+
 		if(!(this->ps.addCorpus))
-			throw DatabaseException("Analyzer::Database::createCorpus(): Missing prepared SQL statement for adding text corpus");
+			throw DatabaseException(
+					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for adding text corpus"
+			);
 
 		// get prepared SQL statements
 		sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->ps.deleteCorpus);
@@ -592,19 +680,26 @@ namespace crawlservpp::Module::Analyzer {
 		);
 
 		// show warning when using raw crawled data and logging is enabled
-		if(corpusProperties.sourceType == Config::generalInputSourcesCrawling
-				&& this->logging) {
+		if(
+				corpusProperties.sourceType == Config::generalInputSourcesCrawling
+				&& this->logging
+		) {
 			if(this->logging) {
 				this->log(
-						"[#" + this->idString + "] WARNING: Corpus will always be re-created when created from raw crawled data."
+						"[#"
+						+ this->idString
+						+ "] WARNING: Corpus will always be re-created when created from raw crawled data."
 				);
 
 				this->log(
-						"[#" + this->idString + "]  It is highly recommended to use parsed data instead!"
+						"[#"
+						+ this->idString
+						+ "]  It is highly recommended to use parsed data instead!"
 				);
 
 				if(!corpusProperties.sourceTable.empty())
 					this->log("[#" + this->idString + "] WARNING: Source table name ignored.");
+
 				if(!corpusProperties.sourceField.empty())
 					this->log("[#" + this->idString + "] WARNING: Source field name ignored.");
 			}
@@ -612,17 +707,29 @@ namespace crawlservpp::Module::Analyzer {
 
 		// start timing and write log entry
 		Timer::Simple timer;
-		std::string tableName(this->getSourceTableName(
-				corpusProperties.sourceType, corpusProperties.sourceTable)
+
+		std::string tableName(
+				this->getSourceTableName(
+						corpusProperties.sourceType,
+						corpusProperties.sourceTable
+				)
 		);
-		std::string columnName(this->getSourceColumnName(
-				corpusProperties.sourceType, corpusProperties.sourceField)
+		std::string columnName(
+				this->getSourceColumnName(
+						corpusProperties.sourceType,
+						corpusProperties.sourceField
+				)
 		);
 
 		if(this->logging)
 			this->log(
-					"[#" + this->idString + "] compiles text corpus"
-					" from " + tableName + "." + columnName + "..."
+					"[#"
+					+ this->idString
+					+ "] compiles text corpus from "
+					+ tableName
+					+ "."
+					+ columnName
+					+ "..."
 			);
 
 		try {
@@ -630,18 +737,23 @@ namespace crawlservpp::Module::Analyzer {
 			deleteStatement.setUInt(1, corpusProperties.sourceType);
 			deleteStatement.setString(2, corpusProperties.sourceTable);
 			deleteStatement.setString(3, corpusProperties.sourceField);
+
 			Database::sqlExecute(deleteStatement);
 
 			// get texts and possibly parsed datetimes from database
 			Main::Data::GetColumns data;
+
 			data.table = tableName;
 			data.columns.reserve(2);
 			data.columns.emplace_back(columnName);
+
 			if(corpusProperties.sourceType == Config::generalInputSourcesParsing) {
 				data.columns.emplace_back("parsed_datetime");
 				data.order = "parsed_datetime";
 			}
+
 			data.type = DataType::_string;
+
 			this->getCustomData(data);
 
 			if(!data.values.empty()) {
@@ -673,10 +785,9 @@ namespace crawlservpp::Module::Analyzer {
 								// check whether a date is already set
 								if(!std::get<0>(dateMapEntry).empty()) {
 									// date is already set -> compare last with current date
-									if(std::get<0>(dateMapEntry) == date) {
+									if(std::get<0>(dateMapEntry) == date)
 										// last date equals current date -> append last date
 										std::get<2>(dateMapEntry) += i->_s.length() + 1; // include space before current string to add
-									}
 									else {
 										// last date differs from current date -> conclude last date and start new date
 										dateMap.emplace_back(dateMapEntry);
@@ -697,7 +808,9 @@ namespace crawlservpp::Module::Analyzer {
 
 						// concatenate corpus text
 						corpusTo += i->_s;
+
 						corpusTo.push_back(' ');
+
 						++sourcesTo;
 					}
 				}
@@ -705,10 +818,10 @@ namespace crawlservpp::Module::Analyzer {
 				// finish up data
 				if(!corpusTo.empty())
 					corpusTo.pop_back(); // remove last space
-				if(!std::get<0>(dateMapEntry).empty()) { // check for unfinished date
+
+				if(!std::get<0>(dateMapEntry).empty()) // check for unfinished date
 					// conclude last date
 					dateMap.emplace_back(dateMapEntry);
-				}
 
 				if(corpusTo.size() <= this->getMaxAllowedPacketSize()) {
 					// add corpus to database if possible
@@ -725,21 +838,27 @@ namespace crawlservpp::Module::Analyzer {
 						addStatement.setNull(5, 0);
 
 					addStatement.setUInt64(6, sourcesTo);
+
 					Database::sqlExecute(addStatement);
 				}
 				else if(this->logging) {
 					// show warning about text corpus size
 					bool adjustServerSettings = false;
 					std::ostringstream logStrStr;
+
 					logStrStr.imbue(std::locale(""));
 
-					logStrStr << "[#" << this->idString << "] WARNING:"
-							" The text corpus cannot be saved to the database, because its size ("
-							<< corpusTo.size() << " bytes) exceeds the ";
+					logStrStr	<< "[#"
+								<< this->idString
+								<< "] WARNING: The text corpus cannot be saved to the database, because its size ("
+								<< corpusTo.size()
+								<< " bytes) exceeds the ";
 
-					if(corpusTo.size() > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
+					if(corpusTo.size() > 1073741824)
+						logStrStr << "mySQL maximum of 1 GiB.";
 					else {
 						logStrStr << "current mySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
+
 						adjustServerSettings = true;
 					}
 
@@ -755,9 +874,17 @@ namespace crawlservpp::Module::Analyzer {
 		if(this->logging) {
 			// write log entry
 			std::ostringstream logStrStr;
+
 			logStrStr.imbue(std::locale(""));
-			logStrStr << "[#" << this->idString << "]  compiled text corpus of "
-					<< corpusTo.size() << " bytes in " + timer.tickStr() << ".";
+
+			logStrStr	<< "[#"
+						<< this->idString
+						<< "]  compiled text corpus of "
+						<< corpusTo.size()
+						<< " bytes in "
+						<< timer.tickStr()
+						<< ".";
+
 			this->log(logStrStr.str());
 		}
 	}

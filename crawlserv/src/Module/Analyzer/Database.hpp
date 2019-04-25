@@ -45,6 +45,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	class Database : public Wrapper::Database {
 		// for convenience
+		typedef Helper::Json::Exception JsonException;
 		typedef Main::Data::Type DataType;
 		typedef Main::Database::Exception DatabaseException;
 		typedef Struct::TargetTableProperties CustomTableProperties;
@@ -81,20 +82,29 @@ namespace crawlservpp::Module::Analyzer {
 		sql::PreparedStatement& getPreparedAlgoStatement(unsigned short sqlStatementId);
 
 		// corpus functions
-		void getCorpus(const CorpusProperties& corpusProperties, std::string& corpusTo,
-				unsigned long& sourcesTo, const std::string& filterDateFrom, const std::string& filterDateTo);
+		void getCorpus(
+				const CorpusProperties& corpusProperties,
+				std::string& corpusTo,
+				unsigned long& sourcesTo,
+				const std::string& filterDateFrom,
+				const std::string& filterDateTo
+		);
 
 		// public helper functions
 		std::string getSourceTableName(unsigned short type, const std::string& name);
 		std::string getSourceColumnName(unsigned short type, const std::string& name);
-		void checkSources(	std::vector<unsigned short>& types,
-							std::vector<std::string>& tables,
-							std::vector<std::string>& columns,
-							bool logging);
-		bool checkSource(	unsigned short type,
-							const std::string& table,
-							const std::string& column,
-							bool logging);
+		void checkSources(
+				std::vector<unsigned short>& types,
+				std::vector<std::string>& tables,
+				std::vector<std::string>& columns,
+				bool logging
+		);
+		bool checkSource(
+				unsigned short type,
+				const std::string& table,
+				const std::string& column,
+				bool logging
+		);
 
 	protected:
 		// options
@@ -119,8 +129,12 @@ namespace crawlservpp::Module::Analyzer {
 
 		// corpus helper function
 		bool isCorpusChanged(const CorpusProperties& corpusProperties);
-		void createCorpus(const CorpusProperties& corpusProperties,
-				std::string& corpusTo, std::string& dateMapTo, unsigned long& sourcesTo);
+		void createCorpus(
+				const CorpusProperties& corpusProperties,
+				std::string& corpusTo,
+				std::string& dateMapTo,
+				unsigned long& sourcesTo
+		);
 
 	private:
 		// IDs of prepared SQL statements
@@ -132,6 +146,7 @@ namespace crawlservpp::Module::Analyzer {
 			unsigned short isCorpusChangedAnalyzing;
 			unsigned short deleteCorpus;
 			unsigned short addCorpus;
+
 			std::vector<unsigned short> algo;
 		} ps;
 	};
