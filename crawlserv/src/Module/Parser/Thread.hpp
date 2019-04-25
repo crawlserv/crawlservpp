@@ -51,6 +51,7 @@ namespace crawlservpp::Module::Parser {
 
 	class Thread: public Module::Thread, public Query::Container, public Config {
 		// for convenience
+		typedef Helper::Json::Exception JsonException;
 		typedef Main::Exception Exception;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::ParsingEntry ParsingEntry;
@@ -148,6 +149,13 @@ namespace crawlservpp::Module::Parser {
 		bool parsingContent(const IdString& content, const std::string& parsedId);
 		void parsingUrlFinished();
 		void parsingSaveResults(bool warped);
+
+		// private helper function
+		void logParsingErrors(
+				unsigned long contentId,
+				const std::string& xmlError,
+				const std::string& jsonError
+		);
 	};
 
 } /* crawlservpp::Module::Parser */

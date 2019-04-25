@@ -16,6 +16,7 @@
 #include "../Thread.hpp"
 
 #include "../../Helper/DateTime.hpp"
+#include "../../Helper/Json.hpp"
 #include "../../Helper/Strings.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Network/Curl.hpp"
@@ -52,6 +53,7 @@ namespace crawlservpp::Module::Crawler {
 
 	class Thread: public Module::Thread, public Query::Container, public Config {
 		// for convenienc
+		typedef Helper::Json::Exception JsonException;
 		typedef Helper::Utf8::Exception Utf8Exception;
 		typedef Main::Exception Exception;
 		typedef Network::Curl::Exception CurlException;
@@ -149,6 +151,14 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long retryCounter;		// number of retries
 		bool archiveRetry;				// only archive needs to be retried
 
+		// parsing data and state
+		Parsing::XML parsedXML;			// parsed XML/HTML
+		rapidjson::Document parsedJSON; // parsed JSON
+		bool xmlParsed;					// XML/HTML has been parsed
+		bool jsonParsed;				// JSON has been parsed with RapidJSON
+		std::string xmlParsingError;	// error while parsing XML/HTML
+		std::string jsonParsingError;	// error while parsing JSON
+
 		// timing
 		unsigned long long tickCounter;
 		std::chrono::steady_clock::time_point startTime;
@@ -194,32 +204,18 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
 		bool crawlingCheckContentType(const std::string& url, const std::string& contentType);
 		bool crawlingCheckContentTypeForLinkExtraction(const std::string& url, const std::string& contentType);
-		bool crawlingCheckContent(
-				const std::string& url,
-				const std::string& content,
-				const Parsing::XML& doc,
-				const std::string& xmlError
-		);
-		bool crawlingCheckContentForLinkExtraction(
-				const std::string& url,
-				const std::string& content,
-				const Parsing::XML& doc,
-				const std::string& xmlError
-		);
+		bool crawlingCheckContent(const std::string& url, const std::string& content);
+		bool crawlingCheckContentForLinkExtraction(const std::string& url, const std::string& content);
 		void crawlingSaveContent(
 				const IdString& url,
 				unsigned int response,
 				const std::string& type,
-				const std::string& content,
-				const Parsing::XML& doc,
-				const std::string& xmlError
+				const std::string& content
 		);
 		std::vector<std::string> crawlingExtractUrls(
 				const std::string& url,
 				const std::string& type,
-				const std::string& content,
-				const Parsing::XML& doc,
-				const std::string& xmlError
+				const std::string& content
 		);
 		void crawlingParseAndAddUrls(
 				const std::string& url,
@@ -237,7 +233,10 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
 
-		// helper function for memento crawling
+		// private helper function
+		void logParsingErrors(const std::string& url);
+
+		// static helper function for memento crawling
 		static std::string parseMementos(
 				std::string mementoContent,
 				std::queue<std::string>& warningsTo,

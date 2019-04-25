@@ -35,6 +35,8 @@ namespace crawlservpp::Module::Crawler {
 				  manualOff(false),
 				  retryCounter(0),
 				  archiveRetry(false),
+				  xmlParsed(false),
+				  jsonParsed(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -50,6 +52,8 @@ namespace crawlservpp::Module::Crawler {
 				  manualOff(false),
 				  retryCounter(0),
 				  archiveRetry(false),
+				  xmlParsed(false),
+				  jsonParsed(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -221,6 +225,13 @@ namespace crawlservpp::Module::Crawler {
 
 		bool usePost = false;
 
+		// reset parsing state
+		this->xmlParsed = false;
+		this->jsonParsed = false;
+
+		this->xmlParsingError.clear();
+		this->jsonParsingError.clear();
+
 		// check for jump in last ID ("time travel")
 		long warpedOver = this->getWarpedOverAndReset();
 
@@ -266,6 +277,9 @@ namespace crawlservpp::Module::Crawler {
 
 			// crawl content
 			bool crawled = this->crawlingContent(url, usePost, checkedUrls, newUrls, timerString);
+
+			// handle parsing errors
+			this->logParsingErrors(url.second);
 
 			// get archive (also when crawling failed!)
 			if(this->config.crawlerTiming)
@@ -1098,8 +1112,11 @@ namespace crawlservpp::Module::Crawler {
 								this->log(
 										"Could not get token from "
 										+ this->config.customTokensSource.at(n)
-										+ ": " + e.whatStr() + " - skips "
-										+ result.second	+ "..."
+										+ ": "
+										+ e.whatStr()
+										+ " - skips "
+										+ result.second
+										+ "..."
 								);
 
 							break;
@@ -1136,8 +1153,11 @@ namespace crawlservpp::Module::Crawler {
 						catch(const RegExException& e) {
 							if(this->config.crawlerLogging)
 								this->log(
-										"WARNING: RegEx error"
-										" - " + e.whatStr() + " [" + this->config.customTokensSource.at(n) + "]."
+										"WARNING: RegEx error - "
+										+ e.whatStr()
+										+ " ["
+										+ this->config.customTokensSource.at(n)
+										+ "]."
 								);
 						}
 
@@ -1151,7 +1171,13 @@ namespace crawlservpp::Module::Crawler {
 						catch(const XMLException& e) {
 							// error while parsing content
 							if(this->config.crawlerLogging)
-								this->log("XML error: " + e.whatStr() + " [" + this->config.customTokensSource.at(n) + "].");
+								this->log(
+										"XML error: "
+										+ e.whatStr()
+										+ " ["
+										+ this->config.customTokensSource.at(n)
+										+ "]."
+								);
 
 							break;
 						}
@@ -1165,7 +1191,8 @@ namespace crawlservpp::Module::Crawler {
 								this->log(
 										"WARNING: XPath error - "
 										+ e.whatStr()
-										+ " [" + this->config.customTokensSource.at(n)
+										+ " ["
+										+ this->config.customTokensSource.at(n)
 										+ "]."
 								);
 						}
@@ -1174,12 +1201,19 @@ namespace crawlservpp::Module::Crawler {
 
 					case QueryStruct::typeJSONPointer:
 						// parse JSON content
-						if(jsonDoc.Parse(content).HasParseError()) {
+						try {
+							jsonDoc = Helper::Json::parseRapid(content);
+						}
+						catch(const JsonException& e) {
 							// error while parsing content
 							if(this->config.crawlerLogging)
-								this->log("JSON parsing error ["
+								this->log(
+										"JSON parsing error: "
+										+ e.whatStr()
+										+ " ["
 										+ this->config.customTokensSource.at(n)
-										+ "].");
+										+ "]."
+								);
 
 							break;
 						}
@@ -1206,8 +1240,7 @@ namespace crawlservpp::Module::Crawler {
 					default:
 						if(this->config.crawlerLogging)
 							this->log(
-									"WARNING: Query for getting token"
-									" is not of type RegEx, XPath or JSONPointer."
+									"WARNING: Invalid type of Query for getting token."
 							);
 					}
 				}
@@ -1379,20 +1412,8 @@ namespace crawlservpp::Module::Crawler {
 			return false;
 		}
 
-		// parse content
-		Parsing::XML doc;
-		std::string xmlError;
-
-		try {
-			doc.parse(content, this->config.crawlerRepairCData);
-		}
-		catch(const XMLException& e) {
-			// error while parsing content
-			xmlError = "XML error: " + e.whatStr() + " [" + url.second + "].";
-		}
-
 		// check content
-		if(!(this->crawlingCheckContent(url.second, content, doc, xmlError))) {
+		if(!(this->crawlingCheckContent(url.second, content))) {
 			// skip because of content (on blacklist or not on whitelist)
 			this->crawlingSkip(url, !(this->config.crawlerArchives));
 
@@ -1406,7 +1427,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// save content
-		this->crawlingSaveContent(url, responseCode, contentType, content, doc, xmlError);
+		this->crawlingSaveContent(url, responseCode, contentType, content);
 
 		if(this->config.crawlerTiming) {
 			updateTimer.stop();
@@ -1415,8 +1436,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// extract URLs
-		std::vector<std::string> urls =
-				this->crawlingExtractUrls(url.second, contentType, content, doc, xmlError);
+		std::vector<std::string> urls = this->crawlingExtractUrls(url.second, contentType, content);
 
 		if(!urls.empty()) {
 			// update timer if necessary
@@ -1592,8 +1612,7 @@ namespace crawlservpp::Module::Crawler {
 
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Query on URL"
-								" is not of type RegEx."
+								"WARNING: Query on URL is not of type RegEx."
 						);
 				}
 			}
@@ -1795,6 +1814,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				switch(i->type) {
 				case QueryStruct::typeRegEx:
+					// run query to determine whether to extract links
 					try {
 						found = this->getRegExQuery(i->index).getBool(contentType);
 
@@ -1838,6 +1858,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				switch(i->type) {
 				case QueryStruct::typeRegEx:
+					// run query to determine whether to extract links
 					try {
 						found = this->getRegExQuery(i->index).getBool(contentType);
 
@@ -1873,12 +1894,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// check whether specific content should be crawled
-	bool Thread::crawlingCheckContent(
-			const std::string& url,
-			const std::string& content,
-			const Parsing::XML& doc,
-			const std::string& xmlError
-	) {
+	bool Thread::crawlingCheckContent(const std::string& url, const std::string& content) {
 		// check argument
 		if(url.empty())
 			throw Exception("Crawler::Thread::crawlingCheckContent(): No URL specified");
@@ -1894,6 +1910,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				switch(i->type) {
 				case QueryStruct::typeRegEx:
+					// run query to determine whether to crawl content
 					try {
 						found = this->getRegExQuery(i->index).getBool(content);
 
@@ -1911,15 +1928,24 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeXPath:
-					if(!xmlError.empty()) {
-						if(this->config.crawlerLogging)
-							this->log(xmlError);
+					// parse XML/HTML if still necessary
+					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+						try {
+							this->parsedXML.parse(content, this->config.crawlerRepairCData);
 
-						return false;
+							this->xmlParsed = true;
+						}
+						catch(const XMLException& e) {
+							this->xmlParsingError = e.whatStr();
+						}
 					}
 
+					if(!(this->xmlParsed))
+						return false;
+
+					// run query to determine whether to crawl content
 					try {
-						found = this->getXPathQuery(i->index).getBool(doc);
+						found = this->getXPathQuery(i->index).getBool(this->parsedXML);
 
 						if(found)
 							break;
@@ -1935,8 +1961,24 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeJSONPointer:
+					// parse JSON if still necessary
+					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
+						try {
+							this->parsedJSON = Helper::Json::parseRapid(content);
+
+							this->jsonParsed = true;
+						}
+						catch(const XMLException& e) {
+							this->jsonParsingError = e.whatStr();
+						}
+					}
+
+					if(!(this->jsonParsed))
+						return false;
+
+					// run query to determine whether to crawl content
 					try {
-						found = this->getJSONPointerQuery(i->index).getBool(content);
+						found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
 
 						if(found)
 							break;
@@ -1957,8 +1999,7 @@ namespace crawlservpp::Module::Crawler {
 				default:
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx, XPath or JSONPointer."
+								"WARNING: Invalid type of query on content type."
 						);
 				}
 			}
@@ -1978,6 +2019,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				switch(i->type) {
 				case QueryStruct::typeRegEx:
+					// run query to determine whether to crawl content
 					try {
 						found = this->getRegExQuery(i->index).getBool(content);
 
@@ -1995,9 +2037,22 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeXPath:
-					if(xmlError.empty()) {
+					// parse XML/HTML if still necessary
+					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
 						try {
-							found = this->getXPathQuery(i->index).getBool(doc);
+							this->parsedXML.parse(content, this->config.crawlerRepairCData);
+
+							this->xmlParsed = true;
+						}
+						catch(const XMLException& e) {
+							this->xmlParsingError = e.whatStr();
+						}
+					}
+
+					if(this->xmlParsed) {
+						// run query to determine whether to crawl content
+						try {
+							found = this->getXPathQuery(i->index).getBool(this->parsedXML);
 
 							if(found)
 								break;
@@ -2014,18 +2069,33 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeJSONPointer:
-					try {
-						found = this->getJSONPointerQuery(i->index).getBool(content);
+					// parse JSON if still necessary
+					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
+						try {
+							this->parsedJSON = Helper::Json::parseRapid(content);
 
-						if(found)
-							break;
+							this->jsonParsed = true;
+						}
+						catch(const XMLException& e) {
+							this->jsonParsingError = e.whatStr();
+						}
 					}
-					catch(const JSONPointerException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: JSONPointer error - " +
-									e.whatStr() + " [" + url + "]."
-							);
+
+					if(this->jsonParsed) {
+						// run query to determine whether to crawl content
+						try {
+							found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
+
+							if(found)
+								break;
+						}
+						catch(const JSONPointerException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: JSONPointer error - " +
+										e.whatStr() + " [" + url + "]."
+								);
+						}
 					}
 
 					break;
@@ -2033,8 +2103,7 @@ namespace crawlservpp::Module::Crawler {
 				case QueryStruct::typeNone:
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx, XPath or JSONPointer."
+								"WARNING: Invalid type of query on content type."
 						);
 				}
 			}
@@ -2047,12 +2116,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// check whether specific content should be used for link extraction
-	bool Thread::crawlingCheckContentForLinkExtraction(
-			const std::string& url,
-			const std::string& content,
-			const Parsing::XML& doc,
-			const std::string& xmlError
-	) {
+	bool Thread::crawlingCheckContentForLinkExtraction(const std::string& url, const std::string& content) {
 		// check argument
 		if(url.empty())
 			throw Exception("Crawler::Thread::crawlingCheckContent(): No URL specified");
@@ -2068,6 +2132,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				switch(i->type) {
 				case QueryStruct::typeRegEx:
+					// run query to determine whether to extract links
 					try {
 						found = this->getRegExQuery(i->index).getBool(content);
 
@@ -2085,15 +2150,24 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeXPath:
-					if(!xmlError.empty()) {
-						if(this->config.crawlerLogging)
-							this->log(xmlError);
+					// parse XML/HTML if still necessary
+					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+						try {
+							this->parsedXML.parse(content, this->config.crawlerRepairCData);
 
-						return false;
+							this->xmlParsed = true;
+						}
+						catch(const XMLException& e) {
+							this->xmlParsingError = e.whatStr();
+						}
 					}
 
+					if(!(this->xmlParsed))
+						return false;
+
+					// run query to determine whether to extract links
 					try {
-						found = this->getXPathQuery(i->index).getBool(doc);
+						found = this->getXPathQuery(i->index).getBool(this->parsedXML);
 
 						if(found)
 							break;
@@ -2109,8 +2183,21 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeJSONPointer:
+					// parse JSON if still necessary
+					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
+						try {
+							this->parsedJSON = Helper::Json::parseRapid(content);
+
+							this->jsonParsed = true;
+						}
+						catch(const JsonException& e) {
+							this->jsonParsingError = e.whatStr();
+						}
+					}
+
+					// run query to determine whether to extract links
 					try {
-						found = this->getJSONPointerQuery(i->index).getBool(content);
+						found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
 
 						if(found)
 							break;
@@ -2131,8 +2218,7 @@ namespace crawlservpp::Module::Crawler {
 				default:
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx, XPath or JSONPointer."
+								"WARNING: Unknown type of query on content type"
 						);
 				}
 			}
@@ -2152,6 +2238,7 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				switch(i->type) {
 				case QueryStruct::typeRegEx:
+					// run query to determine whether to extract links
 					try {
 						found = this->getRegExQuery(i->index).getBool(content);
 
@@ -2169,9 +2256,22 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeXPath:
-					if(xmlError.empty()) {
+					// parse XML/HTML if still necessary
+					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
 						try {
-							found = this->getXPathQuery(i->index).getBool(doc);
+							this->parsedXML.parse(content, this->config.crawlerRepairCData);
+
+							this->xmlParsed = true;
+						}
+						catch(const XMLException& e) {
+							this->xmlParsingError = e.whatStr();
+						}
+					}
+
+					if(this->xmlParsed) {
+						// run query to determine whether to extract links
+						try {
+							found = this->getXPathQuery(i->index).getBool(this->parsedXML);
 
 							if(found)
 								break;
@@ -2188,18 +2288,33 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeJSONPointer:
-					try {
-						found = this->getJSONPointerQuery(i->index).getBool(content);
+					// parse JSON if still necessary
+					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
+						try {
+							this->parsedJSON = Helper::Json::parseRapid(content);
 
-						if(found)
-							break;
+							this->jsonParsed = true;
+						}
+						catch(const JsonException& e) {
+							this->jsonParsingError = e.whatStr();
+						}
 					}
-					catch(const JSONPointerException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: JSONPointer error - " +
-									e.whatStr() + " [" + url + "]."
-							);
+
+					if(this->jsonParsed) {
+						// run query to determine whether to extract links
+						try {
+							found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
+
+							if(found)
+								break;
+						}
+						catch(const JSONPointerException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: JSONPointer error - " +
+										e.whatStr() + " [" + url + "]."
+								);
+						}
 					}
 
 					break;
@@ -2210,8 +2325,7 @@ namespace crawlservpp::Module::Crawler {
 				default:
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx, XPath or JSONPointer."
+								"WARNING: Invalid type of query on content type."
 						);
 				}
 			}
@@ -2228,9 +2342,7 @@ namespace crawlservpp::Module::Crawler {
 			const IdString& url,
 			unsigned int response,
 			const std::string& type,
-			const std::string& content,
-			const Parsing::XML& doc,
-			const std::string& xmlError
+			const std::string& content
 	) {
 		// check arguments
 		if(!url.first)
@@ -2240,11 +2352,23 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Crawler::Thread::crawlingSaveContent(): No URL specified");
 
 		if(this->config.crawlerXml) {
-			if(xmlError.empty()) {
+			// parse XML/HTML if still necessary
+			if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+				try {
+					this->parsedXML.parse(content, this->config.crawlerRepairCData);
+
+					this->xmlParsed = true;
+				}
+				catch(const XMLException& e) {
+					this->xmlParsingError = e.whatStr();
+				}
+			}
+
+			if(this->xmlParsed) {
 				std::string xmlContent;
 
 				try {
-					doc.getContent(xmlContent);
+					this->parsedXML.getContent(xmlContent);
 
 					this->database.saveContent(url.first, response, type, xmlContent);
 
@@ -2258,8 +2382,6 @@ namespace crawlservpp::Module::Crawler {
 						);
 				}
 			}
-			else if(this->config.crawlerLogging)
-				this->log(xmlError);
 		}
 
 		this->database.saveContent(url.first, response, type, content);
@@ -2269,9 +2391,7 @@ namespace crawlservpp::Module::Crawler {
 	std::vector<std::string> Thread::crawlingExtractUrls(
 			const std::string& url,
 			const std::string& type,
-			const std::string& content,
-			const Parsing::XML& doc,
-			const std::string& xmlError
+			const std::string& content
 	) {
 		// check argument
 		if(url.empty())
@@ -2285,16 +2405,11 @@ namespace crawlservpp::Module::Crawler {
 		if(
 				!(this->crawlingCheckUrlForLinkExtraction(url))
 				|| !(this->crawlingCheckContentTypeForLinkExtraction(url, type))
-				|| !(this->crawlingCheckContentForLinkExtraction(url, content, doc, xmlError))
+				|| !(this->crawlingCheckContentForLinkExtraction(url, content))
 		)
 			return std::vector<std::string>();
 
 		std::vector<std::string> urls;
-		rapidjson::Document jsonDoc;
-		bool jsonParsed = false;
-		bool jsonError = false;
-		bool xmlOnly = true;
-		bool jsonOnly = true;
 
 		for(
 				auto i = this->queriesLinks.begin();
@@ -2303,10 +2418,8 @@ namespace crawlservpp::Module::Crawler {
 		) {
 			switch(i->type) {
 			case QueryStruct::typeRegEx:
-				xmlOnly = false;
-				jsonOnly = false;
-
 				try {
+					// run query to extract URLs
 					if(i->resultMulti) {
 						std::vector<std::string> results;
 
@@ -2331,14 +2444,25 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 			case QueryStruct::typeXPath:
-				jsonOnly = false;
+				// parse XML/HTML if still necessary
+				if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+					try {
+						this->parsedXML.parse(content, this->config.crawlerRepairCData);
 
-				if(xmlError.empty()) {
+						this->xmlParsed = true;
+					}
+					catch(const XMLException& e) {
+						this->xmlParsingError = e.whatStr();
+					}
+				}
+
+				if(this->xmlParsed) {
+					// run query to extract URLs
 					try {
 						if(i->resultMulti) {
 							std::vector<std::string> results;
 
-							this->getXPathQuery(i->index).getAll(doc, results);
+							this->getXPathQuery(i->index).getAll(this->parsedXML, results);
 
 							urls.reserve(urls.size() + results.size());
 							urls.insert(urls.end(), results.begin(), results.end());
@@ -2346,7 +2470,7 @@ namespace crawlservpp::Module::Crawler {
 						else {
 							std::string result;
 
-							this->getXPathQuery(i->index).getFirst(doc, result);
+							this->getXPathQuery(i->index).getFirst(this->parsedXML, result);
 
 							urls.emplace_back(result);
 						}
@@ -2360,25 +2484,25 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 			case QueryStruct::typeJSONPointer:
-				xmlOnly = false;
+				// parse JSON if still necessary
+				if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
+					try {
+						this->parsedJSON = Helper::Json::parseRapid(content);
 
-				if(!jsonParsed) {
-					if(!jsonError) {
-						// parse JSON
-						if(jsonDoc.Parse(content).HasParseError()) {
-							jsonError = true;
-						}
-						else
-							jsonParsed = true;
+						this->jsonParsed = true;
+					}
+					catch(const JsonException& e) {
+						this->jsonParsingError = e.whatStr();
 					}
 				}
 
-				if(!jsonError) {
+				if(this->jsonParsed) {
+					// run query to extract URLs
 					try {
 						if(i->resultMulti) {
 							std::vector<std::string> results;
 
-							this->getJSONPointerQuery(i->index).getAll(jsonDoc, results);
+							this->getJSONPointerQuery(i->index).getAll(this->parsedJSON, results);
 
 							urls.reserve(urls.size() + results.size());
 							urls.insert(urls.end(), results.begin(), results.end());
@@ -2386,7 +2510,7 @@ namespace crawlservpp::Module::Crawler {
 						else {
 							std::string result;
 
-							this->getJSONPointerQuery(i->index).getFirst(jsonDoc, result);
+							this->getJSONPointerQuery(i->index).getFirst(this->parsedJSON, result);
 
 							urls.emplace_back(result);
 						}
@@ -2404,17 +2528,8 @@ namespace crawlservpp::Module::Crawler {
 
 			default:
 				if(this->config.crawlerLogging)
-					this->log("WARNING: Query on content type is not of type RegEx, XPath or JSONPointer.");
+					this->log("WARNING: Invalid type of query on content type.");
 			}
-		}
-
-		// show warnings if necessary
-		if(this->config.crawlerLogging) {
-			if(xmlOnly && !xmlError.empty())
-				this->log(xmlError);
-
-			if(jsonOnly && jsonError)
-				this->log("WARNING: JSON parsing error [" + url + "].");
 		}
 
 		// sort and remove duplicates
@@ -2796,17 +2911,12 @@ namespace crawlservpp::Module::Crawler {
 																	" [" + url.second + "].");
 													}
 													else {
-														// parse content
-														Parsing::XML doc;
-														std::string xmlError;
+														// reset parsing status
+														this->xmlParsed = false;
+														this->jsonParsed = false;
 
-														try {
-															doc.parse(archivedContent, this->config.crawlerRepairCData);
-														}
-														catch(const XMLException& e) {
-															// error while parsing content
-															xmlError = "XML error: " + e.whatStr() + " [" + url.second + "].";
-														}
+														this->xmlParsingError.clear();
+														this->jsonParsingError.clear();
 
 														// get content type
 														std::string contentType = this->networkingArchives->getContentType();
@@ -2824,10 +2934,11 @@ namespace crawlservpp::Module::Crawler {
 														std::vector<std::string> urls = this->crawlingExtractUrls(
 																url.second,
 																contentType,
-																archivedContent,
-																doc,
-																xmlError
+																archivedContent
 														);
+
+														// handle parsing errors
+														this->logParsingErrors(mementos.front().url);
 
 														if(!urls.empty()) {
 															// parse and add URLs
@@ -3099,6 +3210,23 @@ namespace crawlservpp::Module::Crawler {
 
 		if(archiveOnly)
 			this->archiveRetry = true;
+	}
+
+	// write parsing errors as warnings to log if necessary
+	void Thread::logParsingErrors(const std::string& url) {
+		if(!(this->xmlParsingError.empty())) {
+			if(this->config.crawlerLogging)
+				this->log("WARNING: " + this->xmlParsingError + " [" + url + "].");
+
+			this->xmlParsingError.clear();
+		}
+
+		if(!(this->jsonParsingError.empty())) {
+			if(this->config.crawlerLogging)
+				this->log("WARNING: " + this->jsonParsingError + " [" + url + "].");
+
+			this->jsonParsingError.clear();
+		}
 	}
 
 	// parse memento reply, get mementos and link to next page if one exists
