@@ -488,12 +488,16 @@ jQuery(function($) {
 		
 		if($("#query-test-text"))
 			args["test"] = $("#query-test-text").val();
+		
 		if(typeof $(this).data("tab") !== "undefined")
 			args["tab"] = $(this).data("tab");
+		
 		if(typeof $(this).data("mode") !== "undefined")
 			args["mode"] = $(this).data("mode");
+		
 		if(typeof $(this).data("scrolldown") !== "undefined")
 			args["scrolldown"] = true;
+		
 		if(typeof config !== "undefined") {
 			if(config.isConfChanged()) {
 				if(confirm("Do you want to discard the changes to your current configuration?"))
@@ -501,7 +505,8 @@ jQuery(function($) {
 				else
 					reenableInputs();
 			}
-			else reload(args);
+			else
+				reload(args);
 		}
 		else {
 			// reload in "Threads" menu also

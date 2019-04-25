@@ -1,7 +1,17 @@
 <?php
-if(isset($_POST["website"])) $website = $_POST["website"];
-if(isset($_POST["module"])) $module = $_POST["module"];
-else $module = "crawler";
+if(isset($_POST["website"]))
+    $website = $_POST["website"];
+
+if(isset($_POST["module"]))
+    $module = $_POST["module"];
+else
+    $module = "crawler";
+
+if(isset($_POST["config"]))
+    $config = $_POST["config"];
+
+if(isset($_POST["urllist"]))
+    $urllist = $_POST["urllist"];
 ?>
 <h2>Threads</h2>
 <div id="threads">
@@ -14,27 +24,38 @@ else $module = "crawler";
 <div class="content-block">
 <div class="entry-row">
 <div class="entry-label">Website:</div><div class="entry-input">
-<select class="entry-input" id="website-select" data-m="<?php echo $m; ?>" data-scrolldown >
+<select class="entry-input" id="website-select" data-m="threads" data-scrolldown >
 <?php
 $result = $dbConnection->query("SELECT id,name FROM crawlserv_websites ORDER BY name");
-if(!$result) exit("ERROR: Could not get ids and names of websites.");
+
+if(!$result)
+    exit("ERROR: Could not get ids and names of websites.");
+
 $first = true;
+
 while($row = $result->fetch_assoc()) {
     $id = $row["id"];
     $name = $row["name"];
     
     if($first) {
-        if(!isset($website)) $website = $id;
+        if(!isset($website))
+            $website = $id;
+        
         $first = false;
     }
+    
     echo "<option value=\"".$id."\"";
-    if($website == $id) {
+    
+    if($website == $id)
         echo " selected";
-    }
+
     echo ">".htmlspecialchars($name)."</option>\n";
 }
+
 $result->close();
-if(!isset($website)) echo "<option disabled>No websites available</option>\n";
+
+if(!isset($website))
+    echo "<option disabled>No websites available</option>\n";
 ?>
 </select>
 </div>
@@ -53,58 +74,78 @@ if(!isset($website)) echo "<option disabled>No websites available</option>\n";
 if(isset($website)) {
     echo "<div class=\"entry-row\">\n";
     echo "<div class=\"entry-label\">Config:</div><div class=\"entry-input\">\n";
-    echo "<select id=\"config-select\" class=\"entry-input\">\n";
+    echo "<select id=\"config-select\" class=\"entry-input\" data-noreload>\n";
     
     $result = $dbConnection->query("SELECT id, name FROM crawlserv_configs WHERE website=$website AND module='$module'");
-    if(!$result) exit("ERROR: Could not get ids and names of configurations.");
+    
+    if(!$result)
+        exit("ERROR: Could not get IDs and names of configurations.");
+    
     $first = true;
+    
     while($row = $result->fetch_assoc()) {
         $id = $row["id"];
         $name = $row["name"];
         
         if($first) {
-            if(!isset($config)) $config = $id;
+            if(!isset($config))
+                $config = $id;
+            
             $first = false;
         }
+        
         echo "<option value=\"".$id."\"";
         
-        if($id == $config) echo " selected";
+        if($id == $config)
+            echo " selected";
         
         echo ">$name</option>\n";
         
     }
+    
     $result->close();
     
-    if(!isset($config)) echo "<option disabled>No configurations available</option>\n";
+    if(!isset($config))
+        echo "<option disabled>No configurations available</option>\n";
     
     echo "</select>\n";
     echo "</div>\n";
     echo "</div>\n";
     echo "<div class=\"entry-row\">\n";
     echo "<div class=\"entry-label\">URL list:</div><div class=\"entry-input\">\n";
-    echo "<select id=\"urllist-select\" class=\"entry-input\">\n";
+    echo "<select id=\"urllist-select\" class=\"entry-input\" data-noreload>\n";
     
     $result = $dbConnection->query("SELECT id, name FROM crawlserv_urllists WHERE website=$website");
-    if(!$result) exit("ERROR: Could not get ids and names of URL lists.");
+    
+    if(!$result)
+        exit("ERROR: Could not get IDs and names of URL lists.");
+    
     $first = true;
+    
     while($row = $result->fetch_assoc()) {
         $id = $row["id"];
         $name = $row["name"];
         
         if($first) {
-            if(!isset($urllist)) $urllist = $id;
+            if(!isset($urllist))
+                $urllist = $id;
+            
             $first = false;
         }
+        
         echo "<option value=\"".$id."\"";
         
-        if($id == $urllist) echo " selected";
+        if($id == $urllist)
+            echo " selected";
         
         echo ">$name</option>\n";
         
     }
+    
     $result->close();
     
-    if(!isset($urllist)) echo "<option disabled>No URL list available</option>\n";
+    if(!isset($urllist))
+        echo "<option disabled>No URL list available</option>\n";
     
     echo "</select>\n";
     echo "</div>\n";
@@ -113,8 +154,10 @@ if(isset($website)) {
 ?>
 <div class="action-link-box" id="scroll-to">
 <div class="action-link">
-<?php if(isset($website))
-    echo "<a href=\"#\" class=\"action-link thread-start\" data-module=\"$module\" data-noreload>Start thread</a>\n"; ?>
+<?php
+if(isset($website))
+    echo "<a href=\"#\" class=\"action-link thread-start\" data-module=\"$module\" data-noreload>Start thread</a>\n";
+?>
 </div>
 </div>
 </div>
