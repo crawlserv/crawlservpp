@@ -5310,14 +5310,10 @@ namespace crawlservpp::Main {
 				throw Database::Exception("Main::Database::run(): Could not create SQL statement");
 
 			// execute lines in SQL file
-			unsigned long lineCounter = 1;
-
 			while(std::getline(initSQLFile, line)) {
 				try {
 					if(!line.empty())
 						Database::sqlExecute(sqlStatement, line);
-
-					++lineCounter;
 				}
 				catch(const sql::SQLException &e) { this->sqlException("Main::Database::run", e); }
 			}
