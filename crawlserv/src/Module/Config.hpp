@@ -10,6 +10,7 @@
 #ifndef MODULE_CONFIG_HPP_
 #define MODULE_CONFIG_HPP_
 
+#include "../Helper/Json.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/ConfigItem.hpp"
@@ -30,6 +31,7 @@ namespace crawlservpp::Module {
 
 	class Config {
 		// for convenience
+		typedef Helper::Json::Exception JsonException;
 		typedef Struct::ConfigItem ConfigItem;
 
 		typedef std::queue<std::string>& LogQueue;
@@ -135,8 +137,15 @@ protected:
 		// parse JSON
 		rapidjson::Document json;
 
-		if(json.Parse(configJson.c_str()).HasParseError())
-			throw Config::Exception("Module::Config::loadConfig(): Could not parse configuration JSON.");
+		try {
+			json = Helper::Json::parseRapid(configJson);
+		}
+		catch(const JsonException& e) {
+			throw Config::Exception(
+					"Module::Config::loadConfig(): Could not parse configuration JSON - "
+					+ e.whatStr()
+			);
+		}
 
 		if(!json.IsArray())
 			throw Config::Exception("Module::Config::loadConfig(): Invalid configuration JSON (is no array).");
