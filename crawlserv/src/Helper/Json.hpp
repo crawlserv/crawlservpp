@@ -10,9 +10,13 @@
 #ifndef HELPER_JSON_HPP_
 #define HELPER_JSON_HPP_
 
+#include "../Main/Exception.hpp"
+
 #define RAPIDJSON_HAS_STDSTRING 1
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
+#include "../_extern/rapidjson/include/rapidjson/error/en.h"
+#include "../_extern/rapidjson/include/rapidjson/error/error.h"
 #include "../_extern/rapidjson/include/rapidjson/stringbuffer.h"
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
 
@@ -35,6 +39,19 @@ namespace crawlservpp::Helper::Json {
 	std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify);
 	std::string stringify(const TextMap& textMapToStringify);
 	std::string stringify(const rapidjson::Value& value);
+
+	// parsing function
+	rapidjson::Document parseRapid(const std::string& json);
+
+	/*
+	 * CLASS FOR JSON EXCEPTIONS
+	 */
+
+	class Exception : public Main::Exception {
+	public:
+		Exception(const std::string& description) : Main::Exception(description) {}
+		virtual ~Exception() {}
+	};
 
 	/*
 	 * IMPLEMENTATION
@@ -196,6 +213,37 @@ namespace crawlservpp::Helper::Json {
 		value.Accept(writer);
 
 		return buffer.GetString();
+	}
+
+	// parse JSON using RapidJSON, throws Helper::Json::Exception
+	inline rapidjson::Document parseRapid(const std::string& json) {
+		rapidjson::Document doc;
+
+		doc.Parse(json);
+
+		if(doc.HasParseError()) {
+			std::string exceptionStr(rapidjson::GetParseError_En(doc.GetParseError()));
+
+			exceptionStr += " at \'";
+
+			if(doc.GetErrorOffset() > 25)
+				exceptionStr += json.substr(doc.GetErrorOffset() - 25, 25);
+			else if(doc.GetErrorOffset() > 0)
+				exceptionStr += json.substr(0, doc.GetErrorOffset());
+
+			exceptionStr += "[!]";
+
+			if(json.size() > doc.GetErrorOffset() + 25)
+				exceptionStr += json.substr(doc.GetErrorOffset(), 25);
+			else if(json.size() > doc.GetErrorOffset())
+				exceptionStr += json.substr(doc.GetErrorOffset());
+
+			exceptionStr += "\'";
+
+			throw Exception(exceptionStr);
+		}
+
+		return doc;
 	}
 
 } /* crawlservpp::Helper::Json */
