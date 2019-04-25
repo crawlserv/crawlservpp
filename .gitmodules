@@ -10,3 +10,6 @@
 [submodule "crawlserv/src/_extern/rapidjson"]
 	path = crawlserv/src/_extern/rapidjson
 	url = https://github.com/Tencent/rapidjson
+[submodule "crawlserv/src/_extern/jsoncons"]
+	path = crawlserv/src/_extern/jsoncons
+	url = https://github.com/danielaparker/jsoncons
