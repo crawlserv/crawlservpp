@@ -138,6 +138,7 @@ The source code of the server consists of the following classes (as of April 201
 The following additional namespaces are used (to be found in [`crawlserv/src/Helper`](crawlserv/src/Helper)):
 
 * **[`Helper::DateTime`](crawlserv/src/Helper/DateTime.hpp)**: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
+* **[`Helper::File`](crawlserv/src/Helper/File.hpp)**: Global helper function for file access.
 * **[`Helper::FileSystem`](crawlserv/src/Helper/FileSystem.hpp)**: Global helper functions for file system operations using `std::experimental::filesystem`.
 * **[`Helper::Json`](crawlserv/src/Helper/Json.hpp)**: Global helper functions for converting to JSON using the [RapidJSON library](https://github.com/Tencent/rapidjson).
 * **[`Helper::Portability`](crawlserv/src/Helper/Portability/)**: Additional headers for portability.
