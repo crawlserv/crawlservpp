@@ -54,7 +54,7 @@ namespace crawlservpp::Query {
 	void JSONPointer::getFirst(const rapidjson::Document& doc, std::string& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError())
-			throw JSONPointer::Exception("JSON parsing error");
+			throw JSONPointer::Exception("Invalid JSON");
 
 		if(!(this->pointerFirst.IsValid()))
 			throw JSONPointer::Exception("Invalid JSONPointer");
@@ -79,7 +79,7 @@ namespace crawlservpp::Query {
 	void JSONPointer::getAll(const rapidjson::Document& doc, std::vector<std::string>& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError())
-			throw JSONPointer::Exception("JSON parsing error");
+			throw JSONPointer::Exception("Invalid JSON");
 
 		if(!(this->pointerFirst.IsValid()))
 			throw JSONPointer::Exception("Invalid JSONPointer");
