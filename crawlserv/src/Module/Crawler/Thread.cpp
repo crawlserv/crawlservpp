@@ -2668,7 +2668,7 @@ namespace crawlservpp::Module::Crawler {
 
 			if(urls.size() < expected) {
 				// number of URLs is smaller than expected
-				expectedStrStr	<< "Number of extracted URLs ["
+				expectedStrStr	<< "number of extracted URLs ["
 								<< urls.size()
 								<< "] is smaller than expected ["
 								<< expected
@@ -2683,7 +2683,7 @@ namespace crawlservpp::Module::Crawler {
 			}
 			else if(urls.size() > expected) {
 				// number of URLs is larger than expected
-				expectedStrStr	<< "Number of extracted URLs ["
+				expectedStrStr	<< "number of extracted URLs ["
 								<< urls.size()
 								<< "] is larger than expected ["
 								<< expected
@@ -2698,7 +2698,7 @@ namespace crawlservpp::Module::Crawler {
 					this->log("WARNING: " + expectedStrStr.str() + ".");
 			}
 			else if(this->config.crawlerLogging == Config::crawlerLoggingVerbose) {
-				expectedStrStr	<< "Number of extracted URLs ["
+				expectedStrStr	<< "number of extracted URLs ["
 								<< urls.size()
 								<< "] as expected ["
 								<< expected
