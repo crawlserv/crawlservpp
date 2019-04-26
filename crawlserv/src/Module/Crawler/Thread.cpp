@@ -2672,7 +2672,7 @@ namespace crawlservpp::Module::Crawler {
 								<< urls.size()
 								<< "] is smaller than expected ["
 								<< expected
-								<< " ["
+								<< "] ["
 								<< url
 								<< "]";
 
@@ -2687,7 +2687,7 @@ namespace crawlservpp::Module::Crawler {
 								<< urls.size()
 								<< "] is larger than expected ["
 								<< expected
-								<< " ["
+								<< "] ["
 								<< url
 								<< "]";
 
@@ -2702,7 +2702,7 @@ namespace crawlservpp::Module::Crawler {
 								<< urls.size()
 								<< "] as expected ["
 								<< expected
-								<< " ["
+								<< "] ["
 								<< url
 								<< "].";
 
