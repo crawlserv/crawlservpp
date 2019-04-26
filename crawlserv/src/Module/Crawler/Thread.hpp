@@ -23,7 +23,8 @@
 #include "../../Parsing/URI.hpp"
 #include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
-#include "../../Query/JSONPointer.hpp"
+#include "../../Query/JsonPath.hpp"
+#include "../../Query/JsonPointer.hpp"
 #include "../../Query/RegEx.hpp"
 #include "../../Query/XPath.hpp"
 #include "../../Struct/QueryProperties.hpp"
@@ -31,7 +32,11 @@
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/DatabaseLock.hpp"
 
+#include "../../_extern/jsoncons/include/jsoncons/json.hpp"
+#include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
+
 #define RAPIDJSON_HAS_STDSTRING 1
+
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <curl/curl.h>
@@ -61,7 +66,8 @@ namespace crawlservpp::Module::Crawler {
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Query::JSONPointer::Exception JSONPointerException;
+		typedef Query::JsonPath::Exception JsonPathException;
+		typedef Query::JsonPointer::Exception JsonPointerException;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
@@ -152,12 +158,14 @@ namespace crawlservpp::Module::Crawler {
 		bool archiveRetry;				// only archive needs to be retried
 
 		// parsing data and state
-		Parsing::XML parsedXML;			// parsed XML/HTML
-		rapidjson::Document parsedJSON; // parsed JSON
-		bool xmlParsed;					// XML/HTML has been parsed
-		bool jsonParsed;				// JSON has been parsed with RapidJSON
-		std::string xmlParsingError;	// error while parsing XML/HTML
-		std::string jsonParsingError;	// error while parsing JSON
+		Parsing::XML parsedXML;					// parsed XML/HTML
+		rapidjson::Document parsedJsonRapid;	// parsed JSON (using RapidJSON)
+		jsoncons::json parsedJsonCons;			// parsed JSON (using jsoncons)
+		bool xmlParsed;							// XML/HTML has been parsed
+		bool jsonParsedRapid;					// JSON has been parsed using RapidJSON
+		bool jsonParsedCons;					// JSON has been parsed using jsoncons
+		std::string xmlParsingError;			// error while parsing XML/HTML
+		std::string jsonParsingError;			// error while parsing JSON
 
 		// timing
 		unsigned long long tickCounter;
@@ -233,7 +241,11 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
 
-		// private helper function
+		// private helper functions
+		bool parseXml(const std::string& content);
+		bool parseJsonRapid(const std::string& content);
+		bool parseJsonCons(const std::string& content);
+		void resetParsingState();
 		void logParsingErrors(const std::string& url);
 
 		// static helper function for memento crawling

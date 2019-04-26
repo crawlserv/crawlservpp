@@ -10,7 +10,8 @@
 #ifndef QUERY_CONTAINER_HPP_
 #define QUERY_CONTAINER_HPP_
 
-#include "JSONPointer.hpp"
+#include "JsonPath.hpp"
+#include "JsonPointer.hpp"
 #include "RegEx.hpp"
 #include "XPath.hpp"
 
@@ -37,7 +38,8 @@ namespace crawlservpp::Query {
 			static const unsigned char typeNone = 0;
 			static const unsigned char typeRegEx = 1;
 			static const unsigned char typeXPath = 2;
-			static const unsigned char typeJSONPointer = 3;
+			static const unsigned char typeJsonPointer = 3;
+			static const unsigned char typeJsonPath = 4;
 			unsigned char type;
 			unsigned long index;
 			bool resultBool;
@@ -56,11 +58,11 @@ namespace crawlservpp::Query {
 
 		// query functions
 		virtual void initQueries() = 0;
-		void reserveForQueries(unsigned long numOfAdditionalQueries);
 		QueryStruct addQuery(const QueryProperties& properties);
 		const RegEx& getRegExQuery(unsigned long index) const;
 		const XPath& getXPathQuery(unsigned long index) const;
-		const JSONPointer& getJSONPointerQuery(unsigned long index) const;
+		const JsonPointer& getJsonPointerQuery(unsigned long index) const;
+		const JsonPath& getJsonPathQuery(unsigned long index) const;
 		void clearQueries();
 
 		// not moveable, not copyable
@@ -73,7 +75,8 @@ namespace crawlservpp::Query {
 		// queries
 		std::vector<RegEx> queriesRegEx;
 		std::vector<XPath> queriesXPath;
-		std::vector<JSONPointer> queriesJSONPointer;
+		std::vector<JsonPointer> queriesJSONPointer;
+		std::vector<JsonPath> queriesJSONPath;
 	};
 
 } /* crawlservpp::Query */

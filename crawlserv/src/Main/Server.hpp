@@ -30,7 +30,8 @@
 #include "../Module/Analyzer/Algo/All.hpp"
 #include "../Module/Crawler/Thread.hpp"
 #include "../Module/Parser/Thread.hpp"
-#include "../Query/JSONPointer.hpp"
+#include "../Query/JsonPath.hpp"
+#include "../Query/JsonPointer.hpp"
 #include "../Query/RegEx.hpp"
 #include "../Query/XPath.hpp"
 #include "../Timer/SimpleHR.hpp"
@@ -42,7 +43,11 @@
 #include "../Struct/UrlListProperties.hpp"
 #include "../Struct/WebsiteProperties.hpp"
 
+#include "../_extern/jsoncons/include/jsoncons/json.hpp"
+#include "../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
+
 #define RAPIDJSON_HAS_STDSTRING 1
+
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/prettywriter.h"
 
@@ -74,7 +79,8 @@ namespace crawlservpp::Main {
 		typedef Database::StorageEngineException StorageEngineException;
 		typedef Helper::Json::Exception JsonException;
 		typedef Parsing::XML::Exception XMLException;
-		typedef Query::JSONPointer::Exception JSONPointerException;
+		typedef Query::JsonPath::Exception JSONPathException;
+		typedef Query::JsonPointer::Exception JSONPointerException;
 		typedef Query::RegEx::Exception RegExException;
 		typedef Query::XPath::Exception XPathException;
 		typedef Struct::AlgoThreadProperties AlgoThreadProperties;

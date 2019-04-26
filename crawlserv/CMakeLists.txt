@@ -180,6 +180,11 @@ else()
 	endif()
 endif()
 
+# set include directory for jsoncons to sub-directory of source code
+set(jsoncons_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/jsoncons/include")
+
+message("jsoncons include directory set to: \"${jsoncons_INCLUDE}\".")
+
 # source files
 add_executable(${PROJECT_NAME}
 		src/main.cpp
@@ -204,7 +209,8 @@ add_executable(${PROJECT_NAME}
 		src/Parsing/URI.cpp
 		src/Parsing/XML.cpp
 		src/Query/Container.cpp
-		src/Query/JSONPointer.cpp
+		src/Query/JsonPath.cpp
+		src/Query/JsonPointer.cpp
 		src/Query/RegEx.cpp
 		src/Query/XPath.cpp
 		src/Timer/Simple.cpp
@@ -228,6 +234,7 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 # set include directories
 target_include_directories(${PROJECT_NAME} PRIVATE ${mysqlcppconn_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${tidy_INCLUDE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncons_INCLUDE})
 
 # set libraries
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})

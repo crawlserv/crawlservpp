@@ -17,13 +17,6 @@ namespace crawlservpp::Query {
 	// destructor stub
 	Container::~Container() {}
 
-	// reserve memory for additional queries (optimized for speed, not memory)
-	void Container::reserveForQueries(unsigned long numOfAdditionalQueries) {
-		this->queriesRegEx.reserve(this->queriesRegEx.size() + numOfAdditionalQueries);
-		this->queriesXPath.reserve(this->queriesXPath.size() + numOfAdditionalQueries);
-		this->queriesJSONPointer.reserve(this->queriesJSONPointer.size() + numOfAdditionalQueries);
-	}
-
 	// add query to internal vectors and return index, throws std::runtime_error
 	Container::QueryStruct Container::addQuery(const QueryProperties& properties) {
 		Container::QueryStruct newQuery;
@@ -53,7 +46,14 @@ namespace crawlservpp::Query {
 
 				this->queriesJSONPointer.emplace_back(properties.text);
 
-				newQuery.type = QueryStruct::typeJSONPointer;
+				newQuery.type = QueryStruct::typeJsonPointer;
+			}
+			else if(properties.type == "jsonpath") {
+				newQuery.index = this->queriesJSONPath.size();
+
+				this->queriesJSONPath.emplace_back(properties.text);
+
+				newQuery.type = QueryStruct::typeJsonPath;
 			}
 			else throw std::runtime_error("Unknown query type \'" + properties.type + "\'");
 		}
@@ -72,8 +72,13 @@ namespace crawlservpp::Query {
 	}
 
 	// get JSONPointer query by index
-	const JSONPointer& Container::getJSONPointerQuery(unsigned long index) const {
+	const JsonPointer& Container::getJsonPointerQuery(unsigned long index) const {
 		return this->queriesJSONPointer.at(index);
+	}
+
+	// get JSONPath query by index
+	const JsonPath& Container::getJsonPathQuery(unsigned long index) const {
+		return this->queriesJSONPath.at(index);
 	}
 
 	// clear queries
@@ -82,6 +87,7 @@ namespace crawlservpp::Query {
 		this->queriesXPath.clear();
 		this->queriesRegEx.clear();
 		this->queriesJSONPointer.clear();
+		this->queriesJSONPath.clear();
 	}
 
 } /* crawlservpp::Query */

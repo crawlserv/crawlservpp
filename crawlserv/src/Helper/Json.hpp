@@ -12,6 +12,8 @@
 
 #include "../Main/Exception.hpp"
 
+#include "../_extern/jsoncons/include/jsoncons/json.hpp"
+
 #define RAPIDJSON_HAS_STDSTRING 1
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
@@ -42,6 +44,7 @@ namespace crawlservpp::Helper::Json {
 
 	// parsing function
 	rapidjson::Document parseRapid(const std::string& json);
+	jsoncons::json parseCons(const std::string& json);
 
 	/*
 	 * CLASS FOR JSON EXCEPTIONS
@@ -205,7 +208,7 @@ namespace crawlservpp::Helper::Json {
 		return std::string(buffer.GetString(), buffer.GetSize());
 	}
 
-	// stringify a JSON value
+	// stringify a JSON value using RapidJSON
 	inline std::string stringify(const rapidjson::Value& value) {
 		rapidjson::StringBuffer buffer;
 		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -244,6 +247,18 @@ namespace crawlservpp::Helper::Json {
 		}
 
 		return doc;
+	}
+
+	// parse JSON using jsoncons, throws Helper::Json::Exception
+	inline jsoncons::json parseCons(const std::string& json) {
+		try {
+			jsoncons::json result(json);
+
+			return result;
+		}
+		catch(const jsoncons::json_exception& e) {
+			throw Exception(e.what());
+		}
 	}
 
 } /* crawlservpp::Helper::Json */

@@ -118,7 +118,8 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction using [uriparser](https://github.com/uriparser/uriparser).
 * **[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
 * **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for query management in child classes.
-* **[`Query::JSONPointer`](crawlserv/src/Query/JSONPointer.cpp)**: Using the [RapidJSON library](https://github.com/Tencent/rapidjson) to implement a JSONPointer with boolean and/or single result.
+* **[`Query::JsonPath`](crawlserv/src/Query/JsonPath.cpp)**: Using the [jsoncons library](https://github.com/danielaparker/jsoncons/) to implement a JSONPath with boolean, single and/or multiple results.
+* **[`Query::JsonPointer`](crawlserv/src/Query/JsonPointer.cpp)**: Using the [RapidJSON library](https://github.com/Tencent/rapidjson) to implement a JSONPointer with boolean, single and/or multiple results.
 * **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * **[`Query::XPath`](crawlserv/src/Query/XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
 * **[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
@@ -140,7 +141,7 @@ The following additional namespaces are used (to be found in [`crawlserv/src/Hel
 * **[`Helper::DateTime`](crawlserv/src/Helper/DateTime.hpp)**: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
 * **[`Helper::File`](crawlserv/src/Helper/File.hpp)**: Global helper function for file access.
 * **[`Helper::FileSystem`](crawlserv/src/Helper/FileSystem.hpp)**: Global helper functions for file system operations using `std::experimental::filesystem`.
-* **[`Helper::Json`](crawlserv/src/Helper/Json.hpp)**: Global helper functions for converting to JSON using the [RapidJSON library](https://github.com/Tencent/rapidjson).
+* **[`Helper::Json`](crawlserv/src/Helper/Json.hpp)**: Global helper functions for converting and parsing to JSON using the [RapidJSON](https://github.com/Tencent/rapidjson) and [jsoncons](https://github.com/danielaparker/jsoncons/) libraries.
 * **[`Helper::Portability`](crawlserv/src/Helper/Portability/)**: Additional headers for portability.
 * **[`Helper::Strings`](crawlserv/src/Helper/Strings.hpp)**: Global helper functions for string processing and manipulation.
 * **[`Helper::System`](crawlserv/src/Helper/System.hpp)**: Global system helper function.
@@ -286,6 +287,7 @@ The following third-party libraries are used by the command-and-control server:
 * [Boost C++ Libraries](https://www.boost.org/)
 * [GNU Aspell](http://aspell.net/)
 * [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html) (included in `crawlserv/src/_extern/date.h`)
+* [jsoncons](https://github.com/danielaparker/jsoncons/)
 * [libcurl](https://curl.haxx.se/libcurl/)
 * [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/_extern/mongoose`)
 * [MySQL Connector/C++ 8.0](https://dev.mysql.com/doc/connector-cpp/8.0/en/)
@@ -297,7 +299,7 @@ The following third-party libraries are used by the command-and-control server:
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8`)
 
-While `date.h`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
+While `date.h`, `jsoncons`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
 
 ## Frontend
 

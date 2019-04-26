@@ -36,7 +36,8 @@ namespace crawlservpp::Module::Crawler {
 				  retryCounter(0),
 				  archiveRetry(false),
 				  xmlParsed(false),
-				  jsonParsed(false),
+				  jsonParsedRapid(false),
+				  jsonParsedCons(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -53,7 +54,8 @@ namespace crawlservpp::Module::Crawler {
 				  retryCounter(0),
 				  archiveRetry(false),
 				  xmlParsed(false),
-				  jsonParsed(false),
+				  jsonParsedRapid(false),
+				  jsonParsedCons(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -226,11 +228,7 @@ namespace crawlservpp::Module::Crawler {
 		bool usePost = false;
 
 		// reset parsing state
-		this->xmlParsed = false;
-		this->jsonParsed = false;
-
-		this->xmlParsingError.clear();
-		this->jsonParsingError.clear();
+		this->resetParsingState();
 
 		// check for jump in last ID ("time travel")
 		long warpedOver = this->getWarpedOverAndReset();
@@ -840,8 +838,11 @@ namespace crawlservpp::Module::Crawler {
 		catch(const XPathException& e) {
 			throw Exception("Crawler::Thread::initQueries(): [XPath] " + e.whatStr());
 		}
-		catch(const JSONPointerException &e) {
+		catch(const JsonPointerException &e) {
 			throw Exception("Crawler::Thread::initQueries(): [JSONPointer] " + e.whatStr());
+		}
+		catch(const JsonPathException &e) {
+			throw Exception("Crawler::Thread::initQueries(): [JSONPath] " + e.whatStr());
 		}
 	}
 
@@ -1143,6 +1144,7 @@ namespace crawlservpp::Module::Crawler {
 					// get token from content
 					Parsing::XML xmlDoc;
 					rapidjson::Document jsonDoc;
+					jsoncons::json json;
 
 					switch(this->queriesTokens.at(n).type) {
 					case QueryStruct::typeRegEx:
@@ -1199,8 +1201,8 @@ namespace crawlservpp::Module::Crawler {
 
 						break;
 
-					case QueryStruct::typeJSONPointer:
-						// parse JSON content
+					case QueryStruct::typeJsonPointer:
+						// parse JSON using RapidJSON
 						try {
 							jsonDoc = Helper::Json::parseRapid(content);
 						}
@@ -1220,9 +1222,44 @@ namespace crawlservpp::Module::Crawler {
 
 						// get token from JSON
 						try {
-							this->getJSONPointerQuery(this->queriesTokens.at(n).index).getFirst(jsonDoc, token);
+							this->getJsonPointerQuery(this->queriesTokens.at(n).index).getFirst(jsonDoc, token);
 						}
-						catch(const JSONPointerException& e) {
+						catch(const JsonPointerException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: JSONPointer error - "
+										+ e.whatStr() + " ["
+										+ this->config.customTokensSource.at(n)
+										+ "]."
+								);
+						}
+
+						break;
+
+					case QueryStruct::typeJsonPath:
+						// parse JSON using jsoncons
+						try {
+							json = Helper::Json::parseCons(content);
+						}
+						catch(const JsonException& e) {
+							// error while parsing content
+							if(this->config.crawlerLogging)
+								this->log(
+										"JSON parsing error: "
+										+ e.whatStr()
+										+ " ["
+										+ this->config.customTokensSource.at(n)
+										+ "]."
+								);
+
+							break;
+						}
+
+						// get token from JSON
+						try {
+							this->getJsonPathQuery(this->queriesTokens.at(n).index).getFirst(json, token);
+						}
+						catch(const JsonPathException& e) {
 							if(this->config.crawlerLogging)
 								this->log(
 										"WARNING: JSONPointer error - "
@@ -1929,18 +1966,7 @@ namespace crawlservpp::Module::Crawler {
 
 				case QueryStruct::typeXPath:
 					// parse XML/HTML if still necessary
-					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-						try {
-							this->parsedXML.parse(content, this->config.crawlerRepairCData);
-
-							this->xmlParsed = true;
-						}
-						catch(const XMLException& e) {
-							this->xmlParsingError = e.whatStr();
-						}
-					}
-
-					if(!(this->xmlParsed))
+					if(!(this->parseXml(content)))
 						return false;
 
 					// run query to determine whether to crawl content
@@ -1960,33 +1986,44 @@ namespace crawlservpp::Module::Crawler {
 
 					break;
 
-				case QueryStruct::typeJSONPointer:
-					// parse JSON if still necessary
-					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
-						try {
-							this->parsedJSON = Helper::Json::parseRapid(content);
-
-							this->jsonParsed = true;
-						}
-						catch(const XMLException& e) {
-							this->jsonParsingError = e.whatStr();
-						}
-					}
-
-					if(!(this->jsonParsed))
+				case QueryStruct::typeJsonPointer:
+					// parse JSON using RapidJSON if still necessary
+					if(!(this->parseJsonRapid(content)))
 						return false;
 
 					// run query to determine whether to crawl content
 					try {
-						found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
+						found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
 
 						if(found)
 							break;
 					}
-					catch(const JSONPointerException& e) {
+					catch(const JsonPointerException& e) {
 						if(this->config.crawlerLogging)
 							this->log(
 									"WARNING: JSONPointer error - " +
+									e.whatStr() + " [" + url + "]."
+							);
+					}
+
+					break;
+
+				case QueryStruct::typeJsonPath:
+					// parse JSON using jsoncons if still necessary
+					if(!(this->parseJsonCons(content)))
+						return false;
+
+					// run query to determine whether to crawl content
+					try {
+						found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
+
+						if(found)
+							break;
+					}
+					catch(const JsonPathException& e) {
+						if(this->config.crawlerLogging)
+							this->log(
+									"WARNING: JSONPath error - " +
 									e.whatStr() + " [" + url + "]."
 							);
 					}
@@ -2038,18 +2075,7 @@ namespace crawlservpp::Module::Crawler {
 
 				case QueryStruct::typeXPath:
 					// parse XML/HTML if still necessary
-					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-						try {
-							this->parsedXML.parse(content, this->config.crawlerRepairCData);
-
-							this->xmlParsed = true;
-						}
-						catch(const XMLException& e) {
-							this->xmlParsingError = e.whatStr();
-						}
-					}
-
-					if(this->xmlParsed) {
+					if(this->parseXml(content)) {
 						// run query to determine whether to crawl content
 						try {
 							found = this->getXPathQuery(i->index).getBool(this->parsedXML);
@@ -2068,31 +2094,41 @@ namespace crawlservpp::Module::Crawler {
 
 					break;
 
-				case QueryStruct::typeJSONPointer:
-					// parse JSON if still necessary
-					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
-						try {
-							this->parsedJSON = Helper::Json::parseRapid(content);
-
-							this->jsonParsed = true;
-						}
-						catch(const XMLException& e) {
-							this->jsonParsingError = e.whatStr();
-						}
-					}
-
-					if(this->jsonParsed) {
+				case QueryStruct::typeJsonPointer:
+					// parse JSON using RapidJSON if still necessary
+					if(this->parseJsonRapid(content)) {
 						// run query to determine whether to crawl content
 						try {
-							found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
+							found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
 
 							if(found)
 								break;
 						}
-						catch(const JSONPointerException& e) {
+						catch(const JsonPointerException& e) {
 							if(this->config.crawlerLogging)
 								this->log(
 										"WARNING: JSONPointer error - " +
+										e.whatStr() + " [" + url + "]."
+								);
+						}
+					}
+
+					break;
+
+				case QueryStruct::typeJsonPath:
+					// parse JSON using jsoncons if still necessary
+					if(this->parseJsonCons(content)) {
+						// run query to determine whether to crawl content
+						try {
+							found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
+
+							if(found)
+								break;
+						}
+						catch(const JsonPathException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: JSONPath error - " +
 										e.whatStr() + " [" + url + "]."
 								);
 						}
@@ -2151,18 +2187,7 @@ namespace crawlservpp::Module::Crawler {
 
 				case QueryStruct::typeXPath:
 					// parse XML/HTML if still necessary
-					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-						try {
-							this->parsedXML.parse(content, this->config.crawlerRepairCData);
-
-							this->xmlParsed = true;
-						}
-						catch(const XMLException& e) {
-							this->xmlParsingError = e.whatStr();
-						}
-					}
-
-					if(!(this->xmlParsed))
+					if(!(this->parseXml(content)))
 						return false;
 
 					// run query to determine whether to extract links
@@ -2182,30 +2207,44 @@ namespace crawlservpp::Module::Crawler {
 
 					break;
 
-				case QueryStruct::typeJSONPointer:
-					// parse JSON if still necessary
-					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
-						try {
-							this->parsedJSON = Helper::Json::parseRapid(content);
-
-							this->jsonParsed = true;
-						}
-						catch(const JsonException& e) {
-							this->jsonParsingError = e.whatStr();
-						}
-					}
+				case QueryStruct::typeJsonPointer:
+					// parse JSON using RapidJSON if still necessary
+					if(!(this->parseJsonRapid(content)))
+						return false;
 
 					// run query to determine whether to extract links
 					try {
-						found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
+						found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
 
 						if(found)
 							break;
 					}
-					catch(const JSONPointerException& e) {
+					catch(const JsonPointerException& e) {
 						if(this->config.crawlerLogging)
 							this->log(
 									"WARNING: JSONPointer error - " +
+									e.whatStr() + " [" + url + "]."
+							);
+					}
+
+					break;
+
+				case QueryStruct::typeJsonPath:
+					// parse JSON using jsoncons if still necessary
+					if(!(this->parseJsonCons(content)))
+						return false;
+
+					// run query to determine whether to extract links
+					try {
+						found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
+
+						if(found)
+							break;
+					}
+					catch(const JsonPathException& e) {
+						if(this->config.crawlerLogging)
+							this->log(
+									"WARNING: JSONPath error - " +
 									e.whatStr() + " [" + url + "]."
 							);
 					}
@@ -2257,18 +2296,7 @@ namespace crawlservpp::Module::Crawler {
 
 				case QueryStruct::typeXPath:
 					// parse XML/HTML if still necessary
-					if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-						try {
-							this->parsedXML.parse(content, this->config.crawlerRepairCData);
-
-							this->xmlParsed = true;
-						}
-						catch(const XMLException& e) {
-							this->xmlParsingError = e.whatStr();
-						}
-					}
-
-					if(this->xmlParsed) {
+					if(this->parseXml(content)) {
 						// run query to determine whether to extract links
 						try {
 							found = this->getXPathQuery(i->index).getBool(this->parsedXML);
@@ -2287,31 +2315,41 @@ namespace crawlservpp::Module::Crawler {
 
 					break;
 
-				case QueryStruct::typeJSONPointer:
-					// parse JSON if still necessary
-					if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
-						try {
-							this->parsedJSON = Helper::Json::parseRapid(content);
-
-							this->jsonParsed = true;
-						}
-						catch(const JsonException& e) {
-							this->jsonParsingError = e.whatStr();
-						}
-					}
-
-					if(this->jsonParsed) {
+				case QueryStruct::typeJsonPointer:
+					// parse JSON using RapidJSON if still necessary
+					if(this->parseJsonRapid(content)) {
 						// run query to determine whether to extract links
 						try {
-							found = this->getJSONPointerQuery(i->index).getBool(this->parsedJSON);
+							found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
 
 							if(found)
 								break;
 						}
-						catch(const JSONPointerException& e) {
+						catch(const JsonPointerException& e) {
 							if(this->config.crawlerLogging)
 								this->log(
 										"WARNING: JSONPointer error - " +
+										e.whatStr() + " [" + url + "]."
+								);
+						}
+					}
+
+					break;
+
+				case QueryStruct::typeJsonPath:
+					// parse JSON using jsoncons if still necessary
+					if(this->parseJsonCons(content)) {
+						// run query to determine whether to extract links
+						try {
+							found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
+
+							if(found)
+								break;
+						}
+						catch(const JsonPathException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: JSONPath error - " +
 										e.whatStr() + " [" + url + "]."
 								);
 						}
@@ -2445,18 +2483,7 @@ namespace crawlservpp::Module::Crawler {
 
 			case QueryStruct::typeXPath:
 				// parse XML/HTML if still necessary
-				if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-					try {
-						this->parsedXML.parse(content, this->config.crawlerRepairCData);
-
-						this->xmlParsed = true;
-					}
-					catch(const XMLException& e) {
-						this->xmlParsingError = e.whatStr();
-					}
-				}
-
-				if(this->xmlParsed) {
+				if(this->parseXml(content)) {
 					// run query to extract URLs
 					try {
 						if(i->resultMulti) {
@@ -2483,26 +2510,15 @@ namespace crawlservpp::Module::Crawler {
 
 				break;
 
-			case QueryStruct::typeJSONPointer:
-				// parse JSON if still necessary
-				if(!(this->jsonParsed) && this->jsonParsingError.empty()) {
-					try {
-						this->parsedJSON = Helper::Json::parseRapid(content);
-
-						this->jsonParsed = true;
-					}
-					catch(const JsonException& e) {
-						this->jsonParsingError = e.whatStr();
-					}
-				}
-
-				if(this->jsonParsed) {
+			case QueryStruct::typeJsonPointer:
+				// parse JSON using RapidJSON if still necessary
+				if(this->parseJsonRapid(content)) {
 					// run query to extract URLs
 					try {
 						if(i->resultMulti) {
 							std::vector<std::string> results;
 
-							this->getJSONPointerQuery(i->index).getAll(this->parsedJSON, results);
+							this->getJsonPointerQuery(i->index).getAll(this->parsedJsonRapid, results);
 
 							urls.reserve(urls.size() + results.size());
 							urls.insert(urls.end(), results.begin(), results.end());
@@ -2510,14 +2526,43 @@ namespace crawlservpp::Module::Crawler {
 						else {
 							std::string result;
 
-							this->getJSONPointerQuery(i->index).getFirst(this->parsedJSON, result);
+							this->getJsonPointerQuery(i->index).getFirst(this->parsedJsonRapid, result);
 
 							urls.emplace_back(result);
 						}
 					}
-					catch(const JSONPointerException& e) {
+					catch(const JsonPointerException& e) {
 						if(this->config.crawlerLogging)
 							this->log("WARNING: JSONPointer error - " + e.whatStr() + " [" + url + "].");
+					}
+				}
+
+				break;
+
+			case QueryStruct::typeJsonPath:
+				// parse JSON using jsoncons if still necessary
+				if(this->parseJsonCons(content)) {
+					// run query to extract URLs
+					try {
+						if(i->resultMulti) {
+							std::vector<std::string> results;
+
+							this->getJsonPathQuery(i->index).getAll(this->parsedJsonCons, results);
+
+							urls.reserve(urls.size() + results.size());
+							urls.insert(urls.end(), results.begin(), results.end());
+						}
+						else {
+							std::string result;
+
+							this->getJsonPathQuery(i->index).getFirst(this->parsedJsonCons, result);
+
+							urls.emplace_back(result);
+						}
+					}
+					catch(const JsonPathException& e) {
+						if(this->config.crawlerLogging)
+							this->log("WARNING: JSONPath error - " + e.whatStr() + " [" + url + "].");
 					}
 				}
 
@@ -2912,11 +2957,7 @@ namespace crawlservpp::Module::Crawler {
 													}
 													else {
 														// reset parsing status
-														this->xmlParsed = false;
-														this->jsonParsed = false;
-
-														this->xmlParsingError.clear();
-														this->jsonParsingError.clear();
+														this->resetParsingState();
 
 														// get content type
 														std::string contentType = this->networkingArchives->getContentType();
@@ -3210,6 +3251,64 @@ namespace crawlservpp::Module::Crawler {
 
 		if(archiveOnly)
 			this->archiveRetry = true;
+	}
+
+	// parse XML/HTML if still necessary, return false if parsing failed
+	bool Thread::parseXml(const std::string& content) {
+		if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+			try {
+				this->parsedXML.parse(content, this->config.crawlerRepairCData);
+
+				this->xmlParsed = true;
+			}
+			catch(const XMLException& e) {
+				this->xmlParsingError = e.whatStr();
+			}
+		}
+
+		return this->xmlParsed;
+	}
+
+	// parse JSON using RapidJSON if still necessary, return false if parsing failed
+	bool Thread::parseJsonRapid(const std::string& content) {
+		if(!(this->jsonParsedRapid) && this->jsonParsingError.empty()) {
+			try {
+				this->parsedJsonRapid = Helper::Json::parseRapid(content);
+
+				this->jsonParsedRapid = true;
+			}
+			catch(const JsonException& e) {
+				this->jsonParsingError = e.whatStr();
+			}
+		}
+
+		return this->jsonParsedRapid;
+	}
+
+	// parse JSON using jsoncons if still necessary, return false if parsing failed
+	bool Thread::parseJsonCons(const std::string& content) {
+		if(!(this->jsonParsedCons) && this->jsonParsingError.empty()) {
+			try {
+				this->parsedJsonCons = Helper::Json::parseCons(content);
+
+				this->jsonParsedCons = true;
+			}
+			catch(const JsonException& e) {
+				this->jsonParsingError = e.whatStr();
+			}
+		}
+
+		return this->jsonParsedCons;
+	}
+
+	// reset parsing state
+	void Thread::resetParsingState() {
+		this->xmlParsed = false;
+		this->jsonParsedRapid = false;
+		this->jsonParsedCons = false;
+
+		this->xmlParsingError.clear();
+		this->jsonParsingError.clear();
 	}
 
 	// write parsing errors as warnings to log if necessary

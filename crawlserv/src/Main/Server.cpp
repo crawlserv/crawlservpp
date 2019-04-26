@@ -2190,7 +2190,12 @@ namespace crawlservpp::Main {
 		if(properties.type.empty())
 			return ServerCommandResponse(true, "Query type is empty.");
 
-		if(properties.type != "regex" && properties.type != "xpath" && properties.type != "jsonpointer")
+		if(
+				properties.type != "regex"
+				&& properties.type != "xpath"
+				&& properties.type != "jsonpointer"
+				&& properties.type != "jsonpath"
+		)
 			return ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
@@ -2296,7 +2301,12 @@ namespace crawlservpp::Main {
 		if(properties.type.empty())
 			return ServerCommandResponse(true, "Query type is empty.");
 
-		if(properties.type != "regex" && properties.type != "xpath" && properties.type != "jsonpointer")
+		if(
+				properties.type != "regex"
+				&& properties.type != "xpath"
+				&& properties.type != "jsonpointer"
+				&& properties.type != "jsonpath"
+		)
 			return ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
@@ -2459,7 +2469,12 @@ namespace crawlservpp::Main {
 				else if(type.empty())
 					response = ServerCommandResponse(true, "Query type is empty.");
 
-				else if(type != "regex" && type != "xpath" && type != "jsonpointer")
+				else if(
+						type != "regex"
+						&& type != "xpath"
+						&& type != "jsonpointer"
+						&& type != "jsonpath"
+				)
 					response = ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
 
 				else if(!resultBool && !resultSingle && !resultMulti)
@@ -2587,11 +2602,11 @@ namespace crawlservpp::Main {
 							response = ServerCommandResponse(true, "XML error: " + e.whatStr());
 						}
 					}
-					else {
+					else if(type == "jsonpointer") {
 						// test JSONPointer query on text
 						try {
 							Timer::SimpleHR timer;
-							Query::JSONPointer JSONPointerTest(query);
+							Query::JsonPointer JSONPointerTest(query);
 
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
@@ -2656,6 +2671,75 @@ namespace crawlservpp::Main {
 						}
 						catch(const JSONPointerException& e) {
 							response = ServerCommandResponse(true, "JSONPointer error: " + e.whatStr());
+						}
+					}
+					else {
+						// test JSONPath query on text
+						try {
+							Timer::SimpleHR timer;
+							Query::JsonPath JSONPathTest(query);
+
+							jsoncons::json jsonTest;
+							bool success = false;
+
+							try {
+								jsonTest = Helper::Json::parseCons(text);
+
+								success = true;
+							}
+							catch(const JsonException& e) {
+								response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+							}
+
+							if(success) {
+								result += "PARSING TIME: " + timer.tickStr() + '\n';
+
+								if(resultBool) {
+									// get boolean result (does at least one match exist?)
+									result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
+											+ std::string(JSONPathTest.getBool(jsonTest) ? "true" : "false") + '\n';
+								}
+
+								if(resultSingle) {
+									// get first result (first full match)
+									std::string tempResult;
+
+									JSONPathTest.getFirst(jsonTest, tempResult);
+
+									if(tempResult.empty())
+										result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+									else
+										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+								}
+
+								if(resultMulti) {
+									// get all results (all full matches)
+									std::vector<std::string> tempResult;
+
+									JSONPathTest.getAll(jsonTest, tempResult);
+
+									result += "ALL RESULTS (" + timer.tickStr() + "):";
+
+									if(tempResult.empty())
+										result += " [empty]\n";
+									else {
+										unsigned long n = 0;
+										std::ostringstream resultStrStr;
+
+										resultStrStr << '\n';
+
+										for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
+											resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
+											++n;
+										}
+
+										result += resultStrStr.str();
+									}
+								}
+							}
+						}
+						catch(const JSONPathException& e) {
+							response = ServerCommandResponse(true, "JSONPath error: " + e.whatStr());
 						}
 					}
 
