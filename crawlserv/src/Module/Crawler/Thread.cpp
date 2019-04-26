@@ -2662,40 +2662,51 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!expectedStr.empty()) {
 			unsigned long expected = std::stoul(expectedStr);
-			std::ostringstream errorStrStr;
+			std::ostringstream expectedStrStr;
 
-			errorStrStr.imbue(std::locale(""));
+			expectedStrStr.imbue(std::locale(""));
 
 			if(urls.size() < expected) {
 				// number of URLs is smaller than expected
-				errorStrStr	<< "Number of extracted URLs ["
-							<< urls.size()
-							<< "] is smaller than expected ["
-							<< expected
-							<< " ["
-							<< url
-							<< "]";
+				expectedStrStr	<< "Number of extracted URLs ["
+								<< urls.size()
+								<< "] is smaller than expected ["
+								<< expected
+								<< " ["
+								<< url
+								<< "]";
 
 				if(this->config.expectedErrorIfSmaller)
-					throw Exception(errorStrStr.str());
+					throw Exception(expectedStrStr.str());
 				else if(this->config.crawlerLogging)
-					this->log("WARNING: " + errorStrStr.str() + ".");
+					this->log("WARNING: " + expectedStrStr.str() + ".");
 			}
 			else if(urls.size() > expected) {
 				// number of URLs is larger than expected
-				errorStrStr	<< "Number of extracted URLs ["
-							<< urls.size()
-							<< "] is larger than expected ["
-							<< expected
-							<< " ["
-							<< url
-							<< "]";
+				expectedStrStr	<< "Number of extracted URLs ["
+								<< urls.size()
+								<< "] is larger than expected ["
+								<< expected
+								<< " ["
+								<< url
+								<< "]";
 
 				// number of URLs is smaller than expected
 				if(this->config.expectedErrorIfLarger)
-					throw Exception(errorStrStr.str());
+					throw Exception(expectedStrStr.str());
 				else if(this->config.crawlerLogging)
-					this->log("WARNING: " + errorStrStr.str() + ".");
+					this->log("WARNING: " + expectedStrStr.str() + ".");
+			}
+			else if(this->config.crawlerLogging == Config::crawlerLoggingVerbose) {
+				expectedStrStr	<< "Number of extracted URLs ["
+								<< urls.size()
+								<< "] as expected ["
+								<< expected
+								<< " ["
+								<< url
+								<< "].";
+
+				this->log(expectedStrStr.str());
 			}
 		}
 
