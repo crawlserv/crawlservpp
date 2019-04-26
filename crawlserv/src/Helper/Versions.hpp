@@ -12,9 +12,11 @@
 
 #include "../Helper/Portability/mysqlcppconn.h"
 
+#include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
 #include "../_extern/mongoose/mongoose.h"
 
 #define RAPIDJSON_HAS_STDSTRING 1
+
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 
 #include <aspell.h>
@@ -69,6 +71,14 @@ namespace crawlservpp::Helper::Versions {
 
 		// date.h (no version information available)
 		result.emplace_back("Howard E. Hinnant's date.h library", "");
+
+		// jsoncons
+		out << jsoncons::version();
+
+		result.emplace_back("jsoncons", out.str());
+
+		out.str("");
+		out.clear();
 
 		// mongoose
 		result.emplace_back("mongoose", MG_VERSION);
