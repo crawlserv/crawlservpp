@@ -528,7 +528,7 @@
 				"single"
 			],
 			"default": 0,
-			"label": "Number of results query:",
+			"label": "Query for number of URLs:",
 			"description": "Query to be performed on content to get the expected number of URLs.",
 			"simple": true,
 			"position": 1
