@@ -70,7 +70,7 @@ namespace crawlservpp::Helper::Versions {
 		result.emplace_back("GNU Aspell", aspell_version_string());
 
 		// date.h (no version information available)
-		result.emplace_back("Howard E. Hinnant's date.h library", "");
+		result.emplace_back("Howard E. Hinnant's date.h", "");
 
 		// jsoncons
 		out << jsoncons::version();
