@@ -416,12 +416,6 @@ namespace crawlservpp::Module::Parser {
 		this->queriesDateTime.reserve(this->config.parsingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.parsingFieldQueries.size());
 
-		this->reserveForQueries(
-				this->config.parsingIdQueries.size()
-				+ this->config.parsingDateTimeQueries.size()
-				+ this->config.parsingFieldQueries.size()
-		);
-
 		try {
 			// create queries and get query IDs
 			for(auto i = this->config.generalSkip.begin(); i != this->config.generalSkip.end(); ++i) {
