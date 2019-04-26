@@ -11,6 +11,7 @@
 #define STRUCT_CONFIGITEM_HPP_
 
 #define RAPIDJSON_HAS_STDSTRING 1
+
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <string>
