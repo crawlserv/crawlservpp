@@ -1229,7 +1229,9 @@ class Config {
 			for(var key in this.config_current) {
 				if(this.config_current[key].name == "_algo") {
 					this.config_current[key].value = algo.id;
+					
 					found = true;
+					
 					break;
 				}
 			}
@@ -1262,6 +1264,7 @@ class Config {
 					$.each(thisClass.config_current, function(index, configEntry) {
 						if(configEntry["name"] != "_algo" && configEntry["cat"] == algoCat) {
 							found = true;
+							
 							return false; // break
 						}
 					});
@@ -1282,13 +1285,17 @@ class Config {
 	// get filter string for queries
 	getFilter(obj) {
 		var filter = "";
-		if(obj.type != "query"
-			&& obj["item-type"] != "query")
+		
+		if(
+				obj.type != "query"
+				&& obj["item-type"] != "query"
+		)
 			return undefined;
 		
-		if(typeof obj["query-results"] !== "undefined"
-			&& obj["query-results"].length) {
-			
+		if(
+				typeof obj["query-results"] !== "undefined"
+				&& obj["query-results"].length
+		) {		
 			if(obj["query-results"].includes("bool"))
 				filter += "X";
 			else
@@ -1304,10 +1311,13 @@ class Config {
 			else
 				filter += "0";
 		}
-		else filter += "XXX";
+		else
+			filter += "XXX";
 
-		if(typeof obj["query-types"] !== "undefined"
-			&& obj["query-types"].length) {
+		if(
+				typeof obj["query-types"] !== "undefined"
+				&& obj["query-types"].length
+		) {
 			
 			if(obj["query-types"].includes("regex"))
 				filter += "X";
@@ -1321,10 +1331,16 @@ class Config {
 			
 			if(obj["query-types"].includes("jsonpointer"))
 				filter += "X";
-			else filter += "0";
+			else
+				filter += "0";
+			
+			if(obj["query-types"].includes("jsonpath"))
+				filter += "X";
+			else
+				filter += "0";
 		}
 		else
-			filter += "XXX";
+			filter += "XXXX";
 		
 		return filter;
 	}
@@ -1332,19 +1348,29 @@ class Config {
 	// check query against filter
 	checkFilter(obj, filter) {
 		var result = false;
+		
 		if(filter[0] == "X" && obj.resultbool)
 			result = true;
+		
 		if(filter[1] == "X" && obj.resultsingle)
 			result = true;
+		
 		if(filter[2] == "X" && obj.resultmulti)
 			result = true;
+		
 		if(!result)
 			return false;
+		
 		if(filter[3] == "X" && obj.type ==
 			"regex") return true;
+		
 		if(filter[4] == "X" && obj.type == "xpath")
 			return true;
+		
 		if(filter[5] == "X" && obj.type == "jsonpointer")
+			return true;
+		
+		if(filter[6] == "X" && obj.type == "jsonpath")
 			return true;
 		
 		return false;
