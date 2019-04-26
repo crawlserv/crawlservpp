@@ -531,9 +531,12 @@ namespace crawlservpp::Main {
 								// create a worker thread for testing query (so large queries do not block the server)
 								{
 									std::lock_guard<std::mutex> workersLocked(this->workersLock);
+
 									this->workersRunning.push_back(true);
+
 									this->workers.emplace_back(&Server::cmdTestQuery, this, connection, this->workers.size(), msgBody);
 								}
+
 								threadStartedTo = true;
 							}
 
