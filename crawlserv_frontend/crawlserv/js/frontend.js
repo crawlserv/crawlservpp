@@ -6,6 +6,7 @@ var crawlserv_frontend_unloading = false;
 var helperRegEx = null;
 var helperXPath = null;
 var helperJSONPointer = null;
+var helperJSONPath = null;
 
 // fullscreen mode
 var fullscreen = false;
@@ -261,6 +262,9 @@ jQuery(function($) {
 				if(!helperJSONPointer)
 					helperJSONPointer = $("#jsonpointer-helper").detach();
 				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
+				
 				$("#query-text-only").prop("checked", false);
 				$("#query-text-only").prop("disabled", true);
 				$("#query-text-only-label").addClass("check-label-disabled");
@@ -271,6 +275,9 @@ jQuery(function($) {
 				
 				if(!helperJSONPointer)
 					helperJSONPointer = $("#jsonpointer-helper").detach();
+				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
 			}
 			else if($("#query-type-select").val() == "jsonpointer") {
 				if(!helperRegEx)
@@ -278,6 +285,23 @@ jQuery(function($) {
 				
 				if(!helperXPath)
 					helperXPath = $("#xpath-helper").detach();
+				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
+				
+				$("#query-text-only").prop("checked", false);
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
+			else if($("#query-type-select").val() == "jsonpath") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperXPath)
+					helperXPath = $("#xpath-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
 				
 				$("#query-text-only").prop("checked", false);
 				$("#query-text-only").prop("disabled", true);
@@ -812,6 +836,9 @@ jQuery(function($) {
 			
 			if(!helperJSONPointer)
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
 		}
 		else if($(this).val() == "xpath") {
 			$("#query-text-only").prop("disabled", false);
@@ -825,6 +852,9 @@ jQuery(function($) {
 			
 			if(!helperJSONPointer)
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
 		}
 		else if($(this).val() == "jsonpointer") {
 			$("#query-text-only").prop("checked", false);
@@ -839,6 +869,26 @@ jQuery(function($) {
 			
 			if(!helperXPath)
 				helperXPath = $("#xpath-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
+		}
+		else if($(this).val() == "jsonpath") {
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
+			
+			helperJSONPath.insertAfter("#query-properties");
+			helperJSONPath = null;
+			
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperXPath)
+				helperXPath = $("#xpath-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
 		}
 		
 		return true;

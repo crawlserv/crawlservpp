@@ -59,6 +59,8 @@ while($row = $result->fetch_assoc()) {
         $pugixml_version = $row["version"];
     else if(strtolower($row["name"]) == "rapidjson")
         $rapidjson_version = $row["version"];
+    else if(strtolower($row["name"]) == "jsoncons")
+        $jsoncons_version = $row["version"];
 }
 
 $result->close();
@@ -157,6 +159,10 @@ if($query && $queryType == "xpath")
 if($query && $queryType == "jsonpointer")
     echo " selected";
 ?>>JSONPointer (RapidJSON v<?php echo $rapidjson_version; ?>)</option> 
+<option value="jsonpath"<?php
+if($query && $queryType == "jsonpath")
+    echo " selected";
+?>>JSONPath (jsoncons v<?php echo $jsoncons_version; ?>)</option>
 </select>
 </div>
 </div>
@@ -242,6 +248,14 @@ for help with your query.</p>
 <div class="entry-row">
 <div class="entry-label-top helper">Note</div><div class="entry-input">
 <p>Use '$$' as placeholder for multiple matches.<br>The placeholder will be replaced by 0...n.</p>
+</div>
+</div>
+</div>
+<div class="content-block" id="jsonpath-helper">
+<div class="entry-row">
+<div class="entry-label-top helper">Help?!</div><div class="entry-input">
+<p>Try <a href="https://jsonpath.herokuapp.com/" target="_blank">Jayway JSONPath Evaluator</a> or <a href="https://jsonpath.curiousconcept.com/" target="_blank">JSONPATH Expression Tester</a>
+for help with your query.</p>
 </div>
 </div>
 </div>
