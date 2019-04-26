@@ -831,6 +831,14 @@ namespace crawlservpp::Module::Crawler {
 
 				this->queriesTokens.emplace_back(this->addQuery(properties));
 			}
+
+			if(this->config.expectedQuery) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(this->config.expectedQuery, properties);
+
+				this->queryExpected = this->addQuery(properties);
+			}
 		}
 		catch(const RegExException& e) {
 			throw Exception("Crawler::Thread::initQueries(): [RegEx] " + e.whatStr());
@@ -2574,6 +2582,120 @@ namespace crawlservpp::Module::Crawler {
 			default:
 				if(this->config.crawlerLogging)
 					this->log("WARNING: Invalid type of query on content type.");
+			}
+		}
+
+		// check number of extracted URLs if necessary
+		std::string expectedStr;
+
+		switch(this->queryExpected.type) {
+		case QueryStruct::typeRegEx:
+			if(this->queryExpected.resultSingle) {
+				try {
+					this->getRegExQuery(this->queryExpected.index).getFirst(content, expectedStr);
+				}
+				catch(const RegExException& e) {
+					if(this->config.crawlerLogging)
+						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
+				}
+			}
+			else if(this->config.crawlerLogging)
+				this->log("WARNING: Invalid result type of query for expected number of results.");
+
+			break;
+
+		case QueryStruct::typeXPath:
+			if(this->queryExpected.resultSingle) {
+				if(this->parseXml(content)) {
+					try {
+						this->getXPathQuery(this->queryExpected.index).getFirst(this->parsedXML, expectedStr);
+					}
+					catch(const XPathException& e) {
+						if(this->config.crawlerLogging)
+							this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
+					}
+				}
+			}
+			else if(this->config.crawlerLogging)
+				this->log("WARNING: Invalid result type of query for expected number of results.");
+			break;
+
+		case QueryStruct::typeJsonPointer:
+			if(this->queryExpected.resultSingle) {
+				if(this->parseJsonRapid(content)) {
+					try {
+						this->getJsonPointerQuery(this->queryExpected.index).getFirst(this->parsedJsonRapid, expectedStr);
+					}
+					catch(const JsonPointerException& e) {
+						if(this->config.crawlerLogging)
+							this->log("WARNING: JSONPointer error - " + e.whatStr() + " [" + url + "].");
+					}
+				}
+			}
+			else if(this->config.crawlerLogging)
+				this->log("WARNING: Invalid result type of query for expected number of results.");
+			break;
+
+		case QueryStruct::typeJsonPath:
+			if(this->queryExpected.resultSingle) {
+				if(this->parseJsonCons(content)) {
+					try {
+						this->getJsonPathQuery(this->queryExpected.index).getFirst(this->parsedJsonCons, expectedStr);
+					}
+					catch(const JsonPathException& e) {
+						if(this->config.crawlerLogging)
+							this->log("WARNING: JSONPath error - " + e.whatStr() + " [" + url + "].");
+					}
+				}
+			}
+			else if(this->config.crawlerLogging)
+				this->log("WARNING: Invalid result type of query for expected number of results.");
+			break;
+
+		case QueryStruct::typeNone:
+			break;
+
+		default:
+			if(this->config.crawlerLogging)
+				this->log("WARNING: Invalid type of query for expected number of results.");
+		}
+
+		if(!expectedStr.empty()) {
+			unsigned long expected = std::stoul(expectedStr);
+			std::ostringstream errorStrStr;
+
+			errorStrStr.imbue(std::locale(""));
+
+			if(urls.size() < expected) {
+				// number of URLs is smaller than expected
+				errorStrStr	<< "Number of extracted URLs ["
+							<< urls.size()
+							<< "] is smaller than expected ["
+							<< expected
+							<< " ["
+							<< url
+							<< "]";
+
+				if(this->config.expectedErrorIfSmaller)
+					throw Exception(errorStrStr.str());
+				else if(this->config.crawlerLogging)
+					this->log("WARNING: " + errorStrStr.str() + ".");
+			}
+			else if(urls.size() > expected) {
+				// number of URLs is larger than expected
+				errorStrStr	<< "Number of extracted URLs ["
+							<< urls.size()
+							<< "] is larger than expected ["
+							<< expected
+							<< " ["
+							<< url
+							<< "]";
+
+				// number of URLs is smaller than expected
+				if(this->config.expectedErrorIfLarger)
+					throw Exception(errorStrStr.str());
+				else if(this->config.crawlerLogging)
+					this->log("WARNING: " + errorStrStr.str() + ".");
 			}
 		}
 

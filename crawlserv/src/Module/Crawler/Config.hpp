@@ -108,6 +108,11 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> customTokensSource;
 			std::vector<std::string> customUrls;
 			bool customUsePost;
+
+			// expected number of results
+			unsigned long expectedQuery;
+			bool expectedErrorIfLarger;
+			bool expectedErrorIfSmaller;
 		} config;
 
 	protected:
@@ -153,7 +158,10 @@ namespace crawlservpp::Module::Crawler {
 										crawlerXml(false),
 										customCountersGlobal(true),
 										customReCrawl(true),
-										customUsePost(false) {
+										customUsePost(false),
+										expectedQuery(0),
+										expectedErrorIfLarger(false),
+										expectedErrorIfSmaller(false) {
 		this->crawlerArchivesNames.emplace_back("archives.org");
 		this->crawlerArchivesUrlsMemento.emplace_back("http://web.archive.org/web/");
 		this->crawlerArchivesUrlsTimemap.emplace_back("http://web.archive.org/web/timemap/link/");
@@ -227,6 +235,12 @@ namespace crawlservpp::Module::Crawler {
 		this->option("tokens.source", this->config.customTokensSource);
 		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 		this->option("use.post", this->config.customUsePost);
+
+		// expected number of results
+		this->category("expected");
+		this->option("query", this->config.expectedQuery);
+		this->option("error.if.larger", this->config.expectedErrorIfLarger);
+		this->option("error.if.smaller", this->config.expectedErrorIfSmaller);
 	}
 
 	// check parsing-specific configuration

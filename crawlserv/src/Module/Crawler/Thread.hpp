@@ -43,6 +43,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <deque>
 #include <queue>
 #include <functional>
@@ -141,6 +142,7 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<QueryStruct> queriesWhiteListTypes;
 		std::vector<QueryStruct> queriesWhiteListUrls;
 		std::vector<QueryStruct> queriesTokens;
+		QueryStruct queryExpected;
 
 		// custom URLs
 		IdString startPage;
