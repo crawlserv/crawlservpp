@@ -252,7 +252,7 @@ namespace crawlservpp::Helper::Json {
 	// parse JSON using jsoncons, throws Helper::Json::Exception
 	inline jsoncons::json parseCons(const std::string& json) {
 		try {
-			jsoncons::json result(json);
+			jsoncons::json result = jsoncons::json::parse(json);
 
 			return result;
 		}

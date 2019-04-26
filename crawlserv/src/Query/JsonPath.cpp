@@ -32,7 +32,7 @@ namespace crawlservpp::Query {
 			return !(result.is_array() && result.is_empty());
 		}
 		catch(const jsoncons::json_exception& e) {
-			throw Exception("[JSON] " + std::string(e.what()));
+			throw Exception(std::string(e.what()) + " (JSONPath: \'" + this->jsonPath + "\')");
 		}
 	}
 
@@ -50,15 +50,17 @@ namespace crawlservpp::Query {
 			auto result = jsoncons::jsonpath::json_query(json, this->jsonPath);
 
 			// check for array
-			if(result.is_array())
-				// stringify first element of array
-				resultTo = result[0].as<std::string>();
+			if(result.is_array()) {
+				if(!result.is_empty())
+					// stringify first element of array
+					resultTo = result[0].as<std::string>();
+			}
 			else
 				// stringify value
 				resultTo = result.as<std::string>();
 		}
 		catch(const jsoncons::json_exception& e) {
-			throw Exception("[JSON] " + std::string(e.what()));
+			throw Exception(std::string(e.what()) + " (JSONPath: \'" + this->jsonPath + "\')");
 		}
 	}
 
@@ -76,16 +78,17 @@ namespace crawlservpp::Query {
 			auto result = jsoncons::jsonpath::json_query(json, this->jsonPath);
 
 			// check for array
-			if(result.is_array())
+			if(result.is_array()) {
 				// stringify all array members
 				for(auto i = result.begin_elements(); i != result.end_elements(); ++i)
 					resultTo.emplace_back(i->as<std::string>());
+			}
 			else
 				// stringify value
 				resultTo.emplace_back(result.as<std::string>());
 		}
 		catch(const jsoncons::json_exception& e) {
-			throw Exception("[JSON] " + std::string(e.what()));
+			throw Exception(std::string(e.what()) + " (JSONPath: \'" + this->jsonPath + "\')");
 		}
 	}
 } /* crawlservpp::Query */
