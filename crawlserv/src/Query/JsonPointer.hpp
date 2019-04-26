@@ -27,10 +27,10 @@
 
 namespace crawlservpp::Query {
 
-	class JSONPointer {
+	class JsonPointer {
 	public:
 		// constructor
-		JSONPointer(const std::string& pointerString);
+		JsonPointer(const std::string& pointerString);
 
 		// getters
 		bool getBool(const rapidjson::Document& doc) const;

@@ -10,12 +10,12 @@
  *      Author: ans
  */
 
-#include "JSONPointer.hpp"
+#include "JsonPointer.hpp"
 
 namespace crawlservpp::Query {
 
 	// constructor: check for placeholder and create JSONPointer for first result, throws JSONPointer::Exception
-	JSONPointer::JSONPointer(const std::string& pointerString) {
+	JsonPointer::JsonPointer(const std::string& pointerString) {
 		if(pointerString.find("$$") != std::string::npos)
 			this->pointerStringMulti = pointerString;
 
@@ -23,7 +23,7 @@ namespace crawlservpp::Query {
 			this->pointerFirst = rapidjson::Pointer(pointerString);
 
 			if(!(this->pointerFirst.IsValid()))
-				throw JSONPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
+				throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
 		}
 		else {
 			std::string pointerFirstString(pointerString);
@@ -33,31 +33,31 @@ namespace crawlservpp::Query {
 			this->pointerFirst = rapidjson::Pointer(pointerFirstString);
 
 			if(!(this->pointerFirst.IsValid()))
-				throw JSONPointer::Exception("Invalid JSONPointer \'" + pointerFirstString + "\'");
+				throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerFirstString + "\'");
 		}
 	}
 
 	// get boolean value from parsed JSON document (at least one match?), throws JSONPointer::Exception
-	bool JSONPointer::getBool(const rapidjson::Document& doc) const {
+	bool JsonPointer::getBool(const rapidjson::Document& doc) const {
 		// check document and pointer
 		if(doc.HasParseError())
-			throw JSONPointer::Exception("JSON parsing error");
+			throw JsonPointer::Exception("JSON parsing error");
 
 		if(!(this->pointerFirst.IsValid()))
-			throw JSONPointer::Exception("Invalid JSONPointer");
+			throw JsonPointer::Exception("Invalid JSONPointer");
 
 		// evaluate query with boolean result
 		return this->pointerFirst.Get(doc) != nullptr;
 	}
 
 	// get first match from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
-	void JSONPointer::getFirst(const rapidjson::Document& doc, std::string& resultTo) const {
+	void JsonPointer::getFirst(const rapidjson::Document& doc, std::string& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError())
-			throw JSONPointer::Exception("Invalid JSON");
+			throw JsonPointer::Exception("Invalid JSON");
 
 		if(!(this->pointerFirst.IsValid()))
-			throw JSONPointer::Exception("Invalid JSONPointer");
+			throw JsonPointer::Exception("Invalid JSONPointer");
 
 		// empty result
 		resultTo.clear();
@@ -76,13 +76,13 @@ namespace crawlservpp::Query {
 	}
 
 	// get all matches from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
-	void JSONPointer::getAll(const rapidjson::Document& doc, std::vector<std::string>& resultTo) const {
+	void JsonPointer::getAll(const rapidjson::Document& doc, std::vector<std::string>& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError())
-			throw JSONPointer::Exception("Invalid JSON");
+			throw JsonPointer::Exception("Invalid JSON");
 
 		if(!(this->pointerFirst.IsValid()))
-			throw JSONPointer::Exception("Invalid JSONPointer");
+			throw JsonPointer::Exception("Invalid JSONPointer");
 
 		// empty result
 		resultTo.clear();
@@ -112,7 +112,7 @@ namespace crawlservpp::Query {
 				rapidjson::Pointer pointer(pointerString);
 
 				if(!(pointer.IsValid()))
-					throw JSONPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
+					throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
 
 				auto result = pointer.Get(doc);
 
