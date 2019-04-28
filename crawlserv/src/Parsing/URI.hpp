@@ -37,6 +37,7 @@ namespace crawlservpp::Parsing {
 
 		// getters
 		bool isSameDomain() const;
+		std::string getSubUrl();
 		std::string getSubUrl(const std::vector<std::string>& args, bool whiteList) const;
 
 		// parser function

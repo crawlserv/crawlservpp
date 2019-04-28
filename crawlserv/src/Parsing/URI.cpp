@@ -102,6 +102,13 @@ namespace crawlservpp::Parsing {
 	}
 
 	// get sub-URL for link (including domain if website is cross-domain)
+	//  while keeping all query arguments
+	std::string URI::getSubUrl() {
+		return this->getSubUrl(std::vector<std::string>(), false);
+	}
+
+	// get sub-URL for link (including domain if website is cross-domain)
+	//  while filtering query arguments according to white or black list
 	std::string URI::getSubUrl(const std::vector<std::string>& args, bool whiteList) const {
 		if(!(this->uri))
 			throw URI::Exception("No link parsed");
