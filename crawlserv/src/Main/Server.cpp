@@ -1633,8 +1633,8 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse(true, "Invalid character(s) in domain.");
 
 		// check namespace
-		if(properties.nameSpace.length() < 4)
-			return ServerCommandResponse(true, "Website namespace has to be at least 4 characters long.");
+		if(properties.nameSpace.length() < 3)
+			return ServerCommandResponse(true, "Website namespace has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 			return ServerCommandResponse(true, "Invalid character(s) in website namespace.");
@@ -1760,8 +1760,8 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse(true, "Name is empty.");
 
 		// check namespace name
-		if(properties.nameSpace.length() < 4)
-			return ServerCommandResponse(true, "Website namespace has to be at least 4 characters long.");
+		if(properties.nameSpace.length() < 3)
+			return ServerCommandResponse(true, "Website namespace has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 			return ServerCommandResponse(true, "Invalid character(s) in website namespace.");
@@ -1958,8 +1958,8 @@ namespace crawlservpp::Main {
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		// check namespace
-		if(properties.nameSpace.length() < 4)
-			return ServerCommandResponse(true, "Namespace of URL list has to be at least 4 characters long.");
+		if(properties.nameSpace.length() < 3)
+			return ServerCommandResponse(true, "Namespace of URL list has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 			return ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");
@@ -2018,8 +2018,8 @@ namespace crawlservpp::Main {
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		// check namespace
-		if(properties.nameSpace.length() < 4)
-			return ServerCommandResponse(true, "Namespace of URL list has to be at least 4 characters long.");
+		if(properties.nameSpace.length() < 3)
+			return ServerCommandResponse(true, "Namespace of URL list has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
 			return ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");
