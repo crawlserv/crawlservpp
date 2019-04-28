@@ -407,7 +407,7 @@
 			"label": "Counter variables:",
 			"description": "List of counter variables to be replaced in custom URLs.",
 			"simple": true,
-			"position": 3
+			"position": 4
 		},
 		"counters.alias": {
 			"type": "array",
@@ -416,7 +416,7 @@
 			"label": "Counter alias:",
 			"description": "Alias for the counter variable with the same array index.",
 			"simple": true,
-			"position": 7
+			"position": 8
 		},
 		"counters.alias.add": {
 			"type": "array",
@@ -425,7 +425,7 @@
 			"label": "Increase alias value by:",
 			"description": "Value to add to the counter alias with the same array index.",
 			"simple": true,
-			"position": 8
+			"position": 9
 		},
 		"counters.end": {
 			"type": "array",
@@ -434,7 +434,7 @@
 			"label": "Stop counter at:",
 			"description": "End value for the counter with the same array index.",
 			"simple": true,
-			"position": 5
+			"position": 6
 		},
 		"counters.global": {
 			"type": "bool",
@@ -442,7 +442,7 @@
 			"label": "Use counters globally",
 			"description": "Use every counter for all custom URLs. Otherwise a counters will only be used for URLs with the same array index.",
 			"simple": true,
-			"position": 9
+			"position": 10
 		},
 		"counters.start": {
 			"type": "array",
@@ -451,7 +451,7 @@
 			"label": "Start counter at:",
 			"description": "Start value for the counter with the same array index.",
 			"simple": true,
-			"position": 4
+			"position": 5
 		},
 		"counters.step": {
 			"type": "array",
@@ -460,7 +460,7 @@
 			"label": "Increase counter by:",
 			"description": "Step value for the counter with the same array index.",
 			"simple": true,
-			"position": 6
+			"position": 7
 		},
 		"recrawl": {
 			"type": "bool",
@@ -468,7 +468,15 @@
 			"label": "Re-crawl custom URLs",
 			"description": "Always re-crawl custom URLs.",
 			"simple": true,
-			"position": 10
+			"position": 11
+		},
+		"robots": {
+			"type": "bool",
+			"default": false,
+			"label": "Add sitemaps in 'robots.txt'",
+			"description": "Adds the sitemaps specified in ''robots.txt'' as custom URLs.",
+			"simple": true,
+			"position": 2
 		},
 		"tokens": {
 			"type": "array",
@@ -477,7 +485,7 @@
 			"label": "Token variables:",
 			"description": "List of token variables to be replaced in custom URLs.",
 			"simple": true,
-			"position": 11
+			"position": 12
 		},
 		"tokens.source": {
 			"type": "array",
@@ -486,7 +494,7 @@
 			"label": "Token sources:",
 			"description": "Source URL of the token with the same array index (absolute link without protocol).",
 			"simple": true,
-			"position": 12
+			"position": 13
 		},
 		"tokens.query": {
 			"type": "array",
@@ -498,7 +506,7 @@
 			"label": "Token queries:",
 			"description": "Query to extract token with the same array index.",
 			"simple": true,
-			"position": 13
+			"position": 14
 		},
 		"urls": {
 			"type": "array",
@@ -515,7 +523,7 @@
 			"label": "Use POST for custom URLs",
 			"description": "Use HTTP POST instead of HTTP GET to retrieve custom URLs.",
 			"simple": true,
-			"position": 2
+			"position": 3
 		}
 	},
 	"expected": {

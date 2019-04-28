@@ -50,6 +50,7 @@
 #include <fstream>
 #include <locale>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
@@ -174,10 +175,12 @@ namespace crawlservpp::Module::Crawler {
 		std::chrono::steady_clock::time_point startTime;
 		std::chrono::steady_clock::time_point pauseTime;
 		std::chrono::steady_clock::time_point idleTime;
-		std::chrono::steady_clock::time_point httpTime;	// time of last HTTP request (only used when HTTP sleep is enabled)
+		std::chrono::steady_clock::time_point httpTime;	// time of last HTTP request
+														// (only used when HTTP sleep is enabled)
 
 		// initializing functions
 		void initCustomUrls();
+		void initRobotsTxt();
 		void initDoGlobalCounting(
 				std::vector<std::string>& urlList,
 				const std::string& variable,

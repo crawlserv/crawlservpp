@@ -103,6 +103,7 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<long> customCountersStart;
 			std::vector<long> customCountersStep;
 			bool customReCrawl;
+			bool customRobots;
 			std::vector<std::string> customTokens;
 			std::vector<unsigned long> customTokensQuery;
 			std::vector<std::string> customTokensSource;
@@ -158,6 +159,7 @@ namespace crawlservpp::Module::Crawler {
 										crawlerXml(false),
 										customCountersGlobal(true),
 										customReCrawl(true),
+										customRobots(false),
 										customUsePost(false),
 										expectedQuery(0),
 										expectedErrorIfLarger(false),
@@ -230,6 +232,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("counters.start", this->config.customCountersStart);
 		this->option("counters.step", this->config.customCountersStep);
 		this->option("recrawl", this->config.customReCrawl);
+		this->option("robots", this->config.customRobots);
 		this->option("tokens", this->config.customTokens);
 		this->option("tokens.query", this->config.customTokensQuery);
 		this->option("tokens.source", this->config.customTokensSource);

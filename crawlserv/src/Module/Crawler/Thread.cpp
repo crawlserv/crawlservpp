@@ -487,9 +487,6 @@ namespace crawlservpp::Module::Crawler {
 				this->customPages.emplace_back(0, *i);
 		}
 
-		// queue for log entries while URL list is locked
-		std::queue<std::string> warnings;
-
 		if(!(this->config.crawlerStart.empty())) {
 			// set URL of start page
 			this->startPage.second = this->config.crawlerStart;
@@ -504,6 +501,11 @@ namespace crawlservpp::Module::Crawler {
 			// get the ID of the start page URL
 			this->startPage.first = this->database.getUrlId(this->startPage.second);
 		}
+
+		// check whether to extract URLs from 'robots.txt'
+		if(this->config.customRobots)
+			// add sitemap(s) from 'robots.txt' as custom URLs
+			this->initRobotsTxt();
 
 		// get IDs and lock IDs for custom URLs (and add them to the URL list if necessary)
 		for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
@@ -523,18 +525,154 @@ namespace crawlservpp::Module::Crawler {
 			}
 			catch(const URIException& e) {
 				if(this->config.crawlerLogging) {
-					warnings.emplace("URI Parser error: " + e.whatStr());
-					warnings.emplace("Skipped invalid custom URL " + i->second);
+					this->log("URI Parser error: " + e.whatStr());
+					this->log("skipped invalid custom URL " + i->second);
 				}
 			}
 		}
+	}
 
-		// log warnings if necessary
-		if(this->config.crawlerLogging) {
-			while(!warnings.empty()) {
-				this->log(warnings.front());
+	// add sitemap(s) from 'robots.txt' as custom URLs
+	void Thread::initRobotsTxt() {
+		// get content for extracting sitemap(s)
+		std::string content;
+		std::string token;
+		std::string url("https://" + this->domain + "/robots.txt");
+		bool success = false;
 
-				warnings.pop();
+		// check for cross-domain website
+		if(this->domain.empty()) {
+			if(this->config.crawlerLogging)
+				this->log("WARNING: Cannot get \'robots.txt\' for cross-domain websites");
+
+			return;
+		}
+
+		// get robots.txt
+		while(this->isRunning()) {
+			try {
+				this->networking.getContent(
+						url,
+						false,
+						content,
+						this->config.crawlerRetryHttp
+				);
+
+				success = true;
+
+				break;
+			}
+			catch(const CurlException& e) {
+				// error while getting content: check type of error i.e. last cURL code
+				if(this->crawlingCheckCurlCode(
+						this->networking.getCurlCode(),
+						url
+				)) {
+					// reset connection and retry
+					if(this->config.crawlerLogging) {
+						this->log(e.whatStr() + " [" + url + "].");
+						this->log("resets connection...");
+					}
+
+					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
+
+					this->networking.resetConnection(this->config.crawlerSleepError);
+				}
+				else {
+					if(this->config.crawlerLogging)
+						this->log("WARNING: Could not get \'robots.txt\'.");
+
+					break;
+				}
+			}
+			catch(const Utf8Exception& e) {
+				// write UTF-8 error to log if neccessary
+				if(this->config.crawlerLogging)
+					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
+
+				break;
+			}
+		}
+
+		if(!success)
+			return;
+
+		std::istringstream in(content);
+		std::string line;
+
+		// go through all lines in 'robots.txt'
+		while(std::getline(in, line)) {
+			// check length of line
+			if(line.size() < 9)
+				continue;
+
+			// convert first 7 characters to lower case
+			std::transform(line.begin(), line.begin() + 7, line.begin(), ::tolower);
+
+			// check for sitemap
+			if(line.substr(0, 8) == "sitemap:") {
+				// get sitemap
+				std::string sitemap = line.substr(8);
+
+				// trim sitemap (removing optional space at the beginning)
+				Helper::Strings::trim(sitemap);
+
+				// check length of sitemap
+				if(sitemap.empty())
+					continue;
+
+				// parse sitemap URL to sub-URL of domain
+				try {
+					Parsing::URI uriParser;
+
+					uriParser.setCurrentDomain(this->domain);
+					uriParser.setCurrentUrl("/robots.txt");
+
+					uriParser.parseLink(sitemap);
+
+					if(!uriParser.isSameDomain()) {
+						if(this->config.crawlerLogging)
+							this->log(
+									"WARNING: Cross-domain sitemaps not supported ["
+									+ sitemap
+									+ "]."
+							);
+
+						continue;
+					}
+
+					sitemap = uriParser.getSubUrl();
+				}
+				catch(const URIException& e) {
+					if(this->config.crawlerLogging)
+						this->log(
+								"WARNING: URI parser error: "
+								+ e.whatStr()
+								+ "["
+								+ sitemap
+								+ "]"
+						);
+
+					continue;
+				}
+
+				// add sitemap to custom URLs if it does not exist yet
+				if(
+						std::find_if(
+								this->customPages.begin(),
+								this->customPages.end(),
+								[&](const auto& val) {
+									return val.second == sitemap;
+								}
+						) == this->customPages.end()
+				) {
+
+
+					this->customPages.emplace_back(0, sitemap);
+
+					if(this->config.crawlerLogging)
+						this->log("added sitemap \"" + sitemap + "\" from 'robots.txt'.");
+				}
 			}
 		}
 	}
@@ -1132,7 +1270,7 @@ namespace crawlservpp::Module::Crawler {
 						}
 					}
 					catch(const Utf8Exception& e) {
-						// write to log if neccessary
+						// write UTF-8 error to log if neccessary
 						if(this->config.crawlerLogging)
 							this->log("WARNING: " + e.whatStr() + " [" + url.second + "].");
 
@@ -1418,7 +1556,7 @@ namespace crawlservpp::Module::Crawler {
 			return false;
 		}
 		catch(const Utf8Exception& e) {
-			// write to log if neccessary
+			// write UTF-8 error to log if neccessary
 			if(this->config.crawlerLogging)
 				this->log("WARNING: " + e.whatStr() + " [" + url.second + "].");
 
@@ -3172,7 +3310,7 @@ namespace crawlservpp::Module::Crawler {
 														);
 												}
 												catch(const Utf8Exception& e) {
-													// log UTF-8 error and skip
+													// write UTF-8 error to log if necessary (and skip)
 													if(this->config.crawlerLogging)
 														this->log(
 																"WARNING: " + e.whatStr() + " - skips..."
@@ -3238,6 +3376,7 @@ namespace crawlservpp::Module::Crawler {
 						}
 					}
 					catch(const Utf8Exception& e) {
+						// write UTF-8 error to log if necessary
 						if(this->config.crawlerLogging)
 							this->log("WARNING: " + e.whatStr() + " [" + archivedUrl + "]");
 
