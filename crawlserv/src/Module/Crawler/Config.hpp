@@ -57,6 +57,7 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> crawlerArchivesUrlsTimemap;
 			unsigned int crawlerLock;
 			unsigned short crawlerLogging;
+			std::vector<std::string> crawlerParamsAdd;
 			std::vector<std::string> crawlerParamsBlackList;
 			std::vector<std::string> crawlerParamsWhiteList;
 			std::vector<unsigned long> crawlerQueriesBlackListContent;
@@ -185,6 +186,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("archives.urls.timemap", this->config.crawlerArchivesUrlsTimemap);
 		this->option("lock", this->config.crawlerLock);
 		this->option("logging", this->config.crawlerLogging);
+		this->option("params.add", this->config.crawlerParamsAdd);
 		this->option("params.blacklist", this->config.crawlerParamsBlackList);
 		this->option("params.whitelist", this->config.crawlerParamsWhiteList);
 		this->option("queries.blacklist.cont", this->config.crawlerQueriesBlackListContent);

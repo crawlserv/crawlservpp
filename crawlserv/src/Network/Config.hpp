@@ -42,7 +42,7 @@ namespace crawlservpp::Network {
 		std::vector<std::string> cookiesOverwrite;
 		std::string cookiesSave;
 		bool cookiesSession;
-		std::string cookiesSet;
+		std::string cookiesSet; // (crawler only)
 		long dnsCacheTimeOut;
 		std::string dnsDoH;
 		std::string dnsInterface;
