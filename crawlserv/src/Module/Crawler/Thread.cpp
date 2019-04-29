@@ -1714,29 +1714,30 @@ namespace crawlservpp::Module::Crawler {
 		if(
 				this->config.redirectQueryUrl
 				&& this->queryRedirectUrl.type == QueryStruct::typeRegEx
-				&& this->getRegExQuery(this->queryRedirectUrl.index).getBool(url)
 		) {
-			// preserve old URL for queries
-			std::string oldUrl = url;
+			if(this->getRegExQuery(this->queryRedirectUrl.index).getBool(url)) {
+				// preserve old URL for queries
+				std::string oldUrl = url;
 
-			// set new URL and whether to use HTTP POST
-			url = this->config.redirectTo;
-			usePost = this->config.redirectUsePost;
+				// set new URL and whether to use HTTP POST
+				url = this->config.redirectTo;
+				usePost = this->config.redirectUsePost;
 
-			// handle variables in new URL
-			this->crawlingDynamicRedirectUrlVars(oldUrl, url);
+				// handle variables in new URL
+				this->crawlingDynamicRedirectUrlVars(oldUrl, url);
 
-			// set new custom cookies header if necessary
-			if(!(this->config.redirectCookies.empty())) {
-				customCookies = this->config.redirectCookies;
+				// set new custom cookies header if necessary
+				if(!(this->config.redirectCookies.empty())) {
+					customCookies = this->config.redirectCookies;
 
-				// handle variables in new custom cookies header
-				this->crawlingDynamicRedirectUrlVars(oldUrl, customCookies);
+					// handle variables in new custom cookies header
+					this->crawlingDynamicRedirectUrlVars(oldUrl, customCookies);
+				}
+
+				// write to log if necessary
+				if(this->config.crawlerLogging)
+					this->log("[dynamic redirect] " + oldUrl + " -> " + url);
 			}
-
-			// write to log if necessary
-			if(this->config.crawlerLogging)
-				this->log("[dynamic redirect] " + oldUrl + " -> " + url);
 		}
 		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
 			this->log("WARNING: Did not find RegEx query for dynamic redirect.");
