@@ -2,7 +2,7 @@
  * Algorithms class for the crawlserv frontend
  */
 
-// @required: helper function msToStr() from frontend.js!
+// @requires helpers.js !
 
 class Algo {
 	/*
@@ -146,7 +146,12 @@ class Algo {
 			callback_when_finished();
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) {
-			throw new Error("Algo::constructor(): Could not load algorithm data.\n" + textStatus + ": " + errorThrown);
+			handleJsonError(
+					"Algo::constructor(): Could not load algorithm data.",
+					jqXHR,
+					textStatus,
+					errorThrown
+			);
 		});
 	}
 	

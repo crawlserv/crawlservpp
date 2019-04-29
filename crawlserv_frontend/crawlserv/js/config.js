@@ -1,83 +1,8 @@
 /**
  * Configuration class for the crawlserv frontend
- * 
  */
 
-// @required: helper function msToStr() from frontend.js !
-
-// helper function to compare two configurations
-function areConfigsEqual(config1, config2, logging = false) {
-	// go through all configuration entries in the first configuration
-	for(key1 in config1) {
-		// find configuration entry in the second configuration
-		var found = false;
-		
-		for(key2 in config2) {
-			if(config1[key1].cat == config2[key2].cat) {
-				if(config1[key1].name == config2[key2].name) {
-					// configuration entry found: check for array
-					if($.isArray(config1[key1].value)
-							&& $.isArray(config2[key2].value)) {
-						// compare array size
-						var arrayLength = config1[key1].value.length;
-						
-						if(arrayLength != config2[key2].value.length) {
-							if(logging)
-								console.log(
-										"areConfigsEqual(): Unequal number of elements in "
-										+ config1[key1].cat + "." + config1[key1].name
-								);
-							return false;
-						}
-						
-						// compare array items
-						for(var i = 0; i < arrayLength; i++) {
-							if(config1[key1].value[i] != config2[key2].value[i]) {
-								if(logging)
-									console.log(
-											"areConfigsEqual(): " + config1[key1].cat + "." + config1[key1].name
-											+ "[" + i + "]: " + config1[key1].value[i]
-											+ " != " + config2[key2].value[i]
-									);
-								
-								return false;
-							}
-						}
-					}
-					// compare value (ignore change of algorithm)
-					else if(config1[key1].name != "_algo"
-						&& config1[key1].value != config2[key2].value) {
-						if(logging)
-							console.log(
-									"areConfigsEqual(): " + config1[key1].cat + "." + config1[key1].name +
-									": " + config1[key1].value + " != " + config2[key2].value
-						);
-						
-						return false;
-					}
-					
-					found = true;
-					
-					break;
-				}
-			}
-		}
-		
-		if(!found
-				&& config1[key1].name != "_algo") {
-			if(logging)
-				console.log(
-						"areConfigsEqual(): " + config1[key1].cat + "."	+ config1[key1].name +
-						" [=\'" + config1[key1].value + "\'] not found"
-				);
-			
-			return false;
-		}
-	}
-	
-	return true;
-};
-
+// @requires helpers.js !
 
 class Config {
 	
@@ -297,16 +222,20 @@ class Config {
 					callback_when_finished();
 			})
 			.fail(function(jqXHR, textStatus, errorThrown) {
-				throw new Error(
-						"Config::constructor(): Could not load configuration data" +
-						" for algorithm.\n" + textStatus + ": " + errorThrown
+				handleJsonError(
+						"Config::constructor(): Could not load configuration data.",
+						jqXHR,
+						textStatus,
+						errorThrown,
 				);
 			});
 		})
 		.fail(function(jqXHR, textStatus, errorThrown) {
-			throw new Error(
-					"Config::constructor(): Could not load configuration data." +
-					"\n" + textStatus + ": " + errorThrown
+			handleJsonError(
+					"Config::constructor(): Could not load configuration data.",
+					jqXHR,
+					textStatus,
+					errorThrown
 			);
 		});
 	}
@@ -834,9 +763,15 @@ class Config {
 		
 		if(!Array.isArray(def))
 			throw new Error(
-					"config::array(): Invalid default value \
-					 for " + cat + ".#" + id + " \
-					 (should be an array of " + type + ", but is \'" + def + "\')."
+					"config::array(): Invalid default value for '"
+					+ cat
+					+ ".#"
+					+ id
+					+ "' (should be an array of "
+					+ type
+					+ ", but is \'"
+					+ def
+					+ "\')."
 			);
 		
 		isdef = def.equals(value);
@@ -1039,7 +974,11 @@ class Config {
 				return this.config_combined[i].value;
 		}
 		throw new Error(
-				"config::getConfValue(): Could not find \'" + cat + "." + opt + "\' in current configuration."
+				"config::getConfValue(): Could not find \'"
+				+ cat
+				+ "."
+				+ opt
+				+ "\' in current configuration."
 		);
 	}
 	
@@ -1151,7 +1090,11 @@ class Config {
 						this.config_current.push(nobj);
 					
 					else throw new Error(
-							"Config::updateConf(): Could not get value of '" + cat + "." + opt + "'. Invalid type?"
+							"Config::updateConf(): Could not get value of '"
+							+ cat
+							+ "."
+							+ opt
+							+ "'. Invalid type?"
 					);
 				}
 			}
