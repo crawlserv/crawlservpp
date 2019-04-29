@@ -63,6 +63,15 @@
 			"label": "Logging mode:",
 			"description": "Level of logging activity.",
 			"simple": true,
+			"position": 13
+		},
+		"params.add": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "URL parameters to add:",
+			"description": "URL parameters that will be added shortly before getting the content (but not saved in the URL list).",
+			"simple": true,
 			"position": 12
 		},
 		"params.blacklist": {
@@ -76,7 +85,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"label": "URL parameters:",
+			"label": "URL parameters to keep:",
 			"description": "Parameters in URLs that will not be ignored.",
 			"simple": true,
 			"position": 11
@@ -583,8 +592,10 @@
 		"cookies.load": {
 			"type": "string",
 			"default": "",
+			"label": "Read from:",
 			"description": "Read cookies from specific server file.",
-			"simple": false
+			"simple": true,
+			"position": 7
 		},
 		"cookies.overwrite": {
 			"type": "array",
@@ -596,8 +607,10 @@
 		"cookies.save": {
 			"type": "string",
 			"default": "",
+			"label": "Write to:",
 			"description": "Write cookies to specific server file.",
-			"simple": false
+			"simple": true,
+			"position": 8
 		},
 		"cookies.session": {
 			"type": "bool",
@@ -608,7 +621,7 @@
 		"cookies.set": {
 			"type": "string",
 			"default": "",
-			"description": "Custom Cookie header independent from internal cookie engine.",
+			"description": "Custom cookie header independent from internal cookie engine (will be overwritten if cookie is set on dynamic overwrite).",
 			"simple": false
 		},
 		"dns.cachetimeout": {
