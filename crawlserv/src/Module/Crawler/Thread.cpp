@@ -1740,8 +1740,6 @@ namespace crawlservpp::Module::Crawler {
 		}
 		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
 			this->log("WARNING: Did not find RegEx query for dynamic redirect.");
-
-		this->warning("");
 	}
 
 	// resolve variables in string (i.e. URL or custom cookies header) for dynamic redirect by URL
