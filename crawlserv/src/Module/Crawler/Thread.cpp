@@ -259,6 +259,26 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
+			// add parameters to URL if necessary
+			if(!(this->config.crawlerParamsAdd.empty())) {
+				bool questionMark = false;
+
+				if(url.second.find('?') == std::string::npos)
+					questionMark = true;
+
+				for(auto i = this->config.crawlerParamsAdd.begin(); i != this->config.crawlerParamsAdd.end(); ++i) {
+					if(questionMark) {
+						url.second.push_back('?');
+
+						questionMark = false;
+					}
+					else
+						url.second.push_back('&');
+
+					url.second += *i;
+				}
+			}
+
 			if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 				// idling stopped
 				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
