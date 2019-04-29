@@ -774,7 +774,17 @@ namespace crawlservpp::Network {
 
 	// set current network options from crawling configuration
 	void Curl::setConfigCurrent(const Config& currentConfig) {
-		//TODO (e.g. overwrite cookies)
+		// overwrite cookies
+		for(auto i = currentConfig.cookiesOverwrite.begin(); i != currentConfig.cookiesOverwrite.end(); ++i) {
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_COOKIELIST,
+					i->c_str()
+			);
+
+			if(this->curlCode != CURLE_OK)
+				throw Curl::Exception(curl_easy_strerror(this->curlCode));
+		}
 	}
 
 	// get remote content
