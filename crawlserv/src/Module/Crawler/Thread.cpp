@@ -1732,7 +1732,7 @@ namespace crawlservpp::Module::Crawler {
 			}
 
 			// write to log if necessary
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			if(this->config.crawlerLogging)
 				this->log("[dynamic redirect] " + oldUrl + " -> " + url);
 		}
 		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
@@ -1898,7 +1898,7 @@ namespace crawlservpp::Module::Crawler {
 		this->crawlingDynamicRedirectContentVars(oldUrl, content, url);
 
 		// write to log if necessary
-		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+		if(this->config.crawlerLogging)
 			this->log("[dynamic redirect] " + oldUrl + " -> " + url);
 
 		// get custom cookie header
