@@ -1235,7 +1235,7 @@ protected:
 		else
 			throw std::logic_error(
 					"Config::warning(): No log queue is active."
-					" Do not use outside of Config::loadConfig()!"
+					" Do not use this function outside of Config::loadConfig()!"
 			);
 	}
 
