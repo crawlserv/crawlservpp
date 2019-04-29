@@ -563,6 +563,86 @@
 			"simple": false
 		}
 	},
+	"redirect": {
+		"label": "Dynamic Redirect",
+		"open": false,
+		
+		"cookies": {
+			"type": "string",
+			"default": "",
+			"label": "Cookies:",
+			"description": "Set-Cookie header on dynamic redirect.",
+			"simple": true,
+			"position": 7
+		},
+		"query.url" : {
+			"type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"label": "Query on URL:",
+			"description": "Boolean queries on URL that specify whether to redirect to different URL.",
+			"simple": true,
+			"position": 1
+		},
+		"query.content" : {
+			"type": "query",
+			"query-results": [
+				"bool"
+			],
+			"default": [],
+			"label": "Query on content:",
+			"description": "Boolean queries on content that specify whether to redirect to different URL.",
+			"simple": true,
+			"position": 2
+		},
+		"redirect.to": {
+			"type": "string",
+			"default": "",
+			"label": "Redirect to:",
+			"description": "Sub-URL (for cross-domain websites: URL without protocol) to redirect to.",
+			"simple": true,
+			"position": 6
+		},
+		"var.names": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Variable names:",
+			"description": "Variable names to be replaced by values in 'redirect.to' and 'cookies'.",
+			"simple": true,
+			"position": 3
+		},
+		"var.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": [],
+			"label": "Variable queries:",
+			"description": "Query on variable source to get the value of the variable with the same index.",
+			"simple": true,
+			"position": 5			
+		},
+		"var.sources": {
+			"type": "array",
+			"item-type": "enum",
+			"enum-values": [
+				"URL",
+				"Content"
+			],
+			"default": [],
+			"label": "Variable sources:",
+			"description": "Source type of the variable with the same index.",
+			"simple": true,
+			"position": 4
+		}
+	},
 	"network": {
 		"label": "Networking",
 		"open": false,
