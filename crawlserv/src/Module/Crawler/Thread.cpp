@@ -548,6 +548,9 @@ namespace crawlservpp::Module::Crawler {
 		std::string url("https://" + this->domain + "/robots.txt");
 		bool success = false;
 
+		if(this->config.crawlerLogging == Config::crawlerLoggingVerbose)
+			this->log("fetches \'robots.txt\'...");
+
 		// check for cross-domain website
 		if(this->domain.empty()) {
 			if(this->config.crawlerLogging)
@@ -1736,7 +1739,9 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[dynamic redirect] " + oldUrl + " -> " + url);
 		}
 		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
-			this->warning("WARNING: Did not find RegEx query for dynamic redirect.");
+			this->log("WARNING: Did not find RegEx query for dynamic redirect.");
+
+		this->warning("");
 	}
 
 	// resolve variables in string (i.e. URL or custom cookies header) for dynamic redirect by URL

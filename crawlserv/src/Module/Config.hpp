@@ -112,7 +112,7 @@ protected:
 		bool finished;					// item has been found
 		LogPtr logPtr;					// pointer to logging queue
 
-		// private helper function
+		// private static helper functions
 		static void makeSubUrl(std::string& s);
 		static void makeUrl(std::string& s);
 
@@ -278,6 +278,9 @@ protected:
 
 		// check options
 		this->checkOptions();
+
+		// unset logging queue
+		this->logPtr = nullptr;
 	}
 
 	// set category of configuration items to parse
@@ -1229,6 +1232,11 @@ protected:
 	inline void Config::warning(const std::string& warning) {
 		if(this->logPtr)
 			this->logPtr->emplace(warning);
+		else
+			throw std::logic_error(
+					"Config::warning(): No log queue is active."
+					" Do not use outside of Config::loadConfig()!"
+			);
 	}
 
 	// check for sub-URL (starting with /) or cURL-supported URL protocol
