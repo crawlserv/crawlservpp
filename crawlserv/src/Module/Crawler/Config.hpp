@@ -279,6 +279,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// check properties of archives
 		bool incompleteArchives = false;
+
 		unsigned long completeArchives = std::min({ // number of complete archives (= minimum size of all arrays)
 				this->config.crawlerArchivesNames.size(),
 				this->config.crawlerArchivesUrlsMemento.size(),
@@ -312,11 +313,13 @@ namespace crawlservpp::Module::Crawler {
 					"\'archives.names\', \'.urls.memento\' and \'.urls.timemap\'"
 					" should have the same number of elements."
 			);
+
 			this->warning("Incomplete archive(s) removed.");
 		}
 
 		// check properties of counters
 		bool incompleteCounters = false;
+
 		unsigned long completeCounters = std::min({ // number of complete counters (= minimum size of all arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
@@ -358,6 +361,7 @@ namespace crawlservpp::Module::Crawler {
 					"\'custom.counters\', \'.start\', \'.end\' and \'.step\'"
 					" should have the same number of elements."
 			);
+
 			this->warning("Incomplete counter(s) removed.");
 		}
 
@@ -392,6 +396,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// check properties of tokens
 		bool incompleteTokens = false;
+
 		unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of all arrays)
 				this->config.customTokens.size(),
 				this->config.customTokensSource.size(),
@@ -431,7 +436,48 @@ namespace crawlservpp::Module::Crawler {
 					"\'custom.tokens\', \'.tokens.source\' and \'.tokens.query\'"
 					" should have the same number of elements."
 			);
+
 			this->warning("Incomplete token(s) removed.");
+		}
+
+		// check properties of variables for dynamic redirect
+		bool incompleteVars = false;
+
+		unsigned long completeVars = std::min({ // number of complete variables (= minimum size of all arrays)
+			this->config.redirectVarNames.size(),
+			this->config.redirectVarQueries.size(),
+			this->config.redirectVarSources.size()
+		});
+
+		if(this->config.redirectVarNames.size() > completeVars) {
+			// remove names of incomplete redirect variables
+			this->config.redirectVarNames.resize(completeVars);
+
+			incompleteVars = true;
+		}
+
+		if(this->config.redirectVarQueries.size() > completeVars) {
+			// remove queries of incomplete redirect variables
+			this->config.redirectVarQueries.resize(completeVars);
+
+			incompleteVars = true;
+		}
+
+		if(this->config.redirectVarSources.size() > completeVars) {
+			// remove sources of incomplete redirect variables
+			this->config.redirectVarSources.resize(completeVars);
+
+			incompleteVars = true;
+		}
+
+		if(incompleteTokens) {
+			// warn about incomplete counters
+			this->warning(
+					"\'redirect.var.names\', \'.var.sources\' and \'.var.queries\'"
+					" should have the same number of elements."
+			);
+
+			this->warning("Incomplete variable(s) removed.");
 		}
 	}
 
