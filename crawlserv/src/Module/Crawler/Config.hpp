@@ -44,6 +44,8 @@ namespace crawlservpp::Module::Crawler {
 		static const unsigned short crawlerLoggingDefault = 1;
 		static const unsigned short crawlerLoggingExtended = 2;
 		static const unsigned short crawlerLoggingVerbose = 3;
+		static const unsigned short crawlerRedirectSourceUrl = 0;
+		static const unsigned short crawlerRedirectSourceContent = 1;
 
 		// configuration entries
 		struct Entries {
@@ -111,6 +113,15 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> customUrls;
 			bool customUsePost;
 
+			// dynamic redirect
+			std::string redirectCookies;
+			unsigned long redirectQueryUrl;
+			unsigned long redirectQueryContent;
+			std::string redirectTo;
+			std::vector<std::string> redirectVarNames;
+			std::vector<unsigned long> redirectVarQueries;
+			std::vector<unsigned short> redirectVarSources;
+
 			// expected number of results
 			unsigned long expectedQuery;
 			bool expectedErrorIfLarger;
@@ -162,6 +173,8 @@ namespace crawlservpp::Module::Crawler {
 										customReCrawl(true),
 										customRobots(false),
 										customUsePost(false),
+										redirectQueryUrl(0),
+										redirectQueryContent(0),
 										expectedQuery(0),
 										expectedErrorIfLarger(false),
 										expectedErrorIfSmaller(false) {
@@ -240,6 +253,16 @@ namespace crawlservpp::Module::Crawler {
 		this->option("tokens.source", this->config.customTokensSource);
 		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 		this->option("use.post", this->config.customUsePost);
+
+		// dynamic redirect
+		this->category("redirect");
+		this->option("cookies", this->config.redirectCookies);
+		this->option("query.content", this->config.redirectQueryContent);
+		this->option("query.url", this->config.redirectQueryUrl);
+		this->option("redirect.to", this->config.redirectTo);
+		this->option("var.names", this->config.redirectVarNames);
+		this->option("var.queries", this->config.redirectVarQueries);
+		this->option("var.sources", this->config.redirectVarSources);
 
 		// expected number of results
 		this->category("expected");
