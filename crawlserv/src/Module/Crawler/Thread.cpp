@@ -194,6 +194,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("initializes networking for archives...");
 
 			this->networkingArchives = std::make_unique<Network::Curl>();
+
 			this->networkingArchives->setConfigGlobal(*this, true, &configWarnings);
 
 			// log warnings if necessary
@@ -259,25 +260,11 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
+			// dynamic redirect on URL
+			// TODO
+
 			// add parameters to URL if necessary
-			if(!(this->config.crawlerParamsAdd.empty())) {
-				bool questionMark = false;
-
-				if(url.second.find('?') == std::string::npos)
-					questionMark = true;
-
-				for(auto i = this->config.crawlerParamsAdd.begin(); i != this->config.crawlerParamsAdd.end(); ++i) {
-					if(questionMark) {
-						url.second.push_back('?');
-
-						questionMark = false;
-					}
-					else
-						url.second.push_back('&');
-
-					url.second += *i;
-				}
-			}
+			this->crawlingUrlParams(url.second);
 
 			if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 				// idling stopped
@@ -1229,6 +1216,27 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		return result;
+	}
+
+	void Thread::crawlingUrlParams(std::string& url) {
+		if(!(this->config.crawlerParamsAdd.empty())) {
+			bool questionMark = false;
+
+			if(url.find('?') == std::string::npos)
+				questionMark = true;
+
+			for(auto i = this->config.crawlerParamsAdd.begin(); i != this->config.crawlerParamsAdd.end(); ++i) {
+				if(questionMark) {
+					url.push_back('?');
+
+					questionMark = false;
+				}
+				else
+					url.push_back('&');
+
+				url += *i;
+			}
+		}
 	}
 
 	// replace token variables in custom URL
