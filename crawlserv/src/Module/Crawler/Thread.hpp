@@ -143,6 +143,9 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<QueryStruct> queriesWhiteListTypes;
 		std::vector<QueryStruct> queriesWhiteListUrls;
 		std::vector<QueryStruct> queriesTokens;
+		QueryStruct queryRedirectContent;
+		QueryStruct queryRedirectUrl;
+		std::vector<QueryStruct> queriesRedirectVars;
 		QueryStruct queryExpected;
 
 		// custom URLs
@@ -155,7 +158,7 @@ namespace crawlservpp::Module::Crawler {
 		IdString manualUrl;				// custom URL to be retried
 		unsigned long manualCounter;	// number of crawled custom URLs
 		bool startCrawled;				// start page has been successfully crawled
-		bool manualOff;					// manual mode has been turned off (after first URL from database is crawled)
+		bool manualOff;					// manual mode has been turned off (after first URL is crawled)
 		std::string crawledContent;		// crawled content
 		unsigned long retryCounter;		// number of retries
 		bool archiveRetry;				// only archive needs to be retried
@@ -203,21 +206,33 @@ namespace crawlservpp::Module::Crawler {
 
 		// crawling functions
 		bool crawlingUrlSelection(IdString& urlTo, bool& usePostTo);
-		void crawlingUrlParams(std::string& url);
 		IdString crawlingReplaceTokens(const IdString& url);
+		void crawlingUrlParams(std::string& url);
 		bool crawlingContent(
-				const IdString& url,
+				IdString& url,
+				const std::string& customCookies,
 				bool usePost,
 				unsigned long& checkedUrlsTo,
 				unsigned long& newUrlsTo,
 				std::string& timerStrTo
+		);
+		void crawlingDynamicRedirectUrl(std::string& url, std::string& customCookies, bool& usePost);
+		void crawlingDynamicRedirectUrlVars(const std::string& oldUrl, std::string& strInOut);
+		bool crawlingDynamicRedirectContent(std::string& url, std::string& content);
+		void crawlingDynamicRedirectContentVars(
+				const std::string& oldUrl,
+				const std::string& oldContent,
+				std::string& strInOut
 		);
 		bool crawlingCheckUrl(const std::string& url, const std::string& from);
 		bool crawlingCheckUrlForLinkExtraction(const std::string& url);
 		bool crawlingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
 		bool crawlingCheckContentType(const std::string& url, const std::string& contentType);
-		bool crawlingCheckContentTypeForLinkExtraction(const std::string& url, const std::string& contentType);
+		bool crawlingCheckContentTypeForLinkExtraction(
+				const std::string& url,
+				const std::string& contentType
+		);
 		bool crawlingCheckContent(const std::string& url, const std::string& content);
 		bool crawlingCheckContentForLinkExtraction(const std::string& url, const std::string& content);
 		void crawlingSaveContent(

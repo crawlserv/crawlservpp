@@ -219,6 +219,7 @@ namespace crawlservpp::Module::Crawler {
 		Timer::StartStop timerArchives;
 		Timer::StartStop timerTotal;
 
+		std::string customCookies;
 		std::string timerString;
 
 		unsigned long checkedUrls = 0;
@@ -260,8 +261,8 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
-			// dynamic redirect on URL
-			// TODO
+			// dynamic redirect on URL if necessary
+			this->crawlingDynamicRedirectUrl(url.second, customCookies, usePost);
 
 			// add parameters to URL if necessary
 			this->crawlingUrlParams(url.second);
@@ -281,7 +282,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("crawls " + url.second + "...");
 
 			// crawl content
-			bool crawled = this->crawlingContent(url, usePost, checkedUrls, newUrls, timerString);
+			bool crawled = this->crawlingContent(url, customCookies, usePost, checkedUrls, newUrls, timerString);
 
 			// handle parsing errors
 			this->logParsingErrors(url.second);
@@ -565,7 +566,7 @@ namespace crawlservpp::Module::Crawler {
 						this->config.crawlerRetryHttp
 				);
 
-				success = true;
+				success = this->crawlingCheckResponseCode(url, this->networking.getResponseCode());
 
 				break;
 			}
@@ -587,7 +588,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 				else {
 					if(this->config.crawlerLogging)
-						this->log("WARNING: Could not get \'robots.txt\'.");
+						this->log("WARNING: " + e.whatStr() + " [" + url + "]");
 
 					break;
 				}
@@ -977,6 +978,34 @@ namespace crawlservpp::Module::Crawler {
 				this->queriesTokens.emplace_back(this->addQuery(properties));
 			}
 
+			if(this->config.redirectQueryContent) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(this->config.redirectQueryContent, properties);
+
+				this->queryRedirectContent = this->addQuery(properties);
+			}
+
+			if(this->config.redirectQueryUrl) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(this->config.redirectQueryUrl, properties);
+
+				this->queryRedirectUrl = this->addQuery(properties);
+			}
+
+			for(
+					auto i = this->config.redirectVarQueries.begin();
+					i != this->config.redirectVarQueries.end();
+					++i
+			) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesRedirectVars.emplace_back(this->addQuery(properties));
+			}
+
 			if(this->config.expectedQuery) {
 				QueryProperties properties;
 
@@ -1218,27 +1247,6 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
-	void Thread::crawlingUrlParams(std::string& url) {
-		if(!(this->config.crawlerParamsAdd.empty())) {
-			bool questionMark = false;
-
-			if(url.find('?') == std::string::npos)
-				questionMark = true;
-
-			for(auto i = this->config.crawlerParamsAdd.begin(); i != this->config.crawlerParamsAdd.end(); ++i) {
-				if(questionMark) {
-					url.push_back('?');
-
-					questionMark = false;
-				}
-				else
-					url.push_back('&');
-
-				url += *i;
-			}
-		}
-	}
-
 	// replace token variables in custom URL
 	Thread::IdString Thread::crawlingReplaceTokens(const IdString& url) {
 		if(this->config.customTokens.empty())
@@ -1451,7 +1459,7 @@ namespace crawlservpp::Module::Crawler {
 					default:
 						if(this->config.crawlerLogging)
 							this->log(
-									"WARNING: Invalid type of Query for getting token."
+									"WARNING: Unknown type of Query for getting token."
 							);
 					}
 				}
@@ -1464,9 +1472,32 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
+	// add custom parameters to URL
+	void Thread::crawlingUrlParams(std::string& url) {
+		if(!(this->config.crawlerParamsAdd.empty())) {
+			bool questionMark = false;
+
+			if(url.find('?') == std::string::npos)
+				questionMark = true;
+
+			for(auto i = this->config.crawlerParamsAdd.begin(); i != this->config.crawlerParamsAdd.end(); ++i) {
+				if(questionMark) {
+					url.push_back('?');
+
+					questionMark = false;
+				}
+				else
+					url.push_back('&');
+
+				url += *i;
+			}
+		}
+	}
+
 	// crawl content
 	bool Thread::crawlingContent(
-			const IdString& url,
+			IdString& url,
+			const std::string& customCookies,
 			bool usePost,
 			unsigned long& checkedUrlsTo,
 			unsigned long& newUrlsTo,
@@ -1524,26 +1555,6 @@ namespace crawlservpp::Module::Crawler {
 			}
 		}
 
-		try {
-			// set local networking options
-			this->networking.setConfigCurrent(*this);
-		}
-		catch(const CurlException& e) {
-			// error while setting up network
-			if(this->config.crawlerLogging) {
-				this->log(e.whatStr() + " [" + url.second+ "].");
-				this->log("resets connection...");
-			}
-
-			this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
-
-			this->networking.resetConnection(this->config.crawlerSleepError);
-
-			this->crawlingRetry(url, false);
-
-			return false;
-		}
-
 		// start HTTP timer(s)
 		if(this->config.crawlerTiming)
 			httpTimer.start();
@@ -1551,6 +1562,13 @@ namespace crawlservpp::Module::Crawler {
 			this->httpTime = std::chrono::steady_clock::now();
 
 		try {
+			// set local networking options
+			this->networking.setConfigCurrent(*this);
+
+			// set custom cookies header if necessary
+			if(!customCookies.empty())
+				this->networking.setCookies(customCookies);
+
 			// get content
 			this->networking.getContent(
 					"https://" + this->domain + url.second,
@@ -1558,6 +1576,10 @@ namespace crawlservpp::Module::Crawler {
 					content,
 					this->config.crawlerRetryHttp
 			);
+
+			// unset custom cookies header if necessary
+			if(!customCookies.empty())
+				this->networking.unsetCookies();
 		}
 		catch(const CurlException& e) {
 			// error while getting content: check type of error i.e. last cURL code
@@ -1592,7 +1614,7 @@ namespace crawlservpp::Module::Crawler {
 			this->crawlingSkip(url, !(this->config.crawlerArchives));
 		}
 
-		// check response code
+		// check HTTP response code
 		unsigned int responseCode = this->networking.getResponseCode();
 
 		if(!(this->crawlingCheckResponseCode(url.second, responseCode))) {
@@ -1611,6 +1633,14 @@ namespace crawlservpp::Module::Crawler {
 			timerStrTo += "http: " + httpTimer.totalStr();
 
 			parseTimer.start();
+		}
+
+		// perform dynamic redirect if necessary
+		if(!(this->crawlingDynamicRedirectContent(url.second, content))) {
+			// skip because dynamic redirect failed
+			this->crawlingSkip(url, !(this->config.crawlerArchives));
+
+			return false;
 		}
 
 		// check content type
@@ -1673,6 +1703,411 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		return true;
+	}
+
+	// check URL for dynamic redirect and perform it if necessary
+	void Thread::crawlingDynamicRedirectUrl(std::string& url, std::string& customCookies, bool& usePost) {
+		// determine whether to redirect
+		if(
+				this->config.redirectQueryUrl
+				&& this->queryRedirectUrl.type == QueryStruct::typeRegEx
+				&& this->getRegExQuery(this->queryRedirectUrl.index).getBool(url)
+		) {
+			// preserve old URL for queries
+			std::string oldUrl = url;
+
+			// set new URL and whether to use HTTP POST
+			url = this->config.redirectTo;
+			usePost = this->config.redirectUsePost;
+
+			// handle variables in new URL
+			this->crawlingDynamicRedirectUrlVars(oldUrl, url);
+
+			// set new custom cookies header if necessary
+			if(!(this->config.redirectCookies.empty())) {
+				customCookies = this->config.redirectCookies;
+
+				// handle variables in new custom cookies header
+				this->crawlingDynamicRedirectUrlVars(oldUrl, customCookies);
+			}
+
+			// write to log if necessary
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log("[dynamic redirect] " + oldUrl + " -> " + url);
+		}
+		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
+			this->warning("WARNING: Did not find RegEx query for dynamic redirect.");
+	}
+
+	// resolve variables in string (i.e. URL or custom cookies header) for dynamic redirect by URL
+	void Thread::crawlingDynamicRedirectUrlVars(const std::string& oldUrl, std::string& strInOut) {
+		for(unsigned long n = 0; n < this->config.redirectVarNames.size(); ++n) {
+			if(strInOut.find(this->config.redirectVarNames.at(n)) == std::string::npos)
+				continue;
+
+			std::string value;
+
+			// check type of variable source
+			switch(this->config.redirectVarSources.at(n)) {
+			case Config::redirectSourceUrl:
+				if(
+						this->queriesRedirectVars.at(n).index
+						&& this->queriesRedirectVars.at(n).type == QueryStruct::typeRegEx
+				)
+					this->getRegExQuery(this->queriesRedirectVars.at(n).index).getFirst(oldUrl, value);
+				else
+					this->log(
+							"WARNING: Could not get value of variable \'"
+							+ this->config.redirectVarNames.at(n)
+							+ "\' for dynamic redirect - set to empty."
+					);
+
+				break;
+
+			default:
+				if(this->config.crawlerLogging)
+					this->log(
+							"WARNING: Unknown source type for variable \'"
+							+ this->config.redirectVarNames.at(n)
+							+ "\' for dynamic redirect - set to empty."
+					);
+			}
+
+			Helper::Strings::replaceAll(strInOut, this->config.redirectVarNames.at(n), value, true);
+		}
+	}
+
+	// check content for dynamic redirect and perform it if necessary
+	bool Thread::crawlingDynamicRedirectContent(std::string& url, std::string& content) {
+		// check whether dynamic redirect (determined by content) is enabled
+		if(!(this->config.redirectQueryContent))
+			return true;
+
+		// check arguments
+		if(url.empty())
+			throw Exception("Thread::crawlingDynamicRedirectContent(): No URL specified");
+
+		if(content.empty())
+			return false;
+
+		// determine whether to redirect to new URL
+		switch(this->queryRedirectContent.type) {
+		case QueryStruct::typeRegEx:
+			// run query to determine whether to redirect to new URL
+			try {
+				if(!(this->getRegExQuery(this->queryRedirectContent.index).getBool(content)))
+					return true;
+			}
+			catch(const RegExException&e) {
+				if(this->config.crawlerLogging)
+					this->log(
+							"WARNING: RegEx error - " +
+							e.whatStr() + " [" + url + "]."
+					);
+
+				return true;
+			}
+
+			break;
+
+		case QueryStruct::typeXPath:
+			// parse XML/HTML if still necessary
+			if(!(this->parseXml(content)))
+				return true;
+
+			// run query to determine whether to redirect to new URL
+			try {
+				if(!(this->getXPathQuery(this->queryRedirectContent.index).getBool(this->parsedXML)))
+					return true;
+			}
+			catch(const XPathException& e) {
+				if(this->config.crawlerLogging)
+					this->log(
+							"WARNING: XPath error - " +
+							e.whatStr() + " [" + url + "]."
+					);
+
+				return true;
+			}
+
+			break;
+
+		case QueryStruct::typeJsonPointer:
+			// parse JSON using RapidJSON if still necessary
+			if(!(this->parseJsonRapid(content)))
+				return true;
+
+			// run query to determine whether to redirect to new URL
+			try {
+				if(!(this->getJsonPointerQuery(this->queryRedirectContent.index).getBool(this->parsedJsonRapid)))
+					return true;
+			}
+			catch(const JsonPointerException& e) {
+				if(this->config.crawlerLogging)
+					this->log(
+							"WARNING: JSONPointer error - " +
+							e.whatStr() + " [" + url + "]."
+					);
+
+				return true;
+			}
+
+			break;
+
+		case QueryStruct::typeJsonPath:
+			// parse JSON using jsoncons if still necessary
+			if(!(this->parseJsonCons(content)))
+				return true;
+
+			// run query to determine whether to redirect to new URL
+			try {
+				if(!(this->getJsonPathQuery(this->queryRedirectContent.index).getBool(this->parsedJsonCons)))
+					return true;
+			}
+			catch(const JsonPathException& e) {
+				if(this->config.crawlerLogging)
+					this->log(
+							"WARNING: JSONPath error - " +
+							e.whatStr() + " [" + url + "]."
+					);
+
+				return true;
+			}
+
+			break;
+
+		case QueryStruct::typeNone:
+			return true;
+
+		default:
+			if(this->config.crawlerLogging)
+				this->log(
+						"WARNING: Unknown type of query on content for dynamic redirect."
+				);
+
+			return true;
+		}
+
+		// preserve old URL for queries
+		std::string oldUrl = url;
+
+		// get new URL
+		url = this->config.redirectTo;
+
+		// resolve variables in new URL
+		this->crawlingDynamicRedirectContentVars(oldUrl, content, url);
+
+		// write to log if necessary
+		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("[dynamic redirect] " + oldUrl + " -> " + url);
+
+		// get custom cookie header
+		std::string customCookies = this->config.redirectCookies;
+
+		// resolve variables in custom cookie header
+		this->crawlingDynamicRedirectContentVars(oldUrl, content, customCookies);
+
+		// get new content
+		bool success = false;
+
+		while(this->isRunning()) {
+			try {
+				// set current network configuration
+				this->networking.setConfigCurrent(*this);
+
+				// set custom cookies header if necessary
+				if(!customCookies.empty())
+					this->networking.setCookies(customCookies);
+
+				// get content
+				this->networking.getContent(
+						url,
+						this->config.redirectUsePost,
+						content,
+						this->config.crawlerRetryHttp
+				);
+
+				// unset custom cookies header if necessary
+				if(!customCookies.empty())
+					this->networking.unsetCookies();
+
+				// get HTTP response code
+				success = this->crawlingCheckResponseCode(url, this->networking.getResponseCode());
+
+				break;
+			}
+			catch(const CurlException& e) {
+				// error while getting content: check type of error i.e. last cURL code
+				if(this->crawlingCheckCurlCode(
+						this->networking.getCurlCode(),
+						url
+				)) {
+					// reset connection and retry
+					if(this->config.crawlerLogging) {
+						this->log(e.whatStr() + " [" + url + "].");
+						this->log("resets connection...");
+					}
+
+					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
+
+					this->networking.resetConnection(this->config.crawlerSleepError);
+				}
+				else {
+					if(this->config.crawlerLogging)
+						this->log("WARNING: " + e.whatStr() + " [" + url + "]");
+
+					break;
+				}
+			}
+			catch(const Utf8Exception& e) {
+				// write UTF-8 error to log if neccessary
+				if(this->config.crawlerLogging)
+					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
+
+				break;
+			}
+		}
+
+		if(!success)
+			return false;
+
+		// reset parsing state
+		this->resetParsingState();
+
+		// check response code and return result
+		return this->crawlingCheckResponseCode(url, this->networking.getResponseCode());
+	}
+
+	// resolve variables in string (i.e. URL or cookies header) for dynamic redirect by content
+	void Thread::crawlingDynamicRedirectContentVars(
+			const std::string& oldUrl,
+			const std::string& oldContent,
+			std::string& strInOut
+	) {
+		for(unsigned long n = 0; n < this->config.redirectVarNames.size(); ++n) {
+			if(strInOut.find(this->config.redirectVarNames.at(n)) == std::string::npos)
+				continue;
+
+			std::string value;
+
+			// check type of variable source
+			switch(this->config.redirectVarSources.at(n)) {
+			case Config::redirectSourceUrl:
+				if(this->queriesRedirectVars.at(n).type == QueryStruct::typeRegEx)
+					this->getRegExQuery(this->queriesRedirectVars.at(n).index).getFirst(oldUrl, value);
+				else
+					this->log(
+							"WARNING: Invalid type of query on URL for dynamic redirect variable \'"
+							+ this->config.redirectVarNames.at(n)
+							+ "\' - set to empty."
+					);
+
+				break;
+
+			case Config::redirectSourceContent:
+				// check type of variable query on content
+				switch(this->queriesRedirectVars.at(n).type) {
+				case QueryStruct::typeRegEx:
+					// run query to get variable value
+					try {
+						this->getRegExQuery(
+								this->queriesRedirectVars.at(n).index
+						).getFirst(oldContent, value);
+					}
+					catch(const RegExException&e) {
+						if(this->config.crawlerLogging)
+							this->log(
+									"WARNING: RegEx error - " +
+									e.whatStr() + " [" + oldUrl + "]."
+							);
+					}
+
+					break;
+
+				case QueryStruct::typeXPath:
+					// parse XML/HTML if still necessary
+					if(this->parseXml(oldContent)) {
+						// run query to get variable value
+						try {
+							this->getXPathQuery(
+									this->queriesRedirectVars.at(n).index
+							).getFirst(this->parsedXML, value);
+						}
+						catch(const XPathException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: XPath error - " +
+										e.whatStr() + " [" + oldUrl + "]."
+								);
+						}
+					}
+
+					break;
+
+				case QueryStruct::typeJsonPointer:
+					// parse JSON using RapidJSON if still necessary
+					if(this->parseJsonRapid(oldContent)) {
+						// run query to get variable value
+						try {
+							this->getJsonPointerQuery(
+									this->queriesRedirectVars.at(n).index
+							).getFirst(this->parsedJsonRapid, value);
+						}
+						catch(const JsonPointerException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: JSONPointer error - " +
+										e.whatStr() + " [" + oldUrl + "]."
+								);
+						}
+					}
+
+					break;
+
+				case QueryStruct::typeJsonPath:
+					// parse JSON using jsoncons if still necessary
+					if(this->parseJsonCons(oldContent)) {
+						// run query to get variable value
+						try {
+							this->getJsonPathQuery(
+									this->queriesRedirectVars.at(n).index
+							).getFirst(this->parsedJsonCons, value);
+						}
+						catch(const JsonPathException& e) {
+							if(this->config.crawlerLogging)
+								this->log(
+										"WARNING: JSONPath error - " +
+										e.whatStr() + " [" + oldUrl + "]."
+								);
+						}
+					}
+
+					break;
+
+				case QueryStruct::typeNone:
+					break;
+
+				default:
+					if(this->config.crawlerLogging)
+						this->log(
+								"WARNING: Unknown type of dynamic redirect query on content."
+						);
+				}
+
+				break;
+
+			default:
+				if(this->config.crawlerLogging)
+					this->log(
+							"WARNING: Unknown source type for variable \'"
+							+ this->config.redirectVarNames.at(n)
+							+ "\' for dynamic redirect - set to empty."
+					);
+			}
+
+			// replace variable with value
+			Helper::Strings::replaceAll(strInOut, this->config.redirectVarNames.at(n), value, true);
+		}
 	}
 
 	// check whether URL should be added
@@ -2210,7 +2645,7 @@ namespace crawlservpp::Module::Crawler {
 				default:
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Invalid type of query on content type."
+								"WARNING: Unknown type of query on content type."
 						);
 				}
 			}
@@ -2311,9 +2746,12 @@ namespace crawlservpp::Module::Crawler {
 					break;
 
 				case QueryStruct::typeNone:
+					break;
+
+				default:
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Invalid type of query on content type."
+								"WARNING: Unknown type of query on content type."
 						);
 				}
 			}
@@ -2537,7 +2975,7 @@ namespace crawlservpp::Module::Crawler {
 				default:
 					if(this->config.crawlerLogging)
 						this->log(
-								"WARNING: Invalid type of query on content type."
+								"WARNING: Unknown type of query on content type."
 						);
 				}
 			}
@@ -2747,7 +3185,7 @@ namespace crawlservpp::Module::Crawler {
 
 			default:
 				if(this->config.crawlerLogging)
-					this->log("WARNING: Invalid type of query on content type.");
+					this->log("WARNING: Unknown type of query on content type.");
 			}
 		}
 
@@ -2823,7 +3261,7 @@ namespace crawlservpp::Module::Crawler {
 
 		default:
 			if(this->config.crawlerLogging)
-				this->log("WARNING: Invalid type of query for expected number of results.");
+				this->log("WARNING: Unknown type of query for expected number of results.");
 		}
 
 		if(!expectedStr.empty()) {
@@ -3200,7 +3638,7 @@ namespace crawlservpp::Module::Crawler {
 															this->config.crawlerRetryHttp
 													);
 
-													// check response code
+													// check HTTP response code
 													if(!(this->crawlingCheckResponseCode(
 															mementos.front().url,
 															this->networkingArchives->getResponseCode()
