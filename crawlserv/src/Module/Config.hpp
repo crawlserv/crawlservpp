@@ -108,6 +108,7 @@ protected:
 		ConfigItem currentItem;			// current configuration item
 		bool setCategory;				// category has been set
 		bool foundCategory;				// category has been found
+		bool currentCategory;			// category equals current category
 		bool finished;					// item has been found
 		LogPtr logPtr;					// pointer to logging queue
 
@@ -124,6 +125,7 @@ protected:
 	// constructor stub
 	inline Config::Config() :	setCategory(false),
 								foundCategory(false),
+								currentCategory(false),
 								finished(false),
 								logPtr(nullptr) {}
 
@@ -149,7 +151,9 @@ protected:
 		}
 
 		if(!json.IsArray())
-			throw Config::Exception("Module::Config::loadConfig(): Invalid configuration JSON (is no array).");
+			throw Config::Exception(
+					"Module::Config::loadConfig(): Invalid configuration JSON (is no array)."
+			);
 
 		// parse configuration entries
 		for(auto entry = json.Begin(); entry != json.End(); ++entry) {
@@ -211,7 +215,9 @@ protected:
 						);
 						else
 							warningsTo.emplace(
-									"Unknown configuration entry member \'" + memberName + "\' ignored."
+									"Unknown configuration entry member \'"
+									+ memberName
+									+ "\' ignored."
 							);
 
 						continue;
@@ -251,19 +257,22 @@ protected:
 			if(!this->finished) {
 				if(this->foundCategory)
 					this->logPtr->emplace(
-							"Unknown configuration entry"
-							" \'" + this->currentItem.str() + "\' ignored."
+							"Unknown configuration entry \'"
+							+ this->currentItem.str()
+							+ "\' ignored."
 					);
 				else
 					this->logPtr->emplace(
-							"Configuration entry with unknown category"
-							" \'" + this->currentItem.category + "\' ignored."
+							"Configuration entry with unknown category \'"
+							+ this->currentItem.category
+							+ "\' ignored."
 					);
 			}
 
 			// update parsing status
 			this->currentItem = ConfigItem();
 			this->foundCategory = false;
+			this->currentCategory = false;
 			this->finished = false;
 		}
 
@@ -281,7 +290,12 @@ protected:
 		this->setCategory = true;
 
 		// compare category with current configuration item
-		this->foundCategory = this->currentItem.category == category;
+		if(this->currentItem.category == category) {
+			this->foundCategory = true;
+			this->currentCategory = true;
+		}
+		else
+			this->currentCategory = false;
 	}
 
 	// check for a configuration option (bool)
@@ -290,7 +304,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -318,7 +332,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -362,7 +376,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -422,7 +436,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -505,7 +519,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -542,7 +556,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -595,7 +609,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -623,7 +637,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -667,7 +681,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -695,7 +709,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -739,7 +753,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -776,7 +790,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -829,7 +843,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -866,7 +880,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -919,7 +933,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -947,7 +961,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -991,7 +1005,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -1019,7 +1033,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -1063,7 +1077,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
@@ -1133,7 +1147,7 @@ protected:
 		if(!(this->setCategory))
 			throw Config::Exception("Module::Config::option(): No category has been set");
 
-		if(this->finished || !(this->foundCategory))
+		if(this->finished || !(this->currentCategory))
 			return;
 
 		// compare current configuration item with defined option
