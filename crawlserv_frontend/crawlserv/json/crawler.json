@@ -528,7 +528,7 @@
 			"type": "bool",
 			"default": false,
 			"label": "Use POST for custom URLs",
-			"description": "Use HTTP POST instead of HTTP GET to retrieve custom URLs.",
+			"description": "Use HTTP POST instead of HTTP GET to retrieve custom URLs (except after dynamic redirect).",
 			"simple": true,
 			"position": 3
 		}
@@ -598,13 +598,18 @@
 			"simple": true,
 			"position": 1
 		},
-		"redirect.to": {
+		"to": {
 			"type": "string",
 			"default": "",
 			"label": "Redirect to:",
 			"description": "Sub-URL (for cross-domain websites: URL without protocol) to redirect to.",
 			"simple": true,
 			"position": 6
+		},
+		"use.post": {
+			"type": "bool",
+			"default": false,
+			"description": "Use HTTP POST instead of HTTP GET to retrieve URL."
 		},
 		"var.names": {
 			"type": "array",
