@@ -13,9 +13,6 @@
 #ifndef MAIN_SERVER_HPP_
 #define MAIN_SERVER_HPP_
 
-// for debug-purposes only: write HTTP requests to console
-//#define MAIN_SERVER_DEBUG_HTTP_REQUEST
-
 // hard-coded constant for server-side sleep on mySQL error
 #define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5
 

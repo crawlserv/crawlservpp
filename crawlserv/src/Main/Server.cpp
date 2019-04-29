@@ -687,11 +687,6 @@ namespace crawlservpp::Main {
 			}
 		}
 
-	#ifdef MAIN_SERVER_DEBUG_HTTP_REQUEST
-		// debug HTTP request
-		std::cout << '\n' << message << std::endl;
-	#endif
-
 		// check for GET request
 		if(method == "GET")
 			this->webServer.send(connection, 200, "text/plain", this->getStatus());
