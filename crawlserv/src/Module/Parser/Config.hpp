@@ -149,9 +149,11 @@ namespace crawlservpp::Module::Parser {
 		bool incompleteDateTimes = false;
 
 		// the 'date/time format' property will be ignored if array is too large or set to "%F %T" if entry is missing
-		if(this->config.parsingDateTimeFormats.size() > completeDateTimes) this->config.parsingDateTimeFormats.resize(completeDateTimes);
+		if(this->config.parsingDateTimeFormats.size() > completeDateTimes)
+			this->config.parsingDateTimeFormats.resize(completeDateTimes);
 		else {
 			this->config.parsingDateTimeFormats.reserve(completeDateTimes);
+
 			while(this->config.parsingDateTimeFormats.size() < completeDateTimes)
 				this->config.parsingDateTimeFormats.emplace_back("%F %T");
 		}
@@ -161,9 +163,11 @@ namespace crawlservpp::Module::Parser {
 			if(i->empty()) *i = "%F %T";
 
 		// the 'locales' property will be ignored if array is too large or set to "" if entry is missing
-		if(this->config.parsingDateTimeLocales.size() > completeDateTimes) this->config.parsingDateTimeLocales.resize(completeDateTimes);
+		if(this->config.parsingDateTimeLocales.size() > completeDateTimes)
+			this->config.parsingDateTimeLocales.resize(completeDateTimes);
 		else {
 			this->config.parsingDateTimeLocales.reserve(completeDateTimes);
+
 			while(this->config.parsingDateTimeLocales.size() < completeDateTimes)
 				this->config.parsingDateTimeLocales.emplace_back();
 		}
@@ -174,12 +178,14 @@ namespace crawlservpp::Module::Parser {
 
 			incompleteDateTimes = true;
 		}
+
 		if(this->config.parsingDateTimeSources.size() > completeDateTimes) {
 			// remove sources of incomplete datetime queries
 			this->config.parsingDateTimeSources.resize(completeDateTimes);
 
 			incompleteDateTimes = true;
 		}
+
 		if(incompleteDateTimes) {
 			// warn about incomplete datetime queries
 			this->warning("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
@@ -192,36 +198,45 @@ namespace crawlservpp::Module::Parser {
 				this->config.parsingFieldQueries.size(),
 				this->config.parsingFieldSources.size()
 		});
+
 		bool incompleteFields = false;
 
 		// the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
-		if(this->config.parsingFieldDelimiters.size() > completeFields) this->config.parsingFieldDelimiters.resize(completeFields);
+		if(this->config.parsingFieldDelimiters.size() > completeFields)
+			this->config.parsingFieldDelimiters.resize(completeFields);
 		else {
 			this->config.parsingFieldDelimiters.reserve(completeFields);
+
 			while(this->config.parsingFieldDelimiters.size() < completeFields)
 				this->config.parsingFieldDelimiters.push_back('\n');
 		}
 
 		// the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
-		if(this->config.parsingFieldIgnoreEmpty.size() > completeFields) this->config.parsingFieldIgnoreEmpty.resize(completeFields);
+		if(this->config.parsingFieldIgnoreEmpty.size() > completeFields)
+			this->config.parsingFieldIgnoreEmpty.resize(completeFields);
 		else {
 			this->config.parsingFieldIgnoreEmpty.reserve(completeFields);
+
 			while(this->config.parsingFieldIgnoreEmpty.size() < completeFields)
 				this->config.parsingFieldIgnoreEmpty.push_back(true);
 		}
 
 		// the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->config.parsingFieldJSON.size() > completeFields) this->config.parsingFieldJSON.resize(completeFields);
+		if(this->config.parsingFieldJSON.size() > completeFields)
+			this->config.parsingFieldJSON.resize(completeFields);
 		else {
 			this->config.parsingFieldJSON.reserve(completeFields);
+
 			while(this->config.parsingFieldJSON.size() < completeFields)
 				this->config.parsingFieldJSON.push_back(false);
 		}
 
 		// the 'tidy text' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->config.parsingFieldTidyTexts.size() > completeFields) this->config.parsingFieldTidyTexts.resize(completeFields);
+		if(this->config.parsingFieldTidyTexts.size() > completeFields)
+			this->config.parsingFieldTidyTexts.resize(completeFields);
 		else {
 			this->config.parsingFieldTidyTexts.reserve(completeFields);
+
 			while(this->config.parsingFieldTidyTexts.size() < completeFields)
 				this->config.parsingFieldTidyTexts.push_back(false);
 		}
@@ -241,18 +256,21 @@ namespace crawlservpp::Module::Parser {
 
 			incompleteFields = true;
 		}
+
 		if(this->config.parsingFieldQueries.size() > completeFields) {
 			// remove queries of incomplete parsing fields
 			this->config.parsingFieldQueries.resize(completeFields);
 
 			incompleteFields = true;
 		}
+
 		if(this->config.parsingFieldSources.size() > completeFields) {
 			// remove sources of incomplete parsing fields
 			this->config.parsingFieldSources.resize(completeFields);
 
 			incompleteFields = true;
 		}
+
 		if(incompleteFields) {
 			// warn about incomplete parsing fields
 			this->warning("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
