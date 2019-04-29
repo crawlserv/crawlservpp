@@ -1717,7 +1717,7 @@ namespace crawlservpp::Module::Crawler {
 		) {
 			if(this->getRegExQuery(this->queryRedirectUrl.index).getBool(url)) {
 				// preserve old URL for queries
-				std::string oldUrl = url;
+				std::string oldUrl(url);
 
 				// set new URL and whether to use HTTP POST
 				url = this->config.redirectTo;
@@ -1893,7 +1893,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// preserve old URL for queries
-		std::string oldUrl = url;
+		std::string oldUrl(url);
 
 		// get new URL
 		url = this->config.redirectTo;
@@ -1925,7 +1925,7 @@ namespace crawlservpp::Module::Crawler {
 
 				// get content
 				this->networking.getContent(
-						url,
+						"https://" + this->domain + url,
 						this->config.redirectUsePost,
 						content,
 						this->config.crawlerRetryHttp
