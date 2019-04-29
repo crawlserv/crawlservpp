@@ -358,6 +358,12 @@ namespace crawlservpp::Module::Crawler {
 			incompleteCounters = true;
 		}
 
+		// remove aliases that are not used, add empty aliases where none exist
+		this->config.customCountersAlias.resize(completeCounters);
+
+		// remove alias summands that are not used, add zero as summand where none is specified
+		this->config.customCountersAliasAdd.resize(completeCounters, 0);
+
 		if(incompleteCounters) {
 			// warn about incomplete counters
 			this->warning(
@@ -426,12 +432,6 @@ namespace crawlservpp::Module::Crawler {
 
 			incompleteTokens = true;
 		}
-
-		// remove aliases that are not used, add empty aliases where none exist
-		this->config.customCountersAlias.resize(completeTokens);
-
-		// remove alias summands that are not used, add zero as summand where none is specified
-		this->config.customCountersAliasAdd.resize(completeTokens, 0);
 
 		if(incompleteTokens) {
 			// warn about incomplete counters
