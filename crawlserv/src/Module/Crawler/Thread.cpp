@@ -679,7 +679,7 @@ namespace crawlservpp::Module::Crawler {
 					this->customPages.emplace_back(0, sitemap);
 
 					if(this->config.crawlerLogging)
-						this->log("added sitemap \"" + sitemap + "\" from 'robots.txt'.");
+						this->log("fetched sitemap \"" + sitemap + "\" from 'robots.txt'.");
 				}
 			}
 		}
