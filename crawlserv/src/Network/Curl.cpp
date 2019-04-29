@@ -781,11 +781,18 @@ namespace crawlservpp::Network {
 
 	// set custom cookies (independent from cookie engine)
 	void Curl::setCookies(const std::string& cookies) {
-		this->curlCode = curl_easy_setopt(
-				this->curl.get(),
-				CURLOPT_COOKIE,
-				cookies.c_str()
-		);
+		if(cookies.empty())
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_COOKIE,
+					nullptr
+			);
+		else
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_COOKIE,
+					cookies.c_str()
+			);
 
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));

@@ -41,6 +41,8 @@ namespace crawlservpp::Network {
 		// setters
 		void setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string> * warningsTo);
 		void setConfigCurrent(const Config& currentConfig);
+		void setCookies(const std::string& cookies);
+		void unsetCookies();
 
 		// getters
 		void getContent(const std::string& url, bool usePost, std::string& contentTo, const std::vector<unsigned int>& errors);
@@ -76,6 +78,8 @@ namespace crawlservpp::Network {
 		unsigned int responseCode;
 		bool limitedSettings;
 		bool post;
+		std::string tmpCookies;
+		std::string oldCookies;
 
 		// const pointer to network configuration
 		const Network::Config * config;
