@@ -174,10 +174,8 @@
 				"regex"
 			],
 			"default": [],
-			"label": "Always skip:",
 			"description": "Boolean RegEx queries on URLs that will not be used for link extraction.",
-			"simple": true,
-			"position": 9
+			"simple": false
 		},
 		"queries.links.whitelist.cont": {
 			"type": "array",
