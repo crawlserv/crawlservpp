@@ -575,6 +575,17 @@
 			"simple": true,
 			"position": 7
 		},
+		"query.content" : {
+			"type": "query",
+			"query-results": [
+				"bool"
+			],
+			"default": [],
+			"label": "Query on content:",
+			"description": "Boolean queries on content that specify whether to redirect to different URL.",
+			"simple": true,
+			"position": 2
+		},
 		"query.url" : {
 			"type": "query",
 			"query-results": [
@@ -588,17 +599,6 @@
 			"description": "Boolean queries on URL that specify whether to redirect to different URL.",
 			"simple": true,
 			"position": 1
-		},
-		"query.content" : {
-			"type": "query",
-			"query-results": [
-				"bool"
-			],
-			"default": [],
-			"label": "Query on content:",
-			"description": "Boolean queries on content that specify whether to redirect to different URL.",
-			"simple": true,
-			"position": 2
 		},
 		"redirect.to": {
 			"type": "string",
