@@ -118,6 +118,7 @@ namespace crawlservpp::Module::Crawler {
 			unsigned long redirectQueryUrl;
 			unsigned long redirectQueryContent;
 			std::string redirectTo;
+			bool redirectUsePost;
 			std::vector<std::string> redirectVarNames;
 			std::vector<unsigned long> redirectVarQueries;
 			std::vector<unsigned short> redirectVarSources;
@@ -175,6 +176,7 @@ namespace crawlservpp::Module::Crawler {
 										customUsePost(false),
 										redirectQueryUrl(0),
 										redirectQueryContent(0),
+										redirectUsePost(false),
 										expectedQuery(0),
 										expectedErrorIfLarger(false),
 										expectedErrorIfSmaller(false) {
@@ -259,7 +261,8 @@ namespace crawlservpp::Module::Crawler {
 		this->option("cookies", this->config.redirectCookies);
 		this->option("query.content", this->config.redirectQueryContent);
 		this->option("query.url", this->config.redirectQueryUrl);
-		this->option("redirect.to", this->config.redirectTo);
+		this->option("to", this->config.redirectTo);
+		this->option("use.post", this->config.redirectUsePost);
 		this->option("var.names", this->config.redirectVarNames);
 		this->option("var.queries", this->config.redirectVarQueries);
 		this->option("var.sources", this->config.redirectVarSources);
