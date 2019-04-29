@@ -31,6 +31,7 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="js/external/tippy.all.min.js"></script>
 <script src="js/external/prism.js"></script>
 <script src="js/style.js"></script>
+<script src="js/helpers.js"></script>
 <script src="js/frontend.js"></script>
 <script src="js/algo.js"></script>
 <script src="js/config.js"></script>
