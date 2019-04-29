@@ -98,16 +98,8 @@ namespace crawlservpp::Network {
 				throw Curl::Exception(curl_easy_strerror(this->curlCode));
 		}
 
-		if(!globalConfig.cookiesSet.empty() && !limited) {
-			this->curlCode = curl_easy_setopt(
-					this->curl.get(),
-					CURLOPT_COOKIE,
-					globalConfig.cookiesSet.c_str()
-			);
-
-			if(this->curlCode != CURLE_OK)
-				throw Curl::Exception(curl_easy_strerror(this->curlCode));
-		}
+		if(!globalConfig.cookiesSet.empty() && !limited)
+			this->setCookies(globalConfig.cookiesSet);
 
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
@@ -785,6 +777,48 @@ namespace crawlservpp::Network {
 			if(this->curlCode != CURLE_OK)
 				throw Curl::Exception(curl_easy_strerror(this->curlCode));
 		}
+	}
+
+	// set custom cookies (independent from cookie engine)
+	void Curl::setCookies(const std::string& cookies) {
+		this->curlCode = curl_easy_setopt(
+				this->curl.get(),
+				CURLOPT_COOKIE,
+				cookies.c_str()
+		);
+
+		if(this->curlCode != CURLE_OK)
+			throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+		this->oldCookies = this->tmpCookies;
+		this->tmpCookies = cookies;
+	}
+
+	// unset custom cookies (independent from cookie engine)
+	void Curl::unsetCookies() {
+		if(this->oldCookies.empty()) {
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_COOKIE,
+					nullptr
+			);
+
+			this->tmpCookies.clear();
+		}
+		else {
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_COOKIE,
+					this->oldCookies.c_str()
+			);
+
+			this->tmpCookies = this->oldCookies;
+
+			this->oldCookies.clear();
+		}
+
+		if(this->curlCode != CURLE_OK)
+			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 
 	// get remote content
