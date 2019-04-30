@@ -14,6 +14,7 @@ namespace crawlservpp::Module::Crawler {
 	// constructor A: run previously interrupted crawler
 	Thread::Thread(
 			Main::Database& dbBase,
+			const std::string& cookieDirectory,
 			const ThreadOptions& threadOptions,
 			const ThreadStatus& threadStatus
 	)
@@ -23,6 +24,8 @@ namespace crawlservpp::Module::Crawler {
 						threadStatus
 				  ),
 				  database(this->Module::Thread::database),
+				  networking(cookieDirectory),
+				  cookieDir(cookieDirectory),
 				  manualCounter(0),
 				  startCrawled(false),
 				  manualOff(false),
@@ -38,9 +41,14 @@ namespace crawlservpp::Module::Crawler {
 				  httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 	// constructor B: start a new crawler
-	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
+	Thread::Thread(
+			Main::Database& dbBase,
+			const std::string& cookieDirectory,
+			const ThreadOptions& threadOptions)
 				: Module::Thread(dbBase, threadOptions, ThreadStatus()),
 				  database(this->Module::Thread::database),
+				  networking(cookieDirectory),
+				  cookieDir(cookieDirectory),
 				  manualCounter(0),
 				  startCrawled(false),
 				  manualOff(false),
@@ -186,7 +194,7 @@ namespace crawlservpp::Module::Crawler {
 			if(verbose)
 				this->log("initializes networking for archives...");
 
-			this->networkingArchives = std::make_unique<Network::Curl>();
+			this->networkingArchives = std::make_unique<Network::Curl>(this->cookieDir);
 
 			this->networkingArchives->setConfigGlobal(*this, true, &configWarnings);
 

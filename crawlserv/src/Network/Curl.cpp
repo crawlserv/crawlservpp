@@ -14,7 +14,12 @@
 namespace crawlservpp::Network {
 
 	// constructor
-	Curl::Curl() : curlCode(CURLE_OK), responseCode(0), limitedSettings(false), config(nullptr) {
+	Curl::Curl(const std::string& cookieDirectory)
+			: cookieDir(cookieDirectory),
+			  curlCode(CURLE_OK),
+			  responseCode(0),
+			  limitedSettings(false),
+			  config(nullptr) {
 		// check pointer to cURL instance
 		if(!(this->curl))
 			throw Curl::Exception("Could not initialize cURL");
@@ -66,20 +71,56 @@ namespace crawlservpp::Network {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 		if(globalConfig.cookies && !limited) {
+			// add cookie directory to cookie files
+			std::string loadCookiesFrom;
+			std::string saveCookiesTo;
+
+			if(!globalConfig.cookiesLoad.empty()) {
+				loadCookiesFrom = this->cookieDir
+						+ Helper::FileSystem::getPathSeparator()
+						+ globalConfig.cookiesLoad;
+
+				// check whether cookie file really is located in cookie directory
+				if(!Helper::FileSystem::contains(this->cookieDir, loadCookiesFrom))
+					throw Curl::Exception(
+							"Cookie file \'"
+							+ loadCookiesFrom
+							+ "is not in directory \'"
+							+ this->cookieDir
+							+ "\'"
+					);
+			}
+
+			if(!globalConfig.cookiesSave.empty()) {
+				saveCookiesTo = this->cookieDir
+						+ Helper::FileSystem::getPathSeparator()
+						+ globalConfig.cookiesSave;
+
+				// check whether cookie file really is located in cookie directory
+				if(!Helper::FileSystem::contains(this->cookieDir, saveCookiesTo))
+					throw Curl::Exception(
+							"Cookie file \'"
+							+ saveCookiesTo
+							+ "is not in directory \'"
+							+ this->cookieDir
+							+ "\'"
+					);
+			}
+
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
 					CURLOPT_COOKIEFILE,
-					globalConfig.cookiesLoad.c_str()
+					loadCookiesFrom.c_str()
 			);
 
 			if(this->curlCode != CURLE_OK)
 				throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
-			if(globalConfig.cookiesSave.c_str()) {
+			if(!saveCookiesTo.empty()) {
 				this->curlCode = curl_easy_setopt(
 						this->curl.get(),
 						CURLOPT_COOKIEJAR,
-						globalConfig.cookiesSave.c_str()
+						saveCookiesTo.c_str()
 				);
 
 				if(this->curlCode != CURLE_OK)

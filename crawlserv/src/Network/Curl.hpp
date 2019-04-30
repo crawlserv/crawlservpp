@@ -14,6 +14,7 @@
 
 #include "Config.hpp"
 
+#include "../Helper/FileSystem.hpp"
 #include "../Helper/Utf8.hpp"
 #include "../Main/Exception.hpp"
 #include "../Wrapper/Curl.hpp"
@@ -35,7 +36,7 @@ namespace crawlservpp::Network {
 
 	class Curl {
 	public:
-		Curl();
+		Curl(const std::string& cookieDirectory);
 		virtual ~Curl();
 
 		// setters
@@ -72,6 +73,7 @@ namespace crawlservpp::Network {
 		Curl& operator=(Curl&&) = delete;
 
 	private:
+		const std::string cookieDir;
 		CURLcode curlCode;
 		std::string content;
 		std::string contentType;

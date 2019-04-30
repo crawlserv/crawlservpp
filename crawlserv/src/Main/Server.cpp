@@ -69,7 +69,7 @@ namespace crawlservpp::Main {
 			if(i->options.module == "crawler") {
 				// load crawler thread
 				this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(
-						this->database, i->options, i->status
+						this->database, MAIN_SERVER_DIR_COOKIES, i->options, i->status
 				));
 
 				this->crawlers.back()->Module::Thread::start();
@@ -927,7 +927,13 @@ namespace crawlservpp::Main {
 		}
 
 		// create crawler
-		this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(this->database, options));
+		this->crawlers.push_back(
+				std::make_unique<Module::Crawler::Thread>(
+						this->database,
+						MAIN_SERVER_DIR_COOKIES,
+						options
+				)
+		);
 
 		// start crawler
 		this->crawlers.back()->Module::Thread::start();

@@ -82,11 +82,16 @@ namespace crawlservpp::Module::Crawler {
 		// constructors
 		Thread(
 				Main::Database& database,
+				const std::string& cookieDirectory,
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
 
-		Thread(Main::Database& database, const ThreadOptions& threadOptions);
+		Thread(
+				Main::Database& database,
+				const std::string& cookieDirectory,
+				const ThreadOptions& threadOptions
+		);
 
 		// destructor
 		virtual ~Thread();
@@ -122,6 +127,9 @@ namespace crawlservpp::Module::Crawler {
 			std::string url;
 			std::string timeStamp;
 		};
+
+		// constant for cookie directory
+		const std::string cookieDir;
 
 		// domain, URI parser and separate networking for archives
 		std::string domain;
