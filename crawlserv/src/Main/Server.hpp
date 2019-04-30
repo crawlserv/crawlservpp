@@ -13,6 +13,8 @@
 #ifndef MAIN_SERVER_HPP_
 #define MAIN_SERVER_HPP_
 
+#define RAPIDJSON_HAS_STDSTRING 1
+
 // hard-coded constants
 #define MAIN_SERVER_DIR_CACHE "cache" // directory for file cache
 #define MAIN_SERVER_DIR_COOKIES "cookies" // directory for cookies

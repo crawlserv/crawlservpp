@@ -13,6 +13,8 @@
 #ifndef QUERY_JSONPOINTER_HPP_
 #define QUERY_JSONPOINTER_HPP_
 
+#define RAPIDJSON_HAS_STDSTRING 1
+
 #include "../Helper/Json.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
