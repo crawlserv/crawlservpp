@@ -41,7 +41,10 @@ namespace crawlservpp::Module::Parser {
 
 	// constructor B: start a new parser
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(dbBase, ThreadOptions("parser", threadOptions)),
+				: Module::Thread(
+						dbBase,
+						ThreadOptions("parser", threadOptions)
+				  ),
 				  database(this->Module::Thread::database),
 				  idFromUrl(false),
 				  lastUrl(0),

@@ -16,12 +16,19 @@ namespace crawlservpp::Module::Analyzer {
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
 			const ThreadStatus& threadStatus)
-				: Module::Thread(dbBase, ThreadOptions("analyzer", threadOptions), threadStatus),
+				: Module::Thread(
+						dbBase,
+						ThreadOptions("analyzer", threadOptions),
+						threadStatus
+				  ),
 				  database(this->Module::Thread::database) {}
 
 	// constructor B: start a new analyzer
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(dbBase, ThreadOptions("analyzer", threadOptions)),
+				: Module::Thread(
+						dbBase,
+						ThreadOptions("analyzer", threadOptions)
+				  ),
 				  database(this->Module::Thread::database) {}
 
 	// destructor stub
