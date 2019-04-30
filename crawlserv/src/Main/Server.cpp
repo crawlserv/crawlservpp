@@ -25,10 +25,18 @@ namespace crawlservpp::Main {
 			  allowed(serverSettings.allowedClients),
 			  running(true),
 			  offline(true) {
+		// create cache directory if it does not exist
+		if(!std::filesystem::is_directory(MAIN_SERVER_DIR_CACHE)
+			|| !std::filesystem::exists(MAIN_SERVER_DIR_CACHE))
+			std::filesystem::create_directory(MAIN_SERVER_DIR_CACHE);
+		else
+			// directory exists: clear it
+			Helper::FileSystem::clearDirectory(MAIN_SERVER_DIR_CACHE);
+
 		// create cookies directory if it does not exist
-		if(!std::filesystem::is_directory("cookies")
-			|| !std::filesystem::exists("cookies"))
-			std::filesystem::create_directory("cookies");
+		if(!std::filesystem::is_directory(MAIN_SERVER_DIR_COOKIES)
+			|| !std::filesystem::exists(MAIN_SERVER_DIR_COOKIES))
+			std::filesystem::create_directory(MAIN_SERVER_DIR_COOKIES);
 
 		// connect to database and initialize it
 		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
@@ -58,10 +66,10 @@ namespace crawlservpp::Main {
 		// load threads from database
 		std::vector<Struct::ThreadDatabaseEntry> threads = this->database.getThreads();
 		for(auto i = threads.begin(); i != threads.end(); ++i) {
-			if(i->module == "crawler") {
+			if(i->options.module == "crawler") {
 				// load crawler thread
 				this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(
-						this->database, i->id, i->status, i->paused, i->options, i->last
+						this->database, i->options, i->status
 				));
 
 				this->crawlers.back()->Module::Thread::start();
@@ -69,14 +77,14 @@ namespace crawlservpp::Main {
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "crawler #" << i->id << " continued.";
+				logStrStr << "crawler #" << i->status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
-			else if(i->module == "parser") {
+			else if(i->options.module == "parser") {
 				// load parser thread
 				this->parsers.push_back(std::make_unique<Module::Parser::Thread>(
-						this->database, i->id, i->status, i->paused, i->options, i->last
+						this->database, i->options, i->status
 				));
 
 				this->parsers.back()->Module::Thread::start();
@@ -84,15 +92,15 @@ namespace crawlservpp::Main {
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "parser #" << i->id << " continued.";
+				logStrStr << "parser #" << i->status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
-			else if(i->module == "extractor") {
+			else if(i->options.module == "extractor") {
 				// load extractor thread
 				/*
 				this->extractors.push_back(std::make_unique<Module::Extractor::Thread>(
-						this->database, i->id, i->status, i->paused, i->options, i->last
+						this->database, i->options, i->status
 				));
 
 				this->extractors.back()->Module::Thread::start();
@@ -101,11 +109,11 @@ namespace crawlservpp::Main {
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "extractor #" << i->id << " continued.";
+				logStrStr << "extractor #" << i->status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
-			else if(i->module == "analyzer") {
+			else if(i->options.module == "analyzer") {
 				// get JSON
 				std::string config = this->database.getConfiguration(i->options.config);
 
@@ -126,12 +134,9 @@ namespace crawlservpp::Main {
 				this->analyzers.push_back(
 						Module::Analyzer::Algo::initAlgo(AlgoThreadProperties(
 								Server::getAlgoFromConfig(configJson),
-								i->id,
 								this->database,
-								i->status,
-								i->paused,
 								i->options,
-								i->last
+								i->status
 						))
 				);
 
@@ -150,12 +155,12 @@ namespace crawlservpp::Main {
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "analyzer #" << i->id << " continued.";
+				logStrStr << "analyzer #" << i->status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
 			else
-				throw std::runtime_error("Unknown thread module \'" + i->module + "\'");
+				throw std::runtime_error("Unknown thread module \'" + i->options.module + "\'");
 		}
 
 		// save start time for up-time calculation
