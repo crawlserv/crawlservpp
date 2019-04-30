@@ -89,17 +89,6 @@ namespace crawlservpp::Network {
 							+ this->cookieDir
 							+ "\'"
 					);
-
-				// check whether cookie file exists
-				if(!Helper::FileSystem::isValidFile(loadCookiesFrom)) {
-					warningsTo->emplace(
-							"Non-existing cookie file \'"
-							+ loadCookiesFrom
-							+ "\' ignored."
-					);
-
-					loadCookiesFrom.clear();
-				}
 			}
 
 			if(!globalConfig.cookiesSave.empty()) {
