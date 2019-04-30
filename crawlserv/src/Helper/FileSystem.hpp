@@ -31,10 +31,10 @@ namespace crawlservpp::Helper::FileSystem {
 	bool isValidFile(const std::string& path);
 
 	// directory functions
+	char getPathSeparator();
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
 	bool contains(const std::string& pathToDir, const std::string& pathToCheck);
 	void clearDirectory(const std::string& pathToDir);
-	std::string getPathSeparator();
 
 	/*
 	 * IMPLEMENTATION
@@ -57,6 +57,11 @@ namespace crawlservpp::Helper::FileSystem {
 		std::filesystem::path file(path);
 
 		return std::filesystem::exists(file) && std::filesystem::is_regular_file(file);
+	}
+
+	// get the preferred separator for file paths
+	inline char getPathSeparator() {
+		return std::filesystem::path::preferred_separator;
 	}
 
 	// list files with specific extension in a directory and its subdirectories
@@ -123,11 +128,6 @@ namespace crawlservpp::Helper::FileSystem {
 
 		for(std::filesystem::directory_iterator it(pathToDir), endIt; it != endIt; ++it)
 			std::filesystem::remove_all(it->path());
-	}
-
-	// get the preferred separator for file paths
-	inline std::string getPathSeparator() {
-		return std::string(1, std::filesystem::path::preferred_separator);
 	}
 
 } /* crawlservpp::Helper::FileSystem */
