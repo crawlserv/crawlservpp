@@ -24,7 +24,8 @@ namespace crawlservpp::Main {
 			  database(databaseSettings, "server"),
 			  allowed(serverSettings.allowedClients),
 			  running(true),
-			  offline(true) {
+			  offline(true),
+			  webServer(MAIN_SERVER_DIR_CACHE) {
 		// create cache directory if it does not exist
 		if(!std::filesystem::is_directory(MAIN_SERVER_DIR_CACHE)
 			|| !std::filesystem::exists(MAIN_SERVER_DIR_CACHE))
@@ -623,7 +624,7 @@ namespace crawlservpp::Main {
 		// check authorization
 		if(this->allowed != "*") {
 			if(this->allowed.find(ip) == std::string::npos) {
-				this->webServer.close(connection);
+				WebServer::close(connection);
 				if(this->offline)
 						std::cout << "\nserver rejected client " + ip + "." << std::flush;
 				else {
@@ -688,7 +689,7 @@ namespace crawlservpp::Main {
 			if(this->allowed.find(ip) == std::string::npos) {
 				this->database.log("Client " + ip + " rejected.");
 
-				this->webServer.close(connection);
+				WebServer::close(connection);
 			}
 		}
 
