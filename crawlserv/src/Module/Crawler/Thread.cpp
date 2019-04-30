@@ -45,7 +45,10 @@ namespace crawlservpp::Module::Crawler {
 			Main::Database& dbBase,
 			const std::string& cookieDirectory,
 			const ThreadOptions& threadOptions)
-				: Module::Thread(dbBase, threadOptions, ThreadStatus()),
+				: Module::Thread(
+						dbBase,
+						ThreadOptions("crawler", threadOptions)
+				),
 				  database(this->Module::Thread::database),
 				  networking(cookieDirectory),
 				  cookieDir(cookieDirectory),
