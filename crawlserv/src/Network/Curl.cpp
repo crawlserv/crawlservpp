@@ -46,7 +46,7 @@ namespace crawlservpp::Network {
 	Curl::~Curl() {}
 
 	// set global network options from crawling configuration
-	//  NOTE: if limited is set, cookie settings, custom headers, HTTP version and error responses will be ignored
+	//  NOTE: if limited is true, cookie settings, custom headers, HTTP version and error responses will be ignored
 	//  throws Curl::Exception
 	void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string> * warningsTo) {
 		if(!(this->curl.get()))
@@ -89,6 +89,17 @@ namespace crawlservpp::Network {
 							+ this->cookieDir
 							+ "\'"
 					);
+
+				// check whether cookie file exists
+				if(!Helper::FileSystem::isValidFile(loadCookiesFrom)) {
+					warningsTo->emplace(
+							"Non-existing cookie file \'"
+							+ loadCookiesFrom
+							+ "\' ignored."
+					);
+
+					loadCookiesFrom.clear();
+				}
 			}
 
 			if(!globalConfig.cookiesSave.empty()) {
