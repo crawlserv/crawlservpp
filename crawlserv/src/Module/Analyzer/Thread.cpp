@@ -14,17 +14,14 @@ namespace crawlservpp::Module::Analyzer {
 	// constructor A: run previously interrupted analyzer
 	Thread::Thread(
 			Main::Database& dbBase,
-			unsigned long analyzerId,
-			const std::string& analyzerStatus,
-			bool analyzerPaused,
 			const ThreadOptions& threadOptions,
-			unsigned long analyzerLast)
-				: Module::Thread(dbBase, analyzerId, "analyzer", analyzerStatus, analyzerPaused, threadOptions, analyzerLast),
+			const ThreadStatus& threadStatus)
+				: Module::Thread(dbBase, ThreadOptions("analyzer", threadOptions), threadStatus),
 				  database(this->Module::Thread::database) {}
 
 	// constructor B: start a new analyzer
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(dbBase, "analyzer", threadOptions),
+				: Module::Thread(dbBase, ThreadOptions("analyzer", threadOptions)),
 				  database(this->Module::Thread::database) {}
 
 	// destructor stub

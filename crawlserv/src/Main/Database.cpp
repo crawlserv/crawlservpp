@@ -461,16 +461,18 @@ namespace crawlservpp::Main {
 
 				while(sqlResultSet->next()) {
 					result.emplace_back(
-							sqlResultSet->getUInt64("id"),
-							sqlResultSet->getString("module"),
-							sqlResultSet->getString("status"),
-							sqlResultSet->getBoolean("paused"),
 							ThreadOptions(
+									sqlResultSet->getString("module"),
 									sqlResultSet->getUInt64("website"),
 									sqlResultSet->getUInt64("urllist"),
 									sqlResultSet->getUInt64("config")
 							),
-							sqlResultSet->getUInt64("last")
+							ThreadStatus(
+									sqlResultSet->getUInt64("id"),
+									sqlResultSet->getString("status"),
+									sqlResultSet->getBoolean("paused"),
+									sqlResultSet->getUInt64("last")
+							)
 					);
 				}
 			}
@@ -481,11 +483,11 @@ namespace crawlservpp::Main {
 	}
 
 	// add a thread to the database and return its new ID
-	unsigned long Database::addThread(const std::string& threadModule, const ThreadOptions& threadOptions) {
+	unsigned long Database::addThread(const ThreadOptions& threadOptions) {
 		unsigned long result = 0;
 
 		// check arguments
-		if(threadModule.empty())
+		if(threadOptions.module.empty())
 			throw Database::Exception("Main::Database::addThread(): No thread module specified");
 
 		if(!threadOptions.website)
@@ -507,7 +509,7 @@ namespace crawlservpp::Main {
 			));
 
 			// execute SQL statement
-			sqlStatement->setString(1, threadModule);
+			sqlStatement->setString(1, threadOptions.module);
 			sqlStatement->setUInt64(2, threadOptions.website);
 			sqlStatement->setUInt64(3, threadOptions.urlList);
 			sqlStatement->setUInt64(4, threadOptions.config);

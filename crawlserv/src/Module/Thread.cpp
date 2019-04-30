@@ -15,26 +15,22 @@ namespace crawlservpp::Module {
 	// constructor A: run previously interrupted thread
 	Thread::Thread(
 			Main::Database& dbBase,
-			unsigned long threadId,
-			const std::string& threadModule,
-			const std::string& threadStatus,
-			bool threadPaused,
 			const ThreadOptions& threadOptions,
-			unsigned long threadLast
+			const ThreadStatus& threadStatus
 	)
-			: database(dbBase.getSettings(), threadModule),
+			: database(dbBase.getSettings(), threadOptions.module),
 			  databaseClass(dbBase),
 			  pausable(true),
 			  running(true),
-			  paused(threadPaused),
+			  paused(threadStatus.paused),
 			  interrupted(false),
 			  resumed(true),
 			  terminated(false),
 			  shutdown(false),
 			  finished(false),
-			  module(threadModule),
+			  module(threadOptions.module),
 			  options(threadOptions),
-			  last(threadLast),
+			  last(threadStatus.last),
 			  overwriteLast(0),
 			  warpedOver(0),
 			  startTimePoint(std::chrono::steady_clock::time_point::min()),
@@ -42,19 +38,25 @@ namespace crawlservpp::Module {
 			  runTime(std::chrono::duration<unsigned long>::zero()),
 			  pauseTime(std::chrono::duration<unsigned long>::zero()) {
 		// remove paused or interrupted thread status from status message
-		if(threadStatus.length() >= 12 && threadStatus.substr(0, 12) == "INTERRUPTED ")
-			this->status = threadStatus.substr(12);
-		else if(threadStatus.length() >= 7 && threadStatus.substr(0, 7) == "PAUSED ")
-			this->status = threadStatus.substr(7);
+		if(
+				threadStatus.status.length() >= 12
+				&& threadStatus.status.substr(0, 12) == "INTERRUPTED "
+		)
+			this->status = threadStatus.status.substr(12);
+		else if(
+				threadStatus.status.length() >= 7
+				&& threadStatus.status.substr(0, 7) == "PAUSED "
+		)
+			this->status = threadStatus.status.substr(7);
 
-		if(threadId) {
+		if(threadStatus.id) {
 			// set ID
-			this->id = threadId;
+			this->id = threadStatus.id;
 
 			// create ID string
 			std::ostringstream idStrStr;
 
-			idStrStr << threadId;
+			idStrStr << threadStatus.id;
 
 			this->idString = idStrStr.str();
 		}
@@ -65,15 +67,21 @@ namespace crawlservpp::Module {
 		this->configuration = this->databaseClass.getConfiguration(this->getConfig());
 
 		// update thread status in database (remove "INTERRUPTED ", add "PAUSED " before status if necessary)
-		if(threadId)
-			this->databaseClass.setThreadStatus(threadId, threadPaused, this->status);
+		if(threadStatus.id)
+			this->databaseClass.setThreadStatus(
+					threadStatus.id,
+					threadStatus.paused,
+					this->status
+			);
 	}
 
 	// constructor B: start new thread (using constructor A to initialize values)
-	Thread::Thread(Main::Database& dbBase, const std::string& threadModule, const ThreadOptions& threadOptions)
-						: Thread(dbBase, 0, threadModule, "", false, threadOptions, 0) {
+	Thread::Thread(
+			Main::Database& dbBase,
+			const ThreadOptions& threadOptions
+	) : Thread(dbBase, threadOptions, ThreadStatus()) {
 		// add thread to database and save ID
-		this->id = this->databaseClass.addThread(threadModule, threadOptions);
+		this->id = this->databaseClass.addThread(threadOptions);
 
 		std::ostringstream idStrStr;
 

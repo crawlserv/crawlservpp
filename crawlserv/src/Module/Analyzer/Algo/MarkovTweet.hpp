@@ -25,6 +25,8 @@
 
 #include "../../../Main/Data.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
+#include "../../../Struct/ThreadOptions.hpp"
+#include "../../../Struct/ThreadStatus.hpp"
 #include "../../../Timer/Simple.hpp"
 
 #include "../../../_extern/rawr/rawr.h"
@@ -44,15 +46,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		typedef Main::Data::Value DataValue;
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::ThreadStatus ThreadStatus;
 
 	public:
 		MarkovTweet(
 				Main::Database& dbBase,
-				unsigned long analyzerId,
-				const std::string& analyzerStatus,
-				bool analyzerPaused,
 				const ThreadOptions& threadOptions,
-				unsigned long analyzerLast
+				const ThreadStatus& threadStatus
 		);
 		MarkovTweet(
 				Main::Database& dbBase,

@@ -23,6 +23,7 @@
 #include "../Main/Exception.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Struct/ThreadOptions.hpp"
+#include "../Struct/ThreadStatus.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
 
 #include <atomic>
@@ -46,20 +47,21 @@ namespace crawlservpp::Module {
 		typedef Main::Database::ConnectionException ConnectionException;
 		typedef Main::Exception Exception;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::ThreadStatus ThreadStatus;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 	public:
 		// constructors
 		Thread(
 				Main::Database& dbBase,
-				unsigned long threadId,
-				const std::string& threadModule,
-				const std::string& threadStatus,
-				bool threadPaused,
 				const ThreadOptions& threadOptions,
-				unsigned long threadLast
+				const ThreadStatus& threadStatus
 		);
-		Thread(Main::Database& dbBase, const std::string& threadModule, const ThreadOptions& threadOptions);
+
+		Thread(
+				Main::Database& dbBase,
+				const ThreadOptions& threadOptions
+		);
 
 		// destructor
 		virtual ~Thread();

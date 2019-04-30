@@ -14,20 +14,13 @@ namespace crawlservpp::Module::Parser {
 	// constructor A: run previously interrupted parser
 	Thread::Thread(
 			Main::Database& dbBase,
-			unsigned long parserId,
-			const std::string& parserStatus,
-			bool parserPaused,
 			const ThreadOptions& threadOptions,
-			unsigned long parserLast
+			const ThreadStatus& threadStatus
 	)
 				: Module::Thread(
 						dbBase,
-						parserId,
-						"parser",
-						parserStatus,
-						parserPaused,
-						threadOptions,
-						parserLast
+						ThreadOptions("parser", threadOptions),
+						threadStatus
 				  ),
 				  database(this->Module::Thread::database),
 				  idFromUrl(false),
@@ -48,7 +41,7 @@ namespace crawlservpp::Module::Parser {
 
 	// constructor B: start a new parser
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(dbBase, "parser", threadOptions),
+				: Module::Thread(dbBase, ThreadOptions("parser", threadOptions)),
 				  database(this->Module::Thread::database),
 				  idFromUrl(false),
 				  lastUrl(0),

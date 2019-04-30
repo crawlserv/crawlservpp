@@ -40,6 +40,7 @@
 #include "../Struct/TableColumn.hpp"
 #include "../Struct/ThreadDatabaseEntry.hpp"
 #include "../Struct/ThreadOptions.hpp"
+#include "../Struct/ThreadStatus.hpp"
 #include "../Struct/UrlListProperties.hpp"
 #include "../Struct/WebsiteProperties.hpp"
 #include "../Timer/Simple.hpp"
@@ -96,6 +97,7 @@ namespace crawlservpp::Main {
 		typedef Struct::TableColumn TableColumn;
 		typedef Struct::ThreadDatabaseEntry ThreadDatabaseEntry;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::ThreadStatus ThreadStatus;
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
 
@@ -134,7 +136,7 @@ namespace crawlservpp::Main {
 
 		// thread functions
 		std::vector<ThreadDatabaseEntry> getThreads();
-		unsigned long addThread(const std::string& threadModule, const ThreadOptions& threadOptions);
+		unsigned long addThread(const ThreadOptions& threadOptions);
 		unsigned long getThreadRunTime(unsigned long threadId);
 		unsigned long getThreadPauseTime(unsigned long threadId);
 		void setThreadStatus(

@@ -12,6 +12,7 @@
 
 #include "../Main/Database.hpp"
 #include "../Struct/ThreadOptions.hpp"
+#include "../Struct/ThreadStatus.hpp"
 
 #include <string>
 
@@ -23,12 +24,9 @@ namespace crawlservpp::Struct {
 	public:
 		bool recreate;
 		unsigned long algoId;
-		unsigned long threadId;
 		Main::Database& dbBase;
-		const std::string& status;
-		bool paused;
 		const ThreadOptions& options;
-		unsigned long last;
+		const ThreadStatus& status;
 
 		// properties for newly created thread
 		AlgoThreadProperties(
@@ -38,32 +36,23 @@ namespace crawlservpp::Struct {
 		)
 					: recreate(false),
 					  algoId(setAlgoId),
-					  threadId(0),
 					  dbBase(setDatabase),
-					  status(_emptyString),
-					  paused(false),
 					  options(setOptions),
-					  last(0)
+					  status(ThreadStatus())
 					  {}
 
 		// properties for previously interrupted thread
 		AlgoThreadProperties(
 				unsigned long setAlgoId,
-				unsigned long setThreadId,
 				Main::Database& setDatabase,
-				const std::string& setStatus,
-				bool setPaused,
 				const ThreadOptions& setOptions,
-				unsigned long setLast
+				const ThreadStatus& setStatus
 		)
 					: recreate(true),
 					  algoId(setAlgoId),
-					  threadId(setThreadId),
 					  dbBase(setDatabase),
-					  status(setStatus),
-					  paused(setPaused),
 					  options(setOptions),
-					  last(setLast) {}
+					  status(setStatus) {}
 	};
 }
 

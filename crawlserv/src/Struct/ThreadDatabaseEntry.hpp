@@ -11,37 +11,22 @@
 #define STRUCT_THREADDATABASEENTRY_HPP_
 
 #include "ThreadOptions.hpp"
+#include "ThreadStatus.hpp"
 
 #include <string>
 
 namespace crawlservpp::Struct {
 
 	struct ThreadDatabaseEntry {
-		unsigned long id;		// thread id
-		std::string module;		// thread module
-		std::string status;		// thread status
-		bool paused;			// is thread paused?
-		ThreadOptions options;	// options for thread
-		unsigned long last;		// last id
+		ThreadOptions options;	// options for the thread
+		ThreadStatus status;	// status of the thread
 
 		// constructors
-		ThreadDatabaseEntry()
-						: id(0),
-						  paused(false),
-						  last(0) {}
+		ThreadDatabaseEntry() {}
 		ThreadDatabaseEntry(
-				unsigned long setId,
-				const std::string& setModule,
-				const std::string& setStatus,
-				bool setPaused,
 				const ThreadOptions& setOptions,
-				unsigned long setLast)
-						: id(setId),
-						  module(setModule),
-						  status(setStatus),
-						  paused(setPaused),
-						  options(setOptions),
-						  last(setLast) {}
+				const ThreadStatus& setStatus
+		) : options(setOptions), status(setStatus) {}
 	};
 
 } /* crawlservpp::Struct */

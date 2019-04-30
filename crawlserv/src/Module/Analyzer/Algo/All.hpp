@@ -33,11 +33,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		if(thread.recreate) \
 			return std::make_unique<CLASS>(\
 					thread.dbBase, \
-					thread.threadId, \
-					thread.status, \
-					thread.paused, \
 					thread.options, \
-					thread.last \
+					thread.status \
 			); \
 		else \
 			return std::make_unique<CLASS>(thread.dbBase, thread.options); \

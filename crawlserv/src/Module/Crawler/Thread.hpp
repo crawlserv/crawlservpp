@@ -29,6 +29,7 @@
 #include "../../Query/XPath.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/ThreadOptions.hpp"
+#include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/DatabaseLock.hpp"
 
@@ -68,6 +69,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::ThreadStatus ThreadStatus;
 		typedef Query::JsonPath::Exception JsonPathException;
 		typedef Query::JsonPointer::Exception JsonPointerException;
 		typedef Query::RegEx::Exception RegExException;
@@ -80,12 +82,10 @@ namespace crawlservpp::Module::Crawler {
 		// constructors
 		Thread(
 				Main::Database& database,
-				unsigned long crawlerId,
-				const std::string& crawlerStatus,
-				bool crawlerPaused,
 				const ThreadOptions& threadOptions,
-				unsigned long crawlerLast
+				const ThreadStatus& threadStatus
 		);
+
 		Thread(Main::Database& database, const ThreadOptions& threadOptions);
 
 		// destructor
@@ -123,7 +123,7 @@ namespace crawlservpp::Module::Crawler {
 			std::string timeStamp;
 		};
 
-		// domain, URI parser and separate networking for archive.org
+		// domain, URI parser and separate networking for archives
 		std::string domain;
 		std::unique_ptr<Parsing::URI> parser;
 		std::unique_ptr<Network::Curl> networkingArchives;

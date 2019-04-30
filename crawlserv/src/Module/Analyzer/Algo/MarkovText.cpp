@@ -21,18 +21,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// constructor A: run previously interrupted algorithm run
 	MarkovText::MarkovText(
 			Main::Database& dbBase,
-			unsigned long analyzerId,
-			const std::string& analyzerStatus,
-			bool analyzerPaused,
 			const ThreadOptions& threadOptions,
-			unsigned long analyzerLast
+			const ThreadStatus& threadStatus
 	) : Module::Analyzer::Thread(
 				dbBase,
-				analyzerId,
-				analyzerStatus,
-				analyzerPaused,
 				threadOptions,
-				analyzerLast
+				threadStatus
 			),
 			sources(0),
 			markovTextDimension(3),

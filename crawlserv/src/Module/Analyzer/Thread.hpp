@@ -19,6 +19,7 @@
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Strings.hpp"
 #include "../../Struct/ThreadOptions.hpp"
+#include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/StartStop.hpp"
 
 #include <algorithm>
@@ -37,10 +38,10 @@ namespace crawlservpp::Module::Analyzer {
 	class Thread: public Module::Thread, public Config {
 		// for convenience
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::ThreadStatus ThreadStatus;
 
 	public:
-		Thread(Main::Database& database, unsigned long analyzerId, const std::string& analyzerStatus,
-				bool analyzerPaused, const ThreadOptions& threadOptions, unsigned long analyzerLast);
+		Thread(Main::Database& database, const ThreadOptions& threadOptions, const ThreadStatus& threadStatus);
 		Thread(Main::Database& database, const ThreadOptions& threadOptions);
 		virtual ~Thread();
 

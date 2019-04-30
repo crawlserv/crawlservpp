@@ -14,20 +14,13 @@ namespace crawlservpp::Module::Crawler {
 	// constructor A: run previously interrupted crawler
 	Thread::Thread(
 			Main::Database& dbBase,
-			unsigned long crawlerId,
-			const std::string& crawlerStatus,
-			bool crawlerPaused,
 			const ThreadOptions& threadOptions,
-			unsigned long crawlerLast
+			const ThreadStatus& threadStatus
 	)
 				: Module::Thread(
 						dbBase,
-						crawlerId,
-						"crawler",
-						crawlerStatus,
-						crawlerPaused,
-						threadOptions,
-						crawlerLast
+						ThreadOptions("crawler", threadOptions),
+						threadStatus
 				  ),
 				  database(this->Module::Thread::database),
 				  manualCounter(0),
@@ -46,7 +39,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// constructor B: start a new crawler
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(dbBase, "crawler", threadOptions),
+				: Module::Thread(dbBase, threadOptions, ThreadStatus()),
 				  database(this->Module::Thread::database),
 				  manualCounter(0),
 				  startCrawled(false),

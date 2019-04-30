@@ -27,9 +27,10 @@
 #include "../../Query/JsonPointer.hpp"
 #include "../../Query/RegEx.hpp"
 #include "../../Query/XPath.hpp"
-#include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ParsingEntry.hpp"
 #include "../../Struct/QueryProperties.hpp"
+#include "../../Struct/ThreadOptions.hpp"
+#include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/Simple.hpp"
 
 #include "../../_extern/jsoncons/include/jsoncons/json.hpp"
@@ -62,6 +63,7 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
+		typedef Struct::ThreadStatus ThreadStatus;
 		typedef Query::JsonPath::Exception JsonPathException;
 		typedef Query::JsonPointer::Exception JsonPointerException;
 		typedef Query::RegEx::Exception RegExException;
@@ -74,12 +76,10 @@ namespace crawlservpp::Module::Parser {
 		// constructors
 		Thread(
 				Main::Database& database,
-				unsigned long crawlerId,
-				const std::string& crawlerStatus,
-				bool crawlerPaused,
 				const ThreadOptions& threadOptions,
-				unsigned long crawlerLast
+				const ThreadStatus& threadStatus
 		);
+
 		Thread(Main::Database& database, const ThreadOptions& threadOptions);
 
 		// destructor
