@@ -473,7 +473,7 @@ namespace crawlservpp::Module::Crawler {
 			incompleteVars = true;
 		}
 
-		if(incompleteTokens) {
+		if(incompleteVars) {
 			// warn about incomplete counters
 			this->warning(
 					"\'redirect.var.names\', \'.var.sources\' and \'.var.queries\'"
