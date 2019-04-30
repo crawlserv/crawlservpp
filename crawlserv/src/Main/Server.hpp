@@ -13,8 +13,10 @@
 #ifndef MAIN_SERVER_HPP_
 #define MAIN_SERVER_HPP_
 
-// hard-coded constant for server-side sleep on mySQL error
-#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5
+// hard-coded constants
+#define MAIN_SERVER_DIR_CACHE "cache" // directory for file cache
+#define MAIN_SERVER_DIR_COOKIES "cookies" // directory for cookies
+#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5 // server-side sleep on mySQL error
 
 #include "Database.hpp"
 #include "WebServer.hpp"
