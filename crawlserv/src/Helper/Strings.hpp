@@ -256,25 +256,22 @@ namespace crawlservpp::Helper::Strings {
 	// generate a random alphanumerical string of a specific length
 	inline std::string generateRandom(unsigned long length) {
 		static const std::string charSet(
-					"01234567890"
-					"abcdefghijklmnopqrstuvwxyz"
-					"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-			);
+				"01234567890"
+				"abcdefghijklmnopqrstuvwxyz"
+				"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		);
 
-			thread_local static std::default_random_engine rengine(std::random_device{}());
-			thread_local static std::uniform_int_distribution<std::string::size_type> distribution(
-					0,
-					charSet.length() - 1
-			);
+		thread_local static std::default_random_engine rengine(std::random_device{}());
+		thread_local static std::uniform_int_distribution<std::string::size_type> distribution(0, charSet.length() - 1);
 
-			std::string result;
+		std::string result;
 
-			result.reserve(length);
+		result.reserve(length);
 
-			while(length--)
-				result += charSet[distribution(rengine)];
+		while(length--)
+			result += charSet[distribution(rengine)];
 
-			return result;
+		return result;
 	}
 
 } // /* crawlservpp::Helper::Strings */
