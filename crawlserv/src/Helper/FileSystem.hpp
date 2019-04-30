@@ -112,8 +112,10 @@ namespace crawlservpp::Helper::FileSystem {
 		if(!std::filesystem::is_directory(pathToDir))
 			throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
 
-		std::filesystem::remove_all(pathToDir);
-		std::filesystem::create_directory(pathToDir);
+		std::filesystem::path dir(pathToDir);
+
+		for(std::filesystem::directory_iterator it(pathToDir), endIt; it != endIt; ++it)
+			std::filesystem::remove_all(it->path());
 	}
 
 } /* crawlservpp::Helper::FileSystem */
