@@ -13,13 +13,7 @@
 #include "../Helper/Portability/mysqlcppconn.h"
 
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
-
-#define MG_ENABLE_HTTP_STREAMING_MULTIPART 1
-
 #include "../_extern/mongoose/mongoose.h"
-
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 
 #include <aspell.h>
@@ -27,8 +21,6 @@
 #include <curl/curl.h>
 #include <cppconn/driver.h>
 #include <tidy.h>
-
-#define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
 
 #include <pugixml.hpp>

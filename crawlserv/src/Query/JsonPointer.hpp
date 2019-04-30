@@ -17,7 +17,6 @@
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
 
-#define RAPIDJSON_HAS_STDSTRING 1
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/pointer.h"
 

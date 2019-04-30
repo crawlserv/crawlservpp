@@ -35,9 +35,6 @@
 
 #include "../../_extern/jsoncons/include/jsoncons/json.hpp"
 #include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
-
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <curl/curl.h>

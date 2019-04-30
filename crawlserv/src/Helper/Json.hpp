@@ -14,8 +14,6 @@
 
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"
 
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/error/en.h"
 #include "../_extern/rapidjson/include/rapidjson/error/error.h"

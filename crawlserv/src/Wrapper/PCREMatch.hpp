@@ -11,9 +11,7 @@
 #ifndef WRAPPER_PCREMATCH_HPP_
 #define WRAPPER_PCREMATCH_HPP_
 
-#define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
-
 #include <stddef.h>
 
 namespace crawlservpp::Wrapper {

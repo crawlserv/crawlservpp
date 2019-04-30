@@ -248,6 +248,11 @@ target_link_libraries(${PROJECT_NAME} ${PCRE2_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${mysqlcppconn_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 
+# set library options
+target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_HTTP_STREAMING_MULTIPART=1)
+target_compile_definitions(${PROJECT_NAME} PRIVATE PCRE2_CODE_UNIT_WIDTH=8)
+target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_HAS_STDSTRING=1)
+
 # set compiler options
 if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE /W4)
