@@ -29,8 +29,10 @@ namespace crawlservpp::Helper::FileSystem {
 	bool isValidDirectory(const std::string& path);
 	bool isValidFile(const std::string& path);
 
-	// directory listing
+	// directory functions
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
+	bool contains(const std::string& pathToDir, const std::string& pathToCheck);
+	void clearDirectory(const std::string& pathToDir);
 
 	/*
 	 * IMPLEMENTATION
@@ -51,14 +53,20 @@ namespace crawlservpp::Helper::FileSystem {
 	}
 
 	// list files with specific extension in a directory and its subdirectories
-	inline std::vector<std::string> listFilesInPath(const std::string& pathToDir,
-			const std::string& fileExtension) {
+	inline std::vector<std::string> listFilesInPath(
+			const std::string& pathToDir,
+			const std::string& fileExtension
+	) {
 		std::vector<std::string> result;
 
 		// open path
 		std::filesystem::path path(pathToDir);
-		if(!std::filesystem::exists(path)) throw std::runtime_error("\'" + pathToDir + "\' does not exist");
-		if(!std::filesystem::is_directory(path)) throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
+
+		if(!std::filesystem::exists(path))
+			throw std::runtime_error("\'" + pathToDir + "\' does not exist");
+
+		if(!std::filesystem::is_directory(path))
+			throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
 
 		// iterate through items
 		for(auto& it: std::filesystem::recursive_directory_iterator(path)) {
@@ -66,6 +74,46 @@ namespace crawlservpp::Helper::FileSystem {
 		}
 
 		return result;
+	}
+
+	// check whether file or directory is located inside directory (including its subdirectories)
+	inline bool contains(const std::string& pathToDir, const std::string& pathToCheck) {
+		if(!std::filesystem::exists(pathToDir))
+			throw std::runtime_error("\'" + pathToDir + "\' does not exist");
+
+		if(!std::filesystem::is_directory(pathToDir))
+			throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
+
+		// make both paths absolute
+		std::filesystem::path absPathToDir(std::filesystem::system_complete(pathToDir));
+		std::filesystem::path absPathToCheck(std::filesystem::system_complete(pathToCheck));
+
+		// remove filename if necessary
+		if(absPathToCheck.has_filename())
+			absPathToCheck.remove_filename();
+
+		// compare number of path components
+		if(
+				std::distance(absPathToDir.begin(), absPathToDir.end())
+				> std::distance(absPathToCheck.begin(), absPathToCheck.end())
+		)
+			// pathToCheck cannot be contained in a path with more components
+			return false;
+
+		// compare as many components as there are in pathToDir
+		return std::equal(pathToDir.begin(), pathToDir.end(), pathToCheck.begin());
+	}
+
+	// delete all files and folders in a directory
+	inline void clearDirectory(const std::string& pathToDir) {
+		if(!std::filesystem::exists(pathToDir))
+			throw std::runtime_error("\'" + pathToDir + "\' does not exist");
+
+		if(!std::filesystem::is_directory(pathToDir))
+			throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
+
+		std::filesystem::remove_all(pathToDir);
+		std::filesystem::create_directory(pathToDir);
 	}
 
 } /* crawlservpp::Helper::FileSystem */
