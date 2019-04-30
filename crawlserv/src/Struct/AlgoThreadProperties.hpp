@@ -19,7 +19,7 @@
 namespace crawlservpp::Struct {
 	struct AlgoThreadProperties {
 	private:
-		const std::string _emptyString;
+		const ThreadStatus _emptyStatus;
 
 	public:
 		bool recreate;
@@ -38,7 +38,7 @@ namespace crawlservpp::Struct {
 					  algoId(setAlgoId),
 					  dbBase(setDatabase),
 					  options(setOptions),
-					  status(ThreadStatus())
+					  status(_emptyStatus)
 					  {}
 
 		// properties for previously interrupted thread
