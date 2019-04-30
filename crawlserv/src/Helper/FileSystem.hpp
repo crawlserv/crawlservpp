@@ -26,6 +26,7 @@ namespace crawlservpp::Helper::FileSystem {
 	 */
 
 	// existence checks
+	bool exists(const std::string& path);
 	bool isValidDirectory(const std::string& path);
 	bool isValidFile(const std::string& path);
 
@@ -38,6 +39,11 @@ namespace crawlservpp::Helper::FileSystem {
 	/*
 	 * IMPLEMENTATION
 	 */
+
+	// check whether the specified path exists
+	inline bool exists(const std::string& path) {
+		return std::filesystem::exists(path);
+	}
 
 	// check whether the specified path points to a valid directory
 	inline bool isValidDirectory(const std::string& path) {
