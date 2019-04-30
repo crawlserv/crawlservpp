@@ -668,7 +668,7 @@
 			"type": "bool",
 			"default": false,
 			"label": "Enable cookies",
-			"description": "Enable the internal cookie engine.",
+			"description": "Enable the internal HTTP cookie engine.",
 			"simple": true,
 			"position": 6
 		},
@@ -704,7 +704,7 @@
 		"cookies.set": {
 			"type": "string",
 			"default": "",
-			"description": "Custom cookie header independent from internal cookie engine (will be overwritten if cookie is set on dynamic overwrite).",
+			"description": "Custom cookie header independent from internal cookie engine (will be overwritten if cookie is set on dynamic redirect).",
 			"simple": false
 		},
 		"dns.cachetimeout": {
