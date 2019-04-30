@@ -254,18 +254,28 @@ namespace crawlservpp::Helper::Strings {
 		) == std::string::npos;
 	}
 
-	// generate a random alphanumerical (ASCII) string of a specific length
+	// generate a random alphanumerical string of a specific length
 	inline std::string generateRandom(unsigned long length) {
-		const std::string characters("01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-		std::mt19937_64 generator { std::random_device()() };
-		std::uniform_int_distribution<unsigned long> distribution { 0, characters.size() - 1 };
-		std::string result;
+		static const std::string charSet(
+					"01234567890"
+					"abcdefghijklmnopqrstuvwxyz"
+					"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+			);
 
-		std::generate_n(std::back_inserter(result), length, [&] {
-			return characters[distribution(generator)];
-		});
+			thread_local static std::default_random_engine rengine(std::random_device{}());
+			thread_local static std::uniform_int_distribution<std::string::size_type> distribution(
+					0,
+					charSet.length() - 1
+			);
 
-		return result;
+			std::string result;
+
+			result.reserve(length);
+
+			while(length--)
+				result += charSet[distribution(rengine)];
+
+			return result;
 	}
 
 } // /* crawlservpp::Helper::Strings */
