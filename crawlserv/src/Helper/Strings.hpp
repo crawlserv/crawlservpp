@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
+#include <iterator>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -32,6 +34,7 @@ namespace crawlservpp::Helper::Strings {
 	void utfTidy(std::string& stringToTidy);
 	bool checkDomainName(const std::string& name);
 	bool checkSQLName(const std::string& name);
+	std::string randomGenerate(unsigned long length);
 
 	// Unicode white spaces
 	const std::string utfWhitespaces[] = {
@@ -249,6 +252,20 @@ namespace crawlservpp::Helper::Strings {
 		return name.find_first_not_of(
 				"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$_"
 		) == std::string::npos;
+	}
+
+	// generate a random alphanumerical (ASCII) string of a specific length
+	inline std::string generateRandom(unsigned long length) {
+		const std::string characters("01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+		std::mt19937_64 generator { std::random_device()() };
+		std::uniform_int_distribution<unsigned long> distribution { 0, characters.size() - 1 };
+		std::string result;
+
+		std::generate_n(std::back_inserter(result), length, [&] {
+			return characters[distribution(generator)];
+		});
+
+		return result;
 	}
 
 } // /* crawlservpp::Helper::Strings */
