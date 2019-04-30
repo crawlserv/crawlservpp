@@ -13,6 +13,9 @@
 #include "../Helper/Portability/mysqlcppconn.h"
 
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
+
+#define MG_ENABLE_HTTP_STREAMING_MULTIPART 1
+
 #include "../_extern/mongoose/mongoose.h"
 
 #define RAPIDJSON_HAS_STDSTRING 1
