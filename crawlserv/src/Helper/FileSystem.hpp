@@ -33,6 +33,7 @@ namespace crawlservpp::Helper::FileSystem {
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
 	bool contains(const std::string& pathToDir, const std::string& pathToCheck);
 	void clearDirectory(const std::string& pathToDir);
+	std::string getPathSeparator();
 
 	/*
 	 * IMPLEMENTATION
@@ -116,6 +117,11 @@ namespace crawlservpp::Helper::FileSystem {
 
 		for(std::filesystem::directory_iterator it(pathToDir), endIt; it != endIt; ++it)
 			std::filesystem::remove_all(it->path());
+	}
+
+	// get the preferred separator for file paths
+	inline std::string getPathSeparator() {
+		return std::string(1, std::filesystem::path::preferred_separator);
 	}
 
 } /* crawlservpp::Helper::FileSystem */
