@@ -19,6 +19,7 @@ namespace crawlservpp::Network {
 			  curlCode(CURLE_OK),
 			  responseCode(0),
 			  limitedSettings(false),
+			  post(false),
 			  config(nullptr) {
 		// check pointer to cURL instance
 		if(!(this->curl))
