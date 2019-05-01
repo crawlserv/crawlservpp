@@ -234,9 +234,9 @@ Apart from these server commands, the server automatically handles HTTP file upl
 
 Files in the file cache of the server can be downloaded using the `download` server command. These files are **temporary** as the file cache will be cleared and all uploaded files deleted as soon as the server is restarted.
 
-#### Example
+#### Example exchange
 
-* Command from frontend to server: Delete the URL list with the ID #1.
+Command from frontend to server: Delete the URL list with the ID #1.
 
 ```json
 {
@@ -245,7 +245,7 @@ Files in the file cache of the server can be downloaded using the `download` ser
 }
 ```
 
-* Response from the server: Command needs to be confirmed.
+Response from the server: Command needs to be confirmed.
 
 ```json
 {
@@ -254,7 +254,7 @@ Files in the file cache of the server can be downloaded using the `download` ser
 }
 ````
 
-* Response from the frontend: Confirm command.
+Response from the frontend: Confirm command.
 
 ```json
 {
@@ -264,7 +264,7 @@ Files in the file cache of the server can be downloaded using the `download` ser
 }
 ````
 
-* Response from the server: Success (otherwise `"failed":true` would be included in the response).
+Response from the server: Success (otherwise `"failed":true` would be included in the response).
 
 ```json
 {
