@@ -399,7 +399,7 @@
 		"xml": {
 			"type": "bool",
 			"default": false,
-			"description": "Save crawled content as cleaned XML.",
+			"description": "Always save crawled content as cleaned XML.",
 			"simple": false
 		}
 	},
