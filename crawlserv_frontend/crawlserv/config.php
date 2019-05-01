@@ -1,4 +1,5 @@
 <?php
+
 /*
  * config.php
  * 
@@ -15,9 +16,8 @@ $db_name = "crawled";               // database schema
 $dbConnection = new mysqli($db_host, $db_user, $db_password, $db_name);
 
 // check for connection error
-if($dbConnection->connect_error) {
+if($dbConnection->connect_error)
     die("Connection to databank failed: " . $dbConnection->connect_error);
-}
 
 // set charset to UTF-8
 $dbConnection->set_charset("utf8mb4");
