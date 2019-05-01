@@ -43,6 +43,7 @@ namespace crawlservpp::Helper::Versions {
 	 * IMPLEMENTATION
 	 */
 
+	// Get the versions of the libraries as vector of [name, version] string pairs
 	inline std::vector<std::pair<std::string, std::string>> getLibraryVersions() {
 		std::vector<std::pair<std::string, std::string>> result;
 		std::ostringstream out;
@@ -143,6 +144,7 @@ namespace crawlservpp::Helper::Versions {
 		return result;
 	}
 
+	// get the versions of the libraries as one indented string
 	inline std::string getLibraryVersionsStr(const std::string& indent) {
 		std::vector<std::pair<std::string, std::string>> versions(getLibraryVersions());
 		std::string result;
