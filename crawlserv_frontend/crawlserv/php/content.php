@@ -1,5 +1,7 @@
 <?php
 
+// @requires config.php !
+
 // function to wrap long code lines
 function codeWrapper($str, $limit, $indent_limit) {
     $out = "";
