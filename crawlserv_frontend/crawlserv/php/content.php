@@ -1,6 +1,7 @@
 <?php
 
-// @requires config.php !
+require "_helpers.php";
+require "config.php";
 
 // function to wrap long code lines
 function codeWrapper($str, $limit, $indent_limit) {
@@ -26,6 +27,7 @@ function codeWrapper($str, $limit, $indent_limit) {
             
             // find last space, tab or tag in line inside $limit
             $allowed = substr($line, 0, $limit);
+            
             $space = strrpos($allowed, " ", $indent + 1);
             
             if($space === false)
@@ -47,11 +49,13 @@ function codeWrapper($str, $limit, $indent_limit) {
             
             if($cut > 0) {
                 $out .= substr($line, 0, $cut + 1)."\n";
+                
                 $line = $begin.substr($line, $cut + 1);
             }
             else {
                 // find last hyphen, comma or semicolon in line inside $limit
                 $allowed = substr($line, 0, $limit);
+                
                 $hyphen = strrpos($allowed, "-", $indent + 1);
                 
                 if($space === false)
@@ -73,11 +77,13 @@ function codeWrapper($str, $limit, $indent_limit) {
                 
                 if($cut > 0) {
                     $out .= substr($line, 0, $cut + 1)."\n";
+                    
                     $line = $begin.substr($line, $cut + 1);
                 }
                 else {
                     // find first space, tab or tag outside $limit
                     $l = strlen($line);
+                    
                     $space = strpos($line, " ", $limit);
                     
                     if($space === false)
@@ -99,6 +105,7 @@ function codeWrapper($str, $limit, $indent_limit) {
                     
                     if($cut < $l) {
                         $out .= substr($line, 0, $cut + 1)."\n";
+                        
                         $line = $begin.substr($line, $cut + 1);
                     }
                     else {
@@ -117,10 +124,12 @@ function codeWrapper($str, $limit, $indent_limit) {
                         
                         if($cut < $l) {
                             $out .= substr($line, 0, $cut + 1)."\n";
+                            
                             $line = $begin.substr($line, $cut + 1);
                         }
                         else {
                             $out .= $line."\n";
+                            
                             $line = "";
                         }
                     }
@@ -348,6 +357,7 @@ if(isset($_POST["tab"]))
     $tab = $_POST["tab"];
 else
     $tab = "parsed";
+
 ?>
 
 <h2>Content<?php
@@ -385,102 +395,15 @@ echo "</span>\n";
 ?></h2>
 
 <div class="content-block">
-<div class="entry-row">
-<div class="entry-label">Website:</div><div class="entry-input">
-
-<select class="entry-input" id="website-select" data-m="content" data-tab="<?php echo $tab; ?>">
 
 <?php
 
-$result = $dbConnection->query("SELECT id,name FROM crawlserv_websites ORDER BY name");
-
-if(!$result)
-    die("ERROR: Could not get IDs and names of websites.");
-
-$first = true;
-
-while($row = $result->fetch_assoc()) {
-    $id = $row["id"];
-    $name = $row["name"];
-    
-    if($first) {
-        if(!isset($website))
-            $website = $id;
-        
-        $first = false;
-    }
-    
-    echo "<option value=\"".$id."\"";
-    
-    if($website == $id)
-        echo " selected";
-    
-    echo ">".htmlspecialchars($name)."</option>\n";
-}
-
-$result->close();
-
-if(!isset($website)) {
-    $website = 0;
-    
-    echo "<option disabled>No website available</option>\n";
-}
-
-?>
-
-</select>
-
-</div>
-</div>
-
-<?php
+echo rowWebsiteSelect();
 
 if($website) {
     flush();
     
-    echo "<div class=\"entry-label\">URL list:</div><div class=\"entry-input\">\n";
-    echo "<select class=\"entry-input\" id=\"urllist-select\" data-m=\"$m\" data-tab=\"$tab\">\n";
-    
-    $result = $dbConnection->query("SELECT id,name,namespace FROM crawlserv_urllists WHERE website=$website ORDER BY name");
-    
-    if($result) {
-        $first = true;
-        
-        while($row = $result->fetch_assoc()) {
-            $ulId = $row["id"];
-            $ulName = $row["name"];
-            $ulNamespace = $row["namespace"];
-            
-            if($first) {
-                if(!isset($urllist))
-                    $urllist = $ulId;
-                $first = false;
-            }
-            
-            echo "<option value=\"".$ulId."\"";
-            
-            if($urllist == $ulId) {
-                $urllistName = $ulName;
-                $urllistNamespace = $ulNamespace;
-                
-                echo " selected";
-            }
-            
-            echo ">".htmlspecialchars($ulName)."</option>\n";
-        }
-        
-        $result->close();
-    }
-    
-    if(!isset($urllist))
-        $urllist = 0;
-    
-    if(!$urllist)
-        echo "<option disabled>No URL list available</option>\n";
-    
-    echo "</select>\n";
-    
-    echo "</div>\n";
+    echo rowUrlListSelect();
 }
 
 ?>
@@ -624,7 +547,8 @@ if($website && $urllist) {
                             $result = $dbConnection->query(
                                     "SELECT EXISTS(".
                                             "SELECT 1 FROM `$ctable` AS a,".
-                                            " `crawlserv_".$namespace."_".$urllistNamespace."_parsed_".$table["name"]."` AS b".
+                                            " `crawlserv_".$namespace."_".$urllistNamespace."_parsed_".$table["name"]."`".
+                                            " AS b".
                                             " WHERE a.id = b.content".
                                             " AND a.url=".$url.
                                     ")"
@@ -827,6 +751,7 @@ if($website && $urllist) {
             case "extracted":
                 // extracted data
                 // TODO
+                
                 echo "<br><br><i>This feature is not implemented yet.<br><br></i>\n";
                 
                 break;
@@ -834,6 +759,7 @@ if($website && $urllist) {
             case "analyzed":
                 // analyzed data
                 // TODO
+                
                 echo "<br><br><i>This feature is not implemented yet.<br><br></i>\n";
                 
                 break;

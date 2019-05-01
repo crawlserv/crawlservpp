@@ -1,4 +1,8 @@
 <?php
+
+require "_helpers.php";
+require "config.php";
+
 if(isset($_POST["website"]))
     $website = $_POST["website"];
 
@@ -19,7 +23,9 @@ if(isset($_POST["algo_id"]))
 if(isset($_POST["algo_cat"]))
     $newCat = $_POST["algo_cat"];
 ?>
-<h2>Analyzing options<?php 
+
+<h2>Analyzing options<?php
+
 echo "<span id=\"opt-mode\">\n";
 
 if($mode == "simple")
@@ -35,134 +41,43 @@ else
     echo "<a href=\"#\" class=\"action-link post-redirect-mode\" data-m=\"$m\" data-mode=\"advanced\">advanced</a>\n";
 
 echo "</span>\n";
+
 ?>
+
 </h2>
+
 <div class="content-block">
-<div class="entry-row">
-<div class="entry-label">Website:</div><div class="entry-input">
-<select class="entry-input" id="website-select" data-m="<?php 
-echo $m;
-?>" data-mode="<?php
-echo $mode;
-?>">
+
 <?php
-$result = $dbConnection->query("SELECT id,name FROM crawlserv_websites ORDER BY name");
 
-if(!$result)
-    exit("ERROR: Could not get ids and names of websites.");
+echo rowWebsiteSelect();
 
-$first = true;
+if(isset($website))
+    flush();
 
-while($row = $result->fetch_assoc()) {
-    $id = $row["id"];
-    $name = $row["name"];
-    
-    if($first) {
-        if(!isset($website))
-            $website = $id;
-        
-        $first = false;
-    }
-    
-    echo "<option value=\"".$id."\"";
-    
-    if($website == $id)
-        echo " selected";
-    
-    echo ">".htmlspecialchars($name)."</option>\n";
-}
+    echo rowConfigSelect("Analyzer", true);
 
-$result->close();
-
-if(!isset($website))
-    echo "<option disabled>No websites available</option>\n";
 ?>
-</select>
-</div>
-</div>
-<?php
-if(isset($website)) {
-    echo "<div class=\"entry-row\">\n";
-    echo "<div class=\"entry-label\">Analyzer:</div><div class=\"entry-x-input\">\n";
-    echo "<select id=\"config-select\" class=\"entry-x-input\" data-m=\"$m\" data-mode=\"$mode\">\n";
-    
-    $result = $dbConnection->query(
-            "SELECT id, name FROM crawlserv_configs WHERE website=$website AND module='analyzer' ORDER BY name"
-    );
-    
-    if(!$result)
-        exit("ERROR: Could not get ids and names of URL lists.");
-    
-    $first = true;
-    
-    while($row = $result->fetch_assoc()) {
-        $id = $row["id"];
-        $name = $row["name"];
-        
-        if($first) {
-            if(!isset($config))
-                $config = $id;
-            
-            $first = false;
-        }
-        
-        echo "<option value=\"".$id."\"";
-        
-        if($id == $config)
-            echo " selected";
-        
-        echo ">$name</option>\n";
-    }
-    
-    $result->close();
-    
-    if(!isset($config))
-        $config = 0;
-    
-    if($config) {
-        $result = $dbConnection->query("SELECT name, config FROM crawlserv_configs WHERE id=$config LIMIT 1");
-        
-        if(!$result)
-            exit("ERROR: Could not get configuration data.");
-        
-        $row = $result->fetch_assoc();
-        
-        $configName = $row["name"];
-        
-        if(!isset($current))
-            $current = $row["config"];
-        
-        $result->close();
-    }
-    else if(!isset($current))
-        $current = '[]';
-    
-    echo "<option value=\"0\"";
-    
-    if(!$config)
-        echo " selected";
-    
-    echo ">Add new</option>\n";
-    
-    echo "</select>\n";
-    echo "<a href=\"#\" class=\"actionlink config-delete\" data-m=\"$m\">";
-    echo "<span class=\"remove-entry\">X</span>";
-    echo "</a>";
-    echo "</div>\n</div>\n";
-}
-?>
+
 <div class="action-link-box">
 <div class="action-link">
+
 <?php
-if($config)
+
+if($config) {
     echo "<a href=\"#\" class=\"action-link config-duplicate\" data-m=\"$m\" data-mode=\"$mode\">";
     echo "Duplicate configuration";
     echo "</a>\n";
+}
+
 ?>
+
 </div>
 </div>
 </div>
+
 <?php
+
 if(isset($website)) {
     echo "<div class =\"content-block\">\n";
     echo "<div class=\"opt-block\">\n";
@@ -234,94 +149,57 @@ if(isset($website)) {
     echo "</div>\n";
     echo "</div>\n";
 }
+
 ?>
 
 <script>
 
 // load locales, queries and configuration
-<?php 
-if($website) {
-    echo "var db_locales = [\n";
-    
-    $result = $dbConnection->query("SELECT name FROM crawlserv_locales ORDER BY name");
-    
-    if(!$result)
-        exit("ERROR: Could not get locales from database.");
-    
-    $locales = "";
-    
-    while($row = $result->fetch_assoc())
-        $locales .= " \"".$row["name"]."\",";
-    
-    $locales = substr($locales, 0, -1);
-    
-    echo "$locales];\n";
-    
-    echo "var db_queries = [\n";
-    
-    $result = $dbConnection->query(
-            "SELECT id,name,type,resultbool,resultsingle,resultmulti FROM crawlserv_queries WHERE website="
-            .$website." OR website IS NULL ORDER BY name"
-    );
-    
-    if(!$result)
-        exit("ERROR: Could not get queries from database.");
-    
-    while($row = $result->fetch_assoc())
-        echo " { \"id\": ".$row["id"].", \"name\": \"".$row["name"]."\", \"type\": \"".$row["type"]."\", \"resultbool\": "
-            .($row["resultbool"] ? "true" : "false").", \"resultsingle\": ".($row["resultsingle"] ? "true" : "false")
-            .", \"resultmulti\": ".($row["resultmulti"] ? "true" : "false")." },\n";
-    
-    $result->close();
-    
-    echo "];\n";
-    
-    echo "var db_config = \n";
-    
-    if($config) {
-        $result = $dbConnection->query("SELECT config FROM crawlserv_configs WHERE id=$config LIMIT 1");
-        
-        if(!$result)
-            exit("ERROR: Could not get current config from database");
-        
-        $row = $result->fetch_assoc();
-        
-        echo " ".$row["config"];
-        
-        $result->close();
-    }
-    else
-        echo " []\n";
-    
-    echo ";\n";
-}
+
+<?php
+
+echo scriptModule();
+
 ?>
 
 var config = null;
 var algoChanged = <?php
+
 echo isset($algoChanged) ? "true" : "false";
+
 ?>
 
 // load algorithm
+
 var algo = new Algo(
     <?php
+    
     if(isset($newCat))
         echo $newCat; else echo "null";
+    
     ?>,
     <?php
+    
     if(isset($newAlgo))
         echo $newAlgo; else echo "null";
+    
     ?>,
-    function() {        
+    function() {
+        
     	// load configuration after algorithm has been fully loaded
-    	//  (necessary to load algorithm-specific configuration entries)    	
+    	//  (necessary to load algorithm-specific configuration entries)
+    	    	
     	config = new Config(
     	    "analyzer",
     	    '<?php
+    	    
     	    echo $current;
+    	    
     	    ?>',
     	    "<?php
+    	    
     	    echo $mode;
+    	    
     	    ?>",
     	    algo.config_cats,
     	    algo.old_config_cats
