@@ -240,8 +240,8 @@ Command from frontend to server: Delete the URL list with the ID #1.
 
 ```json
 {
- "cmd":"deleteurllist",
- "id":1,
+ "cmd": "deleteurllist",
+ "id": 1,
 }
 ```
 
@@ -249,8 +249,8 @@ Response from the server: Command needs to be confirmed.
 
 ```json
 {
- "confirm":true,
- "text":"Do you really want to delete this URL list?\n!!! All associated data will be lost !!!"
+ "confirm": true,
+ "text": "Do you really want to delete this URL list?\n!!! All associated data will be lost !!!"
 }
 ````
 
@@ -258,9 +258,9 @@ Response from the frontend: Confirm command.
 
 ```json
 {
- "cmd":"deleteurllist",
- "id":1,
- "confirmed":true
+ "cmd": "deleteurllist",
+ "id": 1,
+ "confirmed": true
 }
 ````
 
@@ -268,7 +268,7 @@ Response from the server: Success (otherwise `"failed":true` would be included i
 
 ```json
 {
- "text":"URL list deleted."
+ "text": "URL list deleted."
 }
 ```
 
