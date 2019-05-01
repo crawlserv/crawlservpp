@@ -232,7 +232,7 @@ The commands and their replies are using the JSON format (implemented using the 
 
 Apart from these commands, the server automatically handles HTTP file uploads sent as `multipart/form-data`. The part containing the content of the file needs to be named `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined as `MAIN_WEBSERVER_FILE_LENGTH` in [`crawlserv/src/Main/WebServer.hpp`](crawlserv/src/Main/WebServer.hpp)) as file names.
 
-The cache is also used to store files generated on data export. Files in the cache can be downloaded using the `download` server command. Note that these files are **temporary** as the file cache will be cleared and all uploaded and/or generated files deleted as soon as the server is restarted. All permanent data will be written to the database.
+The cache is also used to store files generated on data export. Files in the cache can be downloaded using the `download` server command. Note that these files are **temporary** as the file cache will be cleared and all uploaded and/or generated files deleted as soon as the server is restarted. Permanent data will be written to the database instead.
 
 #### Example exchange
 
