@@ -35,7 +35,8 @@ else
     echo "<a href=\"#\" class=\"action-link post-redirect-mode\" data-m=\"$m\" data-mode=\"advanced\">advanced</a>\n";
 
 echo "</span>\n";
-?></h2>
+?>
+</h2>
 <div class="content-block">
 <div class="entry-row">
 <div class="entry-label">Website:</div><div class="entry-input">
