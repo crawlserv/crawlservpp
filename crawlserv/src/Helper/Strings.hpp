@@ -274,7 +274,7 @@ namespace crawlservpp::Helper::Strings {
 		return result;
 	}
 
-} // /* crawlservpp::Helper::Strings */
+} /* crawlservpp::Helper::Strings */
 
 
 #endif /* HELPER_STRINGS_HPP_ */
