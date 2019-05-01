@@ -7,6 +7,8 @@
 
 <?php
 
+require "../config.php";
+
 // function to format the remainig time
 function formatTime($seconds) {
     $result = "";
@@ -82,10 +84,6 @@ function formatTime($seconds) {
     
     return "<1s";
 }
-
-require "../config.php";
-
-global $dbConnection;
 
 $result = $dbConnection->query(
     "SELECT id,".
