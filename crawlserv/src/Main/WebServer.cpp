@@ -21,9 +21,8 @@ namespace crawlservpp::Main {
 		mg_mgr_free(&(this->eventManager));
 	}
 
-	// initialize embedded web server and bind it to port, throws WebServer::Exception
+	// bind embedded web serverto port, set user data and protocol, throws WebServer::Exception
 	void WebServer::initHTTP(const std::string& port) {
-		// bind mongoose server to port
 		ConnectionPtr connection = mg_bind(
 				&(this->eventManager),
 				port.c_str(),
