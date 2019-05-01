@@ -38,7 +38,7 @@ namespace crawlservpp::Parsing {
 		// getter
 		void getContent(std::string& resultTo) const;
 
-		// parse functionURI
+		// parse function
 		void parse(const std::string& content, bool repairCData);
 
 		// sub-class for XML exceptions
