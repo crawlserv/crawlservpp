@@ -237,7 +237,7 @@ if($website) {
         );
                 
         if(!$result)
-            exit(
+            die(
                     "ERROR: Could not get number of parsed URLs from `crawlserv_"
                     .$namespace
                     ."_"
