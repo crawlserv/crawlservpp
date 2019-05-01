@@ -1,5 +1,6 @@
 <?php
 
+// render row with website selection
 function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown = false) {
     global $m, $mode, $tab, $dbConnection, $website, $websiteName, $namespace, $domain, $dir;
     
@@ -98,6 +99,7 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     return $html;
 }
 
+// render row with URL list selection
 function rowUrlListSelect($adddelete = false, $scrolldown = false, $noreload = false) {
     global $m, $mode, $tab, $dbConnection, $website, $urllist, $urllistName, $urllistNamespace;
     
@@ -192,6 +194,7 @@ function rowUrlListSelect($adddelete = false, $scrolldown = false, $noreload = f
     return $html;
 }
 
+// render row with configuration selection (for specific module)
 function rowConfigSelect($module, $adddelete = false, $noreload = false) {
     global $m, $mode, $dbConnection, $website, $config, $configName, $current;
     
@@ -297,6 +300,7 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
     return $html;
 }
 
+// generate script for locales, queries and current configuration
 function scriptModule() {
     global $website, $dbConnection, $config;
     
@@ -362,7 +366,7 @@ function scriptModule() {
             );
             
             if(!$result)
-                exit("ERROR: Could not get current config from database");
+                exit("ERROR: Could not get current configuration from database");
                 
             $row = $result->fetch_assoc();
                 
