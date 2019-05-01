@@ -32,7 +32,8 @@ namespace crawlservpp::Helper::Json {
 	 * DECLARATION
 	 */
 
-	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings (words, dates etc.)
+	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings
+	//  (words, dates etc.)
 	typedef std::vector<std::tuple<std::string, unsigned long, unsigned long>> TextMap;
 
 	// stringify different kind of data to a JSON string
@@ -42,7 +43,7 @@ namespace crawlservpp::Helper::Json {
 	std::string stringify(const TextMap& textMapToStringify);
 	std::string stringify(const rapidjson::Value& value);
 
-	// parsing function
+	// parsing functions
 	rapidjson::Document parseRapid(const std::string& json);
 	jsoncons::json parseCons(const std::string& json);
 
@@ -64,7 +65,9 @@ namespace crawlservpp::Helper::Json {
 	inline std::string stringify(const std::vector<std::string>& vectorToStringify) {
 		// create document as array and get reference to allocator
 		rapidjson::Document document;
+		
 		document.SetArray();
+		
 		rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
 		// reserve memory for all array elements
@@ -73,7 +76,9 @@ namespace crawlservpp::Helper::Json {
 		// write vector elements as string values to array
 		for(auto i = vectorToStringify.begin(); i != vectorToStringify.end(); ++i) {
 			rapidjson::Value stringValue;
+			
 			stringValue.SetString(*i, allocator);
+			
 			document.PushBack(stringValue, allocator);
 		}
 
@@ -92,12 +97,16 @@ namespace crawlservpp::Helper::Json {
 	inline std::string stringify(const std::string& stringToStringify) {
 		// create document as array and get reference to allocator
 		rapidjson::Document document;
+		
 		document.SetArray();
+		
 		rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
 		// write string as string element to array
 		rapidjson::Value stringValue;
+		
 		stringValue.SetString(stringToStringify, allocator);
+		
 		document.PushBack(stringValue, allocator);
 
 		// create string buffer and writer
@@ -113,9 +122,11 @@ namespace crawlservpp::Helper::Json {
 
 	// stringify a vector of vectors of string pairs to a JSON array with corresponding objects containing [key, value] pairs
 	inline std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify) {
-		// create document as array and get refference to allocator
+		// create document as array and get reference to allocator
 		rapidjson::Document document;
+		
 		document.SetArray();
+		
 		rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
 		// reserve memory for all array elements
@@ -125,16 +136,19 @@ namespace crawlservpp::Helper::Json {
 		for(auto i = vectorToStringify.begin(); i != vectorToStringify.end(); ++i) {
 			// create object and reserve memory for all [key, value] pairs
 			rapidjson::Value objectValue;
+			
 			objectValue.SetObject();
 
 			// go through the sub-vector elements representing the [key, value] pairs in the object
 			for(auto j = i->begin(); j != i->end(); ++j) {
 				// create key
 				rapidjson::Value key;
+				
 				key.SetString(j->first, allocator);
 
 				// create value
 				rapidjson::Value value;
+				
 				value.SetString(j->second, allocator);
 
 				// add [key, value] pair to object
@@ -160,7 +174,9 @@ namespace crawlservpp::Helper::Json {
 	inline std::string stringify(const TextMap& textmapToStringify) {
 		// create document as array and get refference to allocator
 		rapidjson::Document document;
+		
 		document.SetArray();
+		
 		rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
 		// reserve memory for all array elements
@@ -170,27 +186,40 @@ namespace crawlservpp::Helper::Json {
 		for(auto i = textmapToStringify.begin(); i != textmapToStringify.end(); ++i) {
 			// create object and reserve memory for all [key, value] pairs
 			rapidjson::Value objectValue;
+			
 			objectValue.SetObject();
 
 			// create and add [key, value] pair for describing string
 			rapidjson::Value keyValue;
+			
 			keyValue.SetString("v", 1, allocator);
+			
 			rapidjson::Value valueValue;
+			
 			valueValue.SetString(std::get<0>(*i), allocator);
+			
 			objectValue.AddMember(keyValue, valueValue, allocator);
 
 			// create and add [key, value] pair for position
 			rapidjson::Value keyPos;
+			
 			keyPos.SetString("p", 1, allocator);
+			
 			rapidjson::Value valuePos;
+			
 			valuePos.SetUint64(std::get<1>(*i));
+			
 			objectValue.AddMember(keyPos, valuePos, allocator);
 
 			// create and add [key, value] pair for length
 			rapidjson::Value keyLength;
+			
 			keyLength.SetString("l", 1, allocator);
+			
 			rapidjson::Value valueLength;
+			
 			valueLength.SetUint64(std::get<2>(*i));
+			
 			objectValue.AddMember(keyLength, valueLength, allocator);
 
 			// add object to array
