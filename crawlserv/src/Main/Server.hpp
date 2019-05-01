@@ -142,7 +142,12 @@ namespace crawlservpp::Main {
 		WebServer webServer;
 
 		// run server command
-		std::string cmd(ConnectionPtr connection, const std::string& msgBody, bool& threadStartedTo);
+		std::string cmd(
+				ConnectionPtr connection,
+				const std::string& msgBody,
+				bool& threadStartedTo,
+				bool& fileDownloadTo
+		);
 
 		// set server status
 		void setStatus(const std::string& statusString);
@@ -176,7 +181,12 @@ namespace crawlservpp::Main {
 
 		// event handlers
 		void onAccept(ConnectionPtr connection);
-		void onRequest(ConnectionPtr connection, const std::string& method,	const std::string& body);
+		void onRequest(
+				ConnectionPtr connection,
+				const std::string& method,
+				const std::string& body,
+				void * data
+		);
 
 		// static helper function for the class
 		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
@@ -230,6 +240,8 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdDuplicateConfig(const rapidjson::Document& json);
 
 		ServerCommandResponse cmdWarp(const rapidjson::Document& json);
+
+		ServerCommandResponse cmdDownload(const rapidjson::Document& json);
 	};
 
 } /* crawlservpp::Main */

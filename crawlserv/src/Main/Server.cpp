@@ -54,7 +54,14 @@ namespace crawlservpp::Main {
 		);
 
 		this->webServer.setRequestCallback( // @suppress("Invalid arguments")
-				std::bind(&Server::onRequest, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+				std::bind(
+						&Server::onRequest,
+						this,
+						std::placeholders::_1,
+						std::placeholders::_2,
+						std::placeholders::_3,
+						std::placeholders::_4
+				)
 		);
 
 		// initialize mongoose embedded web server, bind it to port and set CORS string
@@ -424,8 +431,17 @@ namespace crawlservpp::Main {
 	}
 
 	// perform a server command
-	std::string Server::cmd(ConnectionPtr connection, const std::string& msgBody, bool& threadStartedTo) {
+	std::string Server::cmd(
+			ConnectionPtr connection,
+			const std::string& msgBody,
+			bool& threadStartedTo,
+			bool& fileDownloadTo
+	) {
 		ServerCommandResponse response;
+
+		// set default values
+		threadStartedTo = false;
+		fileDownloadTo = false;
 
 		if(this->offline) {
 			// database offline: return error
@@ -558,6 +574,16 @@ namespace crawlservpp::Main {
 							else if(command == "warp")
 								response = this->cmdWarp(json);
 
+							else if(command == "download") {
+								response = this->cmdDownload(json);
+
+								if(!response.fail) {
+									fileDownloadTo = true;
+
+									return response.text;
+								}
+							}
+
 							else if(!command.empty())
 								// unknown command: debug the command and its arguments
 								response = ServerCommandResponse(true, "Unknown command \'" + command + "\'.");
@@ -676,7 +702,8 @@ namespace crawlservpp::Main {
 	void Server::onRequest(
 			ConnectionPtr connection,
 			const std::string& method,
-			const std::string& body
+			const std::string& body,
+			void * data
 	) {
 		// check connection and get IP
 		if(!connection)
@@ -700,11 +727,14 @@ namespace crawlservpp::Main {
 		else if(method == "POST") {
 			// parse JSON
 			bool threadStarted = false;
+			bool fileDownload = false;
 
-			std::string reply = this->cmd(connection, body, threadStarted);
+			std::string reply = this->cmd(connection, body, threadStarted, fileDownload);
 
 			// send reply
-			if(!threadStarted)
+			if(fileDownload)
+				this->webServer.sendFile(connection, reply, data);
+			else if(!threadStarted)
 				this->webServer.send(connection, 200, "application/json", reply);
 		}
 		else if(method == "OPTIONS")
@@ -3073,6 +3103,24 @@ namespace crawlservpp::Main {
 
 			return ServerCommandResponse(true, errStrStr.str());
 		}
+	}
+
+	// server command download(filename): Download the specified file from the file cache of the web server
+	//  NOTE: Returns the name of the file to download
+	Server::ServerCommandResponse Server::cmdDownload(const rapidjson::Document& json) {
+		// get argument
+		if(!json.HasMember("filename"))
+			return ServerCommandResponse(true, "Invalid arguments (\'filename\' is missing).");
+
+		if(!json["filename"].IsString())
+			return ServerCommandResponse(true, "Invalid arguments (\'filename\' is not a string).");
+
+		return ServerCommandResponse(
+				std::string(
+						json["filename"].GetString(),
+						json["filename"].GetStringLength()
+				)
+		);
 	}
 
 } /* crawlservpp::Main */
