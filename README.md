@@ -230,11 +230,15 @@ The commands and their replies are using the JSON format (implemented using the 
 
 #### File cache
 
+Apart from server commands, the server automatically handles HTTP file uploads (`multipart/form-data`). The name of the part containing the file content needs to be `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined as `MAIN_WEBSERVER_FILE_LENGTH` in [WebServer.hpp](crawlserv/src/Main/WebServer.hpp)) as file names.
 
+Files in the file cache of the server can be downloaded using the `download` server command.
 
-#### Examples
+Note that the file cache will be cleared and all uploaded files will be deleted as soon as the server is restarted.
 
-**Command from frontend to server:** Delete the URL list with the ID #1.
+#### Example
+
+* Command from frontend to server: Delete the URL list with the ID #1.
 
 ```json
 {
@@ -243,7 +247,7 @@ The commands and their replies are using the JSON format (implemented using the 
 }
 ```
 
-**Response by server:** Command needs to be confirmed.
+* Response from the server: Command needs to be confirmed.
 
 ```json
 {
@@ -252,7 +256,7 @@ The commands and their replies are using the JSON format (implemented using the 
 }
 ````
 
-**Response from frontend:** Confirm command.
+* Response from the frontend: Confirm command.
 
 ```json
 {
@@ -262,7 +266,7 @@ The commands and their replies are using the JSON format (implemented using the 
 }
 ````
 
-**Response from server:** Success (otherwise `"failed":true` would be included in the response).
+* Response from the server: Success (otherwise `"failed":true` would be included in the response).
 
 ```json
 {
