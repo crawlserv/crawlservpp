@@ -40,7 +40,7 @@ $result = $dbConnection->query(
 );
 
 if(!$result)
-    exit("ERROR: Could not get library versions from database.");
+    die("ERROR: Could not get library versions from database.");
 
 while($row = $result->fetch_assoc()) {
     if(strtolower($row["name"]) == "pcre2")
@@ -63,7 +63,7 @@ else
     $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website=$website ORDER BY name");
 
 if(!$result)
-    exit("ERROR: Could not get IDs and names of queries.");
+    die("ERROR: Could not get IDs and names of queries.");
 
 $first = true;
 
@@ -98,7 +98,7 @@ if(isset($query)) {
         );
         
         if(!$result)
-            exit("ERROR: Could not get query properties from database.");
+            die("ERROR: Could not get query properties from database.");
         
         $row = $result->fetch_assoc();
         
