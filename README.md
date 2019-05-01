@@ -230,11 +230,9 @@ The commands and their replies are using the JSON format (implemented using the 
 
 #### File cache
 
-Apart from server commands, the server automatically handles HTTP file uploads (`multipart/form-data`). The name of the part containing the file content needs to be `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined as `MAIN_WEBSERVER_FILE_LENGTH` in [WebServer.hpp](crawlserv/src/Main/WebServer.hpp)) as file names.
+Apart from these server commands, the server automatically handles HTTP file uploads (`multipart/form-data`). The name of the part containing the content of the file needs to be `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined as `MAIN_WEBSERVER_FILE_LENGTH` in [`crawlserv/src/Main/WebServer.hpp`](crawlserv/src/Main/WebServer.hpp)) as file names.
 
-Files in the file cache of the server can be downloaded using the `download` server command.
-
-Note that the file cache will be cleared and all uploaded files will be deleted as soon as the server is restarted.
+Files in the file cache of the server can be downloaded using the `download` server command. These files are **temporary** as the file cache will be cleared and all uploaded files deleted as soon as the server is restarted.
 
 #### Example
 
