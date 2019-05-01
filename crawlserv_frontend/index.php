@@ -1,4 +1,1 @@
-<?php
-header("Location: crawlserv/", true, 301);
-exit();
-?>
+<?php header("Location: crawlserv/", true, 301); ?>
