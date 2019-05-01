@@ -56,11 +56,10 @@ namespace crawlservpp::Main {
 
 	// poll server
 	void WebServer::poll(int timeOut) {
-		// poll server
 		mg_mgr_poll(&(this->eventManager), timeOut);
 	}
 
-	// send reply, throws WebServer::Exception
+	// send HTTP reply, throws WebServer::Exception
 	void WebServer::send(
 			ConnectionPtr connection,
 			unsigned short code,
@@ -118,7 +117,7 @@ namespace crawlservpp::Main {
 		);
 	}
 
-	// send internal server error (HTTP 500) with custom message and close connection, throws WebServer::Exception
+	// send internal server error (HTTP code 500) with custom message and close connection, throws WebServer::Exception
 	void WebServer::sendError(ConnectionPtr connection, const std::string& error) {
 		// check for connection
 		if(!connection)
@@ -204,8 +203,9 @@ namespace crawlservpp::Main {
 			break;
 
 		case MG_EV_HTTP_PART_BEGIN:
-	    case MG_EV_HTTP_PART_DATA:
-	    case MG_EV_HTTP_PART_END:
+		case MG_EV_HTTP_PART_DATA:
+		case MG_EV_HTTP_PART_END:
+			// handle file upload
 			if(
 					!strncmp(
 							static_cast<mg_http_multipart_part *>(data)->var_name,
@@ -234,7 +234,7 @@ namespace crawlservpp::Main {
 				}
 			}
 
-	    	break;
+	    		break;
 		}
 	}
 
