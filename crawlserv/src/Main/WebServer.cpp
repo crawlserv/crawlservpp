@@ -135,6 +135,7 @@ namespace crawlservpp::Main {
 				responseStr.c_str()
 		);
 
+		// set closing flag
 		connection->flags |= MG_F_SEND_AND_CLOSE;
 	}
 
@@ -221,6 +222,7 @@ namespace crawlservpp::Main {
 				);
 
 				if(event == MG_EV_HTTP_PART_END) {
+					// file upload finished: return name on server as plain text
 					mg_printf(
 							connection,
 							"HTTP/1.1 200 OK\r\n"
@@ -230,6 +232,7 @@ namespace crawlservpp::Main {
 							this->oldFileName.c_str()
 					);
 
+					// set closing flag
 					connection->flags |= MG_F_SEND_AND_CLOSE;
 				}
 			}
@@ -269,18 +272,23 @@ namespace crawlservpp::Main {
 	mg_str WebServer::generateFileNameInClass() {
 		mg_str result;
 
+		// save length of file name in result
 		result.len = this->fileCache.size() + MAIN_WEBSERVER_FILE_LENGTH + 1;
 
+		// allocate memory for file name
 		char * buffer = new char[result.len];
 
+		// copy file cache directory to file name
 		std::memcpy(
 				static_cast<void *>(buffer),
 				static_cast<const void *>(this->fileCache.c_str()),
 				this->fileCache.size()
 		);
 
+		// add path separator to file name
 		buffer[this->fileCache.size()] = Helper::FileSystem::getPathSeparator();
 
+		// generate random file names until no file with the generated name already exists
 		do {
 			std::memcpy(
 					static_cast<void *>(buffer + this->fileCache.size() + 1),
@@ -290,13 +298,15 @@ namespace crawlservpp::Main {
 		}
 		while(Helper::FileSystem::exists(std::string(buffer, result.len)));
 
+		// save new file name in result
 		result.p = buffer;
 
+		// save file name in class and return result
 		this->oldFileName = std::string(
 				result.p + this->fileCache.size() + 1,
 				result.len - this->fileCache.size() - 1
 		);
-
+		
 		return result;
 	}
 } /* crawlservpp::Main */
