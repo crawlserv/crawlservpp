@@ -111,8 +111,6 @@ namespace crawlservpp::Main {
 		headers += "\r\nContent-Disposition: attachment; filename=\"" + fileName + "\"";
 
 		// serve file from file cache
-		std::cout << "\nserving \'" << fullFileName << "\'..." << std::flush;
-
 		mg_http_serve_file(
 				connection,
 				static_cast<http_message *>(data),
