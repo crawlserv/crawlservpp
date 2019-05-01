@@ -26,7 +26,6 @@ function handleJsonError(txt, jqxhr, status, thrown) {
 		else
 			error += jqxhr;
 	}
-		
 	
 	throw new Error(error);
 }
@@ -35,21 +34,30 @@ function handleJsonError(txt, jqxhr, status, thrown) {
 function msToStr(ms) {
 	var result = "";
 	
-	if(!ms) return "<1ms";
+	if(!ms)
+		return "<1ms";
 	
 	if(ms > 3600000) {
 		result = Math.floor(ms / 3600000).toString() + "h ";
+		
 		ms = ms % 3600000;
 	}
+	
 	if(ms > 60000) {
 		result += Math.floor(ms / 60000).toString() + "min ";
+		
 		ms = ms % 60000;
 	}
+	
 	if(ms > 1000) {
 		result += Math.floor(ms/ 1000).toString() + "s ";
+		
 		ms = ms % 1000;
 	}
-	if(ms > 0) result += ms + "ms ";
+	
+	if(ms > 0)
+		result += ms + "ms ";
+	
 	return result.substr(0, result.length - 1);
 }
 
@@ -59,60 +67,82 @@ function msToStr(ms) {
 
 // check whether a date is valid
 function isValidDate(dateString) {
-	if(!dateString.length) return true; // empty string allowed (no date specified)
+	if(!dateString.length)
+		return true; // empty string allowed (no date specified)
+	
 	var regEx = /^\d{4}-\d{2}-\d{2}$/;
-	if(!dateString.match(regEx)) return false;  // invalid format
+	
+	if(!dateString.match(regEx))
+		return false;  // invalid format
+	
 	var d = new Date(dateString);
-	if(Number.isNaN(d.getTime())) return false; // invalid date
+	
+	if(Number.isNaN(d.getTime()))
+		return false; // invalid date
+	
 	return d.toISOString().slice(0,10) === dateString;
 }
 
 // check whether a (positive) integer is valid [based on https://stackoverflow.com/a/10834843 by T.J. Crowder]
 function isNormalInteger(str) {
 	var n = Math.floor(Number(str));
+	
     return n !== Infinity && String(n) === str && n >= 0;
 }
 
 // refresh data
 function refreshData() {
-	if(crawlserv_frontend_unloading) return;
+	if(crawlserv_frontend_unloading)
+		return;
+	
 	if($("#server-status").length > 0) {
 		var timerStart = +new Date();
+		
 		$("#server-status").load("http://localhost:8080", function(response, status, xhr) {
 			if(status == "error") {
 				$("#server-status").html("<div class='no-server-status'>crawlserv not found</div>");
+				
 				$("#server-ping-value").text("");
+				
 				setTimeout(refreshData, 10000);
 			}
 			else {
 				var timerEnd = +new Date();
+				
 				$("#server-ping").
 					html("<span id='_ping1'>&bull;</span><span id='_ping2'>&bull;</span><span id='_ping3'>&bull;</span>");
+				
 				$("#_ping1").fadeIn(0).fadeOut(600);
 				$("#_ping2").fadeIn(0).delay(200).fadeOut(500);
 				$("#_ping3").fadeIn(0).delay(300).fadeOut(400, "linear", function() {
 					$("#server-ping-value").text(msToStr(timerEnd - timerStart));
 				});
+				
 				setTimeout(refreshData, 5000);
 			}
 		});
 	}
+	
 	if($("#threads").length > 0) {
 		$("#threads").load("php/_threads.php", function(response, status, xhr) {
 			if(status == "error") {
 				$("#threads").html("<div class='no-server-status'>Failed to load threads.</div>");
+				
 				setTimeout(refreshData, 2500);
 			}
 			else {
 				$("#threads-ping").
 					html("<span id='_ping1'>&bull;</span><span id='_ping2'>&bull;</span><span id='_ping3'>&bull;</span>");
+				
 				$("#_ping1").fadeIn(0).fadeOut(600);
 				$("#_ping2").fadeIn(0).delay(200).fadeOut(500);
 				$("#_ping3").fadeIn(0).delay(300).fadeOut(400);
+				
 				setTimeout(refreshData, 700);
 				
 				if(scrolldown) {
 					$("#container").scrollTop($("#scroll-to").offset().top);
+					
 					scrolldown = false;
 				}
 			}
@@ -127,6 +157,7 @@ function reload(args) {
 	
 	//args["_redirectstarttime"] = +new Date();
 	args["redirected"] = true;
+	
 	$.redirect("", args);
 }
 
@@ -222,6 +253,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 																+ ")\n\n"
 																+ data["text"]
 														);
+													
 													if(doReload)
 														reload(reloadArgs);
 												}
@@ -290,8 +322,26 @@ function reenableInputs() {
  * CONFIG
  */
 
-//helper function to compare two configurations
-function areConfigsEqual(config1, config2, logging = false) {
+// are two JSON values are unequal (while value2 can be null)?
+function areValuesUnequal(value1, value2) {
+	if(value2 === null) {
+		if(!isNaN(value1))
+			return value1 != 0;
+		
+		if(typeof value1 === "string" || value1 instanceof String)
+			return value1 != "";
+		
+		if(typeof value1 === "boolean")
+			return value1 != false;
+		
+		return value1 != null;
+	}
+	
+	return value1 != value2;
+}
+
+// helper function to compare two configurations
+function areConfigsEqual(config1, config2, logging = true) {
 	// go through all configuration entries in the first configuration
 	for(key1 in config1) {
 		// find configuration entry in the second configuration
@@ -312,18 +362,20 @@ function areConfigsEqual(config1, config2, logging = false) {
 										"areConfigsEqual(): Unequal number of elements in "
 										+ config1[key1].cat + "." + config1[key1].name
 								);
+							
 							return false;
 						}
 						
 						// compare array items
 						for(var i = 0; i < arrayLength; i++) {
-							if(config1[key1].value[i] != config2[key2].value[i]) {
-								if(logging)
+							if(areValuesUnequal(config1[key1].value[i], config2[key2].value[i])) {
+								if(logging) {
 									console.log(
 											"areConfigsEqual(): " + config1[key1].cat + "." + config1[key1].name
 											+ "[" + i + "]: " + config1[key1].value[i]
 											+ " != " + config2[key2].value[i]
 									);
+								}
 								
 								return false;
 							}
@@ -331,7 +383,7 @@ function areConfigsEqual(config1, config2, logging = false) {
 					}
 					// compare value (ignore change of algorithm)
 					else if(config1[key1].name != "_algo"
-						&& config1[key1].value != config2[key2].value) {
+						&& areValuesUnequal(config1[key1].value, config2[key2].value)) {
 						if(logging)
 							console.log(
 									"areConfigsEqual(): " + config1[key1].cat + "." + config1[key1].name +
@@ -348,8 +400,7 @@ function areConfigsEqual(config1, config2, logging = false) {
 			}
 		}
 		
-		if(!found
-				&& config1[key1].name != "_algo") {
+		if(!found && config1[key1].name != "_algo") {
 			if(logging)
 				console.log(
 						"areConfigsEqual(): " + config1[key1].cat + "."	+ config1[key1].name +
