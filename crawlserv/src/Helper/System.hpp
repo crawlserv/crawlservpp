@@ -15,7 +15,7 @@
 #include <string>
 
 namespace crawlservpp::Helper::System {
-	// execute a system command and return the stdout of the program
+	// execute a system command and return the stdout of the program, throws std::runtime_error
 	inline std::string exec(const char* cmd) {
 	    std::array<char, 128> buffer;
 	    std::string result;
