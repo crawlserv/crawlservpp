@@ -22,7 +22,6 @@
 #include <cppconn/driver.h>
 #include <tidy.h>
 #include <pcre2.h>
-
 #include <pugixml.hpp>
 #include <uriparser/UriBase.h>
 
