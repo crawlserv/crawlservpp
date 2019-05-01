@@ -9,7 +9,7 @@ The architecture of **crawlserv++** consists of three distinct components:
 
 * The **command-and-control server**, written in C++ (source code in [`crawlserv/src`](crawlserv/src)),
 * a web server hosting the (quick 'n' dirty) **frontend** written in HTML, PHP and JavaScript (source code in [`crawlserv_frontend/crawlserv`](crawlserv_frontend/crawlserv)),
-* a mySQL **database** containing all data (i.e. thread status, configurations, logs, crawled content, parsed and extracted data as well as the results of all analyses).
+* a mySQL **database** containing all permanent data (i.e. thread status, configurations, logs, crawled content, parsed and extracted data as well as the results of all analyses).
 
 ## Legal Notice
 
@@ -232,7 +232,7 @@ The commands and their replies are using the JSON format (implemented using the 
 
 Apart from these commands, the server automatically handles HTTP file uploads sent as `multipart/form-data`. The name of the part containing the content of the file needs to be `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined as `MAIN_WEBSERVER_FILE_LENGTH` in [`crawlserv/src/Main/WebServer.hpp`](crawlserv/src/Main/WebServer.hpp)) as file names.
 
-The cache is also used to store files generated on data export. Files in the cache can be downloaded using the `download` server command. Note that these files are **temporary** as the file cache will be cleared and all uploaded and/or generated files deleted as soon as the server is restarted.
+The cache is also used to store files generated on data export. Files in the cache can be downloaded using the `download` server command. Note that these files are **temporary** as the file cache will be cleared and all uploaded and/or generated files deleted as soon as the server is restarted. All permanent data will be written to the database.
 
 #### Example exchange
 
