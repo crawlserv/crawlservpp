@@ -19,13 +19,17 @@ function formatTime($seconds) {
     
     if($seconds > 31557600) {
         $years = floor($seconds / 31557600);
+        
         $result .= $years."y ";
+        
         $seconds -= $years * 31557600;
     }
     
     if($seconds > 2629746) {
         $months = floor($seconds / 2629746);
+        
         $result .= $months."mth ";
+        
         $seconds -= $months * 2629746;
     }
     
@@ -34,7 +38,9 @@ function formatTime($seconds) {
     
     if($seconds > 604800) {
         $weeks = floor($seconds / 604800);
+        
         $result .= $weeks."w ";
+        
         $seconds -= $weeks * 604800;
     }
     
@@ -43,7 +49,9 @@ function formatTime($seconds) {
     
     if($seconds > 86400) {
         $days = floor($seconds / 86400);
+        
         $result .= $days."d ";
+        
         $seconds -= $days * 86400;
     }
     
@@ -52,7 +60,9 @@ function formatTime($seconds) {
     
     if($seconds > 3600) {
         $hours = floor($seconds / 3600);
+        
         $result .= $hours."h ";
+        
         $seconds -= $hours * 3600;
     }
     
@@ -61,7 +71,9 @@ function formatTime($seconds) {
     
     if($seconds > 60) {
         $minutes = floor($seconds / 60);
+        
         $result .= $minutes."min ";
+        
         $seconds -= $minutes * 60;
     }
     
@@ -321,5 +333,6 @@ else {
     echo "</div>\n";
     echo "</div>\n";
 }
+
 $result->close();
 ?>
