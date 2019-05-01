@@ -88,7 +88,8 @@ namespace crawlservpp::Helper::FileSystem {
 		return result;
 	}
 
-	// check whether file or directory is located inside directory (including its subdirectories)
+	// check whether a path is located inside directory (including its subdirectories)
+	//  NOTE: While the directory needs to exist, the path does not
 	inline bool contains(const std::string& pathToDir, const std::string& pathToCheck) {
 		if(!std::filesystem::exists(pathToDir))
 			throw std::runtime_error("\'" + pathToDir + "\' does not exist");
