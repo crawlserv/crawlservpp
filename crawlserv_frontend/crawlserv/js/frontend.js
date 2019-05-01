@@ -493,7 +493,8 @@ jQuery(function($) {
 		var id = parseInt($("#urllist-select").val(), 10);
 		
 		if(id)
-			runCmd("deleteurllist",
+			runCmd(
+					"deleteurllist",
 					{ "id" : id },
 					true,
 					{
