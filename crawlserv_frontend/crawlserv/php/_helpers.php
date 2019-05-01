@@ -46,7 +46,7 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     );
 
     if(!$result)
-        exit("ERROR: Could not websites from database.");
+        die("ERROR: Could not websites from database.");
     
     $first = true;
     
@@ -140,7 +140,7 @@ function rowUrlListSelect($adddelete = false, $scrolldown = false, $noreload = f
     );
     
     if(!$result)
-        exit("ERROR: Could not get URL lists from database.");
+        die("ERROR: Could not get URL lists from database.");
         
     if($result) {
         $first = true;
@@ -261,7 +261,7 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
         $result = $dbConnection->query("SELECT name, config FROM crawlserv_configs WHERE id=$config LIMIT 1");
         
         if(!$result)
-            exit("ERROR: Could not get ".strtolower($module)." data.");
+            die("ERROR: Could not get ".strtolower($module)." data.");
             
             $row = $result->fetch_assoc();
             
@@ -307,12 +307,13 @@ function scriptModule() {
     $script = "";
     
     if($website) {
+        $script .= "// load locales, queries and configuration\n\n"; // JavaScript comment
         $script .= "var db_locales = [\n";
         
         $result = $dbConnection->query("SELECT name FROM crawlserv_locales ORDER BY name");
         
         if(!$result)
-            exit("ERROR: Could not get locales from database.");
+            die("ERROR: Could not get locales from database.");
             
         $locales = "";
             
@@ -321,7 +322,7 @@ function scriptModule() {
                 
         $locales = substr($locales, 0, -1);
                 
-        $script .= "$locales];\n";
+        $script .= "$locales];\n\n";
                 
         $script .= "var db_queries = [\n";
                 
@@ -334,7 +335,7 @@ function scriptModule() {
         );
                 
         if(!$result)
-            exit("ERROR: Could not get queries from database.");
+            die("ERROR: Could not get queries from database.");
                     
         while($row = $result->fetch_assoc())
             $script .= " { \"id\": "
@@ -366,7 +367,7 @@ function scriptModule() {
             );
             
             if(!$result)
-                exit("ERROR: Could not get current configuration from database");
+                die("ERROR: Could not get current configuration from database");
                 
             $row = $result->fetch_assoc();
                 

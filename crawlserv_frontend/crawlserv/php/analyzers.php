@@ -154,8 +154,6 @@ if(isset($website)) {
 
 <script>
 
-// load locales, queries and configuration
-
 <?php
 
 echo scriptModule();
