@@ -181,7 +181,7 @@ The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the appli
 
 ### Server Commands
 
-The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of February 2019):
+The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of May 2019):
 
 * **`addconfig`** (arguments: `website`, `module`, `name`, `config`): Add a configuration to the database.
 * **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Add a RegEx, XPath or JSONPointer query to the database.
@@ -194,6 +194,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`deleteurllist`** (argument: `id`): Delete a URL list (and all associated data) from the database.
 * **`deletewebsite`** (argument: `id`): Delete a website (and all associated data) from the database.
 * **`disallow`**: Revoke access from all except the initial IP(s) specified by the configuration file.
+* **`download`** (argument: `filename`): Download file from the file cache of the server.
 * **`duplicateconfig`** (argument: `id`): Duplicate the specified configuration.
 * **`duplicatequery`** (argument: `id`): Duplicate the specified RegEx, XPath or JSONPointer query.
 * **`duplicatewebsite`** (argument: `id`): Duplicate the specified website.
@@ -227,7 +228,11 @@ The server performs commands and sends back their results. Some commands need to
 
 The commands and their replies are using the JSON format (implemented using the [RapidJSON library](https://github.com/Tencent/rapidjson)).
 
-See the following examples.
+#### File cache
+
+
+
+#### Examples
 
 **Command from frontend to server:** Delete the URL list with the ID #1.
 
