@@ -21,7 +21,7 @@ namespace crawlservpp::Main {
 		mg_mgr_free(&(this->eventManager));
 	}
 
-	// bind embedded web serverto port, set user data and protocol, throws WebServer::Exception
+	// bind embedded web server to port, set user data and protocol, throws WebServer::Exception
 	void WebServer::initHTTP(const std::string& port) {
 		ConnectionPtr connection = mg_bind(
 				&(this->eventManager),
