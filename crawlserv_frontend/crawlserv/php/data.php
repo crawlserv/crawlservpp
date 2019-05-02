@@ -8,8 +8,26 @@ if(isset($_POST["action"]))
 else
     $action = "import";
 
+if(isset($_POST["datatype"]))
+    $datatype = $_POST["datatype"];
+else
+    $datatype = "urllist";
+
+if(isset($_POST["filetype"]))
+    $filetype = $_POST["filetype"];
+else
+    $filetype = "text";
+
+if(isset($_POST["compression"]))
+    $compression = $_POST["compression"];
+else
+    $compression = "none";
+
 if(isset($_POST["website"]))
     $website = $_POST["website"];
+
+if(isset($_POST["urllist"]))
+    $urllist = $_POST["urllist"];
 
 ?>
 
@@ -20,21 +38,21 @@ if(isset($_POST["website"]))
 
 <div class="entry-label">Action:</div><div class="entry-input">
 
-<input type="radio" name="action" value="import"<?php
+<input type="radio" name="action" value="import" data-m="data" <?php
 
 if($action == "import")
     echo " checked";
 
 ?> /> Import &emsp;
 
-<input type="radio" name="action" value="merge"<?php
+<input type="radio" name="action" value="merge" data-m="data"<?php
 
 if($action == "merge")
     echo " checked";
 
 ?> /> Merge &emsp;
 
-<input type="radio" name="action" value="export"<?php
+<input type="radio" name="action" value="export" data-m="data"<?php
 
 if($action == "export")
     echo " checked";
@@ -45,6 +63,219 @@ if($action == "export")
 </div>
 
 <div class="entry-row">
+
+<div class="entry-label">Data Type:</div><div class="entry-input">
+
+<select id="data-type-select" class="entry-input" data-m="data">
+
+<option value="urllist" <?php 
+
+if($datatype == "urllist")
+    echo " selected";
+
+?>>URL list</option>
+
+</select>
+
+</div>
+</div>
+</div>
+
+<div class="content-block">
+
+<?php
+
+if($action != "merge") {
+    // file type
+    echo "<div class=\"entry-row\">\n";
+    
+    echo "<div class=\"entry-label\">File Type:</div><div class=\"entry-input\">\n";
+    
+    echo "<select id=\"file-type-select\" class=\"entry-input\" data-m=\"$m\">\n";
+    
+    echo "<option value=\"text\"";
+    
+    if($filetype == "text")
+        echo " selected";
+    
+    echo ">Text file</option>\n";
+    
+    echo "</select>";
+    
+    echo "</div>\n</div>\n";
+    
+    // compression
+    $result = $dbConnection->query(
+        "SELECT name, version".
+        " FROM crawlserv_versions"
+        );
+    
+    if(!$result)
+        die("ERROR: Could not get library versions from database.");
+        
+    while($row = $result->fetch_assoc()) {
+        if(strtolower($row["name"]) == "boost")
+            $boost_version = $row["version"];
+        else if(strtolower($row["name"]) == "zlib")
+            $zlib_version = $row["version"];
+    }
+    
+    $result->close();
+    
+    echo "<div class=\"entry-row\">\n";
+    
+    echo "<div class=\"entry-label\">Compression:</div><div class=\"entry-input\">\n";
+    
+    echo "<select id=\"compression-select\" class=\"entry-input\">\n";
+    
+    echo "<option value=\"none\"";
+    
+    if($compression == "none")
+        echo " selected";
+    
+    echo ">[none]</option>\n";
+    
+    echo "<option value=\"gzip\"";
+    
+    if($compression == "gzip")
+        echo " selected";
+    
+    echo ">gzip (Boost $boost_version)</option>\n";
+    
+    echo "<option value=\"zip\"";
+    
+    if($compression == "zip")
+        echo " selected";
+    
+    echo ">ZIP (zlib $zlib_version)</option>\n";
+    
+    echo "</select>";
+    
+    echo "</div>\n</div>\n";
+}
+
+?>
+
+</div>
+
+<?php
+
+if($action != "export") {
+    // target
+    
+    echo "<div class=\"content-block\">\n";
+    
+    echo "<div class=\"entry-row\"><b>Target</b></div>\n";
+    
+    if($datatype == "urllist") {
+        echo rowWebsiteSelect();
+        echo rowUrlListSelect($action != "merge", false, false, $action == "merge", "urllist-target");
+            
+        if($action != "merge" && !$urllist) {
+            echo "<div class=\"entry-row\">\n";
+                
+            echo "<div class=\"entry-label\">Name:</div><div class=\"entry-input\">\n";
+                
+            echo "<input type=\"text\" id=\"urllist-name\" class=\"entry-input\" />\n";
+                
+            echo "</div>\n</div>\n";
+        }
+    }
+    
+    echo "</div>\n";
+}
+
+if($action != "import") {
+    // source
+    
+    echo "<div class=\"content-block\">\n";
+    
+    echo "<div class=\"entry-row\"><b>Source</b></div>\n";
+    
+    if($datatype == "urllist") {
+        if($action != "merge")
+            echo rowWebsiteSelect();
+        
+        echo rowUrlListSelect(false, false, false, true, "urllist-source");
+    }
+    
+    echo "</div>\n";
+}
+
+if($action == "import") {
+    // file
+    echo "<div class=\"content-block\">\n";
+    
+    echo "<div class=\"entry-row\">\n";
+    
+    echo "<div class=\"entry-label\">File:</div><div class=\"entry-input\">\n";
+    
+    echo "<input id=\"file-select\" type=\"file\" />\n";
+    
+    echo "</div>\n</div>\n</div>\n";
+}
+
+?>
+
+<div class="content-block">
+
+<?php 
+
+if($action != "merge" || $datatype != "urllist") {
+    echo "<div class=\"entry-row\"><b>Options</b></div>\n";
+
+    if($action == "import") {
+        // import options
+        if($datatype == "urllist") {
+            if($filetype == "text") {
+                // options for importing URL list from text file
+                echo "<div class=\"entry-row\">\n";
+                echo "<div class=\"entry-label\"></div>\n";
+                
+                echo "<input id=\"is-firstline-header\" type=\"checkbox\" /> First line is header (will be ignored)\n";
+                
+                echo "</div>\n";
+            }
+        }
+    }
+    else if($action == "export") {
+        // export options
+        if($datatype == "urllist") {
+            if($filetype == "text") {
+                // options for exporting URL list to text file
+                echo "<div class=\"entry-row\">\n";
+                echo "<div class=\"entry-label\"></div>\n";
+                echo "<div class=\"entry-input\">\n";
+                
+                echo "<input id=\"write-firstline-header\" type=\"checkbox\" /> Write header to first line:\n";
+                
+                echo "</div>\n</div>\n";
+                
+                echo "<div class=\"entry-row\">\n";
+                echo "<div class=\"entry-label\"></div>\n";
+                echo "<div class=\"entry-input\">\n";
+                
+                echo "<input id=\"firstline-header\" type=\"text\" />\n";
+                
+                echo "</div>\n</div>\n";
+            }
+        }
+    }
+}
+
+?>
+
+<div class="entry-row-right">
+
+<input id="perform-action" type="button" value="<?php 
+
+echo ucfirst($action);
+
+?>" data-action="<?php 
+
+echo $action;
+
+?>"/>
 
 </div>
 </div>
