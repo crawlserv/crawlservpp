@@ -22,9 +22,6 @@ if(isset($_POST["query"]))
 
 echo rowWebsiteSelect(false, true);
 
-if(isset($website))
-    flush();
-
 ?>
 
 <div class="entry-row">

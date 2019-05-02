@@ -78,14 +78,9 @@ if($module == "analyzer")
 
 <?php
 
-if(isset($website)) {
-    flush();
-    
-    echo rowConfigSelect(ucfirst($module), false, true);
-    
-    flush();
-    
-    echo rowUrlListSelect(false, false, true);
+if(isset($website)) {    
+    echo rowConfigSelect(ucfirst($module), false, true);    
+    echo rowUrlListSelect(false, false, false, true);
 }
 
 ?>

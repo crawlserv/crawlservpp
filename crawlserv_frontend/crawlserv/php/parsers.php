@@ -46,8 +46,6 @@ echo "</span>\n";
 echo rowWebsiteSelect(false);
 
 if(isset($website)) {
-    flush();
-
     echo rowConfigSelect("Parser", true);
 }
 
