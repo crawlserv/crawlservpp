@@ -99,6 +99,10 @@ jQuery(function($) {
 		if($("#write-firstline-header"))
 			$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
 		
+		// prepare form for file upload if necessary
+		if($("#file-form"))
+			$("#file-form").ajaxForm();
+		
 		// set timer
 		refreshData();
 		
@@ -1614,12 +1618,128 @@ jQuery(function($) {
 	
 // CLICK EVENT: perform selected data action (import, export or merge)
 	$("#perform-action").on("click", function() {
+		// get type of action
 		var action = $(this).data("action");
 		
-		if(action == "import") {
-			// upload file
-			
+		// set arguments and options
+		var args = {}
+		
+		args["datatype"] = $("#data-type-select").val();
+		
+		if(action != "merge") {
+			args["filetype"] = $("#file-type-select").val();
+			args["compression"] = $("#compression-select").val();
 		}
+		
+		var options = {};
+		
+		// (website, source URL list, target URL list)
+		if($("#website-select").length)
+			options["website"] = parseInt($("#website-select").val(), 10);
+		
+		if($("#urllist-source").length)
+			options["urllist-source"] = parseInt($("#urllist-source").val(), 10);
+		
+		if($("#urllist-target").length)
+			options["urllist-target"] = parseInt($("#urllist-target").val(), 10);
+		
+		// (header options for text files)
+		if($("#is-firstline-header").length)
+			options["is-firstline-header"] = $("#is-firstline-header").prop("checked");
+		
+		if($("#write-firstline-header").length)
+			options["write-firstline-header"] = $("#write-firstline-header").prop("checked");
+		
+		if($("#firstline-header").length)
+			options["firstline-header"] = $("#firstline-header").val();
+		
+		args["options"] = JSON.stringify(options, null, 1);
+		
+		if(action == "import") {
+			// check whether file has been selected
+			if($("#file-select").val().length) {
+				// preserve caption of button
+				var caption = $(this).val();
+				
+				// disable button while uploading file
+				$(this).prop("disabled", true);
+				$(this).val("Uploading file...");
+				
+				// save pointer to button
+				let t = this;
+				
+				// submit form for file upload
+				$("#file-form").ajaxSubmit({
+					success: function(response) {
+						// file upload successful: add filename to arguments
+						args["filename"] = response;
+						
+						// run command
+						runCmd("import", args, false);
+						
+						// restore button
+						$(t).prop("disabled", false);
+						$(t).val(caption)
+					},
+					failure: function(response) {
+						// file upload failed
+						alert("File upload failed: " + response);
+						
+						// restore button
+						$(t).prop("disabled", false);
+						$(t).val(caption)
+					}
+				});
+			}
+			else
+				alert("Please select a file to upload.");
+		}
+		else if(action == "export") {
+			// run command for export
+			args["cmd"] = "export";
+			
+			$.ajax({
+					type: "POST",
+					url: cc_host,
+					data: JSON.stringify(args, null, 1),
+					contentType: "application/json; charset=utf-8",
+					dataType: "text",
+					success: function(response, status, xhr) {
+						var contentType = xhr.getResponseHeader("content-type") || "";
+						
+						if(contentType.indexOf("json") > - 1) {
+							// show JSON response
+							var responseObj = JSON.parse(response);
+							
+							if(responseObj["fail"])
+								alert(
+										"crawlserv responded with error:\n\n"
+										+ responseObj["text"]
+										+ "\n\ndebug: "
+										+ responseObj["debug"]
+								);
+							else
+								alert("crawlserv responded with: " + responseObj["text"]);
+						}
+						else
+							// download resulting file
+							runCmd("download", { "filename": response }, false);
+					},
+					failure: function(response) {
+						alert("Error performing the export: " + response);
+					}
+			});
+		}
+		else if(action == "merge") {
+			// perform merge
+			runCmd("merge", args, false);
+		}
+		else if(action.length)
+			alert("Unknown action: \"" + action + "\".");
+		else
+			alert("No action specified.");
+		
+		return true;
 	});
 	
 /*
