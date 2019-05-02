@@ -52,6 +52,7 @@ header('Content-Type: text/html; charset=utf-8');
 <script src="js/external/array.equals.js"></script>
 <script src="js/external/jquery-3.3.1.min.js"></script>
 <script src="js/external/jquery.redirect.js"></script>
+<script src="js/external/jquery.form.min.js"></script>
 <script src="js/external/tippy.all.min.js"></script>
 <script src="js/external/prism.js"></script>
 
