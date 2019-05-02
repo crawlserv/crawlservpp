@@ -38,7 +38,7 @@ namespace crawlservpp::Helper::File {
 
 		in.seekg(0, std::ios::beg);
 
-		// read file to string
+		// write file content to string
 		result.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 
 		// return string
