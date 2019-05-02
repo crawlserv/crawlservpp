@@ -162,7 +162,6 @@ if($action != "merge") {
 
 if($action != "export") {
     // target
-    
     echo "<div class=\"content-block\">\n";
     
     echo "<div class=\"entry-row\"><b>Target</b></div>\n";
@@ -187,7 +186,6 @@ if($action != "export") {
 
 if($action != "import") {
     // source
-    
     echo "<div class=\"content-block\">\n";
     
     echo "<div class=\"entry-row\"><b>Source</b></div>\n";
@@ -210,7 +208,11 @@ if($action == "import") {
     
     echo "<div class=\"entry-label\">File:</div><div class=\"entry-input\">\n";
     
-    echo "<input id=\"file-select\" type=\"file\" />\n";
+    echo "<form id=\"file-form\" action=\"$cc_host\" method=\"post\">\n";
+    
+    echo "<input id=\"file-select\" type=\"file\" name=\"fileToUpload\" />\n";
+    
+    echo "</form>\n";
     
     echo "</div>\n</div>\n</div>\n";
 }
