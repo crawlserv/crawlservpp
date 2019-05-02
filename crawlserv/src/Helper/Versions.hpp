@@ -24,6 +24,7 @@
 #include <pcre2.h>
 #include <pugixml.hpp>
 #include <uriparser/UriBase.h>
+#include <zlib.h>
 
 #include <sstream>
 #include <string>
@@ -140,6 +141,9 @@ namespace crawlservpp::Helper::Versions {
 
 		// UTF8-CPP (WARNING: hard-coded version information not necessarily accurate)
 		result.emplace_back("UTF8-CPP", "2.1");
+
+		// zlib
+		result.emplace_back("zlib", ZLIB_VERSION);
 
 		return result;
 	}
