@@ -53,8 +53,6 @@ echo "</span>\n";
 echo rowWebsiteSelect();
 
 if(isset($website))
-    flush();
-
     echo rowConfigSelect("Analyzer", true);
 
 ?>
