@@ -95,6 +95,10 @@ jQuery(function($) {
 			}
 		}
 		
+		// check import/export inputs if necessary
+		if($("#write-firstline-header"))
+			$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
+		
 		// set timer
 		refreshData();
 		
@@ -291,6 +295,7 @@ jQuery(function($) {
 // CHANGE EVENT: website selected
 	$("#website-select").on("change", function() {
 		$(this).blur();
+		
 		disableInputs();
 		
 		var id = parseInt($(this).val(), 10);
@@ -304,6 +309,18 @@ jQuery(function($) {
 		
 		if(typeof $(this).data("mode") !== "undefined")
 			args["mode"] = $(this).data("mode");
+		
+		if(typeof $(this).data("action") !== "undefined")
+			args["action"] = $(this).data("action");
+		
+		if(typeof $(this).data("datatype") !== "undefined")
+			args["datatype"] = $(this).data("datatype");
+		
+		if(typeof $(this).data("filetype") !== "undefined")
+			args["filetype"] = $(this).data("filetype");
+		
+		if(typeof $(this).data("compression") !== "undefined")
+			args["compression"] = $(this).data("compression");
 		
 		if(typeof $(this).data("scrolldown") !== "undefined")
 			args["scrolldown"] = true;
@@ -461,6 +478,7 @@ jQuery(function($) {
 				"id",
 				"urllist"
 		);
+		
 		return false;
 	});
 	
@@ -502,6 +520,7 @@ jQuery(function($) {
 						"website" : website
 					}
 			);
+		
 		return false;
 	});
 	
@@ -692,6 +711,7 @@ jQuery(function($) {
 			$("#xpath-result-property").prop("disabled", true);
 			$("#xpath-generate").text("Generate query for HTML tag");
 		}
+		
 		return true;
 	});
 	
@@ -866,7 +886,7 @@ jQuery(function($) {
 			
 			$.ajax({
 				type: "POST",
-				url: "http://localhost:8080",
+				url: cc_host,
 				data: JSON.stringify(args, null, 1),
 				contentType: "application/json; charset=utf-8",
 				dataType: "json",
@@ -1161,18 +1181,21 @@ jQuery(function($) {
 // CLICK EVENT: add item to array
 	$(document).on("click", "input.opt-array-add", function() {
 		config.onAddElement($(this).data("cat"), $(this).data("id"));
+		
 		return true;
 	});
 	
 // CLICK EVENT: remove item from array
 	$(document).on("click", "input.opt-array-del", function() {
 		config.onDelElement($(this).data("cat"), $(this).data("id"), $(this).data("item"));
+		
 		return true;
 	});
 	
 // CLICK EVENT: remove placeholder on click
 	$(document).on("click", "input.opt", function() {
 		$(this).removeAttr("placeholder");
+		
 		return true;
 	});
 
@@ -1234,6 +1257,7 @@ jQuery(function($) {
 				{ "id" : id },
 				false
 		);
+		
 		return false;
 	})
 
@@ -1526,6 +1550,76 @@ jQuery(function($) {
 		});
 		
 		return false;
+	});
+	
+/*
+ * EVENTS for IMPORT/EXPORT [DATA]
+ */
+	
+// CHANGE EVENT: action selected
+	$("input[name='action']").on("change", function() {
+		var dataType = $("#data-type-select").val();
+		var fileType = $("#file-type-select").val();
+		
+		disableInputs();
+		
+		reload({
+			"m" : $(this).data("m"),
+			"action" : $(this).val(),
+			"data-type": dataType,
+			"file-type": fileType
+		});
+		
+		return false;
+	});
+	
+// CHANGE EVENT: data type selected
+	$("#data-type-select").on("change", function() {
+		var action = $("input[name='action']").val();
+		var fileType = $("#file-type-select").val();
+		
+		disableInputs();
+		
+		reload({
+			"m" : $(this).data("m"),
+			"action" : action,
+			"data-type": $(this).val(),
+			"file-type": fileType
+		});
+		
+		return false;
+	});
+	
+// CHANGE EVENT: file type selected
+	$("#data-type-select").on("change", function() {
+		var action = $("input[name='action']").val();
+		var dataType = $("#data-type-select").val();
+		
+		disableInputs();
+		
+		reload({
+			"m" : $(this).data("m"),
+			"action" : action,
+			"data-type": dataType,
+			"file-type": $(this).val()
+		});
+		
+		return false;
+	});
+	
+// CHANGE EVENT: write first-line header toggled
+	$("#write-firstline-header").on("change", function() {
+		$("#firstline-header").prop("disabled", !$(this).prop("checked"));
+	});
+	
+// CLICK EVENT: perform selected data action (import, export or merge)
+	$("#perform-action").on("click", function() {
+		var action = $(this).data("action");
+		
+		if(action == "import") {
+			// upload file
+			
+		}
 	});
 	
 /*
