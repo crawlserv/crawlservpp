@@ -359,7 +359,7 @@ Using some algorithms on large corpora may require a large amount of memory. Con
 
 ### Third-party Code
 
-The frontend uses the following third-party code (to be found in [`crawlserv_frontend/js/external`](crawlserv_frontend/js/external):
+The frontend uses the following third-party code (to be found in [`crawlserv_frontend/crawlserv/js/external`](crawlserv_frontend/crawlserv/js/external):
 
 * [Array.prototype.equals](https://stackoverflow.com/a/14853974) by Rob Bednak
 * [jQuery](https://jquery.com/)
