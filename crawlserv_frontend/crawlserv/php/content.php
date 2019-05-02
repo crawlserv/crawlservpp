@@ -400,11 +400,8 @@ echo "</span>\n";
 
 echo rowWebsiteSelect();
 
-if($website) {
-    flush();
-    
+if($website)
     echo rowUrlListSelect();
-}
 
 ?>
 

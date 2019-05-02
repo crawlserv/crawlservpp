@@ -45,11 +45,9 @@ echo "</span>\n";
 
 echo rowWebsiteSelect();
 
-if(isset($website)) {
-    flush();
-
+if(isset($website))
     echo rowConfigSelect("Crawler", true);
-}
+
 ?>
 
 <div class="action-link-box">
