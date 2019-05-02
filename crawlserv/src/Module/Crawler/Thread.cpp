@@ -1807,7 +1807,7 @@ namespace crawlservpp::Module::Crawler {
 				if(!(this->getRegExQuery(this->queryRedirectContent.index).getBool(content)))
 					return true;
 			}
-			catch(const RegExException&e) {
+			catch(const RegExException& e) {
 				if(this->config.crawlerLogging)
 					this->log(
 							"WARNING: RegEx error - " +
@@ -2023,7 +2023,7 @@ namespace crawlservpp::Module::Crawler {
 								this->queriesRedirectVars.at(n).index
 						).getFirst(oldContent, value);
 					}
-					catch(const RegExException&e) {
+					catch(const RegExException& e) {
 						if(this->config.crawlerLogging)
 							this->log(
 									"WARNING: RegEx error - " +
@@ -2124,6 +2124,34 @@ namespace crawlservpp::Module::Crawler {
 		// check argument
 		if(url.empty())
 			return false;
+
+		// check for invalid UTF-8 character(s) in URL
+		std::string utf8Error;
+
+		if(!Helper::Utf8::isValidUtf8(url, utf8Error)) {
+			if(this->config.crawlerLogging) {
+				if(utf8Error.empty())
+					this->log(
+							"WARNING: Ignored URL containing invalid UTF-8 character(s) ["
+							+ url
+							+ " from "
+							+ from
+							+ "]."
+					);
+				else
+					this->log(
+							"WARNING: Ignored URL because "
+							+ utf8Error
+							+ " ["
+							+ url
+							+ " from "
+							+ from
+							+ "]."
+					);
+			}
+
+			return false;
+		}
 
 		// check for whitelisted URLs
 		if(!(this->queriesWhiteListUrls.empty())) {
@@ -2572,7 +2600,7 @@ namespace crawlservpp::Module::Crawler {
 						if(found)
 							break;
 					}
-					catch(const RegExException&e) {
+					catch(const RegExException& e) {
 						if(this->config.crawlerLogging)
 							this->log(
 									"WARNING: RegEx error - " +
@@ -2796,7 +2824,7 @@ namespace crawlservpp::Module::Crawler {
 						if(found)
 							break;
 					}
-					catch(const RegExException&e) {
+					catch(const RegExException& e) {
 						if(this->config.crawlerLogging)
 							this->log(
 									"WARNING: RegEx error - " +
@@ -3325,30 +3353,6 @@ namespace crawlservpp::Module::Crawler {
 
 		// sort and remove duplicates
 		Helper::Strings::sortAndRemoveDuplicates(urls, this->config.crawlerUrlCaseSensitive);
-
-		// remove URLs containing invalid UTF-8
-		std::queue<std::string> warningsTo;
-
-		std::remove_if(urls.begin(), urls.end(), [&warningsTo](const auto& url) {
-				std::string err;
-
-				if(Helper::Utf8::isValidUtf8(url, err))
-					return false;
-
-				if(err.empty())
-					warningsTo.emplace("WARNING: Ignored URL with invalid character(s) [" + url + "].");
-				else
-					warningsTo.emplace("WARNING: Ignored URL because of " + err + " [" + url + "].");
-
-				return true;
-		});
-
-		if(this->config.crawlerLogging)
-			while(!warningsTo.empty()) {
-				this->log(warningsTo.front());
-
-				warningsTo.pop();
-			}
 
 		return urls;
 	}
