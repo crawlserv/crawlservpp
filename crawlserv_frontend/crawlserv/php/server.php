@@ -1,4 +1,10 @@
 
+<?php
+
+require "config.php";
+
+?>
+
 <h2>Status</h2>
 
 <div class="content-block">
