@@ -17,22 +17,34 @@ else()
 	message(WARNING "Multi-threading library not found.")
 endif()
 
-# find Boost.System
-find_package(Boost COMPONENTS System QUIET)
+# find Boost.System and Boost.Iostreams
+find_package(Boost REQUIRED COMPONENTS system iostreams QUIET)
 
 if(${Boost_FOUND})
-	message("Boost ${Boost_VERSION} library found: \"${Boost_LIBRARIES}\"")
+	message("Boost v${Boost_VERSION} libraries found: \"${Boost_LIBRARIES}\"")
 else()
 	# find manually
 	unset(Boost_LIBRARIES)
 
-	find_library(Boost_LIBRARIES boost_system PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+	find_library(Boost_LIBRARIES1 boost_system PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
 
-	if(Boost_LIBRARIES)
-		message("Boost.System library manually found: \"${Boost_LIBRARIES}\"")
+	if(Boost_LIBRARIES1)
+		message("Boost.System library manually found: \"${Boost_LIBRARIES1}\"")
 	else()
 		message(WARNING "Boost.System library not found.")
 	endif()
+	
+	find_library(Boost_LIBRARIES2 boost_iostreams PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(Boost_LIBRARIES2)
+		message("Boost.Iostreams library manually found: \"${Boost_LIBRARIES2}\"")
+	else()
+		message(WARNING "Boost.Iostreams library not found.")
+	endif()
+	
+	set(Boost_LIBRARIES ${Boost_LIBRARIES1};${Boost_LIBRARIES2})
+	
+	message("Using Boost libraries: ${Boost_LIBRARIES}") 
 endif()
 
 # find cURL
@@ -161,6 +173,33 @@ else()
 	endif()
 endif()
 
+# find zlib
+find_package(ZLIB QUIET)
+
+if(${ZLIB_FOUND})
+	message("zlib v${ZLIB_VERSION_STRING} include directory found: \"${ZLIB_INCLUDE_DIRS}\"")
+	message("zlib v${ZLIB_VERSION_STRING} library found: \"${ZLIB_LIBRARIES}\"")
+else()
+	# find manually
+	unset(ZLIB_INCLUDE_DIRS)
+	unset(ZLIB_LIBRARIES)
+	
+	find_path(ZLIB_INCLUDE_DIRS zlib.h PATH_SUFFIXES zlib/include include REQUIRED)
+	find_library(ZLIB_LIBRARIES z PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+	
+	if(ZLIB_INCLUDE_DIRS)
+		message("zlib include directory manually found: \"${ZLIB_INCLUDE_DIRS}/\"")
+	else()
+		message(WARNING "zlib include directory not found.")
+	endif()
+
+	if(ZLIB_LIBRARIES)
+		message("zlib library manually found: \"${ZLIB_LIBRARIES}\"")
+	else()
+		message(WARNING "zlib library not found.")
+	endif()
+endif()
+
 # find GNU Aspell
 # 	NOTE: Might be removed in the near future.
 find_package(ASPELL QUIET)
@@ -235,6 +274,7 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 target_include_directories(${PROJECT_NAME} PRIVATE ${mysqlcppconn_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${tidy_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncons_INCLUDE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
 # set libraries
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
@@ -246,6 +286,8 @@ target_link_libraries(${PROJECT_NAME} ${uriparser_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${pugixml_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${PCRE2_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${mysqlcppconn_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
+
 target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 
 # set library options
