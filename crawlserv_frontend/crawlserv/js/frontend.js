@@ -39,69 +39,65 @@ jQuery(function($) {
 		if(redirected)
 			$("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
 		
-		// check query type if necessary
-		if($("#query-type-select")) {
-			if($("#query-type-select").val() == "regex") {
-				if(!helperXPath)
-					helperXPath = $("#xpath-helper").detach();
-				
-				if(!helperJSONPointer)
-					helperJSONPointer = $("#jsonpointer-helper").detach();
-				
-				if(!helperJSONPath)
-					helperJSONPath = $("#jsonpath-helper").detach();
-				
-				$("#query-text-only").prop("checked", false);
-				$("#query-text-only").prop("disabled", true);
-				$("#query-text-only-label").addClass("check-label-disabled");
-			}
-			else if($("#query-type-select").val() == "xpath") {
-				if(!helperRegEx)
-					helperRegEx = $("#regex-helper").detach();
-				
-				if(!helperJSONPointer)
-					helperJSONPointer = $("#jsonpointer-helper").detach();
-				
-				if(!helperJSONPath)
-					helperJSONPath = $("#jsonpath-helper").detach();
-			}
-			else if($("#query-type-select").val() == "jsonpointer") {
-				if(!helperRegEx)
-					helperRegEx = $("#regex-helper").detach();
-				
-				if(!helperXPath)
-					helperXPath = $("#xpath-helper").detach();
-				
-				if(!helperJSONPath)
-					helperJSONPath = $("#jsonpath-helper").detach();
-				
-				$("#query-text-only").prop("checked", false);
-				$("#query-text-only").prop("disabled", true);
-				$("#query-text-only-label").addClass("check-label-disabled");
-			}
-			else if($("#query-type-select").val() == "jsonpath") {
-				if(!helperRegEx)
-					helperRegEx = $("#regex-helper").detach();
-				
-				if(!helperXPath)
-					helperXPath = $("#xpath-helper").detach();
-				
-				if(!helperJSONPointer)
-					helperJSONPointer = $("#jsonpointer-helper").detach();
-				
-				$("#query-text-only").prop("checked", false);
-				$("#query-text-only").prop("disabled", true);
-				$("#query-text-only-label").addClass("check-label-disabled");
-			}
+		// check query type
+		if($("#query-type-select").val() == "regex") {
+			if(!helperXPath)
+				helperXPath = $("#xpath-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
+			
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
+		}
+		else if($("#query-type-select").val() == "xpath") {
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
+		}
+		else if($("#query-type-select").val() == "jsonpointer") {
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperXPath)
+				helperXPath = $("#xpath-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
+			
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
+		}
+		else if($("#query-type-select").val() == "jsonpath") {
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperXPath)
+				helperXPath = $("#xpath-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
 		}
 		
-		// check import/export inputs if necessary
-		if($("#write-firstline-header"))
-			$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
+		// check import/export inputs
+		$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
 		
-		// prepare form for file upload if necessary
-		if($("#file-form"))
-			$("#file-form").ajaxForm();
+		// prepare form for file upload
+		$("#file-form").ajaxForm();
 		
 		// set timer
 		refreshData();
@@ -1610,7 +1606,7 @@ jQuery(function($) {
 		
 		return false;
 	});
-	
+
 // CHANGE EVENT: write first-line header toggled
 	$("#write-firstline-header").on("change", function() {
 		$("#firstline-header").prop("disabled", !$(this).prop("checked"));
