@@ -26,6 +26,8 @@ if(isset($_POST["mode"]))
 else
     $mode_attribute = "";
 
+// send header with content type and character encoding
+
 header('Content-Type: text/html; charset=utf-8');
 
 ?>
