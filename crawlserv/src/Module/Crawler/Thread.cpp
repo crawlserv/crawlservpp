@@ -3335,9 +3335,9 @@ namespace crawlservpp::Module::Crawler {
 					return false;
 
 				if(err.empty())
-					warningsTo.emplace("WARNING: Skipped URL with invalid character(s) [" + url + "].");
+					warningsTo.emplace("WARNING: Ignored URL with invalid character(s) [" + url + "].");
 				else
-					warningsTo.emplace("WARNING: Skipped URL because of " + err + " [" + url + "].");
+					warningsTo.emplace("WARNING: Ignored URL because of " + err + " [" + url + "].");
 
 				return true;
 		});
