@@ -2,7 +2,9 @@
 
 // render row with website selection
 function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown = false) {
-    global $m, $mode, $tab, $dbConnection, $website, $websiteName, $namespace, $domain, $dir;
+    global $m, $mode, $tab, $action, $datatype, $filetype, $compression, $dbConnection, $website, $websiteName, $namespace, $domain, $dir;
+    
+    flush();
     
     if($adddelete)
         $class = "entry-x-input";
@@ -24,6 +26,18 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     
     if(isset($tab))
         $html .= " data-tab=\"$tab\"";
+    
+    if(isset($action))
+        $html .= " data-action=\"$action\"";
+    
+    if(isset($datatype))
+        $html .= " data-datatype=\"$datatype\"";
+    
+    if(isset($filetype))
+        $html .= " data-filetype=\"$filetype\"";
+    
+    if(isset($compression))
+        $html .= " data-compression=\"$compression\"";
     
     if($scrolldown)
         $html .= " data-scrolldown";
@@ -100,10 +114,12 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
 }
 
 // render row with URL list selection
-function rowUrlListSelect($adddelete = false, $scrolldown = false, $noreload = false) {
+function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $noreload = false, $id = "urllist-select") {
     global $m, $mode, $tab, $dbConnection, $website, $urllist, $urllistName, $urllistNamespace;
     
-    if($adddelete)
+    flush();
+    
+    if($delete)
         $class = "entry-x-input";
     else
         $class = "entry-input";
@@ -112,7 +128,7 @@ function rowUrlListSelect($adddelete = false, $scrolldown = false, $noreload = f
     
     $html .= "<div class=\"entry-label\">URL list:</div><div class=\"$class\">\n";
     
-    $html .= "<select class=\"$class\" id=\"urllist-select\"";
+    $html .= "<select class=\"$class\" id=\"$id\"";
     
     if(isset($m))
         $html .= " data-m=\"$m\"";
@@ -172,7 +188,7 @@ function rowUrlListSelect($adddelete = false, $scrolldown = false, $noreload = f
         $result->close();
     }
     
-    if($adddelete) {
+    if($add) {
         $html .= "<option value=\"0\"";
         
         if(!$urllist)
@@ -185,7 +201,7 @@ function rowUrlListSelect($adddelete = false, $scrolldown = false, $noreload = f
         
     $html .= "</select>\n";
     
-    if($adddelete)
+    if($delete)
         $html .= "<a href=\"#\" class=\"actionlink urllist-delete\" ><span class=\"remove-entry\">X</span></a>\n";
     
     $html .= "</div>\n";
