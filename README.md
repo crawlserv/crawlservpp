@@ -355,7 +355,18 @@ max_allowed_packet = 1G
 
 On the client side, crawlserv++ will set these values automatically. Due to the restrictions of mySQL, saving corpora (and other field values) larger than 1 GiB is not supported. Larger text corpora will be re-created every time they are used. If logging has been enabled for the module, respective warnings will be written to the log table. Algorithms may either trim or ignore larger data values or throw exceptions logged by the server and stop to work.
 
-Using some algorithms on large corpora may require a large amount of memory. Consider [adjusting the size of your swap](https://bogdancornianu.com/change-swap-size-in-ubuntu/) if memory usage reaches its limit to avoid the server from being killed by the operating system. 
+Using some algorithms on large corpora may require a large amount of memory. Consider [adjusting the size of your swap](https://bogdancornianu.com/change-swap-size-in-ubuntu/) if memory usage reaches its limit to avoid the server from being killed by the operating system.
+
+### Third-party Code
+
+The frontend uses the following third-party code (to be found in [`crawlserv_frontend/js/external`](crawlserv_frontend/js/external):
+
+* [Array.prototype.equals](https://stackoverflow.com/a/14853974) by Rob Bednak
+* [jQuery](https://jquery.com/)
+* [jQuery Form](http://jquery.malsup.com/form/)
+* [jQuery Redirect](https://github.com/mgalante/jquery.redirect/)
+* [Prism](https://prismjs.com/)
+* [Tippy.js](https://atomiks.github.io/tippyjs/)
 
 ## Database
 
