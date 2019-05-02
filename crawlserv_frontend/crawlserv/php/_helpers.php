@@ -78,7 +78,7 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     $result->close();
     
     if($adddelete) {
-        $html .= "option value=\"0\"";
+        $html .= "<option value=\"0\"";
         
         if(!$website)
             $html .= " selected";
