@@ -23,6 +23,8 @@
 #include "Database.hpp"
 #include "WebServer.hpp"
 
+#include "../Data/Compression/Gzip.hpp"
+#include "../Data/Compression/Zlib.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
