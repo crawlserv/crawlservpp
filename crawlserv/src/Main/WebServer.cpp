@@ -227,8 +227,10 @@ namespace crawlservpp::Main {
 							connection,
 							"HTTP/1.1 200 OK\r\n"
 							"Content-Type: text/plain\r\n"
-							"Connection: close\r\n\r\n"
+							"Connection: close\r\n"
+							"%sr\n\r\n"
 							"%s",
+							this->getCorsHeaders().c_str(),
 							this->oldFileName.c_str()
 					);
 
