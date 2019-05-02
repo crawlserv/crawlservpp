@@ -23,6 +23,7 @@ namespace crawlservpp::Helper::Utf8 {
 	 */
 
 	std::string iso88591ToUtf8(const std::string& strIn);
+	bool isValidUtf8(const std::string& stringToCheck, std::string& errTo);
 	bool repairUtf8(const std::string& strIn, std::string& strOut);
 
 	/*
@@ -42,10 +43,14 @@ namespace crawlservpp::Helper::Utf8 {
 	// convert ISO-8859-1 to UTF-8
 	inline std::string iso88591ToUtf8(const std::string& strIn) {
 		std::string strOut;
+
 		strOut.reserve(strIn.size() * 2);
+
 		for(auto i = strIn.begin(); i != strIn.end(); ++i) {
 			uint8_t c = *i;
-			if(c < 0x80) strOut.push_back(c);
+
+			if(c < 0x80)
+				strOut.push_back(c);
 			else {
 				strOut.push_back(0xc0 | c >> 6);
 				strOut.push_back(0x80 | (c & 0x3f));
@@ -54,11 +59,26 @@ namespace crawlservpp::Helper::Utf8 {
 		return strOut;
 	}
 
+	// check for valid UTF-8 string
+	inline bool isValidUtf8(const std::string& stringToCheck, std::string& errTo) {
+		try {
+			return utf8::is_valid(stringToCheck.begin(), stringToCheck.end());
+		}
+		catch(const utf8::exception& e) {
+			errTo = e.what();
+
+			return false;
+		}
+	}
+
 	// replace invalid UTF-8 characters, return whether invalid characters occured, throws Utf8::Exception
 	inline bool repairUtf8(const std::string& strIn, std::string& strOut) {
 		try {
-			if(utf8::is_valid(strIn.begin(), strIn.end())) return false;
+			if(utf8::is_valid(strIn.begin(), strIn.end()))
+				return false;
+
 			utf8::replace_invalid(strIn.begin(), strIn.end(), back_inserter(strOut));
+
 			return true;
 		}
 		catch(const utf8::exception& e) {
