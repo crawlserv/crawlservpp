@@ -7,7 +7,9 @@
  * 
  */
 
-$db_host = "localhost";             // database host
+$cc_host = "http://localhost:8080"; // URL to the host of the command-and-control server
+
+$db_host = "localhost";             // host of the database
 $db_user = "frontend";              // user name (for security reasons, this user should only have SELECT privileges!)
 $db_password = "K*^Qe,qzu=5Vn+gj";  // user password (randomly created test password, to be replaced by your own!)
 $db_name = "crawled";               // database schema
@@ -21,5 +23,9 @@ if($dbConnection->connect_error)
 
 // set charset to UTF-8
 $dbConnection->set_charset("utf8mb4");
+
+// tranfer command-and-control server settings to JavaScript
+
+echo "\n<script>\n\nvar cc_host = \"$cc_host\";\n\n</script>\n\n";
 
 ?>
