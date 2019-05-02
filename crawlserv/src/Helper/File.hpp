@@ -20,14 +20,15 @@ namespace crawlservpp::Helper::File {
 	 */
 
 	// read file content to string
-	std::string readToString(const std::string& fileName);
+	std::string readToString(const std::string& fileName, bool binary);
 
 	/*
 	 * IMPLEMENTATION
 	 */
+
 	// read file content to string
-	inline std::string readToString(const std::string& fileName) {
-		std::ifstream in(fileName.c_str());
+	inline std::string readToString(const std::string& fileName, bool binary) {
+		std::ifstream in(fileName.c_str(), binary ? std::ios_base::binary : std::ios_base::in);
 		std::string result;
 
 		// reserve memory
