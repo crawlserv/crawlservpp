@@ -141,6 +141,7 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerUrlStartupCheck) {
 				this->database.urlDuplicationCheck();
 				this->database.urlEmptyCheck(std::vector<std::string>());
+				this->database.urlHashCheck();
 			}
 		}
 
@@ -1740,7 +1741,7 @@ namespace crawlservpp::Module::Crawler {
 
 				// write to log if necessary
 				if(this->config.crawlerLogging)
-					this->log("Dynamic Redirect: " + oldUrl + " -> " + url);
+					this->log("Dynamic redirect: " + oldUrl + " -> " + url);
 			}
 		}
 		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
@@ -1907,7 +1908,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// write to log if necessary
 		if(this->config.crawlerLogging)
-			this->log("Dynamic Redirect: " + oldUrl + " -> " + url);
+			this->log("Dynamic redirect: " + oldUrl + " -> " + url);
 
 		// get custom cookie header
 		std::string customCookies = this->config.redirectCookies;

@@ -30,7 +30,9 @@ namespace crawlservpp::Module::Crawler {
 	// convert thread ID to string for logging
 	void Database::setId(unsigned long analyzerId) {
 		std::ostringstream idStrStr;
+
 		idStrStr << analyzerId;
+
 		this->idString = idStrStr.str();
 	}
 
@@ -75,17 +77,26 @@ namespace crawlservpp::Module::Crawler {
 		// create table names
 		this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
 		this->crawlingTable = this->urlListTable + "_crawling";
+
 		std::string crawledTable(this->urlListTable + "_crawled");
 
 		// create SQL strings for URL hashing
 		std::string hashQuery("CRC32( ");
-		if(this->urlCaseSensitive) hashQuery += "?";
-		else hashQuery += "LOWER( ? )";
+
+		if(this->urlCaseSensitive)
+			hashQuery += "?";
+		else
+			hashQuery += "LOWER( ? )";
+
 		hashQuery += " )";
 
 		std::string urlHash("CRC32( ");
-		if(this->urlCaseSensitive) urlHash += "url";
-		else urlHash += "LOWER( url )";
+
+		if(this->urlCaseSensitive)
+			urlHash += "url";
+		else
+			urlHash += "LOWER( url )";
+
 		urlHash.push_back(')');
 
 		// check connection to database
@@ -116,6 +127,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares getNextUrl()...");
 
 			std::ostringstream sqlQueryStrStr;
+
 			sqlQueryStrStr <<	"SELECT `" << this->urlListTableAlias << "1`.id AS id,"
 								" `" << this->urlListTableAlias << "1`.url AS url"
 								" FROM `" << this->urlListTable << "`"
@@ -263,6 +275,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [2/2]...");
 
 			std::ostringstream sqlQueryStrStr;
+
 			sqlQueryStrStr <<	"INSERT INTO `" << this->crawlingTable << "`(id, url, locktime)"
 								" VALUES"
 								" ("
@@ -364,8 +377,11 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares urlDuplicationCheck()...");
 
 			std::string groupBy;
-			if(this->urlCaseSensitive) groupBy = "url";
-			else groupBy = "LOWER(url)";
+
+			if(this->urlCaseSensitive)
+				groupBy = "url";
+			else
+				groupBy = "LOWER(url)";
 
 			this->ps.urlDuplicationCheck = this->addPreparedStatement(
 					"SELECT CAST( " + groupBy + " AS BINARY ) AS url, COUNT( " + groupBy + " )"
@@ -398,13 +414,22 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.urlEmptyCheck) && (this->urlStartupCheck || this->urlDebug)) {
+		if(!(this->ps.urlEmptyCheck) && this->urlStartupCheck) {
 			if(this->verbose)
 				this->log("[#" + this->idString + "] prepares urlHashCheck()...");
 
 			this->ps.urlEmptyCheck = this->addPreparedStatement(
 					"SELECT id FROM `" + this->urlListTable + "`"
 					" WHERE url = '' LIMIT 1"
+			);
+		}
+
+		if(!(this->ps.getUrls) && this->urlStartupCheck) {
+			if(this->verbose)
+				this->log("[# " + this->idString + "] prepares getUrls()...");
+
+			this->ps.getUrls = this->addPreparedStatement(
+					"SELECT url FROM `" + this->urlListTable + "`"
 			);
 		}
 	}
@@ -457,6 +482,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, currentUrlId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -614,6 +640,7 @@ namespace crawlservpp::Module::Crawler {
 			result = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlGetId", e); }
+
 		return result;
 	}
 
@@ -642,6 +669,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// re-enable locking
@@ -708,10 +736,13 @@ namespace crawlservpp::Module::Crawler {
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next()) {
-				throw DatabaseException("Crawler::Database::urlDuplicationCheck(): Duplicate URL \'"
-						+ sqlResultSet->getString("url") + "\" in `" + this->urlListTable + "`");
-			}
+			if(sqlResultSet && sqlResultSet->next())
+				throw DatabaseException(
+						"Crawler::Database::urlDuplicationCheck(): Duplicate URL \'"
+						+ sqlResultSet->getString("url")
+						+ "\" in `"
+						+ this->urlListTable + "`"
+				);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
 	}
@@ -758,7 +789,7 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
 	}
 
-	// check for empty URLs in the URL list, throw DatabaseException if an empty URL exists
+	// check for empty URLs in the URL list, throws DatabaseException if an empty URL exists
 	void Database::urlEmptyCheck(const std::vector<std::string>& urlsAdded) {
 		// check connection
 		this->checkConnection();
@@ -781,20 +812,55 @@ namespace crawlservpp::Module::Crawler {
 					// DEBUG
 					std::cout << "\n Empty URL in `" + this->urlListTable + "` after adding:";
 
-					for(auto i = urlsAdded.begin(); i != urlsAdded.end(); ++i) {
+					for(auto i = urlsAdded.begin(); i != urlsAdded.end(); ++i)
 						std::cout << "\n \'" << *i << "\'";
-					}
 
 					std::cout << std::flush;
 				}
 
 				throw DatabaseException(
 						"Crawler::Database::urlEmptyCheck():"
-						" Empty URL in `" + this->urlListTable + "`"
+						" Empty URL in `"
+						+ this->urlListTable
+						+ "`"
 				);
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
+	}
+
+	// check for URLs containing invalid UTF-8 characters in the URL list, throws DatabaseException if invalid URL exists
+	void Database::urlUtf8Check() {
+		// get all URLs from URL list
+		std::queue<std::string> urls(this->getUrls());
+
+		// check URLs for invalid UTF-8
+		while(!urls.empty()) {
+			std::string err;
+
+			if(!Helper::Utf8::isValidUtf8(urls.front(), err)) {
+				if(err.empty())
+					throw DatabaseException(
+							"Crawler::Database::urlUtf8Check(): URL containing invalid UTF-8 in `"
+							+ this->urlListTable
+							+ "` ["
+							+ urls.front()
+							+ "]"
+					);
+				else
+					throw DatabaseException(
+							"Crawler::Database::urlUtf8Check(): "
+							+ err
+							+ " in `"
+							+ this->urlListTable
+							+ "` ["
+							+ urls.front()
+							+ "]"
+					);
+			}
+
+			urls.pop();
+		}
 	}
 
 	// get the URL lock end time of a specific URL from database
@@ -817,6 +883,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -848,12 +915,12 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next()) {
+			if(sqlResultSet && sqlResultSet->next())
 				return sqlResultSet->getBoolean("success");
-			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isUrlCrawled", e); }
 
@@ -919,6 +986,7 @@ namespace crawlservpp::Module::Crawler {
 		// check argument
 		if(!urlId)
 			throw DatabaseException("Crawler::Database::unLockUrlIfOk(): No URL lock ID specified");
+
 		if(lockTime.empty())
 			throw DatabaseException("Crawler::Database::unLockUrlIfOk(): URL lock is missing");
 
@@ -937,6 +1005,7 @@ namespace crawlservpp::Module::Crawler {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setString(2, lockTime);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::unLockUrlIfOk", e); }
@@ -947,6 +1016,7 @@ namespace crawlservpp::Module::Crawler {
 		// check argument
 		if(!urlId)
 			throw DatabaseException("Crawler::Database::setUrlFinishedIfOk(): No crawling ID specified");
+
 		if(lockTime.empty())
 			throw DatabaseException("Crawler::Database::setUrlFinishedIfOk(): URL lock is missing");
 
@@ -965,6 +1035,7 @@ namespace crawlservpp::Module::Crawler {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setString(2, lockTime);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::setUrlFinishedIfOk", e); }
@@ -994,23 +1065,31 @@ namespace crawlservpp::Module::Crawler {
 				sqlStatement.setUInt(2, response);
 				sqlStatement.setString(3, type);
 				sqlStatement.setString(4, content);
+
 				Database::sqlExecute(sqlStatement);
 			}
 			else if(this->logging) {
 				// show warning about content size
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
+
 				logStrStr.imbue(std::locale(""));
+
 				logStrStr << "[#" << this->idString << "] WARNING:"
 						" Some content could not be saved to the database, because its size ("
 						<< content.size() << " bytes) exceeds the ";
-				if(content.size() > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
+
+				if(content.size() > 1073741824)
+					logStrStr << "mySQL maximum of 1 GiB.";
 				else {
 					logStrStr << "current mySQL server maximum of "
 							<< this->getMaxAllowedPacketSize() << " bytes.";
+
 					adjustServerSettings = true;
 				}
+
 				this->log(logStrStr.str());
+
 				if(adjustServerSettings)
 					this->log(
 							"[#" + this->idString + "]"
@@ -1047,23 +1126,30 @@ namespace crawlservpp::Module::Crawler {
 				sqlStatement.setUInt(3, response);
 				sqlStatement.setString(4, type);
 				sqlStatement.setString(5, content);
+
 				Database::sqlExecute(sqlStatement);
 			}
 			else if(this->logging) {
 				// show warning about content size
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
+
 				logStrStr.imbue(std::locale(""));
+
 				logStrStr << "[#" << this->idString << "] WARNING:"
 						" Some content could not be saved to the database, because its size ("
 						<< content.size() << " bytes) exceeds the ";
-				if(content.size() > 1073741824) logStrStr << "mySQL maximum of 1 GiB.";
+
+				if(content.size() > 1073741824)
+					logStrStr << "mySQL maximum of 1 GiB.";
 				else {
 					logStrStr << "current mySQL server maximum of "
 							<< this->getMaxAllowedPacketSize() << " bytes.";
 					adjustServerSettings = true;
 				}
+
 				this->log(logStrStr.str());
+
 				if(adjustServerSettings)
 					this->log(
 							"[#" + this->idString + "]"
@@ -1096,6 +1182,7 @@ namespace crawlservpp::Module::Crawler {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setString(2, timeStamp);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -1115,6 +1202,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// generate INSERT INTO ... VALUES clause
 		std::ostringstream sqlQueryStr;
+
 		sqlQueryStr << "INSERT IGNORE INTO `" << this->urlListTable << "`(id, url, hash) VALUES ";
 
 		// generate placeholders
@@ -1135,11 +1223,41 @@ namespace crawlservpp::Module::Crawler {
 
 		// remove last comma and space
 		std::string sqlQuery = sqlQueryStr.str();
+
 		sqlQuery.pop_back();
 		sqlQuery.pop_back();
 
 		// return query
 		return sqlQuery;
+	}
+
+	// get all URLs from the URL list
+	std::queue<std::string> Database::getUrls() {
+		std::queue<std::string> result;
+
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(!(this->ps.getUrls))
+			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrls()");
+
+		// get prepared SQL statement
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);
+
+		// get URLs from database
+		try {
+			// execute SQL query
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
+			// get result
+			if(sqlResultSet)
+				while(sqlResultSet->next())
+					result.emplace(sqlResultSet->getString("url"));
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrls", e); }
+
+		return result;
 	}
 
 } /* crawlservpp::Module::Crawler */

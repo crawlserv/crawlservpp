@@ -11,6 +11,7 @@
 #define MODULE_CRAWLER_DATABASE_HPP_
 
 #include "../../Helper/Portability/mysqlcppconn.h"
+#include "../../Helper/Utf8.hpp"
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/Database.hpp"
 
@@ -62,7 +63,6 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL functions
 		unsigned long getUrlId(const std::string& url);
-
 		IdString getNextUrl(unsigned long currentUrlId);
 		bool addUrlIfNotExists(const std::string& urlString, bool manual);
 		unsigned long addUrlsIfNotExist(std::queue<std::string, std::deque<std::string>>& urls);
@@ -74,6 +74,7 @@ namespace crawlservpp::Module::Crawler {
 		void urlDuplicationCheck();
 		void urlHashCheck();
 		void urlEmptyCheck(const std::vector<std::string>& urlsAdded);
+		void urlUtf8Check();
 
 		// URL locking functions
 		std::string getUrlLockTime(unsigned long urlId);
@@ -141,10 +142,12 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short urlHashCheck;
 			unsigned short urlHashCorrect;
 			unsigned short urlEmptyCheck;
+			unsigned short getUrls;
 		} ps;
 
-		// helper function
+		// helper functions
 		std::string queryAddUrlsIfNotExist(unsigned int numberOfUrls, const std::string& hashQuery);
+		std::queue<std::string> getUrls();
 	};
 
 	} /* crawlservpp::Module::Crawler */
