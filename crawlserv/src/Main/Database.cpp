@@ -335,7 +335,7 @@ namespace crawlservpp::Main {
 		repaired = Helper::Utf8::repairUtf8(logEntry, repairedEntry);
 
 		if(repaired)
-			repairedEntry += " [invalid UTF-8 characters removed from log]";
+			repairedEntry += " [invalid UTF-8 character(s) removed from log]";
 
 		// check connection
 		this->checkConnection();
