@@ -1,20 +1,20 @@
 /*
  * File.hpp
  *
- * Namespace with global helper function for file access.
+ * Namespace with function for file access.
  *
  *  Created on: Apr 25, 2019
  *      Author: ans
  */
 
-#ifndef HELPER_FILE_HPP_
-#define HELPER_FILE_HPP_
+#ifndef DATA_FILE_HPP_
+#define DATA_FILE_HPP_
 
 #include <fstream>
 #include <streambuf>
 #include <string>
 
-namespace crawlservpp::Helper::File {
+namespace crawlservpp::Data::File {
 	/*
 	 * DECLARATION
 	 */
@@ -45,6 +45,6 @@ namespace crawlservpp::Helper::File {
 		return result;
 	}
 
-} /* crawlservpp::Helper::File */
+} /* crawlservpp::Data::File */
 
-#endif /* HELPER_FILE_HPP_ */
+#endif /* DATA_FILE_HPP_ */
