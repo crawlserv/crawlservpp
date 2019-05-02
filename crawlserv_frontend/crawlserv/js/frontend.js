@@ -1621,7 +1621,7 @@ jQuery(function($) {
 		// get type of action
 		var action = $(this).data("action");
 		
-		// set arguments and options
+		// set arguments
 		var args = {}
 		
 		args["datatype"] = $("#data-type-select").val();
@@ -1631,29 +1631,25 @@ jQuery(function($) {
 			args["compression"] = $("#compression-select").val();
 		}
 		
-		var options = {};
-		
 		// (website, source URL list, target URL list)
 		if($("#website-select").length)
-			options["website"] = parseInt($("#website-select").val(), 10);
+			args["website"] = parseInt($("#website-select").val(), 10);
 		
 		if($("#urllist-source").length)
-			options["urllist-source"] = parseInt($("#urllist-source").val(), 10);
+			args["urllist-source"] = parseInt($("#urllist-source").val(), 10);
 		
 		if($("#urllist-target").length)
-			options["urllist-target"] = parseInt($("#urllist-target").val(), 10);
+			args["urllist-target"] = parseInt($("#urllist-target").val(), 10);
 		
 		// (header options for text files)
 		if($("#is-firstline-header").length)
-			options["is-firstline-header"] = $("#is-firstline-header").prop("checked");
+			args["is-firstline-header"] = $("#is-firstline-header").prop("checked");
 		
 		if($("#write-firstline-header").length)
-			options["write-firstline-header"] = $("#write-firstline-header").prop("checked");
+			args["write-firstline-header"] = $("#write-firstline-header").prop("checked");
 		
 		if($("#firstline-header").length)
-			options["firstline-header"] = $("#firstline-header").val();
-		
-		args["options"] = JSON.stringify(options, null, 1);
+			args["firstline-header"] = $("#firstline-header").val();
 		
 		if(action == "import") {
 			// check whether file has been selected
