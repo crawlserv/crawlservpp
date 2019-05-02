@@ -208,7 +208,7 @@ if($action == "import") {
     
     echo "<div class=\"entry-label\">File:</div><div class=\"entry-input\">\n";
     
-    echo "<form id=\"file-form\" action=\"$cc_host\" method=\"POST\">\n";
+    echo "<form id=\"file-form\" action=\"$cc_host\" method=\"POST\" enctype=\"multipart/form-data\">\n";
     
     echo "<input id=\"file-select\" type=\"file\" name=\"fileToUpload\" />\n";
     
