@@ -3325,6 +3325,30 @@ namespace crawlservpp::Module::Crawler {
 		// sort and remove duplicates
 		Helper::Strings::sortAndRemoveDuplicates(urls, this->config.crawlerUrlCaseSensitive);
 
+		// remove URLs containing invalid UTF-8
+		std::queue<std::string> warningsTo;
+
+		std::remove_if(urls.begin(), urls.end(), [&warningsTo](const auto& url) {
+				std::string err;
+
+				if(Helper::Utf8::isValidUtf8(url, err))
+					return false;
+
+				if(err.empty())
+					warningsTo.emplace("WARNING: Skipped URL with invalid character(s) [" + url + "].");
+				else
+					warningsTo.emplace("WARNING: Skipped URL because of " + err + " [" + url + "].");
+
+				return true;
+		});
+
+		if(this->config.crawlerLogging)
+			while(!warningsTo.empty()) {
+				this->log(warningsTo.front());
+
+				warningsTo.pop();
+			}
+
 		return urls;
 	}
 
