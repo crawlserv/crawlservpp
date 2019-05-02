@@ -98,7 +98,7 @@ function refreshData() {
 	if($("#server-status").length > 0) {
 		var timerStart = +new Date();
 		
-		$("#server-status").load("http://localhost:8080", function(response, status, xhr) {
+		$("#server-status").load(cc_host, function(response, status, xhr) {
 			if(status == "error") {
 				$("#server-status").html("<div class='no-server-status'>crawlserv not found</div>");
 				
@@ -193,7 +193,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 			}
 		};
 		
-		xhttp.open("POST", "http://localhost:8080");
+		xhttp.open("POST", cc_host);
 		
 		xhttp.setRequestHeader("Content-Type", "application/json");
 		
@@ -206,7 +206,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 		$.ajax(
 				{
 					type: "POST",
-					url: "http://localhost:8080",
+					url: cc_host,
 					data: data,
 					contentType: "application/json; charset=utf-8",
 					dataType: "json",
@@ -224,7 +224,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 								$.ajax(
 										{
 											type: "POST",
-											url: "http://localhost:8080",
+											url: cc_host,
 											data: JSON.stringify(cmdArgs, null, 1),
 											contentType: "application/json; charset=utf-8",
 											dataType: "json", success: function(data) {
