@@ -131,8 +131,9 @@ div.content-block {
 	background-color:#ffffff;
 	padding-left:10px;
 	padding-right:10px;
-	padding-top:6px;
+	padding-top:3px;
 	padding-bottom:2px;
+	margin-top:3px;
 }
 
 /* SERVER STATUS */
@@ -250,6 +251,13 @@ option {
 div.entry-row {
 	display:table;
 	margin-top:2px;
+}
+div.entry-row-right {
+	display:table;
+	margin-top:2px;
+	width:auto;
+	margin-right:0px;
+	margin-left:auto;
 }
 
 /* ENTRY LABELS */
