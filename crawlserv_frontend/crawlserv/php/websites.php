@@ -174,12 +174,10 @@ else
 
 <?php
 
-if($website) {
-    flush();
-    
+if($website) {    
     echo "<div class=\"content-block\">\n";
     
-    echo rowUrlListSelect(true);
+    echo rowUrlListSelect(true, true);
     
     echo "</div>\n";
     
