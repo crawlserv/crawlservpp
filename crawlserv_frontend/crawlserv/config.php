@@ -3,7 +3,8 @@
 /*
  * config.php
  * 
- * Configuration file for the crawlserv++ frontent allowing read-only database access.
+ * Configuration file for the crawlserv++ frontent
+ *  allowing read-only database access (and access to the command-and-control server).
  * 
  */
 
@@ -25,7 +26,6 @@ if($dbConnection->connect_error)
 $dbConnection->set_charset("utf8mb4");
 
 // tranfer command-and-control server settings to JavaScript
-
-echo "\n<script>\n\nvar cc_host = \"$cc_host\";\n\n</script>\n\n";
+echo "<script>\n\nvar cc_host = \"$cc_host\";\n\n</script>\n";
 
 ?>
