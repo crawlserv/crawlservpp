@@ -142,12 +142,12 @@ if($action != "merge") {
     
     echo ">gzip (Boost $boost_version)</option>\n";
     
-    echo "<option value=\"zip\"";
+    echo "<option value=\"zlib\"";
     
-    if($compression == "zip")
+    if($compression == "zlib")
         echo " selected";
-    
-    echo ">ZIP (zlib $zlib_version)</option>\n";
+        
+        echo ">zlib (zlib $zlib_version)</option>\n";
     
     echo "</select>";
     
