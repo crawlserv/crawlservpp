@@ -291,9 +291,9 @@ target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 
 # set library options
-target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_HTTP_STREAMING_MULTIPART=1)
+target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_HTTP_STREAMING_MULTIPART)
 target_compile_definitions(${PROJECT_NAME} PRIVATE PCRE2_CODE_UNIT_WIDTH=8)
-target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_HAS_STDSTRING=1)
+target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_HAS_STDSTRING)
 
 # set compiler options
 if(MSVC)
