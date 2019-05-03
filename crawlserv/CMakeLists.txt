@@ -288,6 +288,7 @@ target_link_libraries(${PROJECT_NAME} ${PCRE2_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${mysqlcppconn_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
 
+# NOTE: The following might be removed in the near future.
 target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 
 # set library options
