@@ -2132,7 +2132,7 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerLogging) {
 				if(utf8Error.empty())
 					this->log(
-							"WARNING: Ignored URL containing invalid UTF-8 character(s) ["
+							"Ignored URL containing invalid UTF-8 character(s) ["
 							+ url
 							+ " from "
 							+ from
@@ -2140,7 +2140,7 @@ namespace crawlservpp::Module::Crawler {
 					);
 				else
 					this->log(
-							"WARNING: Ignored URL because "
+							"Ignored URL because "
 							+ utf8Error
 							+ " ["
 							+ url
