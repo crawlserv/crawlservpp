@@ -116,7 +116,7 @@ if($action != "merge") {
                 $boost_version = $row["version"];
             else if(strtolower($row["name"]) == "zlib")
                 $zlib_version = $row["version"];
-            else if(strtolower($row["name"] == "miniz-cpp"))
+            else if(strtolower($row["name"] == "miniz-cpp with miniz"))
                 $mz_version = $row["version"];
         }
     
