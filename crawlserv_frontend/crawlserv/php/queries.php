@@ -36,23 +36,37 @@ $result = $dbConnection->query(
     " FROM crawlserv_versions"
 );
 
-if(!$result)
-    die("ERROR: Could not get library versions from database.");
-
-while($row = $result->fetch_assoc()) {
-    if(strtolower($row["name"]) == "pcre2")
-        $pcre_version = $row["version"];
-    else if(strtolower($row["name"]) == "tidy-html5")
-        $tidy_version = $row["version"];
-    else if(strtolower($row["name"]) == "pugixml")
-        $pugixml_version = $row["version"];
-    else if(strtolower($row["name"]) == "rapidjson")
-        $rapidjson_version = $row["version"];
-    else if(strtolower($row["name"]) == "jsoncons")
-        $jsoncons_version = $row["version"];
+if($result) {
+    while($row = $result->fetch_assoc()) {
+        if(strtolower($row["name"]) == "pcre2")
+            $pcre_version = $row["version"];
+        else if(strtolower($row["name"]) == "tidy-html5")
+            $tidy_version = $row["version"];
+        else if(strtolower($row["name"]) == "pugixml")
+            $pugixml_version = $row["version"];
+        else if(strtolower($row["name"]) == "rapidjson")
+            $rapidjson_version = $row["version"];
+        else if(strtolower($row["name"]) == "jsoncons")
+            $jsoncons_version = $row["version"];
+    }
+    
+    $result->close();
 }
 
-$result->close();
+if(!isset($pcre_version))
+    $pcre_version = "[NOT FOUND]";
+
+if(!isset($tidy_version))
+    $tidy_version = "[NOT FOUND]";
+
+if(!isset($pugixml_version))
+    $pugixml_version = "[NOT FOUND]";
+
+if(!isset($rapidjson_version))
+    $rapidjson_version = "[NOT FOUND]";
+
+if(!isset($jsoncons_version))
+    $jsoncons_version = "[NOT FOUND]";
 
 if(!$website)
     $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website IS NULL ORDER BY name");

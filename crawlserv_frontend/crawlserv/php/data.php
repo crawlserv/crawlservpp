@@ -110,19 +110,29 @@ if($action != "merge") {
         " FROM crawlserv_versions"
         );
     
-    if(!$result)
-        die("ERROR: Could not get library versions from database.");
-        
-    while($row = $result->fetch_assoc()) {
-        if(strtolower($row["name"]) == "boost")
-            $boost_version = $row["version"];
-        else if(strtolower($row["name"]) == "zlib")
-            $zlib_version = $row["version"];
+    if($result) {
+        while($row = $result->fetch_assoc()) {
+            if(strtolower($row["name"]) == "boost")
+                $boost_version = $row["version"];
+            else if(strtolower($row["name"]) == "zlib")
+                $zlib_version = $row["version"];
+            else if(strtolower($row["name"] == "miniz-cpp"))
+                $mz_version = $row["version"];
+        }
+    
+        $result->close();
     }
     
-    $result->close();
+    if(!isset($boost_version))
+        $boost_version = "[NOT FOUND]";
     
-    echo "<div class=\"entry-row\">\n";
+    if(!isset($zlib_version))
+        $zlib_version = "[NOT FOUND]";
+    
+    if(!isset($mz_version))
+        $mz_version = "[NOT FOUND]";
+    
+    echo "<div id=\"compression-div\" class=\"entry-row\">\n";
     
     echo "<div class=\"entry-label\">Compression:</div><div class=\"entry-input\">\n";
     
@@ -149,7 +159,23 @@ if($action != "merge") {
         
         echo ">zlib (zlib $zlib_version)</option>\n";
     
+    echo "<option value=\"zip\"";
+    
+    if($compression == "zip")
+        echo " selected";
+        
+    echo ">ZIP archive (miniz-cpp $mz_version)</option>\n";
+    
     echo "</select>";
+    
+    echo "</div>\n</div>\n";
+    
+    // compression path
+    echo "<div id=\"compression-path-div\" class=\"entry-row\">\n";
+    
+    echo "<div class=\"entry-label\">Sub-path:</div><div class=\"entry-input\">\n";
+    
+    echo "<input id=\"compression-path\" type=\"text\" class=\"entry-input\" />\n";
     
     echo "</div>\n</div>\n";
 }
