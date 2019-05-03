@@ -13,6 +13,7 @@
 #include "../Helper/Portability/mysqlcppconn.h"
 
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
+#include "../_extern/miniz-cpp/zip_file.hpp"
 #include "../_extern/mongoose/mongoose.h"
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 
@@ -78,6 +79,9 @@ namespace crawlservpp::Helper::Versions {
 
 		// mongoose
 		result.emplace_back("mongoose", MG_VERSION);
+
+		// miniz-cpp with miniz
+		result.emplace_back("miniz-cpp with miniz", MZ_VERSION);
 
 		// MySQL Connector/C++
 		sql::Driver * driver = get_driver_instance();
