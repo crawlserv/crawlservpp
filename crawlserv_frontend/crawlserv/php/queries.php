@@ -234,9 +234,7 @@ if($query && $queryTextOnly)
 <div class="entry-row">
 <div class="entry-label-top">Query text:</div><div class="entry-input">
 
-<textarea class="entry-input" id="query-text" spellcheck="false" autocomplete="off">
-
-<?php
+<textarea class="entry-input" id="query-text" spellcheck="false" autocomplete="off"><?php
 
 if($query)
     echo htmlspecialchars($queryText, ENT_QUOTES);
@@ -336,9 +334,7 @@ for help with your query.</p>
 <div class="entry-row">
 <div class="entry-label-top" id="query-test-label">Test text:</div><div class="entry-input">
 
-<textarea class="entry-input" id="query-test-text" spellcheck="false" autocomplete="off">
-
-<?php
+<textarea class="entry-input" id="query-test-text" spellcheck="false" autocomplete="off"><?php
 
 if(isset($_POST["test"]))
     echo htmlspecialchars($_POST["test"], ENT_QUOTES);
