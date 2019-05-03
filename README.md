@@ -314,6 +314,7 @@ The following third-party libraries are used by the command-and-control server:
 * [HTML Tidy API](http://www.html-tidy.org/)
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8`)
+* [zlib](https://www.zlib.net/)
 
 While `date.h`, `jsoncons`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
 
