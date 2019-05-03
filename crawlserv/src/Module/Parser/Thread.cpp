@@ -833,7 +833,7 @@ namespace crawlservpp::Module::Parser {
 						"WARNING: Content for parsed ID '"
 						+ parsedData.parsedId
 						+ "' already exists ["
-						+ this->urls.front()
+						+ this->urls.front().second
 						+ "]."
 				);
 
@@ -988,9 +988,9 @@ namespace crawlservpp::Module::Parser {
 				this->log(
 						"ERROR: Could not parse date/time \'"
 						+ parsedData.dateTime
-						+ "\' ["
-						+ this->urls.front()
-						+ "].");
+						+ "\' from "
+						+ this->urls.front().second
+				);
 
 			parsedData.dateTime = "";
 		}
