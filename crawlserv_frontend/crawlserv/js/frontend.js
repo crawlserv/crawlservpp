@@ -13,9 +13,6 @@ var helperXPath = null;
 var helperJSONPointer = null;
 var helperJSONPath = null;
 
-// detached options
-var optionCompressionPath = null;
-
 // fullscreen mode
 var fullscreen = false;
 
@@ -98,9 +95,6 @@ jQuery(function($) {
 		
 		// check import/export inputs
 		$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
-		
-		if($("#compression-select").val() != "zip" && !optionCompressionPath)
-			optionCompressionPath = $("#compression-path-div").detach();
 		
 		// prepare form for file upload
 		$("#file-form").ajaxForm();
@@ -1612,19 +1606,6 @@ jQuery(function($) {
 		
 		return false;
 	});
-	
-// CHANGE EVENT: compression type selected
-	$("#compression-select").on("change", function() {
-		if($(this).val() == "zip") {
-			if(optionCompressionPath) {
-				optionCompressionPath.insertAfter("#compression-div");
-				
-				optionCompressionPath = null;
-			}
-		}
-		else if(!optionCompressionPath)
-			optionCompressionPath = $("#compression-path-div").detach();
-	});
 
 // CHANGE EVENT: write first-line header toggled
 	$("#write-firstline-header").on("change", function() {
@@ -1645,9 +1626,6 @@ jQuery(function($) {
 		if(action != "merge") {
 			args["filetype"] = $("#file-type-select").val();
 			args["compression"] = $("#compression-select").val();
-			
-			if(!optionCompressionPath)
-				args["compression-path"] = $("#compression-path").val();
 		}
 		
 		// (website, source URL list, target URL list)

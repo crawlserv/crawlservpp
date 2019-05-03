@@ -13,6 +13,3 @@
 [submodule "crawlserv/src/_extern/jsoncons"]
 	path = crawlserv/src/_extern/jsoncons
 	url = https://github.com/danielaparker/jsoncons
-[submodule "crawlserv/src/_extern/miniz-cpp"]
-	path = crawlserv/src/_extern/miniz-cpp
-	url = https://github.com/tfussell/miniz-cpp/
