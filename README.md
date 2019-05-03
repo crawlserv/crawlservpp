@@ -81,9 +81,9 @@ Even without access to the frontend you can shut down the server from the termin
 
 **NB!** When compiling the source manually, the following definitions need to be set in advance:
 
-* `#define MG_ENABLE_HTTP_STREAMING_MULTIPART 1`
+* `#define MG_ENABLE_HTTP_STREAMING_MULTIPART`
 * `#define PCRE2_CODE_UNIT_WIDTH 8`
-* `#define RAPIDJSON_HAS_STDSTRING 1`
+* `#define RAPIDJSON_HAS_STDSTRING`
 
 ## Command-and-Control Server
 
