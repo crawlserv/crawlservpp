@@ -829,7 +829,13 @@ namespace crawlservpp::Module::Parser {
 			this->logParsingErrors(content.first);
 
 			if(this->config.generalLogging)
-				this->log("WARNING: Content for parsed ID '" + parsedData.parsedId + "' already exists.");
+				this->log(
+						"WARNING: Content for parsed ID '"
+						+ parsedData.parsedId
+						+ "' already exists ["
+						+ this->urls.front()
+						+ "]."
+				);
 
 			return false;
 		}
@@ -979,7 +985,12 @@ namespace crawlservpp::Module::Parser {
 		// check whether date/time conversion was successful
 		if(!parsedData.dateTime.empty() && !dateTimeSuccess) {
 			if(this->config.generalLogging)
-				this->log("ERROR: Could not parse date/time \'" + parsedData.dateTime + "\'!");
+				this->log(
+						"ERROR: Could not parse date/time \'"
+						+ parsedData.dateTime
+						+ "\' ["
+						+ this->urls.front()
+						+ "].");
 
 			parsedData.dateTime = "";
 		}
