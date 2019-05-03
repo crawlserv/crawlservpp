@@ -210,9 +210,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 					data: data,
 					contentType: "application/json; charset=utf-8",
 					dataType: "json",
-					success: function(data) {
-						console.log(data);
-						
+					success: function(data) {						
 						var timerEnd = +new Date();
 						
 						if(data["confirm"]) {
