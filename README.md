@@ -48,6 +48,7 @@ The following additional components are required to build crawlserv++ on your sy
 * the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
 * the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
+* the [`zlib`](https://www.zlib.net/) library (preinstalled on many Linux systems)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
 *&ast; Older Linux distributions may only have `libtidy-dev` v0.9 available. Install the current version [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the ones from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).*
