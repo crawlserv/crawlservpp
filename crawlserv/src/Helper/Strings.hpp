@@ -34,14 +34,24 @@ namespace crawlservpp::Helper::Strings {
 	std::string join(
 			const std::vector<std::string>& strings,
 			char delimiter,
-			bool ignoreEmpty,
-			bool reserveMemory
+			bool ignoreEmpty
 	);
 	std::string join(
 			const std::vector<std::string>& strings,
 			const std::string& delimiter,
+			bool ignoreEmpty
+	);
+	void join(
+			const std::vector<std::string>& strings,
+			char delimiter,
 			bool ignoreEmpty,
-			bool reserveMemory
+			std::string& appendTo
+	);
+	void join(
+			const std::vector<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty,
+			std::string& appendTo
 	);
 	std::vector<std::string> split(const std::string& str, char delimiter);
 	std::vector<std::string> split(const std::string& str, const std::string& delimiter);
@@ -141,24 +151,22 @@ namespace crawlservpp::Helper::Strings {
 	inline std::string join(
 			const std::vector<std::string>& strings,
 			char delimiter,
-			bool ignoreEmpty,
-			bool reserveMemory
+			bool ignoreEmpty
 	) {
+		unsigned long size = 0;
 		std::string result;
 
-		if(reserveMemory) {
-			unsigned long size = 0;
+		// calculate and reserve needed memory
+		for(auto i = strings.begin(); i != strings.end(); ++i)
+			if(!ignoreEmpty || !(i->empty()))
+				size += i->size() + 1;
 
-			// calculate and reserve needed memory
-			for(auto i = strings.begin(); i != strings.end(); ++i)
-				if(!ignoreEmpty || !(i->empty())) size += i->size() + 1;
-
-			result.reserve(size);
-		}
+		result.reserve(size);
 
 		// create string
 		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty())) result += *i + delimiter;
+			if(!ignoreEmpty || !(i->empty()))
+				result += *i + delimiter;
 
 		if(!result.empty())
 			result.pop_back();
@@ -171,30 +179,80 @@ namespace crawlservpp::Helper::Strings {
 	inline std::string join(
 			const std::vector<std::string>& strings,
 			const std::string& delimiter,
-			bool ignoreEmpty,
-			bool reserveMemory
+			bool ignoreEmpty
 	) {
+		unsigned long size = 0;
 		std::string result;
 
-		if(reserveMemory) {
-			unsigned long size = 0;
+		// calculate and reserve needed memory
+		for(auto i = strings.begin(); i != strings.end(); ++i)
+			if(!ignoreEmpty || !(i->empty()))
+				size += i->size() + delimiter.size();
 
-			// calculate and reserve needed memory
-			for(auto i = strings.begin(); i != strings.end(); ++i)
-				if(!ignoreEmpty || !(i->empty())) size += i->size() + delimiter.size();
-
-			result.reserve(size);
-		}
+		result.reserve(size);
 
 		// create string
 		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty())) result += *i + delimiter;
+			if(!ignoreEmpty || !(i->empty()))
+				result += *i + delimiter;
 
 		if(!result.empty())
 			result.pop_back();
 
 		// return string
 		return result;
+	}
+
+	// concatenate all elements of a vector and append them to a single string
+	inline void join(
+			const std::vector<std::string>& strings,
+			char delimiter,
+			bool ignoreEmpty,
+			std::string& appendTo
+	) {
+		const unsigned long oldSize = appendTo.size();
+		unsigned long size = oldSize;
+
+		// calculate and reserve needed memory
+		for(auto i = strings.begin(); i != strings.end(); ++i)
+			if(!ignoreEmpty || !(i->empty()))
+				size += i->size() + 1;
+
+		appendTo.reserve(size);
+
+		// append string
+		for(auto i = strings.begin(); i != strings.end(); ++i)
+			if(!ignoreEmpty || !(i->empty()))
+				appendTo += *i + delimiter;
+
+		if(appendTo.size() > oldSize)
+			appendTo.pop_back();
+	}
+
+	// concatenate all elements of a vector and append them to a single string
+	inline void join(
+			const std::vector<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty,
+			std::string& appendTo
+	) {
+		const unsigned long oldSize = appendTo.size();
+		unsigned long size = oldSize;
+
+		// calculate and reserve needed memory
+		for(auto i = strings.begin(); i != strings.end(); ++i)
+			if(!ignoreEmpty || !(i->empty()))
+				size += i->size() + delimiter.size();
+
+		appendTo.reserve(size);
+
+		// append string
+		for(auto i = strings.begin(); i != strings.end(); ++i)
+			if(!ignoreEmpty || !(i->empty()))
+				appendTo += *i + delimiter;
+
+		if(appendTo.size() > oldSize)
+			appendTo.pop_back();
 	}
 
 	// split string into vector of strings
