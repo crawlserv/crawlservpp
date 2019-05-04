@@ -138,6 +138,9 @@ namespace crawlservpp::Wrapper {
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
 
+		// wrapper for URL list helper function
+		void setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive);
+
 		// wrapper for exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
 
@@ -363,6 +366,11 @@ namespace crawlservpp::Wrapper {
 	// delete a table from the database if it exists
 	inline void Database::deleteTable(const std::string& tableName) {
 		this->database.deleteTable(tableName);
+	}
+
+	// set whether the specified URL list is case-sensitive
+	inline void Database::setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive) {
+		this->database.setUrlListCaseSensitive(listId, isCaseSensitive);
 	}
 
 	// catch SQL exception and re-throw it as ConnectionException or Exception
