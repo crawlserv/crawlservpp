@@ -10,7 +10,7 @@
 #ifndef MAIN_EXCEPTION_HPP_
 #define MAIN_EXCEPTION_HPP_
 
-#include <exception>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -20,10 +20,10 @@ namespace crawlservpp::Main {
 	 * DECLARATION
 	 */
 
-	class Exception : public std::exception {
+	class Exception : public std::runtime_error {
 	public:
 		// constructor
-		Exception(const std::string& description) : _description(description) {}
+		Exception(const std::string& description) : std::runtime_error(description), _description(description) {}
 
 		// getters
 		const char * what() const noexcept;
