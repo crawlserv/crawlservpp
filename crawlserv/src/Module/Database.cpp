@@ -1,8 +1,10 @@
 /*
  * Database.cpp
  *
- * Database functionality for a single thread. Only implements module-independent functionality, for module-specific functionality use the
- *  child classes of the DatabaseModule interface instead.
+ * Database functionality for a single thread.
+ *
+ * Only implements module-independent functionality. For module-specific functionality use the
+ *  child classes of the Wrapper::Database interface instead.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
