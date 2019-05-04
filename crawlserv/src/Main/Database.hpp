@@ -168,6 +168,8 @@ namespace crawlservpp::Main {
 		// URL list functions
 		unsigned long addUrlList(unsigned long websiteId, const UrlListProperties& listProperties);
 		std::queue<IdString> getUrlLists(unsigned long websiteId);
+		unsigned long mergeUrls(unsigned long listId, std::queue<std::string>& urls);
+		std::queue<std::string> getUrls(unsigned long listId);
 		std::string getUrlListNamespace(unsigned long listId);
 		IdString getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
@@ -302,6 +304,10 @@ namespace crawlservpp::Main {
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
 		void checkDirectory(const std::string& dir);
+
+		// URL list helper functions
+		bool isUrlListCaseSensitive(unsigned long listId);
+		void setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive);
 
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
