@@ -24,7 +24,7 @@ namespace crawlservpp::Main {
 		std::atomic<unsigned long long> Database::requestCounter(0);
 	#endif
 
-	// constructor: save settings and set default values
+	// constructor: save settings and set default values, throws Database::Exception
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 			: settings(dbSettings),
 			  maxAllowedPacketSize(0),
@@ -36,7 +36,7 @@ namespace crawlservpp::Main {
 			Database::driver = get_driver_instance();
 
 			if(!Database::driver)
-				throw std::runtime_error("Could not get database instance");
+				throw Database::Exception("Could not get database instance");
 		}
 	}
 
@@ -94,7 +94,7 @@ namespace crawlservpp::Main {
 	 * INITIALIZING FUNCTIONS
 	 */
 
-	// connect to the database
+	// connect to the database, throws Database::Exception
 	void Database::connect() {
 		// check driver
 		if(!Database::driver)
@@ -326,7 +326,8 @@ namespace crawlservpp::Main {
 	 * LOGGING FUNCTIONS
 	 */
 
-	// add a log entry to the database (for any module), remove invalid UTF-8 characters if needed
+	// add a log entry to the database (for any module), remove invalid UTF-8 characters if needed,
+	//  throws Database::Exception
 	void Database::log(const std::string& logModule, const std::string& logEntry) {
 		bool repaired = false;
 		std::string repairedEntry;
@@ -388,6 +389,7 @@ namespace crawlservpp::Main {
 
 		// create SQL query string
 		std::string sqlQuery("SELECT COUNT(*) FROM crawlserv_log");
+
 		if(!logModule.empty())
 			sqlQuery += " WHERE module = ?";
 
@@ -483,7 +485,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// add a thread to the database and return its new ID
+	// add a thread to the database and return its new ID, throws Database::Exception
 	unsigned long Database::addThread(const ThreadOptions& threadOptions) {
 		unsigned long result = 0;
 
@@ -525,7 +527,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get run time of thread (in seconds) from the database by its ID
+	// get run time of thread (in seconds) from the database by its ID, throws Database::Exception
 	unsigned long Database::getThreadRunTime(unsigned long threadId) {
 		unsigned long result = 0;
 
@@ -556,7 +558,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get pause time of thread (in seconds) from the database by its ID
+	// get pause time of thread (in seconds) from the database by its ID, throws Database::Exception
 	unsigned long Database::getThreadPauseTime(unsigned long threadId) {
 		unsigned long result = 0;
 
@@ -587,7 +589,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// update thread status in the database (and add the pause state to the status message if necessary)
+	// update thread status in the database (and add the pause state to the status message if necessary),
+	//  throws Database::Exception
 	void Database::setThreadStatus(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 		// check argument
 		if(!threadId)
@@ -626,7 +629,8 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadStatus", e); }
 	}
 
-	// update thread status in the database (without using or changing the pause state)
+	// update thread status in the database (without using or changing the pause state),
+	//  throws Database::Exception
 	void Database::setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage) {
 		// check argument
 		if(!threadId)
@@ -657,7 +661,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadStatus", e); }
 	}
 
-	// set run time of thread (in seconds) in the database
+	// set run time of thread (in seconds) in the database, throws Database::Exception
 	void Database::setThreadRunTime(unsigned long threadId, unsigned long threadRunTime) {
 		// check argument
 		if(!threadId)
@@ -686,7 +690,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadRunTime", e); }
 	}
 
-	// set pause time of thread (in seconds) in the database
+	// set pause time of thread (in seconds) in the database, throws Database::Exception
 	void Database::setThreadPauseTime(unsigned long threadId, unsigned long threadPauseTime) {
 		// check argument
 		if(!threadId)
@@ -715,7 +719,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setThreadPauseTime", e); }
 	}
 
-	// remove thread from the database by its ID
+	// remove thread from the database by its ID, throws Database::Exception
 	void Database::deleteThread(unsigned long threadId) {
 		// check argument
 		if(!threadId)
@@ -750,7 +754,7 @@ namespace crawlservpp::Main {
 	 * WEBSITE FUNCTIONS
 	 */
 
-	// add a website to the database and return its new ID
+	// add a website to the database and return its new ID, throws Database::Exception
 	unsigned long Database::addWebsite(const WebsiteProperties& websiteProperties) {
 		unsigned long result = 0;
 		std::string timeStamp;
@@ -816,7 +820,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get website domain from the database by its ID
+	// get website domain from the database by its ID, throws Database::Exception
 	std::string Database::getWebsiteDomain(unsigned long websiteId) {
 		std::string result;
 
@@ -852,7 +856,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get namespace of website from the database by its ID
+	// get namespace of website from the database by its ID, throws Database::Exception
 	std::string Database::getWebsiteNamespace(unsigned long int websiteId) {
 		std::string result;
 
@@ -888,7 +892,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get ID and namespace of website from the database by URL list ID
+	// get ID and namespace of website from the database by URL list ID, throws Database::Exception
 	Database::IdString Database::getWebsiteNamespaceFromUrlList(unsigned long listId) {
 		unsigned long websiteId = 0;
 
@@ -924,7 +928,7 @@ namespace crawlservpp::Main {
 		return IdString(websiteId, this->getWebsiteNamespace(websiteId));
 	}
 
-	// get ID and namespace of website from the database by configuration ID
+	// get ID and namespace of website from the database by configuration ID, throws Database::Exception
 	Database::IdString Database::getWebsiteNamespaceFromConfig(unsigned long configId) {
 		unsigned long websiteId = 0;
 
@@ -960,7 +964,8 @@ namespace crawlservpp::Main {
 		return IdString(websiteId, this->getWebsiteNamespace(websiteId));
 	}
 
-	// get ID and namespace of website from the database by target table ID of specified type
+	// get ID and namespace of website from the database by target table ID of specified type,
+	//  throws Database::Exception
 	Database::IdString Database::getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
 		unsigned long websiteId = 0;
 
@@ -999,7 +1004,7 @@ namespace crawlservpp::Main {
 		return IdString(websiteId, this->getWebsiteNamespace(websiteId));
 	}
 
-	// check whether website namespace exists in the database
+	// check whether website namespace exists in the database, throws Database::Exception
 	bool Database::isWebsiteNamespace(const std::string& nameSpace) {
 		bool result = false;
 
@@ -1038,7 +1043,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// create new website namespace for duplicated website
+	// create new website namespace for duplicated website, throws Database::Exception
 	std::string Database::duplicateWebsiteNamespace(const std::string& websiteNamespace) {
 		// check argument
 		if(websiteNamespace.empty())
@@ -1086,7 +1091,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get data directory of website or empty string if default directory is used
+	// get data directory of website or empty string if default directory is used, throws Database::Exception
 	std::string Database::getWebsiteDataDirectory(unsigned long websiteId) {
 		std::string result;
 
@@ -1122,7 +1127,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get number of URLs that will be modified by updating the website
+	// get number of URLs that will be modified by updating the website, throws Database::Exception
 	unsigned long Database::getChangedUrlsByWebsiteUpdate(unsigned long websiteId, const WebsiteProperties& websiteProperties) {
 		unsigned long result = 0;
 
@@ -1205,7 +1210,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get number of URLs that will be lost by updating the website
+	// get number of URLs that will be lost by updating the website, throws Database::Exception
 	unsigned long Database::getLostUrlsByWebsiteUpdate(unsigned long websiteId, const WebsiteProperties& websiteProperties) {
 		unsigned long result = 0;
 
@@ -1264,7 +1269,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// update website (and all associated tables) in the database
+	// update website (and all associated tables) in the database, throws Database::Exception
 	void Database::updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties) {
 		// check arguments
 		if(!websiteId)
@@ -1489,7 +1494,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateWebsite", e); }
 	}
 
-	// delete website (and all associated data) from the database by its ID
+	// delete website (and all associated data) from the database by its ID, throws Database::Exception
 	void Database::deleteWebsite(unsigned long websiteId) {
 		// check argument
 		if(!websiteId)
@@ -1532,7 +1537,8 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteWebsite", e); }
 	}
 
-	// duplicate website in the database by its ID (no processed data will be duplicated)
+	// duplicate website in the database by its ID (no processed data will be duplicated),
+	//  throws Database::Exception
 	unsigned long Database::duplicateWebsite(unsigned long websiteId) {
 		unsigned long result = 0;
 
@@ -1670,7 +1676,7 @@ namespace crawlservpp::Main {
 	 * URL LIST FUNCTIONS
 	 */
 
-	// add a URL list to the database and return its new ID
+	// add a URL list to the database and return its new ID, throws Database::Exception
 	unsigned long Database::addUrlList(unsigned long websiteId, const UrlListProperties& listProperties) {
 		unsigned long result = 0;
 
@@ -1846,7 +1852,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get URL lists for ID-specified website from the database
+	// get URL lists for ID-specified website from the database, throws Database::Exception
 	std::queue<Database::IdString> Database::getUrlLists(unsigned long websiteId) {
 		std::queue<IdString> result;
 
@@ -1883,7 +1889,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// insert URLs that do not already exist into the specified URL list and return the number of added URLs
+	// insert URLs that do not already exist into the specified URL list and return the number of added URLs,
+	//  throws Database::Exception
 	unsigned long Database::mergeUrls(unsigned long listId, std::queue<std::string>& urls) {
 		unsigned long result = 0;
 
@@ -1973,7 +1980,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get all URLs from the specified URL list
+	// get all URLs from the specified URL list, throws Database::Exception
 	std::queue<std::string> Database::getUrls(unsigned long listId) {
 		std::queue<std::string> result;
 
@@ -2011,7 +2018,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get namespace of URL list by its ID
+	// get namespace of URL list by its ID, throws Database::Exception
 	std::string Database::getUrlListNamespace(unsigned long listId) {
 		std::string result;
 
@@ -2047,7 +2054,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get ID and namespace of URL list from the database using a target table type and ID
+	// get ID and namespace of URL list from the database using a target table type and ID,
+	//  throws Database::Exception
 	Database::IdString Database::getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long tableId) {
 		unsigned long urlListId = 0;
 
@@ -2086,7 +2094,8 @@ namespace crawlservpp::Main {
 		return IdString(urlListId, this->getUrlListNamespace(urlListId));
 	}
 
-	// check whether a URL list namespace for an ID-specified website exists in the database
+	// check whether a URL list namespace for an ID-specified website exists in the database,
+	//  throws Database::Exception
 	bool Database::isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace) {
 		bool result = false;
 
@@ -2130,7 +2139,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// update URL list (and all associated tables) in the database
+	// update URL list (and all associated tables) in the database, throws Database::Exception
 	void Database::updateUrlList(unsigned long listId, const UrlListProperties& listProperties) {
 		// check arguments
 		if(!listId)
@@ -2276,7 +2285,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateUrlList", e); }
 	}
 
-	// delete URL list (and all associated data) from the database by its ID
+	// delete URL list (and all associated data) from the database by its ID, throws Database::Exception
 	void Database::deleteUrlList(unsigned long listId) {
 		std::queue<IdString> tables;
 
@@ -2348,7 +2357,7 @@ namespace crawlservpp::Main {
 		this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
 	}
 
-	// reset parsing status of ID-specified URL list
+	// reset parsing status of ID-specified URL list, throws Database::Exception
 	void Database::resetParsingStatus(unsigned long listId) {
 		// check argument
 		if(!listId)
@@ -2368,7 +2377,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetParsingStatus", e); }
 	}
 
-	// reset extracting status of ID-specified URL list
+	// reset extracting status of ID-specified URL list, throws Database::Exception
 	void Database::resetExtractingStatus(unsigned long listId) {
 		// check argument
 		if(!listId)
@@ -2388,7 +2397,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::resetExtractingStatus", e); }
 	}
 
-	// reset analyzing status of ID-specified URL list
+	// reset analyzing status of ID-specified URL list, throws Database::Exception
 	void Database::resetAnalyzingStatus(unsigned long listId) {
 		// check argument
 		if(!listId)
@@ -2412,7 +2421,8 @@ namespace crawlservpp::Main {
 	 * QUERY FUNCTIONS
 	 */
 
-	// add a query to the database and return its new ID (add global query when websiteId is zero)
+	// add a query to the database and return its new ID (add global query when websiteId is zero),
+	//  throws Database::Exception
 	unsigned long Database::addQuery(unsigned long websiteId, const QueryProperties& queryProperties) {
 		unsigned long result = 0;
 
@@ -2469,7 +2479,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get the properties of a query from the database by its ID
+	// get the properties of a query from the database by its ID, throws Database::Exception
 	void Database::getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo) {
 		// check argument
 		if(!queryId)
@@ -2515,7 +2525,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getQueryProperties", e); }
 	}
 
-	// edit query in the database
+	// edit query in the database, throws Database::Exception
 	void Database::updateQuery(unsigned long queryId, const QueryProperties& queryProperties) {
 		// check arguments
 		if(!queryId)
@@ -2566,7 +2576,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateQuery", e); }
 	}
 
-	// delete query from the database by its ID
+	// delete query from the database by its ID, throws Database::Exception
 	void Database::deleteQuery(unsigned long queryId) {
 		// check argument
 		if(!queryId)
@@ -2597,7 +2607,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteQuery", e); }
 	}
 
-	// duplicate query in the database by its ID
+	// duplicate query in the database by its ID, throws Database::Exception
 	unsigned long Database::duplicateQuery(unsigned long queryId) {
 		unsigned long result = 0;
 
@@ -2658,7 +2668,8 @@ namespace crawlservpp::Main {
 	 * CONFIGURATION FUNCTIONS
 	 */
 
-	// add a configuration to the database and return its new ID (add global configuration when websiteId is zero)
+	// add a configuration to the database and return its new ID (add global configuration when websiteId is 0),
+	//  throws Database::Exception
 	unsigned long Database::addConfiguration(unsigned long websiteId, const ConfigProperties& configProperties) {
 		unsigned long result = 0;
 
@@ -2700,7 +2711,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get a configuration from the database by its ID
+	// get a configuration from the database by its ID, throws Database::Exception
 	const std::string Database::getConfiguration(unsigned long configId) {
 		std::string result;
 
@@ -2735,7 +2746,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// update configuration in the database (NOTE: module will not be updated!)
+	// update configuration in the database (NOTE: module will not be updated!), throws Database::Exception
 	void Database::updateConfiguration(unsigned long configId, const ConfigProperties& configProperties) {
 		// check arguments
 		if(!configId)
@@ -2771,7 +2782,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateConfiguration", e); }
 	}
 
-	// delete configuration from the database by its ID
+	// delete configuration from the database by its ID, throws Database::Exception
 	void Database::deleteConfiguration(unsigned long configId) {
 		// check argument
 		if(!configId)
@@ -2801,7 +2812,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteConfiguration", e); }
 	}
 
-	// duplicate configuration in the database by its ID
+	// duplicate configuration in the database by its ID, throws Database::Exception
 	unsigned long Database::duplicateConfiguration(unsigned long configId) {
 		unsigned long result = 0;
 
@@ -2847,7 +2858,8 @@ namespace crawlservpp::Main {
 	 * TARGET TABLE FUNCTIONS
 	 */
 
-	// add a target table of the specified type to the database if such a table does not exist already, return table ID
+	// add a target table of the specified type to the database if such a table does not exist already, return table ID,
+	//  throws Database::Exception
 	unsigned long Database::addTargetTable(const TargetTableProperties& properties) {
 		unsigned long result = 0;
 
@@ -2887,8 +2899,10 @@ namespace crawlservpp::Main {
 							std::transform(targetType.begin(), targetType.end(), targetType.begin(), ::tolower);
 
 							if(columnType != targetType)
-								throw Database::Exception("Main::Database::addTargetTable(): Cannot overwrite column of type \'"
-										+ columnType + "\' with data of type \'" + targetType + "\'");
+								throw Database::Exception(
+										"Main::Database::addTargetTable(): Cannot overwrite column of type \'"
+										+ columnType + "\' with data of type \'" + targetType + "\'"
+								);
 						}
 						else {
 							// column does not exist: add column
@@ -2962,7 +2976,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get target tables of the specified type for an ID-specified URL list from the database
+	// get target tables of the specified type for an ID-specified URL list from the database,
+	//  throws Database::Exception
 	std::queue<Database::IdString> Database::getTargetTables(const std::string& type, unsigned long listId) {
 		std::queue<IdString> result;
 
@@ -3001,7 +3016,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name
+	// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name,
+	//  throws Database::Exception
 	unsigned long Database::getTargetTableId(
 			const std::string& type,
 			unsigned long websiteId,
@@ -3055,7 +3071,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get the name of a target table of the specified type from the database by its ID
+	// get the name of a target table of the specified type from the database by its ID,
+	//  throws Database::Exception
 	std::string Database::getTargetTableName(const std::string& type, unsigned long tableId) {
 		std::string result;
 
@@ -3094,7 +3111,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// delete target table of the specified type from the database by its ID
+	// delete target table of the specified type from the database by its ID, throws Database::Exception
 	void Database::deleteTargetTable(const std::string& type, unsigned long tableId) {
 		// check arguments
 		if(type.empty())
@@ -3149,8 +3166,9 @@ namespace crawlservpp::Main {
 	 * VALIDATION FUNCTIONS
 	 */
 
-	// check whether the connection to the database is still valid and try to re-connect if necesssary
-	//  WARNING: afterwards, old references to prepared SQL statements may be invalid!
+	// check whether the connection to the database is still valid and try to re-connect if necesssary,
+	//  throws Database::Exception
+	// WARNING: Afterwards, old references to prepared SQL statements may be invalid!
 	void Database::checkConnection() {
 		unsigned long long milliseconds = 0;
 
@@ -3205,7 +3223,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkConnection", e); }
 	}
 
-	// check whether a website ID is valid
+	// check whether a website ID is valid, throws Database::Exception
 	bool Database::isWebsite(unsigned long websiteId) {
 		bool result = false;
 
@@ -3244,7 +3262,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a URL list ID is valid
+	// check whether a URL list ID is valid, throws Database::Exception
 	bool Database::isUrlList(unsigned long urlListId) {
 		bool result = false;
 
@@ -3283,7 +3301,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a URL list ID is valid for the ID-specified website
+	// check whether a URL list ID is valid for the ID-specified website, throws Database::Exception
 	bool Database::isUrlList(unsigned long websiteId, unsigned long urlListId) {
 		bool result = false;
 
@@ -3327,7 +3345,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a query ID is valid
+	// check whether a query ID is valid, throws Database::Exception
 	bool Database::isQuery(unsigned long queryId) {
 		bool result = false;
 
@@ -3366,7 +3384,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a query ID is valid for the ID-specified website (look for global queries if websiteID is zero)
+	// check whether a query ID is valid for the ID-specified website (look for global queries if websiteID is zero),
+	//  throws Database::Exception
 	bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 		bool result = false;
 
@@ -3410,7 +3429,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a configuration ID is valid
+	// check whether a configuration ID is valid, throws Database::Exception
 	bool Database::isConfiguration(unsigned long configId) {
 		bool result = false;
 
@@ -3449,7 +3468,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a configuration ID is valid for the ID-specified website (look for global configurations if websiteId is zero)
+	// check whether a configuration ID is valid for the ID-specified website (look for global configurations if websiteId is 0),
+	//  throws Database::Exception
 	bool Database::isConfiguration(unsigned long websiteId, unsigned long configId) {
 		bool result = false;
 
@@ -3512,7 +3532,7 @@ namespace crawlservpp::Main {
 	 * GENERAL TABLE FUNCTIONS
 	 */
 
-	// check whether a name-specified table in the database is empty
+	// check whether a name-specified table in the database is empty, throws Database::Exception
 	bool Database::isTableEmpty(const std::string& tableName) {
 		bool result = false;
 
@@ -3549,7 +3569,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a specific table exists in the database
+	// check whether a specific table exists in the database, throws Database::Exception
 	bool Database::isTableExists(const std::string& tableName) {
 		bool result = false;
 
@@ -3587,7 +3607,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a specific column of a specific table exists in the database
+	// check whether a specific column of a specific table exists in the database, throws Database::Exception
 	bool Database::isColumnExists(const std::string& tableName, const std::string& columnName) {
 		bool result = false;
 
@@ -3631,7 +3651,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get the type of a specific column of a specific table in the database
+	// get the type of a specific column of a specific table in the database, throws Database::Exception
 	std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
 		std::string result;
 
@@ -3678,7 +3698,7 @@ namespace crawlservpp::Main {
 	 * CUSTOM DATA FUNCTIONS FOR ALGORITHMS
 	 */
 
-	// get one custom value from one field of a row in the database
+	// get one custom value from one field of a row in the database, throws Database::Exception
 	void Database::getCustomData(Data::GetValue& data) {
 		// check argument
 		if(data.column.empty())
@@ -3754,7 +3774,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomData", e); }
 	}
 
-	// get custom values from multiple fields of a row in the database
+	// get custom values from multiple fields of a row in the database, throws Database::Exception
 	void Database::getCustomData(Data::GetFields& data) {
 		// check argument
 		if(data.columns.empty())
@@ -3862,7 +3882,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomData", e); }
 	}
 
-	// get custom values from multiple fields of a row with different types in the database
+	// get custom values from multiple fields of a row with different types in the database, throws Database::Exception
 	void Database::getCustomData(Data::GetFieldsMixed& data) {
 		// check argument
 		if(data.columns_types.empty())
@@ -3938,7 +3958,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomData", e); }
 	}
 
-	// get custom values from one column in the database
+	// get custom values from one column in the database, throws Database::Exception
 	void Database::getCustomData(Data::GetColumn& data) {
 		// check argument
 		if(data.column.empty())
@@ -4022,7 +4042,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomData", e); }
 	}
 
-	// get custom values from multiple columns of the same type in the database
+	// get custom values from multiple columns of the same type in the database, throws Database::Exception
 	void Database::getCustomData(Data::GetColumns& data) {
 		// check argument
 		if(data.columns.empty())
@@ -4126,7 +4146,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomData", e); }
 	}
 
-	// get custom values from multiple columns of different types in the database
+	// get custom values from multiple columns of different types in the database, throws Database::Exception
 	void Database::getCustomData(Data::GetColumnsMixed& data) {
 		// check argument
 		if(data.columns_types.empty())
@@ -4227,7 +4247,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getCustomData", e); }
 	}
 
-	// insert one custom value into a row in the database
+	// insert one custom value into a row in the database, throws Database::Exception
 	void Database::insertCustomData(const Data::InsertValue& data) {
 		// check argument
 		if(data.column.empty())
@@ -4336,7 +4356,8 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::insertCustomData", e); }
 	}
 
-	// insert custom values into multiple fields of the same type into a row in the database
+	// insert custom values into multiple fields of the same type into a row in the database,
+	//  throws Database::Exception
 	void Database::insertCustomData(const Data::InsertFields& data) {
 		// check argument
 		if(data.columns_values.empty())
@@ -4496,7 +4517,8 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::insertCustomData", e); }
 	}
 
-	// insert custom values into multiple fields of different types into a row in the database
+	// insert custom values into multiple fields of different types into a row in the database,
+	//  throws Database::Exception
 	void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 		// check argument
 		if(data.columns_types_values.empty())
@@ -4620,7 +4642,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::insertCustomData", e); }
 	}
 
-	// update one custom value in one field of a row in the database
+	// update one custom value in one field of a row in the database, throws Database::Exception
 	void Database::updateCustomData(const Data::UpdateValue& data) {
 		// check argument
 		if(data.column.empty())
@@ -4730,7 +4752,8 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateCustomData", e); }
 	}
 
-	// update custom values in multiple fields of a row with the same type in the database
+	// update custom values in multiple fields of a row with the same type in the database,
+	//  throws Database::Exception
 	void Database::updateCustomData(const Data::UpdateFields& data) {
 		// check argument
 		if(data.columns_values.empty())
@@ -4891,7 +4914,8 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateCustomData", e); }
 	}
 
-	// update custom values in multiple fields of a row with different types in the database
+	// update custom values in multiple fields of a row with different types in the database,
+	//  throws Database::Exception
 	void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 		// check argument
 		if(data.columns_types_values.empty())
@@ -5061,7 +5085,7 @@ namespace crawlservpp::Main {
 	 * DATABASE HELPER FUNCTIONS (protected)
 	 */
 
-	// get the last inserted ID from the database
+	// get the last inserted ID from the database, throws Database::Exception
 	unsigned long Database::getLastInsertedId() {
 		unsigned long result = 0;
 
@@ -5088,7 +5112,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// reset the auto increment of an (empty) table in the database
+	// reset the auto increment of an (empty) table in the database, throws Database::Exception
 	void Database::resetAutoIncrement(const std::string& tableName) {
 		// check argument
 		if(tableName.empty())
@@ -5132,10 +5156,11 @@ namespace crawlservpp::Main {
 	// remove lock with specific name from database
 	void Database::removeDatabaseLock(const std::string& name) {
 		std::lock_guard<std::mutex> accessLock(Database::lockAccess);
+
 		Database::locks.erase(std::remove(Database::locks.begin(), Database::locks.end(), name), Database::locks.end());
 	}
 
-	// add a table to the database (the primary key 'id' will be created automatically)
+	// add a table to the database (the primary key 'id' will be created automatically), throws Database::Exception
 	void Database::createTable(const TableProperties& properties) {
 		// check argument
 		if(properties.name.empty())
@@ -5202,7 +5227,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::createTable", e); }
 	}
 
-	// delete table from database if it exists
+	// delete table from database if it exists, throws Database::Exception
 	void Database::dropTable(const std::string& tableName) {
 		// check argument
 		if(tableName.empty())
@@ -5221,7 +5246,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::dropTable", e); }
 	}
 
-	// add a column to a table in the database
+	// add a column to a table in the database, throws Database::Exception
 	void Database::addColumn(const std::string& tableName, const TableColumn& column) {
 		// check arguments
 		if(tableName.empty())
@@ -5260,7 +5285,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addColumn", e); }
 	}
 
-	// compress a table in the database
+	// compress a table in the database, throws Database::Exception
 	void Database::compressTable(const std::string& tableName) {
 		bool compressed = false;
 
@@ -5305,7 +5330,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::compressTable", e); }
 	}
 
-	// delete a table from the database if it exists
+	// delete a table from the database if it exists, throws Database::Exception
 	void Database::deleteTable(const std::string& tableName) {
 		// check argument
 		if(tableName.empty())
@@ -5327,7 +5352,7 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteTable", e); }
 	}
 
-	// check access to an external data directory
+	// check access to an external data directory, throws Database::Exception
 	void Database::checkDirectory(const std::string& dir) {
 		// check argument
 		if(dir.empty())
@@ -5363,7 +5388,7 @@ namespace crawlservpp::Main {
 	 * URL LIST HELPER FUNCTIONS (protected)
 	 */
 
-	// get whether the specified URL list is case-sensitive
+	// get whether the specified URL list is case-sensitive, throws Database::Exception
 	bool Database::isUrlListCaseSensitive(unsigned long listId) {
 		bool result = true;
 
@@ -5406,7 +5431,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// set whether the specified URL list is case-sensitive
+	// set whether the specified URL list is case-sensitive, throws Database::Exception
 	void Database::setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive) {
 		// check argument
 		if(!listId)
@@ -5511,7 +5536,7 @@ namespace crawlservpp::Main {
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
 
-	// run file with SQL commands
+	// run file with SQL commands, throws Database::Exception
 	void Database::run(const std::string& sqlFile) {
 		// check argument
 		if(sqlFile.empty())
@@ -5547,7 +5572,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::run(): Could not open \'" + sqlFile + "\' for reading");
 	}
 
-	// execute a SQL query
+	// execute a SQL query, throws Database::Exception
 	void Database::execute(const std::string& sqlQuery) {
 		// check argument
 		if(sqlQuery.empty())

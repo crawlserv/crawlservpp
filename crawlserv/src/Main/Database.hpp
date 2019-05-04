@@ -60,7 +60,6 @@
 #include <chrono>
 #include <cmath>
 #include <ctime>
-#include <exception>
 #include <fstream>
 #include <functional>
 #include <iomanip>
@@ -70,7 +69,6 @@
 #include <mutex>
 #include <queue>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
