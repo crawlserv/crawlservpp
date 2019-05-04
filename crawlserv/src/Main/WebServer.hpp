@@ -13,8 +13,6 @@
 #ifndef MAIN_WEBSERVER_HPP_
 #define MAIN_WEBSERVER_HPP_
 
-#define MG_ENABLE_HTTP_STREAMING_MULTIPART 1
-
 // hard-coded constant
 #define MAIN_WEBSERVER_FILE_LENGTH 64
 
