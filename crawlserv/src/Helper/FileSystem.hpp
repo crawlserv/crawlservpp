@@ -76,7 +76,7 @@ namespace crawlservpp::Helper::FileSystem {
 		return std::filesystem::path::preferred_separator;
 	}
 
-	// list files with specific extension in a directory and its subdirectories
+	// list files with specific extension in a directory and its subdirectories, throws FileSystem::Exception
 	inline std::vector<std::string> listFilesInPath(
 			const std::string& pathToDir,
 			const std::string& fileExtension
@@ -100,7 +100,7 @@ namespace crawlservpp::Helper::FileSystem {
 		return result;
 	}
 
-	// check whether a path is located inside directory (including its subdirectories)
+	// check whether a path is located inside directory (including its subdirectories), throws FileSystem::Exception
 	//  NOTE: While the directory needs to exist, the path does not
 	inline bool contains(const std::string& pathToDir, const std::string& pathToCheck) {
 		if(!std::filesystem::exists(pathToDir))
@@ -129,7 +129,7 @@ namespace crawlservpp::Helper::FileSystem {
 		return std::equal(pathToDir.begin(), pathToDir.end(), pathToCheck.begin());
 	}
 
-	// delete all files and folders in a directory
+	// delete all files and folders in a directory, throws FileSystem::Exception
 	inline void clearDirectory(const std::string& pathToDir) {
 		if(!std::filesystem::exists(pathToDir))
 			throw Exception("\'" + pathToDir + "\' does not exist");
