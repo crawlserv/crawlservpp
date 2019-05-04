@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
+#include <queue>
 #include <random>
 #include <string>
 #include <vector>
@@ -29,8 +30,11 @@ namespace crawlservpp::Helper::Strings {
 			const std::string& to,
 			bool onlyOnce
 	);
+
 	bool stringToBool(std::string inputString);
+
 	void trim(std::string& stringToTrim);
+
 	std::string join(
 			const std::vector<std::string>& strings,
 			char delimiter,
@@ -38,6 +42,16 @@ namespace crawlservpp::Helper::Strings {
 	);
 	std::string join(
 			const std::vector<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty
+	);
+	std::string join(
+			std::queue<std::string>& strings,
+			char delimiter,
+			bool ignoreEmpty
+	);
+	std::string join(
+			std::queue<std::string>& strings,
 			const std::string& delimiter,
 			bool ignoreEmpty
 	);
@@ -53,13 +67,33 @@ namespace crawlservpp::Helper::Strings {
 			bool ignoreEmpty,
 			std::string& appendTo
 	);
+	void join(
+			std::queue<std::string>& strings,
+			char delimiter,
+			bool ignoreEmpty,
+			std::string& appendTo
+	);
+	void join(
+			std::queue<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty,
+			std::string& appendTo
+	);
+
 	std::vector<std::string> split(const std::string& str, char delimiter);
 	std::vector<std::string> split(const std::string& str, const std::string& delimiter);
+	std::queue<std::string> splitToQueue(const std::string& str, char delimiter);
+	std::queue<std::string> splitToQueue(const std::string& str, const std::string& delimiter);
+
 	void sortAndRemoveDuplicates(std::vector<std::string>& vectorOfStrings, bool caseSensitive);
+
 	char getFirstOrEscapeChar(const std::string& from);
+
 	void utfTidy(std::string& stringToTidy);
+
 	bool checkDomainName(const std::string& name);
 	bool checkSQLName(const std::string& name);
+
 	std::string randomGenerate(unsigned long length);
 
 	// Unicode white spaces
@@ -181,10 +215,11 @@ namespace crawlservpp::Helper::Strings {
 			const std::string& delimiter,
 			bool ignoreEmpty
 	) {
-		unsigned long size = 0;
 		std::string result;
 
 		// calculate and reserve needed memory
+		unsigned long size = 0;
+
 		for(auto i = strings.begin(); i != strings.end(); ++i)
 			if(!ignoreEmpty || !(i->empty()))
 				size += i->size() + delimiter.size();
@@ -192,9 +227,56 @@ namespace crawlservpp::Helper::Strings {
 		result.reserve(size);
 
 		// create string
+
 		for(auto i = strings.begin(); i != strings.end(); ++i)
 			if(!ignoreEmpty || !(i->empty()))
 				result += *i + delimiter;
+
+		if(!result.empty())
+			result.pop_back();
+
+		// return string
+		return result;
+	}
+
+	// concatenate all elements of a queue into a single string, emptying the queue in the process
+	inline std::string join(
+			std::queue<std::string>& strings,
+			char delimiter,
+			bool ignoreEmpty
+	) {
+		// create string
+		std::string result;
+
+		while(!strings.empty()) {
+			if(!ignoreEmpty || !(strings.front().empty()))
+				result += strings.front() + delimiter;
+
+			strings.pop();
+		}
+
+		if(!result.empty())
+			result.pop_back();
+
+		// return string
+		return result;
+	}
+
+	// concatenate all elements of a queue into a single string, emptying the queue in the process
+	inline std::string join(
+			std::queue<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty
+	) {
+		// create string
+		std::string result;
+
+		while(!strings.empty()) {
+			if(!ignoreEmpty || !(strings.front().empty()))
+				result += strings.front() + delimiter;
+
+			strings.pop();
+		}
 
 		if(!result.empty())
 			result.pop_back();
@@ -210,10 +292,12 @@ namespace crawlservpp::Helper::Strings {
 			bool ignoreEmpty,
 			std::string& appendTo
 	) {
+		// save old size of the string
 		const unsigned long oldSize = appendTo.size();
-		unsigned long size = oldSize;
 
 		// calculate and reserve needed memory
+		unsigned long size = oldSize;
+
 		for(auto i = strings.begin(); i != strings.end(); ++i)
 			if(!ignoreEmpty || !(i->empty()))
 				size += i->size() + 1;
@@ -236,10 +320,12 @@ namespace crawlservpp::Helper::Strings {
 			bool ignoreEmpty,
 			std::string& appendTo
 	) {
+		// save old size of the string
 		const unsigned long oldSize = appendTo.size();
-		unsigned long size = oldSize;
 
 		// calculate and reserve needed memory
+		unsigned long size = oldSize;
+
 		for(auto i = strings.begin(); i != strings.end(); ++i)
 			if(!ignoreEmpty || !(i->empty()))
 				size += i->size() + delimiter.size();
@@ -250,6 +336,50 @@ namespace crawlservpp::Helper::Strings {
 		for(auto i = strings.begin(); i != strings.end(); ++i)
 			if(!ignoreEmpty || !(i->empty()))
 				appendTo += *i + delimiter;
+
+		if(appendTo.size() > oldSize)
+			appendTo.pop_back();
+	}
+
+	// concatenate all elements of a queue and append them to a single string, emptying the queue in the process
+	inline void join(
+			std::queue<std::string>& strings,
+			char delimiter,
+			bool ignoreEmpty,
+			std::string& appendTo
+	) {
+		// save old size of the string
+		const unsigned long oldSize = appendTo.size();
+
+		// append string
+		while(!strings.empty()) {
+			if(!ignoreEmpty || !(strings.front().empty()))
+				appendTo += strings.front() + delimiter;
+
+			strings.pop();
+		}
+
+		if(appendTo.size() > oldSize)
+			appendTo.pop_back();
+	}
+
+	// concatenate all elements of a queue and append them to a single string, emptying the queue in the process
+	inline void join(
+			std::queue<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty,
+			std::string& appendTo
+	) {
+		// save old size of the string
+		const unsigned long oldSize = appendTo.size();
+
+		// append string
+		while(!strings.empty()) {
+			if(!ignoreEmpty || !(strings.front().empty()))
+				appendTo += strings.front() + delimiter;
+
+			strings.pop();
+		}
 
 		if(appendTo.size() > oldSize)
 			appendTo.pop_back();
