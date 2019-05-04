@@ -10,11 +10,11 @@
 #ifndef MAIN_CONFIGFILE_HPP_
 #define MAIN_CONFIGFILE_HPP_
 
+#include "Exception.hpp"
+
 #include <boost/algorithm/string.hpp>
 
-#include <exception>
 #include <fstream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>

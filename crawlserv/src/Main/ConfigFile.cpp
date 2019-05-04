@@ -11,7 +11,7 @@
 
 namespace crawlservpp::Main {
 
-	// constructor: read file
+	// constructor: read file, throws Main::Exception
 	ConfigFile::ConfigFile(const std::string& name) {
 		std::ifstream fileStream(name);
 		std::string line;
@@ -36,7 +36,7 @@ namespace crawlservpp::Main {
 			fileStream.close();
 		}
 		else
-			throw std::runtime_error("Could not open \"" + name + "\" for reading");
+			throw Exception("Could not open \"" + name + "\" for reading");
 	}
 
 	// get value of config entry (or empty string if entry does not exist)
