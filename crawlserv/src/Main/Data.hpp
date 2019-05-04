@@ -49,7 +49,7 @@ namespace crawlservpp::Main::Data {
 
 		// action that will be performed if a string is too large for the database (default: _error)
 		enum _if_too_large {
-			_error,	// throw a std::runtime_exception
+			_error,	// throw a Database::Exception
 			_trim,	// trim the string to an acceptable size
 			_empty,	// use an empty string instead
 			_null	// use a null value instead
