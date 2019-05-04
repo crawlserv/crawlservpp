@@ -2433,12 +2433,6 @@ namespace crawlservpp::Main {
 			else if(!json["compression"].IsString())
 				response = ServerCommandResponse::failed("Invalid arguments (\'compression\' is not a string).");
 
-			else if(!json.HasMember("filename"))
-				response = ServerCommandResponse::failed("Invalid arguments (\'filename\' is missing).");
-
-			else if(!json["filename"].IsString())
-				response = ServerCommandResponse::failed("Invalid arguments (\'filename\' is not a string).");
-
 			else {
 				std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
 				std::string filetype(json["filetype"].GetString(), json["filetype"].GetStringLength());
