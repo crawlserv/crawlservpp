@@ -278,7 +278,7 @@ namespace crawlservpp::Main {
 		result.len = this->fileCache.size() + MAIN_WEBSERVER_FILE_LENGTH + 1;
 
 		// allocate memory for file name
-		char * buffer = new char[result.len];
+		char * buffer = static_cast<char *>(std::malloc(result.len));
 
 		// copy file cache directory to file name
 		std::memcpy(
