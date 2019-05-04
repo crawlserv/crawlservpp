@@ -394,12 +394,12 @@ namespace crawlservpp::Helper::Strings {
 			auto index = tmp.find(delimiter);
 
 			if(index != std::string::npos) {
-				result.push_back(tmp.substr(0, index));
+				result.emplace_back(tmp, 0, index);
 
 				tmp = tmp.substr(index + 1);
 			}
 			else if(!tmp.empty()) {
-				result.push_back(tmp);
+				result.emplace_back(tmp);
 
 				tmp.clear();
 			}
@@ -417,12 +417,58 @@ namespace crawlservpp::Helper::Strings {
 			auto index = tmp.find(delimiter);
 
 			if(index != std::string::npos) {
-				result.push_back(tmp.substr(0, index));
+				result.emplace_back(tmp, 0, index);
 
 				tmp = tmp.substr(index + delimiter.size());
 			}
 			else if(!tmp.empty()) {
-				result.push_back(tmp);
+				result.emplace_back(tmp);
+
+				tmp.clear();
+			}
+		}
+
+		return result;
+	}
+
+	// split string into queue of strings
+	inline std::queue<std::string> splitToQueue(const std::string& str, char delimiter) {
+		std::string tmp(str);
+		std::queue<std::string> result;
+
+		while(!tmp.empty()) {
+			auto index = tmp.find(delimiter);
+
+			if(index != std::string::npos) {
+				result.emplace(tmp, 0, index);
+
+				tmp = tmp.substr(index + 1);
+			}
+			else if(!tmp.empty()) {
+				result.emplace(tmp);
+
+				tmp.clear();
+			}
+		}
+
+		return result;
+	}
+
+	// split string into queue of strings
+	inline std::queue<std::string> splitToQueue(const std::string& str, const std::string& delimiter) {
+		std::string tmp(str);
+		std::queue<std::string> result;
+
+		while(!tmp.empty()) {
+			auto index = tmp.find(delimiter);
+
+			if(index != std::string::npos) {
+				result.emplace(tmp, 0, index);
+
+				tmp = tmp.substr(index + delimiter.size());
+			}
+			else if(!tmp.empty()) {
+				result.emplace(tmp);
 
 				tmp.clear();
 			}
