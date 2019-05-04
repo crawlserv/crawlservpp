@@ -13,6 +13,7 @@
 #ifndef MODULE_PARSER_CONFIG_HPP_
 #define MODULE_PARSER_CONFIG_HPP_
 
+#include "../../Main/Exception.hpp"
 #include "../../Module/Config.hpp"
 #include "../../Network/Config.hpp"
 
@@ -79,6 +80,13 @@ namespace crawlservpp::Module::Parser {
 			bool parsingRepairCData;
 		} config;
 
+		// sub-class for Module::Config exceptions
+		class Exception : public Main::Exception {
+			public:
+				Exception(const std::string& description) : Main::Exception(description) {}
+				virtual ~Exception() {}
+			};
+
 	protected:
 		// parsing-specific configuration parsing
 		void parseOption() override;
@@ -134,11 +142,11 @@ namespace crawlservpp::Module::Parser {
 		this->option("repair.cdata", this->config.parsingRepairCData);
 	}
 
-	// check parsing-specific configuration
+	// check parsing-specific configuration, throws Config::Exception
 	inline void Config::checkOptions() {
 		// check for result table
 		if(this->config.generalResultTable.empty())
-			throw std::runtime_error("Parser::Config::checkOptions(): No result table specified.");
+			throw Exception("Parser::Config::checkOptions(): No result table specified.");
 		
 		// check properties of datetime queries
 		unsigned long completeDateTimes = std::min( // number of complete datetime queries (= minimum size of all arrays)
