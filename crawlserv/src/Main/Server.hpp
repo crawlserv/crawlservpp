@@ -18,11 +18,23 @@
 #define MAIN_SERVER_DIR_COOKIES "cookies" // directory for cookies
 #define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5 // server-side sleep on mySQL error
 
+// macros for exception handling of worker threads
+#define MAIN_SERVER_WORKER_BEGIN	try {
+#define MAIN_SERVER_WORKER_END(X)	} \
+									catch(const std::exception& e) { \
+										(X) = ServerCommandResponse::failed( \
+												e.what() \
+										); \
+									}
+
 #include "Database.hpp"
+#include "Exception.hpp"
 #include "WebServer.hpp"
 
+#include "../Data/File.hpp"
 #include "../Data/Compression/Gzip.hpp"
 #include "../Data/Compression/Zlib.hpp"
+#include "../Data/ImportExport/Text.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
@@ -44,6 +56,7 @@
 #include "../Struct/ThreadDatabaseEntry.hpp"
 #include "../Struct/UrlListProperties.hpp"
 #include "../Struct/WebsiteProperties.hpp"
+#include "../Wrapper/Database.hpp"
 
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"
 #include "../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
@@ -61,7 +74,8 @@
 #include <iostream>
 #include <locale>
 #include <mutex>
-#include <stdexcept>
+#include <queue>
+#include <sstream>
 #include <thread>
 #include <vector>
 
@@ -223,7 +237,18 @@ namespace crawlservpp::Main {
 
 		ServerCommandResponse cmdDownload(const rapidjson::Document& json);
 
-		// private static helper function
+		// private helper functions
+		static bool workerBegin(
+				const std::string& message,
+				rapidjson::Document& json,
+				ServerCommandResponse& response
+		);
+		void workerEnd(
+				unsigned long threadIndex,
+				ConnectionPtr connection,
+				const std::string& message,
+				const ServerCommandResponse& response
+		);
 		static std::string generateReply(const ServerCommandResponse& response, const std::string& msgBody);
 	};
 
