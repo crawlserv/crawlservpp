@@ -247,7 +247,7 @@ namespace crawlservpp::Main {
 
 			// write installed locales to database
 			try {
-				// create SQL statement
+				// prepare SQL statement
 				SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 						sqlQuery
 				));
@@ -300,7 +300,7 @@ namespace crawlservpp::Main {
 
 			// write library versions to database
 			try {
-				// create SQL statement
+				// prepare SQL statement
 				SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 						sqlQuery
 				));
@@ -392,7 +392,7 @@ namespace crawlservpp::Main {
 			sqlQuery += " WHERE module = ?";
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// execute SQL statement
@@ -422,7 +422,7 @@ namespace crawlservpp::Main {
 			sqlQuery += " WHERE module = ?";
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// execute SQL statement
@@ -503,7 +503,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 					"INSERT INTO crawlserv_threads(module, website, urllist, config) VALUES (?, ?, ?, ?)"
 			));
@@ -536,7 +536,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 					"SELECT runtime FROM crawlserv_threads WHERE id = ? LIMIT 1"
 			));
@@ -567,7 +567,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
 					"SELECT pausetime FROM crawlserv_threads WHERE id = ? LIMIT 1"
 			));
@@ -666,7 +666,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"UPDATE crawlserv_threads"
@@ -695,7 +695,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"UPDATE crawlserv_threads"
@@ -724,7 +724,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"DELETE FROM crawlserv_threads"
@@ -773,7 +773,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for adding website
+			// prepare SQL statement for adding website
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"INSERT INTO crawlserv_websites(domain, namespace, name, dir)"
@@ -827,7 +827,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT domain"
@@ -863,7 +863,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT namespace"
@@ -899,7 +899,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT website"
@@ -935,7 +935,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT website"
@@ -974,7 +974,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT website"
@@ -1010,7 +1010,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -1097,7 +1097,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT dir"
@@ -1440,7 +1440,7 @@ namespace crawlservpp::Main {
 					urlLists.pop();
 				}
 
-				// create SQL statement for updating
+				// prepare SQL statement for updating
 				SqlPreparedStatementPtr updateStatement(
 						this->connection->prepareStatement(
 								"UPDATE crawlserv_websites"
@@ -1463,7 +1463,7 @@ namespace crawlservpp::Main {
 				Database::sqlExecute(updateStatement);
 			}
 			else {
-				// create SQL statement for updating
+				// prepare SQL statement for updating
 				SqlPreparedStatementPtr updateStatement(
 						this->connection->prepareStatement(
 								"UPDATE crawlserv_websites"
@@ -1511,7 +1511,7 @@ namespace crawlservpp::Main {
 			// check connection
 			this->checkConnection();
 
-			// create SQL statement for deletion of website
+			// prepare SQL statement for deletion of website
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"DELETE FROM crawlserv_websites"
@@ -1543,7 +1543,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for geting website info
+			// prepare SQL statement for geting website info
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT name, namespace, domain, dir"
@@ -1579,7 +1579,7 @@ namespace crawlservpp::Main {
 				// add website
 				result = this->addWebsite(WebsiteProperties(websiteDomain, newNamespace, newName, websiteDir));
 
-				// create SQL statement for geting URL list info
+				// prepare SQL statement for geting URL list info
 				sqlStatement.reset(
 						this->connection->prepareStatement(
 								"SELECT name, namespace"
@@ -1602,7 +1602,7 @@ namespace crawlservpp::Main {
 						this->addUrlList(result, UrlListProperties(sqlResultSet->getString("namespace"), urlListName));
 				}
 
-				// create SQL statement for getting queries
+				// prepare SQL statement for getting queries
 				sqlStatement.reset(
 						this->connection->prepareStatement(
 							"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
@@ -1632,7 +1632,7 @@ namespace crawlservpp::Main {
 
 				}
 
-				// create SQL statement for getting configurations
+				// prepare SQL statement for getting configurations
 				sqlStatement.reset(
 						this->connection->prepareStatement(
 								"SELECT module, name, config"
@@ -1695,7 +1695,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for adding URL list
+			// prepare SQL statement for adding URL list
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"INSERT INTO crawlserv_urllists(website, namespace, name)"
@@ -1857,7 +1857,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT id, namespace"
@@ -1894,7 +1894,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT namespace"
@@ -1933,7 +1933,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT urllist"
@@ -1972,7 +1972,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -2115,7 +2115,7 @@ namespace crawlservpp::Main {
 					tables.pop();
 				}
 
-				// create SQL statement for updating
+				// prepare SQL statement for updating
 				SqlPreparedStatementPtr updateStatement(
 						this->connection->prepareStatement(
 						"UPDATE crawlserv_urllists"
@@ -2132,7 +2132,7 @@ namespace crawlservpp::Main {
 				Database::sqlExecute(updateStatement);
 			}
 			else {
-				// create SQL statement for updating
+				// prepare SQL statement for updating
 				SqlPreparedStatementPtr updateStatement(this->connection->prepareStatement(
 						"UPDATE crawlserv_urllists SET name = ? WHERE id = ? LIMIT 1"
 				));
@@ -2190,7 +2190,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for deleting URL list
+			// prepare SQL statement for deleting URL list
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 						"DELETE FROM crawlserv_urllists"
@@ -2299,7 +2299,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for adding query
+			// prepare SQL statement for adding query
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"INSERT INTO crawlserv_queries"
@@ -2350,7 +2350,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
@@ -2405,7 +2405,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for updating
+			// prepare SQL statement for updating
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 						"UPDATE crawlserv_queries"
@@ -2480,7 +2480,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for getting query info
+			// prepare SQL statement for getting query info
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 						"SELECT"
@@ -2547,7 +2547,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for adding configuration
+			// prepare SQL statement for adding configuration
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"INSERT INTO crawlserv_configs(website, module, name, config)"
@@ -2583,7 +2583,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT config"
@@ -2652,7 +2652,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"DELETE FROM crawlserv_configs"
@@ -2684,7 +2684,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for getting configuration info
+			// prepare SQL statement for getting configuration info
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT website, module, name, config"
@@ -2786,7 +2786,7 @@ namespace crawlservpp::Main {
 				);
 			}
 
-			// create SQL statement for checking for entry
+			// prepare SQL statement for checking for entry
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT id"
@@ -2809,7 +2809,7 @@ namespace crawlservpp::Main {
 				// entry exists: return ID
 				result = sqlResultSet->getUInt64("id");
 			else {
-				// entry does not exist already: create SQL statement for adding table
+				// entry does not exist already: prepare SQL statement for adding table
 				sqlStatement.reset(
 						this->connection->prepareStatement(
 								"INSERT INTO `crawlserv_" + properties.type + "tables`(website, urllist, name)"
@@ -2848,7 +2848,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT id, name"
@@ -2898,7 +2898,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT id"
@@ -2941,7 +2941,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT name"
@@ -2983,7 +2983,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for deletion
+			// prepare SQL statement for deletion
 			SqlPreparedStatementPtr deleteStatement(this->connection->prepareStatement(
 					"DELETE FROM `crawlserv_" + type + "tables` WHERE id = ? LIMIT 1"
 			));
@@ -3088,7 +3088,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -3127,7 +3127,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -3169,7 +3169,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -3210,7 +3210,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -3249,7 +3249,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -3293,7 +3293,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -3332,7 +3332,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT EXISTS"
@@ -3473,7 +3473,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT COUNT(*)"
@@ -3517,7 +3517,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT DATA_TYPE"
@@ -4111,7 +4111,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"INSERT INTO `" + data.table + "` (`" + data.column + "`)"
@@ -4236,7 +4236,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += "?)";
 
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
@@ -4393,7 +4393,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += "?)";
 
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
@@ -4504,7 +4504,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"UPDATE `" + data.table + "`"
@@ -4625,7 +4625,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += " WHERE (" + data.condition + ")";
 
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
@@ -4783,7 +4783,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += " WHERE (" + data.condition + ")";
 
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
