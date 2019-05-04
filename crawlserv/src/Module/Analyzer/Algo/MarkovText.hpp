@@ -20,6 +20,7 @@
 #include "../Thread.hpp"
 
 #include "../../../Main/Data.hpp"
+#include "../../../Main/Exception.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
