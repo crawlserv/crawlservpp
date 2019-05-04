@@ -20,7 +20,6 @@
 #include "../Thread.hpp"
 
 #include "../../../Main/Data.hpp"
-#include "../../../Main/Exception.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
@@ -41,6 +40,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// for convenience
 		typedef Main::Data::Type DataType;
 		typedef Main::Data::Value DataValue;
+		typedef Module::Analyzer::Thread::Exception Exception;
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;

@@ -64,20 +64,25 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// destructor stub
 	MarkovTweet::~MarkovTweet() {}
 
-	// initialize algorithm run, throws std::runtime_error
+	// initialize algorithm run, throws Thread::Exception
 	void MarkovTweet::onAlgoInit() {
 		// set target fields
 		std::vector<std::string> fields, types;
+
 		fields.reserve(2);
 		types.reserve(2);
+
 		fields.emplace_back(this->markovTweetResultField);
 		fields.emplace_back(this->markovTweetSourcesField);
+
 		types.emplace_back("LONGTEXT NOT NULL");
 		types.emplace_back("BIGINT UNSIGNED NOT NULL");
+
 		this->database.setTargetFields(fields, types);
 
 		// initialize target table
 		this->setStatusMessage("Creating result table...");
+
 		this->database.initTargetTable(true);
 
 		// get text corpus
@@ -85,14 +90,28 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string corpus, dateFrom, dateTo;
+
 			unsigned long corpusSources = 0;
+
 			if(this->config.filterDateEnable) {
 				dateFrom = this->config.filterDateFrom;
 				dateTo = this->config.filterDateTo;
 			}
-			this->database.getCorpus(CorpusProperties(this->config.generalInputSources.at(n),
-					this->config.generalInputTables.at(n), this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo);
+
+			this->database.getCorpus(
+					CorpusProperties(
+							this->config.generalInputSources.at(n),
+							this->config.generalInputTables.at(n),
+							this->config.generalInputFields.at(n)
+					),
+					corpus,
+					corpusSources,
+					dateFrom,
+					dateTo
+			);
+
 			this->generator.addCorpus(corpus);
+
 			this->sources += corpusSources;
 		}
 
@@ -103,17 +122,24 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// set callbacks (suppressing wrong error messages by Eclipse IDE)
 		this->generator.setIsRunningCallback( // @suppress("Invalid arguments")
-				std::bind(&MarkovTweet::_isRunning, this));
+				std::bind(&MarkovTweet::_isRunning, this)
+		);
+
 		this->generator.setSetStatusCallback( // @suppress("Invalid arguments")
-				std::bind(&MarkovTweet::_setStatus, this, std::placeholders::_1));
+				std::bind(&MarkovTweet::_setStatus, this, std::placeholders::_1)
+		);
+
 		this->generator.setSetProgressCallback( // @suppress("Invalid arguments")
-				std::bind(&MarkovTweet::_setProgress, this, std::placeholders::_1));
+				std::bind(&MarkovTweet::_setProgress, this, std::placeholders::_1)
+		);
+
 		this->generator.setLogCallback( // @suppress("Invalid arguments")
-				std::bind(&MarkovTweet::_log, this, std::placeholders::_1));
+				std::bind(&MarkovTweet::_log, this, std::placeholders::_1)
+		);
 
 		// compile text corpus
 		if(!(this->generator.compile(this->markovTweetDimension)))
-			throw std::runtime_error("Error while compiling corpus for tweet generation");
+			throw Exception("Error while compiling corpus for tweet generation");
 
 		// re-allow pausing the thread
 		this->allowPausing();
@@ -124,33 +150,53 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// check number of tweets (internally saved as "last") if necessary
 		if(this->markovTweetMax && this->getLast() >= this->markovTweetMax) {
 			this->finished();
+
 			return;
 		}
 
 		// generate tweet
 		this->setStatusMessage("Generating tweet...");
+
 		std::string tweet = this->generator.randomSentence(this->markovTweetLength);
 
 		// insert tweet into result table in the database
 		Main::Data::InsertFieldsMixed data;
+
 		data.columns_types_values.reserve(2);
-		data.table = "crawlserv_" + this->websiteNamespace + "_"
-				+ this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
-		data.columns_types_values.emplace_back("analyzed__"
-				+ this->markovTweetResultField, DataType::_string, DataValue(tweet));
-		data.columns_types_values.emplace_back("analyzed__"
-				+ this->markovTweetSourcesField, DataType::_ulong, DataValue(this->sources));
+
+		data.table =
+				"crawlserv_"
+				+ this->websiteNamespace
+				+ "_"
+				+ this->urlListNamespace
+				+ "_analyzed_"
+				+ this->config.generalResultTable;
+
+		data.columns_types_values.emplace_back(
+				"analyzed__" + this->markovTweetResultField,
+				DataType::_string,
+				DataValue(tweet)
+		);
+
+		data.columns_types_values.emplace_back(
+				"analyzed__" + this->markovTweetSourcesField,
+				DataType::_ulong,
+				DataValue(this->sources)
+		);
+
 		this->database.insertCustomData(data);
 
 		// increase tweet count (internally saved as "last") and calculate progress if necessary
 		if(this->markovTweetMax) {
 			this->incrementLast();
+
 			this->setProgress(static_cast<float>(this->getLast()) / this->markovTweetMax);
 		}
 
 		// sleep if necessary
 		if(this->markovTweetSleep) {
 			this->setStatusMessage("Sleeping...");
+
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->markovTweetSleep));
 		}
 	}
@@ -182,20 +228,23 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->option("timing", this->markovTweetTiming);
 	}
 
-	// check algorithm options
+	// check algorithm options, throws Thread::Exception
 	void MarkovTweet::checkOptions() {
 		// analyzer options
 		this->Module::Analyzer::Config::checkOptions();
 
 		// algorithm options
 		if(this->config.generalInputFields.empty())
-			throw std::runtime_error("Algo::MarkovTweet::checkOptions(): No input sources provided");
+			throw Exception("Algo::MarkovTweet::checkOptions(): No input sources provided");
+
 		if(this->config.generalResultTable.empty())
-			throw std::runtime_error("Algo::MarkovTweet::checkOptions(): No result table specified");
+			throw Exception("Algo::MarkovTweet::checkOptions(): No result table specified");
+
 		if(!(this->markovTweetDimension))
-			throw std::runtime_error("Algo::MarkovTweet::checkOptions(): Markov chain dimension is zero");
+			throw Exception("Algo::MarkovTweet::checkOptions(): Markov chain dimension is zero");
+
 		if(!(this->markovTweetLength))
-			throw std::runtime_error("Algo::MarkovTweet::checkOptions(): Result tweet length is zero");
+			throw Exception("Algo::MarkovTweet::checkOptions(): Result tweet length is zero");
 
 		// check your sources
 		this->database.checkSources(
@@ -207,9 +256,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// external access to thread functionality for rawr
-	bool MarkovTweet::_isRunning() { return this->isRunning(); }
-	void MarkovTweet::_setStatus(const std::string& status) { this->setStatusMessage(status); }
-	void MarkovTweet::_setProgress(float progress) { this->setProgress(progress); }
+	bool MarkovTweet::_isRunning() {
+		return this->isRunning();
+	}
+
+	void MarkovTweet::_setStatus(const std::string& status) {
+		this->setStatusMessage(status);
+	}
+
+	void MarkovTweet::_setProgress(float progress) {
+		this->setProgress(progress);
+	}
+
 	void MarkovTweet::_log(const std::string& entry) {
 		this->log(entry);
 	}

@@ -57,7 +57,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// destructor stub
 	MarkovText::~MarkovText() {}
 
-	// initialize algorithm run, throws Main::Exception
+	// initialize algorithm run
 	void MarkovText::onAlgoInit() {
 		// initialize random number generator
 		srand(unsigned(time(nullptr)));
@@ -216,23 +216,23 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->option("timing", this->markovTextTiming);
 	}
 
-	// check configuration
+	// check configuration, throws Thread::Exception
 	void MarkovText::checkOptions() {
 		// analyzer options
 		this->Module::Analyzer::Config::checkOptions();
 
 		// algorithm options
 		if(this->config.generalInputFields.empty())
-			throw Main::Exception("Algo::MarkovText::checkOptions(): No input sources provided");
+			throw Exception("Algo::MarkovText::checkOptions(): No input sources provided");
 
 		if(this->config.generalResultTable.empty())
-			throw Main::Exception("Algo::MarkovText::checkOptions(): No result table specified");
+			throw Exception("Algo::MarkovText::checkOptions(): No result table specified");
 
 		if(!(this->markovTextDimension))
-			throw Main::Exception("Algo::MarkovText::checkOptions(): Markov chain dimension is zero");
+			throw Exception("Algo::MarkovText::checkOptions(): Markov chain dimension is zero");
 
 		if(!(this->markovTextLength))
-			throw Main::Exception("Algo::MarkovText::checkOptions(): Result text length is zero");
+			throw Exception("Algo::MarkovText::checkOptions(): Result text length is zero");
 
 		// check your sources
 		this->database.checkSources(
@@ -312,10 +312,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 	}
 
-	// create text (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator)
+	// create text (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator),
+	//  throws Thread::Exception
 	std::string MarkovText::createText() {
 		if(!dictionary.size())
-			throw Main::Exception("Dictionary is empty");
+			throw Exception("Dictionary is empty");
 
 		std::string key, first, second, result;
 		size_t next = 0;

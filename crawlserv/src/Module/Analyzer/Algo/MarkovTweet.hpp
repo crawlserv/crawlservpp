@@ -44,6 +44,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// for convenience
 		typedef Main::Data::Type DataType;
 		typedef Main::Data::Value DataValue;
+		typedef Module::Analyzer::Thread::Exception Exception;
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
