@@ -14,7 +14,7 @@
 
 namespace crawlservpp::Main {
 
-	// constructor
+	// constructor, throws Main::Exception
 	Server::Server(
 			const DatabaseSettings& databaseSettings,
 			const ServerSettings& serverSettings
@@ -27,25 +27,32 @@ namespace crawlservpp::Main {
 			  offline(true),
 			  webServer(MAIN_SERVER_DIR_CACHE) {
 		// create cache directory if it does not exist
-		if(!std::filesystem::is_directory(MAIN_SERVER_DIR_CACHE)
-			|| !std::filesystem::exists(MAIN_SERVER_DIR_CACHE))
+		if(
+				!std::filesystem::is_directory(MAIN_SERVER_DIR_CACHE)
+				|| !std::filesystem::exists(MAIN_SERVER_DIR_CACHE)
+		)
 			std::filesystem::create_directory(MAIN_SERVER_DIR_CACHE);
 		else
 			// directory exists: clear it
 			Helper::FileSystem::clearDirectory(MAIN_SERVER_DIR_CACHE);
 
 		// create cookies directory if it does not exist
-		if(!std::filesystem::is_directory(MAIN_SERVER_DIR_COOKIES)
-			|| !std::filesystem::exists(MAIN_SERVER_DIR_COOKIES))
+		if(
+				!std::filesystem::is_directory(MAIN_SERVER_DIR_COOKIES)
+				|| !std::filesystem::exists(MAIN_SERVER_DIR_COOKIES)
+		)
 			std::filesystem::create_directory(MAIN_SERVER_DIR_COOKIES);
 
-		// connect to database and initialize it
+		// set database option
 		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
+
+		// connect to database and initialize it
 		this->database.connect();
 		this->database.initializeSql();
 		this->database.prepare();
 		this->database.update();
 
+		// change state to online
 		this->offline = false;
 
 		// set callbacks (suppressing wrong error messages by Eclipse IDE)
@@ -66,6 +73,7 @@ namespace crawlservpp::Main {
 
 		// initialize mongoose embedded web server, bind it to port and set CORS string
 		this->webServer.initHTTP(serverSettings.port);
+
 		this->webServer.setCORS(serverSettings.corsOrigins);
 
 		// set initial status
@@ -73,6 +81,7 @@ namespace crawlservpp::Main {
 
 		// load threads from database
 		std::vector<Struct::ThreadDatabaseEntry> threads = this->database.getThreads();
+
 		for(auto i = threads.begin(); i != threads.end(); ++i) {
 			if(i->options.module == "crawler") {
 				// load crawler thread
@@ -132,11 +141,11 @@ namespace crawlservpp::Main {
 					configJson = Helper::Json::parseRapid(config);
 				}
 				catch(const JsonException& e) {
-					throw std::runtime_error("Could not parse configuration: " + e.whatStr());
+					throw Exception("Could not parse configuration: " + e.whatStr());
 				}
 
 				if(!configJson.IsArray())
-					throw std::runtime_error("Parsed configuration JSON is not an array.");
+					throw Exception("Parsed configuration JSON is not an array.");
 
 				// try to add algorithm according to parsed algorithm ID
 				this->analyzers.push_back(
@@ -168,7 +177,7 @@ namespace crawlservpp::Main {
 				this->database.log(logStrStr.str());
 			}
 			else
-				throw std::runtime_error("Unknown thread module \'" + i->options.module + "\'");
+				throw Exception("Unknown thread module \'" + i->options.module + "\'");
 		}
 
 		// save start time for up-time calculation
@@ -246,6 +255,7 @@ namespace crawlservpp::Main {
 				}
 			}
 		}
+
 		this->parsers.clear();
 
 		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
@@ -274,6 +284,7 @@ namespace crawlservpp::Main {
 				}
 			}
 		}
+
 		this->extractors.clear();*/
 
 		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
@@ -302,6 +313,7 @@ namespace crawlservpp::Main {
 				}
 			}
 		}
+
 		this->analyzers.clear();
 
 		// wait for worker threads
@@ -430,7 +442,7 @@ namespace crawlservpp::Main {
 		).count();
 	}
 
-	// perform a server command
+	// perform a server command, throws Main::Exception
 	std::string Server::cmd(
 			ConnectionPtr connection,
 			const std::string& msgBody,
@@ -450,27 +462,24 @@ namespace crawlservpp::Main {
 		else {
 			// check connection and get IP
 			if(!connection)
-				throw std::runtime_error("Server::cmd(): No connection specified");
+				throw Exception("Server::cmd(): No connection specified");
 
 			std::string ip(WebServer::getIP(connection));
 
 			// parse JSON
 			rapidjson::Document json;
-			bool success = false;
 
 			try {
 				json = Helper::Json::parseRapid(msgBody);
 
-				if(json.IsObject())
-					success = true;
-				else
+				if(!json.IsObject())
 					response = ServerCommandResponse::failed("Parsed JSON is not an object.");
 			}
 			catch(const JsonException& e) {
 				response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 			}
 
-			if(success){
+			if(!response.fail){
 				// get server command
 				if(json.HasMember("cmd")) {
 					if(json["cmd"].IsString()) {
@@ -629,10 +638,11 @@ namespace crawlservpp::Main {
 							else
 								response = ServerCommandResponse::failed("Empty command.");
 						}
-						catch(std::exception &e) {
+						catch(const std::exception &e) {
 							// exceptions caused by server commands should not kill the server
 							//  (and are attributed to the frontend)
 							this->database.log("frontend", e.what());
+
 							response = response = ServerCommandResponse::failed(e.what());
 						}
 					}
@@ -653,11 +663,11 @@ namespace crawlservpp::Main {
 		this->status = statusMsg;
 	}
 
-	// handle accept event
+	// handle accept event, throws Main::Exception
 	void Server::onAccept(ConnectionPtr connection) {
 		// check connection and get IP
 		if(!connection)
-			throw std::runtime_error("Server::onAccept(): No connection specified");
+			throw Exception("Server::onAccept(): No connection specified");
 
 		std::string ip(WebServer::getIP(connection));
 
@@ -712,7 +722,7 @@ namespace crawlservpp::Main {
 		}
 	}
 
-	// handle request event
+	// handle request event, throws Main::Exception
 	void Server::onRequest(
 			ConnectionPtr connection,
 			const std::string& method,
@@ -721,7 +731,7 @@ namespace crawlservpp::Main {
 	) {
 		// check connection and get IP
 		if(!connection)
-			throw std::runtime_error("Server::onRequest(): No connection specified");
+			throw Exception("Server::onRequest(): No connection specified");
 
 		std::string ip(WebServer::getIP(connection));
 
@@ -2151,26 +2161,16 @@ namespace crawlservpp::Main {
 	}
 
 	// server command import(datatype, filetype, compression, filename, [...]): import data from a file into the database
-	void Server::cmdImport(ConnectionPtr connection, unsigned long index, const std::string& message) {
+	void Server::cmdImport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
+		namespace Data = crawlservpp::Data;
+
+		rapidjson::Document json;
 		ServerCommandResponse response;
 
-		// parse JSON (again for thread)
-		rapidjson::Document json;
-		bool success = false;
+		// begin of worker thread
+		MAIN_SERVER_WORKER_BEGIN
 
-		try {
-			json = Helper::Json::parseRapid(message);
-
-			if(json.IsObject())
-				success = true;
-			else
-				response = ServerCommandResponse::failed("Parsed JSON is not an object.");
-		}
-		catch(const JsonException& e) {
-			response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
-		}
-
-		if(success) {
+		if(Server::workerBegin(message, json, response)) {
 			// get arguments
 			if(!json.HasMember("datatype"))
 				response = ServerCommandResponse::failed("Invalid arguments (\'datatype\' is missing).");
@@ -2197,51 +2197,191 @@ namespace crawlservpp::Main {
 				response = ServerCommandResponse::failed("Invalid arguments (\'filename\' is not a string).");
 
 			else {
-				std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
-				std::string filetype(json["filetype"].GetString(), json["filetype"].GetStringLength());
-				std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
+				const std::string dataType(json["datatype"].GetString(), json["datatype"].GetStringLength());
+				const std::string fileType(json["filetype"].GetString(), json["filetype"].GetStringLength());
+				const std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
+				const std::string fileName(json["filename"].GetString(), json["filename"].GetStringLength());
 
-				// [...]
+				// generate full file name to import from
+				std::string fullFileName(MAIN_SERVER_DIR_CACHE);
 
-				response = ServerCommandResponse::failed("[THREAD:] Not implemented yet.");
+				fullFileName.reserve(fullFileName.size() + fileName.size() + 1);
+
+				fullFileName += Helper::FileSystem::getPathSeparator();
+				fullFileName += fileName;
+
+				std::string content;
+
+				// check file name and whether file exists
+				if(Helper::FileSystem::contains(MAIN_SERVER_DIR_CACHE, fullFileName)) {
+					if(Helper::FileSystem::isValidFile(fullFileName)) {
+						content = std::string(Data::File::readToString(fullFileName, true));
+
+						if(compression != "none") {
+							if(compression == "gzip")
+								content = Data::Compression::Gzip::decompress(content);
+							else if(compression == "zlib")
+								content = Data::Compression::Zlib::decompress(content);
+							else
+								response = ServerCommandResponse::failed("Unknown compression type: \'" + compression + "\'.");
+						}
+					}
+					else
+						response = ServerCommandResponse::failed("File does not exist: \'" + fileName + "\'.");
+				}
+				else
+					response = ServerCommandResponse::failed("Invalid file name: \'" + fileName + "\'.");
+
+				if(!response.fail) {
+					if(dataType == "urllist") {
+						// check arguments for importing a URL list
+						if(!json.HasMember("website"))
+							response = ServerCommandResponse::failed(
+									"Invalid arguments (\'website\' is missing)."
+							);
+						else if(!json["website"].IsUint64()) {
+							response = ServerCommandResponse::failed(
+									"Invalid arguments (\'website\' is not a valid number)."
+							);
+						}
+						else if(!json.HasMember("urllist-target"))
+							response = ServerCommandResponse::failed(
+									"Invalid arguments (\'urllist-target\' is missing)."
+							);
+						else if(!json["urllist-target"].IsUint64()) {
+							response = ServerCommandResponse::failed(
+									"Invalid arguments (\'urllist-target\' is not a valid number)."
+							);
+						}
+
+						if(!response.fail) {
+							// import URL list
+							unsigned long website = json["website"].GetUint64();
+							unsigned long target = json["urllist-target"].GetUint64();
+							std::queue<std::string> urls;
+
+							if(fileType == "text") {
+								// import URL list from text file
+								if(!json.HasMember("is-firstline-header"))
+									response = ServerCommandResponse::failed(
+											"Invalid arguments (\'is-firstline-header\' is missing)."
+									);
+								else if(!json["is-firstline-header"].IsBool())
+									response = ServerCommandResponse::failed(
+											"Invalid arguments (\'is-firstline-header\' is not a boolean)."
+									);
+								else {
+									urls = Data::ImportExport::Text::importList(
+											content,
+											json["is-firstline-header"].GetBool()
+									);
+								}
+							}
+							else
+								response = ServerCommandResponse::failed("Unknown file type: \'" + fileType + "\'.");
+
+							if(!response.fail) {
+								// create new database connection for worker thread
+								Module::Database db(this->dbSettings, "worker");
+
+								// check website
+								if(!db.isWebsite(website))
+									response = ServerCommandResponse::failed("Invalid website ID.");
+								else {
+									// check URL list
+									if(target) {
+										if(!db.isUrlList(website, target))
+											response = ServerCommandResponse::failed(
+													"Invalid target URL list ID."
+											);
+									}
+									else {
+										// check arguments for URL list creation
+										if(!json.HasMember("urllist-namespace"))
+											response = ServerCommandResponse::failed(
+													"Invalid arguments (\'urllist-namespace\' is missing)."
+											);
+										else if(!json["urllist-namespace"].IsString())
+											response = ServerCommandResponse::failed(
+													"Invalid arguments (\'urllist-namespace\' is not a string)."
+											);
+										else if(!json.HasMember("urllist-name"))
+											response = ServerCommandResponse::failed(
+													"Invalid arguments (\'urllist-name\' is missing)."
+											);
+										else if(!json["urllist-name"].IsString())
+											response = ServerCommandResponse::failed(
+													"Invalid arguments (\'urllist-name\' is not a string)."
+											);
+										else {
+											// set properties for new URL list
+											UrlListProperties urlListProperties(
+													std::string(
+															json["urllist-namespace"].GetString(),
+															json["urllist-namespace"].GetStringLength()
+													),
+													std::string(
+															json["urllist-name"].GetString(),
+															json["urllist-name"].GetStringLength()
+													)
+											);
+
+											// add new URL list
+											target = db.addUrlList(website, urlListProperties);
+										}
+									}
+
+									if(!response.fail) {
+										// add URLs that do not exist already to URL list
+										unsigned long added = db.mergeUrls(target, urls);
+
+										// generate response
+										std::ostringstream responseStrStr;
+
+										switch(added) {
+										case 0:
+											responseStrStr << "Added no new URLs.";
+
+											break;
+
+										case 1:
+											responseStrStr << "Added one new URL.";
+
+											break;
+
+										default:
+											responseStrStr.imbue(std::locale(""));
+
+											responseStrStr << "Added " << added << " new URLs.";
+										}
+
+										response = ServerCommandResponse(responseStrStr.str());
+									}
+								}
+							}
+						}
+					}
+					else
+						response = ServerCommandResponse::failed("Unknown data type: \'" + dataType + "\'.");
+				}
 			}
 		}
 
-		// generate the reply
-		std::string replyString(Server::generateReply(response, message));
+		// end of worker thread
+		MAIN_SERVER_WORKER_END(response)
 
-		// send the reply
-		this->webServer.send(connection, 200, "application/json", replyString);
-
-		// set thread status to not running
-		{
-			std::lock_guard<std::mutex> workersLocked(this->workersLock);
-
-			this->workersRunning.at(index) = false;
-		}
+		this->workerEnd(threadIndex, connection, message, response);
 	}
 
 	// server command merge(datatype, [...]): merge two tables in the database
-	void Server::cmdMerge(ConnectionPtr connection, unsigned long index, const std::string& message) {
+	void Server::cmdMerge(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
+		rapidjson::Document json;
 		ServerCommandResponse response;
 
-		// parse JSON (again for thread)
-		rapidjson::Document json;
-		bool success = false;
+		// begin of worker thread
+		MAIN_SERVER_WORKER_BEGIN
 
-		try {
-			json = Helper::Json::parseRapid(message);
-
-			if(json.IsObject())
-				success = true;
-			else
-				response = ServerCommandResponse::failed("Parsed JSON is not an object.");
-		}
-		catch(const JsonException& e) {
-			response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
-		}
-
-		if(success) {
+		if(Server::workerBegin(message, json, response)) {
 			// get arguments
 			if(!json.HasMember("datatype"))
 				response = ServerCommandResponse::failed("Invalid arguments (\'datatype\' is missing).");
@@ -2254,45 +2394,25 @@ namespace crawlservpp::Main {
 
 				// [...]
 
-				response = ServerCommandResponse::failed("[THREAD:] Not implemented yet.");
+				response = ServerCommandResponse::failed("Not implemented yet.");
 			}
 		}
 
-		// generate the reply
-		std::string replyString(Server::generateReply(response, message));
+		// end of worker thread
+		MAIN_SERVER_WORKER_END(response)
 
-		// send the reply
-		this->webServer.send(connection, 200, "application/json", replyString);
-
-		// set thread status to not running
-		{
-			std::lock_guard<std::mutex> workersLocked(this->workersLock);
-
-			this->workersRunning.at(index) = false;
-		}
+		this->workerEnd(threadIndex, connection, message, response);
 	}
 
 	// server command export(datatype, filetype, compression, [...]): export data from the database into a file
-	void Server::cmdExport(ConnectionPtr connection, unsigned long index, const std::string& message) {
+	void Server::cmdExport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
+		rapidjson::Document json;
 		ServerCommandResponse response;
 
-		// parse JSON (again for thread)
-		rapidjson::Document json;
-		bool success = false;
+		// begin of worker thread
+		MAIN_SERVER_WORKER_BEGIN
 
-		try {
-			json = Helper::Json::parseRapid(message);
-
-			if(json.IsObject())
-				success = true;
-			else
-				response = ServerCommandResponse::failed("Parsed JSON is not an object.");
-		}
-		catch(const JsonException& e) {
-			response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
-		}
-
-		if(success) {
+		if(Server::workerBegin(message, json, response)) {
 			// get arguments
 			if(!json.HasMember("datatype"))
 				response = ServerCommandResponse::failed("Invalid arguments (\'datatype\' is missing).");
@@ -2322,26 +2442,17 @@ namespace crawlservpp::Main {
 				std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
 				std::string filetype(json["filetype"].GetString(), json["filetype"].GetStringLength());
 				std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
-				std::string filename(json["filename"].GetString(), json["filename"].GetStringLength());
 
 				// [...]
 
-				response = ServerCommandResponse::failed("[THREAD:] Not implemented yet.");
+				response = ServerCommandResponse::failed("Not implemented yet.");
 			}
 		}
 
-		// generate the reply
-		std::string replyString(Server::generateReply(response, message));
+		// end of worker thread
+		MAIN_SERVER_WORKER_END(response)
 
-		// send the reply
-		this->webServer.send(connection, 200, "application/json", replyString);
-
-		// set thread status to not running
-		{
-			std::lock_guard<std::mutex> workersLocked(this->workersLock);
-
-			this->workersRunning.at(index) = false;
-		}
+		this->workerEnd(threadIndex, connection, message, response);
 	}
 
 	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, textonly): add a query
@@ -2625,26 +2736,14 @@ namespace crawlservpp::Main {
 	}
 
 	// server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text): test query on text
-	void Server::cmdTestQuery(ConnectionPtr connection, unsigned long index, const std::string& message) {
+	void Server::cmdTestQuery(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
 		ServerCommandResponse response;
-
-		// parse JSON (again for thread)
 		rapidjson::Document json;
-		bool success = false;
 
-		try {
-			json = Helper::Json::parseRapid(message);
+		// begin of worker thread
+		MAIN_SERVER_WORKER_BEGIN
 
-			if(json.IsObject())
-				success = true;
-			else
-				response = ServerCommandResponse::failed("Parsed JSON is not an object.");
-		}
-		catch(const JsonException& e) {
-			response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
-		}
-
-		if(success) {
+		if(Server::workerBegin(message, json, response)) {
 			// get arguments
 			if(!json.HasMember("query"))
 				response = ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
@@ -2846,18 +2945,15 @@ namespace crawlservpp::Main {
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
 							rapidjson::Document jsonDocumentTest;
-							bool success = false;
 
 							try {
 								jsonDocumentTest = Helper::Json::parseRapid(text);
-
-								success = true;
 							}
 							catch(const JsonException& e) {
 								response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 							}
 
-							if(success) {
+							if(!response.fail) {
 								result += "PARSING TIME: " + timer.tickStr() + '\n';
 
 								if(resultBool) {
@@ -2915,18 +3011,15 @@ namespace crawlservpp::Main {
 							Query::JsonPath JSONPathTest(query);
 
 							jsoncons::json jsonTest;
-							bool success = false;
 
 							try {
 								jsonTest = Helper::Json::parseCons(text);
-
-								success = true;
 							}
 							catch(const JsonException& e) {
 								response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 							}
 
-							if(success) {
+							if(!response.fail) {
 								result += "PARSING TIME: " + timer.tickStr() + '\n';
 
 								if(resultBool) {
@@ -2987,18 +3080,10 @@ namespace crawlservpp::Main {
 			}
 		}
 
-		// generate the reply
-		std::string replyString(Server::generateReply(response, message));
+		// end of worker thread
+		MAIN_SERVER_WORKER_END(response)
 
-		// send the reply
-		this->webServer.send(connection, 200, "application/json", replyString);
-
-		// set thread status to not running
-		{
-			std::lock_guard<std::mutex> workersLocked(this->workersLock);
-
-			this->workersRunning.at(index) = false;
-		}
+		this->workerEnd(threadIndex, connection, message, response);
 	}
 
 	// server command addconfig(website, module, name, config): Add configuration to database
@@ -3301,6 +3386,47 @@ namespace crawlservpp::Main {
 						json["filename"].GetStringLength()
 				)
 		);
+	}
+
+	// private static helper function: begin of worker thread
+	bool Server::workerBegin(
+			const std::string& message,
+			rapidjson::Document& json,
+			ServerCommandResponse& response
+	) {
+		// parse JSON (again) for thread
+		try {
+			json = Helper::Json::parseRapid(message);
+
+			if(!json.IsObject())
+				response = ServerCommandResponse::failed("Parsed JSON is not an object.");
+		}
+		catch(const JsonException& e) {
+			response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
+		}
+
+		return !response.fail;
+	}
+
+	// private helper function: end of worker thread
+	void Server::workerEnd(
+			unsigned long threadIndex,
+			ConnectionPtr connection,
+			const std::string& message,
+			const ServerCommandResponse& response
+	) {
+		// generate the reply
+		std::string replyString(Server::generateReply(response, message));
+
+		// send the reply
+		this->webServer.send(connection, 200, "application/json", replyString);
+
+		// set thread status to not running
+		{
+			std::lock_guard<std::mutex> workersLocked(this->workersLock);
+
+			this->workersRunning.at(threadIndex) = false;
+		}
 	}
 
 	// private static helper function: generate server reply
