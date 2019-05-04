@@ -26,6 +26,7 @@
 #include <chrono>
 #include <climits>
 #include <cstdio>
+#include <exception>
 #include <queue>
 #include <sstream>
 #include <string>
