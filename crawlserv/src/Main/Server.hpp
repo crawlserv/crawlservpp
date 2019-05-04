@@ -13,8 +13,6 @@
 #ifndef MAIN_SERVER_HPP_
 #define MAIN_SERVER_HPP_
 
-#define RAPIDJSON_HAS_STDSTRING 1
-
 // hard-coded constants
 #define MAIN_SERVER_DIR_CACHE "cache" // directory for file cache
 #define MAIN_SERVER_DIR_COOKIES "cookies" // directory for cookies
@@ -205,11 +203,16 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdUpdateUrlList(const rapidjson::Document& json);
 		ServerCommandResponse cmdDeleteUrlList(const rapidjson::Document& json, const std::string& ip);
 
+		void cmdImport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
+		void cmdMerge(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
+		void cmdExport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
+
 		ServerCommandResponse cmdAddQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdUpdateQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDeleteQuery(const rapidjson::Document& json);
 		ServerCommandResponse cmdDuplicateQuery(const rapidjson::Document& json);
-		void cmdTestQuery(ConnectionPtr connection, unsigned long index, const std::string& message);
+
+		void cmdTestQuery(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
 
 		ServerCommandResponse cmdAddConfig(const rapidjson::Document& json);
 		ServerCommandResponse cmdUpdateConfig(const rapidjson::Document& json);
@@ -219,6 +222,9 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdWarp(const rapidjson::Document& json);
 
 		ServerCommandResponse cmdDownload(const rapidjson::Document& json);
+
+		// private static helper function
+		static std::string generateReply(const ServerCommandResponse& response, const std::string& msgBody);
 	};
 
 } /* crawlservpp::Main */
