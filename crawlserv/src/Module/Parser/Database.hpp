@@ -11,6 +11,7 @@
 #define MODULE_PARSER_DATABASE_HPP_
 
 #include "../../Helper/Portability/mysqlcppconn.h"
+#include "../../Main/Exception.hpp"
 #include "../../Struct/ParsingEntry.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
@@ -36,7 +37,6 @@ namespace crawlservpp::Module::Parser {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef Main::Database::Exception DatabaseException;
 		typedef Struct::TargetTableProperties TargetTableProperties;
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::TableColumn TableColumn;
@@ -91,6 +91,13 @@ namespace crawlservpp::Module::Parser {
 		// constant strings for table aliases (public)
 		const std::string parsingTableAlias;
 		const std::string targetTableAlias;
+
+		// sub-class for Parser::Database exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// options

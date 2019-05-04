@@ -429,6 +429,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// fetch and lock next URLs to parse from database, add them to the cache (i. e. queue), return the lock expiration time
+	//  throws Database::Exception
 	std::string Database::fetchUrls(unsigned long lastId, std::queue<IdString>& cache, unsigned long lockTimeout) {
 		// queue for locking URLs
 		std::queue<unsigned long> lockingQueue;
@@ -442,7 +443,7 @@ namespace crawlservpp::Module::Parser {
 				|| !(this->ps.lock10Urls)
 				|| !(this->ps.lock100Urls)
 				|| !(this->ps.lock1000Urls))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::fetchUrls(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::fetchUrls(...)");
 
 		// get prepared SQL statements
 		sql::PreparedStatement& sqlStatementFetch = this->getPreparedStatement(this->ps.fetchUrls);
@@ -531,20 +532,20 @@ namespace crawlservpp::Module::Parser {
 		return std::string();
 	}
 
-	// get the position of the URL in the URL list
+	// get the position of the URL in the URL list, throws Database::Exception
 	unsigned long Database::getUrlPosition(unsigned long urlId) {
 		unsigned long result = 0;
 
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Parser::Database::getUrlPosition(): No URL ID specified");
+			throw Exception("Parser::Database::getUrlPosition(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.getUrlPosition))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getUrlPosition()");
+			throw Exception("Missing prepared SQL statement for Parser::Database::getUrlPosition()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlPosition);
@@ -564,7 +565,7 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// get the number of URLs in the URL list
+	// get the number of URLs in the URL list, throws Database::Exception
 	unsigned long Database::getNumberOfUrls() {
 		unsigned long result = 0;
 
@@ -573,7 +574,7 @@ namespace crawlservpp::Module::Parser {
 
 		// check prepared SQL statement
 		if(!(this->ps.getNumberOfUrls))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getNumberOfUrls()");
+			throw Exception("Missing prepared SQL statement for Parser::Database::getNumberOfUrls()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNumberOfUrls);
@@ -592,7 +593,7 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// let the database calculate the current URL lock expiration time
+	// let the database calculate the current URL lock expiration time, throws Database::Exception
 	std::string Database::getLockTime(unsigned long lockTimeout) {
 		std::string result;
 
@@ -601,7 +602,7 @@ namespace crawlservpp::Module::Parser {
 
 		// check prepared SQL statement
 		if(!(this->ps.getLockTime))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getLockTime(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::getLockTime(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLockTime);
@@ -621,7 +622,7 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// get the URL lock expiration time for a specific URL from the database
+	// get the URL lock expiration time for a specific URL from the database, throws Database::Exception
 	std::string Database::getUrlLockTime(unsigned long urlId) {
 		std::string result;
 
@@ -634,7 +635,7 @@ namespace crawlservpp::Module::Parser {
 
 		// check prepared SQL statement
 		if(!(this->ps.getUrlLockTime))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getUrlLockTime(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::getUrlLockTime(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockTime);
@@ -654,13 +655,14 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful
+	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful,
+	//  throws Database::Exception
 	std::string Database::renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout) {
 		std::string dbg;
 
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Parser::Database::renewUrlLockIfOk(): No URL ID specified");
+			throw Exception("Parser::Database::renewUrlLockIfOk(): No URL ID specified");
 
 		// get lock time
 		std::string newLockTime = this->getLockTime(lockTimeout);
@@ -670,7 +672,7 @@ namespace crawlservpp::Module::Parser {
 
 		// check prepared SQL statements
 		if(!(this->ps.renewUrlLockIfOk))
-			throw DatabaseException("Missing prepared SQL statement for Module::Parser::Database::renewUrlLockIfOk(...)");
+			throw Exception("Missing prepared SQL statement for Module::Parser::Database::renewUrlLockIfOk(...)");
 
 		// get prepared SQL statement for renewing the URL lock
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
@@ -693,7 +695,7 @@ namespace crawlservpp::Module::Parser {
 		return newLockTime;
 	}
 
-	// unlock a URL in the database, return whether unlocking was successful
+	// unlock a URL in the database, return whether unlocking was successful, throws Database::Exception
 	bool Database::unLockUrlIfOk(unsigned long urlId, const std::string& lockTime) {
 		// check argument
 		if(!urlId)
@@ -704,7 +706,7 @@ namespace crawlservpp::Module::Parser {
 
 		// check prepared SQL statement
 		if(!(this->ps.unLockUrlIfOk))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::unLockUrlIfOk(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::unLockUrlIfOk(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.unLockUrlIfOk);
@@ -761,20 +763,20 @@ namespace crawlservpp::Module::Parser {
 		lockTime.clear();
 	}
 
-	// get content ID from parsed ID
+	// get content ID from parsed ID, throws Database::Exception
 	unsigned long Database::getContentIdFromParsedId(const std::string& parsedId) {
 		unsigned long result = 0;
 
 		// check argument
 		if(parsedId.empty())
-			throw DatabaseException("Parser::Database::getContentIdFromParsedId(): No parsed ID specified");
+			throw Exception("Parser::Database::getContentIdFromParsedId(): No parsed ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.getContentIdFromParsedId))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getContentIdFromParsedId(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::getContentIdFromParsedId(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getContentIdFromParsedId);
@@ -795,14 +797,15 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// check the parsing table, delete duplicate URL locks and return the number of deleted URL locks
+	// check the parsing table, delete duplicate URL locks and return the number of deleted URL locks,
+	//  throws Database::Exception
 	unsigned int Database::checkParsingTable() {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement for locking the URL
 		if(!(this->ps.checkParsingTable))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::checkParsingTable(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::checkParsingTable(...)");
 
 		// get prepared SQL statement for locking the URL
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.checkParsingTable);
@@ -820,21 +823,22 @@ namespace crawlservpp::Module::Parser {
 		return 0;
 	}
 
-	// get latest content for the ID-specified URL, return false if there is no content
+	// get latest content for the ID-specified URL, return false if there is no content,
+	//  throws Database::Exception
 	bool Database::getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo) {
 		IdString result;
 		bool success = false;
 
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Parser::Database::getLatestContent(): No URL ID specified");
+			throw Exception("Parser::Database::getLatestContent(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.getLatestContent))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getLatestContent(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::getLatestContent(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLatestContent);
@@ -862,20 +866,20 @@ namespace crawlservpp::Module::Parser {
 		return false;
 	}
 
-	// get all contents for the ID-specified URL
+	// get all contents for the ID-specified URL, throws Database::Exception
 	std::queue<Database::IdString> Database::getAllContents(unsigned long urlId) {
 		std::queue<IdString> result;
 
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Parser::Database::getAllContents(): No URL ID specified");
+			throw Exception("Parser::Database::getAllContents(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.getAllContents))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::getAllContents(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::getAllContents(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getAllContents);
@@ -897,7 +901,7 @@ namespace crawlservpp::Module::Parser {
 		return result;
 	}
 
-	// add parsed data to database (update if row for ID-specified content already exists
+	// add parsed data to database (update if row for ID-specified content already exists, throws Database::Exception
 	void Database::updateOrAddEntries(std::queue<ParsingEntry>& entries) {
 		// check argument
 		if(entries.empty())
@@ -912,7 +916,7 @@ namespace crawlservpp::Module::Parser {
 				|| !(this->ps.updateOrAdd100Entries)
 				|| !(this->ps.updateOrAdd1000Entries)
 		)
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::updateOrAddEntries(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::updateOrAddEntries(...)");
 
 		// get prepared SQL statements
 		sql::PreparedStatement& sqlStatement1 = this->getPreparedStatement(this->ps.updateOrAddEntry);
@@ -1070,7 +1074,7 @@ namespace crawlservpp::Module::Parser {
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::updateOrAddEntries", e); }
 	}
 
-	// set URL as parsed in the database
+	// set URL as parsed in the database, throws Database::Exception
 	void Database::setUrlsFinishedIfLockOk(std::queue<IdString>& finished) {
 		// check argument
 		if(finished.empty())
@@ -1082,7 +1086,7 @@ namespace crawlservpp::Module::Parser {
 		// check prepared SQL statements
 		if(!(this->ps.setUrlFinishedIfLockOk) || !(this->ps.set10UrlsFinishedIfLockOk)
 				|| !(this->ps.set100UrlsFinishedIfLockOk) || !(this->ps.set1000UrlsFinishedIfLockOk))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::setUrlsFinishedIfLockOk(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::setUrlsFinishedIfLockOk(...)");
 
 		// get prepared SQL statements
 		sql::PreparedStatement& sqlStatement1 = this->getPreparedStatement(this->ps.setUrlFinishedIfLockOk);
@@ -1135,14 +1139,14 @@ namespace crawlservpp::Module::Parser {
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::setUrlsFinishedIfLockOk", e); }
 	}
 
-	// update target table
+	// update target table, throws Database::Exception
 	void Database::updateTargetTable() {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.updateTargetTable))
-			throw DatabaseException("Missing prepared SQL statement for Parser::Database::updateTargetTable(...)");
+			throw Exception("Missing prepared SQL statement for Parser::Database::updateTargetTable(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateTargetTable);
@@ -1214,11 +1218,11 @@ namespace crawlservpp::Module::Parser {
 		return true;
 	}
 
-	// generate a SQL query for locking a specific number of URLs
+	// generate a SQL query for locking a specific number of URLs, throws Database::Exception
 	std::string Database::queryLockUrls(unsigned int numberOfUrls) {
 		// check arguments
 		if(!numberOfUrls)
-			throw DatabaseException("Database::queryLockUrls(): No number of URLs specified");
+			throw Exception("Database::queryLockUrls(): No number of URLs specified");
 
 		std::ostringstream sqlQueryStrStr;
 
@@ -1253,11 +1257,11 @@ namespace crawlservpp::Module::Parser {
 		return sqlQueryStrStr.str();
 	}
 
-	// generate SQL query for updating or adding a specific number of parsed entries
+	// generate SQL query for updating or adding a specific number of parsed entries, throws Database::Exception
 	std::string Database::queryUpdateOrAddEntries(unsigned int numberOfEntries) {
 		// check arguments
 		if(!numberOfEntries)
-			throw DatabaseException("Database::queryUpdateOrAddEntries(): No number of entries specified");
+			throw Exception("Database::queryUpdateOrAddEntries(): No number of entries specified");
 
 		// create INSERT INTO clause
 		std::string sqlQueryStr("INSERT INTO `" + this->targetTableFull + "`"
@@ -1308,11 +1312,12 @@ namespace crawlservpp::Module::Parser {
 		return sqlQueryStr;
 	}
 
-	// generate SQL query for setting a specific number of URLs to finished if they haven't been locked since parsing
+	// generate SQL query for setting a specific number of URLs to finished if they haven't been locked since parsing,
+	//  throws Database::Exception
 	std::string Database::querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls) {
 		// check arguments
 		if(!numberOfUrls)
-			throw DatabaseException("Database::querySetUrlsFinishedIfLockOk(): No number of URLs specified");
+			throw Exception("Database::querySetUrlsFinishedIfLockOk(): No number of URLs specified");
 
 		// create UPDATE SET clause
 		std::ostringstream sqlQueryStrStr;
