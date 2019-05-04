@@ -12,6 +12,7 @@
 #define MAIN_APP_HPP_
 
 #include "ConfigFile.hpp"
+#include "Exception.hpp"
 #include "Server.hpp"
 
 #include "../Helper/DateTime.hpp"
@@ -29,7 +30,6 @@
 #include <exception>
 #include <iostream>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 namespace crawlservpp::Main {

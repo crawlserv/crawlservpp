@@ -195,13 +195,13 @@ namespace crawlservpp::Main {
 		std::cout << Helper::Versions::getLibraryVersionsStr(" ") << std::endl;
 	}
 
-	// static helper function: check number of command line arguments, throws std::runtime_error
+	// static helper function: check number of command line arguments, throws Main::Exception
 	void App::checkArgumentNumber(int argc) {
 		if(argc != 2)
-			throw std::runtime_error("USAGE: crawlserv <config_file> or crawlserv -v");
+			throw Exception("USAGE: crawlserv <config_file> or crawlserv -v");
 	}
 
-	// static helper function: load database and server settings from configuration file, throws std::runtime_error
+	// static helper function: load database and server settings from configuration file, throws Main::Exception
 	void App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings,	ServerSettings& serverSettings) {
 		ConfigFile configFile(fileName);
 
@@ -211,7 +211,7 @@ namespace crawlservpp::Main {
 			dbSettings.port = boost::lexical_cast<unsigned short>(configFile.getValue("db_port"));
 		}
 		catch(const boost::bad_lexical_cast& e) {
-			throw std::runtime_error(
+			throw Exception(
 							fileName + ":"
 							" Could not convert config file entry \"db_port\""
 							" (=\"" + configFile.getValue("db_port") + "\") to numeric value"
@@ -226,7 +226,7 @@ namespace crawlservpp::Main {
 				dbSettings.compression = boost::lexical_cast<bool>(configFile.getValue("server_client_compress"));
 			}
 			catch(const boost::bad_lexical_cast& e) {
-				throw std::runtime_error(
+				throw Exception(
 						fileName + ":"
 						" Could not convert config file entry"
 						" \"server_client_compress\" (=\"" + configFile.getValue("server_client_compress") + "\")"
@@ -246,7 +246,7 @@ namespace crawlservpp::Main {
 				serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
 			}
 			catch(const boost::bad_lexical_cast& e) {
-				throw std::runtime_error(
+				throw Exception(
 						fileName + ":"
 						" Could not convert config file entry \"server_logs_deletable\""
 						" (=\""	+ configFile.getValue("server_logs_deletable") + "\")"
@@ -262,7 +262,7 @@ namespace crawlservpp::Main {
 				serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
 			}
 			catch(const boost::bad_lexical_cast& e) {
-				throw std::runtime_error(
+				throw Exception(
 						fileName + ":"
 						" Could not convert config file entry \"server_data_deletable\""
 						" (=\"" + configFile.getValue("server_data_deletable") + "\")"
