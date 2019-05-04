@@ -5,7 +5,10 @@
 ----
 -->
 
+
 <?php
+
+$db_init = true;
 
 require "../config.php";
 

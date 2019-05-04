@@ -1,7 +1,7 @@
-
-<h2>Logs</h2>
-
 <?php
+
+$db_init = true;
+$cc_init = true;
 
 require "config.php";
 
@@ -16,6 +16,8 @@ else
     $filter = "";
 
 ?>
+
+<h2>Logs</h2>
 
 <div id="top-box">
 

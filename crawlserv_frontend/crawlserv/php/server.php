@@ -1,6 +1,8 @@
 
 <?php
 
+$cc_init = true;
+
 require "config.php";
 
 ?>

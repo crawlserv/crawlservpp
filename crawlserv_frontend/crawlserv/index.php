@@ -13,21 +13,18 @@ error_reporting(E_ALL);
 // </DEBUG>
 
 // get navigation
-
 if(isset($_POST["m"]))
     $m = $_POST["m"];
 else
     $m = "server";
 
 // get optional attribute
-
 if(isset($_POST["mode"]))
     $mode_attribute = ' data-mode="'.$_POST["mode"].'"';
 else
     $mode_attribute = "";
 
 // send header with content type and character encoding
-
 header('Content-Type: text/html; charset=utf-8');
 
 ?>

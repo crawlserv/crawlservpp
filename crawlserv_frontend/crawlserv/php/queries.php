@@ -1,5 +1,7 @@
-
 <?php
+
+$db_init = true;
+$cc_init = true;
 
 require "_helpers.php";
 require "config.php";
