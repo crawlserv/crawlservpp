@@ -245,7 +245,7 @@ namespace crawlservpp::Helper::Json {
 		return buffer.GetString();
 	}
 
-	// parse JSON using RapidJSON
+	// parse JSON using RapidJSON, throws Json::Exception
 	inline rapidjson::Document parseRapid(const std::string& json) {
 		rapidjson::Document doc;
 
@@ -276,7 +276,7 @@ namespace crawlservpp::Helper::Json {
 		return doc;
 	}
 
-	// parse JSON using jsoncons
+	// parse JSON using jsoncons, throws Json::Exception
 	inline jsoncons::json parseCons(const std::string& json) {
 		try {
 			jsoncons::json result = jsoncons::json::parse(json);
