@@ -13,6 +13,7 @@
 #ifndef MODULE_CRAWLER_CONFIG_HPP_
 #define MODULE_CRAWLER_CONFIG_HPP_
 
+#include "../../Main/Exception.hpp"
 #include "../../Network/Config.hpp"
 #include "../../Struct/ConfigItem.hpp"
 
@@ -128,6 +129,13 @@ namespace crawlservpp::Module::Crawler {
 			bool expectedErrorIfLarger;
 			bool expectedErrorIfSmaller;
 		} config;
+
+		// sub-class for Crawler::Config exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// crawling-specific configuration parsing
@@ -274,7 +282,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("error.if.smaller", this->config.expectedErrorIfSmaller);
 	}
 
-	// check parsing-specific configuration
+	// check parsing-specific configuration, throws Config::Exception
 	inline void Config::checkOptions() {
 		// check for link extraction query
 		if(this->config.crawlerQueriesLinks.empty())

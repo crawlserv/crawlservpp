@@ -80,12 +80,12 @@ namespace crawlservpp::Module::Parser {
 			bool parsingRepairCData;
 		} config;
 
-		// sub-class for Module::Config exceptions
+		// sub-class for Parser::Config exceptions
 		class Exception : public Main::Exception {
-			public:
-				Exception(const std::string& description) : Main::Exception(description) {}
-				virtual ~Exception() {}
-			};
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// parsing-specific configuration parsing

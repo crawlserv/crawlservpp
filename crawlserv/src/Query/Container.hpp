@@ -15,6 +15,7 @@
 #include "RegEx.hpp"
 #include "XPath.hpp"
 
+#include "../Main/Exception.hpp"
 #include "../Struct/QueryProperties.hpp"
 
 #include <memory>
@@ -31,6 +32,13 @@ namespace crawlservpp::Query {
 	public:
 		Container();
 		virtual ~Container();
+
+		// sub-class for query container exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// structure used by child classes to identify queries

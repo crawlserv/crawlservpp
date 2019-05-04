@@ -19,6 +19,7 @@
 
 #include <limits>
 #include <queue>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -130,7 +131,7 @@ protected:
 	// destructor stub
 	inline Config::~Config() {}
 
-	// load configuration
+	// load configuration, throws Config::Exception
 	inline void Config::loadConfig(const std::string& configJson, std::queue<std::string>& warningsTo) {
 		// save pointer to logging queue
 		this->logPtr = &warningsTo;
@@ -142,14 +143,14 @@ protected:
 			json = Helper::Json::parseRapid(configJson);
 		}
 		catch(const JsonException& e) {
-			throw Config::Exception(
+			throw Exception(
 					"Module::Config::loadConfig(): Could not parse configuration JSON - "
 					+ e.whatStr()
 			);
 		}
 
 		if(!json.IsArray())
-			throw Config::Exception(
+			throw Exception(
 					"Module::Config::loadConfig(): Invalid configuration JSON (is no array)."
 			);
 
@@ -299,11 +300,11 @@ protected:
 			this->currentCategory = false;
 	}
 
-	// check for a configuration option (bool)
+	// check for a configuration option (bool), throws Config::Exception
 	inline void Config::option(const std::string& name, bool& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -327,11 +328,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of bools)
+	// check for a configuration option (array of bools), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<bool>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -371,11 +372,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (char)
+	// check for a configuration option (char), throws Config::Exception
 	inline void Config::option(const std::string& name, char& target, CharParsingOption opt) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -424,18 +425,18 @@ protected:
 			break;
 
 		default:
-			throw Config::Exception("Config::option(): Invalid string parsing option");
+			throw Exception("Config::option(): Invalid string parsing option");
 		}
 
 		// current item is parsed
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of chars)
+	// check for a configuration option (array of chars), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<char>& target, CharParsingOption opt) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -500,7 +501,7 @@ protected:
 					break;
 
 				default:
-					throw Config::Exception("Config::option(): Invalid string parsing option");
+					throw Exception("Config::option(): Invalid string parsing option");
 				}
 			}
 		}
@@ -514,11 +515,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (short)
+	// check for a configuration option (short), throws Config::Exception
 	inline void Config::option(const std::string& name, short& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -551,11 +552,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of shorts)
+	// check for a configuration option (array of shorts), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<short>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -604,11 +605,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (int)
+	// check for a configuration option (int), throws Config::Exception
 	inline void Config::option(const std::string& name, int& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -632,11 +633,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of ints)
+	// check for a configuration option (array of ints), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<int>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -676,11 +677,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (long)
+	// check for a configuration option (long), throws Config::Exception
 	inline void Config::option(const std::string& name, long& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -704,11 +705,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of longs)
+	// check for a configuration option (array of longs), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<long>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -748,11 +749,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned char)
+	// check for a configuration option (unsigned char), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned char& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -785,11 +786,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned chars)
+	// check for a configuration option (array of unsigned chars), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned char>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -838,11 +839,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned short)
+	// check for a configuration option (unsigned short), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned short& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -875,11 +876,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned shorts)
+	// check for a configuration option (array of unsigned shorts), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned short>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -928,11 +929,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned int)
+	// check for a configuration option (unsigned int), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned int& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -956,11 +957,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned ints)
+	// check for a configuration option (array of unsigned ints), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned int>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -1000,11 +1001,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned long)
+	// check for a configuration option (unsigned long), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned long& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -1028,11 +1029,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned longs)
+	// check for a configuration option (array of unsigned longs), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned long>& target) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -1072,11 +1073,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (string)
+	// check for a configuration option (string), throws Config::Exception
 	inline void Config::option(const std::string& name, std::string &target, StringParsingOption opt) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -1127,7 +1128,7 @@ protected:
 				break;
 
 			default:
-				throw Config::Exception("Config::option(): Invalid string parsing option");
+				throw Exception("Config::option(): Invalid string parsing option");
 			}
 		}
 		else if(this->currentItem.value->IsNull())
@@ -1142,11 +1143,11 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of strings)
+	// check for a configuration option (array of strings), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt) {
 		// check parsing state
 		if(!(this->setCategory))
-			throw Config::Exception("Module::Config::option(): No category has been set");
+			throw Exception("Module::Config::option(): No category has been set");
 
 		if(this->finished || !(this->currentCategory))
 			return;
@@ -1202,7 +1203,7 @@ protected:
 						break;
 
 					default:
-						throw Config::Exception("Config::option(): Invalid string parsing option");
+						throw Exception("Config::option(): Invalid string parsing option");
 					}
 				}
 				else {

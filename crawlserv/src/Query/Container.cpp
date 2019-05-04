@@ -17,7 +17,7 @@ namespace crawlservpp::Query {
 	// destructor stub
 	Container::~Container() {}
 
-	// add query to internal vectors and return index, throws std::runtime_error
+	// add query to internal vectors and return index, throws Container::Exception
 	Container::QueryStruct Container::addQuery(const QueryProperties& properties) {
 		Container::QueryStruct newQuery;
 		newQuery.resultBool = properties.resultBool;
@@ -55,7 +55,7 @@ namespace crawlservpp::Query {
 
 				newQuery.type = QueryStruct::typeJsonPath;
 			}
-			else throw std::runtime_error("Unknown query type \'" + properties.type + "\'");
+			else throw Exception("Unknown query type \'" + properties.type + "\'");
 		}
 
 		return newQuery;
