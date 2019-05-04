@@ -180,7 +180,7 @@ namespace crawlservpp::Module::Parser {
 		this->tickCounter = 0;
 	}
 
-	// parser tick
+	// parser tick, throws Thread::Exception
 	void Thread::onTick() {
 		bool skip = false;
 		unsigned long parsed = 0;
@@ -411,7 +411,7 @@ namespace crawlservpp::Module::Parser {
 		throw(std::logic_error("Thread::interrupt() not to be used by thread itself"));
 	}
 
-	// initialize queries
+	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		// reserve memory for query ids
 		this->queriesId.reserve(this->config.parsingIdQueries.size());

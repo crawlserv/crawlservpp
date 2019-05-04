@@ -38,7 +38,6 @@
 #include <algorithm>
 #include <cctype>
 #include <chrono>
-#include <exception>
 #include <locale>
 #include <queue>
 #include <sstream>
@@ -53,7 +52,6 @@ namespace crawlservpp::Module::Parser {
 	class Thread: public Module::Thread, public Query::Container, public Config {
 		// for convenience
 		typedef Helper::Json::Exception JsonException;
-		typedef Main::Exception Exception;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::QueryProperties QueryProperties;
@@ -79,6 +77,13 @@ namespace crawlservpp::Module::Parser {
 
 		// destructor
 		virtual ~Thread();
+
+		// sub-class for Parser exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// database for the thread
