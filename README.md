@@ -165,6 +165,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::DatabaseSettings`](crawlserv/src/Struct/DatabaseSettings.hpp)**: Basic database settings (host, port, user, password, schema, compression).
 * **[`Struct::ParsingEntry`](crawlserv/src/Struct/ParsingEntry.hpp)**: Parsed data (content ID, parsed ID, parsed date/time, parsed fields).
 * **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.hpp)**: Basic query properties (name, text, type, result type).
+* **[`Struct::ServerCommandResponse`](crawlserv/src/Struct/ServerCommandResponse.hpp)**: Response from the command-and-control server.
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.hpp)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
 * **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.hpp)**: Structure for table columns (name, type, reference, indexed).
 * **[`Struct::TableProperties`](crawlserv/src/Struct/TableProperties.hpp)**: Table properties (name, columns, data directory, compression).
