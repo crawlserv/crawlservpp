@@ -29,7 +29,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <vector>
