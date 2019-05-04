@@ -12,7 +12,9 @@
 namespace crawlservpp::Parsing {
 
 	// constructor: create tidy object and fill buffer struct with zeros
-	HTML::HTML() : doc(tidyCreate()), buffer(TidyBuffer()) {}
+	HTML::HTML() : doc(tidyCreate()) {
+		tidyBufInit(&(this->buffer));
+	}
 
 	// destructor: free buffer if necessary and release tidy object
 	HTML::~HTML() {
