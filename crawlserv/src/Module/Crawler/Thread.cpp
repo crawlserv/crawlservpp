@@ -73,8 +73,9 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
-		// set ID, website and URL list namespace
+		// set ID, URL list and URL list namespace
 		this->database.setId(this->getId());
+		this->database.setUrlListId(this->getUrlList());
 		this->database.setNamespaces(this->websiteNamespace, this->urlListNamespace);
 
 		// load configuration
