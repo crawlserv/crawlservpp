@@ -69,7 +69,7 @@ namespace crawlservpp::Module {
 			);
 	}
 
-	// set the status message of a thread (and add the pause state)
+	// set the status message of a thread (and add the pause state), throws Database::Exception
 	void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
 		// check connection
 		this->checkConnection();
@@ -104,7 +104,8 @@ namespace crawlservpp::Module {
 		catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadStatusMessage", e); }
 	}
 
-	// set the progress of a thread to between 0 for 0% and 1 for 100% in database (and update runtime)
+	// set the progress of a thread to between 0 for 0% and 1 for 100% in database (and update runtime),
+	//  throws Database::Exception
 	void Database::setThreadProgress(unsigned long threadId, float threadProgress, unsigned long threadRunTime) {
 		// check connection
 		this->checkConnection();
@@ -126,7 +127,7 @@ namespace crawlservpp::Module {
 		catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadProgress", e); }
 	}
 
-	// set last ID of thread in database
+	// set last ID of thread in database, throws Database::Exception
 	void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
 		// check connection
 		this->checkConnection();

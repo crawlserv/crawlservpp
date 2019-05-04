@@ -16,9 +16,7 @@
 #include "../Main/Database.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 
-#include <exception>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 namespace crawlservpp::Wrapper {
