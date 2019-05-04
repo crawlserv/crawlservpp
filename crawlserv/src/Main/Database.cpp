@@ -452,7 +452,8 @@ namespace crawlservpp::Main {
 
 			// execute SQL query
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
-					"SELECT id, module, status, paused, website, urllist, config, last FROM crawlserv_threads"
+					"SELECT id, module, status, paused, website, urllist, config, last"
+					" FROM crawlserv_threads"
 			));
 
 			// get results
@@ -1882,6 +1883,134 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
+	// insert URLs that do not already exist into the specified URL list and return the number of added URLs
+	unsigned long Database::mergeUrls(unsigned long listId, std::queue<std::string>& urls) {
+		unsigned long result = 0;
+
+		// check arguments
+		if(!listId)
+			throw Database::Exception("Main::Database::mergeUrls(): No URL list ID specified");
+
+		if(urls.empty())
+			return 0;
+
+		// get ID and namespaces of website
+		IdString website = this->getWebsiteNamespaceFromUrlList(listId);
+
+		// get namespace of URL list and generate name of URL list table
+		std::string urlListTable =
+				"crawlserv_"
+				+ website.second
+				+ "_"
+				+ this->getUrlListNamespace(listId);
+
+		// generate SQL string for URL hashing
+		std::string hashQuery("CRC32( ");
+
+		if(this->isUrlListCaseSensitive(listId))
+			hashQuery += "?";
+		else
+			hashQuery += "LOWER( ? )";
+
+		hashQuery += " )";
+
+		// generate INSERT INTO ... VALUES clause
+		std::ostringstream sqlQueryStr;
+
+		sqlQueryStr << "INSERT IGNORE INTO `" << urlListTable << "`(id, url, hash) VALUES ";
+
+		// generate placeholders
+		for(unsigned long n = 0; n < urls.size(); ++n)
+			sqlQueryStr << "(" // begin of VALUES arguments
+							" ("
+								"SELECT id FROM"
+								" ("
+									"SELECT id, url"
+									" FROM `" << urlListTable << "`"
+									" AS `a" << n + 1 << "`"
+									" WHERE hash = " << hashQuery <<
+								" ) AS tmp2 WHERE url = ? LIMIT 1"
+							" ),"
+							"?, " <<
+							hashQuery <<
+						"), "; // end of VALUES arguments
+
+		// remove last comma and space
+		std::string sqlQuery = sqlQueryStr.str();
+
+		sqlQuery.pop_back();
+		sqlQuery.pop_back();
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// prepare SQL statement
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							sqlQuery
+					)
+			);
+
+			// execute SQL query
+			unsigned long counter = 0;
+
+			while(!urls.empty()) {
+				sqlStatement->setString((counter * 4) + 1, urls.front());
+				sqlStatement->setString((counter * 4) + 2, urls.front());
+				sqlStatement->setString((counter * 4) + 3, urls.front());
+				sqlStatement->setString((counter * 4) + 4, urls.front());
+
+				urls.pop();
+
+				counter++;
+			}
+
+			result = Database::sqlExecuteUpdate(sqlStatement);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::mergeUrls", e); }
+
+		return result;
+	}
+
+	// get all URLs from the specified URL list
+	std::queue<std::string> Database::getUrls(unsigned long listId) {
+		std::queue<std::string> result;
+
+		// check argument
+		if(!listId)
+			throw Database::Exception("Main::Database::getUrls(): No URL list ID specified");
+
+		// get ID and namespaces of website
+		IdString website = this->getWebsiteNamespaceFromUrlList(listId);
+
+		// get namespace of URL list and generate name of URL list table
+		std::string urlListTable =
+				"crawlserv_"
+				+ website.second
+				+ "_"
+				+ this->getUrlListNamespace(listId);
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(
+					sqlStatement,
+					"SELECT url FROM `" + urlListTable + "`"
+			));
+
+			// get results
+			if(sqlResultSet)
+				while(sqlResultSet->next())
+					result.emplace(sqlResultSet->getString("url"));
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getUrls", e); }
+
+		return result;
+	}
+
 	// get namespace of URL list by its ID
 	std::string Database::getUrlListNamespace(unsigned long listId) {
 		std::string result;
@@ -2447,7 +2576,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement
+			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"DELETE FROM crawlserv_queries"
@@ -2622,7 +2751,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create SQL statement for updating
+			// prepare SQL statement for updating
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"UPDATE crawlserv_configs"
@@ -5168,7 +5297,10 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement for compressing the table if table is not already compressed
 			if(!compressed)
-				Database::sqlExecute(sqlStatement, "ALTER TABLE `" + tableName + "` ROW_FORMAT=COMPRESSED");
+				Database::sqlExecute(
+						sqlStatement,
+						"ALTER TABLE `" + tableName + "` ROW_FORMAT=COMPRESSED"
+				);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::compressTable", e); }
 	}
@@ -5187,7 +5319,10 @@ namespace crawlservpp::Main {
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 			// execute SQL statement
-			Database::sqlExecute(sqlStatement, "DROP TABLE IF EXISTS `" + tableName + "`");
+			Database::sqlExecute(
+					sqlStatement,
+					"DROP TABLE IF EXISTS `" + tableName + "`"
+			);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteTable", e); }
 	}
@@ -5206,11 +5341,96 @@ namespace crawlservpp::Main {
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 			// execute SQL commands
-			Database::sqlExecute(sqlStatement, "DROP TABLE IF EXISTS `crawlserv_testaccess`");
-			Database::sqlExecute(sqlStatement, "CREATE TABLE `crawlserv_testaccess(id SERIAL)` DATA DIRECTORY=`" + dir + "`");
-			Database::sqlExecute(sqlStatement, "DROP TABLE `crawlserv_testaccess`");
+			Database::sqlExecute(
+					sqlStatement,
+					"DROP TABLE IF EXISTS `crawlserv_testaccess`"
+			);
+
+			Database::sqlExecute(
+					sqlStatement,
+					"CREATE TABLE `crawlserv_testaccess(id SERIAL)` DATA DIRECTORY=`" + dir + "`"
+			);
+
+			Database::sqlExecute(
+					sqlStatement,
+					"DROP TABLE `crawlserv_testaccess`"
+			);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkDirectory", e); }
+	}
+
+	/*
+	 * URL LIST HELPER FUNCTIONS (protected)
+	 */
+
+	// get whether the specified URL list is case-sensitive
+	bool Database::isUrlListCaseSensitive(unsigned long listId) {
+		bool result = true;
+
+		// check argument
+		if(!listId)
+			throw Database::Exception("Main::Database::isUrlListCaseSensitive(): No URL list specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// prepare SQL statement
+			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+					"SELECT case_sensitive"
+					" FROM `crawlserv_urllists`"
+					" WHERE id = ?"
+					" LIMIT 1"
+			));
+
+			// execute SQL statement
+			sqlStatement->setUInt64(1, listId);
+
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getBoolean("case_sensitive");
+			else {
+				std::ostringstream errStrStr;
+
+				errStrStr	<< "Main::Database::isUrlListCaseSensitive():"
+							<< " Could not get case sensitivity for URL list #"
+							<< listId;
+
+				throw Database::Exception(errStrStr.str());
+			}
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isUrlListCaseSensitive", e); }
+
+		return result;
+	}
+
+	// set whether the specified URL list is case-sensitive
+	void Database::setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive) {
+		// check argument
+		if(!listId)
+			throw Database::Exception("Main::Database::setUrlListCaseSensitive(): No URL list specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// prepare SQL statement
+			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
+					"UPDATE `crawlserv_urllists`"
+					" SET case_sensitive = ?"
+					" WHERE id = ?"
+					" LIMIT 1"
+			));
+
+			// execute SQL statement
+			sqlStatement->setBoolean(1, isCaseSensitive);
+			sqlStatement->setUInt64(2, listId);
+
+			Database::sqlExecute(sqlStatement);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setUrlListCaseSensitive", e); }
 	}
 
 	/*
