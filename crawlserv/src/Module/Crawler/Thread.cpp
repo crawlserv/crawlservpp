@@ -69,7 +69,7 @@ namespace crawlservpp::Module::Crawler {
 	// destructor stub
 	Thread::~Thread() {}
 
-	// initialize crawler
+	// initialize crawler, throws Thread::Exception
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
@@ -421,16 +421,16 @@ namespace crawlservpp::Module::Crawler {
 
 	// hide other functions not to be used by thread
 	void Thread::start() {
-		throw(std::logic_error("Thread::start() not to be used by thread itself"));
+		throw std::logic_error("Thread::start() not to be used by thread itself");
 	}
 	void Thread::unpause() {
-		throw(std::logic_error("Thread::unpause() not to be used by thread itself"));
+		throw std::logic_error("Thread::unpause() not to be used by thread itself");
 	}
 	void Thread::stop() {
-		throw(std::logic_error("Thread::stop() not to be used by thread itself"));
+		throw std::logic_error("Thread::stop() not to be used by thread itself");
 	}
 	void Thread::interrupt() {
-		throw(std::logic_error("Thread::interrupt() not to be used by thread itself"));
+		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
 	}
 
 	// initialize custom URLs
@@ -814,7 +814,7 @@ namespace crawlservpp::Module::Crawler {
 		return newUrlList;
 	}
 
-	// initialize queries
+	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		try {
 			for(
@@ -1503,7 +1503,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// crawl content
+	// crawl content, throws Thread::Exception
 	bool Thread::crawlingContent(
 			IdString& url,
 			const std::string& customCookies,
@@ -1787,7 +1787,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// check content for dynamic redirect and perform it if necessary
+	// check content for dynamic redirect and perform it if necessary, throws Thread::Exception
 	bool Thread::crawlingDynamicRedirectContent(std::string& url, std::string& content) {
 		// check whether dynamic redirect (determined by content) is enabled
 		if(!(this->config.redirectQueryContent))
@@ -2577,7 +2577,7 @@ namespace crawlservpp::Module::Crawler {
 		return true;
 	}
 
-	// check whether specific content should be crawled
+	// check whether specific content should be crawled, throws Thread::Exception
 	bool Thread::crawlingCheckContent(const std::string& url, const std::string& content) {
 		// check argument
 		if(url.empty())
@@ -2801,7 +2801,7 @@ namespace crawlservpp::Module::Crawler {
 		return true;
 	}
 
-	// check whether specific content should be used for link extraction
+	// check whether specific content should be used for link extraction, throws Thread::Exception
 	bool Thread::crawlingCheckContentForLinkExtraction(const std::string& url, const std::string& content) {
 		// check argument
 		if(url.empty())
@@ -3025,7 +3025,7 @@ namespace crawlservpp::Module::Crawler {
 		return true;
 	}
 
-	// save content to database
+	// save content to database, throws Thread::Exception
 	void Thread::crawlingSaveContent(
 			const IdString& url,
 			unsigned int response,
@@ -3075,7 +3075,7 @@ namespace crawlservpp::Module::Crawler {
 		this->database.saveContent(url.first, response, type, content);
 	}
 
-	// extract URLs from content
+	// extract URLs from content, throws Thread::Exception
 	std::vector<std::string> Thread::crawlingExtractUrls(
 			const std::string& url,
 			const std::string& type,
@@ -3358,7 +3358,8 @@ namespace crawlservpp::Module::Crawler {
 		return urls;
 	}
 
-	// parse URLs and add them as sub-links (or links if website is cross-domain) to the database if they do not already exist
+	// parse URLs and add them as sub-links (or links if website is cross-domain) to the database if they do not already exist,
+	//  throws Thread::Exception
 	void Thread::crawlingParseAndAddUrls(
 			const std::string& url,
 			std::vector<std::string>& urls,
@@ -3544,7 +3545,7 @@ namespace crawlservpp::Module::Crawler {
 		this->setStatusMessage(statusMessage);
 	}
 
-	// crawl archives
+	// crawl archives, throws Thread::Exception
 	bool Thread::crawlingArchive(
 			IdString& url,
 			unsigned long& checkedUrlsTo,
@@ -3909,7 +3910,7 @@ namespace crawlservpp::Module::Crawler {
 		return this->isRunning();
 	}
 
-	// crawling successfull
+	// crawling successfull, throws Thread::Exception
 	void Thread::crawlingSuccess(const IdString& url) {
 		// check argument
 		if(!url.first)
@@ -3924,6 +3925,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 		catch(Main::Exception& e) {
 			e.append("[" + url.second + "]");
+
 			throw e;
 		}
 
@@ -3961,7 +3963,7 @@ namespace crawlservpp::Module::Crawler {
 		this->nextUrl = IdString();
 	}
 
-	// skip URL after crawling problem
+	// skip URL after crawling problem, throws Thread::Exception
 	void Thread::crawlingSkip(const IdString& url, bool unlockUrl) {
 		// check argument
 		if(!url.first)
@@ -4003,7 +4005,7 @@ namespace crawlservpp::Module::Crawler {
 		this->archiveRetry = false;
 	}
 
-	// retry URL (completely or achives-only) after crawling problem
+	// retry URL (completely or achives-only) after crawling problem, throws Thread::Exception
 	//  NOTE: leaves the URL lock active for retry
 	void Thread::crawlingRetry(const IdString& url, bool archiveOnly) {
 		// check argument

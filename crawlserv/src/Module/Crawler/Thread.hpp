@@ -49,6 +49,7 @@
 #include <locale>
 #include <memory>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -60,7 +61,6 @@ namespace crawlservpp::Module::Crawler {
 		// for convenienc
 		typedef Helper::Json::Exception JsonException;
 		typedef Helper::Utf8::Exception Utf8Exception;
-		typedef Main::Exception Exception;
 		typedef Network::Curl::Exception CurlException;
 		typedef Parsing::URI::Exception URIException;
 		typedef Parsing::XML::Exception XMLException;
@@ -92,6 +92,13 @@ namespace crawlservpp::Module::Crawler {
 
 		// destructor
 		virtual ~Thread();
+
+		// sub-class for Crawler exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// database and networking for thread
