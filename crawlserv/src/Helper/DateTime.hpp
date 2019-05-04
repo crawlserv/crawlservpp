@@ -64,7 +64,8 @@ namespace crawlservpp::Helper::DateTime {
 		return true;
 	}
 
-	// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale)
+	// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale),
+	//  return whether conversion was successful
 	inline bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat, const std::locale& locale) {
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
