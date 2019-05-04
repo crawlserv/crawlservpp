@@ -443,18 +443,19 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// get the ID of an URL (uses hash check for first checking the probable existence of the URL)
+	// get the ID of an URL (uses hash check for first checking the probable existence of the URL),
+	//  throws Database::Exception
 	unsigned long Database::getUrlId(const std::string& url) {
 		// check argument
 		if(url.empty())
-			throw DatabaseException("Crawler::Database::getUrlId(): No URL specified");
+			throw Exception("Crawler::Database::getUrlId(): No URL specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.getUrlId))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlId(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlId(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlId);
@@ -475,14 +476,15 @@ namespace crawlservpp::Module::Crawler {
 		return 0;
 	}
 
-	// get the next URL to crawl from database, return ID and URL or empty IdString if all URLs have been parsed
+	// get the next URL to crawl from database, return ID and URL or empty IdString if all URLs have been parsed,
+	//  throws Database::Exception
 	Database::IdString Database::getNextUrl(unsigned long currentUrlId) {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.getNextUrl))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getNextUrl(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::getNextUrl(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNextUrl);
@@ -507,18 +509,19 @@ namespace crawlservpp::Module::Crawler {
 		return IdString();
 	}
 
-	// add URL to database if it does not exist already, return whether it was added
+	// add URL to database if it does not exist already, return whether it was added,
+	//  throws Database::Exception
 	bool Database::addUrlIfNotExists(const std::string& urlString, bool manual) {
 		// check argument
 		if(urlString.empty())
-			throw DatabaseException("Crawler::Database::addUrlIfNotExists(): No URL specified");
+			throw Exception("Crawler::Database::addUrlIfNotExists(): No URL specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.addUrlIfNotExists))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrlIfNotExists(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::addUrlIfNotExists(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlIfNotExists);
@@ -539,7 +542,8 @@ namespace crawlservpp::Module::Crawler {
 		return false; // not needed
 	}
 
-	// add URLs that do not exist already to the database, return the number of added URLs
+	// add URLs that do not exist already to the database, return the number of added URLs,
+	//  throws Database::Exception
 	unsigned long Database::addUrlsIfNotExist(std::queue<std::string>& urls) {
 		unsigned long result = 0;
 
@@ -557,7 +561,7 @@ namespace crawlservpp::Module::Crawler {
 				|| !(this->ps.add100UrlsIfNotExist)
 				|| !(this->ps.add1000UrlsIfNotExist)
 		)
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::addUrlsIfNotExist(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::addUrlsIfNotExist(...)");
 
 		// get prepared SQL statements
 		sql::PreparedStatement& sqlStatement1 = this->getPreparedStatement(this->ps.addUrlIfNotExists);
@@ -653,7 +657,7 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
-	// get the position of the URL in the URL list
+	// get the position of the URL in the URL list, throws Database::Exception
 	unsigned long Database::getUrlPosition(unsigned long urlId) {
 		unsigned long result = 0;
 
@@ -666,7 +670,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// check prepared SQL statement
 		if(!(this->ps.getUrlPosition))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlPosition()");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlPosition()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlPosition);
@@ -693,7 +697,7 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
-	// get the number of URLs in the URL list
+	// get the number of URLs in the URL list, throws Database::Exception
 	unsigned long Database::getNumberOfUrls() {
 		unsigned long result = 0;
 
@@ -702,7 +706,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// check prepared SQL statement
 		if(!(this->ps.getNumberOfUrls))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getNumberOfUrls()");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::getNumberOfUrls()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNumberOfUrls);
@@ -727,14 +731,14 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
-	// check the URL list for duplicates, throw DatabaseException if duplicates are found
+	// check the URL list for duplicates, throw Exception if duplicates are found, throws Database::Exception
 	void Database::urlDuplicationCheck() {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.urlDuplicationCheck))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlDuplicationCheck()");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::urlDuplicationCheck()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);
@@ -746,7 +750,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
-				throw DatabaseException(
+				throw Exception(
 						"Crawler::Database::urlDuplicationCheck(): Duplicate URL \'"
 						+ sqlResultSet->getString("url")
 						+ "\" in `"
@@ -756,17 +760,17 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
 	}
 
-	// check the hash values in the URL list, correct hash mismatches
+	// check the hash values in the URL list, correct hash mismatches, throws Database::Exception
 	void Database::urlHashCheck() {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statements
 		if(!(this->ps.urlHashCheck))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
 
 		if(!(this->ps.urlHashCorrect))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& checkStatement = this->getPreparedStatement(this->ps.urlHashCheck);
@@ -798,14 +802,15 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
 	}
 
-	// check for empty URLs in the URL list, throws DatabaseException if an empty URL exists
+	// check for empty URLs in the URL list, throws Exception if an empty URL exists,
+	//  throws Database::Exception
 	void Database::urlEmptyCheck(const std::vector<std::string>& urlsAdded) {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.urlEmptyCheck))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::urlEmptyCheck()");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::urlEmptyCheck()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlEmptyCheck);
@@ -827,7 +832,7 @@ namespace crawlservpp::Module::Crawler {
 					std::cout << std::flush;
 				}
 
-				throw DatabaseException(
+				throw Exception(
 						"Crawler::Database::urlEmptyCheck():"
 						" Empty URL in `"
 						+ this->urlListTable
@@ -838,7 +843,8 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
 	}
 
-	// check for URLs containing invalid UTF-8 characters in the URL list, throws DatabaseException if invalid URL exists
+	// check for URLs containing invalid UTF-8 characters in the URL list, throws Exception if invalid URL exists,
+	//  throws Database::Exception
 	void Database::urlUtf8Check() {
 		// get all URLs from URL list
 		std::queue<std::string> urls(this->getUrls());
@@ -849,7 +855,7 @@ namespace crawlservpp::Module::Crawler {
 
 			if(!Helper::Utf8::isValidUtf8(urls.front(), err)) {
 				if(err.empty())
-					throw DatabaseException(
+					throw Exception(
 							"Crawler::Database::urlUtf8Check(): URL containing invalid UTF-8 in `"
 							+ this->urlListTable
 							+ "` ["
@@ -857,7 +863,7 @@ namespace crawlservpp::Module::Crawler {
 							+ "]"
 					);
 				else
-					throw DatabaseException(
+					throw Exception(
 							"Crawler::Database::urlUtf8Check(): "
 							+ err
 							+ " in `"
@@ -872,7 +878,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// get the URL lock end time of a specific URL from database
+	// get the URL lock end time of a specific URL from database, throws Database::Exception
 	std::string Database::getUrlLockTime(unsigned long urlId) {
 		// check argument
 		if(!urlId)
@@ -883,7 +889,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// check prepared SQL statement
 		if(!(this->ps.getUrlLockTime))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrlLockTime(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlLockTime(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockTime);
@@ -904,18 +910,19 @@ namespace crawlservpp::Module::Crawler {
 		return std::string();
 	}
 
-	// get the URL lock ID for a specific URL from the database, return whether the URL has been crawled)
+	// get the URL lock ID for a specific URL from the database, return whether the URL has been crawled),
+	//  throws Database::Exception
 	bool Database::isUrlCrawled(unsigned long urlId) {
 		// check arguments
 		if(!urlId)
-			throw DatabaseException("Crawler::Database::isUrlCrawled(): No URL ID specified");
+			throw Exception("Crawler::Database::isUrlCrawled(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.isUrlCrawled))
-			throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::isUrlCrawled(...)");
+			throw Exception("Missing prepared SQL statement for Module::Crawler::Database::isUrlCrawled(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlCrawled);
@@ -936,20 +943,21 @@ namespace crawlservpp::Module::Crawler {
 		return false;
 	}
 
-	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful
+	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful,
+	//  throws Database::Exception
 	std::string Database::lockUrlIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout) {
 		std::string dbg;
 
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Crawler::Database::lockUrlIfOk(): No URL ID specified");
+			throw Exception("Crawler::Database::lockUrlIfOk(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statements
 		if(!(this->ps.addUrlLockIfOk) || !(this->ps.renewUrlLockIfOk))
-			throw DatabaseException("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
+			throw Exception("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
 
 		if(lockTime.empty()) {
 			// get prepared SQL statement for locking the URL
@@ -990,21 +998,21 @@ namespace crawlservpp::Module::Crawler {
 		return this->getUrlLockTime(urlId);
 	}
 
-	// unlock a URL in the database
+	// unlock a URL in the database, throws Database::Exception
 	void Database::unLockUrlIfOk(unsigned long urlId, const std::string& lockTime) {
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Crawler::Database::unLockUrlIfOk(): No URL lock ID specified");
+			throw Exception("Crawler::Database::unLockUrlIfOk(): No URL lock ID specified");
 
 		if(lockTime.empty())
-			throw DatabaseException("Crawler::Database::unLockUrlIfOk(): URL lock is missing");
+			throw Exception("Crawler::Database::unLockUrlIfOk(): URL lock is missing");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.unLockUrlIfOk))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::unLockUrlIfOk(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::unLockUrlIfOk(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.unLockUrlIfOk);
@@ -1020,21 +1028,21 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::unLockUrlIfOk", e); }
 	}
 
-	// set URL as crawled in the database
+	// set URL as crawled in the database, throws Database::Exception
 	void Database::setUrlFinishedIfOk(unsigned long urlId, const std::string& lockTime) {
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Crawler::Database::setUrlFinishedIfOk(): No crawling ID specified");
+			throw Exception("Crawler::Database::setUrlFinishedIfOk(): No crawling ID specified");
 
 		if(lockTime.empty())
-			throw DatabaseException("Crawler::Database::setUrlFinishedIfOk(): URL lock is missing");
+			throw Exception("Crawler::Database::setUrlFinishedIfOk(): URL lock is missing");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.setUrlFinishedIfOk))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::setUrlFinishedIfOk(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::setUrlFinishedIfOk(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setUrlFinishedIfOk);
@@ -1050,18 +1058,18 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::setUrlFinishedIfOk", e); }
 	}
 
-	// save content to database
+	// save content to database, throws Database::Exception
 	void Database::saveContent(unsigned long urlId, unsigned int response, const std::string& type, const std::string& content) {
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Crawler::Database::saveContent(): No URL ID specified");
+			throw Exception("Crawler::Database::saveContent(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.saveContent))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::saveContent(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::saveContent(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.saveContent);
@@ -1109,19 +1117,19 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveContent", e); }
 	}
 
-	// save archived content to database
+	// save archived content to database, throws Database::Exception
 	void Database::saveArchivedContent(unsigned long urlId, const std::string& timeStamp, unsigned int response,
 			const std::string& type, const std::string& content) {
 		// check arguments
 		if(!urlId)
-			throw DatabaseException("Crawler::Database::saveArchivedContent(): No URL ID specified");
+			throw Exception("Crawler::Database::saveArchivedContent(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.saveArchivedContent))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::saveArchivedContent(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::saveArchivedContent(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.saveArchivedContent);
@@ -1169,19 +1177,20 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveArchivedContent", e); }
 	}
 
+	// chck whether archived content with specific timestamp exists, throws Database::Exception
 	bool Database::isArchivedContentExists(unsigned long urlId, const std::string& timeStamp) {
 		bool result = false;
 
 		// check argument
 		if(!urlId)
-			throw DatabaseException("Crawler::Database::isArchivedContentExists(): No URL ID specified");
+			throw Exception("Crawler::Database::isArchivedContentExists(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
 		if(!(this->ps.isArchivedContentExists))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::isArchivedContentExists(...)");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::isArchivedContentExists(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isArchivedContentExists);
@@ -1203,11 +1212,11 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
-	// generate a SQL query for adding a specific number of URLs
+	// generate a SQL query for adding a specific number of URLs, throws Database::Exception
 	std::string Database::queryAddUrlsIfNotExist(unsigned int numberOfUrls, const std::string& hashQuery) {
 		// check argument
 		if(!numberOfUrls)
-			throw DatabaseException("Crawler::Database::queryUpdateOrAddUrls(): No number of URLs specified");
+			throw Exception("Crawler::Database::queryUpdateOrAddUrls(): No number of URLs specified");
 
 		// generate INSERT INTO ... VALUES clause
 		std::ostringstream sqlQueryStr;
@@ -1240,7 +1249,7 @@ namespace crawlservpp::Module::Crawler {
 		return sqlQuery;
 	}
 
-	// get all URLs from the URL list
+	// get all URLs from the URL list, throws Database::Exception
 	std::queue<std::string> Database::getUrls() {
 		std::queue<std::string> result;
 
@@ -1249,7 +1258,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// check prepared SQL statement
 		if(!(this->ps.getUrls))
-			throw DatabaseException("Missing prepared SQL statement for Crawler::Database::getUrls()");
+			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrls()");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);

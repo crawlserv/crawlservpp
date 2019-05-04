@@ -12,6 +12,7 @@
 
 #include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Helper/Utf8.hpp"
+#include "../../Main/Exception.hpp"
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/Database.hpp"
 
@@ -35,8 +36,6 @@ namespace crawlservpp::Module::Crawler {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef Main::Database::Exception DatabaseException;
-
 		typedef std::pair<unsigned long, std::string> IdString;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
@@ -102,6 +101,13 @@ namespace crawlservpp::Module::Crawler {
 		// constant strings for table aliases (public)
 		const std::string crawlingTableAlias;
 		const std::string urlListTableAlias;
+
+		// sub-class for Crawler::Database exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// options
