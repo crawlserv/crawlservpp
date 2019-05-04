@@ -16,6 +16,7 @@ namespace crawlservpp::Module::Crawler {
 						: Wrapper::Database(dbThread),
 						  crawlingTableAlias("a"),
 						  urlListTableAlias("b"),
+						  urlListId(0),
 						  recrawl(false),
 						  logging(true),
 						  verbose(false),
@@ -42,6 +43,11 @@ namespace crawlservpp::Module::Crawler {
 		this->urlListName = urlList;
 	}
 
+	// set URL list ID
+	void Database::setUrlListId(unsigned long listId) {
+		this->urlListId = listId;
+	}
+
 	// enable or disable recrawling
 	void Database::setRecrawl(bool isRecrawl) {
 		this->recrawl = isRecrawl;
@@ -57,9 +63,12 @@ namespace crawlservpp::Module::Crawler {
 		this->verbose = isVerbose;
 	}
 
-	// enable or disable case-sensitive URLs
+	// enable or disable case-sensitive URLs for current URL list
 	void Database::setUrlCaseSensitive(bool isUrlCaseSensitive) {
 		this->urlCaseSensitive = isUrlCaseSensitive;
+
+		// update case sensitivity in database
+		this->setUrlListCaseSensitive(this->urlListId, this->urlCaseSensitive);
 	}
 
 	// enable or disable URL debugging
@@ -426,7 +435,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(!(this->ps.getUrls) && this->urlStartupCheck) {
 			if(this->verbose)
-				this->log("[# " + this->idString + "] prepares getUrls()...");
+				this->log("[#" + this->idString + "] prepares getUrls()...");
 
 			this->ps.getUrls = this->addPreparedStatement(
 					"SELECT url FROM `" + this->urlListTable + "`"
