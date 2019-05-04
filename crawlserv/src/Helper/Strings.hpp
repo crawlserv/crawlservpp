@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
-#include <queue>
 #include <random>
 #include <string>
 #include <vector>
@@ -36,13 +35,13 @@ namespace crawlservpp::Helper::Strings {
 			const std::vector<std::string>& strings,
 			char delimiter,
 			bool ignoreEmpty,
-			bool reserve
+			bool reserveMemory
 	);
 	std::string join(
 			const std::vector<std::string>& strings,
 			const std::string& delimiter,
 			bool ignoreEmpty,
-			bool reserve
+			bool reserveMemory
 	);
 	std::vector<std::string> split(const std::string& str, char delimiter);
 	std::vector<std::string> split(const std::string& str, const std::string& delimiter);
@@ -143,11 +142,11 @@ namespace crawlservpp::Helper::Strings {
 			const std::vector<std::string>& strings,
 			char delimiter,
 			bool ignoreEmpty,
-			bool reserve
+			bool reserveMemory
 	) {
 		std::string result;
 
-		if(reserve) {
+		if(reserveMemory) {
 			unsigned long size = 0;
 
 			// calculate and reserve needed memory
@@ -173,11 +172,11 @@ namespace crawlservpp::Helper::Strings {
 			const std::vector<std::string>& strings,
 			const std::string& delimiter,
 			bool ignoreEmpty,
-			bool reserve
+			bool reserveMemory
 	) {
 		std::string result;
 
-		if(reserve) {
+		if(reserveMemory) {
 			unsigned long size = 0;
 
 			// calculate and reserve needed memory
