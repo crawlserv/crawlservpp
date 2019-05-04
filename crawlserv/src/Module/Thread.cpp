@@ -403,12 +403,15 @@ namespace crawlservpp::Module {
 		// save old thread status
 		std::string oldStatus = this->getStatusMessage();
 
+#ifndef MODULE_THREAD_DEBUG_NOCATCH
 		try {
+#endif
 			// initialize thread
 			this->onInit();
 
 			// set status message (useful when the thread is paused on startup)
 			this->setStatusMessage(oldStatus);
+#ifndef MODULE_THREAD_DEBUG_NOCATCH
 		}
 		// handle exceptions by trying to log and set status
 		catch(const std::exception& e) {
@@ -417,14 +420,21 @@ namespace crawlservpp::Module {
 
 			logStrStr << "failed - " << e.what() << ".";
 
-			this->log(logStrStr.str());
+			try {
+				this->log(logStrStr.str());
 
-			// try to set status
-			this->setStatusMessage("ERROR " + std::string(e.what()));
+				// try to set status
+				this->setStatusMessage("ERROR " + std::string(e.what()));
+			}
+			catch(const std::exception& e2) {
+				std::cout << "\n" << this->module << ": [#" << this->id << "] " << e.what();
+				std::cout << "\n" << " [Could not write to log: " << e2.what() << "]" << std::flush;
+			}
 
 			// interrupt thread
 			this->interrupted = true;
 		}
+#endif
 
 		// save new start time point
 		this->startTimePoint = std::chrono::steady_clock::now();
