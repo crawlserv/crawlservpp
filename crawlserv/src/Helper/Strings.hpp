@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
+#include <queue>
 #include <random>
 #include <string>
 #include <vector>
@@ -23,11 +24,28 @@ namespace crawlservpp::Helper::Strings {
 	 * DECLARATION
 	 */
 
-	void replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce);
+	void replaceAll(
+			std::string& strInOut,
+			const std::string& from,
+			const std::string& to,
+			bool onlyOnce
+	);
 	bool stringToBool(std::string inputString);
 	void trim(std::string& stringToTrim);
-	std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty);
-	std::vector<std::string> split(const std::string& str, const std::string& token);
+	std::string join(
+			const std::vector<std::string>& strings,
+			char delimiter,
+			bool ignoreEmpty,
+			bool reserve
+	);
+	std::string join(
+			const std::vector<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty,
+			bool reserve
+	);
+	std::vector<std::string> split(const std::string& str, char delimiter);
+	std::vector<std::string> split(const std::string& str, const std::string& delimiter);
 	void sortAndRemoveDuplicates(std::vector<std::string>& vectorOfStrings, bool caseSensitive);
 	char getFirstOrEscapeChar(const std::string& from);
 	void utfTidy(std::string& stringToTidy);
@@ -63,7 +81,12 @@ namespace crawlservpp::Helper::Strings {
 	 */
 
 	// replace all occurences of a string with another string (onlyOnce avoids replacing parts of the replacements)
-	inline void replaceAll(std::string& strInOut, const std::string& from, const std::string& to, bool onlyOnce) {
+	inline void replaceAll(
+			std::string& strInOut,
+			const std::string& from,
+			const std::string& to,
+			bool onlyOnce
+	) {
 		unsigned long startPos = 0;
 		unsigned long jump = 0;
 
@@ -116,30 +139,100 @@ namespace crawlservpp::Helper::Strings {
 	}
 
 	// concatenate all elements of a vector into a single string
-	inline std::string concat(const std::vector<std::string>& vectorToConcat, char delimiter, bool ignoreEmpty) {
+	inline std::string join(
+			const std::vector<std::string>& strings,
+			char delimiter,
+			bool ignoreEmpty,
+			bool reserve
+	) {
 		std::string result;
 
-		for(auto i = vectorToConcat.begin(); i != vectorToConcat.end(); ++i)
+		if(reserve) {
+			unsigned long size = 0;
+
+			// calculate and reserve needed memory
+			for(auto i = strings.begin(); i != strings.end(); ++i)
+				if(!ignoreEmpty || !(i->empty())) size += i->size() + 1;
+
+			result.reserve(size);
+		}
+
+		// create string
+		for(auto i = strings.begin(); i != strings.end(); ++i)
 			if(!ignoreEmpty || !(i->empty())) result += *i + delimiter;
 
 		if(!result.empty())
 			result.pop_back();
 
+		// return string
+		return result;
+	}
+
+	// concatenate all elements of a vector into a single string
+	inline std::string join(
+			const std::vector<std::string>& strings,
+			const std::string& delimiter,
+			bool ignoreEmpty,
+			bool reserve
+	) {
+		std::string result;
+
+		if(reserve) {
+			unsigned long size = 0;
+
+			// calculate and reserve needed memory
+			for(auto i = strings.begin(); i != strings.end(); ++i)
+				if(!ignoreEmpty || !(i->empty())) size += i->size() + delimiter.size();
+
+			result.reserve(size);
+		}
+
+		// create string
+		for(auto i = strings.begin(); i != strings.end(); ++i)
+			if(!ignoreEmpty || !(i->empty())) result += *i + delimiter;
+
+		if(!result.empty())
+			result.pop_back();
+
+		// return string
 		return result;
 	}
 
 	// split string into vector of strings
-	inline std::vector<std::string> split(const std::string& str, const std::string& token) {
+	inline std::vector<std::string> split(const std::string& str, char delimiter) {
 		std::string tmp(str);
 		std::vector<std::string> result;
 
-		while(!tmp.empty()){
-			auto index = tmp.find(token);
+		while(!tmp.empty()) {
+			auto index = tmp.find(delimiter);
 
 			if(index != std::string::npos) {
 				result.push_back(tmp.substr(0, index));
 
-				tmp = tmp.substr(index + token.size());
+				tmp = tmp.substr(index + 1);
+			}
+			else if(!tmp.empty()) {
+				result.push_back(tmp);
+
+				tmp.clear();
+			}
+		}
+
+		return result;
+	}
+
+	// split string into vector of strings
+	inline std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
+		std::string tmp(str);
+		std::vector<std::string> result;
+
+		while(!tmp.empty()) {
+			auto index = tmp.find(delimiter);
+
+			if(index != std::string::npos) {
+				result.push_back(tmp.substr(0, index));
+
+				tmp = tmp.substr(index + delimiter.size());
 			}
 			else if(!tmp.empty()) {
 				result.push_back(tmp);

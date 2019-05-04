@@ -1104,10 +1104,11 @@ namespace crawlservpp::Module::Parser {
 					}
 					else {
 						// concatenate elements
-						std::string result = Helper::Strings::concat(
+						std::string result = Helper::Strings::join(
 								parsedFieldValues,
 								this->config.parsingFieldDelimiters.at(fieldCounter),
-								this->config.parsingFieldIgnoreEmpty.at(fieldCounter)
+								this->config.parsingFieldIgnoreEmpty.at(fieldCounter),
+								true
 						);
 
 						// if necessary, tidy text
