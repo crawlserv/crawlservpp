@@ -2283,6 +2283,7 @@ namespace crawlservpp::Main {
 							if(!response.fail) {
 								// create new database connection for worker thread
 								Module::Database db(this->dbSettings, "worker");
+								db.prepare();
 
 								// check website
 								if(!db.isWebsite(website))
