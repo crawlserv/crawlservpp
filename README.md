@@ -201,8 +201,11 @@ The server performs commands and sends back their results. Some commands need to
 * **`duplicateconfig`** (argument: `id`): Duplicate the specified configuration.
 * **`duplicatequery`** (argument: `id`): Duplicate the specified RegEx, XPath or JSONPointer query.
 * **`duplicatewebsite`** (argument: `id`): Duplicate the specified website.
-* **`kill`**: kill the server.
+* **`export`** (arguments: `datatype`, `filetype`, `compression`, [...]): Export data from the database into a file.
+* **`import`** (arguments: `datatype`, `filetype`, `compression`, `filename`, [...]): Import data from file into the database.
+* **`kill`**: Kill the server.
 * **`log`** (argument: `entry`): Write a log entry by the frontend into the database.
+* **`merge`** (arguments: `datatype`, [...]): Merge two tables in the database.
 * **`pauseanalyzer`** (argument: `id`): Pause a running analyzer by its ID.
 * **`pausecrawler`** (argument: `id`): Pause a running crawler by its ID.
 * **~~`pauseextractor`~~** (argument: `id`): Pause a running extractor by its ID.
