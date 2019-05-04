@@ -445,7 +445,7 @@ namespace crawlservpp::Main {
 
 		if(this->offline) {
 			// database offline: return error
-			response = ServerCommandResponse(true, "Database is offline.");
+			response = ServerCommandResponse::failed("Database is offline.");
 		}
 		else {
 			// check connection and get IP
@@ -464,10 +464,10 @@ namespace crawlservpp::Main {
 				if(json.IsObject())
 					success = true;
 				else
-					response = ServerCommandResponse(true, "Parsed JSON is not an object.");
+					response = ServerCommandResponse::failed("Parsed JSON is not an object.");
 			}
 			catch(const JsonException& e) {
-				response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+				response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 			}
 
 			if(success){
@@ -586,23 +586,23 @@ namespace crawlservpp::Main {
 
 							else if(!command.empty())
 								// unknown command: debug the command and its arguments
-								response = ServerCommandResponse(true, "Unknown command \'" + command + "\'.");
+								response = ServerCommandResponse::failed("Unknown command \'" + command + "\'.");
 
 							else
-								response = ServerCommandResponse(true, "Empty command.");
+								response = ServerCommandResponse::failed("Empty command.");
 						}
 						catch(std::exception &e) {
 							// exceptions caused by server commands should not kill the server
 							//  (and are attributed to the frontend)
 							this->database.log("frontend", e.what());
-							response = response = ServerCommandResponse(true, e.what());
+							response = response = ServerCommandResponse::failed(e.what());
 						}
 					}
 					else
-						response = ServerCommandResponse(true, "Invalid command: Name is not a string.");
+						response = ServerCommandResponse::failed("Invalid command: Name is not a string.");
 				}
 				else
-					response = ServerCommandResponse(true, "No command specified.");
+					response = ServerCommandResponse::failed("No command specified.");
 			}
 		}
 
@@ -801,7 +801,7 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse("Bye bye.");
 		}
 
-		return ServerCommandResponse(false, true, "Are you sure to kill the server?");
+		return ServerCommandResponse::toBeConfirmed("Are you sure to kill the server?");
 	}
 
 	// server command allow(ip): allow acces for the specified IP(s)
@@ -809,18 +809,16 @@ namespace crawlservpp::Main {
 			const std::string& ip) {
 		// get argument
 		if(!json.HasMember("ip"))
-			return ServerCommandResponse(true, "Invalid arguments (\'ip\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is missing).");
 
 		if(!json["ip"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'ip\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is not a string).");
 
 		std::string toAllow(json["ip"].GetString(), json["ip"].GetStringLength());
 
 		// allow needs to be confirmed
 		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse(
-					false,
-					true,
+			return ServerCommandResponse::toBeConfirmed(
 					"Do you really want to allow " + toAllow + " access to the server?"
 			);
 
@@ -850,10 +848,10 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdLog(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("entry"))
-			return ServerCommandResponse(true, "Invalid arguments (\'entry\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'entry\' is missing).");
 
 		if(!json["entry"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'entry\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'entry\' is not a string).");
 
 		std::string entry(json["entry"].GetString(), json["entry"].GetStringLength());
 
@@ -871,7 +869,7 @@ namespace crawlservpp::Main {
 		) {
 		// check whether the clearing of logs is allowed
 		if(!(this->settings.logsDeletable))
-			return ServerCommandResponse(true, "Not allowed.");
+			return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
 		std::string module;
@@ -884,7 +882,7 @@ namespace crawlservpp::Main {
 			std::ostringstream replyStrStr;
 			replyStrStr.imbue(std::locale(""));
 			replyStrStr << "Are you sure to delete " << this->database.getNumberOfLogEntries(module) << " log entries?";
-			return ServerCommandResponse(false, true, replyStrStr.str());
+			return ServerCommandResponse::toBeConfirmed(replyStrStr.str());
 		}
 
 		this->database.clearLogs(module);
@@ -892,6 +890,7 @@ namespace crawlservpp::Main {
 		// clearlog is a logged command
 		if(!module.empty()) {
 			this->database.log("Logs of " + module + " cleared by " + ip + ".");
+
 			return ServerCommandResponse("Logs of " + module + " cleared.");
 		}
 
@@ -909,26 +908,26 @@ namespace crawlservpp::Main {
 		Struct::ThreadOptions options;
 
 		if(!json.HasMember("website"))
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
 		options.website = json["website"].GetUint64();
 
 		if(!json.HasMember("urllist"))
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
 		if(!json["urllist"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		options.urlList = json["urllist"].GetUint64();
 
 		if(!json.HasMember("config"))
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
 		options.config = json["config"].GetUint64();
 
@@ -938,7 +937,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		if(!(this->database.isUrlList(options.website, options.urlList))) {
@@ -946,7 +945,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "URL list #" << options.urlList << " for website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		if(!(this->database.isConfiguration(options.website, options.config))) {
@@ -954,7 +953,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Configuration #" << options.config << " for website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// create crawler
@@ -988,10 +987,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1007,7 +1006,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find crawler #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// pause crawler
@@ -1030,10 +1029,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1049,7 +1048,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find crawler #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// unpause crawler
@@ -1072,10 +1071,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1091,7 +1090,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find crawler #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// interrupt crawler
@@ -1116,26 +1115,26 @@ namespace crawlservpp::Main {
 		Struct::ThreadOptions options;
 
 		if(!json.HasMember("website"))
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
 		options.website = json["website"].GetUint64();
 
 		if(!json.HasMember("urllist"))
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
 		if(!json["urllist"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		options.urlList = json["urllist"].GetUint64();
 
 		if(!json.HasMember("config"))
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
 		options.config = json["config"].GetUint64();
 
@@ -1145,7 +1144,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		if(!(this->database.isUrlList(options.website, options.urlList))) {
@@ -1153,7 +1152,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "URL list #" << options.urlList << " for website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		if(!(this->database.isConfiguration(options.website, options.config))) {
@@ -1161,7 +1160,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Configuration #" << options.config << " for website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// create parser
@@ -1189,10 +1188,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1208,7 +1207,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find parser #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// pause parser
@@ -1231,10 +1230,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1250,7 +1249,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find parser #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// unpause parser
@@ -1273,10 +1272,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1292,7 +1291,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find parser #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// interrupt parser
@@ -1312,18 +1311,16 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdResetParsingStatus(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("urllist"))
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
 		if(!json["urllist"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		unsigned long listId = json["urllist"].GetUint64();
 
 		// resetparsingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse(
-					false,
-					true,
+			return ServerCommandResponse::toBeConfirmed(
 					"Are you sure that you want to reset the parsing status of this URL list?"
 			);
 
@@ -1337,17 +1334,18 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdResetExtractingStatus(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("urllist"))
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
 		if(!json["urllist"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		unsigned long listId = json["urllist"].GetUint64();
 
 		// resetextractingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
-				return ServerCommandResponse(false, true,
-						"Are you sure that you want to reset the extracting status of this URL list?");
+				return ServerCommandResponse::toBeConfirmed(
+						"Are you sure that you want to reset the extracting status of this URL list?"
+				);
 
 		// reset extracting status
 		this->database.resetExtractingStatus(listId);
@@ -1365,26 +1363,26 @@ namespace crawlservpp::Main {
 		Struct::ThreadOptions options;
 
 		if(!json.HasMember("website"))
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
 		options.website = json["website"].GetUint64();
 
 		if(!json.HasMember("urllist"))
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
 		if(!json["urllist"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		options.urlList = json["urllist"].GetUint64();
 
 		if(!json.HasMember("config"))
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
 		options.config = json["config"].GetUint64();
 
@@ -1394,7 +1392,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		if(!(this->database.isUrlList(options.website, options.urlList))) {
@@ -1402,7 +1400,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "URL list #" << options.urlList << " for website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		if(!(this->database.isConfiguration(options.website, options.config))) {
@@ -1410,7 +1408,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Configuration #" << options.config << " for website #" << options.website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// get configuration
@@ -1423,17 +1421,17 @@ namespace crawlservpp::Main {
 			configJson = Helper::Json::parseRapid(config);
 		}
 		catch(const JsonException& e) {
-			return ServerCommandResponse(true, "Could not parse analyzing configuration: " + e.whatStr() + ".");
+			return ServerCommandResponse::failed("Could not parse analyzing configuration: " + e.whatStr() + ".");
 		}
 
 		if(!configJson.IsArray())
-			return ServerCommandResponse(true, "Parsed analyzing configuration is not an array.");
+			return ServerCommandResponse::failed("Parsed analyzing configuration is not an array.");
 
 		// get algorithm from configuration
 		unsigned int algo = Server::getAlgoFromConfig(configJson);
 
 		if(!algo)
-			return ServerCommandResponse(true, "Analyzing configuration does not include an algorithm.");
+			return ServerCommandResponse::failed("Analyzing configuration does not include an algorithm.");
 
 		// try to create algorithm thread
 		this->analyzers.push_back(
@@ -1447,7 +1445,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Algorithm #" << algo << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// start algorithm
@@ -1471,10 +1469,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1490,7 +1488,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find analyzer #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// pause analyzer
@@ -1506,7 +1504,7 @@ namespace crawlservpp::Main {
 		}
 
 		// analyzer is not pausable
-		return ServerCommandResponse(true, "This algorithm cannot be paused at this moment.");
+		return ServerCommandResponse::failed("This algorithm cannot be paused at this moment.");
 	}
 
 	// server command unpauseanalyzer(id): unpause a parser by its ID
@@ -1516,10 +1514,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1535,7 +1533,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find analyzer #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// unpause analyzer
@@ -1558,10 +1556,10 @@ namespace crawlservpp::Main {
 	) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1577,7 +1575,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Could not find analyzer #" << id << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// interrupt analyzer
@@ -1597,18 +1595,16 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdResetAnalyzingStatus(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("urllist"))
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
 		if(!json["urllist"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'urllist\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		unsigned long listId = json["urllist"].GetUint64();
 
 		// resetanalyzingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
-				return ServerCommandResponse(
-						false,
-						true,
+				return ServerCommandResponse::toBeConfirmed(
 						"Are you sure that you want to reset the analyzing status of this URL list?"
 				);
 
@@ -1627,57 +1623,57 @@ namespace crawlservpp::Main {
 		// get arguments
 		if(json.HasMember("crossdomain")) {
 			if(!json["crossdomain"].IsBool())
-				return ServerCommandResponse(true, "Invalid arguments (\'crossdomain\' is not a boolean).");
+				return ServerCommandResponse::failed("Invalid arguments (\'crossdomain\' is not a boolean).");
 
 			crossDomain = json["crossdomain"].GetBool();
 		}
 
 		if(!crossDomain) {
 			if(!json.HasMember("domain"))
-				return ServerCommandResponse(true, "Invalid arguments (\'domain\' is missing).");
+				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is missing).");
 
 			if(!json["domain"].IsString())
-				return ServerCommandResponse(true, "Invalid arguments (\'domain\' is not a string).");
+				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is not a string).");
 
 			properties.domain = std::string(json["domain"].GetString(), json["domain"].GetStringLength());
 		}
 
 		if(!json.HasMember("namespace"))
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
 		if(!json["namespace"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
 		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		if(json.HasMember("dir")) {
 			if(!json["dir"].IsString())
-				return ServerCommandResponse(true, "Invalid arguments (\'dir\' is not a string).");
+				return ServerCommandResponse::failed("Invalid arguments (\'dir\' is not a string).");
 
 			properties.dir = std::string(json["dir"].GetString(), json["dir"].GetStringLength());
 		}
 
 		// check domain name
 		if(!(Helper::Strings::checkDomainName(properties.domain)))
-			return ServerCommandResponse(true, "Invalid character(s) in domain.");
+			return ServerCommandResponse::failed("Invalid character(s) in domain.");
 
 		// check namespace
 		if(properties.nameSpace.length() < 3)
-			return ServerCommandResponse(true, "Website namespace has to be at least three characters long.");
+			return ServerCommandResponse::failed("Website namespace has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
-			return ServerCommandResponse(true, "Invalid character(s) in website namespace.");
+			return ServerCommandResponse::failed("Invalid character(s) in website namespace.");
 
 		// check name
-		if(properties.name.empty()) return ServerCommandResponse(true, "Name is empty.");
+		if(properties.name.empty()) return ServerCommandResponse::failed("Name is empty.");
 
 		// correct and check domain name (remove protocol from start and slash from the end)
 		if(!crossDomain) {
@@ -1691,7 +1687,7 @@ namespace crawlservpp::Main {
 				properties.domain.pop_back();
 
 			if(properties.domain.empty())
-				return ServerCommandResponse(true, "Domain is empty.");
+				return ServerCommandResponse::failed("Domain is empty.");
 		}
 
 		// check for external directory
@@ -1701,13 +1697,11 @@ namespace crawlservpp::Main {
 		else {
 			// check external directory
 			if(!Helper::FileSystem::isValidDirectory(properties.dir))
-				return ServerCommandResponse(true, "External directory does not exist");
+				return ServerCommandResponse::failed("External directory does not exist");
 
 			// adding a website using an external directory needs to be confirmed
 			if(!json.HasMember("confirmed"))
-				return ServerCommandResponse(
-						false,
-						true,
+				return ServerCommandResponse::toBeConfirmed(
 						"Do you really want to use an external directory?\n"
 						"!!! The directory cannot be changed once the website has been added !!!"
 				);
@@ -1717,20 +1711,17 @@ namespace crawlservpp::Main {
 				id = this->database.addWebsite(properties);
 			}
 			catch(const IncorrectPathException &e) {
-				return ServerCommandResponse(
-						true,
+				return ServerCommandResponse::failed(
 						"Incorrect path for external directory"
 				);
 			}
 			catch(const PrivilegesException &e) {
-				return ServerCommandResponse(
-						true,
+				return ServerCommandResponse::failed(
 						"The MySQL user used by the server needs to have FILE privilege to use an external directory"
 				);
 			}
 			catch(const StorageEngineException &e) {
-				return ServerCommandResponse(
-						true,
+				return ServerCommandResponse::failed(
 						"Could not access external directory. Make sure that\n"
 						"* the MySQL server has permission to write into the directory\n"
 						"* the AppArmor profile of the MySQL server allows access to the directory (if applicable)\n"
@@ -1740,7 +1731,7 @@ namespace crawlservpp::Main {
 		}
 
 		if(!id)
-			return ServerCommandResponse(true, "Could not add website to database.");
+			return ServerCommandResponse::failed("Could not add website to database.");
 
 		return ServerCommandResponse("Website added.", id);
 	}
@@ -1752,56 +1743,56 @@ namespace crawlservpp::Main {
 
 		// get arguments
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
 		if(json.HasMember("crossdomain")) {
 			if(!json["crossdomain"].IsBool())
-				return ServerCommandResponse(true, "Invalid arguments (\'crossdomain\' is not a boolean).");
+				return ServerCommandResponse::failed("Invalid arguments (\'crossdomain\' is not a boolean).");
 
 			crossDomain = json["crossdomain"].GetBool();
 		}
 
 		if(!crossDomain) {
 			if(!json.HasMember("domain"))
-				return ServerCommandResponse(true, "Invalid arguments (\'domain\' is missing).");
+				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is missing).");
 
 			if(!json["domain"].IsString())
-				return ServerCommandResponse(true, "Invalid arguments (\'domain\' is not a string).");
+				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is not a string).");
 
 			properties.domain = std::string(json["domain"].GetString(), json["domain"].GetStringLength());
 		}
 
 		if(!json.HasMember("namespace"))
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
 		if(!json["namespace"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
 		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		// check name
 		if(properties.name.empty())
-			return ServerCommandResponse(true, "Name is empty.");
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// check namespace name
 		if(properties.nameSpace.length() < 3)
-			return ServerCommandResponse(true, "Website namespace has to be at least three characters long.");
+			return ServerCommandResponse::failed("Website namespace has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
-			return ServerCommandResponse(true, "Invalid character(s) in website namespace.");
+			return ServerCommandResponse::failed("Invalid character(s) in website namespace.");
 
 		// correct and check domain name (remove protocol from start and slash from the end)
 		while(properties.domain.length() > 6 && properties.domain.substr(0, 7) == "http://")
@@ -1814,7 +1805,7 @@ namespace crawlservpp::Main {
 			properties.domain.pop_back();
 
 		if(properties.domain.empty())
-			ServerCommandResponse(true, "Domain is empty.");
+			ServerCommandResponse::failed("Domain is empty.");
 
 		// check website
 		if(!(this->database.isWebsite(id))) {
@@ -1822,25 +1813,25 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// check whether threads are using the website
 		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be changed while crawler is active.");
+				return ServerCommandResponse::failed("Website cannot be changed while crawler is active.");
 
 		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be changed while parser is active.");
+				return ServerCommandResponse::failed("Website cannot be changed while parser is active.");
 
 		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be changed while extractor is active.");*/
+				return ServerCommandResponse::failed("Website cannot be changed while extractor is active.");*/
 
 		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be changed while analyzer is active.");
+				return ServerCommandResponse::failed("Website cannot be changed while analyzer is active.");
 
 		// check whether URLs will be changed or lost by changing type of website from cross-domain to specific domain
 		if(!json.HasMember("confirmed")) {
@@ -1860,7 +1851,7 @@ namespace crawlservpp::Main {
 
 				confirmationStrStr << "Do you really want to change the domain?";
 
-				return ServerCommandResponse(false, true, confirmationStrStr.str());
+				return ServerCommandResponse::toBeConfirmed(confirmationStrStr.str());
 			}
 		}
 
@@ -1877,14 +1868,14 @@ namespace crawlservpp::Main {
 	) {
 		// check whether the deletion of data is allowed
 		if(!(this->settings.dataDeletable))
-			return ServerCommandResponse(true, "Not allowed.");
+			return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1894,31 +1885,29 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// check whether threads are using the website
 		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be deleted while crawler is active.");
+				return ServerCommandResponse::failed("Website cannot be deleted while crawler is active.");
 
 		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be deleted while parser is active.");
+				return ServerCommandResponse::failed("Website cannot be deleted while parser is active.");
 
 		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be deleted while extractor is active.");*/
+				return ServerCommandResponse::failed("Website cannot be deleted while extractor is active.");*/
 
 		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 			if((*i)->getWebsite() == id)
-				return ServerCommandResponse(true, "Website cannot be deleted while analyzer is active.");
+				return ServerCommandResponse::failed("Website cannot be deleted while analyzer is active.");
 
 		// deletewebsite needs to be confirmed
 		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse(
-					false,
-					true,
+			return ServerCommandResponse::toBeConfirmed(
 					"Do you really want to delete this website?\n"
 					"!!! All associated data will be lost !!!"
 			);
@@ -1940,10 +1929,10 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdDuplicateWebsite(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -1953,14 +1942,14 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// duplicate website configuration
 		unsigned long newId = this->database.duplicateWebsite(id);
 
 		if(!newId)
-			return ServerCommandResponse(true, "Could not add duplicate to database.");
+			return ServerCommandResponse::failed("Could not add duplicate to database.");
 
 		return ServerCommandResponse("Website duplicated.", newId);
 	}
@@ -1971,41 +1960,41 @@ namespace crawlservpp::Main {
 
 		// get arguments
 		if(!json.HasMember("website"))
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
 		unsigned long website = json["website"].GetUint64();
 
 		if(!json.HasMember("namespace"))
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
 		if(!json["namespace"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
 		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		// check namespace
 		if(properties.nameSpace.length() < 3)
-			return ServerCommandResponse(true, "Namespace of URL list has to be at least three characters long.");
+			return ServerCommandResponse::failed("Namespace of URL list has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
-			return ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");
+			return ServerCommandResponse::failed("Invalid character(s) in namespace of URL list.");
 
 		if(properties.nameSpace == "config")
-			return ServerCommandResponse(true, "Namespace of URL list cannot be \'config\'.");
+			return ServerCommandResponse::failed("Namespace of URL list cannot be \'config\'.");
 
 		// check name
-		if(properties.name.empty()) return ServerCommandResponse(true, "Name is empty.");
+		if(properties.name.empty()) return ServerCommandResponse::failed("Name is empty.");
 
 		// check website
 		if(!(this->database.isWebsite(website))) {
@@ -2013,14 +2002,14 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// add URL list to database
 		unsigned long id = this->database.addUrlList(website, properties);
 
 		if(!id)
-			return ServerCommandResponse(true, "Could not add URL list to database.");
+			return ServerCommandResponse::failed("Could not add URL list to database.");
 
 		return ServerCommandResponse("URL list added.", id);
 	}
@@ -2031,42 +2020,42 @@ namespace crawlservpp::Main {
 
 		// get arguments
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
 		if(!json.HasMember("namespace"))
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
 		if(!json["namespace"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'namespace\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
 		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		// check namespace
 		if(properties.nameSpace.length() < 3)
-			return ServerCommandResponse(true, "Namespace of URL list has to be at least three characters long.");
+			return ServerCommandResponse::failed("Namespace of URL list has to be at least three characters long.");
 
 		if(!(Helper::Strings::checkSQLName(properties.nameSpace)))
-			return ServerCommandResponse(true, "Invalid character(s) in namespace of URL list.");
+			return ServerCommandResponse::failed("Invalid character(s) in namespace of URL list.");
 
 		if(properties.nameSpace == "config")
-			return ServerCommandResponse(true, "Namespace of URL list cannot be \'config\'.");
+			return ServerCommandResponse::failed("Namespace of URL list cannot be \'config\'.");
 
 		// check name
 		if(properties.name.empty())
-			return ServerCommandResponse(true, "Name is empty.");
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// check URL list
 		if(!(this->database.isUrlList(id))) {
@@ -2074,25 +2063,25 @@ namespace crawlservpp::Main {
 
 			errStrStr << "URL list #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// check whether threads are using the URL list
 		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
 			if((*i)->getUrlList() == id)
-				return ServerCommandResponse(true, "URL list cannot be changed while crawler is active.");
+				return ServerCommandResponse::failed("URL list cannot be changed while crawler is active.");
 
 		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
 			if((*i)->getUrlList() == id)
-				return ServerCommandResponse(true, "URL list cannot be changed while parser is active.");
+				return ServerCommandResponse::failed("URL list cannot be changed while parser is active.");
 
 		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
 			if((*i)->getUrlList() == id)
-				return ServerCommandResponse(true, "URL list cannot be changed while extractor is active.");*/
+				return ServerCommandResponse::failed("URL list cannot be changed while extractor is active.");*/
 
 		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 			if((*i)->getUrlList() == id)
-				return ServerCommandResponse(true, "URL list cannot be changed while analyzer is active.");
+				return ServerCommandResponse::failed("URL list cannot be changed while analyzer is active.");
 
 		// update URL list in database
 		this->database.updateUrlList(id, properties);
@@ -2107,14 +2096,14 @@ namespace crawlservpp::Main {
 	) {
 		// check whether the deletion of data is allowed
 		if(!(this->settings.dataDeletable))
-			return ServerCommandResponse(true, "Not allowed.");
+			return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -2124,14 +2113,12 @@ namespace crawlservpp::Main {
 
 			errStrStr << "URL list #" << id << " not found.";
 
-			ServerCommandResponse(true, errStrStr.str());
+			ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// deleteurllist needs to be confirmed
 		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse(
-					false,
-					true,
+			return ServerCommandResponse::toBeConfirmed(
 					"Do you really want to delete this URL list?\n"
 					"!!! All associated data will be lost !!!"
 			);
@@ -2155,80 +2142,80 @@ namespace crawlservpp::Main {
 
 		// get arguments
 		if(!json.HasMember("website"))
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
 		unsigned long website = json["website"].GetUint64();
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		if(!json.HasMember("query"))
-			return ServerCommandResponse(true, "Invalid arguments (\'query\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
 
 		if(!json["query"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'query\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
 
 		properties.text = std::string(json["query"].GetString(), json["query"].GetStringLength());
 
 		if(!json.HasMember("type"))
-			return ServerCommandResponse(true, "Invalid arguments (\'type\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
 
 		if(!json["type"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'type\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
 
 		properties.type = std::string(json["type"].GetString(), json["type"].GetStringLength());
 
 		if(!json.HasMember("resultbool"))
-			return ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
 
 		if(!json["resultbool"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
 
 		properties.resultBool = json["resultbool"].GetBool();
 
 		if(!json.HasMember("resultsingle"))
-			return ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
 
 		if(!json["resultsingle"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
 
 		properties.resultSingle = json["resultsingle"].GetBool();
 
 		if(!json.HasMember("resultmulti"))
-			return ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
 
 		if(!json["resultmulti"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
 
 		properties.resultMulti = json["resultmulti"].GetBool();
 
 		if(!json.HasMember("textonly"))
-			return ServerCommandResponse(true, "Invalid arguments (\'textonly\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
 
 		if(!json["textonly"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'textonly\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
 
 		properties.textOnly = json["textonly"].GetBool();
 
 		// check name
 		if(properties.name.empty())
-			return ServerCommandResponse(true, "Name is empty.");
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// check query text
 		if(properties.text.empty())
-			return ServerCommandResponse(true, "Query text is empty.");
+			return ServerCommandResponse::failed("Query text is empty.");
 
 		// check query type
 		if(properties.type.empty())
-			return ServerCommandResponse(true, "Query type is empty.");
+			return ServerCommandResponse::failed("Query type is empty.");
 
 		if(
 				properties.type != "regex"
@@ -2236,11 +2223,11 @@ namespace crawlservpp::Main {
 				&& properties.type != "jsonpointer"
 				&& properties.type != "jsonpath"
 		)
-			return ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
+			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
 		if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
-			return ServerCommandResponse(true, "No result type selected.");
+			return ServerCommandResponse::failed("No result type selected.");
 
 		// check website
 		if(website && !(this->database.isWebsite(website))) {
@@ -2248,7 +2235,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// add query to database
@@ -2266,80 +2253,80 @@ namespace crawlservpp::Main {
 
 		// get arguments
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		if(!json.HasMember("query"))
-			return ServerCommandResponse(true, "Invalid arguments (\'query\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
 
 		if(!json["query"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'query\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
 
 		properties.text = std::string(json["query"].GetString(), json["query"].GetStringLength());
 
 		if(!json.HasMember("type"))
-			return ServerCommandResponse(true, "Invalid arguments (\'type\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
 
 		if(!json["type"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'type\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
 
 		properties.type = std::string(json["type"].GetString(), json["type"].GetStringLength());
 
 		if(!json.HasMember("resultbool"))
-			return ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
 
 		if(!json["resultbool"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
 
 		properties.resultBool = json["resultbool"].GetBool();
 
 		if(!json.HasMember("resultsingle"))
-			return ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
 
 		if(!json["resultsingle"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
 
 		properties.resultSingle = json["resultsingle"].GetBool();
 
 		if(!json.HasMember("resultmulti"))
-			return ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
 
 		if(!json["resultmulti"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
 
 		properties.resultMulti = json["resultmulti"].GetBool();
 
 		if(!json.HasMember("textonly"))
-			return ServerCommandResponse(true, "Invalid arguments (\'textonly\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
 
 		if(!json["textonly"].IsBool())
-			return ServerCommandResponse(true, "Invalid arguments (\'textonly\' is not a boolean).");
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
 
 		properties.textOnly = json["textonly"].GetBool();
 
 		// check name
 		if(properties.name.empty())
-			return ServerCommandResponse(true, "Name is empty.");
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// check query text
 		if(properties.text.empty())
-			return ServerCommandResponse(true, "Query text is empty.");
+			return ServerCommandResponse::failed("Query text is empty.");
 
 		// check query type
 		if(properties.type.empty())
-			return ServerCommandResponse(true, "Query type is empty.");
+			return ServerCommandResponse::failed("Query type is empty.");
 
 		if(
 				properties.type != "regex"
@@ -2347,11 +2334,11 @@ namespace crawlservpp::Main {
 				&& properties.type != "jsonpointer"
 				&& properties.type != "jsonpath"
 		)
-			return ServerCommandResponse(true, "Unknown query type: \'" + properties.type + "\'.");
+			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
 		if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
-			return ServerCommandResponse(true, "No result type selected.");
+			return ServerCommandResponse::failed("No result type selected.");
 
 		// check query
 		if(!(this->database.isQuery(id))) {
@@ -2359,7 +2346,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Query #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// update query in database
@@ -2371,14 +2358,14 @@ namespace crawlservpp::Main {
 	// server command deletequery(id): delete a query from the database by its ID
 	Server::ServerCommandResponse Server::cmdDeleteQuery(const rapidjson::Document& json) {
 		// check whether the deletion of data is allowed
-		if(!(this->settings.dataDeletable)) return ServerCommandResponse(true, "Not allowed.");
+		if(!(this->settings.dataDeletable)) return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -2388,11 +2375,11 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Query #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse(false, true, "Do you really want to delete this query?");
+			return ServerCommandResponse::toBeConfirmed("Do you really want to delete this query?");
 
 		// delete URL list from database
 		this->database.deleteQuery(id);
@@ -2404,10 +2391,10 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdDuplicateQuery(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -2417,14 +2404,14 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Query #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// duplicate query
 		unsigned long newId = this->database.duplicateQuery(id);
 
 		if(!newId)
-			return ServerCommandResponse(true, "Could not add duplicate to database.");
+			return ServerCommandResponse::failed("Could not add duplicate to database.");
 
 		return ServerCommandResponse("Query duplicated.", newId);
 	}
@@ -2443,55 +2430,55 @@ namespace crawlservpp::Main {
 			if(json.IsObject())
 				success = true;
 			else
-				response = ServerCommandResponse(true, "Parsed JSON is not an object.");
+				response = ServerCommandResponse::failed("Parsed JSON is not an object.");
 		}
 		catch(const JsonException& e) {
-			response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+			response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 		}
 
 		if(success) {
 			// get arguments
 			if(!json.HasMember("query"))
-				response = ServerCommandResponse(true, "Invalid arguments (\'query\' is missing).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
 
 			else if(!json["query"].IsString())
-				response = ServerCommandResponse(true, "Invalid arguments (\'query\' is not a string).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
 
 			else if(!json.HasMember("type"))
-				response = ServerCommandResponse(true, "Invalid arguments (\'type\' is missing).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
 
 			else if(!json["type"].IsString())
-				response = ServerCommandResponse(true, "Invalid arguments (\'type\' is not a string).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
 
 			else if(!json.HasMember("resultbool"))
-				response = ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is missing).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
 
 			else if(!json["resultbool"].IsBool())
-				response = ServerCommandResponse(true, "Invalid arguments (\'resultbool\' is not a boolean).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
 
 			else if(!json.HasMember("resultsingle"))
-				response = ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is missing).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
 
 			else if(!json["resultsingle"].IsBool())
-				response = ServerCommandResponse(true, "Invalid arguments (\'resultsingle\' is not a boolean).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
 
 			else if(!json.HasMember("resultmulti"))
-				response = ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is missing).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
 
 			else if(!json["resultmulti"].IsBool())
-				response = ServerCommandResponse(true, "Invalid arguments (\'resultmulti\' is not a boolean).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
 
 			else if(!json.HasMember("textonly"))
-				response = ServerCommandResponse(true, "Invalid arguments (\'textonly\' is missing).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
 
 			else if(!json["textonly"].IsBool())
-				response = ServerCommandResponse(true, "Invalid arguments (\'textonly\' is not a boolean).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
 
 			else if(!json.HasMember("text"))
-				response = ServerCommandResponse(true, "Invalid arguments (\'text\' is missing).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'text\' is missing).");
 
 			else if(!json["text"].IsString())
-				response = ServerCommandResponse(true, "Invalid arguments (\'text\' is not a string).");
+				response = ServerCommandResponse::failed("Invalid arguments (\'text\' is not a string).");
 
 			else {
 				std::string query(json["query"].GetString(), json["query"].GetStringLength());
@@ -2504,10 +2491,10 @@ namespace crawlservpp::Main {
 
 				// check query text, query type and result type
 				if(query.empty())
-					response = ServerCommandResponse(true, "Query text is empty.");
+					response = ServerCommandResponse::failed("Query text is empty.");
 
 				else if(type.empty())
-					response = ServerCommandResponse(true, "Query type is empty.");
+					response = ServerCommandResponse::failed("Query type is empty.");
 
 				else if(
 						type != "regex"
@@ -2515,10 +2502,10 @@ namespace crawlservpp::Main {
 						&& type != "jsonpointer"
 						&& type != "jsonpath"
 				)
-					response = ServerCommandResponse(true, "Unknown query type: \'" + type + "\'.");
+					response = ServerCommandResponse::failed("Unknown query type: \'" + type + "\'.");
 
 				else if(!resultBool && !resultSingle && !resultMulti)
-					response = ServerCommandResponse(true, "No result type selected.");
+					response = ServerCommandResponse::failed("No result type selected.");
 
 				else {
 					// test query
@@ -2575,7 +2562,7 @@ namespace crawlservpp::Main {
 							}
 						}
 						catch(const RegExException& e) {
-							response = ServerCommandResponse(true, "RegEx error: " + e.whatStr());
+							response = ServerCommandResponse::failed("RegEx error: " + e.whatStr());
 						}
 					}
 					else if(type == "xpath") {
@@ -2636,10 +2623,10 @@ namespace crawlservpp::Main {
 							}
 						}
 						catch(const XPathException& e) {
-							response = ServerCommandResponse(true, "XPath error - " + e.whatStr());
+							response = ServerCommandResponse::failed("XPath error - " + e.whatStr());
 						}
 						catch(const XMLException& e) {
-							response = ServerCommandResponse(true, "XML error: " + e.whatStr());
+							response = ServerCommandResponse::failed("XML error: " + e.whatStr());
 						}
 					}
 					else if(type == "jsonpointer") {
@@ -2659,7 +2646,7 @@ namespace crawlservpp::Main {
 								success = true;
 							}
 							catch(const JsonException& e) {
-								response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+								response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 							}
 
 							if(success) {
@@ -2710,7 +2697,7 @@ namespace crawlservpp::Main {
 							}
 						}
 						catch(const JSONPointerException& e) {
-							response = ServerCommandResponse(true, "JSONPointer error: " + e.whatStr());
+							response = ServerCommandResponse::failed("JSONPointer error: " + e.whatStr());
 						}
 					}
 					else {
@@ -2728,7 +2715,7 @@ namespace crawlservpp::Main {
 								success = true;
 							}
 							catch(const JsonException& e) {
-								response = ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+								response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 							}
 
 							if(success) {
@@ -2779,7 +2766,7 @@ namespace crawlservpp::Main {
 							}
 						}
 						catch(const JSONPathException& e) {
-							response = ServerCommandResponse(true, "JSONPath error: " + e.whatStr());
+							response = ServerCommandResponse::failed("JSONPath error: " + e.whatStr());
 						}
 					}
 
@@ -2827,40 +2814,40 @@ namespace crawlservpp::Main {
 
 		// get arguments
 		if(!json.HasMember("website"))
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'website\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
 		unsigned long website = json["website"].GetUint64();
 
 		if(!json.HasMember("module"))
-			return ServerCommandResponse(true, "Invalid arguments (\'module\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'module\' is missing).");
 
 		if(!json["module"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'module\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'module\' is not a string).");
 
 		properties.module = std::string(json["module"].GetString(), json["module"].GetStringLength());
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		if(!json.HasMember("config"))
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
 
 		properties.config = std::string(json["config"].GetString(), json["config"].GetStringLength());
 
 		// check name
 		if(properties.name.empty())
-			return ServerCommandResponse(true, "Name is empty.");
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// check configuration JSON
 		rapidjson::Document configJson;
@@ -2869,16 +2856,16 @@ namespace crawlservpp::Main {
 			configJson = Helper::Json::parseRapid(properties.config);
 		}
 		catch(const JsonException& e) {
-			return ServerCommandResponse(true, "Could not parse JSON: " + e.whatStr() + ".");
+			return ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
 		}
 
 		if(!configJson.IsArray())
-			return ServerCommandResponse(true, "Parsed JSON is not an array.");
+			return ServerCommandResponse::failed("Parsed JSON is not an array.");
 
 		// check analyzer configuration for algorithm
 		if(properties.module == "analyzer") {
 			if(!Server::getAlgoFromConfig(configJson))
-				return ServerCommandResponse(true, "No algorithm selected.");
+				return ServerCommandResponse::failed("No algorithm selected.");
 		}
 
 		// check website
@@ -2887,14 +2874,14 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Website #" << website << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// add configuration to database
 		unsigned long id = this->database.addConfiguration(website, properties);
 
 		if(!id)
-			return ServerCommandResponse(true, "Could not add configuration to database.");
+			return ServerCommandResponse::failed("Could not add configuration to database.");
 
 		return ServerCommandResponse("Configuration added.", id);
 	}
@@ -2905,32 +2892,32 @@ namespace crawlservpp::Main {
 
 		// get arguments
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
 		if(!json.HasMember("name"))
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'name\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
 		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		if(!json.HasMember("config"))
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'config\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
 
 		properties.config = std::string(json["config"].GetString(), json["config"].GetStringLength());
 
 		// check name
 		if(properties.name.empty())
-			return ServerCommandResponse(true, "Name is empty.");
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// check configuration JSON
 		rapidjson::Document configJson;
@@ -2939,11 +2926,11 @@ namespace crawlservpp::Main {
 			configJson = Helper::Json::parseRapid(properties.config);
 		}
 		catch(const JsonException& e) {
-			return ServerCommandResponse(true, "Could not parse JSON.");
+			return ServerCommandResponse::failed("Could not parse JSON.");
 		}
 
 		if(!configJson.IsArray())
-			return ServerCommandResponse(true, "Parsed JSON is not an array.");
+			return ServerCommandResponse::failed("Parsed JSON is not an array.");
 
 		// check configuration
 		if(!(this->database.isConfiguration(id))) {
@@ -2951,7 +2938,7 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Configuration #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// update configuration in database
@@ -2964,14 +2951,14 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdDeleteConfig(const rapidjson::Document& json) {
 		// check whether the deletion of data is allowed
 		if(!(this->settings.dataDeletable))
-			return ServerCommandResponse(true, "Not allowed.");
+			return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -2981,12 +2968,12 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Configuration #" << id << " not found.";
 
-			ServerCommandResponse(true, errStrStr.str());
+			ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// deleteconfig needs to be confirmed
 		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse(false, true, "Do you really want to delete this configuration?");
+			return ServerCommandResponse::toBeConfirmed("Do you really want to delete this configuration?");
 
 		// delete configuration from database
 		this->database.deleteConfiguration(id);
@@ -2998,10 +2985,10 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdDuplicateConfig(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("id"))
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!json["id"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'id\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
 		unsigned long id = json["id"].GetUint64();
 
@@ -3011,14 +2998,14 @@ namespace crawlservpp::Main {
 
 			errStrStr << "Configuration #" << id << " not found.";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 
 		// duplicate configuration
 		unsigned long newId = this->database.duplicateConfiguration(id);
 
 		if(!newId)
-			return ServerCommandResponse(true, "Could not add duplicate to database.");
+			return ServerCommandResponse::failed("Could not add duplicate to database.");
 
 		return ServerCommandResponse("Configuration duplicated.", newId);
 	}
@@ -3027,16 +3014,16 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdWarp(const rapidjson::Document& json) {
 		// get arguments
 		if(!json.HasMember("thread"))
-			return ServerCommandResponse(true, "Invalid arguments (\'thread\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'thread\' is missing).");
 
 		if(!json["thread"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'thread\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'thread\' is not a valid number).");
 
 		if(!json.HasMember("target"))
-			return ServerCommandResponse(true, "Invalid arguments (\'target\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'target\' is missing).");
 
 		if(!json["target"].IsUint64())
-			return ServerCommandResponse(true, "Invalid arguments (\'target\' is not a valid number).");
+			return ServerCommandResponse::failed("Invalid arguments (\'target\' is not a valid number).");
 
 		unsigned long thread = json["thread"].GetUint64();
 		unsigned long target = json["target"].GetUint64();
@@ -3095,13 +3082,13 @@ namespace crawlservpp::Main {
 		);
 
 		if(a != this->analyzers.end())
-			return ServerCommandResponse(true, "Time travel is not supported for analyzers.");
+			return ServerCommandResponse::failed("Time travel is not supported for analyzers.");
 		else {
 			std::ostringstream errStrStr;
 
 			errStrStr << "Could not find thread #" << thread << ".";
 
-			return ServerCommandResponse(true, errStrStr.str());
+			return ServerCommandResponse::failed(errStrStr.str());
 		}
 	}
 
@@ -3110,10 +3097,10 @@ namespace crawlservpp::Main {
 	Server::ServerCommandResponse Server::cmdDownload(const rapidjson::Document& json) {
 		// get argument
 		if(!json.HasMember("filename"))
-			return ServerCommandResponse(true, "Invalid arguments (\'filename\' is missing).");
+			return ServerCommandResponse::failed("Invalid arguments (\'filename\' is missing).");
 
 		if(!json["filename"].IsString())
-			return ServerCommandResponse(true, "Invalid arguments (\'filename\' is not a string).");
+			return ServerCommandResponse::failed("Invalid arguments (\'filename\' is not a string).");
 
 		return ServerCommandResponse(
 				std::string(
