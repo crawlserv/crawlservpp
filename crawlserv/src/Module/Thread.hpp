@@ -35,7 +35,6 @@
 #include <memory>
 #include <mutex>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 #include <thread>
 #include <utility>
@@ -45,7 +44,6 @@ namespace crawlservpp::Module {
 	class Thread {
 		// for convenience
 		typedef Main::Database::ConnectionException ConnectionException;
-		typedef Main::Exception Exception;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
@@ -85,6 +83,13 @@ namespace crawlservpp::Module {
 
 		// time travel
 		void warpTo(unsigned long target);
+
+		// sub-class for Thread exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 		// not moveable, not copyable
 		Thread(Thread&) = delete;

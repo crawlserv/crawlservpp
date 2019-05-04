@@ -236,7 +236,7 @@ namespace crawlservpp::Module {
 		}
 	}
 
-	// jump to specified target ID ("time travel")
+	// jump to specified target ID ("time travel"), throws Thread::Exception
 	void Thread::warpTo(unsigned long target) {
 		// check argument
 		if(!target)
