@@ -531,7 +531,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// add URLs that do not exist already to the database, return the number of added URLs
-	unsigned long Database::addUrlsIfNotExist(std::queue<std::string, std::deque<std::string>>& urls) {
+	unsigned long Database::addUrlsIfNotExist(std::queue<std::string>& urls) {
 		unsigned long result = 0;
 
 		// check argument

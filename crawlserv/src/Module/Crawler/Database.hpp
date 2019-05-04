@@ -65,7 +65,7 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long getUrlId(const std::string& url);
 		IdString getNextUrl(unsigned long currentUrlId);
 		bool addUrlIfNotExists(const std::string& urlString, bool manual);
-		unsigned long addUrlsIfNotExist(std::queue<std::string, std::deque<std::string>>& urls);
+		unsigned long addUrlsIfNotExist(std::queue<std::string>& urls);
 		unsigned long addUrlGetId(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();

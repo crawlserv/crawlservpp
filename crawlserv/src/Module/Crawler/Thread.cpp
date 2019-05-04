@@ -3514,10 +3514,10 @@ namespace crawlservpp::Module::Crawler {
 			chunkSize = urls.size();
 
 		while(pos < urls.size() && this->isRunning()) {
-			std::vector<std::string>::const_iterator begin = urls.begin() + pos;
-			std::vector<std::string>::const_iterator end =
-					urls.begin() + pos + std::min(chunkSize, urls.size() - pos);
-			std::queue<std::string, std::deque<std::string>> chunk(std::deque<std::string>(begin, end));
+			auto begin = urls.begin() + pos;
+			auto end = urls.begin() + pos + std::min(chunkSize, urls.size() - pos);
+
+			std::queue<std::string> chunk(std::queue<std::string>::container_type(begin, end));
 
 			pos += this->config.crawlerUrlChunks;
 
