@@ -53,9 +53,14 @@ namespace crawlservpp::Helper::DateTime {
 	inline bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat) {
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
+
 		in >> date::parse(customFormat, tp);
-		if(!bool(in)) return false;
+
+		if(!bool(in))
+			return false;
+
 		dateTime = date::format("%F %T", tp);
+
 		return true;
 	}
 
@@ -63,10 +68,16 @@ namespace crawlservpp::Helper::DateTime {
 	inline bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat, const std::locale& locale) {
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
+
 		in.imbue(locale);
+
 		in >> date::parse(customFormat, tp);
-		if(!bool(in)) return false;
+
+		if(!bool(in))
+			return false;
+
 		dateTime = date::format("%F %T", tp);
+
 		return true;
 	}
 
@@ -79,9 +90,14 @@ namespace crawlservpp::Helper::DateTime {
 	inline bool convertSQLTimeStampToTimeStamp(std::string& timeStamp) {
 		std::istringstream in(timeStamp);
 		date::sys_seconds tp;
+
 		in >> date::parse("%F %T", tp);
-		if(!bool(in)) return false;
+
+		if(!bool(in))
+			return false;
+
 		timeStamp = date::format("%Y%m%d%H%M%S", tp);
+
 		return true;
 	}
 
@@ -89,16 +105,26 @@ namespace crawlservpp::Helper::DateTime {
 	inline bool isValidISODate(const std::string& isoDate) {
 		std::istringstream in(isoDate);
 		date::sys_days tp;
+
 		in >> date::parse("%F", tp);
+
 		return bool(in);
 	}
 
 	// check whether a ISO date (YYYY-MM-DD) is in a specific date range
 	inline bool isISODateInRange(const std::string& isoDate, const std::string& rangeFrom, const std::string& rangeTo) {
-		if(isoDate.length() < 10) return false;
-		if(rangeFrom.length() < 10 && rangeTo.length() < 10) return true;
-		if(rangeTo.length() < 10) return isoDate.substr(0, 10) >= rangeFrom.substr(0, 10);
-		if(rangeFrom.length() < 10) return isoDate.substr(0, 10) <= rangeTo.substr(0, 10);
+		if(isoDate.length() < 10)
+			return false;
+
+		if(rangeFrom.length() < 10 && rangeTo.length() < 10)
+			return true;
+
+		if(rangeTo.length() < 10)
+			return isoDate.substr(0, 10) >= rangeFrom.substr(0, 10);
+
+		if(rangeFrom.length() < 10)
+			return isoDate.substr(0, 10) <= rangeTo.substr(0, 10);
+
 		return isoDate.substr(0, 10) >= rangeFrom.substr(0, 10) && isoDate <= rangeTo.substr(0, 10);
 	}
 
@@ -106,27 +132,52 @@ namespace crawlservpp::Helper::DateTime {
 	inline std::string microsecondsToString(unsigned long long microseconds) {
 		unsigned long long rest = microseconds;
 		unsigned long days = rest / 86400000000;
+
 		rest -= days * 86400000000;
+
 		unsigned short hours = rest / 3600000000;
+
 		rest -= hours * 3600000000;
+
 		unsigned short minutes = rest / 60000000;
+
 		rest -= minutes * 60000000;
+
 		unsigned short seconds = rest / 1000000;
+
 		rest -= seconds * 1000000;
+
 		unsigned short milliseconds = rest / 1000;
+
 		rest -= milliseconds * 1000;
 
 		std::ostringstream resultStrStr;
-		if(days) resultStrStr << days << "d ";
-		if(hours) resultStrStr << hours << "h ";
-		if(minutes) resultStrStr << minutes << "min ";
-		if(seconds) resultStrStr << seconds << "s ";
-		if(milliseconds) resultStrStr << milliseconds << "ms ";
-		if(rest) resultStrStr << rest << "μs ";
+
+		if(days)
+			resultStrStr << days << "d ";
+
+		if(hours)
+			resultStrStr << hours << "h ";
+
+		if(minutes)
+			resultStrStr << minutes << "min ";
+
+		if(seconds)
+			resultStrStr << seconds << "s ";
+
+		if(milliseconds)
+			resultStrStr << milliseconds << "ms ";
+
+		if(rest)
+			resultStrStr << rest << "μs ";
 
 		std::string resultStr = resultStrStr.str();
-		if(resultStr.empty()) return "<1μs";
+
+		if(resultStr.empty())
+			return "<1μs";
+
 		resultStr.pop_back();
+
 		return resultStr;
 	}
 
@@ -134,24 +185,45 @@ namespace crawlservpp::Helper::DateTime {
 	inline std::string millisecondsToString(unsigned long long milliseconds) {
 		unsigned long long rest = milliseconds;
 		unsigned long days = rest / 86400000;
+
 		rest -= days * 86400000;
+
 		unsigned short hours = rest / 3600000;
+
 		rest -= hours * 3600000;
+
 		unsigned short minutes = rest / 60000;
+
 		rest -= minutes * 60000;
+
 		unsigned short seconds = rest / 1000;
+
 		rest -= seconds * 1000;
 
 		std::ostringstream resultStrStr;
-		if(days) resultStrStr << days << "d ";
-		if(hours) resultStrStr << hours << "h ";
-		if(minutes) resultStrStr << minutes << "min ";
-		if(seconds) resultStrStr << seconds << "s ";
-		if(rest) resultStrStr << rest << "ms ";
+
+		if(days)
+			resultStrStr << days << "d ";
+
+		if(hours)
+			resultStrStr << hours << "h ";
+
+		if(minutes)
+			resultStrStr << minutes << "min ";
+
+		if(seconds)
+			resultStrStr << seconds << "s ";
+
+		if(rest)
+			resultStrStr << rest << "ms ";
 
 		std::string resultStr = resultStrStr.str();
-		if(resultStr.empty()) return "<1ms";
+
+		if(resultStr.empty())
+			return "<1ms";
+
 		resultStr.pop_back();
+
 		return resultStr;
 	}
 
@@ -159,21 +231,38 @@ namespace crawlservpp::Helper::DateTime {
 	inline std::string secondsToString(unsigned long long seconds) {
 		unsigned long long rest = seconds;
 		unsigned long days = rest / 86400;
+
 		rest -= days * 86400;
+
 		unsigned short hours = rest / 3600;
+
 		rest -= hours * 3600;
+
 		unsigned short minutes = rest / 60;
+
 		rest -= minutes * 60;
 
 		std::ostringstream resultStrStr;
-		if(days) resultStrStr << days << "d ";
-		if(hours) resultStrStr << hours << "h ";
-		if(minutes) resultStrStr << minutes << "min ";
-		if(rest) resultStrStr << rest << "s ";
+
+		if(days)
+			resultStrStr << days << "d ";
+
+		if(hours)
+			resultStrStr << hours << "h ";
+
+		if(minutes)
+			resultStrStr << minutes << "min ";
+
+		if(rest)
+			resultStrStr << rest << "s ";
 
 		std::string resultStr = resultStrStr.str();
-		if(resultStr.empty()) return "<1s";
+
+		if(resultStr.empty())
+			return "<1s";
+
 		resultStr.pop_back();
+
 		return resultStr;
 	}
 
