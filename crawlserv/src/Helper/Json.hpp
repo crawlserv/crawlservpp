@@ -10,8 +10,6 @@
 #ifndef HELPER_JSON_HPP_
 #define HELPER_JSON_HPP_
 
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "../Main/Exception.hpp"
 
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"

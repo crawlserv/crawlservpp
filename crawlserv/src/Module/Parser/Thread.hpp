@@ -10,8 +10,6 @@
 #ifndef MODULE_PARSER_THREAD_HPP_
 #define MODULE_PARSER_THREAD_HPP_
 
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "Config.hpp"
 #include "Database.hpp"
 

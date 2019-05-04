@@ -10,8 +10,6 @@
 #ifndef MODULE_CONFIG_HPP_
 #define MODULE_CONFIG_HPP_
 
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "../Helper/Json.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"

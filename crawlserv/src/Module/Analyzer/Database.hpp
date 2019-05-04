@@ -10,8 +10,6 @@
 #ifndef MODULE_ANALYZER_DATABASE_HPP_
 #define MODULE_ANALYZER_DATABASE_HPP_
 
-#define RAPIDJSON_HAS_STDSTRING 1
-
 #include "Config.hpp"
 
 #include "../../Helper/Portability/mysqlcppconn.h"
