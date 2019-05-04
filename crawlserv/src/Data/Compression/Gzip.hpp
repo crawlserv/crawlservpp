@@ -17,7 +17,7 @@
 #include <sstream>
 #include <string>
 
-namespace crawlservpp::Data::Gzip {
+namespace crawlservpp::Data::Compression::Gzip {
 	/*
 	 * DECLARATION
 	 */
@@ -61,6 +61,6 @@ namespace crawlservpp::Data::Gzip {
 		return decompressed.str();
 	}
 
-} /* crawlservpp::Data::Gzip */
+} /* crawlservpp::Data::Compression::Gzip */
 
 #endif /* DATA_GZIP_HPP_ */

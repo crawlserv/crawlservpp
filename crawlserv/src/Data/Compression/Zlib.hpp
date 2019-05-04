@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace crawlservpp::Data::Zlib {
+namespace crawlservpp::Data::Compression::Zlib {
 	/*
 	 * DECLARATION
 	 */
@@ -98,6 +98,6 @@ namespace crawlservpp::Data::Zlib {
 		return result;
 	}
 
-} /* crawlservpp::Data::File */
+} /* crawlservpp::Data::Compression::Zlib */
 
 #endif /* DATA_ZLIB_HPP_ */
