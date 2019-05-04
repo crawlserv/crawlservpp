@@ -10,6 +10,8 @@
 #ifndef HELPER_FILESYSTEM_HPP_
 #define HELPER_FILESYSTEM_HPP_
 
+#include "../Main/Exception.hpp"
+
 #include <experimental/filesystem>
 
 #include <string>
@@ -35,6 +37,16 @@ namespace crawlservpp::Helper::FileSystem {
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
 	bool contains(const std::string& pathToDir, const std::string& pathToCheck);
 	void clearDirectory(const std::string& pathToDir);
+
+	/*
+	 * CLASS FOR FILE SYSTEM EXCEPTIONS
+	 */
+
+	class Exception : public Main::Exception {
+	public:
+		Exception(const std::string& description) : Main::Exception(description) {}
+		virtual ~Exception() {}
+	};
 
 	/*
 	 * IMPLEMENTATION
@@ -75,10 +87,10 @@ namespace crawlservpp::Helper::FileSystem {
 		std::filesystem::path path(pathToDir);
 
 		if(!std::filesystem::exists(path))
-			throw std::runtime_error("\'" + pathToDir + "\' does not exist");
+			throw Exception("\'" + pathToDir + "\' does not exist");
 
 		if(!std::filesystem::is_directory(path))
-			throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
+			throw Exception("\'" + pathToDir + "\' is not a directory");
 
 		// iterate through items
 		for(auto& it: std::filesystem::recursive_directory_iterator(path)) {
@@ -92,10 +104,10 @@ namespace crawlservpp::Helper::FileSystem {
 	//  NOTE: While the directory needs to exist, the path does not
 	inline bool contains(const std::string& pathToDir, const std::string& pathToCheck) {
 		if(!std::filesystem::exists(pathToDir))
-			throw std::runtime_error("\'" + pathToDir + "\' does not exist");
+			throw Exception("\'" + pathToDir + "\' does not exist");
 
 		if(!std::filesystem::is_directory(pathToDir))
-			throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
+			throw Exception("\'" + pathToDir + "\' is not a directory");
 
 		// make both paths absolute
 		std::filesystem::path absPathToDir(std::filesystem::system_complete(pathToDir));
@@ -120,10 +132,10 @@ namespace crawlservpp::Helper::FileSystem {
 	// delete all files and folders in a directory
 	inline void clearDirectory(const std::string& pathToDir) {
 		if(!std::filesystem::exists(pathToDir))
-			throw std::runtime_error("\'" + pathToDir + "\' does not exist");
+			throw Exception("\'" + pathToDir + "\' does not exist");
 
 		if(!std::filesystem::is_directory(pathToDir))
-			throw std::runtime_error("\'" + pathToDir + "\' is not a directory");
+			throw Exception("\'" + pathToDir + "\' is not a directory");
 
 		std::filesystem::path dir(pathToDir);
 
