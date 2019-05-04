@@ -34,7 +34,7 @@ namespace crawlservpp::Module::Analyzer {
 	// destructor stub
 	Thread::~Thread() {}
 
-	// initialize parser, throws std::runtime_error
+	// initialize parser
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
@@ -57,8 +57,10 @@ namespace crawlservpp::Module::Analyzer {
 
 		// set database configuration
 		this->setStatusMessage("Setting database configuration...");
+
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("sets database configuration...");
+
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setLogging(this->config.generalLogging);
 		this->database.setVerbose(config.generalLogging == Config::generalLoggingVerbose);
@@ -67,14 +69,18 @@ namespace crawlservpp::Module::Analyzer {
 
 		// prepare SQL queries
 		this->setStatusMessage("Preparing SQL statements...");
+
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("prepares SQL statements...");
+
 		this->database.prepare();
 
 		// initialize algorithm
 		this->setStatusMessage("Initializing algorithm...");
+
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("initializes algorithm...");
+
 		this->onAlgoInit();
 
 		this->setStatusMessage("Starting algorithm...");
@@ -120,19 +126,19 @@ namespace crawlservpp::Module::Analyzer {
 
 	// hide functions not to be used by thread
 	void Thread::start() {
-		throw(std::logic_error("Thread::start() not to be used by thread itself"));
+		throw std::logic_error("Thread::start() not to be used by thread itself");
 	}
 
 	void Thread::unpause() {
-		throw(std::logic_error("Thread::unpause() not to be used by thread itself"));
+		throw std::logic_error("Thread::unpause() not to be used by thread itself");
 	}
 
 	void Thread::stop() {
-		throw(std::logic_error("Thread::stop() not to be used by thread itself"));
+		throw std::logic_error("Thread::stop() not to be used by thread itself");
 	}
 
 	void Thread::interrupt() {
-		throw(std::logic_error("Thread::interrupt() not to be used by thread itself"));
+		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
 	}
 
 } /* crawlservpp::Module::Analyzer */
