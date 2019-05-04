@@ -21,7 +21,7 @@ namespace crawlservpp::Module {
 		if(Main::Database::driver)
 			Main::Database::driver->threadInit();
 		else
-			throw(Database::Exception("MySQL driver not loaded"));
+			throw(Exception("MySQL driver not loaded"));
 	}
 
 	// destructor stub
@@ -76,7 +76,7 @@ namespace crawlservpp::Module {
 
 		// check prepared SQL statement
 		if(!(this->ps.setThreadStatusMessage))
-			throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadStatusMessage(...)");
+			throw Exception("Missing prepared SQL statement for Module::Database::setThreadStatusMessage(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
@@ -112,7 +112,7 @@ namespace crawlservpp::Module {
 
 		// check prepared SQL statement
 		if(!(this->ps.setThreadProgress))
-			throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadProgress(...)");
+			throw Exception("Missing prepared SQL statement for Module::Database::setThreadProgress(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadProgress);
@@ -134,7 +134,7 @@ namespace crawlservpp::Module {
 
 		// check prepared SQL statement
 		if(!(this->ps.setThreadLast))
-			throw Database::Exception("Missing prepared SQL statement for Module::Database::setThreadLast(...)");
+			throw Exception("Missing prepared SQL statement for Module::Database::setThreadLast(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadLast);

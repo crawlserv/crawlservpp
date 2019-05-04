@@ -14,6 +14,7 @@
 #define MODULE_DATABASE_HPP_
 
 #include "../Main/Database.hpp"
+#include "../Main/Exception.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 
 #include <memory>
@@ -45,6 +46,13 @@ namespace crawlservpp::Module {
 		void setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
 		void setThreadProgress(unsigned long threadId, float threadProgress, unsigned long threadRunTime);
 		void setThreadLast(unsigned long threadId, unsigned long threadLast);
+
+		// sub-class for Module::Database exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	private:
 		// IDs of prepared SQL statements
