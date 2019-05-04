@@ -13,6 +13,10 @@ var helperXPath = null;
 var helperJSONPointer = null;
 var helperJSONPath = null;
 
+// detached options
+var optionUrlListName = null;
+var optionUrlListNamespace = null;
+
 // fullscreen mode
 var fullscreen = false;
 
@@ -95,6 +99,14 @@ jQuery(function($) {
 		
 		// check import/export inputs
 		$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
+		
+		if($("#urllist-target").val() != 0) {
+			if(!optionUrlListName)
+				optionUrlListName = $("#urllist-name-div").detach();
+			
+			if(!optionUrlListNamespace)
+				optionUrlListNamespace = $("#urllist-namespace-div").detach();
+		}
 		
 		// prepare form for file upload
 		$("#file-form").ajaxForm();
@@ -1606,6 +1618,30 @@ jQuery(function($) {
 		
 		return false;
 	});
+	
+// CHANGE EVENT: target URL list selected
+	$("#urllist-target").on("change", function() {		
+		if($(this).val() == 0) {
+			// show inputs for name and namespace if not shown yet
+			if(optionUrlListName) {
+				optionUrlListName.insertAfter("#urllist-target-div");
+				optionUrlListName = null;
+			}
+			
+			if(optionUrlListNamespace) {
+				optionUrlListNamespace.insertAfter("#urllist-name-div");
+				optionUrlListNamespace = null;
+			}
+		}
+		else {
+			// hide inputs for name and namespace if not hidden yet
+			if(!optionUrlListName)
+				optionUrlListName = $("#urllist-name-div").detach();
+			
+			if(!optionUrlListNamespace)
+				optionUrlListNamespace = $("#urllist-namespace-div").detach();
+		}
+	});
 
 // CHANGE EVENT: write first-line header toggled
 	$("#write-firstline-header").on("change", function() {
@@ -1638,6 +1674,13 @@ jQuery(function($) {
 		if($("#urllist-target").length)
 			args["urllist-target"] = parseInt($("#urllist-target").val(), 10);
 		
+		// (URL list name and namespace)
+		if($("#urllist-name").length)
+			args["urllist-name"] = $("#urllist-name").val();
+		
+		if($("#urllist-namespace").length)
+			args["urllist-namespace"] = $("#urllist-namespace").val();
+		
 		// (header options for text files)
 		if($("#is-firstline-header").length)
 			args["is-firstline-header"] = $("#is-firstline-header").prop("checked");
@@ -1669,15 +1712,12 @@ jQuery(function($) {
 						
 						// run command
 						runCmd("import", args, false);
-						
-						// restore button
-						$(t).prop("disabled", false);
-						$(t).val(caption)
 					},
 					failure: function(response) {
 						// file upload failed
 						alert("File upload failed: " + response);
-						
+					},
+					complete: function() {
 						// restore button
 						$(t).prop("disabled", false);
 						$(t).val(caption)

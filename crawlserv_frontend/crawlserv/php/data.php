@@ -176,15 +176,23 @@ if($action != "export") {
     
     if($datatype == "urllist") {
         echo rowWebsiteSelect();
-        echo rowUrlListSelect($action != "merge", false, false, $action == "merge", "urllist-target");
+        echo rowUrlListSelect($action == "import", false, false, $action == "merge", "urllist-target");
             
-        if($action != "merge" && !$urllist) {
-            echo "<div class=\"entry-row\">\n";
+        if($action == "import") {
+            echo "<div id=\"urllist-name-div\" class=\"entry-row\">\n";
                 
             echo "<div class=\"entry-label\">Name:</div><div class=\"entry-input\">\n";
                 
             echo "<input type=\"text\" id=\"urllist-name\" class=\"entry-input\" />\n";
                 
+            echo "</div>\n</div>\n";
+            
+            echo "<div id=\"urllist-namespace-div\" class=\"entry-row\">\n";
+            
+            echo "<div class=\"entry-label\">Namespace:</div><div class=\"entry-input\">\n";
+            
+            echo "<input type=\"text\" id=\"urllist-namespace\" class=\"entry-input\" />\n";
+            
             echo "</div>\n</div>\n";
         }
     }

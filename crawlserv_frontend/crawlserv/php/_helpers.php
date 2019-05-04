@@ -124,7 +124,7 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
     else
         $class = "entry-input";
     
-    $html = "<div class=\"entry-row\">\n";
+    $html = "<div id=\"$id-div\" class=\"entry-row\">\n";
     
     $html .= "<div class=\"entry-label\">URL list:</div><div class=\"$class\">\n";
     
