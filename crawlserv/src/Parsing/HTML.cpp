@@ -25,7 +25,7 @@ namespace crawlservpp::Parsing {
 	}
 
 	// tidy HTML and convert it to XML, throws HTML::Exception
-	void HTML::tidyAndConvert(std::string& content) {
+	std::string HTML::tidyAndConvert(const std::string& content) {
 		if(!tidyOptSetBool(this->doc, TidyXmlOut, yes)
 				|| !tidyOptSetBool(this->doc, TidyQuiet, yes)
 				|| !tidyOptSetBool(this->doc, TidyNumEntities, yes)
@@ -51,7 +51,9 @@ namespace crawlservpp::Parsing {
 
 		// save output
 		if(this->buffer.bp)
-			content = std::string((char *) this->buffer.bp);
+			return std::string((char *) this->buffer.bp, this->buffer.size);
+
+		return "";
 	}
 
 } /* crawlservpp::Parsing */
