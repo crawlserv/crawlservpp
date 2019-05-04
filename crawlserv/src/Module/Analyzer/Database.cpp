@@ -94,17 +94,17 @@ namespace crawlservpp::Module::Analyzer {
 
 	// create target table if it does not exists or add field columns if they do not exist
 	// 	NOTE:	Needs to be called by algorithm class in order to get the required field names!
-	//  throws Main::Database::Exception
+	//  throws Database::Exception
 	void Database::initTargetTable(bool compressed) {
 		// check options
 		if(this->websiteName.empty())
-			throw DatabaseException("Analyzer::Database::initTargetTable(): No website specified");
+			throw Exception("Analyzer::Database::initTargetTable(): No website specified");
 
 		if(this->urlListName.empty())
-			throw DatabaseException("Analyzer::Database::initTargetTable(): No URL list specified");
+			throw Exception("Analyzer::Database::initTargetTable(): No URL list specified");
 
 		if(this->targetTableName.empty())
-			throw DatabaseException("Analyzer::Database::initTargetTable(): Name of result table is empty");
+			throw Exception("Analyzer::Database::initTargetTable(): Name of result table is empty");
 
 		bool emptyFields = true;
 
@@ -117,7 +117,7 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		if(emptyFields)
-			throw DatabaseException(
+			throw Exception(
 					"Analyzer::Database::initTargetTable(): No target fields specified (only empty strings)"
 			);
 
@@ -146,7 +146,7 @@ namespace crawlservpp::Module::Analyzer {
 				);
 
 				if(properties.columns.back().type.empty())
-					throw DatabaseException("Analyzer::Database::initTargetTable(): No type for target field \'" + *i + "\' specified");
+					throw Exception("Analyzer::Database::initTargetTable(): No type for target field \'" + *i + "\' specified");
 			}
 		}
 
@@ -293,7 +293,8 @@ namespace crawlservpp::Module::Analyzer {
 		return this->getPreparedStatement(sqlStatementId);
 	}
 
-	// get text corpus and save it to corpusTo - the corpus will be created if it is out-of-date or does not exist
+	// get text corpus and save it to corpusTo - the corpus will be created if it is out-of-date or does not exist,
+	//  throws Database::Exception
 	void Database::getCorpus(
 			const CorpusProperties& corpusProperties,
 			std::string& corpusTo,
@@ -327,7 +328,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			// check prepared SQL statement
 			if(!(this->ps.getCorpus))
-				throw DatabaseException("Analyzer::Database::getCorpus(): Missing prepared SQL statement for getting the corpus");
+				throw Exception("Analyzer::Database::getCorpus(): Missing prepared SQL statement for getting the corpus");
 
 			// get prepared SQL statement
 			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getCorpus);
@@ -381,14 +382,14 @@ namespace crawlservpp::Module::Analyzer {
 					document = Helper::Json::parseRapid(dateMap);
 				}
 				catch(const JsonException& e) {
-					throw DatabaseException(
+					throw Exception(
 							"Analyzer::Database::getCorpus(): Could not parse datemap of corpus - "
 							+ e.whatStr()
 					);
 				}
 
 				if(!document.IsArray())
-					throw DatabaseException("Analyzer::Database::getCorpus(): Invalid datemap (is not an array)");
+					throw Exception("Analyzer::Database::getCorpus(): Invalid datemap (is not an array)");
 
 				for(auto i = document.Begin(); i != document.End(); ++i) {
 					rapidjson::Value::MemberIterator p = i->FindMember("p");
@@ -396,17 +397,17 @@ namespace crawlservpp::Module::Analyzer {
 					rapidjson::Value::MemberIterator v = i->FindMember("v");
 
 					if(p == i->MemberEnd() || !(p->value.IsUint64()))
-						throw DatabaseException(
+						throw Exception(
 								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid position)"
 						);
 
 					if(l == i->MemberEnd() || !(l->value.IsUint64()))
-						throw DatabaseException(
+						throw Exception(
 								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid length)"
 						);
 
 					if(v == i->MemberEnd() || !(v->value.IsString()))
-						throw DatabaseException(
+						throw Exception(
 								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid value)"
 						);
 
@@ -437,11 +438,11 @@ namespace crawlservpp::Module::Analyzer {
 				}
 			}
 			else
-				throw DatabaseException("Analyzer::Database::getCorpus(): No datemap for corpus found");
+				throw Exception("Analyzer::Database::getCorpus(): No datemap for corpus found");
 		}
 	}
 
-	// public helper function: get the full name of a source table
+	// public helper function: get the full name of a source table, throws Database::Exception
 	std::string Database::getSourceTableName(unsigned short type, const std::string& name) {
 		std::string tableName;
 
@@ -463,13 +464,13 @@ namespace crawlservpp::Module::Analyzer {
 			break;
 
 		default:
-			throw DatabaseException("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
+			throw Exception("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
 		}
 
 		return tableName;
 	}
 
-	// public helper function: get the full name of a source column
+	// public helper function: get the full name of a source column, throws Database::Exception
 	std::string Database::getSourceColumnName(unsigned short type, const std::string& name) {
 		std::string columnName;
 
@@ -496,13 +497,13 @@ namespace crawlservpp::Module::Analyzer {
 			break;
 
 		default:
-			throw DatabaseException("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
+			throw Exception("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
 		}
 
 		return columnName;
 	}
 
-	// public helper function: check input tables and columns
+	// public helper function: check input tables and columns, throws Database::Exception
 	void Database::checkSources(
 			std::vector<unsigned short>& types,
 			std::vector<std::string>& tables,
@@ -522,7 +523,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check for valid sources
 		if(types.empty() || tables.empty() || columns.empty())
-			throw DatabaseException("Analyzer::Database::checkSources(): No input sources available");
+			throw Exception("Analyzer::Database::checkSources(): No input sources available");
 	}
 
 	// public helper function: check input table and column
@@ -564,7 +565,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// helper function: check whether the basis for a specific corpus has changed since its creation,
-	//  return true if corpus was not created yet
+	//  return true if corpus was not created yet, throws Database::Exception
 	// NOTE: Corpora from raw crawling data will always be re-created!
 	bool Database::isCorpusChanged(const CorpusProperties& corpusProperties) {
 		bool result = true;
@@ -574,7 +575,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check prepared SQL statements
 		if(!(this->ps.isCorpusChanged))
-			throw DatabaseException("Analyzer::Database::isCorpusChanged():"
+			throw Exception("Analyzer::Database::isCorpusChanged():"
 					" Missing prepared SQL statement for getting the corpus creation time");
 
 		// get prepared SQL statement
@@ -600,7 +601,7 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		if(!sourceStatement)
-			throw DatabaseException(
+			throw Exception(
 					"Analyzer::Database::isCorpusChanged():"
 					" Missing prepared SQL statement for creating text corpus from specified source type"
 			);
@@ -635,7 +636,8 @@ namespace crawlservpp::Module::Analyzer {
 		return result;
 	}
 
-	// create and add text corpus (old corpus will be deleted if it exists, a datemap will be created when using parsed data)
+	// create and add text corpus (old corpus will be deleted if it exists, a datemap will be created when using parsed data),
+	//  throws Database::Exception
 	void Database::createCorpus(
 			const CorpusProperties& corpusProperties,
 			std::string& corpusTo,
@@ -658,12 +660,12 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check prepared SQL statements
 		if(!(this->ps.deleteCorpus))
-			throw DatabaseException(
+			throw Exception(
 					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for deleting text corpus"
 			);
 
 		if(!(this->ps.addCorpus))
-			throw DatabaseException(
+			throw Exception(
 					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for adding text corpus"
 			);
 

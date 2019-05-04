@@ -14,6 +14,7 @@
 
 #include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Main/Data.hpp"
+#include "../../Main/Exception.hpp"
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Json.hpp"
 #include "../../Struct/CorpusProperties.hpp"
@@ -46,7 +47,6 @@ namespace crawlservpp::Module::Analyzer {
 		// for convenience
 		typedef Helper::Json::Exception JsonException;
 		typedef Main::Data::Type DataType;
-		typedef Main::Database::Exception DatabaseException;
 		typedef Struct::TargetTableProperties CustomTableProperties;
 		typedef Struct::CorpusProperties CorpusProperties;
 		typedef Struct::TableColumn TableColumn;
@@ -104,6 +104,13 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string& column,
 				bool logging
 		);
+
+		// sub-class for Analyzer::Database exceptions
+		class Exception : public Main::Exception {
+		public:
+			Exception(const std::string& description) : Main::Exception(description) {}
+			virtual ~Exception() {}
+		};
 
 	protected:
 		// options
