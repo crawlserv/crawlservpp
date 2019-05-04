@@ -21,15 +21,15 @@ namespace crawlservpp::Data::ImportExport::Text {
 	 * DECLARATION
 	 */
 
-	std::queue<std::string> ImportList(const std::string& content, bool skipFirstLine);
-	std::string ExportList(std::queue<std::string>& list, bool writeHeader, const std::string& header);
+	std::queue<std::string> importList(const std::string& content, bool skipFirstLine);
+	std::string exportList(std::queue<std::string>& list, bool writeHeader, const std::string& header);
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
 	// import list from text file content, ignoring empty lines
-	inline std::queue<std::string> ImportList(const std::string& content, bool skipFirstLine) {
+	inline std::queue<std::string> importList(const std::string& content, bool skipFirstLine) {
 		// split content into entries
 		std::queue<std::string> result(Helper::Strings::splitToQueue(content, '\n'));
 
@@ -42,7 +42,7 @@ namespace crawlservpp::Data::ImportExport::Text {
 	}
 
 	// export list to text file content, ignoring empty entries
-	inline std::string ExportList(std::queue<std::string>& list, bool writeHeader, const std::string& header) {
+	inline std::string exportList(std::queue<std::string>& list, bool writeHeader, const std::string& header) {
 		std::string result;
 
 		// write header to string if necessary
