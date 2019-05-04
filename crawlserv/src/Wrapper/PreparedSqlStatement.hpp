@@ -12,10 +12,11 @@
 
 #include "../Helper/Portability/mysqlcppconn.h"
 
+#include "../Main/Exception.hpp"
+
 #include <cppconn/prepared_statement.h>
 #include <mysql_connection.h>
 
-#include <exception>
 #include <memory>
 #include <string>
 #include <utility>
@@ -42,17 +43,17 @@ namespace crawlservpp::Wrapper {
 			this->reset();
 		}
 
-		// get reference to prepared SQL statement
+		// get reference to prepared SQL statement, throws Main::Exception
 		sql::PreparedStatement& get() {
 			if(!(this->ptr))
-				throw std::runtime_error("get(): No SQL statement prepared");
+				throw Main::Exception("get(): No SQL statement prepared");
 			return *(this->ptr);
 		}
 
-		// get const reference to prepared SQL statement
-		const sql::PreparedStatement& get() const{
+		// get const reference to prepared SQL statement, throws Main::Exception
+		const sql::PreparedStatement& get() const {
 			if(!(this->ptr))
-				throw std::runtime_error("get(): No SQL statement prepared");
+				throw Main::Exception("get(): No SQL statement prepared");
 			return *(this->ptr);
 		}
 
