@@ -13,11 +13,12 @@
 // hard-coded constant
 #define DATA_ZLIB_BUFFER_SIZE 65536
 
+#include "../../Main/Exception.hpp"
+
 #include <zlib.h>
 
 #include <iomanip>
 #include <sstream>
-#include <stdexcept>
 #include <string>
 
 namespace crawlservpp::Data::Compression::Zlib {
@@ -29,10 +30,20 @@ namespace crawlservpp::Data::Compression::Zlib {
 	std::string decompress(const std::string& compressedContent);
 
 	/*
+	 * CLASS FOR ZLIB EXCEPTIONS
+	 */
+
+	class Exception : public Main::Exception {
+	public:
+		Exception(const std::string& description) : Main::Exception(description) {}
+		virtual ~Exception() {}
+	};
+
+	/*
 	 * IMPLEMENTATION
 	 */
 
-	// compress content, throws std::runtime_error
+	// compress content, throws Zlib::Exception
 	inline std::string compress(const std::string& content) {
 		z_stream control = z_stream();
 		int returnValue = 0;
@@ -42,7 +53,7 @@ namespace crawlservpp::Data::Compression::Zlib {
 		result.reserve(content.size());
 
 		if(deflateInit(&control, Z_BEST_COMPRESSION) != Z_OK)
-			throw std::runtime_error("Could not initialize zlib compression");
+			throw Exception("Could not initialize zlib compression");
 
 		control.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(content.data()));
 		control.avail_in = content.size();
@@ -61,12 +72,12 @@ namespace crawlservpp::Data::Compression::Zlib {
 		deflateEnd(&control);
 
 		if(returnValue != Z_STREAM_END)
-			throw std::runtime_error("zlib error: " + std::string(control.msg));
+			throw Exception("zlib error: " + std::string(control.msg));
 
 		return result;
 	}
 
-	// decompress content, throws std::runtime_error
+	// decompress content, throws Zlib::Exception
 	inline std::string decompress(const std::string& compressedContent) {
 		z_stream control = z_stream();
 		int returnValue = 0;
@@ -74,7 +85,7 @@ namespace crawlservpp::Data::Compression::Zlib {
 		std::string result;
 
 		if(inflateInit(&control) != Z_OK)
-			throw std::runtime_error("Could not initialize zlib decompression");
+			throw Exception("Could not initialize zlib decompression");
 
 		control.next_in = reinterpret_cast<Bytef *>(const_cast<char *>(compressedContent.data()));
 		control.avail_in = compressedContent.size();
@@ -93,7 +104,7 @@ namespace crawlservpp::Data::Compression::Zlib {
 		inflateEnd(&control);
 
 		if(returnValue != Z_STREAM_END)
-			throw std::runtime_error("zlib error: " + std::string(control.msg));
+			throw Exception("zlib error: " + std::string(control.msg));
 
 		return result;
 	}
