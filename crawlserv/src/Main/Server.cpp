@@ -2283,6 +2283,10 @@ namespace crawlservpp::Main {
 							if(!response.fail) {
 								// create new database connection for worker thread
 								Module::Database db(this->dbSettings, "worker");
+
+								db.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
+
+								db.connect();
 								db.prepare();
 
 								// check website
