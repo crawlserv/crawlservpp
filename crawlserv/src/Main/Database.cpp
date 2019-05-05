@@ -1893,7 +1893,7 @@ namespace crawlservpp::Main {
 	// insert URLs that do not already exist into the specified URL list and return the number of added URLs,
 	//  throws Database::Exception
 	unsigned long Database::mergeUrls(unsigned long listId, std::queue<std::string>& urls) {
-		unsigned long result = 0;
+		unsigned long urlsAdded = 0;
 
 		// check arguments
 		if(!listId)
@@ -1922,63 +1922,64 @@ namespace crawlservpp::Main {
 
 		hashQuery += " )";
 
-		// generate INSERT INTO ... VALUES clause
-		std::ostringstream sqlQueryStr;
+		// generate query for each 1,000 (or less) URLs
+		while(!urls.empty()) {
+			// generate INSERT INTO ... VALUES clause
+			std::ostringstream sqlQueryStr;
 
-		sqlQueryStr << "INSERT IGNORE INTO `" << urlListTable << "`(id, url, hash) VALUES ";
+			sqlQueryStr << "INSERT IGNORE INTO `" << urlListTable << "`(id, url, hash) VALUES ";
 
-		// generate placeholders
-		for(unsigned long n = 0; n < urls.size(); ++n)
-			sqlQueryStr << "(" // begin of VALUES arguments
-							" ("
-								"SELECT id FROM"
+			// generate placeholders
+			for(unsigned long n = 0; n < (urls.size() > 1000 ? 1000 : urls.size()); ++n)
+				sqlQueryStr << "(" // begin of VALUES arguments
 								" ("
-									"SELECT id, url"
-									" FROM `" << urlListTable << "`"
-									" AS `a" << n + 1 << "`"
-									" WHERE hash = " << hashQuery <<
-								" ) AS tmp2 WHERE url = ? LIMIT 1"
-							" ),"
-							"?, " <<
-							hashQuery <<
-						"), "; // end of VALUES arguments
+									"SELECT id FROM"
+									" ("
+										"SELECT id, url"
+										" FROM `" << urlListTable << "`"
+										" AS `a" << n + 1 << "`"
+										" WHERE hash = " << hashQuery <<
+									" ) AS tmp2 WHERE url = ? LIMIT 1"
+								" ),"
+								"?, " <<
+								hashQuery <<
+							"), "; // end of VALUES arguments
 
-		// remove last comma and space
-		std::string sqlQuery = sqlQueryStr.str();
+			// remove last comma and space
+			std::string sqlQuery = sqlQueryStr.str();
 
-		sqlQuery.pop_back();
-		sqlQuery.pop_back();
+			sqlQuery.pop_back();
+			sqlQuery.pop_back();
 
-		// check connection
-		this->checkConnection();
+			// check connection
+			this->checkConnection();
 
-		try {
-			// prepare SQL statement
-			SqlPreparedStatementPtr sqlStatement(
-					this->connection->prepareStatement(
-							sqlQuery
-					)
-			);
+			try {
+				// prepare SQL statement
+				SqlPreparedStatementPtr sqlStatement(
+						this->connection->prepareStatement(
+								sqlQuery
+						)
+				);
 
-			// execute SQL query
-			unsigned long counter = 0;
+				// execute SQL query
+				const unsigned long max = urls.size() > 1000 ? 1000 : urls.size();
 
-			while(!urls.empty()) {
-				sqlStatement->setString((counter * 4) + 1, urls.front());
-				sqlStatement->setString((counter * 4) + 2, urls.front());
-				sqlStatement->setString((counter * 4) + 3, urls.front());
-				sqlStatement->setString((counter * 4) + 4, urls.front());
+				for(unsigned long n = 0; n < max; ++n) {
+					sqlStatement->setString((n * 4) + 1, urls.front());
+					sqlStatement->setString((n * 4) + 2, urls.front());
+					sqlStatement->setString((n * 4) + 3, urls.front());
+					sqlStatement->setString((n * 4) + 4, urls.front());
 
-				urls.pop();
+					urls.pop();
+				}
 
-				counter++;
+				urlsAdded += Database::sqlExecuteUpdate(sqlStatement);
 			}
-
-			result = Database::sqlExecuteUpdate(sqlStatement);
+			catch(const sql::SQLException &e) { this->sqlException("Main::Database::mergeUrls", e); }
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::mergeUrls", e); }
 
-		return result;
+		return urlsAdded;
 	}
 
 	// get all URLs from the specified URL list, throws Database::Exception
