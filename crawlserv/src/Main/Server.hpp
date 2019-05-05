@@ -150,6 +150,10 @@ namespace crawlservpp::Main {
 		std::vector<bool> workersRunning;
 		std::mutex workersLock;
 
+		// access to hard-coded constants
+		const std::string dirCache;
+		const std::string dirCookies;
+
 		/*  NOTE:	The web server needs to be declared after/destroyed before the database and any data,
 					because it is doing one last poll on destruction!
 		*/
