@@ -105,8 +105,8 @@ namespace crawlservpp::Module {
 		std::string configuration; 					// configuration
 
 		// thread helper functions
-		bool isInterrupted();
-		bool isResumed();
+		bool isInterrupted() const;
+		bool isResumed() const;
 
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
@@ -118,7 +118,7 @@ namespace crawlservpp::Module {
 		unsigned long getLast() const;
 		void setLast(unsigned long last);
 		void incrementLast();
-		std::string getStatusMessage();
+		std::string getStatusMessage() const;
 		long getWarpedOverAndReset();
 
 		virtual void onInit() = 0;
@@ -148,10 +148,10 @@ namespace crawlservpp::Module {
 		long warpedOver;							// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
 		std::condition_variable pauseCondition; 	// condition variable to wait for unpause
-		std::mutex pauseLock;
+		mutable std::mutex pauseLock;
 
 		std::string status; 						// status message of the thread (without pause state)
-		std::mutex statusLock;
+		mutable std::mutex statusLock;
 
 		std::thread thread;							// pointer to the thread
 
@@ -160,7 +160,7 @@ namespace crawlservpp::Module {
 		std::chrono::steady_clock::time_point pauseTimePoint;
 		std::chrono::duration<unsigned long> runTime;
 		std::chrono::duration<unsigned long> pauseTime;
-		unsigned long getRunTime();
+		unsigned long getRunTime() const;
 		void updateRunTime();
 		void updatePauseTime();
 

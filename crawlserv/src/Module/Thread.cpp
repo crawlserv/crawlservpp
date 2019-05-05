@@ -247,12 +247,12 @@ namespace crawlservpp::Module {
 	}
 
 	// return whether thread has been resumed after an interruption by shutdown
-	bool Thread::isResumed() {
+	bool Thread::isResumed() const {
 		return this->resumed;
 	}
 
 	// return whether thread has been interrupted by shutdown
-	bool Thread::isInterrupted() {
+	bool Thread::isInterrupted() const {
 		return this->interrupted;
 	}
 
@@ -334,7 +334,7 @@ namespace crawlservpp::Module {
 	}
 
 	// get a copy of the current status message
-	std::string Thread::getStatusMessage() {
+	std::string Thread::getStatusMessage() const {
 		std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
 		return this->status;
@@ -350,7 +350,7 @@ namespace crawlservpp::Module {
 	}
 
 	// get current run time in seconds
-	unsigned long Thread::getRunTime() {
+	unsigned long Thread::getRunTime() const {
 		if(this->startTimePoint > std::chrono::steady_clock::time_point::min())
 			return	(
 							this->runTime +
