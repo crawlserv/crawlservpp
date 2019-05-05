@@ -116,6 +116,8 @@ namespace crawlservpp::Main {
 		// getters
 		const std::string& getStatus() const;
 		unsigned long getUpTime() const;
+		unsigned long getActiveThreads() const;
+		unsigned long getActiveWorkers() const;
 
 		// command function
 		bool tick();
@@ -148,7 +150,7 @@ namespace crawlservpp::Main {
 		std::vector<std::unique_ptr<Module::Analyzer::Thread>> analyzers;
 		std::vector<std::thread> workers;
 		std::vector<bool> workersRunning;
-		std::mutex workersLock;
+		mutable std::mutex workersLock;
 
 		// access to hard-coded constants
 		const std::string dirCache;
