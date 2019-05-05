@@ -67,6 +67,7 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     while($row = $result->fetch_assoc()) {
         $id = $row["id"];
         $name = $row["name"];
+        $data_namespace = $row["namespace"];
         
         if($first) {
             if(!isset($website))
@@ -75,13 +76,13 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
             $first = false;
         }
         
-        $html .= "<option value=\"".$id."\"";
+        $html .= "<option value=\"$id\" data-namespace=\"$data_namespace\"";
         
         if($website == $id) {
             $html .= " selected";
             
             $websiteName = $name;
-            $namespace = $row["namespace"];
+            $namespace = $data_namespace;
             $domain = $row["domain"];
             $dir = $row["dir"];
         }
@@ -173,7 +174,7 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
                 $first = false;
             }
             
-            $html .= "<option value=\"$ulId\"";
+            $html .= "<option value=\"$ulId\" data-namespace=\"$ulNamespace\"";
             
             if($urllist == $ulId) {
                 $urllistName = $ulName;
