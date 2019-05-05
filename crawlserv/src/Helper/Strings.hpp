@@ -10,6 +10,8 @@
 #ifndef HELPER_STRINGS_HPP_
 #define HELPER_STRINGS_HPP_
 
+#include <boost/algorithm/string.hpp>
+
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
@@ -82,8 +84,17 @@ namespace crawlservpp::Helper::Strings {
 
 	std::vector<std::string> split(const std::string& str, char delimiter);
 	std::vector<std::string> split(const std::string& str, const std::string& delimiter);
-	std::queue<std::string> splitToQueue(const std::string& str, char delimiter);
-	std::queue<std::string> splitToQueue(const std::string& str, const std::string& delimiter);
+
+	std::queue<std::string> splitToQueue(
+			const std::string& str,
+			char delimiter,
+			bool removeEmpty
+	);
+	std::queue<std::string> splitToQueue(
+			const std::string& str,
+			const std::string& delimiter,
+			bool removeEmpty
+	);
 
 	void sortAndRemoveDuplicates(std::vector<std::string>& vectorOfStrings, bool caseSensitive);
 
@@ -387,23 +398,11 @@ namespace crawlservpp::Helper::Strings {
 
 	// split string into vector of strings
 	inline std::vector<std::string> split(const std::string& str, char delimiter) {
-		std::string tmp(str);
 		std::vector<std::string> result;
 
-		while(!tmp.empty()) {
-			auto index = tmp.find(delimiter);
-
-			if(index != std::string::npos) {
-				result.emplace_back(tmp, 0, index);
-
-				tmp = tmp.substr(index + 1);
-			}
-			else if(!tmp.empty()) {
-				result.emplace_back(tmp);
-
-				tmp.clear();
-			}
-		}
+		boost::split(result, str, [&delimiter](char c) {
+			return c == delimiter;
+		});
 
 		return result;
 	}
@@ -432,30 +431,30 @@ namespace crawlservpp::Helper::Strings {
 	}
 
 	// split string into queue of strings
-	inline std::queue<std::string> splitToQueue(const std::string& str, char delimiter) {
-		std::string tmp(str);
-		std::queue<std::string> result;
+	inline std::queue<std::string> splitToQueue(const std::string& str, char delimiter, bool removeEmpty) {
+		std::queue<std::string>::container_type result;
 
-		while(!tmp.empty()) {
-			auto index = tmp.find(delimiter);
+		boost::split(result, str, [&delimiter](char c) {
+			return c == delimiter;
+		});
 
-			if(index != std::string::npos) {
-				result.emplace(tmp, 0, index);
+		if(removeEmpty)
+			result.erase(
+					std::remove_if(
+							result.begin(),
+							result.end(),
+							[](const auto& str) {
+								return str.empty();
+							}
+					),
+					result.end()
+			);
 
-				tmp = tmp.substr(index + 1);
-			}
-			else if(!tmp.empty()) {
-				result.emplace(tmp);
-
-				tmp.clear();
-			}
-		}
-
-		return result;
+		return std::queue<std::string>(result);
 	}
 
 	// split string into queue of strings
-	inline std::queue<std::string> splitToQueue(const std::string& str, const std::string& delimiter) {
+	inline std::queue<std::string> splitToQueue(const std::string& str, const std::string& delimiter, bool removeEmpty) {
 		std::string tmp(str);
 		std::queue<std::string> result;
 
@@ -463,7 +462,8 @@ namespace crawlservpp::Helper::Strings {
 			auto index = tmp.find(delimiter);
 
 			if(index != std::string::npos) {
-				result.emplace(tmp, 0, index);
+				if(!removeEmpty || index > 0)
+					result.emplace(tmp, 0, index);
 
 				tmp = tmp.substr(index + delimiter.size());
 			}
