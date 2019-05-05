@@ -79,6 +79,8 @@ echo isset($_POST["scrolldown"]) ? "true" : "false";
 
 <body>
 
+<div id="hidden-div" style="visibility:hidden"></div>
+
 <div id="container">
 <div id="main">
 
