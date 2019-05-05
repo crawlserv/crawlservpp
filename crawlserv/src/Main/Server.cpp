@@ -25,23 +25,25 @@ namespace crawlservpp::Main {
 			  allowed(serverSettings.allowedClients),
 			  running(true),
 			  offline(true),
-			  webServer(MAIN_SERVER_DIR_CACHE) {
+			  dirCache(MAIN_SERVER_DIR_CACHE),
+			  dirCookies(MAIN_SERVER_DIR_COOKIES),
+			  webServer(this->dirCache) {
 		// create cache directory if it does not exist
 		if(
-				!std::filesystem::is_directory(MAIN_SERVER_DIR_CACHE)
-				|| !std::filesystem::exists(MAIN_SERVER_DIR_CACHE)
+				!std::filesystem::is_directory(this->dirCache)
+				|| !std::filesystem::exists(this->dirCache)
 		)
-			std::filesystem::create_directory(MAIN_SERVER_DIR_CACHE);
+			std::filesystem::create_directory(this->dirCache);
 		else
 			// directory exists: clear it
-			Helper::FileSystem::clearDirectory(MAIN_SERVER_DIR_CACHE);
+			Helper::FileSystem::clearDirectory(this->dirCache);
 
 		// create cookies directory if it does not exist
 		if(
-				!std::filesystem::is_directory(MAIN_SERVER_DIR_COOKIES)
-				|| !std::filesystem::exists(MAIN_SERVER_DIR_COOKIES)
+				!std::filesystem::is_directory(this->dirCookies)
+				|| !std::filesystem::exists(this->dirCookies)
 		)
-			std::filesystem::create_directory(MAIN_SERVER_DIR_COOKIES);
+			std::filesystem::create_directory(this->dirCookies);
 
 		// set database option
 		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
@@ -86,7 +88,7 @@ namespace crawlservpp::Main {
 			if(i->options.module == "crawler") {
 				// load crawler thread
 				this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(
-						this->database, MAIN_SERVER_DIR_COOKIES, i->options, i->status
+						this->database, this->dirCookies, i->options, i->status
 				));
 
 				this->crawlers.back()->Module::Thread::start();
@@ -442,6 +444,60 @@ namespace crawlservpp::Main {
 		).count();
 	}
 
+	// get number of active module threads
+	unsigned long Server::getActiveThreads() const {
+		unsigned long result = 0;
+
+		// count active crawlers
+		result += std::count_if(
+				this->crawlers.begin(),
+				this->crawlers.end(),
+				[](const auto& thread) {
+						return thread->Module::Thread::isRunning();
+				}
+		);
+
+		// count active parsers
+		result += std::count_if(
+				this->parsers.begin(),
+				this->parsers.end(),
+				[](const auto& thread) {
+						return thread->Module::Thread::isRunning();
+				}
+		);
+
+		/* TODO: count extractors
+		// count active extractors
+		result += std::count_if(
+				this->extractors.begin(),
+				this->extractors.end(),
+				[](const auto& thread) {
+						return thread->Module::Thread::isRunning();
+				}
+		);
+		*/
+
+		// count active analyzers
+		result += std::count_if(
+				this->analyzers.begin(),
+				this->analyzers.end(),
+				[](const auto& thread) {
+						return thread->Module::Thread::isRunning();
+				}
+		);
+
+		return result;
+	}
+
+	// get number of active worker threads
+	unsigned long Server::getActiveWorkers() const {
+		std::lock_guard<std::mutex> workersLocked(this->workersLock);
+
+		return std::count_if(this->workersRunning.begin(), this->workersRunning.end(), [](bool isRunning) {
+			return isRunning;
+		});
+	}
+
 	// perform a server command, throws Main::Exception
 	std::string Server::cmd(
 			ConnectionPtr connection,
@@ -557,7 +613,13 @@ namespace crawlservpp::Main {
 
 									this->workersRunning.push_back(true);
 
-									this->workers.emplace_back(&Server::cmdImport, this, connection, this->workers.size(), msgBody);
+									this->workers.emplace_back(
+											&Server::cmdImport,
+											this,
+											connection,
+											this->workers.size(),
+											msgBody
+									);
 								}
 
 								threadStartedTo = true;
@@ -569,7 +631,12 @@ namespace crawlservpp::Main {
 
 									this->workersRunning.push_back(true);
 
-									this->workers.emplace_back(&Server::cmdMerge, this, connection, this->workers.size(), msgBody);
+									this->workers.emplace_back(
+											&Server::cmdMerge,
+											this, connection,
+											this->workers.size(),
+											msgBody
+									);
 								}
 
 								threadStartedTo = true;
@@ -581,7 +648,13 @@ namespace crawlservpp::Main {
 
 									this->workersRunning.push_back(true);
 
-									this->workers.emplace_back(&Server::cmdExport, this, connection, this->workers.size(), msgBody);
+									this->workers.emplace_back(
+											&Server::cmdExport,
+											this,
+											connection,
+											this->workers.size(),
+											msgBody
+									);
 								}
 
 								threadStartedTo = true;
@@ -603,7 +676,12 @@ namespace crawlservpp::Main {
 
 									this->workersRunning.push_back(true);
 
-									this->workers.emplace_back(&Server::cmdTestQuery, this, connection, this->workers.size(), msgBody);
+									this->workers.emplace_back(
+											&Server::cmdTestQuery,
+											this, connection,
+											this->workers.size(),
+											msgBody
+									);
 								}
 
 								threadStartedTo = true;
@@ -984,7 +1062,7 @@ namespace crawlservpp::Main {
 		this->crawlers.push_back(
 				std::make_unique<Module::Crawler::Thread>(
 						this->database,
-						MAIN_SERVER_DIR_COOKIES,
+						this->dirCookies,
 						options
 				)
 		);
@@ -2203,25 +2281,28 @@ namespace crawlservpp::Main {
 				const std::string fileName(json["filename"].GetString(), json["filename"].GetStringLength());
 
 				// generate full file name to import from
-				std::string fullFileName(MAIN_SERVER_DIR_CACHE);
+				std::string fullFileName;
 
-				fullFileName.reserve(fullFileName.size() + fileName.size() + 1);
+				fullFileName.reserve(this->dirCache.size() + fileName.size() + 1);
 
+				fullFileName = this->dirCache;
 				fullFileName += Helper::FileSystem::getPathSeparator();
 				fullFileName += fileName;
 
 				std::string content;
 
 				// check file name and whether file exists
-				if(Helper::FileSystem::contains(MAIN_SERVER_DIR_CACHE, fullFileName)) {
+				if(Helper::FileSystem::contains(this->dirCache, fullFileName)) {
 					if(Helper::FileSystem::isValidFile(fullFileName)) {
-						content = std::string(Data::File::readToString(fullFileName, true));
+						content = std::string(Data::File::read(fullFileName, true));
 
 						if(compression != "none") {
 							if(compression == "gzip")
 								content = Data::Compression::Gzip::decompress(content);
+
 							else if(compression == "zlib")
 								content = Data::Compression::Zlib::decompress(content);
+
 							else
 								response = ServerCommandResponse::failed("Unknown compression type: \'" + compression + "\'.");
 						}
@@ -2234,30 +2315,34 @@ namespace crawlservpp::Main {
 
 				if(!response.fail) {
 					if(dataType == "urllist") {
-						// check arguments for importing a URL list
+						// get arguments for importing a URL list
 						if(!json.HasMember("website"))
 							response = ServerCommandResponse::failed(
 									"Invalid arguments (\'website\' is missing)."
 							);
+
 						else if(!json["website"].IsUint64()) {
 							response = ServerCommandResponse::failed(
 									"Invalid arguments (\'website\' is not a valid number)."
 							);
 						}
+
 						else if(!json.HasMember("urllist-target"))
 							response = ServerCommandResponse::failed(
 									"Invalid arguments (\'urllist-target\' is missing)."
 							);
+
 						else if(!json["urllist-target"].IsUint64()) {
 							response = ServerCommandResponse::failed(
 									"Invalid arguments (\'urllist-target\' is not a valid number)."
 							);
 						}
 
-						if(!response.fail) {
-							// import URL list
+						else {
 							unsigned long website = json["website"].GetUint64();
 							unsigned long target = json["urllist-target"].GetUint64();
+
+							// import URL list
 							std::queue<std::string> urls;
 
 							if(fileType == "text") {
@@ -2266,14 +2351,17 @@ namespace crawlservpp::Main {
 									response = ServerCommandResponse::failed(
 											"Invalid arguments (\'is-firstline-header\' is missing)."
 									);
+
 								else if(!json["is-firstline-header"].IsBool())
 									response = ServerCommandResponse::failed(
 											"Invalid arguments (\'is-firstline-header\' is not a boolean)."
 									);
+
 								else {
 									urls = Data::ImportExport::Text::importList(
 											content,
-											json["is-firstline-header"].GetBool()
+											json["is-firstline-header"].GetBool(),
+											true
 									);
 								}
 							}
@@ -2306,18 +2394,22 @@ namespace crawlservpp::Main {
 											response = ServerCommandResponse::failed(
 													"Invalid arguments (\'urllist-namespace\' is missing)."
 											);
+
 										else if(!json["urllist-namespace"].IsString())
 											response = ServerCommandResponse::failed(
 													"Invalid arguments (\'urllist-namespace\' is not a string)."
 											);
+
 										else if(!json.HasMember("urllist-name"))
 											response = ServerCommandResponse::failed(
 													"Invalid arguments (\'urllist-name\' is missing)."
 											);
+
 										else if(!json["urllist-name"].IsString())
 											response = ServerCommandResponse::failed(
 													"Invalid arguments (\'urllist-name\' is not a string)."
 											);
+
 										else {
 											// set properties for new URL list
 											UrlListProperties urlListProperties(
@@ -2337,8 +2429,29 @@ namespace crawlservpp::Main {
 									}
 
 									if(!response.fail) {
-										// add URLs that do not exist already to URL list
-										unsigned long added = db.mergeUrls(target, urls);
+										unsigned long added = 0;
+
+										if(urls.size()) {
+											// write to log
+											std::ostringstream logStrStr;
+
+											logStrStr << "imports ";
+
+											if(urls.size() == 1)
+												logStrStr << "one URL";
+											else {
+												logStrStr.imbue(std::locale(""));
+
+												logStrStr << urls.size() << " URLs";
+											}
+
+											logStrStr << "...";
+
+											db.log(logStrStr.str());
+
+											// add URLs that do not exist already to URL list
+											added = db.mergeUrls(target, urls);
+										}
 
 										// generate response
 										std::ostringstream responseStrStr;
@@ -2380,6 +2493,8 @@ namespace crawlservpp::Main {
 
 	// server command merge(datatype, [...]): merge two tables in the database
 	void Server::cmdMerge(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
+		namespace Data = crawlservpp::Data;
+
 		rapidjson::Document json;
 		ServerCommandResponse response;
 
@@ -2411,6 +2526,8 @@ namespace crawlservpp::Main {
 
 	// server command export(datatype, filetype, compression, [...]): export data from the database into a file
 	void Server::cmdExport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
+		namespace Data = crawlservpp::Data;
+
 		rapidjson::Document json;
 		ServerCommandResponse response;
 
@@ -2441,10 +2558,153 @@ namespace crawlservpp::Main {
 				std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
 				std::string filetype(json["filetype"].GetString(), json["filetype"].GetStringLength());
 				std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
+				std::queue<std::string> urls;
+				std::string content;
 
-				// [...]
+				if(datatype == "urllist") {
+					// get arguments for exporting a URL list
+					if(!json.HasMember("website"))
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'website\' is missing)."
+						);
 
-				response = ServerCommandResponse::failed("Not implemented yet.");
+					else if(!json["website"].IsUint64()) {
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'website\' is not a valid number)."
+						);
+					}
+
+					else if(!json.HasMember("urllist-source"))
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'urllist-source\' is missing)."
+						);
+
+					else if(!json["urllist-source"].IsUint64()) {
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'urllist-source\' is not a valid number)."
+						);
+					}
+
+					else {
+						unsigned long website = json["website"].GetUint64();
+						unsigned long source = json["urllist-source"].GetUint64();
+
+						// create new database connection for worker thread
+						Module::Database db(this->dbSettings, "worker");
+
+						db.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
+
+						db.connect();
+						db.prepare();
+
+						// check website
+						if(!db.isWebsite(website))
+							response = ServerCommandResponse::failed("Invalid website ID.");
+
+						else if(!db.isUrlList(website, source))
+							response = ServerCommandResponse::failed("Invalid URL list ID.");
+
+						else {
+							urls = db.getUrls(source);
+
+							// write to log
+							std::ostringstream logStrStr;
+
+							logStrStr << "exports ";
+
+							switch(urls.size()) {
+							case 0:
+								logStrStr << "empty URL list";
+
+								break;
+
+							case 1:
+								logStrStr << "one URL";
+
+								break;
+
+							default:
+								logStrStr.imbue(std::locale(""));
+
+								logStrStr << urls.size() << " URLs";
+							}
+
+							logStrStr << "...";
+
+							db.log(logStrStr.str());
+						}
+					}
+				}
+				else
+					response = ServerCommandResponse::failed("Unknown data type: \'" + datatype + "\'.");
+
+				if(!response.fail) {
+					if(filetype == "text") {
+						// export URL list into text file
+						if(!json.HasMember("write-firstline-header"))
+							response = ServerCommandResponse::failed(
+									"Invalid arguments (\'write-firstline-header\' is missing)."
+							);
+
+						else if(!json["write-firstline-header"].IsBool())
+							response = ServerCommandResponse::failed(
+									"Invalid arguments (\'write-firstline-header\' is not a boolean)."
+							);
+						else {
+							bool writeHeader = json["write-firstline-header"].GetBool();
+							std::string header;
+
+							if(writeHeader) {
+								if(!json.HasMember("firstline-header"))
+									response = ServerCommandResponse::failed(
+											"Invalid arguments (\'firstline-header\' is missing)."
+									);
+
+								else if(!json["firstline-header"].IsString())
+									response = ServerCommandResponse::failed(
+											"Invalid arguments (\'firstline-header\' is not a string)."
+									);
+								else
+									header = std::string(
+											json["firstline-header"].GetString(),
+											json["firstline-header"].GetStringLength()
+									);
+							}
+
+							if(!response.fail && urls.size())
+								content = Data::ImportExport::Text::exportList(urls, writeHeader, header);
+						}
+					}
+					else
+						response = ServerCommandResponse::failed("Unknown file type: \'" + filetype + "\'.");
+
+					if(!response.fail && compression != "none") {
+						if(compression == "gzip")
+							content = Data::Compression::Gzip::compress(content);
+
+						else if(compression == "zlib")
+							content = Data::Compression::Zlib::compress(content);
+
+						else
+							response = ServerCommandResponse::failed("Unknown compression type: \'" + compression + "\'.");
+					}
+
+					if(!response.fail) {
+						// generate file name
+						const std::string fileName(Helper::Strings::generateRandom(this->webServer.fileLength));
+						const std::string fullFileName(
+								this->dirCache
+								+ Helper::FileSystem::getPathSeparator()
+								+ fileName
+						);
+
+						// write file
+						Data::File::write(fullFileName, content, true);
+
+						// return file name
+						response = ServerCommandResponse(fileName);
+					}
+				}
 			}
 		}
 
