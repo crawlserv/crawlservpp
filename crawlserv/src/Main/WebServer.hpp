@@ -119,8 +119,8 @@ namespace crawlservpp::Main {
 			std::string name;
 			std::ofstream stream;
 
-			FileUploadData(const std::string& fileName, const std::string& fullName) : name(fileName) {
-				this->stream.open(fullName.c_str(), std::ios_base::binary);
+			FileUploadData(const std::string& fileName, const std::string& fullFileName) : name(fileName) {
+				this->stream.open(fullFileName.c_str(), std::ios_base::binary);
 			}
 		};
 	};
