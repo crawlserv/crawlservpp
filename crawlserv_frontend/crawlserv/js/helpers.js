@@ -161,132 +161,164 @@ function reload(args) {
 	$.redirect("", args);
 }
 
-// run command with arguments
-function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReloadArgTo) {
+// send command to server
+function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReloadArgTo, whenDone) {
 	if(cmd === "")
 		return;
 	
-	cmdArgs["cmd"] = cmd;
-	
-	var timerStart = +new Date();
-	var data = JSON.stringify(cmdArgs, null, 1);
-
-	if(cmd == "download") {
-		// send file download command via XMLHttpRequest
-		xhttp = new XMLHttpRequest();
-		
-		xhttp.onreadystatechange = function() {
-			var a;
+	// check connection to server
+	$("#hidden-div").load(cc_host, function(response, status, xhr) {		
+		if(status == "error") {
+			alert("No connection to the server.");
+		}
+		else {
+			cmdArgs["cmd"] = cmd;
 			
-			if(xhttp.readyState === 4 && xhttp.status === 200) {
-				a = document.createElement("a");
-				
-				a.href = window.URL.createObjectURL(xhttp.response);
-				
-				a.download = cmdArgs["filename"];
-				
-				a.style.display = "none";
-				
-				document.body.appendChild(a);
-				
-				a.click();
-			}
-		};
+			var timerStart = +new Date();
+			var data = JSON.stringify(cmdArgs, null, 1);
 		
-		xhttp.open("POST", cc_host);
-		
-		xhttp.setRequestHeader("Content-Type", "application/json");
-		
-		xhttp.responseType = "blob";
-		
-		xhttp.send(data);
-	}
-	else
-		// send other server commands via AJAX
-		$.ajax(
-				{
-					type: "POST",
-					url: cc_host,
-					data: data,
-					contentType: "application/json; charset=utf-8",
-					dataType: "json",
-					success: function(data) {						
-						var timerEnd = +new Date();
+			if(cmd == "download") {
+				// send file download command via XMLHttpRequest
+				xhttp = new XMLHttpRequest();
+				
+				xhttp.onreadystatechange = function() {
+					var a;
+					
+					if(xhttp.readyState === 4 && xhttp.status === 200) {
+						a = document.createElement("a");
 						
-						if(data["confirm"]) {
-							if(confirm("crawlserv asks (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"])) {
-								cmdArgs["confirmed"] = true;
+						a.href = window.URL.createObjectURL(xhttp.response);
+						
+						if(cmdArgs["as"])
+							a.download = cmdArgs["as"];
+						
+						a.style.display = "none";
+						
+						document.body.appendChild(a);
+						
+						a.click();
+						
+						if(whenDone)
+							whenDone();
+					}
+				};
+				
+				xhttp.open("POST", cc_host);
+				
+				xhttp.setRequestHeader("Content-Type", "application/json");
+				
+				xhttp.responseType = "blob";
+				
+				xhttp.send(data);
+			}
+			else
+				// send other server commands via AJAX
+				$.ajax(
+						{
+							type: "POST",
+							url: cc_host,
+							data: data,
+							contentType: "application/json; charset=utf-8",
+							dataType: "json",
+							success: function(data) {						
+								var timerEnd = +new Date();
 								
-								timerStart = +new Date();
+								if(data["confirm"]) {
+									if(confirm("crawlserv asks (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"])) {
+										cmdArgs["confirmed"] = true;
+										
+										timerStart = +new Date();
+										
+										$.ajax(
+												{
+													type: "POST",
+													url: cc_host,
+													data: JSON.stringify(cmdArgs, null, 1),
+													contentType: "application/json; charset=utf-8",
+													dataType: "json",
+													success: function(data) {
+														timerEnd = +new Date();
+														
+														if(data["fail"]) {
+															var errorStr = "crawlserv responded with error ("
+																+ msToStr(timerEnd - timerStart) + ")";
+															
+															if(data["text"].length)
+																errorStr += "\n\n" + data["text"];
+															else
+																errorStr += ".";
+															
+															if(data["debug"]) 
+																errorStr += "\n\ndebug: " + data["debug"];
+															
+															alert(errorStr);
+														}
+														else {
+															if(getReloadArgFrom && saveReloadArgTo)
+																reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
+															else if(data["text"].length)
+																alert("crawlserv responded ("
+																		+ msToStr(timerEnd - timerStart)
+																		+ ")\n\n"
+																		+ data["text"]
+																);
+															
+															if(doReload)
+																reload(reloadArgs);
+														}
+														
+														if(whenDone)
+															whenDone();
+													},
+													failure: function(errMsg) {
+														alert(errMsg);
+														
+														if(whenDone)
+															whenDone();
+													}
+										});
+									}
+								}
+								else if(data["fail"]) {
+									var errorStr = "crawlserv responded with error (" + msToStr(timerEnd - timerStart) + ")";
+									
+									if(data["text"].length)
+										errorStr += "\n\n" + data["text"];
+									else
+										errorStr += ".";
+									
+									if(data["debug"])
+										errorStr += "\n\ndebug: " + data["debug"];
+									
+									alert(errorStr);
+									
+									if(whenDone)
+										whenDone();
+								}
+								else {
+									if(getReloadArgFrom && saveReloadArgTo)
+										reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
+									else if(data["text"].length) {
+										alert("crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"]);
+									}
+									
+									if(doReload)
+										reload(reloadArgs);
+									
+									if(whenDone)
+										whenDone();
+								}
+							},
+							failure: function(errMsg) {
+								alert(errMsg);
 								
-								$.ajax(
-										{
-											type: "POST",
-											url: cc_host,
-											data: JSON.stringify(cmdArgs, null, 1),
-											contentType: "application/json; charset=utf-8",
-											dataType: "json", success: function(data) {
-												timerEnd = +new Date();
-												
-												if(data["fail"]) {
-													var errorStr = "crawlserv responded with error ("
-														+ msToStr(timerEnd - timerStart) + ")";
-													
-													if(data["text"].length)
-														errorStr += "\n\n" + data["text"];
-													else
-														errorStr += ".";
-													
-													if(data["debug"]) 
-														errorStr += "\n\ndebug: " + data["debug"];
-													
-													alert(errorStr);
-												}
-												else {
-													if(getReloadArgFrom && saveReloadArgTo)
-														reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
-													else if(data["text"].length)
-														alert("crawlserv responded ("
-																+ msToStr(timerEnd - timerStart)
-																+ ")\n\n"
-																+ data["text"]
-														);
-													
-													if(doReload)
-														reload(reloadArgs);
-												}
-											},
-											failure: function(errMsg) { alert(errMsg); }
-								});
+								if(whenDone)
+									whenDone();
 							}
 						}
-						else if(data["fail"]) {
-							var errorStr = "crawlserv responded with error (" + msToStr(timerEnd - timerStart) + ")";
-							
-							if(data["text"].length)
-								errorStr += "\n\n" + data["text"];
-							else
-								errorStr += ".";
-							
-							if(data["debug"])
-								errorStr += "\n\ndebug: " + data["debug"];
-							
-							alert(errorStr);
-						}
-						else {
-							if(getReloadArgFrom && saveReloadArgTo)
-								reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
-							else if(data["text"].length) {
-								alert("crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"]);
-							}
-							
-							if(doReload)
-								reload(reloadArgs);
-						}
-					},
-					failure: function(errMsg) { alert(errMsg); }
-				}
-		);
+				);
+		}
+	});
 }
 
 // check whether object has data attribute
