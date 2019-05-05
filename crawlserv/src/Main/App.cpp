@@ -78,7 +78,32 @@ namespace crawlservpp::Main {
 		if(this->server) {
 			// server up-time message
 			std::cout << "\nUp-time: " << Helper::DateTime::secondsToString(server->getUpTime()) << ".";
-			std::cout << "\n> Waiting for threads..." << std::flush;
+
+			const unsigned long threads = this->server->getActiveThreads();
+			const unsigned long workers = this->server->getActiveWorkers();
+
+			if(threads || workers) {
+				std::cout << "\n> Waiting for threads (";
+
+				if(threads) {
+					std::cout << threads << " module";
+
+					if(threads > 1)
+						std::cout << "s";
+				}
+
+				if(threads && workers)
+					std::cout << ", ";
+
+				if(workers) {
+					std::cout << workers << " worker";
+
+					if(workers > 1)
+						std::cout << "s";
+				}
+
+				std::cout << " active)..." << std::flush;
+			}
 
 			this->server.reset();
 		}
