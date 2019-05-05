@@ -266,6 +266,7 @@ jQuery(function($) {
   		});
   		
 		runCmd(document.getElementById("cmd-custom-form-cmd").value, args, false, null);
+		
 		return false;
 	});
 
@@ -1650,127 +1651,167 @@ jQuery(function($) {
 	
 // CLICK EVENT: perform selected data action (import, export or merge)
 	$("#perform-action").on("click", function() {
-		// get type of action
-		var action = $(this).data("action");
+		// save pointer to button
+		let t = this;
 		
-		// set arguments
-		var args = {}
-		
-		// (datatype, compression, compression path)
-		args["datatype"] = $("#data-type-select").val();
-		
-		if(action != "merge") {
-			args["filetype"] = $("#file-type-select").val();
-			args["compression"] = $("#compression-select").val();
-		}
-		
-		// (website, source URL list, target URL list)
-		if($("#website-select").length)
-			args["website"] = parseInt($("#website-select").val(), 10);
-		
-		if($("#urllist-source").length)
-			args["urllist-source"] = parseInt($("#urllist-source").val(), 10);
-		
-		if($("#urllist-target").length)
-			args["urllist-target"] = parseInt($("#urllist-target").val(), 10);
-		
-		// (URL list name and namespace)
-		if($("#urllist-name").length)
-			args["urllist-name"] = $("#urllist-name").val();
-		
-		if($("#urllist-namespace").length)
-			args["urllist-namespace"] = $("#urllist-namespace").val();
-		
-		// (header options for text files)
-		if($("#is-firstline-header").length)
-			args["is-firstline-header"] = $("#is-firstline-header").prop("checked");
-		
-		if($("#write-firstline-header").length)
-			args["write-firstline-header"] = $("#write-firstline-header").prop("checked");
-		
-		if($("#firstline-header").length)
-			args["firstline-header"] = $("#firstline-header").val();
-		
-		if(action == "import") {
-			// check whether file has been selected
-			if($("#file-select").val().length) {
-				// preserve caption of button
-				var caption = $(this).val();
-				
-				// disable button while uploading file
-				$(this).prop("disabled", true);
-				$(this).val("Uploading file...");
-				
-				// save pointer to button
-				let t = this;
-				
-				// submit form for file upload
-				$("#file-form").ajaxSubmit({
-					success: function(response) {
-						// file upload successful: add filename to arguments
-						args["filename"] = response;
-						
-						// run command
-						runCmd("import", args, false);
-					},
-					failure: function(response) {
-						// file upload failed
-						alert("File upload failed: " + response);
-					},
-					complete: function() {
-						// restore button
-						$(t).prop("disabled", false);
-						$(t).val(caption)
-					}
-				});
+		// check connection to server
+		$("#hidden-div").load(cc_host, function(response, status, xhr) {
+			if(status == "error") {
+				alert("No connection to the server.");
 			}
-			else
-				alert("Please select a file to upload.");
-		}
-		else if(action == "export") {
-			// run command for export
-			args["cmd"] = "export";
-			
-			$.ajax({
-					type: "POST",
-					url: cc_host,
-					data: JSON.stringify(args, null, 1),
-					contentType: "application/json; charset=utf-8",
-					dataType: "text",
-					success: function(response, status, xhr) {
-						var contentType = xhr.getResponseHeader("content-type") || "";
+			else {
+				// get type of action
+				var action = $(t).data("action");
+				
+				// set arguments and properties
+				var args = {};
+				var props = {};
+				
+				// (datatype, compression, compression path)
+				args["datatype"] = $("#data-type-select").val();
+				
+				if(action != "merge") {
+					args["filetype"] = $("#file-type-select").val();
+					args["compression"] = $("#compression-select").val();
+					
+					if(action == "export") {
+						// (file ending for download)
+						props["ending"] = "";
 						
-						if(contentType.indexOf("json") > - 1) {
-							// show JSON response
-							var responseObj = JSON.parse(response);
-							
-							if(responseObj["fail"])
-								alert(
-										"crawlserv responded with error:\n\n"
-										+ responseObj["text"]
-										+ "\n\ndebug: "
-										+ responseObj["debug"]
-								);
-							else
-								alert("crawlserv responded with: " + responseObj["text"]);
-						}
-						else
-							// download resulting file
-							runCmd("download", { "filename": response }, false);
-					},
-					failure: function(response) {
-						alert("Error performing the export: " + response);
+						if(args["filetype"] == "text")
+							props["ending"] += ".txt";
+						
+						if(args["compression"] == "gzip")
+							props["ending"] += ".gz";
+						else if(args["compression"] == "zlib")
+							props["ending"] += ".zlib";
 					}
-			});
-		}
-		else if(action == "merge") {
-			// perform merge
-			runCmd("merge", args, false);
-		}
-		else if(action.length)
-			alert("Unknown action: \"" + action + "\".");
-		else
-			alert("No action specified.");
+				}
+				
+				// (website, source URL list, target URL list)
+				if($("#website-select").length) {
+					args["website"] = parseInt($("#website-select").val(), 10);
+					props["website-namespace"] = $("#website-select").find(":selected").data("namespace");
+				}
+				
+				if($("#urllist-source").length) {
+					args["urllist-source"] = parseInt($("#urllist-source").val(), 10);
+					props["urllist-namespace"] = $("#urllist-source").find(":selected").data("namespace");
+				}
+				
+				if($("#urllist-target").length)
+					args["urllist-target"] = parseInt($("#urllist-target").val(), 10);
+				
+				// (URL list name and namespace)
+				if($("#urllist-name").length)
+					args["urllist-name"] = $("#urllist-name").val();
+				
+				if($("#urllist-namespace").length) {
+					args["urllist-namespace"] = $("#urllist-namespace").val();
+					props["urllist-namespace"] = args["urllist-namespace"];
+				}
+				
+				// (header options for text files)
+				if($("#is-firstline-header").length)
+					args["is-firstline-header"] = $("#is-firstline-header").prop("checked");
+				
+				if($("#write-firstline-header").length)
+					args["write-firstline-header"] = $("#write-firstline-header").prop("checked");
+				
+				if($("#firstline-header").length)
+					args["firstline-header"] = $("#firstline-header").val();
+				
+				if(action == "import") {
+					// check whether file has been selected
+					if($("#file-select").val().length) {
+						// preserve caption of button
+						var caption = $(t).val();
+						
+						// disable button while uploading file
+						$(t).prop("disabled", true);
+						$(t).val("Importing...");
+						
+						// submit form for file upload
+						$("#file-form").ajaxSubmit({
+							
+							success: function(response) {
+								// file upload successful: add filename to arguments
+								args["filename"] = response;
+								
+								// run command
+								runCmd("import", args, false, null, null, null, function() {
+									$(t).prop("disabled", false);
+									$(t).val(caption)
+								});
+							},
+							failure: function(response) {
+								// file upload failed
+								alert("File upload failed: " + response);
+								
+								// restore button
+								$(t).prop("disabled", false);
+								$(t).val(caption)
+							}
+						});
+					}
+					else
+						alert("Please select a file to upload.");
+				}
+				else if(action == "export") {
+					// preserve caption of button
+					var caption = $(t).val();
+					
+					// disable button while exporting
+					$(t).prop("disabled", true);
+					$(t).val("Exporting...");
+					
+					// run command for export
+					args["cmd"] = "export";
+					
+					$.ajax({
+							type: "POST",
+							url: cc_host,
+							data: JSON.stringify(args, null, 1),
+							contentType: "application/json; charset=utf-8",
+							dataType: "json",
+							success: function(response, status, xhr) {
+								if(response["fail"])
+									alert(
+											"crawlserv responded with error:\n\n"
+											+ responseObj["text"]
+											+ "\n\ndebug: "
+											+ responseObj["debug"]
+									);
+								else
+									// download resulting file
+									var downloadAs =
+										props["website-namespace"]
+										+ "_"
+										+ props["urllist-namespace"]
+										+ props["ending"];
+									
+									runCmd("download", { "filename": response["text"], "as": downloadAs }, false);
+							},
+							failure: function(response) {
+								alert("Error performing the export: " + response);
+							},
+							complete: function() {
+								// restore button
+								$(t).prop("disabled", false);
+								$(t).val(caption)
+							}
+					});
+				}
+				else if(action == "merge") {
+					// perform merge
+					runCmd("merge", args, false);
+				}
+				else if(action.length)
+					alert("Unknown action: \"" + action + "\".");
+				else
+					alert("No action specified.");
+			}
+		});
 		
 		return true;
 	});
