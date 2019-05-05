@@ -45,6 +45,9 @@ namespace crawlservpp::Data::Compression::Zlib {
 
 	// compress content, throws Zlib::Exception
 	inline std::string compress(const std::string& content) {
+		if(content.empty())
+			return "";
+
 		z_stream control = z_stream();
 		int returnValue = 0;
 		char buffer[DATA_ZLIB_BUFFER_SIZE] = { 0 };
@@ -79,6 +82,9 @@ namespace crawlservpp::Data::Compression::Zlib {
 
 	// decompress content, throws Zlib::Exception
 	inline std::string decompress(const std::string& compressedContent) {
+		if(compressedContent.empty())
+			return "";
+
 		z_stream control = z_stream();
 		int returnValue = 0;
 		char buffer[DATA_ZLIB_BUFFER_SIZE] = { 0 };
