@@ -12,7 +12,9 @@
 namespace crawlservpp::Main {
 
 	// constructor: set file cache directory and initialize embedded web server
-	WebServer::WebServer(const std::string& fileCacheDirectory) : fileCache(fileCacheDirectory) {
+	WebServer::WebServer(const std::string& fileCacheDirectory)
+			: fileLength(MAIN_WEBSERVER_FILE_LENGTH),
+			  fileCache(fileCacheDirectory) {
 		mg_mgr_init(&(this->eventManager), nullptr);
 	}
 

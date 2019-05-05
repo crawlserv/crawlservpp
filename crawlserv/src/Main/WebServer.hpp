@@ -85,6 +85,9 @@ namespace crawlservpp::Main {
 			Exception(const std::string& description) : Main::Exception(description) {}
 		};
 
+		// public access to hard-coded option
+		const unsigned short fileLength;
+
 		// not moveable, not copyable
 		WebServer(WebServer&) = delete;
 		WebServer(WebServer&&) = delete;
