@@ -800,8 +800,11 @@ namespace crawlservpp::Module::Parser {
 					}
 				}
 
-				// not successfull: check next query for parsing the ID (if it exists)
-				++idQueryCounter;
+				if(parsedData.parsedId.empty())
+					// not successfull: check next query for parsing the ID (if it exists)
+					++idQueryCounter;
+				else
+					break;
 			}
 		}
 
