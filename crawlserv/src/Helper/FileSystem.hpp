@@ -59,14 +59,14 @@ namespace crawlservpp::Helper::FileSystem {
 
 	// check whether the specified path points to a valid directory
 	inline bool isValidDirectory(const std::string& path) {
-		std::filesystem::path dir(path);
+		const std::filesystem::path dir(path);
 
 		return std::filesystem::exists(dir) && std::filesystem::is_directory(dir);
 	}
 
 	// check whether the specified path points to a valid file
 	inline bool isValidFile(const std::string& path) {
-		std::filesystem::path file(path);
+		const std::filesystem::path file(path);
 
 		return std::filesystem::exists(file) && std::filesystem::is_regular_file(file);
 	}
@@ -84,7 +84,7 @@ namespace crawlservpp::Helper::FileSystem {
 		std::vector<std::string> result;
 
 		// open path
-		std::filesystem::path path(pathToDir);
+		const std::filesystem::path path(pathToDir);
 
 		if(!std::filesystem::exists(path))
 			throw Exception("\'" + pathToDir + "\' does not exist");
@@ -94,7 +94,8 @@ namespace crawlservpp::Helper::FileSystem {
 
 		// iterate through items
 		for(auto& it: std::filesystem::recursive_directory_iterator(path)) {
-			if(it.path().extension().string() == fileExtension) result.emplace_back(it.path().string());
+			if(it.path().extension().string() == fileExtension)
+				result.emplace_back(it.path().string());
 		}
 
 		return result;
@@ -110,7 +111,7 @@ namespace crawlservpp::Helper::FileSystem {
 			throw Exception("\'" + pathToDir + "\' is not a directory");
 
 		// make both paths absolute
-		std::filesystem::path absPathToDir(std::filesystem::system_complete(pathToDir));
+		const std::filesystem::path absPathToDir(std::filesystem::system_complete(pathToDir));
 		std::filesystem::path absPathToCheck(std::filesystem::system_complete(pathToCheck));
 
 		// remove filename if necessary
@@ -137,7 +138,7 @@ namespace crawlservpp::Helper::FileSystem {
 		if(!std::filesystem::is_directory(pathToDir))
 			throw Exception("\'" + pathToDir + "\' is not a directory");
 
-		std::filesystem::path dir(pathToDir);
+		const std::filesystem::path dir(pathToDir);
 
 		for(std::filesystem::directory_iterator it(pathToDir), endIt; it != endIt; ++it)
 			std::filesystem::remove_all(it->path());
