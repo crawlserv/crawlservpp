@@ -60,7 +60,7 @@ if(isset($website)) {
 <?php
 
 if($config)
-    echo "<a href=\"#\" class=\"action-link config-duplicate\" data-m=\"$m\" data-mode=\"$mode\">Duplicate configuration</a>\n";
+    echo "<a id=\"config-duplicate\" href=\"#\" class=\"action-link\" data-m=\"$m\" data-mode=\"$mode\">Duplicate configuration</a>\n";
 
 ?>
 

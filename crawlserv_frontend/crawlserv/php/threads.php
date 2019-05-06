@@ -94,7 +94,7 @@ if(isset($website)) {
 <?php
 
 if(isset($website))
-    echo "<a href=\"#\" class=\"action-link thread-start\""
+    echo "<a id=\"thread-start\" href=\"#\" class=\"action-link\""
         ." data-module=\"$module\" data-noreload>Start thread</a>\n";
 
 ?>

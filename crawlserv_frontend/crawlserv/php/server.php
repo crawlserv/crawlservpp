@@ -32,7 +32,7 @@ require "config.php";
 
 <div class="action-link-box">
 
-<div class="action-link"><a href="#" class="action-link cmd-allow">Allow access to server</a></div>
+<div class="action-link"><a id="cmd-allow" href="#" class="action-link">Allow access to server</a></div>
 <div class="action-link"><a href="#" class="action-link cmd" data-cmd="disallow">Reset allowed IP addresses</a></div>
 
 </div>
@@ -51,8 +51,8 @@ require "config.php";
 
 <div class="action-link-box">
 
-<div class="action-link"><a href="#" class="action-link cmd-custom-addarg">Add argument</a></div>
-<div class="action-link"><a href="#" class="action-link cmd-custom">Run command</a></div>
+<div class="action-link"><a id="cmd-custom-addarg" href="#" class="action-link">Add argument</a></div>
+<div class="action-link"><a id="cmd-custom" href="#" class="action-link">Run command</a></div>
 
 </div>
 </div>

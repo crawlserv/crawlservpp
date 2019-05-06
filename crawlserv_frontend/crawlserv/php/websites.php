@@ -62,7 +62,7 @@ echo rowWebsiteSelect(true);
 <?php
 
 if($website)
-    echo "<a href=\"#\" class=\"action-link website-duplicate\">Duplicate configuration</a>";
+    echo "<a id=\"website-duplicate\" href=\"#\" class=\"action-link\">Duplicate configuration</a>";
 
 ?>
 
@@ -101,7 +101,7 @@ if($website)
 <div class="entry-row">
 <div class="entry-label">Domain:</div><div class="entry-input">
 
-<input type="text" class="entry-input" id="website-domain" value="<?php
+<input id="website-domain" type="text" class="entry-input" value="<?php
 
 if($website)
     echo htmlspecialchars($domain);
@@ -115,7 +115,7 @@ if($website)
 <div class="entry-label"></div>
 <div class="entry-input">
 
-<input type="checkbox" id="website-crossdomain" <?php
+<input id="website-crossdomain" type="checkbox" <?php
 
 if($website && !strlen($domain))
     echo "checked";
@@ -132,7 +132,7 @@ if($website && !strlen($domain))
 <?php
 
 if(!$website)
-    echo '<input type="checkbox" id="website-externaldir" /> use external directory';
+    echo "<input id=\"website-externaldir\" type=\"checkbox\" /> use external directory";
 
 ?>
 
@@ -146,9 +146,9 @@ if(!$website)
 <input type="text" class="entry-input" <?php
 
 if($website)
-    echo 'disabled';
+    echo "disabled";
 else
-    echo 'id="website-dir"';
+    echo "id=\"website-dir\"";
 
 ?> value="<?php
 
@@ -165,9 +165,9 @@ echo $website && strlen($dir) ? htmlspecialchars($dir) : "[default]";
 <?php
 
 if($website)
-    echo "<a href=\"#\" class=\"action-link website-update\">Change website</a>";
+    echo "<a id=\"website-update\" href=\"#\" class=\"action-link\">Change website</a>";
 else
-    echo "<a href=\"#\" class=\"action-link website-add\">Add website</a>";
+    echo "<a id=\"website-add\" href=\"#\" class=\"action-link\">Add website</a>";
 
 ?>
 
@@ -362,7 +362,7 @@ if($website) {
         else
             echo number_format($urllistSize)." entries";
         
-        echo " <a href=\"#\" class=\"urllist-download entry-value\" target=\"_blank\""
+        echo " <a id=\"urllist-download\" href=\"#\" class=\"entry-value\" target=\"_blank\""
             ." data-website-namespace=\"";
         
         echo htmlspecialchars($namespace);
@@ -432,7 +432,7 @@ if($website) {
                 echo time_elapsed_string($parsedUpdate);
             }
             
-            echo ") <a href=\"#\" class=\"urllist-reset-parsing entry-value\">[Reset]</a>";
+            echo ") <a id=\"urllist-reset-parsing\" href=\"#\" class=\"entry-value\">[Reset]</a>";
             
             echo "</div>\n";
             echo "</div>\n";
@@ -463,7 +463,7 @@ if($website) {
                 echo time_elapsed_string($extractedUpdate);
             }
             
-            echo ") <a href=\"#\" class=\"urllist-reset-extracting entry-value\">[Reset]</a>";
+            echo ") <a id=\"urllist-reset-extracting\" href=\"#\" class=\"entry-value\">[Reset]</a>";
             
             echo "</div>\n";
             echo "</div>\n";
@@ -474,12 +474,12 @@ if($website) {
     echo "<div class=\"action-link\">\n";
     
     if($urllist) {
-        echo "<a href=\"#\" class=\"action-link urllist-update\">";
+        echo "<a id=\"urllist-update\" href=\"#\" class=\"action-link\">";
         
         echo "Change URL list</a>\n";
     }
     else
-        echo "<a href=\"#\" class=\"action-link urllist-add\">Add URL list</a>\n";
+        echo "<a id=\"urllist-add\" href=\"#\" class=\"action-link\">Add URL list</a>\n";
     
     echo "</div>\n";
     echo "</div>\n";
