@@ -444,63 +444,45 @@ namespace crawlservpp::Module::Analyzer {
 
 	// public helper function: get the full name of a source table, throws Database::Exception
 	std::string Database::getSourceTableName(unsigned short type, const std::string& name) {
-		std::string tableName;
-
 		switch(type) {
 		case Config::generalInputSourcesParsing:
-			tableName = this->tablePrefix + "parsed_" + name;
-			break;
+			return this->tablePrefix + "parsed_" + name;
 
 		case Config::generalInputSourcesExtracting:
-			tableName = this->tablePrefix + "extracted_" + name;
-			break;
+			return this->tablePrefix + "extracted_" + name;
 
 		case Config::generalInputSourcesAnalyzing:
-			tableName = this->tablePrefix + "analyzed_" + name;
-			break;
+			return this->tablePrefix + "analyzed_" + name;
 
 		case Config::generalInputSourcesCrawling:
-			tableName = this->tablePrefix + "crawled";
-			break;
-
-		default:
-			throw Exception("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
+			return this->tablePrefix + "crawled";
 		}
 
-		return tableName;
+		throw Exception("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
 	}
 
 	// public helper function: get the full name of a source column, throws Database::Exception
 	std::string Database::getSourceColumnName(unsigned short type, const std::string& name) {
-		std::string columnName;
-
 		switch(type) {
 		case Config::generalInputSourcesParsing:
 			if(name == "id")
-				columnName = "parsed_id";
+				return "parsed_id";
 			else if(name == "datetime")
-				columnName = "parsed_datetime";
-			else
-				columnName = "parsed__" + name;
-			break;
+				return "parsed_datetime";
+
+			return "parsed__" + name;
 
 		case Config::generalInputSourcesExtracting:
-			columnName = "extracted__" + name;
-			break;
+			return "extracted__" + name;
 
 		case Config::generalInputSourcesAnalyzing:
-			columnName = "analyzed__" + name;
-			break;
+			return "analyzed__" + name;
 
 		case Config::generalInputSourcesCrawling:
-			columnName =name;
-			break;
-
-		default:
-			throw Exception("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
+			return name;
 		}
 
-		return columnName;
+		throw Exception("Analyzer::Database::getSourceTableName(): Invalid source type for text corpus");
 	}
 
 	// public helper function: check input tables and columns, throws Database::Exception
@@ -534,12 +516,12 @@ namespace crawlservpp::Module::Analyzer {
 			bool logging
 	) {
 		// get full table name
-		std::string tableName(this->getSourceTableName(type, table));
+		const std::string tableName(this->getSourceTableName(type, table));
 
 		// check existence of table
 		if(this->database.isTableExists(tableName)) {
 			// get full column name
-			std::string columnName(this->getSourceColumnName(type, column));
+			const std::string columnName(this->getSourceColumnName(type, column));
 
 			// check existence of column
 			if(!(this->database.isColumnExists(tableName, columnName))) {
@@ -579,7 +561,7 @@ namespace crawlservpp::Module::Analyzer {
 					" Missing prepared SQL statement for getting the corpus creation time");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& corpusStatement = this->getPreparedStatement(this->ps.isCorpusChanged);
+		sql::PreparedStatement& corpusStatement(this->getPreparedStatement(this->ps.isCorpusChanged));
 
 		unsigned short sourceStatement = 0;
 
@@ -616,7 +598,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				std::string updateTime = sqlResultSet->getString("updated");
+				const std::string updateTime(sqlResultSet->getString("updated"));
 
 				// execute SQL query for comparing the creation time of the corpus with the update time of the table
 				corpusStatement.setUInt(1, corpusProperties.sourceType);
@@ -710,13 +692,13 @@ namespace crawlservpp::Module::Analyzer {
 		// start timing and write log entry
 		Timer::Simple timer;
 
-		std::string tableName(
+		const std::string tableName(
 				this->getSourceTableName(
 						corpusProperties.sourceType,
 						corpusProperties.sourceTable
 				)
 		);
-		std::string columnName(
+		const std::string columnName(
 				this->getSourceColumnName(
 						corpusProperties.sourceType,
 						corpusProperties.sourceField
@@ -782,7 +764,7 @@ namespace crawlservpp::Module::Analyzer {
 							// check for current datetime
 							if((!(datetime->_isnull)) && datetime->_s.length() > 9) {
 								// found current datetime -> create date string
-								std::string date = datetime->_s.substr(0, 10); // get only date (YYYY-MM-DD) from datetime
+								const std::string date(datetime->_s.substr(0, 10)); // get only date (YYYY-MM-DD) from datetime
 
 								// check whether a date is already set
 								if(!std::get<0>(dateMapEntry).empty()) {
@@ -793,6 +775,7 @@ namespace crawlservpp::Module::Analyzer {
 									else {
 										// last date differs from current date -> conclude last date and start new date
 										dateMap.emplace_back(dateMapEntry);
+
 										dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
 									}
 								}
@@ -804,6 +787,7 @@ namespace crawlservpp::Module::Analyzer {
 							else if(!std::get<0>(dateMapEntry).empty()) {
 								// no valid datetime was found, but last date is set -> conclude last date
 								dateMap.emplace_back(dateMapEntry);
+
 								dateMapEntry = std::make_tuple("", 0, 0);
 							}
 						}
@@ -834,6 +818,7 @@ namespace crawlservpp::Module::Analyzer {
 
 					if(corpusProperties.sourceType == Config::generalInputSourcesParsing) {
 						dateMapTo = Helper::Json::stringify(dateMap);
+
 						addStatement.setString(5, dateMapTo);
 					}
 					else
