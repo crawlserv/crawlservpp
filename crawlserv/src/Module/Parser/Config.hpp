@@ -149,7 +149,7 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Parser::Config::checkOptions(): No result table specified.");
 		
 		// check properties of datetime queries
-		unsigned long completeDateTimes = std::min( // number of complete datetime queries (= minimum size of all arrays)
+		const unsigned long completeDateTimes = std::min( // number of complete datetime queries (= minimum size of all arrays)
 				this->config.parsingDateTimeQueries.size(),
 				this->config.parsingDateTimeSources.size()
 		);
@@ -201,7 +201,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// check properties of parsing fields (arrays with field names, queries and sources should have the same number of elements)
-		unsigned long completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
+		const unsigned long completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
 				this->config.parsingFieldNames.size(),
 				this->config.parsingFieldQueries.size(),
 				this->config.parsingFieldSources.size()
@@ -286,7 +286,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// check properties of ID queries
-		unsigned long completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
+		const unsigned long completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
 				this->config.parsingIdQueries.size(),
 				this->config.parsingIdSources.size()
 		);
