@@ -27,7 +27,7 @@ namespace crawlservpp::Query {
 
 		try {
 			// evaluate query with boolean result
-			auto result = jsoncons::jsonpath::json_query(json, this->jsonPath);
+			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
 
 			return !(result.is_array() && result.is_empty());
 		}
@@ -47,7 +47,7 @@ namespace crawlservpp::Query {
 
 		try {
 			// get result
-			auto result = jsoncons::jsonpath::json_query(json, this->jsonPath);
+			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
 
 			// check for array
 			if(result.is_array()) {
@@ -75,7 +75,7 @@ namespace crawlservpp::Query {
 
 		try {
 			// get result
-			auto result = jsoncons::jsonpath::json_query(json, this->jsonPath);
+			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
 
 			// check for array
 			if(result.is_array()) {
