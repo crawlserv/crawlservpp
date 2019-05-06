@@ -12,9 +12,7 @@
 namespace crawlservpp::Parsing {
 
 	// constructor: create tidy object and fill buffer struct with zeros
-	HTML::HTML() : doc(tidyCreate()) {
-		tidyBufInit(&(this->buffer));
-	}
+	HTML::HTML() : doc(tidyCreate()), buffer(TidyBuffer()) {}
 
 	// destructor: free buffer if necessary and release tidy object
 	HTML::~HTML() {
@@ -37,6 +35,10 @@ namespace crawlservpp::Parsing {
 				|| !tidyOptSetBool(this->doc, TidyDropEmptyElems, no))
 			throw HTML::Exception("Could not set options");
 
+		// release old buffer
+		if(this->buffer.allocated)
+			tidyBufFree(&(this->buffer));
+
 		// parse content
 		if(tidyParseString(this->doc, content.c_str()) < 0)
 			throw HTML::Exception("Could not parse HTML content");
@@ -51,7 +53,7 @@ namespace crawlservpp::Parsing {
 
 		// save output
 		if(this->buffer.bp)
-			content = std::string((char *) this->buffer.bp);
+			content = std::string(reinterpret_cast<char *>(this->buffer.bp), this->buffer.size);
 	}
 
 } /* crawlservpp::Parsing */
