@@ -87,7 +87,7 @@ namespace crawlservpp::Module::Crawler {
 		this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
 		this->crawlingTable = this->urlListTable + "_crawling";
 
-		std::string crawledTable(this->urlListTable + "_crawled");
+		const std::string crawledTable(this->urlListTable + "_crawled");
 
 		// create SQL strings for URL hashing
 		std::string hashQuery("CRC32( ");
@@ -249,6 +249,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log("[#" + this->idString + "] prepares isUrlCrawled()...");
 
 			std::ostringstream sqlQueryStrStr;
+
 			sqlQueryStrStr <<	"SELECT success"
 								" FROM `" << this->crawlingTable << "`"
 								" WHERE url = ?"
@@ -458,12 +459,13 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlId(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlId);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlId));
 
 		// get ID of URL from database
 		try {
 			// execute SQL query for getting URL
 			sqlStatement.setString(1, url);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -487,7 +489,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::getNextUrl(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNextUrl);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getNextUrl));
 
 		// get next URL from database
 		try {
@@ -524,7 +526,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::addUrlIfNotExists(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlIfNotExists);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.addUrlIfNotExists));
 
 		// add URL to database and get resulting ID
 		try {
@@ -673,7 +675,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlPosition()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlPosition);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlPosition));
 
 		// get URL position of URL from database
 		try {
@@ -709,7 +711,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::getNumberOfUrls()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNumberOfUrls);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getNumberOfUrls));
 
 		// get number of URLs from database
 		try {
@@ -741,7 +743,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::urlDuplicationCheck()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.urlDuplicationCheck));
 
 		// get number of URLs from database
 		try {
@@ -813,7 +815,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::urlEmptyCheck()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlEmptyCheck);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.urlEmptyCheck));
 
 		// get number of URLs from database
 		try {
@@ -892,7 +894,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlLockTime(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockTime);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlLockTime));
 
 		// get URL lock end time from database
 		try {
@@ -925,7 +927,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Module::Crawler::Database::isUrlCrawled(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isUrlCrawled);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.isUrlCrawled));
 
 		// get lock ID from database
 		try {
@@ -961,7 +963,7 @@ namespace crawlservpp::Module::Crawler {
 
 		if(lockTime.empty()) {
 			// get prepared SQL statement for locking the URL
-			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.addUrlLockIfOk);
+			sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.addUrlLockIfOk));
 
 			// add URL lock to database
 			try {
@@ -977,7 +979,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 		else {
 			// get prepared SQL statement for renewing the URL lock
-			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
+			sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.renewUrlLockIfOk));
 
 			// lock URL in database
 			dbg = "renewUrlLockIfOk";
@@ -1015,7 +1017,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::unLockUrlIfOk(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.unLockUrlIfOk);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.unLockUrlIfOk));
 
 		// unlock URL in database
 		try {
@@ -1045,7 +1047,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::setUrlFinishedIfOk(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setUrlFinishedIfOk);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.setUrlFinishedIfOk));
 
 		// set URL as crawled
 		try {
@@ -1072,7 +1074,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::saveContent(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.saveContent);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.saveContent));
 
 		// save content to database
 		try {
@@ -1132,7 +1134,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::saveArchivedContent(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.saveArchivedContent);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.saveArchivedContent));
 
 		try {
 			// save archived content to database if possible
@@ -1193,7 +1195,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::isArchivedContentExists(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.isArchivedContentExists);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.isArchivedContentExists));
 
 		// get next URL from database
 		try {
@@ -1261,7 +1263,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrls()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.urlDuplicationCheck);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.urlDuplicationCheck));
 
 		// get URLs from database
 		try {

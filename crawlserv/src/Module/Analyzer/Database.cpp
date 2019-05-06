@@ -331,7 +331,7 @@ namespace crawlservpp::Module::Analyzer {
 				throw Exception("Analyzer::Database::getCorpus(): Missing prepared SQL statement for getting the corpus");
 
 			// get prepared SQL statement
-			sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getCorpus);
+			sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getCorpus));
 
 			try {
 				// execute SQL query for getting the corpus

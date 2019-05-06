@@ -345,7 +345,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Missing prepared SQL statement for Main::Database::log(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.log);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.log));
 
 		// add entry to database
 		try {
@@ -603,7 +603,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Missing prepared SQL statement for Main::Database::setThreadStatus(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatus);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.setThreadStatus));
 
 		// create status message
 		std::string statusMessage;
@@ -643,7 +643,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Missing prepared SQL statement for Main::Database::setThreadStatus(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.setThreadStatusMessage));
 
 		try {
 			// execute SQL statement
@@ -5116,7 +5116,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::getLastInsertedId: Missing prepared SQL statement for last inserted ID");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.lastId);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.lastId));
 
 		try {
 			// execute SQL statement

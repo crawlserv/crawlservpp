@@ -79,7 +79,7 @@ namespace crawlservpp::Module {
 			throw Exception("Missing prepared SQL statement for Module::Database::setThreadStatusMessage(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.setThreadStatusMessage));
 
 		// create status message
 		std::string statusMessage;
@@ -115,13 +115,14 @@ namespace crawlservpp::Module {
 			throw Exception("Missing prepared SQL statement for Module::Database::setThreadProgress(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadProgress);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.setThreadProgress));
 
 		try {
 			// execute SQL statement
 			sqlStatement.setDouble(1, threadProgress);
 			sqlStatement.setUInt64(2, threadRunTime);
 			sqlStatement.setUInt64(3, threadId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Module::Database::setThreadProgress", e); }
@@ -137,7 +138,7 @@ namespace crawlservpp::Module {
 			throw Exception("Missing prepared SQL statement for Module::Database::setThreadLast(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadLast);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.setThreadLast));
 
 		try {
 			// execute SQL statement
