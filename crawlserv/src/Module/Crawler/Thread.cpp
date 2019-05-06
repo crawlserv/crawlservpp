@@ -3734,8 +3734,7 @@ namespace crawlservpp::Module::Crawler {
 																		timeStamp
 																)
 														) {
-															const unsigned long subUrlPos =
-																	mementos.front().url.find(timeStamp);
+															unsigned long subUrlPos = mementos.front().url.find(timeStamp);
 
 															if(subUrlPos != std::string::npos) {
 																subUrlPos += timeStamp.length();
