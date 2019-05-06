@@ -32,7 +32,7 @@ namespace crawlservpp::Parsing {
 			HTML tidy;
 
 			try {
-				tidy.tidyAndConvert(xml);
+				xml = tidy.tidyAndConvert(xml);
 			}
 			catch(const HTML::Exception& e) {
 				throw XML::Exception("TidyLib error: " + e.whatStr());
