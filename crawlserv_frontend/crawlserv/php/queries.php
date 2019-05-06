@@ -29,7 +29,7 @@ echo rowWebsiteSelect(false, true);
 <div class="entry-row">
 <div class="entry-label">Query:</div><div class="entry-x-input">
 
-<select class="entry-x-input" id="query-select" data-m="queries">
+<select id="query-select" class="entry-x-input" data-m="queries">
 
 <?php
 
@@ -134,7 +134,7 @@ else
 
 </select>
 
-<a href="#" class="actionlink query-delete"><span class="remove-entry">X</span></a>
+<a id="query-delete" href="#" class="actionlink"><span class="remove-entry">X</span></a>
 
 </div>
 </div>
@@ -145,7 +145,7 @@ else
 <?php
 
 if($query)
-    echo "<a href=\"#\" class=\"action-link query-duplicate\">Duplicate query</a>\n";
+    echo "<a id=\"query-duplicate\" href=\"#\" class=\"action-link\">Duplicate query</a>\n";
 
 ?>
 
@@ -153,11 +153,11 @@ if($query)
 </div>
 </div>
 
-<div class="content-block" id="query-properties">
+<div id="query-properties" class="content-block">
 <div class="entry-row">
 <div class="entry-label">Name:</div><div class="entry-input">
 
-<input type="text" class="entry-input" id="query-name" value="<?php if($query) echo $queryName; ?>" />
+<input id="query-name" type="text" class="entry-input" value="<?php if($query) echo $queryName; ?>" />
 
 </div>
 </div>
@@ -165,7 +165,7 @@ if($query)
 <div class="entry-row">
 <div class="entry-label">Type:</div><div class="entry-input">
 
-<select class="entry-input" id="query-type-select">
+<select id="query-type-select" class="entry-input">
 
 <option value="regex"<?php
 
@@ -203,27 +203,27 @@ if($query && $queryType == "jsonpath")
 <div class="entry-row">
 <div class="entry-label">Result:</div><div class="entry-input">
 
-<input type="checkbox" id="query-result-bool" class="entry-check-first"<?php
+<input id="query-result-bool" type="checkbox" class="entry-check-first"<?php
 
 if(!$query || ($query && $queryResultBool))
     echo " checked";
 
 ?> /> boolean
 
-<input type="checkbox" id="query-result-single" class="entry-check-next"<?php
+<input id="query-result-single" type="checkbox" class="entry-check-next"<?php
 
 if($query && $queryResultSingle)
     echo " checked";
 
 ?> /> single
 
-<input type="checkbox" id="query-result-multi" class="entry-check-next"<?php
+<input id="query-result-multi" type="checkbox" class="entry-check-next"<?php
 
 if($query && $queryResultMulti)
     echo " checked";
 ?> /> multiple
 
-<input type="checkbox" id="query-text-only" class="entry-check-next"<?php
+<input id="query-text-only" type="checkbox" class="entry-check-next"<?php
 
 if($query && $queryTextOnly)
     echo " checked";
@@ -236,7 +236,7 @@ if($query && $queryTextOnly)
 <div class="entry-row">
 <div class="entry-label-top">Query text:</div><div class="entry-input">
 
-<textarea class="entry-input" id="query-text" spellcheck="false" autocomplete="off"><?php
+<textarea id="query-text" class="entry-input" spellcheck="false" autocomplete="off"><?php
 
 if($query)
     echo htmlspecialchars($queryText, ENT_QUOTES);
@@ -254,9 +254,9 @@ if($query)
 <?php
 
 if($query)
-    echo "<a href=\"#\" class=\"action-link query-update\">Change query</a>";
+    echo "<a id=\"query-update\" href=\"#\" class=\"action-link\">Change query</a>";
 else
-    echo "<a href=\"#\" class=\"action-link query-add\">Add query</a>";
+    echo "<a id=\"query-add\" href=\"#\" class=\"action-link\">Add query</a>";
 
 ?>
 
@@ -264,26 +264,27 @@ else
 </div>
 </div>
 
-<div class="content-block" id="xpath-helper">
+<div id="xpath-helper" class="content-block">
 <div class="entry-row">
 <div class="entry-label-top helper">XPath Helper:</div><div class="entry-input xpath-helper-code">
 
-<span class="tag">&lt;</span><input type="text" class="entry-input-inline xpath-helper tag" id="xpath-element" value="div"
+<span class="tag">&lt;</span><input id="xpath-element" type="text" class="entry-input-inline xpath-helper tag" value="div"
 	data-tippy="Name of the HTML tag" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true" data-tippy-placement="left-start"
 	data-tippy-size="small" />
 	
-<input type="text" class="entry-input-inline xpath-helper property" id="xpath-property" value="class"
+<input id="xpath-property" type="text" class="entry-input-inline xpath-helper property" value="class"
 	data-tippy="Name of the first HTML attribute" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
-	data-tippy-placement="left-start" data-tippy-size="small" />=<input type="text" class="entry-input-inline-wide xpath-helper value"
-	id="xpath-value" placeholder="?" data-tippy="Value of the first HTML attribute" data-tippy-delay="0" data-tippy-duration="0"
-	data-tippy-arrow="true" data-tippy-placement="left-start" data-tippy-size="small" /> <input type="text"
-	class="entry-input-inline xpath-helper property" id="xpath-result-property" value="href" disabled
-	data-tippy="Name of the second HTML attribute" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
-	data-tippy-placement="left-start" data-tippy-size="small" />=<span class="value">&hellip;<input type="radio" name="xpath-result" value="property"
-	data-tippy="Get the value of a HTML attribute" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
-	data-tippy-placement="left-start" data-tippy-size="small" />&hellip;</span><span class="tag">&gt;</span><span class="content">&hellip;<input
-	type="radio" name="xpath-result" value="text" checked data-tippy="Get the inner content of the whole HTML tag" data-tippy-delay="0"
-	data-tippy-duration="0" data-tippy-arrow="true" data-tippy-placement="left-start" data-tippy-size="small" />&hellip;</span>
+	data-tippy-placement="left-start" data-tippy-size="small" />=<input id="xpath-value" type="text" 
+	class="entry-input-inline-wide xpath-helper value" placeholder="?" data-tippy="Value of the first HTML attribute"
+	data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true" data-tippy-placement="left-start"
+	data-tippy-size="small" /> <input id="xpath-result-property" type="text" class="entry-input-inline xpath-helper property"
+	value="href" data-tippy="Name of the second HTML attribute" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
+	data-tippy-placement="left-start" data-tippy-size="small" disabled />=<span class="value">&hellip;<input type="radio"
+	name="xpath-result" value="property" data-tippy="Get the value of a HTML attribute" data-tippy-delay="0" data-tippy-duration="0"
+	data-tippy-arrow="true" data-tippy-placement="left-start" data-tippy-size="small" />&hellip;</span><span
+	class="tag">&gt;</span><span class="content">&hellip;<input type="radio" name="xpath-result" value="text"
+	data-tippy="Get the inner content of the whole HTML tag" data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true"
+	data-tippy-placement="left-start" data-tippy-size="small" checked />&hellip;</span>
 	
 </div>
 </div>
@@ -291,7 +292,7 @@ else
 <div class="action-link-box">
 <div class="action-link">
 
-<a href="#" class="action-link xpath-generate" id="xpath-generate"  data-tippy="Let XPath Helper generate a XPath query for you"
+<a id="xpath-generate" href="#" class="action-link" data-tippy="Let XPath Helper generate a XPath query for you"
 	data-tippy-delay="0" data-tippy-duration="0" data-tippy-arrow="true" data-tippy-placement="left-start" data-tippy-size="small">
 	Generate query for HTML tag
 </a>
@@ -300,7 +301,7 @@ else
 </div>
 </div>
 
-<div class="content-block" id="regex-helper">
+<div id="regex-helper" class="content-block">
 <div class="entry-row">
 <div class="entry-label-top helper">Help?!</div><div class="entry-input">
 
@@ -311,7 +312,7 @@ for help with your query.</p>
 </div>
 </div>
 
-<div class="content-block" id="jsonpointer-helper">
+<div id="jsonpointer-helper" class="content-block">
 <div class="entry-row">
 <div class="entry-label-top helper">Note</div><div class="entry-input">
 
@@ -321,7 +322,7 @@ for help with your query.</p>
 </div>
 </div>
 
-<div class="content-block" id="jsonpath-helper">
+<div id="jsonpath-helper" class="content-block">
 <div class="entry-row">
 <div class="entry-label-top helper">Help?!</div><div class="entry-input">
 
@@ -334,9 +335,9 @@ for help with your query.</p>
 
 <div class="content-block">
 <div class="entry-row">
-<div class="entry-label-top" id="query-test-label">Test text:</div><div class="entry-input">
+<div id="query-test-label" class="entry-label-top">Test text:</div><div class="entry-input">
 
-<textarea class="entry-input" id="query-test-text" spellcheck="false" autocomplete="off"><?php
+<textarea id="query-test-text" class="entry-input" spellcheck="false" autocomplete="off"><?php
 
 if(isset($_POST["test"]))
     echo htmlspecialchars($_POST["test"], ENT_QUOTES);
@@ -345,7 +346,7 @@ if(isset($_POST["test"]))
 
 </textarea>
 
-<textarea class="entry-input" id="query-test-result" disabled></textarea>
+<textarea id="query-test-result" class="entry-input" disabled></textarea>
 
 </div>
 </div>
@@ -353,7 +354,7 @@ if(isset($_POST["test"]))
 <div class="action-link-box">
 <div class="action-link">
 
-<a href="#" class="action-link query-test">Test query</a>
+<a id="query-test" href="#" class="action-link">Test query</a>
 
 </div>
 </div>
