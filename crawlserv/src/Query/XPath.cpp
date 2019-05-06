@@ -56,14 +56,15 @@ namespace crawlservpp::Query {
 		// evaluate query with string result
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
-				pugi::xpath_node_set nodeSet = this->query.evaluate_node_set(*(doc.doc));
+				const pugi::xpath_node_set nodeSet(this->query.evaluate_node_set(*(doc.doc)));
 
-				if(!nodeSet.empty())
-					resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
-				else
+				if(nodeSet.empty())
 					resultTo = "";
+				else
+					resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
 			}
-			else resultTo = this->query.evaluate_string(*(doc.doc));
+			else
+				resultTo = this->query.evaluate_string(*(doc.doc));
 		}
 		catch(const std::exception& e) {
 			throw XPath::Exception(e.what());
@@ -84,18 +85,19 @@ namespace crawlservpp::Query {
 		// evaluate query with multiple string results
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
-				pugi::xpath_node_set nodeSet = this->query.evaluate_node_set(*(doc.doc));
+				const pugi::xpath_node_set nodeSet(this->query.evaluate_node_set(*(doc.doc)));
+
 				resultArray.reserve(resultArray.size() + nodeSet.size());
 
 				for(auto i = nodeSet.begin(); i != nodeSet.end(); ++i) {
-					std::string result = XPath::nodeToString(*i, this->isTextOnly);
+					const std::string result(XPath::nodeToString(*i, this->isTextOnly));
 
 					if(!result.empty())
 						resultArray.emplace_back(result);
 				}
 			}
 			else {
-				std::string result = this->query.evaluate_string(*(doc.doc));
+				const std::string result(this->query.evaluate_string(*(doc.doc)));
 
 				if(!result.empty())
 					resultArray.emplace_back(result);
