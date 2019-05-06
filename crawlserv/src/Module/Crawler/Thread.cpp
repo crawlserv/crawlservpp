@@ -20,7 +20,7 @@ namespace crawlservpp::Module::Crawler {
 	)
 				: Module::Thread(
 						dbBase,
-						ThreadOptions("crawler", threadOptions),
+						threadOptions,
 						threadStatus
 				  ),
 				  database(this->Module::Thread::database),
@@ -47,7 +47,7 @@ namespace crawlservpp::Module::Crawler {
 			const ThreadOptions& threadOptions)
 				: Module::Thread(
 						dbBase,
-						ThreadOptions("crawler", threadOptions)
+						threadOptions
 				),
 				  database(this->Module::Thread::database),
 				  networking(cookieDirectory),

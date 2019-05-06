@@ -18,7 +18,7 @@ namespace crawlservpp::Module::Analyzer {
 			const ThreadStatus& threadStatus)
 				: Module::Thread(
 						dbBase,
-						ThreadOptions("analyzer", threadOptions),
+						threadOptions,
 						threadStatus
 				  ),
 				  database(this->Module::Thread::database) {}
@@ -27,7 +27,7 @@ namespace crawlservpp::Module::Analyzer {
 	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
 				: Module::Thread(
 						dbBase,
-						ThreadOptions("analyzer", threadOptions)
+						threadOptions
 				  ),
 				  database(this->Module::Thread::database) {}
 
