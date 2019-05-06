@@ -49,7 +49,7 @@ namespace crawlservpp::Parsing {
 		// parse XHTML with pugixml
 		std::istringstream in(xml);
 
-		pugi::xml_parse_result result = this->doc->load(in, pugi::parse_full);
+		const pugi::xml_parse_result result(this->doc->load(in, pugi::parse_full));
 
 		if(!result) {
 			// parsing error
@@ -103,7 +103,7 @@ namespace crawlservpp::Parsing {
 			pos += 9;
 
 		while(pos < content.size()) {
-			auto next = content.find("<![CDATA[", pos);
+			const auto next = content.find("<![CDATA[", pos);
 
 			if(next == std::string::npos)
 				break;
