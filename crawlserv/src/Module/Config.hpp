@@ -159,6 +159,7 @@ protected:
 			// check whether configuration item is a JSON object
 			if(!(entry->IsObject())) {
 				warningsTo.emplace("Configuration entry that is no object ignored.");
+
 				return;
 			}
 
@@ -169,7 +170,7 @@ protected:
 			for(auto member = entry->MemberBegin(); member != entry->MemberEnd(); ++member) {
 				// check the name of the current item member
 				if(member->name.IsString()) {
-					std::string memberName(
+					const std::string memberName(
 							member->name.GetString(), member->name.GetStringLength()
 					);
 
@@ -181,7 +182,9 @@ protected:
 							);
 						else {
 							warningsTo.emplace("Configuration entry with invalid category name ignored.");
+
 							ignore = true;
+
 							break;
 						}
 					}
@@ -345,6 +348,7 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
@@ -389,7 +393,7 @@ protected:
 		case FromNumber:
 			// get from number
 			if(this->currentItem.value->IsInt()) {
-				int value = this->currentItem.value->GetInt();
+				const int value = this->currentItem.value->GetInt();
 
 				if(value > std::numeric_limits<char>::max())
 					this->logPtr->emplace(
@@ -449,6 +453,7 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
@@ -458,7 +463,7 @@ protected:
 				case FromNumber:
 					// get from number
 					if(i->IsInt()) {
-						int value = i->GetInt();
+						const int value = i->GetInt();
 
 						if(value > std::numeric_limits<char>::max())
 							this->logPtr->emplace(
@@ -569,12 +574,13 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
 			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsInt()) {
-					int value = i->GetInt();
+					const int value = i->GetInt();
 
 					if(value > std::numeric_limits<short>::max())
 						this->logPtr->emplace(
@@ -650,6 +656,7 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
@@ -722,6 +729,7 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
@@ -803,12 +811,13 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
 			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsUint()) {
-					unsigned int value = i->GetUint();
+					const unsigned int value = i->GetUint();
 
 					if(value > std::numeric_limits<unsigned char>::max())
 						this->logPtr->emplace(
@@ -854,7 +863,7 @@ protected:
 
 		// check value type
 		if(this->currentItem.value->IsUint()) {
-			unsigned int value = this->currentItem.value->GetUint();
+			const unsigned int value = this->currentItem.value->GetUint();
 
 			if(value > std::numeric_limits<unsigned short>::max())
 				this->logPtr->emplace(
@@ -893,12 +902,13 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
 			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
 				if(i->IsUint()) {
-					unsigned int value = i->GetUint();
+					const unsigned int value = i->GetUint();
 
 					if(value > std::numeric_limits<unsigned short>::max())
 						this->logPtr->emplace(
@@ -974,6 +984,7 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
@@ -1046,6 +1057,7 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
@@ -1160,6 +1172,7 @@ protected:
 		if(this->currentItem.value->IsArray()) {
 			// clear target and reserve memory
 			target.clear();
+
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
