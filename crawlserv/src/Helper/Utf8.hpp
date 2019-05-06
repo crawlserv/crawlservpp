@@ -47,7 +47,7 @@ namespace crawlservpp::Helper::Utf8 {
 		strOut.reserve(strIn.size() * 2);
 
 		for(auto i = strIn.begin(); i != strIn.end(); ++i) {
-			uint8_t c = *i;
+			const uint8_t c = *i;
 
 			if(c < 0x80)
 				strOut.push_back(c);

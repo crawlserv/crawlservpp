@@ -150,7 +150,10 @@ namespace crawlservpp::Helper::Versions {
 
 	// get the versions of the libraries as one indented string
 	inline std::string getLibraryVersionsStr(const std::string& indent) {
-		std::vector<std::pair<std::string, std::string>> versions(getLibraryVersions());
+		// get versions
+		const std::vector<std::pair<std::string, std::string>> versions(getLibraryVersions());
+
+		// create resulting string
 		std::string result;
 
 		for(auto i = versions.begin(); i != versions.end(); ++i) {
