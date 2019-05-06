@@ -61,6 +61,7 @@ namespace crawlservpp::Wrapper {
 				this->ptr = other.ptr;
 				other.ptr = nullptr;
 			}
+
 			return *this;
 		}
 

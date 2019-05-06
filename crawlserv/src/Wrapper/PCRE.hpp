@@ -46,13 +46,16 @@ namespace crawlservpp::Wrapper {
 		void reset() {
 			if(this->ptr) {
 				pcre2_code_free(this->ptr);
+
 				this->ptr = nullptr;
 			}
 		}
 
 		// replace Perl-Compatible Regular Expression
 		void reset(pcre2_code * other) {
-			if(this->ptr) pcre2_code_free(this->ptr);
+			if(this->ptr)
+				pcre2_code_free(this->ptr);
+
 			this->ptr = other;
 		}
 
@@ -72,6 +75,7 @@ namespace crawlservpp::Wrapper {
 				this->ptr = other.ptr;
 				other.ptr = nullptr;
 			}
+
 			return *this;
 		}
 

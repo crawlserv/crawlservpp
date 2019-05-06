@@ -48,7 +48,12 @@ namespace crawlservpp::Wrapper {
 		}
 
 		// reset cURL list
-		void reset() { if(this->ptr) curl_slist_free_all(this->ptr); this->ptr = nullptr; }
+		void reset() {
+			if(this->ptr)
+				curl_slist_free_all(this->ptr);
+
+			this->ptr = nullptr;
+		}
 
 		// bool operator
 		operator bool() const {
@@ -66,6 +71,7 @@ namespace crawlservpp::Wrapper {
 				this->ptr = other.ptr;
 				other.ptr = nullptr;
 			}
+
 			return *this;
 		}
 

@@ -206,8 +206,12 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name
-	inline unsigned long Database::getTargetTableId(const std::string& type, unsigned long websiteId, unsigned long listId,
-			const std::string& tableName) {
+	inline unsigned long Database::getTargetTableId(
+			const std::string& type,
+			unsigned long websiteId,
+			unsigned long listId,
+			const std::string& tableName
+	) {
 		return this->database.getTargetTableId(type, websiteId, listId, tableName);
 	}
 

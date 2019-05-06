@@ -21,10 +21,13 @@ namespace crawlservpp::Wrapper {
 		// constructor: set pointer to nullptr
 		Curl() : ptr(nullptr) {
 			// initialize global instance if necessary
-			if(globalInit) this->localInit = false;
+			if(globalInit)
+				this->localInit = false;
 			else {
 				globalInit = true;
+
 				this->localInit = true;
+
 				curl_global_init(CURL_GLOBAL_ALL);
 			}
 
@@ -36,6 +39,7 @@ namespace crawlservpp::Wrapper {
 		Curl(Curl&& other) noexcept {
 			this->ptr = other.ptr;
 			other.ptr = nullptr;
+
 			this->localInit = other.localInit;
 			other.localInit = false;
 		}
@@ -47,7 +51,9 @@ namespace crawlservpp::Wrapper {
 			// cleanup global instance if necessary
 			if(globalInit && this->localInit) {
 				curl_global_cleanup();
+
 				globalInit = false;
+
 				this->localInit = false;
 			}
 		}
@@ -76,6 +82,7 @@ namespace crawlservpp::Wrapper {
 		void reset() {
 			if(this->ptr) {
 				curl_easy_cleanup(this->ptr);
+
 				this->ptr = nullptr;
 			}
 		}
@@ -95,9 +102,11 @@ namespace crawlservpp::Wrapper {
 			if(&other != this) {
 				this->ptr = other.ptr;
 				other.ptr = nullptr;
+
 				this->localInit = other.localInit;
 				other.localInit = false;
 			}
+
 			return *this;
 		}
 

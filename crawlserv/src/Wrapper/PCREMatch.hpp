@@ -28,7 +28,8 @@ namespace crawlservpp::Wrapper {
 
 		// destructor: free Perl-Compatible Regular Expression match if necessary
 		~PCREMatch() {
-			if(this->ptr) pcre2_match_data_free(this->ptr);
+			if(this->ptr)
+				pcre2_match_data_free(this->ptr);
 		}
 
 		// get pointer to Perl-Compatible Regular Expression match
@@ -57,6 +58,7 @@ namespace crawlservpp::Wrapper {
 				this->ptr = other.ptr;
 				other.ptr = nullptr;
 			}
+
 			return *this;
 		}
 

@@ -47,6 +47,7 @@ namespace crawlservpp::Wrapper {
 		sql::PreparedStatement& get() {
 			if(!(this->ptr))
 				throw Main::Exception("get(): No SQL statement prepared");
+
 			return *(this->ptr);
 		}
 
@@ -54,6 +55,7 @@ namespace crawlservpp::Wrapper {
 		const sql::PreparedStatement& get() const {
 			if(!(this->ptr))
 				throw Main::Exception("get(): No SQL statement prepared");
+
 			return *(this->ptr);
 		}
 
@@ -75,7 +77,9 @@ namespace crawlservpp::Wrapper {
 		// refresh prepared SQL statement
 		void refresh(sql::Connection * newConnection) {
 			this->reset();
+
 			this->connection = newConnection;
+
 			this->prepare();
 		}
 
@@ -93,9 +97,12 @@ namespace crawlservpp::Wrapper {
 		PreparedSqlStatement& operator=(PreparedSqlStatement&& other) noexcept {
 			if(&other != this) {
 				this->connection = other.connection;
+
 				this->ptr = std::move(other.ptr);
+
 				this->query = other.query;
 			}
+
 			return *this;
 		}
 

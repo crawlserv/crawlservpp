@@ -67,7 +67,9 @@ namespace crawlservpp::Wrapper {
 
 		// move assignment operator
 		URI& operator=(URI&& other) noexcept {
-			if(&other != this) this->ptr = std::move(other.ptr);
+			if(&other != this)
+				this->ptr = std::move(other.ptr);
+
 			return *this;
 		}
 
