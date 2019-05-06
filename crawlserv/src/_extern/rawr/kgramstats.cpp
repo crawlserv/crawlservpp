@@ -304,6 +304,8 @@ bool rawr::compile(unsigned short maxK)
                 case '*': return parentype::asterisk;
                 case '"': return parentype::quote;
               }
+
+              throw std::logic_error("invalid parentype");
             })();
           
             if (tk.delimiters[{pt, doublestatus::opening}] > 0)
