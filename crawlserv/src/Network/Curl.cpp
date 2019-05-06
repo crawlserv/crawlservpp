@@ -56,7 +56,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_MAXCONNECTS,
-				(long) globalConfig.connectionsMax
+				static_cast<long>(globalConfig.connectionsMax)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -77,7 +77,8 @@ namespace crawlservpp::Network {
 			std::string saveCookiesTo;
 
 			if(!globalConfig.cookiesLoad.empty()) {
-				loadCookiesFrom = this->cookieDir
+				loadCookiesFrom =
+						this->cookieDir
 						+ Helper::FileSystem::getPathSeparator()
 						+ globalConfig.cookiesLoad;
 
@@ -93,7 +94,8 @@ namespace crawlservpp::Network {
 			}
 
 			if(!globalConfig.cookiesSave.empty()) {
-				saveCookiesTo = this->cookieDir
+				saveCookiesTo =
+						this->cookieDir
 						+ Helper::FileSystem::getPathSeparator()
 						+ globalConfig.cookiesSave;
 
@@ -408,7 +410,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_LOCALPORT,
-				(long) globalConfig.localPort
+				static_cast<long>(globalConfig.localPort)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -417,7 +419,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_LOCALPORTRANGE,
-				(long) globalConfig.localPortRange
+				static_cast<long>(globalConfig.localPortRange)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -524,7 +526,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_MAXREDIRS ,
-				(long) globalConfig.redirectMax
+				static_cast<long>(globalConfig.redirectMax)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -589,7 +591,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_MAX_RECV_SPEED_LARGE,
-				(long) globalConfig.speedDownLimit
+				static_cast<long>(globalConfig.speedDownLimit)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -598,7 +600,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_LOW_SPEED_LIMIT,
-				(long) globalConfig.speedLowLimit
+				static_cast<long>(globalConfig.speedLowLimit)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -607,7 +609,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_LOW_SPEED_TIME,
-				(long) globalConfig.speedLowTime
+				static_cast<long>(globalConfig.speedLowTime)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -616,7 +618,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_MAX_SEND_SPEED_LARGE,
-				(long) globalConfig.speedUpLimit
+				static_cast<long>(globalConfig.speedUpLimit)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -701,7 +703,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_TCP_KEEPIDLE,
-				(long) globalConfig.tcpKeepAliveIdle
+				static_cast<long>(globalConfig.tcpKeepAliveIdle)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -710,7 +712,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_TCP_KEEPINTVL,
-				(long) globalConfig.tcpKeepAliveInterval
+				static_cast<long>(globalConfig.tcpKeepAliveInterval)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -728,7 +730,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_CONNECTTIMEOUT,
-				(long) globalConfig.timeOut
+				static_cast<long>(globalConfig.timeOut)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -738,7 +740,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS,
-				(long) globalConfig.timeOutHappyEyeballs
+				static_cast<long>(globalConfig.timeOutHappyEyeballs)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -755,7 +757,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_TIMEOUT,
-				(long) globalConfig.timeOutRequest
+				static_cast<long>(globalConfig.timeOutRequest)
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -872,8 +874,7 @@ namespace crawlservpp::Network {
 
 	// get remote content
 	void Curl::getContent(const std::string& url, bool usePost, std::string& contentTo, const std::vector<unsigned int>& errors) {
-		std::string encodedUrl = this->escapeUrl(url);
-
+		std::string escapedUrl(this->escapeUrl(url));
 		char errorBuffer[CURL_ERROR_SIZE];
 
 		this->content.clear();
@@ -883,7 +884,7 @@ namespace crawlservpp::Network {
 
 		// check whether setting of method is needed
 		if(usePost) {
-			auto delim = encodedUrl.find('?');
+			const auto delim = escapedUrl.find('?');
 
 			if(delim == std::string::npos) {
 				if(!(this->post)) {
@@ -900,7 +901,7 @@ namespace crawlservpp::Network {
 			}
 			else {
 				// get POST data
-				std::string postFields = encodedUrl.substr(delim + 1);
+				const std::string postFields(escapedUrl, delim + 1);
 
 				// set POST data size
 				this->curlCode = curl_easy_setopt(
@@ -923,7 +924,7 @@ namespace crawlservpp::Network {
 					throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 				// remove POST data from URL
-				encodedUrl = encodedUrl.substr(0, delim);
+				escapedUrl.erase(delim);
 			}
 
 			this->post = true;
@@ -946,7 +947,7 @@ namespace crawlservpp::Network {
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_URL,
-				encodedUrl.c_str()
+				escapedUrl.c_str()
 		);
 
 		if(this->curlCode != CURLE_OK)
@@ -989,7 +990,7 @@ namespace crawlservpp::Network {
 		else if(responseCodeL < 0 || responseCodeL > UINT_MAX)
 			throw Curl::Exception("Invalid HTTP response code");
 
-		this->responseCode = (unsigned int) responseCodeL;
+		this->responseCode = static_cast<unsigned int>(responseCodeL);
 
 		// check response code
 		for(auto i = errors.begin(); i != errors.end(); ++i) {
@@ -1183,7 +1184,6 @@ namespace crawlservpp::Network {
 	// escape an URL but leave reserved characters (; / ? : @ = & #) intact
 	std::string Curl::escapeUrl(const std::string& urlToEncode) {
 		unsigned long pos = 0;
-
 		std::string result;
 
 		while(pos < urlToEncode.length()) {
@@ -1192,7 +1192,7 @@ namespace crawlservpp::Network {
 			if(end == std::string::npos)
 				end = urlToEncode.length();
 			if(end - pos) {
-				std::string part = urlToEncode.substr(pos, end - pos);
+				const std::string part(urlToEncode, pos, end - pos);
 
 				result += Curl::curlStringToString(curl_easy_escape(this->curl.get(), part.c_str(), part.length()));
 			}
@@ -1209,7 +1209,7 @@ namespace crawlservpp::Network {
 	// static helper function for converting cURL string to std::string and releasing its memory
 	std::string Curl::curlStringToString(char * curlString) {
 		if(curlString) {
-			std::string newString(curlString);
+			const std::string newString(curlString);
 
 			curl_free(curlString);
 
