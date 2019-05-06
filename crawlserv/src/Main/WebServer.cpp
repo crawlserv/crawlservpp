@@ -186,7 +186,9 @@ namespace crawlservpp::Main {
 		http_message * httpMessage = nullptr;
 		std::string method;
 		std::string body;
-		std::string ip = WebServer::getIP(connection); // get IP
+
+		// get IP
+		const std::string ip(WebServer::getIP(connection));
 
 		switch(event) {
 		case MG_EV_ACCEPT:
