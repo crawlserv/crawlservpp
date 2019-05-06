@@ -65,6 +65,7 @@ namespace crawlservpp::Data::ImportExport::Text {
 		// write header to string if necessary
 		if(writeHeader) {
 			result.reserve(header.size() + 1);
+
 			result = header + "\n";
 		}
 
