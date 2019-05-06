@@ -2498,7 +2498,7 @@ namespace crawlservpp::Main {
 											// write to log
 											std::ostringstream logStrStr;
 
-											logStrStr << "Importing ";
+											logStrStr << "importing ";
 
 											if(urls.size() == 1)
 												logStrStr << "one URL";
@@ -2644,7 +2644,7 @@ namespace crawlservpp::Main {
 								// write to log
 								std::ostringstream logStrStr;
 
-								logStrStr << "Merging with ";
+								logStrStr << "merging with ";
 
 								switch(urls.size()) {
 								case 0:
@@ -2790,7 +2790,7 @@ namespace crawlservpp::Main {
 							// write to log
 							std::ostringstream logStrStr;
 
-							logStrStr << "Exporting ";
+							logStrStr << "exporting ";
 
 							switch(urls.size()) {
 							case 0:
