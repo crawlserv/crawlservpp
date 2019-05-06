@@ -70,6 +70,13 @@ if($filter == "analyzer")
 else
     echo filterlink("analyzer");
 
+echo " &middot; ";
+
+if($filter == "worker")
+    echo "<b>worker</b>";
+else
+    echo filterLink("worker");
+
 if(isset($_POST["offset"]))
     $offset = $_POST["offset"];
 else
