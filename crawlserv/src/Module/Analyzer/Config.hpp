@@ -108,7 +108,7 @@ namespace crawlservpp::Module::Analyzer {
 	// check analyzing-specific configuration
 	inline void Config::checkOptions() {
 		// check properties of inputs (arrays with fields, sources and tables should have the same number of elements)
-		unsigned long completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
+		const unsigned long completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
 				this->config.generalInputFields.size(),
 				this->config.generalInputSources.size(),
 				this->config.generalInputTables.size()
