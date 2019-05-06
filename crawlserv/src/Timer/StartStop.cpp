@@ -17,21 +17,29 @@ StartStop::StartStop() : timePoint(std::chrono::steady_clock::time_point::min())
 
 // start timer
 void StartStop::start() {
-	if(this->timePoint != std::chrono::steady_clock::time_point::min()) this->stop();
+	if(this->timePoint != std::chrono::steady_clock::time_point::min())
+		this->stop();
+
 	this->timePoint = std::chrono::steady_clock::now();
 }
 
 // stop timer
 void StartStop::stop() {
 	this->duration += std::chrono::steady_clock::now() - this->timePoint;
+
 	this->timePoint = std::chrono::steady_clock::time_point::min();
 }
 
 // get total duration as string
 std::string StartStop::totalStr() {
-	if(this->timePoint != std::chrono::steady_clock::time_point::min()) this->stop();
+	if(this->timePoint != std::chrono::steady_clock::time_point::min())
+		this->stop();
+
 	return Helper::DateTime::millisecondsToString(
-			std::chrono::duration_cast<std::chrono::milliseconds>(this->duration).count());
+			std::chrono::duration_cast<std::chrono::milliseconds>(
+					this->duration
+			).count()
+	);
 }
 
 }
