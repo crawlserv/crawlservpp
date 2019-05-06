@@ -115,7 +115,7 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
 }
 
 // render row with URL list selection
-function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $noreload = false, $id = "urllist-select") {
+function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $noreload = false, $id = "urllist-select", $selectsecond = false) {
     global $m, $mode, $tab, $dbConnection, $website, $urllist, $urllistName, $urllistNamespace;
     
     flush();
@@ -161,6 +161,8 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
         
     if($result) {
         $first = true;
+        $second = true;
+        $total = $result->num_rows;
         
         while($row = $result->fetch_assoc()) {
             $ulId = $row["id"];
@@ -168,10 +170,17 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
             $ulNamespace = $row["namespace"];
             
             if($first) {
-                if(!isset($urllist))
+                if(!isset($urllist) && (!$selectsecond || $total == 1))
                     $urllist = $ulId;
-                    
+                
                 $first = false;
+            }
+            else if($second) {
+                if(!isset($urllist) && $selectsecond) {
+                    $urllist = $ulId;
+                }
+                
+                $second = false;
             }
             
             $html .= "<option value=\"$ulId\" data-namespace=\"$ulNamespace\"";
