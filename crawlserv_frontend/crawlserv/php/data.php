@@ -168,6 +168,20 @@ if($action != "merge") {
 
 <?php
 
+if($action != "import") {
+    // source
+    echo "<div class=\"content-block\">\n";
+    
+    echo "<div class=\"entry-row\"><b>Source</b></div>\n";
+    
+    if($datatype == "urllist") {
+        echo rowWebsiteSelect();
+        echo rowUrlListSelect(false, false, false, true, "urllist-source");
+    }
+    
+    echo "</div>\n";
+}
+
 if($action != "export") {
     // target
     echo "<div class=\"content-block\">\n";
@@ -175,7 +189,9 @@ if($action != "export") {
     echo "<div class=\"entry-row\"><b>Target</b></div>\n";
     
     if($datatype == "urllist") {
-        echo rowWebsiteSelect();
+        if($action != "merge")
+            echo rowWebsiteSelect();
+        
         echo rowUrlListSelect($action == "import", false, false, $action == "merge", "urllist-target");
             
         if($action == "import") {
@@ -195,22 +211,6 @@ if($action != "export") {
             
             echo "</div>\n</div>\n";
         }
-    }
-    
-    echo "</div>\n";
-}
-
-if($action != "import") {
-    // source
-    echo "<div class=\"content-block\">\n";
-    
-    echo "<div class=\"entry-row\"><b>Source</b></div>\n";
-    
-    if($datatype == "urllist") {
-        if($action != "merge")
-            echo rowWebsiteSelect();
-        
-        echo rowUrlListSelect(false, false, false, true, "urllist-source");
     }
     
     echo "</div>\n";
