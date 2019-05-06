@@ -222,6 +222,7 @@ namespace crawlservpp::Module::Parser {
 		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 			// idling stopped
 			this->startTime += std::chrono::steady_clock::now() - this->idleTime;
+
 			this->pauseTime = std::chrono::steady_clock::time_point::min();
 			this->idleTime = std::chrono::steady_clock::time_point::min();
 		}
@@ -350,12 +351,14 @@ namespace crawlservpp::Module::Parser {
 			if(this->pauseTime != std::chrono::steady_clock::time_point::min()) {
 				// add pause time to start time to ignore pause
 				this->startTime += std::chrono::steady_clock::now() - this->pauseTime;
+
 				this->pauseTime = std::chrono::steady_clock::time_point::min();
 			}
 
 			if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 				// add idle time to start time to ignore idling
 				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
+
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
 
