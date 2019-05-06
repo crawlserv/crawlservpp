@@ -443,3 +443,11 @@ function areConfigsEqual(config1, config2, logging = true) {
 	
 	return true;
 };
+
+/*
+ * IMPORT/EXPORT [DATA]
+ */
+
+function disableImportExport() {
+	$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
+}
