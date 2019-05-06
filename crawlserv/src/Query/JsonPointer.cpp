@@ -63,7 +63,7 @@ namespace crawlservpp::Query {
 		resultTo.clear();
 
 		// get result
-		auto result = this->pointerFirst.Get(doc);
+		const auto result(this->pointerFirst.Get(doc));
 
 		if(result != nullptr) {
 			// check type of result
@@ -109,12 +109,12 @@ namespace crawlservpp::Query {
 
 				Helper::Strings::replaceAll(pointerString, "$$", counterStrStr.str(), true);
 
-				rapidjson::Pointer pointer(pointerString);
+				const rapidjson::Pointer pointer(pointerString);
 
 				if(!(pointer.IsValid()))
 					throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
 
-				auto result = pointer.Get(doc);
+				const auto result(pointer.Get(doc));
 
 				if(result == nullptr)
 					break;
