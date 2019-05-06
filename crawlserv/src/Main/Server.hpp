@@ -54,6 +54,7 @@
 #include "../Struct/ServerCommandResponse.hpp"
 #include "../Struct/ServerSettings.hpp"
 #include "../Struct/ThreadDatabaseEntry.hpp"
+#include "../Struct/ThreadOptions.hpp"
 #include "../Struct/UrlListProperties.hpp"
 #include "../Struct/WebsiteProperties.hpp"
 #include "../Wrapper/Database.hpp"
@@ -102,6 +103,8 @@ namespace crawlservpp::Main {
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ServerCommandResponse ServerCommandResponse;
 		typedef Struct::ServerSettings ServerSettings;
+		typedef Struct::ThreadDatabaseEntry ThreadDatabaseEntry;
+		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
 		typedef struct mg_connection * ConnectionPtr;
