@@ -291,7 +291,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of archives
 		bool incompleteArchives = false;
 
-		unsigned long completeArchives = std::min({ // number of complete archives (= minimum size of all arrays)
+		const unsigned long completeArchives = std::min({ // number of complete archives (= minimum size of all arrays)
 				this->config.crawlerArchivesNames.size(),
 				this->config.crawlerArchivesUrlsMemento.size(),
 				this->config.crawlerArchivesUrlsTimemap.size()
@@ -331,7 +331,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of counters
 		bool incompleteCounters = false;
 
-		unsigned long completeCounters = std::min({ // number of complete counters (= minimum size of all arrays)
+		const unsigned long completeCounters = std::min({ // number of complete counters (= minimum size of all arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
 				this->config.customCountersEnd.size(),
@@ -414,7 +414,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of tokens
 		bool incompleteTokens = false;
 
-		unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of all arrays)
+		const unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of all arrays)
 				this->config.customTokens.size(),
 				this->config.customTokensSource.size(),
 				this->config.customTokensQuery.size()
@@ -454,7 +454,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of variables for dynamic redirect
 		bool incompleteVars = false;
 
-		unsigned long completeVars = std::min({ // number of complete variables (= minimum size of all arrays)
+		const unsigned long completeVars = std::min({ // number of complete variables (= minimum size of all arrays)
 			this->config.redirectVarNames.size(),
 			this->config.redirectVarQueries.size(),
 			this->config.redirectVarSources.size()
