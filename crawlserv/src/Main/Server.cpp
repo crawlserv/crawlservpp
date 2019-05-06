@@ -925,6 +925,9 @@ namespace crawlservpp::Main {
 
 		const std::string toAllow(json["ip"].GetString(), json["ip"].GetStringLength());
 
+		if(toAllow.empty())
+			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is empty).");
+
 		// allow needs to be confirmed
 		if(!json.HasMember("confirmed"))
 			return ServerCommandResponse::toBeConfirmed(
