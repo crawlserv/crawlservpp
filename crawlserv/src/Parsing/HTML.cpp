@@ -16,7 +16,7 @@ namespace crawlservpp::Parsing {
 
 	// destructor: free buffer if necessary and release tidy object
 	HTML::~HTML() {
-		if(this->buffer.allocated)
+		if(this->buffer.bp)
 			tidyBufFree(&(this->buffer));
 
 		tidyRelease(this->doc);
@@ -36,7 +36,7 @@ namespace crawlservpp::Parsing {
 			throw HTML::Exception("Could not set options");
 
 		// release old buffer
-		if(this->buffer.allocated)
+		if(this->buffer.bp)
 			tidyBufFree(&(this->buffer));
 
 		// parse content
