@@ -36,14 +36,6 @@ namespace crawlservpp::Struct {
 				  website(setWebsite),
 				  urlList(setUrlList),
 				  config(setConfig) {}
-
-		ThreadOptions( // copy thread options and set module
-				const std::string& setModule,
-				const ThreadOptions& options
-				) : module(setModule),
-					website(options.website),
-					urlList(options.urlList),
-					config(options.config) {}
 	};
 
 } /* crawlservpp::Struct */
