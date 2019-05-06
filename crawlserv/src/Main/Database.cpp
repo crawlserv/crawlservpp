@@ -45,7 +45,7 @@ namespace crawlservpp::Main {
 	Database::~Database() {
 		if(this->module == "server") {
 			// log SQL request counter (if available)
-			unsigned long long requests = this->getRequestCounter();
+			const unsigned long long requests = this->getRequestCounter();
 
 			if(requests) {
 				std::ostringstream logStrStr;
@@ -128,10 +128,10 @@ namespace crawlservpp::Main {
 				throw Database::Exception("Main::Database::connect(): Connection to database is invalid");
 
 			// set max_allowed_packet size to maximum of 1 GiB
-			//  NOTE: needs to be set independently, because setting in connection options somehow leads to invalid read of size 8
-			int maxAllowedPacket = 1073741824;
+			//  NOTE: needs to be set independently, setting it in the connection options somehow leads to invalid read of size 8
+			const int maxAllowedPacket = 1073741824;
 
-			this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", (void *) &maxAllowedPacket);
+			this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", static_cast<const void *>(&maxAllowedPacket));
 
 			// run initializing session commands
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
@@ -168,8 +168,7 @@ namespace crawlservpp::Main {
 	// run initializing SQL commands by processing all .sql files in the "sql" sub-folder
 	void Database::initializeSql() {
 		// read 'sql' directory
-		std::vector<std::string> sqlFiles;
-		sqlFiles = Helper::FileSystem::listFilesInPath("sql", ".sql");
+		const std::vector<std::string> sqlFiles(Helper::FileSystem::listFilesInPath("sql", ".sql"));
 
 		// execute all SQL files
 		for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i)
@@ -233,7 +232,7 @@ namespace crawlservpp::Main {
 		columns.clear();
 
 		// get installed locales
-		std::vector<std::string> locales = Helper::Portability::enumLocales();
+		const std::vector<std::string> locales(Helper::Portability::enumLocales());
 
 		if(!locales.empty()) {
 			std::string sqlQuery("INSERT INTO `crawlserv_locales`(name) VALUES");
@@ -286,7 +285,7 @@ namespace crawlservpp::Main {
 		columns.clear();
 
 		// get library versions
-		std::vector<std::pair<std::string, std::string>> versions(Helper::Versions::getLibraryVersions());
+		const std::vector<std::pair<std::string, std::string>> versions(Helper::Versions::getLibraryVersions());
 
 		if(!versions.empty()) {
 			std::string sqlQuery("INSERT INTO `crawlserv_versions`(name, version) VALUES");
@@ -330,11 +329,10 @@ namespace crawlservpp::Main {
 	// add a log entry to the database (for any module), remove invalid UTF-8 characters if needed,
 	//  throws Database::Exception
 	void Database::log(const std::string& logModule, const std::string& logEntry) {
-		bool repaired = false;
 		std::string repairedEntry;
 
-		// check argument
-		repaired = Helper::Utf8::repairUtf8(logEntry, repairedEntry);
+		// repair invalid UTF-8 in argument
+		const bool repaired = Helper::Utf8::repairUtf8(logEntry, repairedEntry);
 
 		if(repaired)
 			repairedEntry += " [invalid UTF-8 character(s) removed from log]";
@@ -647,14 +645,9 @@ namespace crawlservpp::Main {
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.setThreadStatusMessage);
 
-		// create status message
-		std::string statusMessage;
-
-		statusMessage = threadStatusMessage;
-
 		try {
 			// execute SQL statement
-			sqlStatement.setString(1, statusMessage);
+			sqlStatement.setString(1, threadStatusMessage);
 			sqlStatement.setUInt64(2, threadId);
 
 			Database::sqlExecute(sqlStatement);
@@ -1051,7 +1044,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::duplicateWebsiteNamespace(): No namespace specified");
 
 		std::string nameString, numberString;
-		unsigned long end = websiteNamespace.find_last_not_of("0123456789");
+		const unsigned long end = websiteNamespace.find_last_not_of("0123456789");
 
 		// separate number at the end of string from the rest of the string
 		if(end == std::string::npos) {
@@ -1143,8 +1136,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::getChangedUrlsByWebsiteUpdate(): No website name specified");
 
 		// get old namespace and domain
-		std::string oldNamespace = this->getWebsiteNamespace(websiteId);
-		std::string oldDomain = this->getWebsiteDomain(websiteId);
+		const std::string oldNamespace = this->getWebsiteNamespace(websiteId);
+		const std::string oldDomain = this->getWebsiteDomain(websiteId);
 
 		// check connection
 		this->checkConnection();
@@ -1152,7 +1145,7 @@ namespace crawlservpp::Main {
 		try {
 			if(oldDomain.empty() != websiteProperties.domain.empty()) {
 				// get URL lists
-				std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+				std::queue<IdString> urlLists(this->getUrlLists(websiteId));
 
 				// create SQL statement
 				SqlStatementPtr sqlStatement(this->connection->createStatement());
@@ -1226,8 +1219,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::getLostUrlsByWebsiteUpdate(): No website name specified");
 
 		// get old namespace and domain
-		std::string oldNamespace = this->getWebsiteNamespace(websiteId);
-		std::string oldDomain = this->getWebsiteDomain(websiteId);
+		const std::string oldNamespace = this->getWebsiteNamespace(websiteId);
+		const std::string oldDomain = this->getWebsiteDomain(websiteId);
 
 		// check connection
 		this->checkConnection();
@@ -1235,7 +1228,7 @@ namespace crawlservpp::Main {
 		try {
 			if(oldDomain.empty() && !websiteProperties.domain.empty()) {
 				// get URL lists
-				std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+				std::queue<IdString> urlLists(this->getUrlLists(websiteId));
 
 				// create SQL statement
 				SqlStatementPtr sqlStatement(this->connection->createStatement());
@@ -1283,8 +1276,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::updateWebsite(): No website name specified");
 
 		// get old namespace and domain
-		std::string oldNamespace = this->getWebsiteNamespace(websiteId);
-		std::string oldDomain = this->getWebsiteDomain(websiteId);
+		const std::string oldNamespace = this->getWebsiteNamespace(websiteId);
+		const std::string oldDomain = this->getWebsiteDomain(websiteId);
 
 		// check website namespace if necessary
 		if(websiteProperties.nameSpace != oldNamespace)
@@ -1298,7 +1291,7 @@ namespace crawlservpp::Main {
 			// check whether the type of the website (can either be cross-domain or a specific domain) has changed
 			if(oldDomain.empty() != websiteProperties.domain.empty()) {
 				// get URL lists
-				std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+				std::queue<IdString> urlLists(this->getUrlLists(websiteId));
 
 				// create SQL statement for modifying and deleting URLs
 				SqlStatementPtr urlStatement(this->connection->createStatement());
@@ -1336,7 +1329,7 @@ namespace crawlservpp::Main {
 				else if(!oldDomain.empty() && websiteProperties.domain.empty()) {
 					// type changed from specific domain to cross-domain:
 					// 	change URLs from relative (sub-URLs) to absolute (URLs without protocol)
-					std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+					std::queue<IdString> urlLists(this->getUrlLists(websiteId));
 
 					while(!urlLists.empty()) {
 						// update URLs
@@ -1353,13 +1346,12 @@ namespace crawlservpp::Main {
 
 			// check whether namespace has changed
 			if(websiteProperties.nameSpace != oldNamespace) {
-				std::queue<IdString> tables;
-
 				// create SQL statement for renaming
 				SqlStatementPtr renameStatement(this->connection->createStatement());
 
 				// rename sub-tables
-				std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+				std::queue<IdString> urlLists(this->getUrlLists(websiteId));
+				std::queue<IdString> tables;
 
 				while(!urlLists.empty()) {
 					Database::sqlExecute(
@@ -1506,7 +1498,7 @@ namespace crawlservpp::Main {
 
 		try {
 			// delete URL lists
-			std::queue<IdString> urlLists = this->getUrlLists(websiteId);
+			std::queue<IdString> urlLists(this->getUrlLists(websiteId));
 
 			while(!urlLists.empty()) {
 				// delete URL list
@@ -1568,8 +1560,9 @@ namespace crawlservpp::Main {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				std::string websiteNamespace = sqlResultSet->getString("namespace");
-				std::string websiteName = sqlResultSet->getString("name");
+				const std::string websiteNamespace = sqlResultSet->getString("namespace");
+				const std::string websiteName = sqlResultSet->getString("name");
+
 				std::string websiteDomain;
 				std::string websiteDir;
 
@@ -1580,9 +1573,8 @@ namespace crawlservpp::Main {
 					websiteDir = sqlResultSet->getString("dir");
 
 				// create new namespace and new name
-				std::string newNamespace = Database::duplicateWebsiteNamespace(websiteNamespace);
-
-				std::string newName = websiteName + " (copy)";
+				const std::string newNamespace(Database::duplicateWebsiteNamespace(websiteNamespace));
+				const std::string newName(websiteName + " (copy)", websiteName.size() + 7);
 
 				// add website
 				result = this->addWebsite(WebsiteProperties(websiteDomain, newNamespace, newName, websiteDir));
@@ -1604,7 +1596,7 @@ namespace crawlservpp::Main {
 				// get results
 				while(sqlResultSet && sqlResultSet->next()) {
 					// add URL lists with same name (except for "default", which has already been created)
-					std::string urlListName = sqlResultSet->getString("namespace");
+					const std::string urlListName(sqlResultSet->getString("namespace"));
 
 					if(urlListName != "default")
 						this->addUrlList(result, UrlListProperties(sqlResultSet->getString("namespace"), urlListName));
@@ -1629,13 +1621,15 @@ namespace crawlservpp::Main {
 					// add query
 					this->addQuery(
 							result,
-							QueryProperties(sqlResultSet->getString("name"),
-							sqlResultSet->getString("query"),
-							sqlResultSet->getString("type"),
-							sqlResultSet->getBoolean("resultbool"),
-							sqlResultSet->getBoolean("resultsingle"),
-							sqlResultSet->getBoolean("resultmulti"),
-							sqlResultSet->getBoolean("textonly"))
+							QueryProperties(
+									sqlResultSet->getString("name"),
+									sqlResultSet->getString("query"),
+									sqlResultSet->getString("type"),
+									sqlResultSet->getBoolean("resultbool"),
+									sqlResultSet->getBoolean("resultsingle"),
+									sqlResultSet->getBoolean("resultmulti"),
+									sqlResultSet->getBoolean("textonly")
+							)
 					);
 
 				}
@@ -1692,8 +1686,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::addUrlList(): No URL list name specified");
 
 		// get website namespace and data directory
-		std::string websiteNamespace = this->getWebsiteNamespace(websiteId);
-		std::string websiteDataDirectory = this->getWebsiteDataDirectory(websiteId);
+		const std::string websiteNamespace(this->getWebsiteNamespace(websiteId));
+		const std::string websiteDataDirectory(this->getWebsiteDataDirectory(websiteId));
 
 		// check URL list namespace
 		if(this->isUrlListNamespace(websiteId, listProperties.nameSpace))
@@ -1903,14 +1897,15 @@ namespace crawlservpp::Main {
 			return 0;
 
 		// get ID and namespaces of website
-		IdString website = this->getWebsiteNamespaceFromUrlList(listId);
+		const IdString website(this->getWebsiteNamespaceFromUrlList(listId));
 
 		// get namespace of URL list and generate name of URL list table
-		std::string urlListTable =
+		const std::string urlListTable(
 				"crawlserv_"
 				+ website.second
 				+ "_"
-				+ this->getUrlListNamespace(listId);
+				+ this->getUrlListNamespace(listId)
+		);
 
 		// generate SQL string for URL hashing
 		std::string hashQuery("CRC32( ");
@@ -1946,7 +1941,7 @@ namespace crawlservpp::Main {
 							"), "; // end of VALUES arguments
 
 			// remove last comma and space
-			std::string sqlQuery = sqlQueryStr.str();
+			std::string sqlQuery(sqlQueryStr.str());
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -1991,14 +1986,15 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::getUrls(): No URL list ID specified");
 
 		// get ID and namespaces of website
-		IdString website = this->getWebsiteNamespaceFromUrlList(listId);
+		const IdString website(this->getWebsiteNamespaceFromUrlList(listId));
 
 		// get namespace of URL list and generate name of URL list table
-		std::string urlListTable =
+		const std::string urlListTable(
 				"crawlserv_"
 				+ website.second
 				+ "_"
-				+ this->getUrlListNamespace(listId);
+				+ this->getUrlListNamespace(listId)
+		);
 
 		try {
 			// create SQL statement
@@ -2154,8 +2150,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::updateUrlList(): No URL list name specified");
 
 		// get website namespace and URL list name
-		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
-		std::string oldListNamespace = this->getUrlListNamespace(listId);
+		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
+		const std::string oldListNamespace(this->getUrlListNamespace(listId));
 
 		// check website namespace if necessary
 		if(listProperties.nameSpace != oldListNamespace)
@@ -2167,8 +2163,6 @@ namespace crawlservpp::Main {
 
 		try {
 			if(listProperties.nameSpace != oldListNamespace) {
-				std::queue<IdString> tables;
-
 				// create SQL statement for renaming
 				SqlStatementPtr renameStatement(this->connection->createStatement());
 
@@ -2199,7 +2193,7 @@ namespace crawlservpp::Main {
 						" RENAME TO `crawlserv_" + websiteNamespace.second + "_" + listProperties.nameSpace + "_parsing`"
 				);
 
-				tables = this->getTargetTables("parsed", listId);
+				std::queue<IdString> tables(this->getTargetTables("parsed", listId));
 
 				while(!tables.empty()) {
 					Database::sqlExecute(
@@ -2289,18 +2283,16 @@ namespace crawlservpp::Main {
 
 	// delete URL list (and all associated data) from the database by its ID, throws Database::Exception
 	void Database::deleteUrlList(unsigned long listId) {
-		std::queue<IdString> tables;
-
 		// check argument
 		if(!listId)
 			throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
-		std::string listNamespace = this->getUrlListNamespace(listId);
+		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
+		const std::string listNamespace(this->getUrlListNamespace(listId));
 
 		// delete parsing tables
-		tables = this->getTargetTables("parsed", listId);
+		std::queue<IdString> tables(this->getTargetTables("parsed", listId));
 
 		while(!tables.empty()) {
 			this->deleteTargetTable("parsed", tables.front().first);
@@ -2366,8 +2358,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::resetParsingStatus(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
-		std::string listNamespace = this->getUrlListNamespace(listId);
+		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
+		const std::string listNamespace(this->getUrlListNamespace(listId));
 
 		try {
 			// update parsing table
@@ -2386,8 +2378,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::resetExtractingStatus(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
-		std::string listNamespace = this->getUrlListNamespace(listId);
+		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
+		const std::string listNamespace(this->getUrlListNamespace(listId));
 
 		try {
 			// update extracting table
@@ -2406,8 +2398,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::resetAnalyzingStatus(): No URL list ID specified");
 
 		// get website namespace and URL list name
-		IdString websiteNamespace = this->getWebsiteNamespaceFromUrlList(listId);
-		std::string listNamespace = this->getUrlListNamespace(listId);
+		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
+		const std::string listNamespace(this->getUrlListNamespace(listId));
 
 		try {
 			// update URL list
@@ -2431,8 +2423,10 @@ namespace crawlservpp::Main {
 		// check arguments
 		if(queryProperties.name.empty())
 			throw Database::Exception("Main::Database::addQuery(): No query name specified");
+
 		if(queryProperties.text.empty())
 			throw Database::Exception("Main::Database::addQuery(): No query text specified");
+
 		if(queryProperties.type.empty())
 			throw Database::Exception("Main::Database::addQuery(): No query type specified");
 
@@ -2737,6 +2731,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, configId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -2779,6 +2774,7 @@ namespace crawlservpp::Main {
 			sqlStatement->setString(1, configProperties.name);
 			sqlStatement->setString(2, configProperties.config);
 			sqlStatement->setUInt64(3, configId);
+
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateConfiguration", e); }
@@ -2805,6 +2801,7 @@ namespace crawlservpp::Main {
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, configId);
+
 			Database::sqlExecute(sqlStatement);
 
 			// reset auto-increment if table is empty
@@ -2846,7 +2843,8 @@ namespace crawlservpp::Main {
 				// add configuration
 				result = this->addConfiguration(sqlResultSet->getUInt64("website"),
 						ConfigProperties(
-								sqlResultSet->getString("module"), sqlResultSet->getString("name") + " (copy)",
+								sqlResultSet->getString("module"),
+								sqlResultSet->getString("name") + " (copy)",
 								sqlResultSet->getString("config")
 						));
 			}
@@ -2919,7 +2917,7 @@ namespace crawlservpp::Main {
 			}
 			else {
 				// table does not exist: get data directory and create table
-				std::string dataDirectory = this->getWebsiteDataDirectory(properties.website);
+				const std::string dataDirectory(this->getWebsiteDataDirectory(properties.website));
 
 				this->createTable(
 						TableProperties(
@@ -3123,9 +3121,9 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::deleteTargetTable(): No table ID specified");
 
 		// get namespace, URL list name and table name
-		IdString websiteNamespace = this->getWebsiteNamespaceFromTargetTable(type, tableId);
-		IdString listNamespace = this->getUrlListNamespaceFromTargetTable(type, tableId);
-		std::string tableName = this->getTargetTableName(type, tableId);
+		const IdString websiteNamespace(this->getWebsiteNamespaceFromTargetTable(type, tableId));
+		const IdString listNamespace(this->getUrlListNamespaceFromTargetTable(type, tableId));
+		const std::string tableName(this->getTargetTableName(type, tableId));
 
 		// check connection
 		this->checkConnection();
@@ -3924,30 +3922,37 @@ namespace crawlservpp::Main {
 						switch(i->second) {
 						case Data::Type::_bool:
 							data.values.emplace_back(sqlResultSet->getBoolean(i->first));
+
 							break;
 
 						case Data::Type::_double:
 							data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(i->first)));
+
 							break;
 
 						case Data::Type::_int:
 							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(i->first)));
+
 							break;
 
 						case Data::Type::_long:
 							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(i->first)));
+
 							break;
 
 						case Data::Type::_string:
 							data.values.emplace_back(sqlResultSet->getString(i->first));
+
 							break;
 
 						case Data::Type::_uint:
 							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(i->first)));
+
 							break;
 
 						case Data::Type::_ulong:
 							data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(i->first)));
+
 							break;
 
 						default:
@@ -3994,6 +3999,7 @@ namespace crawlservpp::Main {
 			// get result
 			if(sqlResultSet) {
 				data.values.reserve(sqlResultSet->rowsCount());
+
 				while(sqlResultSet->next()) {
 					if(sqlResultSet->isNull(data.column))
 						data.values.emplace_back();
@@ -4055,6 +4061,7 @@ namespace crawlservpp::Main {
 
 		// clear and reserve memory
 		data.values.clear();
+
 		data.values.reserve(data.columns.size());
 
 		// check connection
@@ -4156,6 +4163,7 @@ namespace crawlservpp::Main {
 
 		// clear and reserve memory
 		data.values.clear();
+
 		data.values.reserve(data.columns_types.size());
 
 		// check connection
@@ -4315,6 +4323,7 @@ namespace crawlservpp::Main {
 
 						default:
 							std::ostringstream errStrStr;
+
 							errStrStr.imbue(std::locale(""));
 
 							errStrStr <<	"Main::Database::insertCustomData():"
@@ -4450,20 +4459,24 @@ namespace crawlservpp::Main {
 						switch(i->second._overflow) {
 						case Data::Value::_if_too_large::_trim:
 							sqlStatement->setString(1, i->second._s.substr(0, this->getMaxAllowedPacketSize()));
+
 							break;
 
 						case Data::Value::_if_too_large::_empty:
 							sqlStatement->setString(1, "");
+
 							break;
 
 						case Data::Value::_if_too_large::_null:
 							sqlStatement->setNull(1, 0);
+
 							break;
 
 						default:
 							std::ostringstream errStrStr;
 
 							errStrStr.imbue(std::locale(""));
+
 							errStrStr	<< "Main::Database::insertCustomData(): Size (" << i->second._s.size()
 										<< " bytes) of custom value for `" << data.table << "`.`" << i->first
 										<< "` exceeds the ";
@@ -4596,6 +4609,7 @@ namespace crawlservpp::Main {
 
 							default:
 								std::ostringstream errStrStr;
+
 								errStrStr.imbue(std::locale(""));
 
 								errStrStr <<	"Main::Database::insertCustomData():"
@@ -4711,6 +4725,7 @@ namespace crawlservpp::Main {
 
 						default:
 							std::ostringstream errStrStr;
+
 							errStrStr.imbue(std::locale(""));
 
 							errStrStr <<	"Main::Database::updateCustomData():"
@@ -4857,6 +4872,7 @@ namespace crawlservpp::Main {
 
 						default:
 							std::ostringstream errStrStr;
+
 							errStrStr.imbue(std::locale(""));
 
 							errStrStr <<	"Main::Database::updateCustomData():"
@@ -4989,6 +5005,7 @@ namespace crawlservpp::Main {
 
 							default:
 								std::ostringstream errStrStr;
+
 								errStrStr.imbue(std::locale(""));
 
 								errStrStr <<	"Main::Database::updateCustomData():"
@@ -5140,9 +5157,13 @@ namespace crawlservpp::Main {
 				std::lock_guard<std::mutex> accessLock(Database::lockAccess);
 
 				// check whether lock with specified name already exists
-				auto databaseLock = std::find(Database::locks.begin(), Database::locks.end(), name);
-
-				if(databaseLock == Database::locks.end()) {
+				if(
+						std::find(
+								Database::locks.begin(),
+								Database::locks.end(),
+								name
+						) == Database::locks.end()
+				) {
 					// lock does not exist: add lock and return true
 					Database::locks.emplace_back(name);
 
@@ -5180,6 +5201,7 @@ namespace crawlservpp::Main {
 					"CREATE TABLE IF NOT EXISTS `" + properties.name + "`"
 						"(id SERIAL"
 			);
+
 			std::string propertiesString;
 
 			for(auto i = properties.columns.begin(); i != properties.columns.end(); ++i) {
@@ -5466,9 +5488,9 @@ namespace crawlservpp::Main {
 
 	// catch SQL exception and re-throw it as ConnectionException or generic Exception
 	void Database::sqlException(const std::string& function, const sql::SQLException& e) {
-		// create error string
+		// get error code and create error string
+		const int error = e.getErrorCode();
 		std::ostringstream errorStrStr;
-		int error = e.getErrorCode();
 
 		errorStrStr << function << "() SQL Error #" << error << " (State " << e.getSQLState() << "): " << e.what();
 
@@ -5595,9 +5617,11 @@ namespace crawlservpp::Main {
 
 	// escape string for usage in SQL commands
 	std::string Database::sqlEscapeString(const std::string& in) {
-		auto mySqlConnection = dynamic_cast<sql::mysql::MySQL_Connection*>(this->connection.get());
+		// check connection
+		this->checkConnection();
 
-		return mySqlConnection->escapeString(in);
+		// escape string
+		return static_cast<sql::mysql::MySQL_Connection *>(this->connection.get())->escapeString(in);
 	}
 
 } /* crawlservpp::Main */
