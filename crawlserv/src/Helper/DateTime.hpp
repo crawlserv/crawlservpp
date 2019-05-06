@@ -185,19 +185,20 @@ namespace crawlservpp::Helper::DateTime {
 	// convert milliseconds to string
 	inline std::string millisecondsToString(unsigned long long milliseconds) {
 		unsigned long long rest = milliseconds;
-		unsigned long days = rest / 86400000;
+
+		const unsigned long days = rest / 86400000;
 
 		rest -= days * 86400000;
 
-		unsigned short hours = rest / 3600000;
+		const unsigned short hours = rest / 3600000;
 
 		rest -= hours * 3600000;
 
-		unsigned short minutes = rest / 60000;
+		const unsigned short minutes = rest / 60000;
 
 		rest -= minutes * 60000;
 
-		unsigned short seconds = rest / 1000;
+		const unsigned short seconds = rest / 1000;
 
 		rest -= seconds * 1000;
 
@@ -231,15 +232,16 @@ namespace crawlservpp::Helper::DateTime {
 	// convert seconds to string
 	inline std::string secondsToString(unsigned long long seconds) {
 		unsigned long long rest = seconds;
-		unsigned long days = rest / 86400;
+
+		const unsigned long days = rest / 86400;
 
 		rest -= days * 86400;
 
-		unsigned short hours = rest / 3600;
+		const unsigned short hours = rest / 3600;
 
 		rest -= hours * 3600;
 
-		unsigned short minutes = rest / 60;
+		const unsigned short minutes = rest / 60;
 
 		rest -= minutes * 60;
 
