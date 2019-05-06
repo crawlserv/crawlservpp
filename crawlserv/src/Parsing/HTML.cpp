@@ -40,7 +40,7 @@ namespace crawlservpp::Parsing {
 			tidyBufFree(&(this->buffer));
 
 		// parse content
-		if(tidyParseString(this->doc, content.c_str()) < 0)
+		if(tidyParseString(this->doc, content.c_str()) < 0) // TODO: MEMORY LEAK !!!
 			throw HTML::Exception("Could not parse HTML content");
 
 		// clean and repair
