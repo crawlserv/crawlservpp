@@ -99,7 +99,7 @@ jQuery(function($) {
 		}
 		
 		// check import/export inputs
-		$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
+		disableImportExport();
 		
 		if($("#urllist-target").val() != 0) {
 			if(!optionUrlListName)
@@ -1751,26 +1751,35 @@ jQuery(function($) {
 						
 						// submit form for file upload
 						$("#file-form").ajaxSubmit({
-							
 							success: function(response) {
 								// file upload successful: add filename to arguments
 								args["filename"] = response;
 								
 								// run command
 								runCmd("import", args, false, null, null, null, function() {
+									// restore button and inputs
 									$(t).prop("disabled", false);
 									$(t).val(caption)
+									
+									reenableInputs();
+									disableImportExport();
 								});
 							},
 							failure: function(response) {
 								// file upload failed
 								alert("File upload failed: " + response);
 								
-								// restore button
+								// restore button and inputs
 								$(t).prop("disabled", false);
-								$(t).val(caption)
+								$(t).val(caption);
+								
+								reenableInputs();
+								disableImportExport();
 							}
 						});
+						
+						// disable inputs while waiting for response
+						disableInputs();
 					}
 					else
 						alert("Please select a file to upload.");
@@ -1779,9 +1788,11 @@ jQuery(function($) {
 					// preserve caption of button
 					var caption = $(t).val();
 					
-					// disable button while exporting
+					// disable button and inputs while exporting
 					$(t).prop("disabled", true);
 					$(t).val("Exporting...");
+					
+					disableInputs();
 					
 					// run command for export
 					args["cmd"] = "export";
@@ -1814,9 +1825,12 @@ jQuery(function($) {
 								alert("Error performing the export: " + response);
 							},
 							complete: function() {
-								// restore button
+								// restore button and inputs
 								$(t).prop("disabled", false);
 								$(t).val(caption)
+								
+								reenableInputs();
+								disableImportExport();
 							}
 					});
 				}
@@ -1824,15 +1838,20 @@ jQuery(function($) {
 					// preserve caption of button
 					var caption = $(t).val();
 					
-					// disable button while exporting
+					// disable button and inputs while exporting
 					$(t).prop("disabled", true);
 					$(t).val("Merging...");
 					
+					disableInputs();
+					
 					// perform merge
 					runCmd("merge", args, false, null, null, null, function() {
-						// restore button
+						// restore button and inputs
 						$(t).prop("disabled", false);
 						$(t).val(caption)
+						
+						reenableInputs();
+						disableImportExport();
 					});
 				}
 				else if(action.length)
