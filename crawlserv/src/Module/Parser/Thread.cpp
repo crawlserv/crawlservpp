@@ -104,7 +104,7 @@ namespace crawlservpp::Module::Parser {
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 
 		// create table names for locking
-		std::string urlListTable("crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace);
+		const std::string urlListTable("crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace);
 
 		this->parsingTable = urlListTable + "_parsing";
 		this->targetTable = urlListTable + "_parsed_" + this->config.generalResultTable;
@@ -162,12 +162,13 @@ namespace crawlservpp::Module::Parser {
 			// check parsing table
 			this->setStatusMessage("Checking parsing table...");
 
-			unsigned int deleted = this->database.checkParsingTable();
+			const unsigned int deleted = this->database.checkParsingTable();
 
 			if(deleted && this->config.generalLogging) {
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
+
 				logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
 
 				this->log(logStrStr.str());
@@ -212,6 +213,7 @@ namespace crawlservpp::Module::Parser {
 				this->idleTime = std::chrono::steady_clock::now();
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepIdle));
+
 			return;
 		}
 
@@ -244,6 +246,7 @@ namespace crawlservpp::Module::Parser {
 				this->cacheLockTime,
 				this->config.generalLock
 		);
+
 		skip = this->lockTime.empty();
 
 		if(skip) {
@@ -260,10 +263,10 @@ namespace crawlservpp::Module::Parser {
 				throw Exception("Parser::Thread::onTick(): Could not get URL list size");
 
 			if(this->idDist) {
-				float cacheProgress = static_cast<float>(this->urls.front().first - this->idFirst) / this->idDist;
+				const float cacheProgress = static_cast<float>(this->urls.front().first - this->idFirst) / this->idDist;
 					// cache progress = (current ID - first ID) / (last ID - first ID)
 
-				float approxPosition = this->posFirstF + cacheProgress * this->posDist;
+				const float approxPosition = this->posFirstF + cacheProgress * this->posDist;
 					// approximate position = first position + cache progress * (last position - first position)
 
 				this->setProgress(approxPosition / this->total);
@@ -362,12 +365,13 @@ namespace crawlservpp::Module::Parser {
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
 
-			long double tps =
+			const long double tps =
 					(long double) this->tickCounter /
 					std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
 					- this->startTime).count();
 
 			tpsStrStr.imbue(std::locale(""));
+
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
 			this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
@@ -377,7 +381,7 @@ namespace crawlservpp::Module::Parser {
 		this->parsingSaveResults(false);
 
 		// save status message
-		std::string oldStatus = this->getStatusMessage();
+		const std::string oldStatus(this->getStatusMessage());
 
 		// set status message
 		this->setStatusMessage("Finishing up...");
@@ -392,7 +396,7 @@ namespace crawlservpp::Module::Parser {
 		this->queriesId.clear();
 		this->clearQueries();
 
-		// update status message
+		// restore previous status message
 		this->setStatusMessage(oldStatus);
 	}
 
@@ -523,7 +527,7 @@ namespace crawlservpp::Module::Parser {
 		this->idFirst = this->urls.front().first;
 		this->idDist = this->urls.back().first - this->idFirst;
 
-		unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
+		const unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
 
 		this->posFirstF = static_cast<float>(posFirst);
 		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
@@ -543,6 +547,7 @@ namespace crawlservpp::Module::Parser {
 
 				// finish skipped URL
 				this->parsingUrlFinished();
+
 				continue;
 			}
 
@@ -674,7 +679,7 @@ namespace crawlservpp::Module::Parser {
 			// parse all contents of URL
 			unsigned long counter = 0;
 
-			std::queue<IdString> contents = this->database.getAllContents(this->urls.front().first);
+			std::queue<IdString> contents(this->database.getAllContents(this->urls.front().first));
 
 			while(!contents.empty()) {
 				if(this->parsingContent(contents.front(), parsedId))
@@ -948,8 +953,8 @@ namespace crawlservpp::Module::Parser {
 
 			if(querySuccess && !parsedData.dateTime.empty()) {
 				// found date/time: try to convert it to SQL time stamp
-				std::string format = this->config.parsingDateTimeFormats.at(dateTimeQueryCounter);
-				std::string locale = this->config.parsingDateTimeLocales.at(dateTimeQueryCounter);
+				std::string format(this->config.parsingDateTimeFormats.at(dateTimeQueryCounter));
+				const std::string locale(this->config.parsingDateTimeLocales.at(dateTimeQueryCounter));
 
 				// use "%F %T" as default date/time format
 				if(format.empty())
@@ -1111,11 +1116,13 @@ namespace crawlservpp::Module::Parser {
 					}
 					else {
 						// concatenate elements
-						std::string result = Helper::Strings::join(
-								parsedFieldValues,
-								this->config.parsingFieldDelimiters.at(fieldCounter),
-								this->config.parsingFieldIgnoreEmpty.at(fieldCounter)
-						);
+						std::string result(
+								Helper::Strings::join(
+										parsedFieldValues,
+										this->config.parsingFieldDelimiters.at(fieldCounter),
+										this->config.parsingFieldIgnoreEmpty.at(fieldCounter)
+								)
+							);
 
 						// if necessary, tidy text
 						if(this->config.parsingFieldTidyTexts.at(fieldCounter))
@@ -1360,8 +1367,8 @@ namespace crawlservpp::Module::Parser {
 		// timer
 		Timer::Simple timer;
 
-		// save old status
-		std::string status = this->getStatusMessage();
+		// save status message
+		const std::string status(this->getStatusMessage());
 
 		this->setStatusMessage("Waiting for target table...");
 
