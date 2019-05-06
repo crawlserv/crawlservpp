@@ -1,3 +1,4 @@
+
 /**
  * JavaScript frontend for crawlserv++
  */
@@ -122,22 +123,27 @@ jQuery(function($) {
 	});
 	
 // DOCUMENT UNLOAD
-	$(window).on('beforeunload', function() {
+	$(window).on("beforeunload", function() {
 		// set status
 		crawlserv_frontend_unloading = true;
 		
 		// set leave time
 		localStorage["_crawlserv_leavetime"] = +new Date();
 	});
-
-// CHANGE EVENT: check date
-	$(document).on("change", "input[type='date']", function() {
-		if(isValidDate($(this).val()))
-			return true;
+	
+// DOCUMENT KEYUP EVENT: exit fullscreen on ESC
+	$(document).on("keyup", function(e) {
+		if(
+				e.keyCode === 27
+				&& $("#content-fullscreen").length
+				&& fullscreen
+		) {
+			$("#content-fullscreen").click();
+			
+			return false;
+		}
 		
-		alert("Please enter an empty or a valid date in the format \'YYYY-MM-DD\'.");
-		
-		return false;
+		return true;
 	});
 	
 // CLICK EVENT: navigation
@@ -177,17 +183,14 @@ jQuery(function($) {
 		return false;
 	});
 	
-// KEYUP EVENT: exit fullscreen on ESC
-	$(document).on("keyup", function(e) {
-		if(e.keyCode === 27
-				&& $("#content-fullscreen")
-				&& fullscreen) {
-			$("#content-fullscreen").click();
-			
-			return false;
-		}
+// CHANGE EVENT: check date
+	$("input[type='date']").on("change", function() {
+		if(isValidDate($(this).val()))
+			return true;
 		
-		return true;
+		alert("Please enter an empty or a valid date in the format \'YYYY-MM-DD\'.");
+		
+		return false;
 	});
 
 /* 
@@ -195,7 +198,7 @@ jQuery(function($) {
  */
 
 // CLICK EVENT: add allowed IP
-	$(document).on("click", "a.cmd-allow", function() {
+	$("#cmd-allow").on("click", function() {
 	    runCmd(
 	    		"allow",
 	    		{ "ip" : document.getElementById("cmd-allow-form-ip").value },
@@ -207,7 +210,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: add argument to custom command
-	$(document).on("click", "a.cmd-custom-addarg", function() {
+	$("#cmd-custom-addarg").on("click", function() {
   		var argId = 0;
   		var argTotal = $("#cmd-args .cmd-custom-arg").length;
   		
@@ -221,7 +224,7 @@ jQuery(function($) {
   				"<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-name\" /></div>" +
   				"<div class=\"entry-separator\">=</div>" +
   				"<div class=\"entry-halfx-input\"><input type=\"text\" class=\"entry-halfx-input cmd-custom-arg-value\" /></div>" +
-  				"<a href=\"\" class=\"action-link cmd-custom-remarg\" data-n=\"" + argId + "\">" +
+  				"<a href=\"#\" class=\"action-link cmd-custom-remarg\" data-n=\"" + argId + "\">" +
   				"<span class=\"remove-entry\">X</div></a></div>"
   		);
   		
@@ -231,27 +234,31 @@ jQuery(function($) {
   	});
 
 // CLICK EVENT: remove argument from custom command
-	$(document).on("click", "a.cmd-custom-remarg", function() {
+	$(document).on("click", "a.cmd-custom-remarg", function() {		
   		var n = parseInt($(this).data("n"), 10);
   		var toRemove = null;
   		
   		$("#cmd-args .cmd-custom-arg").each(function(i, obj) {
   			var objn = parseInt($(obj).data("n"), 10);
+  			
   			if(n == objn) {
   				toRemove = obj;
   			}
   			else if(n < objn) {
   				var div = $(this).find("div.cmd-custom-arg-no");
+  				
   				div.text(parseInt(div.text(), 10) - 1);
   			}
   		});
   		
-  		if(toRemove) toRemove.remove();
+  		if(toRemove)
+  			toRemove.remove();
+  		
   		return false;
   	});
 
 // CLICK EVENT: run custom command with custom arguments
-	$(document).on("click", "a.cmd-custom", function() {
+	$("#cmd-custom").on("click", function() {
   		var args = {};
   		$("#cmd-args .cmd-custom-arg").each(function(i, obj) { 
   			var argname = $(this).find(".cmd-custom-arg-name").val();
@@ -278,7 +285,7 @@ jQuery(function($) {
  */
 
 // CLICK EVENT: navigate log entries
-	$(document).on("click", "a.logs-nav", function() {
+	$("a.logs-nav").on("click", function() {
 		reload({
 			"m" : "logs",
 			"filter" : $(this).data("filter"),
@@ -290,7 +297,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: clear log entries
-	$(document).on("click", "a.logs-clear", function() {
+	$("a.logs-clear").on("click", function() {
 		runCmd(
 				"clearlogs",
 				{ "module" : $(this).data("filter") },
@@ -325,6 +332,9 @@ jQuery(function($) {
 		
 		if(typeof $(this).data("mode") !== "undefined")
 			args["mode"] = $(this).data("mode");
+		
+		if(typeof $(this).data("module") !== "undefined")
+			args["module"] = $(this).data("module");
 		
 		if(typeof $(this).data("action") !== "undefined")
 			args["action"] = $(this).data("action");
@@ -402,7 +412,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: add website
-	$(document).on("click", "a.website-add", function() {
+	$("#website-add").on("click", function() {
 		runCmd(
 				"addwebsite",
 				{
@@ -422,7 +432,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: duplicate website
-	$(document).on("click", "a.website-duplicate", function() {
+	$("#website-duplicate").on("click", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		
 		runCmd(
@@ -438,7 +448,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: update website
-	$(document).on("click", "a.website-update", function() {
+	$("#website-update").on("click", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		
 		runCmd(
@@ -461,7 +471,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: delete website
-	$(document).on("click", "a.website-delete", function() {
+	$("#website-delete").on("click", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		
 		if(id)
@@ -476,7 +486,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: add URL list
-	$(document).on("click", "a.urllist-add", function() {
+	$("#urllist-add").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		
 		runCmd(
@@ -499,7 +509,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: update URL list
-	$(document).on("click", "a.urllist-update", function() {
+	$("#urllist-update").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
 		
@@ -522,7 +532,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: delete URL list
-	$(document).on("click", "a.urllist-delete", function() {
+	$("#urllist-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
 		
@@ -541,7 +551,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: download URL list
-	$(document).on("click", "a.urllist-download", function() {
+	$("#urllist-download").on("click", function() {
 		var ulwebsite = $(this).data("website-namespace");
 		var ulnamespace = $(this).data("namespace");
 		var ulfilename = ulwebsite + "_" + ulnamespace + ".txt";
@@ -563,7 +573,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: reset parsing status
-	$(document).on("click", "a.urllist-reset-parsing", function() {
+	$("#urllist-reset-parsing").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		
@@ -582,7 +592,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: reset extracting status
-	$(document).on("click", "a.urllist-reset-extracting", function() {
+	$("#urllist-reset-extracting").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		
@@ -601,7 +611,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: reset analyzing status
-	$(document).on("click", "a.urllist-reset-analyzing", function() {
+	$("#urllist-reset-analyzing").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		
@@ -732,7 +742,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: let XPath helper generate a query
-	$(document).on("click", "a.xpath-generate", function() {
+	$("a.xpath-generate").on("click", function() {
 		var query = "";
 		var property = $("input:radio[name='xpath-result']:checked").val() == "property";
 		
@@ -779,7 +789,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: add query
-	$(document).on("click", "a.query-add", function() {
+	$("#query-add").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		
 		runCmd(
@@ -808,7 +818,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: duplicate query
-	$(document).on("click", "a.query-duplicate", function() {
+	$("#query-duplicate").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
 		
@@ -830,7 +840,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: update query
-	$(document).on("click", "a.query-update", function() {
+	$("#query-update").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
 		
@@ -859,7 +869,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: delete query
-	$(document).on("click", "a.query-delete", function() {
+	$("#query-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
 		
@@ -880,7 +890,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: test query (or hide test result)
-	$(document).on("click", "a.query-test", function() {
+	$("#query-test").on("click", function() {
 		if($("#query-test-text").is(":visible")) {
 			$("#query-test-label").text("Test result:");
 			$("#query-test-text").hide();
@@ -1043,7 +1053,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: change mode
-	$(document).on("click", "a.post-redirect-mode", function() {
+	$("a.post-redirect-mode").on("click", function() {
 		$("#website-select").prop("disabled", true);
 		$("#config-select").prop("disabled", true);
 		$("#algo-select").prop("disabled", true);
@@ -1095,7 +1105,7 @@ jQuery(function($) {
 	});
 
 // CLICK EVENT: add configuration
-	$(document).on("click", "a.config-add", function() {
+	$("a.config-add").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var name = $("#config-name").val();
 		var json = JSON.stringify(config.updateConf());
@@ -1121,7 +1131,7 @@ jQuery(function($) {
 	})
 	
 // CLICK EVENT: duplicate configuration
-	$(document).on("click", "a.config-duplicate", function() {
+	$("#config-duplicate").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
 		var json = JSON.stringify(config.updateConf());
@@ -1146,7 +1156,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: update configuration
-	$(document).on("click", "a.config-update", function() {
+	$("a.config-update").on("click", function() {
 		var id = parseInt($("#config-select").val(), 10);
 		var website = parseInt($("#website-select").val(), 10);
 		var name = $("#config-name").val();
@@ -1173,7 +1183,7 @@ jQuery(function($) {
 	})
 	
 // CLICK EVENT: delete configuration
-	$(document).on("click", "a.config-delete", function() {
+	$("#config-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
 		
@@ -1278,7 +1288,7 @@ jQuery(function($) {
 	})
 
 // CLICK EVENT: start thread
-	$(document).on("click", "a.thread-start", function() {
+	$("#thread-start").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var module = $("#module-select").val();
 		var config = parseInt($("#config-select").val(), 10);
@@ -1323,7 +1333,7 @@ jQuery(function($) {
  */
 	
 // CLICK EVENT: change tab
-	$(document).on("click", "a.post-redirect-tab", function() {
+	$("a.post-redirect-tab").on("click", function() {
 		$("#website-select").prop("disabled", true);
 		$("#urllist-select").prop("disabled", true);
 		$("#content-last").prop("disabled", true);
@@ -1348,7 +1358,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: last URL
-	$(document).on("click", "#content-last", function() {
+	$("#content-last").on("click", function() {
 		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
@@ -1368,7 +1378,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: next URL
-	$(document).on("click", "#content-next", function() {
+	$("#content-next").on("click", function() {
 		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
@@ -1387,7 +1397,7 @@ jQuery(function($) {
 	});
 
 // CHANGE EVENT: input URL ID (numbers only)
-	$(document).on("input keydown keyup mousedown mouseup select contextmenu drop", "#content-url", function() {
+	$("#content-url").on("input keydown keyup mousedown mouseup select contextmenu drop", function() {
 		var input = $(this).val();
 		
 		if(!input.length || isNormalInteger(input)) {
@@ -1404,7 +1414,7 @@ jQuery(function($) {
 	});
 	
 // KEYPRESS EVENT: input URL ID (ENTER)
-	$(document).on("keypress", "#content-url", function(e) {
+	$("#content-url").on("keypress", function(e) {
 		if(e.which == 13) {
 			if(!$(this).val().length)
 				return true;
@@ -1430,7 +1440,7 @@ jQuery(function($) {
 	});
 	
 // KEYPRESS EVENT: input URL text (ENTER)
-	$(document).on("keypress", "#content-url-text", function(e) {
+	$("#content-url-text").on("keypress", function(e) {
 		if(e.which == 13) {
 			if(!$(this).val().length)
 				return true;
@@ -1454,7 +1464,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: fullscreen
-	$(document).on("click", "#content-fullscreen", function() {
+	$("#content-fullscreen").on("click", function() {
 		if(fullscreen) {
 			fullscreen = false;
 			
@@ -1517,7 +1527,7 @@ jQuery(function($) {
 	});
 	
 // CHANGE EVENT: select content version
-	$(document).on("change", "#content-version", function() {
+	$("#content-version").on("change", function() {
 		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
@@ -1538,7 +1548,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: download content
-	$(document).on("click", "#content-download", function() {
+	$("#content-download").on("click", function() {
 		var contentwebsiteid = parseInt($("#website-select").val(), 10);
 		var contentwebsitename = $("#website-select option:selected").text();
 		var contenturlid = parseInt($("#content-url").val(), 10);
@@ -1811,8 +1821,19 @@ jQuery(function($) {
 					});
 				}
 				else if(action == "merge") {
+					// preserve caption of button
+					var caption = $(t).val();
+					
+					// disable button while exporting
+					$(t).prop("disabled", true);
+					$(t).val("Merging...");
+					
 					// perform merge
-					runCmd("merge", args, false);
+					runCmd("merge", args, false, null, null, null, function() {
+						// restore button
+						$(t).prop("disabled", false);
+						$(t).val(caption)
+					});
 				}
 				else if(action.length)
 					alert("Unknown action: \"" + action + "\".");
