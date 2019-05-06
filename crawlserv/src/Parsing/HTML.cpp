@@ -52,8 +52,6 @@ namespace crawlservpp::Parsing {
 		// save output
 		if(this->buffer.bp)
 			content = std::string((char *) this->buffer.bp);
-			
-		return "";
 	}
 
 } /* crawlservpp::Parsing */
