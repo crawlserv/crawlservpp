@@ -33,6 +33,7 @@ namespace crawlservpp::Helper::Portability {
 			GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, BUFFER_SIZE);
 
 			std::wstring wstr(wcBuffer);
+
 			((std::vector<std::string> *) lparam)->emplace_back(wstr.begin(), wstr.end());
 		}
 
@@ -46,7 +47,7 @@ namespace crawlservpp::Helper::Portability {
 #ifdef _WIN32
 		EnumSystemLocalesEx(addLocale, LOCALE_ALL, (LPARAM) &result, NULL);
 #else
-		std::string locales = Helper::System::exec("locale -a");
+		const std::string locales = Helper::System::exec("locale -a");
 #endif
 
 		return Helper::Strings::split(locales, "\n");
