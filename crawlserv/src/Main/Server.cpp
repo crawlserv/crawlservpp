@@ -2307,11 +2307,11 @@ namespace crawlservpp::Main {
 	void Server::cmdImport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
 		namespace Data = crawlservpp::Data;
 
-		rapidjson::Document json;
-		ServerCommandResponse response;
-
 		// begin of worker thread
 		MAIN_SERVER_WORKER_BEGIN
+
+		ServerCommandResponse response;
+		rapidjson::Document json;
 
 		if(Server::workerBegin(message, json, response)) {
 			// get arguments
@@ -2344,6 +2344,9 @@ namespace crawlservpp::Main {
 				const std::string fileType(json["filetype"].GetString(), json["filetype"].GetStringLength());
 				const std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
 				const std::string fileName(json["filename"].GetString(), json["filename"].GetStringLength());
+
+				// start timer
+				Timer::Simple timer;
 
 				// generate full file name to import from
 				const std::string fullFileName(
@@ -2492,9 +2495,6 @@ namespace crawlservpp::Main {
 									}
 
 									if(!response.fail) {
-										// start timer
-										Timer::Simple timer;
-
 										unsigned long added = 0;
 
 										if(urls.size()) {
@@ -2574,11 +2574,11 @@ namespace crawlservpp::Main {
 	void Server::cmdMerge(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
 		namespace Data = crawlservpp::Data;
 
-		rapidjson::Document json;
-		ServerCommandResponse response;
-
 		// begin of worker thread
 		MAIN_SERVER_WORKER_BEGIN
+
+		ServerCommandResponse response;
+		rapidjson::Document json;
 
 		if(Server::workerBegin(message, json, response)) {
 			// get arguments
@@ -2744,11 +2744,11 @@ namespace crawlservpp::Main {
 	void Server::cmdExport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
 		namespace Data = crawlservpp::Data;
 
-		rapidjson::Document json;
-		ServerCommandResponse response;
-
 		// begin of worker thread
 		MAIN_SERVER_WORKER_BEGIN
+
+		ServerCommandResponse response;
+		rapidjson::Document json;
 
 		if(Server::workerBegin(message, json, response)) {
 			// get arguments
@@ -3233,11 +3233,11 @@ namespace crawlservpp::Main {
 
 	// server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text): test query on text
 	void Server::cmdTestQuery(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
-		ServerCommandResponse response;
-		rapidjson::Document json;
-
 		// begin of worker thread
 		MAIN_SERVER_WORKER_BEGIN
+
+		ServerCommandResponse response;
+		rapidjson::Document json;
 
 		if(Server::workerBegin(message, json, response)) {
 			// get arguments
