@@ -157,7 +157,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// generate tweet
 		this->setStatusMessage("Generating tweet...");
 
-		std::string tweet = this->generator.randomSentence(this->markovTweetLength);
+		const std::string tweet(this->generator.randomSentence(this->markovTweetLength));
 
 		// insert tweet into result table in the database
 		Main::Data::InsertFieldsMixed data;
