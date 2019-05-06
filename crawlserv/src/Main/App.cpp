@@ -130,6 +130,7 @@ namespace crawlservpp::Main {
 				std::cout << "\n[ERROR] Unknown exception in App::run()" << std::flush;
 			}
 		}
+
 		return EXIT_FAILURE;
 	}
 
@@ -196,6 +197,7 @@ namespace crawlservpp::Main {
 				// ESCAPE -> cancel and end input loop
 				inputCancel = true;
 				inputLoop = false;
+
 				break;
 
 			default:
@@ -228,7 +230,7 @@ namespace crawlservpp::Main {
 
 	// static helper function: load database and server settings from configuration file, throws Main::Exception
 	void App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings,	ServerSettings& serverSettings) {
-		ConfigFile configFile(fileName);
+		const ConfigFile configFile(fileName);
 
 		dbSettings.host = configFile.getValue("db_host");
 
