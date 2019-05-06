@@ -145,7 +145,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		if(this->config.generalLogging && this->markovTextTiming)
 			timer = std::make_unique<Timer::Simple>();
 
-		std::string text = this->createText();
+		const std::string text(this->createText());
 
 		if(timer)
 			this->log("created text in " + timer->tickStr() + ".");
@@ -246,7 +246,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// create dictionary (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator)
 	void MarkovText::createDictionary() {
 		// *** added: get dimension from configuration + counter
-		unsigned int kl = this->markovTextDimension, counter = 0;
+		const unsigned int kl = this->markovTextDimension;
+		unsigned int counter = 0;
 		// ***
 
 		std::string w1, key;
