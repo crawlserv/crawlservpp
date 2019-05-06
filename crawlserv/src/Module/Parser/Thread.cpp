@@ -110,7 +110,7 @@ namespace crawlservpp::Module::Parser {
 		this->targetTable = urlListTable + "_parsed_" + this->config.generalResultTable;
 
 		// initialize target table
-		this->setStatusMessage("Initialiting target table...");
+		this->setStatusMessage("Initializing target table...");
 
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("initializes target table...");
@@ -126,7 +126,7 @@ namespace crawlservpp::Module::Parser {
 		this->database.prepare();
 
 		// initialize queries
-		this->setStatusMessage("Initialiting custom queries...");
+		this->setStatusMessage("Initializing custom queries...");
 
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("initializes custom queries...");
