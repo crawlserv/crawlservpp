@@ -2492,6 +2492,9 @@ namespace crawlservpp::Main {
 									}
 
 									if(!response.fail) {
+										// start timer
+										Timer::Simple timer;
+
 										unsigned long added = 0;
 
 										if(urls.size()) {
@@ -2516,27 +2519,40 @@ namespace crawlservpp::Main {
 											added = db.mergeUrls(target, urls);
 										}
 
-										// generate response
+										// generate response and final log entry
 										std::ostringstream responseStrStr;
+										std::ostringstream logStrStr;
+										const std::string timerStr(timer.tickStr());
+
+										logStrStr << "completed (added ";
 
 										switch(added) {
 										case 0:
-											responseStrStr << "Added no new URLs.";
+											responseStrStr << "Added no new URLs";
+											logStrStr << "no new URL";
 
 											break;
 
 										case 1:
-											responseStrStr << "Added one new URL.";
+											responseStrStr << "Added one new URL";
+											logStrStr << "one new URL";
 
 											break;
 
 										default:
 											responseStrStr.imbue(std::locale(""));
+											logStrStr.imbue(std::locale(""));
 
-											responseStrStr << "Added " << added << " new URLs.";
+											responseStrStr << "Added " << added << " new URLs";
+											logStrStr << added << "new URLs";
 										}
 
+										responseStrStr << " after " << timerStr << ".";
+										logStrStr << " after " << timerStr << ").";
+
 										response = ServerCommandResponse(responseStrStr.str());
+
+										db.log(logStrStr.str());
 									}
 								}
 							}
@@ -2638,6 +2654,9 @@ namespace crawlservpp::Main {
 								response = ServerCommandResponse::failed("Invalid ID of target URL list.");
 
 							else {
+								// start timer
+								Timer::Simple timer;
+
 								// get URLs from source
 								auto urls(db.getUrls(source));
 
@@ -2667,17 +2686,28 @@ namespace crawlservpp::Main {
 
 								db.log(logStrStr.str());
 
-								// merge URLs with target
+								logStrStr.str("");
+
+								logStrStr.clear();
+
+								// merge URLs with target, generate response and final log entry
 								const unsigned long added = db.mergeUrls(target, urls);
+								const std::string timerStr(timer.tickStr());
+
+								logStrStr << "completed (added ";
 
 								switch(added) {
 								case 0:
-									response = ServerCommandResponse("No URLs added.");
+									response = ServerCommandResponse("No new URLs added after " + timerStr + ".");
+
+									logStrStr << "no new URLs";
 
 									break;
 
 								case 1:
-									response = ServerCommandResponse("One URL added.");
+									response = ServerCommandResponse("One new URL added after " + timerStr + ".");
+
+									logStrStr << "one new URL";
 
 									break;
 
@@ -2686,10 +2716,17 @@ namespace crawlservpp::Main {
 
 									responseStrStr.imbue(std::locale(""));
 
-									responseStrStr << added << " URLs added.";
+									responseStrStr << added << " new URLs added after " << timerStr << ".";
 
 									response = responseStrStr.str();
+
+									logStrStr << added << " new URLs";
 								}
+
+								logStrStr << " after " << timerStr << ").";
+
+								// write to log
+								db.log(logStrStr.str());
 							}
 						}
 					}
@@ -2741,6 +2778,17 @@ namespace crawlservpp::Main {
 				std::queue<std::string> urls;
 				std::string content;
 
+				// create new database connection for worker thread
+				Module::Database db(this->dbSettings, "worker");
+
+				db.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
+
+				db.connect();
+				db.prepare();
+
+				// start timer
+				Timer::Simple timer;
+
 				if(datatype == "urllist") {
 					// get arguments for exporting a URL list
 					if(!json.HasMember("website"))
@@ -2769,14 +2817,6 @@ namespace crawlservpp::Main {
 						const unsigned long website = json["website"].GetUint64();
 						const unsigned long source = json["urllist-source"].GetUint64();
 
-						// create new database connection for worker thread
-						Module::Database db(this->dbSettings, "worker");
-
-						db.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
-
-						db.connect();
-						db.prepare();
-
 						// check website and URL list
 						if(!db.isWebsite(website))
 							response = ServerCommandResponse::failed("Invalid website ID.");
@@ -2785,6 +2825,7 @@ namespace crawlservpp::Main {
 							response = ServerCommandResponse::failed("Invalid URL list ID.");
 
 						else {
+							// get URLs
 							urls = db.getUrls(source);
 
 							// write to log
@@ -2884,6 +2925,32 @@ namespace crawlservpp::Main {
 
 						// return file name
 						response = ServerCommandResponse(fileName);
+
+						// write to log
+						std::ostringstream logStrStr;
+
+						logStrStr << "complete (generated ";
+
+						switch(content.size()) {
+						case 0:
+							logStrStr << "empty file";
+
+							break;
+
+						case 1:
+							logStrStr << "one byte";
+
+							break;
+
+						default:
+							logStrStr.imbue(std::locale(""));
+
+							logStrStr << content.size() << " bytes";
+						}
+
+						logStrStr << " after " << timer.tickStr() << ").";
+
+						db.log(logStrStr.str());
 					}
 				}
 			}
