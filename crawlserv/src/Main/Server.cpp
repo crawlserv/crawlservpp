@@ -116,7 +116,7 @@ namespace crawlservpp::Main {
 				this->database.log(logStrStr.str());
 			}
 			else if(i->options.module == "extractor") {
-				// load extractor thread
+				// TODO: load extractor thread
 				/*
 				this->extractors.push_back(std::make_unique<Module::Extractor::Thread>(
 						this->database, i->options, i->status
@@ -2572,43 +2572,98 @@ namespace crawlservpp::Main {
 			else {
 				const std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
 
-				// get arguments for merging two URL lists
-				if(!json.HasMember("website"))
-					response = ServerCommandResponse::failed(
-							"Invalid arguments (\'website\' is missing)."
-					);
+				if(datatype == "urllist") {
+					// get arguments for merging two URL lists
+					if(!json.HasMember("website"))
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'website\' is missing)."
+						);
 
-				else if(!json["website"].IsUint64()) {
-					response = ServerCommandResponse::failed(
-							"Invalid arguments (\'website\' is not a valid number)."
-					);
-				}
+					else if(!json["website"].IsUint64()) {
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'website\' is not a valid number)."
+						);
+					}
 
-				else if(!json.HasMember("urllist-source"))
-					response = ServerCommandResponse::failed(
-							"Invalid arguments (\'urllist-source\' is missing)."
-					);
+					else if(!json.HasMember("urllist-source"))
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'urllist-source\' is missing)."
+						);
 
-				else if(!json["urllist-source"].IsUint64()) {
-					response = ServerCommandResponse::failed(
-							"Invalid arguments (\'urllist-source\' is not a valid number)."
-					);
-				}
+					else if(!json["urllist-source"].IsUint64()) {
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'urllist-source\' is not a valid number)."
+						);
+					}
 
-				else if(!json.HasMember("urllist-target"))
-					response = ServerCommandResponse::failed(
-							"Invalid arguments (\'urllist-target\' is missing)."
-					);
+					else if(!json.HasMember("urllist-target"))
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'urllist-target\' is missing)."
+						);
 
-				else if(!json["urllist-target"].IsUint64()) {
-					response = ServerCommandResponse::failed(
-							"Invalid arguments (\'urllist-target\' is not a valid number)."
-					);
-				}
+					else if(!json["urllist-target"].IsUint64()) {
+						response = ServerCommandResponse::failed(
+								"Invalid arguments (\'urllist-target\' is not a valid number)."
+						);
+					}
 
-				else {
+					else {
+						// merge URL lists
+						const unsigned long website = json["website"].GetUint64();
+						const unsigned long source = json["urllist-source"].GetUint64();
+						const unsigned long target = json["urllist-target"].GetUint64();
 
-					response = ServerCommandResponse::failed("Not implemented yet.");
+						if(source == target)
+							response = ServerCommandResponse::failed("A URL list cannot be merged with itself.");
+						else {
+							// create new database connection for worker thread
+							Module::Database db(this->dbSettings, "worker");
+
+							db.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
+
+							db.connect();
+							db.prepare();
+
+							// check website and URL lists
+							if(!db.isWebsite(website))
+								response = ServerCommandResponse::failed("Invalid website ID.");
+
+							else if(!db.isUrlList(website, source))
+								response = ServerCommandResponse::failed("Invalid ID of source URL list.");
+
+							else if(!db.isUrlList(website, target))
+								response = ServerCommandResponse::failed("Invalid ID of target URL list.");
+
+							else {
+								// get URLs from source
+								auto urls(db.getUrls(source));
+
+								// merge URLs with target
+								const unsigned long added = db.mergeUrls(target, urls);
+
+								switch(added) {
+								case 0:
+									response = ServerCommandResponse("No URLs added.");
+
+									break;
+
+								case 1:
+									response = ServerCommandResponse("One URL added.");
+
+									break;
+
+								default:
+									std::ostringstream responseStrStr;
+
+									responseStrStr.imbue(std::locale(""));
+
+									responseStrStr << added << " URLs added.";
+
+									response = responseStrStr.str();
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -2693,7 +2748,7 @@ namespace crawlservpp::Main {
 						db.connect();
 						db.prepare();
 
-						// check website
+						// check website and URL list
 						if(!db.isWebsite(website))
 							response = ServerCommandResponse::failed("Invalid website ID.");
 
