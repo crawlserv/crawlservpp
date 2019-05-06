@@ -35,7 +35,7 @@ namespace crawlservpp::Parsing {
 
 		// if website is cross-domain, get the current domain from the URL
 		if(this->crossDomain) {
-			size_t domainEnd = currentUrl.find('/');
+			const size_t domainEnd = currentUrl.find('/');
 
 			if(domainEnd == std::string::npos) {
 				this->setCurrentDomain(currentUrl);
@@ -74,8 +74,8 @@ namespace crawlservpp::Parsing {
 		this->state.uri = this->base.get();
 
 		if(uriParseUriA(&(this->state), current.c_str()) != URI_SUCCESS) {
+			const std::string end(this->state.errorPos);
 			std::ostringstream errStrStr;
-			std::string end(this->state.errorPos);
 
 			errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
 
@@ -199,7 +199,7 @@ namespace crawlservpp::Parsing {
 		std::string linkCopy(linkToParse);
 
 		// remove anchor if necessary
-		unsigned long end = linkCopy.find('#');
+		const unsigned long end = linkCopy.find('#');
 
 		if(end != std::string::npos && linkCopy.length() > end) {
 			if(end)
@@ -233,8 +233,8 @@ namespace crawlservpp::Parsing {
 		this->state.uri = relativeSource.get();
 
 		if(uriParseUriA(&(this->state), this->link.c_str()) != URI_SUCCESS) {
+			const std::string end(this->state.errorPos);
 			std::ostringstream errStrStr;
-			std::string end(this->state.errorPos);
 
 			errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
 
@@ -306,7 +306,7 @@ namespace crawlservpp::Parsing {
 				end = urlToEscape.length();
 
 			if(end - pos) {
-				std::string part = urlToEscape.substr(pos, end - pos);
+				const std::string part(urlToEscape, pos, end - pos);
 
 				result += URI::escape(part, false);
 			}
