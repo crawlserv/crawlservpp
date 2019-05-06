@@ -238,7 +238,6 @@ namespace crawlservpp::Helper::Strings {
 		result.reserve(size);
 
 		// create string
-
 		for(auto i = strings.begin(); i != strings.end(); ++i)
 			if(!ignoreEmpty || !(i->empty()))
 				result += *i + delimiter;
