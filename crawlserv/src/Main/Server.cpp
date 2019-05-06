@@ -2547,7 +2547,7 @@ namespace crawlservpp::Main {
 											logStrStr.imbue(std::locale(""));
 
 											responseStrStr << "Added " << added << " new URLs";
-											logStrStr << added << "new URLs";
+											logStrStr << added << " new URLs";
 										}
 
 										responseStrStr << " after " << timerStr << ".";
