@@ -141,7 +141,8 @@ namespace crawlservpp::Module {
 			return true;
 
 		// check whether thread is pausable
-		if(!(this->pausable)) return false;
+		if(!(this->pausable))
+			return false;
 
 		// set internal pause state
 		this->paused = true;
@@ -327,7 +328,7 @@ namespace crawlservpp::Module {
 	// increment last ID (to be used by the thread only)
 	void Thread::incrementLast() {
 		// increment last ID internally
-		(this->last)++;
+		++(this->last);
 
 		// increment last ID in database
 		this->database.setThreadLast(this->id, this->last);
@@ -342,7 +343,7 @@ namespace crawlservpp::Module {
 
 	// return and reset number of IDs that have been jumped over (might be negative, to be used by the thread only)
 	long Thread::getWarpedOverAndReset() {
-		long result = this->warpedOver;
+		const long result = this->warpedOver;
 
 		this->warpedOver = 0;
 
@@ -401,7 +402,7 @@ namespace crawlservpp::Module {
 		this->pauseTime = std::chrono::seconds(this->database.getThreadPauseTime(this->id));
 
 		// save old thread status
-		std::string oldStatus = this->getStatusMessage();
+		const std::string oldStatus(this->getStatusMessage());
 
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
 		try {
@@ -492,8 +493,8 @@ namespace crawlservpp::Module {
 		// check for "time travel" to another ID
 		if(this->overwriteLast) {
 			// save old values for time calculation
-			unsigned long oldId = this->last;
-			double oldTime = static_cast<double>(this->getRunTime());
+			const unsigned long oldId = this->last;
+			const double oldTime = static_cast<double>(this->getRunTime());
 
 			// change status
 			this->setLast(this->overwriteLast);
@@ -596,8 +597,10 @@ namespace crawlservpp::Module {
 			this->setStatusMessage("INTERRUPTED " + this->status);
 		else {
 			// log timing statistic
-			std::string logStr = "stopped after "
-					+ Helper::DateTime::secondsToString(this->runTime.count()) + " running";
+			std::string logStr =
+					"stopped after "
+					+ Helper::DateTime::secondsToString(this->runTime.count())
+					+ " running";
 
 			if(this->pauseTime.count())
 				logStr += " and " + Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
@@ -614,15 +617,20 @@ namespace crawlservpp::Module {
 		try {
 			std::ostringstream logStrStr;
 
-			logStrStr	<< "[WARNING] Exception in Thread::" << inFunction << "() - "
+			logStrStr	<< "[WARNING] Exception in Thread::"
+						<< inFunction
+						<< "() - "
 						<< e.what();
 
 			this->database.log(logStrStr.str());
 		}
 		// if that fails too, write the original exception to the console
 		catch(...) {
-			std::cout	<< "\nWARNING: Exception in Thread::" << inFunction << "() - "
-						<< e.what() << std::flush;
+			std::cout	<< "\nWARNING: Exception in Thread::"
+						<< inFunction
+						<< "() - "
+						<< e.what()
+						<< std::flush;
 		}
 	}
 
@@ -630,11 +638,17 @@ namespace crawlservpp::Module {
 	void Thread::clearException(const std::string& inFunction) {
 		// try to log the unknown exception
 		try {
-			this->database.log("[WARNING] Unknown exception in Thread::on" + inFunction + "()");
+			this->database.log(
+					"[WARNING] Unknown exception in Thread::on"
+					+ inFunction
+					+ "()"
+			);
 		}
 		// if that fails too, write the original exception to the console
 		catch(...) {
-			std::cout	<< "\nWARNING: Unknown exception in Thread::" << inFunction << "()"
+			std::cout	<< "\nWARNING: Unknown exception in Thread::"
+						<< inFunction
+						<< "()"
 						<< std::flush;
 		}
 	}
@@ -680,7 +694,7 @@ namespace crawlservpp::Module {
 
 				this->log(logStrStr.str());
 
-				// update run or pause time if necessary
+				// update run or pause time
 				this->updateRunTime();
 				this->updatePauseTime();
 			}
