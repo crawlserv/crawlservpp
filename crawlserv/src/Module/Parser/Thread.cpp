@@ -297,6 +297,7 @@ namespace crawlservpp::Module::Parser {
 					|| (this->config.generalTiming && this->config.generalLogging)
 			) {
 				std::ostringstream logStrStr;
+
 				logStrStr.imbue(std::locale(""));
 
 				if(parsed > 1)
