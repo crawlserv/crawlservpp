@@ -210,14 +210,20 @@ namespace crawlservpp::Main {
 		case MG_EV_HTTP_PART_BEGIN:
 		case MG_EV_HTTP_PART_DATA:
 		case MG_EV_HTTP_PART_END:
+			// reset file name before upload begins
+			if(event == MG_EV_HTTP_PART_BEGIN)
+				this->oldFileName = "";
+
 			// handle file upload
 			if(
-					!strncmp(
+					data
+					&& static_cast<mg_http_multipart_part *>(data)->var_name
+					&& !strncmp(
 							static_cast<mg_http_multipart_part *>(data)->var_name,
 							"fileToUpload",
 							12
 					)
-			) {
+			)
 				mg_file_upload_handler(
 						connection,
 						event,
@@ -225,25 +231,24 @@ namespace crawlservpp::Main {
 						WebServer::generateFileName
 				);
 
-				if(event == MG_EV_HTTP_PART_END) {
-					// file upload finished: return name on server as plain text
-					mg_printf(
-							connection,
-							"HTTP/1.1 200 OK\r\n"
-							"Content-Type: text/plain\r\n"
-							"Connection: close\r\n"
-							"%sr\n\r\n"
-							"%s",
-							this->getCorsHeaders().c_str(),
-							this->oldFileName.c_str()
-					);
+			if(event == MG_EV_HTTP_PART_END) {
+				// file upload finished: return name on server as plain text
+				mg_printf(
+						connection,
+						"HTTP/1.1 200 OK\r\n"
+						"Content-Type: text/plain\r\n"
+						"Connection: close\r\n"
+						"%sr\n\r\n"
+						"%s",
+						this->getCorsHeaders().c_str(),
+						this->oldFileName.c_str()
+				);
 
-					// set closing flag
-					connection->flags |= MG_F_SEND_AND_CLOSE;
-				}
+				// set closing flag
+				connection->flags |= MG_F_SEND_AND_CLOSE;
 			}
 
-	    		break;
+	    	break;
 		}
 	}
 

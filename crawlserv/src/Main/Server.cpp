@@ -2339,6 +2339,9 @@ namespace crawlservpp::Main {
 			else if(!json["filename"].IsString())
 				response = ServerCommandResponse::failed("Invalid arguments (\'filename\' is not a string).");
 
+			else if(!json["filename"].GetStringLength())
+				response = ServerCommandResponse::failed("File upload failed.");
+
 			else {
 				const std::string dataType(json["datatype"].GetString(), json["datatype"].GetStringLength());
 				const std::string fileType(json["filetype"].GetString(), json["filetype"].GetStringLength());
