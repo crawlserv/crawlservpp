@@ -2,7 +2,20 @@
 
 // render row with website selection
 function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown = false) {
-    global $m, $mode, $tab, $action, $datatype, $filetype, $compression, $dbConnection, $website, $websiteName, $namespace, $domain, $dir;
+    global  $m,
+            $mode,
+            $tab,
+            $module,
+            $action,
+            $datatype,
+            $filetype,
+            $compression,
+            $dbConnection,
+            $website,
+            $websiteName,
+            $namespace,
+            $domain,
+            $dir;
     
     flush();
     
@@ -26,6 +39,9 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     
     if(isset($tab))
         $html .= " data-tab=\"$tab\"";
+    
+    if(isset($module))
+        $html .= " data-module=\"$module\"";
     
     if(isset($action))
         $html .= " data-action=\"$action\"";
@@ -106,7 +122,7 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     $html .= "</select>\n";
     
     if($adddelete)
-        $html .= "<a href=\"#\" class=\"actionlink website-delete\"><span class=\"remove-entry\">X</span></a>";
+        $html .= "<a id=\"website-delete\" href=\"#\" class=\"actionlink\"><span class=\"remove-entry\">X</span></a>";
     
     $html .= "</div>\n";
     $html .= "</div>\n";
@@ -116,7 +132,14 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
 
 // render row with URL list selection
 function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $noreload = false, $id = "urllist-select") {
-    global $m, $mode, $tab, $dbConnection, $website, $urllist, $urllistName, $urllistNamespace;
+    global  $m,
+            $mode,
+            $tab,
+            $dbConnection,
+            $website,
+            $urllist,
+            $urllistName,
+            $urllistNamespace;
     
     flush();
     
@@ -203,7 +226,7 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
     $html .= "</select>\n";
     
     if($delete)
-        $html .= "<a href=\"#\" class=\"actionlink urllist-delete\" ><span class=\"remove-entry\">X</span></a>\n";
+        $html .= "<a id=\"urllist-delete\" href=\"#\" class=\"actionlink\" ><span class=\"remove-entry\">X</span></a>\n";
     
     $html .= "</div>\n";
     $html .= "</div>\n";
@@ -306,7 +329,7 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
     $html .= "</select>\n";
     
     if($adddelete) {
-        $html .= "<a href=\"#\" class=\"actionlink config-delete\" data-m=\"$m\">";
+        $html .= "<a id=\"config-delete\" href=\"#\" class=\"actionlink\" data-m=\"$m\">";
         $html .= "<span class=\"remove-entry\">X</span>";
         $html .= "</a>";
     }
