@@ -182,7 +182,7 @@ namespace crawlservpp::Query {
 		}
 
 		// at least one match found -> get resulting match
-		PCRE2_SIZE * pcreOVector = pcre2_get_ovector_pointer(pcreMatch.get());
+		const PCRE2_SIZE * pcreOVector = pcre2_get_ovector_pointer(pcreMatch.get());
 
 		resultTo = text.substr(pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 	}
@@ -248,8 +248,8 @@ namespace crawlservpp::Query {
 		pcre2_pattern_info(this->expressionMulti.get(), PCRE2_INFO_ALLOPTIONS, &pcreOptions);
 		pcre2_pattern_info(this->expressionMulti.get(), PCRE2_INFO_NEWLINE, &pcreNewLineOption);
 
-		int pcreUTF8 = (pcreOptions & PCRE2_UTF) != 0;
-		int pcreNewLine =
+		const int pcreUTF8 = (pcreOptions & PCRE2_UTF) != 0;
+		const int pcreNewLine =
 				pcreNewLineOption == PCRE2_NEWLINE_ANY
 				|| pcreNewLineOption == PCRE2_NEWLINE_CRLF
 				|| pcreNewLineOption == PCRE2_NEWLINE_ANYCRLF;
