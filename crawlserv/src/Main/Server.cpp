@@ -2498,7 +2498,7 @@ namespace crawlservpp::Main {
 											// write to log
 											std::ostringstream logStrStr;
 
-											logStrStr << "imports ";
+											logStrStr << "Importing ";
 
 											if(urls.size() == 1)
 												logStrStr << "one URL";
@@ -2641,6 +2641,32 @@ namespace crawlservpp::Main {
 								// get URLs from source
 								auto urls(db.getUrls(source));
 
+								// write to log
+								std::ostringstream logStrStr;
+
+								logStrStr << "Merging with ";
+
+								switch(urls.size()) {
+								case 0:
+									logStrStr << "empty URL list";
+
+									break;
+
+								case 1:
+									logStrStr << "one URL";
+
+									break;
+
+								default:
+									logStrStr.imbue(std::locale(""));
+
+									logStrStr << urls.size() << " URLs";
+								}
+
+								logStrStr << "...";
+
+								db.log(logStrStr.str());
+
 								// merge URLs with target
 								const unsigned long added = db.mergeUrls(target, urls);
 
@@ -2764,7 +2790,7 @@ namespace crawlservpp::Main {
 							// write to log
 							std::ostringstream logStrStr;
 
-							logStrStr << "exports ";
+							logStrStr << "Exporting ";
 
 							switch(urls.size()) {
 							case 0:
