@@ -108,6 +108,9 @@ jQuery(function($) {
 				optionUrlListNamespace = $("#urllist-namespace-div").detach();
 		}
 		
+		if($("#compression-select").length)
+			$("#website-select").data("compression", $("#compression-select").val());
+		
 		// prepare form for file upload
 		$("#file-form").ajaxForm();
 		
@@ -1618,6 +1621,11 @@ jQuery(function($) {
 		});
 		
 		return false;
+	});
+	
+// CHANGE EVENT: compression selected
+	$("#compression-select").on("change", function() {
+		$("#website-select").data("compression", $(this).val());
 	});
 	
 // CHANGE EVENT: target URL list selected
