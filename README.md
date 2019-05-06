@@ -304,7 +304,7 @@ The parser and analyzer threads may pre-cache (and therefore temporarily multipl
 
 The following third-party libraries are used by the command-and-control server:
 
-* [Boost C++ Libraries](https://www.boost.org/) (`Boost.Iostreams` and `Boost.System`)
+* [Boost C++ Libraries](https://www.boost.org/) (`Boost.Iostreams`, `Boost.Strings` and `Boost.System`)
 * [GNU Aspell](http://aspell.net/)
 * [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html) (included in `crawlserv/src/_extern/date.h`)
 * [jsoncons](https://github.com/danielaparker/jsoncons/)
