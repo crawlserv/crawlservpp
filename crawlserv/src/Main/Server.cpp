@@ -82,7 +82,7 @@ namespace crawlservpp::Main {
 		this->setStatus("crawlserv is ready");
 
 		// load threads from database
-		std::vector<Struct::ThreadDatabaseEntry> threads = this->database.getThreads();
+		std::vector<ThreadDatabaseEntry> threads = this->database.getThreads();
 
 		for(auto i = threads.begin(); i != threads.end(); ++i) {
 			if(i->options.module == "crawler") {
@@ -134,7 +134,7 @@ namespace crawlservpp::Main {
 			}
 			else if(i->options.module == "analyzer") {
 				// get JSON
-				std::string config = this->database.getConfiguration(i->options.config);
+				const std::string config = this->database.getConfiguration(i->options.config);
 
 				// parse JSON
 				rapidjson::Document configJson;
@@ -194,10 +194,13 @@ namespace crawlservpp::Main {
 		// interrupt module threads
 		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
 			(*i)->Module::Thread::interrupt();
+
 		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
 			(*i)->Module::Thread::interrupt();
+
 		//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
-		//	(*i)->Module::Thread::sendInterrupt();
+		//	(*i)->Module::Thread::interrupt();
+
 		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
 			(*i)->Module::Thread::interrupt();
 
@@ -205,7 +208,7 @@ namespace crawlservpp::Main {
 		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) {
 			if(*i) {
 				// get thread ID (for logging)
-				unsigned long id = (*i)->getId();
+				const unsigned long id = (*i)->getId();
 
 				// wait for thread
 				(*i)->Module::Thread::end();
@@ -234,7 +237,7 @@ namespace crawlservpp::Main {
 		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
 			if(*i) {
 				// get thread ID (for logging)
-				unsigned long id = (*i)->getId();
+				const unsigned long id = (*i)->getId();
 
 				// wait for thread
 				(*i)->Module::Thread::end();
@@ -263,10 +266,10 @@ namespace crawlservpp::Main {
 		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
 			if(*i) {
 				// get thread ID (for logging)
-				unsigned long id = (*i)->getId();
+				const unsigned long id = (*i)->getId();
 
 				// wait for thread
-				(*i)->Module::Thread::finishInterrupt();
+				(*i)->Module::Thread::end();
 
 				// log interruption
 				std::ostringstream logStrStr;
@@ -292,7 +295,7 @@ namespace crawlservpp::Main {
 		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
 			if(*i) {
 				// get thread ID (for logging)
-				unsigned long id = (*i)->getId();
+				const unsigned long id = (*i)->getId();
 
 				// wait for thread
 				(*i)->Module::Thread::end();
@@ -370,6 +373,7 @@ namespace crawlservpp::Main {
 				this->crawlers.erase(this->crawlers.begin() + n);
 			}
 		}
+
 		for(unsigned long n = 1; n <= this->parsers.size(); ++n) {
 			if(this->parsers.at(n - 1)->isShutdown() && this->parsers.at(n - 1)->isFinished()) {
 				--n;
@@ -379,16 +383,17 @@ namespace crawlservpp::Main {
 				this->parsers.erase(this->parsers.begin() + n);
 			}
 		}
+
 		/*for(unsigned long n = 1; n <= this->extractors.size(); ++n) {
 			if(this->extractors.at(n - 1)->isShutdown() && this->extractors.at(n - 1)->isFinished()) {
-
-				this->extractors.at(n - 1)->Module::Thread::finishInterrupt();
-
-				this->extractors.erase(this->extractors.begin() + (n - 1));
-
 				--n;
+
+				this->extractors.at(n)->Module::Thread::end();
+
+				this->extractors.erase(this->extractors.begin() + n);
 			}
 		}*/
+
 		for(unsigned long n = 1; n <= this->analyzers.size(); ++n) {
 			if(this->analyzers.at(n - 1)->isShutdown() && this->analyzers.at(n - 1)->isFinished()) {
 				--n;
@@ -424,6 +429,7 @@ namespace crawlservpp::Main {
 		if(this->offline) {
 			try {
 				this->database.checkConnection();
+
 				this->offline = false;
 			}
 			catch(const Database::Exception &e) {}
@@ -493,9 +499,7 @@ namespace crawlservpp::Main {
 	unsigned long Server::getActiveWorkers() const {
 		std::lock_guard<std::mutex> workersLocked(this->workersLock);
 
-		return std::count_if(this->workersRunning.begin(), this->workersRunning.end(), [](bool isRunning) {
-			return isRunning;
-		});
+		return std::count(this->workersRunning.begin(), this->workersRunning.end(), true);
 	}
 
 	// perform a server command, throws Main::Exception
@@ -520,7 +524,7 @@ namespace crawlservpp::Main {
 			if(!connection)
 				throw Exception("Server::cmd(): No connection specified");
 
-			std::string ip(WebServer::getIP(connection));
+			const std::string ip(WebServer::getIP(connection));
 
 			// parse JSON
 			rapidjson::Document json;
@@ -541,7 +545,7 @@ namespace crawlservpp::Main {
 					if(json["cmd"].IsString()) {
 						try {
 							// handle server commands
-							std::string command(json["cmd"].GetString(), json["cmd"].GetStringLength());
+							const std::string command(json["cmd"].GetString(), json["cmd"].GetStringLength());
 
 							if(command == "kill")
 								response = this->cmdKill(json, ip);
@@ -747,14 +751,15 @@ namespace crawlservpp::Main {
 		if(!connection)
 			throw Exception("Server::onAccept(): No connection specified");
 
-		std::string ip(WebServer::getIP(connection));
+		const std::string ip(WebServer::getIP(connection));
 
 		// check authorization
 		if(this->allowed != "*") {
 			if(this->allowed.find(ip) == std::string::npos) {
 				WebServer::close(connection);
+
 				if(this->offline)
-						std::cout << "\nserver rejected client " + ip + "." << std::flush;
+					std::cout << "\nserver rejected client " + ip + "." << std::flush;
 				else {
 					try {
 						this->database.log("rejected client " + ip + ".");
@@ -811,7 +816,7 @@ namespace crawlservpp::Main {
 		if(!connection)
 			throw Exception("Server::onRequest(): No connection specified");
 
-		std::string ip(WebServer::getIP(connection));
+		const std::string ip(WebServer::getIP(connection));
 
 		// check authorization
 		if(this->allowed != "*") {
@@ -831,7 +836,7 @@ namespace crawlservpp::Main {
 			bool threadStarted = false;
 			bool fileDownload = false;
 
-			std::string reply = this->cmd(connection, body, threadStarted, fileDownload);
+			const std::string reply(this->cmd(connection, body, threadStarted, fileDownload));
 
 			// send reply
 			if(fileDownload)
@@ -855,13 +860,15 @@ namespace crawlservpp::Main {
 				// go through all item properties
 				for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
 					if(j->name.IsString()) {
-						std::string itemName(j->name.GetString(), j->name.GetStringLength());
+						const std::string itemName(j->name.GetString(), j->name.GetStringLength());
 
 						if(itemName == "name") {
 							if(j->value.IsString()) {
 								if(std::string(j->value.GetString(), j->value.GetStringLength()) == "_algo") {
 									algoItem = true;
-									if(result) break;
+
+									if(result)
+										break;
 								}
 								else
 									break;
@@ -916,7 +923,7 @@ namespace crawlservpp::Main {
 		if(!json["ip"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is not a string).");
 
-		std::string toAllow(json["ip"].GetString(), json["ip"].GetStringLength());
+		const std::string toAllow(json["ip"].GetString(), json["ip"].GetStringLength());
 
 		// allow needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -955,7 +962,7 @@ namespace crawlservpp::Main {
 		if(!json["entry"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'entry\' is not a string).");
 
-		std::string entry(json["entry"].GetString(), json["entry"].GetStringLength());
+		const std::string entry(json["entry"].GetString(), json["entry"].GetStringLength());
 
 		// write log entry
 		this->database.log("frontend", entry);
@@ -982,8 +989,27 @@ namespace crawlservpp::Main {
 		// clearlog needs to be confirmed
 		if(!json.HasMember("confirmed")) {
 			std::ostringstream replyStrStr;
-			replyStrStr.imbue(std::locale(""));
-			replyStrStr << "Are you sure to delete " << this->database.getNumberOfLogEntries(module) << " log entries?";
+
+			replyStrStr << "Are you sure to delete ";
+
+			const unsigned long num = this->database.getNumberOfLogEntries(module);
+
+			switch(num) {
+			case 0:
+				return ServerCommandResponse("No log entries to delete.");
+
+			case 1:
+				replyStrStr << "one log entry";
+				break;
+
+			default:
+				replyStrStr.imbue(std::locale(""));
+
+				replyStrStr << num << " log entries";
+			}
+
+			replyStrStr << "?";
+
 			return ServerCommandResponse::toBeConfirmed(replyStrStr.str());
 		}
 
@@ -1007,15 +1033,11 @@ namespace crawlservpp::Main {
 			const std::string& ip
 	) {
 		// get arguments
-		Struct::ThreadOptions options;
-
 		if(!json.HasMember("website"))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
-
-		options.website = json["website"].GetUint64();
 
 		if(!json.HasMember("urllist"))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
@@ -1023,15 +1045,18 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		options.urlList = json["urllist"].GetUint64();
-
 		if(!json.HasMember("config"))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
-		options.config = json["config"].GetUint64();
+		const ThreadOptions options(
+				"crawler",
+				json["website"].GetUint64(),
+				json["urllist"].GetUint64(),
+				json["config"].GetUint64()
+		);
 
 		// check arguments
 		if(!(this->database.isWebsite(options.website))) {
@@ -1214,15 +1239,11 @@ namespace crawlservpp::Main {
 			const std::string& ip
 	) {
 		// get arguments
-		Struct::ThreadOptions options;
-
 		if(!json.HasMember("website"))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
-
-		options.website = json["website"].GetUint64();
 
 		if(!json.HasMember("urllist"))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
@@ -1230,15 +1251,18 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		options.urlList = json["urllist"].GetUint64();
-
 		if(!json.HasMember("config"))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
-		options.config = json["config"].GetUint64();
+		const ThreadOptions options(
+				"parser",
+				json["website"].GetUint64(),
+				json["urllist"].GetUint64(),
+				json["config"].GetUint64()
+		);
 
 		// check arguments
 		if(!(this->database.isWebsite(options.website))) {
@@ -1271,7 +1295,7 @@ namespace crawlservpp::Main {
 		// start parser
 		this->parsers.back()->Module::Thread::start();
 
-		unsigned long id = this->parsers.back()->Module::Thread::getId();
+		const unsigned long id = this->parsers.back()->Module::Thread::getId();
 
 		// startparser is a logged command
 		std::ostringstream logStrStr;
@@ -1295,7 +1319,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find parser
 		auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
@@ -1337,7 +1361,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find parser
 		auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
@@ -1379,7 +1403,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find parser
 		auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
@@ -1418,7 +1442,7 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		unsigned long listId = json["urllist"].GetUint64();
+		const unsigned long listId = json["urllist"].GetUint64();
 
 		// resetparsingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -1462,15 +1486,11 @@ namespace crawlservpp::Main {
 			const std::string& ip
 	) {
 		// get arguments
-		Struct::ThreadOptions options;
-
 		if(!json.HasMember("website"))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
 		if(!json["website"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
-
-		options.website = json["website"].GetUint64();
 
 		if(!json.HasMember("urllist"))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
@@ -1478,15 +1498,18 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		options.urlList = json["urllist"].GetUint64();
-
 		if(!json.HasMember("config"))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
-		options.config = json["config"].GetUint64();
+		const ThreadOptions options(
+				"analyzer",
+				json["website"].GetUint64(),
+				json["urllist"].GetUint64(),
+				json["config"].GetUint64()
+		);
 
 		// check arguments
 		if(!(this->database.isWebsite(options.website))) {
@@ -1514,7 +1537,7 @@ namespace crawlservpp::Main {
 		}
 
 		// get configuration
-		std::string config = this->database.getConfiguration(options.config);
+		const std::string config = this->database.getConfiguration(options.config);
 
 		// check configuration JSON
 		rapidjson::Document configJson;
@@ -1530,7 +1553,7 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Parsed analyzing configuration is not an array.");
 
 		// get algorithm from configuration
-		unsigned int algo = Server::getAlgoFromConfig(configJson);
+		const unsigned int algo = Server::getAlgoFromConfig(configJson);
 
 		if(!algo)
 			return ServerCommandResponse::failed("Analyzing configuration does not include an algorithm.");
@@ -1555,7 +1578,8 @@ namespace crawlservpp::Main {
 
 		// startanalyzer is a logged command
 		std::ostringstream logStrStr;
-		unsigned long id = this->analyzers.back()->Module::Thread::getId();
+
+		const unsigned long id = this->analyzers.back()->Module::Thread::getId();
 
 		logStrStr << "analyzer #" << id << " started by " << ip << ".";
 
@@ -1576,7 +1600,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find analyzer
 		auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
@@ -1621,7 +1645,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find analyzer
 		auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
@@ -1663,7 +1687,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find analyzer
 		auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
@@ -1702,7 +1726,7 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		unsigned long listId = json["urllist"].GetUint64();
+		const unsigned long listId = json["urllist"].GetUint64();
 
 		// resetanalyzingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -1775,7 +1799,8 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Invalid character(s) in website namespace.");
 
 		// check name
-		if(properties.name.empty()) return ServerCommandResponse::failed("Name is empty.");
+		if(properties.name.empty())
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// correct and check domain name (remove protocol from start and slash from the end)
 		if(!crossDomain) {
@@ -1919,26 +1944,31 @@ namespace crawlservpp::Main {
 		}
 
 		// check whether threads are using the website
-		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
-			if((*i)->getWebsite() == id)
-				return ServerCommandResponse::failed("Website cannot be changed while crawler is active.");
+		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->crawlers.end())
+			return ServerCommandResponse::failed("Website cannot be changed while crawler is active.");
 
-		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
-			if((*i)->getWebsite() == id)
-				return ServerCommandResponse::failed("Website cannot be changed while parser is active.");
+		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->parsers.end())
+			return ServerCommandResponse::failed("Website cannot be changed while parser is active.");
 
-		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
-			if((*i)->getWebsite() == id)
+		// TODO: check extractors
+		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->extractors.end())
 				return ServerCommandResponse::failed("Website cannot be changed while extractor is active.");*/
 
-		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
-			if((*i)->getWebsite() == id)
-				return ServerCommandResponse::failed("Website cannot be changed while analyzer is active.");
+		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->analyzers.end())
+			return ServerCommandResponse::failed("Website cannot be changed while analyzer is active.");
 
 		// check whether URLs will be changed or lost by changing type of website from cross-domain to specific domain
 		if(!json.HasMember("confirmed")) {
-			unsigned long toModify = this->database.getChangedUrlsByWebsiteUpdate(id, properties);
-			unsigned long toDelete = this->database.getLostUrlsByWebsiteUpdate(id, properties);
+			const unsigned long toModify = this->database.getChangedUrlsByWebsiteUpdate(id, properties);
+			const unsigned long toDelete = this->database.getLostUrlsByWebsiteUpdate(id, properties);
 
 			if(toModify || toDelete) {
 				std::ostringstream confirmationStrStr;
@@ -1979,7 +2009,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// check website
 		if(!(this->database.isWebsite(id))) {
@@ -1991,21 +2021,26 @@ namespace crawlservpp::Main {
 		}
 
 		// check whether threads are using the website
-		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
-			if((*i)->getWebsite() == id)
-				return ServerCommandResponse::failed("Website cannot be deleted while crawler is active.");
+		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->crawlers.end())
+			return ServerCommandResponse::failed("Website cannot be deleted while crawler is active.");
 
-		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
-			if((*i)->getWebsite() == id)
-				return ServerCommandResponse::failed("Website cannot be deleted while parser is active.");
+		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->parsers.end())
+			return ServerCommandResponse::failed("Website cannot be deleted while parser is active.");
 
-		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
-			if((*i)->getWebsite() == id)
+		// TODO: check extractors
+		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->extractors.end())
 				return ServerCommandResponse::failed("Website cannot be deleted while extractor is active.");*/
 
-		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
-			if((*i)->getWebsite() == id)
-				return ServerCommandResponse::failed("Website cannot be deleted while analyzer is active.");
+		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
+			return p->getWebsite() == id;
+		}) != this->analyzers.end())
+			return ServerCommandResponse::failed("Website cannot be deleted while analyzer is active.");
 
 		// deletewebsite needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -2036,7 +2071,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// check website
 		if(!(this->database.isWebsite(id))) {
@@ -2048,7 +2083,7 @@ namespace crawlservpp::Main {
 		}
 
 		// duplicate website configuration
-		unsigned long newId = this->database.duplicateWebsite(id);
+		const unsigned long newId = this->database.duplicateWebsite(id);
 
 		if(!newId)
 			return ServerCommandResponse::failed("Could not add duplicate to database.");
@@ -2058,7 +2093,6 @@ namespace crawlservpp::Main {
 
 	// server command addurllist(website, namespace, name): add a URL list to the ID-specified website
 	Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& json) {
-		UrlListProperties properties;
 
 		// get arguments
 		if(!json.HasMember("website"))
@@ -2067,7 +2101,7 @@ namespace crawlservpp::Main {
 		if(!json["website"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		unsigned long website = json["website"].GetUint64();
+		const unsigned long website = json["website"].GetUint64();
 
 		if(!json.HasMember("namespace"))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
@@ -2075,15 +2109,16 @@ namespace crawlservpp::Main {
 		if(!json["namespace"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
-		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
-
 		if(!json.HasMember("name"))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
+		const UrlListProperties properties(
+				std::string(json["namespace"].GetString(), json["namespace"].GetStringLength()),
+				std::string(json["name"].GetString(), json["name"].GetStringLength())
+		);
 
 		// check namespace
 		if(properties.nameSpace.length() < 3)
@@ -2096,7 +2131,8 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Namespace of URL list cannot be \'config\'.");
 
 		// check name
-		if(properties.name.empty()) return ServerCommandResponse::failed("Name is empty.");
+		if(properties.name.empty())
+			return ServerCommandResponse::failed("Name is empty.");
 
 		// check website
 		if(!(this->database.isWebsite(website))) {
@@ -2108,7 +2144,7 @@ namespace crawlservpp::Main {
 		}
 
 		// add URL list to database
-		unsigned long id = this->database.addUrlList(website, properties);
+		const unsigned long id = this->database.addUrlList(website, properties);
 
 		if(!id)
 			return ServerCommandResponse::failed("Could not add URL list to database.");
@@ -2118,8 +2154,6 @@ namespace crawlservpp::Main {
 
 	// server command updateurllist(id, namespace, name): edit a URL list
 	Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
-		UrlListProperties properties;
-
 		// get arguments
 		if(!json.HasMember("id"))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
@@ -2127,7 +2161,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		if(!json.HasMember("namespace"))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
@@ -2135,15 +2169,16 @@ namespace crawlservpp::Main {
 		if(!json["namespace"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
-		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
-
 		if(!json.HasMember("name"))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
+		const UrlListProperties properties(
+				std::string(json["namespace"].GetString(), json["namespace"].GetStringLength()),
+				std::string(json["name"].GetString(), json["name"].GetStringLength())
+		);
 
 		// check namespace
 		if(properties.nameSpace.length() < 3)
@@ -2169,21 +2204,26 @@ namespace crawlservpp::Main {
 		}
 
 		// check whether threads are using the URL list
-		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
-			if((*i)->getUrlList() == id)
-				return ServerCommandResponse::failed("URL list cannot be changed while crawler is active.");
+		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->crawlers.end())
+			return ServerCommandResponse::failed("URL list cannot be changed while crawler is active.");
 
-		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
-			if((*i)->getUrlList() == id)
-				return ServerCommandResponse::failed("URL list cannot be changed while parser is active.");
+		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->parsers.end())
+			return ServerCommandResponse::failed("URL list cannot be changed while parser is active.");
 
-		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
-			if((*i)->getUrlList() == id)
+		// TODO: check extractors
+		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->extractors.end())
 				return ServerCommandResponse::failed("URL list cannot be changed while extractor is active.");*/
 
-		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
-			if((*i)->getUrlList() == id)
-				return ServerCommandResponse::failed("URL list cannot be changed while analyzer is active.");
+		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->analyzers.end())
+			return ServerCommandResponse::failed("URL list cannot be changed while analyzer is active.");
 
 		// update URL list in database
 		this->database.updateUrlList(id, properties);
@@ -2207,7 +2247,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// check URL list
 		if(!(this->database.isUrlList(id))) {
@@ -2217,6 +2257,28 @@ namespace crawlservpp::Main {
 
 			ServerCommandResponse::failed(errStrStr.str());
 		}
+
+		// check whether threads are using the URL list
+		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->crawlers.end())
+			return ServerCommandResponse::failed("URL list cannot be deleted while crawler is active.");
+
+		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->parsers.end())
+			return ServerCommandResponse::failed("URL list cannot be deleted while parser is active.");
+
+		// TODO: check extractors
+		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->extractors.end())
+				return ServerCommandResponse::failed("URL list cannot be deleted while extractor is active.");*/
+
+		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
+			return p->getUrlList() == id;
+		}) != this->analyzers.end())
+			return ServerCommandResponse::failed("URL list cannot be deleted while analyzer is active.");
 
 		// deleteurllist needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -2281,13 +2343,11 @@ namespace crawlservpp::Main {
 				const std::string fileName(json["filename"].GetString(), json["filename"].GetStringLength());
 
 				// generate full file name to import from
-				std::string fullFileName;
-
-				fullFileName.reserve(this->dirCache.size() + fileName.size() + 1);
-
-				fullFileName = this->dirCache;
-				fullFileName += Helper::FileSystem::getPathSeparator();
-				fullFileName += fileName;
+				const std::string fullFileName(
+						this->dirCache
+						+ Helper::FileSystem::getPathSeparator()
+						+ fileName
+				);
 
 				std::string content;
 
@@ -2339,7 +2399,7 @@ namespace crawlservpp::Main {
 						}
 
 						else {
-							unsigned long website = json["website"].GetUint64();
+							const unsigned long website = json["website"].GetUint64();
 							unsigned long target = json["urllist-target"].GetUint64();
 
 							// import URL list
@@ -2510,11 +2570,46 @@ namespace crawlservpp::Main {
 				response = ServerCommandResponse::failed("Invalid arguments (\'datatype\' is not a string).");
 
 			else {
-				std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
+				const std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
 
-				// [...]
+				// get arguments for merging two URL lists
+				if(!json.HasMember("website"))
+					response = ServerCommandResponse::failed(
+							"Invalid arguments (\'website\' is missing)."
+					);
 
-				response = ServerCommandResponse::failed("Not implemented yet.");
+				else if(!json["website"].IsUint64()) {
+					response = ServerCommandResponse::failed(
+							"Invalid arguments (\'website\' is not a valid number)."
+					);
+				}
+
+				else if(!json.HasMember("urllist-source"))
+					response = ServerCommandResponse::failed(
+							"Invalid arguments (\'urllist-source\' is missing)."
+					);
+
+				else if(!json["urllist-source"].IsUint64()) {
+					response = ServerCommandResponse::failed(
+							"Invalid arguments (\'urllist-source\' is not a valid number)."
+					);
+				}
+
+				else if(!json.HasMember("urllist-target"))
+					response = ServerCommandResponse::failed(
+							"Invalid arguments (\'urllist-target\' is missing)."
+					);
+
+				else if(!json["urllist-target"].IsUint64()) {
+					response = ServerCommandResponse::failed(
+							"Invalid arguments (\'urllist-target\' is not a valid number)."
+					);
+				}
+
+				else {
+
+					response = ServerCommandResponse::failed("Not implemented yet.");
+				}
 			}
 		}
 
@@ -2555,9 +2650,10 @@ namespace crawlservpp::Main {
 				response = ServerCommandResponse::failed("Invalid arguments (\'compression\' is not a string).");
 
 			else {
-				std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
-				std::string filetype(json["filetype"].GetString(), json["filetype"].GetStringLength());
-				std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
+				const std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
+				const std::string filetype(json["filetype"].GetString(), json["filetype"].GetStringLength());
+				const std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
+
 				std::queue<std::string> urls;
 				std::string content;
 
@@ -2586,8 +2682,8 @@ namespace crawlservpp::Main {
 					}
 
 					else {
-						unsigned long website = json["website"].GetUint64();
-						unsigned long source = json["urllist-source"].GetUint64();
+						const unsigned long website = json["website"].GetUint64();
+						const unsigned long source = json["urllist-source"].GetUint64();
 
 						// create new database connection for worker thread
 						Module::Database db(this->dbSettings, "worker");
@@ -2652,6 +2748,7 @@ namespace crawlservpp::Main {
 							);
 						else {
 							bool writeHeader = json["write-firstline-header"].GetBool();
+
 							std::string header;
 
 							if(writeHeader) {
@@ -2716,8 +2813,6 @@ namespace crawlservpp::Main {
 
 	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, textonly): add a query
 	Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& json) {
-		QueryProperties properties;
-
 		// get arguments
 		if(!json.HasMember("website"))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
@@ -2725,7 +2820,7 @@ namespace crawlservpp::Main {
 		if(!json["website"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		unsigned long website = json["website"].GetUint64();
+		const unsigned long website = json["website"].GetUint64();
 
 		if(!json.HasMember("name"))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
@@ -2733,15 +2828,11 @@ namespace crawlservpp::Main {
 		if(!json["name"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
-
 		if(!json.HasMember("query"))
 			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
 
 		if(!json["query"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
-
-		properties.text = std::string(json["query"].GetString(), json["query"].GetStringLength());
 
 		if(!json.HasMember("type"))
 			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
@@ -2749,15 +2840,11 @@ namespace crawlservpp::Main {
 		if(!json["type"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
 
-		properties.type = std::string(json["type"].GetString(), json["type"].GetStringLength());
-
 		if(!json.HasMember("resultbool"))
 			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
 
 		if(!json["resultbool"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
-
-		properties.resultBool = json["resultbool"].GetBool();
 
 		if(!json.HasMember("resultsingle"))
 			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
@@ -2765,15 +2852,11 @@ namespace crawlservpp::Main {
 		if(!json["resultsingle"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
 
-		properties.resultSingle = json["resultsingle"].GetBool();
-
 		if(!json.HasMember("resultmulti"))
 			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
 
 		if(!json["resultmulti"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
-
-		properties.resultMulti = json["resultmulti"].GetBool();
 
 		if(!json.HasMember("textonly"))
 			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
@@ -2781,7 +2864,15 @@ namespace crawlservpp::Main {
 		if(!json["textonly"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
 
-		properties.textOnly = json["textonly"].GetBool();
+		const QueryProperties properties(
+				std::string(json["name"].GetString(), json["name"].GetStringLength()),
+				std::string(json["query"].GetString(), json["query"].GetStringLength()),
+				std::string(json["type"].GetString(), json["type"].GetStringLength()),
+				json["resultbool"].GetBool(),
+				json["resultsingle"].GetBool(),
+				json["resultmulti"].GetBool(),
+				json["textonly"].GetBool()
+		);
 
 		// check name
 		if(properties.name.empty())
@@ -2817,7 +2908,7 @@ namespace crawlservpp::Main {
 		}
 
 		// add query to database
-		unsigned long id = this->database.addQuery(website, properties);
+		const unsigned long id = this->database.addQuery(website, properties);
 
 		if(!id)
 			return ServerCommandResponse("Could not add query to database.");
@@ -2827,8 +2918,6 @@ namespace crawlservpp::Main {
 
 	// server command updatequery(id, name, query, type, resultbool, resultsingle, resultmulti, textonly): edit a query
 	Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
-		QueryProperties properties;
-
 		// get arguments
 		if(!json.HasMember("id"))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
@@ -2836,7 +2925,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		if(!json.HasMember("name"))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
@@ -2844,15 +2933,11 @@ namespace crawlservpp::Main {
 		if(!json["name"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
-
 		if(!json.HasMember("query"))
 			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
 
 		if(!json["query"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
-
-		properties.text = std::string(json["query"].GetString(), json["query"].GetStringLength());
 
 		if(!json.HasMember("type"))
 			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
@@ -2860,15 +2945,11 @@ namespace crawlservpp::Main {
 		if(!json["type"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
 
-		properties.type = std::string(json["type"].GetString(), json["type"].GetStringLength());
-
 		if(!json.HasMember("resultbool"))
 			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
 
 		if(!json["resultbool"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
-
-		properties.resultBool = json["resultbool"].GetBool();
 
 		if(!json.HasMember("resultsingle"))
 			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
@@ -2876,15 +2957,11 @@ namespace crawlservpp::Main {
 		if(!json["resultsingle"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
 
-		properties.resultSingle = json["resultsingle"].GetBool();
-
 		if(!json.HasMember("resultmulti"))
 			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
 
 		if(!json["resultmulti"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
-
-		properties.resultMulti = json["resultmulti"].GetBool();
 
 		if(!json.HasMember("textonly"))
 			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
@@ -2892,7 +2969,15 @@ namespace crawlservpp::Main {
 		if(!json["textonly"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
 
-		properties.textOnly = json["textonly"].GetBool();
+		const QueryProperties properties(
+				std::string(json["name"].GetString(), json["name"].GetStringLength()),
+				std::string(json["query"].GetString(), json["query"].GetStringLength()),
+				std::string(json["type"].GetString(), json["type"].GetStringLength()),
+				json["resultbool"].GetBool(),
+				json["resultsingle"].GetBool(),
+				json["resultmulti"].GetBool(),
+				json["textonly"].GetBool()
+		);
 
 		// check name
 		if(properties.name.empty())
@@ -2936,7 +3021,8 @@ namespace crawlservpp::Main {
 	// server command deletequery(id): delete a query from the database by its ID
 	Server::ServerCommandResponse Server::cmdDeleteQuery(const rapidjson::Document& json) {
 		// check whether the deletion of data is allowed
-		if(!(this->settings.dataDeletable)) return ServerCommandResponse::failed("Not allowed.");
+		if(!(this->settings.dataDeletable))
+			return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
 		if(!json.HasMember("id"))
@@ -2945,7 +3031,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// check query
 		if(!(this->database.isQuery(id))) {
@@ -2974,7 +3060,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// check query
 		if(!(this->database.isQuery(id))) {
@@ -2986,7 +3072,7 @@ namespace crawlservpp::Main {
 		}
 
 		// duplicate query
-		unsigned long newId = this->database.duplicateQuery(id);
+		const unsigned long newId = this->database.duplicateQuery(id);
 
 		if(!newId)
 			return ServerCommandResponse::failed("Could not add duplicate to database.");
@@ -3047,51 +3133,62 @@ namespace crawlservpp::Main {
 				response = ServerCommandResponse::failed("Invalid arguments (\'text\' is not a string).");
 
 			else {
-				std::string query(json["query"].GetString(), json["query"].GetStringLength());
-				std::string type(json["type"].GetString(), json["type"].GetStringLength());
-				bool resultBool = json["resultbool"].GetBool();
-				bool resultSingle = json["resultsingle"].GetBool();
-				bool resultMulti = json["resultmulti"].GetBool();
-				bool textOnly = json["textonly"].GetBool();
-				std::string text(json["text"].GetString(), json["text"].GetStringLength());
+				const QueryProperties properties(
+						std::string(json["query"].GetString(), json["query"].GetStringLength()),
+						std::string(json["type"].GetString(), json["type"].GetStringLength()),
+						json["resultbool"].GetBool(),
+						json["resultsingle"].GetBool(),
+						json["resultmulti"].GetBool(),
+						json["textonly"].GetBool()
+				);
+
+				const std::string text(json["text"].GetString(), json["text"].GetStringLength());
 
 				// check query text, query type and result type
-				if(query.empty())
+				if(properties.text.empty())
 					response = ServerCommandResponse::failed("Query text is empty.");
 
-				else if(type.empty())
+				else if(properties.type.empty())
 					response = ServerCommandResponse::failed("Query type is empty.");
 
 				else if(
-						type != "regex"
-						&& type != "xpath"
-						&& type != "jsonpointer"
-						&& type != "jsonpath"
+						properties.type != "regex"
+						&& properties.type != "xpath"
+						&& properties.type != "jsonpointer"
+						&& properties.type != "jsonpath"
 				)
-					response = ServerCommandResponse::failed("Unknown query type: \'" + type + "\'.");
+					response = ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
-				else if(!resultBool && !resultSingle && !resultMulti)
+				else if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
 					response = ServerCommandResponse::failed("No result type selected.");
 
 				else {
 					// test query
 					std::string result;
 
-					if(type == "regex") {
+					if(properties.type == "regex") {
 						// test RegEx expression on text
 						try {
 							Timer::SimpleHR timer;
-							Query::RegEx regExTest(query, resultBool || resultSingle, resultMulti);
+
+							const Query::RegEx regExTest(
+									properties.text,
+									properties.resultBool || properties.resultSingle,
+									properties.resultMulti
+							);
 
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
-							if(resultBool) {
+							if(properties.resultBool) {
 								// get boolean result (does at least one match exist?)
-								result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-									+ std::string(regExTest.getBool(text) ? "true" : "false") + '\n';
+								result	+= "BOOLEAN RESULT ("
+										+ timer.tickStr()
+										+ "): "
+										+ (regExTest.getBool(text) ? "true" : "false")
+										+ '\n';
 							}
 
-							if(resultSingle) {
+							if(properties.resultSingle) {
 								// get first result (first full match)
 								std::string tempResult;
 
@@ -3103,24 +3200,26 @@ namespace crawlservpp::Main {
 									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 							}
 
-							if(resultMulti) {
+							if(properties.resultMulti) {
 								// get all results (all full matches)
 								std::vector<std::string> tempResult;
 
 								regExTest.getAll(text, tempResult);
+
 								result += "ALL RESULTS (" + timer.tickStr() + "):";
 
 								if(tempResult.empty())
 									result += " [empty]\n";
 								else {
-									unsigned long n = 0;
 									std::ostringstream resultStrStr;
+									unsigned long counter = 0;
 
 									resultStrStr << '\n';
 
 									for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
-										resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
-										++n;
+										++counter;
+
+										resultStrStr << '[' << counter << "] " << *i << '\n';
 									}
 
 									result += resultStrStr.str();
@@ -3131,11 +3230,15 @@ namespace crawlservpp::Main {
 							response = ServerCommandResponse::failed("RegEx error: " + e.whatStr());
 						}
 					}
-					else if(type == "xpath") {
+					else if(properties.type == "xpath") {
 						// test XPath expression on text
 						try {
 							Timer::SimpleHR timer;
-							Query::XPath xPathTest(query, textOnly);
+
+							const Query::XPath xPathTest(
+									properties.text,
+									properties.textOnly
+							);
 
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
@@ -3145,13 +3248,16 @@ namespace crawlservpp::Main {
 
 							result += "PARSING TIME: " + timer.tickStr() + '\n';
 
-							if(resultBool) {
+							if(properties.resultBool) {
 								// get boolean result (does at least one match exist?)
-								result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-										+ std::string(xPathTest.getBool(xmlDocumentTest) ? "true" : "false") + '\n';
+								result	+= "BOOLEAN RESULT ("
+										+ timer.tickStr()
+										+ "): "
+										+ (xPathTest.getBool(xmlDocumentTest) ? "true" : "false")
+										+ '\n';
 							}
 
-							if(resultSingle) {
+							if(properties.resultSingle) {
 								// get first result (first full match)
 								std::string tempResult;
 
@@ -3163,7 +3269,7 @@ namespace crawlservpp::Main {
 									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 							}
 
-							if(resultMulti) {
+							if(properties.resultMulti) {
 								// get all results (all full matches)
 								std::vector<std::string> tempResult;
 
@@ -3174,14 +3280,15 @@ namespace crawlservpp::Main {
 								if(tempResult.empty())
 									result += " [empty]\n";
 								else {
-									unsigned long n = 0;
 									std::ostringstream resultStrStr;
+									unsigned long counter = 0;
 
 									resultStrStr << '\n';
 
 									for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
-										resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
-										++n;
+										++counter;
+
+										resultStrStr << '[' << counter << "] " << *i << '\n';
 									}
 
 									result += resultStrStr.str();
@@ -3195,11 +3302,14 @@ namespace crawlservpp::Main {
 							response = ServerCommandResponse::failed("XML error: " + e.whatStr());
 						}
 					}
-					else if(type == "jsonpointer") {
+					else if(properties.type == "jsonpointer") {
 						// test JSONPointer query on text
 						try {
 							Timer::SimpleHR timer;
-							Query::JsonPointer JSONPointerTest(query);
+
+							const Query::JsonPointer JSONPointerTest(
+									properties.text
+							);
 
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
@@ -3215,13 +3325,15 @@ namespace crawlservpp::Main {
 							if(!response.fail) {
 								result += "PARSING TIME: " + timer.tickStr() + '\n';
 
-								if(resultBool) {
+								if(properties.resultBool) {
 									// get boolean result (does at least one match exist?)
-									result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-											+ std::string(JSONPointerTest.getBool(jsonDocumentTest) ? "true" : "false") + '\n';
+									result	+= "BOOLEAN RESULT ("
+											+ timer.tickStr() + "): "
+											+ (JSONPointerTest.getBool(jsonDocumentTest) ? "true" : "false")
+											+ '\n';
 								}
 
-								if(resultSingle) {
+								if(properties.resultSingle) {
 									// get first result (first full match)
 									std::string tempResult;
 
@@ -3233,7 +3345,7 @@ namespace crawlservpp::Main {
 										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 								}
 
-								if(resultMulti) {
+								if(properties.resultMulti) {
 									// get all results (all full matches)
 									std::vector<std::string> tempResult;
 
@@ -3244,14 +3356,15 @@ namespace crawlservpp::Main {
 									if(tempResult.empty())
 										result += " [empty]\n";
 									else {
-										unsigned long n = 0;
 										std::ostringstream resultStrStr;
+										unsigned long counter = 0;
 
 										resultStrStr << '\n';
 
 										for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
-											resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
-											++n;
+											++counter;
+
+											resultStrStr << '[' << counter << "] " << *i << '\n';
 										}
 
 										result += resultStrStr.str();
@@ -3267,7 +3380,10 @@ namespace crawlservpp::Main {
 						// test JSONPath query on text
 						try {
 							Timer::SimpleHR timer;
-							Query::JsonPath JSONPathTest(query);
+
+							const Query::JsonPath JSONPathTest(
+									properties.text
+							);
 
 							jsoncons::json jsonTest;
 
@@ -3281,13 +3397,16 @@ namespace crawlservpp::Main {
 							if(!response.fail) {
 								result += "PARSING TIME: " + timer.tickStr() + '\n';
 
-								if(resultBool) {
+								if(properties.resultBool) {
 									// get boolean result (does at least one match exist?)
-									result += "BOOLEAN RESULT (" + timer.tickStr() + "): "
-											+ std::string(JSONPathTest.getBool(jsonTest) ? "true" : "false") + '\n';
+									result	+= "BOOLEAN RESULT ("
+											+ timer.tickStr()
+											+ "): "
+											+ (JSONPathTest.getBool(jsonTest) ? "true" : "false")
+											+ '\n';
 								}
 
-								if(resultSingle) {
+								if(properties.resultSingle) {
 									// get first result (first full match)
 									std::string tempResult;
 
@@ -3299,7 +3418,7 @@ namespace crawlservpp::Main {
 										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 								}
 
-								if(resultMulti) {
+								if(properties.resultMulti) {
 									// get all results (all full matches)
 									std::vector<std::string> tempResult;
 
@@ -3310,14 +3429,15 @@ namespace crawlservpp::Main {
 									if(tempResult.empty())
 										result += " [empty]\n";
 									else {
-										unsigned long n = 0;
 										std::ostringstream resultStrStr;
+										unsigned long counter = 0;
 
 										resultStrStr << '\n';
 
 										for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
-											resultStrStr << '[' << (n + 1) << "] " << tempResult.at(n) << '\n';
-											++n;
+											++counter;
+
+											resultStrStr << '[' << counter << "] " << *i << '\n';
 										}
 
 										result += resultStrStr.str();
@@ -3347,8 +3467,6 @@ namespace crawlservpp::Main {
 
 	// server command addconfig(website, module, name, config): Add configuration to database
 	Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& json) {
-		ConfigProperties properties;
-
 		// get arguments
 		if(!json.HasMember("website"))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
@@ -3356,7 +3474,7 @@ namespace crawlservpp::Main {
 		if(!json["website"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		unsigned long website = json["website"].GetUint64();
+		const unsigned long website = json["website"].GetUint64();
 
 		if(!json.HasMember("module"))
 			return ServerCommandResponse::failed("Invalid arguments (\'module\' is missing).");
@@ -3364,15 +3482,11 @@ namespace crawlservpp::Main {
 		if(!json["module"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'module\' is not a string).");
 
-		properties.module = std::string(json["module"].GetString(), json["module"].GetStringLength());
-
 		if(!json.HasMember("name"))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
 		if(!json["name"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
-
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
 
 		if(!json.HasMember("config"))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
@@ -3380,7 +3494,11 @@ namespace crawlservpp::Main {
 		if(!json["config"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
 
-		properties.config = std::string(json["config"].GetString(), json["config"].GetStringLength());
+		const ConfigProperties properties(
+				std::string(json["module"].GetString(), json["module"].GetStringLength()),
+				std::string(json["name"].GetString(), json["name"].GetStringLength()),
+				std::string(json["config"].GetString(), json["config"].GetStringLength())
+		);
 
 		// check name
 		if(properties.name.empty())
@@ -3415,7 +3533,7 @@ namespace crawlservpp::Main {
 		}
 
 		// add configuration to database
-		unsigned long id = this->database.addConfiguration(website, properties);
+		const unsigned long id = this->database.addConfiguration(website, properties);
 
 		if(!id)
 			return ServerCommandResponse::failed("Could not add configuration to database.");
@@ -3425,8 +3543,6 @@ namespace crawlservpp::Main {
 
 	// server command updateconfig(id, name, config): Update a configuration in the database by its ID
 	Server::ServerCommandResponse Server::cmdUpdateConfig(const rapidjson::Document& json) {
-		ConfigProperties properties;
-
 		// get arguments
 		if(!json.HasMember("id"))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
@@ -3434,7 +3550,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		if(!json.HasMember("name"))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
@@ -3442,15 +3558,16 @@ namespace crawlservpp::Main {
 		if(!json["name"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
-
 		if(!json.HasMember("config"))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
 		if(!json["config"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
 
-		properties.config = std::string(json["config"].GetString(), json["config"].GetStringLength());
+		const ConfigProperties properties(
+				std::string(json["name"].GetString(), json["name"].GetStringLength()),
+				std::string(json["config"].GetString(), json["config"].GetStringLength())
+		);
 
 		// check name
 		if(properties.name.empty())
@@ -3497,7 +3614,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// check configuration
 		if(!(this->database.isConfiguration(id))) {
@@ -3527,7 +3644,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// check configuration
 		if(!(this->database.isConfiguration(id))) {
@@ -3539,7 +3656,7 @@ namespace crawlservpp::Main {
 		}
 
 		// duplicate configuration
-		unsigned long newId = this->database.duplicateConfiguration(id);
+		const unsigned long newId = this->database.duplicateConfiguration(id);
 
 		if(!newId)
 			return ServerCommandResponse::failed("Could not add duplicate to database.");
@@ -3562,8 +3679,8 @@ namespace crawlservpp::Main {
 		if(!json["target"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'target\' is not a valid number).");
 
-		unsigned long thread = json["thread"].GetUint64();
-		unsigned long target = json["target"].GetUint64();
+		const unsigned long thread = json["thread"].GetUint64();
+		const unsigned long target = json["target"].GetUint64();
 
 		// find thread
 		auto c = std::find_if(this->crawlers.begin(), this->crawlers.end(),
@@ -3576,6 +3693,7 @@ namespace crawlservpp::Main {
 			(*c)->Module::Thread::warpTo(target);
 
 			std::ostringstream responseStrStr;
+
 			responseStrStr << "Crawler #" << thread << " will warp to #" << target << ".";
 
 			return ServerCommandResponse(responseStrStr.str());
@@ -3591,12 +3709,14 @@ namespace crawlservpp::Main {
 			(*p)->Module::Thread::warpTo(target);
 
 			std::ostringstream responseStrStr;
+
 			responseStrStr << "Parser #" << thread << " will warp to #" << target << ".";
 
 			return ServerCommandResponse(responseStrStr.str());
 		}
-/*
+
 		// TODO: Time travel for extractors
+/*
 		auto e = std::find_if(this->extractors.begin(), this->extractors.end(),
 				[&thread](const auto& p) {
 					return p->Module::Thread::getId() == thread;
@@ -3607,6 +3727,7 @@ namespace crawlservpp::Main {
 			(*e)->Module::Thread::warpTo(target);
 
 			std::ostringstream responseStrStr;
+
 			responseStrStr << "Extractor #" << thread << " will warp to #" << target << ".";
 
 			return ServerCommandResponse(responseStrStr.str());
@@ -3675,7 +3796,7 @@ namespace crawlservpp::Main {
 			const ServerCommandResponse& response
 	) {
 		// generate the reply
-		std::string replyString(Server::generateReply(response, message));
+		const std::string replyString(Server::generateReply(response, message));
 
 		// send the reply
 		this->webServer.send(connection, 200, "application/json", replyString);
