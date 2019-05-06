@@ -86,7 +86,7 @@ namespace crawlservpp::Main {
 				std::cout << "\n> Waiting for threads (";
 
 				if(threads) {
-					std::cout << threads << " module";
+					std::cout << threads << " module thread";
 
 					if(threads > 1)
 						std::cout << "s";
@@ -96,7 +96,7 @@ namespace crawlservpp::Main {
 					std::cout << ", ";
 
 				if(workers) {
-					std::cout << workers << " worker";
+					std::cout << workers << " worker thread";
 
 					if(workers > 1)
 						std::cout << "s";
