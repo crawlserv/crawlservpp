@@ -167,8 +167,8 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
             $ulName = $row["name"];
             $ulNamespace = $row["namespace"];
             
-            if($first) {                if()!isset($urllist)
-
+            if($first) {
+                if(!isset($urllist))
                     $urllist = $ulId;
                     
                 $first = false;
