@@ -31,14 +31,18 @@ namespace crawlservpp::Module::Parser {
 	// convert thread ID to string for logging
 	void Database::setId(unsigned long analyzerId) {
 		std::ostringstream idStrStr;
+
 		idStrStr << analyzerId;
+
 		this->idString = idStrStr.str();
 	}
 
 	// set website ID (and convert it to string for SQL requests)
 	void Database::setWebsite(unsigned long websiteId) {
 		std::ostringstream idStrStr;
+
 		idStrStr << websiteId;
+
 		this->website = websiteId;
 		this->websiteIdString = idStrStr.str();
 	}
@@ -46,7 +50,9 @@ namespace crawlservpp::Module::Parser {
 	// set URL list ID (and convert it to string for SQL requests)
 	void Database::setUrlList(unsigned long listId) {
 		std::ostringstream idStrStr;
+
 		idStrStr << listId;
+
 		this->urlList = listId;
 		this->listIdString = idStrStr.str();
 	}
@@ -108,6 +114,7 @@ namespace crawlservpp::Module::Parser {
 				this->targetTableFull,
 				true
 		);
+
 		properties.columns.reserve(4 + this->targetFieldNames.size());
 
 		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL UNIQUE");
@@ -254,6 +261,7 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares getUrlLockTime()...");
 
 			std::ostringstream sqlQueryStrStr;
+
 			sqlQueryStrStr <<	"SELECT MAX(locktime) AS locktime"
 								" FROM `" << this->parsingTable << "`"
 								" WHERE target = " << this->targetTableId <<
@@ -293,6 +301,7 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares unLockUrlIfOk()...");
 
 			std::ostringstream sqlQueryStrStr;
+
 			sqlQueryStrStr <<	"UPDATE `" << this->parsingTable << "`"
 								" SET locktime = NULL"
 								" WHERE target = " << this->targetTableId <<
@@ -311,6 +320,7 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares checkParsingTable()...");
 
 			std::ostringstream sqlQueryStrStr;
+
 			sqlQueryStrStr <<	"DELETE t1 FROM `" << this->parsingTable + "` t1"
 								" INNER JOIN `" << this->parsingTable + "` t2"
 								" WHERE t1.id < t2.id"
@@ -421,6 +431,7 @@ namespace crawlservpp::Module::Parser {
 				this->log("[#" + this->idString + "] prepares updateTargetTable()...");
 
 			std::ostringstream sqlQueryStrStr;
+
 			sqlQueryStrStr <<	"UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
 								" WHERE id = " << this->targetTableId << " LIMIT 1";
 
@@ -453,7 +464,7 @@ namespace crawlservpp::Module::Parser {
 		sql::PreparedStatement& sqlStatementLock1000 = this->getPreparedStatement(this->ps.lock1000Urls);
 
 		// get lock expiration time
-		std::string lockTime = this->getLockTime(lockTimeout);
+		const std::string lockTime(this->getLockTime(lockTimeout));
 
 		try {
 			// execute SQL query for fetching URLs
@@ -482,6 +493,7 @@ namespace crawlservpp::Module::Parser {
 				sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock1000.setString(n * 3 + 3, lockTime);
+
 				lockingQueue.pop();
 			}
 
@@ -495,6 +507,7 @@ namespace crawlservpp::Module::Parser {
 				sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock100.setString(n * 3 + 3, lockTime);
+
 				lockingQueue.pop();
 			}
 
@@ -508,6 +521,7 @@ namespace crawlservpp::Module::Parser {
 				sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock10.setString(n * 3 + 3, lockTime);
+
 				lockingQueue.pop();
 			}
 
@@ -520,6 +534,7 @@ namespace crawlservpp::Module::Parser {
 			sqlStatementLock1.setUInt64(1, lockingQueue.front());
 			sqlStatementLock1.setUInt64(2, lockingQueue.front());
 			sqlStatementLock1.setString(3, lockTime);
+
 			lockingQueue.pop();
 
 			// execute SQL query
@@ -528,8 +543,6 @@ namespace crawlservpp::Module::Parser {
 
 		// return the expiration time of all locks
 		return lockTime;
-
-		return std::string();
 	}
 
 	// get the position of the URL in the URL list, throws Database::Exception
@@ -548,12 +561,13 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::getUrlPosition()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlPosition);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlPosition));
 
 		// get URL position of URL from database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -577,7 +591,7 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::getNumberOfUrls()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getNumberOfUrls);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getNumberOfUrls));
 
 		// get number of URLs from database
 		try {
@@ -605,12 +619,13 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::getLockTime(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLockTime);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getLockTime));
 
 		// get URL lock end time from database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, lockTimeout);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -638,12 +653,13 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::getUrlLockTime(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getUrlLockTime);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlLockTime));
 
 		// get URL lock end time from database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -658,14 +674,12 @@ namespace crawlservpp::Module::Parser {
 	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful,
 	//  throws Database::Exception
 	std::string Database::renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout) {
-		std::string dbg;
-
 		// check argument
 		if(!urlId)
 			throw Exception("Parser::Database::renewUrlLockIfOk(): No URL ID specified");
 
 		// get lock time
-		std::string newLockTime = this->getLockTime(lockTimeout);
+		const std::string newLockTime(this->getLockTime(lockTimeout));
 
 		// check connection
 		this->checkConnection();
@@ -675,10 +689,9 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Module::Parser::Database::renewUrlLockIfOk(...)");
 
 		// get prepared SQL statement for renewing the URL lock
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.renewUrlLockIfOk);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.renewUrlLockIfOk));
 
 		// lock URL in database
-		dbg = "renewUrlLockIfOk";
 		try {
 			// execute SQL query
 			sqlStatement.setString(1, newLockTime);
@@ -689,7 +702,7 @@ namespace crawlservpp::Module::Parser {
 			if(Database::sqlExecuteUpdate(sqlStatement) < 1)
 				return std::string(); // locking failed when no entries have been updated
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk > " + dbg, e); }
+		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::renewUrlLockIfOk", e); }
 
 		// get new expiration time of URL lock
 		return newLockTime;
@@ -709,13 +722,14 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::unLockUrlIfOk(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.unLockUrlIfOk);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.unLockUrlIfOk));
 
 		// unlock URL in database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setString(2, lockTime);
+
 			return Database::sqlExecuteUpdate(sqlStatement) > 0;
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::unLockUrlIfOk", e); }
@@ -734,9 +748,11 @@ namespace crawlservpp::Module::Parser {
 		this->checkConnection();
 
 		// create and get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(
-				this->addPreparedStatement(
-						this->queryUnlockUrlsIfOk(urls.size())
+		sql::PreparedStatement& sqlStatement(
+				this->getPreparedStatement(
+						this->addPreparedStatement(
+								this->queryUnlockUrlsIfOk(urls.size())
+						)
 				)
 		);
 
@@ -779,13 +795,14 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::getContentIdFromParsedId(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getContentIdFromParsedId);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getContentIdFromParsedId));
 
 		// get content ID from database
 		try {
 			// execute SQL query
 			sqlStatement.setString(1, parsedId);
 			sqlStatement.setString(2, parsedId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get (and parse) result
@@ -808,7 +825,7 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::checkParsingTable(...)");
 
 		// get prepared SQL statement for locking the URL
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.checkParsingTable);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.checkParsingTable));
 
 		// lock URL in database if not locked (and not parsed yet when re-parsing is deactivated)
 		try {
@@ -841,13 +858,14 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::getLatestContent(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getLatestContent);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getLatestContent));
 
 		// get URL latest content from database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
 			sqlStatement.setUInt64(2, index);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -860,6 +878,7 @@ namespace crawlservpp::Module::Parser {
 
 		if(success) {
 			contentTo = result;
+
 			return true;
 		}
 
@@ -882,12 +901,13 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::getAllContents(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.getAllContents);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getAllContents));
 
 		// get all contents from database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
+
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
@@ -1102,8 +1122,10 @@ namespace crawlservpp::Module::Parser {
 				for(unsigned long n = 0; n < 1000; ++n) {
 					sqlStatement1000.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement1000.setString(n * 2 + 2, finished.front().second);
+
 					finished.pop();
 				}
+
 				Database::sqlExecute(sqlStatement1000);
 			}
 
@@ -1112,8 +1134,10 @@ namespace crawlservpp::Module::Parser {
 				for(unsigned long n = 0; n < 100; ++n) {
 					sqlStatement100.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement100.setString(n * 2 + 2, finished.front().second);
+
 					finished.pop();
 				}
+
 				Database::sqlExecute(sqlStatement100);
 			}
 
@@ -1122,8 +1146,10 @@ namespace crawlservpp::Module::Parser {
 				for(unsigned long n = 0; n < 10; ++n) {
 					sqlStatement10.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement10.setString(n * 2 + 2, finished.front().second);
+
 					finished.pop();
 				}
+
 				Database::sqlExecute(sqlStatement10);
 			}
 
@@ -1131,6 +1157,7 @@ namespace crawlservpp::Module::Parser {
 			while(!finished.empty()) {
 				sqlStatement1.setUInt64(1, finished.front().first);
 				sqlStatement1.setString(2, finished.front().second);
+
 				finished.pop();
 
 				Database::sqlExecute(sqlStatement1);
@@ -1149,7 +1176,7 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Missing prepared SQL statement for Parser::Database::updateTargetTable(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(this->ps.updateTargetTable);
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.updateTargetTable));
 
 		try {
 			// execute SQL query
@@ -1187,6 +1214,7 @@ namespace crawlservpp::Module::Parser {
 			if(this->logging) {
 				// show warning about data size
 				bool adjustServerSettings = false;
+
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
