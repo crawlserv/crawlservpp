@@ -120,7 +120,9 @@ namespace crawlservpp::Main {
 
 		// getters
 		const DatabaseSettings& getSettings() const;
+		const std::string& getMysqlVersion() const;
 		const std::string& getDataDir() const;
+		unsigned long getMaxAllowedPacketSize() const;
 
 		// initializing functions
 		void connect();
@@ -284,9 +286,6 @@ namespace crawlservpp::Main {
 		// shared connection information
 		std::unique_ptr<sql::Connection> connection;
 		static sql::Driver * driver;
-
-		// protected getter
-		unsigned long getMaxAllowedPacketSize() const;
 
 		// helper functions for prepared SQL statements
 		void reserveForPreparedStatements(unsigned short numberOfAdditionalPreparedStatements);
@@ -464,6 +463,7 @@ namespace crawlservpp::Main {
 		const DatabaseSettings settings;
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
+		std::string mysqlVersion;
 		std::string dataDir;
 		std::string module;
 
