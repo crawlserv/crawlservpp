@@ -118,8 +118,9 @@ namespace crawlservpp::Main {
 		// setter
 		void setSleepOnError(unsigned long seconds);
 
-		// getter
+		// getters
 		const DatabaseSettings& getSettings() const;
+		const std::string& getDataDir() const;
 
 		// initializing functions
 		void connect();
@@ -463,6 +464,7 @@ namespace crawlservpp::Main {
 		const DatabaseSettings settings;
 		unsigned long maxAllowedPacketSize;
 		unsigned long sleepOnError;
+		std::string dataDir;
 		std::string module;
 
 		// optional private variables

@@ -94,12 +94,17 @@ namespace crawlservpp::Main {
 	}
 
 	/*
-	 * GETTER
+	 * GETTERS
 	 */
 
 	// get settings of the database
 	const Database::DatabaseSettings& Database::getSettings() const {
 		return this->settings;
+	}
+
+	// get (default) data directory
+	const std::string& Database::getDataDir() const {
+		return this->dataDir;
 	}
 
 	/*
@@ -158,20 +163,36 @@ namespace crawlservpp::Main {
 
 			Database::sqlExecute(sqlStatement, executeStr.str());
 
-			// request maximum allowed package size
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
-					"SHOW VARIABLES LIKE 'max_allowed_packet'"
-			));
+			// get and save maximum allowed package size
+			SqlResultSetPtr sqlMaxAllowedPacketResult(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SHOW VARIABLES LIKE 'max_allowed_packet'"
+					)
+			);
 
-			// get result
-			if(sqlResultSet && sqlResultSet->next()){
-				this->maxAllowedPacketSize = sqlResultSet->getUInt64("Value");
+			if(sqlMaxAllowedPacketResult && sqlMaxAllowedPacketResult->next()) {
+				this->maxAllowedPacketSize = sqlMaxAllowedPacketResult->getUInt64("Value");
 
 				if(!(this->maxAllowedPacketSize))
 					throw Database::Exception("Main::Database::connect(): \'max_allowed_packet\' is zero");
 			}
 			else
 				throw Database::Exception("Main::Database::connect(): Could not get \'max_allowed_packet\'");
+
+			// get and save data directory
+			SqlResultSetPtr sqlDataDirResult(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SHOW VARIABLES LIKE 'datadir'"
+					)
+			);
+
+			if(sqlDataDirResult && sqlDataDirResult->next()) {
+				this->dataDir = sqlDataDirResult->getString("Value");
+			}
+			else
+				throw Database::Exception("Main::Database::connect(): Could not get \'datadir\'");
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::connect", e); }
 	}
