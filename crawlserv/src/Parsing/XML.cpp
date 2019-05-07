@@ -18,7 +18,7 @@ namespace crawlservpp::Parsing {
 	XML::~XML() {}
 
 	// parse XML content, throws XML::Exception
-	void XML::parse(const std::string& content, bool repairCData) {
+	void XML::parse(const std::string& content, std::queue<std::string>& warningsTo, bool repairCData) {
 		// remove whitespaces
 		unsigned long begin = 0;
 
@@ -32,7 +32,7 @@ namespace crawlservpp::Parsing {
 			HTML tidy;
 
 			try {
-				tidy.tidyAndConvert(xml); // TODO: MEMORY LEAK !!!
+				tidy.tidyAndConvert(xml, warningsTo); // TODO: MEMORY LEAK !!!
 			}
 			catch(const HTML::Exception& e) {
 				throw XML::Exception("TidyLib error: " + e.whatStr());

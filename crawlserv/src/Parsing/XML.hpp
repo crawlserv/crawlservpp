@@ -17,6 +17,7 @@
 #include <pugixml.hpp>
 
 #include <memory>
+#include <queue>
 #include <sstream>
 #include <string>
 
@@ -39,7 +40,7 @@ namespace crawlservpp::Parsing {
 		void getContent(std::string& resultTo) const;
 
 		// parse function
-		void parse(const std::string& content, bool repairCData);
+		void parse(const std::string& content, std::queue<std::string>& warningsTo, bool repairCData);
 
 		// sub-class for XML exceptions
 		class Exception : public Main::Exception {
