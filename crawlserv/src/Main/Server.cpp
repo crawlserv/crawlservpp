@@ -3385,10 +3385,11 @@ namespace crawlservpp::Main {
 						}
 					}
 					else if(properties.type == "xpath") {
+						Timer::SimpleHR timer;
+						std::queue<std::string> warnings;
+
 						// test XPath expression on text
 						try {
-							Timer::SimpleHR timer;
-
 							const Query::XPath xPathTest(
 									properties.text,
 									properties.textOnly
@@ -3398,7 +3399,13 @@ namespace crawlservpp::Main {
 
 							Parsing::XML xmlDocumentTest;
 
-							xmlDocumentTest.parse(text, true);
+							xmlDocumentTest.parse(text, warnings, true);
+
+							while(!warnings.empty()) {
+								result += "WARNING: " + warnings.front() + '\n';
+
+								warnings.pop();
+							}
 
 							result += "PARSING TIME: " + timer.tickStr() + '\n';
 

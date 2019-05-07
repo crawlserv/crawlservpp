@@ -1355,6 +1355,7 @@ namespace crawlservpp::Module::Crawler {
 					Parsing::XML xmlDoc;
 					rapidjson::Document jsonDoc;
 					jsoncons::json json;
+					std::queue<std::string> warnings;
 
 					switch(this->queriesTokens.at(n).type) {
 					case QueryStruct::typeRegEx:
@@ -1378,7 +1379,7 @@ namespace crawlservpp::Module::Crawler {
 					case QueryStruct::typeXPath:
 						// parse XML content
 						try {
-							xmlDoc.parse(content, this->config.crawlerRepairCData);
+							xmlDoc.parse(content, warnings, this->config.crawlerRepairCData);
 						}
 						catch(const XMLException& e) {
 							// error while parsing content
@@ -1393,6 +1394,14 @@ namespace crawlservpp::Module::Crawler {
 
 							break;
 						}
+
+						// write warnings to log if necessary
+						if(this->config.crawlerLogging)
+							while(!warnings.empty()) {
+								this->log("WARNING: " + warnings.front());
+
+								warnings.pop();
+							}
 
 						// get token from XML
 						try {
@@ -3066,14 +3075,24 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerXml) {
 			// parse XML/HTML if still necessary
 			if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+				std::queue<std::string> warnings;
+
 				try {
-					this->parsedXML.parse(content, this->config.crawlerRepairCData);
+					this->parsedXML.parse(content, warnings, this->config.crawlerRepairCData);
 
 					this->xmlParsed = true;
 				}
 				catch(const XMLException& e) {
 					this->xmlParsingError = e.whatStr();
 				}
+
+				// write warnings to log if necessary
+				if(this->config.crawlerLogging)
+					while(!warnings.empty()) {
+						this->log("WARNING: " + warnings.front());
+
+						warnings.pop();
+					}
 			}
 
 			if(this->xmlParsed) {
@@ -4117,14 +4136,24 @@ namespace crawlservpp::Module::Crawler {
 	// parse XML/HTML if still necessary, return false if parsing failed
 	bool Thread::parseXml(const std::string& content) {
 		if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+			std::queue<std::string> warnings;
+
 			try {
-				this->parsedXML.parse(content, this->config.crawlerRepairCData);
+				this->parsedXML.parse(content, warnings, this->config.crawlerRepairCData);
 
 				this->xmlParsed = true;
 			}
 			catch(const XMLException& e) {
 				this->xmlParsingError = e.whatStr();
 			}
+
+			// write warnings to log if necessary
+			if(this->config.crawlerLogging)
+				while(!warnings.empty()) {
+					this->log("WARNING: " + warnings.front());
+
+					warnings.pop();
+				}
 		}
 
 		return this->xmlParsed;

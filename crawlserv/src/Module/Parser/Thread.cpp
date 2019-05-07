@@ -1409,8 +1409,10 @@ namespace crawlservpp::Module::Parser {
 	// parse XML/HTML if still necessary, return false if parsing failed
 	bool Thread::parseXml(const std::string& content) {
 		if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
+			std::queue<std::string> warnings;
+
 			try {
-				this->parsedXML.parse(content, this->config.parsingRepairCData);
+				this->parsedXML.parse(content, warnings, this->config.parsingRepairCData);
 
 				this->xmlParsed = true;
 			}
