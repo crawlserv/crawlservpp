@@ -17,8 +17,18 @@
     #include <string>
     #include <memory>
 
-    // temporary removal of throw
+    // temporary removal of throw (ignoring warning by clang)
+	#ifdef __clang__
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wkeyword-macro"
+	#endif
+
     #define throw(...)
+
+	#ifdef __clang__
+		#pragma clang diagnostic pop
+	#endif
+
     #include <cppconn/exception.h>
 
 	// reset
