@@ -11,20 +11,25 @@
 #define PARSING_HTML_HPP_
 
 #include "../Main/Exception.hpp"
+#include "../Wrapper/TidyDoc.hpp"
 
-#include <tidy.h>
-#include <tidybuffio.h>
-
+#include <queue>
 #include <string>
 
 namespace crawlservpp::Parsing {
 
 	class HTML final {
-	public:
-		HTML();
-		virtual ~HTML();
+	private:
+		// for convenience
+		typedef Wrapper::TidyDoc TidyDoc;
 
-		void tidyAndConvert(std::string& content);
+	public:
+		// constructor and destructor
+		HTML() {}
+		virtual ~HTML() {}
+
+		// member function
+		void tidyAndConvert(std::string& inOut, std::queue<std::string>& warningsTo);
 
 		// sub-class for HTML exceptions
 		class Exception : public Main::Exception {
@@ -41,7 +46,6 @@ namespace crawlservpp::Parsing {
 
 	private:
 		TidyDoc doc;
-		TidyBuffer buffer;
 	};
 
 } /* crawlservpp::Parsing */
