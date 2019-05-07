@@ -37,6 +37,7 @@ namespace crawlservpp::Helper::FileSystem {
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
 	bool contains(const std::string& pathToDir, const std::string& pathToCheck);
 	void clearDirectory(const std::string& pathToDir);
+	unsigned long getFreeSpace(const std::string& path);
 
 	/*
 	 * CLASS FOR FILE SYSTEM EXCEPTIONS
@@ -142,6 +143,11 @@ namespace crawlservpp::Helper::FileSystem {
 
 		for(std::filesystem::directory_iterator it(pathToDir), endIt; it != endIt; ++it)
 			std::filesystem::remove_all(it->path());
+	}
+
+	// get the free disk space for a directory (in bytes)
+	inline unsigned long getFreeSpace(const std::string& path) {
+		return std::filesystem::space(path).available;
 	}
 
 } /* crawlservpp::Helper::FileSystem */
