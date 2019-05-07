@@ -140,7 +140,7 @@ namespace crawlservpp::Wrapper {
 
 				break;
 
-			case 2:
+			default:
 				// errors occured
 				if(this->errors)
 					throw Exception("Could not write to buffer: " + errors.getString());
