@@ -38,6 +38,17 @@ namespace crawlservpp::Main {
 
 			if(!Database::driver)
 				throw Database::Exception("Could not get database instance");
+
+			// check MySQL version
+			if(Database::driver->getMajorVersion() < 8)
+				std::cout	<< "\nWARNING: Using MySQL v"
+							<< Database::driver->getMajorVersion()
+							<< "."
+							<< Database::driver->getMinorVersion()
+							<< "."
+							<< Database::driver->getPatchVersion()
+							<< ", version 8 or higher is strongly recommended."
+							<< std::endl;
 		}
 	}
 
