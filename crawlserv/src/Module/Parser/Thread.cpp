@@ -1419,6 +1419,13 @@ namespace crawlservpp::Module::Parser {
 			catch(const XMLException& e) {
 				this->xmlParsingError = e.whatStr();
 			}
+
+			if(this->config.generalLogging)
+				while(!warnings.empty()) {
+					this->log(warnings.front());
+
+					warnings.pop();
+				}
 		}
 
 		return this->xmlParsed;
