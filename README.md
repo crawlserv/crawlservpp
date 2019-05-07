@@ -141,6 +141,8 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.hpp)**: Wrapper for pointer to Perl-Compatible Regular Expression.
 * **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.hpp)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
 * **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.hpp)**: RAII wrapper for prepared SQL statement pointer.
+* **[`Wrapper::TidyBuffer`](crawlserv/src/Wrapper/TidyBuffer.hpp)**: RAII wrapper for `tidyhtml` buffers.
+* **[`Wrapper::TidyDoc`](crawlserv/src/Wrapper/TidyDoc.hpp)**: RAII wrapper for `tidyhtml` documents.
 * **[`Wrapper::URI`](crawlserv/src/Wrapper/URI.hpp)**: Wrapper for pointer to URI structure.
 * **[`Wrapper::URIQueryList`](crawlserv/src/Wrapper/URIQueryList.hpp)**: RAII wrapper for pointer to URI query list.
 
