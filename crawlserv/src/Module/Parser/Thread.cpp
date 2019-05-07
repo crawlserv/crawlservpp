@@ -842,9 +842,9 @@ namespace crawlservpp::Module::Parser {
 
 			if(this->config.generalLogging)
 				this->log(
-						"WARNING: Content for parsed ID '"
+						"skipped content with already existing ID \'"
 						+ parsedData.parsedId
-						+ "' already exists ["
+						+ "\' ["
 						+ this->urls.front().second
 						+ "]."
 				);

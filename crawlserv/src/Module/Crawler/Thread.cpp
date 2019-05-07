@@ -1774,7 +1774,7 @@ namespace crawlservpp::Module::Crawler {
 
 				// write to log if necessary
 				if(this->config.crawlerLogging)
-					this->log("Dynamic redirect: " + oldUrl + " -> " + url);
+					this->log("performed dynamic redirect: " + oldUrl + " -> " + url);
 			}
 		}
 		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
@@ -1941,7 +1941,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// write to log if necessary
 		if(this->config.crawlerLogging)
-			this->log("Dynamic redirect: " + oldUrl + " -> " + url);
+			this->log("performed dynamic redirect: " + oldUrl + " -> " + url);
 
 		// get custom cookie header
 		std::string customCookies(this->config.redirectCookies);
