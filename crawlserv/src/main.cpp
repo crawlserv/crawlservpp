@@ -1,6 +1,10 @@
 /*
  * main.cpp
  *
+ * crawlserv++ command-and-control server
+ *
+ * https://github.com/crawlserv/crawlservpp/
+ *
  * Entry point of the application. One line only! Use the App class for basic application functionality instead (OOP).
  *
  *  Created on: Sep 29, 2018

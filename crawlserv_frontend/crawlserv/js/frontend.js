@@ -1,6 +1,9 @@
 
-/**
- * JavaScript frontend for crawlserv++
+/*
+ * JavaScript/PHP frontend for crawlserv++
+ * 
+ * https://github.com/crawlserv/crawlservpp/
+ * 
  */
 
 // @requires helpers.js !
