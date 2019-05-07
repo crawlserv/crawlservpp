@@ -1092,7 +1092,13 @@ jQuery(function($) {
 		$("span.segment-arrow[data-block=\"" + $(this).data("block") + "\"]").html("&dArr;");
 		$(this).toggleClass("segment-head-closed segment-head-open");
 		
-		$("#container").scrollTop(block.offset().top + block.height())
+		$("#container").scrollTop(
+				$(this).offset().top
+				- $("#container").offset().top
+				+ $("#container").scrollTop()
+				- $(this).outerHeight()
+				- 2.5
+		);
 		
 		return true;
 	});
