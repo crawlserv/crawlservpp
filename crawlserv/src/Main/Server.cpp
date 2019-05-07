@@ -188,13 +188,13 @@ namespace crawlservpp::Main {
 		// start logging
 		std::ostringstream logStrStr;
 
-		logStrStr	<< "started. [MySQL v"
+		logStrStr	<< "successfully started and connected to database [MySQL v"
 					<< this->database.getMysqlVersion()
 					<< "; datadir=\'"
 					<< this->database.getDataDir()
 					<< "\'; maxAllowedPacketSize="
 					<< this->database.getMaxAllowedPacketSize()
-					<< "]";
+					<< "].";
 
 		this->database.log(logStrStr.str());
 	}
