@@ -186,7 +186,17 @@ namespace crawlservpp::Main {
 		this->uptimeStart = std::chrono::steady_clock::now();
 
 		// start logging
-		this->database.log("started.");
+		std::ostringstream logStrStr;
+
+		logStrStr	<< "started. [MySQL v"
+					<< this->database.getMysqlVersion()
+					<< "; datadir=\'"
+					<< this->database.getDataDir()
+					<< "\'; maxAllowedPacketSize="
+					<< this->database.getMaxAllowedPacketSize()
+					<< "]";
+
+		this->database.log(logStrStr.str());
 	}
 
 	// destructor
