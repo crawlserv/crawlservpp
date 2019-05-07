@@ -1,5 +1,13 @@
 
-<!-- crawlserv frontend v0.1 -->
+<!--
+
+    index.php
+
+    PHP/JavaScript frontend for crawlserv++
+    
+    https://github.com/crawlserv/crawlservpp/
+
+ -->
 
 <?php
 
