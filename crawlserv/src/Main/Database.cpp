@@ -50,6 +50,17 @@ namespace crawlservpp::Main {
 							<< ", version 8 or higher is strongly recommended."
 							<< std::endl;
 		}
+
+		// get MySQL version
+		std::ostringstream mysqlVersionStrStr;
+
+		mysqlVersionStrStr	<< Database::driver->getMajorVersion()
+							<< "."
+							<< Database::driver->getMinorVersion()
+							<< "."
+							<< Database::driver->getPatchVersion();
+
+		this->mysqlVersion = mysqlVersionStrStr.str();
 	}
 
 	// destructor
@@ -102,9 +113,19 @@ namespace crawlservpp::Main {
 		return this->settings;
 	}
 
+	// get MySQL version string
+	const std::string& Database::getMysqlVersion() const {
+		return this->mysqlVersion;
+	}
+
 	// get (default) data directory
 	const std::string& Database::getDataDir() const {
 		return this->dataDir;
+	}
+
+	// get the maximum allowed packet size
+	unsigned long Database::getMaxAllowedPacketSize() const {
+		return this->maxAllowedPacketSize;
 	}
 
 	/*
@@ -5085,15 +5106,6 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateCustomData", e); }
-	}
-
-	/*
-	 * PROTECTED GETTER (protected)
-	 */
-
-	// get the maximum allowed packet size
-	unsigned long Database::getMaxAllowedPacketSize() const {
-		return this->maxAllowedPacketSize;
 	}
 
 	/*
