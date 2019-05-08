@@ -51,7 +51,7 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Database();
 
 		// setters
-		void setId(unsigned long analyzerId);
+		void setId(unsigned long parserId);
 		void setWebsite(unsigned long websiteId);
 		void setUrlList(unsigned long listId);
 		void setNamespaces(const std::string& website, const std::string& urlList);

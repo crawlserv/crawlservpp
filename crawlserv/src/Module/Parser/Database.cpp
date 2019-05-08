@@ -29,10 +29,10 @@ namespace crawlservpp::Module::Parser {
 	Database::~Database() {}
 
 	// convert thread ID to string for logging
-	void Database::setId(unsigned long analyzerId) {
+	void Database::setId(unsigned long parserId) {
 		std::ostringstream idStrStr;
 
-		idStrStr << analyzerId;
+		idStrStr << parserId;
 
 		this->idString = idStrStr.str();
 	}
