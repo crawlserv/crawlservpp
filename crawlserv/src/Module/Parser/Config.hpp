@@ -52,7 +52,6 @@ namespace crawlservpp::Module::Parser {
 			unsigned long generalCacheSize;
 			unsigned int generalLock;
 			unsigned short generalLogging;
-
 			bool generalNewestOnly;
 			bool generalParseCustom;
 			bool generalReParse;
