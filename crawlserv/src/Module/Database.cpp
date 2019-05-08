@@ -17,6 +17,8 @@ namespace crawlservpp::Module {
 	// constructor
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 							: Main::Database(dbSettings, dbModule),
+							  logging(true),
+							  verbose(false),
 							  ps(_ps()) {
 		if(Main::Database::driver)
 			Main::Database::driver->threadInit();
@@ -28,6 +30,39 @@ namespace crawlservpp::Module {
 	Database::~Database() {
 		if(Main::Database::driver)
 			Main::Database::driver->threadEnd();
+	}
+
+	// set general module options and convert IDs to strings
+	void Database::setOptions(const ModuleOptions& moduleOptions) {
+		std::ostringstream idStrStr;
+
+		idStrStr << moduleOptions.threadId;
+
+		this->threadIdString = idStrStr.str();
+
+		idStrStr.str("");
+
+		idStrStr.clear();
+
+		idStrStr << moduleOptions.websiteId;
+
+		this->websiteIdString = idStrStr.str();
+
+		idStrStr.str("");
+
+		idStrStr.clear();
+
+		idStrStr << moduleOptions.urlListId;
+
+		this->urlListIdString = idStrStr.str();
+
+		this->options = moduleOptions;
+	}
+
+	// set logging options
+	void Database::setLogging(bool isLogging, bool isVerbose) {
+		this->logging = isLogging;
+		this->verbose = isVerbose;
 	}
 
 	// prepare SQL statements for thread management
@@ -67,6 +102,11 @@ namespace crawlservpp::Module {
 					" WHERE id = ?"
 					" LIMIT 1"
 			);
+	}
+
+	// add thread-specific logging entry to database
+	void Database::log(const std::string& logEntry) {
+		this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
 	}
 
 	// set the status message of a thread (and add the pause state), throws Database::Exception
