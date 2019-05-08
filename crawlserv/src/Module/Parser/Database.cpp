@@ -15,53 +15,14 @@ namespace crawlservpp::Module::Parser {
 							: Wrapper::Database(dbThread),
 							  parsingTableAlias("a"),
 							  targetTableAlias("b"),
-							  website(0),
-							  urlList(0),
 							  cacheSize(2500),
 							  reparse(false),
 							  parseCustom(true),
-							  logging(true),
-							  verbose(false),
 							  targetTableId(0),
 							  ps(_ps()) {}
 
 	// destructor stub
 	Database::~Database() {}
-
-	// convert thread ID to string for logging
-	void Database::setId(unsigned long parserId) {
-		std::ostringstream idStrStr;
-
-		idStrStr << parserId;
-
-		this->idString = idStrStr.str();
-	}
-
-	// set website ID (and convert it to string for SQL requests)
-	void Database::setWebsite(unsigned long websiteId) {
-		std::ostringstream idStrStr;
-
-		idStrStr << websiteId;
-
-		this->website = websiteId;
-		this->websiteIdString = idStrStr.str();
-	}
-
-	// set URL list ID (and convert it to string for SQL requests)
-	void Database::setUrlList(unsigned long listId) {
-		std::ostringstream idStrStr;
-
-		idStrStr << listId;
-
-		this->urlList = listId;
-		this->listIdString = idStrStr.str();
-	}
-
-	// set namespaces for website and URL list
-	void Database::setNamespaces(const std::string& website, const std::string& urlList) {
-		this->websiteName = website;
-		this->urlListName = urlList;
-	}
 
 	// set maximum cache size for URLs
 	void Database::setCacheSize(unsigned long setCacheSize) {
@@ -78,16 +39,6 @@ namespace crawlservpp::Module::Parser {
 		this->parseCustom = isParseCustom;
 	}
 
-	// enable or disable logging
-	void Database::setLogging(bool isLogging) {
-		this->logging = isLogging;
-	}
-
-	// enable or disable verbose logging
-	void Database::setVerbose(bool isVerbose) {
-		this->verbose = isVerbose;
-	}
-
 	// set target table name
 	void Database::setTargetTable(const std::string& table) {
 		this->targetTableName = table;
@@ -101,15 +52,15 @@ namespace crawlservpp::Module::Parser {
 	// create target table if it does not exists or add custom field columns if they do not exist
 	void Database::initTargetTable() {
 		// create table names
-		this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
+		this->urlListTable = "crawlserv_" + this->getOptions().websiteNamespace + "_" + this->getOptions().urlListNamespace;
 		this->parsingTable = this->urlListTable + "_parsing";
 		this->targetTableFull = this->urlListTable + "_parsed_" + this->targetTableName;
 
 		// create table properties
 		TargetTableProperties properties(
 				"parsed",
-				this->website,
-				this->urlList,
+				this->getOptions().websiteId,
+				this->getOptions().urlListId,
 				this->targetTableName,
 				this->targetTableFull,
 				true
@@ -140,8 +91,8 @@ namespace crawlservpp::Module::Parser {
 
 		// prepare SQL statements for parser
 		if(!(this->ps.fetchUrls)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares fetchUrls()...");
+			if(this->isVerbose())
+				this->log("prepares fetchUrls()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -193,43 +144,43 @@ namespace crawlservpp::Module::Parser {
 			if(this->cacheSize)
 				sqlQueryStrStr <<	" LIMIT " << this->cacheSize;
 
-			if(this->verbose)
-				this->log("[#" + this->idString + "] > " + sqlQueryStrStr.str());
+			if(this->isVerbose())
+				this->log("> " + sqlQueryStrStr.str());
 
 			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
 
 		if(!(this->ps.lockUrl)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrls() [1/4]...");
+			if(this->isVerbose())
+				this->log("prepares lockUrls() [1/4]...");
 
 			this->ps.lockUrl = this->addPreparedStatement(this->queryLockUrls(1));
 		}
 
 		if(!(this->ps.lock10Urls)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrls() [2/4]...");
+			if(this->isVerbose())
+				this->log("prepares lockUrls() [2/4]...");
 
 			this->ps.lock10Urls = this->addPreparedStatement(this->queryLockUrls(10));
 		}
 
 		if(!(this->ps.lock100Urls)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrls() [3/4]...");
+			if(this->isVerbose())
+				this->log("prepares lockUrls() [3/4]...");
 
 			this->ps.lock100Urls = this->addPreparedStatement(this->queryLockUrls(100));
 		}
 
 		if(!(this->ps.lock1000Urls)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrls() [4/4]...");
+			if(this->isVerbose())
+				this->log("prepares lockUrls() [4/4]...");
 
 			this->ps.lock1000Urls = this->addPreparedStatement(this->queryLockUrls(1000));
 		}
 
 		if(!(this->ps.getUrlPosition)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrlPosition()...");
+			if(this->isVerbose())
+				this->log("prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
 					"SELECT COUNT(id) AS result"
@@ -238,8 +189,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getNumberOfUrls)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
+			if(this->isVerbose())
+				this->log("prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
 					"SELECT COUNT(id) AS result"
@@ -248,8 +199,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getLockTime)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getLockTime()...");
+			if(this->isVerbose())
+				this->log("prepares getLockTime()...");
 
 			this->ps.getLockTime = this->addPreparedStatement(
 					"SELECT NOW() + INTERVAL ? SECOND AS locktime"
@@ -257,8 +208,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getUrlLockTime)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrlLockTime()...");
+			if(this->isVerbose())
+				this->log("prepares getUrlLockTime()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -273,8 +224,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.renewUrlLockIfOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares renewUrlLockIfOk()...");
+			if(this->isVerbose())
+				this->log("prepares renewUrlLockIfOk()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -297,8 +248,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares unLockUrlIfOk()...");
+			if(this->isVerbose())
+				this->log("prepares unLockUrlIfOk()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -316,8 +267,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.checkParsingTable)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares checkParsingTable()...");
+			if(this->isVerbose())
+				this->log("prepares checkParsingTable()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -332,8 +283,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getContentIdFromParsedId)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getContentIdFromParsedId()...");
+			if(this->isVerbose())
+				this->log("prepares getContentIdFromParsedId()...");
 
 			this->ps.getContentIdFromParsedId = this->addPreparedStatement(
 					"SELECT content FROM"
@@ -349,8 +300,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getLatestContent)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getLatestContent()...");
+			if(this->isVerbose())
+				this->log("prepares getLatestContent()...");
 
 			this->ps.getLatestContent = this->addPreparedStatement(
 					"SELECT id, content FROM `" + this->urlListTable + "_crawled`"
@@ -361,8 +312,8 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getAllContents)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getAllContents()...");
+			if(this->isVerbose())
+				this->log("prepares getAllContents()...");
 
 			this->ps.getAllContents = this->addPreparedStatement(
 					"SELECT id, content FROM `" + this->urlListTable + "_crawled`"
@@ -371,64 +322,64 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.setUrlFinishedIfLockOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares setUrlFinished() [1/4]...");
+			if(this->isVerbose())
+				this->log("prepares setUrlFinished() [1/4]...");
 
 			this->ps.setUrlFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(1));
 		}
 
 		if(!(this->ps.set10UrlsFinishedIfLockOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares setUrlFinished() [2/4]...");
+			if(this->isVerbose())
+				this->log("prepares setUrlFinished() [2/4]...");
 
 			this->ps.set10UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(10));
 		}
 
 		if(!(this->ps.set100UrlsFinishedIfLockOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares setUrlFinished() [3/4]...");
+			if(this->isVerbose())
+				this->log("prepares setUrlFinished() [3/4]...");
 
 			this->ps.set100UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(100));
 		}
 
 		if(!(this->ps.set1000UrlsFinishedIfLockOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares setUrlFinished() [4/4]...");
+			if(this->isVerbose())
+				this->log("prepares setUrlFinished() [4/4]...");
 
 			this->ps.set1000UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(1000));
 		}
 
 		if(!(this->ps.updateOrAddEntry)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares updateOrAddEntries() [1/4]...");
+			if(this->isVerbose())
+				this->log("prepares updateOrAddEntries() [1/4]...");
 
 			this->ps.updateOrAddEntry = this->addPreparedStatement(this->queryUpdateOrAddEntries(1));
 		}
 
 		if(!(this->ps.updateOrAdd10Entries)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares updateOrAddEntries() [2/4]...");
+			if(this->isVerbose())
+				this->log("prepares updateOrAddEntries() [2/4]...");
 
 			this->ps.updateOrAdd10Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(10));
 		}
 
 		if(!(this->ps.updateOrAdd100Entries)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares updateOrAddEntries() [3/4]...");
+			if(this->isVerbose())
+				this->log("prepares updateOrAddEntries() [3/4]...");
 
 			this->ps.updateOrAdd100Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(100));
 		}
 
 		if(!(this->ps.updateOrAdd1000Entries)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares updateOrAddEntries() [4/4]...");
+			if(this->isVerbose())
+				this->log("prepares updateOrAddEntries() [4/4]...");
 
 			this->ps.updateOrAdd1000Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(1000));
 		}
 
 		if(!(this->ps.updateTargetTable)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares updateTargetTable()...");
+			if(this->isVerbose())
+				this->log("prepares updateTargetTable()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -1211,7 +1162,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(tooLarge) {
-			if(this->logging) {
+			if(this->isLogging()) {
 				// show warning about data size
 				bool adjustServerSettings = false;
 
@@ -1219,8 +1170,7 @@ namespace crawlservpp::Module::Parser {
 
 				logStrStr.imbue(std::locale(""));
 
-				logStrStr <<	"[#" << this->idString << "]"
-								" WARNING: An entry could not be saved to the database,"
+				logStrStr <<	"WARNING: An entry could not be saved to the database,"
 								" because the size of a parsed value (" << tooLarge << " bytes) exceeds the ";
 
 				if(tooLarge > 1073741824)
@@ -1234,10 +1184,7 @@ namespace crawlservpp::Module::Parser {
 				this->log(logStrStr.str());
 
 				if(adjustServerSettings)
-					this->log(
-							"[#" + this->idString + "]"
-							" Adjust the server's \'max_allowed_packet\' setting accordingly."
-					);
+					this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
 			}
 
 			return false;

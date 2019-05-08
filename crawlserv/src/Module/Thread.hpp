@@ -22,6 +22,7 @@
 #include "../Main/Database.hpp"
 #include "../Main/Exception.hpp"
 #include "../Helper/DateTime.hpp"
+#include "../Struct/ModuleOptions.hpp"
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/ThreadStatus.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
@@ -44,6 +45,7 @@ namespace crawlservpp::Module {
 	class Thread {
 		// for convenience
 		typedef Main::Database::ConnectionException ConnectionException;
+		typedef Struct::ModuleOptions ModuleOptions;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
@@ -100,8 +102,8 @@ namespace crawlservpp::Module {
 	protected:
 		Database database; 							// access to the database for the thread
 
-		std::string websiteNamespace; 				// namespace of website
-		std::string urlListNamespace; 				// namespace of URL list
+		std::string websiteNamespace; 				// namespace of website (used by thread)
+		std::string urlListNamespace; 				// namespace of URL list (used by thread)
 		std::string configuration; 					// configuration
 
 		// thread helper functions
@@ -144,7 +146,6 @@ namespace crawlservpp::Module {
 		const ThreadOptions options;				// options for the thread
 		unsigned long last;							// last ID for the thread
 		std::atomic<unsigned long> overwriteLast;	// ID to overwrite last ID with ("time travel")
-		std::string idString;						// ID of the thread as string (used for logging, ONLY for threads!)
 		long warpedOver;							// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
 		std::condition_variable pauseCondition; 	// condition variable to wait for unpause

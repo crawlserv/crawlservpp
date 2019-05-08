@@ -38,12 +38,6 @@ namespace crawlservpp::Module::Analyzer {
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
-		// set ID, website and URL list
-		this->database.setId(this->getId());
-		this->database.setWebsite(this->getWebsite());
-		this->database.setUrlList(this->getUrlList());
-		this->database.setNamespaces(this->websiteNamespace, this->urlListNamespace);
-
 		// load configuration
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
@@ -56,21 +50,22 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// set database configuration
+		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
+
 		this->setStatusMessage("Setting database configuration...");
 
-		if(config.generalLogging == Config::generalLoggingVerbose)
+		if(verbose)
 			this->log("sets database configuration...");
 
+		this->database.setLogging(this->config.generalLogging, verbose);
 		this->database.setTargetTable(this->config.generalResultTable);
-		this->database.setLogging(this->config.generalLogging);
-		this->database.setVerbose(config.generalLogging == Config::generalLoggingVerbose);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 		this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 
-		// prepare SQL queries
+		// prepare SQL statements for analyzer
 		this->setStatusMessage("Preparing SQL statements...");
 
-		if(config.generalLogging == Config::generalLoggingVerbose)
+		if(verbose)
 			this->log("prepares SQL statements...");
 
 		this->database.prepare();
@@ -78,7 +73,7 @@ namespace crawlservpp::Module::Analyzer {
 		// initialize algorithm
 		this->setStatusMessage("Initializing algorithm...");
 
-		if(config.generalLogging == Config::generalLoggingVerbose)
+		if(verbose)
 			this->log("initializes algorithm...");
 
 		this->onAlgoInit();

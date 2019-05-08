@@ -16,10 +16,7 @@ namespace crawlservpp::Module::Crawler {
 						: Wrapper::Database(dbThread),
 						  crawlingTableAlias("a"),
 						  urlListTableAlias("b"),
-						  urlListId(0),
 						  recrawl(false),
-						  logging(true),
-						  verbose(false),
 						  urlCaseSensitive(true),
 						  urlDebug(false),
 						  urlStartupCheck(true),
@@ -28,39 +25,9 @@ namespace crawlservpp::Module::Crawler {
 	// destructor stub
 	Database::~Database() {}
 
-	// convert thread ID to string for logging
-	void Database::setId(unsigned long analyzerId) {
-		std::ostringstream idStrStr;
-
-		idStrStr << analyzerId;
-
-		this->idString = idStrStr.str();
-	}
-
-	// set website namespace
-	void Database::setNamespaces(const std::string& website, const std::string& urlList) {
-		this->websiteName = website;
-		this->urlListName = urlList;
-	}
-
-	// set URL list ID
-	void Database::setUrlListId(unsigned long listId) {
-		this->urlListId = listId;
-	}
-
 	// enable or disable recrawling
 	void Database::setRecrawl(bool isRecrawl) {
 		this->recrawl = isRecrawl;
-	}
-
-	// enable or disable logging
-	void Database::setLogging(bool isLogging) {
-		this->logging = isLogging;
-	}
-
-	// enable or disable verbose logging
-	void Database::setVerbose(bool isVerbose) {
-		this->verbose = isVerbose;
 	}
 
 	// enable or disable case-sensitive URLs for current URL list
@@ -68,7 +35,7 @@ namespace crawlservpp::Module::Crawler {
 		this->urlCaseSensitive = isUrlCaseSensitive;
 
 		// update case sensitivity in database
-		this->setUrlListCaseSensitive(this->urlListId, this->urlCaseSensitive);
+		this->setUrlListCaseSensitive(this->getOptions().urlListId, this->urlCaseSensitive);
 	}
 
 	// enable or disable URL debugging
@@ -84,7 +51,7 @@ namespace crawlservpp::Module::Crawler {
 	// prepare SQL statements for crawler, throws Main::Database::Exception
 	void Database::prepare() {
 		// create table names
-		this->urlListTable = "crawlserv_" + this->websiteName + "_" + this->urlListName;
+		this->urlListTable = "crawlserv_" + this->getOptions().websiteNamespace + "_" + this->getOptions().urlListNamespace;
 		this->crawlingTable = this->urlListTable + "_crawling";
 
 		const std::string crawledTable(this->urlListTable + "_crawled");
@@ -115,8 +82,8 @@ namespace crawlservpp::Module::Crawler {
 		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
 
 		if(!(this->ps.getUrlId)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrlId()...");
+			if(this->isVerbose())
+				this->log("prepares getUrlId()...");
 
 			this->ps.getUrlId = this->addPreparedStatement(
 					"SELECT `" + this->urlListTableAlias + "1`.id AS id"
@@ -132,8 +99,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getNextUrl)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getNextUrl()...");
+			if(this->isVerbose())
+				this->log("prepares getNextUrl()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -168,8 +135,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.addUrlIfNotExists)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares addUrlIfNotExists()...");
+			if(this->isVerbose())
+				this->log("prepares addUrlIfNotExists()...");
 
 			this->ps.addUrlIfNotExists = this->addPreparedStatement(
 					"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, hash, manual)"
@@ -192,29 +159,29 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.add10UrlsIfNotExist)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares addUrlsIfNotExist() [1/3]...");
+			if(this->isVerbose())
+				this->log("prepares addUrlsIfNotExist() [1/3]...");
 
 			this->ps.add10UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(10, hashQuery));
 		}
 
 		if(!(this->ps.add100UrlsIfNotExist)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares addUrlsIfNotExist() [2/3]...");
+			if(this->isVerbose())
+				this->log("prepares addUrlsIfNotExist() [2/3]...");
 
 			this->ps.add100UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(100, hashQuery));
 		}
 
 		if(!(this->ps.add1000UrlsIfNotExist)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares addUrlsIfNotExist() [3/3]...");
+			if(this->isVerbose())
+				this->log("prepares addUrlsIfNotExist() [3/3]...");
 
 			this->ps.add1000UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(1000, hashQuery));
 		}
 
 		if(!(this->ps.getUrlPosition)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrlPosition()...");
+			if(this->isVerbose())
+				this->log("prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
 					"SELECT COUNT(*) AS result"
@@ -223,8 +190,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getNumberOfUrls)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getNumberOfUrls()...");
+			if(this->isVerbose())
+				this->log("prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
 					"SELECT COUNT(*) AS result"
@@ -233,8 +200,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getUrlLockTime)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrlLock()...");
+			if(this->isVerbose())
+				this->log("prepares getUrlLock()...");
 
 			this->ps.getUrlLockTime = this->addPreparedStatement(
 					"SELECT locktime"
@@ -245,8 +212,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.isUrlCrawled)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares isUrlCrawled()...");
+			if(this->isVerbose())
+				this->log("prepares isUrlCrawled()...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -259,8 +226,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.renewUrlLockIfOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [1/2]...");
+			if(this->isVerbose())
+				this->log("prepares lockUrlIfOk() [1/2]...");
 
 			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->crawlingTable + "`"
@@ -281,8 +248,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.addUrlLockIfOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares lockUrlIfOk() [2/2]...");
+			if(this->isVerbose())
+				this->log("prepares lockUrlIfOk() [2/2]...");
 
 			std::ostringstream sqlQueryStrStr;
 
@@ -312,8 +279,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares unLockUrlIfOk()...");
+			if(this->isVerbose())
+				this->log("prepares unLockUrlIfOk()...");
 
 			this->ps.unLockUrlIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->crawlingTable + "`"
@@ -330,8 +297,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.setUrlFinishedIfOk)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares setUrlFinishedIfOk()...");
+			if(this->isVerbose())
+				this->log("prepares setUrlFinishedIfOk()...");
 
 			this->ps.setUrlFinishedIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->crawlingTable + "`"
@@ -348,8 +315,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.saveContent)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares saveContent()...");
+			if(this->isVerbose())
+				this->log("prepares saveContent()...");
 
 			this->ps.saveContent = this->addPreparedStatement(
 					"INSERT INTO `" + crawledTable + "`(url, response, type, content)"
@@ -358,8 +325,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.saveArchivedContent)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares saveArchivedContent()...");
+			if(this->isVerbose())
+				this->log("prepares saveArchivedContent()...");
 
 			this->ps.saveArchivedContent = this->addPreparedStatement(
 					"INSERT INTO `" + crawledTable + "`(url, crawltime, archived, response, type, content)"
@@ -368,8 +335,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.isArchivedContentExists)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares isArchivedContentExists()...");
+			if(this->isVerbose())
+				this->log("prepares isArchivedContentExists()...");
 
 			this->ps.isArchivedContentExists = this->addPreparedStatement(
 					"SELECT EXISTS"
@@ -383,8 +350,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlDuplicationCheck) && (this->urlStartupCheck || this->urlDebug)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares urlDuplicationCheck()...");
+			if(this->isVerbose())
+				this->log("prepares urlDuplicationCheck()...");
 
 			std::string groupBy;
 
@@ -401,8 +368,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlHashCheck)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares urlHashCheck() [1/2]...");
+			if(this->isVerbose())
+				this->log("prepares urlHashCheck() [1/2]...");
 
 			this->ps.urlHashCheck = this->addPreparedStatement(
 					"SELECT EXISTS"
@@ -415,8 +382,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlHashCorrect)) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares urlHashCheck() [1/2]...");
+			if(this->isVerbose())
+				this->log("prepares urlHashCheck() [1/2]...");
 
 			this->ps.urlHashCorrect = this->addPreparedStatement(
 					"UPDATE `" + this->urlListTable + "`"
@@ -425,8 +392,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlEmptyCheck) && this->urlStartupCheck) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares urlHashCheck()...");
+			if(this->isVerbose())
+				this->log("prepares urlHashCheck()...");
 
 			this->ps.urlEmptyCheck = this->addPreparedStatement(
 					"SELECT id FROM `" + this->urlListTable + "`"
@@ -435,8 +402,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getUrls) && this->urlStartupCheck) {
-			if(this->verbose)
-				this->log("[#" + this->idString + "] prepares getUrls()...");
+			if(this->isVerbose())
+				this->log("prepares getUrls()...");
 
 			this->ps.getUrls = this->addPreparedStatement(
 					"SELECT url FROM `" + this->urlListTable + "`"
@@ -789,7 +756,7 @@ namespace crawlservpp::Module::Crawler {
 
 				int updated = Database::sqlExecuteUpdate(correctStatement);
 
-				if(updated > 0 && this->logging) {
+				if(updated > 0 && this->isLogging()) {
 					std::ostringstream logStrStr;
 
 					logStrStr.imbue(std::locale(""));
@@ -1087,15 +1054,14 @@ namespace crawlservpp::Module::Crawler {
 
 				Database::sqlExecute(sqlStatement);
 			}
-			else if(this->logging) {
+			else if(this->isLogging()) {
 				// show warning about content size
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
 
-				logStrStr << "[#" << this->idString << "] WARNING:"
-						" Some content could not be saved to the database, because its size ("
+				logStrStr << "WARNING: Some content could not be saved to the database, because its size ("
 						<< content.size() << " bytes) exceeds the ";
 
 				if(content.size() > 1073741824)
@@ -1110,10 +1076,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log(logStrStr.str());
 
 				if(adjustServerSettings)
-					this->log(
-							"[#" + this->idString + "]"
-							" Adjust the server's \'max_allowed_packet\' setting accordingly."
-					);
+					this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveContent", e); }
@@ -1148,16 +1111,16 @@ namespace crawlservpp::Module::Crawler {
 
 				Database::sqlExecute(sqlStatement);
 			}
-			else if(this->logging) {
+			else if(this->isLogging()) {
 				// show warning about content size
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
 
-				logStrStr << "[#" << this->idString << "] WARNING:"
-						" Some content could not be saved to the database, because its size ("
-						<< content.size() << " bytes) exceeds the ";
+				logStrStr	<< "WARNING: Some content could not be saved to the database, because its size ("
+							<< content.size()
+							<< " bytes) exceeds the ";
 
 				if(content.size() > 1073741824)
 					logStrStr << "mySQL maximum of 1 GiB.";
@@ -1170,10 +1133,7 @@ namespace crawlservpp::Module::Crawler {
 				this->log(logStrStr.str());
 
 				if(adjustServerSettings)
-					this->log(
-							"[#" + this->idString + "]"
-							" Adjust the server's \'max_allowed_packet\' setting accordingly."
-					);
+					this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveArchivedContent", e); }

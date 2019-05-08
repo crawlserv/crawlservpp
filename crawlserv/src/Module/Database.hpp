@@ -16,8 +16,10 @@
 #include "../Main/Database.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/DatabaseSettings.hpp"
+#include "../Struct/ModuleOptions.hpp"
 
 #include <memory>
+#include <sstream>
 #include <string>
 
 namespace crawlservpp::Wrapper {
@@ -30,6 +32,7 @@ namespace crawlservpp::Module {
 
 		// for convenience
 		typedef Struct::DatabaseSettings DatabaseSettings;
+		typedef Struct::ModuleOptions ModuleOptions;
 
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 	public:
@@ -39,8 +42,15 @@ namespace crawlservpp::Module {
 		// destructor
 		virtual ~Database();
 
+		// setters
+		void setOptions(const ModuleOptions& moduleOptions);
+		void setLogging(bool isLogging, bool isVerbose);
+
 		// command function
 		void prepare();
+
+		// logging function
+		void log(const std::string& logEntry);
 
 		// thread functions
 		void setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
@@ -55,6 +65,14 @@ namespace crawlservpp::Module {
 		};
 
 	private:
+		// general thread options
+		ModuleOptions options;
+		std::string threadIdString;
+		std::string websiteIdString;
+		std::string urlListIdString;
+		bool logging;
+		bool verbose;
+
 		// IDs of prepared SQL statements
 		struct _ps {
 			unsigned short setThreadStatusMessage;

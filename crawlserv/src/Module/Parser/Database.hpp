@@ -51,15 +51,9 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Database();
 
 		// setters
-		void setId(unsigned long parserId);
-		void setWebsite(unsigned long websiteId);
-		void setUrlList(unsigned long listId);
-		void setNamespaces(const std::string& website, const std::string& urlList);
 		void setCacheSize(unsigned long setCacheSize);
 		void setReparse(bool isReparse);
 		void setParseCustom(bool isParseCustom);
-		void setLogging(bool isLogging);
-		void setVerbose(bool isVerbose);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields);
 
@@ -101,18 +95,9 @@ namespace crawlservpp::Module::Parser {
 
 	protected:
 		// options
-		std::string idString;
-		unsigned long website;
-		std::string websiteIdString;
-		std::string websiteName;
-		unsigned long urlList;
-		std::string listIdString;
-		std::string urlListName;
 		unsigned long cacheSize;
 		bool reparse;
 		bool parseCustom;
-		bool logging;
-		bool verbose;
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 

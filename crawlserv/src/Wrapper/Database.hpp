@@ -15,10 +15,11 @@
 #include "../Main/Data.hpp"
 #include "../Module/Database.hpp"
 #include "../Struct/DatabaseSettings.hpp"
+#include "../Struct/ModuleOptions.hpp"
+#include "../Struct/QueryProperties.hpp"
 #include "../Struct/TableColumn.hpp"
 #include "../Struct/TableProperties.hpp"
 #include "../Struct/TargetTableProperties.hpp"
-#include "../Struct/QueryProperties.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
 
 #include <cppconn/prepared_statement.h>
@@ -38,6 +39,7 @@ namespace crawlservpp::Wrapper {
 
 	class Database {
 		// for convenience
+		typedef Struct::ModuleOptions ModuleOptions;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::TableColumn TableColumn;
 		typedef Struct::TableProperties TableProperties;
@@ -54,7 +56,8 @@ namespace crawlservpp::Wrapper {
 		Database(Module::Database& dbRef);
 		~Database();
 
-		// wrapper for setter
+		// wrapper for setters
+		void setLogging(bool logging, bool verbose);
 		void setSleepOnError(unsigned long seconds);
 
 		// wrapper for logging function
@@ -118,6 +121,13 @@ namespace crawlservpp::Wrapper {
 		// reference to the database connection by the thread
 		Module::Database& database;
 
+		// protected getters for general module options
+		const ModuleOptions& getOptions() const;
+		const std::string& getWebsiteIdString() const;
+		const std::string& getUrlListIdString() const;
+		bool isLogging() const;
+		bool isVerbose() const;
+
 		// wrapper for validation function (changed from public to protected)
 		void checkConnection();
 
@@ -159,6 +169,12 @@ namespace crawlservpp::Wrapper {
 
 	// destructor stub
 	inline Database::~Database() {}
+
+	// set logging options
+	inline void Database::setLogging(bool isLogging, bool isVerbose) {
+		this->database.logging = isLogging;
+		this->database.verbose = isVerbose;
+	}
 
 	// set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
 	inline void Database::setSleepOnError(unsigned long seconds) {
@@ -308,6 +324,31 @@ namespace crawlservpp::Wrapper {
 	// get database request counter or return zero if program was compiled without
 	inline unsigned long long Database::getRequestCounter() {
 		return Main::Database::getRequestCounter();
+	}
+
+	// get general module options
+	inline const Struct::ModuleOptions& Database::getOptions() const {
+		return this->database.options;
+	}
+
+	// get website ID as string
+	inline const std::string& Database::getWebsiteIdString() const {
+		return this->database.websiteIdString;
+	}
+
+	// get ID of URL list as string
+	inline const std::string& Database::getUrlListIdString() const {
+		return this->database.urlListIdString;
+	}
+
+	// get whether logging is enabled
+	inline bool Database::isLogging() const {
+		return this->database.logging;
+	}
+
+	// get whether verbose logging is enabled
+	inline bool Database::isVerbose() const {
+		return this->database.verbose;
 	}
 
 	// check whether the connection to the database is still valid and try to re-connect if necesssary, throws Exception

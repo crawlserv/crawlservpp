@@ -47,13 +47,7 @@ namespace crawlservpp::Module::Crawler {
 		virtual ~Database();
 
 		// setters
-		void setId(unsigned long crawlerId);
-		void setNamespaces(const std::string& website, const std::string& urlList);
-		void setUrlListId(unsigned long listId);
-		void setUrlListNamespace(const std::string& urlListNamespace);
 		void setRecrawl(bool isRecrawl);
-		void setLogging(bool isLogging);
-		void setVerbose(bool isVerbose);
 		void setUrlCaseSensitive(bool isUrlCaseSensitive);
 		void setUrlDebug(bool isUrlDebug);
 		void setUrlStartupCheck(bool isUrlStartupCheck);
@@ -111,13 +105,7 @@ namespace crawlservpp::Module::Crawler {
 
 	protected:
 		// options
-		std::string idString;
-		std::string websiteName;
-		unsigned long urlListId;
-		std::string urlListName;
 		bool recrawl;
-		bool logging;
-		bool verbose;
 		bool urlCaseSensitive;
 		bool urlDebug;
 		bool urlStartupCheck;

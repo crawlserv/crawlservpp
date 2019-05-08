@@ -14,62 +14,12 @@ namespace crawlservpp::Module::Analyzer {
 	// constructor: initialize database and set default values
 	Database::Database(Module::Database& dbThread)
 							: Wrapper::Database(dbThread),
-							  website(0),
-							  urlList(0),
-							  logging(false),
-							  verbose(false),
 							  timeoutTargetLock(0),
 							  targetTableId(0),
 							  ps(_ps()) {}
 
 	// destructor stub
 	Database::~Database() {}
-
-	// convert thread ID to string for logging
-	void Database::setId(unsigned long analyzerId) {
-		std::ostringstream idStrStr;
-
-		idStrStr << analyzerId;
-
-		this->idString = idStrStr.str();
-	}
-
-	// set website ID (and convert it to string for SQL requests)
-	void Database::setWebsite(unsigned long websiteId) {
-		std::ostringstream idStrStr;
-
-		idStrStr << websiteId;
-
-		this->website = websiteId;
-		this->websiteIdString = idStrStr.str();
-	}
-
-	// set URL list ID (and convert it to string for SQL requests)
-	void Database::setUrlList(unsigned long listId) {
-		std::ostringstream idStrStr;
-
-		idStrStr << listId;
-
-		this->urlList = listId;
-		this->listIdString = idStrStr.str();
-	}
-
-	// set website and URL list namespace
-	void Database::setNamespaces(const std::string& website, const std::string& urlList) {
-		this->websiteName = website;
-		this->urlListName = urlList;
-		this->tablePrefix = "crawlserv_" + this->websiteName + "_" + this->urlListName + "_";
-	}
-
-	// enable or disable logging
-	void Database::setLogging(bool isLogging) {
-		this->logging = isLogging;
-	}
-
-	// enable or disable verbose logging
-	void Database::setVerbose(bool isVerbose) {
-		this->verbose = isVerbose;
-	}
 
 	// set target table name
 	void Database::setTargetTable(const std::string& table) {
@@ -97,10 +47,10 @@ namespace crawlservpp::Module::Analyzer {
 	//  throws Database::Exception
 	void Database::initTargetTable(bool compressed) {
 		// check options
-		if(this->websiteName.empty())
+		if(this->getOptions().websiteNamespace.empty())
 			throw Exception("Analyzer::Database::initTargetTable(): No website specified");
 
-		if(this->urlListName.empty())
+		if(this->getOptions().urlListNamespace.empty())
 			throw Exception("Analyzer::Database::initTargetTable(): No URL list specified");
 
 		if(this->targetTableName.empty())
@@ -123,17 +73,17 @@ namespace crawlservpp::Module::Analyzer {
 
 		// create target table name
 		this->targetTableFull = "crawlserv_"
-								+ this->websiteName
+								+ this->getOptions().websiteNamespace
 								+ "_"
-								+ this->urlListName
+								+ this->getOptions().urlListNamespace
 								+ "_analyzed_"
 								+ this->targetTableName;
 
 		// create table properties
 		CustomTableProperties properties(
 				"analyzed",
-				this->website,
-				this->urlList,
+				this->getOptions().websiteId,
+				this->getOptions().urlListId,
 				this->targetTableName,
 				this->targetTableFull,
 				compressed
@@ -165,13 +115,13 @@ namespace crawlservpp::Module::Analyzer {
 		try {
 			// prepare SQL statements for analyzer
 			if(!(this->ps.getCorpus)) {
-				if(this->verbose)
-					this->log("[#" + this->idString + "] prepares getCorpus()...");
+				if(this->isVerbose())
+					this->log("prepares getCorpus()...");
 
 				this->ps.getCorpus = this->addPreparedStatement(
 						"SELECT corpus, datemap, sources FROM crawlserv_corpora"
-						" WHERE website = "	+ this->websiteIdString +
-						" AND urllist = " + this->listIdString +
+						" WHERE website = "	+ this->getWebsiteIdString() +
+						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
 						" AND source_table = ?"
 						" AND source_field = ?"
@@ -180,16 +130,16 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.isCorpusChanged)) {
-				if(this->verbose)
-					this->log("[#" + this->idString + "] prepares isCorpusChanged() [1/4]...");
+				if(this->isVerbose())
+					this->log("prepares isCorpusChanged() [1/4]...");
 
 				this->ps.isCorpusChanged = this->addPreparedStatement(
 						"SELECT EXISTS"
 						" ("
 							" SELECT *"
 							" FROM crawlserv_corpora"
-							" WHERE website = "	+ this->websiteIdString + ""
-							" AND urllist = " + this->listIdString +
+							" WHERE website = "	+ this->getWebsiteIdString() + ""
+							" AND urllist = " + this->getUrlListIdString() +
 							" AND source_type = ?"
 							" AND source_table = ?"
 							" AND source_field = ?"
@@ -200,49 +150,49 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.isCorpusChangedParsing)) {
-				if(this->verbose)
-					this->log("[#" + this->idString + "] prepares isCorpusChanged() [2/4]...");
+				if(this->isVerbose())
+					this->log("prepares isCorpusChanged() [2/4]...");
 
 				this->ps.isCorpusChangedParsing = this->addPreparedStatement(
 						"SELECT updated FROM crawlserv_parsedtables"
-						" WHERE website = "	+ this->websiteIdString +
-						" AND urllist = " + this->listIdString +
+						" WHERE website = "	+ this->getWebsiteIdString() +
+						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
 				);
 			}
 
 			if(!(this->ps.isCorpusChangedExtracting)) {
-				if(this->verbose)
-					this->log("[#" + this->idString + "] prepares isCorpusChanged() [3/4]...");
+				if(this->isVerbose())
+					this->log("prepares isCorpusChanged() [3/4]...");
 
 				this->ps.isCorpusChangedExtracting = this->addPreparedStatement(
 						"SELECT updated FROM crawlserv_extractedtables"
-						" WHERE website = "	+ this->websiteIdString +
-						" AND urllist = " + this->listIdString +
+						" WHERE website = "	+ this->getWebsiteIdString() +
+						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
 				);
 			}
 
 			if(!(this->ps.isCorpusChangedAnalyzing)) {
-				if(this->verbose)
-					this->log("[#" + this->idString + "] prepares isCorpusChanged() [4/4]...");
+				if(this->isVerbose())
+					this->log("prepares isCorpusChanged() [4/4]...");
 
 				this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement(
 						"SELECT updated FROM crawlserv_analyzedtables"
-						" WHERE website = "	+ this->websiteIdString +
-						" AND urllist = " + this->listIdString +
+						" WHERE website = "	+ this->getWebsiteIdString() +
+						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
 				);
 			}
 
 			if(!(this->ps.deleteCorpus)) {
-				if(this->verbose)
-					this->log("[#" + this->idString + "] prepares createCorpus() [1/2]...");
+				if(this->isVerbose())
+					this->log("prepares createCorpus() [1/2]...");
 
 				this->ps.deleteCorpus = this->addPreparedStatement(
 						"DELETE FROM crawlserv_corpora"
-						" WHERE website = " + this->websiteIdString +
-						" AND urllist = " + this->listIdString +
+						" WHERE website = " + this->getWebsiteIdString() +
+						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
 						" AND source_table = ?"
 						" AND source_field = ?"
@@ -250,13 +200,13 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.addCorpus)) {
-				if(this->verbose)
-					this->log("[#" + this->idString + "] prepares createCorpus() [2/2]...");
+				if(this->isVerbose())
+					this->log("prepares createCorpus() [2/2]...");
 
 				this->ps.addCorpus = this->addPreparedStatement(
 						"INSERT INTO crawlserv_corpora"
 							"(website, urllist, source_type, source_table, source_field, corpus, datemap, sources)"
-							" VALUES (" + this->websiteIdString + ", " + this->listIdString + ", ?, ?, ?, ?, ?, ?)"
+							" VALUES (" + this->getWebsiteIdString() + ", " + this->getUrlListIdString() + ", ?, ?, ?, ?, ?, ?)"
 				);
 			}
 		}
@@ -272,12 +222,10 @@ namespace crawlservpp::Module::Analyzer {
 		this->reserveForPreparedStatements(statements.size());
 
 		// prepare SQL statements for algorithm
-		if(this->verbose) {
+		if(this->isVerbose()) {
 			std::ostringstream logStrStr;
 
-			logStrStr	<< "[#"
-						<< this->idString
-						<< "] prepares "
+			logStrStr	<< "prepares "
 						<< statements.size()
 						<< " SQL statements for algorithm...";
 
@@ -306,15 +254,15 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check arguments
 		if(corpusProperties.sourceTable.empty()) {
-			if(this->logging)
-				this->log("[#" + this->idString + "] WARNING: Name of source table is empty.");
+			if(this->isLogging())
+				this->log("WARNING: Name of source table is empty.");
 
 			return;
 		}
 
 		if(corpusProperties.sourceField.empty()) {
-			if(this->logging)
-				this->log("[#" + this->idString + "] WARNING: Name of source field is empty.");
+			if(this->isLogging())
+				this->log("WARNING: Name of source field is empty.");
 
 			return;
 		}
@@ -350,14 +298,12 @@ namespace crawlservpp::Module::Analyzer {
 
 					sourcesTo = sqlResultSet->getUInt64("sources");
 
-					if(this->logging) {
+					if(this->isLogging()) {
 						std::ostringstream logStrStr;
 
 						logStrStr.imbue(std::locale(""));
 
-						logStrStr	<< "[#"
-									<< this->idString
-									<< "] got text corpus of "
+						logStrStr	<< "got text corpus of "
 									<< corpusTo.size()
 									<< " bytes.";
 
@@ -423,14 +369,12 @@ namespace crawlservpp::Module::Analyzer {
 
 				corpusTo.swap(filteredCorpus);
 
-				if(this->logging) {
+				if(this->isLogging()) {
 					std::ostringstream logStrStr;
 
 					logStrStr.imbue(std::locale(""));
 
-					logStrStr	<< "[#"
-								<< this->idString
-								<< "] filtered corpus to "
+					logStrStr	<< "filtered corpus to "
 								<< corpusTo.length()
 								<< " bytes.";
 
@@ -527,8 +471,11 @@ namespace crawlservpp::Module::Analyzer {
 			if(!(this->database.isColumnExists(tableName, columnName))) {
 				if(logging)
 					this->log(
-							"WARNING: Non-existing column `" + columnName + "`"
-							" in input table `" + tableName + "` ignored"
+							"WARNING: Non-existing column `"
+							+ columnName
+							+ "` in input table `"
+							+ tableName
+							+ "` ignored"
 					);
 
 				return false;
@@ -537,7 +484,9 @@ namespace crawlservpp::Module::Analyzer {
 		else {
 			if(logging)
 				this->log(
-					"WARNING: Non-existing input table `" + tableName + "` ignored"
+						"WARNING: Non-existing input table `"
+						+ tableName
+						+ "` ignored"
 				);
 
 			return false;
@@ -660,32 +609,24 @@ namespace crawlservpp::Module::Analyzer {
 				corpusProperties.sourceType,
 				corpusProperties.sourceTable,
 				corpusProperties.sourceField,
-				this->logging
+				this->isLogging()
 		);
 
 		// show warning when using raw crawled data and logging is enabled
 		if(
 				corpusProperties.sourceType == Config::generalInputSourcesCrawling
-				&& this->logging
+				&& this->isLogging()
 		) {
-			if(this->logging) {
-				this->log(
-						"[#"
-						+ this->idString
-						+ "] WARNING: Corpus will always be re-created when created from raw crawled data."
-				);
+			if(this->isLogging()) {
+				this->log("WARNING: Corpus will always be re-created when created from raw crawled data.");
 
-				this->log(
-						"[#"
-						+ this->idString
-						+ "]  It is highly recommended to use parsed data instead!"
-				);
+				this->log("It is highly recommended to use parsed data instead!");
 
 				if(!corpusProperties.sourceTable.empty())
-					this->log("[#" + this->idString + "] WARNING: Source table name ignored.");
+					this->log("WARNING: Source table name ignored.");
 
 				if(!corpusProperties.sourceField.empty())
-					this->log("[#" + this->idString + "] WARNING: Source field name ignored.");
+					this->log("WARNING: Source field name ignored.");
 			}
 		}
 
@@ -705,11 +646,9 @@ namespace crawlservpp::Module::Analyzer {
 				)
 		);
 
-		if(this->logging)
+		if(this->isLogging())
 			this->log(
-					"[#"
-					+ this->idString
-					+ "] compiles text corpus from "
+					"compiles text corpus from "
 					+ tableName
 					+ "."
 					+ columnName
@@ -828,16 +767,14 @@ namespace crawlservpp::Module::Analyzer {
 
 					Database::sqlExecute(addStatement);
 				}
-				else if(this->logging) {
+				else if(this->isLogging()) {
 					// show warning about text corpus size
 					bool adjustServerSettings = false;
 					std::ostringstream logStrStr;
 
 					logStrStr.imbue(std::locale(""));
 
-					logStrStr	<< "[#"
-								<< this->idString
-								<< "] WARNING: The text corpus cannot be saved to the database, because its size ("
+					logStrStr	<< "WARNING: The text corpus cannot be saved to the database, because its size ("
 								<< corpusTo.size()
 								<< " bytes) exceeds the ";
 
@@ -852,21 +789,19 @@ namespace crawlservpp::Module::Analyzer {
 					this->log(logStrStr.str());
 
 					if(adjustServerSettings)
-						this->log("[#" + this->idString + "] Adjust the server's \'max_allowed_packet\' setting accordingly.");
+						this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
 				}
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::createCorpus", e); }
 
-		if(this->logging) {
+		if(this->isLogging()) {
 			// write log entry
 			std::ostringstream logStrStr;
 
 			logStrStr.imbue(std::locale(""));
 
-			logStrStr	<< "[#"
-						<< this->idString
-						<< "]  compiled text corpus of "
+			logStrStr	<< "compiled text corpus of "
 						<< corpusTo.size()
 						<< " bytes in "
 						<< timer.tickStr()

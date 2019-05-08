@@ -104,7 +104,6 @@ namespace crawlservpp::Module {
 			);
 	}
 
-	// add thread-specific logging entry to database
 	void Database::log(const std::string& logEntry) {
 		this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
 	}

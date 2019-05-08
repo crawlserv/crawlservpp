@@ -62,12 +62,6 @@ namespace crawlservpp::Module::Analyzer {
 		virtual ~Database();
 
 		// setters
-		void setId(unsigned long analyzerId);
-		void setWebsite(unsigned long websiteId);
-		void setUrlList(unsigned long listId);
-		void setNamespaces(const std::string& website, const std::string& urlList);
-		void setLogging(bool isLogging);
-		void setVerbose(bool isVerbose);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
 		void setTimeoutTargetLock(unsigned long timeOut);
@@ -114,15 +108,6 @@ namespace crawlservpp::Module::Analyzer {
 
 	protected:
 		// options
-		std::string idString;
-		unsigned long website;
-		std::string websiteIdString;
-		std::string websiteName;
-		unsigned long urlList;
-		std::string listIdString;
-		std::string urlListName;
-		bool logging;
-		bool verbose;
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;

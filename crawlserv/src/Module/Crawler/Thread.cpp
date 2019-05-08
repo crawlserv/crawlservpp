@@ -73,13 +73,9 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
-		// set ID, URL list and URL list namespace
-		this->database.setId(this->getId());
-		this->database.setUrlListId(this->getUrlList());
-		this->database.setNamespaces(this->websiteNamespace, this->urlListNamespace);
-
 		// load configuration
 		this->setCrossDomain(this->database.getWebsiteDomain(this->getWebsite()).empty());
+
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
@@ -90,7 +86,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check configuration
-		bool verbose = this->config.crawlerLogging == Config::crawlerLoggingVerbose;
+		const bool verbose = this->config.crawlerLogging == Config::crawlerLoggingVerbose;
 
 		if(this->config.crawlerQueriesLinks.empty())
 			throw Exception("Crawler::Thread::onInit(): No link extraction query specified");
@@ -101,9 +97,8 @@ namespace crawlservpp::Module::Crawler {
 		if(verbose)
 			this->log("sets database options...");
 
+		this->database.setLogging(this->config.crawlerLogging, verbose);
 		this->database.setRecrawl(this->config.crawlerReCrawl);
-		this->database.setLogging(this->config.crawlerLogging);
-		this->database.setVerbose(verbose);
 		this->database.setUrlCaseSensitive(this->config.crawlerUrlCaseSensitive);
 		this->database.setUrlDebug(this->config.crawlerUrlDebug);
 		this->database.setUrlStartupCheck(this->config.crawlerUrlStartupCheck);
@@ -216,6 +211,7 @@ namespace crawlservpp::Module::Crawler {
 		// save start time and initialize counter
 		this->startTime = std::chrono::steady_clock::now();
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
+
 		this->tickCounter = 0;
 	}
 

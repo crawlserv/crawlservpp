@@ -70,12 +70,6 @@ namespace crawlservpp::Module::Parser {
 		std::queue<std::string> configWarnings;
 		std::vector<std::string> fields;
 
-		// set ID, website and URL list
-		this->database.setId(this->getId());
-		this->database.setWebsite(this->getWebsite());
-		this->database.setUrlList(this->getUrlList());
-		this->database.setNamespaces(this->websiteNamespace, this->urlListNamespace);
-
 		// load configuration
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
@@ -89,16 +83,17 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// set database options
+		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
+
 		this->setStatusMessage("Setting database options...");
 
-		if(config.generalLogging == Config::generalLoggingVerbose)
+		if(verbose)
 			this->log("sets database options...");
 
+		this->database.setLogging(this->config.generalLogging, verbose);
 		this->database.setCacheSize(this->config.generalCacheSize);
 		this->database.setReparse(this->config.generalReParse);
 		this->database.setParseCustom(this->config.generalParseCustom);
-		this->database.setLogging(this->config.generalLogging);
-		this->database.setVerbose(config.generalLogging == Config::generalLoggingVerbose);
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setTargetFields(this->config.parsingFieldNames);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
@@ -112,6 +107,9 @@ namespace crawlservpp::Module::Parser {
 		// initialize target table
 		this->setStatusMessage("Initializing target table...");
 
+		if(verbose)
+			this->log("initializes target table...");
+
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("initializes target table...");
 
@@ -120,13 +118,16 @@ namespace crawlservpp::Module::Parser {
 		// prepare SQL statements for parser
 		this->setStatusMessage("Preparing SQL statements...");
 
-		if(config.generalLogging == Config::generalLoggingVerbose)
+		if(verbose)
 			this->log("prepares SQL statements...");
 
 		this->database.prepare();
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
+
+		if(verbose)
+			this->log("initializes custom queries...");
 
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("initializes custom queries...");
@@ -136,7 +137,7 @@ namespace crawlservpp::Module::Parser {
 		// check whether ID can be parsed from URL only
 		this->setStatusMessage("Checking for URL-only parsing...");
 
-		if(config.generalLogging == Config::generalLoggingVerbose)
+		if(verbose)
 			this->log("checks for URL-only parsing...");
 
 		this->idFromUrl = true;
@@ -153,6 +154,9 @@ namespace crawlservpp::Module::Parser {
 			// wait for parsing table lock
 			this->setStatusMessage("Waiting for parsing table...");
 
+			if(verbose)
+				this->log("waits for parsing table...");
+
 			DatabaseLock(
 					this->database,
 					"parsingTable." + this->parsingTable,
@@ -161,6 +165,9 @@ namespace crawlservpp::Module::Parser {
 
 			// check parsing table
 			this->setStatusMessage("Checking parsing table...");
+
+			if(verbose)
+					this->log("checks parsing table...");
 
 			const unsigned int deleted = this->database.checkParsingTable();
 
@@ -178,6 +185,7 @@ namespace crawlservpp::Module::Parser {
 		// save start time and initialize counter
 		this->startTime = std::chrono::steady_clock::now();
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
+
 		this->tickCounter = 0;
 	}
 
