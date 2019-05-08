@@ -45,6 +45,7 @@ namespace crawlservpp::Module::Crawler {
 		static const unsigned short crawlerLoggingDefault = 1;
 		static const unsigned short crawlerLoggingExtended = 2;
 		static const unsigned short crawlerLoggingVerbose = 3;
+
 		static const unsigned short redirectSourceUrl = 0;
 		static const unsigned short redirectSourceContent = 1;
 

@@ -39,6 +39,7 @@ namespace crawlservpp::Module::Parser {
 		static const unsigned short generalLoggingDefault = 1;
 		static const unsigned short generalLoggingExtended = 2;
 		static const unsigned short generalLoggingVerbose = 3;
+
 		static const unsigned short parsingSourceUrl = 0;
 		static const unsigned short parsingSourceContent = 1;
 
