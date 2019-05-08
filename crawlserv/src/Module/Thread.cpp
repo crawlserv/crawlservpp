@@ -49,22 +49,24 @@ namespace crawlservpp::Module {
 		)
 			this->status = threadStatus.status.substr(7);
 
-		if(threadStatus.id) {
-			// set ID
-			this->id = threadStatus.id;
-
-			// create ID string
-			std::ostringstream idStrStr;
-
-			idStrStr << threadStatus.id;
-
-			this->idString = idStrStr.str();
-		}
+		// set ID
+		this->id = threadStatus.id;
 
 		// get namespace of website, URL list and configuration
 		this->websiteNamespace = this->databaseClass.getWebsiteNamespace(this->getWebsite());
 		this->urlListNamespace = this->databaseClass.getUrlListNamespace(this->getUrlList());
 		this->configuration = this->databaseClass.getConfiguration(this->getConfig());
+
+		// set general database options
+		this->database.setOptions(
+				ModuleOptions(
+						threadStatus.id,
+						this->getWebsite(),
+						this->websiteNamespace,
+						this->getUrlList(),
+						this->urlListNamespace
+				)
+		);
 
 		// update thread status in database (remove "INTERRUPTED ", add "PAUSED " before status if necessary)
 		if(threadStatus.id)
@@ -82,12 +84,6 @@ namespace crawlservpp::Module {
 	) : Thread(dbBase, threadOptions, ThreadStatus()) {
 		// add thread to database and save ID
 		this->id = this->databaseClass.addThread(threadOptions);
-
-		std::ostringstream idStrStr;
-
-		idStrStr << this->id;
-
-		this->idString = idStrStr.str();
 	}
 
 	// destructor stub
@@ -298,7 +294,7 @@ namespace crawlservpp::Module {
 
 	// add a log entry for the thread to the database using the module of the thread (to be used by the thread only)
 	void Thread::log(const std::string& entry) {
-		this->database.log("[#" + this->idString + "] " + entry);
+		this->database.log(entry);
 	}
 
 	// allow the thread to be paused (enabled by default)
