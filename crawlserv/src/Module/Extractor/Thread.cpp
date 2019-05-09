@@ -422,10 +422,12 @@ namespace crawlservpp::Module::Extractor {
 
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
-		// reserve memory for query ids
+		// reserve memory for queries
 		this->queriesId.reserve(this->config.extractingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.extractingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.extractingFieldQueries.size());
+		this->queriesVariables.reserve(this->config.variablesQueries.size());
+		this->queriesTokens.reserve(this->config.variablesTokenQueries.size());
 
 		try {
 			// create queries and get query IDs
@@ -451,6 +453,22 @@ namespace crawlservpp::Module::Extractor {
 				this->database.getQueryProperties(*i, properties);
 
 				this->queriesFields.emplace_back(this->addQuery(properties));
+			}
+
+			for(auto i = this->config.variablesQueries.begin(); i != this->config.variablesQueries.end(); ++i) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesVariables.emplace_back(this->addQuery(properties));
+			}
+
+			for(auto i = this->config.variablesTokenQueries.begin(); i != this->config.variablesTokenQueries.end(); ++i) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(*i, properties);
+
+				this->queriesTokens.emplace_back(this->addQuery(properties));
 			}
 		}
 		catch(const RegExException& e) {
