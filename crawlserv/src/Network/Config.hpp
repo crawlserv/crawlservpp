@@ -14,9 +14,7 @@
 #define NETWORK_CONFIG_HPP_
 
 #include "../Module/Config.hpp"
-#include "../Struct/ConfigItem.hpp"
 
-#include <queue>
 #include <string>
 #include <vector>
 
@@ -27,9 +25,6 @@ namespace crawlservpp::Network {
 	 */
 
 	class Config : public Module::Config {
-		// for convenience
-		typedef Struct::ConfigItem ConfigItem;
-
 	public:
 		Config();
 		virtual ~Config();
