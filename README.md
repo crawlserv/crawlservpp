@@ -108,19 +108,19 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Abstract class for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
 * **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
 * **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
-* **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.hpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for all configuration entries.
+* **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.hpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for configuration entries.
 * **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for analyzers. Abstract class to be inherited by algorithm classes.
-* **[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.hpp)**: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for all configuration entries.
+* **[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.hpp)**: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for configuration entries.
 * **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for crawlers.
-* **~~[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.hpp)~~**: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
-* **~~[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
-* **~~[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for extractors.
-* **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.hpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for all configuration entries.
+* **[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.hpp)~~**: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for configuration entries.
+* **[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
+* **[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for extractors.
+* **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.hpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for configuration entries.
 * **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for parsers.
-* **[`Network::Config`](crawlserv/src/Network/Config.hpp)**: Network configuration. This class is both used by the crawler and the extractor. See [crawler.json](crawlserv_frontend/crawlserv/json/parser.json) or ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for all configuration entries.
+* **[`Network::Config`](crawlserv/src/Network/Config.hpp)**: Network configuration. This class is both used by the crawler and the extractor. See [network.json](crawlserv_frontend/crawlserv/json/include/network.json) for configuration entries.
 * **[`Network::Curl`](crawlserv/src/Network/Curl.cpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
 * **[`Parsing::HTML`](crawlserv/src/Parsing/HTML.cpp)**: Clean HTML documents and parse them into XML using the [HTML Tidy API](http://www.html-tidy.org/).
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction using [uriparser](https://github.com/uriparser/uriparser).
