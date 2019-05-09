@@ -95,7 +95,6 @@ namespace crawlservpp::Module::Extractor {
 		this->database.setCacheSize(this->config.generalCacheSize);
 		this->database.setReextract(this->config.generalReExtract);
 		this->database.setExtractCustom(this->config.generalExtractCustom);
-		this->database.setExtractStart(this->config.generalExtractStart);
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setTargetFields(this->config.extractingFieldNames);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
