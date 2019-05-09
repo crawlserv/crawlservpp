@@ -84,6 +84,8 @@ namespace crawlservpp::Module {
 	) : Thread(dbBase, threadOptions, ThreadStatus()) {
 		// add thread to database and save ID
 		this->id = this->databaseClass.addThread(threadOptions);
+
+		this->database.setThreadId(this->id);
 	}
 
 	// destructor stub
