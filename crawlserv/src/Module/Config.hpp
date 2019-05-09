@@ -99,7 +99,7 @@ protected:
 
 	protected:
 		// module-specific parsing functions
-		virtual void parseOption() = 0;
+		virtual void parseBasicOption() = 0;
 		virtual void checkOptions() = 0;
 
 	private:
@@ -253,7 +253,7 @@ protected:
 			}
 
 			// parse option by child class
-			this->parseOption();
+			this->parseBasicOption();
 
 			// check whether category and item were found
 			if(!this->finished) {

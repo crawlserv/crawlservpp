@@ -136,7 +136,7 @@ namespace crawlservpp::Module::Crawler {
 
 	protected:
 		// crawling-specific configuration parsing
-		void parseAdditionalOption() override;
+		void parseOption() override;
 		void checkOptions() override;
 
 	private:
@@ -194,7 +194,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// parse crawling-specific configuration option
-	inline void Config::parseAdditionalOption() {
+	inline void Config::parseOption() {
 		// crawler options
 		this->category("crawler");
 		this->option("archives", this->config.crawlerArchives);

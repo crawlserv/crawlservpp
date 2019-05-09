@@ -66,7 +66,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	protected:
 		// analyzing-specific configuration parsing
-		void parseOption() override;
+		void parseBasicOption() override;
 		void checkOptions() override;
 
 		// algo-specific configuration parsing
@@ -87,7 +87,7 @@ namespace crawlservpp::Module::Analyzer {
 										filterDateEnable(false) {}
 
 	// parse analyzing-specific configuration option
-	inline void Config::parseOption() {
+	inline void Config::parseBasicOption() {
 		// general options
 		this->category("general");
 		this->option("input.fields", this->config.generalInputFields, StringParsingOption::SQL);

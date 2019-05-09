@@ -98,10 +98,10 @@ namespace crawlservpp::Network {
 		bool verbose;
 
 		// parse network configuration option
-		void parseOption() override;
+		void parseBasicOption() override;
 
 		// parse additional configuration options
-		virtual void parseAdditionalOption() = 0;
+		virtual void parseOption() = 0;
 	};
 
 	/*
@@ -154,7 +154,7 @@ namespace crawlservpp::Network {
 	inline Config::~Config() {}
 
 	// parse configuration option
-	inline void Config::parseOption() {
+	inline void Config::parseBasicOption() {
 		this->category("network");
 		this->option("connections.max", this->connectionsMax);
 		this->option("contentlength.ignore", this->contentLengthIgnore);
@@ -217,7 +217,7 @@ namespace crawlservpp::Network {
 		this->option("useragent", this->userAgent);
 		this->option("verbose", this->verbose);
 
-		this->parseAdditionalOption();
+		this->parseOption();
 	}
 
 } /* crawlservpp::Network */

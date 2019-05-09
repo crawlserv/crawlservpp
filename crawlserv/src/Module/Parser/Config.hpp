@@ -87,7 +87,7 @@ namespace crawlservpp::Module::Parser {
 
 	protected:
 		// parsing-specific configuration parsing
-		void parseOption() override;
+		void parseBasicOption() override;
 		void checkOptions() override;
 	};
 
@@ -108,7 +108,7 @@ namespace crawlservpp::Module::Parser {
 										parsingRepairCData(true) {}
 
 	// parse parsing-specific configuration option
-	inline void Config::parseOption() {
+	inline void Config::parseBasicOption() {
 		this->category("general");
 		this->option("cache.size", this->config.generalCacheSize);
 		this->option("logging", this->config.generalLogging);
