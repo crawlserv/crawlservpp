@@ -65,6 +65,9 @@ namespace crawlservpp::Module::Extractor {
 
 	// initialize extractor
 	void Thread::onInit() {
+		// TODO: Not fully implemented yet
+		throw Exception("Extractor is not implemented yet.");
+
 		std::queue<std::string> configWarnings;
 		std::vector<std::string> fields;
 
