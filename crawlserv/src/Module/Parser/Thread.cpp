@@ -441,6 +441,7 @@ namespace crawlservpp::Module::Parser {
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		// reserve memory for query ids
+		this->queriesSkip.reserve(this->config.generalSkip.size());
 		this->queriesId.reserve(this->config.parsingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.parsingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.parsingFieldQueries.size());
