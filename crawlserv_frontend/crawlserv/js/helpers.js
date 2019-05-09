@@ -16,15 +16,15 @@ function handleJsonError(txt, jqxhr, status, thrown) {
 	if(typeof thrown !== "undefined")
 		error += thrown + " ";
 	
-	if(typeof jqxhr !== "undefined") {
+	if(typeof jqxhr !== "undefined") {			
 		if(typeof jqxhr.responseJSON !== "undefined") {
 			if(typeof jqxhr.responeJSON.message !== "undefined")
 				error += "[" + jqxhr.responseJSON.message + "]";
 			else
 				error += "[" + jqxhr.responseJSON + "]";
 		}
-		else
-			error += jqxhr;
+		else if(typeof jqxhr.status !== "undefined" && typeof(jqxhr.statusText !== "undefined"))
+			error += "[" + jqxhr.status + " " + jqxhr.statusText + "]";
 	}
 	
 	throw new Error(error);
