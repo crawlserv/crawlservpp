@@ -32,14 +32,15 @@ namespace crawlservpp::Module::Analyzer {
 		virtual ~Config() {};
 
 		// configuration constants
-		static const unsigned short generalInputSourcesParsing = 0;
-		static const unsigned short generalInputSourcesExtracting = 1;
-		static const unsigned short generalInputSourcesAnalyzing = 2;
-		static const unsigned short generalInputSourcesCrawling = 3;
-		static const unsigned short generalLoggingSilent = 0;
-		static const unsigned short generalLoggingDefault = 1;
-		static const unsigned short generalLoggingExtended = 2;
-		static const unsigned short generalLoggingVerbose = 3;
+		static const unsigned char generalInputSourcesParsing = 0;
+		static const unsigned char generalInputSourcesExtracting = 1;
+		static const unsigned char generalInputSourcesAnalyzing = 2;
+		static const unsigned char generalInputSourcesCrawling = 3;
+
+		static const unsigned char generalLoggingSilent = 0;
+		static const unsigned char generalLoggingDefault = 1;
+		static const unsigned char generalLoggingExtended = 2;
+		static const unsigned char generalLoggingVerbose = 3;
 
 		// configuration entries
 		struct Entries {
@@ -48,10 +49,10 @@ namespace crawlservpp::Module::Analyzer {
 
 			// general entries
 			std::vector<std::string> generalInputFields;
-			std::vector<unsigned short> generalInputSources;
+			std::vector<unsigned char> generalInputSources;
 
 			std::vector<std::string> generalInputTables;
-			unsigned short generalLogging;
+			unsigned char generalLogging;
 			std::string generalResultTable;
 			unsigned long generalSleepMySql;
 			unsigned long generalSleepWhenFinished;

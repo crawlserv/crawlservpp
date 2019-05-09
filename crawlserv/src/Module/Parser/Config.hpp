@@ -33,13 +33,13 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Config() {};
 
 		// configuration constants
-		static const unsigned short generalLoggingSilent = 0;
-		static const unsigned short generalLoggingDefault = 1;
-		static const unsigned short generalLoggingExtended = 2;
-		static const unsigned short generalLoggingVerbose = 3;
+		static const unsigned char generalLoggingSilent = 0;
+		static const unsigned char generalLoggingDefault = 1;
+		static const unsigned char generalLoggingExtended = 2;
+		static const unsigned char generalLoggingVerbose = 3;
 
-		static const unsigned short parsingSourceUrl = 0;
-		static const unsigned short parsingSourceContent = 1;
+		static const unsigned char parsingSourceUrl = 0;
+		static const unsigned char parsingSourceContent = 1;
 
 		// configuration entries
 		struct Entries {
@@ -49,7 +49,7 @@ namespace crawlservpp::Module::Parser {
 			// general entries
 			unsigned long generalCacheSize;
 			unsigned int generalLock;
-			unsigned short generalLogging;
+			unsigned char generalLogging;
 			bool generalNewestOnly;
 			bool generalParseCustom;
 			bool generalReParse;
@@ -69,12 +69,12 @@ namespace crawlservpp::Module::Parser {
 			std::vector<bool> parsingFieldJSON;
 			std::vector<std::string> parsingFieldNames;
 			std::vector<unsigned long> parsingFieldQueries;
-			std::vector<unsigned short> parsingFieldSources;
+			std::vector<unsigned char> parsingFieldSources;
 			std::vector<bool> parsingFieldTidyTexts;
 			std::vector<bool> parsingFieldWarningsEmpty;
 			std::vector<std::string> parsingIdIgnore;
 			std::vector<unsigned long> parsingIdQueries;
-			std::vector<unsigned short> parsingIdSources;
+			std::vector<unsigned char> parsingIdSources;
 			bool parsingRepairCData;
 		} config;
 

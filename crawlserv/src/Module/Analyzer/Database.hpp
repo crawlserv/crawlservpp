@@ -87,7 +87,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::string getSourceTableName(unsigned short type, const std::string& name);
 		std::string getSourceColumnName(unsigned short type, const std::string& name);
 		void checkSources(
-				std::vector<unsigned short>& types,
+				std::vector<unsigned char>& types,
 				std::vector<std::string>& tables,
 				std::vector<std::string>& columns,
 				bool logging

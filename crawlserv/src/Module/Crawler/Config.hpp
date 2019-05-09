@@ -37,13 +37,13 @@ namespace crawlservpp::Module::Crawler {
 		void setCrossDomain(bool isCrossDomain);
 
 		// configuration constants
-		static const unsigned short crawlerLoggingSilent = 0;
-		static const unsigned short crawlerLoggingDefault = 1;
-		static const unsigned short crawlerLoggingExtended = 2;
-		static const unsigned short crawlerLoggingVerbose = 3;
+		static const unsigned char crawlerLoggingSilent = 0;
+		static const unsigned char crawlerLoggingDefault = 1;
+		static const unsigned char crawlerLoggingExtended = 2;
+		static const unsigned char crawlerLoggingVerbose = 3;
 
-		static const unsigned short redirectSourceUrl = 0;
-		static const unsigned short redirectSourceContent = 1;
+		static const unsigned char redirectSourceUrl = 0;
+		static const unsigned char redirectSourceContent = 1;
 
 		// configuration entries
 		struct Entries {
@@ -56,7 +56,7 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> crawlerArchivesUrlsMemento;
 			std::vector<std::string> crawlerArchivesUrlsTimemap;
 			unsigned int crawlerLock;
-			unsigned short crawlerLogging;
+			unsigned char crawlerLogging;
 			std::vector<std::string> crawlerParamsAdd;
 			std::vector<std::string> crawlerParamsBlackList;
 			std::vector<std::string> crawlerParamsWhiteList;
@@ -119,7 +119,7 @@ namespace crawlservpp::Module::Crawler {
 			bool redirectUsePost;
 			std::vector<std::string> redirectVarNames;
 			std::vector<unsigned long> redirectVarQueries;
-			std::vector<unsigned short> redirectVarSources;
+			std::vector<unsigned char> redirectVarSources;
 
 			// expected number of results
 			unsigned long expectedQuery;

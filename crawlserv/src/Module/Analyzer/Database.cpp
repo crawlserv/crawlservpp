@@ -431,7 +431,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	// public helper function: check input tables and columns, throws Database::Exception
 	void Database::checkSources(
-			std::vector<unsigned short>& types,
+			std::vector<unsigned char>& types,
 			std::vector<std::string>& tables,
 			std::vector<std::string>& columns,
 			bool logging
