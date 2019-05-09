@@ -3,7 +3,7 @@
  *
  * Network configuration. This class is used by both the crawler and the extractor.
  *
- * WARNING:	Changing the configuration requires updating 'json/crawler.json' and 'json/extractor.json'
+ * WARNING:	Changing the configuration requires updating 'json/include/network.json'
  * 			in crawlserv_frontend! See there for details on the specific configuration entries.
  *
  *  Created on: Jan 8, 2019
