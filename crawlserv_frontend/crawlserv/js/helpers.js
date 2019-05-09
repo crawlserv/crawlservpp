@@ -25,6 +25,8 @@ function handleJsonError(txt, jqxhr, status, thrown) {
 		}
 		else if(typeof jqxhr.status !== "undefined")
 			error += "[" + jqxhr.status + "]";
+		else
+			error += jqxhr;
 	}
 	
 	throw new Error(error);
