@@ -827,6 +827,23 @@ namespace crawlservpp::Module::Crawler {
 
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
+		// reserve memory for queries
+		this->queriesBlackListContent.reserve(this->config.crawlerQueriesBlackListContent.size());
+		this->queriesBlackListTypes.reserve(this->config.crawlerQueriesBlackListTypes.size());
+		this->queriesBlackListUrls.reserve(this->config.crawlerQueriesBlackListUrls.size());
+		this->queriesLinks.reserve(this->config.crawlerQueriesLinks.size());
+		this->queriesLinksBlackListContent.reserve(this->config.crawlerQueriesLinksBlackListContent.size());
+		this->queriesLinksBlackListTypes.reserve(this->config.crawlerQueriesLinksBlackListTypes.size());
+		this->queriesLinksBlackListUrls.reserve(this->config.crawlerQueriesLinksBlackListUrls.size());
+		this->queriesLinksWhiteListContent.reserve(this->config.crawlerQueriesLinksWhiteListContent.size());
+		this->queriesLinksWhiteListTypes.reserve(this->config.crawlerQueriesLinksWhiteListTypes.size());
+		this->queriesLinksWhiteListUrls.reserve(this->config.crawlerQueriesLinksWhiteListUrls.size());
+		this->queriesWhiteListContent.reserve(this->config.crawlerQueriesWhiteListContent.size());
+		this->queriesWhiteListTypes.reserve(this->config.crawlerQueriesWhiteListTypes.size());
+		this->queriesWhiteListUrls.reserve(this->config.crawlerQueriesWhiteListUrls.size());
+		this->queriesTokens.reserve(this->config.customTokensQuery.size());
+		this->queriesRedirectVars.reserve(this->config.redirectVarQueries.size());
+
 		try {
 			for(
 					auto i = this->config.crawlerQueriesBlackListContent.begin();
