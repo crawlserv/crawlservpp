@@ -57,7 +57,6 @@ namespace crawlservpp::Module::Extractor {
 			// general entries
 			unsigned long generalCacheSize;
 			bool generalExtractCustom;
-			bool generalExtractStart;
 			unsigned int generalLock;
 			unsigned char generalLogging;
 			bool generalReExtract;
@@ -81,6 +80,10 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<unsigned long> variablesQueries;
 			std::vector<unsigned char> variablesSources;
 			std::vector<std::string> variablesTables;
+			std::vector<std::string> variablesTokenNames;
+			std::vector<unsigned long> variablesTokenQueries;
+			std::vector<std::string> variablesTokenSources;
+			std::vector<bool> variablesTokenUsePost;
 
 			// paging entries
 			long pagingFirst;
@@ -139,7 +142,6 @@ namespace crawlservpp::Module::Extractor {
 	// configuration constructor: set default values
 	inline Config::Entries::Entries() : generalCacheSize(2500),
 										generalExtractCustom(false),
-										generalExtractStart(false),
 										generalLock(300),
 										generalLogging(generalLoggingDefault),
 										generalReExtract(false),
@@ -167,7 +169,6 @@ namespace crawlservpp::Module::Extractor {
 		this->category("general");
 		this->option("cache.size", this->config.generalCacheSize);
 		this->option("extract.custom", this->config.generalExtractCustom);
-		this->option("extract.start", this->config.generalExtractStart);
 		this->option("lock", this->config.generalLock);
 		this->option("logging", this->config.generalLogging);
 		this->option("reextract", this->config.generalReExtract);
@@ -192,6 +193,10 @@ namespace crawlservpp::Module::Extractor {
 		this->option("variables.queries", this->config.variablesQueries);
 		this->option("variables.sources", this->config.variablesSources);
 		this->option("variables.tables", this->config.variablesTables);
+		this->option("variables.token.names", this->config.variablesTokenNames);
+		this->option("variables.token.queries", this->config.variablesTokenQueries);
+		this->option("variables.token.sources", this->config.variablesTokenSources);
+		this->option("variables.token.use.post", this->config.variablesTokenUsePost);
 
 		// paging
 		this->category("paging");
