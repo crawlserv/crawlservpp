@@ -44,6 +44,7 @@ namespace crawlservpp::Module {
 
 		// setters
 		void setOptions(const ModuleOptions& moduleOptions);
+		void setThreadId(unsigned long id);
 		void setLogging(bool isLogging, bool isVerbose);
 
 		// command function
