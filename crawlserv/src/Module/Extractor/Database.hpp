@@ -51,7 +51,6 @@ namespace crawlservpp::Module::Extractor {
 		// setters
 		void setCacheSize(unsigned long setCacheSize);
 		void setReextract(bool isReextract);
-		void setExtractStart(bool isParseStart);
 		void setExtractCustom(bool isParseCustom);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields);
@@ -94,7 +93,6 @@ namespace crawlservpp::Module::Extractor {
 		// options
 		unsigned long cacheSize;
 		bool reextract;
-		bool extractStart;
 		bool extractCustom;
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
