@@ -97,8 +97,11 @@ namespace crawlservpp::Network {
 		std::string userAgent;
 		bool verbose;
 
-		// parse configuration option
+		// parse network configuration option
 		void parseOption() override;
+
+		// parse additional configuration options
+		virtual void parseAdditionalOption() = 0;
 	};
 
 	/*
@@ -213,6 +216,8 @@ namespace crawlservpp::Network {
 		this->option("tlssrp.user", this->tlsSrpUser);
 		this->option("useragent", this->userAgent);
 		this->option("verbose", this->verbose);
+
+		this->parseAdditionalOption();
 	}
 
 } /* crawlservpp::Network */
