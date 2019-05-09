@@ -1170,13 +1170,17 @@ namespace crawlservpp::Module::Parser {
 
 				logStrStr.imbue(std::locale(""));
 
-				logStrStr <<	"WARNING: An entry could not be saved to the database,"
-								" because the size of a parsed value (" << tooLarge << " bytes) exceeds the ";
+				logStrStr	<<	"WARNING: An entry could not be saved to the database,"
+								" because the size of a parsed value ("
+							<<	tooLarge
+							<< " bytes) exceeds the ";
 
 				if(tooLarge > 1073741824)
 					logStrStr << "MySQL maximum of 1 GiB.";
 				else {
-					logStrStr << "current MySQL server maximum of " << this->getMaxAllowedPacketSize() << " bytes.";
+					logStrStr	<< "current MySQL server maximum of "
+								<< this->getMaxAllowedPacketSize()
+								<< " bytes.";
 
 					adjustServerSettings = true;
 				}
