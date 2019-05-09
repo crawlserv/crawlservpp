@@ -86,7 +86,7 @@ namespace crawlservpp::Module::Parser {
 		};
 
 	protected:
-		// parsing-specific configuration parsing
+		// parsing of parsing-specific configuration
 		void parseOption() override;
 		void checkOptions() override;
 	};

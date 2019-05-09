@@ -69,7 +69,7 @@ namespace crawlservpp::Module::Analyzer {
 		void parseOption() override;
 		void checkOptions() override;
 
-		// algo-specific configuration parsing
+		// parsing of algo-specific configuration
 		virtual void parseAlgoOption() = 0;
 		virtual void checkAlgoOptions() = 0;
 	};
