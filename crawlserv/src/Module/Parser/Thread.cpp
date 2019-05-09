@@ -171,14 +171,25 @@ namespace crawlservpp::Module::Parser {
 
 			const unsigned int deleted = this->database.checkParsingTable();
 
-			if(deleted && this->config.generalLogging) {
-				std::ostringstream logStrStr;
+			if(this->config.generalLogging) {
+				switch(deleted) {
+				case 0:
+					break;
 
-				logStrStr.imbue(std::locale(""));
+				case 1:
+					this->log("WARNING: Deleted a duplicate URL lock.");
 
-				logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+					break;
 
-				this->log(logStrStr.str());
+				default:
+					std::ostringstream logStrStr;
+
+					logStrStr.imbue(std::locale(""));
+
+					logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+
+					this->log(logStrStr.str());
+				}
 			}
 		}
 
@@ -482,7 +493,7 @@ namespace crawlservpp::Module::Parser {
 		}
 	}
 
-	// parsing function for URL selection, return whether there are URLs left to parse
+	// URL selection
 	void Thread::parsingUrlSelection() {
 		Timer::Simple timer;
 
@@ -843,7 +854,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// check whether parsed ID already exists and the current content ID differs from the one in the database
-		unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
+		const unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
 
 		if(contentId && contentId != content.first) {
 			this->logParsingErrors(content.first);
