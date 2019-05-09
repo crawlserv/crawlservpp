@@ -69,21 +69,21 @@ namespace crawlservpp::Module::Extractor {
 			bool generalTiming;
 
 			// variables entries
-			std::vector<std::string> variablesAliases;
-			std::vector<long> variablesAliasesAdd;
-			std::vector<std::string> variablesColumns;
-			std::vector<long> variablesCountersEnd;
-			std::vector<long> variablesCountersStart;
-			std::vector<long> variablesCountersStep;
-			std::vector<std::string> variablesDateTimeFormats;
-			std::vector<std::string> variablesNames;
-			std::vector<unsigned long> variablesQueries;
-			std::vector<unsigned char> variablesSources;
-			std::vector<std::string> variablesTables;
-			std::vector<std::string> variablesTokenNames;
-			std::vector<unsigned long> variablesTokenQueries;
-			std::vector<std::string> variablesTokenSources;
-			std::vector<bool> variablesTokenUsePost;
+			std::vector<std::string> variablesAlias;
+			std::vector<long> variablesAliasAdd;
+			std::vector<std::string> variablesColumn;
+			std::vector<long> variablesCounterEnd;
+			std::vector<long> variablesCounterStart;
+			std::vector<long> variablesCounterStep;
+			std::vector<std::string> variablesDateTimeFormat;
+			std::vector<std::string> variablesName;
+			std::vector<unsigned long> variablesQuery;
+			std::vector<unsigned char> variablesSource;
+			std::vector<std::string> variablesTable;
+			std::vector<std::string> variablesTokensName;
+			std::vector<unsigned long> variablesTokensQuery;
+			std::vector<std::string> variablesTokensSource;
+			std::vector<bool> variablesTokensUsePost;
 
 			// paging entries
 			long pagingFirst;
@@ -182,21 +182,21 @@ namespace crawlservpp::Module::Extractor {
 
 		// variables
 		this->category("variables");
-		this->option("variables.aliases", this->config.variablesAliases);
-		this->option("variables.aliases.add", this->config.variablesAliasesAdd);
-		this->option("variables.columns", this->config.variablesColumns);
-		this->option("variables.counters.end", this->config.variablesCountersEnd);
-		this->option("variables.counters.start", this->config.variablesCountersStart);
-		this->option("variables.counters.step", this->config.variablesCountersStep);
-		this->option("variables.datetime.formats", this->config.variablesDateTimeFormats);
-		this->option("variables.names", this->config.variablesNames);
-		this->option("variables.queries", this->config.variablesQueries);
-		this->option("variables.sources", this->config.variablesSources);
-		this->option("variables.tables", this->config.variablesTables);
-		this->option("variables.token.names", this->config.variablesTokenNames);
-		this->option("variables.token.queries", this->config.variablesTokenQueries);
-		this->option("variables.token.sources", this->config.variablesTokenSources);
-		this->option("variables.token.use.post", this->config.variablesTokenUsePost);
+		this->option("alias", this->config.variablesAlias);
+		this->option("alias.add", this->config.variablesAliasAdd);
+		this->option("column", this->config.variablesColumn);
+		this->option("counter.end", this->config.variablesCounterEnd);
+		this->option("counter.start", this->config.variablesCounterStart);
+		this->option("counter.step", this->config.variablesCounterStep);
+		this->option("datetime.format", this->config.variablesDateTimeFormat);
+		this->option("name", this->config.variablesName);
+		this->option("query", this->config.variablesQuery);
+		this->option("source", this->config.variablesSource);
+		this->option("table", this->config.variablesTable);
+		this->option("tokens.name", this->config.variablesTokensName);
+		this->option("tokens.query", this->config.variablesTokensQuery);
+		this->option("tokens.source", this->config.variablesTokensSource);
+		this->option("tokens.use.post", this->config.variablesTokensUsePost);
 
 		// paging
 		this->category("paging");
