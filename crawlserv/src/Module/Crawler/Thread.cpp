@@ -1048,7 +1048,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// crawling function for URL selection (includes locking the URL)
+	// URL selection (includes locking the URL), return whether there are any URLs to crawl left
 	bool Thread::crawlingUrlSelection(IdString& urlTo, bool& usePostTo) {
 		bool result = true;
 
