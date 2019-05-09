@@ -41,7 +41,6 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::TableColumn TableColumn;
 
-		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::pair<unsigned long, std::string> IdString;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
