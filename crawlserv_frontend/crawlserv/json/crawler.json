@@ -509,6 +509,7 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
+				"bool",
 				"single"
 			],
 			"default": [],
