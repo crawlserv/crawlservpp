@@ -425,8 +425,8 @@ namespace crawlservpp::Module::Extractor {
 		this->queriesId.reserve(this->config.extractingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.extractingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.extractingFieldQueries.size());
-		this->queriesVariables.reserve(this->config.variablesQueries.size());
-		this->queriesTokens.reserve(this->config.variablesTokenQueries.size());
+		this->queriesVariables.reserve(this->config.variablesQuery.size());
+		this->queriesTokens.reserve(this->config.variablesTokensQuery.size());
 
 		try {
 			// create queries and get query IDs
@@ -454,7 +454,7 @@ namespace crawlservpp::Module::Extractor {
 				this->queriesFields.emplace_back(this->addQuery(properties));
 			}
 
-			for(auto i = this->config.variablesQueries.begin(); i != this->config.variablesQueries.end(); ++i) {
+			for(auto i = this->config.variablesQuery.begin(); i != this->config.variablesQuery.end(); ++i) {
 				QueryProperties properties;
 
 				this->database.getQueryProperties(*i, properties);
@@ -462,7 +462,7 @@ namespace crawlservpp::Module::Extractor {
 				this->queriesVariables.emplace_back(this->addQuery(properties));
 			}
 
-			for(auto i = this->config.variablesTokenQueries.begin(); i != this->config.variablesTokenQueries.end(); ++i) {
+			for(auto i = this->config.variablesTokensQuery.begin(); i != this->config.variablesTokensQuery.end(); ++i) {
 				QueryProperties properties;
 
 				this->database.getQueryProperties(*i, properties);
