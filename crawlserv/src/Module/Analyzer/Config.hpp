@@ -15,14 +15,10 @@
 
 #include "../Config.hpp"
 
-#include "../../Helper/DateTime.hpp"
-#include "../../Helper/Strings.hpp"
-
-#include <algorithm>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <algorithm>	// std::min
+#include <queue>		// std::queue
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer {
 
@@ -71,6 +67,10 @@ namespace crawlservpp::Module::Analyzer {
 		// analyzing-specific configuration parsing
 		void parseOption() override;
 		void checkOptions() override;
+
+		// algo-specific configuration parsing
+		virtual void parseAlgoOption() = 0;
+		virtual void checkAlgoOptions() = 0;
 	};
 
 	/*
@@ -103,6 +103,9 @@ namespace crawlservpp::Module::Analyzer {
 		this->option("enable", this->config.filterDateEnable);
 		this->option("from", this->config.filterDateFrom);
 		this->option("to", this->config.filterDateTo);
+
+		// parse algo options
+		this->parseAlgoOption();
 	}
 
 	// check analyzing-specific configuration
@@ -145,6 +148,9 @@ namespace crawlservpp::Module::Analyzer {
 			);
 			this->warning("Incomplete inputs removed.");
 		}
+
+		// check algo options
+		this->checkAlgoOptions();
 	}
 
 } /* crawlservpp::Module::Analyzer */

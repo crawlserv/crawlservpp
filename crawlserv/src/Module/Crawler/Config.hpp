@@ -15,13 +15,12 @@
 
 #include "../../Main/Exception.hpp"
 #include "../../Network/Config.hpp"
-#include "../../Struct/ConfigItem.hpp"
 
-#include <algorithm>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <algorithm>	// std::min
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Crawler {
 
@@ -30,9 +29,6 @@ namespace crawlservpp::Module::Crawler {
 	 */
 
 	class Config : public Network::Config {
-		// for convenience
-		typedef Struct::ConfigItem ConfigItem;
-
 	public:
 		Config() : crossDomain(false) {}
 		virtual ~Config() {}
