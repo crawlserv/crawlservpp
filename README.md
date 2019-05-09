@@ -79,7 +79,7 @@ The program will ask you for the password of the chosen MySQL user before it pro
 
 Even without access to the frontend you can shut down the server from the terminal by sending a SIGINT signal (`CTRL+X`). It will wait for all running threads to avoid any loss of data.
 
-**NB!** When compiling the source manually, the following definitions need to be set in advance:
+**NB!** When compiling the sources manually, the following definitions need to be set in advance:
 
 * `#define MG_ENABLE_HTTP_STREAMING_MULTIPART`
 * `#define PCRE2_CODE_UNIT_WIDTH 8`
