@@ -120,6 +120,9 @@ namespace crawlservpp::Module::Extractor {
 		std::vector<QueryStruct> queriesId;
 		std::vector<QueryStruct> queriesDateTime;
 		std::vector<QueryStruct> queriesFields;
+		std::vector<QueryStruct> queriesVariables;
+		std::vector<QueryStruct> queriesTokens;
+
 		unsigned long lastUrl;
 
 		// timing
