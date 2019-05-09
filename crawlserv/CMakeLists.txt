@@ -239,6 +239,8 @@ add_executable(${PROJECT_NAME}
 		src/Module/Analyzer/Thread.cpp
 		src/Module/Crawler/Database.cpp
 		src/Module/Crawler/Thread.cpp
+		src/Module/Extractor/Database.cpp
+		src/Module/Extractor/Thread.cpp
 		src/Module/Parser/Database.cpp
 		src/Module/Parser/Thread.cpp
 		src/Module/Database.cpp
