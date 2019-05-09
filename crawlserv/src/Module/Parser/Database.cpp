@@ -89,7 +89,7 @@ namespace crawlservpp::Module::Parser {
 		// reserve memory
 		this->reserveForPreparedStatements(sizeof(ps) / sizeof(unsigned short));
 
-		// prepare SQL statements for parser
+		// prepare SQL statements
 		if(!(this->ps.fetchUrls)) {
 			if(this->isVerbose())
 				this->log("prepares fetchUrls()...");
