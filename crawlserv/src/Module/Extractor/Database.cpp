@@ -17,7 +17,6 @@ namespace crawlservpp::Module::Extractor {
 							  targetTableAlias("b"),
 							  cacheSize(2500),
 							  reextract(false),
-							  extractStart(false),
 							  extractCustom(false),
 							  targetTableId(0),
 							  ps(_ps()) {}
@@ -33,11 +32,6 @@ namespace crawlservpp::Module::Extractor {
 	// enable or disable reextracting
 	void Database::setReextract(bool isReextract) {
 		this->reextract = isReextract;
-	}
-
-	// enable or disable extracting from start page
-	void Database::setExtractStart(bool isExtractStart) {
-		this->extractStart = isExtractStart;
 	}
 
 	// enable or disable extracting from custom URLs
@@ -114,10 +108,10 @@ namespace crawlservpp::Module::Extractor {
 			sqlQueryStrStr <<			" AND EXISTS"
 										" ("
 											" SELECT *"
-											" FROM `" << this->urlListTable << "_crawled`"
-											" WHERE `" << this->urlListTable << "_crawled`.url"
+											" FROM `" << this->urlListTable << "_parsing`"
+											" WHERE `" << this->urlListTable << "_parsing`.url"
 											" = `" << this->urlListTable << "`.id"
-											" AND `" <<  this->urlListTable << "_crawled`.response < 400"
+											" AND `" <<  this->urlListTable << "_parsing`.success"
 										" )"
 										" ORDER BY `" << this->urlListTable << "`.id"
 									" ) AS tmp1"
