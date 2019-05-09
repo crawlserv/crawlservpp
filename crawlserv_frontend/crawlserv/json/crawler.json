@@ -522,7 +522,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"label": "Use HTTP POST for tokens:",
+			"label": "Use POST for tokens:",
 			"description": "Use HTTP POST instead of GET for the token with the same array index.",
 			"simple": true,
 			"position": 14
