@@ -1356,14 +1356,6 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				if(success) {
-					// check query result type
-					if(!(this->queriesTokens.at(n).resultSingle)) {
-						if(this->config.crawlerLogging)
-							this->log("WARNING: Query for getting token has wrong result type.");
-
-						continue;
-					}
-
 					// get token from content
 					Parsing::XML xmlDoc;
 					rapidjson::Document jsonDoc;
@@ -1374,7 +1366,17 @@ namespace crawlservpp::Module::Crawler {
 					case QueryStruct::typeRegEx:
 						// get token from content
 						try {
-							this->getRegExQuery(this->queriesTokens.at(n).index).getFirst(content, token);
+							// check result type of query
+							if(this->queriesTokens.at(n).resultSingle)
+								this->getRegExQuery(this->queriesTokens.at(n).index).getFirst(content, token);
+							else if(this->queriesTokens.at(n).resultBool)
+								token = this->getRegExQuery(this->queriesTokens.at(n).index).getBool(content) ? "true" : "false";
+							else
+								this->log(
+										"WARNING: Invalid result type of query for token \'"
+										+ this->config.customTokens.at(n)
+										+ "\'"
+								);
 						}
 						catch(const RegExException& e) {
 							if(this->config.crawlerLogging)
@@ -1411,14 +1413,30 @@ namespace crawlservpp::Module::Crawler {
 						// write warnings to log if necessary
 						if(this->config.crawlerLogging)
 							while(!warnings.empty()) {
-								this->log("WARNING: " + warnings.front());
+								this->log(
+										"WARNING: "
+										+ warnings.front()
+										+ " ["
+										+ this->config.customTokensSource.at(n)
+										+ "]."
+								);
 
 								warnings.pop();
 							}
 
 						// get token from XML
 						try {
-							this->getXPathQuery(this->queriesTokens.at(n).index).getFirst(xmlDoc, token);
+							// check result type of query
+							if(this->queriesTokens.at(n).resultSingle)
+								this->getXPathQuery(this->queriesTokens.at(n).index).getFirst(xmlDoc, token);
+							else if(this->queriesTokens.at(n).resultBool)
+								token = this->getXPathQuery(this->queriesTokens.at(n).index).getBool(xmlDoc) ? "true" : "false";
+							else
+								this->log(
+										"WARNING: Invalid result type of query for token \'"
+										+ this->config.customTokens.at(n)
+										+ "\'"
+								);
 						}
 						catch(const XPathException& e) {
 							if(this->config.crawlerLogging)
@@ -1454,7 +1472,17 @@ namespace crawlservpp::Module::Crawler {
 
 						// get token from JSON
 						try {
-							this->getJsonPointerQuery(this->queriesTokens.at(n).index).getFirst(jsonDoc, token);
+							// check result type of query
+							if(this->queriesTokens.at(n).resultSingle)
+								this->getJsonPointerQuery(this->queriesTokens.at(n).index).getFirst(jsonDoc, token);
+							else if(this->queriesTokens.at(n).resultBool)
+								token = this->getJsonPointerQuery(this->queriesTokens.at(n).index).getBool(jsonDoc) ? "true" : "false";
+							else
+								this->log(
+										"WARNING: Invalid result type of query for token \'"
+										+ this->config.customTokens.at(n)
+										+ "\'"
+								);
 						}
 						catch(const JsonPointerException& e) {
 							if(this->config.crawlerLogging)
@@ -1489,7 +1517,17 @@ namespace crawlservpp::Module::Crawler {
 
 						// get token from JSON
 						try {
-							this->getJsonPathQuery(this->queriesTokens.at(n).index).getFirst(json, token);
+							// check query type
+							if(this->queriesTokens.at(n).resultSingle)
+								this->getJsonPathQuery(this->queriesTokens.at(n).index).getFirst(json, token);
+							else if(this->queriesTokens.at(n).resultBool)
+								token = this->getJsonPathQuery(this->queriesTokens.at(n).index).getBool(json) ? "true" : "false";
+							else
+								this->log(
+										"WARNING: Invalid result type of query for token \'"
+										+ this->config.customTokens.at(n)
+										+ "\'"
+								);
 						}
 						catch(const JsonPathException& e) {
 							if(this->config.crawlerLogging)
@@ -1509,12 +1547,14 @@ namespace crawlservpp::Module::Crawler {
 					default:
 						if(this->config.crawlerLogging)
 							this->log(
-									"WARNING: Unknown type of Query for getting token."
+									"WARNING: Unknown type of query for getting token \'"
+									+ this->config.customTokens.at(n)
+									+ "\'."
 							);
 					}
 				}
 
-				// replace variable(s) with token
+				// replace variable(s) with token(s)
 				Helper::Strings::replaceAll(result.second, this->config.customTokens.at(n), token, true);
 			}
 		}
