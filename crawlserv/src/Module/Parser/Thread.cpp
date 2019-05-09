@@ -1215,7 +1215,7 @@ namespace crawlservpp::Module::Parser {
 							if(this->config.generalLogging)
 								this->log(
 										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-										" query on content is not of type RegEx, XPath or JSONPointer."
+										" query on content is of unknown type."
 								);
 						}
 					}
@@ -1309,7 +1309,7 @@ namespace crawlservpp::Module::Parser {
 							if(this->config.generalLogging)
 								this->log(
 										"WARNING: \'" + this->config.parsingFieldNames.at(fieldCounter) + "\'"
-										" query on content is not of type RegEx, XPath or JSONPointer."
+										" query on content is of unknown type."
 								);
 						}
 					}
@@ -1525,4 +1525,4 @@ namespace crawlservpp::Module::Parser {
 		}
 	}
 
-} /* crawlservpp::Module::Crawler */
+} /* crawlservpp::Module::Parser */
