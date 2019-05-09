@@ -40,7 +40,6 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::TargetTableProperties TargetTableProperties;
 		typedef Struct::ParsingEntry ParsingEntry;
 		typedef Struct::TableColumn TableColumn;
-		typedef Wrapper::TargetTablesLock TargetTablesLock;
 
 		typedef std::function<bool()> CallbackIsRunning;
 		typedef std::pair<unsigned long, std::string> IdString;

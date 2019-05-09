@@ -35,8 +35,6 @@ namespace crawlservpp::Wrapper {
 	 * DECLARATION
 	 */
 
-	class TargetTablesLock;
-
 	class Database {
 		// for convenience
 		typedef Struct::ModuleOptions ModuleOptions;
