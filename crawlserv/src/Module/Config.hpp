@@ -10,12 +10,19 @@
 #ifndef MODULE_CONFIG_HPP_
 #define MODULE_CONFIG_HPP_
 
+// hardcoded debugging constant
+#define MODULE_CONFIG_DEBUG
+
 #include "../Helper/Json.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/ConfigItem.hpp"
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
+
+#ifdef MODULE_CONFIG_DEBUG
+#include <algorithm>
+#endif
 
 #include <limits>
 #include <queue>
@@ -97,7 +104,6 @@ protected:
 
 		void warning(const std::string& warning);
 
-	protected:
 		// module-specific parsing functions
 		virtual void parseBasicOption();
 		virtual void parseOption() = 0;
@@ -111,6 +117,11 @@ protected:
 		bool currentCategory;			// category equals current category
 		bool finished;					// item has been found
 		LogPtr logPtr;					// pointer to logging queue
+#ifdef MODULE_CONFIG_DEBUG
+		bool debug;						// options have been debugged
+		std::string categoryString;		// category to check as string
+		std::vector<std::string> list;	// container to check for duplicates
+#endif
 
 		// private static helper functions
 		static void makeSubUrl(std::string& s);
@@ -127,7 +138,11 @@ protected:
 								foundCategory(false),
 								currentCategory(false),
 								finished(false),
-								logPtr(nullptr) {}
+								logPtr(nullptr)
+#ifdef MODULE_CONFIG_DEBUG
+								, debug(true)
+#endif
+	{}
 
 	// destructor stub
 	inline Config::~Config() {}
@@ -172,14 +187,16 @@ protected:
 				// check the name of the current item member
 				if(member->name.IsString()) {
 					const std::string memberName(
-							member->name.GetString(), member->name.GetStringLength()
+							member->name.GetString(),
+							member->name.GetStringLength()
 					);
 
 					if(memberName == "cat") {
 						// found the category of the configuration item
 						if(member->value.IsString())
 							this->currentItem.category = std::string(
-									member->value.GetString(), member->value.GetStringLength()
+									member->value.GetString(),
+									member->value.GetStringLength()
 							);
 						else {
 							warningsTo.emplace("Configuration entry with invalid category name ignored.");
@@ -193,7 +210,8 @@ protected:
 						// found the name of the configuration item
 						if(member->value.IsString())
 							this->currentItem.name = std::string(
-									member->value.GetString(), member->value.GetStringLength()
+									member->value.GetString(),
+									member->value.GetStringLength()
 							);
 						else {
 							warningsTo.emplace("Configuration entry with invalid option name ignored.");
@@ -256,6 +274,22 @@ protected:
 			// parse option by child class
 			this->parseBasicOption();
 
+#ifdef MODULE_CONFIG_DEBUG
+			if(this->debug) {
+				// debug options
+				std::sort(this->list.begin(), this->list.end());
+
+				const auto i = std::adjacent_find(this->list.begin(), this->list.end());
+
+				if(i != this->list.end())
+					throw Exception("Duplicate option \'" + *i + "\'");
+
+				this->list.clear();
+
+				this->debug = false;
+			}
+#endif
+
 			// check whether category and item were found
 			if(!this->finished) {
 				if(this->foundCategory)
@@ -288,6 +322,11 @@ protected:
 
 	// set category of configuration items to parse
 	inline void Config::category(const std::string& category) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->categoryString = category;
+#endif
+
 		// check parsing state
 		if(this->finished)
 			return;
@@ -306,6 +345,11 @@ protected:
 
 	// check for a configuration option (bool), throws Config::Exception
 	inline void Config::option(const std::string& name, bool& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -334,6 +378,11 @@ protected:
 
 	// check for a configuration option (array of bools), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<bool>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -379,6 +428,11 @@ protected:
 
 	// check for a configuration option (char), throws Config::Exception
 	inline void Config::option(const std::string& name, char& target, CharParsingOption opt) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -439,6 +493,11 @@ protected:
 
 	// check for a configuration option (array of chars), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<char>& target, CharParsingOption opt) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -523,6 +582,11 @@ protected:
 
 	// check for a configuration option (short), throws Config::Exception
 	inline void Config::option(const std::string& name, short& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -560,6 +624,11 @@ protected:
 
 	// check for a configuration option (array of shorts), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<short>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -614,6 +683,11 @@ protected:
 
 	// check for a configuration option (int), throws Config::Exception
 	inline void Config::option(const std::string& name, int& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -642,6 +716,11 @@ protected:
 
 	// check for a configuration option (array of ints), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<int>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -687,6 +766,11 @@ protected:
 
 	// check for a configuration option (long), throws Config::Exception
 	inline void Config::option(const std::string& name, long& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -760,6 +844,11 @@ protected:
 
 	// check for a configuration option (unsigned char), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned char& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -797,6 +886,11 @@ protected:
 
 	// check for a configuration option (array of unsigned chars), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned char>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -851,6 +945,11 @@ protected:
 
 	// check for a configuration option (unsigned short), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned short& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -888,6 +987,11 @@ protected:
 
 	// check for a configuration option (array of unsigned shorts), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned short>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -942,6 +1046,11 @@ protected:
 
 	// check for a configuration option (unsigned int), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned int& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -970,6 +1079,11 @@ protected:
 
 	// check for a configuration option (array of unsigned ints), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned int>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -1015,6 +1129,11 @@ protected:
 
 	// check for a configuration option (unsigned long), throws Config::Exception
 	inline void Config::option(const std::string& name, unsigned long& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -1043,6 +1162,11 @@ protected:
 
 	// check for a configuration option (array of unsigned longs), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<unsigned long>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -1088,6 +1212,11 @@ protected:
 
 	// check for a configuration option (string), throws Config::Exception
 	inline void Config::option(const std::string& name, std::string &target, StringParsingOption opt) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -1158,6 +1287,11 @@ protected:
 
 	// check for a configuration option (array of strings), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug)
+			this->list.emplace_back(this->categoryString + "." + name);
+#endif
+
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
