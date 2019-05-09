@@ -15,7 +15,6 @@
 
 #include "../../Main/Exception.hpp"
 #include "../../Module/Config.hpp"
-#include "../../Network/Config.hpp"
 
 #include <algorithm>	// std::min
 #include <queue>		// std::queue
