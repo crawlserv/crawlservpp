@@ -40,10 +40,10 @@ namespace crawlservpp::Module::Extractor {
 		static const unsigned char generalLoggingExtended = 2;
 		static const unsigned char generalLoggingVerbose = 3;
 
-		static const unsigned char variablesSourcesUrl = 0;
+		static const unsigned char variablesSourcesParsed = 0;
 		static const unsigned char variablesSourcesContent = 1;
-		static const unsigned char variablesSourcesParsed = 2;
-		static const unsigned char variablesSourcesCounter = 3;
+		static const unsigned char variablesSourcesCounter = 2;
+		static const unsigned char variablesSourcesUrl = 3;
 
 		static const unsigned char expectedSourceExtracting = 0;
 		static const unsigned char expectedSourceParsed = 1;
