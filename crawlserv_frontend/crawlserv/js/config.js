@@ -16,6 +16,7 @@ class Config {
 		
 		// link class to view
 		this.view = $("#config-view");
+		
 		if(!this.view)
 			throw new Error(
 					"Config::constructor(): Content view not found."
@@ -32,28 +33,61 @@ class Config {
 		
 		// parse configuration data from JSON file for module
 		console.log("> json/" + module + ".json");
+		
 		$.getJSON("json/" + module + ".json", function(data) {
 			// get algo data
 			var deferreds = [];
 			var categories = [];
 			var results = [];
+			var includes = [];
 			
+			// get data for algorithms from external JSONs
 			if(typeof algo !== 'undefined') {
 				$.each(algo.config_cats, function(index, category) {
 					if(category != "general") {
 						categories.push(category);
 						
 						console.log("> json/algos/" + category + ".json");
+						
 						deferreds.push($.getJSON("json/algos/" + category + ".json", function(data) {
 							results.push(data);
 						}));
 					}
 				});
 			}
+			
+			// get included data from external JSONs
+			if(data.hasOwnProperty("#include")) {
+				if($.isArray(data["#include"])) {
+					$.each(data["#include"], function(index, include) {
+						console.log("> json/" + include);
+						
+						deferreds.push($.getJSON("json/" + include, function(data) {
+							includes.push(data);
+						}));
+					});
+				}
+				else {
+					console.log("> json/" + data["#include"]);
+					
+					deferreds.push($.getJSON("json/" + data["#include"], function(data) {
+						includes.push(data);
+					}));
+				}
+				
+				delete data["#include"];
+			}
+			
 			$.when.apply($, deferreds).then(function() {
+				// include algo data				
 				$.each(results, function(index, algoData) {
 					data[categories[index]] = algoData;
 				});
+				
+				// merge with included JSON data
+				$.each(includes, function(index, include) {
+					$.extend(data, include);
+				})
 				
 				thisClass.config_base = data;
 								
@@ -62,6 +96,7 @@ class Config {
 				
 				for(var cat in thisClass.config_base) {
 					catCounter++;
+					
 					thisClass.config_base[cat].id = catCounter;
 					
 					var idCounter = 0;
@@ -73,6 +108,7 @@ class Config {
 								&& opt != "open"
 								&& opt != "label") {
 							idCounter++;
+							
 							thisClass.config_base[cat][opt].id = idCounter;
 							
 							// check whether default value exists
@@ -86,10 +122,12 @@ class Config {
 			
 				// calculate loading time
 				var endTime = +new Date();
+				
 				console.log(
 						"Config::constructor(): Configuration data loaded" +
 						" after " + msToStr(endTime - startTime) + "."
 				);
+				
 				startTime = endTime;
 				
 				// parse configuration from database
@@ -119,18 +157,14 @@ class Config {
 							optobj.value = thisClass.config_base[cat][opt].default;
 							
 							// overwrite value from database
-							for(var i = 0; i < thisClass.config_db.length; i++) {
-								if(thisClass.config_db[i].cat == cat && thisClass.config_db[i].name == opt) {
+							for(var i = 0; i < thisClass.config_db.length; i++)
+								if(thisClass.config_db[i].cat == cat && thisClass.config_db[i].name == opt)
 									optobj.value = thisClass.config_db[i].value;
-								}
-							}
 							
 							// overwrite value from current configuration
-							for(var i = 0; i < thisClass.config_current.length; i++) {
-								if(thisClass.config_current[i].cat == cat && thisClass.config_current[i].name == opt) {
+							for(var i = 0; i < thisClass.config_current.length; i++)
+								if(thisClass.config_current[i].cat == cat && thisClass.config_current[i].name == opt)
 									optobj.value = thisClass.config_current[i].value;
-								}			
-							}
 							
 							thisClass.config_combined.push(optobj);
 						}
@@ -149,6 +183,7 @@ class Config {
 						for(var whitelisted of filter) {
 							if(whitelisted == cat) {
 								found = true;
+								
 								break;
 							}
 						}
@@ -159,6 +194,7 @@ class Config {
 					
 					// start category
 					let cobj = thisClass.config_base[cat];
+					
 					thisClass.content += thisClass.startCat(cobj.id, cat, cobj.label, cobj.open);
 					
 					// go through all options in category
@@ -180,10 +216,9 @@ class Config {
 								thisClass.content += thisClass.advancedOpt(cat, opt, obj, value);
 							else {
 								// simple configuration: hide options that are not simple
-								if(obj.simple) {
+								if(obj.simple)
 									// push simple option to array for sorting
 									simple.push([obj.position, cat, opt, obj, value]);
-								}
 								else
 									thisClass.content += thisClass.hiddenOpt(
 											cat, opt, obj, value
@@ -196,11 +231,10 @@ class Config {
 						simple.sort(thisClass.sortByPos);
 						
 						// show simple configuration
-						for(var i = 0; i < simple.length; i++) {
+						for(var i = 0; i < simple.length; i++)
 							thisClass.content += thisClass.simpleOpt(
 									simple[i][1], simple[i][2], simple[i][3], simple[i][4]
 							);
-						}
 					}
 					
 					// end category
@@ -761,7 +795,7 @@ class Config {
 		var isdef = false;
 		var result = "";
 		
-		if(!Array.isArray(def))
+		if(!$.isArray(def))
 			throw new Error(
 					"config::array(): Invalid default value for '"
 					+ cat
@@ -1139,7 +1173,7 @@ class Config {
 			
 			let def = this.config_base[opt.cat][opt.name].default;
 			
-			if(Array.isArray(opt.value)) {
+			if($.isArray(opt.value)) {
 				if(opt.value.equals(def)) {
 					if(this.config_current.splice(i, 1).length < 1)
 						console.log(
