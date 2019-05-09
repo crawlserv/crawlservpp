@@ -501,7 +501,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Token sources:",
-			"description": "Source URL of the token with the same array index (absolute link without protocol).",
+			"description": "Source URL for the token with the same array index (absolute link without protocol).",
 			"simple": true,
 			"position": 13
 		},
@@ -514,7 +514,7 @@
 			],
 			"default": [],
 			"label": "Token queries:",
-			"description": "Query to extract token with the same array index.",
+			"description": "Query to extract the token with the same array index.",
 			"simple": true,
 			"position": 15
 		},
@@ -522,7 +522,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"label": "Token POST:",
+			"label": "Use HTTP POST for tokens:",
 			"description": "Use HTTP POST instead of GET for the token with the same array index.",
 			"simple": true,
 			"position": 14
