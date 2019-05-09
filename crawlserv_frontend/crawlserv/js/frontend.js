@@ -329,7 +329,7 @@ jQuery(function($) {
 		var id = parseInt($(this).val(), 10);
 		var args = { "m" : $(this).data("m"), "website" : id };
 		
-		if($("#query-test-text"))
+		if($("#query-test-text").length)
 			args["test"] = $("#query-test-text").val();
 		
 		if(typeof $(this).data("tab") !== "undefined")
@@ -901,7 +901,7 @@ jQuery(function($) {
 			$("#query-test-text").hide();
 			$("#query-test-result").show();
 			$("#query-test-result").val("Testing query...");
-			$("a.query-test").text("Back to text");
+			$("#query-test").text("Back to text");
 			
 			var timerStart = +new Date();
 			var args = {
@@ -940,7 +940,7 @@ jQuery(function($) {
 			$("#query-test-label").text("Test text:");
 			$("#query-test-result").hide();
 			$("#query-test-text").show();
-			$("a.query-test").text("Test query");
+			$("#query-test").text("Test query");
 		}
 		
 		return false;
