@@ -873,7 +873,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// add parsed data to database (update if row for ID-specified content already exists, throws Database::Exception
-	void Database::updateOrAddEntries(std::queue<ParsingEntry>& entries) {
+	void Database::updateOrAddEntries(std::queue<DataEntry>& entries) {
 		// check argument
 		if(entries.empty())
 			return;
@@ -912,8 +912,8 @@ namespace crawlservpp::Module::Parser {
 
 					// set default values
 					sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement1000.setString(n * fields + 2, entries.front().parsedId);
-					sqlStatement1000.setString(n * fields + 3, entries.front().parsedId);
+					sqlStatement1000.setString(n * fields + 2, entries.front().dataId);
+					sqlStatement1000.setString(n * fields + 3, entries.front().dataId);
 
 					if(entries.front().dateTime.empty())
 						sqlStatement1000.setNull(n * fields + 4, 0);
@@ -947,8 +947,8 @@ namespace crawlservpp::Module::Parser {
 
 					// set default values
 					sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement100.setString(n * fields + 2, entries.front().parsedId);
-					sqlStatement100.setString(n * fields + 3, entries.front().parsedId);
+					sqlStatement100.setString(n * fields + 2, entries.front().dataId);
+					sqlStatement100.setString(n * fields + 3, entries.front().dataId);
 
 					if(entries.front().dateTime.empty())
 						sqlStatement100.setNull(n * fields + 4, 0);
@@ -982,8 +982,8 @@ namespace crawlservpp::Module::Parser {
 
 					// set default values
 					sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement10.setString(n * fields + 2, entries.front().parsedId);
-					sqlStatement10.setString(n * fields + 3, entries.front().parsedId);
+					sqlStatement10.setString(n * fields + 2, entries.front().dataId);
+					sqlStatement10.setString(n * fields + 3, entries.front().dataId);
 
 					if(entries.front().dateTime.empty())
 						sqlStatement10.setNull(n * fields + 4, 0);
@@ -1016,8 +1016,8 @@ namespace crawlservpp::Module::Parser {
 
 				// set default values
 				sqlStatement1.setUInt64(1, entries.front().contentId);
-				sqlStatement1.setString(2, entries.front().parsedId);
-				sqlStatement1.setString(3, entries.front().parsedId);
+				sqlStatement1.setString(2, entries.front().dataId);
+				sqlStatement1.setString(3, entries.front().dataId);
 
 				if(entries.front().dateTime.empty())
 					sqlStatement1.setNull(4, 0);
@@ -1137,14 +1137,14 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// check the value sizes in a parsing entry and remove values that are too large for the database
-	bool Database::checkEntrySize(ParsingEntry& entry) {
+	bool Database::checkEntrySize(DataEntry& entry) {
 		// check data sizes
 		unsigned long tooLarge = 0;
 
-		if(entry.parsedId.size() > this->getMaxAllowedPacketSize()) {
-			tooLarge = entry.parsedId.size();
+		if(entry.dataId.size() > this->getMaxAllowedPacketSize()) {
+			tooLarge = entry.dataId.size();
 
-			entry.parsedId.clear();
+			entry.dataId.clear();
 		}
 
 		if(entry.dateTime.size() > this->getMaxAllowedPacketSize() && entry.dateTime.size() > tooLarge) {

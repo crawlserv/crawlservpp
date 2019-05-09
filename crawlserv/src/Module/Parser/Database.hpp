@@ -12,7 +12,7 @@
 
 #include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Main/Exception.hpp"
-#include "../../Struct/ParsingEntry.hpp"
+#include "../../Struct/DataEntry.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Wrapper/Database.hpp"
@@ -38,7 +38,7 @@ namespace crawlservpp::Module::Parser {
 	class Database : public Wrapper::Database {
 		// for convenience
 		typedef Struct::TargetTableProperties TargetTableProperties;
-		typedef Struct::ParsingEntry ParsingEntry;
+		typedef Struct::DataEntry DataEntry;
 		typedef Struct::TableColumn TableColumn;
 
 		typedef std::pair<unsigned long, std::string> IdString;
@@ -76,7 +76,7 @@ namespace crawlservpp::Module::Parser {
 		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
 		std::queue<IdString> getAllContents(unsigned long urlId);
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
-		void updateOrAddEntries(std::queue<ParsingEntry>& entries);
+		void updateOrAddEntries(std::queue<DataEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
 
@@ -136,7 +136,7 @@ namespace crawlservpp::Module::Parser {
 		} ps;
 
 		// internal helper function
-		bool checkEntrySize(ParsingEntry& entry);
+		bool checkEntrySize(DataEntry& entry);
 		std::string queryLockUrls(unsigned int numberOfUrls);
 		std::string queryUpdateOrAddEntries(unsigned int numberOfEntries);
 		std::string querySetUrlsFinishedIfLockOk(unsigned int numberOfUrls);

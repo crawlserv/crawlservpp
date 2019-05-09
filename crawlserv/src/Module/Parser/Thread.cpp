@@ -704,14 +704,14 @@ namespace crawlservpp::Module::Parser {
 
 	// parse ID-specific content, return whether parsing was successfull (i.e. an ID could be parsed)
 	bool Thread::parsingContent(const IdString& content, const std::string& parsedId) {
-		ParsingEntry parsedData(content.first);
+		DataEntry parsedData(content.first);
 
 		// reset parsing state
 		this->resetParsingState();
 
 		// parse ID (if still necessary)
 		if(this->idFromUrl)
-			parsedData.parsedId = parsedId;
+			parsedData.dataId = parsedId;
 		else {
 			unsigned long idQueryCounter = 0;
 
@@ -727,9 +727,9 @@ namespace crawlservpp::Module::Parser {
 					case QueryStruct::typeRegEx:
 						// parse ID by running RegEx query on URL
 						try {
-							this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedData.parsedId);
+							this->getRegExQuery(i->index).getFirst(this->urls.front().second, parsedData.dataId);
 
-							if(!parsedData.parsedId.empty())
+							if(!parsedData.dataId.empty())
 								break;
 						}
 						catch(const RegExException& e) {} // ignore query on error
@@ -750,9 +750,9 @@ namespace crawlservpp::Module::Parser {
 					case QueryStruct::typeRegEx:
 						// parse ID by running RegEx query on content string
 						try {
-							this->getRegExQuery(i->index).getFirst(content.second, parsedData.parsedId);
+							this->getRegExQuery(i->index).getFirst(content.second, parsedData.dataId);
 
-							if(!parsedData.parsedId.empty())
+							if(!parsedData.dataId.empty())
 								break;
 						}
 						catch(const RegExException& e) {} // ignore query on error
@@ -764,9 +764,9 @@ namespace crawlservpp::Module::Parser {
 						if(this->parseXml(content.second)) {
 							// parse ID by running XPath query on parsed content
 							try {
-								this->getXPathQuery(i->index).getFirst(this->parsedXML, parsedData.parsedId);
+								this->getXPathQuery(i->index).getFirst(this->parsedXML, parsedData.dataId);
 
-								if(!parsedData.parsedId.empty())
+								if(!parsedData.dataId.empty())
 									break;
 							}
 							catch(const XPathException& e) {} // ignore query on error
@@ -779,9 +779,9 @@ namespace crawlservpp::Module::Parser {
 						if(this->parseJsonRapid(content.second)) {
 							// parse ID by running JSONPointer query on content string
 							try {
-								this->getJsonPointerQuery(i->index).getFirst(this->parsedJsonRapid, parsedData.parsedId);
+								this->getJsonPointerQuery(i->index).getFirst(this->parsedJsonRapid, parsedData.dataId);
 
-								if(!parsedData.parsedId.empty())
+								if(!parsedData.dataId.empty())
 									break;
 							}
 							catch(const JsonPointerException& e) {} // ignore query on error
@@ -794,9 +794,9 @@ namespace crawlservpp::Module::Parser {
 						if(this->parseJsonCons(content.second)) {
 							// parse ID by running JSONPath query on content string
 							try {
-								this->getJsonPathQuery(i->index).getFirst(this->parsedJsonCons, parsedData.parsedId);
+								this->getJsonPathQuery(i->index).getFirst(this->parsedJsonCons, parsedData.dataId);
 
-								if(!parsedData.parsedId.empty())
+								if(!parsedData.dataId.empty())
 									break;
 							}
 							catch(const JsonPathException& e) {} // ignore query on error
@@ -813,7 +813,7 @@ namespace crawlservpp::Module::Parser {
 					}
 				}
 
-				if(parsedData.parsedId.empty())
+				if(parsedData.dataId.empty())
 					// not successfull: check next query for parsing the ID (if it exists)
 					++idQueryCounter;
 				else
@@ -822,7 +822,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// check whether no ID has been parsed
-		if(parsedData.parsedId.empty()) {
+		if(parsedData.dataId.empty()) {
 			this->logParsingErrors(content.first);
 
 			return false;
@@ -834,7 +834,7 @@ namespace crawlservpp::Module::Parser {
 				&& std::find(
 						this->config.parsingIdIgnore.begin(),
 						this->config.parsingIdIgnore.end(),
-						parsedData.parsedId
+						parsedData.dataId
 				) != this->config.parsingIdIgnore.end()
 		) {
 			this->logParsingErrors(content.first);
@@ -843,7 +843,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// check whether parsed ID already exists and the current content ID differs from the one in the database
-		unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.parsedId);
+		unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
 
 		if(contentId && contentId != content.first) {
 			this->logParsingErrors(content.first);
@@ -851,7 +851,7 @@ namespace crawlservpp::Module::Parser {
 			if(this->config.generalLogging)
 				this->log(
 						"skipped content with already existing ID \'"
-						+ parsedData.parsedId
+						+ parsedData.dataId
 						+ "\' ["
 						+ this->urls.front().second
 						+ "]."

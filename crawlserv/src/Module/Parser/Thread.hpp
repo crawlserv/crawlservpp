@@ -25,7 +25,7 @@
 #include "../../Query/JsonPointer.hpp"
 #include "../../Query/RegEx.hpp"
 #include "../../Query/XPath.hpp"
-#include "../../Struct/ParsingEntry.hpp"
+#include "../../Struct/DataEntry.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
@@ -53,7 +53,7 @@ namespace crawlservpp::Module::Parser {
 		// for convenience
 		typedef Helper::Json::Exception JsonException;
 		typedef Parsing::XML::Exception XMLException;
-		typedef Struct::ParsingEntry ParsingEntry;
+		typedef Struct::DataEntry DataEntry;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
@@ -96,7 +96,7 @@ namespace crawlservpp::Module::Parser {
 		// cache
 		std::queue<IdString> urls;
 		std::string cacheLockTime;
-		std::queue<ParsingEntry> results;
+		std::queue<DataEntry> results;
 		std::queue<IdString> finished;
 
 		// implemented thread functions
