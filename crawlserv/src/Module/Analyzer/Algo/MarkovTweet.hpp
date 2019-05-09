@@ -69,8 +69,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void onAlgoClear() override;
 
 		// overwritten configuration functions
-		void parseOption() override;
-		void checkOptions() override;
+		void parseAlgoOption() override;
+		void checkAlgoOptions() override;
 
 		// external access to thread functionality for rawr
 		bool _isRunning();

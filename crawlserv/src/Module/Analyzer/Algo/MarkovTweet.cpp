@@ -211,10 +211,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovTweet::onAlgoClear() {}
 
 	// parse algorithm option
-	void MarkovTweet::parseOption() {
-		// analyzer options
-		this->Module::Analyzer::Config::parseOption();
-
+	void MarkovTweet::parseAlgoOption() {
 		// algorithm options
 		this->category("markov-tweet");
 		this->option("dimension", this->markovTweetDimension);
@@ -229,10 +226,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// check algorithm options, throws Thread::Exception
-	void MarkovTweet::checkOptions() {
-		// analyzer options
-		this->Module::Analyzer::Config::checkOptions();
-
+	void MarkovTweet::checkAlgoOptions() {
 		// algorithm options
 		if(this->config.generalInputFields.empty())
 			throw Exception("Algo::MarkovTweet::checkOptions(): No input sources provided");

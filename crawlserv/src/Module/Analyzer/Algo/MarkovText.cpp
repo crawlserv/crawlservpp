@@ -201,10 +201,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovText::onAlgoClear() {}
 
 	// parse configuration option
-	void MarkovText::parseOption() {
-		// analyzer options
-		this->Module::Analyzer::Config::parseOption();
-
+	void MarkovText::parseAlgoOption() {
 		// algorithm options
 		this->category("markov-text");
 		this->option("dimension", this->markovTextDimension);
@@ -217,10 +214,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// check configuration, throws Thread::Exception
-	void MarkovText::checkOptions() {
-		// analyzer options
-		this->Module::Analyzer::Config::checkOptions();
-
+	void MarkovText::checkAlgoOptions() {
 		// algorithm options
 		if(this->config.generalInputFields.empty())
 			throw Exception("Algo::MarkovText::checkOptions(): No input sources provided");
