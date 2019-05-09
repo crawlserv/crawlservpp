@@ -86,13 +86,13 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check configuration
-		const bool verbose = this->config.crawlerLogging == Config::crawlerLoggingVerbose;
-
 		if(this->config.crawlerQueriesLinks.empty())
 			throw Exception("Crawler::Thread::onInit(): No link extraction query specified");
 
 		// set database options
 		this->setStatusMessage("Setting database options...");
+
+		const bool verbose = this->config.crawlerLogging == Config::crawlerLoggingVerbose;
 
 		if(verbose)
 			this->log("sets database options...");

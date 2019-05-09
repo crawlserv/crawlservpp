@@ -50,9 +50,9 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// set database configuration
-		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
-
 		this->setStatusMessage("Setting database configuration...");
+
+		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
 
 		if(verbose)
 			this->log("sets database configuration...");

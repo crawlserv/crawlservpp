@@ -83,9 +83,9 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// set database options
-		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
-
 		this->setStatusMessage("Setting database options...");
+
+		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
 
 		if(verbose)
 			this->log("sets database options...");
