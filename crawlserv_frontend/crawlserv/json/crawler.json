@@ -626,7 +626,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Variable names:",
-			"description": "Variable names to be replaced by values in 'redirect.to' and 'cookies'.",
+			"description": "Variable names to be replaced in 'redirect.to' and 'cookies'.",
 			"simple": true,
 			"position": 3
 		},
