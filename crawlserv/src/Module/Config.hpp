@@ -99,7 +99,8 @@ protected:
 
 	protected:
 		// module-specific parsing functions
-		virtual void parseBasicOption() = 0;
+		virtual void parseBasicOption();
+		virtual void parseOption() = 0;
 		virtual void checkOptions() = 0;
 
 	private:
@@ -1249,6 +1250,11 @@ protected:
 					"Config::warning(): No log queue is active."
 					" Do not use this function outside of Config::loadConfig()!"
 			);
+	}
+
+	// parse basic option (can be overwritten by child classes)
+	inline void Config::parseBasicOption() {
+		this->parseOption();
 	}
 
 	// check for sub-URL (starting with /) or cURL-supported URL protocol
