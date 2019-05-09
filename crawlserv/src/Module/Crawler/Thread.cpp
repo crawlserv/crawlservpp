@@ -1306,7 +1306,7 @@ namespace crawlservpp::Module::Crawler {
 					try {
 						this->networking.getContent(
 								"https://" + this->config.customTokensSource.at(n),
-								this->config.customUsePost,
+								this->config.customTokensUsePost.at(n),
 								content,
 								this->config.crawlerRetryHttp
 						);

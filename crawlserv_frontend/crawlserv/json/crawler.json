@@ -514,6 +514,15 @@
 			"label": "Token queries:",
 			"description": "Query to extract token with the same array index.",
 			"simple": true,
+			"position": 15
+		},
+		"tokens.use.post": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Token POST:",
+			"description": "Use HTTP POST instead of GET for the token with the same array index.",
+			"simple": true,
 			"position": 14
 		},
 		"urls": {

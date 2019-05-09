@@ -108,6 +108,7 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> customTokens;
 			std::vector<unsigned long> customTokensQuery;
 			std::vector<std::string> customTokensSource;
+			std::vector<bool> customTokensUsePost;
 			std::vector<std::string> customUrls;
 			bool customUsePost;
 
@@ -255,6 +256,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("tokens", this->config.customTokens);
 		this->option("tokens.query", this->config.customTokensQuery);
 		this->option("tokens.source", this->config.customTokensSource);
+		this->option("tokens.use.post", this->config.customTokensUsePost);
 		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 		this->option("use.post", this->config.customUsePost);
 
@@ -325,7 +327,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of counters
 		bool incompleteCounters = false;
 
-		const unsigned long completeCounters = std::min({ // number of complete counters (= minimum size of all arrays)
+		const unsigned long completeCounters = std::min({ // number of complete counters (= minimum size of arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
 				this->config.customCountersEnd.size(),
@@ -408,7 +410,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of tokens
 		bool incompleteTokens = false;
 
-		const unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of all arrays)
+		const unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of arrays)
 				this->config.customTokens.size(),
 				this->config.customTokensSource.size(),
 				this->config.customTokensQuery.size()
@@ -434,6 +436,9 @@ namespace crawlservpp::Module::Crawler {
 
 			incompleteTokens = true;
 		}
+
+		// remove token POST options that are not used, add false where none is specified
+		this->config.customTokensUsePost.resize(completeTokens, false);
 
 		if(incompleteTokens) {
 			// warn about incomplete counters
