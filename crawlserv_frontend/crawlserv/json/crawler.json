@@ -312,7 +312,7 @@
 		},
 		"sleep.error": {
 			"type": "number",
-			"default": 5000,
+			"default": 10000,
 			"min": 0,
 			"description": "Sleeping time (in ms) on connection errors",
 			"simple": false
