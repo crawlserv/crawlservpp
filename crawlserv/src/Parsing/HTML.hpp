@@ -29,7 +29,12 @@ namespace crawlservpp::Parsing {
 		virtual ~HTML() {}
 
 		// member function
-		void tidyAndConvert(std::string& inOut, std::queue<std::string>& warningsTo);
+		void tidyAndConvert(
+				std::string& inOut,
+				bool warnings,
+				unsigned int numOfErrors,
+				std::queue<std::string>& warningsTo
+		);
 
 		// sub-class for HTML exceptions
 		class Exception : public Main::Exception {
