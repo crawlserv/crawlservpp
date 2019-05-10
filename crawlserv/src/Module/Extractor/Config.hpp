@@ -146,7 +146,7 @@ namespace crawlservpp::Module::Extractor {
 										generalLogging(generalLoggingDefault),
 										generalReExtract(false),
 										generalReTries(720),
-										generalSleepError(5000),
+										generalSleepError(10000),
 										generalSleepHttp(0),
 										generalSleepIdle(5000),
 										generalSleepMySql(20),

@@ -164,7 +164,7 @@ namespace crawlservpp::Module::Crawler {
 										crawlerRepairCData(true),
 										crawlerReTries(720),
 										crawlerRetryArchive(true),
-										crawlerSleepError(5000),
+										crawlerSleepError(10000),
 										crawlerSleepHttp(0),
 										crawlerSleepIdle(5000),
 										crawlerSleepMySql(20),
