@@ -11,6 +11,7 @@
 
 namespace crawlservpp::Parsing {
 	// tidy HTML and convert it to XML, throws HTML::Exception
+	//  NOTE: Does not change input if output of tidying was empty
 	void HTML::tidyAndConvert(std::string& inOut, bool warnings, unsigned int numOfErrors, std::queue<std::string>& warningsTo) {
 		// set options
 		try {
@@ -27,7 +28,12 @@ namespace crawlservpp::Parsing {
 			this->doc.parseString(inOut, warningsTo);
 			this->doc.cleanAndRepair(warningsTo);
 
-			inOut = this->doc.getOutput(warningsTo);
+			const std::string output(this->doc.getOutput(warningsTo));
+
+			if(output.empty())
+				return;
+
+			inOut = output;
 		}
 		catch(const TidyDoc::Exception& e) {
 			throw HTML::Exception(e.what());
