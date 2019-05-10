@@ -57,6 +57,12 @@ namespace crawlservpp::Wrapper {
 				throw Exception("Could not set tidy option");
 		}
 
+		// set unsigned int option, throws TidyDoc::Exception
+		void setOption(TidyOptionId option, unsigned int value) {
+			if(!tidyOptSetInt(this->doc, option, value))
+				throw Exception("Could not set tidy option");
+		}
+
 		// set string option, throws TidyDoc::Exception
 		void setOption(TidyOptionId option, const std::string& value) {
 			if(!tidyOptSetValue(this->doc, option, value.c_str()))
@@ -77,7 +83,8 @@ namespace crawlservpp::Wrapper {
 				break;
 
 			case 1:
-				// warnings occured
+			case 2:
+				// warnings or errors occured
 				if(this->errors) {
 					warningsTo.emplace(this->errors.getString());
 
@@ -103,7 +110,8 @@ namespace crawlservpp::Wrapper {
 				break;
 
 			case 1:
-				// warnings occured
+			case 2:
+				// warnings or errors occured
 				if(this->errors) {
 					warningsTo.emplace(this->errors.getString());
 
@@ -113,7 +121,7 @@ namespace crawlservpp::Wrapper {
 				break;
 
 			default:
-				// errors occured
+				// fatal errors occured
 				if(this->errors)
 					throw Exception("Could not clean and repair HTML: " + errors.getString());
 
@@ -131,7 +139,8 @@ namespace crawlservpp::Wrapper {
 				break;
 
 			case 1:
-				// warnings occured
+			case 2:
+				// warnings or errors occured
 				if(this->errors) {
 					warningsTo.emplace(this->errors.getString());
 
@@ -141,7 +150,7 @@ namespace crawlservpp::Wrapper {
 				break;
 
 			default:
-				// errors occured
+				// fatal errors occured
 				if(this->errors)
 					throw Exception("Could not write to buffer: " + errors.getString());
 
