@@ -68,6 +68,20 @@
 			"simple": true,
 			"position": 6
 		},
+		"sleep.error": {
+			"type": "number",
+			"default": 10000,
+			"min": 0,
+			"description": "Sleeping time (in ms) on connection errors",
+			"simple": false
+		},
+		"sleep.http": {
+			"type": "number",
+			"default": 0,
+			"min": 0,
+			"description": "Time (in ms) that will be waited between HTTP requests.",
+			"simple": false
+		},
 		"sleep.idle": {
 			"type": "number",
 			"default": 5000,
