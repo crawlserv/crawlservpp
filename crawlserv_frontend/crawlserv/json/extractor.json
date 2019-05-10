@@ -342,7 +342,7 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
-				"single"
+				"multi"
 			],
 			"default": [],
 			"label": "Date/time queries:",
@@ -363,7 +363,6 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
-				"single",
 				"multi"
 			],
 			"default": [],
@@ -392,7 +391,7 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
-				"single"
+				"multi"
 			],
 			"default": [],
 			"label": "ID queries:",
