@@ -36,6 +36,11 @@ namespace crawlservpp::Wrapper {
 			return &(this->buffer);
 		}
 
+		// check whether string (with size greater than zero) was created
+		bool isNonEmptyString() const {
+			return this->buffer && this->buffer.size;
+		}
+
 		// create string from buffer
 		std::string getString() const {
 			return std::string(reinterpret_cast<const char *>(this->buffer.bp), this->buffer.size);
