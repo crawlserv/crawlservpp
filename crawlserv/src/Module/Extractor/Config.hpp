@@ -71,15 +71,15 @@ namespace crawlservpp::Module::Extractor {
 			// variables entries
 			std::vector<std::string> variablesAlias;
 			std::vector<long> variablesAliasAdd;
-			std::vector<std::string> variablesColumn;
 			std::vector<long> variablesCounterEnd;
 			std::vector<long> variablesCounterStart;
 			std::vector<long> variablesCounterStep;
 			std::vector<std::string> variablesDateTimeFormat;
 			std::vector<std::string> variablesName;
+			std::vector<std::string> variablesParsedColumn;
+			std::vector<std::string> variablesParsedTable;
 			std::vector<unsigned long> variablesQuery;
 			std::vector<unsigned char> variablesSource;
-			std::vector<std::string> variablesTable;
 			std::vector<std::string> variablesTokensName;
 			std::vector<unsigned long> variablesTokensQuery;
 			std::vector<std::string> variablesTokensSource;
@@ -184,15 +184,15 @@ namespace crawlservpp::Module::Extractor {
 		this->category("variables");
 		this->option("alias", this->config.variablesAlias);
 		this->option("alias.add", this->config.variablesAliasAdd);
-		this->option("column", this->config.variablesColumn);
 		this->option("counter.end", this->config.variablesCounterEnd);
 		this->option("counter.start", this->config.variablesCounterStart);
 		this->option("counter.step", this->config.variablesCounterStep);
 		this->option("datetime.format", this->config.variablesDateTimeFormat);
 		this->option("name", this->config.variablesName);
+		this->option("parsed.column", this->config.variablesParsedColumn);
+		this->option("parsed.table", this->config.variablesParsedTable);
 		this->option("query", this->config.variablesQuery);
 		this->option("source", this->config.variablesSource);
-		this->option("table", this->config.variablesTable);
 		this->option("tokens.name", this->config.variablesTokensName);
 		this->option("tokens.query", this->config.variablesTokensQuery);
 		this->option("tokens.source", this->config.variablesTokensSource);
