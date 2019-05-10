@@ -157,7 +157,10 @@ namespace crawlservpp::Wrapper {
 				throw Exception("Could not write to buffer");
 			}
 
-			return buffer.getString();
+			if(buffer.isString())
+				return buffer.getString();
+
+			return "";
 		}
 
 		// sub-class for TidyDoc exceptions
