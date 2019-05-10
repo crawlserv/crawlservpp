@@ -1,0 +1,453 @@
+{
+	"#include": [ "include/network.json" ],
+	
+	"general": {
+		"label": "General",
+		"open": true,
+		
+		"cache.size": {
+			"type": "number",
+			"default": 2500,
+			"min": 0,
+			"label": "Cache size:",
+			"description": "Number of URLs fetched and extracted from before saving results (0=infinite).",
+			"simple": true,
+			"position": 2
+		},
+		"extract.custom": {
+			"type": "bool",
+			"default": false,
+			"label": "Extract from custom URLs",
+			"description": "Include custom URLs when extracting.",
+			"simple": true,
+			"position": 4
+		},
+		"lock": {
+			"type": "number",
+			"default": 300,
+			"min": 1,
+			"description": "URL locking time (in s).",
+			"simple": false
+		},
+		"logging": {
+			"type": "enum",
+			"default": 1,
+			"enum-values": [
+				"silent",
+				"default",
+				"extended",
+				"verbose"
+			],
+			"label": "Logging mode:",
+			"description": "Level of logging activity.",
+			"simple": true,
+			"position": 5
+		},
+		"reextract": {
+			"type": "bool",
+			"default": false,
+			"label": "Re-extract data",
+			"description": "Re-extract data from already processed URLs.",
+			"simple": true,
+			"position": 3
+		},
+		"result.table": {
+			"type": "string",
+			"default": "",
+			"label": "Result table:",
+			"description": "Table name to save extracted data to.",
+			"simple": true,
+			"position": 1
+		},
+		"retries": {
+			"type": "number",
+			"default": 720,
+			"min": -1,
+			"label": "Connection retries:",
+			"description": "Number of re-tries on connection errors (-1=infinite).",
+			"simple": true,
+			"position": 6
+		},
+		"sleep.idle": {
+			"type": "number",
+			"default": 5000,
+			"min": 100,
+			"description": "Time (in ms) to wait before checking for new URLs when all URLs have been processed.",
+			"simple": false
+		},
+		"sleep.mysql": {
+			"type": "number",
+			"default": 10,
+			"min": 1,
+			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
+			"simple": false
+		},
+		"timing": {
+			"type": "bool",
+			"default": false,
+			"description": "Calculate timing statistics.",
+			"simple": false
+		}
+	},
+	"variables": {
+		"label": "Variables",
+		"open": true,
+		
+		"alias": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Variable aliases:",
+			"description": "Alias for the variable with same array index.",
+			"simple": true,
+			"position": 10
+		},
+		"alias.add": {
+			"type": "array",
+			"item-type": "number",
+			"default": [],
+			"label": "Increase alias value by:",
+			"description": "Value to add to the counter alias with the same array index.",
+			"simple": true,
+			"position": 11
+		},
+		"counter.end": {
+			"type": "array",
+			"item-type": "number",
+			"default": []	,
+			"label": "Stop counter at:",
+			"description": "End value for the counter variable with the same array index.",
+			"simple": true,
+			"position": 8
+		},
+		"counter.start": {
+			"type": "array",
+			"item-type": "number",
+			"default": [],
+			"label": "Start counter at:",
+			"description": "Start value for the counter variable with the same array index.",
+			"simple": true,
+			"position": 7
+		},
+		"counter.step": {
+			"type": "array",
+			"item-type": "number",
+			"default": [],
+			"label": "Increase counter by:",
+			"description": "Step value for the counter variable with the same array index.",
+			"simple": true,
+			"position": 9
+		},
+		"datetime.format": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Date/time formats:",
+			"description": "The date and time format to be used for the variable with the same array index (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"simple": true,
+			"position": 6
+		},
+		"name": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Variable names:",
+			"description": "Variable names to be replaced in 'source.url' and 'source.cookies'.",
+			"simple": true,
+			"position": 1
+		},
+		"parsed.column": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Parsed column:",
+			"description": "Parsed 'id', 'datetime' or field for the variable with the same array index (if parsed data is the source).",
+			"simple": true,
+			"position": 5
+		},
+		"parsed.table": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Parsing table:",
+			"description": "Name of the table containing the parsed data for the variable with the same array index (if parsed data is the source).",
+			"simple": true,
+			"position": 4
+		},
+		"query": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool",
+				"single"
+			],
+			"default": [],
+			"label": "Variable queries:",
+			"description": "Query for the variable with the same array index.",
+			"simple": true,
+			"position": 3
+		},
+		"source": {
+			"type": "array",
+			"item-type": "enum",
+			"enum-values": [
+				"parsed",
+				"content",
+				"counter",
+				"URL"
+			],
+			"default": [],
+			"label": "Variable sources:",
+			"description": "Source of the variable with the same array index.",
+			"simple": true,
+			"position": 2
+		},
+		"tokens.name": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Token variables:",
+			"description": "List of token variables to be replaced in 'source.url' and 'source.cookies'.",
+			"simple": true,
+			"position": 12
+		},
+		"tokens.query": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool",
+				"single"
+			],
+			"default": [],
+			"label": "Token queries:",
+			"description": "Query to extract token variable with the same array index.",
+			"simple": true,
+			"position": 15
+		},
+		"tokens.source": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Token sources:",
+			"description": "Source URL for the token with the same array index (absolute link without protocol).",
+			"simple": true,
+			"position": 13
+		},
+		"tokens.use.post": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Use POST for tokens:",
+			"description": "Use HTTP POST instead of GET for the token with the same array index.",
+			"simple": true,
+			"position": 14
+		}
+	},
+	"paging": {
+		"label": "Paging",
+		"open": false,
+		
+		"first": {
+			"type": "number",
+			"default": 0,
+			"label": "First page (number):",
+			"description": "Number of the first page.",
+			"simple": true,
+			"position": 2
+		},
+		"first.string": {
+			"type": "string",
+			"default": "",
+			"label": "First page (string):",
+			"description": "Name of the first page (will overwrite its number).",
+			"simple": true,
+			"position": 3
+		},
+		"is.next": {
+			"type": "query",
+			"result-types": [
+				"bool"
+			],
+			"default": 0,
+			"label": "Query to check for next page:",
+			"description": "Boolean query on page content to find out whether there is another page.",
+			"simple": true,
+			"position": 5
+		},
+		"next.from": {
+			"type": "query",
+			"result-types": [
+				"single"
+			],
+			"default": 0,
+			"label": "Query to get next page:",
+			"description": "Query on page content to find number or name of next page (will overwrite step).",
+			"simple": true,
+			"position": 6
+		},
+		"step": {
+			"type": "number",
+			"default": 1,
+			"label": "Paging step:",
+			"description": "Number to add to page variable for getting the next page (if page number is used).",
+			"simple": true,
+			"position": 4
+		},
+		"variable": {
+			"type": "string",
+			"default": "$p",
+			"label": "Paging variable:",
+			"description": "Paging variable to be used in 'source.url' and 'source.cookies'. Will be overwritten with either page number or page name.",
+			"simple": true,
+			"position": 1
+		}
+	},
+	"extracting": {
+		"label": "Extracting",
+		"open": true,
+		
+		"datetime.formats": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Date/time formats:",
+			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"simple": true,
+			"position": 5
+		},
+		"datetime.locales": {
+			"type": "array",
+			"item-type": "locale",
+			"default": [],
+			"label": "Date/time locales:",
+			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
+			"simple": true,
+			"position": 6
+		},
+		"datetime.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": [],
+			"label": "Date/time queries:",
+			"description": "Queries used for parsing the date and time. The first query that returns a non-empty result will be used.",
+			"simple": true,
+			"position": 4
+		},
+		"field.names": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Field names:",
+			"description": "The names of the custom fields to parse.",
+			"simple": true,
+			"position": 7
+		},
+		"field.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single",
+				"multi"
+			],
+			"default": [],
+			"label": "Field queries:",
+			"description": "The queries used to parse the custom fields.",
+			"simple": true,
+			"position": 9
+		},
+		"field.tidy.texts": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Field results as tidied texts:",
+			"description": "Remove line breaks and unnecessary spaces.",
+			"simple": true,
+			"position": 11
+		},
+		"field.warnings.empty": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"description": "Log warning when field is empty.",
+			"simple": false
+		},
+		"id.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": [],
+			"label": "ID queries:",
+			"description": "Queries to parse the ID. The first query that returns a non-empty result will be used. Pages with duplicate or empty IDs will not be parsed.",
+			"simple": true,
+			"position": 2
+		},
+		"repair.cdata": {
+			"type": "bool",
+			"default": true,
+			"description": "Try to repair broken CData.",
+			"simple": false
+		}
+	},
+	"expected": {
+		"label": "Expected Result",
+		"open": false,
+
+		"error.if.larger": {
+			"type": "bool",
+			"default": false,
+			"description": "Cause fatal error when number of expected datasets is exceeded.",
+			"simple": false
+		},
+		"error.if.smaller": {
+			"type": "bool",
+			"default": false,
+			"description": "Cause fatal error when number of expected datasets is exceeded.",
+			"simple": false
+		},
+		"parsed.column": {
+			"type": "string",
+			"default": "",
+			"label": "Parsed column:",
+			"description": "Parsed 'id', 'datetime' or field containing the expected number of datasets (if parsed data is the source).",
+			"simple": true,
+			"position": 4
+		},
+		"parsed.table": {
+			"type": "string",
+			"default": "",
+			"label": "Parsing table:",
+			"description": "Name of the result table containing the expected number of datasets (if parsed data is the source).",
+			"simple": true,
+			"position": 3
+		},
+		"query": {
+			"type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": 0,
+			"label": "Query for number of URLs:",
+			"description": "Query to be performed on content to get the expected number of datasets.",
+			"simple": true,
+			"position": 2
+		},
+		"source": {
+			"type": "enum",
+			"enum-values": [
+				"Extracted content (first page)",
+				"Parsed data",
+				"Raw crawled data"
+			],
+			"default": 0,
+			"label": "Source:",
+			"description": "Source of the expected number of datasets.",
+			"simple": true,
+			"position": 1
+		}
+	}
+}
