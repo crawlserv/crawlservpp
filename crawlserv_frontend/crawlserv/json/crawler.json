@@ -562,17 +562,6 @@
 		"label": "Expected Result",
 		"open": false,
 		
-		"query": {
-			"type": "query",
-			"query-results": [
-				"single"
-			],
-			"default": 0,
-			"label": "Query for number of URLs:",
-			"description": "Query to be performed on content to get the expected number of URLs.",
-			"simple": true,
-			"position": 1
-		},
 		"error.if.larger": {
 			"type": "bool",
 			"default": false,
@@ -584,6 +573,17 @@
 			"default": false,
 			"description": "Cause fatal error when number of expected URLs is exceeded.",
 			"simple": false
+		},
+		"query": {
+			"type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": 0,
+			"label": "Query for number of URLs:",
+			"description": "Query to be performed on content to get the expected number of URLs.",
+			"simple": true,
+			"position": 1
 		}
 	},
 	"redirect": {
