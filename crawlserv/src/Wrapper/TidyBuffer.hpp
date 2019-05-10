@@ -36,9 +36,9 @@ namespace crawlservpp::Wrapper {
 			return &(this->buffer);
 		}
 
-		// check whether string (with size greater than zero) was created
+		// check whether string was created
 		bool isString() const {
-			return this->buffer != nullptr;
+			return this->buffer.bp != nullptr;
 		}
 
 		// create string from buffer
