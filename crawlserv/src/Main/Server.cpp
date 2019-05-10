@@ -3409,6 +3409,7 @@ namespace crawlservpp::Main {
 
 							Parsing::XML xmlDocumentTest;
 
+							xmlDocumentTest.setOptions(true, 25);
 							xmlDocumentTest.parse(text, warnings, true);
 
 							while(!warnings.empty()) {

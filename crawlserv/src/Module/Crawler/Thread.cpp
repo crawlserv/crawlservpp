@@ -104,6 +104,9 @@ namespace crawlservpp::Module::Crawler {
 		this->database.setUrlStartupCheck(this->config.crawlerUrlStartupCheck);
 		this->database.setSleepOnError(this->config.crawlerSleepMySql);
 
+		// set XML logging options
+		this->parsedXML.setOptions(this->config.crawlerTidyWarnings, this->config.crawlerTidyErrors);
+
 		// create table names for table locking
 		this->urlListTable = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace;
 		this->crawlingTable = this->urlListTable + "_crawling";
@@ -1361,6 +1364,9 @@ namespace crawlservpp::Module::Crawler {
 					rapidjson::Document jsonDoc;
 					jsoncons::json json;
 					std::queue<std::string> warnings;
+
+					// set options for logging
+					xmlDoc.setOptions(this->config.crawlerTidyWarnings, this->config.crawlerTidyErrors);
 
 					switch(this->queriesTokens.at(n).type) {
 					case QueryStruct::typeRegEx:

@@ -39,6 +39,9 @@ namespace crawlservpp::Parsing {
 		// getter
 		void getContent(std::string& resultTo) const;
 
+		// setter
+		void setOptions(bool showWarnings, unsigned int numOfErrors);
+
 		// parse function
 		void parse(const std::string& content, std::queue<std::string>& warningsTo, bool repairCData);
 
@@ -61,6 +64,11 @@ namespace crawlservpp::Parsing {
 
 		// internal static helper function
 		static void cDataRepair(std::string& content);
+
+	private:
+		// options
+		bool warnings;
+		unsigned int errors;
 	};
 
 } /* crawlservpp::Parsing */

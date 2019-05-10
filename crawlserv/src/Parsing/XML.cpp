@@ -12,10 +12,16 @@
 namespace crawlservpp::Parsing {
 
 	// constructor stub
-	XML::XML() {}
+	XML::XML() : warnings(false), errors(0) {}
 
 	// destructor stub
 	XML::~XML() {}
+
+	// set options for logging
+	void XML::setOptions(bool showWarnings, unsigned int numOfErrors) {
+		this->warnings = showWarnings;
+		this->errors = numOfErrors;
+	}
 
 	// parse XML content, throws XML::Exception
 	void XML::parse(const std::string& content, std::queue<std::string>& warningsTo, bool repairCData) {
@@ -32,7 +38,7 @@ namespace crawlservpp::Parsing {
 			HTML tidy;
 
 			try {
-				tidy.tidyAndConvert(xml, warningsTo); // TODO: MEMORY LEAK !!!
+				tidy.tidyAndConvert(xml, this->warnings, this->errors, warningsTo); // TODO: MEMORY LEAK !!!
 			}
 			catch(const HTML::Exception& e) {
 				throw XML::Exception("TidyLib error: " + e.whatStr());

@@ -86,6 +86,8 @@ namespace crawlservpp::Module::Crawler {
 			unsigned long crawlerSleepMySql;
 			std::string crawlerStart;
 			bool crawlerStartIgnore;
+			unsigned int crawlerTidyErrors;
+			bool crawlerTidyWarnings;
 			bool crawlerTiming;
 			bool crawlerUrlCaseSensitive;
 			unsigned long crawlerUrlChunks;
@@ -168,6 +170,8 @@ namespace crawlservpp::Module::Crawler {
 										crawlerSleepMySql(20),
 										crawlerStart("/"),
 										crawlerStartIgnore(false),
+										crawlerTidyErrors(0),
+										crawlerTidyWarnings(false),
 										crawlerTiming(false),
 										crawlerUrlCaseSensitive(true),
 										crawlerUrlChunks(5000),
@@ -233,6 +237,8 @@ namespace crawlservpp::Module::Crawler {
 		this->option("sleep.mysql", this->config.crawlerSleepMySql);
 		this->option("start", this->config.crawlerStart, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 		this->option("start.ignore", this->config.crawlerStartIgnore);
+		this->option("tidy.errors", this->config.crawlerTidyErrors);
+		this->option("tidy.warnings", this->config.crawlerTidyWarnings);
 		this->option("timing", this->config.crawlerTiming);
 		this->option("url.case.sensitive", this->config.crawlerUrlCaseSensitive);
 		this->option("url.chunks", this->config.crawlerUrlChunks);

@@ -354,6 +354,19 @@
 			"simple": true,
 			"position": 3
 		},
+		"tidy-errors": {
+			"type": "number",
+			"min": 0,
+			"default": 0,
+			"description": "Number  of tidyhtml errors to log (if logging is enabled).",
+			"simple": false
+		},
+		"tidy-warnings": {
+			"type": "bool",
+			"default": false,
+			"description": "Log tidyhtml warnings (if logging is enabled).",
+			"simple": false
+		},
 		"timing": {
 			"type": "bool",
 			"default": false,
