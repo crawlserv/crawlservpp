@@ -111,7 +111,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	// check analyzing-specific configuration
 	inline void Config::checkOptions() {
-		// check properties of inputs (arrays with fields, sources and tables should have the same number of elements)
+		// check properties of input fields
 		const unsigned long completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
 				this->config.generalInputFields.size(),
 				this->config.generalInputSources.size(),
@@ -120,20 +120,21 @@ namespace crawlservpp::Module::Analyzer {
 
 		bool incompleteInputs = false;
 
+		// remove field names that are not used
 		if(this->config.generalInputFields.size() > completeInputs) {
-			// remove queries of incomplete datetime queries
 			this->config.generalInputFields.resize(completeInputs);
 
 			incompleteInputs = true;
 		}
 
+		// remove field sources that are not used
 		if(this->config.generalInputSources.size() > completeInputs) {
-			// remove queries of incomplete datetime queries
 			this->config.generalInputSources.resize(completeInputs);
 
 			incompleteInputs = true;
 		}
 
+		// remove field source tables that are not used
 		if(this->config.generalInputTables.size() > completeInputs) {
 			// remove sources of incomplete datetime queries
 			this->config.generalInputTables.resize(completeInputs);
@@ -141,12 +142,13 @@ namespace crawlservpp::Module::Analyzer {
 			incompleteInputs = true;
 		}
 
+		// warn about incomplete input fields
 		if(incompleteInputs) {
-			// warn about incomplete inputs
 			this->warning(
 					"\'input.fields\', \'.sources\' and \'.tables\'"
 					" should have the same number of elements."
 			);
+
 			this->warning("Incomplete inputs removed.");
 		}
 
