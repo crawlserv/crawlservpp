@@ -327,7 +327,7 @@ namespace crawlservpp::Module::Crawler {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete archive(s) removed.");
+			this->warning("Incomplete archive(s) removed from configuration.");
 		}
 
 		// check properties of counters
@@ -369,12 +369,6 @@ namespace crawlservpp::Module::Crawler {
 			incompleteCounters = true;
 		}
 
-		// remove aliases that are not used, add empty aliases where none exist
-		this->config.customCountersAlias.resize(completeCounters);
-
-		// remove alias summands that are not used, add zero as summand where none is specified
-		this->config.customCountersAliasAdd.resize(completeCounters, 0);
-
 		// warn about incomplete counters
 		if(incompleteCounters) {
 			this->warning(
@@ -382,8 +376,26 @@ namespace crawlservpp::Module::Crawler {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete counter(s) removed.");
+			this->warning("Incomplete counter(s) removed from configuration.");
+
+			incompleteCounters = false;
 		}
+
+		// remove aliases that are not used, add empty aliases where none exist
+		if(this->config.customCountersAlias.size() > completeCounters)
+			incompleteCounters = true;
+
+		this->config.customCountersAlias.resize(completeCounters);
+
+		// remove alias summands that are not used, add zero as summand where none is specified
+		if(this->config.customCountersAliasAdd.size() > completeCounters)
+			incompleteCounters = true;
+
+		this->config.customCountersAliasAdd.resize(completeCounters, 0);
+
+		// warn about unused properties
+		if(incompleteCounters)
+			this->warning("Unused counter properties removed from configuration.");
 
 		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
 		for(unsigned long n = 1; n <= this->config.customCounters.size(); ++n) {
@@ -403,6 +415,8 @@ namespace crawlservpp::Module::Crawler {
 				this->config.customCountersStart.erase(this->config.customCountersStart.begin() + i);
 				this->config.customCountersEnd.erase(this->config.customCountersEnd.begin() + i);
 				this->config.customCountersStep.erase(this->config.customCountersStep.begin() + i);
+				this->config.customCountersAlias.erase(this->config.customCountersAlias.begin() + i);
+				this->config.customCountersAliasAdd.erase(this->config.customCountersAliasAdd.begin() + i);
 
 				std::ostringstream warningStrStr;
 
@@ -444,9 +458,6 @@ namespace crawlservpp::Module::Crawler {
 			incompleteTokens = true;
 		}
 
-		// remove token POST options that are not used, set to 'false' where none is specified
-		this->config.customTokensUsePost.resize(completeTokens, false);
-
 		// warn about incomplete counters
 		if(incompleteTokens) {
 			this->warning(
@@ -454,8 +465,20 @@ namespace crawlservpp::Module::Crawler {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete token(s) removed.");
+			this->warning("Incomplete token(s) removed from configuration.");
+
+			incompleteTokens = false;
 		}
+
+		// remove token POST options that are not used, set to 'false' where none is specified
+		if(this->config.customTokensUsePost.size() > completeTokens)
+			incompleteTokens = true;
+
+		this->config.customTokensUsePost.resize(completeTokens, false);
+
+		// warn about unused property
+		if(incompleteTokens)
+			this->warning("Unused token properties removed from configuration.");
 
 		// check properties of variables for dynamic redirect
 		bool incompleteVars = false;
@@ -494,7 +517,7 @@ namespace crawlservpp::Module::Crawler {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete variable(s) removed.");
+			this->warning("Incomplete variable(s) removed form configuration.");
 		}
 	}
 
