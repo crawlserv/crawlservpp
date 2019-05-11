@@ -184,7 +184,7 @@ namespace crawlservpp::Module::Parser {
 
 		this->config.parsingDateTimeFormats.resize(completeDateTimes);
 
-		// replace all empty date/time formats with "%F %T"
+		// replace empty date/time formats with "%F %T"
 		std::replace_if(
 				this->config.parsingDateTimeFormats.begin(),
 				this->config.parsingDateTimeFormats.end(),
