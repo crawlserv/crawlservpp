@@ -149,7 +149,7 @@ namespace crawlservpp::Module::Analyzer {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete inputs removed.");
+			this->warning("Incomplete input field(s) removed.");
 		}
 
 		// check algo options
