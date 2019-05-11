@@ -190,7 +190,11 @@ namespace crawlservpp::Module::Parser {
 
 		// warn about incomplete date/time queries
 		if(incompleteDateTimes) {
-			this->warning("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
+			this->warning(
+					"\'datetime.queries\' and \'.sources\'"
+					" should have the same number of elements."
+			);
+
 			this->warning("Incomplete date/time queries removed.");
 		}
 
@@ -226,7 +230,11 @@ namespace crawlservpp::Module::Parser {
 
 		// warn about incomplete parsing fields
 		if(incompleteFields) {
-			this->warning("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
+			this->warning(
+					"\'field.names\', \'.queries\' and \'.sources\'"
+					" should have the same number of elements."
+			);
+
 			this->warning("Incomplete field(s) removed.");
 		}
 
@@ -277,7 +285,11 @@ namespace crawlservpp::Module::Parser {
 
 		// warn about incomplete ID queries
 		if(incompleteIds) {
-			this->warning("\'id.queries\' and \'.sources\' should have the same number of elements.");
+			this->warning(
+					"\'id.queries\' and \'.sources\'"
+					" should have the same number of elements."
+			);
+
 			this->warning("Incomplete ID queries removed.");
 		}
 	}
