@@ -154,7 +154,7 @@ namespace crawlservpp::Module::Parser {
 
 		bool incompleteDateTimes = false;
 
-		// remove queries or sources that are not used
+		// remove date/time queries or sources that are not used
 		if(this->config.parsingDateTimeQueries.size() > completeDateTimes) {
 			this->config.parsingDateTimeQueries.resize(completeDateTimes);
 
@@ -204,7 +204,7 @@ namespace crawlservpp::Module::Parser {
 		if(incompleteDateTimes)
 			this->warning("Unused date/time properties removed from configuration.");
 
-		// check properties of parsing fields (arrays with field names, queries and sources should have the same number of elements)
+		// check properties of parsing fields
 		const unsigned long completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
 				this->config.parsingFieldNames.size(),
 				this->config.parsingFieldQueries.size(),
@@ -298,7 +298,7 @@ namespace crawlservpp::Module::Parser {
 
 		bool incompleteIds = false;
 
-		// remove queries or sources that are not used
+		// remove ID queries or sources that are not used
 		if(this->config.parsingIdQueries.size() > completeIds) {
 			this->config.parsingIdQueries.resize(completeIds);
 
