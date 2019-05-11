@@ -176,10 +176,10 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// initialize custom URLs
-		this->setStatusMessage("Initializing custom URLs...");
+		this->setStatusMessage("Generating custom URLs...");
 
 		if(verbose)
-			this->log("initializes custom URLs...");
+			this->log("generates custom URLs...");
 
 		this->initCustomUrls();
 
