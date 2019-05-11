@@ -12,6 +12,7 @@
 
 #include "TidyBuffer.hpp"
 
+#include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
 
 #include <tidy.h>
@@ -86,7 +87,19 @@ namespace crawlservpp::Wrapper {
 			case 2:
 				// warnings or errors occured
 				if(this->errors) {
-					warningsTo.emplace(this->errors.getString());
+					std::queue<std::string> warnings(
+							Helper::Strings::splitToQueue(
+									this->errors.getString(),
+									'\n',
+									true
+							)
+					);
+
+					while(!warnings.empty()) {
+						warningsTo.emplace(warnings.front());
+
+						warnings.pop();
+					}
 
 					this->errors.clear();
 				}
@@ -113,7 +126,19 @@ namespace crawlservpp::Wrapper {
 			case 2:
 				// warnings or errors occured
 				if(this->errors) {
-					warningsTo.emplace(this->errors.getString());
+					std::queue<std::string> warnings(
+							Helper::Strings::splitToQueue(
+									this->errors.getString(),
+									'\n',
+									true
+							)
+					);
+
+					while(!warnings.empty()) {
+						warningsTo.emplace(warnings.front());
+
+						warnings.pop();
+					}
 
 					this->errors.clear();
 				}
@@ -142,7 +167,19 @@ namespace crawlservpp::Wrapper {
 			case 2:
 				// warnings or errors occured
 				if(this->errors) {
-					warningsTo.emplace(this->errors.getString());
+					std::queue<std::string> warnings(
+							Helper::Strings::splitToQueue(
+									this->errors.getString(),
+									'\n',
+									true
+							)
+					);
+
+					while(!warnings.empty()) {
+						warningsTo.emplace(warnings.front());
+
+						warnings.pop();
+					}
 
 					this->errors.clear();
 				}
@@ -157,7 +194,7 @@ namespace crawlservpp::Wrapper {
 				throw Exception("Could not write to buffer");
 			}
 
-			if(buffer.isString())
+			if(buffer)
 				return buffer.getString();
 
 			return "";
