@@ -36,11 +36,6 @@ namespace crawlservpp::Wrapper {
 			return &(this->buffer);
 		}
 
-		// check whether string was created
-		bool isString() const {
-			return this->buffer.bp != nullptr;
-		}
-
 		// create string from buffer
 		std::string getString() const {
 			return std::string(reinterpret_cast<const char *>(this->buffer.bp), this->buffer.size);
