@@ -399,7 +399,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
 		for(unsigned long n = 1; n <= this->config.customCounters.size(); ++n) {
-			unsigned long i = n - 1;
+			const unsigned long i = n - 1;
 
 			if(
 					(
@@ -421,7 +421,7 @@ namespace crawlservpp::Module::Crawler {
 
 				std::ostringstream warningStrStr;
 
-				warningStrStr << "Loop of counter #" << (n + 1) << " would be infinitive, counter removed.";
+				warningStrStr << "Loop of counter #" << n << " would be infinitive, counter removed.";
 
 				this->warning(warningStrStr.str());
 
