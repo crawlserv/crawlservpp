@@ -694,7 +694,7 @@ namespace crawlservpp::Module::Crawler {
 						std::find_if(
 								this->customPages.begin(),
 								this->customPages.end(),
-								[&](const auto& val) {
+								[&sitemap](const auto& val) {
 									return val.second == sitemap;
 								}
 						) == this->customPages.end()
