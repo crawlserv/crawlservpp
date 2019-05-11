@@ -412,6 +412,9 @@ namespace crawlservpp::Module::Crawler {
 							&& this->config.customCountersStart.at(i) > this->config.customCountersEnd.at(i)
 					)
 			) {
+				const std::string counterName(this->config.customCounters.at(i));
+
+				// delete the invalid counter
 				this->config.customCounters.erase(this->config.customCounters.begin() + i);
 				this->config.customCountersStart.erase(this->config.customCountersStart.begin() + i);
 				this->config.customCountersEnd.erase(this->config.customCountersEnd.begin() + i);
@@ -419,13 +422,13 @@ namespace crawlservpp::Module::Crawler {
 				this->config.customCountersAlias.erase(this->config.customCountersAlias.begin() + i);
 				this->config.customCountersAliasAdd.erase(this->config.customCountersAliasAdd.begin() + i);
 
-				std::ostringstream warningStrStr;
-
-				warningStrStr << "Loop of counter #" << n << " would be infinitive, counter removed.";
-
-				this->warning(warningStrStr.str());
-
 				--n;
+
+				this->warning(
+						"Loop of counter \'"
+						+ counterName
+						+ "\' would be infinite, counter removed."
+				);
 			}
 		}
 
