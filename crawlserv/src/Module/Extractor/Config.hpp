@@ -15,7 +15,7 @@
 
 #include "../../Network/Config.hpp"
 
-#include <algorithm>	// std::min
+#include <algorithm>	// std::min, std::replace_if
 #include <queue>		// std::queue
 #include <string>		// std::string
 #include <vector>		// std::vector
@@ -80,7 +80,7 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<std::string> variablesParsedTable;
 			std::vector<unsigned long> variablesQuery;
 			std::vector<unsigned char> variablesSource;
-			std::vector<std::string> variablesTokensName;
+			std::vector<std::string> variablesTokens;
 			std::vector<unsigned long> variablesTokensQuery;
 			std::vector<std::string> variablesTokensSource;
 			std::vector<bool> variablesTokensUsePost;
@@ -193,7 +193,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("parsed.table", this->config.variablesParsedTable);
 		this->option("query", this->config.variablesQuery);
 		this->option("source", this->config.variablesSource);
-		this->option("tokens.name", this->config.variablesTokensName);
+		this->option("tokens", this->config.variablesTokens);
 		this->option("tokens.query", this->config.variablesTokensQuery);
 		this->option("tokens.source", this->config.variablesTokensSource);
 		this->option("tokens.use.post", this->config.variablesTokensUsePost);
@@ -237,7 +237,250 @@ namespace crawlservpp::Module::Extractor {
 
 	// check extracting-specific configuration, throws Config::Exception
 	inline void Config::checkOptions() {
-		// TODO
+		// check properties of variables
+		bool incompleteVariables = false;
+
+		const unsigned long completeVariables = std::min({ // number of complete variables (= minimum size of arrays)
+				this->config.variablesName.size(),
+				this->config.variablesSource.size(),
+				this->config.variablesQuery.size()
+		});
+
+		// remove variable names that are not used
+		if(this->config.variablesName.size() > completeVariables) {
+			this->config.variablesName.resize(completeVariables);
+
+			incompleteVariables = true;
+		}
+
+		// remove variable sources that are not used
+		if(this->config.variablesSource.size() > completeVariables) {
+			this->config.variablesSource.resize(completeVariables);
+
+			incompleteVariables = true;
+		}
+
+		// remove variable queries that are not used
+		if(this->config.variablesQuery.size() > completeVariables) {
+			this->config.variablesQuery.resize(completeVariables);
+
+			incompleteVariables = true;
+		}
+
+		// warn about incomplete variables
+		if(incompleteVariables) {
+			this->warning(
+					"\'variables.name\', \'.source\' and \'.query\'"
+					" should have the same number of elements."
+			);
+
+			this->warning("Incomplete variable(s) removed from configuration.");
+
+			incompleteVariables = false;
+		}
+
+		// remove variable tables that are not used, add empty table where none is specified
+		if(this->config.variablesParsedTable.size() > completeVariables)
+			incompleteVariables = true;
+
+		this->config.variablesParsedTable.resize(completeVariables);
+
+		// remove variable columns that are not used, add empty column where none is specified
+		if(this->config.variablesParsedColumn.size() > completeVariables)
+			incompleteVariables = true;
+
+		this->config.variablesParsedColumn.resize(completeVariables);
+
+		// remove variable date/time formats that are not used, add empty format where none is specified
+		if(this->config.variablesDateTimeFormat.size() > completeVariables)
+			incompleteVariables = true;
+
+		this->config.variablesDateTimeFormat.resize(completeVariables);
+
+		// replace empty date/time formats with "%F %T"
+		std::replace_if(
+				this->config.variablesDateTimeFormat.begin(),
+				this->config.variablesDateTimeFormat.end(),
+				[](const auto& str) {
+					return str.empty();
+				},
+				"%F %T"
+		);
+
+		// warn about unused properties
+		if(incompleteVariables)
+			this->warning("Unused variable properties removed from configuration.");
+
+		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
+		for(unsigned long n = 1; n <= this->config.variablesName.size(); ++n) {
+			const unsigned long i = n - 1;
+
+			if(
+					(this->config.variablesSource.at(i) == Config::variablesSourcesCounter)
+					&&
+					((
+							this->config.variablesCounterStep.at(i) <= 0
+							&& this->config.variablesCounterStart.at(i) < this->config.variablesCounterEnd.at(i)
+					)
+					||
+					(
+							this->config.variablesCounterStep.at(i) >= 0
+							&& this->config.variablesCounterStart.at(i) > this->config.variablesCounterEnd.at(i)
+					))
+			) {
+				const std::string counterName(this->config.variablesName.at(i));
+
+				// delete the invalid (counter) variable
+				this->config.variablesName.erase(this->config.variablesName.begin() + i);
+				this->config.variablesSource.erase(this->config.variablesSource.begin() + i);
+				this->config.variablesQuery.erase(this->config.variablesQuery.begin() + i);
+				this->config.variablesParsedTable.erase(this->config.variablesParsedTable.begin() + i);
+				this->config.variablesParsedColumn.erase(this->config.variablesParsedColumn.begin() + i);
+				this->config.variablesDateTimeFormat.erase(this->config.variablesDateTimeFormat.begin() + i);
+				this->config.variablesCounterStart.erase(this->config.variablesCounterStart.begin() + i);
+				this->config.variablesCounterEnd.erase(this->config.variablesCounterEnd.begin() + i);
+				this->config.variablesCounterStep.erase(this->config.variablesCounterStep.begin() + i);
+				this->config.variablesAlias.erase(this->config.variablesAlias.begin() + i);
+				this->config.variablesAliasAdd.erase(this->config.variablesAliasAdd.begin() + i);
+
+				--n;
+
+				this->warning(
+						"Loop of counter \'"
+						+ counterName
+						+ "\' would be infinite, variable removed."
+				);
+			}
+		}
+
+		// check properties of tokens
+		bool incompleteTokens = false;
+
+		const unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of arrays)
+				this->config.variablesTokens.size(),
+				this->config.variablesTokensSource.size(),
+				this->config.variablesTokensQuery.size()
+		});
+
+		// remove token variable names that are not used
+		if(this->config.variablesTokens.size() > completeTokens) {
+			this->config.variablesTokens.resize(completeTokens);
+
+			incompleteTokens = true;
+		}
+
+		// remove token sources that are not used
+		if(this->config.variablesTokensSource.size() > completeTokens) {
+			this->config.variablesTokensSource.resize(completeTokens);
+
+			incompleteTokens = true;
+		}
+
+		// remove token queries that are not used
+		if(this->config.variablesTokensQuery.size() > completeTokens) {
+			this->config.variablesTokensQuery.resize(completeTokens);
+
+			incompleteTokens = true;
+		}
+
+		// warn about incomplete counters
+		if(incompleteTokens) {
+			this->warning(
+					"\'variables.tokens\', \'.tokens.source\' and \'.tokens.query\'"
+					" should have the same number of elements."
+			);
+
+			this->warning("Incomplete token(s) removed from configuration.");
+
+			incompleteTokens = false;
+		}
+
+		// remove token POST options that are not used, set to 'false' where none is specified
+		if(this->config.variablesTokensUsePost.size() > completeTokens)
+			incompleteTokens = true;
+
+		this->config.variablesTokensUsePost.resize(completeTokens, false);
+
+		// warn about unused property
+		if(incompleteTokens)
+			this->warning("Unused token properties removed from configuration.");
+
+		// check properties of date/time queries
+		bool incompleteDateTimes = false;
+
+		// remove date/time formats that are not used, add empty format where none is specified
+		if(this->config.extractingDateTimeFormats.size() > this->config.extractingDateTimeQueries.size())
+			incompleteDateTimes = true;
+
+		this->config.extractingDateTimeFormats.resize(this->config.extractingDateTimeQueries.size());
+
+		// remove date/time locales that are not used, add empty locale where none is specified
+		if(this->config.extractingDateTimeLocales.size() > this->config.extractingDateTimeQueries.size())
+			incompleteDateTimes = true;
+
+		this->config.extractingDateTimeLocales.resize(this->config.extractingDateTimeQueries.size());
+
+		// warn about unused properties
+		if(incompleteDateTimes)
+			this->warning("Unused date/time properties removed from configuration.");
+
+		// replace empty date/time formats with "%F %T"
+		std::replace_if(
+				this->config.extractingDateTimeFormats.begin(),
+				this->config.extractingDateTimeFormats.end(),
+				[](const auto& str) {
+					return str.empty();
+				},
+				"%F %T"
+		);
+
+		// check properties of fields
+		const unsigned long completeFields = std::min(
+				this->config.extractingFieldNames.size(),
+				this->config.extractingFieldQueries.size()
+		);
+
+		bool incompleteFields = false;
+
+		// remove field names or queries that are not used
+		if(this->config.extractingFieldNames.size() > completeFields) {
+			incompleteFields = true;
+
+			this->config.extractingFieldNames.resize(completeFields);
+		}
+		else if(this->config.extractingFieldQueries.size() > completeFields) {
+			incompleteFields = true;
+
+			this->config.extractingFieldQueries.resize(completeFields);
+		}
+
+		// warn about incomplete fields
+		if(incompleteFields) {
+			this->warning(
+					"\'variables.field.names\' and \'.field.queries\'"
+					" should have the same number of elements."
+			);
+
+			this->warning("Incomplete field(s) removed from configuration.");
+
+			incompleteFields = false;
+		}
+
+		// remove 'tidy text' properties that are not used, set to 'false' where none is specified
+		if(this->config.extractingFieldTidyTexts.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.extractingFieldTidyTexts.resize(completeFields, false);
+
+		// remove 'warning if empty' properties that are not used, set to 'false' where none is specified
+		if(this->config.extractingFieldWarningsEmpty.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.extractingFieldWarningsEmpty.resize(completeFields, false);
+
+		// warn about unused properties
+		if(incompleteFields)
+			this->warning("Unused field properties removed from configuration.");
 	}
 
 } /* crawlservpp::Module::Extractor */
