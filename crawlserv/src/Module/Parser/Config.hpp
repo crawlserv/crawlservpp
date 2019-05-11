@@ -166,6 +166,18 @@ namespace crawlservpp::Module::Parser {
 			incompleteDateTimes = true;
 		}
 
+		// warn about incomplete date/time queries
+		if(incompleteDateTimes) {
+			this->warning(
+					"\'datetime.queries\', \'.sources\'"
+					" should have the same number of elements."
+			);
+
+			this->warning("Incomplete date/time queries removed from configuration.");
+
+			incompleteDateTimes = false;
+		}
+
 		// remove date/time formats that are not used, add empty format where none is specified
 		if(this->config.parsingDateTimeFormats.size() > completeDateTimes)
 			incompleteDateTimes = true;
@@ -188,15 +200,9 @@ namespace crawlservpp::Module::Parser {
 
 		this->config.parsingDateTimeLocales.resize(completeDateTimes);
 
-		// warn about incomplete date/time queries
-		if(incompleteDateTimes) {
-			this->warning(
-					"\'datetime.queries\' and \'.sources\'"
-					" should have the same number of elements."
-			);
-
-			this->warning("Incomplete date/time queries removed.");
-		}
+		// warn about unused properties
+		if(incompleteDateTimes)
+			this->warning("Unused date/time properties removed from configuration.");
 
 		// check properties of parsing fields (arrays with field names, queries and sources should have the same number of elements)
 		const unsigned long completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
@@ -235,10 +241,15 @@ namespace crawlservpp::Module::Parser {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete field(s) removed.");
+			this->warning("Incomplete field(s) removed from configuration.");
+
+			incompleteFields = false;
 		}
 
 		// remove field delimiters that are not used, add empty delimiter (\0) where none is specified
+		if(this->config.parsingFieldDelimiters.size() > completeFields)
+			incompleteFields = true;
+
 		this->config.parsingFieldDelimiters.resize(completeFields, '\0');
 
 		// replace all empty field delimiters with '\n'
@@ -252,16 +263,32 @@ namespace crawlservpp::Module::Parser {
 		);
 
 		// remove 'ignore empty values' properties that are not used, set to 'true' where none is specified
+		if(this->config.parsingFieldIgnoreEmpty.size() > completeFields)
+			incompleteFields = true;
+
 		this->config.parsingFieldIgnoreEmpty.resize(completeFields, true);
 
-		// remove 'save fiel entry' properties that are not used, set to 'false' where none is specified
+		// remove 'save field entry' properties that are not used, set to 'false' where none is specified
+		if(this->config.parsingFieldJSON.size() > completeFields)
+			incompleteFields = true;
+
 		this->config.parsingFieldJSON.resize(completeFields, false);
 
 		// remove 'tidy text' properties that are not used, set to 'false' where none is specified
+		if(this->config.parsingFieldTidyTexts.size() > completeFields)
+			incompleteFields = true;
+
 		this->config.parsingFieldTidyTexts.resize(completeFields, false);
 
 		// remove 'warning if empty' properties that are not used, set to 'false' where none is specified
+		if(this->config.parsingFieldWarningsEmpty.size() > completeFields)
+			incompleteFields = true;
+
 		this->config.parsingFieldWarningsEmpty.resize(completeFields, false);
+
+		// warn about unused properties
+		if(incompleteFields)
+			this->warning("Unused field properties removed from configuration.");
 
 		// check properties of ID queries
 		const unsigned long completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
@@ -290,7 +317,7 @@ namespace crawlservpp::Module::Parser {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete ID queries removed.");
+			this->warning("Incomplete ID queries removed from configuration.");
 		}
 	}
 
