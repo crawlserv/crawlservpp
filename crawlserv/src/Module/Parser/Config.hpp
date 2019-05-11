@@ -256,7 +256,7 @@ namespace crawlservpp::Module::Parser {
 		std::replace_if(
 				this->config.parsingFieldDelimiters.begin(),
 				this->config.parsingFieldDelimiters.end(),
-				[](const auto& c) {
+				[](char c) {
 					return c == '\0';
 				},
 				'\n'
