@@ -16,7 +16,7 @@
 #include "../../Main/Exception.hpp"
 #include "../../Module/Config.hpp"
 
-#include <algorithm>	// std::min
+#include <algorithm>	// std::min, std::replace_if
 #include <queue>		// std::queue
 #include <string>		// std::string
 #include <vector>		// std::vector
@@ -154,48 +154,44 @@ namespace crawlservpp::Module::Parser {
 
 		bool incompleteDateTimes = false;
 
-		// the 'date/time format' property will be ignored if array is too large or set to "%F %T" if entry is missing
-		if(this->config.parsingDateTimeFormats.size() > completeDateTimes)
-			this->config.parsingDateTimeFormats.resize(completeDateTimes);
-		else {
-			this->config.parsingDateTimeFormats.reserve(completeDateTimes);
-
-			while(this->config.parsingDateTimeFormats.size() < completeDateTimes)
-				this->config.parsingDateTimeFormats.emplace_back("%F %T");
-		}
-
-		// ...and empty 'date/time format' properties will also be replaced by the default value "%F %T"
-		for(auto i = this->config.parsingDateTimeFormats.begin(); i != this->config.parsingDateTimeFormats.end(); ++i)
-			if(i->empty()) *i = "%F %T";
-
-		// the 'locales' property will be ignored if array is too large or set to "" if entry is missing
-		if(this->config.parsingDateTimeLocales.size() > completeDateTimes)
-			this->config.parsingDateTimeLocales.resize(completeDateTimes);
-		else {
-			this->config.parsingDateTimeLocales.reserve(completeDateTimes);
-
-			while(this->config.parsingDateTimeLocales.size() < completeDateTimes)
-				this->config.parsingDateTimeLocales.emplace_back();
-		}
-
+		// remove queries or sources that are not used
 		if(this->config.parsingDateTimeQueries.size() > completeDateTimes) {
-			// remove queries of incomplete date/time queries
 			this->config.parsingDateTimeQueries.resize(completeDateTimes);
 
 			incompleteDateTimes = true;
 		}
-
-		if(this->config.parsingDateTimeSources.size() > completeDateTimes) {
-			// remove sources of incomplete date/time queries
+		else if(this->config.parsingDateTimeSources.size() > completeDateTimes) {
 			this->config.parsingDateTimeSources.resize(completeDateTimes);
 
 			incompleteDateTimes = true;
 		}
 
+		// remove date/time formats that are not used, add empty format where none is specified
+		if(this->config.parsingDateTimeFormats.size() > completeDateTimes)
+			incompleteDateTimes = true;
+
+		this->config.parsingDateTimeFormats.resize(completeDateTimes);
+
+		// replace all empty date/time formats with "%F %T"
+		std::replace_if(
+				this->config.parsingDateTimeFormats.begin(),
+				this->config.parsingDateTimeFormats.end(),
+				[](const auto& str) {
+					return str.empty();
+				},
+				"%F %T"
+		);
+
+		// remove date/time locales that are not used, add empty locale where none is specified
+		if(this->config.parsingDateTimeLocales.size() > completeDateTimes)
+			incompleteDateTimes = true;
+
+		this->config.parsingDateTimeLocales.resize(completeDateTimes);
+
+		// warn about incomplete date/time queries
 		if(incompleteDateTimes) {
-			// warn about incomplete date/time queries
 			this->warning("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
-			this->warning("Incomplete datetime queries removed.");
+			this->warning("Incomplete date/time queries removed.");
 		}
 
 		// check properties of parsing fields (arrays with field names, queries and sources should have the same number of elements)
@@ -207,81 +203,57 @@ namespace crawlservpp::Module::Parser {
 
 		bool incompleteFields = false;
 
-		// the 'delimiter' property will be ignored if array is too large or set to '\n' if entry is missing
-		if(this->config.parsingFieldDelimiters.size() > completeFields)
-			this->config.parsingFieldDelimiters.resize(completeFields);
-		else {
-			this->config.parsingFieldDelimiters.reserve(completeFields);
-
-			while(this->config.parsingFieldDelimiters.size() < completeFields)
-				this->config.parsingFieldDelimiters.push_back('\n');
-		}
-
-		// the 'ignore empty values' property will be ignored if array is too large or set to 'true' if entry is missing
-		if(this->config.parsingFieldIgnoreEmpty.size() > completeFields)
-			this->config.parsingFieldIgnoreEmpty.resize(completeFields);
-		else {
-			this->config.parsingFieldIgnoreEmpty.reserve(completeFields);
-
-			while(this->config.parsingFieldIgnoreEmpty.size() < completeFields)
-				this->config.parsingFieldIgnoreEmpty.push_back(true);
-		}
-
-		// the 'save field entry as JSON' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->config.parsingFieldJSON.size() > completeFields)
-			this->config.parsingFieldJSON.resize(completeFields);
-		else {
-			this->config.parsingFieldJSON.reserve(completeFields);
-
-			while(this->config.parsingFieldJSON.size() < completeFields)
-				this->config.parsingFieldJSON.push_back(false);
-		}
-
-		// the 'tidy text' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->config.parsingFieldTidyTexts.size() > completeFields)
-			this->config.parsingFieldTidyTexts.resize(completeFields);
-		else {
-			this->config.parsingFieldTidyTexts.reserve(completeFields);
-
-			while(this->config.parsingFieldTidyTexts.size() < completeFields)
-				this->config.parsingFieldTidyTexts.push_back(false);
-		}
-
-		// the 'warning if empty' property will be ignored if array is too large or set to 'false' if entry is missing
-		if(this->config.parsingFieldWarningsEmpty.size() > completeFields)
-			this->config.parsingFieldWarningsEmpty.resize(completeFields);
-		else {
-			this->config.parsingFieldWarningsEmpty.reserve(completeFields);
-			while(this->config.parsingFieldWarningsEmpty.size() < completeFields)
-				this->config.parsingFieldWarningsEmpty.push_back(false);
-		}
-
+		// remove names of incomplete parsing fields
 		if(this->config.parsingFieldNames.size() > completeFields) {
-			// remove names of incomplete parsing fields
 			this->config.parsingFieldNames.resize(completeFields);
 
 			incompleteFields = true;
 		}
 
+		// remove queries of incomplete parsing fields
 		if(this->config.parsingFieldQueries.size() > completeFields) {
-			// remove queries of incomplete parsing fields
 			this->config.parsingFieldQueries.resize(completeFields);
 
 			incompleteFields = true;
 		}
 
+		// remove sources of incomplete parsing fields
 		if(this->config.parsingFieldSources.size() > completeFields) {
-			// remove sources of incomplete parsing fields
 			this->config.parsingFieldSources.resize(completeFields);
 
 			incompleteFields = true;
 		}
 
+		// warn about incomplete parsing fields
 		if(incompleteFields) {
-			// warn about incomplete parsing fields
 			this->warning("\'field.names\', \'.queries\' and \'.sources\' should have the same number of elements.");
 			this->warning("Incomplete field(s) removed.");
 		}
+
+		// remove field delimiters that are not used, add empty delimiter (\0) where none is specified
+		this->config.parsingFieldDelimiters.resize(completeFields, '\0');
+
+		// replace all empty field delimiters with '\n'
+		std::replace_if(
+				this->config.parsingFieldDelimiters.begin(),
+				this->config.parsingFieldDelimiters.end(),
+				[](const auto& c) {
+					return c == '\0';
+				},
+				'\n'
+		);
+
+		// remove 'ignore empty values' properties that are not used, set to 'true' where none is specified
+		this->config.parsingFieldIgnoreEmpty.resize(completeFields, true);
+
+		// remove 'save fiel entry' properties that are not used, set to 'false' where none is specified
+		this->config.parsingFieldJSON.resize(completeFields, false);
+
+		// remove 'tidy text' properties that are not used, set to 'false' where none is specified
+		this->config.parsingFieldTidyTexts.resize(completeFields, false);
+
+		// remove 'warning if empty' properties that are not used, set to 'false' where none is specified
+		this->config.parsingFieldWarningsEmpty.resize(completeFields, false);
 
 		// check properties of ID queries
 		const unsigned long completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
@@ -291,22 +263,20 @@ namespace crawlservpp::Module::Parser {
 
 		bool incompleteIds = false;
 
+		// remove queries or sources that are not used
 		if(this->config.parsingIdQueries.size() > completeIds) {
-			// remove queries of incomplete ID queries
 			this->config.parsingIdQueries.resize(completeIds);
 
 			incompleteIds = true;
 		}
-
-		if(this->config.parsingIdSources.size() > completeIds) {
-			// remove sources of incomplete ID queries
+		else if(this->config.parsingIdSources.size() > completeIds) {
 			this->config.parsingIdSources.resize(completeIds);
 
 			incompleteIds = true;
 		}
 
+		// warn about incomplete ID queries
 		if(incompleteIds) {
-			// warn about incomplete ID queries
 			this->warning("\'id.queries\' and \'.sources\' should have the same number of elements.");
 			this->warning("Incomplete ID queries removed.");
 		}
