@@ -216,7 +216,7 @@
 			"simple": true,
 			"position": 2
 		},
-		"tokens.name": {
+		"tokens": {
 			"type": "array",
 			"item-type": "string",
 			"default": [],
