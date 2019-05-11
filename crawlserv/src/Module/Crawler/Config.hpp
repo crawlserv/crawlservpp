@@ -299,29 +299,29 @@ namespace crawlservpp::Module::Crawler {
 				this->config.crawlerArchivesUrlsTimemap.size()
 		});
 
+		// remove names that are not used
 		if(this->config.crawlerArchivesNames.size() > completeArchives) {
-			// remove names of incomplete archives
 			this->config.crawlerArchivesNames.resize(completeArchives);
 
 			incompleteArchives = true;
 		}
 
+		// remove memento URL templates that are not used
 		if(this->config.crawlerArchivesUrlsMemento.size() > completeArchives) {
-			// remove memento URL templates of incomplete archives
 			this->config.crawlerArchivesUrlsMemento.resize(completeArchives);
 
 			incompleteArchives = true;
 		}
 
+		// remove timemap URL templates that are not used
 		if(this->config.crawlerArchivesUrlsTimemap.size() > completeArchives) {
-			// remove timemap URL templates of incomplete archives
 			this->config.crawlerArchivesUrlsTimemap.resize(completeArchives);
 
 			incompleteArchives = true;
 		}
 
+		// warn about incomplete archives
 		if(incompleteArchives) {
-			// warn about incomplete archives
 			this->warning(
 					"\'archives.names\', \'.urls.memento\' and \'.urls.timemap\'"
 					" should have the same number of elements."
@@ -340,6 +340,7 @@ namespace crawlservpp::Module::Crawler {
 				this->config.customCountersStep.size()
 		});
 
+		// remove counter variable names that are not used
 		if(this->config.customCounters.size() > completeCounters) {
 			// remove counter variables of incomplete counters
 			this->config.customCounters.resize(completeCounters);
@@ -347,22 +348,22 @@ namespace crawlservpp::Module::Crawler {
 			incompleteCounters = true;
 		}
 
+		// remove starting values that are not used
 		if(this->config.customCountersStart.size() > completeCounters) {
-			// remove starting values of incomplete counters
 			this->config.customCountersStart.resize(completeCounters);
 
 			incompleteCounters = true;
 		}
 
+		// remove ending values that are not used
 		if(this->config.customCountersEnd.size() > completeCounters) {
-			// remove ending values of incomplete counters
 			this->config.customCountersEnd.resize(completeCounters);
 
 			incompleteCounters = true;
 		}
 
+		// remove step values that are not used
 		if(this->config.customCountersStep.size() > completeCounters) {
-			// remove step values of incomplete counters
 			this->config.customCountersStep.resize(completeCounters);
 
 			incompleteCounters = true;
@@ -374,8 +375,8 @@ namespace crawlservpp::Module::Crawler {
 		// remove alias summands that are not used, add zero as summand where none is specified
 		this->config.customCountersAliasAdd.resize(completeCounters, 0);
 
+		// warn about incomplete counters
 		if(incompleteCounters) {
-			// warn about incomplete counters
 			this->warning(
 					"\'custom.counters\', \'.start\', \'.end\' and \'.step\'"
 					" should have the same number of elements."
@@ -422,32 +423,32 @@ namespace crawlservpp::Module::Crawler {
 				this->config.customTokensQuery.size()
 		});
 
+		// remove token variable names that are not used
 		if(this->config.customTokens.size() > completeTokens) {
-			// remove token variables of incomplete counters
 			this->config.customTokens.resize(completeTokens);
 
 			incompleteTokens = true;
 		}
 
+		// remove token sources that are not used
 		if(this->config.customTokensSource.size() > completeTokens) {
-			// remove sources of incomplete counters
 			this->config.customTokensSource.resize(completeTokens);
 
 			incompleteTokens = true;
 		}
 
+		// remove token queries that are not used
 		if(this->config.customTokensQuery.size() > completeTokens) {
-			// remove queries of incomplete counters
 			this->config.customTokensQuery.resize(completeTokens);
 
 			incompleteTokens = true;
 		}
 
-		// remove token POST options that are not used, add false where none is specified
+		// remove token POST options that are not used, set to 'false' where none is specified
 		this->config.customTokensUsePost.resize(completeTokens, false);
 
+		// warn about incomplete counters
 		if(incompleteTokens) {
-			// warn about incomplete counters
 			this->warning(
 					"\'custom.tokens\', \'.tokens.source\' and \'.tokens.query\'"
 					" should have the same number of elements."
@@ -465,29 +466,29 @@ namespace crawlservpp::Module::Crawler {
 			this->config.redirectVarSources.size()
 		});
 
+		// remove redirect variable names that are not used
 		if(this->config.redirectVarNames.size() > completeVars) {
-			// remove names of incomplete redirect variables
 			this->config.redirectVarNames.resize(completeVars);
 
 			incompleteVars = true;
 		}
 
+		// remove redirect queries that are not used
 		if(this->config.redirectVarQueries.size() > completeVars) {
-			// remove queries of incomplete redirect variables
 			this->config.redirectVarQueries.resize(completeVars);
 
 			incompleteVars = true;
 		}
 
+		// remove redirect sources that are not used
 		if(this->config.redirectVarSources.size() > completeVars) {
-			// remove sources of incomplete redirect variables
 			this->config.redirectVarSources.resize(completeVars);
 
 			incompleteVars = true;
 		}
 
+		// warn about incomplete counters
 		if(incompleteVars) {
-			// warn about incomplete counters
 			this->warning(
 					"\'redirect.var.names\', \'.var.sources\' and \'.var.queries\'"
 					" should have the same number of elements."
