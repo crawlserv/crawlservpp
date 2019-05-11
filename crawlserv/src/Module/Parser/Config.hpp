@@ -146,8 +146,8 @@ namespace crawlservpp::Module::Parser {
 		if(this->config.generalResultTable.empty())
 			throw Exception("Parser::Config::checkOptions(): No result table specified.");
 		
-		// check properties of datetime queries
-		const unsigned long completeDateTimes = std::min( // number of complete datetime queries (= minimum size of all arrays)
+		// check properties of date/time queries
+		const unsigned long completeDateTimes = std::min( // number of complete date/time queries (= minimum size of all arrays)
 				this->config.parsingDateTimeQueries.size(),
 				this->config.parsingDateTimeSources.size()
 		);
@@ -179,21 +179,21 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(this->config.parsingDateTimeQueries.size() > completeDateTimes) {
-			// remove queries of incomplete datetime queries
+			// remove queries of incomplete date/time queries
 			this->config.parsingDateTimeQueries.resize(completeDateTimes);
 
 			incompleteDateTimes = true;
 		}
 
 		if(this->config.parsingDateTimeSources.size() > completeDateTimes) {
-			// remove sources of incomplete datetime queries
+			// remove sources of incomplete date/time queries
 			this->config.parsingDateTimeSources.resize(completeDateTimes);
 
 			incompleteDateTimes = true;
 		}
 
 		if(incompleteDateTimes) {
-			// warn about incomplete datetime queries
+			// warn about incomplete date/time queries
 			this->warning("\'datetime.queries\' and \'.sources\' should have the same number of elements.");
 			this->warning("Incomplete datetime queries removed.");
 		}
