@@ -264,14 +264,14 @@
 			"simple": true,
 			"position": 3
 		},
-		"is.next": {
+		"is.next.from": {
 			"type": "query",
 			"result-types": [
 				"bool"
 			],
 			"default": 0,
 			"label": "Does next page exists?",
-			"description": "Boolean query on page content to find out whether there is another page.",
+			"description": "Boolean query on page content to determine whether there is another page.",
 			"simple": true,
 			"position": 7
 		},
@@ -283,6 +283,17 @@
 			"default": 0,
 			"label": "Get next page:",
 			"description": "Query on page content to find the number or the name of the next page (will overwrite step).",
+			"simple": true,
+			"position": 9
+		},
+		"number.from": {
+			"type": "query",
+			"result-types": [
+				"single"
+			],
+			"default": 0,
+			"label": "Get number of pages:",
+			"description": "Query on first page to determine the total number of pages (will overwrite 'is.next.from').",
 			"simple": true,
 			"position": 8
 		},
