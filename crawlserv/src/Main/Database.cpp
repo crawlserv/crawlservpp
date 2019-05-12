@@ -2553,23 +2553,18 @@ namespace crawlservpp::Main {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				queryPropertiesTo.name = sqlResultSet->getString("name");
-				queryPropertiesTo.text = sqlResultSet->getString("query");
-				queryPropertiesTo.type = sqlResultSet->getString("type");
-				queryPropertiesTo.resultBool = sqlResultSet->getBoolean("resultbool");
-				queryPropertiesTo.resultSingle = sqlResultSet->getBoolean("resultsingle");
-				queryPropertiesTo.resultMulti = sqlResultSet->getBoolean("resultmulti");
-				queryPropertiesTo.textOnly = sqlResultSet->getBoolean("textonly");
+				queryPropertiesTo = QueryProperties(
+					sqlResultSet->getString("name"),
+					sqlResultSet->getString("query"),
+					sqlResultSet->getString("type"),
+					sqlResultSet->getBoolean("resultbool"),
+					sqlResultSet->getBoolean("resultsingle"),
+					sqlResultSet->getBoolean("resultmulti"),
+					sqlResultSet->getBoolean("textonly")
+				);
 			}
-			else {
-				queryPropertiesTo.name = "";
-				queryPropertiesTo.text = "";
-				queryPropertiesTo.type = "";
-				queryPropertiesTo.resultBool = false;
-				queryPropertiesTo.resultSingle = false;
-				queryPropertiesTo.resultMulti = false;
-				queryPropertiesTo.textOnly = false;
-			}
+			else
+				queryPropertiesTo = QueryProperties();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getQueryProperties", e); }
 	}
