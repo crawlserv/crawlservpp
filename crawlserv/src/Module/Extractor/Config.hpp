@@ -42,8 +42,7 @@ namespace crawlservpp::Module::Extractor {
 
 		static const unsigned char variablesSourcesParsed = 0;
 		static const unsigned char variablesSourcesContent = 1;
-		static const unsigned char variablesSourcesCounter = 2;
-		static const unsigned char variablesSourcesUrl = 3;
+		static const unsigned char variablesSourcesUrl = 2;
 
 		static const unsigned char expectedSourceExtracting = 0;
 		static const unsigned char expectedSourceParsed = 1;
@@ -71,9 +70,6 @@ namespace crawlservpp::Module::Extractor {
 			// variables entries
 			std::vector<std::string> variablesAlias;
 			std::vector<long> variablesAliasAdd;
-			std::vector<long> variablesCounterEnd;
-			std::vector<long> variablesCounterStart;
-			std::vector<long> variablesCounterStep;
 			std::vector<std::string> variablesDateTimeFormat;
 			std::vector<std::string> variablesName;
 			std::vector<std::string> variablesParsedColumn;
@@ -86,16 +82,20 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<bool> variablesTokensUsePost;
 
 			// paging entries
+			std::string pagingAlias;
+			long pagingAliasAdd;
 			long pagingFirst;
 			std::string pagingFirstString;
-			unsigned long pagingIsNext;
+			unsigned long pagingIsNextFrom;
 			unsigned long pagingNextFrom;
+			unsigned long pagingNumberFrom;
 			long pagingStep;
 			std::string pagingVariable;
 
 			// source entries
 			std::string sourceCookies;
 			std::string sourceUrl;
+			std::string sourceUrlFirst;
 			bool sourceUsePost;
 
 			// extracting entries
@@ -151,9 +151,11 @@ namespace crawlservpp::Module::Extractor {
 										generalSleepIdle(5000),
 										generalSleepMySql(20),
 										generalTiming(false),
+										pagingAliasAdd(0),
 										pagingFirst(0),
-										pagingIsNext(0),
+										pagingIsNextFrom(0),
 										pagingNextFrom(0),
+										pagingNumberFrom(0),
 										pagingStep(1),
 										pagingVariable("$p"),
 										sourceUsePost(false),
@@ -184,9 +186,6 @@ namespace crawlservpp::Module::Extractor {
 		this->category("variables");
 		this->option("alias", this->config.variablesAlias);
 		this->option("alias.add", this->config.variablesAliasAdd);
-		this->option("counter.end", this->config.variablesCounterEnd);
-		this->option("counter.start", this->config.variablesCounterStart);
-		this->option("counter.step", this->config.variablesCounterStep);
 		this->option("datetime.format", this->config.variablesDateTimeFormat);
 		this->option("name", this->config.variablesName);
 		this->option("parsed.column", this->config.variablesParsedColumn);
@@ -200,30 +199,34 @@ namespace crawlservpp::Module::Extractor {
 
 		// paging
 		this->category("paging");
-		this->option("paging.first", this->config.pagingFirst);
-		this->option("paging.first.string", this->config.pagingFirstString);
-		this->option("paging.is.next", this->config.pagingIsNext);
-		this->option("paging.next.from", this->config.pagingNextFrom);
-		this->option("paging.step", this->config.pagingStep);
-		this->option("paging.variable", this->config.pagingVariable);
+		this->option("alias", this->config.pagingAlias);
+		this->option("alias.add", this->config.pagingAliasAdd);
+		this->option("first", this->config.pagingFirst);
+		this->option("first.string", this->config.pagingFirstString);
+		this->option("is.next.from", this->config.pagingIsNextFrom);
+		this->option("next.from", this->config.pagingNextFrom);
+		this->option("number.from", this->config.pagingNumberFrom);
+		this->option("step", this->config.pagingStep);
+		this->option("variable", this->config.pagingVariable);
 
 		// source
 		this->category("source");
-		this->option("source.cookies", this->config.sourceCookies);
-		this->option("source.url", this->config.sourceUrl);
-		this->option("source.use.post", this->config.sourceUsePost);
+		this->option("cookies", this->config.sourceCookies);
+		this->option("url", this->config.sourceUrl);
+		this->option("url.first", this->config.sourceUrlFirst);
+		this->option("use.post", this->config.sourceUsePost);
 
 		// extracting
 		this->category("extracting");
-		this->option("extracting.datetime.formats", this->config.extractingDateTimeFormats);
-		this->option("extracting.datetime.locales", this->config.extractingDateTimeLocales);
-		this->option("extracting.datetime.queries", this->config.extractingDateTimeQueries);
-		this->option("extracting.field.names", this->config.extractingFieldNames);
-		this->option("extracting.field.queries", this->config.extractingFieldQueries);
-		this->option("extracting.field.tidy.texts", this->config.extractingFieldTidyTexts);
-		this->option("extracting.field.warnings.empty", this->config.extractingFieldWarningsEmpty);
-		this->option("extracting.id.queries", this->config.extractingIdQueries);
-		this->option("extracting.repair.cdata", this->config.extractingRepairCData);
+		this->option("datetime.formats", this->config.extractingDateTimeFormats);
+		this->option("datetime.locales", this->config.extractingDateTimeLocales);
+		this->option("datetime.queries", this->config.extractingDateTimeQueries);
+		this->option("field.names", this->config.extractingFieldNames);
+		this->option("field.queries", this->config.extractingFieldQueries);
+		this->option("field.tidy.texts", this->config.extractingFieldTidyTexts);
+		this->option("field.warnings.empty", this->config.extractingFieldWarningsEmpty);
+		this->option("id.queries", this->config.extractingIdQueries);
+		this->option("repair.cdata", this->config.extractingRepairCData);
 
 		// expected [number of results]
 		this->category("expected");
@@ -311,48 +314,6 @@ namespace crawlservpp::Module::Extractor {
 		if(incompleteVariables)
 			this->warning("Unused variable properties removed from configuration.");
 
-		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
-		for(unsigned long n = 1; n <= this->config.variablesName.size(); ++n) {
-			const unsigned long i = n - 1;
-
-			if(
-					(this->config.variablesSource.at(i) == Config::variablesSourcesCounter)
-					&&
-					((
-							this->config.variablesCounterStep.at(i) <= 0
-							&& this->config.variablesCounterStart.at(i) < this->config.variablesCounterEnd.at(i)
-					)
-					||
-					(
-							this->config.variablesCounterStep.at(i) >= 0
-							&& this->config.variablesCounterStart.at(i) > this->config.variablesCounterEnd.at(i)
-					))
-			) {
-				const std::string counterName(this->config.variablesName.at(i));
-
-				// delete the invalid (counter) variable
-				this->config.variablesName.erase(this->config.variablesName.begin() + i);
-				this->config.variablesSource.erase(this->config.variablesSource.begin() + i);
-				this->config.variablesQuery.erase(this->config.variablesQuery.begin() + i);
-				this->config.variablesParsedTable.erase(this->config.variablesParsedTable.begin() + i);
-				this->config.variablesParsedColumn.erase(this->config.variablesParsedColumn.begin() + i);
-				this->config.variablesDateTimeFormat.erase(this->config.variablesDateTimeFormat.begin() + i);
-				this->config.variablesCounterStart.erase(this->config.variablesCounterStart.begin() + i);
-				this->config.variablesCounterEnd.erase(this->config.variablesCounterEnd.begin() + i);
-				this->config.variablesCounterStep.erase(this->config.variablesCounterStep.begin() + i);
-				this->config.variablesAlias.erase(this->config.variablesAlias.begin() + i);
-				this->config.variablesAliasAdd.erase(this->config.variablesAliasAdd.begin() + i);
-
-				--n;
-
-				this->warning(
-						"Loop of counter \'"
-						+ counterName
-						+ "\' would be infinite, variable removed."
-				);
-			}
-		}
-
 		// check properties of tokens
 		bool incompleteTokens = false;
 
@@ -383,7 +344,7 @@ namespace crawlservpp::Module::Extractor {
 			incompleteTokens = true;
 		}
 
-		// warn about incomplete counters
+		// warn about incomplete tokens
 		if(incompleteTokens) {
 			this->warning(
 					"\'variables.tokens\', \'.tokens.source\' and \'.tokens.query\'"
