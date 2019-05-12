@@ -42,6 +42,7 @@ namespace crawlservpp::Module::Extractor {
 		typedef Struct::TableColumn TableColumn;
 
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::pair<std::string, std::string> StringString;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 
 	public:
@@ -52,6 +53,8 @@ namespace crawlservpp::Module::Extractor {
 		void setCacheSize(unsigned long setCacheSize);
 		void setReextract(bool isReextract);
 		void setExtractCustom(bool isParseCustom);
+		void setRawContentIsSource(bool isRawContentIsSource);
+		void setSources(std::queue<StringString>& tablesAndColumns);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields);
 
@@ -74,6 +77,7 @@ namespace crawlservpp::Module::Extractor {
 		// extracting functions
 		unsigned int checkExtractingTable();
 		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
+		std::string getParsedData(unsigned long urlId, unsigned long sourceIndex);
 		void updateOrAddEntries(std::queue<DataEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
@@ -96,6 +100,10 @@ namespace crawlservpp::Module::Extractor {
 		bool extractCustom;
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
+
+		// sources
+		bool rawContentIsSource;
+		std::queue<StringString> sources;
 
 		// table names and target table ID
 		std::string urlListTable;
@@ -129,6 +137,9 @@ namespace crawlservpp::Module::Extractor {
 			unsigned short set1000UrlsFinishedIfLockOk;
 			unsigned short updateTargetTable;
 		} ps;
+
+		// prepared SQL statements for getting parsed data
+		std::vector<unsigned short> psGetParsedData;
 
 		// internal helper function
 		bool checkEntrySize(DataEntry& entry);

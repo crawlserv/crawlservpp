@@ -18,6 +18,7 @@ namespace crawlservpp::Module::Extractor {
 							  cacheSize(2500),
 							  reextract(false),
 							  extractCustom(false),
+							  rawContentIsSource(false),
 							  targetTableId(0),
 							  ps(_ps()) {}
 
@@ -37,6 +38,17 @@ namespace crawlservpp::Module::Extractor {
 	// enable or disable extracting from custom URLs
 	void Database::setExtractCustom(bool isExtractCustom) {
 		this->extractCustom = isExtractCustom;
+	}
+
+	// set whether raw crawled data is used as source
+	void Database::setRawContentIsSource(bool isRawContentIsSource) {
+		this->rawContentIsSource = isRawContentIsSource;
+	}
+
+	// set tables and columns of parsed data sources
+	// NOTE: Uses std::queue::swap() - do not use argument afterwards!
+	void Database::setSources(std::queue<StringString>& tablesAndColumns) {
+		this->sources.swap(tablesAndColumns);
 	}
 
 	// set target table name
@@ -87,7 +99,10 @@ namespace crawlservpp::Module::Extractor {
 		this->checkConnection();
 
 		// reserve memory
-		this->reserveForPreparedStatements(sizeof(ps) / sizeof(unsigned short));
+		if(this->rawContentIsSource)
+			this->reserveForPreparedStatements(sizeof(ps) / sizeof(unsigned short) + this->sources.size());
+		else
+			this->reserveForPreparedStatements(sizeof(ps) / sizeof(unsigned short) + this->sources.size() - 1);
 
 		// prepare SQL statements
 		if(!(this->ps.fetchUrls)) {
@@ -282,7 +297,7 @@ namespace crawlservpp::Module::Extractor {
 			this->ps.checkExtractingTable = this->addPreparedStatement(sqlQueryStrStr.str());
 		}
 
-		if(!(this->ps.getLatestContent)) {
+		if(this->rawContentIsSource && !(this->ps.getLatestContent)) {
 			if(this->isVerbose())
 				this->log("prepares getLatestContent()...");
 
@@ -360,6 +375,25 @@ namespace crawlservpp::Module::Extractor {
 								" WHERE id = " << this->targetTableId << " LIMIT 1";
 
 			this->ps.updateTargetTable = this->addPreparedStatement(sqlQueryStrStr.str());
+		}
+
+		if(this->psGetParsedData.empty()) {
+			if(this->isVerbose())
+				this->log("prepares getParsedData()...");
+
+			while(!(this->sources.empty())) {
+				this->psGetParsedData.push_back(
+						this->addPreparedStatement(
+								"SELECT `" + this->sources.front().second + "` AS result"
+								" FROM `" + this->urlListTable + "_parsed_" + this->sources.front().first + "`"
+								" WHERE url = ?"
+								" ORDER BY id DESC"
+								" LIMIT 1"
+						)
+				);
+
+				sources.pop();
+			}
 		}
 	}
 
@@ -774,6 +808,43 @@ namespace crawlservpp::Module::Extractor {
 		return false;
 	}
 
+	// get parsed data for the ID-specified URL from the index-specified source, throws Database::Exception
+	//  NOTE:	The source index is determined by the order of adding the sources (starting with 0).
+	//			Returns an empty string when no data has been found.
+	std::string Database::getParsedData(unsigned long urlId, unsigned long sourceIndex) {
+		std::string result;
+
+		// check argument
+		if(!urlId)
+			throw Exception("No URL specified for Database::getParsedData(...)");
+
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(sourceIndex >= this->psGetParsedData.size() || !(this->psGetParsedData.at(sourceIndex)))
+			throw Exception("Missing prepared SQL statement for Database::getParsedData(...)");
+
+		// get prepared SQL statement
+		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(
+				this->psGetParsedData.at(sourceIndex)
+		);
+
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(1, urlId);
+
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getString("result");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Extractor:Database::getParsedData", e); }
+
+		return result;
+	}
+
 	// add extracted data to database (update if row for ID-specified content already exists, throws Database::Exception
 	void Database::updateOrAddEntries(std::queue<DataEntry>& entries) {
 		// check argument
@@ -805,7 +876,6 @@ namespace crawlservpp::Module::Extractor {
 				fields++;
 
 		try {
-
 			// add 1,000 entries at once
 			while(entries.size() >= 1000) {
 				for(unsigned short n = 0; n < 1000; ++n) {
