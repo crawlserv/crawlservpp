@@ -121,36 +121,9 @@
 			"item-type": "number",
 			"default": [],
 			"label": "Increase alias value by:",
-			"description": "Value to add to the counter alias with the same array index.",
+			"description": "Value to add to the variable alias with the same array index.",
 			"simple": true,
 			"position": 11
-		},
-		"counter.end": {
-			"type": "array",
-			"item-type": "number",
-			"default": []	,
-			"label": "Stop counter at:",
-			"description": "End value for the counter variable with the same array index.",
-			"simple": true,
-			"position": 8
-		},
-		"counter.start": {
-			"type": "array",
-			"item-type": "number",
-			"default": [],
-			"label": "Start counter at:",
-			"description": "Start value for the counter variable with the same array index.",
-			"simple": true,
-			"position": 7
-		},
-		"counter.step": {
-			"type": "array",
-			"item-type": "number",
-			"default": [],
-			"label": "Increase counter by:",
-			"description": "Step value for the counter variable with the same array index.",
-			"simple": true,
-			"position": 9
 		},
 		"datetime.format": {
 			"type": "array",
@@ -207,7 +180,6 @@
 			"enum-values": [
 				"parsed",
 				"content",
-				"counter",
 				"URL"
 			],
 			"default": [],
@@ -261,6 +233,21 @@
 		"label": "Paging",
 		"open": false,
 		
+		"alias": {
+			"type": "string",
+			"default": "",
+			"label": "Paging variable alias:",
+			"description": "Alias for the paging variable.",
+			"simple": true,
+			"position": 5 
+		},
+		"alias.add": {
+			"type": "number",
+			"label": "Increase alias value by:",
+			"description": "Value to add to the alias of the paging variable.",
+			"simple": true,
+			"position": 6
+		},
 		"first": {
 			"type": "number",
 			"default": 0,
@@ -283,10 +270,10 @@
 				"bool"
 			],
 			"default": 0,
-			"label": "Query to check for next page:",
+			"label": "Does next page exists?",
 			"description": "Boolean query on page content to find out whether there is another page.",
 			"simple": true,
-			"position": 5
+			"position": 7
 		},
 		"next.from": {
 			"type": "query",
@@ -294,10 +281,10 @@
 				"single"
 			],
 			"default": 0,
-			"label": "Query to get next page:",
-			"description": "Query on page content to find number or name of next page (will overwrite step).",
+			"label": "Get next page:",
+			"description": "Query on page content to find the number or the name of the next page (will overwrite step).",
 			"simple": true,
-			"position": 6
+			"position": 8
 		},
 		"step": {
 			"type": "number",
@@ -315,6 +302,36 @@
 			"simple": true,
 			"position": 1
 		}
+	},
+	"source": {
+		"label": "Source",
+		"open": true,
+		
+		"cookies": {
+			"type": "string",
+			"default": "",
+			"label": "Cookies:",
+			"description": "Cookie header for getting data.",
+			"simple": true,
+			"position": 3
+		},
+		"url": {
+			"type": "string",
+			"default": "",
+			"label": "URL:",
+			"description": "URL to get data from.",
+			"simple": true,
+			"position": 1
+		},
+		"url.first": {
+			"type": "string",
+			"default": "",
+			"label": "URL (first page):",
+			"description": "URL of the first page to get data from (will be ignored if empty).",
+			"simple": true,
+			"position": 2
+		}
+		
 	},
 	"extracting": {
 		"label": "Extracting",
