@@ -18,9 +18,9 @@
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ModuleOptions.hpp"
 
-#include <memory>
-#include <sstream>
-#include <string>
+#include <memory>	// std::unique_ptr
+#include <sstream>	// std::ostringstream
+#include <string>	// std::string
 
 namespace crawlservpp::Wrapper {
 	class Database;
