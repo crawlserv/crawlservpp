@@ -13,7 +13,7 @@
 #ifndef STRUCT_CONFIGPROPERTIES_HPP_
 #define STRUCT_CONFIGPROPERTIES_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
@@ -24,9 +24,16 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		ConfigProperties() {}
-		ConfigProperties(const std::string& setModule, const std::string& setName, const std::string& setConfig)
+		ConfigProperties(
+				const std::string& setModule,
+				const std::string& setName,
+				const std::string& setConfig
+		)
 				: module(setModule), name(setName), config(setConfig) {}
-		ConfigProperties(const std::string& setName, const std::string& setConfig)
+		ConfigProperties(
+				const std::string& setName,
+				const std::string& setConfig
+		)
 				: ConfigProperties("", setName, setConfig) {}
 	};
 
