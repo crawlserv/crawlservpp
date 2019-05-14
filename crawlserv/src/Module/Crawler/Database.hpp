@@ -22,15 +22,13 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <chrono>
-#include <deque>
-#include <fstream>
-#include <iostream>
-#include <locale>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <utility>
+#include <chrono>	// std::chrono
+#include <locale>	// std::locale
+#include <memory>	// std::unique_ptr
+#include <queue>	// std::queue
+#include <sstream>	// std::ostringstream
+#include <string>	// std::string
+#include <utility>	// std::pair
 
 namespace crawlservpp::Module::Crawler {
 
@@ -67,7 +65,7 @@ namespace crawlservpp::Module::Crawler {
 		// URL checking functions
 		void urlDuplicationCheck();
 		void urlHashCheck();
-		void urlEmptyCheck(const std::vector<std::string>& urlsAdded);
+		void urlEmptyCheck();
 		void urlUtf8Check();
 
 		// URL locking functions
