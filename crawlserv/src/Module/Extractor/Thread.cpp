@@ -65,9 +65,6 @@ namespace crawlservpp::Module::Extractor {
 
 	// initialize extractor
 	void Thread::onInit() {
-		// TODO: Not fully implemented yet
-		throw Exception("Extractor is not implemented yet.");
-
 		std::queue<std::string> configWarnings;
 		std::vector<std::string> fields;
 
@@ -99,8 +96,46 @@ namespace crawlservpp::Module::Extractor {
 		this->database.setTargetFields(this->config.extractingFieldNames);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 
+		// set sources
+		this->database.setRawContentIsSource(
+				std::find(
+						this->config.variablesSource.begin(),
+						this->config.variablesSource.end(),
+						Config::variablesSourcesContent
+				) != this->config.variablesSource.end()
+		);
+
+		std::queue<StringString> sources;
+
+		for(unsigned long n = 0; n < this->config.variablesName.size(); ++n)
+			if(this->config.variablesSource.at(n) == Config::variablesSourcesParsed) {
+				if(
+						this->config.variablesParsedColumn.at(n) == "id"
+						|| this->config.variablesParsedColumn.at(n) == "datetime"
+				)
+					sources.push(
+							StringString(
+									this->config.variablesParsedTable.at(n),
+									"parsed_" + this->config.variablesParsedColumn.at(n)
+							)
+					);
+				else
+					sources.push(
+							StringString(
+									this->config.variablesParsedTable.at(n),
+									"parsed__" + this->config.variablesParsedColumn.at(n)
+							)
+					);
+			}
+
+		this->database.setSources(sources);
+
 		// create table names for locking
-		const std::string urlListTable("crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace);
+		const std::string urlListTable(
+				"crawlserv_"
+				+ this->websiteNamespace
+				+ "_" + this->urlListNamespace
+		);
 
 		this->extractingTable = urlListTable + "_extracting";
 		this->targetTable = urlListTable + "_extracted_" + this->config.generalResultTable;
@@ -137,16 +172,19 @@ namespace crawlservpp::Module::Extractor {
 
 		{
 			// wait for extracting table lock
-			this->setStatusMessage("Waiting for parsing table...");
+			this->setStatusMessage("Waiting for extracting table...");
 
 			if(verbose)
-				this->log("waits for parsing table...");
+				this->log("waits for extracting table...");
 
 			DatabaseLock(
 					this->database,
 					"extractingTable." + this->extractingTable,
 					std::bind(&Thread::isRunning, this)
 			);
+
+			if(!(this->isRunning()))
+				return;
 
 			// check extracting table
 			this->setStatusMessage("Checking extracting table...");
@@ -187,6 +225,9 @@ namespace crawlservpp::Module::Extractor {
 
 	// extractor tick, throws Thread::Exception
 	void Thread::onTick() {
+		// TODO: Not fully implemented yet
+		throw Exception("Extractor is not implemented yet.");
+
 		bool skip = false;
 
 		// check for jump in last ID ("time travel")
@@ -241,7 +282,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// write log entry if necessary
 		if(this->config.generalLogging > Config::generalLoggingExtended)
-			this->log("extracts data from " + this->urls.front().second + "...");
+			this->log("extracts data for " + this->urls.front().second + "...");
 
 		// try to renew URL lock
 		this->lockTime = this->database.renewUrlLockIfOk(
@@ -282,9 +323,9 @@ namespace crawlservpp::Module::Extractor {
 			std::string timerStr;
 
 			// extract from content
-			const bool extracted = this->extractingNext();
+			const unsigned long extracted = this->extractingNext();
 
-			// save expiration time of URL lock if parsing was successful or unlock URL if parsing failed
+			// save expiration time of URL lock if extracting was successful or unlock URL if extracting failed
 			if(extracted)
 				this->finished.emplace(this->urls.front().first, this->lockTime);
 			else
@@ -305,12 +346,22 @@ namespace crawlservpp::Module::Extractor {
 			) {
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
-
-				if(extracted)
-					logStrStr << "extracted data from ";
-				else
+				switch(extracted) {
+				case 0:
 					logStrStr << "skipped ";
+
+					break;
+
+				case 1:
+					logStrStr << "extracted one dataset from ";
+
+					break;
+
+				default:
+					logStrStr.imbue(std::locale(""));
+
+					logStrStr << "extracted " << extracted << " datasets from ";
+				}
 
 				logStrStr << this->urls.front().second;
 
@@ -430,45 +481,68 @@ namespace crawlservpp::Module::Extractor {
 
 		try {
 			// create queries and get query IDs
-			for(auto i = this->config.extractingIdQueries.begin(); i != this->config.extractingIdQueries.end(); ++i) {
+			for(const auto& query : this->config.extractingIdQueries) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+				this->database.getQueryProperties(query, properties);
 
 				this->queriesId.emplace_back(this->addQuery(properties));
 			}
 
-			for(auto i = this->config.extractingDateTimeQueries.begin(); i != this->config.extractingDateTimeQueries.end(); ++i) {
+			for(const auto& query : this->config.extractingDateTimeQueries) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+				this->database.getQueryProperties(query, properties);
 
 				this->queriesDateTime.emplace_back(this->addQuery(properties));
 			}
 
-			for(auto i = this->config.extractingFieldQueries.begin(); i != this->config.extractingFieldQueries.end(); ++i) {
+			for(const auto& query : this->config.extractingFieldQueries) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+				this->database.getQueryProperties(query, properties);
 
 				this->queriesFields.emplace_back(this->addQuery(properties));
 			}
 
-			for(auto i = this->config.variablesQuery.begin(); i != this->config.variablesQuery.end(); ++i) {
+			for(const auto& query : this->config.variablesQuery) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+				this->database.getQueryProperties(query, properties);
 
 				this->queriesVariables.emplace_back(this->addQuery(properties));
 			}
 
-			for(auto i = this->config.variablesTokensQuery.begin(); i != this->config.variablesTokensQuery.end(); ++i) {
+			for(const auto& query : this->config.variablesTokensQuery) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+				this->database.getQueryProperties(query, properties);
 
 				this->queriesTokens.emplace_back(this->addQuery(properties));
 			}
+
+			QueryStruct queryPagingIsNextFrom;
+			QueryStruct queryPagingNextFrom;
+			QueryStruct queryPagingNumberFrom;
+			QueryStruct queryExpected;
+
+			QueryProperties properties;
+
+			this->database.getQueryProperties(this->config.pagingIsNextFrom, properties);
+
+			this->queryPagingIsNextFrom = this->addQuery(properties);
+
+			this->database.getQueryProperties(this->config.pagingNextFrom, properties);
+
+			this->queryPagingNextFrom = this->addQuery(properties);
+
+			this->database.getQueryProperties(this->config.pagingNumberFrom, properties);
+
+			this->queryPagingNumberFrom = this->addQuery(properties);
+
+			this->database.getQueryProperties(this->config.expectedQuery, properties);
+
+			this->queryExpected = this->addQuery(properties);
 		}
 		catch(const RegExException& e) {
 			throw Exception("Extractor::Thread::initQueries(): [RegEx] " + e.whatStr());
@@ -565,35 +639,61 @@ namespace crawlservpp::Module::Extractor {
 		} // end of loop over URLs in cache
 	}
 
-	// extract data from next URL, return number of extracted entries
+	// extract data from next URL, return number of extracted datasets
 	unsigned long Thread::extractingNext() {
-		// TODO
+		unsigned long extracted = 0;
+		std::vector<StringString> globalTokens;
+
+		// loop over variables
+
+
+		// loop over global tokens
+		if(!(this->config.pagingVariable.empty()))
+			for(unsigned long n = 0; n < this->config.variablesTokens.size(); ++n) {
+				if(
+						this->config.variablesTokensSource.at(n).find(
+								this->config.pagingVariable
+						) == std::string::npos
+				) {
+					// get global token
+				}
+			}
+
+		// loop over pages
+		long pageNum = this->config.pagingFirst;
+		std::string pageName(this->config.pagingFirstString);
+		bool pageFirst = true;
+
+		while(this->isRunning()) {
+			// loop over page-specific tokens
+
+			// resolve paging variable
+
+			// get page
+		}
 
 		return false;
 	}
 
-	// extract data by parsing content, return number of extracted entries
+	// extract data by parsing content, return number of extracted datasets
 	unsigned long Thread::extractingParse(unsigned long contentId, const std::string& content) {
 		DataEntry extractedData(contentId);
 
 		// reset parsing state
 		this->resetParsingState();
 
-		while(false) { // TODO: check for paging
-			// extract ID
-			unsigned long idQueryCounter = 0;
+		// extract IDs
+		unsigned long idQueryCounter = 0;
 
-			for(auto i = this->queriesId.begin(); i != this->queriesId.end(); ++i) {
-				// check result type of query
-				if(!(i->resultSingle) && this->config.generalLogging)
-					this->log("WARNING: Invalid result type of ID query (not single).");
-
+		for(const auto& query : this->queriesId) {
+			// check result type of query
+			if(query.resultMulti)
 				// check query type
-				switch(i->type) {
+				switch(query.type) {
 				case QueryStruct::typeRegEx:
 					// extract ID by running RegEx query on content
 					try {
-						this->getRegExQuery(i->index).getFirst(content, extractedData.dataId);
+						this->getRegExQuery(query.index).getFirst(content, extractedData.dataId);
 
 						if(!extractedData.dataId.empty())
 							break;
@@ -607,7 +707,7 @@ namespace crawlservpp::Module::Extractor {
 					if(this->parseXml(content)) {
 						// extract ID by running XPath query on content
 						try {
-							this->getXPathQuery(i->index).getFirst(this->parsedXML, extractedData.dataId);
+							this->getXPathQuery(query.index).getFirst(this->parsedXML, extractedData.dataId);
 
 							if(!extractedData.dataId.empty())
 								break;
@@ -622,7 +722,7 @@ namespace crawlservpp::Module::Extractor {
 					if(this->parseJsonRapid(content)) {
 						// extract ID by running JSONPointer query on content
 						try {
-							this->getJsonPointerQuery(i->index).getFirst(this->parsedJsonRapid, extractedData.dataId);
+							this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, extractedData.dataId);
 
 							if(!extractedData.dataId.empty())
 								break;
@@ -637,7 +737,7 @@ namespace crawlservpp::Module::Extractor {
 					if(this->parseJsonCons(content)) {
 						// extract ID by running JSONPath query on content
 						try {
-							this->getJsonPathQuery(i->index).getFirst(this->parsedJsonCons, extractedData.dataId);
+							this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, extractedData.dataId);
 
 							if(!extractedData.dataId.empty())
 								break;
@@ -654,13 +754,14 @@ namespace crawlservpp::Module::Extractor {
 					if(this->config.generalLogging)
 						this->log("WARNING: Unknown type of ID query on content.");
 				}
+			else if(this->config.generalLogging)
+				this->log("WARNING: Invalid result type of ID query (not single).");
 
-				if(extractedData.dataId.empty())
-					// not successfull: check next query for parsing the ID (if it exists)
-					++idQueryCounter;
-				else
-					break;
-			}
+			if(extractedData.dataId.empty())
+				// not successfull: check next query for parsing the ID (if it exists)
+				++idQueryCounter;
+			else
+				break;
 		}
 
 		// check whether no ID has been extracted
@@ -670,43 +771,27 @@ namespace crawlservpp::Module::Extractor {
 			return false;
 		}
 
-		// TODO: check whether extracted ID already exists
-		/*
-		const unsigned long contentId = this->database.getContentIdFromParsedId(extractedData.dataId);
-
-		if(contentId && contentId != content.first) {
-			this->logParsingErrors(contentId);
-
-			if(this->config.generalLogging)
-				this->log(
-						"skipped content with already existing ID \'"
-						+ extractedData.dataId
-						+ "\' ["
-						+ this->urls.front().second
-						+ "]."
-				);
-
-			return false;
-		}
-		*/
-
 		// extract date/time
 		unsigned long dateTimeQueryCounter = 0;
 		bool dateTimeSuccess = false;
 
-		for(auto i = this->queriesDateTime.begin(); i != this->queriesDateTime.end(); ++i) {
+		for(const auto& query : this->queriesDateTime) {
 			bool querySuccess = false;
 
 			// check result type of query
-			if(!(i->resultSingle) && this->config.generalLogging)
-				this->log("WARNING: Invalid result type of DateTime query (not single).");
+			if(!query.resultSingle) {
+				if(this->config.generalLogging)
+					this->log("WARNING: Invalid result type of DateTime query (not single).");
+
+				continue;
+			}
 
 			// check query type
-			switch(i->type) {
+			switch(query.type) {
 			case QueryStruct::typeRegEx:
 				// parse date/time by running RegEx query on content
 				try {
-					this->getRegExQuery(i->index).getFirst(content, extractedData.dateTime);
+					this->getRegExQuery(query.index).getFirst(content, extractedData.dateTime);
 
 					querySuccess = true;
 				}
@@ -719,7 +804,7 @@ namespace crawlservpp::Module::Extractor {
 				if(this->parseXml(content)) {
 					// parse date/time by running XPath query on parsed content
 					try {
-						this->getXPathQuery(i->index).getFirst(this->parsedXML, extractedData.dateTime);
+						this->getXPathQuery(query.index).getFirst(this->parsedXML, extractedData.dateTime);
 
 						querySuccess = true;
 					}
@@ -733,7 +818,7 @@ namespace crawlservpp::Module::Extractor {
 				if(this->parseJsonRapid(content)) {
 					// parse date/time by running JSONPointer query on parsed content
 					try {
-						this->getJsonPointerQuery(i->index).getFirst(this->parsedJsonRapid, extractedData.dateTime);
+						this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, extractedData.dateTime);
 
 						querySuccess = true;
 					}
@@ -747,7 +832,7 @@ namespace crawlservpp::Module::Extractor {
 				if(this->parseJsonCons(content)) {
 					// parse date/time by running JSONPointer query on parsed content
 					try {
-						this->getJsonPathQuery(i->index).getFirst(this->parsedJsonCons, extractedData.dateTime);
+						this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, extractedData.dateTime);
 
 						querySuccess = true;
 					}
@@ -776,8 +861,8 @@ namespace crawlservpp::Module::Extractor {
 				if(!locale.empty()) {
 					// locale hack: The French abbreviation "avr." for April is not stringently supported
 					if(locale.length() > 1
-							&& tolower(locale.at(0) == 'f')
-							&& tolower(locale.at(1) == 'r'))
+							&& ::tolower(locale.at(0) == 'f')
+							&& ::tolower(locale.at(1) == 'r'))
 						Helper::Strings::replaceAll(extractedData.dateTime, "avr.", "avril", true);
 
 					try {
@@ -825,18 +910,18 @@ namespace crawlservpp::Module::Extractor {
 
 		extractedData.fields.reserve(this->queriesFields.size());
 
-		for(auto i = this->queriesFields.begin(); i != this->queriesFields.end(); ++i) {
+		for(const auto& query : this->queriesFields) {
 			try {
 				// determinate whether to get the match as string or as boolean value
-				if(i->resultSingle) {
+				if(query.resultSingle) {
 					// parse first element only (as string)
 					std::string parsedFieldValue;
 
 					// check query type
-					switch(i->type) {
+					switch(query.type) {
 					case QueryStruct::typeRegEx:
 						// parse single field element by running RegEx query on content string
-						this->getRegExQuery(i->index).getFirst(content, parsedFieldValue);
+						this->getRegExQuery(query.index).getFirst(content, parsedFieldValue);
 
 						break;
 
@@ -844,7 +929,7 @@ namespace crawlservpp::Module::Extractor {
 						// parse XML/HTML if still necessary
 						if(this->parseXml(content))
 							// parse single field element by running XPath query on parsed content
-							this->getXPathQuery(i->index).getFirst(this->parsedXML, parsedFieldValue);
+							this->getXPathQuery(query.index).getFirst(this->parsedXML, parsedFieldValue);
 
 						break;
 
@@ -852,7 +937,7 @@ namespace crawlservpp::Module::Extractor {
 						// parse JSON using RapidJSON if still necessary
 						if(this->parseJsonRapid(content))
 							// parse single field element by running JSONPointer query on content string
-							this->getJsonPointerQuery(i->index).getFirst(this->parsedJsonRapid, parsedFieldValue);
+							this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, parsedFieldValue);
 
 						break;
 
@@ -860,7 +945,7 @@ namespace crawlservpp::Module::Extractor {
 						// parse JSON using jsoncons if still necessary
 						if(this->parseJsonCons(content))
 							// parse single field element by running JSONPath query on content string
-							this->getJsonPathQuery(i->index).getFirst(this->parsedJsonCons, parsedFieldValue);
+							this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, parsedFieldValue);
 
 						break;
 
@@ -893,15 +978,15 @@ namespace crawlservpp::Module::Extractor {
 					// stringify and add parsed element as JSON array with one element
 					extractedData.fields.emplace_back(Helper::Json::stringify(parsedFieldValue));
 				}
-				else if(i->resultBool) {
+				else if(query.resultBool) {
 					// only save whether a match for the query exists
 					bool parsedBool = false;
 
 					// check query type
-					switch(i->type) {
+					switch(query.type) {
 					case QueryStruct::typeRegEx:
 						// parse boolean value by running RegEx query on content string
-						parsedBool = this->getRegExQuery(i->index).getBool(content);
+						parsedBool = this->getRegExQuery(query.index).getBool(content);
 
 						break;
 
@@ -909,7 +994,7 @@ namespace crawlservpp::Module::Extractor {
 						// parse XML/HTML if still necessary
 						if(this->parseXml(content))
 							// parse boolean value by running XPath query on parsed content
-							parsedBool = this->getXPathQuery(i->index).getBool(this->parsedXML);
+							parsedBool = this->getXPathQuery(query.index).getBool(this->parsedXML);
 
 						break;
 
@@ -917,7 +1002,7 @@ namespace crawlservpp::Module::Extractor {
 						// parse JSON using RapidJSON if still necessary
 						if(this->parseJsonRapid(content))
 							// parse boolean value by running JSONPointer query on content string
-							parsedBool = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
+							parsedBool = this->getJsonPointerQuery(query.index).getBool(this->parsedJsonRapid);
 
 						break;
 
@@ -925,7 +1010,7 @@ namespace crawlservpp::Module::Extractor {
 						// parse JSON using jsoncons if still necessary
 						if(this->parseJsonCons(content))
 							// parse boolean value by running JSONPath query on content string
-							parsedBool = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
+							parsedBool = this->getJsonPathQuery(query.index).getBool(this->parsedJsonCons);
 
 						break;
 
@@ -944,7 +1029,7 @@ namespace crawlservpp::Module::Extractor {
 					extractedData.fields.emplace_back(Helper::Json::stringify(parsedBool ? "true" : "false"));
 				}
 				else {
-					if(i->type != QueryStruct::typeNone && this->config.generalLogging)
+					if(query.type != QueryStruct::typeNone && this->config.generalLogging)
 						this->log(
 								"WARNING: Ignored \'" + this->config.extractingFieldNames.at(fieldCounter) + "\'"
 								" query without specified result type."
