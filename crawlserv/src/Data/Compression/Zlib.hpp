@@ -17,9 +17,7 @@
 
 #include <zlib.h>
 
-#include <iomanip>
-#include <sstream>
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Data::Compression::Zlib {
 	/*

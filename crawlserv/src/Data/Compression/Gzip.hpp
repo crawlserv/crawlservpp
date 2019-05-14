@@ -14,8 +14,8 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 
-#include <sstream>
-#include <string>
+#include <sstream>	// std::stringstream
+#include <string>	// std::string
 
 namespace crawlservpp::Data::Compression::Gzip {
 	/*
