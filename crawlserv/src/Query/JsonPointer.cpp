@@ -103,6 +103,7 @@ namespace crawlservpp::Query {
 
 			while(true) {
 				std::string pointerString(this->pointerStringMulti);
+
 				std::ostringstream counterStrStr;
 
 				counterStrStr << counter;
