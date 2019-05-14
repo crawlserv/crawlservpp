@@ -37,13 +37,13 @@ namespace crawlservpp::Module::Crawler {
 		void setCrossDomain(bool isCrossDomain);
 
 		// configuration constants
-		static const unsigned char crawlerLoggingSilent = 0;
-		static const unsigned char crawlerLoggingDefault = 1;
-		static const unsigned char crawlerLoggingExtended = 2;
-		static const unsigned char crawlerLoggingVerbose = 3;
+		inline static const unsigned char crawlerLoggingSilent = 0;
+		inline static const unsigned char crawlerLoggingDefault = 1;
+		inline static const unsigned char crawlerLoggingExtended = 2;
+		inline static const unsigned char crawlerLoggingVerbose = 3;
 
-		static const unsigned char redirectSourceUrl = 0;
-		static const unsigned char redirectSourceContent = 1;
+		inline static const unsigned char redirectSourceUrl = 0;
+		inline static const unsigned char redirectSourceContent = 1;
 
 		// configuration entries
 		struct Entries {
