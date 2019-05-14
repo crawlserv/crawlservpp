@@ -26,10 +26,10 @@
 #include <uriparser/UriBase.h>
 #include <zlib.h>
 
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
+#include <sstream>	// std::ostringstream
+#include <string>	// std::string
+#include <utility>	// std::pair
+#include <vector>	// std::vector
 
 namespace crawlservpp::Helper::Versions {
 
@@ -156,13 +156,13 @@ namespace crawlservpp::Helper::Versions {
 		// create resulting string
 		std::string result;
 
-		for(auto i = versions.begin(); i != versions.end(); ++i) {
+		for(const auto& version : versions) {
 			result += indent;
-			result += i->first;
+			result += version.first;
 
-			if(!(i->second.empty())) {
+			if(!(version.second.empty())) {
 				result += " v";
-				result += i->second;
+				result += version.second;
 			}
 
 			result += "\n";
