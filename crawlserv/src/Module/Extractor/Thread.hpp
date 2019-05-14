@@ -35,17 +35,19 @@
 #include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <algorithm>
-#include <cctype>
-#include <chrono>
-#include <locale>
-#include <queue>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <thread>
-#include <utility>
-#include <vector>
+#include <algorithm>	// std::find
+#include <chrono>		// std::chrono
+#include <functional>	// std::bind
+#include <iomanip>		// std::setprecision
+#include <ios>			// std::fixed
+#include <locale>		// std::locale
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <stdexcept>	// std::logic_error, std::runtime_error
+#include <string>		// std::string
+#include <thread>		// std::this_thread
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Extractor {
 
@@ -64,6 +66,7 @@ namespace crawlservpp::Module::Extractor {
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::pair<std::string, std::string> StringString;
 
 	public:
 		// constructors
@@ -122,6 +125,10 @@ namespace crawlservpp::Module::Extractor {
 		std::vector<QueryStruct> queriesFields;
 		std::vector<QueryStruct> queriesVariables;
 		std::vector<QueryStruct> queriesTokens;
+		QueryStruct queryPagingIsNextFrom;
+		QueryStruct queryPagingNextFrom;
+		QueryStruct queryPagingNumberFrom;
+		QueryStruct queryExpected;
 
 		unsigned long lastUrl;
 
