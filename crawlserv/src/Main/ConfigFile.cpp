@@ -18,13 +18,18 @@ namespace crawlservpp::Main {
 
 		if(fileStream.is_open()) {
 			while(std::getline(fileStream, line)) {
-				unsigned long nameEnd = line.find('=');
+				const unsigned long nameEnd = line.find('=');
 
-				if(nameEnd < line.length())
+				if(nameEnd < line.length()) {
+					std::string nameInLine(line, nameEnd);
+
+					std::transform(nameInLine.begin(), nameInLine.end(), nameInLine.begin(), ::tolower);
+
 					this->entries.emplace_back(
-							boost::algorithm::to_lower_copy(line.substr(0, nameEnd)),
+							nameInLine,
 							line.substr(nameEnd + 1)
 					);
+				}
 				else
 					this->entries.emplace_back(
 							line,
@@ -40,11 +45,15 @@ namespace crawlservpp::Main {
 
 	// get value of config entry (or empty string if entry does not exist)
 	std::string ConfigFile::getValue(const std::string& name) const {
+		std::string nameCopy(name);
+
+		std::transform(nameCopy.begin(), nameCopy.end(), nameCopy.begin(), ::tolower);
+
 		const auto valueIt = std::find_if(
 				this->entries.begin(),
 				this->entries.end(),
-				[&name](const auto& entry) {
-					return entry.first == boost::algorithm::to_lower_copy(name);
+				[&nameCopy](const auto& entry) {
+					return entry.first == nameCopy;
 				}
 		);
 

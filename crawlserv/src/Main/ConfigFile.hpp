@@ -12,9 +12,8 @@
 
 #include "Exception.hpp"
 
-#include <boost/algorithm/string.hpp>
-
-#include <algorithm>	// std::find_if
+#include <algorithm>	// std::find_if, std::transform
+#include <cctype>		// ::tolower
 #include <fstream>		// std::ifstream
 #include <string>		// std::string, std::getline
 #include <utility>		// std::pair
