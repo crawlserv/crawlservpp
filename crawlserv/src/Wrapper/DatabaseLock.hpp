@@ -10,8 +10,8 @@
 #ifndef WRAPPER_DATABASELOCK_HPP_
 #define WRAPPER_DATABASELOCK_HPP_
 
-#include <functional>
-#include <string>
+#include <functional>	// std::function
+#include <string>		// std::string
 
 namespace crawlservpp::Wrapper {
 
