@@ -10,10 +10,10 @@
 #ifndef MAIN_DATA_HPP_
 #define MAIN_DATA_HPP_
 
-#include <string>
-#include <tuple>
-#include <utility>
-#include <vector>
+#include <string>	// std::string
+#include <tuple>	// std::tuple
+#include <utility>	// std::pair
+#include <vector>	// std:vector
 
 namespace crawlservpp::Main::Data {
 
