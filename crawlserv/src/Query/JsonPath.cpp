@@ -32,7 +32,12 @@ namespace crawlservpp::Query {
 			return !(result.is_array() && result.is_empty());
 		}
 		catch(const jsoncons::json_exception& e) {
-			throw Exception(std::string(e.what()) + " (JSONPath: \'" + this->jsonPath + "\')");
+			throw Exception(
+					std::string(e.what())
+					+ " (JSONPath: \'"
+					+ this->jsonPath
+					+ "\')"
+			);
 		}
 	}
 
@@ -60,7 +65,11 @@ namespace crawlservpp::Query {
 				resultTo = result.as<std::string>();
 		}
 		catch(const jsoncons::json_exception& e) {
-			throw Exception(std::string(e.what()) + " (JSONPath: \'" + this->jsonPath + "\')");
+			throw Exception(
+					std::string(e.what())
+					+ " (JSONPath: \'"
+					+ this->jsonPath + "\')"
+			);
 		}
 	}
 
@@ -88,7 +97,11 @@ namespace crawlservpp::Query {
 				resultTo.emplace_back(result.as<std::string>());
 		}
 		catch(const jsoncons::json_exception& e) {
-			throw Exception(std::string(e.what()) + " (JSONPath: \'" + this->jsonPath + "\')");
+			throw Exception(
+					std::string(e.what())
+					+ " (JSONPath: \'"
+					+ this->jsonPath + "\')"
+			);
 		}
 	}
 } /* crawlservpp::Query */
