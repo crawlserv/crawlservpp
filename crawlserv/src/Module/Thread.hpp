@@ -27,18 +27,16 @@
 #include "../Struct/ThreadStatus.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
 
-#include <atomic>
-#include <chrono>
-#include <cmath>
-#include <condition_variable>
-#include <exception>
-#include <iostream>
-#include <memory>
-#include <mutex>
-#include <sstream>
-#include <string>
-#include <thread>
-#include <utility>
+#include <atomic>				// std::atomic
+#include <chrono>				// std::chrono
+#include <cmath>				// std::lround
+#include <condition_variable>	// std::condition_variable
+#include <exception>			// std::exception
+#include <iostream>				// std::cout, std::flush
+#include <mutex>				// std::lock_guard, std::mutex, std::unique_lock
+#include <sstream>				// std::ostringstream
+#include <string>				// std::string
+#include <thread>				// std::this_thread, std::thread
 
 namespace crawlservpp::Module {
 
