@@ -7,13 +7,14 @@
  *      Author: ans
  */
 
+#include "../Helper/Portability/pipe.h"
+
 #include "../Main/Exception.hpp"
 
-#include <array>
-#include <cstdio>
-#include <iostream>
-#include <memory>
-#include <string>
+#include <array>	// std::array
+#include <cstdio>	// fgets, FILE, pclose, pipe, popen
+#include <memory>	// std::unique_ptr
+#include <string>	// std::string
 
 namespace crawlservpp::Helper::System {
 	// execute a system command and return the stdout of the program, throws Main::Exception
