@@ -645,7 +645,25 @@ namespace crawlservpp::Module::Extractor {
 		std::vector<StringString> globalTokens;
 
 		// loop over variables
+		for(auto i = this->config.variablesName.begin(); i != this->config.variablesName.end(); ++i) {
+			const auto source =
+					this->config.variablesSource.begin()
+					+ (i - this->config.variablesName.begin());
 
+			switch(*source) {
+			case Config::variablesSourcesParsed:
+				// TODO
+				break;
+
+			case Config::variablesSourcesContent:
+				// TODO
+				break;
+
+			case Config::variablesSourcesUrl:
+				// TODO
+				break;
+			}
+		}
 
 		// loop over global tokens
 		if(!(this->config.pagingVariable.empty()))
@@ -656,6 +674,7 @@ namespace crawlservpp::Module::Extractor {
 						) == std::string::npos
 				) {
 					// get global token
+					// TODO
 				}
 			}
 
