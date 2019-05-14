@@ -57,29 +57,26 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <experimental/filesystem>
-
-#include <algorithm>
-#include <chrono>
-#include <cmath>
-#include <ctime>
-#include <fstream>
-#include <functional>
-#include <iomanip>
-#include <iostream>
-#include <locale>
-#include <memory>
-#include <mutex>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <thread>
-#include <utility>
-#include <vector>
+#include <algorithm>	// std::find, std::remove, std::transform
+#include <chrono>		// std::chrono
+#include <cmath>		// std::round
+#include <fstream>		// std::ifstream
+#include <functional>	// std::function
+#include <iostream>		// std::cout, std::endl, std::flush
+#include <locale>		// std::locale
+#include <memory>		// std::unique_ptr
+#include <mutex>		// std::lock_guard, std::mutex
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::getline, std::stoul, std::string
+#include <thread>		// std::this_thread
+#include <tuple>		// std::get(std::tuple)
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
 // optional header
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-#include <atomic>
+#include <atomic>		// std::atomic
 #endif
 
 namespace crawlservpp::Wrapper {
