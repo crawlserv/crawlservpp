@@ -122,11 +122,17 @@ namespace crawlservpp::Module::Crawler {
 		{ // lock URL list
 			this->setStatusMessage("Waiting for URL list...");
 
+			if(verbose)
+				this->log("waits for URL list...");
+
 			DatabaseLock urlListLock(
 					this->database,
 					"urlList." + this->websiteNamespace + "_" + this->urlListNamespace,
 					std::bind(&Thread::isRunning, this)
 			);
+
+			if(!(this->isRunning()))
+				return;
 
 			// check URL list
 			this->setStatusMessage("Checking URL list...");
