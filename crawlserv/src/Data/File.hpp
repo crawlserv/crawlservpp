@@ -12,9 +12,10 @@
 
 #include "../Main/Exception.hpp"
 
-#include <fstream>
-#include <streambuf>
-#include <string>
+#include <fstream>		// std::ifstream, std::ofstream
+#include <ios>			// std::ios_base
+#include <streambuf>	// std::istreambuf_iterator
+#include <string>		// std::string
 
 namespace crawlservpp::Data::File {
 	/*
