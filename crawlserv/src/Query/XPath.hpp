@@ -17,10 +17,10 @@
 
 #include <pugixml.hpp>
 
-#include <memory>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <exception>	// std::exception
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Query {
 
