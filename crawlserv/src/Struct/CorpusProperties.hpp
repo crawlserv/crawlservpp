@@ -10,7 +10,7 @@
 #ifndef STRUCT_CORPUSPROPERTIES_HPP_
 #define STRUCT_CORPUSPROPERTIES_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
@@ -21,12 +21,13 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		CorpusProperties() : sourceType(0) {}
-		CorpusProperties(	unsigned short setSourceType,
-							const std::string& setSourceTable,
-							const std::string& setSourceField)
-								: sourceType(setSourceType),
-								  sourceTable(setSourceTable),
-								  sourceField(setSourceField) {}
+		CorpusProperties(
+				unsigned short setSourceType,
+				const std::string& setSourceTable,
+				const std::string& setSourceField)
+		: sourceType(setSourceType),
+		  sourceTable(setSourceTable),
+		  sourceField(setSourceField) {}
 	};
 
 } /* crawlservpp::Struct */
