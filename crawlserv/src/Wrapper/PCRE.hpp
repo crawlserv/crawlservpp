@@ -13,8 +13,6 @@
 
 #include <pcre2.h>
 
-#include <stddef.h>
-
 namespace crawlservpp::Wrapper {
 
 	class PCRE {
@@ -73,6 +71,7 @@ namespace crawlservpp::Wrapper {
 		PCRE& operator=(PCRE&& other) noexcept {
 			if(&other != this) {
 				this->ptr = other.ptr;
+
 				other.ptr = nullptr;
 			}
 

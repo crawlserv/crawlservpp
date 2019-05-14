@@ -12,7 +12,6 @@
 #define WRAPPER_PCREMATCH_HPP_
 
 #include <pcre2.h>
-#include <stddef.h>
 
 namespace crawlservpp::Wrapper {
 
