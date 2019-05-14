@@ -80,7 +80,9 @@ namespace crawlservpp::Parsing {
 			errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
 
 			if(end.length() < current.length())
-				errStrStr << current.substr(0, current.length() - end.length()) << "[!!!]" << end;
+				errStrStr	<< current.substr(0, current.length() - end.length())
+							<< "[!!!]"
+							<< end;
 			else
 				errStrStr << current << "[!!!]";
 
@@ -137,9 +139,19 @@ namespace crawlservpp::Parsing {
 				while(queryNext) {
 					if(
 							(
-									whiteList && std::find(args.begin(), args.end(), queryNext->key) != args.end()
+									whiteList
+									&& std::find(
+											args.begin(),
+											args.end(),
+											queryNext->key
+									) != args.end()
 							) || (
-									!whiteList && std::find(args.begin(), args.end(), queryNext->key) == args.end()
+									!whiteList
+									&& std::find(
+											args.begin(),
+											args.end(),
+											queryNext->key
+									) == args.end()
 							)
 					) {
 						queries += queryNext->key;
@@ -239,7 +251,9 @@ namespace crawlservpp::Parsing {
 			errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
 
 			if(end.length() < this->link.length())
-				errStrStr << this->link.substr(0, this->link.length() - end.length())	<< "[!!!]" << end;
+				errStrStr	<< this->link.substr(0, this->link.length() - end.length())
+							<< "[!!!]"
+							<< end;
 			else
 				errStrStr << this->link << "[!!!]";
 
@@ -257,22 +271,48 @@ namespace crawlservpp::Parsing {
 						URI_RESOLVE_IDENTICAL_SCHEME_COMPAT
 				) != URI_SUCCESS
 		)
-			throw URI::Exception("Reference resolving failed for \'" + this->toString(relativeSource) + "\'");
+			throw URI::Exception(
+					"Reference resolving failed for \'"
+					+ this->toString(relativeSource)
+					+ "\'"
+			);
 
 		// normalize URI
-		const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(this->uri.get());
+		const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(
+				this->uri.get()
+		);
 
-		if(dirtyParts != URI_NORMALIZED && uriNormalizeSyntaxExA(this->uri.get(), dirtyParts) != URI_SUCCESS)
-			throw URI::Exception("Normalizing failed for \'" + this->toString(this->uri) + "\'");
+		if(
+				dirtyParts != URI_NORMALIZED
+				&& uriNormalizeSyntaxExA(
+						this->uri.get(),
+						dirtyParts
+				) != URI_SUCCESS
+		)
+			throw URI::Exception(
+					"Normalizing failed for \'"
+					+ this->toString(this->uri)
+					+ "\'"
+			);
 
 		return true;
 	}
 
 	// public static helper function: escape string
 	std::string URI::escape(const std::string& string, bool plusSpace) {
-		std::unique_ptr<char[]> cString(std::make_unique<char[]>(string.size() * 6 + 1));
+		std::unique_ptr<char[]> cString(
+				std::make_unique<char[]>(
+						string.size() * 6 + 1
+				)
+		);
 
-		uriEscapeExA(string.c_str(), string.c_str() + string.size(), cString.get(), plusSpace, false);
+		uriEscapeExA(
+				string.c_str(),
+				string.c_str() + string.size(),
+				cString.get(),
+				plusSpace,
+				false
+		);
 
 		return std::string(cString.get());
 	}
@@ -282,7 +322,11 @@ namespace crawlservpp::Parsing {
 		if(string.empty())
 			return "";
 
-		std::unique_ptr<char[]> cString(std::make_unique<char[]>(string.size() + 1));
+		std::unique_ptr<char[]> cString(
+				std::make_unique<char[]>(
+						string.size() + 1
+				)
+		);
 
 		for(unsigned long n = 0; n < string.length(); ++n)
 			cString[n] = string.at(n);
@@ -322,7 +366,12 @@ namespace crawlservpp::Parsing {
 
 	// static helper function: convert URITextRangeA to std::string
 	std::string URI::textRangeToString(const UriTextRangeA& range) {
-		if(!(range.first) || *(range.first) == 0 || !(range.afterLast) || range.afterLast <= range.first)
+		if(
+				!(range.first)
+				|| *(range.first) == 0
+				|| !(range.afterLast)
+				|| range.afterLast <= range.first
+		)
 			return "";
 
 		return std::string(range.first, range.afterLast - range.first);
@@ -335,12 +384,28 @@ namespace crawlservpp::Parsing {
 
 		int charsRequired = 0;
 
-		if(uriToStringCharsRequiredA(uri.get(), &charsRequired) != URI_SUCCESS)
+		if(
+				uriToStringCharsRequiredA(
+						uri.get(),
+						&charsRequired
+				) != URI_SUCCESS
+		)
 			throw URI::Exception("Could not convert URI to string because uriToStringCharsRequiredA(...) failed");
 
-		std::unique_ptr<char[]> uriCString(std::make_unique<char[]>(charsRequired + 1));
+		std::unique_ptr<char[]> uriCString(
+				std::make_unique<char[]>(
+						charsRequired + 1
+				)
+		);
 
-		if(uriToStringA(uriCString.get(), uri.get(), charsRequired + 1, nullptr) != URI_SUCCESS)
+		if(
+				uriToStringA(
+						uriCString.get(),
+						uri.get(),
+						charsRequired + 1,
+						nullptr
+				) != URI_SUCCESS
+		)
 			throw URI::Exception("Could not convert URI to string because uriToStringA(...) failed");
 
 		return std::string(uriCString.get());
