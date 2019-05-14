@@ -13,7 +13,7 @@
 #ifndef STRUCT_THREADSTATUS_HPP_
 #define STRUCT_THREADSTATUS_HPP_
 
-#include <string>
+#include <string>	// std::stirng
 
 namespace crawlservpp::Struct {
 

@@ -13,8 +13,8 @@
 
 #include "TableColumn.hpp"
 
-#include <string>
-#include <vector>
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
 
@@ -32,10 +32,10 @@ namespace crawlservpp::Struct {
 				const std::vector<TableColumn>& setColumns,
 				const std::string& setDataDirectory,
 				bool setCompressed
-		)		:	name(setName),
-					columns(setColumns),
-					dataDirectory(setDataDirectory),
-					compressed(setCompressed) {}
+		) : name(setName),
+			columns(setColumns),
+			dataDirectory(setDataDirectory),
+			compressed(setCompressed) {}
 	};
 
 } /* crawlservpp::Struct */

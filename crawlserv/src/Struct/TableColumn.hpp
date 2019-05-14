@@ -10,7 +10,7 @@
 #ifndef STRUCT_TABLECOLUMN_HPP_
 #define STRUCT_TABLECOLUMN_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
@@ -38,22 +38,23 @@ namespace crawlservpp::Struct {
 				const std::string& setType,
 				const std::string& setReferenceTable,
 				const std::string& setReferenceColumn
-		)			: TableColumn(setName, setType, setReferenceTable, setReferenceColumn, false) {}
+		) : TableColumn(setName, setType, setReferenceTable, setReferenceColumn, false) {}
 
 		TableColumn(
 				const std::string& setName,
 				const std::string& setType,
 				bool setIndexed
-		)			: TableColumn(setName, setType, "", "", setIndexed) {}
+		) : TableColumn(setName, setType, "", "", setIndexed) {}
 
 		TableColumn(
 				const std::string& setName,
 				const std::string& setType
-		)
-					: TableColumn(setName, setType, "", "", false) {}
+		) : TableColumn(setName, setType, "", "", false) {}
 
-		TableColumn(const std::string& newName, const TableColumn& c)
-					: TableColumn(newName, c.type, c.referenceTable, c.referenceColumn, c.indexed) {}
+		TableColumn(
+				const std::string& newName,
+				const TableColumn& c
+		) : TableColumn(newName, c.type, c.referenceTable, c.referenceColumn, c.indexed) {}
 	};
 
 } /* crawlservpp::Struct */

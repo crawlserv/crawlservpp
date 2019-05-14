@@ -13,8 +13,6 @@
 #include "ThreadOptions.hpp"
 #include "ThreadStatus.hpp"
 
-#include <string>
-
 namespace crawlservpp::Struct {
 
 	struct ThreadDatabaseEntry {

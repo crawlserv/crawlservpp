@@ -12,7 +12,7 @@
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
@@ -25,13 +25,14 @@ namespace crawlservpp::Struct {
 		std::string name;
 		const rapidjson::Value * value;
 
-		std::string str(); // stringify category and name
+		std::string str();
 	};
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
+	// stringify category and name
 	inline std::string ConfigItem::str() {
 		return std::string(category + "." + name);
 	}

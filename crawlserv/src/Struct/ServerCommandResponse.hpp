@@ -10,6 +10,8 @@
 #ifndef STRUCT_SERVERCOMMANDRESPONSE_HPP_
 #define STRUCT_SERVERCOMMANDRESPONSE_HPP_
 
+#include <string>	// std::string
+
 namespace crawlservpp::Struct {
 
 	struct ServerCommandResponse {

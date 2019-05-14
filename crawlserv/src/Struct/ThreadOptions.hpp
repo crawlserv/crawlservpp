@@ -10,7 +10,7 @@
 #ifndef STRUCT_THREADOPTIONS_HPP_
 #define STRUCT_THREADOPTIONS_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 

@@ -10,7 +10,7 @@
 #ifndef STRUCT_SERVERSETTINGS_HPP_
 #define STRUCT_SERVERSETTINGS_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 

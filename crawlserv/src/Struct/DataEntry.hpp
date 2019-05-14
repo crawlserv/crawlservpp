@@ -10,8 +10,8 @@
 #ifndef STRUCT_DATAENTRY_HPP_
 #define STRUCT_DATAENTRY_HPP_
 
-#include <string>
-#include <vector>
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
 

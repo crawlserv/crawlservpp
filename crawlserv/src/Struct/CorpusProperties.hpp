@@ -24,10 +24,10 @@ namespace crawlservpp::Struct {
 		CorpusProperties(
 				unsigned short setSourceType,
 				const std::string& setSourceTable,
-				const std::string& setSourceField)
-		: sourceType(setSourceType),
-		  sourceTable(setSourceTable),
-		  sourceField(setSourceField) {}
+				const std::string& setSourceField
+		) : sourceType(setSourceType),
+			sourceTable(setSourceTable),
+			sourceField(setSourceField) {}
 	};
 
 } /* crawlservpp::Struct */

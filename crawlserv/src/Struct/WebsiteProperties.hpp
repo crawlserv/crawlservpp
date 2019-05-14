@@ -10,7 +10,7 @@
 #ifndef STRUCT_WEBSITEPROPERTIES_HPP_
 #define STRUCT_WEBSITEPROPERTIES_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 

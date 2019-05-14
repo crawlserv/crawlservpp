@@ -28,13 +28,11 @@ namespace crawlservpp::Struct {
 				const std::string& setModule,
 				const std::string& setName,
 				const std::string& setConfig
-		)
-				: module(setModule), name(setName), config(setConfig) {}
+		) : module(setModule), name(setName), config(setConfig) {}
 		ConfigProperties(
 				const std::string& setName,
 				const std::string& setConfig
-		)
-				: ConfigProperties("", setName, setConfig) {}
+		) : ConfigProperties("", setName, setConfig) {}
 	};
 
 } /* crawlservpp::Struct */

@@ -15,8 +15,8 @@
 
 #include "TableColumn.hpp"
 
-#include <string>
-#include <vector>
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
 
@@ -39,12 +39,12 @@ namespace crawlservpp::Struct {
 				const std::string& setName,
 				const std::string& setFullName,
 				bool setCompressed
-		)		:	type(setType),
-					website(setWebsite),
-					urlList(setUrlList),
-					name(setName),
-					fullName(setFullName),
-					compressed(setCompressed) {}
+		) : type(setType),
+			website(setWebsite),
+			urlList(setUrlList),
+			name(setName),
+			fullName(setFullName),
+			compressed(setCompressed) {}
 
 		TargetTableProperties(
 				const std::string& setType,
@@ -54,13 +54,13 @@ namespace crawlservpp::Struct {
 				const std::string& setFullName,
 				const std::vector<TableColumn>& setColumns,
 				bool setCompressed
-		)		:	type(setType),
-					website(setWebsite),
-					urlList(setUrlList),
-					name(setName),
-					fullName(setFullName),
-					columns(setColumns),
-					compressed(setCompressed) {}
+		) : type(setType),
+			website(setWebsite),
+			urlList(setUrlList),
+			name(setName),
+			fullName(setFullName),
+			columns(setColumns),
+			compressed(setCompressed) {}
 	};
 
 } /* crawlservpp::Struct */

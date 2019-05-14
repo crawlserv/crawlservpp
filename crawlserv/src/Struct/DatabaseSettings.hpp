@@ -30,13 +30,13 @@ namespace crawlservpp::Struct {
 				const std::string& setUser,
 				const std::string& setPassword,
 				const std::string& setName,
-				bool setCompression)
-		: host(setHost),
-		  port(setPort),
-		  user(setUser),
-		  password(setPassword),
-		  name(setName),
-		  compression(setCompression) {}
+				bool setCompression
+		) : host(setHost),
+			port(setPort),
+			user(setUser),
+			password(setPassword),
+			name(setName),
+			compression(setCompression) {}
 	};
 
 } /* crawlservpp::Struct */

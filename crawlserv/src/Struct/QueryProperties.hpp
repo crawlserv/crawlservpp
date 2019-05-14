@@ -10,7 +10,7 @@
 #ifndef STRUCT_QUERYPROPERTIES_HPP_
 #define STRUCT_QUERYPROPERTIES_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
@@ -48,7 +48,15 @@ namespace crawlservpp::Struct {
 				bool setResultSingle,
 				bool setResultMulti,
 				bool setTextOnly
-		) : QueryProperties("", setText, setType, setResultBool, setResultSingle, setResultMulti, setTextOnly) {}
+		) : QueryProperties(
+				"",
+				setText,
+				setType,
+				setResultBool,
+				setResultSingle,
+				setResultMulti,
+				setTextOnly
+			) {}
 	};
 
 } /* crawlservpp::Struct */

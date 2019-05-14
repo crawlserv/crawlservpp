@@ -10,7 +10,7 @@
 #ifndef STRUCT_URLLISTPROPERTIES_HPP_
 #define STRUCT_URLLISTPROPERTIES_HPP_
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
@@ -20,7 +20,10 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		UrlListProperties() {}
-		UrlListProperties(const std::string& setNameSpace, const std::string& setName) : nameSpace(setNameSpace), name(setName) {}
+		UrlListProperties(
+				const std::string& setNameSpace,
+				const std::string& setName
+		) : nameSpace(setNameSpace), name(setName) {}
 	};
 
 } /* crawlservpp::Struct */
