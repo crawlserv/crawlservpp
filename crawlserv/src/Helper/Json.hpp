@@ -20,9 +20,10 @@
 #include "../_extern/rapidjson/include/rapidjson/stringbuffer.h"
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
 
-#include <string>
-#include <tuple>
-#include <vector>
+#include <string>	// std::string
+#include <tuple>	// std::get(std::tuple), std::tuple
+#include <utility>	// std::pair
+#include <vector>	// std::vector
 
 namespace crawlservpp::Helper::Json {
 
@@ -72,10 +73,10 @@ namespace crawlservpp::Helper::Json {
 		document.Reserve(vectorToStringify.size(), allocator);
 
 		// write vector elements as string values to array
-		for(auto i = vectorToStringify.begin(); i != vectorToStringify.end(); ++i) {
+		for(const auto& element : vectorToStringify) {
 			rapidjson::Value stringValue;
 			
-			stringValue.SetString(*i, allocator);
+			stringValue.SetString(element, allocator);
 			
 			document.PushBack(stringValue, allocator);
 		}
@@ -131,23 +132,23 @@ namespace crawlservpp::Helper::Json {
 		document.Reserve(vectorToStringify.size(), allocator);
 
 		// go through the vector elements representing the objects in the array
-		for(auto i = vectorToStringify.begin(); i != vectorToStringify.end(); ++i) {
+		for(const auto& element : vectorToStringify) {
 			// create object and reserve memory for all [key, value] pairs
 			rapidjson::Value objectValue;
 			
 			objectValue.SetObject();
 
 			// go through the sub-vector elements representing the [key, value] pairs in the object
-			for(auto j = i->begin(); j != i->end(); ++j) {
+			for(const auto& pair : element) {
 				// create key
 				rapidjson::Value key;
 				
-				key.SetString(j->first, allocator);
+				key.SetString(pair.first, allocator);
 
 				// create value
 				rapidjson::Value value;
 				
-				value.SetString(j->second, allocator);
+				value.SetString(pair.second, allocator);
 
 				// add [key, value] pair to object
 				objectValue.AddMember(key, value, allocator);
@@ -181,7 +182,7 @@ namespace crawlservpp::Helper::Json {
 		document.Reserve(textmapToStringify.size(), allocator);
 
 		// go through the vector elements representing the objects in the array
-		for(auto i = textmapToStringify.begin(); i != textmapToStringify.end(); ++i) {
+		for(const auto& element : textmapToStringify) {
 			// create object and reserve memory for all [key, value] pairs
 			rapidjson::Value objectValue;
 			
@@ -194,7 +195,7 @@ namespace crawlservpp::Helper::Json {
 			
 			rapidjson::Value valueValue;
 			
-			valueValue.SetString(std::get<0>(*i), allocator);
+			valueValue.SetString(std::get<0>(element), allocator);
 			
 			objectValue.AddMember(keyValue, valueValue, allocator);
 
@@ -205,7 +206,7 @@ namespace crawlservpp::Helper::Json {
 			
 			rapidjson::Value valuePos;
 			
-			valuePos.SetUint64(std::get<1>(*i));
+			valuePos.SetUint64(std::get<1>(element));
 			
 			objectValue.AddMember(keyPos, valuePos, allocator);
 
@@ -216,7 +217,7 @@ namespace crawlservpp::Helper::Json {
 			
 			rapidjson::Value valueLength;
 			
-			valueLength.SetUint64(std::get<2>(*i));
+			valueLength.SetUint64(std::get<2>(element));
 			
 			objectValue.AddMember(keyLength, valueLength, allocator);
 
