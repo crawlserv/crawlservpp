@@ -24,6 +24,10 @@ namespace crawlservpp::Main {
 			// save instance and register signals
 			App::instance = this;
 
+#ifdef _WIN32
+			signal(SIGINT, App::signal);
+			signal(SIGTERM, App::signal);
+#else
 			struct sigaction sigIntHandler;
 
 			sigIntHandler.sa_handler = App::signal;
@@ -34,6 +38,7 @@ namespace crawlservpp::Main {
 
 			sigaction(SIGINT, &sigIntHandler, nullptr);
 			sigaction(SIGTERM, &sigIntHandler, nullptr);
+#endif
 
 			// show header
 			this->outputHeader();
