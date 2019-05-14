@@ -42,6 +42,7 @@
 #include "../Module/Thread.hpp"
 #include "../Module/Analyzer/Algo/All.hpp"
 #include "../Module/Crawler/Thread.hpp"
+#include "../Module/Extractor/Thread.hpp"
 #include "../Module/Parser/Thread.hpp"
 #include "../Query/JsonPath.hpp"
 #include "../Query/JsonPointer.hpp"
@@ -65,9 +66,8 @@
 #include "../_extern/rapidjson/include/rapidjson/prettywriter.h"
 
 #include <boost/lexical_cast.hpp>
-#include <experimental/filesystem>
 
-#include <algorithm>
+#include <algorithm>	// std::count_if
 #include <chrono>
 #include <cstring>
 #include <exception>
@@ -149,7 +149,7 @@ namespace crawlservpp::Main {
 		// threads
 		std::vector<std::unique_ptr<Module::Crawler::Thread>> crawlers;
 		std::vector<std::unique_ptr<Module::Parser::Thread>> parsers;
-		//std::vector<std::unique_ptr<Module::Extractor::Thread>> extractors;
+		std::vector<std::unique_ptr<Module::Extractor::Thread>> extractors;
 		std::vector<std::unique_ptr<Module::Analyzer::Thread>> analyzers;
 		std::vector<std::thread> workers;
 		std::vector<bool> workersRunning;

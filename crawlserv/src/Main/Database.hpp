@@ -16,6 +16,8 @@
 #define MAIN_DATABASE_HPP_
 
 // hard-coded options
+#define MAIN_DATABASE_SQL_DIRECTORY "sql"			// (sub-)directory for SQL files
+
 #define MAIN_DATABASE_LOCK_TIMEOUT_SEC 300			// time-out on table lock
 #define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC 600	// force re-connect if the connection has been idle for that long
 #define MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS 250		// sleep before re-trying after MySQL deadlock

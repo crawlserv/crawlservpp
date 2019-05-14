@@ -28,22 +28,15 @@ namespace crawlservpp::Main {
 			  dirCache(MAIN_SERVER_DIR_CACHE),
 			  dirCookies(MAIN_SERVER_DIR_COOKIES),
 			  webServer(this->dirCache) {
-		// create cache directory if it does not exist
-		if(
-				!std::filesystem::is_directory(this->dirCache)
-				|| !std::filesystem::exists(this->dirCache)
-		)
-			std::filesystem::create_directory(this->dirCache);
-		else
-			// directory exists: clear it
+		// clear or create cache directory
+		if(Helper::FileSystem::isValidDirectory(this->dirCache))
 			Helper::FileSystem::clearDirectory(this->dirCache);
+		else
+			Helper::FileSystem::createDirectory(this->dirCache);
+
 
 		// create cookies directory if it does not exist
-		if(
-				!std::filesystem::is_directory(this->dirCookies)
-				|| !std::filesystem::exists(this->dirCookies)
-		)
-			std::filesystem::create_directory(this->dirCookies);
+		Helper::FileSystem::createDirectoryIfNotExists(this->dirCookies);
 
 		// set database option
 		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);
@@ -82,13 +75,11 @@ namespace crawlservpp::Main {
 		this->setStatus("crawlserv is ready");
 
 		// load threads from database
-		std::vector<ThreadDatabaseEntry> threads = this->database.getThreads();
-
-		for(auto i = threads.begin(); i != threads.end(); ++i) {
-			if(i->options.module == "crawler") {
+		for(const auto& thread : this->database.getThreads()) {
+			if(thread.options.module == "crawler") {
 				// load crawler thread
 				this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(
-						this->database, this->dirCookies, i->options, i->status
+						this->database, this->dirCookies, thread.options, thread.status
 				));
 
 				this->crawlers.back()->Module::Thread::start();
@@ -96,14 +87,14 @@ namespace crawlservpp::Main {
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "crawler #" << i->status.id << " continued.";
+				logStrStr << "crawler #" << thread.status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
-			else if(i->options.module == "parser") {
+			else if(thread.options.module == "parser") {
 				// load parser thread
 				this->parsers.push_back(std::make_unique<Module::Parser::Thread>(
-						this->database, i->options, i->status
+						this->database, thread.options, thread.status
 				));
 
 				this->parsers.back()->Module::Thread::start();
@@ -111,30 +102,27 @@ namespace crawlservpp::Main {
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "parser #" << i->status.id << " continued.";
+				logStrStr << "parser #" << thread.status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
-			else if(i->options.module == "extractor") {
-				// TODO: load extractor thread
-				/*
+			else if(thread.options.module == "extractor") {
 				this->extractors.push_back(std::make_unique<Module::Extractor::Thread>(
-						this->database, i->options, i->status
+						this->database, thread.options, thread.status
 				));
 
 				this->extractors.back()->Module::Thread::start();
-				*/
 
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "extractor #" << i->status.id << " continued.";
+				logStrStr << "extractor #" << thread.status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
-			else if(i->options.module == "analyzer") {
+			else if(thread.options.module == "analyzer") {
 				// get JSON
-				const std::string config = this->database.getConfiguration(i->options.config);
+				const std::string config = this->database.getConfiguration(thread.options.config);
 
 				// parse JSON
 				rapidjson::Document configJson;
@@ -154,8 +142,8 @@ namespace crawlservpp::Main {
 						Module::Analyzer::Algo::initAlgo(AlgoThreadProperties(
 								Server::getAlgoFromConfig(configJson),
 								this->database,
-								i->options,
-								i->status
+								thread.options,
+								thread.status
 						))
 				);
 
@@ -174,12 +162,12 @@ namespace crawlservpp::Main {
 				// write to log
 				std::ostringstream logStrStr;
 
-				logStrStr << "analyzer #" << i->status.id << " continued.";
+				logStrStr << "analyzer #" << thread.status.id << " continued.";
 
 				this->database.log(logStrStr.str());
 			}
 			else
-				throw Exception("Unknown thread module \'" + i->options.module + "\'");
+				throw Exception("Unknown thread module \'" + thread.options.module + "\'");
 		}
 
 		// save start time for up-time calculation
@@ -202,26 +190,26 @@ namespace crawlservpp::Main {
 	// destructor
 	Server::~Server() {
 		// interrupt module threads
-		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i)
-			(*i)->Module::Thread::interrupt();
+		for(auto& crawler : this->crawlers)
+			crawler->Module::Thread::interrupt();
 
-		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i)
-			(*i)->Module::Thread::interrupt();
+		for(auto& parser : this->parsers)
+			parser->Module::Thread::interrupt();
 
-		//for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i)
-		//	(*i)->Module::Thread::interrupt();
+		for(auto& extractor : this->extractors)
+			extractor->Module::Thread::interrupt();
 
-		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i)
-			(*i)->Module::Thread::interrupt();
+		for(auto& analyzer : this->analyzers)
+			analyzer->Module::Thread::interrupt();
 
 		// wait for module threads
-		for(auto i = this->crawlers.begin(); i != this->crawlers.end(); ++i) {
-			if(*i) {
-				// get thread ID (for logging)
-				const unsigned long id = (*i)->getId();
+		for(auto& crawler : this->crawlers) {
+			if(crawler) {
+				// save the ID of the thread before ending it
+				const unsigned long id = crawler->getId();
 
 				// wait for thread
-				(*i)->Module::Thread::end();
+				crawler->Module::Thread::end();
 
 				// log interruption
 				std::ostringstream logStrStr;
@@ -235,22 +223,18 @@ namespace crawlservpp::Main {
 					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
-				catch(...) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
-				}
 			}
 		}
 
 		this->crawlers.clear();
 
-		for(auto i = this->parsers.begin(); i != this->parsers.end(); ++i) {
-			if(*i) {
-				// get thread ID (for logging)
-				const unsigned long id = (*i)->getId();
+		for(auto& parser : this->parsers) {
+			if(parser) {
+				// save the ID of the thread before ending it
+				const unsigned long id = parser->getId();
 
 				// wait for thread
-				(*i)->Module::Thread::end();
+				parser->Module::Thread::end();
 
 				// log interruption
 				std::ostringstream logStrStr;
@@ -264,22 +248,18 @@ namespace crawlservpp::Main {
 					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
-				catch(...) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
-				}
 			}
 		}
 
 		this->parsers.clear();
 
-		/*for(auto i = this->extractors.begin(); i != this->extractors.end(); ++i) {
-			if(*i) {
-				// get thread ID (for logging)
-				const unsigned long id = (*i)->getId();
+		for(auto& extractor : this->extractors) {
+			if(extractor) {
+				// save the ID of the thread before ending it
+				const unsigned long id = extractor->getId();
 
 				// wait for thread
-				(*i)->Module::Thread::end();
+				extractor->Module::Thread::end();
 
 				// log interruption
 				std::ostringstream logStrStr;
@@ -293,22 +273,18 @@ namespace crawlservpp::Main {
 					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
-				catch(...) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
-				}
 			}
 		}
 
-		this->extractors.clear();*/
+		this->extractors.clear();
 
-		for(auto i = this->analyzers.begin(); i != this->analyzers.end(); ++i) {
-			if(*i) {
-				// get thread ID (for logging)
-				const unsigned long id = (*i)->getId();
+		for(auto& analyzer : this->analyzers) {
+			if(analyzer) {
+				// save the ID of the thread before ending it
+				const unsigned long id = analyzer->getId();
 
 				// wait for thread
-				(*i)->Module::Thread::end();
+				analyzer->Module::Thread::end();
 
 				// log interruption
 				std::ostringstream logStrStr;
@@ -322,19 +298,15 @@ namespace crawlservpp::Main {
 					std::cout	<< '\n' << logStrStr.str()
 								<< "\nCould not write to log: " << e.what() << std::flush;
 				}
-				catch(...) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
-				}
 			}
 		}
 
 		this->analyzers.clear();
 
 		// wait for worker threads
-		for(auto i = this->workers.begin(); i != this->workers.end(); ++i)
-			if(i->joinable())
-				i->join();
+		for(auto& worker : this->workers)
+			if(worker.joinable())
+				worker.join();
 
 		this->workers.clear();
 
@@ -858,23 +830,31 @@ namespace crawlservpp::Main {
 			this->webServer.send(connection, 200, "", "");
 	}
 
-	// static helper function: get algorithm ID from configuration JSON
+	// static helper function: get algorithm ID from configuration JSON, throws Main::Exception
 	unsigned int Server::getAlgoFromConfig(const rapidjson::Document& json) {
 		unsigned int result = 0;
 
+		if(!json.IsArray())
+			throw Exception("Server::getAlgoFromConfig(): Configuration is no array");
+
 		// go through all array items i.e. configuration entries
-		for(auto i = json.Begin(); i != json.End(); ++i) {
+		for(const auto& item : json.GetArray()) {
 			bool algoItem = false;
 
-			if(i->IsObject()) {
+			if(item.IsObject()) {
 				// go through all item properties
-				for(auto j = i->MemberBegin(); j != i->MemberEnd(); ++j) {
-					if(j->name.IsString()) {
-						const std::string itemName(j->name.GetString(), j->name.GetStringLength());
+				for(const auto& property : item.GetObject()) {
+					if(property.name.IsString()) {
+						const std::string itemName(property.name.GetString(), property.name.GetStringLength());
 
 						if(itemName == "name") {
-							if(j->value.IsString()) {
-								if(std::string(j->value.GetString(), j->value.GetStringLength()) == "_algo") {
+							if(property.value.IsString()) {
+								if(
+										std::string(
+												property.value.GetString(),
+												property.value.GetStringLength()
+										) == "_algo"
+								) {
 									algoItem = true;
 
 									if(result)
@@ -885,8 +865,8 @@ namespace crawlservpp::Main {
 							}
 						}
 						else if(itemName == "value") {
-							if(j->value.IsUint()) {
-								result = j->value.GetUint();
+							if(property.value.IsUint()) {
+								result = property.value.GetUint();
 
 								if(algoItem)
 									break;
@@ -3366,13 +3346,13 @@ namespace crawlservpp::Main {
 
 							if(properties.resultMulti) {
 								// get all results (all full matches)
-								std::vector<std::string> tempResult;
+								std::vector<std::string> tempResults;
 
-								regExTest.getAll(text, tempResult);
+								regExTest.getAll(text, tempResults);
 
 								result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-								if(tempResult.empty())
+								if(tempResults.empty())
 									result += " [empty]\n";
 								else {
 									std::ostringstream resultStrStr;
@@ -3380,10 +3360,10 @@ namespace crawlservpp::Main {
 
 									resultStrStr << '\n';
 
-									for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
+									for(const auto& tempResult : tempResults) {
 										++counter;
 
-										resultStrStr << '[' << counter << "] " << *i << '\n';
+										resultStrStr << '[' << counter << "] " << tempResult << '\n';
 									}
 
 									result += resultStrStr.str();
@@ -3443,13 +3423,13 @@ namespace crawlservpp::Main {
 
 							if(properties.resultMulti) {
 								// get all results (all full matches)
-								std::vector<std::string> tempResult;
+								std::vector<std::string> tempResults;
 
-								xPathTest.getAll(xmlDocumentTest, tempResult);
+								xPathTest.getAll(xmlDocumentTest, tempResults);
 
 								result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-								if(tempResult.empty())
+								if(tempResults.empty())
 									result += " [empty]\n";
 								else {
 									std::ostringstream resultStrStr;
@@ -3457,10 +3437,10 @@ namespace crawlservpp::Main {
 
 									resultStrStr << '\n';
 
-									for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
+									for(const auto& tempResult : tempResults) {
 										++counter;
 
-										resultStrStr << '[' << counter << "] " << *i << '\n';
+										resultStrStr << '[' << counter << "] " << tempResult << '\n';
 									}
 
 									result += resultStrStr.str();
@@ -3519,13 +3499,13 @@ namespace crawlservpp::Main {
 
 								if(properties.resultMulti) {
 									// get all results (all full matches)
-									std::vector<std::string> tempResult;
+									std::vector<std::string> tempResults;
 
-									JSONPointerTest.getAll(jsonDocumentTest, tempResult);
+									JSONPointerTest.getAll(jsonDocumentTest, tempResults);
 
 									result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-									if(tempResult.empty())
+									if(tempResults.empty())
 										result += " [empty]\n";
 									else {
 										std::ostringstream resultStrStr;
@@ -3533,10 +3513,10 @@ namespace crawlservpp::Main {
 
 										resultStrStr << '\n';
 
-										for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
+										for(const auto& tempResult : tempResults) {
 											++counter;
 
-											resultStrStr << '[' << counter << "] " << *i << '\n';
+											resultStrStr << '[' << counter << "] " << tempResult << '\n';
 										}
 
 										result += resultStrStr.str();
@@ -3592,13 +3572,13 @@ namespace crawlservpp::Main {
 
 								if(properties.resultMulti) {
 									// get all results (all full matches)
-									std::vector<std::string> tempResult;
+									std::vector<std::string> tempResults;
 
-									JSONPathTest.getAll(jsonTest, tempResult);
+									JSONPathTest.getAll(jsonTest, tempResults);
 
 									result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-									if(tempResult.empty())
+									if(tempResults.empty())
 										result += " [empty]\n";
 									else {
 										std::ostringstream resultStrStr;
@@ -3606,10 +3586,10 @@ namespace crawlservpp::Main {
 
 										resultStrStr << '\n';
 
-										for(auto i = tempResult.begin(); i != tempResult.end(); ++i) {
+										for(const auto& tempResult : tempResults) {
 											++counter;
 
-											resultStrStr << '[' << counter << "] " << *i << '\n';
+											resultStrStr << '[' << counter << "] " << tempResult << '\n';
 										}
 
 										result += resultStrStr.str();

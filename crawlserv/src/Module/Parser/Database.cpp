@@ -73,9 +73,9 @@ namespace crawlservpp::Module::Parser {
 		properties.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
 		properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
 
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-			if(!(i->empty()))
-				properties.columns.emplace_back("parsed__" + *i, "LONGTEXT");
+		for(const auto& targetFieldName : this->targetFieldNames)
+			if(!targetFieldName.empty())
+				properties.columns.emplace_back("parsed__" + targetFieldName, "LONGTEXT");
 
 		// add target table if it does not exist already
 		this->targetTableId = this->addTargetTable(properties);
@@ -899,8 +899,8 @@ namespace crawlservpp::Module::Parser {
 		const unsigned long fields = 5 + std::count_if(
 				this->targetFieldNames.begin(),
 				this->targetFieldNames.end(),
-				[](const auto& field) {
-					return !field.empty();
+				[](const auto& fieldName) {
+					return !fieldName.empty();
 				}
 		);
 
@@ -1152,17 +1152,19 @@ namespace crawlservpp::Module::Parser {
 			entry.dataId.clear();
 		}
 
-		if(entry.dateTime.size() > this->getMaxAllowedPacketSize() && entry.dateTime.size() > tooLarge) {
-			tooLarge = entry.dateTime.size();
+		if(entry.dateTime.size() > this->getMaxAllowedPacketSize()) {
+			if(entry.dateTime.size() > tooLarge)
+					tooLarge = entry.dateTime.size();
 
 			entry.dateTime.clear();
 		}
 
-		for(auto i = entry.fields.begin(); i != entry.fields.end(); ++i) {
-			if(i->size() > this->getMaxAllowedPacketSize() && i->size() > tooLarge) {
-				tooLarge = i->size();
+		for(auto& field : entry.fields) {
+			if(field.size() > this->getMaxAllowedPacketSize()) {
+				if(field.size() > tooLarge)
+					tooLarge = field.size();
 
-				i->clear();
+				field.clear();
 			}
 		}
 
@@ -1258,9 +1260,10 @@ namespace crawlservpp::Module::Parser {
 
 		unsigned long counter = 0;
 
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			if(!(i->empty())) {
-				sqlQueryStr += 		", `parsed__" + *i + "`";
+		for(const auto& targetFieldName : this->targetFieldNames) {
+			if(!targetFieldName.empty()) {
+				sqlQueryStr += 		", `parsed__" + targetFieldName + "`";
+
 				++counter;
 			}
 		}
@@ -1295,10 +1298,10 @@ namespace crawlservpp::Module::Parser {
 									" hash = VALUES(hash),"
 									" parsed_datetime = VALUES(parsed_datetime)";
 
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-			if(!(i->empty()))
-				sqlQueryStr 	+=	", `parsed__" + *i + "`"
-									" = VALUES(`parsed__" + *i + "`)";
+		for(const auto& targetFieldName : this->targetFieldNames)
+			if(!targetFieldName.empty())
+				sqlQueryStr 	+=	", `parsed__" + targetFieldName + "`"
+									" = VALUES(`parsed__" + targetFieldName + "`)";
 
 		// return query
 		return sqlQueryStr;

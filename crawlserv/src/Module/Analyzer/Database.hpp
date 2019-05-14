@@ -31,15 +31,14 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <chrono>
-#include <functional>
-#include <locale>
-#include <fstream>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <tuple>
-#include <vector>
+#include <algorithm>	// std::find_if
+#include <chrono>		// std::chrono
+#include <locale>		// std::locale
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <tuple>		// std::get(std::tuple), std::make_tuple, std::tuple
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer {
 

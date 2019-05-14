@@ -39,21 +39,21 @@
 
 #include <curl/curl.h>
 
-#include <algorithm>
-#include <chrono>
-#include <cstdlib>
-#include <deque>
-#include <queue>
-#include <functional>
-#include <fstream>
-#include <locale>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <thread>
-#include <utility>
-#include <vector>
+#include <algorithm>	// std::find
+#include <cctype>		// ::tolower
+#include <chrono>		// std::chrono
+#include <queue>		// std::queue
+#include <functional>	// std::bind
+#include <iomanip>		// std::setprecision
+#include <ios>			// std::fixed
+#include <locale>		// std::locale
+#include <memory>		// std::make_unique, std::unique_ptr
+#include <sstream>		// std::ostringstream
+#include <stdexcept>	// std::logic_error, std::runtime_error
+#include <string>		// std::string
+#include <thread>		// std::this_thread
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Crawler {
 

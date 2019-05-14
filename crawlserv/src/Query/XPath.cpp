@@ -89,8 +89,8 @@ namespace crawlservpp::Query {
 
 				resultArray.reserve(resultArray.size() + nodeSet.size());
 
-				for(auto i = nodeSet.begin(); i != nodeSet.end(); ++i) {
-					const std::string result(XPath::nodeToString(*i, this->isTextOnly));
+				for(const auto& node : nodeSet) {
+					const std::string result(XPath::nodeToString(node, this->isTextOnly));
 
 					if(!result.empty())
 						resultArray.emplace_back(result);
@@ -128,11 +128,11 @@ namespace crawlservpp::Query {
 					result.pop_back();
 			}
 			else {
-				for(auto i = node.node().children().begin(); i != node.node().children().end(); ++i) {
+				for(const auto& child : node.node().children()) {
 					std::ostringstream outStrStr;
 					std::string out;
 
-					i->print(outStrStr, "", 0);
+					child.print(outStrStr, "", 0);
 
 					out = outStrStr.str();
 

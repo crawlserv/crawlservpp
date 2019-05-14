@@ -4156,7 +4156,7 @@ namespace crawlservpp::Main {
 				// get results
 				while(sqlResultSet->next()) {
 					for(auto i = data.columns.begin(); i != data.columns.end(); ++i) {
-						auto column = data.values.begin() + (i - data.columns.begin());
+						const auto column = data.values.begin() + (i - data.columns.begin());
 
 						if(sqlResultSet->isNull(*i))
 							column->emplace_back();
@@ -4260,7 +4260,7 @@ namespace crawlservpp::Main {
 				// get results
 				while(sqlResultSet->next()) {
 					for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
-						auto column = data.values.begin() + (i - data.columns_types.begin());
+						const auto column = data.values.begin() + (i - data.columns_types.begin());
 
 						if(sqlResultSet->isNull(i->first))
 							column->emplace_back();

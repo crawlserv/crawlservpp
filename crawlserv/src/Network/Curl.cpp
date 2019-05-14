@@ -182,8 +182,8 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.dnsResolves.empty()) {
-			for(auto i = globalConfig.dnsResolves.begin(); i != globalConfig.dnsResolves.end(); ++i)
-				this->dnsResolves.append(*i);
+			for(const auto& dnsResolve : globalConfig.dnsResolves)
+				this->dnsResolves.append(dnsResolve);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -198,8 +198,8 @@ namespace crawlservpp::Network {
 		if(!globalConfig.dnsServers.empty()) {
 			std::string serverList;
 
-			for(auto i = globalConfig.dnsServers.begin(); i != globalConfig.dnsServers.end(); ++i)
-				serverList += *i + ",";
+			for(const auto& dnsServer : globalConfig.dnsServers)
+				serverList += dnsServer + ",";
 
 			serverList.pop_back();
 
@@ -281,8 +281,8 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.headers.empty() && !limited) {
-			for(auto i = globalConfig.headers.begin(); i != globalConfig.headers.end(); ++i)
-				this->headers.append(*i);
+			for(const auto& header : globalConfig.headers)
+				this->headers.append(header);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -295,8 +295,8 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.http200Aliases.empty() && !limited) {
-			for(auto i = globalConfig.http200Aliases.begin(); i != globalConfig.http200Aliases.end(); ++i)
-				this->http200Aliases.append(*i);
+			for(const auto& alias: globalConfig.http200Aliases)
+				this->http200Aliases.append(alias);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -448,8 +448,8 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.proxyHeaders.empty()) {
-			for(auto i = globalConfig.proxyHeaders.begin(); i != globalConfig.proxyHeaders.end(); ++i)
-				this->headers.append(*i);
+			for(const auto& header : globalConfig.proxyHeaders)
+				this->headers.append(header);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -811,11 +811,11 @@ namespace crawlservpp::Network {
 	// set current network options from crawling configuration
 	void Curl::setConfigCurrent(const Config& currentConfig) {
 		// overwrite cookies
-		for(auto i = currentConfig.cookiesOverwrite.begin(); i != currentConfig.cookiesOverwrite.end(); ++i) {
+		for(const auto& cookie : currentConfig.cookiesOverwrite) {
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
 					CURLOPT_COOKIELIST,
-					i->c_str()
+					cookie.c_str()
 			);
 
 			if(this->curlCode != CURLE_OK)
@@ -993,8 +993,8 @@ namespace crawlservpp::Network {
 		this->responseCode = static_cast<unsigned int>(responseCodeL);
 
 		// check response code
-		for(auto i = errors.begin(); i != errors.end(); ++i) {
-			if(this->responseCode == *i) {
+		for(const auto& error : errors) {
+			if(this->responseCode == error) {
 				std::ostringstream errStrStr;
 
 				errStrStr << "HTTP error " << this->responseCode << " from " << url;

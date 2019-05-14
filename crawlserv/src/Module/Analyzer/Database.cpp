@@ -56,17 +56,15 @@ namespace crawlservpp::Module::Analyzer {
 		if(this->targetTableName.empty())
 			throw Exception("Analyzer::Database::initTargetTable(): Name of result table is empty");
 
-		bool emptyFields = true;
-
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
-			if(!(i->empty())) {
-				emptyFields = false;
-
-				break;
-			}
-		}
-
-		if(emptyFields)
+		if(
+				std::find_if(
+						this->targetFieldNames.begin(),
+						this->targetFieldNames.end(),
+						[](const auto& targetFieldName){
+							return !targetFieldName.empty();
+						}
+				) == this->targetFieldNames.end()
+		)
 			throw Exception(
 					"Analyzer::Database::initTargetTable(): No target fields specified (only empty strings)"
 			);
@@ -92,7 +90,8 @@ namespace crawlservpp::Module::Analyzer {
 		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i) {
 			if(!(i->empty())) {
 				properties.columns.emplace_back(
-						"analyzed__" + *i, this->targetFieldTypes.at(i - this->targetFieldNames.begin())
+						"analyzed__" + *i,
+						this->targetFieldTypes.at(i - this->targetFieldNames.begin())
 				);
 
 				if(properties.columns.back().type.empty())
@@ -232,8 +231,8 @@ namespace crawlservpp::Module::Analyzer {
 			this->log(logStrStr.str());
 		}
 
-		for(auto i = statements.begin(); i != statements.end(); ++i)
-			idsTo.push_back(this->addPreparedStatement(*i));
+		for(const auto& statement : statements)
+			idsTo.push_back(this->addPreparedStatement(statement));
 	}
 
 	// get prepared SQL statement for algorithm (wraps protected parent member function to the public)
@@ -337,22 +336,27 @@ namespace crawlservpp::Module::Analyzer {
 				if(!document.IsArray())
 					throw Exception("Analyzer::Database::getCorpus(): Invalid datemap (is not an array)");
 
-				for(auto i = document.Begin(); i != document.End(); ++i) {
-					rapidjson::Value::MemberIterator p = i->FindMember("p");
-					rapidjson::Value::MemberIterator l = i->FindMember("l");
-					rapidjson::Value::MemberIterator v = i->FindMember("v");
+				for(const auto& element : document.GetArray()) {
+					if(!element.IsObject())
+						throw Exception(
+								"Analyzer::Database::getCorpus(): Invalid datemap (an array element is not an object"
+						);
 
-					if(p == i->MemberEnd() || !(p->value.IsUint64()))
+					auto p = element.FindMember("p");
+					auto l = element.FindMember("l");
+					auto v = element.FindMember("v");
+
+					if(p == element.MemberEnd() || !(p->value.IsUint64()))
 						throw Exception(
 								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid position)"
 						);
 
-					if(l == i->MemberEnd() || !(l->value.IsUint64()))
+					if(l == element.MemberEnd() || !(l->value.IsUint64()))
 						throw Exception(
 								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid length)"
 						);
 
-					if(v == i->MemberEnd() || !(v->value.IsString()))
+					if(v == element.MemberEnd() || !(v->value.IsString()))
 						throw Exception(
 								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid value)"
 						);
@@ -679,65 +683,63 @@ namespace crawlservpp::Module::Analyzer {
 
 			this->getCustomData(data);
 
-			if(!data.values.empty()) {
-				// go through all strings
-				for(auto i = data.values.at(0).begin(); i != data.values.at(0).end(); ++i) {
-					// check string
-					if((!(i->_isnull)) && !(i->_s.empty())) {
-						// check for datetime (i.e. whether to create a datemap)
-						if(data.values.size() > 1) {
-							auto datetime = data.values.at(1).begin() + (i - data.values.at(0).begin());
+			// go through all strings
+			for(auto i = data.values.at(0).begin(); i != data.values.at(0).end(); ++i) {
+				// check string
+				if((!(i->_isnull)) && !(i->_s.empty())) {
+					// check for datetime (i.e. whether to create a datemap)
+					if(data.values.size() > 1) {
+						const auto datetime = data.values.at(1).begin() + (i - data.values.at(0).begin());
 
-							/*
-							 * USAGE OF DATE MAP ENTRIES:
-							 *
-							 *	[std::string&] std::get<0>(DateMapEntry)
-							 *		-> date of the text part as string ("YYYY-MM-DD")
-							 *	[unsigned long&] std::get<1>(DateMapEntry)
-							 *		-> position of the text part in the text corpus (starts with 1!)
-							 * 	[unsigned long&] std::get<2>(DateMapEntry)
-							 * 		-> length of the text part
-							 *
-							 */
+						/*
+						 * USAGE OF DATE MAP ENTRIES:
+						 *
+						 *	[std::string&] std::get<0>(DateMapEntry)
+						 *		-> date of the text part as string ("YYYY-MM-DD")
+						 *	[unsigned long&] std::get<1>(DateMapEntry)
+						 *		-> position of the text part in the text corpus (starts with 1!)
+						 * 	[unsigned long&] std::get<2>(DateMapEntry)
+						 * 		-> length of the text part
+						 *
+						 */
 
-							// check for current datetime
-							if((!(datetime->_isnull)) && datetime->_s.length() > 9) {
-								// found current datetime -> create date string
-								const std::string date(datetime->_s.substr(0, 10)); // get only date (YYYY-MM-DD) from datetime
+						// check for current datetime
+						if((!(datetime->_isnull)) && datetime->_s.length() > 9) {
+							// found current datetime -> create date string
+							const std::string date(datetime->_s, 10); // get only date (YYYY-MM-DD) from datetime
 
-								// check whether a date is already set
-								if(!std::get<0>(dateMapEntry).empty()) {
-									// date is already set -> compare last with current date
-									if(std::get<0>(dateMapEntry) == date)
-										// last date equals current date -> append last date
-										std::get<2>(dateMapEntry) += i->_s.length() + 1; // include space before current string to add
-									else {
-										// last date differs from current date -> conclude last date and start new date
-										dateMap.emplace_back(dateMapEntry);
-
-										dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
-									}
-								}
+							// check whether a date is already set
+							if(!std::get<0>(dateMapEntry).empty()) {
+								// date is already set -> compare last with current date
+								if(std::get<0>(dateMapEntry) == date)
+									// last date equals current date -> append last date
+									std::get<2>(dateMapEntry) += i->_s.length() + 1; // include space before current string to add
 								else {
-									// no date is set yet -> start new date
+									// last date differs from current date -> conclude last date and start new date
+									dateMap.emplace_back(dateMapEntry);
+
 									dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
 								}
 							}
-							else if(!std::get<0>(dateMapEntry).empty()) {
-								// no valid datetime was found, but last date is set -> conclude last date
-								dateMap.emplace_back(dateMapEntry);
-
-								dateMapEntry = std::make_tuple("", 0, 0);
+							else {
+								// no date is set yet -> start new date
+								dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
 							}
 						}
+						else if(!std::get<0>(dateMapEntry).empty()) {
+							// no valid datetime was found, but last date is set -> conclude last date
+							dateMap.emplace_back(dateMapEntry);
 
-						// concatenate corpus text
-						corpusTo += i->_s;
-
-						corpusTo.push_back(' ');
-
-						++sourcesTo;
+							dateMapEntry = std::make_tuple("", 0, 0);
+						}
 					}
+
+					// concatenate corpus text
+					corpusTo += i->_s;
+
+					corpusTo.push_back(' ');
+
+					++sourcesTo;
 				}
 
 				// finish up data

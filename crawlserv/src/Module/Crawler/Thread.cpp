@@ -140,7 +140,7 @@ namespace crawlservpp::Module::Crawler {
 			// optional startup checks
 			if(this->config.crawlerUrlStartupCheck) {
 				this->database.urlDuplicationCheck();
-				this->database.urlEmptyCheck(std::vector<std::string>());
+				this->database.urlEmptyCheck();
 				this->database.urlHashCheck();
 			}
 		}
@@ -502,8 +502,8 @@ namespace crawlservpp::Module::Crawler {
 
 			this->customPages.reserve(newUrls.size());
 
-			for(auto i = newUrls.begin(); i != newUrls.end(); ++i)
-				this->customPages.emplace_back(0, *i);
+			for(const auto& newUrl : newUrls)
+				this->customPages.emplace_back(0, newUrl);
 		}
 		else {
 			// no counters: add all custom URLs as is
@@ -538,25 +538,25 @@ namespace crawlservpp::Module::Crawler {
 			this->initRobotsTxt();
 
 		// get IDs and lock IDs for custom URLs (and add them to the URL list if necessary)
-		for(auto i = this->customPages.begin(); i != this->customPages.end(); ++i) {
+		for(auto& customPage : this->customPages) {
 			try {
 				// check URI
-				this->parser->setCurrentUrl(i->second);
+				this->parser->setCurrentUrl(customPage.second);
 
 				// add URL (if it does not exist)
-				this->database.addUrlIfNotExists(i->second, true);
+				this->database.addUrlIfNotExists(customPage.second, true);
 
 				// check for duplicates if URL debugging is active
 				if(this->config.crawlerUrlDebug)
 					this->database.urlDuplicationCheck();
 
 				// get the ID of the custom URL (and of its URL lock if one already exists)
-				i->first = this->database.getUrlId(i->second);
+				customPage.first = this->database.getUrlId(customPage.second);
 			}
 			catch(const URIException& e) {
 				if(this->config.crawlerLogging) {
 					this->log("URI Parser error: " + e.whatStr());
-					this->log("skipped invalid custom URL " + i->second);
+					this->log(" skipped invalid custom URL " + customPage.second);
 				}
 			}
 		}
@@ -722,8 +722,8 @@ namespace crawlservpp::Module::Crawler {
 
 		newUrlList.reserve(urlList.size());
 
-		for(auto i = urlList.begin(); i != urlList.end(); ++i) {
-			if(i->find(variable) != std::string::npos) {
+		for(const auto& url : urlList) {
+			if(url.find(variable) != std::string::npos) {
 				long counter = start;
 
 				while(
@@ -734,7 +734,7 @@ namespace crawlservpp::Module::Crawler {
 								|| (start == end)
 						)
 				) {
-					std::string newUrl(*i);
+					std::string newUrl(url);
 					std::ostringstream counterStrStr;
 
 					counterStrStr << counter;
@@ -764,7 +764,7 @@ namespace crawlservpp::Module::Crawler {
 				);
 			}
 			else
-				newUrlList.emplace_back(*i); // variable not in URL
+				newUrlList.emplace_back(url); // variable not in URL
 		}
 
 		urlList.swap(newUrlList);
@@ -1571,21 +1571,18 @@ namespace crawlservpp::Module::Crawler {
 	// add custom parameters to URL
 	void Thread::crawlingUrlParams(std::string& url) {
 		if(!(this->config.crawlerParamsAdd.empty())) {
-			bool questionMark = false;
+			bool addQuestionMark = url.find('?') == std::string::npos;
 
-			if(url.find('?') == std::string::npos)
-				questionMark = true;
-
-			for(auto i = this->config.crawlerParamsAdd.begin(); i != this->config.crawlerParamsAdd.end(); ++i) {
-				if(questionMark) {
+			for(const auto& paramToAdd : this->config.crawlerParamsAdd) {
+				if(addQuestionMark) {
 					url.push_back('?');
 
-					questionMark = false;
+					addQuestionMark = false;
 				}
 				else
 					url.push_back('&');
 
-				url += *i;
+				url += paramToAdd;
 			}
 		}
 	}
@@ -3586,7 +3583,7 @@ namespace crawlservpp::Module::Crawler {
 		Helper::Strings::sortAndRemoveDuplicates(urls, this->config.crawlerUrlCaseSensitive);
 
 		// remove URLs longer than maximum number of characters
-		const auto tmpSize = urls.size();
+		const auto oldSize = urls.size();
 
 		urls.erase(std::remove_if(urls.begin(), urls.end(),
 				[&maxLength = this->config.crawlerUrlMaxLength](const auto& url) {
@@ -3594,21 +3591,21 @@ namespace crawlservpp::Module::Crawler {
 				}
 		), urls.end());
 
-		if(this->config.crawlerLogging && urls.size() < tmpSize)
+		if(this->config.crawlerLogging && urls.size() < oldSize)
 			this->log("WARNING: URLs longer than 2,000 Bytes ignored [" + url + "]");
 
 		// if necessary, check for file endings and show warnings
 		if(this->config.crawlerLogging && this->config.crawlerWarningsFile)
-			for(auto i = urls.begin(); i != urls.end(); ++i)
-				if(i->back() != '/'){
-					const auto lastSlash = i->rfind('/');
+			for(const auto& url : urls)
+				if(url.back() != '/'){
+					const auto lastSlash = url.rfind('/');
 
 					if(lastSlash == std::string::npos) {
-						if(i->find('.') != std::string::npos)
-							this->log("WARNING: Found file \'" + *i + "\' [" + url + "]");
+						if(url.find('.') != std::string::npos)
+							this->log("WARNING: Found file \'" + url + "\' [" + url + "]");
 					}
-					else if(i->find('.', lastSlash + 1) != std::string::npos)
-						this->log("WARNING: Found file \'" + *i + "\' [" + url + "]");
+					else if(url.find('.', lastSlash + 1) != std::string::npos)
+						this->log("WARNING: Found file \'" + url + "\' [" + url + "]");
 				}
 
 		// save status message
