@@ -12,7 +12,7 @@
 
 #include <tidybuffio.h>
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Wrapper {
 
@@ -38,7 +38,10 @@ namespace crawlservpp::Wrapper {
 
 		// create string from buffer
 		std::string getString() const {
-			return std::string(reinterpret_cast<const char *>(this->buffer.bp), this->buffer.size);
+			return std::string(
+					reinterpret_cast<const char *>(this->buffer.bp),
+					this->buffer.size
+			);
 		}
 
 		// free buffer
