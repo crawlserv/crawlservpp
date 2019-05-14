@@ -12,7 +12,7 @@
 #include "../Main/Exception.hpp"
 
 #include <array>	// std::array
-#include <cstdio>	// fgets, FILE, pclose, pipe, popen
+#include <cstdio>	// ::fgets, FILE, pclose, pipe, popen
 #include <memory>	// std::unique_ptr
 #include <string>	// std::string
 
@@ -26,7 +26,7 @@ namespace crawlservpp::Helper::System {
 	    if(!pipe)
 	        throw Main::Exception("popen() failed");
 
-	    while(fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+	    while(::fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
 	        result += buffer.data();
 
 	    return result;
