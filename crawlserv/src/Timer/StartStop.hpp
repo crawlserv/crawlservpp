@@ -12,8 +12,8 @@
 
 #include "../Helper/DateTime.hpp"
 
-#include <chrono>
-#include <string>
+#include <chrono>	// std::chrono
+#include <string>	// std::string
 
 namespace crawlservpp::Timer {
 
