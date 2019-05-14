@@ -78,9 +78,14 @@ namespace crawlservpp::Main {
 		for(const auto& thread : this->database.getThreads()) {
 			if(thread.options.module == "crawler") {
 				// load crawler thread
-				this->crawlers.push_back(std::make_unique<Module::Crawler::Thread>(
-						this->database, this->dirCookies, thread.options, thread.status
-				));
+				this->crawlers.push_back(
+						std::make_unique<Module::Crawler::Thread>(
+								this->database,
+								this->dirCookies,
+								thread.options,
+								thread.status
+						)
+				);
 
 				this->crawlers.back()->Module::Thread::start();
 
@@ -93,9 +98,13 @@ namespace crawlservpp::Main {
 			}
 			else if(thread.options.module == "parser") {
 				// load parser thread
-				this->parsers.push_back(std::make_unique<Module::Parser::Thread>(
-						this->database, thread.options, thread.status
-				));
+				this->parsers.push_back(
+						std::make_unique<Module::Parser::Thread>(
+								this->database,
+								thread.options,
+								thread.status
+						)
+				);
 
 				this->parsers.back()->Module::Thread::start();
 
@@ -107,9 +116,13 @@ namespace crawlservpp::Main {
 				this->database.log(logStrStr.str());
 			}
 			else if(thread.options.module == "extractor") {
-				this->extractors.push_back(std::make_unique<Module::Extractor::Thread>(
-						this->database, thread.options, thread.status
-				));
+				this->extractors.push_back(
+						std::make_unique<Module::Extractor::Thread>(
+								this->database,
+								thread.options,
+								thread.status
+						)
+				);
 
 				this->extractors.back()->Module::Thread::start();
 
@@ -122,7 +135,9 @@ namespace crawlservpp::Main {
 			}
 			else if(thread.options.module == "analyzer") {
 				// get JSON
-				const std::string config = this->database.getConfiguration(thread.options.config);
+				const std::string config(
+						this->database.getConfiguration(thread.options.config)
+				);
 
 				// parse JSON
 				rapidjson::Document configJson;
@@ -139,12 +154,14 @@ namespace crawlservpp::Main {
 
 				// try to add algorithm according to parsed algorithm ID
 				this->analyzers.push_back(
-						Module::Analyzer::Algo::initAlgo(AlgoThreadProperties(
-								Server::getAlgoFromConfig(configJson),
-								this->database,
-								thread.options,
-								thread.status
-						))
+						Module::Analyzer::Algo::initAlgo(
+								AlgoThreadProperties(
+										Server::getAlgoFromConfig(configJson),
+										this->database,
+										thread.options,
+										thread.status
+								)
+						)
 				);
 
 				if(!(this->analyzers.back())) {
@@ -454,7 +471,6 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		/* TODO: count extractors
 		// count active extractors
 		result += std::count_if(
 				this->extractors.begin(),
@@ -463,7 +479,6 @@ namespace crawlservpp::Main {
 						return thread->Module::Thread::isRunning();
 				}
 		);
-		*/
 
 		// count active analyzers
 		result += std::count_if(
@@ -481,7 +496,11 @@ namespace crawlservpp::Main {
 	unsigned long Server::getActiveWorkers() const {
 		std::lock_guard<std::mutex> workersLocked(this->workersLock);
 
-		return std::count(this->workersRunning.begin(), this->workersRunning.end(), true);
+		return std::count(
+				this->workersRunning.begin(),
+				this->workersRunning.end(),
+				true
+		);
 	}
 
 	// perform a server command, throws Main::Exception
@@ -527,7 +546,10 @@ namespace crawlservpp::Main {
 					if(json["cmd"].IsString()) {
 						try {
 							// handle server commands
-							const std::string command(json["cmd"].GetString(), json["cmd"].GetStringLength());
+							const std::string command(
+									json["cmd"].GetString(),
+									json["cmd"].GetStringLength()
+							);
 
 							if(command == "kill")
 								response = this->cmdKill(json, ip);
@@ -818,7 +840,9 @@ namespace crawlservpp::Main {
 			bool threadStarted = false;
 			bool fileDownload = false;
 
-			const std::string reply(this->cmd(connection, body, threadStarted, fileDownload));
+			const std::string reply(
+					this->cmd(connection, body, threadStarted, fileDownload)
+			);
 
 			// send reply
 			if(fileDownload)
@@ -845,7 +869,10 @@ namespace crawlservpp::Main {
 				// go through all item properties
 				for(const auto& property : item.GetObject()) {
 					if(property.name.IsString()) {
-						const std::string itemName(property.name.GetString(), property.name.GetStringLength());
+						const std::string itemName(
+								property.name.GetString(),
+								property.name.GetStringLength()
+						);
 
 						if(itemName == "name") {
 							if(property.value.IsString()) {
@@ -886,8 +913,10 @@ namespace crawlservpp::Main {
 	}
 
 	// server command kill: kill the server
-	Server::ServerCommandResponse Server::cmdKill(const rapidjson::Document& json,
-			const std::string& ip) {
+	Server::ServerCommandResponse Server::cmdKill(
+			const rapidjson::Document& json,
+			const std::string& ip
+	) {
 		// kill needs to be confirmed
 		if(json.HasMember("confirmed")) {
 			// kill server
@@ -904,8 +933,10 @@ namespace crawlservpp::Main {
 	}
 
 	// server command allow(ip): allow acces for the specified IP(s)
-	Server::ServerCommandResponse Server::cmdAllow(const rapidjson::Document& json,
-			const std::string& ip) {
+	Server::ServerCommandResponse Server::cmdAllow(
+			const rapidjson::Document& json,
+			const std::string& ip
+	) {
 		// get argument
 		if(!json.HasMember("ip"))
 			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is missing).");
@@ -913,7 +944,10 @@ namespace crawlservpp::Main {
 		if(!json["ip"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is not a string).");
 
-		const std::string toAllow(json["ip"].GetString(), json["ip"].GetStringLength());
+		const std::string toAllow(
+				json["ip"].GetString(),
+				json["ip"].GetStringLength()
+		);
 
 		if(toAllow.empty())
 			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is empty).");
@@ -955,7 +989,10 @@ namespace crawlservpp::Main {
 		if(!json["entry"].IsString())
 			return ServerCommandResponse::failed("Invalid arguments (\'entry\' is not a string).");
 
-		const std::string entry(json["entry"].GetString(), json["entry"].GetStringLength());
+		const std::string entry(
+				json["entry"].GetString(),
+				json["entry"].GetStringLength()
+		);
 
 		// write log entry
 		this->database.log("frontend", entry);
@@ -977,7 +1014,10 @@ namespace crawlservpp::Main {
 		std::string module;
 
 		if(json.HasMember("module") && json["module"].IsString())
-			module = std::string(json["module"].GetString(), json["module"].GetStringLength());
+			module = std::string(
+					json["module"].GetString(),
+					json["module"].GetStringLength()
+			);
 
 		// clearlog needs to be confirmed
 		if(!json.HasMember("confirmed")) {
@@ -1283,7 +1323,11 @@ namespace crawlservpp::Main {
 		}
 
 		// create parser
-		this->parsers.push_back(std::make_unique<Module::Parser::Thread>(this->database, options));
+		this->parsers.push_back(
+				std::make_unique<Module::Parser::Thread>(
+						this->database, options
+				)
+		);
 
 		// start parser
 		this->parsers.back()->Module::Thread::start();
@@ -1553,7 +1597,13 @@ namespace crawlservpp::Main {
 
 		// try to create algorithm thread
 		this->analyzers.push_back(
-				Module::Analyzer::Algo::initAlgo(AlgoThreadProperties(algo, this->database, options))
+				Module::Analyzer::Algo::initAlgo(
+						AlgoThreadProperties(
+								algo,
+								this->database,
+								options
+						)
+				)
 		);
 
 		if(!(this->analyzers.back())) {
