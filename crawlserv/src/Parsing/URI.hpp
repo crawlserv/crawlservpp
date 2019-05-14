@@ -18,11 +18,11 @@
 
 #include <uriparser/Uri.h>
 
-#include <algorithm>
-#include <memory>
-#include <sstream>
-#include <string>
-#include <vector>
+#include <algorithm>	// std::find
+#include <memory>		// std::make_unique, std::unique_ptr
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Parsing {
 
