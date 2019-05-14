@@ -14,7 +14,7 @@
 
 #include "../_extern/utf8/source/utf8.h"
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Helper::Utf8 {
 
@@ -46,9 +46,7 @@ namespace crawlservpp::Helper::Utf8 {
 
 		strOut.reserve(strIn.size() * 2);
 
-		for(auto i = strIn.begin(); i != strIn.end(); ++i) {
-			const uint8_t c = *i;
-
+		for(const uint8_t c : strIn) {
 			if(c < 0x80)
 				strOut.push_back(c);
 			else {
