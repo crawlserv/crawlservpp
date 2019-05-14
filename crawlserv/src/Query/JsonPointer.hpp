@@ -20,9 +20,9 @@
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/pointer.h"
 
-#include <sstream>
-#include <string>
-#include <vector>
+#include <sstream>	// std::ostringstream
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Query {
 
