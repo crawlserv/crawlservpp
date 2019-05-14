@@ -620,9 +620,14 @@ namespace crawlservpp::Main {
 
 		try {
 			// prepare SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT pausetime FROM crawlserv_threads WHERE id = ? LIMIT 1"
-			));
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"SELECT pausetime"
+							" FROM crawlserv_threads"
+							" WHERE id = ?"
+							" LIMIT 1"
+					)
+			);
 
 			// execute SQL statement
 			sqlStatement->setUInt64(1, threadId);
@@ -1206,7 +1211,7 @@ namespace crawlservpp::Main {
 					// 	discarding URLs with different domain
 					while(!urlLists.empty()) {
 						// count URLs of same domain
-						std::string comparison = "url LIKE '" + websiteProperties.domain + "/%'";
+						std::string comparison("url LIKE '" + websiteProperties.domain + "/%'");
 
 						if(websiteProperties.domain.size() > 4 && websiteProperties.domain.substr(0, 4) == "www.")
 							comparison += " OR url LIKE '" + websiteProperties.domain.substr(4) + "/%'";
@@ -1269,8 +1274,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::getLostUrlsByWebsiteUpdate(): No website name specified");
 
 		// get old namespace and domain
-		const std::string oldNamespace = this->getWebsiteNamespace(websiteId);
-		const std::string oldDomain = this->getWebsiteDomain(websiteId);
+		const std::string oldNamespace(this->getWebsiteNamespace(websiteId));
+		const std::string oldDomain(this->getWebsiteDomain(websiteId));
 
 		// check connection
 		this->checkConnection();
@@ -1285,7 +1290,7 @@ namespace crawlservpp::Main {
 
 				while(!urlLists.empty()) {
 					// count URLs of different domain
-					std::string comparison = "url NOT LIKE '" + websiteProperties.domain + "/%'";
+					std::string comparison("url NOT LIKE '" + websiteProperties.domain + "/%'");
 
 					if(websiteProperties.domain.size() > 4 && websiteProperties.domain.substr(0, 4) == "www.")
 						comparison += " AND url NOT LIKE '" + websiteProperties.domain.substr(4) + "/%'";
@@ -1326,8 +1331,8 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::updateWebsite(): No website name specified");
 
 		// get old namespace and domain
-		const std::string oldNamespace = this->getWebsiteNamespace(websiteId);
-		const std::string oldDomain = this->getWebsiteDomain(websiteId);
+		const std::string oldNamespace(this->getWebsiteNamespace(websiteId));
+		const std::string oldDomain(this->getWebsiteDomain(websiteId));
 
 		// check website namespace if necessary
 		if(websiteProperties.nameSpace != oldNamespace)
@@ -1352,7 +1357,7 @@ namespace crawlservpp::Main {
 					// 	discarding URLs with different domain
 					while(!urlLists.empty()) {
 						// update URLs of same domain
-						std::string comparison = "url LIKE '" + websiteProperties.domain + "/%'";
+						std::string comparison("url LIKE '" + websiteProperties.domain + "/%'");
 
 						if(websiteProperties.domain.size() > 4 && websiteProperties.domain.substr(0, 4) == "www.")
 							comparison += " OR url LIKE '" + websiteProperties.domain.substr(4) + "/%'";
@@ -1544,7 +1549,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::deleteWebsite(): No website ID specified");
 
 		// get website namespace
-		std::string websiteNamespace = this->getWebsiteNamespace(websiteId);
+		std::string websiteNamespace(this->getWebsiteNamespace(websiteId));
 
 		try {
 			// delete URL lists
@@ -1610,8 +1615,8 @@ namespace crawlservpp::Main {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				const std::string websiteNamespace = sqlResultSet->getString("namespace");
-				const std::string websiteName = sqlResultSet->getString("name");
+				const std::string websiteNamespace(sqlResultSet->getString("namespace"));
+				const std::string websiteName(sqlResultSet->getString("name"));
 
 				std::string websiteDomain;
 				std::string websiteDir;
@@ -5273,7 +5278,14 @@ namespace crawlservpp::Main {
 	void Database::removeDatabaseLock(const std::string& name) {
 		std::lock_guard<std::mutex> accessLock(Database::lockAccess);
 
-		Database::locks.erase(std::remove(Database::locks.begin(), Database::locks.end(), name), Database::locks.end());
+		Database::locks.erase(
+				std::remove(
+						Database::locks.begin(),
+						Database::locks.end(),
+						name
+				),
+				Database::locks.end()
+		);
 	}
 
 	// add a table to the database (the primary key 'id' will be created automatically), throws Database::Exception
@@ -5383,7 +5395,14 @@ namespace crawlservpp::Main {
 
 		try {
 			// create SQL query
-			std::string sqlQuery("ALTER TABLE `" + tableName + "` ADD COLUMN `" + column.name + "` " + column.type);
+			std::string sqlQuery(
+					"ALTER TABLE `"
+					+ tableName
+					+ "` ADD COLUMN `"
+					+ column.name
+					+ "` "
+					+ column.type
+			);
 
 			if(!column.referenceTable.empty()) {
 				if(column.referenceColumn.empty())
@@ -5586,6 +5605,7 @@ namespace crawlservpp::Main {
 	void Database::sqlException(const std::string& function, const sql::SQLException& e) {
 		// get error code and create error string
 		const int error = e.getErrorCode();
+
 		std::ostringstream errorStrStr;
 
 		errorStrStr << function << "() SQL Error #" << error << " (State " << e.getSQLState() << "): " << e.what();
