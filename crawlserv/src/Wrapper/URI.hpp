@@ -13,8 +13,8 @@
 
 #include <uriparser/Uri.h>
 
-#include <memory>
-#include <utility>
+#include <memory>	// std::make_unique, std::unique_ptr
+#include <utility>	// std::move
 
 namespace crawlservpp::Wrapper {
 
