@@ -25,13 +25,14 @@
 #include "../../../Struct/ThreadStatus.hpp"
 #include "../../../Timer/Simple.hpp"
 
-#include <chrono>
-#include <functional>
-#include <map>
-#include <memory>
-#include <string>
-#include <thread>
-#include <vector>
+#include <algorithm>	// std::find
+#include <chrono>		// std::chrono
+#include <iterator>		// std::advance
+#include <map>			// std::map
+#include <memory>		// std::make_unique, std::unique_ptr
+#include <string>		// std::string
+#include <thread>		// std::this_thread
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
