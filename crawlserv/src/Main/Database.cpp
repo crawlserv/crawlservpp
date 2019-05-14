@@ -218,14 +218,11 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::connect", e); }
 	}
 
-	// run initializing SQL commands by processing all .sql files in the "sql" sub-folder
+	// run initializing SQL commands by processing all .sql files in the SQL (sub-)folder
 	void Database::initializeSql() {
-		// read 'sql' directory
-		const std::vector<std::string> sqlFiles(Helper::FileSystem::listFilesInPath("sql", ".sql"));
-
-		// execute all SQL files
-		for(auto i = sqlFiles.begin(); i != sqlFiles.end(); ++i)
-			this->run(*i);
+		// execute all SQL files in SQL directory
+		for(const auto& sqlFile : Helper::FileSystem::listFilesInPath(MAIN_DATABASE_SQL_DIRECTORY, ".sql"))
+			this->run(sqlFile);
 	}
 
 	// prepare basic SQL statements (getting last ID, logging and thread status)
@@ -308,10 +305,10 @@ namespace crawlservpp::Main {
 				// execute SQL statement
 				unsigned long counter = 1;
 
-				for(auto i = locales.begin(); i != locales.end(); ++i) {
-					sqlStatement->setString(counter, *i);
+				for(const auto& locale : locales) {
+					sqlStatement->setString(counter, locale);
 
-					counter++;
+					++counter;
 				}
 
 				Database::sqlExecute(sqlStatement);
@@ -361,9 +358,9 @@ namespace crawlservpp::Main {
 				// execute SQL statement
 				unsigned long counter = 1;
 
-				for(auto i = versions.begin(); i != versions.end(); ++i) {
-					sqlStatement->setString(counter, i->first);
-					sqlStatement->setString(counter + 1, i->second);
+				for(const auto& version : versions) {
+					sqlStatement->setString(counter, version.first);
+					sqlStatement->setString(counter + 1, version.second);
 
 					counter += 2;
 				}
@@ -2934,13 +2931,13 @@ namespace crawlservpp::Main {
 			// check whether table exists
 			if(this->isTableExists(properties.fullName)) {
 				// table exists already: add columns that do not exist yet and check columns that do exist
-				for(auto i = properties.columns.begin(); i != properties.columns.end(); ++i) {
-					if(!(i->name.empty())) {
-						std::string columnName = i->name;
+				for(const auto& column : properties.columns) {
+					if(!column.name.empty()) {
+						std::string columnName(column.name);
 
 						if(this->isColumnExists(properties.fullName, columnName)) {
 							// column does exist: check types (does not check specifiers like 'UNSIGNED'!)
-							std::string columnType(i->type, 0, i->type.find(' '));
+							std::string columnType(column.type, 0, column.type.find(' '));
 							std::string targetType(this->getColumnType(properties.fullName, columnName));
 
 							std::transform(columnType.begin(), columnType.end(), columnType.begin(), ::tolower);
@@ -2954,7 +2951,7 @@ namespace crawlservpp::Main {
 						}
 						else {
 							// column does not exist: add column
-							this->addColumn(properties.fullName, TableColumn(columnName, *i));
+							this->addColumn(properties.fullName, TableColumn(columnName, column));
 						}
 					}
 				}
@@ -3257,15 +3254,15 @@ namespace crawlservpp::Main {
 			else this->connect();
 
 			// recover prepared SQL statements
-			for(auto i = this->preparedStatements.begin(); i != this->preparedStatements.end(); ++i)
-				i->refresh(this->connection.get());
+			for(auto& preparedStatement : this->preparedStatements)
+				preparedStatement.refresh(this->connection.get());
 
 			// log re-connect on idle if necessary
 			if(milliseconds)
 				this->log(
-					"re-connected to database after idling for " +
-					Helper::DateTime::secondsToString(std::round(static_cast<float>(milliseconds / 1000))) +
-					"."
+					"re-connected to database after idling for "
+					+ Helper::DateTime::secondsToString(std::round(static_cast<float>(milliseconds / 1000)))
+					+ "."
 				);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkConnection", e); }
@@ -3814,7 +3811,9 @@ namespace crawlservpp::Main {
 						break;
 
 					default:
-						throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
+						throw Database::Exception(
+								"Main::Database::getCustomData(): Invalid data type when getting custom data."
+						);
 					}
 				}
 			}
@@ -3845,8 +3844,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("SELECT ");
 
-			for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-				sqlQuery += "`" + *i + "`, ";
+			for(const auto& column : data.columns)
+				sqlQuery += "`" + column + "`, ";
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -3860,70 +3859,72 @@ namespace crawlservpp::Main {
 			if(sqlResultSet && sqlResultSet->next()) {
 				switch(data.type) {
 				case Data::Type::_bool:
-					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i))
+					for(const auto& column : data.columns)
+						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(sqlResultSet->getBoolean(*i));
+							data.values.emplace_back(sqlResultSet->getBoolean(column));
 
 					break;
 
 				case Data::Type::_double:
-					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i))
+					for(const auto& column : data.columns)
+						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(*i)));
+							data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(column)));
 
 					break;
 
 				case Data::Type::_int:
-					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i))
+					for(const auto& column : data.columns)
+						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
+							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(column)));
 
 					break;
 
 				case Data::Type::_long:
-					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i))
+					for(const auto& column : data.columns)
+						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(*i)));
+							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(column)));
 
 					break;
 
 				case Data::Type::_string:
-					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i))
+					for(const auto& column : data.columns)
+						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(sqlResultSet->getString(*i));
+							data.values.emplace_back(sqlResultSet->getString(column));
 
 					break;
 
 				case Data::Type::_uint:
-					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i))
+					for(const auto& column : data.columns)
+						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
+							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(column)));
 
 					break;
 
 				case Data::Type::_ulong:
-					for(auto i = data.columns.begin(); i != data.columns.end(); ++i)
-						if(sqlResultSet->isNull(*i))
+					for(const auto& column : data.columns)
+						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(*i)));
+							data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(column)));
 
 					break;
 
 				default:
-					throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
+					throw Database::Exception(
+							"Main::Database::getCustomData(): Invalid data type when getting custom data."
+					);
 				}
 			}
 		}
@@ -3950,8 +3951,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("SELECT ");
 
-			for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i)
-				sqlQuery += "`" + i->first + "`, ";
+			for(const auto& column_type : data.columns_types)
+				sqlQuery += "`" + column_type.first + "`, ";
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -3963,48 +3964,50 @@ namespace crawlservpp::Main {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
-					if(sqlResultSet->isNull(i->first))
+				for(const auto& column_type : data.columns_types) {
+					if(sqlResultSet->isNull(column_type.first))
 						data.values.emplace_back();
 					else {
-						switch(i->second) {
+						switch(column_type.second) {
 						case Data::Type::_bool:
-							data.values.emplace_back(sqlResultSet->getBoolean(i->first));
+							data.values.emplace_back(sqlResultSet->getBoolean(column_type.first));
 
 							break;
 
 						case Data::Type::_double:
-							data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(i->first)));
+							data.values.emplace_back(static_cast<double>(sqlResultSet->getDouble(column_type.first)));
 
 							break;
 
 						case Data::Type::_int:
-							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(i->first)));
+							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(column_type.first)));
 
 							break;
 
 						case Data::Type::_long:
-							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(i->first)));
+							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(column_type.first)));
 
 							break;
 
 						case Data::Type::_string:
-							data.values.emplace_back(sqlResultSet->getString(i->first));
+							data.values.emplace_back(sqlResultSet->getString(column_type.first));
 
 							break;
 
 						case Data::Type::_uint:
-							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(i->first)));
+							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(column_type.first)));
 
 							break;
 
 						case Data::Type::_ulong:
-							data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(i->first)));
+							data.values.emplace_back(static_cast<unsigned long>(sqlResultSet->getUInt64(column_type.first)));
 
 							break;
 
 						default:
-							throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
+							throw Database::Exception(
+									"Main::Database::getCustomData(): Invalid data type when getting custom data."
+							);
 						}
 					}
 				}
@@ -4089,7 +4092,9 @@ namespace crawlservpp::Main {
 							break;
 
 						default:
-							throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
+							throw Database::Exception(
+									"Main::Database::getCustomData(): Invalid data type when getting custom data."
+							);
 						}
 					}
 				}
@@ -4122,8 +4127,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("SELECT ");
 
-			for(auto i = data.columns.begin(); i != data.columns.end(); ++i) {
-				sqlQuery += "`" + *i + "`, ";
+			for(const auto& column : data.columns) {
+				sqlQuery += "`" + column + "`, ";
 
 				// add column to result vector
 				data.values.emplace_back();
@@ -4145,8 +4150,8 @@ namespace crawlservpp::Main {
 
 			if(sqlResultSet) {
 				// reserve memory for results
-				for(auto i = data.values.begin(); i != data.values.end(); ++i)
-					i->reserve(sqlResultSet->rowsCount());
+				for(auto& value : data.values)
+					value.reserve(sqlResultSet->rowsCount());
 
 				// get results
 				while(sqlResultSet->next()) {
@@ -4193,7 +4198,9 @@ namespace crawlservpp::Main {
 								break;
 
 							default:
-								throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
+								throw Database::Exception(
+										"Main::Database::getCustomData(): Invalid data type when getting custom data."
+								);
 							}
 						}
 					}
@@ -4224,8 +4231,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("SELECT ");
 
-			for(auto i = data.columns_types.begin(); i != data.columns_types.end(); ++i) {
-				sqlQuery += "`" + i->first + "`, ";
+			for(const auto& column_type : data.columns_types) {
+				sqlQuery += "`" + column_type.first + "`, ";
 
 				// add column to result vector
 				data.values.emplace_back();
@@ -4247,8 +4254,8 @@ namespace crawlservpp::Main {
 
 			if(sqlResultSet) {
 				// reserve memory for results
-				for(auto i = data.values.begin(); i != data.values.end(); ++i)
-					i->reserve(sqlResultSet->rowsCount());
+				for(auto& value : data.values)
+					value.reserve(sqlResultSet->rowsCount());
 
 				// get results
 				while(sqlResultSet->next()) {
@@ -4295,7 +4302,9 @@ namespace crawlservpp::Main {
 								break;
 
 							default:
-								throw Database::Exception("Main::Database::getCustomData(): Invalid data type when getting custom data.");
+								throw Database::Exception(
+										"Main::Database::getCustomData(): Invalid data type when getting custom data."
+								);
 							}
 						}
 					}
@@ -4374,17 +4383,22 @@ namespace crawlservpp::Main {
 
 							errStrStr.imbue(std::locale(""));
 
-							errStrStr <<	"Main::Database::insertCustomData():"
-											" Size (" << data.value._s.size() << " bytes)"
-											" of custom value for `" << data.table << "`.`" << data.column << "`"
-											" exceeds the ";
+							errStrStr	<< "Main::Database::insertCustomData(): Size ("
+										<< data.value._s.size()
+										<< " bytes) of custom value for `"
+										<< data.table
+										<< "`.`"
+										<< data.column
+										<< "` exceeds the ";
 
 							if(data.value._s.size() > 1073741824)
 								errStrStr << "mySQL data limit of 1 GiB";
 							else
-								errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-											 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
-											 " (to max. 1 GiB).";
+								errStrStr	<< "current mySQL server limit of "
+											<< this->getMaxAllowedPacketSize()
+											<< " bytes - adjust the \'max_allowed_packet\'"
+												" setting on the server accordingly"
+												" (to max. 1 GiB).";
 
 							throw Database::Exception(errStrStr.str());
 						}
@@ -4405,7 +4419,9 @@ namespace crawlservpp::Main {
 					break;
 
 				default:
-					throw Database::Exception("Main::Database::insertCustomData(): Invalid data type when inserting custom data.");
+					throw Database::Exception(
+							"Main::Database::insertCustomData(): Invalid data type when inserting custom data."
+					);
 				}
 			}
 
@@ -4432,8 +4448,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("INSERT INTO `" + data.table + "` (");
 
-			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i)
-				sqlQuery += "`" + i->first + "`, ";
+			for(const auto& column_value : data.columns_values)
+				sqlQuery += "`" + column_value.first + "`, ";
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -4453,11 +4469,11 @@ namespace crawlservpp::Main {
 
 			switch(data.type) {
 			case Data::Type::_bool:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setBoolean(counter, i->second._b);
+						sqlStatement->setBoolean(counter, column_value.second._b);
 
 					++counter;
 				}
@@ -4465,11 +4481,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_double:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setDouble(counter, i->second._d);
+						sqlStatement->setDouble(counter, column_value.second._d);
 
 					++counter;
 				}
@@ -4477,11 +4493,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_int:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt(counter, i->second._i);
+						sqlStatement->setInt(counter, column_value.second._i);
 
 					++counter;
 				}
@@ -4489,11 +4505,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_long:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt64(counter, i->second._l);
+						sqlStatement->setInt64(counter, column_value.second._l);
 
 					++counter;
 				}
@@ -4501,12 +4517,12 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_string:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull) sqlStatement->setNull(counter, 0);
-					else if(i->second._s.size() > this->getMaxAllowedPacketSize()) {
-						switch(i->second._overflow) {
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull) sqlStatement->setNull(counter, 0);
+					else if(column_value.second._s.size() > this->getMaxAllowedPacketSize()) {
+						switch(column_value.second._overflow) {
 						case Data::Value::_if_too_large::_trim:
-							sqlStatement->setString(1, i->second._s.substr(0, this->getMaxAllowedPacketSize()));
+							sqlStatement->setString(1, column_value.second._s.substr(0, this->getMaxAllowedPacketSize()));
 
 							break;
 
@@ -4525,21 +4541,27 @@ namespace crawlservpp::Main {
 
 							errStrStr.imbue(std::locale(""));
 
-							errStrStr	<< "Main::Database::insertCustomData(): Size (" << i->second._s.size()
-										<< " bytes) of custom value for `" << data.table << "`.`" << i->first
+							errStrStr	<< "Main::Database::insertCustomData(): Size ("
+										<< column_value.second._s.size()
+										<< " bytes) of custom value for `"
+										<< data.table << "`.`"
+										<< column_value.first
 										<< "` exceeds the ";
 
-							if(i->second._s.size() > 1073741824)
+							if(column_value.second._s.size() > 1073741824)
 								errStrStr << "mySQL data limit of 1 GiB";
 							else
-								errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-										" - adjust the \'max_allowed_packet\' setting on the server accordingly (to max. 1 GiB).";
+								errStrStr	<< "current mySQL server limit of "
+											<< this->getMaxAllowedPacketSize()
+											<< " bytes - adjust the \'max_allowed_packet\'"
+												" setting on the server accordingly"
+												" (to max. 1 GiB).";
 
 							throw Database::Exception(errStrStr.str());
 						}
 					}
 					else
-						sqlStatement->setString(counter, i->second._s);
+						sqlStatement->setString(counter, column_value.second._s);
 
 					++counter;
 				}
@@ -4547,11 +4569,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_uint:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt(counter, i->second._ui);
+						sqlStatement->setUInt(counter, column_value.second._ui);
 
 					++counter;
 				}
@@ -4559,11 +4581,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_ulong:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt64(counter, i->second._ul);
+						sqlStatement->setUInt64(counter, column_value.second._ul);
 
 					++counter;
 				}
@@ -4571,7 +4593,9 @@ namespace crawlservpp::Main {
 				break;
 
 			default:
-				throw Database::Exception("Main::Database::insertCustomData(): Invalid data type when inserting custom data.");
+				throw Database::Exception(
+						"Main::Database::insertCustomData(): Invalid data type when inserting custom data."
+				);
 			}
 
 			// execute SQL statement
@@ -4594,8 +4618,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("INSERT INTO `" + data.table + "` (");
 
-			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i)
-				sqlQuery += "`" + std::get<0>(*i) + "`, ";
+			for(const auto& column_type_value : data.columns_types_values)
+				sqlQuery += "`" + std::get<0>(column_type_value) + "`, ";
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -4613,35 +4637,41 @@ namespace crawlservpp::Main {
 			// set values
 			unsigned int counter = 1;
 
-			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i) {
-				if(std::get<2>(*i)._isnull)
+			for(const auto& column_type_value : data.columns_types_values) {
+				if(std::get<2>(column_type_value)._isnull)
 					sqlStatement->setNull(counter, 0);
 				else {
-					switch(std::get<1>(*i)) {
+					switch(std::get<1>(column_type_value)) {
 					case Data::Type::_bool:
-						sqlStatement->setBoolean(counter, std::get<2>(*i)._b);
+						sqlStatement->setBoolean(counter, std::get<2>(column_type_value)._b);
 
 						break;
 
 					case Data::Type::_double:
-						sqlStatement->setDouble(counter, std::get<2>(*i)._d);
+						sqlStatement->setDouble(counter, std::get<2>(column_type_value)._d);
 
 						break;
 
 					case Data::Type::_int:
-						sqlStatement->setInt(counter, std::get<2>(*i)._i);
+						sqlStatement->setInt(counter, std::get<2>(column_type_value)._i);
 
 						break;
 					case Data::Type::_long:
-						sqlStatement->setInt64(counter, std::get<2>(*i)._l);
+						sqlStatement->setInt64(counter, std::get<2>(column_type_value)._l);
 
 						break;
 
 					case Data::Type::_string:
-						if(std::get<2>(*i)._s.size() > this->getMaxAllowedPacketSize()) {
-							switch(std::get<2>(*i)._overflow) {
+						if(std::get<2>(column_type_value)._s.size() > this->getMaxAllowedPacketSize()) {
+							switch(std::get<2>(column_type_value)._overflow) {
 							case Data::Value::_if_too_large::_trim:
-								sqlStatement->setString(1, std::get<2>(*i)._s.substr(0, this->getMaxAllowedPacketSize()));
+								sqlStatement->setString(
+										1,
+										std::get<2>(column_type_value)._s.substr(
+												0,
+												this->getMaxAllowedPacketSize()
+										)
+								);
 
 								break;
 
@@ -4660,33 +4690,38 @@ namespace crawlservpp::Main {
 
 								errStrStr.imbue(std::locale(""));
 
-								errStrStr <<	"Main::Database::insertCustomData():"
-												" Size (" << std::get<2>(*i)._s.size()<<  " bytes)"
-												" of custom value for `" << data.table << "`.`" << std::get<0>(*i) << "`"
-												" exceeds the ";
+								errStrStr	<< "Main::Database::insertCustomData(): Size ("
+											<< std::get<2>(column_type_value)._s.size()
+											<< " bytes) of custom value for `"
+											<< data.table
+											<< "`.`"
+											<< std::get<0>(column_type_value)
+											<< "` exceeds the ";
 
-								if(std::get<2>(*i)._s.size() > 1073741824)
+								if(std::get<2>(column_type_value)._s.size() > 1073741824)
 									errStrStr << "mySQL data limit of 1 GiB";
 								else
-									errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-												 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
-												 " (to max. 1 GiB).";
+									errStrStr	<< "current mySQL server limit of "
+												<< this->getMaxAllowedPacketSize()
+												<< " bytes - adjust the \'max_allowed_packet\'"
+													" setting on the server accordingly"
+												 	" (to max. 1 GiB).";
 
 								throw Database::Exception(errStrStr.str());
 							}
 						}
 						else
-							sqlStatement->setString(counter, std::get<2>(*i)._s);
+							sqlStatement->setString(counter, std::get<2>(column_type_value)._s);
 
 						break;
 
 					case Data::Type::_uint:
-						sqlStatement->setUInt(counter, std::get<2>(*i)._ui);
+						sqlStatement->setUInt(counter, std::get<2>(column_type_value)._ui);
 
 						break;
 
 					case Data::Type::_ulong:
-						sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
+						sqlStatement->setUInt64(counter, std::get<2>(column_type_value)._ul);
 
 						break;
 
@@ -4776,18 +4811,22 @@ namespace crawlservpp::Main {
 
 							errStrStr.imbue(std::locale(""));
 
-							errStrStr <<	"Main::Database::updateCustomData():"
-											" Size (" << data.value._s.size() << " bytes) of custom value"
-											" for `" << data.table << "`.`" << data.column << "`"
-											" exceeds the ";
+							errStrStr	<< "Main::Database::updateCustomData(): Size ("
+										<< data.value._s.size()
+										<< " bytes) of custom value for `"
+										<< data.table
+										<< "`.`"
+										<< data.column
+										<< "` exceeds the ";
 
 							if(data.value._s.size() > 1073741824)
 								errStrStr << "mySQL data limit of 1 GiB";
 							else
-								errStrStr << "current mySQL server limit"
-										" of " << this->getMaxAllowedPacketSize() << " bytes"
-										" - adjust the \'max_allowed_packet\' setting on the server accordingly"
-										" (to max. 1 GiB).";
+								errStrStr	<< "current mySQL server limit of "
+											<< this->getMaxAllowedPacketSize()
+											<< " bytes - adjust the \'max_allowed_packet\'"
+												" setting on the server accordingly"
+												" (to max. 1 GiB).";
 
 							throw Database::Exception(errStrStr.str());
 						}
@@ -4834,8 +4873,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("UPDATE `" + data.table + "` SET ");
 
-			for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i)
-				sqlQuery += "`" + i->first + "` = ?, ";
+			for(const auto& column_value : data.columns_values)
+				sqlQuery += "`" + column_value.first + "` = ?, ";
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -4850,11 +4889,11 @@ namespace crawlservpp::Main {
 
 			switch(data.type) {
 			case Data::Type::_bool:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setBoolean(counter, i->second._b);
+						sqlStatement->setBoolean(counter, column_value.second._b);
 
 					++counter;
 				}
@@ -4862,11 +4901,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_double:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setDouble(counter, i->second._d);
+						sqlStatement->setDouble(counter, column_value.second._d);
 
 					++counter;
 				}
@@ -4874,11 +4913,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_int:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt(counter, i->second._i);
+						sqlStatement->setInt(counter, column_value.second._i);
 
 					++counter;
 				}
@@ -4886,11 +4925,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_long:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt64(counter, i->second._l);
+						sqlStatement->setInt64(counter, column_value.second._l);
 
 					++counter;
 				}
@@ -4898,13 +4937,13 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_string:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
-					else if(i->second._s.size() > this->getMaxAllowedPacketSize()) {
-						switch(i->second._overflow) {
+					else if(column_value.second._s.size() > this->getMaxAllowedPacketSize()) {
+						switch(column_value.second._overflow) {
 						case Data::Value::_if_too_large::_trim:
-							sqlStatement->setString(1, i->second._s.substr(0, this->getMaxAllowedPacketSize()));
+							sqlStatement->setString(1, column_value.second._s.substr(0, this->getMaxAllowedPacketSize()));
 
 							break;
 
@@ -4923,23 +4962,28 @@ namespace crawlservpp::Main {
 
 							errStrStr.imbue(std::locale(""));
 
-							errStrStr <<	"Main::Database::updateCustomData():"
-											" Size (" << i->second._s.size() << " bytes)"
-											" of custom value for `" << data.table << "`.`" << i->first << "`"
-											" exceeds the ";
+							errStrStr	<< "Main::Database::updateCustomData(): Size ("
+										<< column_value.second._s.size()
+										<< " bytes) of custom value for `"
+										<< data.table
+										<< "`.`"
+										<< column_value.first
+										<< "` exceeds the ";
 
-							if(i->second._s.size() > 1073741824)
+							if(column_value.second._s.size() > 1073741824)
 								errStrStr << "mySQL data limit of 1 GiB";
 							else
-								errStrStr << "current mySQL server limit of " << this->getMaxAllowedPacketSize() << " bytes"
-											 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
-											 " (to max. 1 GiB).";
+								errStrStr	<< "current mySQL server limit of "
+											<< this->getMaxAllowedPacketSize()
+											<< " bytes - adjust the \'max_allowed_packet\'"
+												" setting on the server accordingly"
+											 	" (to max. 1 GiB).";
 
 							throw Database::Exception(errStrStr.str());
 						}
 					}
 					else
-						sqlStatement->setString(counter, i->second._s);
+						sqlStatement->setString(counter, column_value.second._s);
 
 					++counter;
 				}
@@ -4947,11 +4991,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_uint:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt(counter, i->second._ui);
+						sqlStatement->setUInt(counter, column_value.second._ui);
 
 					++counter;
 				}
@@ -4959,11 +5003,11 @@ namespace crawlservpp::Main {
 				break;
 
 			case Data::Type::_ulong:
-				for(auto i = data.columns_values.begin(); i != data.columns_values.end(); ++i) {
-					if(i->second._isnull)
+				for(const auto& column_value : data.columns_values) {
+					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt64(counter, i->second._ul);
+						sqlStatement->setUInt64(counter, column_value.second._ul);
 
 					++counter;
 				}
@@ -4994,8 +5038,8 @@ namespace crawlservpp::Main {
 			// create SQL query
 			std::string sqlQuery("UPDATE `" + data.table + "` SET ");
 
-			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i)
-				sqlQuery += "`" + std::get<0>(*i) + "` = ?, ";
+			for(const auto& column_type_value : data.columns_types_values)
+				sqlQuery += "`" + std::get<0>(column_type_value) + "` = ?, ";
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -5008,36 +5052,42 @@ namespace crawlservpp::Main {
 			// set values
 			unsigned int counter = 1;
 
-			for(auto i = data.columns_types_values.begin(); i != data.columns_types_values.end(); ++i) {
-				if(std::get<2>(*i)._isnull)
+			for(const auto& column_type_value : data.columns_types_values) {
+				if(std::get<2>(column_type_value)._isnull)
 					sqlStatement->setNull(counter, 0);
 				else {
-					switch(std::get<1>(*i)) {
+					switch(std::get<1>(column_type_value)) {
 					case Data::Type::_bool:
-						sqlStatement->setBoolean(counter, std::get<2>(*i)._b);
+						sqlStatement->setBoolean(counter, std::get<2>(column_type_value)._b);
 
 						break;
 
 					case Data::Type::_double:
-						sqlStatement->setDouble(counter, std::get<2>(*i)._d);
+						sqlStatement->setDouble(counter, std::get<2>(column_type_value)._d);
 
 						break;
 
 					case Data::Type::_int:
-						sqlStatement->setInt(counter, std::get<2>(*i)._i);
+						sqlStatement->setInt(counter, std::get<2>(column_type_value)._i);
 
 						break;
 
 					case Data::Type::_long:
-						sqlStatement->setInt64(counter, std::get<2>(*i)._l);
+						sqlStatement->setInt64(counter, std::get<2>(column_type_value)._l);
 
 						break;
 
 					case Data::Type::_string:
-						if(std::get<2>(*i)._s.size() > this->getMaxAllowedPacketSize()) {
-							switch(std::get<2>(*i)._overflow) {
+						if(std::get<2>(column_type_value)._s.size() > this->getMaxAllowedPacketSize()) {
+							switch(std::get<2>(column_type_value)._overflow) {
 							case Data::Value::_if_too_large::_trim:
-								sqlStatement->setString(1, std::get<2>(*i)._s.substr(0, this->getMaxAllowedPacketSize()));
+								sqlStatement->setString(
+										1,
+										std::get<2>(column_type_value)._s.substr(
+												0,
+												this->getMaxAllowedPacketSize()
+										)
+								);
 
 								break;
 
@@ -5056,34 +5106,38 @@ namespace crawlservpp::Main {
 
 								errStrStr.imbue(std::locale(""));
 
-								errStrStr <<	"Main::Database::updateCustomData():"
-												" Size (" << std::get<2>(*i)._s.size() << " bytes)"
-												" of custom value for `" << data.table << "`.`" << std::get<0>(*i) << "`"
-												" exceeds the ";
+								errStrStr	<< "Main::Database::updateCustomData(): Size ("
+											<< std::get<2>(column_type_value)._s.size()
+											<< " bytes) of custom value for `"
+											<< data.table
+											<< "`.`"
+											<< std::get<0>(column_type_value)
+											<< "` exceeds the ";
 
-								if(std::get<2>(*i)._s.size() > 1073741824)
+								if(std::get<2>(column_type_value)._s.size() > 1073741824)
 									errStrStr << "mySQL data limit of 1 GiB";
 								else
-									errStrStr << "current mySQL server limit"
-												 " of " << this->getMaxAllowedPacketSize() << " bytes"
-												 " - adjust the \'max_allowed_packet\' setting on the server accordingly"
-												 " (to max. 1 GiB).";
+									errStrStr	<< "current mySQL server limit of "
+												<< this->getMaxAllowedPacketSize()
+												<< " bytes - adjust the \'max_allowed_packet\'"
+													" setting on the server accordingly"
+												 	" (to max. 1 GiB).";
 
 								throw Database::Exception(errStrStr.str());
 							}
 						}
 						else
-							sqlStatement->setString(counter, std::get<2>(*i)._s);
+							sqlStatement->setString(counter, std::get<2>(column_type_value)._s);
 
 						break;
 
 					case Data::Type::_uint:
-						sqlStatement->setUInt(counter, std::get<2>(*i)._ui);
+						sqlStatement->setUInt(counter, std::get<2>(column_type_value)._ui);
 
 						break;
 
 					case Data::Type::_ulong:
-						sqlStatement->setUInt64(counter, std::get<2>(*i)._ul);
+						sqlStatement->setUInt64(counter, std::get<2>(column_type_value)._ul);
 
 						break;
 
@@ -5243,31 +5297,34 @@ namespace crawlservpp::Main {
 
 			std::string propertiesString;
 
-			for(auto i = properties.columns.begin(); i != properties.columns.end(); ++i) {
+			for(const auto& column : properties.columns) {
 				// check values
-				if(i->name.empty())
+				if(column.name.empty())
 					throw Database::Exception("Main::Database::createTable(): A column is missing its name");
 
-				if(i->type.empty())
+				if(column.type.empty())
 					throw Database::Exception("Main::Database::createTable(): A column is missing its type");
 
 				// add to SQL query
-				sqlQuery += ", `" + i->name + "` " + i->type;
+				sqlQuery += ", `" + column.name + "` " + column.type;
 
 				// add indices and references
-				if(i->indexed)
-					propertiesString += ", INDEX(`" + i->name + "`)";
+				if(column.indexed)
+					propertiesString += ", INDEX(`" + column.name + "`)";
 
-				if(!(i->referenceTable.empty())) {
-					if(i->referenceColumn.empty())
+				if(!column.referenceTable.empty()) {
+					if(column.referenceColumn.empty())
 						throw Database::Exception(
 								"Main::Database::createTable(): A column reference is missing its source column name"
 						);
 
-					propertiesString +=	", FOREIGN KEY(`" + i->name + "`)"
-										" REFERENCES `" + i->referenceTable + "`"
-										" (`" + i->referenceColumn + "`)"
-										" ON UPDATE RESTRICT ON DELETE CASCADE";
+					propertiesString	+= ", FOREIGN KEY(`"
+										+ column.name
+										+ "`) REFERENCES `"
+										+ column.referenceTable
+										+ "` (`"
+										+ column.referenceColumn
+										+ "`) ON UPDATE RESTRICT ON DELETE CASCADE";
 				}
 			}
 
