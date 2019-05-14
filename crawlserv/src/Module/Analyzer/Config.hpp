@@ -32,15 +32,15 @@ namespace crawlservpp::Module::Analyzer {
 		virtual ~Config() {};
 
 		// configuration constants
-		inline static const unsigned char generalInputSourcesParsing = 0;
-		inline static const unsigned char generalInputSourcesExtracting = 1;
-		inline static const unsigned char generalInputSourcesAnalyzing = 2;
-		inline static const unsigned char generalInputSourcesCrawling = 3;
+		static const unsigned char generalInputSourcesParsing = 0;
+		static const unsigned char generalInputSourcesExtracting = 1;
+		static const unsigned char generalInputSourcesAnalyzing = 2;
+		static const unsigned char generalInputSourcesCrawling = 3;
 
-		inline static const unsigned char generalLoggingSilent = 0;
-		inline static const unsigned char generalLoggingDefault = 1;
-		inline static const unsigned char generalLoggingExtended = 2;
-		inline static const unsigned char generalLoggingVerbose = 3;
+		static const unsigned char generalLoggingSilent = 0;
+		static const unsigned char generalLoggingDefault = 1;
+		static const unsigned char generalLoggingExtended = 2;
+		static const unsigned char generalLoggingVerbose = 3;
 
 		// configuration entries
 		struct Entries {
