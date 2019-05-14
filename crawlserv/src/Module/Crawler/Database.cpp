@@ -773,7 +773,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// check for empty URLs in the URL list, throws Exception if an empty URL exists,
 	//  throws Database::Exception
-	void Database::urlEmptyCheck(const std::vector<std::string>& urlsAdded) {
+	void Database::urlEmptyCheck() {
 		// check connection
 		this->checkConnection();
 
@@ -791,16 +791,6 @@ namespace crawlservpp::Module::Crawler {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				if(urlsAdded.size()) {
-					// DEBUG
-					std::cout << "\n Empty URL in `" + this->urlListTable + "` after adding:";
-
-					for(auto i = urlsAdded.begin(); i != urlsAdded.end(); ++i)
-						std::cout << "\n \'" << *i << "\'";
-
-					std::cout << std::flush;
-				}
-
 				throw Exception(
 						"Crawler::Database::urlEmptyCheck():"
 						" Empty URL in `"
@@ -914,9 +904,11 @@ namespace crawlservpp::Module::Crawler {
 
 	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful,
 	//  throws Database::Exception
-	std::string Database::lockUrlIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout) {
-		std::string dbg;
-
+	std::string Database::lockUrlIfOk(
+			unsigned long urlId,
+			const std::string& lockTime,
+			unsigned long lockTimeout
+	) {
 		// check argument
 		if(!urlId)
 			throw Exception("Crawler::Database::lockUrlIfOk(): No URL ID specified");
@@ -949,7 +941,6 @@ namespace crawlservpp::Module::Crawler {
 			sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.renewUrlLockIfOk));
 
 			// lock URL in database
-			dbg = "renewUrlLockIfOk";
 			try {
 				// execute SQL query
 				sqlStatement.setUInt64(1, lockTimeout);
@@ -960,7 +951,7 @@ namespace crawlservpp::Module::Crawler {
 				if(Database::sqlExecuteUpdate(sqlStatement) < 1)
 					return std::string(); // locking failed when no entries have been updated
 			}
-			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk > " + dbg, e); }
+			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk", e); }
 		}
 
 		// get new expiration time of URL lock
@@ -1028,7 +1019,12 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// save content to database, throws Database::Exception
-	void Database::saveContent(unsigned long urlId, unsigned int response, const std::string& type, const std::string& content) {
+	void Database::saveContent(
+			unsigned long urlId,
+			unsigned int response,
+			const std::string& type,
+			const std::string& content
+	) {
 		// check argument
 		if(!urlId)
 			throw Exception("Crawler::Database::saveContent(): No URL ID specified");
@@ -1083,8 +1079,13 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// save archived content to database, throws Database::Exception
-	void Database::saveArchivedContent(unsigned long urlId, const std::string& timeStamp, unsigned int response,
-			const std::string& type, const std::string& content) {
+	void Database::saveArchivedContent(
+			unsigned long urlId,
+			const std::string& timeStamp,
+			unsigned int response,
+			const std::string& type,
+			const std::string& content
+	) {
 		// check arguments
 		if(!urlId)
 			throw Exception("Crawler::Database::saveArchivedContent(): No URL ID specified");
