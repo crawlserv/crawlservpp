@@ -13,8 +13,8 @@
 #include "../Main/Exception.hpp"
 #include "../Wrapper/TidyDoc.hpp"
 
-#include <queue>
-#include <string>
+#include <queue>	// std::queue
+#include <string>	// std::string
 
 namespace crawlservpp::Parsing {
 
