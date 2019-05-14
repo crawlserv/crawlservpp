@@ -287,7 +287,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			if(w1.empty())
 				break;
 
-			if(std::find( dictionary[key].begin(), dictionary[key].end(), w1) == dictionary[key].end())
+			if(
+					std::find(
+							dictionary[key].begin(),
+							dictionary[key].end(),
+							w1
+					) == dictionary[key].end()
+			)
 				dictionary[key].emplace_back(w1);
 
 			key = key.substr(key.find_first_of(32) + 1) + " " + w1;
