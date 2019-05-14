@@ -12,9 +12,9 @@
 
 #include "../_extern/date/include/date/date.h"
 
-#include <locale>
-#include <sstream>
-#include <string>
+#include <locale>	// std::locale
+#include <sstream>	// std::istringstream, std::ostringstream
+#include <string>	// std::string
 
 namespace crawlservpp::Helper::DateTime {
 
@@ -66,7 +66,11 @@ namespace crawlservpp::Helper::DateTime {
 
 	// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale),
 	//  return whether conversion was successful
-	inline bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat, const std::locale& locale) {
+	inline bool convertCustomDateTimeToSQLTimeStamp(
+			std::string& dateTime,
+			const std::string& customFormat,
+			const std::locale& locale
+	) {
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
 
@@ -113,7 +117,11 @@ namespace crawlservpp::Helper::DateTime {
 	}
 
 	// check whether a ISO date (YYYY-MM-DD) is in a specific date range
-	inline bool isISODateInRange(const std::string& isoDate, const std::string& rangeFrom, const std::string& rangeTo) {
+	inline bool isISODateInRange(
+			const std::string& isoDate,
+			const std::string& rangeFrom,
+			const std::string& rangeTo
+	) {
 		if(isoDate.length() < 10)
 			return false;
 
