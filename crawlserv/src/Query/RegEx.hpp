@@ -19,9 +19,10 @@
 
 #include <pcre2.h>
 
-#include <sstream>
-#include <string>
-#include <vector>
+#include <sstream>	// std::ostringstream
+#include <string>	// std::string
+#include <utility>	// std::move
+#include <vector>	// std::vector
 
 namespace crawlservpp::Query {
 
