@@ -67,22 +67,19 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <algorithm>	// std::count_if
-#include <chrono>
-#include <cstring>
-#include <exception>
-#include <functional>
-#include <iostream>
-#include <locale>
-#include <mutex>
-#include <queue>
-#include <sstream>
-#include <thread>
-#include <vector>
-
-#ifdef MAIN_SERVER_DEBUG_HTTP_REQUEST
-#include <iostream>
-#endif
+#include <algorithm>	// std::count, std::count_if, std::find_if
+#include <chrono>		// std::chrono
+#include <exception>	// std::exception
+#include <functional>	// std::bind, std::placeholders
+#include <iostream>		// std::cout, std::flush
+#include <locale>		// std::locale
+#include <memory>		// std::make_unique, std::unique_ptr
+#include <mutex>		// std::lock_guard, std::mutex
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <thread>		// std::thread
+#include <vector>		// std::vector
 
 namespace crawlservpp::Main {
 
