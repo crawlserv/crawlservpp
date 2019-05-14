@@ -21,14 +21,14 @@
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
 #ifdef MODULE_CONFIG_DEBUG
-#include <algorithm>
+#include <algorithm>	// std::adjacent_find, std::sort
 #endif
 
-#include <limits>
-#include <queue>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <limits>		// std::numeric_limits
+#include <queue>		// std::queue
+#include <stdexcept>	// std::logic_error
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module {
 
@@ -117,6 +117,7 @@ protected:
 		bool currentCategory;			// category equals current category
 		bool finished;					// item has been found
 		LogPtr logPtr;					// pointer to logging queue
+
 #ifdef MODULE_CONFIG_DEBUG
 		bool debug;						// options have been debugged
 		std::string categoryString;		// category to check as string
@@ -171,9 +172,9 @@ protected:
 			);
 
 		// parse configuration entries
-		for(auto entry = json.Begin(); entry != json.End(); ++entry) {
+		for(const auto& entry : json.GetArray()) {
 			// check whether configuration item is a JSON object
-			if(!(entry->IsObject())) {
+			if(!entry.IsObject()) {
 				warningsTo.emplace("Configuration entry that is no object ignored.");
 
 				return;
@@ -183,20 +184,20 @@ protected:
 			bool empty = true;
 			bool ignore = false;
 
-			for(auto member = entry->MemberBegin(); member != entry->MemberEnd(); ++member) {
+			for(const auto& member : entry.GetObject()) {
 				// check the name of the current item member
-				if(member->name.IsString()) {
+				if(member.name.IsString()) {
 					const std::string memberName(
-							member->name.GetString(),
-							member->name.GetStringLength()
+							member.name.GetString(),
+							member.name.GetStringLength()
 					);
 
 					if(memberName == "cat") {
 						// found the category of the configuration item
-						if(member->value.IsString())
+						if(member.value.IsString())
 							this->currentItem.category = std::string(
-									member->value.GetString(),
-									member->value.GetStringLength()
+									member.value.GetString(),
+									member.value.GetStringLength()
 							);
 						else {
 							warningsTo.emplace("Configuration entry with invalid category name ignored.");
@@ -208,10 +209,10 @@ protected:
 					}
 					else if(memberName == "name") {
 						// found the name of the configuration item
-						if(member->value.IsString())
+						if(member.value.IsString())
 							this->currentItem.name = std::string(
-									member->value.GetString(),
-									member->value.GetStringLength()
+									member.value.GetString(),
+									member.value.GetStringLength()
 							);
 						else {
 							warningsTo.emplace("Configuration entry with invalid option name ignored.");
@@ -224,7 +225,7 @@ protected:
 					}
 					else if(memberName == "value") {
 						// found the value of the configuration item
-						this->currentItem.value = &(member->value);
+						this->currentItem.value = &(member.value);
 
 						empty = false;
 					}
@@ -402,13 +403,13 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsBool())
-					target.push_back(i->GetBool());
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsBool())
+					target.push_back(item.GetBool());
 				else {
 					target.push_back(false);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not bool)."
@@ -472,8 +473,10 @@ protected:
 			// get from string
 			if(this->currentItem.value->IsString())
 				target = Helper::Strings::getFirstOrEscapeChar(
-						std::string(this->currentItem.value->GetString(),
-						this->currentItem.value->GetStringLength())
+						std::string(
+								this->currentItem.value->GetString(),
+								this->currentItem.value->GetStringLength()
+						)
 				);
 			else
 				this->logPtr->emplace(
@@ -517,13 +520,13 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
+			for(const auto& item : this->currentItem.value->GetArray()) {
 				switch(opt) {
 
 				case FromNumber:
 					// get from number
-					if(i->IsInt()) {
-						const int value = i->GetInt();
+					if(item.IsInt()) {
+						const int value = item.GetInt();
 
 						if(value > std::numeric_limits<char>::max())
 							this->logPtr->emplace(
@@ -536,7 +539,7 @@ protected:
 					else {
 						target.push_back(0);
 
-						if(!(i->IsNull()) && this->logPtr)
+						if(!item.IsNull() && this->logPtr)
 							this->logPtr->emplace(
 									"Value in \'" + this->currentItem.str() + "\'"
 									" ignored because of wrong type (not int)."
@@ -547,19 +550,23 @@ protected:
 
 				case FromString:
 					// get from string
-					if(i->IsString())
+					if(item.IsString())
 						target.push_back(
 								Helper::Strings::getFirstOrEscapeChar(
-										std::string(i->GetString(), i->GetStringLength())
+										std::string(
+												item.GetString(),
+												item.GetStringLength()
+										)
 								)
 						);
 					else {
 						target.push_back(0);
 
-						if(!(i->IsNull()) && this->logPtr)
+						if(!item.IsNull() && this->logPtr)
 							this->logPtr->emplace(
-									"Value in \'" + this->currentItem.str() + "\'"
-									" ignored because of wrong type (not string)."
+									"Value in \'"
+									+ this->currentItem.str()
+									+ "\' ignored because of wrong type (not string)."
 							);
 					}
 
@@ -648,9 +655,9 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsInt()) {
-					const int value = i->GetInt();
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsInt()) {
+					const int value = item.GetInt();
 
 					if(value > std::numeric_limits<short>::max())
 						this->logPtr->emplace(
@@ -663,7 +670,7 @@ protected:
 				else {
 					target.push_back(0);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not int)."
@@ -740,13 +747,13 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsInt())
-					target.push_back(i->GetInt());
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsInt())
+					target.push_back(item.GetInt());
 				else {
 					target.push_back(0);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not int)."
@@ -818,13 +825,13 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsInt64())
-					target.push_back(i->GetInt64());
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsInt64())
+					target.push_back(item.GetInt64());
 				else {
 					target.push_back(0);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not long)."
@@ -910,9 +917,9 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsUint()) {
-					const unsigned int value = i->GetUint();
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsUint()) {
+					const unsigned int value = item.GetUint();
 
 					if(value > std::numeric_limits<unsigned char>::max())
 						this->logPtr->emplace(
@@ -925,7 +932,7 @@ protected:
 				else {
 					target.push_back(0);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not unsigned int)."
@@ -1011,9 +1018,9 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsUint()) {
-					const unsigned int value = i->GetUint();
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsUint()) {
+					const unsigned int value = item.GetUint();
 
 					if(value > std::numeric_limits<unsigned short>::max())
 						this->logPtr->emplace(
@@ -1026,7 +1033,7 @@ protected:
 				else {
 					target.push_back(0);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not unsigned int)."
@@ -1103,13 +1110,13 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsUint())
-					target.push_back(i->GetUint());
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsUint())
+					target.push_back(item.GetUint());
 				else {
 					target.push_back(0);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not unsigned int)."
@@ -1186,13 +1193,13 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsUint64())
-					target.push_back(i->GetUint64());
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsUint64())
+					target.push_back(item.GetUint64());
 				else {
 					target.push_back(0);
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not unsigned long)."
@@ -1231,7 +1238,8 @@ protected:
 		// check value type
 		if(this->currentItem.value->IsString()) {
 			std::string str(
-					this->currentItem.value->GetString(), this->currentItem.value->GetStringLength()
+					this->currentItem.value->GetString(),
+					this->currentItem.value->GetStringLength()
 			);
 
 			switch(opt) {
@@ -1311,9 +1319,9 @@ protected:
 			target.reserve(this->currentItem.value->Size());
 
 			// check and copy array items
-			for(auto i = this->currentItem.value->Begin(); i != this->currentItem.value->End(); ++i) {
-				if(i->IsString()) {
-					std::string str(i->GetString(), i->GetStringLength());
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsString()) {
+					std::string str(item.GetString(), item.GetStringLength());
 
 					switch(opt) {
 					case Default:
@@ -1357,7 +1365,7 @@ protected:
 				else {
 					target.emplace_back();
 
-					if(!(i->IsNull()) && this->logPtr)
+					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
 								" ignored because of wrong type (not string)."
