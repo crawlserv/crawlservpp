@@ -14,8 +14,6 @@
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/ThreadStatus.hpp"
 
-#include <string>
-
 namespace crawlservpp::Struct {
 	struct AlgoThreadProperties {
 	private:
