@@ -36,6 +36,7 @@
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <algorithm>	// std::find
+#include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <functional>	// std::bind
 #include <iomanip>		// std::setprecision
