@@ -24,13 +24,12 @@
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <atomic>
-#include <csignal>
-#include <cstdlib>
-#include <exception>
-#include <iostream>
-#include <memory>
-#include <string>
+#include <atomic>		// std::atomic
+#include <csignal>		// sigaction, sigemptyset, SIGINT, SIGTERM
+#include <exception>	// std::exception
+#include <iostream>		// std::cout, std::endl, std::flush
+#include <memory>		// std::make_unique, std::unique_ptr
+#include <string>		// std::string
 
 namespace crawlservpp::Main {
 
