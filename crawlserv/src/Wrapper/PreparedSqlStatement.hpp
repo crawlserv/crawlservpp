@@ -17,8 +17,8 @@
 #include <cppconn/prepared_statement.h>
 #include <mysql_connection.h>
 
-#include <memory>
-#include <string>
+#include <memory>	// std::unique_ptr
+#include <string>	// std::string
 #include <utility>	// std::move
 
 namespace crawlservpp::Wrapper {
