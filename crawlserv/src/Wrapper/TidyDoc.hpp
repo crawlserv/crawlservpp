@@ -17,8 +17,8 @@
 
 #include <tidy.h>
 
-#include <queue>
-#include <string>
+#include <queue>	// std::queue
+#include <string>	// std::string
 
 namespace crawlservpp::Wrapper {
 
