@@ -155,7 +155,7 @@ namespace crawlservpp::Query {
 	// XML walker for text-only conversion helper functions
 	bool XPath::TextOnlyWalker::for_each(pugi::xml_node& node) {
 		if(node.type() == pugi::node_pcdata) {
-			std::string nodeText = node.text().as_string();
+			std::string nodeText(node.text().as_string());
 
 			Helper::Strings::trim(nodeText);
 
