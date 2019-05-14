@@ -15,8 +15,8 @@
 
 #include "../Module/Config.hpp"
 
-#include <string>
-#include <vector>
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Network {
 
