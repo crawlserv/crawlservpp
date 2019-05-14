@@ -12,13 +12,15 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <algorithm>
-#include <cctype>
-#include <iomanip>
-#include <queue>
-#include <random>
-#include <string>
-#include <vector>
+#include <algorithm>	// std::equal, std::find_if, std::mismatch, std::remove_if,
+						// std::replace, std::sort, std::transform, std::unique
+#include <cctype>		// ::tolower, std::isspace, std::tolower
+#include <ios>			// std::boolalpha
+#include <queue>		// std::queue
+#include <random>		// std::default_random_engine, std::random_device, std::uniform_int_distribution
+#include <sstream>		// std::istringstream
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Helper::Strings {
 
@@ -202,16 +204,16 @@ namespace crawlservpp::Helper::Strings {
 		std::string result;
 
 		// calculate and reserve needed memory
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				size += i->size() + 1;
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				size += string.size() + 1;
 
 		result.reserve(size);
 
 		// create string
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				result += *i + delimiter;
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				result += string + delimiter;
 
 		if(!result.empty())
 			result.pop_back();
@@ -231,16 +233,16 @@ namespace crawlservpp::Helper::Strings {
 		// calculate and reserve needed memory
 		unsigned long size = 0;
 
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				size += i->size() + delimiter.size();
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				size += string.size() + delimiter.size();
 
 		result.reserve(size);
 
 		// create string
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				result += *i + delimiter;
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				result += string + delimiter;
 
 		if(!result.empty())
 			result.pop_back();
@@ -308,16 +310,16 @@ namespace crawlservpp::Helper::Strings {
 		// calculate and reserve needed memory
 		unsigned long size = oldSize;
 
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				size += i->size() + 1;
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				size += string.size() + 1;
 
 		appendTo.reserve(size);
 
 		// append string
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				appendTo += *i + delimiter;
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				appendTo += string + delimiter;
 
 		if(appendTo.size() > oldSize)
 			appendTo.pop_back();
@@ -336,16 +338,16 @@ namespace crawlservpp::Helper::Strings {
 		// calculate and reserve needed memory
 		unsigned long size = oldSize;
 
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				size += i->size() + delimiter.size();
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				size += string.size() + delimiter.size();
 
 		appendTo.reserve(size);
 
 		// append string
-		for(auto i = strings.begin(); i != strings.end(); ++i)
-			if(!ignoreEmpty || !(i->empty()))
-				appendTo += *i + delimiter;
+		for(const auto& string : strings)
+			if(!ignoreEmpty || !string.empty())
+				appendTo += string + delimiter;
 
 		if(appendTo.size() > oldSize)
 			appendTo.pop_back();
@@ -483,13 +485,25 @@ namespace crawlservpp::Helper::Strings {
 			std::sort(vectorOfStrings.begin(), vectorOfStrings.end());
 
 			// case-sensitive removal of co-occuring duplicates
-			vectorOfStrings.erase(std::unique(vectorOfStrings.begin(), vectorOfStrings.end()), vectorOfStrings.end());
+			vectorOfStrings.erase(
+					std::unique(
+							vectorOfStrings.begin(),
+							vectorOfStrings.end()
+					),
+					vectorOfStrings.end()
+			);
 		}
 		else {
 			// case-insensitive sort
-			std::sort(vectorOfStrings.begin(), vectorOfStrings.end(),
+			std::sort(
+					vectorOfStrings.begin(),
+					vectorOfStrings.end(),
 					[](const auto& s1, const auto& s2) {
-						const auto result = std::mismatch(s1.cbegin(), s1.cend(), s2.cbegin(), s2.cend(),
+						const auto result = std::mismatch(
+								s1.cbegin(),
+								s1.cend(),
+								s2.cbegin(),
+								s2.cend(),
 								[](const auto& s1, const auto& s2) {
 									return (s1 == s2) || std::tolower(s1) == std::tolower(s2);
 								}
