@@ -15,8 +15,8 @@
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"
 #include "../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 
-#include <string>
-#include <vector>
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Query {
 
