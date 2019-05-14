@@ -12,8 +12,8 @@
 
 #include "../../Helper/Strings.hpp"
 
-#include <queue>
-#include <string>
+#include <queue>	// std::queue
+#include <string>	// std::string
 
 namespace crawlservpp::Data::ImportExport::Text {
 
