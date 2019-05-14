@@ -16,10 +16,10 @@
 
 #include <pugixml.hpp>
 
-#include <memory>
-#include <queue>
-#include <sstream>
-#include <string>
+#include <memory>	// std::make_unique, std::unique_ptr
+#include <queue>	// std::queue
+#include <sstream>	// std::istringstream, std::ostringstream
+#include <string>	// std::string
 
 namespace crawlservpp::Query {
 
