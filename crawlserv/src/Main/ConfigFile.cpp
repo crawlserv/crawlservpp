@@ -21,7 +21,7 @@ namespace crawlservpp::Main {
 				const unsigned long nameEnd = line.find('=');
 
 				if(nameEnd < line.length()) {
-					std::string nameInLine(line, nameEnd);
+					std::string nameInLine(line, 0, nameEnd);
 
 					std::transform(nameInLine.begin(), nameInLine.end(), nameInLine.begin(), ::tolower);
 
