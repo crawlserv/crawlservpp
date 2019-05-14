@@ -11,7 +11,7 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
-	std::atomic<int> App::interruptionSignal = 0;
+	std::atomic<int> App::interruptionSignal(0);
 
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 	App::App(int argc, char * argv[]) noexcept : running(true), skipLoop(false) {
