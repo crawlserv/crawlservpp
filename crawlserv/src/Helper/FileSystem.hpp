@@ -14,8 +14,8 @@
 
 #include <experimental/filesystem>
 
-#include <string>
-#include <vector>
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 // for convenience
 namespace std {
@@ -36,6 +36,8 @@ namespace crawlservpp::Helper::FileSystem {
 	char getPathSeparator();
 	std::vector<std::string> listFilesInPath(const std::string& pathToDir, const std::string& fileExtension);
 	bool contains(const std::string& pathToDir, const std::string& pathToCheck);
+	void createDirectory(const std::string& pathToDir);
+	void createDirectoryIfNotExists(const std::string& pathToDir);
 	void clearDirectory(const std::string& pathToDir);
 	unsigned long getFreeSpace(const std::string& path);
 
@@ -129,6 +131,17 @@ namespace crawlservpp::Helper::FileSystem {
 
 		// compare as many components as there are in pathToDir
 		return std::equal(pathToDir.begin(), pathToDir.end(), pathToCheck.begin());
+	}
+
+	// create directory
+	inline void createDirectory(const std::string& pathToDir) {
+		std::filesystem::create_directory(pathToDir);
+	}
+
+	// create directory if it does not exists already
+	inline void createDirectoryIfNotExists(const std::string& pathToDir) {
+		if(!isValidDirectory(pathToDir))
+			createDirectory(pathToDir);
 	}
 
 	// delete all files and folders in a directory, throws FileSystem::Exception
