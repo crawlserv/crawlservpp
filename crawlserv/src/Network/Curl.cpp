@@ -46,10 +46,14 @@ namespace crawlservpp::Network {
 	// destructor stub
 	Curl::~Curl() {}
 
-	// set global network options from crawling configuration
-	//  NOTE: if limited is true, cookie settings, custom headers, HTTP version and error responses will be ignored
-	//  throws Curl::Exception
-	void Curl::setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string> * warningsTo) {
+	// set global network options from crawling configuration, throws Curl::Exception
+	//  NOTE:	If limited is true, cookie settings, custom headers,
+	// 			HTTP version and error responses will be ignored.
+	void Curl::setConfigGlobal(
+			const Config& globalConfig,
+			bool limited,
+			std::queue<std::string> * warningsTo
+	) {
 		if(!(this->curl.get()))
 			throw Curl::Exception("cURL not initialized");
 
@@ -873,7 +877,12 @@ namespace crawlservpp::Network {
 	}
 
 	// get remote content
-	void Curl::getContent(const std::string& url, bool usePost, std::string& contentTo, const std::vector<unsigned int>& errors) {
+	void Curl::getContent(
+			const std::string& url,
+			bool usePost,
+			std::string& contentTo,
+			const std::vector<unsigned int>& errors
+	) {
 		std::string escapedUrl(this->escapeUrl(url));
 		char errorBuffer[CURL_ERROR_SIZE];
 
@@ -1033,7 +1042,7 @@ namespace crawlservpp::Network {
 				std::remove_if(
 						this->contentType.begin(),
 						this->contentType.end(),
-						isspace
+						::isspace
 				),
 				this->contentType.end()
 		);
