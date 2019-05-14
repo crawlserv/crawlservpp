@@ -383,7 +383,9 @@ namespace crawlservpp::Module {
 		// check whether pause time was running
 		if(this->pauseTimePoint > std::chrono::steady_clock::time_point::min()) {
 			// add pause time
-			this->pauseTime += std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - this->pauseTimePoint);
+			this->pauseTime += std::chrono::duration_cast<std::chrono::seconds>(
+					std::chrono::steady_clock::now() - this->pauseTimePoint
+			);
 
 			// reset pause time point
 			this->pauseTimePoint = std::chrono::steady_clock::time_point::min();
