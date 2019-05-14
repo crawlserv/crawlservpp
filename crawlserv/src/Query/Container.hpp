@@ -18,10 +18,8 @@
 #include "../Main/Exception.hpp"
 #include "../Struct/QueryProperties.hpp"
 
-#include <memory>
-#include <string>
-#include <utility>
-#include <vector>
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Query {
 
