@@ -14,10 +14,11 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <fstream>
-#include <string>
-#include <utility>
-#include <vector>
+#include <algorithm>	// std::find_if
+#include <fstream>		// std::ifstream
+#include <string>		// std::string, std::getline
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
 namespace crawlservpp::Main {
 
