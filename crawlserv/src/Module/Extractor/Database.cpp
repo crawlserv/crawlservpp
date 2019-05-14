@@ -85,9 +85,9 @@ namespace crawlservpp::Module::Extractor {
 		properties.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
 		properties.columns.emplace_back("extracted_datetime", "DATETIME DEFAULT NULL");
 
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-			if(!(i->empty()))
-				properties.columns.emplace_back("extracted__" + *i, "LONGTEXT");
+		for(const auto& targetFieldName : this->targetFieldNames)
+			if(!targetFieldName.empty())
+				properties.columns.emplace_back("extracted__" + targetFieldName, "LONGTEXT");
 
 		// add target table if it does not exist already
 		this->targetTableId = this->addTargetTable(properties);
@@ -868,12 +868,16 @@ namespace crawlservpp::Module::Extractor {
 		sql::PreparedStatement& sqlStatement100 = this->getPreparedStatement(this->ps.updateOrAdd100Entries);
 		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.updateOrAdd1000Entries);
 
-		// count fields
-		unsigned long fields = 4;
+		// TODO: update if exists (when exactly?)
 
-		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i)
-			if(!(i->empty()))
-				fields++;
+		// count fields
+		const unsigned long fields = 4 + std::count_if(
+				this->targetFieldNames.begin(),
+				this->targetFieldNames.end(),
+				[](const auto& fieldName) {
+					return !fieldName.empty();
+				}
+		);
 
 		try {
 			// add 1,000 entries at once
@@ -1125,11 +1129,12 @@ namespace crawlservpp::Module::Extractor {
 			entry.dateTime.clear();
 		}
 
-		for(auto i = entry.fields.begin(); i != entry.fields.end(); ++i) {
-			if(i->size() > this->getMaxAllowedPacketSize() && i->size() > tooLarge) {
-				tooLarge = i->size();
+		for(auto& field : entry.fields) {
+			if(field.size() > this->getMaxAllowedPacketSize()) {
+				if(field.size() > tooLarge)
+					tooLarge = field.size();
 
-				i->clear();
+				field.clear();
 			}
 		}
 
@@ -1212,6 +1217,8 @@ namespace crawlservpp::Module::Extractor {
 
 	// generate SQL query for updating or adding a specific number of extracted entries, throws Database::Exception
 	std::string Database::queryUpdateOrAddEntries(unsigned int numberOfEntries) {
+		// TODO: update when exists (when exactly?)
+
 		// check arguments
 		if(!numberOfEntries)
 			throw Exception("Database::queryUpdateOrAddEntries(): No number of entries specified");
@@ -1226,9 +1233,10 @@ namespace crawlservpp::Module::Extractor {
 
 		unsigned long counter = 0;
 
-		for(auto i = this->targetFieldNames.begin(); i!= this->targetFieldNames.end(); ++i) {
-			if(!(i->empty())) {
-				sqlQueryStr += 		", `extracted__" + *i + "`";
+		for(const auto& targetFieldName : this->targetFieldNames) {
+			if(!targetFieldName.empty()) {
+				sqlQueryStr += 		", `extracted__" + targetFieldName + "`";
+
 				++counter;
 			}
 		}
@@ -1256,10 +1264,10 @@ namespace crawlservpp::Module::Extractor {
 									" hash = VALUES(hash),"
 									" extracted_datetime = VALUES(extracted_datetime)";
 
-		for(auto i = this->targetFieldNames.begin(); i != this->targetFieldNames.end(); ++i)
-			if(!(i->empty()))
-				sqlQueryStr 	+=	", `extracted__" + *i + "`"
-									" = VALUES(`extracted__" + *i + "`)";
+		for(const auto& targetFieldName : this->targetFieldNames)
+			if(!targetFieldName.empty())
+				sqlQueryStr 	+=	", `extracted__" + targetFieldName + "`"
+									" = VALUES(`extracted__" + targetFieldName + "`)";
 
 		// return query
 		return sqlQueryStr;
