@@ -23,15 +23,15 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <chrono>
-#include <fstream>
-#include <functional>
-#include <memory>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
+#include <algorithm>	// std::count_if
+#include <chrono>		// std::chrono
+#include <locale>		// std::locale
+#include <memory>		// std::unique_ptr
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Parser {
 
