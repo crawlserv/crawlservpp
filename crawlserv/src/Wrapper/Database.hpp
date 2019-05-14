@@ -25,9 +25,10 @@
 #include <cppconn/prepared_statement.h>
 #include <mysql_connection.h>
 
-#include <functional>
-#include <string>
-#include <vector>
+#include <functional>	// std::function
+#include <queue>		// std::queue
+#include <string>		// std::string
+#include <utility>		// std::pair
 
 namespace crawlservpp::Wrapper {
 
