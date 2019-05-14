@@ -13,7 +13,7 @@
 
 #include <curl/curl.h>
 
-#include <string>
+#include <string>	// std::string
 
 namespace crawlservpp::Wrapper {
 
