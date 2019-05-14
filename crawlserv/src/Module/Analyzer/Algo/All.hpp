@@ -16,7 +16,7 @@
 
 #include "../../../Struct/AlgoThreadProperties.hpp"
 
-#include <memory>
+#include <memory>	// std::make_unique, std::unique_ptr
 
 namespace crawlservpp::Module::Analyzer::Algo {
 	// for convenience
