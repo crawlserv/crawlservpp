@@ -25,7 +25,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <atomic>		// std::atomic
-#include <csignal>		// sigaction, sigemptyset, SIGINT, SIGTERM
+#include <csignal>		// sigaction, sigemptyset / signal, SIGINT, SIGTERM
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::endl, std::flush
 #include <memory>		// std::make_unique, std::unique_ptr
