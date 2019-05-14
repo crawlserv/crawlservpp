@@ -25,7 +25,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <atomic>		// std::atomic
-#include <csignal>		// sigaction, sigemptyset / signal, SIGINT, SIGTERM
+#include <csignal>		// sigaction, sigemptyset [Linux] / signal [Windows], SIGINT, SIGTERM
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::endl, std::flush
 #include <memory>		// std::make_unique, std::unique_ptr
@@ -45,9 +45,9 @@ namespace crawlservpp::Main {
 		int run() noexcept;
 
 		// signal handling
-		static App * instance;
-		static void signal(int num);
-		void shutdown(int num);
+		static std::atomic<int> interruptionSignal;
+		static void signal(int signalNumber);
+		void shutdown();
 
 		// not moveable, not copyable
 		App(App&) = delete;

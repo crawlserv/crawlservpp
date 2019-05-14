@@ -11,8 +11,7 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
-
-	App * App::instance = nullptr;
+	std::atomic<int> App::interruptionSignal = 0;
 
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 	App::App(int argc, char * argv[]) noexcept : running(true), skipLoop(false) {
@@ -20,9 +19,6 @@ namespace crawlservpp::Main {
 			DatabaseSettings dbSettings;
 			ServerSettings serverSettings;
 			std::string error;
-
-			// save instance and register signals
-			App::instance = this;
 
 #ifdef _WIN32
 			signal(SIGINT, App::signal);
@@ -124,7 +120,10 @@ namespace crawlservpp::Main {
 
 		if(this->server) {
 			try {
-				while(this->server->tick() && this->running) {}
+				while(this->server->tick() && this->running) {
+					if(interruptionSignal)
+						this->shutdown();
+				}
 
 				return EXIT_SUCCESS;
 			}
@@ -140,16 +139,15 @@ namespace crawlservpp::Main {
 	}
 
 	// static signal handler (forward the signal to the class)
-	void App::signal(int num) {
-		if(App::instance)
-			App::instance->shutdown(num);
+	void App::signal(int signalNumber) {
+		App::interruptionSignal = signalNumber;
 	}
 
 	// in-class signal handler
-	void App::shutdown(int num) {
+	void App::shutdown() {
 		std::cout << "\n[SHUTDOWN] ";
 
-		switch(num) {
+		switch(App::interruptionSignal) {
 		case SIGINT:
 			std::cout << "Interruption request signal (SIGINT)";
 
@@ -161,7 +159,7 @@ namespace crawlservpp::Main {
 			break;
 
 		default:
-			std::cout << "Unknown signal (#" << num << ")";
+			std::cout << "Unknown signal (#" << interruptionSignal << ")";
 		}
 
 		std::cout << " received." << std::flush;
