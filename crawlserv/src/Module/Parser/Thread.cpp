@@ -168,6 +168,9 @@ namespace crawlservpp::Module::Parser {
 					std::bind(&Thread::isRunning, this)
 			);
 
+			if(!(this->isRunning()))
+				return;
+
 			// check parsing table
 			this->setStatusMessage("Checking parsing table...");
 
