@@ -39,6 +39,7 @@
 #include <chrono>		// std::chrono
 #include <functional>	// std::bind
 #include <iomanip>		// std::setprecision
+#include <ios>			// std::fixed
 #include <locale>		// std::locale
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
