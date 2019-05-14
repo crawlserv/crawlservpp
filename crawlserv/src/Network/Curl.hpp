@@ -22,16 +22,15 @@
 
 #include <curl/curl.h>
 
-#include <algorithm>
-#include <chrono>
-#include <climits>
-#include <cstdio>
-#include <exception>
-#include <queue>
-#include <sstream>
-#include <string>
-#include <thread>
-#include <vector>
+#include <algorithm>	// std::remove_if, std::transform
+#include <cctype>		// ::isspace, ::tolower
+#include <chrono>		// std::chrono
+#include <exception>	// std::exception
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <thread>		// std::this_thread
+#include <vector>		// std::vector
 
 namespace crawlservpp::Network {
 
