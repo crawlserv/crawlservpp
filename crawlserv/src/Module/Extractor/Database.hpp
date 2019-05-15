@@ -75,7 +75,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// extracting functions
 		unsigned int checkExtractingTable();
-		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
+		bool getContent(unsigned long urlId, std::string& contentTo);
 		std::string getParsedData(unsigned long urlId, unsigned long sourceIndex);
 		void updateOrAddEntries(std::queue<DataEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
@@ -125,7 +125,7 @@ namespace crawlservpp::Module::Extractor {
 			unsigned short renewUrlLockIfOk;
 			unsigned short unLockUrlIfOk;
 			unsigned short checkExtractingTable;
-			unsigned short getLatestContent;
+			unsigned short getContent;
 			unsigned short updateOrAddEntry;
 			unsigned short updateOrAdd10Entries;
 			unsigned short updateOrAdd100Entries;
