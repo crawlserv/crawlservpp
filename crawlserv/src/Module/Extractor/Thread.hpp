@@ -35,7 +35,9 @@
 #include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <algorithm>	// std::find
+#include <boost/lexical_cast.hpp>
+
+#include <algorithm>	// std::count_if, std::find
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <functional>	// std::bind
@@ -45,7 +47,7 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error, std::runtime_error
-#include <string>		// std::string
+#include <string>		// std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <utility>		// std::pair
 #include <vector>		// std::vector
@@ -167,6 +169,7 @@ namespace crawlservpp::Module::Extractor {
 		void extractingFetchUrls();
 		void extractingCheckUrls();
 		unsigned long extractingNext();
+		std::string extractingGetValueFromContent(const QueryStruct& query, std::string& content);
 		unsigned long extractingParse(unsigned long contentId, const std::string& content);
 		void extractingUrlFinished();
 		void extractingSaveResults(bool warped);
