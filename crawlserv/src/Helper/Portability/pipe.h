@@ -1,6 +1,8 @@
 /*
  * pipe.h
  *
+ * Rename _popen and _pclose to popen and pclose on Windows.
+ *
  *  Created on: May 14, 2019
  *      Author: ans
  */
