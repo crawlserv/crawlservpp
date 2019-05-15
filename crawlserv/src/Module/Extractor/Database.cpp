@@ -100,69 +100,74 @@ namespace crawlservpp::Module::Extractor {
 
 		// reserve memory
 		if(this->rawContentIsSource)
-			this->reserveForPreparedStatements(sizeof(ps) / sizeof(unsigned short) + this->sources.size());
+			this->reserveForPreparedStatements(
+					sizeof(ps) / sizeof(unsigned short) + this->sources.size()
+			);
 		else
-			this->reserveForPreparedStatements(sizeof(ps) / sizeof(unsigned short) + this->sources.size() - 1);
+			this->reserveForPreparedStatements(
+					sizeof(ps) / sizeof(unsigned short) + this->sources.size() - 1
+			);
 
 		// prepare SQL statements
 		if(!(this->ps.fetchUrls)) {
 			if(this->isVerbose())
 				this->log("prepares fetchUrls()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<		"SELECT tmp1.id, tmp1.url FROM"
+			std::string sqlQueryString(
+									"SELECT tmp1.id, tmp1.url FROM"
 									" ("
-										" SELECT `" << this->urlListTable << "`.id,"
-										" `" << this->urlListTable << "`.url"
-										" FROM `" << this->urlListTable << "`"
-										" WHERE `" << this->urlListTable << "`.id > ?";
-			if(!(this->extractCustom))
-				sqlQueryStrStr <<		" AND `" << this->urlListTable << "`.manual = FALSE";
+										" SELECT `" + this->urlListTable + "`.id,"
+										" `" + this->urlListTable + "`.url"
+										" FROM `" + this->urlListTable + "`"
+										" WHERE `" + this->urlListTable + "`.id > ?"
+			);
 
-			sqlQueryStrStr <<			" AND EXISTS"
+			if(!(this->extractCustom))
+				sqlQueryString +=		" AND `" + this->urlListTable + "`.manual = FALSE";
+
+			sqlQueryString +=			" AND EXISTS"
 										" ("
 											" SELECT *"
-											" FROM `" << this->urlListTable << "_parsing`"
-											" WHERE `" << this->urlListTable << "_parsing`.url"
-											" = `" << this->urlListTable << "`.id"
-											" AND `" <<  this->urlListTable << "_parsing`.success"
+											" FROM `" + this->urlListTable + "_parsing`"
+											" WHERE `" + this->urlListTable + "_parsing`.url"
+											" = `" + this->urlListTable + "`.id"
+											" AND `" + this->urlListTable + "_parsing`.success"
 										" )"
-										" ORDER BY `" << this->urlListTable << "`.id"
+										" ORDER BY `" + this->urlListTable + "`.id"
 									" ) AS tmp1"
 									" LEFT OUTER JOIN "
 									" ("
 										" SELECT url, MAX(locktime) AS locktime";
 
 			if(!(this->reextract))
-				sqlQueryStrStr <<		", MAX(success) AS success";
+				sqlQueryString += 		", MAX(success) AS success";
 
-			sqlQueryStrStr <<			" FROM `" << this->extractingTable << "`"
-										" WHERE target = " << this->targetTableId <<
+			sqlQueryString +=			" FROM `" + this->extractingTable + "`"
+										" WHERE target = " + std::to_string(this->targetTableId) +
 										" AND url > ?"
 										" AND"
 										" ("
 											"locktime >= NOW()";
 
 			if(!(this->reextract))
-				sqlQueryStrStr <<			" OR success = TRUE";
+				sqlQueryString +=			" OR success = TRUE";
 
-			sqlQueryStrStr <<			" )"
+			sqlQueryString +=			" )"
 										" GROUP BY url"
 									" ) AS tmp2"
 									" ON tmp1.id = tmp2.url"
 									" WHERE tmp2.locktime IS NULL";
 
 			if(!(this->reextract))
-				sqlQueryStrStr <<	" AND tmp2.success IS NULL";
+				sqlQueryString +=	" AND tmp2.success IS NULL";
 
 			if(this->cacheSize)
-				sqlQueryStrStr <<	" LIMIT " << this->cacheSize;
+				sqlQueryString +=	" LIMIT " + std::to_string(this->cacheSize);
 
 			if(this->isVerbose())
-				this->log("> " + sqlQueryStrStr.str());
+				this->log("> " + sqlQueryString);
 
-			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryString);
 		}
 
 		if(!(this->ps.lockUrl)) {
@@ -226,86 +231,78 @@ namespace crawlservpp::Module::Extractor {
 			if(this->isVerbose())
 				this->log("prepares getUrlLockTime()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"SELECT MAX(locktime) AS locktime"
-								" FROM `" << this->extractingTable << "`"
-								" WHERE target = " << this->targetTableId <<
-								" AND url = ?"
-								" GROUP BY url"
-								" LIMIT 1";
-
-			this->ps.getUrlLockTime = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.getUrlLockTime = this->addPreparedStatement(
+					"SELECT MAX(locktime) AS locktime"
+					" FROM `" + this->extractingTable + "`"
+					" WHERE target = " + std::to_string(this->targetTableId) +
+					" AND url = ?"
+					" GROUP BY url"
+					" LIMIT 1"
+			);
 		}
 
 		if(!(this->ps.renewUrlLockIfOk)) {
 			if(this->isVerbose())
 				this->log("prepares renewUrlLockIfOk()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"UPDATE `" << this->extractingTable << "`"
-								" SET locktime = GREATEST"
-								"("
-									"?,"
-									"? + INTERVAL 1 SECOND"
-								")"
-								" WHERE target = " << this->targetTableId <<
-								" AND url = ?"
-								" AND"
-								" ("
-									" locktime <= ?"
-									" OR locktime IS NULL"
-									" OR locktime < NOW()"
-								" )";
-
-			this->ps.renewUrlLockIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
+					"UPDATE `" + this->extractingTable + "`"
+					" SET locktime = GREATEST"
+					"("
+						"?,"
+						"? + INTERVAL 1 SECOND"
+					")"
+					" WHERE target = " + std::to_string(this->targetTableId) +
+					" AND url = ?"
+					" AND"
+					" ("
+						" locktime <= ?"
+						" OR locktime IS NULL"
+						" OR locktime < NOW()"
+					" )"
+			);
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
 			if(this->isVerbose())
 				this->log("prepares unLockUrlIfOk()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"UPDATE `" << this->extractingTable << "`"
-								" SET locktime = NULL"
-								" WHERE target = " << this->targetTableId <<
-								" AND url = ?"
-								" AND"
-								" ("
-									" locktime <= ?"
-									" OR locktime <= NOW()"
-								" )";
-
-			this->ps.unLockUrlIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.unLockUrlIfOk = this->addPreparedStatement(
+					"UPDATE `" + this->extractingTable + "`"
+					" SET locktime = NULL"
+					" WHERE target = " + std::to_string(this->targetTableId) +
+					" AND url = ?"
+					" AND"
+					" ("
+						" locktime <= ?"
+						" OR locktime <= NOW()"
+					" )"
+			);
 		}
 
 		if(!(this->ps.checkExtractingTable)) {
 			if(this->isVerbose())
 				this->log("prepares checkExtractingTable()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"DELETE t1 FROM `" << this->extractingTable + "` t1"
-								" INNER JOIN `" << this->extractingTable + "` t2"
-								" WHERE t1.id < t2.id"
-								" AND t1.url = t2.url"
-								" AND t1.target = t2.target"
-								" AND t1.target = " << this->targetTableId;
-
-			this->ps.checkExtractingTable = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.checkExtractingTable = this->addPreparedStatement(
+					"DELETE t1 FROM `" + this->extractingTable + "` t1"
+					" INNER JOIN `" + this->extractingTable + "` t2"
+					" WHERE t1.id < t2.id"
+					" AND t1.url = t2.url"
+					" AND t1.target = t2.target"
+					" AND t1.target = " + std::to_string(this->targetTableId)
+			);
 		}
 
-		if(this->rawContentIsSource && !(this->ps.getLatestContent)) {
+		if(this->rawContentIsSource && !(this->ps.getContent)) {
 			if(this->isVerbose())
-				this->log("prepares getLatestContent()...");
+				this->log("prepares getContent()...");
 
-			this->ps.getLatestContent = this->addPreparedStatement(
-					"SELECT id, content FROM `" + this->urlListTable + "_crawled`"
+			this->ps.getContent = this->addPreparedStatement(
+					"SELECT content FROM `" + this->urlListTable + "_crawled`"
 					" WHERE url = ?"
 					" ORDER BY crawltime DESC"
-					" LIMIT ?, 1"
+					" LIMIT 1"
 			);
 		}
 
@@ -369,12 +366,10 @@ namespace crawlservpp::Module::Extractor {
 			if(this->isVerbose())
 				this->log("prepares updateTargetTable()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"UPDATE crawlserv_extractedtables SET updated = CURRENT_TIMESTAMP"
-								" WHERE id = " << this->targetTableId << " LIMIT 1";
-
-			this->ps.updateTargetTable = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.updateTargetTable = this->addPreparedStatement(
+					"UPDATE crawlserv_extractedtables SET updated = CURRENT_TIMESTAMP"
+					" WHERE id = " + std::to_string(this->targetTableId) + " LIMIT 1"
+			);
 		}
 
 		if(this->psGetParsedData.empty()) {
@@ -765,45 +760,36 @@ namespace crawlservpp::Module::Extractor {
 
 	// get latest content for the ID-specified URL, return false if there is no content,
 	//  throws Database::Exception
-	bool Database::getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo) {
-		IdString result;
-		bool success = false;
-
+	bool Database::getContent(unsigned long urlId, std::string& contentTo) {
 		// check argument
 		if(!urlId)
-			throw Exception("Extractor:Database::getLatestContent(): No URL ID specified");
+			throw Exception("Extractor:Database::getContent(): No URL ID specified");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getLatestContent))
-			throw Exception("Missing prepared SQL statement for Extractor:Database::getLatestContent(...)");
+		if(!(this->ps.getContent))
+			throw Exception("Missing prepared SQL statement for Extractor:Database::getContent(...)");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getLatestContent));
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getContent));
 
 		// get URL latest content from database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);
-			sqlStatement.setUInt64(2, index);
 
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				result = IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content"));
-				success = true;
+				contentTo = sqlResultSet->getString("content");
+
+				return true;
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Extractor:Database::getLatestContent", e); }
-
-		if(success) {
-			contentTo = result;
-
-			return true;
-		}
+		catch(const sql::SQLException &e) { this->sqlException("Extractor:Database::getContent", e); }
 
 		return false;
 	}
@@ -1182,37 +1168,37 @@ namespace crawlservpp::Module::Extractor {
 		if(!numberOfUrls)
 			throw Exception("Database::queryLockUrls(): No number of URLs specified");
 
-		std::ostringstream sqlQueryStrStr;
-
 		// create INSERT INTO clause
-		sqlQueryStrStr <<		"INSERT INTO `" << this->extractingTable << "`(id, target, url, locktime)"
-								" VALUES";
+		std::string sqlQueryString(
+				"INSERT INTO `" + this->extractingTable + "`(id, target, url, locktime)"
+				" VALUES"
+		);
 
 		// create VALUES clauses
 		for(unsigned int n = 1; n <= numberOfUrls; ++n) {
-			sqlQueryStrStr <<	" ("
+			sqlQueryString +=	" ("
 									" ("
-										"SELECT id FROM `" << this->extractingTable << "`"
-										" AS `" << this->extractingTableAlias << n << "`"
-										" WHERE target = " << this->targetTableId <<
+										"SELECT id FROM `" + this->extractingTable + "`"
+										" AS `" + this->extractingTableAlias + std::to_string(n) + "`"
+										" WHERE target = " + std::to_string(this->targetTableId) +
 										" AND url = ?"
 										" ORDER BY id DESC"
 										" LIMIT 1"
 									" ),"
-									" " << this->targetTableId << ","
+									" " + std::to_string(this->targetTableId) + ","
 									" ?,"
 									" ?"
 								" )";
 
 			if(n < numberOfUrls)
-				sqlQueryStrStr << ", ";
+				sqlQueryString += ", ";
 		}
 
 		// crate ON DUPLICATE KEY UPDATE clause
-		sqlQueryStrStr <<		" ON DUPLICATE KEY"
+		sqlQueryString +=		" ON DUPLICATE KEY"
 								" UPDATE locktime = VALUES(locktime)";
 
-		return sqlQueryStrStr.str();
+		return sqlQueryString;
 	}
 
 	// generate SQL query for updating or adding a specific number of extracted entries, throws Database::Exception
@@ -1281,19 +1267,19 @@ namespace crawlservpp::Module::Extractor {
 			throw Exception("Database::querySetUrlsFinishedIfLockOk(): No number of URLs specified");
 
 		// create UPDATE SET clause
-		std::ostringstream sqlQueryStrStr;
-
-		sqlQueryStrStr << "UPDATE `" << this->extractingTable << "` SET locktime = NULL, success = TRUE";
+		std::string sqlQueryString(
+				"UPDATE `" + this->extractingTable + "`"
+				" SET locktime = NULL, success = TRUE"
+				" WHERE "
+		);
 
 		// create WHERE clause
-		sqlQueryStrStr << " WHERE ";
-
 		for(unsigned int n = 0; n < numberOfUrls; ++n) {
 			if(n > 0)
-				sqlQueryStrStr << " OR ";
+				sqlQueryString += " OR ";
 
-			sqlQueryStrStr <<	" ( "
-									" target = " << this->targetTableId <<
+			sqlQueryString +=	" ( "
+									" target = " + std::to_string(this->targetTableId) +
 									" AND url = ?"
 									" AND"
 									" ("
@@ -1305,34 +1291,34 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// return query
-		return sqlQueryStrStr.str();
+		return sqlQueryString;
 	}
 
 	// generate SQL query for unlocking multiple URls if they haven't been locked since fetching
 	std::string Database::queryUnlockUrlsIfOk(unsigned int numberOfUrls) {
-		std::ostringstream sqlQueryStrStr;
-
-		sqlQueryStrStr <<	"UPDATE `" << this->extractingTable << "`"
+		std::string sqlQueryString(
+							"UPDATE `" + this->extractingTable + "`"
 							" SET locktime = NULL"
-							" WHERE target = " << this->targetTableId <<
+							" WHERE target = " + std::to_string(this->targetTableId) +
 							" AND"
-							" (";
+							" ("
+		);
 
 		for(unsigned long n = 1; n <= numberOfUrls; ++n) {
-			sqlQueryStrStr <<	" url = ?";
+			sqlQueryString += " url = ?";
 
 			if(n < numberOfUrls)
-				sqlQueryStrStr << " OR";
+				sqlQueryString += " OR";
 		}
 
-		sqlQueryStrStr <<	" )"
+		sqlQueryString +=	" )"
 							" AND"
 							" ("
 								" locktime <= ?"
 								" OR locktime <= NOW()"
 							" )";
 
-		return sqlQueryStrStr.str();
+		return sqlQueryString;
 	}
 
 } /* crawlservpp::Module::Extractor */
