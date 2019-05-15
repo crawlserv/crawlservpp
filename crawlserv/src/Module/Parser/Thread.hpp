@@ -45,7 +45,7 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error, std::runtime_error
-#include <string>		// std::string
+#include <string>		// std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <utility>		// std::pair
 #include <vector>		// std::vector
