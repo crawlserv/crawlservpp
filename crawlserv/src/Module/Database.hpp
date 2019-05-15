@@ -19,8 +19,7 @@
 #include "../Struct/ModuleOptions.hpp"
 
 #include <memory>	// std::unique_ptr
-#include <sstream>	// std::ostringstream
-#include <string>	// std::string
+#include <string>	// std::string, std::to_string
 
 namespace crawlservpp::Wrapper {
 	class Database;
