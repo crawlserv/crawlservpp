@@ -15,8 +15,7 @@
 
 #include "../../Network/Config.hpp"
 
-#include <algorithm>	// std::min, std::replace_if
-#include <queue>		// std::queue
+#include <algorithm>	// std::min std::replace_if
 #include <string>		// std::string
 #include <vector>		// std::vector
 
