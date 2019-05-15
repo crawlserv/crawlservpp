@@ -225,9 +225,6 @@ namespace crawlservpp::Module::Extractor {
 
 	// extractor tick, throws Thread::Exception
 	void Thread::onTick() {
-		// TODO: Not fully implemented yet
-		throw Exception("Extractor is not implemented yet.");
-
 		bool skip = false;
 
 		// check for jump in last ID ("time travel")
