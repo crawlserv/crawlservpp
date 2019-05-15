@@ -22,13 +22,12 @@
 
 #include <curl/curl.h>
 
-#include <algorithm>	// std::remove_if, std::transform
+#include <algorithm>	// std::find, std::remove_if, std::transform
 #include <cctype>		// ::isspace, ::tolower
 #include <chrono>		// std::chrono
 #include <exception>	// std::exception
 #include <queue>		// std::queue
-#include <sstream>		// std::ostringstream
-#include <string>		// std::string
+#include <string>		// std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <vector>		// std::vector
 
