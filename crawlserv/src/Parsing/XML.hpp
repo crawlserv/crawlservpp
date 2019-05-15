@@ -19,7 +19,7 @@
 #include <memory>	// std::make_unique, std::unique_ptr
 #include <queue>	// std::queue
 #include <sstream>	// std::istringstream, std::ostringstream
-#include <string>	// std::string
+#include <string>	// std::string, std::to_string
 
 namespace crawlservpp::Query {
 
