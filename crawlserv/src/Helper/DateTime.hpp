@@ -13,8 +13,8 @@
 #include "../_extern/date/include/date/date.h"
 
 #include <locale>	// std::locale
-#include <sstream>	// std::istringstream, std::ostringstream
-#include <string>	// std::string
+#include <sstream>	// std::istringstream
+#include <string>	// std::string, std::to_string
 
 namespace crawlservpp::Helper::DateTime {
 
@@ -141,6 +141,7 @@ namespace crawlservpp::Helper::DateTime {
 	inline std::string microsecondsToString(unsigned long long microseconds) {
 		unsigned long long rest = microseconds;
 		unsigned long days = rest / 86400000000;
+		std::string result;
 
 		rest -= days * 86400000000;
 
@@ -160,39 +161,36 @@ namespace crawlservpp::Helper::DateTime {
 
 		rest -= milliseconds * 1000;
 
-		std::ostringstream resultStrStr;
-
 		if(days)
-			resultStrStr << days << "d ";
+			result += std::to_string(days) + "d ";
 
 		if(hours)
-			resultStrStr << hours << "h ";
+			result += std::to_string(hours) + "h ";
 
 		if(minutes)
-			resultStrStr << minutes << "min ";
+			result += std::to_string(minutes) + "min ";
 
 		if(seconds)
-			resultStrStr << seconds << "s ";
+			result += std::to_string(seconds) + "s ";
 
 		if(milliseconds)
-			resultStrStr << milliseconds << "ms ";
+			result += std::to_string(milliseconds) + "ms ";
 
 		if(rest)
-			resultStrStr << rest << "μs ";
+			result += std::to_string(rest) + "μs ";
 
-		std::string resultStr = resultStrStr.str();
-
-		if(resultStr.empty())
+		if(result.empty())
 			return "<1μs";
 
-		resultStr.pop_back();
+		result.pop_back();
 
-		return resultStr;
+		return result;
 	}
 
 	// convert milliseconds to string
 	inline std::string millisecondsToString(unsigned long long milliseconds) {
 		unsigned long long rest = milliseconds;
+		std::string result;
 
 		const unsigned long days = rest / 86400000;
 
@@ -210,36 +208,33 @@ namespace crawlservpp::Helper::DateTime {
 
 		rest -= seconds * 1000;
 
-		std::ostringstream resultStrStr;
-
 		if(days)
-			resultStrStr << days << "d ";
+			result += std::to_string(days) + "d ";
 
 		if(hours)
-			resultStrStr << hours << "h ";
+			result += std::to_string(hours) + "h ";
 
 		if(minutes)
-			resultStrStr << minutes << "min ";
+			result += std::to_string(minutes) + "min ";
 
 		if(seconds)
-			resultStrStr << seconds << "s ";
+			result += std::to_string(seconds) + "s ";
 
 		if(rest)
-			resultStrStr << rest << "ms ";
+			result += rest + "ms ";
 
-		std::string resultStr = resultStrStr.str();
-
-		if(resultStr.empty())
+		if(result.empty())
 			return "<1ms";
 
-		resultStr.pop_back();
+		result.pop_back();
 
-		return resultStr;
+		return result;
 	}
 
 	// convert seconds to string
 	inline std::string secondsToString(unsigned long long seconds) {
 		unsigned long long rest = seconds;
+		std::string result;
 
 		const unsigned long days = rest / 86400;
 
@@ -253,28 +248,24 @@ namespace crawlservpp::Helper::DateTime {
 
 		rest -= minutes * 60;
 
-		std::ostringstream resultStrStr;
-
 		if(days)
-			resultStrStr << days << "d ";
+			result += std::to_string(days) + "d ";
 
 		if(hours)
-			resultStrStr << hours << "h ";
+			result += std::to_string(hours) + "h ";
 
 		if(minutes)
-			resultStrStr << minutes << "min ";
+			result += std::to_string(minutes) + "min ";
 
 		if(rest)
-			resultStrStr << rest << "s ";
+			result += std::to_string(rest) + "s ";
 
-		std::string resultStr = resultStrStr.str();
-
-		if(resultStr.empty())
+		if(result.empty())
 			return "<1s";
 
-		resultStr.pop_back();
+		result.pop_back();
 
-		return resultStr;
+		return result;
 	}
 
 } /* crawlservpp::Helper::DateTime */
