@@ -10,6 +10,7 @@
 #ifndef HELPER_VERSIONS_HPP_
 #define HELPER_VERSIONS_HPP_
 
+#include "../Helper/Portability/compiler.h"
 #include "../Helper/Portability/mysqlcppconn.h"
 
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
