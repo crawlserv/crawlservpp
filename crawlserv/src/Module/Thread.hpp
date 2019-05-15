@@ -34,7 +34,6 @@
 #include <exception>			// std::exception
 #include <iostream>				// std::cout, std::flush
 #include <mutex>				// std::lock_guard, std::mutex, std::unique_lock
-#include <sstream>				// std::ostringstream
 #include <string>				// std::string
 #include <thread>				// std::this_thread, std::thread
 
