@@ -417,12 +417,8 @@ namespace crawlservpp::Module {
 		// handle exceptions by trying to log and set status
 		catch(const std::exception& e) {
 			// log error
-			std::ostringstream logStrStr;
-
-			logStrStr << "failed - " << e.what() << ".";
-
 			try {
-				this->log(logStrStr.str());
+				this->log("failed - " + std::string(e.what()) + ".");
 
 				// try to set status
 				this->setStatusMessage("ERROR " + std::string(e.what()));
@@ -461,31 +457,23 @@ namespace crawlservpp::Module {
 		}
 		// handle other exceptions by trying to log, set status and pause thread
 		catch(const std::exception& e) {
-			// try to log error
-			std::ostringstream logStrStr;
+			// log error
+			this->log("failed - " + std::string(e.what()) + ".");
 
-			logStrStr << "failed - " << e.what() << ".";
-
-			this->log(logStrStr.str());
-
-			// try to set status
+			// set status
 			this->setStatusMessage("ERROR " + std::string(e.what()));
 
-			// try to pause thread
+			// pause thread
 			this->pauseByThread();
 		}
 		catch(...) {
-			// try to log error
-			std::ostringstream logStrStr;
+			// log error
+			this->log("failed - Unknown exception.");
 
-			logStrStr << "failed - Unknown exception";
-
-			this->log(logStrStr.str());
-
-			// try to set status
+			// set status
 			this->setStatusMessage("ERROR Unknown exception");
 
-			// try to pause thread
+			// pause thread
 			this->pauseByThread();
 		}
 #endif
@@ -615,14 +603,12 @@ namespace crawlservpp::Module {
 	void Thread::clearException(const std::exception& e, const std::string& inFunction) {
 		// try to log the (known) exception
 		try {
-			std::ostringstream logStrStr;
-
-			logStrStr	<< "[WARNING] Exception in Thread::"
-						<< inFunction
-						<< "() - "
-						<< e.what();
-
-			this->database.log(logStrStr.str());
+			this->database.log(
+					"[WARNING] Exception in Thread::"
+					+ inFunction
+					+ "() - "
+					+ std::string(e.what())
+			);
 		}
 		// if that fails too, write the original exception to the console
 		catch(...) {
@@ -688,11 +674,7 @@ namespace crawlservpp::Module {
 		catch(const std::exception& e) {
 			try {
 				// log error
-				std::ostringstream logStrStr;
-
-				logStrStr << "failed - " << std::string(e.what()) << ".";
-
-				this->log(logStrStr.str());
+				this->log("failed - " + std::string(e.what()) + ".");
 
 				// update run or pause time
 				this->updateRunTime();

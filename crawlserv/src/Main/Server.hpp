@@ -77,7 +77,7 @@
 #include <mutex>		// std::lock_guard, std::mutex
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
-#include <string>		// std::string
+#include <string>		// std::string, std::to_string
 #include <thread>		// std::thread
 #include <vector>		// std::vector
 

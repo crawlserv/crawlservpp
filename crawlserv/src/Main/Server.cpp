@@ -90,11 +90,11 @@ namespace crawlservpp::Main {
 				this->crawlers.back()->Module::Thread::start();
 
 				// write to log
-				std::ostringstream logStrStr;
-
-				logStrStr << "crawler #" << thread.status.id << " continued.";
-
-				this->database.log(logStrStr.str());
+				this->database.log(
+						"crawler #"
+						+ std::to_string(thread.status.id)
+						+ " continued."
+				);
 			}
 			else if(thread.options.module == "parser") {
 				// load parser thread
@@ -109,11 +109,11 @@ namespace crawlservpp::Main {
 				this->parsers.back()->Module::Thread::start();
 
 				// write to log
-				std::ostringstream logStrStr;
-
-				logStrStr << "parser #" << thread.status.id << " continued.";
-
-				this->database.log(logStrStr.str());
+				this->database.log(
+						"parser #"
+						+ std::to_string(thread.status.id)
+						+ " continued."
+				);
 			}
 			else if(thread.options.module == "extractor") {
 				this->extractors.push_back(
@@ -127,16 +127,18 @@ namespace crawlservpp::Main {
 				this->extractors.back()->Module::Thread::start();
 
 				// write to log
-				std::ostringstream logStrStr;
-
-				logStrStr << "extractor #" << thread.status.id << " continued.";
-
-				this->database.log(logStrStr.str());
+				this->database.log(
+						"extractor #"
+						+ std::to_string(thread.status.id)
+						+ " continued."
+				);
 			}
 			else if(thread.options.module == "analyzer") {
 				// get JSON
 				const std::string config(
-						this->database.getConfiguration(thread.options.config)
+						this->database.getConfiguration(
+								thread.options.config
+						)
 				);
 
 				// parse JSON
@@ -175,13 +177,12 @@ namespace crawlservpp::Main {
 				// start algorithm (and get its ID)
 				this->analyzers.back()->Module::Thread::start();
 
-
 				// write to log
-				std::ostringstream logStrStr;
-
-				logStrStr << "analyzer #" << thread.status.id << " continued.";
-
-				this->database.log(logStrStr.str());
+				this->database.log(
+						"analyzer #"
+						+ std::to_string(thread.status.id)
+						+ " continued."
+				);
 			}
 			else
 				throw Exception("Unknown thread module \'" + thread.options.module + "\'");
@@ -191,17 +192,15 @@ namespace crawlservpp::Main {
 		this->uptimeStart = std::chrono::steady_clock::now();
 
 		// start logging
-		std::ostringstream logStrStr;
-
-		logStrStr	<< "successfully started and connected to database [MySQL v"
-					<< this->database.getMysqlVersion()
-					<< "; datadir=\'"
-					<< this->database.getDataDir()
-					<< "\'; maxAllowedPacketSize="
-					<< this->database.getMaxAllowedPacketSize()
-					<< "].";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"successfully started and connected to database [MySQL v"
+				+ this->database.getMysqlVersion()
+				+ "; datadir=\'"
+				+ this->database.getDataDir()
+				+ "\'; maxAllowedPacketSize="
+				+ std::to_string(this->database.getMaxAllowedPacketSize())
+				+ "]."
+		);
 	}
 
 	// destructor
@@ -229,16 +228,21 @@ namespace crawlservpp::Main {
 				crawler->Module::Thread::end();
 
 				// log interruption
-				std::ostringstream logStrStr;
-
-				logStrStr << "crawler #" << id << " interrupted.";
+				const std::string logString(
+						"crawler #"
+						+ std::to_string(id)
+						+ " interrupted."
+				);
 
 				try {
-					this->database.log(logStrStr.str());
+					this->database.log(logString);
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nCould not write to log: " << e.what() << std::flush;
+					std::cout	<< '\n'
+								<< logString
+								<< "\nCould not write to log: "
+								<< e.what()
+								<< std::flush;
 				}
 			}
 		}
@@ -254,16 +258,21 @@ namespace crawlservpp::Main {
 				parser->Module::Thread::end();
 
 				// log interruption
-				std::ostringstream logStrStr;
-
-				logStrStr << "parser #" << id << " interrupted.";
+				const std::string logString(
+						"parser #"
+						+ std::to_string(id)
+						+ " interrupted."
+				);
 
 				try {
-					this->database.log(logStrStr.str());
+					this->database.log(logString);
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nCould not write to log: " << e.what() << std::flush;
+					std::cout	<< '\n'
+								<< logString
+								<< "\nCould not write to log: "
+								<< e.what()
+								<< std::flush;
 				}
 			}
 		}
@@ -279,16 +288,21 @@ namespace crawlservpp::Main {
 				extractor->Module::Thread::end();
 
 				// log interruption
-				std::ostringstream logStrStr;
-
-				logStrStr << "extractor #" << id << " interrupted.";
+				const std::string logString(
+						"extractor #"
+						+ std::to_string(id)
+						+ " interrupted."
+				);
 
 				try {
-					this->database.log(logStrStr.str());
+					this->database.log(logString);
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nCould not write to log: " << e.what() << std::flush;
+					std::cout	<< '\n'
+								<< logString
+								<< "\nCould not write to log: "
+								<< e.what()
+								<< std::flush;
 				}
 			}
 		}
@@ -304,16 +318,21 @@ namespace crawlservpp::Main {
 				analyzer->Module::Thread::end();
 
 				// log interruption
-				std::ostringstream logStrStr;
-
-				logStrStr << "analyzer #" << id << " interrupted.";
+				const std::string logString(
+						"analyzer #"
+						+ std::to_string(id)
+						+ " interrupted."
+				);
 
 				try {
-					this->database.log(logStrStr.str());
+					this->database.log(logString);
 				}
 				catch(const Database::Exception& e) {
-					std::cout	<< '\n' << logStrStr.str()
-								<< "\nCould not write to log: " << e.what() << std::flush;
+					std::cout	<< '\n'
+								<< logString
+								<< "\nCould not write to log: "
+								<< e.what()
+								<< std::flush;
 				}
 			}
 		}
@@ -841,7 +860,12 @@ namespace crawlservpp::Main {
 			bool fileDownload = false;
 
 			const std::string reply(
-					this->cmd(connection, body, threadStarted, fileDownload)
+					this->cmd(
+							connection,
+							body,
+							threadStarted,
+							fileDownload
+					)
 			);
 
 			// send reply
@@ -1092,29 +1116,30 @@ namespace crawlservpp::Main {
 		);
 
 		// check arguments
-		if(!(this->database.isWebsite(options.website))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isWebsite(options.website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
-			errStrStr << "Website #" << options.website << " not found.";
+		if(!(this->database.isUrlList(options.website, options.urlList)))
+			return ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(options.urlList)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		if(!(this->database.isUrlList(options.website, options.urlList))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "URL list #" << options.urlList << " for website #" << options.website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		if(!(this->database.isConfiguration(options.website, options.config))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Configuration #" << options.config << " for website #" << options.website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isConfiguration(options.website, options.config)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(options.config)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
 		// create crawler
 		this->crawlers.push_back(
@@ -1128,14 +1153,14 @@ namespace crawlservpp::Main {
 		// start crawler
 		this->crawlers.back()->Module::Thread::start();
 
-		unsigned long id = this->crawlers.back()->Module::Thread::getId();
-
 		// startcrawler is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "crawler #" << id << " started by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"crawler #"
+				+ std::to_string(this->crawlers.back()->Module::Thread::getId())
+				+ " started by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Crawler has been started.");
 	}
@@ -1152,7 +1177,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find crawler
 		auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
@@ -1161,23 +1186,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->crawlers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find crawler #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->crawlers.end())
+			return ServerCommandResponse::failed(
+					"Could not find crawler #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// pause crawler
 		(*i)->Module::Thread::pause();
 
 		// pausecrawler is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "crawler #" << id << " paused by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"crawler #"
+				+ std::to_string(id)
+				+ " paused by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Crawler is pausing.");
 	}
@@ -1194,7 +1220,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find crawler
 		auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
@@ -1203,23 +1229,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->crawlers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find crawler #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->crawlers.end())
+			return ServerCommandResponse::failed(
+					"Could not find crawler #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// unpause crawler
 		(*i)->Module::Thread::unpause();
 
 		// unpausecrawler is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "crawler #" << id << " unpaused by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"crawler #"
+				+ std::to_string(id)
+				+ " unpaused by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Crawler is unpausing.");
 	}
@@ -1236,7 +1263,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		// find crawler
 		auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
@@ -1245,23 +1272,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->crawlers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find crawler #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->crawlers.end())
+			return ServerCommandResponse::failed(
+					"Could not find crawler #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// interrupt crawler
 		(*i)->Module::Thread::stop();
 
 		// stopcrawler is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "crawler #" << id << " stopped by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"crawler #"
+				+ std::to_string(id)
+				+ " stopped by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Crawler is stopping.");
 	}
@@ -1298,29 +1326,30 @@ namespace crawlservpp::Main {
 		);
 
 		// check arguments
-		if(!(this->database.isWebsite(options.website))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isWebsite(options.website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
-			errStrStr << "Website #" << options.website << " not found.";
+		if(!(this->database.isUrlList(options.website, options.urlList)))
+			return ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(options.urlList)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		if(!(this->database.isUrlList(options.website, options.urlList))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "URL list #" << options.urlList << " for website #" << options.website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		if(!(this->database.isConfiguration(options.website, options.config))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Configuration #" << options.config << " for website #" << options.website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isConfiguration(options.website, options.config)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(options.config)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
 		// create parser
 		this->parsers.push_back(
@@ -1332,14 +1361,14 @@ namespace crawlservpp::Main {
 		// start parser
 		this->parsers.back()->Module::Thread::start();
 
-		const unsigned long id = this->parsers.back()->Module::Thread::getId();
-
 		// startparser is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "parser #" << id << " started by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"parser #"
+				+ std::to_string(this->parsers.back()->Module::Thread::getId())
+				+ " started by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Parser has been started.");
 	}
@@ -1365,23 +1394,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->parsers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find parser #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->parsers.end())
+			return ServerCommandResponse::failed(
+					"Could not find parser #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// pause parser
 		(*i)->Module::Thread::pause();
 
 		// pauseparser is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "parser #" << id << " paused by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"parser #"
+				+ std::to_string(id)
+				+ " paused by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Parser is pausing.");
 	}
@@ -1407,23 +1437,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->parsers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find parser #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->parsers.end())
+			return ServerCommandResponse::failed(
+					"Could not find parser #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// unpause parser
 		(*i)->Module::Thread::unpause();
 
 		// unpauseparser is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "parser #" << id << " unpaused by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"parser #"
+				+ std::to_string(id)
+				+ " unpaused by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Parser is unpausing.");
 	}
@@ -1449,23 +1480,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->parsers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find parser #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->parsers.end())
+			return ServerCommandResponse::failed(
+					"Could not find parser #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// interrupt parser
 		(*i)->Module::Thread::stop();
 
 		// stopparser is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "parser #" << id << " stopped by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"parser #"
+				+ std::to_string(id)
+				+ " stopped by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Parser is stopping.");
 	}
@@ -1479,8 +1511,6 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		const unsigned long listId = json["urllist"].GetUint64();
-
 		// resetparsingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
 			return ServerCommandResponse::toBeConfirmed(
@@ -1488,7 +1518,7 @@ namespace crawlservpp::Main {
 			);
 
 		// reset parsing status
-		this->database.resetParsingStatus(listId);
+		this->database.resetParsingStatus(json["urllist"].GetUint64());
 
 		return ServerCommandResponse("Parsing status reset.");
 	}
@@ -1502,8 +1532,6 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		unsigned long listId = json["urllist"].GetUint64();
-
 		// resetextractingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
 				return ServerCommandResponse::toBeConfirmed(
@@ -1511,7 +1539,7 @@ namespace crawlservpp::Main {
 				);
 
 		// reset extracting status
-		this->database.resetExtractingStatus(listId);
+		this->database.resetExtractingStatus(json["urllist"].GetUint64());
 
 		return ServerCommandResponse("Extracting status reset.");
 	}
@@ -1549,32 +1577,33 @@ namespace crawlservpp::Main {
 		);
 
 		// check arguments
-		if(!(this->database.isWebsite(options.website))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isWebsite(options.website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
-			errStrStr << "Website #" << options.website << " not found.";
+		if(!(this->database.isUrlList(options.website, options.urlList)))
+			return ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(options.urlList)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		if(!(this->database.isUrlList(options.website, options.urlList))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "URL list #" << options.urlList << " for website #" << options.website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		if(!(this->database.isConfiguration(options.website, options.config))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Configuration #" << options.config << " for website #" << options.website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isConfiguration(options.website, options.config)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(options.config)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
 
 		// get configuration
-		const std::string config = this->database.getConfiguration(options.config);
+		const std::string config(this->database.getConfiguration(options.config));
 
 		// check configuration JSON
 		rapidjson::Document configJson;
@@ -1609,24 +1638,24 @@ namespace crawlservpp::Main {
 		if(!(this->analyzers.back())) {
 			this->analyzers.pop_back();
 
-			std::ostringstream errStrStr;
-
-			errStrStr << "Algorithm #" << algo << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
+			return ServerCommandResponse::failed(
+					"Algorithm #"
+					+ std::to_string(algo)
+					+ " not found."
+			);
 		}
 
 		// start algorithm
 		this->analyzers.back()->Module::Thread::start();
 
 		// startanalyzer is a logged command
-		std::ostringstream logStrStr;
-
-		const unsigned long id = this->analyzers.back()->Module::Thread::getId();
-
-		logStrStr << "analyzer #" << id << " started by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"analyzer #"
+				+ std::to_string(this->analyzers.back()->Module::Thread::getId())
+				+ " started by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Analyzer has been started.");
 	}
@@ -1652,28 +1681,29 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->analyzers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find analyzer #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->analyzers.end())
+			return ServerCommandResponse::failed(
+					"Could not find analyzer #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// pause analyzer
 		if((*i)->Module::Thread::pause()) {
 			// pauseanalyzer is a logged command
-			std::ostringstream logStrStr;
-
-			logStrStr << "analyzer #" << id << " paused by " << ip << ".";
-
-			this->database.log(logStrStr.str());
+			this->database.log(
+					"analyzer #"
+					+ std::to_string(id)
+					+ " paused by "
+					+ ip
+					+ "."
+			);
 
 			return ServerCommandResponse("Analyzer is pausing.");
 		}
 
 		// analyzer is not pausable
-		return ServerCommandResponse::failed("This algorithm cannot be paused at this moment.");
+		return ServerCommandResponse::failed("This algorithm cannot be paused at the moment.");
 	}
 
 	// server command unpauseanalyzer(id): unpause a parser by its ID
@@ -1697,23 +1727,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->analyzers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find analyzer #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->analyzers.end())
+			return ServerCommandResponse::failed(
+					"Could not find analyzer #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// unpause analyzer
 		(*i)->Module::Thread::unpause();
 
 		// unpauseanalyzer is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "analyzer #" << id << " unpaused by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"analyzer #"
+				+ std::to_string(id)
+				+ " unpaused by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Analyzer is unpausing.");
 	}
@@ -1739,23 +1770,24 @@ namespace crawlservpp::Main {
 				}
 		);
 
-		if(i == this->analyzers.end()) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find analyzer #" << id << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(i == this->analyzers.end())
+			return ServerCommandResponse::failed(
+					"Could not find analyzer #"
+					+ std::to_string(id)
+					+ "."
+			);
 
 		// interrupt analyzer
 		(*i)->Module::Thread::stop();
 
 		// stopanalyzer is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "analyzer #" << id << " stopped by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"analyzer #"
+				+ std::to_string(id)
+				+ " stopped by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Analyzer is stopping.");
 	}
@@ -1769,8 +1801,6 @@ namespace crawlservpp::Main {
 		if(!json["urllist"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		const unsigned long listId = json["urllist"].GetUint64();
-
 		// resetanalyzingstatus needs to be confirmed
 		if(!json.HasMember("confirmed"))
 				return ServerCommandResponse::toBeConfirmed(
@@ -1778,7 +1808,7 @@ namespace crawlservpp::Main {
 				);
 
 		// reset analyzing status
-		this->database.resetAnalyzingStatus(listId);
+		this->database.resetAnalyzingStatus(json["urllist"].GetUint64());
 
 		return ServerCommandResponse("Analyzing status reset.");
 	}
@@ -1918,7 +1948,7 @@ namespace crawlservpp::Main {
 		if(!json["id"].IsUint64())
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		unsigned long id = json["id"].GetUint64();
+		const unsigned long id = json["id"].GetUint64();
 
 		if(json.HasMember("crossdomain")) {
 			if(!json["crossdomain"].IsBool())
@@ -1978,35 +2008,41 @@ namespace crawlservpp::Main {
 			ServerCommandResponse::failed("Domain is empty.");
 
 		// check website
-		if(!(this->database.isWebsite(id))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isWebsite(id)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
-			errStrStr << "Website #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		// check whether threads are using the website
+		// check whether any thread is using the website
 		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->crawlers.end())
-			return ServerCommandResponse::failed("Website cannot be changed while crawler is active.");
+			return ServerCommandResponse::failed(
+					"Website cannot be changed while crawler is active."
+			);
 
 		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->parsers.end())
-			return ServerCommandResponse::failed("Website cannot be changed while parser is active.");
+			return ServerCommandResponse::failed(
+					"Website cannot be changed while parser is active."
+			);
 
-		// TODO: check extractors
-		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+		if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->extractors.end())
-				return ServerCommandResponse::failed("Website cannot be changed while extractor is active.");*/
+			return ServerCommandResponse::failed(
+					"Website cannot be changed while extractor is active."
+			);
 
 		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->analyzers.end())
-			return ServerCommandResponse::failed("Website cannot be changed while analyzer is active.");
+			return ServerCommandResponse::failed(
+					"Website cannot be changed while analyzer is active."
+			);
 
 		// check whether URLs will be changed or lost by changing type of website from cross-domain to specific domain
 		if(!json.HasMember("confirmed")) {
@@ -2016,13 +2052,35 @@ namespace crawlservpp::Main {
 			if(toModify || toDelete) {
 				std::ostringstream confirmationStrStr;
 
-				confirmationStrStr.imbue(std::locale(""));
+				switch(toModify) {
+				case 0:
+					break;
 
-				if(toModify)
-					confirmationStrStr << toModify << " URL(s) will be modified.\n";
+				case 1:
+					confirmationStrStr << "One URL will be modified.\n";
 
-				if(toDelete)
+					break;
+
+				default:
+					confirmationStrStr.imbue(std::locale(""));
+
+					confirmationStrStr << toModify << " URLs will be modified.\n";
+				}
+
+				switch(toDelete) {
+				case 0:
+					break;
+
+				case 1:
+					confirmationStrStr << "One URL will be IRRECOVERABLY LOST.\n";
+
+					break;
+
+				default:
+					confirmationStrStr.imbue(std::locale(""));
+
 					confirmationStrStr << toDelete << " URL(s) will be IRRECOVERABLY LOST.\n";
+				}
 
 				confirmationStrStr << "Do you really want to change the domain?";
 
@@ -2055,35 +2113,41 @@ namespace crawlservpp::Main {
 		const unsigned long id = json["id"].GetUint64();
 
 		// check website
-		if(!(this->database.isWebsite(id))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isWebsite(id)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
-			errStrStr << "Website #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		// check whether threads are using the website
+		// check whether any thread is using the website
 		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->crawlers.end())
-			return ServerCommandResponse::failed("Website cannot be deleted while crawler is active.");
+			return ServerCommandResponse::failed(
+					"Website cannot be deleted while crawler is active."
+			);
 
 		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->parsers.end())
-			return ServerCommandResponse::failed("Website cannot be deleted while parser is active.");
+			return ServerCommandResponse::failed(
+					"Website cannot be deleted while parser is active."
+			);
 
-		// TODO: check extractors
-		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+		if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->extractors.end())
-				return ServerCommandResponse::failed("Website cannot be deleted while extractor is active.");*/
+			return ServerCommandResponse::failed(
+					"Website cannot be deleted while extractor is active."
+			);
 
 		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
 			return p->getWebsite() == id;
 		}) != this->analyzers.end())
-			return ServerCommandResponse::failed("Website cannot be deleted while analyzer is active.");
+			return ServerCommandResponse::failed(
+					"Website cannot be deleted while analyzer is active."
+			);
 
 		// deletewebsite needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -2096,11 +2160,13 @@ namespace crawlservpp::Main {
 		this->database.deleteWebsite(id);
 
 		// deletewebsite is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "website #" << id << " deleted by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"website #"
+				+ std::to_string(id)
+				+ " deleted by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("Website deleted.");
 	}
@@ -2117,13 +2183,12 @@ namespace crawlservpp::Main {
 		const unsigned long id = json["id"].GetUint64();
 
 		// check website
-		if(!(this->database.isWebsite(id))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Website #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isWebsite(id)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
 		// duplicate website configuration
 		const unsigned long newId = this->database.duplicateWebsite(id);
@@ -2178,13 +2243,12 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Name is empty.");
 
 		// check website
-		if(!(this->database.isWebsite(website))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Website #" << website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isWebsite(website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
 
 		// add URL list to database
 		const unsigned long id = this->database.addUrlList(website, properties);
@@ -2238,35 +2302,41 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Name is empty.");
 
 		// check URL list
-		if(!(this->database.isUrlList(id))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isUrlList(id)))
+			return ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
-			errStrStr << "URL list #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		// check whether threads are using the URL list
+		// check whether any thread is using the URL list
 		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->crawlers.end())
-			return ServerCommandResponse::failed("URL list cannot be changed while crawler is active.");
+			return ServerCommandResponse::failed(
+					"URL list cannot be changed while crawler is active."
+			);
 
 		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->parsers.end())
-			return ServerCommandResponse::failed("URL list cannot be changed while parser is active.");
+			return ServerCommandResponse::failed(
+					"URL list cannot be changed while parser is active."
+			);
 
-		// TODO: check extractors
-		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+		if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->extractors.end())
-				return ServerCommandResponse::failed("URL list cannot be changed while extractor is active.");*/
+			return ServerCommandResponse::failed(
+					"URL list cannot be changed while extractor is active."
+			);
 
 		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->analyzers.end())
-			return ServerCommandResponse::failed("URL list cannot be changed while analyzer is active.");
+			return ServerCommandResponse::failed(
+					"URL list cannot be changed while analyzer is active."
+			);
 
 		// update URL list in database
 		this->database.updateUrlList(id, properties);
@@ -2293,35 +2363,41 @@ namespace crawlservpp::Main {
 		const unsigned long id = json["id"].GetUint64();
 
 		// check URL list
-		if(!(this->database.isUrlList(id))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isUrlList(id)))
+			ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
-			errStrStr << "URL list #" << id << " not found.";
-
-			ServerCommandResponse::failed(errStrStr.str());
-		}
-
-		// check whether threads are using the URL list
+		// check whether any thread is using the URL list
 		if(std::find_if(this->crawlers.begin(), this->crawlers.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->crawlers.end())
-			return ServerCommandResponse::failed("URL list cannot be deleted while crawler is active.");
+			return ServerCommandResponse::failed(
+					"URL list cannot be deleted while crawler is active."
+			);
 
 		if(std::find_if(this->parsers.begin(), this->parsers.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->parsers.end())
-			return ServerCommandResponse::failed("URL list cannot be deleted while parser is active.");
+			return ServerCommandResponse::failed(
+					"URL list cannot be deleted while parser is active."
+			);
 
-		// TODO: check extractors
-		/*if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
+		if(std::find_if(this->extractors.begin(), this->extractors.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->extractors.end())
-				return ServerCommandResponse::failed("URL list cannot be deleted while extractor is active.");*/
+				return ServerCommandResponse::failed(
+						"URL list cannot be deleted while extractor is active."
+				);
 
 		if(std::find_if(this->analyzers.begin(), this->analyzers.end(), [&id](const auto& p) {
 			return p->getUrlList() == id;
 		}) != this->analyzers.end())
-			return ServerCommandResponse::failed("URL list cannot be deleted while analyzer is active.");
+			return ServerCommandResponse::failed(
+					"URL list cannot be deleted while analyzer is active."
+			);
 
 		// deleteurllist needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -2334,11 +2410,13 @@ namespace crawlservpp::Main {
 		this->database.deleteUrlList(id);
 
 		// deleteurllist is a logged command
-		std::ostringstream logStrStr;
-
-		logStrStr << "URL list #" << id << " deleted by " << ip << ".";
-
-		this->database.log(logStrStr.str());
+		this->database.log(
+				"URL list #"
+				+ std::to_string(id)
+				+ " deleted by "
+				+ ip
+				+ "."
+		);
 
 		return ServerCommandResponse("URL list deleted.");
 	}
@@ -2632,7 +2710,10 @@ namespace crawlservpp::Main {
 				response = ServerCommandResponse::failed("Invalid arguments (\'datatype\' is not a string).");
 
 			else {
-				const std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
+				const std::string datatype(
+						json["datatype"].GetString(),
+						json["datatype"].GetStringLength()
+				);
 
 				if(datatype == "urllist") {
 					// get arguments for merging two URL lists
@@ -2814,9 +2895,20 @@ namespace crawlservpp::Main {
 				response = ServerCommandResponse::failed("Invalid arguments (\'compression\' is not a string).");
 
 			else {
-				const std::string datatype(json["datatype"].GetString(), json["datatype"].GetStringLength());
-				const std::string filetype(json["filetype"].GetString(), json["filetype"].GetStringLength());
-				const std::string compression(json["compression"].GetString(), json["compression"].GetStringLength());
+				const std::string datatype(
+						json["datatype"].GetString(),
+						json["datatype"].GetStringLength()
+				);
+
+				const std::string filetype(
+						json["filetype"].GetString(),
+						json["filetype"].GetStringLength()
+				);
+
+				const std::string compression(
+						json["compression"].GetString(),
+						json["compression"].GetStringLength()
+				);
 
 				std::queue<std::string> urls;
 				std::string content;
@@ -2956,7 +3048,12 @@ namespace crawlservpp::Main {
 
 					if(!response.fail) {
 						// generate file name
-						const std::string fileName(Helper::Strings::generateRandom(this->webServer.fileLength));
+						const std::string fileName(
+								Helper::Strings::generateRandom(
+										this->webServer.fileLength
+								)
+						);
+
 						const std::string fullFileName(
 								this->dirCache
 								+ Helper::FileSystem::getPathSeparator()
@@ -3093,13 +3190,12 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("No result type selected.");
 
 		// check website
-		if(website && !(this->database.isWebsite(website))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Website #" << website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(website && !(this->database.isWebsite(website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
 
 		// add query to database
 		const unsigned long id = this->database.addQuery(website, properties);
@@ -3198,13 +3294,12 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("No result type selected.");
 
 		// check query
-		if(!(this->database.isQuery(id))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Query #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isQuery(id)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
 		// update query in database
 		this->database.updateQuery(id, properties);
@@ -3228,13 +3323,12 @@ namespace crawlservpp::Main {
 		const unsigned long id = json["id"].GetUint64();
 
 		// check query
-		if(!(this->database.isQuery(id))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Query #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isQuery(id)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
 		if(!json.HasMember("confirmed"))
 			return ServerCommandResponse::toBeConfirmed("Do you really want to delete this query?");
@@ -3257,13 +3351,12 @@ namespace crawlservpp::Main {
 		const unsigned long id = json["id"].GetUint64();
 
 		// check query
-		if(!(this->database.isQuery(id))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Query #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isQuery(id)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
 		// duplicate query
 		const unsigned long newId = this->database.duplicateQuery(id);
@@ -3336,7 +3429,10 @@ namespace crawlservpp::Main {
 						json["textonly"].GetBool()
 				);
 
-				const std::string text(json["text"].GetString(), json["text"].GetStringLength());
+				const std::string text(
+						json["text"].GetString(),
+						json["text"].GetStringLength()
+				);
 
 				// check query text, query type and result type
 				if(properties.text.empty())
@@ -3405,18 +3501,20 @@ namespace crawlservpp::Main {
 								if(tempResults.empty())
 									result += " [empty]\n";
 								else {
-									std::ostringstream resultStrStr;
 									unsigned long counter = 0;
-
-									resultStrStr << '\n';
+									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
 										++counter;
 
-										resultStrStr << '[' << counter << "] " << tempResult << '\n';
+										toAppend	+= '['
+													+ std::to_string(counter)
+													+ "] "
+													+ tempResult
+													+ '\n';
 									}
 
-									result += resultStrStr.str();
+									result += toAppend;
 								}
 							}
 						}
@@ -3482,18 +3580,20 @@ namespace crawlservpp::Main {
 								if(tempResults.empty())
 									result += " [empty]\n";
 								else {
-									std::ostringstream resultStrStr;
 									unsigned long counter = 0;
-
-									resultStrStr << '\n';
+									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
 										++counter;
 
-										resultStrStr << '[' << counter << "] " << tempResult << '\n';
+										toAppend	+= '['
+													+ std::to_string(counter)
+													+ "] "
+													+ tempResult
+													+ '\n';
 									}
 
-									result += resultStrStr.str();
+									result += toAppend;
 								}
 							}
 						}
@@ -3558,18 +3658,20 @@ namespace crawlservpp::Main {
 									if(tempResults.empty())
 										result += " [empty]\n";
 									else {
-										std::ostringstream resultStrStr;
 										unsigned long counter = 0;
-
-										resultStrStr << '\n';
+										std::string toAppend(1, '\n');
 
 										for(const auto& tempResult : tempResults) {
 											++counter;
 
-											resultStrStr << '[' << counter << "] " << tempResult << '\n';
+											toAppend	+= '['
+														+ std::to_string(counter)
+														+ "] "
+														+ tempResult
+														+ '\n';
 										}
 
-										result += resultStrStr.str();
+										result += toAppend;
 									}
 								}
 							}
@@ -3631,18 +3733,20 @@ namespace crawlservpp::Main {
 									if(tempResults.empty())
 										result += " [empty]\n";
 									else {
-										std::ostringstream resultStrStr;
 										unsigned long counter = 0;
-
-										resultStrStr << '\n';
+										std::string toAppend(1, '\n');
 
 										for(const auto& tempResult : tempResults) {
 											++counter;
 
-											resultStrStr << '[' << counter << "] " << tempResult << '\n';
+											toAppend	+= '['
+														+ std::to_string(counter)
+														+ "] "
+														+ tempResult
+														+ '\n';
 										}
 
-										result += resultStrStr.str();
+										result += toAppend;
 									}
 								}
 							}
@@ -3726,13 +3830,12 @@ namespace crawlservpp::Main {
 		}
 
 		// check website
-		if(!(this->database.isWebsite(website))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Website #" << website << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isWebsite(website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
 
 		// add configuration to database
 		const unsigned long id = this->database.addConfiguration(website, properties);
@@ -3789,13 +3892,12 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Parsed JSON is not an array.");
 
 		// check configuration
-		if(!(this->database.isConfiguration(id))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Configuration #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isConfiguration(id)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
 		// update configuration in database
 		this->database.updateConfiguration(id, properties);
@@ -3819,13 +3921,13 @@ namespace crawlservpp::Main {
 		const unsigned long id = json["id"].GetUint64();
 
 		// check configuration
-		if(!(this->database.isConfiguration(id))) {
-			std::ostringstream errStrStr;
+		if(!(this->database.isConfiguration(id)))
+			ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
-			errStrStr << "Configuration #" << id << " not found.";
-
-			ServerCommandResponse::failed(errStrStr.str());
-		}
 
 		// deleteconfig needs to be confirmed
 		if(!json.HasMember("confirmed"))
@@ -3849,13 +3951,12 @@ namespace crawlservpp::Main {
 		const unsigned long id = json["id"].GetUint64();
 
 		// check configuration
-		if(!(this->database.isConfiguration(id))) {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Configuration #" << id << " not found.";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+		if(!(this->database.isConfiguration(id)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(id)
+					+ " not found."
+			);
 
 		// duplicate configuration
 		const unsigned long newId = this->database.duplicateConfiguration(id);
@@ -3894,11 +3995,13 @@ namespace crawlservpp::Main {
 		if(c != this->crawlers.end()) {
 			(*c)->Module::Thread::warpTo(target);
 
-			std::ostringstream responseStrStr;
-
-			responseStrStr << "Crawler #" << thread << " will warp to #" << target << ".";
-
-			return ServerCommandResponse(responseStrStr.str());
+			return ServerCommandResponse(
+					"Crawler #"
+					+ std::to_string(thread)
+					+ " will warp to #"
+					+ std::to_string(target)
+					+ "."
+			);
 		}
 
 		auto p = std::find_if(this->parsers.begin(), this->parsers.end(),
@@ -3910,15 +4013,15 @@ namespace crawlservpp::Main {
 		if(p != this->parsers.end()) {
 			(*p)->Module::Thread::warpTo(target);
 
-			std::ostringstream responseStrStr;
-
-			responseStrStr << "Parser #" << thread << " will warp to #" << target << ".";
-
-			return ServerCommandResponse(responseStrStr.str());
+			return ServerCommandResponse(
+					"Parser #"
+					+ std::to_string(thread)
+					+ " will warp to #"
+					+ std::to_string(target)
+					+ "."
+			);
 		}
 
-		// TODO: Time travel for extractors
-/*
 		auto e = std::find_if(this->extractors.begin(), this->extractors.end(),
 				[&thread](const auto& p) {
 					return p->Module::Thread::getId() == thread;
@@ -3928,13 +4031,15 @@ namespace crawlservpp::Main {
 		if(e != this->extractors.end()) {
 			(*e)->Module::Thread::warpTo(target);
 
-			std::ostringstream responseStrStr;
-
-			responseStrStr << "Extractor #" << thread << " will warp to #" << target << ".";
-
-			return ServerCommandResponse(responseStrStr.str());
+			return ServerCommandResponse(
+					"Extractor #"
+					+ std::to_string(thread)
+					+ " will warp to #"
+					+ std::to_string(target)
+					+ "."
+			);
 		}
-*/
+
 		auto a = std::find_if(this->analyzers.begin(), this->analyzers.end(),
 				[&thread](const auto& p) {
 					return p->Module::Thread::getId() == thread;
@@ -3942,14 +4047,15 @@ namespace crawlservpp::Main {
 		);
 
 		if(a != this->analyzers.end())
-			return ServerCommandResponse::failed("Time travel is not supported for analyzers.");
-		else {
-			std::ostringstream errStrStr;
-
-			errStrStr << "Could not find thread #" << thread << ".";
-
-			return ServerCommandResponse::failed(errStrStr.str());
-		}
+			return ServerCommandResponse::failed(
+					"Time travel is not supported for analyzers."
+			);
+		else
+			return ServerCommandResponse::failed(
+					"Could not find thread #"
+					+ std::to_string(thread)
+					+ "."
+			);
 	}
 
 	// server command download(filename): Download the specified file from the file cache of the web server
@@ -3998,7 +4104,12 @@ namespace crawlservpp::Main {
 			const ServerCommandResponse& response
 	) {
 		// generate the reply
-		const std::string replyString(Server::generateReply(response, message));
+		const std::string replyString(
+				Server::generateReply(
+						response,
+						message
+				)
+		);
 
 		// send the reply
 		this->webServer.send(connection, 200, "application/json", replyString);

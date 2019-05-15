@@ -102,36 +102,36 @@ namespace crawlservpp::Module::Crawler {
 			if(this->isVerbose())
 				this->log("prepares getNextUrl()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"SELECT `" << this->urlListTableAlias << "1`.id AS id,"
-								" `" << this->urlListTableAlias << "1`.url AS url"
-								" FROM `" << this->urlListTable << "`"
-								" AS `" << this->urlListTableAlias << "1`"
-								" LEFT OUTER JOIN `" << this->crawlingTable << "`"
-								" AS `" << this->crawlingTableAlias << "1`"
-								" ON `" << this->urlListTableAlias << "1`.id"
-								" = `" << this->crawlingTableAlias << "1`.url"
-								" WHERE `" << this->urlListTableAlias << "1`.id > ?"
-								" AND manual = FALSE";
+			std::string sqlQueryString(
+					"SELECT `" + this->urlListTableAlias + "1`.id AS id,"
+					" `" + this->urlListTableAlias + "1`.url AS url"
+					" FROM `" + this->urlListTable + "`"
+					" AS `" + this->urlListTableAlias + "1`"
+					" LEFT OUTER JOIN `" + this->crawlingTable + "`"
+					" AS `" + this->crawlingTableAlias + "1`"
+					" ON `" + this->urlListTableAlias + "1`.id"
+					" = `" + this->crawlingTableAlias + "1`.url"
+					" WHERE `" + this->urlListTableAlias + "1`.id > ?"
+					" AND manual = FALSE"
+			);
 
 			if(!(this->recrawl))
-				sqlQueryStrStr <<
+				sqlQueryString +=
 								" AND"
 								" ("
-									" `" << this->crawlingTableAlias << "1`.success IS NULL"
-									" OR `" << this->crawlingTableAlias << "1`.success = FALSE"
+									" `" + this->crawlingTableAlias + "1`.success IS NULL"
+									" OR `" + this->crawlingTableAlias + "1`.success = FALSE"
 								")";
 
-			sqlQueryStrStr <<	" AND"
+			sqlQueryString +=	" AND"
 								" ("
-									" `" << this->crawlingTableAlias << "1`.locktime IS NULL"
-									" OR `" << this->crawlingTableAlias << "1`.locktime < NOW()"
+									" `" + this->crawlingTableAlias + "1`.locktime IS NULL"
+									" OR `" + this->crawlingTableAlias + "1`.locktime < NOW()"
 								" )"
-								" ORDER BY `" << this->urlListTableAlias << "1`.id"
+								" ORDER BY `" + this->urlListTableAlias + "1`.id"
 								" LIMIT 1";
 
-			this->ps.getNextUrl = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.getNextUrl = this->addPreparedStatement(sqlQueryString);
 		}
 
 		if(!(this->ps.addUrlIfNotExists)) {
@@ -215,14 +215,12 @@ namespace crawlservpp::Module::Crawler {
 			if(this->isVerbose())
 				this->log("prepares isUrlCrawled()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"SELECT success"
-								" FROM `" << this->crawlingTable << "`"
-								" WHERE url = ?"
-								" LIMIT 1";
-
-			this->ps.isUrlCrawled = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.isUrlCrawled = this->addPreparedStatement(
+					"SELECT success"
+					" FROM `" + this->crawlingTable + "`"
+					" WHERE url = ?"
+					" LIMIT 1"
+			);
 		}
 
 		if(!(this->ps.renewUrlLockIfOk)) {
@@ -251,31 +249,29 @@ namespace crawlservpp::Module::Crawler {
 			if(this->isVerbose())
 				this->log("prepares lockUrlIfOk() [2/2]...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"INSERT INTO `" << this->crawlingTable << "`(id, url, locktime)"
-								" VALUES"
-								" ("
-									" ("
-										"SELECT id FROM `" << this->crawlingTable << "`"
-										" AS " << this->crawlingTableAlias << "1"
-										" WHERE url = ?"
-										" LIMIT 1"
-									" ),"
-									" ?,"
-									" NOW() + INTERVAL ? SECOND"
-								" )"
-								" ON DUPLICATE KEY UPDATE locktime = "
-									"IF("
-										" ("
-											" locktime IS NULL"
-											" OR locktime < NOW()"
-										" ),"
-										" VALUES(locktime),"
-										" locktime"
-									")";
-
-			this->ps.addUrlLockIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.addUrlLockIfOk = this->addPreparedStatement(
+					"INSERT INTO `" + this->crawlingTable + "`(id, url, locktime)"
+					" VALUES"
+					" ("
+						" ("
+							"SELECT id FROM `" + this->crawlingTable + "`"
+							" AS " + this->crawlingTableAlias + "1"
+							" WHERE url = ?"
+							" LIMIT 1"
+						" ),"
+						" ?,"
+						" NOW() + INTERVAL ? SECOND"
+					" )"
+					" ON DUPLICATE KEY UPDATE locktime = "
+						"IF("
+							" ("
+								" locktime IS NULL"
+								" OR locktime < NOW()"
+							" ),"
+							" VALUES(locktime),"
+							" locktime"
+						")"
+			);
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
@@ -759,9 +755,19 @@ namespace crawlservpp::Module::Crawler {
 				if(updated > 0 && this->isLogging()) {
 					std::ostringstream logStrStr;
 
-					logStrStr.imbue(std::locale(""));
+					logStrStr << "corrected hash ";
 
-					logStrStr << "corrected hash values for " << updated << " URL(s).";
+					switch(updated) {
+					case 1:
+						logStrStr << "value for one URL.";
+
+						break;
+
+					default:
+						logStrStr.imbue(std::locale(""));
+
+						logStrStr << "values for " << updated << " URLs.";
+					}
 
 					this->log(logStrStr.str());
 				}
@@ -1057,14 +1063,15 @@ namespace crawlservpp::Module::Crawler {
 
 				logStrStr.imbue(std::locale(""));
 
-				logStrStr << "WARNING: Some content could not be saved to the database, because its size ("
-						<< content.size() << " bytes) exceeds the ";
+				logStrStr	<< "WARNING: Some content could not be saved to the database, because its size ("
+							<< content.size()
+							<< " bytes) exceeds the ";
 
 				if(content.size() > 1073741824)
 					logStrStr << "mySQL maximum of 1 GiB.";
 				else {
-					logStrStr << "current mySQL server maximum of "
-							<< this->getMaxAllowedPacketSize() << " bytes.";
+					logStrStr	<< "current mySQL server maximum of "
+								<< this->getMaxAllowedPacketSize() << " bytes.";
 
 					adjustServerSettings = true;
 				}
@@ -1126,8 +1133,9 @@ namespace crawlservpp::Module::Crawler {
 				if(content.size() > 1073741824)
 					logStrStr << "mySQL maximum of 1 GiB.";
 				else {
-					logStrStr << "current mySQL server maximum of "
-							<< this->getMaxAllowedPacketSize() << " bytes.";
+					logStrStr	<< "current mySQL server maximum of "
+								<< this->getMaxAllowedPacketSize() << " bytes.";
+
 					adjustServerSettings = true;
 				}
 
@@ -1182,34 +1190,32 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Crawler::Database::queryUpdateOrAddUrls(): No number of URLs specified");
 
 		// generate INSERT INTO ... VALUES clause
-		std::ostringstream sqlQueryStr;
-
-		sqlQueryStr << "INSERT IGNORE INTO `" << this->urlListTable << "`(id, url, hash) VALUES ";
+		std::string sqlQueryString(
+				"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, hash) VALUES "
+		);
 
 		// generate placeholders
 		for(unsigned int n = 0; n < numberOfUrls; ++n)
-			sqlQueryStr << "(" // begin of VALUES arguments
-							" ("
-								"SELECT id FROM"
-								" ("
-									"SELECT id, url"
-									" FROM `" << this->urlListTable << "`"
-									" AS `" << this->urlListTableAlias << n + 1 << "`"
-									" WHERE hash = " << hashQuery <<
-								" ) AS tmp2 WHERE url = ? LIMIT 1"
-							" ),"
-							"?, " <<
-							hashQuery <<
-						"), "; // end of VALUES arguments
+			sqlQueryString +=	"(" // begin of VALUES arguments
+									" ("
+										"SELECT id FROM"
+										" ("
+											"SELECT id, url"
+											" FROM `" + this->urlListTable + "`"
+											" AS `" + this->urlListTableAlias + std::to_string(n + 1) + "`"
+											" WHERE hash = " + hashQuery +
+										" ) AS tmp2 WHERE url = ? LIMIT 1"
+									" ),"
+									"?, " +
+									hashQuery +
+									"), "; // end of VALUES arguments
 
 		// remove last comma and space
-		std::string sqlQuery = sqlQueryStr.str();
-
-		sqlQuery.pop_back();
-		sqlQuery.pop_back();
+		sqlQueryString.pop_back();
+		sqlQueryString.pop_back();
 
 		// return query
-		return sqlQuery;
+		return sqlQueryString;
 	}
 
 	// get all URLs from the URL list, throws Database::Exception

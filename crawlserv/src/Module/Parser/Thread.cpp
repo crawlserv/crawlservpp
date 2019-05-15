@@ -393,9 +393,10 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			const long double tps =
-					(long double) this->tickCounter /
-					std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
-					- this->startTime).count();
+					static_cast<long double>(this->tickCounter) /
+					std::chrono::duration_cast<std::chrono::seconds>(
+							std::chrono::steady_clock::now() - this->startTime
+					).count();
 
 			tpsStrStr.imbue(std::locale(""));
 
@@ -1511,33 +1512,27 @@ namespace crawlservpp::Module::Parser {
 	// write parsing errors as warnings to log if necessary
 	void Thread::logParsingErrors(unsigned long contentId) {
 		if(this->config.generalLogging) {
-			if(!(this->xmlParsingError.empty())) {
-				std::ostringstream logStrStr;
+			if(!(this->xmlParsingError.empty()))
+				this->log(
+						"WARNING: "
+						+ this->xmlParsingError
+						+ " [content #"
+						+ std::to_string(contentId)
+						+ " - "
+						+ this->urls.front().second
+						+ "]."
+				);
 
-				logStrStr	<< "WARNING: "
-							<< this->xmlParsingError
-							<< " [content #"
-							<< contentId
-							<< " - "
-							<< this->urls.front().second
-							<< "].";
-
-				this->log(logStrStr.str());
-			}
-
-			if(!(this->jsonParsingError.empty())) {
-				std::ostringstream logStrStr;
-
-				logStrStr	<< "WARNING: "
-							<< this->jsonParsingError
-							<< " [content #"
-							<< contentId
-							<< " - "
-							<< this->urls.front().second
-							<< "].";
-
-				this->log(logStrStr.str());
-			}
+			if(!(this->jsonParsingError.empty()))
+				this->log(
+						"WARNING: "
+						+ this->jsonParsingError
+						+ " [content #"
+						+ std::to_string(contentId)
+						+ " - "
+						+ this->urls.front().second
+						+ "]."
+				);
 		}
 	}
 

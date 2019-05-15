@@ -59,29 +59,33 @@ namespace crawlservpp::Parsing {
 
 		if(!result) {
 			// parsing error
-			std::ostringstream errStrStr;
-
-			errStrStr << "XML parsing error: " << result.description() << " at #" << result.offset << " (";
+			std::string errString(
+					"XML parsing error: "
+					+ std::string(result.description())
+					+ " at #"
+					+ std::to_string(result.offset)
+					+ " ("
+			);
 
 			if(result.offset > 0) {
-				errStrStr << "\'[...]";
+				errString += "\'[...]";
 
 				if(result.offset > 50)
-					errStrStr << xml.substr(result.offset - 50, 50);
+					errString += xml.substr(result.offset - 50, 50);
 				else
-					errStrStr << xml.substr(0, result.offset);
+					errString += xml.substr(0, result.offset);
 
-				errStrStr << "[!!!]";
+				errString += "[!!!]";
 
 				if(xml.size() > static_cast<size_t>(result.offset + 50))
-					errStrStr << "\'[...]" << xml.substr(result.offset, 50) << "[...]";
+					errString += "\'[...]" + xml.substr(result.offset, 50) + "[...]";
 				else
-					errStrStr << "\'[...]" << xml.substr(result.offset);
+					errString += "\'[...]" + xml.substr(result.offset);
 
-				errStrStr << "\').";
+				errString += "\').";
 			}
 
-			throw XML::Exception(errStrStr.str());
+			throw XML::Exception(errString);
 		}
 	}
 

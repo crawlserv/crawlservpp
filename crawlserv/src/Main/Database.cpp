@@ -52,15 +52,12 @@ namespace crawlservpp::Main {
 		}
 
 		// get MySQL version
-		std::ostringstream mysqlVersionStrStr;
-
-		mysqlVersionStrStr	<< Database::driver->getMajorVersion()
-							<< "."
-							<< Database::driver->getMinorVersion()
-							<< "."
-							<< Database::driver->getPatchVersion();
-
-		this->mysqlVersion = mysqlVersionStrStr.str();
+		this->mysqlVersion =
+							std::to_string(Database::driver->getMajorVersion())
+							+ '.'
+							+ std::to_string(Database::driver->getMinorVersion())
+							+ '.'
+							+ std::to_string(Database::driver->getPatchVersion());
 	}
 
 	// destructor
@@ -177,12 +174,11 @@ namespace crawlservpp::Main {
 				throw Database::Exception("Main::Database::connect(): Could not create SQL statement");
 
 			// set lock timeout
-			std::ostringstream executeStr;
-
-			executeStr << "SET SESSION innodb_lock_wait_timeout = ";
-			executeStr << MAIN_DATABASE_LOCK_TIMEOUT_SEC;
-
-			Database::sqlExecute(sqlStatement, executeStr.str());
+			Database::sqlExecute(
+					sqlStatement,
+					"SET SESSION innodb_lock_wait_timeout = "
+					+ std::to_string(MAIN_DATABASE_LOCK_TIMEOUT_SEC)
+			);
 
 			// get and save maximum allowed package size
 			SqlResultSetPtr sqlMaxAllowedPacketResult(
@@ -1125,13 +1121,9 @@ namespace crawlservpp::Main {
 		// check whether number needs to be incremented
 		while(true) {
 			// increment number at the end of the string
-			std::ostringstream resultStrStr;
-
 			++n;
 
-			resultStrStr << nameString << n;
-
-			result = resultStrStr.str();
+			result = nameString + std::to_string(n);
 
 			if(!(this->isWebsiteNamespace(result)))
 				break;
@@ -1975,31 +1967,31 @@ namespace crawlservpp::Main {
 		// generate query for each 1,000 (or less) URLs
 		while(!urls.empty()) {
 			// generate INSERT INTO ... VALUES clause
-			std::ostringstream sqlQueryStr;
-
-			sqlQueryStr << "INSERT IGNORE INTO `" << urlListTable << "`(id, url, hash) VALUES ";
+			std::string sqlQueryStr(
+					"INSERT IGNORE INTO `"
+					+ urlListTable
+					+ "`(id, url, hash) VALUES "
+			);
 
 			// generate placeholders
 			for(unsigned long n = 0; n < (urls.size() > 1000 ? 1000 : urls.size()); ++n)
-				sqlQueryStr << "(" // begin of VALUES arguments
+				sqlQueryStr += "(" // begin of VALUES arguments
 								" ("
 									"SELECT id FROM"
 									" ("
 										"SELECT id, url"
-										" FROM `" << urlListTable << "`"
-										" AS `a" << n + 1 << "`"
-										" WHERE hash = " << hashQuery <<
+										" FROM `" + urlListTable + "`"
+										" AS `a" + std::to_string(n + 1) + "`"
+										" WHERE hash = " + hashQuery +
 									" ) AS tmp2 WHERE url = ? LIMIT 1"
 								" ),"
-								"?, " <<
-								hashQuery <<
+								"?, " +
+								hashQuery +
 							"), "; // end of VALUES arguments
 
 			// remove last comma and space
-			std::string sqlQuery(sqlQueryStr.str());
-
-			sqlQuery.pop_back();
-			sqlQuery.pop_back();
+			sqlQueryStr.pop_back();
+			sqlQueryStr.pop_back();
 
 			// check connection
 			this->checkConnection();
@@ -2008,7 +2000,7 @@ namespace crawlservpp::Main {
 				// prepare SQL statement
 				SqlPreparedStatementPtr sqlStatement(
 						this->connection->prepareStatement(
-								sqlQuery
+								sqlQueryStr
 						)
 				);
 
@@ -5555,15 +5547,12 @@ namespace crawlservpp::Main {
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
 				result = sqlResultSet->getBoolean("case_sensitive");
-			else {
-				std::ostringstream errStrStr;
-
-				errStrStr	<< "Main::Database::isUrlListCaseSensitive():"
-							<< " Could not get case sensitivity for URL list #"
-							<< listId;
-
-				throw Database::Exception(errStrStr.str());
-			}
+			else
+				throw Database::Exception(
+						"Main::Database::isUrlListCaseSensitive():"
+						" Could not get case sensitivity for URL list #"
+						+ std::to_string(listId)
+				);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::isUrlListCaseSensitive", e); }
 
@@ -5605,10 +5594,15 @@ namespace crawlservpp::Main {
 	void Database::sqlException(const std::string& function, const sql::SQLException& e) {
 		// get error code and create error string
 		const int error = e.getErrorCode();
-
-		std::ostringstream errorStrStr;
-
-		errorStrStr << function << "() SQL Error #" << error << " (State " << e.getSQLState() << "): " << e.what();
+		std::string errorStr(
+				function
+				+ "() SQL Error #"
+				+ std::to_string(error)
+				+ " (State "
+				+ e.getSQLState()
+				+ "): "
+				+ std::string(e.what())
+		);
 
 		switch(error) {
 		// check for connection error
@@ -5652,23 +5646,23 @@ namespace crawlservpp::Main {
 		case 2027: // Malformed packet
 		case 2048: // Invalid connection handle
 			// throw connection exception
-			throw Database::ConnectionException(errorStrStr.str());
+			throw Database::ConnectionException(errorStr);
 
 		// check for storage engine error
 		case 1030:
-			throw Database::StorageEngineException(errorStrStr.str());
+			throw Database::StorageEngineException(errorStr);
 
 		// check for insufficient privileges error
 		case 1045:
-			throw Database::PrivilegesException(errorStrStr.str());
+			throw Database::PrivilegesException(errorStr);
 
 		// check for incorrect path value error
 		case 1525:
-			throw Database::IncorrectPathException(errorStrStr.str());
+			throw Database::IncorrectPathException(errorStr);
 
 		default:
 			// throw general database exception
-			throw Database::Exception(errorStrStr.str());
+			throw Database::Exception(errorStr);
 		}
 	}
 

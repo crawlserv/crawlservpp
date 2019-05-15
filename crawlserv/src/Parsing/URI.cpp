@@ -75,20 +75,23 @@ namespace crawlservpp::Parsing {
 
 		if(uriParseUriA(&(this->state), current.c_str()) != URI_SUCCESS) {
 			const std::string end(this->state.errorPos);
-			std::ostringstream errStrStr;
 
-			errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
+			std::string errString(
+					"URI Parser error #"
+					+ std::to_string(this->state.errorCode)
+					+ ": \'"
+			);
 
-			if(end.length() < current.length())
-				errStrStr	<< current.substr(0, current.length() - end.length())
-							<< "[!!!]"
-							<< end;
+			if(end.size() < current.size())
+				errString	+= current.substr(0, current.size() - end.size())
+							+ "[!!!]"
+							+ end;
 			else
-				errStrStr << current << "[!!!]";
+				errString += current + "[!!!]";
 
-			errStrStr << "\' in URI::setCurrentSubUrl()";
+			errString += "\' in URI::setCurrentSubUrl()";
 
-			throw URI::Exception(errStrStr.str());
+			throw URI::Exception(errString);
 		}
 	}
 
@@ -213,7 +216,7 @@ namespace crawlservpp::Parsing {
 		// remove anchor if necessary
 		const unsigned long end = linkCopy.find('#');
 
-		if(end != std::string::npos && linkCopy.length() > end) {
+		if(end != std::string::npos && linkCopy.size() > end) {
 			if(end)
 				linkCopy = linkCopy.substr(0, end);
 			else
@@ -246,20 +249,23 @@ namespace crawlservpp::Parsing {
 
 		if(uriParseUriA(&(this->state), this->link.c_str()) != URI_SUCCESS) {
 			const std::string end(this->state.errorPos);
-			std::ostringstream errStrStr;
 
-			errStrStr << "URI Parser error #" << this->state.errorCode << ": \'";
+			std::string errString(
+					"URI Parser error #"
+					+ std::to_string(this->state.errorCode)
+					+ ": \'"
+			);
 
-			if(end.length() < this->link.length())
-				errStrStr	<< this->link.substr(0, this->link.length() - end.length())
-							<< "[!!!]"
-							<< end;
+			if(end.size() < this->link.size())
+				errString	+= this->link.substr(0, this->link.size() - end.size())
+							+ "[!!!]"
+							+ end;
 			else
-				errStrStr << this->link << "[!!!]";
+				errString += this->link + "[!!!]";
 
-			errStrStr << "\' in URIParser::parseLink()";
+			errString += "\' in URIParser::parseLink()";
 
-			throw URI::Exception(errStrStr.str());
+			throw URI::Exception(errString);
 		}
 
 		// resolve reference
@@ -328,10 +334,10 @@ namespace crawlservpp::Parsing {
 				)
 		);
 
-		for(unsigned long n = 0; n < string.length(); ++n)
+		for(unsigned long n = 0; n < string.size(); ++n)
 			cString[n] = string.at(n);
 
-		cString[string.length()] = '\0';
+		cString[string.size()] = '\0';
 
 		uriUnescapeInPlaceExA(cString.get(), plusSpace, URI_BR_DONT_TOUCH);
 
@@ -343,11 +349,11 @@ namespace crawlservpp::Parsing {
 		std::string result;
 		unsigned long pos = 0;
 
-		while(pos < urlToEscape.length()) {
+		while(pos < urlToEscape.size()) {
 			unsigned long end = urlToEscape.find_first_of(";/?:@=&#%", pos);
 
 			if(end == std::string::npos)
-				end = urlToEscape.length();
+				end = urlToEscape.size();
 
 			if(end - pos) {
 				const std::string part(urlToEscape, pos, end - pos);
@@ -355,7 +361,7 @@ namespace crawlservpp::Parsing {
 				result += URI::escape(part, false);
 			}
 
-			if(end < urlToEscape.length())
+			if(end < urlToEscape.size())
 				result += urlToEscape.at(end);
 
 			pos = end + 1;

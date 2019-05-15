@@ -1002,15 +1002,19 @@ namespace crawlservpp::Network {
 		this->responseCode = static_cast<unsigned int>(responseCodeL);
 
 		// check response code
-		for(const auto& error : errors) {
-			if(this->responseCode == error) {
-				std::ostringstream errStrStr;
-
-				errStrStr << "HTTP error " << this->responseCode << " from " << url;
-
-				throw Curl::Exception(errStrStr.str());
-			}
-		}
+		if(
+				std::find(
+						errors.begin(),
+						errors.end(),
+						this->responseCode
+				) != errors.end()
+		)
+			throw Curl::Exception(
+					"HTTP error "
+					+ std::to_string(this->responseCode)
+					+ " from "
+					+ url
+			);
 
 		// get content type
 		char * cString = nullptr;

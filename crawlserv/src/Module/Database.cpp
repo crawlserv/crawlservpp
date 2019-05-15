@@ -36,29 +36,11 @@ namespace crawlservpp::Module {
 	void Database::setOptions(const ModuleOptions& moduleOptions) {
 		this->options = moduleOptions;
 
-		std::ostringstream idStrStr;
+		if(moduleOptions.threadId)
+			this->threadIdString = std::to_string(moduleOptions.threadId);
 
-		if(moduleOptions.threadId) {
-			idStrStr << moduleOptions.threadId;
-
-			this->threadIdString = idStrStr.str();
-
-			idStrStr.str("");
-
-			idStrStr.clear();
-		}
-
-		idStrStr << moduleOptions.websiteId;
-
-		this->websiteIdString = idStrStr.str();
-
-		idStrStr.str("");
-
-		idStrStr.clear();
-
-		idStrStr << moduleOptions.urlListId;
-
-		this->urlListIdString = idStrStr.str();
+		this->websiteIdString = std::to_string(moduleOptions.websiteId);
+		this->urlListIdString = std::to_string(moduleOptions.urlListId);
 	}
 
 	// set ID of thread and convert it to string
@@ -67,12 +49,7 @@ namespace crawlservpp::Module {
 			throw Exception("No thread ID specified");
 
 		this->options.threadId = threadId;
-
-		std::ostringstream idStrStr;
-
-		idStrStr << threadId;
-
-		this->threadIdString = idStrStr.str();
+		this->threadIdString = std::to_string(threadId);
 	}
 
 	// set logging options

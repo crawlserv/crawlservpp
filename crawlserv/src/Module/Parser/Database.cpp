@@ -94,60 +94,61 @@ namespace crawlservpp::Module::Parser {
 			if(this->isVerbose())
 				this->log("prepares fetchUrls()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<		"SELECT tmp1.id, tmp1.url FROM"
+			std::string sqlQueryString(
+									"SELECT tmp1.id, tmp1.url FROM"
 									" ("
-										" SELECT `" << this->urlListTable << "`.id,"
-										" `" << this->urlListTable << "`.url"
-										" FROM `" << this->urlListTable << "`"
-										" WHERE `" << this->urlListTable << "`.id > ?";
-			if(!(this->parseCustom))
-				sqlQueryStrStr <<		" AND `" << this->urlListTable << "`.manual = FALSE";
+										" SELECT `" + this->urlListTable + "`.id,"
+										" `" + this->urlListTable + "`.url"
+										" FROM `" + this->urlListTable + "`"
+										" WHERE `" + this->urlListTable + "`.id > ?"
+			);
 
-			sqlQueryStrStr <<			" AND EXISTS"
+			if(!(this->parseCustom))
+				sqlQueryString +=		" AND `" + this->urlListTable + "`.manual = FALSE";
+
+			sqlQueryString +=			" AND EXISTS"
 										" ("
 											" SELECT *"
-											" FROM `" << this->urlListTable << "_crawled`"
-											" WHERE `" << this->urlListTable << "_crawled`.url"
-											" = `" << this->urlListTable << "`.id"
-											" AND `" <<  this->urlListTable << "_crawled`.response < 400"
+											" FROM `" + this->urlListTable + "_crawled`"
+											" WHERE `" + this->urlListTable + "_crawled`.url"
+											" = `" + this->urlListTable + "`.id"
+											" AND `" + this->urlListTable + "_crawled`.response < 400"
 										" )"
-										" ORDER BY `" << this->urlListTable << "`.id"
+										" ORDER BY `" + this->urlListTable + "`.id"
 									" ) AS tmp1"
 									" LEFT OUTER JOIN "
 									" ("
 										" SELECT url, MAX(locktime) AS locktime";
 
 			if(!(this->reparse))
-				sqlQueryStrStr <<		", MAX(success) AS success";
+				sqlQueryString +=		", MAX(success) AS success";
 
-			sqlQueryStrStr <<			" FROM `" << this->parsingTable << "`"
-										" WHERE target = " << this->targetTableId <<
+			sqlQueryString +=			" FROM `" + this->parsingTable + "`"
+										" WHERE target = " + std::to_string(this->targetTableId) +
 										" AND url > ?"
 										" AND"
 										" ("
 											"locktime >= NOW()";
 
 			if(!(this->reparse))
-				sqlQueryStrStr <<			" OR success = TRUE";
+				sqlQueryString +=			" OR success = TRUE";
 
-			sqlQueryStrStr <<			" )"
+			sqlQueryString +=			" )"
 										" GROUP BY url"
 									" ) AS tmp2"
 									" ON tmp1.id = tmp2.url"
 									" WHERE tmp2.locktime IS NULL";
 
 			if(!(this->reparse))
-				sqlQueryStrStr <<	" AND tmp2.success IS NULL";
+				sqlQueryString +=	" AND tmp2.success IS NULL";
 
 			if(this->cacheSize)
-				sqlQueryStrStr <<	" LIMIT " << this->cacheSize;
+				sqlQueryString +=	" LIMIT " + std::to_string(this->cacheSize);
 
 			if(this->isVerbose())
-				this->log("> " + sqlQueryStrStr.str());
+				this->log("> " + sqlQueryString);
 
-			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryString);
 		}
 
 		if(!(this->ps.lockUrl)) {
@@ -211,75 +212,67 @@ namespace crawlservpp::Module::Parser {
 			if(this->isVerbose())
 				this->log("prepares getUrlLockTime()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"SELECT MAX(locktime) AS locktime"
-								" FROM `" << this->parsingTable << "`"
-								" WHERE target = " << this->targetTableId <<
-								" AND url = ?"
-								" GROUP BY url"
-								" LIMIT 1";
-
-			this->ps.getUrlLockTime = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.getUrlLockTime = this->addPreparedStatement(
+					"SELECT MAX(locktime) AS locktime"
+					" FROM `" + this->parsingTable + "`"
+					" WHERE target = " + std::to_string(this->targetTableId) +
+					" AND url = ?"
+					" GROUP BY url"
+					" LIMIT 1"
+			);
 		}
 
 		if(!(this->ps.renewUrlLockIfOk)) {
 			if(this->isVerbose())
 				this->log("prepares renewUrlLockIfOk()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"UPDATE `" << this->parsingTable << "`"
-								" SET locktime = GREATEST"
-								"("
-									"?,"
-									"? + INTERVAL 1 SECOND"
-								")"
-								" WHERE target = " << this->targetTableId <<
-								" AND url = ?"
-								" AND"
-								" ("
-									" locktime <= ?"
-									" OR locktime IS NULL"
-									" OR locktime < NOW()"
-								" )";
-
-			this->ps.renewUrlLockIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
+					"UPDATE `" + this->parsingTable + "`"
+					" SET locktime = GREATEST"
+					"("
+						"?,"
+						"? + INTERVAL 1 SECOND"
+					")"
+					" WHERE target = " + std::to_string(this->targetTableId) +
+					" AND url = ?"
+					" AND"
+					" ("
+						" locktime <= ?"
+						" OR locktime IS NULL"
+						" OR locktime < NOW()"
+					" )"
+			);
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
 			if(this->isVerbose())
 				this->log("prepares unLockUrlIfOk()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"UPDATE `" << this->parsingTable << "`"
-								" SET locktime = NULL"
-								" WHERE target = " << this->targetTableId <<
-								" AND url = ?"
-								" AND"
-								" ("
-									" locktime <= ?"
-									" OR locktime <= NOW()"
-								" )";
-
-			this->ps.unLockUrlIfOk = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.unLockUrlIfOk = this->addPreparedStatement(
+					"UPDATE `" + this->parsingTable + "`"
+					" SET locktime = NULL"
+					" WHERE target = " + std::to_string(this->targetTableId) +
+					" AND url = ?"
+					" AND"
+					" ("
+						" locktime <= ?"
+						" OR locktime <= NOW()"
+					" )"
+			);
 		}
 
 		if(!(this->ps.checkParsingTable)) {
 			if(this->isVerbose())
 				this->log("prepares checkParsingTable()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"DELETE t1 FROM `" << this->parsingTable + "` t1"
-								" INNER JOIN `" << this->parsingTable + "` t2"
-								" WHERE t1.id < t2.id"
-								" AND t1.url = t2.url"
-								" AND t1.target = t2.target"
-								" AND t1.target = " << this->targetTableId;
-
-			this->ps.checkParsingTable = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.checkParsingTable = this->addPreparedStatement(
+					"DELETE t1 FROM `" + this->parsingTable + "` t1"
+					" INNER JOIN `" + this->parsingTable + "` t2"
+					" WHERE t1.id < t2.id"
+					" AND t1.url = t2.url"
+					" AND t1.target = t2.target"
+					" AND t1.target = " + std::to_string(this->targetTableId)
+			);
 		}
 
 		if(!(this->ps.getContentIdFromParsedId)) {
@@ -381,12 +374,12 @@ namespace crawlservpp::Module::Parser {
 			if(this->isVerbose())
 				this->log("prepares updateTargetTable()...");
 
-			std::ostringstream sqlQueryStrStr;
-
-			sqlQueryStrStr <<	"UPDATE crawlserv_parsedtables SET updated = CURRENT_TIMESTAMP"
-								" WHERE id = " << this->targetTableId << " LIMIT 1";
-
-			this->ps.updateTargetTable = this->addPreparedStatement(sqlQueryStrStr.str());
+			this->ps.updateTargetTable = this->addPreparedStatement(
+					"UPDATE crawlserv_parsedtables"
+					" SET updated = CURRENT_TIMESTAMP"
+					" WHERE id = " + std::to_string(this->targetTableId) +
+					" LIMIT 1"
+			);
 		}
 	}
 
@@ -1210,37 +1203,37 @@ namespace crawlservpp::Module::Parser {
 		if(!numberOfUrls)
 			throw Exception("Database::queryLockUrls(): No number of URLs specified");
 
-		std::ostringstream sqlQueryStrStr;
-
 		// create INSERT INTO clause
-		sqlQueryStrStr <<		"INSERT INTO `" << this->parsingTable << "`(id, target, url, locktime)"
-								" VALUES";
+		std::string sqlQueryString(
+								"INSERT INTO `" + this->parsingTable + "`(id, target, url, locktime)"
+								" VALUES"
+		);
 
 		// create VALUES clauses
 		for(unsigned int n = 1; n <= numberOfUrls; ++n) {
-			sqlQueryStrStr <<	" ("
+			sqlQueryString +=	" ("
 									" ("
-										"SELECT id FROM `" << this->parsingTable << "`"
-										" AS `" << this->parsingTableAlias << n << "`"
-										" WHERE target = " << this->targetTableId <<
+										"SELECT id FROM `" + this->parsingTable + "`"
+										" AS `" + this->parsingTableAlias + std::to_string(n) + "`"
+										" WHERE target = " + std::to_string(this->targetTableId) +
 										" AND url = ?"
 										" ORDER BY id DESC"
 										" LIMIT 1"
 									" ),"
-									" " << this->targetTableId << ","
+									" " + std::to_string(this->targetTableId) + ","
 									" ?,"
 									" ?"
 								" )";
 
 			if(n < numberOfUrls)
-				sqlQueryStrStr << ", ";
+				sqlQueryString += ", ";
 		}
 
 		// crate ON DUPLICATE KEY UPDATE clause
-		sqlQueryStrStr <<		" ON DUPLICATE KEY"
+		sqlQueryString +=		" ON DUPLICATE KEY"
 								" UPDATE locktime = VALUES(locktime)";
 
-		return sqlQueryStrStr.str();
+		return sqlQueryString;
 	}
 
 	// generate SQL query for updating or adding a specific number of parsed entries, throws Database::Exception
@@ -1315,19 +1308,19 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Database::querySetUrlsFinishedIfLockOk(): No number of URLs specified");
 
 		// create UPDATE SET clause
-		std::ostringstream sqlQueryStrStr;
-
-		sqlQueryStrStr << "UPDATE `" << this->parsingTable << "` SET locktime = NULL, success = TRUE";
+		std::string sqlQueryString(
+				"UPDATE `" + this->parsingTable + "`"
+				" SET locktime = NULL, success = TRUE"
+				" WHERE "
+		);
 
 		// create WHERE clause
-		sqlQueryStrStr << " WHERE ";
-
 		for(unsigned int n = 0; n < numberOfUrls; ++n) {
 			if(n > 0)
-				sqlQueryStrStr << " OR ";
+				sqlQueryString += " OR ";
 
-			sqlQueryStrStr <<	" ( "
-									" target = " << this->targetTableId <<
+			sqlQueryString +=	" ( "
+									" target = " + std::to_string(this->targetTableId) +
 									" AND url = ?"
 									" AND"
 									" ("
@@ -1339,34 +1332,35 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// return query
-		return sqlQueryStrStr.str();
+		return sqlQueryString;
 	}
 
 	// generate SQL query for unlocking multiple URls if they haven't been locked since fetching
 	std::string Database::queryUnlockUrlsIfOk(unsigned int numberOfUrls) {
-		std::ostringstream sqlQueryStrStr;
 
-		sqlQueryStrStr <<	"UPDATE `" << this->parsingTable << "`"
+		std::string sqlQueryString(
+							"UPDATE `" + this->parsingTable + "`"
 							" SET locktime = NULL"
-							" WHERE target = " << this->targetTableId <<
+							" WHERE target = " + std::to_string(this->targetTableId) +
 							" AND"
-							" (";
+							" ("
+		);
 
 		for(unsigned long n = 1; n <= numberOfUrls; ++n) {
-			sqlQueryStrStr <<	" url = ?";
+			sqlQueryString +=	" url = ?";
 
 			if(n < numberOfUrls)
-				sqlQueryStrStr << " OR";
+				sqlQueryString += " OR";
 		}
 
-		sqlQueryStrStr <<	" )"
+		sqlQueryString +=	" )"
 							" AND"
 							" ("
 								" locktime <= ?"
 								" OR locktime <= NOW()"
 							" )";
 
-		return sqlQueryStrStr.str();
+		return sqlQueryString;
 	}
 
 } /* crawlservpp::Module::Crawler */

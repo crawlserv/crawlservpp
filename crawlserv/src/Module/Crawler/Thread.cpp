@@ -409,9 +409,12 @@ namespace crawlservpp::Module::Crawler {
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
 
-			const long double tps = (long double) this->tickCounter
-					/ std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
-					- this->startTime).count();
+			const long double tps =
+					static_cast<long double>(this->tickCounter)
+					/ std::chrono::duration_cast<std::chrono::seconds>(
+							std::chrono::steady_clock::now()
+							- this->startTime
+					).count();
 
 			tpsStrStr.imbue(std::locale(""));
 
@@ -741,19 +744,11 @@ namespace crawlservpp::Module::Crawler {
 						)
 				) {
 					std::string newUrl(url);
-					std::ostringstream counterStrStr;
 
-					counterStrStr << counter;
+					Helper::Strings::replaceAll(newUrl, variable, std::to_string(counter), true);
 
-					Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
-
-					if(!alias.empty()) {
-						std::ostringstream aliasStrStr;
-
-						aliasStrStr << counter + aliasAdd;
-
-						Helper::Strings::replaceAll(newUrl, alias, aliasStrStr.str(), true);
-					}
+					if(!alias.empty())
+						Helper::Strings::replaceAll(newUrl, alias, std::to_string(counter + aliasAdd), true);
 
 					newUrlList.emplace_back(newUrl);
 
@@ -800,19 +795,11 @@ namespace crawlservpp::Module::Crawler {
 					)
 			) {
 				std::string newUrl(url);
-				std::ostringstream counterStrStr;
 
-				counterStrStr << counter;
+				Helper::Strings::replaceAll(newUrl, variable, std::to_string(counter), true);
 
-				Helper::Strings::replaceAll(newUrl, variable, counterStrStr.str(), true);
-
-				if(!alias.empty()) {
-					std::ostringstream aliasStrStr;
-
-					aliasStrStr << counter + aliasAdd;
-
-					Helper::Strings::replaceAll(newUrl, alias, aliasStrStr.str(), true);
-				}
+				if(!alias.empty())
+					Helper::Strings::replaceAll(newUrl, alias, std::to_string(counter + aliasAdd), true);
 
 				newUrlList.emplace_back(newUrl);
 
@@ -2463,27 +2450,25 @@ namespace crawlservpp::Module::Crawler {
 	// check the HTTP response code for an error and decide whether to continue or skip
 	bool Thread::crawlingCheckResponseCode(const std::string& url, long responseCode) {
 		if(responseCode >= 400 && responseCode < 600) {
-			if(this->config.crawlerLogging) {
-				std::ostringstream logStrStr;
-
-				logStrStr	<< "HTTP error " << responseCode
-							<< " from " << url << " - skips...";
-
-				this->log(logStrStr.str());
-			}
+			if(this->config.crawlerLogging)
+				this->log(
+						"HTTP error "
+						+ std::to_string(responseCode)
+						+ " from "
+						+ url
+						+ " - skips..."
+				);
 
 			return false;
 		}
-		else if(responseCode != 200 && this->config.crawlerLogging) {
-			if(this->config.crawlerLogging) {
-				std::ostringstream logStrStr;
-
-				logStrStr	<< "WARNING: HTTP response code " << responseCode
-							<< " from " << url << ".";
-
-				this->log(logStrStr.str());
-			}
-		}
+		else if(responseCode != 200 && this->config.crawlerLogging)
+			this->log(
+					"WARNING: HTTP response code "
+					+ std::to_string(responseCode)
+					+ " from "
+					+ url
+					+ "."
+			);
 
 		return true;
 	}
@@ -4312,11 +4297,11 @@ namespace crawlservpp::Module::Crawler {
 				end = mementoContent.find('>', pos + 1);
 
 				if(end == std::string::npos) {
-					std::ostringstream warningStrStr;
-
-					warningStrStr << "No '>' after '<' for link at " << pos << ".";
-
-					warningsTo.emplace(warningStrStr.str());
+					warningsTo.emplace(
+							"No '>' after '<' for link at "
+							+ std::to_string(pos)
+							+ "."
+					);
 
 					break;
 				}
@@ -4326,12 +4311,11 @@ namespace crawlservpp::Module::Crawler {
 					if(!newMemento.url.empty() && !newMemento.timeStamp.empty())
 						mementosTo.emplace(newMemento);
 
-					std::ostringstream warningStrStr;
-
-					warningStrStr <<	"New memento started without finishing the old one"
-										" at " << pos << ".";
-
-					warningsTo.emplace(warningStrStr.str());
+					warningsTo.emplace(
+							"New memento started without finishing the old one at "
+							+ std::to_string(pos)
+							+ "."
+					);
 				}
 
 				mementoStarted = true;
@@ -4361,14 +4345,12 @@ namespace crawlservpp::Module::Crawler {
 			else {
 				if(newField)
 					newField = false;
-				else {
-					std::ostringstream warningStrStr;
-
-					warningStrStr << 	"Field seperator missing for new field"
-										" at " << pos << ".";
-
-					warningsTo.emplace(warningStrStr.str());
-				}
+				else
+					warningsTo.emplace(
+							"Field seperator missing for new field at "
+							+ std::to_string(pos)
+							+ "."
+					);
 
 				end = mementoContent.find('=', pos + 1);
 
@@ -4376,12 +4358,11 @@ namespace crawlservpp::Module::Crawler {
 					end = mementoContent.find_first_of(",;");
 
 					if(end == std::string::npos) {
-						std::ostringstream warningStrStr;
-
-						warningStrStr <<	"Cannot find end of field"
-											" at " << pos << ".";
-
-						warningsTo.emplace(warningStrStr.str());
+						warningsTo.emplace(
+								"Cannot find end of field at "
+								+ std::to_string(pos)
+								+ "."
+						);
 
 						break;
 					}
@@ -4395,12 +4376,11 @@ namespace crawlservpp::Module::Crawler {
 					pos = mementoContent.find_first_of("\"\'", pos + 1);
 
 					if(pos == std::string::npos) {
-						std::ostringstream warningStrStr;
-
-						warningStrStr <<	"Cannot find begin of value"
-											" at " << oldPos << ".";
-
-						warningsTo.emplace(warningStrStr.str());
+						warningsTo.emplace(
+								"Cannot find begin of value at "
+								+ std::to_string(oldPos)
+								+ "."
+						);
 
 						++pos;
 
@@ -4410,12 +4390,11 @@ namespace crawlservpp::Module::Crawler {
 					end = mementoContent.find_first_of("\"\'", pos + 1);
 
 					if(end == std::string::npos) {
-						std::ostringstream warningStrStr;
-
-						warningStrStr <<	"Cannot find end of value"
-											" at " << pos << ".";
-
-						warningsTo.emplace(warningStrStr.str());
+						warningsTo.emplace(
+								"Cannot find end of value at "
+								+ std::to_string(pos)
+								+ "."
+						);
 
 						break;
 					}
@@ -4426,14 +4405,14 @@ namespace crawlservpp::Module::Crawler {
 						// parse timestamp
 						if(Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue))
 							newMemento.timeStamp = fieldValue;
-						else {
-							std::ostringstream warningStrStr;
-
-							warningStrStr <<	"Could not convert timestamp \'" << fieldValue << "\'"
-												"  at " << pos << ".";
-
-							warningsTo.emplace(warningStrStr.str());
-						}
+						else
+							warningsTo.emplace(
+									"Could not convert timestamp \'"
+									+ fieldValue
+									+ "\' at "
+									+ std::to_string(pos)
+									+ "."
+							);
 					}
 					else if(fieldName == "rel") {
 						// parse link to next page

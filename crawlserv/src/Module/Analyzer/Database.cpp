@@ -221,15 +221,12 @@ namespace crawlservpp::Module::Analyzer {
 		this->reserveForPreparedStatements(statements.size());
 
 		// prepare SQL statements for algorithm
-		if(this->isVerbose()) {
-			std::ostringstream logStrStr;
-
-			logStrStr	<< "prepares "
-						<< statements.size()
-						<< " SQL statements for algorithm...";
-
-			this->log(logStrStr.str());
-		}
+		if(this->isVerbose())
+			this->log(
+					"prepares "
+					+ std::to_string(statements.size())
+					+ " SQL statements for algorithm..."
+			);
 
 		for(const auto& statement : statements)
 			idsTo.push_back(this->addPreparedStatement(statement));
