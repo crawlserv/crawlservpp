@@ -787,9 +787,6 @@ namespace crawlservpp::Module::Parser {
 	// get latest content for the ID-specified URL, return false if there is no content,
 	//  throws Database::Exception
 	bool Database::getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo) {
-		IdString result;
-		bool success = false;
-
 		// check argument
 		if(!urlId)
 			throw Exception("Parser::Database::getLatestContent(): No URL ID specified");
@@ -814,17 +811,12 @@ namespace crawlservpp::Module::Parser {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				result = IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content"));
-				success = true;
+				contentTo = IdString(sqlResultSet->getUInt64("id"), sqlResultSet->getString("content"));
+
+				return true;
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getLatestContent", e); }
-
-		if(success) {
-			contentTo = result;
-
-			return true;
-		}
 
 		return false;
 	}
