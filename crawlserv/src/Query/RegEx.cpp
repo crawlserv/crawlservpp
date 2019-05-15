@@ -43,13 +43,15 @@ namespace crawlservpp::Query {
 			if(!(this->expressionSingle)) {
 				// RegEx error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-				std::ostringstream errorStrStr;
 
 				pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
 
-				errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
-
-				throw RegEx::Exception(errorStrStr.str());
+				throw RegEx::Exception(
+						"Compilation error at "
+						+ std::to_string(errorOffset)
+						+ ": "
+						+ std::string(reinterpret_cast<const char *>(errorBuffer))
+				);
 			}
 		}
 
@@ -67,13 +69,15 @@ namespace crawlservpp::Query {
 			if(!(this->expressionMulti)) {
 				// RegEx error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-				std::ostringstream errorStrStr;
 
 				pcre2_get_error_message(errorNumber, errorBuffer, sizeof(errorBuffer));
 
-				errorStrStr << "Compilation error at " << errorOffset << ": " << errorBuffer;
-
-				throw RegEx::Exception(errorStrStr.str());
+				throw RegEx::Exception(
+						"Compilation error at "
+						+ std::to_string(errorOffset)
+						+ ": "
+						+ std::string(reinterpret_cast<const char *>(errorBuffer))
+				);
 			}
 		}
 	}
@@ -119,13 +123,12 @@ namespace crawlservpp::Query {
 				throw RegEx::Exception("Result vector unexpectedly too small");
 
 			default:
-				// match error : set error message and delete match
+				// match error: set error message and delete match
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-				std::ostringstream errorStrStr;
 
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
 
-				throw RegEx::Exception((char *) errorBuffer);
+				throw RegEx::Exception(reinterpret_cast<const char *>(errorBuffer));
 			}
 		}
 
@@ -173,11 +176,10 @@ namespace crawlservpp::Query {
 			default:
 				// matching error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-				std::ostringstream errorStrStr;
 
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
 
-				throw RegEx::Exception((char *) errorBuffer);
+				throw RegEx::Exception(reinterpret_cast<const char *>(errorBuffer));
 			}
 		}
 
@@ -228,11 +230,10 @@ namespace crawlservpp::Query {
 			default:
 				// matching error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-				std::ostringstream errorStrStr;
 
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
 
-				throw RegEx::Exception((char *) errorBuffer);
+				throw RegEx::Exception(reinterpret_cast<const char *>(errorBuffer));
 			}
 		}
 
@@ -307,11 +308,10 @@ namespace crawlservpp::Query {
 			if(result < 0) {
 				// matching error
 				PCRE2_UCHAR errorBuffer[PCRE2_ERROR_BUFFER_LENGTH];
-				std::ostringstream errorStrStr;
 
 				pcre2_get_error_message(result, errorBuffer, sizeof(errorBuffer));
 
-				throw RegEx::Exception((char *) errorBuffer);
+				throw RegEx::Exception(reinterpret_cast<const char *>(errorBuffer));
 			}
 
 			if(!result)
