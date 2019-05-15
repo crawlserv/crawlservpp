@@ -19,8 +19,7 @@
 
 #include <pcre2.h>
 
-#include <sstream>	// std::ostringstream
-#include <string>	// std::string
+#include <string>	// std::string, std::to_string
 #include <utility>	// std::move
 #include <vector>	// std::vector
 
