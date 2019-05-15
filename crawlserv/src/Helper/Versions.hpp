@@ -27,18 +27,19 @@
 #include <uriparser/UriBase.h>
 #include <zlib.h>
 
-#include <sstream>	// std::ostringstream
-#include <string>	// std::string
+#include <string>	// std::string, std::to_string
 #include <utility>	// std::pair
 #include <vector>	// std::vector
 
 namespace crawlservpp::Helper::Versions {
+	// for convenience
+	typedef std::pair<std::string, std::string> StringString;
 
 	/*
 	 * DEFINITION
 	 */
 
-	std::vector<std::pair<std::string, std::string>> getLibraryVersions();
+	std::vector<StringString> getLibraryVersions();
 	std::string getLibraryVersionsStr(const std::string& indent);
 
 	/*
@@ -46,19 +47,18 @@ namespace crawlservpp::Helper::Versions {
 	 */
 
 	// Get the versions of the libraries as vector of [name, version] string pairs
-	inline std::vector<std::pair<std::string, std::string>> getLibraryVersions() {
-		std::vector<std::pair<std::string, std::string>> result;
-		std::ostringstream out;
+	inline std::vector<StringString> getLibraryVersions() {
+		std::vector<StringString> result;
 
 		// Boost
-		out << BOOST_VERSION / 100000
-			<< '.' << BOOST_VERSION / 100 % 1000
-			<< '.' << BOOST_VERSION % 100;
-
-		result.emplace_back("Boost", out.str());
-
-		out.str("");
-		out.clear();
+		result.emplace_back(
+				"Boost",
+				std::to_string(BOOST_VERSION / 100000)
+				+ '.'
+				+ std::to_string(BOOST_VERSION / 100 % 1000)
+				+ '.'
+				+ std::to_string(BOOST_VERSION % 100)
+		);
 
 		// cURL
 		result.emplace_back("cURL", curl_version_info(CURLVERSION_NOW)->version);
@@ -70,12 +70,14 @@ namespace crawlservpp::Helper::Versions {
 		result.emplace_back("Howard E. Hinnant's date.h", "");
 
 		// jsoncons
-		out << jsoncons::version();
-
-		result.emplace_back("jsoncons", out.str());
-
-		out.str("");
-		out.clear();
+		result.emplace_back(
+				"jsoncons",
+				std::to_string(JSONCONS_VERSION_MAJOR)
+				+ '.'
+				+ std::to_string(JSONCONS_VERSION_MINOR)
+				+ '.'
+				+ std::to_string(JSONCONS_VERSION_PATCH)
+		);
 
 		// mongoose
 		result.emplace_back("mongoose", MG_VERSION);
@@ -83,40 +85,33 @@ namespace crawlservpp::Helper::Versions {
 		// MySQL Connector/C++
 		sql::Driver * driver = get_driver_instance();
 
-		if(driver) {
-			out	<< driver->getMajorVersion()
-				<< '.'
-				<< driver->getMinorVersion()
-				<< '.'
-				<< driver->getPatchVersion();
-
-			result.emplace_back(driver->getName(), out.str());
-
-			out.str("");
-			out.clear();
-		}
+		if(driver)
+			result.emplace_back(
+					driver->getName(),
+					std::to_string(driver->getMajorVersion())
+					+ '.'
+					+ std::to_string(driver->getMinorVersion())
+					+ '.'
+					+ std::to_string(driver->getPatchVersion())
+			);
 
 		// PCRE2
-		out	<< PCRE2_MAJOR
-			<< '.'
-			<< PCRE2_MINOR;
-
-		result.emplace_back("PCRE2", out.str());
-
-		out.str("");
-		out.clear();
+		result.emplace_back(
+				"PCRE2",
+				std::to_string(PCRE2_MAJOR)
+				+ '.'
+				+ std::to_string(PCRE2_MINOR)
+		);
 
 		// pugixml
-		out	<< PUGIXML_VERSION / 100
-			<< '.'
-			<< PUGIXML_VERSION % 100 / 10
-			<< '.'
-			<< PUGIXML_VERSION % 10;
-
-		result.emplace_back("pugixml", out.str());
-
-		out.str("");
-		out.clear();
+		result.emplace_back(
+				"pugixml",
+				std::to_string(PUGIXML_VERSION / 100)
+				+ '.'
+				+ std::to_string(PUGIXML_VERSION % 100 / 10)
+				+ '.'
+				+ std::to_string(PUGIXML_VERSION % 10)
+		);
 
 		// RapidJSON
 		result.emplace_back("RapidJSON", RAPIDJSON_VERSION_STRING);
@@ -128,17 +123,15 @@ namespace crawlservpp::Helper::Versions {
 		result.emplace_back("tidy-html5", tidyLibraryVersion());
 
 		// uriparser
-		out	<< URI_VER_MAJOR
-			<< '.' <<
-			URI_VER_MINOR
-			<< '.' <<
-			URI_VER_RELEASE
-			<< URI_VER_SUFFIX_ANSI;
-
-		result.emplace_back("uriparser", out.str());
-
-		out.str("");
-		out.clear();
+		result.emplace_back(
+				"uriparser",
+				std::to_string(URI_VER_MAJOR)
+				+ '.'
+				+ std::to_string(URI_VER_MINOR)
+				+ '.'
+				+ std::to_string(URI_VER_RELEASE)
+				+ URI_VER_SUFFIX_ANSI
+		);
 
 		// UTF8-CPP (WARNING: hard-coded version information not necessarily accurate)
 		result.emplace_back("UTF8-CPP", "2.1");
@@ -152,7 +145,7 @@ namespace crawlservpp::Helper::Versions {
 	// get the versions of the libraries as one indented string
 	inline std::string getLibraryVersionsStr(const std::string& indent) {
 		// get versions
-		const std::vector<std::pair<std::string, std::string>> versions(getLibraryVersions());
+		const std::vector<StringString> versions(getLibraryVersions());
 
 		// create resulting string
 		std::string result;
