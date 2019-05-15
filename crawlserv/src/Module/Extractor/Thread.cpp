@@ -97,14 +97,6 @@ namespace crawlservpp::Module::Extractor {
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 
 		// set sources
-		this->database.setRawContentIsSource(
-				std::find(
-						this->config.variablesSource.begin(),
-						this->config.variablesSource.end(),
-						Config::variablesSourcesContent
-				) != this->config.variablesSource.end()
-		);
-
 		std::queue<StringString> sources;
 
 		for(unsigned long n = 0; n < this->config.variablesName.size(); ++n)
@@ -415,9 +407,11 @@ namespace crawlservpp::Module::Extractor {
 			}
 
 			const long double tps =
-					(long double) this->tickCounter /
-					std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
-					- this->startTime).count();
+					static_cast<long double>(this->tickCounter) /
+					std::chrono::duration_cast<std::chrono::seconds>(
+							std::chrono::steady_clock::now()
+							- this->startTime
+					).count();
 
 			tpsStrStr.imbue(std::locale(""));
 
@@ -473,8 +467,17 @@ namespace crawlservpp::Module::Extractor {
 		this->queriesId.reserve(this->config.extractingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.extractingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.extractingFieldQueries.size());
-		this->queriesVariables.reserve(this->config.variablesQuery.size());
 		this->queriesTokens.reserve(this->config.variablesTokensQuery.size());
+
+		this->queriesVariables.reserve(
+				std::count_if(
+						this->config.variablesSource.begin(),
+						this->config.variablesSource.end(),
+						[](const unsigned char source) {
+							return source == Config::variablesSourcesContent;
+						}
+				)
+		);
 
 		try {
 			// create queries and get query IDs
@@ -502,20 +505,47 @@ namespace crawlservpp::Module::Extractor {
 				this->queriesFields.emplace_back(this->addQuery(properties));
 			}
 
-			for(const auto& query : this->config.variablesQuery) {
-				QueryProperties properties;
-
-				this->database.getQueryProperties(query, properties);
-
-				this->queriesVariables.emplace_back(this->addQuery(properties));
-			}
-
 			for(const auto& query : this->config.variablesTokensQuery) {
 				QueryProperties properties;
 
 				this->database.getQueryProperties(query, properties);
 
 				this->queriesTokens.emplace_back(this->addQuery(properties));
+			}
+
+			for(auto i = this->config.variablesSource.begin(); i != this->config.variablesSource.end(); ++i) {
+				if(*i == Config::variablesSourcesContent) {
+					const auto query =
+							this->config.variablesQuery.begin()
+							+ (i - this->config.variablesSource.begin());
+
+					QueryProperties properties;
+
+					if(*query) {
+						this->database.getQueryProperties(*query, properties);
+
+						if(!properties.resultSingle && !properties.resultBool)
+							this->warning(
+									"ignores variable \'"
+									+ *(
+											this->config.variablesName.begin()
+											+ (i - this->config.variablesSource.begin())
+									   )
+									+ "\' because of wrong query result type."
+							);
+					}
+					else
+						this->warning(
+								"ignores variable \'"
+								+ *(
+										this->config.variablesName.begin()
+										+ (i - this->config.variablesSource.begin())
+								   )
+								+ "\' because of missing query."
+						);
+
+					this->queriesVariables.emplace_back(this->addQuery(properties));
+				}
 			}
 
 			QueryStruct queryPagingIsNextFrom;
@@ -639,26 +669,100 @@ namespace crawlservpp::Module::Extractor {
 	// extract data from next URL, return number of extracted datasets
 	unsigned long Thread::extractingNext() {
 		unsigned long extracted = 0;
-		std::vector<StringString> globalTokens;
+		unsigned long parsedSource = 0;
+		unsigned long queryCounter = 0;
+		std::vector<StringString> globalVariables;
+		std::string content;
 
-		// loop over variables
+		// loop over variables (and their aliases)
 		for(auto i = this->config.variablesName.begin(); i != this->config.variablesName.end(); ++i) {
+			// get value for variable
+			std::string value;
+
 			const auto source =
 					this->config.variablesSource.begin()
 					+ (i - this->config.variablesName.begin());
 
 			switch(*source) {
 			case Config::variablesSourcesParsed:
-				// TODO
+				value = this->database.getParsedData(this->urls.front().first, parsedSource);
+
+				++parsedSource;
+
 				break;
 
 			case Config::variablesSourcesContent:
-				// TODO
+				value = this->extractingGetValueFromContent(
+						this->queriesVariables.at(queryCounter),
+						content
+				);
+
+				++queryCounter;
+
 				break;
 
 			case Config::variablesSourcesUrl:
-				// TODO
+				value = this->urls.front().second;
+
 				break;
+
+			default:
+				if(this->config.generalLogging)
+					this->log(
+							"WARNING: Invalid source for value of variable \'"
+							+ *i
+							+ "\'."
+					);
+			}
+
+			// get value for alias
+			globalVariables.emplace_back(
+					*i,
+					value
+			);
+
+			const auto alias =
+					this->config.variablesAlias.begin()
+					+ (i - this->config.variablesName.begin());
+
+			if(alias->size()) {
+				const auto aliasAdd =
+						this->config.variablesAliasAdd.begin()
+						+ (i - this->config.variablesName.begin());
+
+				if(*aliasAdd != 0) {
+					// try to add value to variable
+					std::string aliasValue;
+
+					try {
+						aliasValue = std::to_string(
+								boost::lexical_cast<long>(value)
+								+ *aliasAdd
+						);
+					}
+					catch(const boost::bad_lexical_cast& e) {
+						if(this->config.generalLogging)
+							this->log(
+									"WARNING: Could not create numeric alias \'"
+									+ *alias
+									+ "\' for non-numeric variable \'"
+									+ *i
+									+ "\' [= \'."
+									+ value
+									+ "\']"
+							);
+					}
+
+					globalVariables.emplace_back(
+							*alias,
+							aliasValue
+					);
+				}
+				else
+					globalVariables.emplace_back(
+							*alias,
+							value
+					);
 			}
 		}
 
@@ -689,6 +793,95 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		return false;
+	}
+
+	// extract data from crawled content
+	std::string Thread::extractingGetValueFromContent(const QueryStruct& query, std::string &content) {
+		std::string result;
+
+		// ignore if no or invalid query is specified
+		if(!query.index || (!query.resultBool && !query.resultSingle))
+			return "";
+
+		// get content if still necessary
+		if(content.empty()) {
+			this->resetParsingState();
+
+			if(!(this->database.getContent(
+					this->urls.front().first,
+					content
+			)))
+				return "";
+		}
+
+		// extract from content
+		switch(query.type) {
+		case QueryStruct::typeRegEx:
+			// get value by running RegEx query on crawled content
+			try {
+				if(query.resultSingle)
+					this->getRegExQuery(query.index).getFirst(content, result);
+				else
+					result = this->getRegExQuery(query.index).getBool(content) ? "true" : "false";
+			}
+			catch(const RegExException& e) {} // ignore query on error
+
+			break;
+
+		case QueryStruct::typeXPath:
+			// parse HTML/XML if still necessary
+			if(this->parseXml(content)) {
+				// get value by running XPath query on crawled content
+				try {
+					if(query.resultSingle)
+						this->getXPathQuery(query.index).getFirst(this->parsedXML, result);
+					else
+						result = this->getXPathQuery(query.index).getBool(this->parsedXML) ? "true" : "false";
+				}
+				catch(const XPathException& e) {} // ignore query on error
+			}
+
+			break;
+
+		case QueryStruct::typeJsonPointer:
+			// parse JSON using RapidJSON if still necessary
+			if(this->parseJsonRapid(content)) {
+				// get value by running JSONPointer query on crawled content
+				try {
+					if(query.resultSingle)
+						this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, result);
+					else
+						result = getJsonPointerQuery(query.index).getBool(this->parsedJsonRapid) ? "true" : "false";
+				}
+				catch(const JsonPointerException& e) {} // ignore query on error
+			}
+
+			break;
+
+		case QueryStruct::typeJsonPath:
+			// parse JSON using jsoncons if still necessary
+			if(this->parseJsonCons(content)) {
+				// get value by running JSONPath query on crawled content
+				try {
+					if(query.resultSingle)
+						this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, result);
+					else
+						result = this->getJsonPathQuery(query.index).getBool(this->parsedJsonCons) ? "true" : "false";
+				}
+				catch(const JsonPathException& e) {} // ignore query on error
+			}
+
+			break;
+
+		case QueryStruct::typeNone:
+			break;
+
+		default:
+			if(this->config.generalLogging)
+				this->log("WARNING: Unknown type of query on crawled content.");
+		}
+
+		return result;
 	}
 
 	// extract data by parsing content, return number of extracted datasets
@@ -1216,33 +1409,27 @@ namespace crawlservpp::Module::Extractor {
 	// write parsing errors as warnings to log if necessary
 	void Thread::logParsingErrors(unsigned long contentId) {
 		if(this->config.generalLogging) {
-			if(!(this->xmlParsingError.empty())) {
-				std::ostringstream logStrStr;
+			if(!(this->xmlParsingError.empty()))
+				this->log(
+						"WARNING: "
+						+ this->xmlParsingError
+						+ " [content #"
+						+ std::to_string(contentId)
+						+ " - "
+						+ this->urls.front().second
+						+ "]."
+				);
 
-				logStrStr	<< "WARNING: "
-							<< this->xmlParsingError
-							<< " [content #"
-							<< contentId
-							<< " - "
-							<< this->urls.front().second
-							<< "].";
-
-				this->log(logStrStr.str());
-			}
-
-			if(!(this->jsonParsingError.empty())) {
-				std::ostringstream logStrStr;
-
-				logStrStr	<< "WARNING: "
-							<< this->jsonParsingError
-							<< " [content #"
-							<< contentId
-							<< " - "
-							<< this->urls.front().second
-							<< "].";
-
-				this->log(logStrStr.str());
-			}
+			if(!(this->jsonParsingError.empty()))
+				this->log(
+						"WARNING: "
+						+ this->jsonParsingError
+						+ " [content #"
+						+ std::to_string(contentId)
+						+ " - "
+						+ this->urls.front().second
+						+ "]."
+				);
 		}
 	}
 
