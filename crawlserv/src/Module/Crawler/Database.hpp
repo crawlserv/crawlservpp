@@ -27,7 +27,7 @@
 #include <memory>	// std::unique_ptr
 #include <queue>	// std::queue
 #include <sstream>	// std::ostringstream
-#include <string>	// std::string
+#include <string>	// std::string, std::to_string
 #include <utility>	// std::pair
 
 namespace crawlservpp::Module::Crawler {

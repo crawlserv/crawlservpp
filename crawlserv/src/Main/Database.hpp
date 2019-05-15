@@ -68,7 +68,7 @@
 #include <mutex>		// std::lock_guard, std::mutex
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
-#include <string>		// std::getline, std::stoul, std::string
+#include <string>		// std::getline, std::stoul, std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <tuple>		// std::get(std::tuple)
 #include <utility>		// std::pair

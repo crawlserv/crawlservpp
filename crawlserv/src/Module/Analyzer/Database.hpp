@@ -36,7 +36,7 @@
 #include <locale>		// std::locale
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
-#include <string>		// std::string
+#include <string>		// std::string, std::to_string
 #include <tuple>		// std::get(std::tuple), std::make_tuple, std::tuple
 #include <vector>		// std::vector
 
