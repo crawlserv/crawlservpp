@@ -118,10 +118,12 @@ namespace crawlservpp::Module::Parser {
 									" ) AS tmp1"
 									" LEFT OUTER JOIN "
 									" ("
-										" SELECT url, MAX(locktime) AS locktime";
+										" SELECT url, MAX(locktime)"
+										" AS locktime";
 
 			if(!(this->reparse))
-				sqlQueryString +=		", MAX(success) AS success";
+				sqlQueryString +=		", MAX(success)"
+										" AS success";
 
 			sqlQueryString +=			" FROM `" + this->parsingTable + "`"
 										" WHERE target = " + std::to_string(this->targetTableId) +
@@ -184,8 +186,10 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
-					"SELECT COUNT(id) AS result"
-					" FROM `" + this->urlListTable + "` WHERE id < ?"
+					"SELECT COUNT(id)"
+					" AS result"
+					" FROM `" + this->urlListTable + "`"
+					" WHERE id < ?"
 			);
 		}
 
@@ -194,7 +198,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
-					"SELECT COUNT(id) AS result"
+					"SELECT COUNT(id)"
+					" AS result"
 					" FROM `" + this->urlListTable + "`"
 			);
 		}
@@ -204,7 +209,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares getLockTime()...");
 
 			this->ps.getLockTime = this->addPreparedStatement(
-					"SELECT NOW() + INTERVAL ? SECOND AS locktime"
+					"SELECT NOW() + INTERVAL ? SECOND"
+					" AS locktime"
 			);
 		}
 
@@ -213,7 +219,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares getUrlLockTime()...");
 
 			this->ps.getUrlLockTime = this->addPreparedStatement(
-					"SELECT MAX(locktime) AS locktime"
+					"SELECT MAX(locktime)"
+					" AS locktime"
 					" FROM `" + this->parsingTable + "`"
 					" WHERE target = " + std::to_string(this->targetTableId) +
 					" AND url = ?"
