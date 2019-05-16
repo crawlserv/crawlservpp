@@ -142,6 +142,9 @@ namespace crawlservpp::Query {
 		if(!(this->expressionSingle))
 			throw RegEx::Exception("No single result expression compiled");
 
+		// empty target
+		resultTo.clear();
+
 		// get first match
 		Wrapper::PCREMatch pcreMatch(
 				pcre2_match_data_create_from_pattern(
@@ -165,8 +168,6 @@ namespace crawlservpp::Query {
 			switch(result) {
 			case PCRE2_ERROR_NOMATCH:
 				// no match found -> result is empty string
-				resultTo = "";
-
 				return;
 
 			case 0:
@@ -191,11 +192,12 @@ namespace crawlservpp::Query {
 
 	// get all results of RegEx expression (all full matches), throws RegEx::Exception
 	void RegEx::getAll(const std::string& text, std::vector<std::string>& resultTo) const {
-		std::vector<std::string> resultArray;
-
 		// check compiled expression
 		if(!(this->expressionMulti))
 			throw RegEx::Exception("No multi result expression compiled");
+
+		// empty target
+		resultTo.clear();
 
 		// get first match
 		Wrapper::PCREMatch pcreMatch(
@@ -219,8 +221,6 @@ namespace crawlservpp::Query {
 			switch(result) {
 			case PCRE2_ERROR_NOMATCH:
 				// no match found -> result is empty array
-				resultTo = resultArray;
-
 				return;
 
 			case 0:
@@ -240,7 +240,7 @@ namespace crawlservpp::Query {
 		// at least one match found -> save first match
 		PCRE2_SIZE * pcreOVector = pcre2_get_ovector_pointer(pcreMatch.get());
 
-		resultArray.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
+		resultTo.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 
 		// get RegEx options
 		uint32_t pcreOptions = 0;
@@ -318,11 +318,8 @@ namespace crawlservpp::Query {
 				throw RegEx::Exception("Result vector unexpectedly too small");
 
 			// get resulting match
-			resultArray.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
+			resultTo.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 		}
-
-		// copy result
-		resultTo = resultArray;
 	}
 
 	// bool operator
