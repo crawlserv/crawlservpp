@@ -896,7 +896,7 @@ namespace crawlservpp::Module::Parser {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					// set default values
+					// set standard values
 					sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement1000.setUInt64(n * fields + 2, entries.front().contentId);
 					sqlStatement1000.setString(n * fields + 3, entries.front().dataId);
@@ -932,7 +932,7 @@ namespace crawlservpp::Module::Parser {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					// set default values
+					// set standard values
 					sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement100.setUInt64(n * fields + 2, entries.front().contentId);
 					sqlStatement100.setString(n * fields + 3, entries.front().dataId);
@@ -968,7 +968,7 @@ namespace crawlservpp::Module::Parser {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					// set default values
+					// set standard values
 					sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
 					sqlStatement10.setUInt64(n * fields + 2, entries.front().contentId);
 					sqlStatement10.setString(n * fields + 3, entries.front().dataId);
@@ -1003,7 +1003,7 @@ namespace crawlservpp::Module::Parser {
 				// check entry
 				this->checkEntrySize(entries.front());
 
-				// set default values
+				// set standard values
 				sqlStatement1.setUInt64(1, entries.front().contentId);
 				sqlStatement1.setUInt64(2, entries.front().contentId);
 				sqlStatement1.setString(3, entries.front().dataId);
