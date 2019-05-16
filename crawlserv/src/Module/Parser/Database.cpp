@@ -95,7 +95,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares fetchUrls()...");
 
 			std::string sqlQueryString(
-									"SELECT tmp1.id, tmp1.url FROM"
+									"SELECT tmp1.id, tmp1.url"
+									" FROM"
 									" ("
 										" SELECT `" + this->urlListTable + "`.id,"
 										" `" + this->urlListTable + "`.url"
@@ -273,7 +274,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares checkParsingTable()...");
 
 			this->ps.checkParsingTable = this->addPreparedStatement(
-					"DELETE t1 FROM `" + this->parsingTable + "` t1"
+					"DELETE t1"
+					" FROM `" + this->parsingTable + "` t1"
 					" INNER JOIN `" + this->parsingTable + "` t2"
 					" WHERE t1.id < t2.id"
 					" AND t1.url = t2.url"
@@ -287,10 +289,11 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares getContentIdFromParsedId()...");
 
 			this->ps.getContentIdFromParsedId = this->addPreparedStatement(
-					"SELECT content FROM"
+					"SELECT content"
+					" FROM"
 					" ("
-						" SELECT id, parsed_id, content FROM "
-						" `" + this->targetTableFull + "`"
+						" SELECT id, parsed_id, content"
+						" FROM `" + this->targetTableFull + "`"
 						" WHERE hash = CRC32( ? )"
 					" ) AS tmp"
 					" WHERE parsed_id LIKE ?"
@@ -304,7 +307,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares getLatestContent()...");
 
 			this->ps.getLatestContent = this->addPreparedStatement(
-					"SELECT id, content FROM `" + this->urlListTable + "_crawled`"
+					"SELECT id, content"
+					" FROM `" + this->urlListTable + "_crawled`"
 					" WHERE url = ?"
 					" ORDER BY crawltime DESC"
 					" LIMIT ?, 1"
@@ -316,7 +320,8 @@ namespace crawlservpp::Module::Parser {
 				this->log("prepares getAllContents()...");
 
 			this->ps.getAllContents = this->addPreparedStatement(
-					"SELECT id, content FROM `" + this->urlListTable + "_crawled`"
+					"SELECT id, content"
+					" FROM `" + this->urlListTable + "_crawled`"
 					" WHERE url = ?"
 			);
 		}
@@ -1212,7 +1217,8 @@ namespace crawlservpp::Module::Parser {
 		for(unsigned int n = 1; n <= numberOfUrls; ++n) {
 			sqlQueryString +=	" ("
 									" ("
-										"SELECT id FROM `" + this->parsingTable + "`"
+										"SELECT id"
+										" FROM `" + this->parsingTable + "`"
 										" AS `" + this->parsingTableAlias + std::to_string(n) + "`"
 										" WHERE target = " + std::to_string(this->targetTableId) +
 										" AND url = ?"
