@@ -118,7 +118,8 @@ namespace crawlservpp::Module::Analyzer {
 					this->log("prepares getCorpus()...");
 
 				this->ps.getCorpus = this->addPreparedStatement(
-						"SELECT corpus, datemap, sources FROM crawlserv_corpora"
+						"SELECT corpus, datemap, sources"
+						" FROM crawlserv_corpora"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
@@ -154,7 +155,8 @@ namespace crawlservpp::Module::Analyzer {
 					this->log("prepares isCorpusChanged() [2/4]...");
 
 				this->ps.isCorpusChangedParsing = this->addPreparedStatement(
-						"SELECT updated FROM crawlserv_parsedtables"
+						"SELECT updated"
+						" FROM crawlserv_parsedtables"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -166,7 +168,8 @@ namespace crawlservpp::Module::Analyzer {
 					this->log("prepares isCorpusChanged() [3/4]...");
 
 				this->ps.isCorpusChangedExtracting = this->addPreparedStatement(
-						"SELECT updated FROM crawlserv_extractedtables"
+						"SELECT updated"
+						" FROM crawlserv_extractedtables"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -178,7 +181,8 @@ namespace crawlservpp::Module::Analyzer {
 					this->log("prepares isCorpusChanged() [4/4]...");
 
 				this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement(
-						"SELECT updated FROM crawlserv_analyzedtables"
+						"SELECT updated"
+						" FROM crawlserv_analyzedtables"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -190,7 +194,8 @@ namespace crawlservpp::Module::Analyzer {
 					this->log("prepares createCorpus() [1/2]...");
 
 				this->ps.deleteCorpus = this->addPreparedStatement(
-						"DELETE FROM crawlserv_corpora"
+						"DELETE"
+						" FROM crawlserv_corpora"
 						" WHERE website = " + this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
