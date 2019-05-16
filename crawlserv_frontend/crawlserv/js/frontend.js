@@ -929,7 +929,7 @@ jQuery(function($) {
 					var resultText = "crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n";
 					
 					if(data["fail"])
-						resultText += "ERROR: " + data["text"];
+						resultText += "ERROR: " + data["text"] + "\nDEBUG:\n" + data["debug"];
 					else
 						resultText += data["text"];
 					
