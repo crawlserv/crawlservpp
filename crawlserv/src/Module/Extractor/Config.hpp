@@ -60,6 +60,7 @@ namespace crawlservpp::Module::Extractor {
 			bool generalReExtract;
 			std::string generalResultTable;
 			long generalReTries;
+			std::vector<unsigned int> generalRetryHttp;
 			unsigned long generalSleepError;
 			unsigned long generalSleepHttp;
 			unsigned long generalSleepIdle;
@@ -162,7 +163,11 @@ namespace crawlservpp::Module::Extractor {
 										expectedErrorIfLarger(false),
 										expectedErrorIfSmaller(false),
 										expectedQuery(0),
-										expectedSource(expectedSourceExtracting) {}
+										expectedSource(expectedSourceExtracting) {
+		this->generalRetryHttp.push_back(502);
+		this->generalRetryHttp.push_back(503);
+		this->generalRetryHttp.push_back(504);
+	}
 
 	// parse extractor-specific configuration option
 	inline void Config::parseOption() {
@@ -175,6 +180,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("reextract", this->config.generalReExtract);
 		this->option("result.table", this->config.generalResultTable);
 		this->option("retries", this->config.generalReTries);
+		this->option("retry.http", this->config.generalRetryHttp);
 		this->option("sleep.error", this->config.generalSleepError);
 		this->option("sleep.http", this->config.generalSleepHttp);
 		this->option("sleep.idle", this->config.generalSleepIdle);
