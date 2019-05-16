@@ -209,6 +209,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`kill`**: Kill the server.
 * **`log`** (argument: `entry`): Write a log entry by the frontend into the database.
 * **`merge`** (arguments: `datatype`, [...]): Merge two tables in the database.
+* **`pauseall`**: Pause all running threads.
 * **`pauseanalyzer`** (argument: `id`): Pause a running analyzer by its ID.
 * **`pausecrawler`** (argument: `id`): Pause a running crawler by its ID.
 * **~~`pauseextractor`~~** (argument: `id`): Pause a running extractor by its ID.
@@ -225,6 +226,7 @@ The server performs commands and sends back their results. Some commands need to
 * **~~`stopextractor`~~** (argument: `id`): Stop a running extractor by its ID.
 * **`stopparser`** (argument: `id`): Stop a running parser by its ID.
 * **`testquery`** (arguments: `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`, `text`): Test a query on the specified text.
+* **`unpauseall`**: Unpause all paused threads.
 * **`unpauseanalyzer`** (argument: `id`): Unpause a paused analyzer by its ID.
 * **`unpausecrawler`** (argument: `id`): Unpause a paused crawler by its ID.
 * **~~`unpauseextractor`~~** (argument: `id`): Unpause a paused extractor by its ID.
