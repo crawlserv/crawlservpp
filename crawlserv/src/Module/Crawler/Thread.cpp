@@ -971,14 +971,29 @@ namespace crawlservpp::Module::Crawler {
 				}
 			}
 
-			for(const auto& query : this->config.customTokensQuery) {
-				if(query) {
-					QueryProperties properties;
+			for(
+					auto i = this->config.customTokensQuery.begin();
+					i != this->config.customTokensQuery.end();
+					++i
+			) {
+				QueryProperties properties;
 
-					this->database.getQueryProperties(query, properties);
+				if(*i)
+					this->database.getQueryProperties(*i, properties);
+				else if(this->config.crawlerLogging) {
+					const auto name =
+							this->config.customTokens.begin()
+							+ (i - this->config.customTokensQuery.begin());
 
-					this->queriesTokens.emplace_back(this->addQuery(properties));
+					if(!(name->empty()))
+						this->log(
+								"WARNING: Ignores token \'"
+								+ *name
+								+ "\' because of missing query."
+						);
 				}
+
+				this->queriesTokens.emplace_back(this->addQuery(properties));
 			}
 
 			if(this->config.redirectQueryContent) {
