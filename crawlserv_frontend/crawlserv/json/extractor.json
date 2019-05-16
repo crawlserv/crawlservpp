@@ -219,6 +219,15 @@
 			"simple": true,
 			"position": 12
 		},
+		"tokens.cookies": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Token cookies:",
+			"description": "Custom cookies header for the token with the same array index.",
+			"simple": true,
+			"position": 14
+		},
 		"tokens.query": {
 			"type": "array",
 			"item-type": "query",
@@ -230,7 +239,7 @@
 			"label": "Token queries:",
 			"description": "Query to extract token variable with the same array index.",
 			"simple": true,
-			"position": 15
+			"position": 16
 		},
 		"tokens.source": {
 			"type": "array",
@@ -248,7 +257,7 @@
 			"label": "Use POST for tokens:",
 			"description": "Use HTTP POST instead of GET for the token with the same array index.",
 			"simple": true,
-			"position": 14
+			"position": 15
 		}
 	},
 	"paging": {

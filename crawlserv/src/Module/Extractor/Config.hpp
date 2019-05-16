@@ -79,6 +79,7 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<unsigned long> variablesQuery;
 			std::vector<unsigned char> variablesSource;
 			std::vector<std::string> variablesTokens;
+			std::vector<std::string> variablesTokensCookies;
 			std::vector<unsigned long> variablesTokensQuery;
 			std::vector<std::string> variablesTokensSource;
 			std::vector<bool> variablesTokensUsePost;
@@ -206,6 +207,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("query", this->config.variablesQuery);
 		this->option("source", this->config.variablesSource);
 		this->option("tokens", this->config.variablesTokens);
+		this->option("tokens.cookies", this->config.variablesTokensCookies);
 		this->option("tokens.query", this->config.variablesTokensQuery);
 		this->option("tokens.source", this->config.variablesTokensSource);
 		this->option("tokens.use.post", this->config.variablesTokensUsePost);
@@ -369,6 +371,12 @@ namespace crawlservpp::Module::Extractor {
 
 			incompleteTokens = false;
 		}
+
+		// remove cookie headers that are not used, set to empty string where none is specified
+		if(this->config.variablesTokensCookies.size() > completeTokens)
+			incompleteTokens = true;
+
+		this->config.variablesTokensCookies.resize(completeTokens, false);
 
 		// remove token POST options that are not used, set to 'false' where none is specified
 		if(this->config.variablesTokensUsePost.size() > completeTokens)
