@@ -458,30 +458,33 @@ namespace crawlservpp::Module::Parser {
 		try {
 			// create queries and get query IDs
 			for(const auto& query : this->config.generalSkip) {
-				QueryProperties properties;
+				if(query) {
+					QueryProperties properties;
 
-				if(query)
 					this->database.getQueryProperties(query, properties);
 
-				this->queriesSkip.emplace_back(this->addQuery(properties));
+					this->queriesSkip.emplace_back(this->addQuery(properties));
+				}
 			}
 
 			for(const auto& query : this->config.parsingIdQueries) {
-				QueryProperties properties;
+				if(query) {
+					QueryProperties properties;
 
-				if(query)
 					this->database.getQueryProperties(query, properties);
 
-				this->queriesId.emplace_back(this->addQuery(properties));
+					this->queriesId.emplace_back(this->addQuery(properties));
+				}
 			}
 
 			for(const auto& query : this->config.parsingDateTimeQueries) {
-				QueryProperties properties;
+				if(query) {
+					QueryProperties properties;
 
-				if(query)
 					this->database.getQueryProperties(query, properties);
 
-				this->queriesDateTime.emplace_back(this->addQuery(properties));
+					this->queriesDateTime.emplace_back(this->addQuery(properties));
+				}
 			}
 
 			for(
