@@ -226,7 +226,14 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 								var timerEnd = +new Date();
 								
 								if(data["confirm"]) {
-									if(confirm("crawlserv asks (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"])) {
+									if(
+											confirm(
+													"crawlserv++ asks ("
+													+ msToStr(timerEnd - timerStart)
+													+ ")\n\n"
+													+ data["text"]
+											)
+									) {
 										cmdArgs["confirmed"] = true;
 										
 										timerStart = +new Date();
@@ -242,8 +249,9 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 														timerEnd = +new Date();
 														
 														if(data["fail"]) {
-															var errorStr = "crawlserv responded with error ("
-																+ msToStr(timerEnd - timerStart) + ")";
+															var errorStr = "crawlserv++ responded with error ("
+																+ msToStr(timerEnd - timerStart)
+																+ ")";
 															
 															if(data["text"].length)
 																errorStr += "\n\n" + data["text"];
@@ -259,7 +267,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 															if(getReloadArgFrom && saveReloadArgTo)
 																reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
 															else if(data["text"].length)
-																alert("crawlserv responded ("
+																alert("crawlserv++ responded ("
 																		+ msToStr(timerEnd - timerStart)
 																		+ ")\n\n"
 																		+ data["text"]
@@ -282,7 +290,9 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 									}
 								}
 								else if(data["fail"]) {
-									var errorStr = "crawlserv responded with error (" + msToStr(timerEnd - timerStart) + ")";
+									var errorStr = "crawlserv++ responded with error ("
+										+ msToStr(timerEnd - timerStart)
+										+ ")";
 									
 									if(data["text"].length)
 										errorStr += "\n\n" + data["text"];
@@ -301,7 +311,12 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 									if(getReloadArgFrom && saveReloadArgTo)
 										reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
 									else if(data["text"].length) {
-										alert("crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n\n" + data["text"]);
+										alert(
+												"crawlserv++ responded ("
+												+ msToStr(timerEnd - timerStart)
+												+ ")\n\n"
+												+ data["text"]
+										);
 									}
 									
 									if(doReload)

@@ -926,7 +926,7 @@ jQuery(function($) {
 				dataType: "json",
 				success: function(data) {
 					var timerEnd = +new Date();
-					var resultText = "crawlserv responded (" + msToStr(timerEnd - timerStart) + ")\n";
+					var resultText = "crawlserv++ responded (" + msToStr(timerEnd - timerStart) + ")\n";
 					
 					if(data["fail"])
 						resultText += "ERROR: " + data["text"] + "\nDEBUG:\n" + data["debug"];
@@ -1820,7 +1820,7 @@ jQuery(function($) {
 							success: function(response, status, xhr) {
 								if(response["fail"])
 									alert(
-											"crawlserv responded with error:\n\n"
+											"crawlserv++ responded with error:\n\n"
 											+ responseObj["text"]
 											+ "\n\ndebug: "
 											+ responseObj["debug"]
