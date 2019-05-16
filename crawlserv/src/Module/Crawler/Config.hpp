@@ -26,7 +26,7 @@ namespace crawlservpp::Module::Crawler {
 	 * DECLARATION
 	 */
 
-	class Config : public Network::Config {
+	class Config : protected Network::Config {
 	public:
 		Config() : crossDomain(false) {}
 		virtual ~Config() {}

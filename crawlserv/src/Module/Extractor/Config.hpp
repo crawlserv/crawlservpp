@@ -25,7 +25,7 @@ namespace crawlservpp::Module::Extractor {
 	 * DECLARATION
 	 */
 
-	class Config : public Network::Config {
+	class Config : protected Network::Config {
 		// for convenience
 		typedef Struct::ConfigItem ConfigItem;
 
