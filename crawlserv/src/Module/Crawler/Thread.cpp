@@ -2432,7 +2432,7 @@ namespace crawlservpp::Module::Crawler {
 		return true;
 	}
 
-	// check CURL code and decide whether to retry or skip
+	// check cURL code and decide whether to retry or skip
 	bool Thread::crawlingCheckCurlCode(CURLcode curlCode, const std::string& url) {
 		if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
 			// redirection error: skip URL
