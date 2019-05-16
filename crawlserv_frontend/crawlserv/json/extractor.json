@@ -170,7 +170,7 @@
 			],
 			"default": [],
 			"label": "Variable queries:",
-			"description": "Query for the variable with the same array index.",
+			"description": "Query on content or URL for the variable with the same array index.",
 			"simple": true,
 			"position": 3
 		},
