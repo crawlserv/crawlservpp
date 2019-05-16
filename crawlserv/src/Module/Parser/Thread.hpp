@@ -71,12 +71,12 @@ namespace crawlservpp::Module::Parser {
 	public:
 		// constructors
 		Thread(
-				Main::Database& database,
+				Main::Database& dbBase,
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
 
-		Thread(Main::Database& database, const ThreadOptions& threadOptions);
+		Thread(Main::Database& dbBase, const ThreadOptions& threadOptions);
 
 		// destructor
 		virtual ~Thread();

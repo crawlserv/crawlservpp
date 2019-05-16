@@ -79,14 +79,14 @@ namespace crawlservpp::Module::Crawler {
 	public:
 		// constructors
 		Thread(
-				Main::Database& database,
+				Main::Database& dbBase,
 				const std::string& cookieDirectory,
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
 
 		Thread(
-				Main::Database& database,
+				Main::Database& dbBase,
 				const std::string& cookieDirectory,
 				const ThreadOptions& threadOptions
 		);

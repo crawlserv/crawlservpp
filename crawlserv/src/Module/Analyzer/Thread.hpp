@@ -41,8 +41,12 @@ namespace crawlservpp::Module::Analyzer {
 		typedef Struct::ThreadStatus ThreadStatus;
 
 	public:
-		Thread(Main::Database& database, const ThreadOptions& threadOptions, const ThreadStatus& threadStatus);
-		Thread(Main::Database& database, const ThreadOptions& threadOptions);
+		Thread(
+				Main::Database& dbBase,
+				const ThreadOptions& threadOptions,
+				const ThreadStatus& threadStatus
+		);
+		Thread(Main::Database& dbBase, const ThreadOptions& threadOptions);
 		virtual ~Thread();
 
 	protected:
