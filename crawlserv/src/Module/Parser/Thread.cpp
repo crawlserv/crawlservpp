@@ -244,7 +244,7 @@ namespace crawlservpp::Module::Parser {
 			return;
 		}
 
-		// check whether next URL(s) are ought not to be skipped
+		// check whether next URL(s) ought to be skipped
 		this->parsingCheckUrls();
 
 		// update timers if idling just stopped
