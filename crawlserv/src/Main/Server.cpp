@@ -72,7 +72,7 @@ namespace crawlservpp::Main {
 		this->webServer.setCORS(serverSettings.corsOrigins);
 
 		// set initial status
-		this->setStatus("crawlserv is ready");
+		this->setStatus("crawlserv++ is ready");
 
 		// load threads from database
 		for(const auto& thread : this->database.getThreads()) {
