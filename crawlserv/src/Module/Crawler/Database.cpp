@@ -86,7 +86,8 @@ namespace crawlservpp::Module::Crawler {
 				this->log("prepares getUrlId()...");
 
 			this->ps.getUrlId = this->addPreparedStatement(
-					"SELECT `" + this->urlListTableAlias + "1`.id AS id"
+					"SELECT `" + this->urlListTableAlias + "1`.id"
+					" AS id"
 					" FROM `" + this->urlListTable + "`"
 					" AS `" + this->urlListTableAlias + "1`"
 					" LEFT OUTER JOIN `" + this->crawlingTable + "`"
@@ -103,8 +104,10 @@ namespace crawlservpp::Module::Crawler {
 				this->log("prepares getNextUrl()...");
 
 			std::string sqlQueryString(
-					"SELECT `" + this->urlListTableAlias + "1`.id AS id,"
-					" `" + this->urlListTableAlias + "1`.url AS url"
+					"SELECT `" + this->urlListTableAlias + "1`.id"
+					" AS id,"
+					" `" + this->urlListTableAlias + "1`.url"
+					" AS url"
 					" FROM `" + this->urlListTable + "`"
 					" AS `" + this->urlListTableAlias + "1`"
 					" LEFT OUTER JOIN `" + this->crawlingTable + "`"
@@ -184,8 +187,10 @@ namespace crawlservpp::Module::Crawler {
 				this->log("prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
-					"SELECT COUNT(*) AS result"
-					" FROM `" + this->urlListTable + "` WHERE id < ?"
+					"SELECT COUNT(*)"
+					" AS result"
+					" FROM `" + this->urlListTable + "`"
+					" WHERE id < ?"
 			);
 		}
 
@@ -194,7 +199,8 @@ namespace crawlservpp::Module::Crawler {
 				this->log("prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
-					"SELECT COUNT(*) AS result"
+					"SELECT COUNT(*)"
+					" AS result"
 					" FROM `" + this->urlListTable + "`"
 			);
 		}
@@ -357,9 +363,12 @@ namespace crawlservpp::Module::Crawler {
 				groupBy = "LOWER(url)";
 
 			this->ps.urlDuplicationCheck = this->addPreparedStatement(
-					"SELECT CAST( " + groupBy + " AS BINARY ) AS url, COUNT( " + groupBy + " )"
+					"SELECT CAST( " + groupBy + " AS BINARY )"
+					" AS url,"
+					" COUNT( " + groupBy + " )"
 					" FROM `" + this->urlListTable + "`"
-					" GROUP BY CAST( " + groupBy + " AS BINARY ) HAVING COUNT( " + groupBy + " ) > 1"
+					" GROUP BY CAST( " + groupBy + " AS BINARY )"
+					" HAVING COUNT( " + groupBy + " ) > 1"
 			);
 		}
 
@@ -393,7 +402,8 @@ namespace crawlservpp::Module::Crawler {
 
 			this->ps.urlEmptyCheck = this->addPreparedStatement(
 					"SELECT id FROM `" + this->urlListTable + "`"
-					" WHERE url = '' LIMIT 1"
+					" WHERE url = ''"
+					" LIMIT 1"
 			);
 		}
 
@@ -402,7 +412,8 @@ namespace crawlservpp::Module::Crawler {
 				this->log("prepares getUrls()...");
 
 			this->ps.getUrls = this->addPreparedStatement(
-					"SELECT url FROM `" + this->urlListTable + "`"
+					"SELECT url"
+					" FROM `" + this->urlListTable + "`"
 			);
 		}
 	}
@@ -1204,7 +1215,9 @@ namespace crawlservpp::Module::Crawler {
 											" FROM `" + this->urlListTable + "`"
 											" AS `" + this->urlListTableAlias + std::to_string(n + 1) + "`"
 											" WHERE hash = " + hashQuery +
-										" ) AS tmp2 WHERE url = ? LIMIT 1"
+										" ) AS tmp2"
+										" WHERE url = ?"
+										" LIMIT 1"
 									" ),"
 									"?, " +
 									hashQuery +
