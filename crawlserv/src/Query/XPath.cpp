@@ -44,7 +44,7 @@ namespace crawlservpp::Query {
 		}
 	}
 
-	// get first match only (saved to resultTo), , throws XPath::Exception
+	// get first match only (saved to resultTo), throws XPath::Exception
 	void XPath::getFirst(const Parsing::XML& doc, std::string& resultTo) const {
 		// check query and content
 		if(!(this->compiled))
@@ -71,7 +71,7 @@ namespace crawlservpp::Query {
 		}
 	}
 
-	// get all matches as vector (saved to resultTo), , throws XPath::Exception
+	// get all matches as vector (saved to resultTo), throws XPath::Exception
 	void XPath::getAll(const Parsing::XML& doc, std::vector<std::string>& resultTo) const {
 		// check query and content
 		if(!(this->compiled))
@@ -105,6 +105,39 @@ namespace crawlservpp::Query {
 				if(!result.empty())
 					resultTo.emplace_back(result);
 			}
+		}
+		catch(const std::exception& e) {
+			throw XPath::Exception(e.what());
+		}
+	}
+
+	// get matching sub-sets from parsed XML document (saved to resultTo), throws XPath::Exception
+	void XPath::getSubSets(const Parsing::XML& doc, std::vector<Parsing::XML>& resultTo) const {
+		// check query and content
+		if(!(this->compiled))
+			throw XPath::Exception("No query compiled");
+
+		if(!(doc.doc))
+			throw XPath::Exception("No content parsed");
+
+		// empty result
+		resultTo.clear();
+
+		// evaluate query with multiple results
+		try {
+			if(this->query.return_type() == pugi::xpath_type_node_set) {
+				const pugi::xpath_node_set nodeSet(
+						this->query.evaluate_node_set(*(doc.doc))
+				);
+
+				resultTo.reserve(nodeSet.size());
+
+				for(const auto& node : nodeSet)
+					if(node)
+						resultTo.emplace_back(node.node());
+			}
+			else
+				throw XPath::Exception("Could not create subset, because the result of the query is no node set");
 		}
 		catch(const std::exception& e) {
 			throw XPath::Exception(e.what());

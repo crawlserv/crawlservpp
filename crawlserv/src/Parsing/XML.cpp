@@ -11,8 +11,16 @@
 
 namespace crawlservpp::Parsing {
 
-	// constructor stub
+	// constructor for new XML document
 	XML::XML() : warnings(false), errors(0) {}
+
+	// constructor to create new XML document from existing node
+	XML::XML(const pugi::xml_node& node) : warnings(false), errors(0) {
+		// create XML document
+		this->doc = std::make_unique<pugi::xml_document>();
+
+		this->doc->append_copy(node);
+	}
 
 	// destructor stub
 	XML::~XML() {}

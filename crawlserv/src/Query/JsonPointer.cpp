@@ -81,9 +81,6 @@ namespace crawlservpp::Query {
 		if(doc.HasParseError())
 			throw JsonPointer::Exception("Invalid JSON");
 
-		if(!(this->pointerFirst.IsValid()))
-			throw JsonPointer::Exception("Invalid JSONPointer");
-
 		// empty result
 		resultTo.clear();
 
@@ -111,17 +108,67 @@ namespace crawlservpp::Query {
 				if(!(pointer.IsValid()))
 					throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
 
-				const auto result(pointer.Get(doc));
+				const auto match(pointer.Get(doc));
 
-				if(result == nullptr)
+				if(match == nullptr)
 					break;
 
 				// check type of result
-				if(result->IsString())
-					resultTo.emplace_back(result->GetString(), result->GetStringLength());
+				if(match->IsString())
+					resultTo.emplace_back(match->GetString(), match->GetStringLength());
 				else
 					// stringify result
-					resultTo.emplace_back(Helper::Json::stringify(*result));
+					resultTo.emplace_back(Helper::Json::stringify(*match));
+
+				++counter;
+			}
+		}
+	}
+
+	// get matching sub-sets from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	void JsonPointer::getSubSets(const rapidjson::Document& doc, std::vector<rapidjson::Document>& resultTo) const {
+		// check document and pointer
+		if(doc.HasParseError())
+			throw JsonPointer::Exception("Invalid JSON");
+
+		if(!(this->pointerFirst.IsValid()))
+			throw JsonPointer::Exception("Invalid JSONPointer");
+
+		// empty result
+		resultTo.clear();
+
+		// check whether multiple matches are possible
+		if(this->pointerStringMulti.empty()) { // get first match only, because multiple matches are not possible
+			// create a new document for the match at the end of the results
+			resultTo.emplace_back();
+
+			// copy the match to the new document
+			resultTo.back().CopyFrom(*this->pointerFirst.Get(doc), resultTo.back().GetAllocator());
+		}
+		else {
+			// get all matches
+			unsigned long counter = 0;
+
+			while(true) {
+				std::string pointerString(this->pointerStringMulti);
+
+				Helper::Strings::replaceAll(pointerString, "$$", std::to_string(counter), true);
+
+				const rapidjson::Pointer pointer(pointerString);
+
+				if(!(pointer.IsValid()))
+					throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
+
+				const auto match(pointer.Get(doc));
+
+				if(match == nullptr)
+					break;
+
+				// create a new document for the match at the end of the results
+				resultTo.emplace_back();
+
+				// copy the match to the new document
+				resultTo.back().CopyFrom(*match, resultTo.back().GetAllocator());
 
 				++counter;
 			}

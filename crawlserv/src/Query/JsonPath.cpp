@@ -89,6 +89,8 @@ namespace crawlservpp::Query {
 			// check for array
 			if(result.is_array()) {
 				// return all array members
+				resultTo.reserve(result.array_value().size());
+
 				for(const auto& element : result.array_range())
 					resultTo.emplace_back(element.as<std::string>());
 			}
@@ -120,12 +122,12 @@ namespace crawlservpp::Query {
 
 			// check for array
 			if(result.is_array()) {
-				// stringify all array members
+				// copy all array members
 				for(const auto& element : result.array_range())
 					resultTo.emplace_back(element);
 			}
 			else
-				// stringify value
+				// copy JSON object
 				resultTo.emplace_back(result);
 		}
 		catch(const jsoncons::json_exception& e) {
