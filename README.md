@@ -214,6 +214,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`pausecrawler`** (argument: `id`): Pause a running crawler by its ID.
 * **~~`pauseextractor`~~** (argument: `id`): Pause a running extractor by its ID.
 * **`pauseparser`** (argument: `id`): Pause a running parser by its ID.
+* **`ping`**: Respond with pong.
 * **`resetanalyzingstatus`** (argument: `urllist`): Reset the analyzing status of an ID-specified URL list.
 * **`resetextractingstatus`** (argument: `urllist`): Reset the extracting status of an ID-specified URL list.
 * **`resetparsingstatus`** (argument: `urllist`): Reset the parsing status of an ID-specified URL list.
