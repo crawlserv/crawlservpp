@@ -68,6 +68,15 @@
 			"simple": true,
 			"position": 6
 		},
+		"retry.http": {
+			"type": "array",
+			"item-type": "number",
+			"default": [ 502, 503, 504 ],
+			"min": 400,
+			"max": 599,
+			"description": "HTTP errors that will be handled like connection errors.",
+			"simple": false
+		},
 		"sleep.error": {
 			"type": "number",
 			"default": 10000,
