@@ -65,6 +65,8 @@ namespace crawlservpp::Module::Extractor {
 			unsigned long generalSleepHttp;
 			unsigned long generalSleepIdle;
 			unsigned long generalSleepMySql;
+			unsigned int generalTidyErrors;
+			bool generalTidyWarnings;
 			bool generalTiming;
 
 			// variables entries
@@ -150,6 +152,8 @@ namespace crawlservpp::Module::Extractor {
 										generalSleepHttp(0),
 										generalSleepIdle(5000),
 										generalSleepMySql(20),
+										generalTidyErrors(0),
+										generalTidyWarnings(false),
 										generalTiming(false),
 										pagingAliasAdd(0),
 										pagingFirst(0),
@@ -185,7 +189,9 @@ namespace crawlservpp::Module::Extractor {
 		this->option("sleep.http", this->config.generalSleepHttp);
 		this->option("sleep.idle", this->config.generalSleepIdle);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
-		this->option("sleep.timing", this->config.generalTiming);
+		this->option("tidy.errors", this->config.generalTidyErrors);
+		this->option("tidy.warnings", this->config.generalTidyWarnings);
+		this->option("timing", this->config.generalTiming);
 
 		// variables
 		this->category("variables");
