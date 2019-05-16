@@ -18,6 +18,7 @@ namespace crawlservpp::Module::Extractor {
 							  cacheSize(2500),
 							  reextract(false),
 							  extractCustom(false),
+							  overwrite(true),
 							  rawContentIsSource(false),
 							  targetTableId(0),
 							  ps(_ps()) {}
@@ -61,6 +62,11 @@ namespace crawlservpp::Module::Extractor {
 		this->targetFieldNames = fields;
 	}
 
+	// set whether existing datasets with identical ID should be overwrittem
+	void Database::setOverwrite(bool isOverwrite) {
+		this->overwrite = isOverwrite;
+	}
+
 	// create target table if it does not exists or add custom field columns if they do not exist
 	void Database::initTargetTable() {
 		// create table names
@@ -99,14 +105,9 @@ namespace crawlservpp::Module::Extractor {
 		this->checkConnection();
 
 		// reserve memory
-		if(this->rawContentIsSource)
-			this->reserveForPreparedStatements(
-					sizeof(ps) / sizeof(unsigned short) + this->sources.size()
-			);
-		else
-			this->reserveForPreparedStatements(
-					sizeof(ps) / sizeof(unsigned short) + this->sources.size() - 1
-			);
+		this->reserveForPreparedStatements(
+				sizeof(ps) / sizeof(unsigned short) + this->sources.size()
+		);
 
 		// prepare SQL statements
 		if(!(this->ps.fetchUrls)) {
@@ -137,10 +138,12 @@ namespace crawlservpp::Module::Extractor {
 									" ) AS tmp1"
 									" LEFT OUTER JOIN "
 									" ("
-										" SELECT url, MAX(locktime) AS locktime";
+										" SELECT url, MAX(locktime)"
+										" AS locktime";
 
 			if(!(this->reextract))
-				sqlQueryString += 		", MAX(success) AS success";
+				sqlQueryString += 		", MAX(success)"
+										 " AS success";
 
 			sqlQueryString +=			" FROM `" + this->extractingTable + "`"
 										" WHERE target = " + std::to_string(this->targetTableId) +
@@ -203,8 +206,10 @@ namespace crawlservpp::Module::Extractor {
 				this->log("prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
-					"SELECT COUNT(id) AS result"
-					" FROM `" + this->urlListTable + "` WHERE id < ?"
+					"SELECT COUNT(id)"
+					" AS result"
+					" FROM `" + this->urlListTable + "`"
+					" WHERE id < ?"
 			);
 		}
 
@@ -213,7 +218,8 @@ namespace crawlservpp::Module::Extractor {
 				this->log("prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
-					"SELECT COUNT(id) AS result"
+					"SELECT COUNT(id)"
+					" AS result"
 					" FROM `" + this->urlListTable + "`"
 			);
 		}
@@ -223,7 +229,8 @@ namespace crawlservpp::Module::Extractor {
 				this->log("prepares getLockTime()...");
 
 			this->ps.getLockTime = this->addPreparedStatement(
-					"SELECT NOW() + INTERVAL ? SECOND AS locktime"
+					"SELECT NOW() + INTERVAL ? SECOND"
+					" AS locktime"
 			);
 		}
 
@@ -232,7 +239,8 @@ namespace crawlservpp::Module::Extractor {
 				this->log("prepares getUrlLockTime()...");
 
 			this->ps.getUrlLockTime = this->addPreparedStatement(
-					"SELECT MAX(locktime) AS locktime"
+					"SELECT MAX(locktime)"
+					" AS locktime"
 					" FROM `" + this->extractingTable + "`"
 					" WHERE target = " + std::to_string(this->targetTableId) +
 					" AND url = ?"
@@ -294,16 +302,24 @@ namespace crawlservpp::Module::Extractor {
 			);
 		}
 
-		if(this->rawContentIsSource && !(this->ps.getContent)) {
+		if(!(this->ps.getContent)) {
 			if(this->isVerbose())
 				this->log("prepares getContent()...");
 
-			this->ps.getContent = this->addPreparedStatement(
-					"SELECT content FROM `" + this->urlListTable + "_crawled`"
-					" WHERE url = ?"
-					" ORDER BY crawltime DESC"
-					" LIMIT 1"
-			);
+			if(this->rawContentIsSource)
+				this->ps.getContent = this->addPreparedStatement(
+						"SELECT id, content FROM `" + this->urlListTable + "_crawled`"
+						" WHERE url = ?"
+						" ORDER BY crawltime DESC"
+						" LIMIT 1"
+				);
+			else
+				this->ps.getContent = this->addPreparedStatement(
+						"SELECT id FROM `" + this->urlListTable + "_crawled`"
+						" WHERE url = ?"
+						" ORDER BY crawltime DESC"
+						" LIMIT 1"
+				);
 		}
 
 		if(!(this->ps.setUrlFinishedIfLockOk)) {
@@ -368,7 +384,8 @@ namespace crawlservpp::Module::Extractor {
 
 			this->ps.updateTargetTable = this->addPreparedStatement(
 					"UPDATE crawlserv_extractedtables SET updated = CURRENT_TIMESTAMP"
-					" WHERE id = " + std::to_string(this->targetTableId) + " LIMIT 1"
+					" WHERE id = " + std::to_string(this->targetTableId) +
+					" LIMIT 1"
 			);
 		}
 
@@ -379,7 +396,8 @@ namespace crawlservpp::Module::Extractor {
 			while(!(this->sources.empty())) {
 				this->psGetParsedData.push_back(
 						this->addPreparedStatement(
-								"SELECT `" + this->sources.front().second + "` AS result"
+								"SELECT `" + this->sources.front().second + "`"
+								" AS result"
 								" FROM `" + this->urlListTable + "_parsed_" + this->sources.front().first + "`"
 								" WHERE url = ?"
 								" ORDER BY id DESC"
@@ -760,7 +778,7 @@ namespace crawlservpp::Module::Extractor {
 
 	// get latest content for the ID-specified URL, return false if there is no content,
 	//  throws Database::Exception
-	bool Database::getContent(unsigned long urlId, std::string& contentTo) {
+	bool Database::getContent(unsigned long urlId, IdString& contentTo) {
 		// check argument
 		if(!urlId)
 			throw Exception("Extractor:Database::getContent(): No URL ID specified");
@@ -784,7 +802,10 @@ namespace crawlservpp::Module::Extractor {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
-				contentTo = sqlResultSet->getString("content");
+				contentTo.first = sqlResultSet->getUInt64("id");
+
+				if(this->rawContentIsSource)
+					contentTo.second = sqlResultSet->getString("content");
 
 				return true;
 			}
@@ -854,16 +875,17 @@ namespace crawlservpp::Module::Extractor {
 		sql::PreparedStatement& sqlStatement100 = this->getPreparedStatement(this->ps.updateOrAdd100Entries);
 		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.updateOrAdd1000Entries);
 
-		// TODO: update if exists (when exactly?)
-
 		// count fields
-		const unsigned long fields = 4 + std::count_if(
+		unsigned long fields = 4 + std::count_if(
 				this->targetFieldNames.begin(),
 				this->targetFieldNames.end(),
 				[](const auto& fieldName) {
 					return !fieldName.empty();
 				}
 		);
+
+		if(this->overwrite)
+			fields += 3;
 
 		try {
 			// add 1,000 entries at once
@@ -872,18 +894,28 @@ namespace crawlservpp::Module::Extractor {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					// set default values
-					sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement1000.setString(n * fields + 2, entries.front().dataId);
-					sqlStatement1000.setString(n * fields + 3, entries.front().dataId);
+					unsigned int counter = 0;
+
+					// set standard values
+					if(this->overwrite) {
+						sqlStatement1000.setUInt64(n * fields + 1, entries.front().contentId);
+						sqlStatement1000.setString(n * fields + 2, entries.front().dataId);
+						sqlStatement1000.setString(n * fields + 3, entries.front().dataId);
+
+						counter += 3;
+					}
+
+					sqlStatement1000.setUInt64(n * fields + counter + 1, entries.front().contentId);
+					sqlStatement1000.setString(n * fields + counter + 2, entries.front().dataId);
+					sqlStatement1000.setString(n * fields + counter + 3, entries.front().dataId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement1000.setNull(n * fields + 4, 0);
+						sqlStatement1000.setNull(n * fields + counter + 4, 0);
 					else
-						sqlStatement1000.setString(n * fields + 4, entries.front().dateTime);
+						sqlStatement1000.setString(n * fields + counter + 4, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 5;
+					counter += 5;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -907,18 +939,28 @@ namespace crawlservpp::Module::Extractor {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					// set default values
-					sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement100.setString(n * fields + 2, entries.front().dataId);
-					sqlStatement100.setString(n * fields + 3, entries.front().dataId);
+					unsigned int counter = 0;
+
+					// set standard values
+					if(this->overwrite) {
+						sqlStatement100.setUInt64(n * fields + 1, entries.front().contentId);
+						sqlStatement100.setString(n * fields + 2, entries.front().dataId);
+						sqlStatement100.setString(n * fields + 3, entries.front().dataId);
+
+						counter += 3;
+					}
+
+					sqlStatement100.setUInt64(n * fields + counter + 1, entries.front().contentId);
+					sqlStatement100.setString(n * fields + counter + 2, entries.front().dataId);
+					sqlStatement100.setString(n * fields + counter + 3, entries.front().dataId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement100.setNull(n * fields + 4, 0);
+						sqlStatement100.setNull(n * fields + counter + 4, 0);
 					else
-						sqlStatement100.setString(n * fields + 4, entries.front().dateTime);
+						sqlStatement100.setString(n * fields + counter + 4, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 5;
+					counter += 5;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -942,18 +984,28 @@ namespace crawlservpp::Module::Extractor {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					// set default values
-					sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
-					sqlStatement10.setString(n * fields + 2, entries.front().dataId);
-					sqlStatement10.setString(n * fields + 3, entries.front().dataId);
+					unsigned int counter = 0;
+
+					// set standard values
+					if(this->overwrite) {
+						sqlStatement10.setUInt64(n * fields + 1, entries.front().contentId);
+						sqlStatement10.setString(n * fields + 2, entries.front().dataId);
+						sqlStatement10.setString(n * fields + 3, entries.front().dataId);
+
+						counter += 3;
+					}
+
+					sqlStatement10.setUInt64(n * fields + counter + 1, entries.front().contentId);
+					sqlStatement10.setString(n * fields + counter + 2, entries.front().dataId);
+					sqlStatement10.setString(n * fields + counter + 3, entries.front().dataId);
 
 					if(entries.front().dateTime.empty())
-						sqlStatement10.setNull(n * fields + 4, 0);
+						sqlStatement10.setNull(n * fields + counter + 4, 0);
 					else
-						sqlStatement10.setString(n * fields + 4, entries.front().dateTime);
+						sqlStatement10.setString(n * fields + counter + 4, entries.front().dateTime);
 
 					// set custom values
-					unsigned int counter = 5;
+					counter += 5;
 
 					for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 						if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -976,18 +1028,28 @@ namespace crawlservpp::Module::Extractor {
 				// check entry
 				this->checkEntrySize(entries.front());
 
-				// set default values
-				sqlStatement1.setUInt64(1, entries.front().contentId);
-				sqlStatement1.setString(2, entries.front().dataId);
-				sqlStatement1.setString(3, entries.front().dataId);
+				unsigned int counter = 0;
+
+				// set standard values
+				if(this->overwrite) {
+					sqlStatement1.setUInt64(1, entries.front().contentId);
+					sqlStatement1.setString(2, entries.front().dataId);
+					sqlStatement1.setString(3, entries.front().dataId);
+
+					counter += 3;
+				}
+
+				sqlStatement1.setUInt64(counter + 1, entries.front().contentId);
+				sqlStatement1.setString(counter + 2, entries.front().dataId);
+				sqlStatement1.setString(counter + 3, entries.front().dataId);
 
 				if(entries.front().dateTime.empty())
-					sqlStatement1.setNull(4, 0);
+					sqlStatement1.setNull(counter + 4, 0);
 				else
-					sqlStatement1.setString(4, entries.front().dateTime);
+					sqlStatement1.setString(counter + 4, entries.front().dateTime);
 
 				// set custom values
-				unsigned int counter = 5;
+				counter += 5;
 
 				for(auto i = entries.front().fields.begin(); i != entries.front().fields.end(); ++i) {
 					if(!(this->targetFieldNames.at(i - entries.front().fields.begin()).empty())) {
@@ -1203,19 +1265,20 @@ namespace crawlservpp::Module::Extractor {
 
 	// generate SQL query for updating or adding a specific number of extracted entries, throws Database::Exception
 	std::string Database::queryUpdateOrAddEntries(unsigned int numberOfEntries) {
-		// TODO: update when exists (when exactly?)
-
 		// check arguments
 		if(!numberOfEntries)
 			throw Exception("Database::queryUpdateOrAddEntries(): No number of entries specified");
 
 		// create INSERT INTO clause
 		std::string sqlQueryStr("INSERT INTO `" + this->targetTableFull + "`"
-								" ("
-									" content,"
+								" (");
+		if(this->overwrite)
+			sqlQueryStr +=			" id,";
+
+		sqlQueryStr += 				" content,"
 									" extracted_id,"
 									" hash,"
-									" extracted_datetime");
+									" extracted_datetime";
 
 		unsigned long counter = 0;
 
@@ -1232,28 +1295,46 @@ namespace crawlservpp::Module::Extractor {
 
 		// create placeholder list (including existence check)
 		for(unsigned int n = 1; n <= numberOfEntries; ++n) {
-			sqlQueryStr +=		"( "
-										"?, ?, CRC32( ? ), ?";
+			sqlQueryStr +=		"( ";
+
+			if(this->overwrite)
+				sqlQueryStr +=		"("
+										"SELECT id"
+										" FROM "
+										" ("
+											" SELECT id, extracted_id"
+											" FROM `" + this->targetTableFull + "`"
+											" AS `" + this->targetTableAlias + "`"
+											" WHERE content = ?"
+											" AND hash = CRC32( ? )"
+										" ) AS tmp"
+										" WHERE extracted_id LIKE ?"
+										" LIMIT 1"
+									"),";
+
+
+			sqlQueryStr +=			"?, ?, CRC32( ? ), ?";
 
 			for(unsigned long c = 0; c < counter; ++c)
 				sqlQueryStr +=	 		", ?";
 
-			sqlQueryStr +=			")";
+			sqlQueryStr +=		")";
 
 			if(n < numberOfEntries)
 				sqlQueryStr +=		", ";
 		}
 
 		// create ON DUPLICATE KEY UPDATE clause
-		sqlQueryStr +=				" ON DUPLICATE KEY UPDATE"
-									" extracted_id = VALUES(extracted_id),"
-									" hash = VALUES(hash),"
-									" extracted_datetime = VALUES(extracted_datetime)";
+		if(this->overwrite) {
+			sqlQueryStr +=		" ON DUPLICATE KEY UPDATE"
+								" hash = VALUES(hash),"
+								" extracted_datetime = VALUES(extracted_datetime)";
 
-		for(const auto& targetFieldName : this->targetFieldNames)
-			if(!targetFieldName.empty())
-				sqlQueryStr 	+=	", `extracted__" + targetFieldName + "`"
+			for(const auto& targetFieldName : this->targetFieldNames)
+				if(!targetFieldName.empty())
+					sqlQueryStr +=	", `extracted__" + targetFieldName + "`"
 									" = VALUES(`extracted__" + targetFieldName + "`)";
+		}
 
 		// return query
 		return sqlQueryStr;

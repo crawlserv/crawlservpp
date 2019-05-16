@@ -56,6 +56,7 @@ namespace crawlservpp::Module::Extractor {
 		void setSources(std::queue<StringString>& tablesAndColumns);
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields);
+		void setOverwrite(bool isOverwrite);
 
 		// prepare target table and SQL statements for parser
 		void initTargetTable();
@@ -75,7 +76,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// extracting functions
 		unsigned int checkExtractingTable();
-		bool getContent(unsigned long urlId, std::string& contentTo);
+		bool getContent(unsigned long urlId, IdString& contentTo);
 		std::string getParsedData(unsigned long urlId, unsigned long sourceIndex);
 		void updateOrAddEntries(std::queue<DataEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
@@ -99,6 +100,7 @@ namespace crawlservpp::Module::Extractor {
 		bool extractCustom;
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
+		bool overwrite;
 
 		// sources
 		bool rawContentIsSource;

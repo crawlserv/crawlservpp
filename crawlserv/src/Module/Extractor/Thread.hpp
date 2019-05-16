@@ -18,7 +18,9 @@
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Json.hpp"
 #include "../../Helper/Strings.hpp"
+#include "../../Helper/Utf8.hpp"
 #include "../../Main/Exception.hpp"
+#include "../../Network/Curl.hpp"
 #include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
 #include "../../Query/JsonPath.hpp"
@@ -57,6 +59,8 @@ namespace crawlservpp::Module::Extractor {
 	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenience
 		typedef Helper::Json::Exception JsonException;
+		typedef Helper::Utf8::Exception Utf8Exception;
+		typedef Network::Curl::Exception CurlException;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::DataEntry DataEntry;
 		typedef Struct::QueryProperties QueryProperties;
@@ -74,12 +78,16 @@ namespace crawlservpp::Module::Extractor {
 	public:
 		// constructors
 		Thread(
-				Main::Database& database,
+				Main::Database& dbBase,
+				const std::string& cookieDirectory,
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
 
-		Thread(Main::Database& database, const ThreadOptions& threadOptions);
+		Thread(
+				Main::Database& dbBase,
+				const std::string& cookieDirectory,
+				const ThreadOptions& threadOptions);
 
 		// destructor
 		virtual ~Thread();
@@ -94,6 +102,7 @@ namespace crawlservpp::Module::Extractor {
 	protected:
 		// database for the thread
 		Database database;
+		Network::Curl networking;
 
 		// table names for locking
 		std::string extractingTable;
@@ -169,11 +178,24 @@ namespace crawlservpp::Module::Extractor {
 		void extractingFetchUrls();
 		void extractingCheckUrls();
 		unsigned long extractingNext();
-		void extractingGetVariableValues(std::vector<StringString>& variables);
+		void extractingGetVariableValues(std::vector<StringString>& variables, const IdString& content);
 		void extractingGetTokenValues(std::vector<StringString>& variables);
-		std::string extractingGetTokenValue(const std::string& source, const QueryStruct& query);
-		std::string extractingGetValueFromContent(const QueryStruct& query, std::string& content);
-		unsigned long extractingParse(unsigned long contentId, const std::string& content);
+		void extractingGetPageTokenValues(const std::string& page, std::vector<StringString>& tokens);
+		std::string extractingGetTokenValue(
+				const std::string& source,
+				bool usePost,
+				const QueryStruct& query
+		);
+		std::string extractingPageContent(const std::string& url, const std::string& cookies);
+		std::string extractingGetValueFromContent(const QueryStruct& query, const std::string& content);
+		std::string extractingGetValueFromUrl(const QueryStruct& query);
+		unsigned long extractingPage(
+				unsigned long contentId,
+				const std::string& url,
+				const std::string& content
+		);
+		bool extractingCheckCurlCode(CURLcode curlCode, const std::string& url);
+		bool extractingCheckResponseCode(const std::string& url, long responseCode);
 		void extractingUrlFinished();
 		void extractingSaveResults(bool warped);
 
@@ -182,7 +204,7 @@ namespace crawlservpp::Module::Extractor {
 		bool parseJsonRapid(const std::string& content);
 		bool parseJsonCons(const std::string& content);
 		void resetParsingState();
-		void logParsingErrors(unsigned long contentId);
+		void logParsingErrors(const std::string& url);
 	};
 
 } /* crawlservpp::Module::Extractor */

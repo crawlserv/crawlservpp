@@ -14,6 +14,7 @@ namespace crawlservpp::Module::Extractor {
 	// constructor A: run previously interrupted extractor
 	Thread::Thread(
 			Main::Database& dbBase,
+			const std::string& cookieDirectory,
 			const ThreadOptions& threadOptions,
 			const ThreadStatus& threadStatus
 	)
@@ -23,6 +24,7 @@ namespace crawlservpp::Module::Extractor {
 						threadStatus
 				  ),
 				  database(this->Module::Thread::database),
+				  networking(cookieDirectory),
 				  lastUrl(0),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
@@ -39,26 +41,27 @@ namespace crawlservpp::Module::Extractor {
 				  total(0) {}
 
 	// constructor B: start a new extractor
-	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(
-						dbBase,
-						threadOptions
-				  ),
-				  database(this->Module::Thread::database),
-				  lastUrl(0),
-				  tickCounter(0),
-				  startTime(std::chrono::steady_clock::time_point::min()),
-				  pauseTime(std::chrono::steady_clock::time_point::min()),
-				  idleTime(std::chrono::steady_clock::time_point::min()),
-				  idle(false),
-				  xmlParsed(false),
-				  jsonParsedRapid(false),
-				  jsonParsedCons(false),
-				  idFirst(0),
-				  idDist(0),
-				  posFirstF(0.),
-				  posDist(0),
-				  total(0) {}
+	Thread::Thread(
+			Main::Database& dbBase,
+			const std::string& cookieDirectory,
+			const ThreadOptions& threadOptions
+	) : Module::Thread(dbBase, threadOptions),
+		database(this->Module::Thread::database),
+		networking(cookieDirectory),
+		lastUrl(0),
+		tickCounter(0),
+		startTime(std::chrono::steady_clock::time_point::min()),
+		pauseTime(std::chrono::steady_clock::time_point::min()),
+		idleTime(std::chrono::steady_clock::time_point::min()),
+		idle(false),
+		xmlParsed(false),
+		jsonParsedRapid(false),
+		jsonParsedCons(false),
+		idFirst(0),
+		idDist(0),
+		posFirstF(0.),
+		posDist(0),
+		total(0) {}
 
 	// destructor stub
 	Thread::~Thread() {}
@@ -94,7 +97,16 @@ namespace crawlservpp::Module::Extractor {
 		this->database.setExtractCustom(this->config.generalExtractCustom);
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setTargetFields(this->config.extractingFieldNames);
+		this->database.setOverwrite(this->config.extractingOverwrite);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
+
+		this->database.setRawContentIsSource(
+				std::find(
+						this->config.variablesSource.begin(),
+						this->config.variablesSource.end(),
+						static_cast<unsigned char>(Config::variablesSourcesContent)
+				) != this->config.variablesSource.end()
+		);
 
 		// set sources
 		std::queue<StringString> sources;
@@ -150,6 +162,19 @@ namespace crawlservpp::Module::Extractor {
 			this->log("prepares SQL statements...");
 
 		this->database.prepare();
+
+		// set network configuration
+		this->setStatusMessage("Setting network configuration...");
+
+		if(config.generalLogging == Config::generalLoggingVerbose)
+			this->log("sets network configuration...");
+
+		this->networking.setConfigGlobal(*this, false, &configWarnings);
+
+		while(!configWarnings.empty()) {
+			this->log("WARNING: " + configWarnings.front());
+			configWarnings.pop();
+		}
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
@@ -250,7 +275,7 @@ namespace crawlservpp::Module::Extractor {
 			return;
 		}
 
-		// check whether next URL(s) are ought not to be skipped
+		// check whether next URL(s) ought to be skipped
 		this->extractingCheckUrls();
 
 		// update timers if idling just stopped
@@ -474,7 +499,8 @@ namespace crawlservpp::Module::Extractor {
 						this->config.variablesSource.begin(),
 						this->config.variablesSource.end(),
 						[](const unsigned char source) {
-							return source == Config::variablesSourcesContent;
+							return	source == Config::variablesSourcesContent
+									|| source == Config::variablesSourcesUrl;
 						}
 				)
 		);
@@ -484,7 +510,8 @@ namespace crawlservpp::Module::Extractor {
 			for(const auto& query : this->config.extractingIdQueries) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(query)
+					this->database.getQueryProperties(query, properties);
 
 				this->queriesId.emplace_back(this->addQuery(properties));
 			}
@@ -492,29 +519,85 @@ namespace crawlservpp::Module::Extractor {
 			for(const auto& query : this->config.extractingDateTimeQueries) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(query)
+					this->database.getQueryProperties(query, properties);
 
 				this->queriesDateTime.emplace_back(this->addQuery(properties));
 			}
 
-			for(const auto& query : this->config.extractingFieldQueries) {
+			for(
+					auto i = this->config.extractingFieldQueries.begin();
+					i != this->config.extractingFieldQueries.end();
+					++i
+			) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(*i)
+					this->database.getQueryProperties(*i, properties);
+				else if(this->config.generalLogging) {
+					const auto name =
+							this->config.extractingFieldNames.begin()
+							+ (i - this->config.extractingFieldQueries.begin());
+
+					if(!(name->empty()))
+						this->log(
+								"WARNING: Ignores field \'"
+								+ *name
+								+ "\' because of missing query."
+						);
+				}
 
 				this->queriesFields.emplace_back(this->addQuery(properties));
 			}
 
-			for(const auto& query : this->config.variablesTokensQuery) {
+			for(
+					auto i = this->config.variablesTokensQuery.begin();
+					i != this->config.variablesTokensQuery.end();
+					++i
+			) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(*i) {
+					this->database.getQueryProperties(*i, properties);
+
+					if(
+							this->config.generalLogging
+							&& !properties.resultSingle
+							&& !properties.resultBool
+					)
+						this->log(
+								"WARNING: Ignores token \'"
+								+ this->config.variablesTokens.at(
+										i - this->config.variablesTokensQuery.begin()
+								)
+								+ "\' because of wrong query result type."
+						);
+				}
+				else if(this->config.generalLogging) {
+					const auto name =
+							this->config.variablesTokens.begin()
+							+ (i - this->config.variablesTokensQuery.begin());
+
+					if(!(name->empty()))
+						this->log(
+								"WARNING: Ignores token \'"
+								+ *name
+								+ "\' because of missing query."
+						);
+				}
 
 				this->queriesTokens.emplace_back(this->addQuery(properties));
 			}
 
-			for(auto i = this->config.variablesSource.begin(); i != this->config.variablesSource.end(); ++i) {
-				if(*i == Config::variablesSourcesContent) {
+			for(
+					auto i = this->config.variablesSource.begin();
+					i != this->config.variablesSource.end();
+					++i
+			) {
+				if(
+						*i == Config::variablesSourcesContent
+						|| *i == Config::variablesSourcesUrl
+				) {
 					const auto query =
 							this->config.variablesQuery.begin()
 							+ (i - this->config.variablesSource.begin());
@@ -524,25 +607,42 @@ namespace crawlservpp::Module::Extractor {
 					if(*query) {
 						this->database.getQueryProperties(*query, properties);
 
-						if(!properties.resultSingle && !properties.resultBool)
-							this->warning(
-									"ignores variable \'"
-									+ *(
-											this->config.variablesName.begin()
-											+ (i - this->config.variablesSource.begin())
-									   )
-									+ "\' because of wrong query result type."
+						if(this->config.generalLogging) {
+							if(!properties.resultSingle && !properties.resultBool)
+								this->log(
+										"WARNING: Ignores variable \'"
+										+ this->config.variablesName.at(
+												i - this->config.variablesSource.begin()
+										)
+										+ "\' because of wrong query result type."
+								);
+							else if(
+									*i == Config::variablesSourcesUrl
+									&& !properties.type.empty()
+									&& properties.type != "regex"
+							)
+								this->log(
+										"WARNING: Ignores variable \'"
+										+ this->config.variablesName.at(
+												i - this->config.variablesSource.begin()
+										)
+										+ "\' because of wrong query type for URL."
+								);
+						}
+
+					}
+					else if(this->config.generalLogging) {
+						const auto name =
+								this->config.variablesName.begin()
+								+ (i - this->config.variablesSource.begin());
+
+						if(!(name->empty()))
+							this->log(
+									"WARNING: Ignores variable \'"
+									+ *name
+									+ "\' because of missing query."
 							);
 					}
-					else
-						this->warning(
-								"ignores variable \'"
-								+ *(
-										this->config.variablesName.begin()
-										+ (i - this->config.variablesSource.begin())
-								   )
-								+ "\' because of missing query."
-						);
 
 					this->queriesVariables.emplace_back(this->addQuery(properties));
 				}
@@ -555,19 +655,23 @@ namespace crawlservpp::Module::Extractor {
 
 			QueryProperties properties;
 
-			this->database.getQueryProperties(this->config.pagingIsNextFrom, properties);
+			if(this->config.pagingIsNextFrom)
+				this->database.getQueryProperties(this->config.pagingIsNextFrom, properties);
 
 			this->queryPagingIsNextFrom = this->addQuery(properties);
 
-			this->database.getQueryProperties(this->config.pagingNextFrom, properties);
+			if(this->config.pagingNextFrom)
+				this->database.getQueryProperties(this->config.pagingNextFrom, properties);
 
 			this->queryPagingNextFrom = this->addQuery(properties);
 
-			this->database.getQueryProperties(this->config.pagingNumberFrom, properties);
+			if(this->config.pagingNumberFrom)
+				this->database.getQueryProperties(this->config.pagingNumberFrom, properties);
 
 			this->queryPagingNumberFrom = this->addQuery(properties);
 
-			this->database.getQueryProperties(this->config.expectedQuery, properties);
+			if(this->config.expectedQuery)
+				this->database.getQueryProperties(this->config.expectedQuery, properties);
 
 			this->queryExpected = this->addQuery(properties);
 		}
@@ -669,21 +773,139 @@ namespace crawlservpp::Module::Extractor {
 	// extract data from next URL, return number of extracted datasets
 	unsigned long Thread::extractingNext() {
 		unsigned long extracted = 0;
+		std::vector<StringString> variables;
+		IdString content;
+
+		// get content ID and - if necessary - the whole content
+		this->database.getContent(this->urls.front().first, content);
+
+		// check content ID
+		if(!content.first)
+			return 0;
+
+		// get values for variables
+		this->extractingGetVariableValues(variables, content);
+
+		// get values for global tokens
+		this->extractingGetTokenValues(variables);
+
+		// loop over pages
+		bool pageFirst = true;
+		long pageNum = this->config.pagingFirst;
+		std::string pageName(this->config.pagingFirstString);
+
+		while(this->isRunning()) {
+			// resolve paging variable
+			std::string page(pageName);
+
+			if(page.empty())
+				page = std::to_string(pageNum);
+
+			// resolve alias for paging variable
+			std::string pageAlias;
+
+			if(this->config.pagingAliasAdd) {
+				try {
+					pageAlias = std::to_string(
+							boost::lexical_cast<long>(page)
+							+ this->config.pagingAliasAdd
+					);
+				}
+				catch(const boost::bad_lexical_cast& e) {
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: Could not create numeric alias \'"
+								+ this->config.pagingAlias
+								+ "\' for non-numeric variable \'"
+								+ this->config.pagingVariable
+								+ "\' [= \'."
+								+ page
+								+ "\']"
+						);
+				}
+			}
+			else
+				pageAlias = page;
+
+			// get page-specific tokens
+			std::vector<StringString> pageTokens;
+
+			this->extractingGetPageTokenValues(page, pageTokens);
+
+			// get cookies and source URL
+			std::string cookies(this->config.sourceCookies);
+			std::string sourceUrl;
+
+			if(pageFirst) {
+				if(this->config.sourceUrlFirst.empty()) {
+					sourceUrl = this->config.sourceUrl;
+				}
+				else
+					sourceUrl = this->config.sourceUrlFirst;
+
+				pageFirst = false;
+			}
+			else
+				sourceUrl = this->config.sourceUrl;
+
+			// replace variables, their aliases and tokens
+			Helper::Strings::replaceAll(cookies, this->config.pagingVariable, page, true);
+			Helper::Strings::replaceAll(cookies, this->config.pagingAlias, pageAlias, true);
+			Helper::Strings::replaceAll(sourceUrl, this->config.pagingVariable, page, true);
+			Helper::Strings::replaceAll(sourceUrl, this->config.pagingAlias, pageAlias, true);
+
+			for(const auto& variable : variables) {
+				Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
+				Helper::Strings::replaceAll(sourceUrl, variable.first, variable.second, true);
+			}
+
+			for(const auto& token : pageTokens) {
+				Helper::Strings::replaceAll(cookies, token.first, token.second, true);
+				Helper::Strings::replaceAll(sourceUrl, token.first, token.second, true);
+			}
+
+			// check URL
+			if(sourceUrl.empty())
+				break;
+
+			// set local network configuration
+			this->networking.setConfigCurrent(*this);
+
+			// set cookies if necessary
+			if(!cookies.empty())
+				this->networking.setCookies(cookies);
+
+			// get and check content of current page
+			std::string pageContent(this->extractingPageContent("https://" + sourceUrl, cookies));
+
+			if(pageContent.empty())
+				break;
+
+			// extract data from content
+			extracted += this->extractingPage(content.first, sourceUrl, pageContent);
+
+			// TODO: check for next page
+			break;
+		}
+
+		return extracted;
+	}
+
+	// get values of variables
+	void Thread::extractingGetVariableValues(std::vector<StringString>& variables, const IdString& content) {
 		unsigned long parsedSource = 0;
 		unsigned long queryCounter = 0;
-		std::vector<StringString> globalVariables;
-		std::string content;
 
 		// loop over variables (and their aliases)
 		for(auto i = this->config.variablesName.begin(); i != this->config.variablesName.end(); ++i) {
 			// get value for variable
 			std::string value;
 
-			const auto source =
-					this->config.variablesSource.begin()
-					+ (i - this->config.variablesName.begin());
-
-			switch(*source) {
+			switch(
+					this->config.variablesSource.at(
+							i - this->config.variablesName.begin()
+					)
+			) {
 			case Config::variablesSourcesParsed:
 				value = this->database.getParsedData(this->urls.front().first, parsedSource);
 
@@ -694,7 +916,7 @@ namespace crawlservpp::Module::Extractor {
 			case Config::variablesSourcesContent:
 				value = this->extractingGetValueFromContent(
 						this->queriesVariables.at(queryCounter),
-						content
+						content.second
 				);
 
 				++queryCounter;
@@ -702,7 +924,11 @@ namespace crawlservpp::Module::Extractor {
 				break;
 
 			case Config::variablesSourcesUrl:
-				value = this->urls.front().second;
+				value = this->extractingGetValueFromUrl(
+						this->queriesVariables.at(queryCounter)
+				);
+
+				++queryCounter;
 
 				break;
 
@@ -716,10 +942,7 @@ namespace crawlservpp::Module::Extractor {
 			}
 
 			// get value for alias
-			globalVariables.emplace_back(
-					*i,
-					value
-			);
+			variables.emplace_back(*i, value);
 
 			const auto alias =
 					this->config.variablesAlias.begin()
@@ -753,68 +976,388 @@ namespace crawlservpp::Module::Extractor {
 							);
 					}
 
-					globalVariables.emplace_back(
-							*alias,
-							aliasValue
-					);
+					// set variable alias to new value
+					variables.emplace_back(*alias, aliasValue);
 				}
 				else
-					globalVariables.emplace_back(
-							*alias,
-							value
-					);
+					// set variable alias to same value
+					variables.emplace_back(*alias, value);
 			}
 		}
-
-		// loop over global tokens
-		if(!(this->config.pagingVariable.empty()))
-			for(unsigned long n = 0; n < this->config.variablesTokens.size(); ++n) {
-				if(
-						this->config.variablesTokensSource.at(n).find(
-								this->config.pagingVariable
-						) == std::string::npos
-				) {
-					// get global token
-					// TODO
-				}
-			}
-
-		// loop over pages
-		long pageNum = this->config.pagingFirst;
-		std::string pageName(this->config.pagingFirstString);
-		bool pageFirst = true;
-
-		while(this->isRunning()) {
-			// loop over page-specific tokens
-
-			// resolve paging variable
-
-			// get page
-		}
-
-		return false;
 	}
 
-	// extract data from crawled content
-	std::string Thread::extractingGetValueFromContent(const QueryStruct& query, std::string &content) {
-		std::string result;
+	// get values of global tokens
+	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) {
+		if(this->config.pagingVariable.empty())
+			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
+				const unsigned long index = i - this->config.variablesTokens.begin();
 
+				variables.emplace_back(
+						*i,
+						this->extractingGetTokenValue(
+								this->config.variablesTokensSource.at(index),
+								this->config.variablesTokensUsePost.at(index),
+								this->queriesTokens.at(index)
+						)
+				);
+			}
+		else
+			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
+				const unsigned long index = i - this->config.variablesTokens.begin();
+				const auto source = this->config.variablesTokensSource.begin() + index;
+
+				if(source->find(this->config.pagingVariable) == std::string::npos)
+					variables.emplace_back(
+							*i,
+							this->extractingGetTokenValue(
+									*source,
+									this->config.variablesTokensUsePost.at(index),
+									this->queriesTokens.at(index)
+							)
+					);
+			}
+	}
+
+	// get values of page-specific tokens
+	void Thread::extractingGetPageTokenValues(const std::string& page, std::vector<StringString>& tokens) {
+		if(this->config.pagingVariable.empty())
+			return;
+
+		for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
+			const unsigned long index = i - this->config.variablesTokens.begin();
+			std::string source(this->config.variablesTokensSource.at(index));
+
+			if(source.find(this->config.pagingVariable) != std::string::npos) {
+				Helper::Strings::replaceAll(source, this->config.pagingVariable, page, true);
+
+				tokens.emplace_back(
+						*i,
+						this->extractingGetTokenValue(
+								source,
+								this->config.variablesTokensUsePost.at(index),
+								this->queriesTokens.at(index)
+						)
+				);
+			}
+		}
+	}
+
+	// get value of token
+	std::string Thread::extractingGetTokenValue(const std::string& source, bool usePost, const QueryStruct& query) {
 		// ignore if no or invalid query is specified
 		if(!query.index || (!query.resultBool && !query.resultSingle))
 			return "";
 
-		// get content if still necessary
-		if(content.empty()) {
-			this->resetParsingState();
+		// get content for extracting token
+		const std::string sourceUrl("https://" + source);
+		std::string content;
+		std::string result;
+		bool success = false;
 
-			if(!(this->database.getContent(
-					this->urls.front().first,
-					content
-			)))
-				return "";
+		while(this->isRunning()) {
+			try {
+				// set local network configuration
+				this->networking.setConfigCurrent(*this);
+
+				// set cookies if necessary
+
+
+				// get content
+				this->networking.getContent(
+						sourceUrl,
+						usePost,
+						content,
+						this->config.generalRetryHttp
+				);
+
+				success = true;
+
+				break;
+			}
+			catch(const CurlException& e) {
+				// error while getting content: check type of error i.e. last cURL code
+				if(this->extractingCheckCurlCode(
+						this->networking.getCurlCode(),
+						sourceUrl
+				)) {
+					// reset connection and retry
+					if(this->config.generalLogging) {
+						this->log(e.whatStr() + " [" + sourceUrl + "].");
+						this->log("resets connection...");
+					}
+
+					this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
+
+					this->networking.resetConnection(this->config.generalSleepError);
+				}
+				else {
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: Could not get value for token from "
+								+ sourceUrl
+								+ ": "
+								+ e.whatStr()
+						);
+
+					break;
+				}
+			}
+			catch(const Utf8Exception& e) {
+				// write UTF-8 error to log if neccessary
+				if(this->config.generalLogging)
+					this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
+
+				break;
+			}
 		}
 
+		if(success) {
+			// get token from content
+			Parsing::XML xmlDoc;
+			rapidjson::Document jsonDoc;
+			jsoncons::json json;
+			std::queue<std::string> warnings;
+
+			// set options for logging
+			xmlDoc.setOptions(this->config.generalTidyWarnings, this->config.generalTidyErrors);
+
+			switch(query.type) {
+			case QueryStruct::typeRegEx:
+				// get token from content
+				try {
+					// check result type of query
+					if(query.resultSingle)
+						this->getRegExQuery(query.index).getFirst(content, result);
+					else
+						result = this->getRegExQuery(query.index).getBool(content) ? "true" : "false";
+				}
+				catch(const RegExException& e) {
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: RegEx error - "
+								+ e.whatStr()
+								+ " ["
+								+ sourceUrl
+								+ "]."
+						);
+				}
+
+				break;
+
+			case QueryStruct::typeXPath:
+				// parse XML content
+				try {
+					xmlDoc.parse(content, warnings, this->config.extractingRepairCData);
+				}
+				catch(const XMLException& e) {
+					// error while parsing content
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: XML error: "
+								+ e.whatStr()
+								+ " ["
+								+ sourceUrl
+								+ "]."
+						);
+
+					break;
+				}
+
+				// write warnings to log if necessary
+				if(this->config.generalLogging)
+					while(!warnings.empty()) {
+						this->log(
+								"WARNING: "
+								+ warnings.front()
+								+ " ["
+								+ sourceUrl
+								+ "]."
+						);
+
+						warnings.pop();
+					}
+
+				// get token from XML
+				try {
+					// check result type of query
+					if(query.resultSingle)
+						this->getXPathQuery(query.index).getFirst(xmlDoc, result);
+					else
+						result = this->getXPathQuery(query.index).getBool(xmlDoc) ? "true" : "false";
+				}
+				catch(const XPathException& e) {
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: XPath error - "
+								+ e.whatStr()
+								+ " ["
+								+ sourceUrl
+								+ "]."
+						);
+				}
+
+				break;
+
+			case QueryStruct::typeJsonPointer:
+				// parse JSON using RapidJSON
+				try {
+					jsonDoc = Helper::Json::parseRapid(content);
+				}
+				catch(const JsonException& e) {
+					// error while parsing content
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: JSON parsing error: "
+								+ e.whatStr()
+								+ " ["
+								+ sourceUrl
+								+ "]."
+						);
+
+					break;
+				}
+
+				// get token from JSON
+				try {
+					// check result type of query
+					if(query.resultSingle)
+						this->getJsonPointerQuery(query.index).getFirst(jsonDoc, result);
+					else
+						result = this->getJsonPointerQuery(query.index).getBool(jsonDoc) ? "true" : "false";
+				}
+				catch(const JsonPointerException& e) {
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: JSONPointer error - "
+								+ e.whatStr() + " ["
+								+ sourceUrl
+								+ "]."
+						);
+				}
+
+				break;
+
+			case QueryStruct::typeJsonPath:
+				// parse JSON using jsoncons
+				try {
+					json = Helper::Json::parseCons(content);
+				}
+				catch(const JsonException& e) {
+					// error while parsing content
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: JSON parsing error: "
+								+ e.whatStr()
+								+ " ["
+								+ sourceUrl
+								+ "]."
+						);
+
+					break;
+				}
+
+				// get token from JSON
+				try {
+					// check query type
+					if(query.resultSingle)
+						this->getJsonPathQuery(query.index).getFirst(json, result);
+					else
+						result = this->getJsonPathQuery(query.index).getBool(json) ? "true" : "false";
+				}
+				catch(const JsonPathException& e) {
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: JSONPointer error - "
+								+ e.whatStr() + " ["
+								+ sourceUrl
+								+ "]."
+						);
+				}
+
+				break;
+
+			case QueryStruct::typeNone:
+				break;
+
+			default:
+				if(this->config.generalLogging)
+					this->log(
+							"WARNING: Unknown type of query for getting token ["
+							+ sourceUrl
+							+ "]."
+					);
+			}
+		}
+
+		return result;
+	}
+
+	// get page content from URL
+	std::string Thread::extractingPageContent(const std::string& url, const std::string& cookies) {
+		std::string result;
+
+		while(this->isRunning()) {
+			this->networking.setCookies(cookies);
+
+			try {
+				this->networking.getContent(
+						url,
+						this->config.sourceUsePost,
+						result,
+						this->config.generalRetryHttp
+				);
+
+				break;
+			}
+			catch(const CurlException& e) {
+				// error while getting content: check type of error i.e. last cURL code
+				if(this->extractingCheckCurlCode(
+						this->networking.getCurlCode(),
+						url
+				)) {
+					// reset connection and retry
+					if(this->config.generalLogging) {
+						this->log(e.whatStr() + " [" + url + "].");
+						this->log("resets connection...");
+					}
+
+					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
+
+					this->networking.resetConnection(this->config.generalSleepError);
+				}
+				else {
+					if(this->config.generalLogging)
+						this->log(
+								"WARNING: Could not extract data from "
+								+ url
+								+ ": "
+								+ e.whatStr()
+						);
+
+					break;
+				}
+			}
+			catch(const Utf8Exception& e) {
+				// write UTF-8 error to log if neccessary
+				if(this->config.generalLogging)
+					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
+
+				break;
+			}
+		}
+
+		return result;
+	}
+
+	// extract data from crawled content
+	std::string Thread::extractingGetValueFromContent(const QueryStruct& query, const std::string &content) {
+		// ignore if no or invalid query is specified
+		if(!query.index || (!query.resultBool && !query.resultSingle))
+			return "";
+
 		// extract from content
+		std::string result;
+
 		switch(query.type) {
 		case QueryStruct::typeRegEx:
 			// get value by running RegEx query on crawled content
@@ -884,8 +1427,38 @@ namespace crawlservpp::Module::Extractor {
 		return result;
 	}
 
-	// extract data by parsing content, return number of extracted datasets
-	unsigned long Thread::extractingParse(unsigned long contentId, const std::string& content) {
+	// extract data from URL
+	std::string Thread::extractingGetValueFromUrl(const QueryStruct& query) {
+		// ignore if no or invalid query is specified
+		if(
+				!query.index
+				|| (!query.resultBool && !query.resultSingle)
+				|| query.type != QueryStruct::typeRegEx
+		)
+			return "";
+
+		// get value by running RegEx query on URL
+		std::string result;
+
+		try {
+			if(query.resultSingle)
+				this->getRegExQuery(query.index).getFirst(this->urls.front().second, result);
+			else
+				result = this->getRegExQuery(query.index).getBool(this->urls.front().second) ? "true" : "false";
+		}
+		catch(const RegExException& e) {} // ignore query on error
+
+		return result;
+	}
+
+	// extract data by parsing page content, return number of extracted datasets
+	unsigned long Thread::extractingPage(
+			unsigned long contentId,
+			const std::string& url,
+			const std::string& content
+	) {
+		// TODO: getAll instead of getFirst
+
 		DataEntry extractedData(contentId);
 
 		// reset parsing state
@@ -975,9 +1548,9 @@ namespace crawlservpp::Module::Extractor {
 
 		// check whether no ID has been extracted
 		if(extractedData.dataId.empty()) {
-			this->logParsingErrors(contentId);
+			this->logParsingErrors(url);
 
-			return false;
+			return 0;
 		}
 
 		// extract date/time
@@ -1108,7 +1681,7 @@ namespace crawlservpp::Module::Extractor {
 						"ERROR: Could not extract date/time \'"
 						+ extractedData.dateTime
 						+ "\' from "
-						+ this->urls.front().second
+						+ url
 				);
 
 			extractedData.dateTime = "";
@@ -1235,7 +1808,11 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// stringify and add parsed element as JSON array with one boolean value as string
-					extractedData.fields.emplace_back(Helper::Json::stringify(parsedBool ? "true" : "false"));
+					extractedData.fields.emplace_back(
+							Helper::Json::stringify(
+									parsedBool ? std::string("true") : std::string("false")
+							)
+					);
 				}
 				else {
 					if(query.type != QueryStruct::typeNone && this->config.generalLogging)
@@ -1256,10 +1833,49 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// show parsing errors if necessary
-		this->logParsingErrors(contentId);
+		this->logParsingErrors(url);
 
 		// add parsed data to results
 		this->results.push(extractedData);
+
+		return true;
+	}
+
+	// check cURL code and decide whether to retry or skip
+	bool Thread::extractingCheckCurlCode(CURLcode curlCode, const std::string& url) {
+		if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
+			// redirection error: skip URL
+			if(this->config.generalLogging)
+				this->log("redirection error at " + url + " - skips...");
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// check the HTTP response code for an error and decide whether to continue or skip
+	bool Thread::extractingCheckResponseCode(const std::string& url, long responseCode) {
+		if(responseCode >= 400 && responseCode < 600) {
+			if(this->config.generalLogging)
+				this->log(
+						"HTTP error "
+						+ std::to_string(responseCode)
+						+ " from "
+						+ url
+						+ " - skips..."
+				);
+
+			return false;
+		}
+		else if(responseCode != 200 && this->config.generalLogging)
+			this->log(
+					"WARNING: HTTP response code "
+					+ std::to_string(responseCode)
+					+ " from "
+					+ url
+					+ "."
+			);
 
 		return true;
 	}
@@ -1407,16 +2023,14 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// write parsing errors as warnings to log if necessary
-	void Thread::logParsingErrors(unsigned long contentId) {
+	void Thread::logParsingErrors(const std::string& url) {
 		if(this->config.generalLogging) {
 			if(!(this->xmlParsingError.empty()))
 				this->log(
 						"WARNING: "
 						+ this->xmlParsingError
-						+ " [content #"
-						+ std::to_string(contentId)
-						+ " - "
-						+ this->urls.front().second
+						+ " ["
+						+ url
 						+ "]."
 				);
 
@@ -1424,10 +2038,8 @@ namespace crawlservpp::Module::Extractor {
 				this->log(
 						"WARNING: "
 						+ this->jsonParsingError
-						+ " [content #"
-						+ std::to_string(contentId)
-						+ " - "
-						+ this->urls.front().second
+						+ " ["
+						+ url
 						+ "]."
 				);
 		}
