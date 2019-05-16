@@ -1301,9 +1301,14 @@ namespace crawlservpp::Module::Crawler {
 					// get content for extracting token
 					while(this->isRunning()) {
 						try {
+							// set local network configuration
+							this->networking.setConfigCurrent(*this);
+
+							// set cookies if necessary
 							if(!(this->config.customTokensCookies.at(n).empty()))
 								this->networking.setCookies(this->config.customTokensCookies.at(n));
 
+							// get content
 							this->networking.getContent(
 									sourceUrl,
 									this->config.customTokensUsePost.at(n),
