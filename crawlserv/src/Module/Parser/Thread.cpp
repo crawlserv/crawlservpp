@@ -145,15 +145,11 @@ namespace crawlservpp::Module::Parser {
 		if(verbose)
 			this->log("checks for URL-only parsing...");
 
-		this->idFromUrl = true;
-
-		for(auto i = this->config.parsingIdSources.begin();
-				i != this->config.parsingIdSources.end(); ++i) {
-			if(*i == Config::parsingSourceContent) {
-				this->idFromUrl = false;
-				break;
-			}
-		}
+		this->idFromUrl = std::find(
+				this->config.parsingIdSources.begin(),
+				this->config.parsingIdSources.end(),
+				Config::parsingSourceContent
+		) == this->config.parsingIdSources.end();
 
 		{
 			// wait for parsing table lock
@@ -1357,7 +1353,11 @@ namespace crawlservpp::Module::Parser {
 					// determine how to save result: JSON array or boolean value as string
 					if(this->config.parsingFieldJSON.at(fieldCounter))
 						// stringify and add parsed element as JSON array with one boolean value as string
-						parsedData.fields.emplace_back(Helper::Json::stringify(parsedBool ? "true" : "false"));
+						parsedData.fields.emplace_back(
+								Helper::Json::stringify(
+										parsedBool ? std::string("true") : std::string("false")
+								)
+						);
 
 					else
 						// save boolean value as string
