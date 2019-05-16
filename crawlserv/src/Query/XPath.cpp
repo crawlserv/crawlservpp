@@ -73,8 +73,6 @@ namespace crawlservpp::Query {
 
 	// get all matches as vector (saved to resultTo), , throws XPath::Exception
 	void XPath::getAll(const Parsing::XML& doc, std::vector<std::string>& resultTo) const {
-		std::vector<std::string> resultArray;
-
 		// check query and content
 		if(!(this->compiled))
 			throw XPath::Exception("No query compiled");
@@ -82,32 +80,33 @@ namespace crawlservpp::Query {
 		if(!(doc.doc))
 			throw XPath::Exception("No content parsed");
 
+		// empty result
+		resultTo.clear();
+
 		// evaluate query with multiple string results
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
 				const pugi::xpath_node_set nodeSet(this->query.evaluate_node_set(*(doc.doc)));
 
-				resultArray.reserve(resultArray.size() + nodeSet.size());
+				resultTo.reserve(nodeSet.size());
 
 				for(const auto& node : nodeSet) {
 					const std::string result(XPath::nodeToString(node, this->isTextOnly));
 
 					if(!result.empty())
-						resultArray.emplace_back(result);
+						resultTo.emplace_back(result);
 				}
 			}
 			else {
 				const std::string result(this->query.evaluate_string(*(doc.doc)));
 
 				if(!result.empty())
-					resultArray.emplace_back(result);
+					resultTo.emplace_back(result);
 			}
 		}
 		catch(const std::exception& e) {
 			throw XPath::Exception(e.what());
 		}
-
-		resultTo = resultArray;
 	}
 
 	// static helper function: convert node to string
