@@ -148,7 +148,7 @@ namespace crawlservpp::Module::Parser {
 		this->idFromUrl = std::find(
 				this->config.parsingIdSources.begin(),
 				this->config.parsingIdSources.end(),
-				Config::parsingSourceContent
+				static_cast<unsigned char>(Config::parsingSourceContent)
 		) == this->config.parsingIdSources.end();
 
 		{
