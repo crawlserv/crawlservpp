@@ -18,6 +18,7 @@
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Json.hpp"
 #include "../../Helper/Strings.hpp"
+#include "../../Helper/Utf8.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Network/Curl.hpp"
 #include "../../Parsing/URI.hpp"
