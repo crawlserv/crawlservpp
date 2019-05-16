@@ -46,6 +46,7 @@ namespace crawlservpp::Query {
 			static const unsigned char typeXPath = 2;
 			static const unsigned char typeJsonPointer = 3;
 			static const unsigned char typeJsonPath = 4;
+
 			unsigned char type;
 			unsigned long index;
 			bool resultBool;
