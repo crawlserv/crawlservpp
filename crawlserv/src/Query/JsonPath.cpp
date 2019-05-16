@@ -29,7 +29,7 @@ namespace crawlservpp::Query {
 			// evaluate query with boolean result
 			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
 
-			return !(result.is_array() && result.is_empty());
+			return !(result.is_array() && result.empty());
 		}
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
@@ -56,7 +56,7 @@ namespace crawlservpp::Query {
 
 			// check for array
 			if(result.is_array()) {
-				if(!result.is_empty())
+				if(!result.empty())
 					// stringify first element of array
 					resultTo = result[0].as<std::string>();
 			}
@@ -89,8 +89,8 @@ namespace crawlservpp::Query {
 			// check for array
 			if(result.is_array()) {
 				// stringify all array members
-				for(auto i = result.begin_elements(); i != result.end_elements(); ++i)
-					resultTo.emplace_back(i->as<std::string>());
+				for(const auto& element : result.array_range())
+					resultTo.emplace_back(element.as<std::string>());
 			}
 			else
 				// stringify value
