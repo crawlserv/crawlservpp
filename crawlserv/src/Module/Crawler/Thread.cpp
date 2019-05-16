@@ -573,22 +573,21 @@ namespace crawlservpp::Module::Crawler {
 
 	// add sitemap(s) from 'robots.txt' as custom URLs
 	void Thread::initRobotsTxt() {
+		// check for cross-domain website
+		if(this->domain.empty()) {
+			if(this->config.crawlerLogging)
+				this->log("WARNING: Cannot get \'robots.txt\' for cross-domain website.");
+
+			return;
+		}
+
 		// get content for extracting sitemap(s)
 		std::string content;
-		std::string token;
 		const std::string url("https://" + this->domain + "/robots.txt");
 		bool success = false;
 
 		if(this->config.crawlerLogging == Config::crawlerLoggingVerbose)
 			this->log("fetches \'robots.txt\'...");
-
-		// check for cross-domain website
-		if(this->domain.empty()) {
-			if(this->config.crawlerLogging)
-				this->log("WARNING: Cannot get \'robots.txt\' for cross-domain websites");
-
-			return;
-		}
 
 		// get robots.txt
 		while(this->isRunning()) {
