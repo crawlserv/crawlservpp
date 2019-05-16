@@ -41,6 +41,7 @@ namespace crawlservpp::Helper::Json {
 	std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify);
 	std::string stringify(const TextMap& textMapToStringify);
 	std::string stringify(const rapidjson::Value& value);
+	std::string stringify(const jsoncons::json& json);
 
 	// parsing functions
 	rapidjson::Document parseRapid(const std::string& json);
@@ -244,6 +245,15 @@ namespace crawlservpp::Helper::Json {
 		value.Accept(writer);
 
 		return buffer.GetString();
+	}
+
+	// stringify JSON using jsoncons
+	inline std::string stringify(const jsoncons::json& json) {
+		std::string result;
+
+		json.dump(result);
+
+		return result;
 	}
 
 	// parse JSON using RapidJSON, throws Json::Exception
