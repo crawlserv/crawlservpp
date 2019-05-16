@@ -88,13 +88,45 @@ namespace crawlservpp::Query {
 
 			// check for array
 			if(result.is_array()) {
-				// stringify all array members
+				// return all array members
 				for(const auto& element : result.array_range())
 					resultTo.emplace_back(element.as<std::string>());
 			}
 			else
-				// stringify value
+				// return result as single object
 				resultTo.emplace_back(result.as<std::string>());
+		}
+		catch(const jsoncons::json_exception& e) {
+			throw Exception(
+					std::string(e.what())
+					+ " (JSONPath: \'"
+					+ this->jsonPath + "\')"
+			);
+		}
+	}
+
+	// get matching sub-sets from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	void JsonPath::getSubSets(const jsoncons::json& json, std::vector<jsoncons::json>& resultTo) const {
+		// check JSONPath
+		if(this->jsonPath.empty())
+			throw Exception("No JSONPath defined");
+
+		// empty target
+		resultTo.clear();
+
+		try {
+			// get result
+			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
+
+			// check for array
+			if(result.is_array()) {
+				// stringify all array members
+				for(const auto& element : result.array_range())
+					resultTo.emplace_back(element);
+			}
+			else
+				// stringify value
+				resultTo.emplace_back(result);
 		}
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
