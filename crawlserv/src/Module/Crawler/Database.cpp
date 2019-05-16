@@ -145,9 +145,11 @@ namespace crawlservpp::Module::Crawler {
 					"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, hash, manual)"
 						"VALUES ("
 							" ("
-								"SELECT id FROM"
+								"SELECT id"
+								" FROM"
 								" ("
-									"SELECT id, url FROM `" + this->urlListTable + "`"
+									"SELECT id, url"
+									" FROM `" + this->urlListTable + "`"
 									" AS `" + this->urlListTableAlias + "1`"
 									" WHERE hash = " + hashQuery +
 								" ) AS tmp2"
@@ -260,7 +262,8 @@ namespace crawlservpp::Module::Crawler {
 					" VALUES"
 					" ("
 						" ("
-							"SELECT id FROM `" + this->crawlingTable + "`"
+							"SELECT id"
+							" FROM `" + this->crawlingTable + "`"
 							" AS " + this->crawlingTableAlias + "1"
 							" WHERE url = ?"
 							" LIMIT 1"
@@ -379,7 +382,8 @@ namespace crawlservpp::Module::Crawler {
 			this->ps.urlHashCheck = this->addPreparedStatement(
 					"SELECT EXISTS"
 					" ("
-						" SELECT * FROM `" + this->urlListTable + "`"
+						" SELECT *"
+						" FROM `" + this->urlListTable + "`"
 						" WHERE hash <> " + urlHash + ""
 					" )"
 					" AS result"
@@ -401,7 +405,8 @@ namespace crawlservpp::Module::Crawler {
 				this->log("prepares urlHashCheck()...");
 
 			this->ps.urlEmptyCheck = this->addPreparedStatement(
-					"SELECT id FROM `" + this->urlListTable + "`"
+					"SELECT id"
+					" FROM `" + this->urlListTable + "`"
 					" WHERE url = ''"
 					" LIMIT 1"
 			);
@@ -1209,7 +1214,8 @@ namespace crawlservpp::Module::Crawler {
 		for(unsigned int n = 0; n < numberOfUrls; ++n)
 			sqlQueryString +=	"(" // begin of VALUES arguments
 									" ("
-										"SELECT id FROM"
+										"SELECT id"
+										" FROM"
 										" ("
 											"SELECT id, url"
 											" FROM `" + this->urlListTable + "`"
