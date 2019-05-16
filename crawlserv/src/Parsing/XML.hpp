@@ -33,7 +33,11 @@ namespace crawlservpp::Parsing {
 		friend class Query::XPath;
 
 	public:
+		// constructors
 		XML();
+		XML(const pugi::xml_node& node);
+
+		// destructor
 		virtual ~XML();
 
 		// getter
@@ -52,11 +56,11 @@ namespace crawlservpp::Parsing {
 			virtual ~Exception() {}
 		};
 
-		// not moveable, not copyable
+		// moveable (using default), not copyable
 		XML(XML&) = delete;
-		XML(XML&&) = delete;
+		XML(XML&&) = default;
 		XML& operator=(XML) = delete;
-		XML& operator=(XML&&) = delete;
+		XML& operator=(XML&&) = default;
 
 	protected:
 		// unique pointer to (pugi)XML document
