@@ -26,7 +26,7 @@ require "config.php";
 
 <div class="entry-label">IP address:</div><div class="entry-input">
 
-<input id="cmd-allow-form-ip" class="entry-input" type="text" /></div>
+<input id="cmd-allow-form-ip" class="entry-input trigger" data-trigger="cmd-allow" type="text" /></div>
 
 </div>
 
@@ -43,7 +43,7 @@ require "config.php";
 
 <div class="entry-label">Command:</div><div class="entry-input">
 
-<input id="cmd-custom-form-cmd" class="entry-input" type="text" /></div>
+<input id="cmd-custom-form-cmd" class="entry-input trigger" data-trigger="cmd-custom" type="text" /></div>
 
 </div>
 

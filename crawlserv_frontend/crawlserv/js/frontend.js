@@ -188,6 +188,13 @@ jQuery(function($) {
 		return false;
 	});
 	
+// KEYDOWN EVENT: trigger event on CTRL+ENTER
+	$(document).on("keydown", "input.trigger[type='text']", function(event) {
+		if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey)
+			if(hasData($(this), "trigger"))
+				$("#" + $(this).data("trigger")).trigger("click");
+	});
+	
 // CHANGE EVENT: check date
 	$("input[type='date']").on("change", function() {
 		if(isValidDate($(this).val()))
