@@ -86,7 +86,9 @@ namespace crawlservpp::Query {
 		// evaluate query with multiple string results
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
-				const pugi::xpath_node_set nodeSet(this->query.evaluate_node_set(*(doc.doc)));
+				const pugi::xpath_node_set nodeSet(
+						this->query.evaluate_node_set(*(doc.doc))
+				);
 
 				resultTo.reserve(nodeSet.size());
 
