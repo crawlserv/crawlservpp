@@ -840,174 +840,145 @@ namespace crawlservpp::Module::Crawler {
 		this->queriesRedirectVars.reserve(this->config.redirectVarQueries.size());
 
 		try {
-			for(
-					auto i = this->config.crawlerQueriesBlackListContent.begin();
-					i != this->config.crawlerQueriesBlackListContent.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesBlackListContent) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesBlackListContent.emplace_back(this->addQuery(properties));
+					this->queriesBlackListContent.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesBlackListTypes.begin();
-					i != this->config.crawlerQueriesBlackListTypes.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesBlackListTypes) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesBlackListTypes.emplace_back(this->addQuery(properties));
-
+					this->queriesBlackListTypes.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesBlackListUrls.begin();
-					i != this->config.crawlerQueriesBlackListUrls.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesBlackListUrls) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesBlackListUrls.emplace_back(this->addQuery(properties));
+					this->queriesBlackListUrls.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesLinks.begin();
-					i != this->config.crawlerQueriesLinks.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesLinks) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesLinks.emplace_back(this->addQuery(properties));
+					this->queriesLinks.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesLinksBlackListContent.begin();
-					i != this->config.crawlerQueriesLinksBlackListContent.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesLinksBlackListContent) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesLinksBlackListContent.emplace_back(this->addQuery(properties));
+					this->queriesLinksBlackListContent.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesLinksBlackListTypes.begin();
-					i != this->config.crawlerQueriesLinksBlackListTypes.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesLinksBlackListTypes) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesLinksBlackListTypes.emplace_back(this->addQuery(properties));
+					this->queriesLinksBlackListTypes.emplace_back(this->addQuery(properties));
+				}
 
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesLinksBlackListUrls.begin();
-					i != this->config.crawlerQueriesLinksBlackListUrls.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesLinksBlackListUrls) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesLinksBlackListUrls.emplace_back(this->addQuery(properties));
+					this->queriesLinksBlackListUrls.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesLinksWhiteListContent.begin();
-					i != this->config.crawlerQueriesLinksWhiteListContent.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesLinksWhiteListContent) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesLinksWhiteListContent.emplace_back(this->addQuery(properties));
+					this->queriesLinksWhiteListContent.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesLinksWhiteListTypes.begin();
-					i != this->config.crawlerQueriesLinksWhiteListTypes.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesLinksWhiteListTypes) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesLinksWhiteListTypes.emplace_back(this->addQuery(properties));
+					this->queriesLinksWhiteListTypes.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesLinksWhiteListUrls.begin();
-					i != this->config.crawlerQueriesLinksWhiteListUrls.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesLinksWhiteListUrls) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesLinksWhiteListUrls.emplace_back(this->addQuery(properties));
+					this->queriesLinksWhiteListUrls.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesWhiteListContent.begin();
-					i != this->config.crawlerQueriesWhiteListContent.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesWhiteListContent) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesWhiteListContent.emplace_back(this->addQuery(properties));
+					this->queriesWhiteListContent.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesWhiteListTypes.begin();
-					i != this->config.crawlerQueriesWhiteListTypes.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesWhiteListTypes) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesWhiteListTypes.emplace_back(this->addQuery(properties));
+					this->queriesWhiteListTypes.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.crawlerQueriesWhiteListUrls.begin();
-					i != this->config.crawlerQueriesWhiteListUrls.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.crawlerQueriesWhiteListUrls) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesWhiteListUrls.emplace_back(this->addQuery(properties));
+					this->queriesWhiteListUrls.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(
-					auto i = this->config.customTokensQuery.begin();
-					i != this->config.customTokensQuery.end();
-					++i
-			) {
-				QueryProperties properties;
+			for(const auto& query : this->config.customTokensQuery) {
+				if(query) {
+					QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+					this->database.getQueryProperties(query, properties);
 
-				this->queriesTokens.emplace_back(this->addQuery(properties));
+					this->queriesTokens.emplace_back(this->addQuery(properties));
+				}
 			}
 
 			if(this->config.redirectQueryContent) {
@@ -1033,7 +1004,20 @@ namespace crawlservpp::Module::Crawler {
 			) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(*i, properties);
+				if(*i)
+					this->database.getQueryProperties(*i, properties);
+				else if(this->config.crawlerLogging) {
+					const auto name =
+							this->config.redirectVarNames.begin()
+							+ (i - this->config.redirectVarQueries.begin());
+
+					if(!(name->empty()))
+						this->log(
+								"WARNING: Ignores variable \'"
+								+ *name
+								+ " because of missing query."
+						);
+				}
 
 				this->queriesRedirectVars.emplace_back(this->addQuery(properties));
 			}
