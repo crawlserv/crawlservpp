@@ -1,10 +1,9 @@
 <!--
----- _threads.php
-----
----- Use the database to show the active module-specific threads on the server.
-----
--->
+     _threads.php
+    
+     Use the database to show the active module-specific threads on the server.
 
+-->
 
 <?php
 
@@ -99,7 +98,7 @@ $result = $dbConnection->query(
     " urllist,".
     " config,".
     " (".
-        " SELECT (AVG(tmp.runtime) * (1 - a.progress)) / AVG(tmp.progress)".
+        "SELECT (AVG(tmp.runtime) * (1 - a.progress)) / AVG(tmp.progress)".
         " FROM crawlserv_threads AS tmp".
         " WHERE tmp.module LIKE a.module".
         " AND tmp.website = a.website".
@@ -119,10 +118,21 @@ if($num) {
     echo "<div class=\"entry-row\">\n";
     
     if($num == 1)
-        echo "<div class=\"value\">$num thread active: <span id=\"threads-ping\"></span></div>";
+        echo "<div class=\"value\">One thread active.";
     else
-        echo "<div class=\"value\">$num threads active: <span id=\"threads-ping\"></span></div>";
+        echo "<div class=\"value\">$num threads active.";
     
+    echo "\n<span class=\"action-link-box\">\n";
+    
+    if($num) {
+        echo "<a href=\"#\" class=\"action-link cmd\" data-cmd=\"pauseall\">Pause all</a>";
+        echo " &middot; <a href=\"#\" class=\"action-link cmd\" data-cmd=\"unpauseall\">Unpause all</a>";
+    }
+    
+    echo "</span>\n";
+    echo "<span id=\"threads-ping\"></span>\n";
+    
+    echo "</div>\n";
     echo "</div>\n";
     echo "</div>\n";
 
@@ -199,8 +209,8 @@ if($num) {
         // calculate remaining time
         $tooltip = "Estimated time until completion.\n&gt; Click to jump to specific ID.";
         
-        echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\""
-            ."data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\"" 
+        echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\" "
+            ."data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" " 
             ."data-last=\"".$row["last"]."\">";
         
         if($row["remaining"] === null)
@@ -304,7 +314,7 @@ if($num) {
                     .number_format($row["last"])
                     ."\" max=\"1";
             
-            echo "\" />\n";
+            echo "\"></progress>\n";
             
             echo "<a href=\"#\" class=\"action-link thread-pause\" data-id=\""
                 .$row["id"]
@@ -324,6 +334,7 @@ if($num) {
         echo "</div>\n";
         echo "</div>\n";
         echo "</div>\n";
+        echo "</div>\n";
     }
 }
 else {
@@ -336,4 +347,5 @@ else {
 }
 
 $result->close();
+
 ?>
