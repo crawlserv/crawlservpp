@@ -27,9 +27,9 @@ namespace crawlservpp::Query {
 
 		// getters
 		bool getBool(const jsoncons::json& json) const;
-		void getFirst(const jsoncons::json& doc, std::string& resultTo) const;
-		void getAll(const jsoncons::json& doc, std::vector<std::string>& resultTo) const;
-		void getSubSets(const jsoncons::json& doc, std::vector<jsoncons::json>& resultTo) const;
+		void getFirst(const jsoncons::json& json, std::string& resultTo) const;
+		void getAll(const jsoncons::json& json, std::vector<std::string>& resultTo) const;
+		void getSubSets(const jsoncons::json& json, std::vector<jsoncons::json>& resultTo) const;
 
 		// sub-class for JSONPath exceptions
 		class Exception : public Main::Exception {
