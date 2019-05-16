@@ -106,8 +106,9 @@ $result->close();
 if(isset($query)) {
     if($query) {
         $result = $dbConnection->query(
-            "SELECT type,query,resultbool,resultsingle,resultmulti,resultsubsets,textonly FROM crawlserv_queries".
-            " WHERE id=".$query." LIMIT 1"
+            "SELECT type, query, resultbool, resultsingle, resultmulti, resultsubsets, textonly".
+            " FROM crawlserv_queries".
+            " WHERE id=$query LIMIT 1"
         );
         
         if(!$result)
