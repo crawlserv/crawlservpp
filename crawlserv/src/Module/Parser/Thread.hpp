@@ -52,7 +52,7 @@
 
 namespace crawlservpp::Module::Parser {
 
-	class Thread: public Module::Thread, public Query::Container, public Config {
+	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenience
 		typedef Helper::Json::Exception JsonException;
 		typedef Parsing::XML::Exception XMLException;

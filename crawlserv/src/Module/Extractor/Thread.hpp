@@ -54,7 +54,7 @@
 
 namespace crawlservpp::Module::Extractor {
 
-	class Thread: public Module::Thread, public Query::Container, public Config {
+	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenience
 		typedef Helper::Json::Exception JsonException;
 		typedef Parsing::XML::Exception XMLException;
@@ -169,6 +169,9 @@ namespace crawlservpp::Module::Extractor {
 		void extractingFetchUrls();
 		void extractingCheckUrls();
 		unsigned long extractingNext();
+		void extractingGetVariableValues(std::vector<StringString>& variables);
+		void extractingGetTokenValues(std::vector<StringString>& variables);
+		std::string extractingGetTokenValue(const std::string& source, const QueryStruct& query);
 		std::string extractingGetValueFromContent(const QueryStruct& query, std::string& content);
 		unsigned long extractingParse(unsigned long contentId, const std::string& content);
 		void extractingUrlFinished();

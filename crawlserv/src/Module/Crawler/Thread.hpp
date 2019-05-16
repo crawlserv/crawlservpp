@@ -57,7 +57,7 @@
 
 namespace crawlservpp::Module::Crawler {
 
-	class Thread: public Module::Thread, public Query::Container, public Config {
+	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenienc
 		typedef Helper::Json::Exception JsonException;
 		typedef Helper::Utf8::Exception Utf8Exception;
