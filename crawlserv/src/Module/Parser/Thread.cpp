@@ -460,7 +460,8 @@ namespace crawlservpp::Module::Parser {
 			for(const auto& query : this->config.generalSkip) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(query)
+					this->database.getQueryProperties(query, properties);
 
 				this->queriesSkip.emplace_back(this->addQuery(properties));
 			}
@@ -468,7 +469,8 @@ namespace crawlservpp::Module::Parser {
 			for(const auto& query : this->config.parsingIdQueries) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(query)
+					this->database.getQueryProperties(query, properties);
 
 				this->queriesId.emplace_back(this->addQuery(properties));
 			}
@@ -476,15 +478,33 @@ namespace crawlservpp::Module::Parser {
 			for(const auto& query : this->config.parsingDateTimeQueries) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(query)
+					this->database.getQueryProperties(query, properties);
 
 				this->queriesDateTime.emplace_back(this->addQuery(properties));
 			}
 
-			for(const auto& query : this->config.parsingFieldQueries) {
+			for(
+					auto i = this->config.parsingFieldQueries.begin();
+					i != this->config.parsingFieldQueries.end();
+					++i
+			) {
 				QueryProperties properties;
 
-				this->database.getQueryProperties(query, properties);
+				if(*i)
+					this->database.getQueryProperties(*i, properties);
+				else if(this->config.generalLogging) {
+					const auto name =
+							this->config.parsingFieldNames.begin()
+							+ (i - this->config.parsingFieldQueries.begin());
+
+					if(!(name->empty()))
+						this->log(
+								"WARNING: Ignores field \'"
+								+ *name
+								+ "\' because of missing query."
+						);
+				}
 
 				this->queriesFields.emplace_back(this->addQuery(properties));
 			}
