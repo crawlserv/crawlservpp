@@ -13,7 +13,7 @@
 
 namespace crawlservpp::Network {
 
-	// constructor
+	// constructor, throws Curl::Exception
 	Curl::Curl(const std::string& cookieDirectory)
 			: cookieDir(cookieDirectory),
 			  curlCode(CURLE_OK),
@@ -812,7 +812,7 @@ namespace crawlservpp::Network {
 		this->limitedSettings = limited;
 	}
 
-	// set current network options from crawling configuration
+	// set current network options from crawling configuration, throws Curl::Exception
 	void Curl::setConfigCurrent(const Config& currentConfig) {
 		// overwrite cookies
 		for(const auto& cookie : currentConfig.cookiesOverwrite) {
@@ -827,7 +827,7 @@ namespace crawlservpp::Network {
 		}
 	}
 
-	// set custom cookies (independent from cookie engine)
+	// set custom cookies (independent from cookie engine), throws Curl::Exception
 	void Curl::setCookies(const std::string& cookies) {
 		if(cookies.empty())
 			this->curlCode = curl_easy_setopt(
@@ -849,7 +849,7 @@ namespace crawlservpp::Network {
 		this->tmpCookies = cookies;
 	}
 
-	// unset custom cookies (independent from cookie engine)
+	// unset custom cookies (independent from cookie engine), throws Curl::Exception
 	void Curl::unsetCookies() {
 		if(this->oldCookies.empty()) {
 			this->curlCode = curl_easy_setopt(
@@ -876,7 +876,7 @@ namespace crawlservpp::Network {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 
-	// get remote content
+	// get remote content, throws Curl::Exception
 	void Curl::getContent(
 			const std::string& url,
 			bool usePost,
@@ -1070,7 +1070,7 @@ namespace crawlservpp::Network {
 		return this->contentType;
 	}
 
-	// reset connection
+	// reset connection, throws Curl::Exception
 	void Curl::resetConnection(unsigned long sleep) {
 		// cleanup lists
 		this->dnsResolves.reset();
