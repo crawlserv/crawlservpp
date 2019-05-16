@@ -106,6 +106,7 @@ namespace crawlservpp::Module::Crawler {
 			bool customReCrawl;
 			bool customRobots;
 			std::vector<std::string> customTokens;
+			std::vector<std::string> customTokensCookies;
 			std::vector<unsigned long> customTokensQuery;
 			std::vector<std::string> customTokensSource;
 			std::vector<bool> customTokensUsePost;
@@ -258,6 +259,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("recrawl", this->config.customReCrawl);
 		this->option("robots", this->config.customRobots);
 		this->option("tokens", this->config.customTokens);
+		this->option("tokens.cookies", this->config.customTokensCookies);
 		this->option("tokens.query", this->config.customTokensQuery);
 		this->option("tokens.source", this->config.customTokensSource);
 		this->option("tokens.use.post", this->config.customTokensUsePost);
@@ -471,6 +473,12 @@ namespace crawlservpp::Module::Crawler {
 
 			incompleteTokens = false;
 		}
+
+		// remove cookie headers that are not used, set to empty string where none is specified
+		if(this->config.customTokensCookies.size() > completeTokens)
+			incompleteTokens = true;
+
+		this->config.customTokensCookies.resize(completeTokens);
 
 		// remove token POST options that are not used, set to 'false' where none is specified
 		if(this->config.customTokensUsePost.size() > completeTokens)

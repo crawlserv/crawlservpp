@@ -509,6 +509,15 @@
 			"simple": true,
 			"position": 12
 		},
+		"tokens.cookies": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Token cookies:",
+			"description": "Custom cookies header for the token with the same array index.",
+			"simple": true,
+			"position": 13
+		},
 		"tokens.source": {
 			"type": "array",
 			"item-type": "string",
@@ -516,7 +525,7 @@
 			"label": "Token sources:",
 			"description": "Source URL for the token with the same array index (absolute link without protocol).",
 			"simple": true,
-			"position": 13
+			"position": 14
 		},
 		"tokens.query": {
 			"type": "array",
@@ -529,7 +538,7 @@
 			"label": "Token queries:",
 			"description": "Query to extract the token with the same array index.",
 			"simple": true,
-			"position": 15
+			"position": 16
 		},
 		"tokens.use.post": {
 			"type": "array",
@@ -538,7 +547,7 @@
 			"label": "Use POST for tokens:",
 			"description": "Use HTTP POST instead of GET for the token with the same array index.",
 			"simple": true,
-			"position": 14
+			"position": 15
 		},
 		"urls": {
 			"type": "array",
