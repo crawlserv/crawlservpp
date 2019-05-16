@@ -24,7 +24,7 @@ namespace crawlservpp::Network {
 	 * DECLARATION
 	 */
 
-	class Config : public Module::Config {
+	class Config : protected Module::Config {
 	public:
 		Config();
 		virtual ~Config();
