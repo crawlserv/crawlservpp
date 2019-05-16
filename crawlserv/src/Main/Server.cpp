@@ -618,6 +618,11 @@ namespace crawlservpp::Main {
 							else if(command == "resetanalyzingstatus")
 								response = this->cmdResetAnalyzingStatus(json);
 
+							else if(command == "pauseall")
+								response = this->cmdPauseAll(ip);
+							else if(command == "unpauseall")
+								response = this->cmdUnpauseAll(ip);
+
 							else if(command == "addwebsite")
 								response = this->cmdAddWebsite(json);
 							else if(command == "updatewebsite")
@@ -1812,6 +1817,174 @@ namespace crawlservpp::Main {
 		this->database.resetAnalyzingStatus(json["urllist"].GetUint64());
 
 		return ServerCommandResponse("Analyzing status reset.");
+	}
+
+	// server command pauseall(): pause all running threads
+	Server::ServerCommandResponse Server::cmdPauseAll(const std::string& ip) {
+		unsigned long counter = 0;
+
+		// pause crawlers
+		for(const auto& thread : this->crawlers) {
+			if(!(thread->isPaused())) {
+				thread->Module::Thread::pause();
+
+				this->database.log(
+						"crawler #"
+						+ std::to_string(thread->getId())
+						+ " paused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		// pause parsers
+		for(const auto& thread : this->parsers) {
+			if(!(thread->isPaused())) {
+				thread->Module::Thread::pause();
+
+				this->database.log(
+						"parser #"
+						+ std::to_string(thread->getId())
+						+ " paused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		// pause extractors
+		for(const auto& thread : this->extractors) {
+			if(!(thread->isPaused())) {
+				thread->Module::Thread::pause();
+
+				this->database.log(
+						"extractor #"
+						+ std::to_string(thread->getId())
+						+ " paused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		// pause analyzers
+		for(const auto& thread : this->analyzers) {
+			if(!(thread->isPaused())) {
+				thread->Module::Thread::pause();
+
+				this->database.log(
+						"analyzer #"
+						+ std::to_string(thread->getId())
+						+ " paused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		switch(counter) {
+		case 0:
+			return ServerCommandResponse("No threads to pause.");
+
+		case 1:
+			return ServerCommandResponse("One thread is pausing.");
+
+		default:
+			return ServerCommandResponse(std::to_string(counter) + " threads are pausing.");
+		}
+	}
+
+	// server command unpauseall(): unpause all paused threads
+	Server::ServerCommandResponse Server::cmdUnpauseAll(const std::string& ip) {
+		unsigned long counter = 0;
+
+		// unpause crawlers
+		for(const auto& thread : this->crawlers) {
+			if(thread->isPaused()) {
+				thread->Module::Thread::unpause();
+
+				this->database.log(
+						"crawler #"
+						+ std::to_string(thread->getId())
+						+ " unpaused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		// unpause parsers
+		for(const auto& thread : this->parsers) {
+			if(thread->isPaused()) {
+				thread->Module::Thread::unpause();
+
+				this->database.log(
+						"parser #"
+						+ std::to_string(thread->getId())
+						+ " unpaused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		// unpause extractors
+		for(const auto& thread : this->extractors) {
+			if(thread->isPaused()) {
+				thread->Module::Thread::unpause();
+
+				this->database.log(
+						"extractor #"
+						+ std::to_string(thread->getId())
+						+ " unpaused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		// unpause analyzers
+		for(const auto& thread : this->analyzers) {
+			if(thread->isPaused()) {
+				thread->Module::Thread::unpause();
+
+				this->database.log(
+						"analyzer #"
+						+ std::to_string(thread->getId())
+						+ " unpaused by "
+						+ ip
+						+ "."
+				);
+
+				++counter;
+			}
+		}
+
+		switch(counter) {
+		case 0:
+			return ServerCommandResponse("No threads to unpause.");
+
+		case 1:
+			return ServerCommandResponse("One thread has been unpaused.");
+
+		default:
+			return ServerCommandResponse(std::to_string(counter) + " threads have been unpaused.");
+		}
 	}
 
 	// server command addwebsite([crossdomain], [domain], namespace, name, [dir]): add a website

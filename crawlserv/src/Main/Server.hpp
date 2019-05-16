@@ -214,6 +214,9 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdStopAnalyzer(const rapidjson::Document& json, const std::string& ip);
 		ServerCommandResponse cmdResetAnalyzingStatus(const rapidjson::Document& json);
 
+		ServerCommandResponse cmdPauseAll(const std::string& ip);
+		ServerCommandResponse cmdUnpauseAll(const std::string& ip);
+
 		ServerCommandResponse cmdAddWebsite(const rapidjson::Document& json);
 		ServerCommandResponse cmdUpdateWebsite(const rapidjson::Document& json);
 		ServerCommandResponse cmdDeleteWebsite(const rapidjson::Document& json, const std::string& ip);
