@@ -1381,7 +1381,7 @@ namespace crawlservpp::Module::Crawler {
 										"WARNING: RegEx error - "
 										+ e.whatStr()
 										+ " ["
-										+ this->config.customTokensSource.at(n)
+										+ sourceUrl
 										+ "]."
 								);
 						}
@@ -1400,7 +1400,7 @@ namespace crawlservpp::Module::Crawler {
 										"WARNING: XML error: "
 										+ e.whatStr()
 										+ " ["
-										+ this->config.customTokensSource.at(n)
+										+ sourceUrl
 										+ "]."
 								);
 
@@ -1414,7 +1414,7 @@ namespace crawlservpp::Module::Crawler {
 										"WARNING: "
 										+ warnings.front()
 										+ " ["
-										+ this->config.customTokensSource.at(n)
+										+ sourceUrl
 										+ "]."
 								);
 
@@ -1441,7 +1441,7 @@ namespace crawlservpp::Module::Crawler {
 										"WARNING: XPath error - "
 										+ e.whatStr()
 										+ " ["
-										+ this->config.customTokensSource.at(n)
+										+ sourceUrl
 										+ "]."
 								);
 						}
