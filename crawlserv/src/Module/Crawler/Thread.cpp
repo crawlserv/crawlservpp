@@ -172,7 +172,7 @@ namespace crawlservpp::Module::Crawler {
 		this->setStatusMessage("Setting network configuration...");
 
 		if(config.crawlerLogging == Config::crawlerLoggingVerbose)
-			this->log("sets global network configuration...");
+			this->log("sets network configuration...");
 
 		this->networking.setConfigGlobal(*this, false, &configWarnings);
 
