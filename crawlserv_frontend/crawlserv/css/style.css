@@ -180,6 +180,9 @@ div.small-text {
 div.action-link-box {
 	font-size:14px;
 }
+span.action-link-box {
+	font-size:14px;
+}
 div.action-link {
 	text-align:right;
 	padding-top:2px;
