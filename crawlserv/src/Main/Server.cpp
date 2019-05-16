@@ -119,6 +119,7 @@ namespace crawlservpp::Main {
 				this->extractors.push_back(
 						std::make_unique<Module::Extractor::Thread>(
 								this->database,
+								this->dirCookies,
 								thread.options,
 								thread.status
 						)
