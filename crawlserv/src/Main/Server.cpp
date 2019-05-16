@@ -742,6 +742,9 @@ namespace crawlservpp::Main {
 								}
 							}
 
+							else if(command == "ping")
+								response = ServerCommandResponse("pong");
+
 							else if(!command.empty())
 								// unknown command: debug the command and its arguments
 								response = ServerCommandResponse::failed("Unknown command \'" + command + "\'.");
