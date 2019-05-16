@@ -1329,13 +1329,12 @@ namespace crawlservpp::Module::Crawler {
 						else {
 							if(this->config.crawlerLogging)
 								this->log(
-										"Could not get token from "
+										"WARNING: Could not get token \'"
+										+ this->config.customTokens.at(n)
+										+ "\' from "
 										+ sourceUrl
 										+ ": "
 										+ e.whatStr()
-										+ " - skips "
-										+ result.second
-										+ "..."
 								);
 
 							break;
@@ -1398,7 +1397,7 @@ namespace crawlservpp::Module::Crawler {
 							// error while parsing content
 							if(this->config.crawlerLogging)
 								this->log(
-										"XML error: "
+										"WARNING: XML error: "
 										+ e.whatStr()
 										+ " ["
 										+ this->config.customTokensSource.at(n)
