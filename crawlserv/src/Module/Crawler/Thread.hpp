@@ -246,7 +246,10 @@ namespace crawlservpp::Module::Crawler {
 				const std::string& contentType
 		);
 		bool crawlingCheckContent(const std::string& url, const std::string& content);
-		bool crawlingCheckContentForLinkExtraction(const std::string& url, const std::string& content);
+		bool crawlingCheckContentForLinkExtraction(
+				const std::string& url,
+				const std::string& content
+		);
 		void crawlingSaveContent(
 				const IdString& url,
 				unsigned int response,
