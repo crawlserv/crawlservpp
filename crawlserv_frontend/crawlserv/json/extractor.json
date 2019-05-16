@@ -449,6 +449,14 @@
 			"simple": true,
 			"position": 2
 		},
+		"overwrite": {
+			"type": "bool",
+			"default": true,
+			"label": "Overwrite existing data",
+			"description": "If a dataset with the same ID already exists, it will be overwritten.",
+			"simple": true,
+			"position": 12
+		},
 		"repair.cdata": {
 			"type": "bool",
 			"default": true,

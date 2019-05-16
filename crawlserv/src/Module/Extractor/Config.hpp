@@ -109,6 +109,7 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<bool> extractingFieldTidyTexts;
 			std::vector<bool> extractingFieldWarningsEmpty;
 			std::vector<unsigned long> extractingIdQueries;
+			bool extractingOverwrite;
 			bool extractingRepairCData;
 
 			// expected [number of results] entries
@@ -163,6 +164,7 @@ namespace crawlservpp::Module::Extractor {
 										pagingStep(1),
 										pagingVariable("$p"),
 										sourceUsePost(false),
+										extractingOverwrite(true),
 										extractingRepairCData(true),
 										expectedErrorIfLarger(false),
 										expectedErrorIfSmaller(false),
@@ -237,6 +239,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("field.tidy.texts", this->config.extractingFieldTidyTexts);
 		this->option("field.warnings.empty", this->config.extractingFieldWarningsEmpty);
 		this->option("id.queries", this->config.extractingIdQueries);
+		this->option("overwrite", this->config.extractingOverwrite);
 		this->option("repair.cdata", this->config.extractingRepairCData);
 
 		// expected [number of results]
