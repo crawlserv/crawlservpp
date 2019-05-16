@@ -84,6 +84,7 @@ Even without access to the frontend you can shut down the server from the termin
 * `#define MG_ENABLE_HTTP_STREAMING_MULTIPART`
 * `#define PCRE2_CODE_UNIT_WIDTH 8`
 * `#define RAPIDJSON_HAS_STDSTRING`
+* `#define JSONCONS_NO_DEPRECATED` (recommended)
 
 ## Command-and-Control Server
 
@@ -189,7 +190,7 @@ The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the appli
 The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of May 2019):
 
 * **`addconfig`** (arguments: `website`, `module`, `name`, `config`): Add a configuration to the database.
-* **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Add a RegEx, XPath or JSONPointer query to the database.
+* **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`): Add a RegEx, XPath or JSONPointer query to the database.
 * **`addurllist`** (arguments: `website`, `name`, `namespace`): Add a URL list to a website in the database.
 * **`addwebsite`** (arguments: `name`, `namespace`, `domain`): Add a website to the database.
 * **`allow`** (argument: `ip`): Allow access for the specified IP(s).
@@ -223,13 +224,13 @@ The server performs commands and sends back their results. Some commands need to
 * **`stopcrawler`** (argument: `id`): Stop a running crawler by its ID.
 * **~~`stopextractor`~~** (argument: `id`): Stop a running extractor by its ID.
 * **`stopparser`** (argument: `id`): Stop a running parser by its ID.
-* **`testquery`** (arguments: `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`, `text`): Test a query on the specified text.
+* **`testquery`** (arguments: `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`, `text`): Test a query on the specified text.
 * **`unpauseanalyzer`** (argument: `id`): Unpause a paused analyzer by its ID.
 * **`unpausecrawler`** (argument: `id`): Unpause a paused crawler by its ID.
 * **~~`unpauseextractor`~~** (argument: `id`): Unpause a paused extractor by its ID.
 * **`unpauseparser`** (argument: `id`): Unpause a paused parser by its ID.
 * **`updateconfig`** (arguments: `id`, `name`, `config`): Update an existing configuration in the database.
-* **`updatequery`** (arguments: `id`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `textonly`): Update an existing RegEx, XPath or JSONPointer query in the database.
+* **`updatequery`** (arguments: `id`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`): Update an existing RegEx, XPath or JSONPointer query in the database.
 * **`updateurllist`** (arguments: `id`, `name`, `namespace`): Update an existing URL list in the database.
 * **`updatewebsite`** (arguments: `id`, `name`, `namespace`, `domain`): Update an existing website in the database.
 * **`warp`** (arguments: `thread`, `target`): Let a thread jump to the specified ID.
