@@ -1294,7 +1294,7 @@ namespace crawlservpp::Module::Crawler {
 				// get content for extracting token
 				const std::string sourceUrl("https://" + this->config.customTokensSource.at(n));
 				std::string content;
-				std::string token;
+				std::string value;
 				bool success = false;
 
 				while(this->isRunning()) {
@@ -1365,9 +1365,9 @@ namespace crawlservpp::Module::Crawler {
 						try {
 							// check result type of query
 							if(this->queriesTokens.at(n).resultSingle)
-								this->getRegExQuery(this->queriesTokens.at(n).index).getFirst(content, token);
+								this->getRegExQuery(this->queriesTokens.at(n).index).getFirst(content, value);
 							else if(this->queriesTokens.at(n).resultBool)
-								token = this->getRegExQuery(this->queriesTokens.at(n).index).getBool(content) ? "true" : "false";
+								value = this->getRegExQuery(this->queriesTokens.at(n).index).getBool(content) ? "true" : "false";
 							else
 								this->log(
 										"WARNING: Invalid result type of query for token \'"
@@ -1425,9 +1425,9 @@ namespace crawlservpp::Module::Crawler {
 						try {
 							// check result type of query
 							if(this->queriesTokens.at(n).resultSingle)
-								this->getXPathQuery(this->queriesTokens.at(n).index).getFirst(xmlDoc, token);
+								this->getXPathQuery(this->queriesTokens.at(n).index).getFirst(xmlDoc, value);
 							else if(this->queriesTokens.at(n).resultBool)
-								token = this->getXPathQuery(this->queriesTokens.at(n).index).getBool(xmlDoc) ? "true" : "false";
+								value = this->getXPathQuery(this->queriesTokens.at(n).index).getBool(xmlDoc) ? "true" : "false";
 							else
 								this->log(
 										"WARNING: Invalid result type of query for token \'"
@@ -1471,9 +1471,9 @@ namespace crawlservpp::Module::Crawler {
 						try {
 							// check result type of query
 							if(this->queriesTokens.at(n).resultSingle)
-								this->getJsonPointerQuery(this->queriesTokens.at(n).index).getFirst(jsonDoc, token);
+								this->getJsonPointerQuery(this->queriesTokens.at(n).index).getFirst(jsonDoc, value);
 							else if(this->queriesTokens.at(n).resultBool)
-								token = this->getJsonPointerQuery(this->queriesTokens.at(n).index).getBool(jsonDoc) ? "true" : "false";
+								value = this->getJsonPointerQuery(this->queriesTokens.at(n).index).getBool(jsonDoc) ? "true" : "false";
 							else
 								this->log(
 										"WARNING: Invalid result type of query for token \'"
@@ -1516,9 +1516,9 @@ namespace crawlservpp::Module::Crawler {
 						try {
 							// check query type
 							if(this->queriesTokens.at(n).resultSingle)
-								this->getJsonPathQuery(this->queriesTokens.at(n).index).getFirst(json, token);
+								this->getJsonPathQuery(this->queriesTokens.at(n).index).getFirst(json, value);
 							else if(this->queriesTokens.at(n).resultBool)
-								token = this->getJsonPathQuery(this->queriesTokens.at(n).index).getBool(json) ? "true" : "false";
+								value = this->getJsonPathQuery(this->queriesTokens.at(n).index).getBool(json) ? "true" : "false";
 							else
 								this->log(
 										"WARNING: Invalid result type of query for token \'"
@@ -1552,7 +1552,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				// replace variable(s) with token(s)
-				Helper::Strings::replaceAll(result.second, this->config.customTokens.at(n), token, true);
+				Helper::Strings::replaceAll(result.second, this->config.customTokens.at(n), value, true);
 			}
 		}
 
