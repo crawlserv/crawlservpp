@@ -124,7 +124,8 @@ namespace crawlservpp::Module::Analyzer {
 						" AND source_type = ?"
 						" AND source_table = ?"
 						" AND source_field = ?"
-						" ORDER BY created DESC LIMIT 1"
+						" ORDER BY created DESC"
+						" LIMIT 1"
 				);
 			}
 
@@ -195,7 +196,8 @@ namespace crawlservpp::Module::Analyzer {
 						" AND source_type = ?"
 						" AND source_table = ?"
 						" AND source_field = ?"
-						" LIMIT 1");
+						" LIMIT 1"
+				);
 			}
 
 			if(!(this->ps.addCorpus)) {
