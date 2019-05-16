@@ -1291,61 +1291,67 @@ namespace crawlservpp::Module::Crawler {
 
 		for(unsigned long n = 0; n < this->config.customTokens.size(); ++n) {
 			if(result.second.find(this->config.customTokens.at(n))) {
-				// get content for extracting token
 				const std::string sourceUrl("https://" + this->config.customTokensSource.at(n));
 				std::string content;
 				std::string value;
 				bool success = false;
 
-				while(this->isRunning()) {
-					try {
-						this->networking.getContent(
-								sourceUrl,
-								this->config.customTokensUsePost.at(n),
-								content,
-								this->config.crawlerRetryHttp
-						);
+				// check token source
+				if(!(this->config.customTokensSource.empty())) {
+					// get content for extracting token
+					while(this->isRunning()) {
+						try {
+							if(!(this->config.customTokensCookies.at(n).empty()))
+								this->networking.setCookies(this->config.customTokensCookies.at(n));
 
-						success = true;
+							this->networking.getContent(
+									sourceUrl,
+									this->config.customTokensUsePost.at(n),
+									content,
+									this->config.crawlerRetryHttp
+							);
 
-						break;
-					}
-					catch(const CurlException& e) {
-						// error while getting content: check type of error i.e. last cURL code
-						if(this->crawlingCheckCurlCode(
-								this->networking.getCurlCode(),
-								sourceUrl
-						)) {
-							// reset connection and retry
-							if(this->config.crawlerLogging) {
-								this->log(e.whatStr() + " [" + sourceUrl + "].");
-								this->log("resets connection...");
-							}
-
-							this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
-
-							this->networking.resetConnection(this->config.crawlerSleepError);
-						}
-						else {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: Could not get token \'"
-										+ this->config.customTokens.at(n)
-										+ "\' from "
-										+ sourceUrl
-										+ ": "
-										+ e.whatStr()
-								);
+							success = true;
 
 							break;
 						}
-					}
-					catch(const Utf8Exception& e) {
-						// write UTF-8 error to log if neccessary
-						if(this->config.crawlerLogging)
-							this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
+						catch(const CurlException& e) {
+							// error while getting content: check type of error i.e. last cURL code
+							if(this->crawlingCheckCurlCode(
+									this->networking.getCurlCode(),
+									sourceUrl
+							)) {
+								// reset connection and retry
+								if(this->config.crawlerLogging) {
+									this->log(e.whatStr() + " [" + sourceUrl + "].");
+									this->log("resets connection...");
+								}
 
-						break;
+								this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
+
+								this->networking.resetConnection(this->config.crawlerSleepError);
+							}
+							else {
+								if(this->config.crawlerLogging)
+									this->log(
+											"WARNING: Could not get token \'"
+											+ this->config.customTokens.at(n)
+											+ "\' from "
+											+ sourceUrl
+											+ ": "
+											+ e.whatStr()
+									);
+
+								break;
+							}
+						}
+						catch(const Utf8Exception& e) {
+							// write UTF-8 error to log if neccessary
+							if(this->config.crawlerLogging)
+								this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
+
+							break;
+						}
 					}
 				}
 
