@@ -1292,7 +1292,7 @@ namespace crawlservpp::Module::Crawler {
 		for(unsigned long n = 0; n < this->config.customTokens.size(); ++n) {
 			if(result.second.find(this->config.customTokens.at(n))) {
 				// get content for extracting token
-				const std::string source("https://" + this->config.customTokensSource.at(n));
+				const std::string sourceUrl("https://" + this->config.customTokensSource.at(n));
 				std::string content;
 				std::string token;
 				bool success = false;
@@ -1300,7 +1300,7 @@ namespace crawlservpp::Module::Crawler {
 				while(this->isRunning()) {
 					try {
 						this->networking.getContent(
-								source,
+								sourceUrl,
 								this->config.customTokensUsePost.at(n),
 								content,
 								this->config.crawlerRetryHttp
@@ -1314,15 +1314,15 @@ namespace crawlservpp::Module::Crawler {
 						// error while getting content: check type of error i.e. last cURL code
 						if(this->crawlingCheckCurlCode(
 								this->networking.getCurlCode(),
-								source
+								sourceUrl
 						)) {
 							// reset connection and retry
 							if(this->config.crawlerLogging) {
-								this->log(e.whatStr() + " [" + source + "].");
+								this->log(e.whatStr() + " [" + sourceUrl + "].");
 								this->log("resets connection...");
 							}
 
-							this->setStatusMessage("ERROR " + e.whatStr() + " [" + source + "]");
+							this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
 
 							this->networking.resetConnection(this->config.crawlerSleepError);
 						}
@@ -1330,7 +1330,7 @@ namespace crawlservpp::Module::Crawler {
 							if(this->config.crawlerLogging)
 								this->log(
 										"Could not get token from "
-										+ source
+										+ sourceUrl
 										+ ": "
 										+ e.whatStr()
 										+ " - skips "
@@ -1344,7 +1344,7 @@ namespace crawlservpp::Module::Crawler {
 					catch(const Utf8Exception& e) {
 						// write UTF-8 error to log if neccessary
 						if(this->config.crawlerLogging)
-							this->log("WARNING: " + e.whatStr() + " [" + source + "].");
+							this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
 
 						break;
 					}
