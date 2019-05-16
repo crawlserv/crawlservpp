@@ -33,6 +33,7 @@ namespace crawlservpp::Query {
 		bool getBool(const Parsing::XML& doc) const;
 		void getFirst(const Parsing::XML& doc, std::string& resultTo) const;
 		void getAll(const Parsing::XML& doc, std::vector<std::string>& resultTo) const;
+		void getSubSets(const Parsing::XML& doc, std::vector<Parsing::XML>& resultTo) const;
 
 		// sub-class for XPath exceptions
 		class Exception : public Main::Exception {

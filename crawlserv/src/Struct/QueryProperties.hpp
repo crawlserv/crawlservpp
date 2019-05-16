@@ -21,10 +21,15 @@ namespace crawlservpp::Struct {
 		bool resultBool;
 		bool resultSingle;
 		bool resultMulti;
+		bool resultSubSets;
 		bool textOnly;
 
 		// constructors
-		QueryProperties() : resultBool(false), resultSingle(false), resultMulti(false), textOnly(false) {}
+		QueryProperties() :	resultBool(false),
+							resultSingle(false),
+							resultMulti(false),
+							resultSubSets(false),
+							textOnly(false) {}
 		QueryProperties(
 				const std::string& setName,
 				const std::string& setText,
@@ -32,6 +37,7 @@ namespace crawlservpp::Struct {
 				bool setResultBool,
 				bool setResultSingle,
 				bool setResultMulti,
+				bool setResultSubSets,
 				bool setTextOnly
 		) : name(setName),
 			text(setText),
@@ -39,6 +45,7 @@ namespace crawlservpp::Struct {
 			resultBool(setResultBool),
 			resultSingle(setResultSingle),
 			resultMulti(setResultMulti),
+			resultSubSets(setResultSubSets),
 			textOnly(setTextOnly) {}
 
 		QueryProperties(
@@ -47,6 +54,7 @@ namespace crawlservpp::Struct {
 				bool setResultBool,
 				bool setResultSingle,
 				bool setResultMulti,
+				bool setResultSubSets,
 				bool setTextOnly
 		) : QueryProperties(
 				"",
@@ -55,6 +63,7 @@ namespace crawlservpp::Struct {
 				setResultBool,
 				setResultSingle,
 				setResultMulti,
+				setResultSubSets,
 				setTextOnly
 			) {}
 	};

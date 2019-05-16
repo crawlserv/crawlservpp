@@ -106,7 +106,7 @@ $result->close();
 if(isset($query)) {
     if($query) {
         $result = $dbConnection->query(
-            "SELECT type,query,resultbool,resultsingle,resultmulti,textonly FROM crawlserv_queries".
+            "SELECT type,query,resultbool,resultsingle,resultmulti,resultsubsets,textonly FROM crawlserv_queries".
             " WHERE id=".$query." LIMIT 1"
         );
         
@@ -120,6 +120,7 @@ if(isset($query)) {
         $queryResultBool = $row["resultbool"];
         $queryResultSingle = $row["resultsingle"];
         $queryResultMulti = $row["resultmulti"];
+        $queryResultSubSets = $row["resultsubsets"];
         $queryTextOnly = $row["textonly"];
         
         $result->close();
@@ -208,7 +209,7 @@ if($query && $queryType == "jsonpath")
 if(!$query || ($query && $queryResultBool))
     echo " checked";
 
-?> /> boolean
+?> /> bool
 
 <input id="query-result-single" type="checkbox" class="entry-check-next"<?php
 
@@ -221,14 +222,20 @@ if($query && $queryResultSingle)
 
 if($query && $queryResultMulti)
     echo " checked";
-?> /> multiple
+?> /> multi
+
+<input id="query-result-subsets" type="checkbox" class="entry-check-next"<?php
+
+if($query && $queryResultSubSets)
+    echo " checked";
+?> /> subsets
 
 <input id="query-text-only" type="checkbox" class="entry-check-next"<?php
 
 if($query && $queryTextOnly)
     echo " checked";
 
-?> /> <span id="query-text-only-label">text only</span>
+?> /> <span id="query-text-only-label">textonly</span>
 
 </div>
 </div>

@@ -3103,7 +3103,8 @@ namespace crawlservpp::Main {
 		this->workerEnd(threadIndex, connection, message, response);
 	}
 
-	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, textonly): add a query
+	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
+	//  add a query
 	Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& json) {
 		// get arguments
 		if(!json.HasMember("website"))
@@ -3150,6 +3151,12 @@ namespace crawlservpp::Main {
 		if(!json["resultmulti"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
 
+		if(!json.HasMember("resultsubsets"))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is missing).");
+
+		if(!json["resultsubsets"].IsBool())
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is not a boolean).");
+
 		if(!json.HasMember("textonly"))
 			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
 
@@ -3163,6 +3170,7 @@ namespace crawlservpp::Main {
 				json["resultbool"].GetBool(),
 				json["resultsingle"].GetBool(),
 				json["resultmulti"].GetBool(),
+				json["resultsubsets"].GetBool(),
 				json["textonly"].GetBool()
 		);
 
@@ -3187,7 +3195,12 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
-		if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
+		if(
+				!properties.resultBool
+				&& !properties.resultSingle
+				&& !properties.resultMulti
+				&& !properties.resultSubSets
+		)
 			return ServerCommandResponse::failed("No result type selected.");
 
 		// check website
@@ -3207,7 +3220,8 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("Query added.", id);
 	}
 
-	// server command updatequery(id, name, query, type, resultbool, resultsingle, resultmulti, textonly): edit a query
+	// server command updatequery(id, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
+	//  edit a query
 	Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
 		// get arguments
 		if(!json.HasMember("id"))
@@ -3254,6 +3268,12 @@ namespace crawlservpp::Main {
 		if(!json["resultmulti"].IsBool())
 			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
 
+		if(!json.HasMember("resultsubsets"))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is missing).");
+
+		if(!json["resultsubsets"].IsBool())
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is not a boolean).");
+
 		if(!json.HasMember("textonly"))
 			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
 
@@ -3267,6 +3287,7 @@ namespace crawlservpp::Main {
 				json["resultbool"].GetBool(),
 				json["resultsingle"].GetBool(),
 				json["resultmulti"].GetBool(),
+				json["resultsubsets"].GetBool(),
 				json["textonly"].GetBool()
 		);
 
@@ -3291,7 +3312,12 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
 		// check result type
-		if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
+		if(
+				!properties.resultBool
+				&& !properties.resultSingle
+				&& !properties.resultMulti
+				&& !properties.resultSubSets
+		)
 			return ServerCommandResponse::failed("No result type selected.");
 
 		// check query
@@ -3408,6 +3434,12 @@ namespace crawlservpp::Main {
 			else if(!json["resultmulti"].IsBool())
 				response = ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
 
+			else if(!json.HasMember("resultsubsets"))
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is missing).");
+
+			else if(!json["resultsubsets"].IsBool())
+				response = ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is not a boolean).");
+
 			else if(!json.HasMember("textonly"))
 				response = ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
 
@@ -3427,6 +3459,7 @@ namespace crawlservpp::Main {
 						json["resultbool"].GetBool(),
 						json["resultsingle"].GetBool(),
 						json["resultmulti"].GetBool(),
+						json["resultsubsets"].GetBool(),
 						json["textonly"].GetBool()
 				);
 
@@ -3450,7 +3483,12 @@ namespace crawlservpp::Main {
 				)
 					response = ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
-				else if(!properties.resultBool && !properties.resultSingle && !properties.resultMulti)
+				else if(
+						!properties.resultBool
+						&& !properties.resultSingle
+						&& !properties.resultMulti
+						&& !properties.resultSubSets
+				)
 					response = ServerCommandResponse::failed("No result type selected.");
 
 				else {
@@ -3491,7 +3529,7 @@ namespace crawlservpp::Main {
 									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 							}
 
-							if(properties.resultMulti) {
+							if(properties.resultMulti || properties.resultSubSets) {
 								// get all results (all full matches)
 								std::vector<std::string> tempResults;
 
@@ -3597,6 +3635,38 @@ namespace crawlservpp::Main {
 									result += toAppend;
 								}
 							}
+
+							if(properties.resultSubSets) {
+								// get subsets
+								std::vector<Parsing::XML> tempResults;
+
+								xPathTest.getSubSets(xmlDocumentTest, tempResults);
+
+								result += "SUBSETS (" + timer.tickStr() + "):";
+
+								if(tempResults.empty())
+									result += " [empty]\n";
+								else {
+									unsigned long counter = 0;
+									std::string toAppend(1, '\n');
+
+									for(const auto& tempResult : tempResults) {
+										++counter;
+
+										std::string subsetString;
+
+										tempResult.getContent(subsetString);
+
+										toAppend	+= '['
+													+ std::to_string(counter)
+													+ "] "
+													+ subsetString
+													+ '\n';
+									}
+
+									result += toAppend;
+								}
+							}
 						}
 						catch(const XPathException& e) {
 							response = ServerCommandResponse::failed("XPath error - " + e.whatStr());
@@ -3675,6 +3745,34 @@ namespace crawlservpp::Main {
 										result += toAppend;
 									}
 								}
+
+								if(properties.resultSubSets) {
+									// get subsets
+									std::vector<rapidjson::Document> tempResults;
+
+									JSONPointerTest.getSubSets(jsonDocumentTest, tempResults);
+
+									result += "SUBSETS (" + timer.tickStr() + "):";
+
+									if(tempResults.empty())
+										result += " [empty]\n";
+									else {
+										unsigned long counter = 0;
+										std::string toAppend(1, '\n');
+
+										for(const auto& tempResult : tempResults) {
+											++counter;
+
+											toAppend	+= '['
+														+ std::to_string(counter)
+														+ "] "
+														+ Helper::Json::stringify(tempResult)
+														+ '\n';
+										}
+
+										result += toAppend;
+									}
+								}
 							}
 						}
 						catch(const JSONPointerException& e) {
@@ -3744,6 +3842,34 @@ namespace crawlservpp::Main {
 														+ std::to_string(counter)
 														+ "] "
 														+ tempResult
+														+ '\n';
+										}
+
+										result += toAppend;
+									}
+								}
+
+								if(properties.resultSubSets) {
+									// get subsets
+									std::vector<jsoncons::json> tempResults;
+
+									JSONPathTest.getSubSets(jsonTest, tempResults);
+
+									result += "SUBSETS (" + timer.tickStr() + "):";
+
+									if(tempResults.empty())
+										result += " [empty]\n";
+									else {
+										unsigned long counter = 0;
+										std::string toAppend(1, '\n');
+
+										for(const auto& tempResult : tempResults) {
+											++counter;
+
+											toAppend	+= '['
+														+ std::to_string(counter)
+														+ "] "
+														+ Helper::Json::stringify(tempResult)
 														+ '\n';
 										}
 

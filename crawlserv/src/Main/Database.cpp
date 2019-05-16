@@ -1652,7 +1652,7 @@ namespace crawlservpp::Main {
 				// prepare SQL statement for getting queries
 				sqlStatement.reset(
 						this->connection->prepareStatement(
-							"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
+							"SELECT name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly"
 							" FROM crawlserv_queries"
 							" WHERE website = ?"
 						)
@@ -1675,6 +1675,7 @@ namespace crawlservpp::Main {
 									sqlResultSet->getBoolean("resultbool"),
 									sqlResultSet->getBoolean("resultsingle"),
 									sqlResultSet->getBoolean("resultmulti"),
+									sqlResultSet->getBoolean("resultsubsets"),
 									sqlResultSet->getBoolean("textonly")
 							)
 					);
@@ -2493,9 +2494,10 @@ namespace crawlservpp::Main {
 								" resultbool,"
 								" resultsingle,"
 								" resultmulti,"
+								" resultsubsets,"
 								" textonly"
 							" )"
-							" VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+							" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 			));
 
 			// execute SQL query for adding query
@@ -2510,7 +2512,8 @@ namespace crawlservpp::Main {
 			sqlStatement->setBoolean(5, queryProperties.resultBool);
 			sqlStatement->setBoolean(6, queryProperties.resultSingle);
 			sqlStatement->setBoolean(7, queryProperties.resultMulti);
-			sqlStatement->setBoolean(8, queryProperties.textOnly);
+			sqlStatement->setBoolean(8, queryProperties.resultSubSets);
+			sqlStatement->setBoolean(9, queryProperties.textOnly);
 
 			Database::sqlExecute(sqlStatement);
 
@@ -2535,7 +2538,7 @@ namespace crawlservpp::Main {
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
-							"SELECT name, query, type, resultbool, resultsingle, resultmulti, textonly"
+							"SELECT name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly"
 							" FROM crawlserv_queries WHERE id = ? LIMIT 1"
 					)
 			);
@@ -2554,6 +2557,7 @@ namespace crawlservpp::Main {
 					sqlResultSet->getBoolean("resultbool"),
 					sqlResultSet->getBoolean("resultsingle"),
 					sqlResultSet->getBoolean("resultmulti"),
+					sqlResultSet->getBoolean("resultsubsets"),
 					sqlResultSet->getBoolean("textonly")
 				);
 			}
@@ -2593,6 +2597,7 @@ namespace crawlservpp::Main {
 						" resultbool = ?,"
 						" resultsingle = ?,"
 						" resultmulti = ?,"
+						" resultsubsets = ?,"
 						" textonly = ?"
 						" WHERE id = ?"
 						" LIMIT 1"
@@ -2606,8 +2611,9 @@ namespace crawlservpp::Main {
 			sqlStatement->setBoolean(4, queryProperties.resultBool);
 			sqlStatement->setBoolean(5, queryProperties.resultSingle);
 			sqlStatement->setBoolean(6, queryProperties.resultMulti);
-			sqlStatement->setBoolean(7, queryProperties.textOnly);
-			sqlStatement->setUInt64(8, queryId);
+			sqlStatement->setBoolean(7, queryProperties.resultSubSets);
+			sqlStatement->setBoolean(8, queryProperties.textOnly);
+			sqlStatement->setUInt64(9, queryId);
 
 			Database::sqlExecute(sqlStatement);
 		}
@@ -2668,6 +2674,7 @@ namespace crawlservpp::Main {
 						" resultbool,"
 						" resultsingle,"
 						" resultmulti,"
+						" resultsubsets,"
 						" textonly"
 						" FROM crawlserv_queries"
 						" WHERE id = ?"
@@ -2692,6 +2699,7 @@ namespace crawlservpp::Main {
 								sqlResultSet->getBoolean("resultbool"),
 								sqlResultSet->getBoolean("resultsingle"),
 								sqlResultSet->getBoolean("resultmulti"),
+								sqlResultSet->getBoolean("resultsubsets"),
 								sqlResultSet->getBoolean("textonly")
 						)
 				);

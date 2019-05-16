@@ -807,6 +807,7 @@ jQuery(function($) {
 					"resultbool": $("#query-result-bool").is(":checked"),
 					"resultsingle" : $("#query-result-single").is(":checked"),
 					"resultmulti" : $("#query-result-multi").is(":checked"),
+					"resultsubsets" : $("#query-result-subsets").is(":checked"),
 					"textonly" : $("#query-text-only").is(":checked") 
 				},
 				true,
@@ -859,6 +860,7 @@ jQuery(function($) {
 					"resultbool": $("#query-result-bool").is(":checked"),
 					"resultsingle" : $("#query-result-single").is(":checked"),
 					"resultmulti" : $("#query-result-multi").is(":checked"),
+					"resultsubsets" : $("#query-result-subsets").is(":checked"),
 					"textonly" : $("#query-text-only").is(":checked")
 				},
 				true,
@@ -911,6 +913,7 @@ jQuery(function($) {
 							"resultbool": $("#query-result-bool").is(":checked"),
 							"resultsingle" : $("#query-result-single").is(":checked"),
 							"resultmulti" : $("#query-result-multi").is(":checked"),
+							"resultsubsets" : $("#query-result-subsets").is(":checked"),
 							"textonly" : $("#query-text-only").is(":checked"),
 							"text" : $("#query-test-text").val()
 						};

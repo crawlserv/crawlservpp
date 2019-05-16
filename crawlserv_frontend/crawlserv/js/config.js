@@ -1287,9 +1287,14 @@ class Config {
 				filter += "X";
 			else
 				filter += "0";
+			
+			if(obj["query-results"].includes("subsets"))
+				filter += "X";
+			else
+				filter += "0";
 		}
 		else
-			filter += "XXX";
+			filter += "XXXX";
 
 		if(
 				typeof obj["query-types"] !== "undefined"
@@ -1335,19 +1340,22 @@ class Config {
 		if(filter[2] == "X" && obj.resultmulti)
 			result = true;
 		
+		if(filter[3] == "X" && obj.resultsubsets)
+			result = true;
+		
 		if(!result)
 			return false;
 		
-		if(filter[3] == "X" && obj.type ==
+		if(filter[4] == "X" && obj.type ==
 			"regex") return true;
 		
-		if(filter[4] == "X" && obj.type == "xpath")
+		if(filter[5] == "X" && obj.type == "xpath")
 			return true;
 		
-		if(filter[5] == "X" && obj.type == "jsonpointer")
+		if(filter[6] == "X" && obj.type == "jsonpointer")
 			return true;
 		
-		if(filter[6] == "X" && obj.type == "jsonpath")
+		if(filter[7] == "X" && obj.type == "jsonpath")
 			return true;
 		
 		return false;

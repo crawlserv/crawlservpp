@@ -34,6 +34,7 @@ namespace crawlservpp::Query {
 		bool getBool(const rapidjson::Document& doc) const;
 		void getFirst(const rapidjson::Document& doc, std::string& resultTo) const;
 		void getAll(const rapidjson::Document& doc, std::vector<std::string>& resultTo) const;
+		void getSubSets(const rapidjson::Document& doc, std::vector<rapidjson::Document>& resultTo) const;
 
 		// sub-class for JSONPointer exceptions
 		class Exception : public Main::Exception {
