@@ -35,7 +35,7 @@
 
 namespace crawlservpp::Module::Analyzer {
 
-	class Thread: public Module::Thread, public Config {
+	class Thread: public Module::Thread, protected Config {
 		// for convenience
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
