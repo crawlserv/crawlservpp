@@ -376,7 +376,7 @@ namespace crawlservpp::Module::Extractor {
 		if(this->config.variablesTokensCookies.size() > completeTokens)
 			incompleteTokens = true;
 
-		this->config.variablesTokensCookies.resize(completeTokens, false);
+		this->config.variablesTokensCookies.resize(completeTokens);
 
 		// remove token POST options that are not used, set to 'false' where none is specified
 		if(this->config.variablesTokensUsePost.size() > completeTokens)
