@@ -71,6 +71,7 @@ namespace crawlservpp::Module {
 		bool isShutdown() const;
 		bool isRunning() const;
 		bool isFinished() const;
+		bool isPaused() const;
 
 		// control functions
 		void start();

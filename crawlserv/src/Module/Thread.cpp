@@ -126,6 +126,11 @@ namespace crawlservpp::Module {
 		return this->finished;
 	}
 
+	// get whether thread has been paused
+	bool Thread::isPaused() const {
+		return this->paused;
+	}
+
 	// start the thread (may not be used by the thread itself!)
 	void Thread::start() {
 		// run thread
