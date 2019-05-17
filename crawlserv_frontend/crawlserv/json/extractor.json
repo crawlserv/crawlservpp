@@ -387,7 +387,7 @@
 			],
 			"default": [],
 			"label": "Dataset queries:",
-			"description": "(Optional) Queries to extract subsets containing one dataset each. The first query that returns a non-empty result will be used.",
+			"description": "Queries to extract subsets containing one dataset each. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 1
 		},
