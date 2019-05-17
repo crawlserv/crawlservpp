@@ -379,6 +379,18 @@
 		"label": "Extracting",
 		"open": true,
 		
+		"dataset.queries": {
+			"type": "array",
+			"item-type": "query",
+			"result-types": [
+				"subsets"
+			],
+			"default": [],
+			"label": "Dataset queries:",
+			"description": "(Optional) Queries to extract subsets containing one dataset each. The first query that returns a non-empty result will be used.",
+			"simple": true,
+			"position": 1
+		},
 		"datetime.formats": {
 			"type": "array",
 			"item-type": "string",
@@ -386,7 +398,7 @@
 			"label": "Date/time formats:",
 			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
-			"position": 5
+			"position": 4
 		},
 		"datetime.locales": {
 			"type": "array",
@@ -395,7 +407,7 @@
 			"label": "Date/time locales:",
 			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
 			"simple": true,
-			"position": 6
+			"position": 5
 		},
 		"datetime.queries": {
 			"type": "array",
@@ -407,7 +419,7 @@
 			"label": "Date/time queries:",
 			"description": "Queries used for parsing the date and time. The first query that returns a non-empty result will be used.",
 			"simple": true,
-			"position": 4
+			"position": 3
 		},
 		"field.names": {
 			"type": "array",
@@ -416,7 +428,7 @@
 			"label": "Field names:",
 			"description": "The names of the custom fields to parse.",
 			"simple": true,
-			"position": 7
+			"position": 6
 		},
 		"field.queries": {
 			"type": "array",
@@ -428,7 +440,7 @@
 			"label": "Field queries:",
 			"description": "The queries used to parse the custom fields.",
 			"simple": true,
-			"position": 9
+			"position": 7
 		},
 		"field.tidy.texts": {
 			"type": "array",
@@ -437,7 +449,7 @@
 			"label": "Field results as tidied texts:",
 			"description": "Remove line breaks and unnecessary spaces.",
 			"simple": true,
-			"position": 11
+			"position": 8
 		},
 		"field.warnings.empty": {
 			"type": "array",
@@ -464,7 +476,7 @@
 			"label": "Overwrite existing data",
 			"description": "If a dataset with the same ID already exists, it will be overwritten.",
 			"simple": true,
-			"position": 12
+			"position": 9
 		},
 		"repair.cdata": {
 			"type": "bool",

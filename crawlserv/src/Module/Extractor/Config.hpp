@@ -102,6 +102,7 @@ namespace crawlservpp::Module::Extractor {
 			bool sourceUsePost;
 
 			// extracting entries
+			std::vector<unsigned long> extractingDataSetQueries;
 			std::vector<std::string> extractingDateTimeFormats;
 			std::vector<std::string> extractingDateTimeLocales;
 			std::vector<unsigned long> extractingDateTimeQueries;
@@ -233,6 +234,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// extracting
 		this->category("extracting");
+		this->option("dataset.queries", this->config.extractingDataSetQueries);
 		this->option("datetime.formats", this->config.extractingDateTimeFormats);
 		this->option("datetime.locales", this->config.extractingDateTimeLocales);
 		this->option("datetime.queries", this->config.extractingDateTimeQueries);
