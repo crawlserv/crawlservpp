@@ -842,6 +842,7 @@ namespace crawlservpp::Module::Crawler {
 		this->queriesRedirectVars.reserve(this->config.redirectVarQueries.size());
 
 		try {
+			// create queries and get query properties
 			for(const auto& query : this->config.crawlerQueriesBlackListContent) {
 				if(query) {
 					QueryProperties properties;

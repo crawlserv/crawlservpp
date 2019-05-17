@@ -454,7 +454,7 @@ namespace crawlservpp::Module::Parser {
 		this->queriesFields.reserve(this->config.parsingFieldQueries.size());
 
 		try {
-			// create queries and get query IDs
+			// create queries and get query properties
 			for(const auto& query : this->config.generalSkip) {
 				if(query) {
 					QueryProperties properties;
