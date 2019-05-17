@@ -18,8 +18,8 @@ namespace crawlservpp::Query {
 	Container::~Container() {}
 
 	// add query to internal vectors and return index, throws Container::Exception
-	Container::QueryStruct Container::addQuery(const QueryProperties& properties) {
-		Container::QueryStruct newQuery;
+	QueryStruct Container::addQuery(const QueryProperties& properties) {
+		QueryStruct newQuery;
 
 		newQuery.resultBool = properties.resultBool;
 		newQuery.resultSingle = properties.resultSingle;

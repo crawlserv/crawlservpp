@@ -29,6 +29,7 @@
 #include "../../Query/XPath.hpp"
 #include "../../Struct/DataEntry.hpp"
 #include "../../Struct/QueryProperties.hpp"
+#include "../../Struct/QueryStruct.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/Simple.hpp"
@@ -64,6 +65,7 @@ namespace crawlservpp::Module::Extractor {
 		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::DataEntry DataEntry;
 		typedef Struct::QueryProperties QueryProperties;
+		typedef Struct::QueryStruct QueryStruct;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
 		typedef Query::JsonPath::Exception JsonPathException;
