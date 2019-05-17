@@ -130,6 +130,7 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Query::JsonPath`](crawlserv/src/Query/JsonPath.cpp)**: Using the [jsoncons library](https://github.com/danielaparker/jsoncons/) to implement a JSONPath with boolean, single and/or multiple results.
 * **[`Query::JsonPointer`](crawlserv/src/Query/JsonPointer.cpp)**: Using the [RapidJSON library](https://github.com/Tencent/rapidjson) to implement a JSONPointer with boolean, single and/or multiple results.
 * **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
+* **[`Query::SubSets`](crawlserv/src/Query/SubSets.hpp)**: Handling of multiple subsets resulting from a query of any type.
 * **[`Query::XPath`](crawlserv/src/Query/XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
 * **[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
 * **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
@@ -168,6 +169,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::DatabaseSettings`](crawlserv/src/Struct/DatabaseSettings.hpp)**: Basic database settings (host, port, user, password, schema, compression).
 * **[`Struct::ParsingEntry`](crawlserv/src/Struct/ParsingEntry.hpp)**: Parsed data (content ID, parsed ID, parsed date/time, parsed fields).
 * **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.hpp)**: Basic query properties (name, text, type, result type).
+* **[`Struct::QueryStruct`](crawlserv/src/Struct/QueryStruct.hpp)**: Structure to identify a query and its result type(s).
 * **[`Struct::ServerCommandResponse`](crawlserv/src/Struct/ServerCommandResponse.hpp)**: Response from the command-and-control server.
 * **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.hpp)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
 * **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.hpp)**: Structure for table columns (name, type, reference, indexed).
