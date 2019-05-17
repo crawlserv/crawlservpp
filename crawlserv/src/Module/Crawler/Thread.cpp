@@ -74,6 +74,8 @@ namespace crawlservpp::Module::Crawler {
 		std::queue<std::string> configWarnings;
 
 		// load configuration
+		this->setStatusMessage("Loading configuration...");
+
 		this->setCrossDomain(this->database.getWebsiteDomain(this->getWebsite()).empty());
 
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);

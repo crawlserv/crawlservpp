@@ -39,6 +39,8 @@ namespace crawlservpp::Module::Analyzer {
 		std::queue<std::string> configWarnings;
 
 		// load configuration
+		this->setStatusMessage("Loading configuration...");
+
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary

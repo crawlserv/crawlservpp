@@ -71,6 +71,8 @@ namespace crawlservpp::Module::Parser {
 		std::vector<std::string> fields;
 
 		// load configuration
+		this->setStatusMessage("Loading configuration...");
+
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
