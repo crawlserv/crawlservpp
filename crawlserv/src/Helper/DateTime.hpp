@@ -221,7 +221,7 @@ namespace crawlservpp::Helper::DateTime {
 			result += std::to_string(seconds) + "s ";
 
 		if(rest)
-			result += rest + "ms ";
+			result += std::to_string(rest) + "ms ";
 
 		if(result.empty())
 			return "<1ms";
