@@ -19,22 +19,13 @@
 #include "../../Helper/Json.hpp"
 #include "../../Helper/Strings.hpp"
 #include "../../Main/Exception.hpp"
-#include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
-#include "../../Query/JsonPath.hpp"
-#include "../../Query/JsonPointer.hpp"
-#include "../../Query/RegEx.hpp"
-#include "../../Query/XPath.hpp"
 #include "../../Struct/DataEntry.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/QueryStruct.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/Simple.hpp"
-
-#include "../../_extern/jsoncons/include/jsoncons/json.hpp"
-#include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
-#include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <algorithm>	// std::find, std::find_if
 #include <cctype>		// ::tolower
@@ -62,10 +53,7 @@ namespace crawlservpp::Module::Parser {
 		typedef Struct::QueryStruct QueryStruct;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
-		typedef Query::JsonPath::Exception JsonPathException;
-		typedef Query::JsonPointer::Exception JsonPointerException;
-		typedef Query::RegEx::Exception RegExException;
-		typedef Query::XPath::Exception XPathException;
+		typedef Query::Container::Exception QueryException;
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
@@ -121,15 +109,11 @@ namespace crawlservpp::Module::Parser {
 		void stop();
 		void interrupt();
 
-		// configuration
-		bool idFromUrl;
-
 		// queries
 		std::vector<QueryStruct> queriesSkip;
 		std::vector<QueryStruct> queriesId;
 		std::vector<QueryStruct> queriesDateTime;
 		std::vector<QueryStruct> queriesFields;
-		unsigned long lastUrl;
 
 		// timing
 		unsigned long long tickCounter;
@@ -137,17 +121,11 @@ namespace crawlservpp::Module::Parser {
 		std::chrono::steady_clock::time_point pauseTime;
 		std::chrono::steady_clock::time_point idleTime;
 
-		// parsing data and state
-		bool idle;								// waiting for new URLs to be crawled
-		std::string lockTime;					// last locking time for currently parsed URL
-		Parsing::XML parsedXML;					// parsed XML/HTML
-		rapidjson::Document parsedJsonRapid;	// parsed JSON (using RapidJSON)
-		jsoncons::json parsedJsonCons;			// parsed JSON (using jsoncons)
-		bool xmlParsed;							// XML/HTML has been parsed
-		bool jsonParsedRapid;					// JSON has been parsed using RapidJSON
-		bool jsonParsedCons;					// JSON has been parsed using jsoncons
-		std::string xmlParsingError;			// error while parsing XML/HTML
-		std::string jsonParsingError;			// error while parsing JSON
+		// parsing state
+		bool idle;					// waiting for new URLs to be crawled
+		bool idFromUrlOnly;			// ID is exclusively parsed from URL
+		unsigned long lastUrl;		// last URL
+		std::string lockTime;		// last locking time for currently parsed URL
 
 		// properties used for progress calculation
 		unsigned long idFirst;		// ID of the first URL fetched
@@ -174,7 +152,7 @@ namespace crawlservpp::Module::Parser {
 		bool parseJsonRapid(const std::string& content);
 		bool parseJsonCons(const std::string& content);
 		void resetParsingState();
-		void logParsingErrors(unsigned long contentId);
+		void logWarnings(std::queue<std::string>& warnings);
 	};
 
 } /* crawlservpp::Module::Parser */

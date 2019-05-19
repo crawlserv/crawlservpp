@@ -31,9 +31,6 @@ namespace crawlservpp::Module::Crawler {
 				  manualOff(false),
 				  retryCounter(0),
 				  archiveRetry(false),
-				  xmlParsed(false),
-				  jsonParsedRapid(false),
-				  jsonParsedCons(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -57,9 +54,6 @@ namespace crawlservpp::Module::Crawler {
 				  manualOff(false),
 				  retryCounter(0),
 				  archiveRetry(false),
-				  xmlParsed(false),
-				  jsonParsedRapid(false),
-				  jsonParsedCons(false),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
@@ -87,9 +81,13 @@ namespace crawlservpp::Module::Crawler {
 			configWarnings.pop();
 		}
 
-		// check configuration
+		// check required query
 		if(this->config.crawlerQueriesLinks.empty())
 			throw Exception("Crawler::Thread::onInit(): No link extraction query specified");
+
+		// set query container options
+		this->setRepairCData(this->config.crawlerRepairCData);
+		this->setTidyErrorsAndWarnings(this->config.crawlerTidyErrors, this->config.crawlerTidyWarnings);
 
 		// set database options
 		this->setStatusMessage("Setting database options...");
@@ -105,9 +103,6 @@ namespace crawlservpp::Module::Crawler {
 		this->database.setUrlDebug(this->config.crawlerUrlDebug);
 		this->database.setUrlStartupCheck(this->config.crawlerUrlStartupCheck);
 		this->database.setSleepOnError(this->config.crawlerSleepMySql);
-
-		// set XML logging options
-		this->parsedXML.setOptions(this->config.crawlerTidyWarnings, this->config.crawlerTidyErrors);
 
 		// create table names for table locking
 		this->urlListTable = "crawlserv_" + this->websiteNamespace + "_" + this->urlListNamespace;
@@ -244,9 +239,6 @@ namespace crawlservpp::Module::Crawler {
 
 		bool usePost = false;
 
-		// reset parsing state
-		this->resetParsingState();
-
 		// check for jump in last ID ("time travel")
 		const long warpedOver = this->getWarpedOverAndReset();
 
@@ -306,9 +298,6 @@ namespace crawlservpp::Module::Crawler {
 					newUrls,
 					timerString
 			);
-
-			// handle parsing errors
-			this->logParsingErrors(url.second);
 
 			// get archive (also when crawling failed!)
 			if(this->config.crawlerTiming)
@@ -520,12 +509,8 @@ namespace crawlservpp::Module::Crawler {
 			// no counters: add all custom URLs as is
 			this->customPages.reserve(this->config.customUrls.size());
 
-			for(
-					auto i = this->config.customUrls.begin();
-					i != this->config.customUrls.end();
-					++i
-			)
-				this->customPages.emplace_back(0, *i);
+			for(const auto& url : this->config.customUrls)
+				this->customPages.emplace_back(0, url);
 		}
 
 		if(!(this->config.crawlerStart.empty())) {
@@ -984,14 +969,12 @@ namespace crawlservpp::Module::Crawler {
 				if(*i)
 					this->database.getQueryProperties(*i, properties);
 				else if(this->config.crawlerLogging) {
-					const auto name =
-							this->config.customTokens.begin()
-							+ (i - this->config.customTokensQuery.begin());
+					const auto index = i - this->config.customTokensQuery.begin();
 
-					if(!(name->empty()))
+					if(!(this->config.customTokens.at(index).empty()))
 						this->log(
 								"WARNING: Ignores token \'"
-								+ *name
+								+ this->config.customTokens.at(index)
 								+ "\' because of missing query."
 						);
 				}
@@ -1025,14 +1008,12 @@ namespace crawlservpp::Module::Crawler {
 				if(*i)
 					this->database.getQueryProperties(*i, properties);
 				else if(this->config.crawlerLogging) {
-					const auto name =
-							this->config.redirectVarNames.begin()
-							+ (i - this->config.redirectVarQueries.begin());
+					const auto index = i - this->config.redirectVarQueries.begin();
 
-					if(!(name->empty()))
+					if(!(this->config.redirectVarNames.at(index).empty()))
 						this->log(
 								"WARNING: Ignores variable \'"
-								+ *name
+								+ this->config.redirectVarNames.at(index)
 								+ " because of missing query."
 						);
 				}
@@ -1048,17 +1029,8 @@ namespace crawlservpp::Module::Crawler {
 				this->queryExpected = this->addQuery(properties);
 			}
 		}
-		catch(const RegExException& e) {
-			throw Exception("Crawler::Thread::initQueries(): [RegEx] " + e.whatStr());
-		}
-		catch(const XPathException& e) {
-			throw Exception("Crawler::Thread::initQueries(): [XPath] " + e.whatStr());
-		}
-		catch(const JsonPointerException &e) {
-			throw Exception("Crawler::Thread::initQueries(): [JSONPointer] " + e.whatStr());
-		}
-		catch(const JsonPathException &e) {
-			throw Exception("Crawler::Thread::initQueries(): [JSONPath] " + e.whatStr());
+		catch(const QueryException & e) {
+			throw Exception("Crawler::Thread::initQueries(): " + e.whatStr());
 		}
 	}
 
@@ -1292,15 +1264,17 @@ namespace crawlservpp::Module::Crawler {
 
 		IdString result(url);
 
-		for(unsigned long n = 0; n < this->config.customTokens.size(); ++n) {
-			if(result.second.find(this->config.customTokens.at(n))) {
-				const std::string sourceUrl("https://" + this->config.customTokensSource.at(n));
+		for(auto i = this->config.customTokens.begin(); i != this->config.customTokens.end(); ++i) {
+			const auto index = i - this->config.customTokens.begin();
+
+			if(result.second.find(*i)) {
+				const std::string sourceUrl("https://" + this->config.customTokensSource.at(index));
 				std::string content;
 				std::string value;
 				bool success = false;
 
 				// check token source
-				if(!(this->config.customTokensSource.empty())) {
+				if(!(this->config.customTokensSource.at(index).empty())) {
 					// get content for extracting token
 					while(this->isRunning()) {
 						try {
@@ -1308,23 +1282,31 @@ namespace crawlservpp::Module::Crawler {
 							this->networking.setConfigCurrent(*this);
 
 							// set cookies if necessary
-							if(!(this->config.customTokensCookies.at(n).empty()))
-								this->networking.setCookies(this->config.customTokensCookies.at(n));
+							if(!(this->config.customTokensCookies.at(index).empty()))
+								this->networking.setCookies(this->config.customTokensCookies.at(index));
 
 							// get content
 							this->networking.getContent(
 									sourceUrl,
-									this->config.customTokensUsePost.at(n),
+									this->config.customTokensUsePost.at(index),
 									content,
 									this->config.crawlerRetryHttp
 							);
+
+							// unset cookies if necessary
+							if(!(this->config.customTokensCookies.at(index).empty()))
+								this->networking.unsetCookies();
 
 							success = true;
 
 							break;
 						}
-						catch(const CurlException& e) {
-							// error while getting content: check type of error i.e. last cURL code
+						catch(const CurlException& e) { // error while getting content
+							// unset cookies if necessary
+							if(!(this->config.customTokensCookies.at(index).empty()))
+								this->networking.unsetCookies();
+
+							// check type of error i.e. last cURL code
 							if(this->crawlingCheckCurlCode(
 									this->networking.getCurlCode(),
 									sourceUrl
@@ -1343,7 +1325,7 @@ namespace crawlservpp::Module::Crawler {
 								if(this->config.crawlerLogging)
 									this->log(
 											"WARNING: Could not get token \'"
-											+ this->config.customTokens.at(n)
+											+ *i
 											+ "\' from "
 											+ sourceUrl
 											+ ": "
@@ -1354,6 +1336,10 @@ namespace crawlservpp::Module::Crawler {
 							}
 						}
 						catch(const Utf8Exception& e) {
+							// unset cookies if necessary
+							if(!(this->config.customTokensCookies.at(index).empty()))
+								this->networking.unsetCookies();
+
 							// write UTF-8 error to log if neccessary
 							if(this->config.crawlerLogging)
 								this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
@@ -1364,209 +1350,30 @@ namespace crawlservpp::Module::Crawler {
 				}
 
 				if(success) {
+					std::queue<std::string> queryWarnings;
+
+					// set content as target for subsequent query
+					this->setQueryTarget(content, sourceUrl);
+
 					// get token from content
-					Parsing::XML xmlDoc;
-					rapidjson::Document jsonDoc;
-					jsoncons::json json;
-					std::queue<std::string> warnings;
+					if(this->queriesTokens.at(index).resultSingle)
+						this->getSingleFromQuery(this->queriesTokens.at(index), value, queryWarnings);
+					else if(this->queriesTokens.at(index).resultBool) {
+						bool booleanResult = false;
 
-					// set options for logging
-					xmlDoc.setOptions(this->config.crawlerTidyWarnings, this->config.crawlerTidyErrors);
-
-					switch(this->queriesTokens.at(n).type) {
-					case QueryStruct::typeRegEx:
-						// get token from content
-						try {
-							// check result type of query
-							if(this->queriesTokens.at(n).resultSingle)
-								this->getRegExQuery(this->queriesTokens.at(n).index).getFirst(content, value);
-							else if(this->queriesTokens.at(n).resultBool)
-								value = this->getRegExQuery(this->queriesTokens.at(n).index).getBool(content) ? "true" : "false";
-							else
-								this->log(
-										"WARNING: Invalid result type of query for token \'"
-										+ this->config.customTokens.at(n)
-										+ "\'"
-								);
-						}
-						catch(const RegExException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: RegEx error - "
-										+ e.whatStr()
-										+ " ["
-										+ sourceUrl
-										+ "]."
-								);
-						}
-
-						break;
-
-					case QueryStruct::typeXPath:
-						// parse XML content
-						try {
-							xmlDoc.parse(content, warnings, this->config.crawlerRepairCData);
-						}
-						catch(const XMLException& e) {
-							// error while parsing content
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: XML error: "
-										+ e.whatStr()
-										+ " ["
-										+ sourceUrl
-										+ "]."
-								);
-
-							break;
-						}
-
-						// write warnings to log if necessary
-						if(this->config.crawlerLogging)
-							while(!warnings.empty()) {
-								this->log(
-										"WARNING: "
-										+ warnings.front()
-										+ " ["
-										+ sourceUrl
-										+ "]."
-								);
-
-								warnings.pop();
-							}
-
-						// get token from XML
-						try {
-							// check result type of query
-							if(this->queriesTokens.at(n).resultSingle)
-								this->getXPathQuery(this->queriesTokens.at(n).index).getFirst(xmlDoc, value);
-							else if(this->queriesTokens.at(n).resultBool)
-								value = this->getXPathQuery(this->queriesTokens.at(n).index).getBool(xmlDoc) ? "true" : "false";
-							else
-								this->log(
-										"WARNING: Invalid result type of query for token \'"
-										+ this->config.customTokens.at(n)
-										+ "\'"
-								);
-						}
-						catch(const XPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: XPath error - "
-										+ e.whatStr()
-										+ " ["
-										+ sourceUrl
-										+ "]."
-								);
-						}
-
-						break;
-
-					case QueryStruct::typeJsonPointer:
-						// parse JSON using RapidJSON
-						try {
-							jsonDoc = Helper::Json::parseRapid(content);
-						}
-						catch(const JsonException& e) {
-							// error while parsing content
-							if(this->config.crawlerLogging)
-								this->log(
-										"JSON parsing error: "
-										+ e.whatStr()
-										+ " ["
-										+ this->config.customTokensSource.at(n)
-										+ "]."
-								);
-
-							break;
-						}
-
-						// get token from JSON
-						try {
-							// check result type of query
-							if(this->queriesTokens.at(n).resultSingle)
-								this->getJsonPointerQuery(this->queriesTokens.at(n).index).getFirst(jsonDoc, value);
-							else if(this->queriesTokens.at(n).resultBool)
-								value = this->getJsonPointerQuery(this->queriesTokens.at(n).index).getBool(jsonDoc) ? "true" : "false";
-							else
-								this->log(
-										"WARNING: Invalid result type of query for token \'"
-										+ this->config.customTokens.at(n)
-										+ "\'"
-								);
-						}
-						catch(const JsonPointerException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPointer error - "
-										+ e.whatStr() + " ["
-										+ this->config.customTokensSource.at(n)
-										+ "]."
-								);
-						}
-
-						break;
-
-					case QueryStruct::typeJsonPath:
-						// parse JSON using jsoncons
-						try {
-							json = Helper::Json::parseCons(content);
-						}
-						catch(const JsonException& e) {
-							// error while parsing content
-							if(this->config.crawlerLogging)
-								this->log(
-										"JSON parsing error: "
-										+ e.whatStr()
-										+ " ["
-										+ this->config.customTokensSource.at(n)
-										+ "]."
-								);
-
-							break;
-						}
-
-						// get token from JSON
-						try {
-							// check query type
-							if(this->queriesTokens.at(n).resultSingle)
-								this->getJsonPathQuery(this->queriesTokens.at(n).index).getFirst(json, value);
-							else if(this->queriesTokens.at(n).resultBool)
-								value = this->getJsonPathQuery(this->queriesTokens.at(n).index).getBool(json) ? "true" : "false";
-							else
-								this->log(
-										"WARNING: Invalid result type of query for token \'"
-										+ this->config.customTokens.at(n)
-										+ "\'"
-								);
-						}
-						catch(const JsonPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPointer error - "
-										+ e.whatStr() + " ["
-										+ this->config.customTokensSource.at(n)
-										+ "]."
-								);
-						}
-
-						break;
-
-					case QueryStruct::typeNone:
-						break;
-
-					default:
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: Unknown type of query for getting token \'"
-									+ this->config.customTokens.at(n)
-									+ "\'."
-							);
+						if(this->getBoolFromQuery(this->queriesTokens.at(index), booleanResult, queryWarnings))
+							value = booleanResult ? "true" : "false";
 					}
+					else
+						queryWarnings.emplace(
+								"WARNING: Invalid result type of query for token \'"
+								+ *i
+								+ "\' - not single and not bool."
+						);
 				}
 
 				// replace variable(s) with token(s)
-				Helper::Strings::replaceAll(result.second, this->config.customTokens.at(n), value, true);
+				Helper::Strings::replaceAll(result.second, *i, value, true);
 			}
 		}
 
@@ -1681,8 +1488,12 @@ namespace crawlservpp::Module::Crawler {
 			if(!customCookies.empty())
 				this->networking.unsetCookies();
 		}
-		catch(const CurlException& e) {
-			// error while getting content: check type of error i.e. last cURL code
+		catch(const CurlException& e) { // error while getting content
+			// unset custom cookies header if necessary
+			if(!customCookies.empty())
+				this->networking.unsetCookies();
+
+			// check type of error i.e. last cURL code
 			if(this->crawlingCheckCurlCode(
 					this->networking.getCurlCode(),
 					url.second
@@ -1707,6 +1518,10 @@ namespace crawlservpp::Module::Crawler {
 			return false;
 		}
 		catch(const Utf8Exception& e) {
+			// unset custom cookies header if necessary
+			if(!customCookies.empty())
+				this->networking.unsetCookies();
+
 			// write UTF-8 error to log if neccessary
 			if(this->config.crawlerLogging)
 				this->log("WARNING: " + e.whatStr() + " [" + url.second + "].");
@@ -1737,6 +1552,9 @@ namespace crawlservpp::Module::Crawler {
 			parseTimer.start();
 		}
 
+		// set content as target for subsequent queries
+		this->setQueryTarget(content, url.second);
+
 		// perform dynamic redirect if necessary
 		if(!(this->crawlingDynamicRedirectContent(url.second, content))) {
 			// skip because dynamic redirect failed
@@ -1756,7 +1574,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check content
-		if(!(this->crawlingCheckContent(url.second, content))) {
+		if(!(this->crawlingCheckContent(url.second))) {
 			// skip because of content (on blacklist or not on whitelist)
 			this->crawlingSkip(url, !(this->config.crawlerArchives));
 
@@ -1779,7 +1597,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// extract URLs
-		std::vector<std::string> urls(this->crawlingExtractUrls(url.second, contentType, content));
+		std::vector<std::string> urls(this->crawlingExtractUrls(url.second, contentType));
 
 		if(!urls.empty()) {
 			// update timer if necessary
@@ -1810,73 +1628,84 @@ namespace crawlservpp::Module::Crawler {
 	// check URL for dynamic redirect and perform it if necessary
 	void Thread::crawlingDynamicRedirectUrl(std::string& url, std::string& customCookies, bool& usePost) {
 		// determine whether to redirect
-		if(
-				this->config.redirectQueryUrl
-				&& this->queryRedirectUrl.type == QueryStruct::typeRegEx
-		) {
-			if(this->getRegExQuery(this->queryRedirectUrl.index).getBool(url)) {
-				// preserve old URL for queries
-				std::string oldUrl(url);
+		if(!(this->config.redirectQueryUrl))
+			return;
 
-				// set new URL and whether to use HTTP POST
-				url = this->config.redirectTo;
-				usePost = this->config.redirectUsePost;
+		bool redirect = false;
+		std::queue<std::string> queryWarnings;
 
-				// handle variables in new URL
-				this->crawlingDynamicRedirectUrlVars(oldUrl, url);
+		this->getBoolFromRegEx(this->queryRedirectUrl, url, redirect, queryWarnings);
 
-				// set new custom cookies header if necessary
-				if(!(this->config.redirectCookies.empty())) {
-					customCookies = this->config.redirectCookies;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-					// handle variables in new custom cookies header
-					this->crawlingDynamicRedirectUrlVars(oldUrl, customCookies);
-				}
+		if(!redirect)
+			return;
 
-				// write to log if necessary
-				if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-					this->log("performed dynamic redirect: " + oldUrl + " -> " + url);
-			}
+		// preserve old URL for queries
+		std::string oldUrl(url);
+
+		// set new URL and whether to use HTTP POST
+		url = this->config.redirectTo;
+		usePost = this->config.redirectUsePost;
+
+		// handle variables in new URL
+		this->crawlingDynamicRedirectUrlVars(oldUrl, url);
+
+		// set new custom cookies header if necessary
+		if(!(this->config.redirectCookies.empty())) {
+			customCookies = this->config.redirectCookies;
+
+			// handle variables in new custom cookies header
+			this->crawlingDynamicRedirectUrlVars(oldUrl, customCookies);
 		}
-		else if(this->config.redirectQueryUrl && this->config.crawlerLogging)
-			this->log("WARNING: Did not find RegEx query for dynamic redirect.");
+
+		// write to log if necessary
+		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("performed dynamic redirect: " + oldUrl + " -> " + url);
 	}
 
 	// resolve variables in string (i.e. URL or custom cookies header) for dynamic redirect by URL
 	void Thread::crawlingDynamicRedirectUrlVars(const std::string& oldUrl, std::string& strInOut) {
-		for(unsigned long n = 0; n < this->config.redirectVarNames.size(); ++n) {
-			if(strInOut.find(this->config.redirectVarNames.at(n)) == std::string::npos)
+		for(auto i = this->config.redirectVarNames.begin(); i != this->config.redirectVarNames.end(); ++i) {
+			if(strInOut.find(*i) == std::string::npos)
 				continue;
 
+			const auto index = i - this->config.redirectVarNames.begin();
+
+			std::queue<std::string> queryWarnings;
 			std::string value;
 
-			// check type of variable source
-			switch(this->config.redirectVarSources.at(n)) {
-			case Config::redirectSourceUrl:
-				if(
-						this->queriesRedirectVars.at(n).index
-						&& this->queriesRedirectVars.at(n).type == QueryStruct::typeRegEx
-				)
-					this->getRegExQuery(this->queriesRedirectVars.at(n).index).getFirst(oldUrl, value);
-				else
-					this->log(
-							"WARNING: Could not get value of variable \'"
-							+ this->config.redirectVarNames.at(n)
-							+ "\' for dynamic redirect - set to empty."
-					);
-
-				break;
-
-			default:
+			// check source type
+			if(this->config.redirectVarSources.at(index) != Config::redirectSourceUrl) {
 				if(this->config.crawlerLogging)
 					this->log(
-							"WARNING: Unknown source type for variable \'"
-							+ this->config.redirectVarNames.at(n)
+							"WARNING: Invalid source type for variable \'"
+							+ *i
 							+ "\' for dynamic redirect - set to empty."
 					);
 			}
+			// check result type
+			else if(this->queriesRedirectVars.at(index).resultSingle)
+				this->getSingleFromRegEx(this->queriesRedirectVars.at(index), oldUrl, value, queryWarnings);
+			else if(this->queriesRedirectVars.at(index).resultBool) {
+				bool booleanResult = false;
 
-			Helper::Strings::replaceAll(strInOut, this->config.redirectVarNames.at(n), value, true);
+				if(this->getBoolFromRegEx(this->queriesRedirectVars.at(index), oldUrl, booleanResult, queryWarnings))
+					value = booleanResult ? "true" : "false";
+			}
+			else if(this->config.crawlerLogging)
+				this->log(
+						"WARNING: Could not get value of variable \'"
+						+ *i
+						+ "\' for dynamic redirect - set to empty."
+				);
+
+			// log warnings if necessary
+			this->logWarnings(queryWarnings);
+
+			// replace variable in string
+			Helper::Strings::replaceAll(strInOut, *i, value, true);
 		}
 	}
 
@@ -1890,106 +1719,18 @@ namespace crawlservpp::Module::Crawler {
 		if(url.empty())
 			throw Exception("Thread::crawlingDynamicRedirectContent(): No URL specified");
 
-		if(content.empty())
-			return false;
-
 		// determine whether to redirect to new URL
-		switch(this->queryRedirectContent.type) {
-		case QueryStruct::typeRegEx:
-			// run query to determine whether to redirect to new URL
-			try {
-				if(!(this->getRegExQuery(this->queryRedirectContent.index).getBool(content)))
-					return true;
-			}
-			catch(const RegExException& e) {
-				if(this->config.crawlerLogging)
-					this->log(
-							"WARNING: RegEx error - " +
-							e.whatStr() + " [" + url + "]."
-					);
+		std::queue<std::string> queryWarnings;
+		bool booleanResult = false;
 
-				return true;
-			}
+		this->getBoolFromQuery(this->queryRedirectContent, booleanResult, queryWarnings);
 
-			break;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-		case QueryStruct::typeXPath:
-			// parse XML/HTML if still necessary
-			if(!(this->parseXml(content)))
-				return true;
-
-			// run query to determine whether to redirect to new URL
-			try {
-				if(!(this->getXPathQuery(this->queryRedirectContent.index).getBool(this->parsedXML)))
-					return true;
-			}
-			catch(const XPathException& e) {
-				if(this->config.crawlerLogging)
-					this->log(
-							"WARNING: XPath error - " +
-							e.whatStr() + " [" + url + "]."
-					);
-
-				return true;
-			}
-
-			break;
-
-		case QueryStruct::typeJsonPointer:
-			// parse JSON using RapidJSON if still necessary
-			if(!(this->parseJsonRapid(content)))
-				return true;
-
-			// run query to determine whether to redirect to new URL
-			try {
-				if(!(this->getJsonPointerQuery(this->queryRedirectContent.index).getBool(this->parsedJsonRapid)))
-					return true;
-			}
-			catch(const JsonPointerException& e) {
-				if(this->config.crawlerLogging)
-					this->log(
-							"WARNING: JSONPointer error - " +
-							e.whatStr() + " [" + url + "]."
-					);
-
-				return true;
-			}
-
-			break;
-
-		case QueryStruct::typeJsonPath:
-			// parse JSON using jsoncons if still necessary
-			if(!(this->parseJsonCons(content)))
-				return true;
-
-			// run query to determine whether to redirect to new URL
-			try {
-				if(!(this->getJsonPathQuery(this->queryRedirectContent.index).getBool(this->parsedJsonCons)))
-					return true;
-			}
-			catch(const JsonPathException& e) {
-				if(this->config.crawlerLogging)
-					this->log(
-							"WARNING: JSONPath error - " +
-							e.whatStr() + " [" + url + "]."
-					);
-
-				return true;
-			}
-
-			break;
-
-		case QueryStruct::typeNone:
+		// check whether no redirect is necessary
+		if(!booleanResult)
 			return true;
-
-		default:
-			if(this->config.crawlerLogging)
-				this->log(
-						"WARNING: Unknown type of query on content for dynamic redirect."
-				);
-
-			return true;
-		}
 
 		// preserve old URL for queries
 		const std::string oldUrl(url);
@@ -1998,7 +1739,7 @@ namespace crawlservpp::Module::Crawler {
 		url = this->config.redirectTo;
 
 		// resolve variables in new URL
-		this->crawlingDynamicRedirectContentVars(oldUrl, content, url);
+		this->crawlingDynamicRedirectContentVars(oldUrl, url);
 
 		// write to log if necessary
 		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2008,7 +1749,7 @@ namespace crawlservpp::Module::Crawler {
 		std::string customCookies(this->config.redirectCookies);
 
 		// resolve variables in custom cookie header
-		this->crawlingDynamicRedirectContentVars(oldUrl, content, customCookies);
+		this->crawlingDynamicRedirectContentVars(oldUrl, customCookies);
 
 		// get new content
 		bool success = false;
@@ -2039,8 +1780,12 @@ namespace crawlservpp::Module::Crawler {
 
 				break;
 			}
-			catch(const CurlException& e) {
-				// error while getting content: check type of error i.e. last cURL code
+			catch(const CurlException& e) { // error while getting content
+				// unset custom cookies header if necessary
+				if(!customCookies.empty())
+					this->networking.unsetCookies();
+
+				// check type of error i.e. last cURL code
 				if(this->crawlingCheckCurlCode(
 						this->networking.getCurlCode(),
 						url
@@ -2063,6 +1808,10 @@ namespace crawlservpp::Module::Crawler {
 				}
 			}
 			catch(const Utf8Exception& e) {
+				// unset custom cookies header if necessary
+				if(!customCookies.empty())
+					this->networking.unsetCookies();
+
 				// write UTF-8 error to log if neccessary
 				if(this->config.crawlerLogging)
 					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
@@ -2074,8 +1823,8 @@ namespace crawlservpp::Module::Crawler {
 		if(!success)
 			return false;
 
-		// reset parsing state
-		this->resetParsingState();
+		// set new content as target for subsequent queries
+		this->setQueryTarget(content, url);
 
 		// check response code and return result
 		return this->crawlingCheckResponseCode(url, this->networking.getResponseCode());
@@ -2084,132 +1833,70 @@ namespace crawlservpp::Module::Crawler {
 	// resolve variables in string (i.e. URL or cookies header) for dynamic redirect by content
 	void Thread::crawlingDynamicRedirectContentVars(
 			const std::string& oldUrl,
-			const std::string& oldContent,
 			std::string& strInOut
 	) {
-		for(unsigned long n = 0; n < this->config.redirectVarNames.size(); ++n) {
-			if(strInOut.find(this->config.redirectVarNames.at(n)) == std::string::npos)
+		for(auto i = this->config.redirectVarNames.begin(); i != this->config.redirectVarNames.end(); ++i) {
+			if(strInOut.find(*i) == std::string::npos)
 				continue;
 
+			const auto index = i - this->config.redirectVarNames.begin();
+			std::queue<std::string> queryWarnings;
 			std::string value;
 
 			// check type of variable source
-			switch(this->config.redirectVarSources.at(n)) {
+			switch(this->config.redirectVarSources.at(index)) {
 			case Config::redirectSourceUrl:
-				if(this->queriesRedirectVars.at(n).type == QueryStruct::typeRegEx)
-					this->getRegExQuery(this->queriesRedirectVars.at(n).index).getFirst(oldUrl, value);
+				// get value from (old) URL
+				if(this->queriesRedirectVars.at(index).resultSingle)
+					this->getSingleFromRegEx(this->queriesRedirectVars.at(index), oldUrl, value, queryWarnings);
+				else if(this->queriesRedirectVars.at(index).resultBool) {
+					bool booleanResult = false;
+
+					if(this->getBoolFromRegEx(this->queriesRedirectVars.at(index), oldUrl, booleanResult, queryWarnings))
+						value = booleanResult ? "true" : "false";
+				}
 				else
 					this->log(
-							"WARNING: Invalid type of query on URL for dynamic redirect variable \'"
-							+ this->config.redirectVarNames.at(n)
+							"WARNING: Invalid result type of query for dynamic redirect variable \'"
+							+ *i
 							+ "\' - set to empty."
 					);
 
 				break;
 
 			case Config::redirectSourceContent:
-				// check type of variable query on content
-				switch(this->queriesRedirectVars.at(n).type) {
-				case QueryStruct::typeRegEx:
-					// run query to get variable value
-					try {
-						this->getRegExQuery(
-								this->queriesRedirectVars.at(n).index
-						).getFirst(oldContent, value);
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + oldUrl + "]."
-							);
-					}
+				// get value from content
+				if(this->queriesRedirectVars.at(index).resultSingle)
+					this->getSingleFromQuery(this->queriesRedirectVars.at(index), value, queryWarnings);
+				else if(this->queriesRedirectVars.at(index).resultBool) {
+					bool booleanResult = false;
 
-					break;
-
-				case QueryStruct::typeXPath:
-					// parse XML/HTML if still necessary
-					if(this->parseXml(oldContent)) {
-						// run query to get variable value
-						try {
-							this->getXPathQuery(
-									this->queriesRedirectVars.at(n).index
-							).getFirst(this->parsedXML, value);
-						}
-						catch(const XPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: XPath error - " +
-										e.whatStr() + " [" + oldUrl + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPointer:
-					// parse JSON using RapidJSON if still necessary
-					if(this->parseJsonRapid(oldContent)) {
-						// run query to get variable value
-						try {
-							this->getJsonPointerQuery(
-									this->queriesRedirectVars.at(n).index
-							).getFirst(this->parsedJsonRapid, value);
-						}
-						catch(const JsonPointerException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPointer error - " +
-										e.whatStr() + " [" + oldUrl + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPath:
-					// parse JSON using jsoncons if still necessary
-					if(this->parseJsonCons(oldContent)) {
-						// run query to get variable value
-						try {
-							this->getJsonPathQuery(
-									this->queriesRedirectVars.at(n).index
-							).getFirst(this->parsedJsonCons, value);
-						}
-						catch(const JsonPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPath error - " +
-										e.whatStr() + " [" + oldUrl + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Unknown type of dynamic redirect query on content."
-						);
+					if(this->getBoolFromQuery(this->queriesRedirectVars.at(index), booleanResult, queryWarnings))
+						value = booleanResult ? "true" : "false";
 				}
+				else
+					this->log(
+							"WARNING: Invalid result type of query for dynamic redirect variable \'"
+							+ *i
+							+ "\' - set to empty."
+					);
 
 				break;
 
 			default:
 				if(this->config.crawlerLogging)
 					this->log(
-							"WARNING: Unknown source type for variable \'"
-							+ this->config.redirectVarNames.at(n)
-							+ "\' for dynamic redirect - set to empty."
+							"WARNING: Unknown source type for dynamic redirect variable \'"
+							+ *i
+							+ "\' - set to empty."
 					);
 			}
 
+			// log warnings if necessary
+			this->logWarnings(queryWarnings);
+
 			// replace variable with value
-			Helper::Strings::replaceAll(strInOut, this->config.redirectVarNames.at(n), value, true);
+			Helper::Strings::replaceAll(strInOut, *i, value, true);
 		}
 	}
 
@@ -2247,101 +1934,44 @@ namespace crawlservpp::Module::Crawler {
 			return false;
 		}
 
-		// check for whitelisted URLs
-		if(!(this->queriesWhiteListUrls.empty())) {
-			// whitelist: only allow URLs that fit a specified whitelist query
-			bool whitelist = false;
-			bool found = false;
+		std::queue<std::string> queryWarnings;
 
-			for(
-					auto i = this->queriesWhiteListUrls.begin();
-					i != this->queriesWhiteListUrls.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					whitelist = true;
+		// whitelist: only allow URLs that fit a specified whitelist query
+		bool whitelist = false;
+		bool found = false;
 
-					try {
-						found = this->getRegExQuery(i->index).getBool(url);
+		for(const auto& query : this->queriesWhiteListUrls) {
+			if(query.type != QueryStruct::typeNone)
+				whitelist = true;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error"
-									" - " + e.whatStr() + " [" + url + " from " + from + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					whitelist = true;
-
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on URL"
-								" is not of type RegEx."
-					);
-				}
-			}
-
-			if(whitelist && !found) {
-				if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-					this->log("skipped " + url + " (not whitelisted).");
-
-				return false;
-			}
+			if(this->getBoolFromRegEx(query, url, found, queryWarnings) && found)
+				break;
 		}
 
-		// check for blacklisted URLs
-		if(!(this->queriesBlackListUrls.empty())) {
-			// blacklist: do not allow URLs that fit a specified blacklist query
-			for(
-					auto i = this->queriesBlackListUrls.begin();
-					i != this->queriesBlackListUrls.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					try {
-						if(this->getRegExQuery(i->index).getBool(url)) {
-							if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-								this->log("skipped " + url + " (blacklisted).");
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-							return false;
-						}
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + " from " + from + "]."
-							);
-					}
+		if(whitelist && !found) {
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log("skipped " + url + " (not whitelisted).");
 
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on URL"
-								" is not of type RegEx."
-						);
-				}
-			}
+			return false;
 		}
 
-		return true;
+		// blacklist: do not allow URLs that fit a specified blacklist query
+		found = false;
+
+		for(const auto& query : this->queriesBlackListUrls)
+			if(this->getBoolFromRegEx(query, url, found, queryWarnings) && found)
+				break;
+
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
+
+		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("skipped " + url + " (blacklisted).");
+
+		return !found;
 	}
 
 	// check whether links should be extracted from URL
@@ -2350,100 +1980,44 @@ namespace crawlservpp::Module::Crawler {
 		if(url.empty())
 			return false;
 
-		// check for whitelisted URLs
-		if(!(this->queriesLinksWhiteListUrls.empty())) {
-			// whitelist: only allow URLs that fit a specified whitelist query
-			bool whitelist = false;
-			bool found = false;
+		std::queue<std::string> queryWarnings;
 
-			for(
-					auto i = this->queriesLinksWhiteListUrls.begin();
-					i != this->queriesLinksWhiteListUrls.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					whitelist = true;
+		// whitelist: only allow URLs that fit a specified whitelist query
+		bool whitelist = false;
+		bool found = false;
 
-					try {
-						found = this->getRegExQuery(i->index).getBool(url);
+		for(const auto& query : this->queriesLinksWhiteListUrls) {
+			if(query.type != QueryStruct::typeNone)
+				whitelist = true;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error"
-									" - " + e.whatStr() + " [" + url + "]."
-							);
-					}
-
+			if(this->getBoolFromRegEx(query, url, found, queryWarnings) && found)
 					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					whitelist = true;
-
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on URL is not of type RegEx."
-						);
-				}
-			}
-
-			if(whitelist && !found) {
-				if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-					this->log("skipped " + url + " (not whitelisted).");
-
-				return false;
-			}
 		}
 
-		// check for blacklisted URLs
-		if(!(this->queriesLinksBlackListUrls.empty())) {
-			// blacklist: do not allow URLs that fit a specified blacklist query
-			for(
-					auto i = this->queriesLinksBlackListUrls.begin();
-					i != this->queriesLinksBlackListUrls.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					try {
-						if(this->getRegExQuery(i->index).getBool(url)) {
-							if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-								this->log("skipped " + url + " (blacklisted).");
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-							return false;
-						}
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
+		if(whitelist && !found) {
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log("skipped " + url + " (not whitelisted).");
 
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on URL"
-								" is not of type RegEx."
-						);
-				}
-			}
+			return false;
 		}
 
-		return true;
+		// blacklist: do not allow URLs that fit a specified blacklist query
+		found = false;
+
+		for(const auto& query : this->queriesLinksBlackListUrls)
+			if(this->getBoolFromRegEx(query, url, found, queryWarnings) && found)
+				break;
+
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
+
+		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("skipped " + url + " (blacklisted).");
+
+		return !found;
 	}
 
 	// check cURL code and decide whether to retry or skip
@@ -2487,634 +2061,185 @@ namespace crawlservpp::Module::Crawler {
 
 	// check whether specific content type should be crawled
 	bool Thread::crawlingCheckContentType(const std::string& url, const std::string& contentType) {
+		std::queue<std::string> queryWarnings;
+
 		// check whitelist for content types
-		if(!(this->queriesWhiteListTypes.empty())) {
-			bool found = false;
+		bool whitelist = false;
+		bool found = false;
 
-			for(
-					auto i = this->queriesWhiteListTypes.begin();
-					i != this->queriesWhiteListTypes.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					try {
-						found = this->getRegExQuery(i->index).getBool(contentType);
+		for(const auto& query : this->queriesWhiteListTypes) {
+			if(query.type != QueryStruct::typeNone)
+				whitelist = true;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
+			if(this->getBoolFromRegEx(query, contentType, found, queryWarnings) && found)
+				break;
+		}
 
-					break;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-				case QueryStruct::typeNone:
-					break;
+		if(whitelist && !found) {
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log("skipped " + url + " (content type \'" + contentType + "\' not whitelisted).");
 
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx."
-						);
-				}
-			}
-
-			if(!found)
-				return false;
+			return false;
 		}
 
 		// check blacklist for content types
-		if(!(this->queriesBlackListTypes.empty())) {
-			bool found = false;
+		found = false;
 
-			for(
-					auto i = this->queriesBlackListTypes.begin();
-					i != this->queriesBlackListTypes.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					try {
-						found = this->getRegExQuery(i->index).getBool(contentType);
+		for(const auto& query : this->queriesBlackListTypes)
+			if(this->getBoolFromRegEx(query, contentType, found, queryWarnings) && found)
+				 break;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-					break;
+		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("skipped " + url + " (content type \'" + contentType + "\' blacklisted).");
 
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx."
-						);
-				}
-			}
-
-			if(found)
-				return false;
-		}
-
-		return true;
+		return !found;
 	}
 
 	// check whether specific content type should be used for link extraction
 	bool Thread::crawlingCheckContentTypeForLinkExtraction(const std::string& url, const std::string& contentType) {
+		std::queue<std::string> queryWarnings;
+
 		// check whitelist for content types
-		if(!(this->queriesLinksWhiteListTypes.empty())) {
-			bool found = false;
+		bool whitelist = false;
+		bool found = false;
 
-			for(
-					auto i = this->queriesLinksWhiteListTypes.begin();
-					i != this->queriesLinksWhiteListTypes.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					// run query to determine whether to extract links
-					try {
-						found = this->getRegExQuery(i->index).getBool(contentType);
+		for(const auto& query : this->queriesLinksWhiteListTypes) {
+			if(query.type != QueryStruct::typeNone)
+				whitelist = true;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
+			if(this->getBoolFromRegEx(query, url, found, queryWarnings) && found)
+				break;
+		}
 
-					break;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-				case QueryStruct::typeNone:
-					break;
+		if(whitelist && !found) {
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log(
+						"skipped link extraction for "
+						+ url
+						+ " (content type \'"
+						+ contentType
+						+ "\' not whitelisted)."
+				);
 
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx."
-						);
-				}
-			}
-
-			if(!found)
-				return false;
+			return false;
 		}
 
 		// check blacklist for content types
-		if(!(this->queriesLinksBlackListTypes.empty())) {
-			bool found = false;
+		found = false;
 
-			for(
-					auto i = this->queriesLinksBlackListTypes.begin();
-					i != this->queriesLinksBlackListTypes.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					// run query to determine whether to extract links
-					try {
-						found = this->getRegExQuery(i->index).getBool(contentType);
+		for(const auto& query : this->queriesLinksBlackListTypes)
+			if(this->getBoolFromRegEx(query, contentType, found, queryWarnings) && found)
+				 break;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-					break;
+		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log(
+						"skipped link extraction for "
+						+ url
+						+ " (content type \'"
+						+ contentType
+						+ "\' blacklisted)."
+				);
 
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Query on content type"
-								" is not of type RegEx."
-						);
-				}
-			}
-
-			if(found)
-				return false;
-		}
-
-		return true;
+		return !found;
 	}
 
 	// check whether specific content should be crawled, throws Thread::Exception
-	bool Thread::crawlingCheckContent(const std::string& url, const std::string& content) {
+	bool Thread::crawlingCheckContent(const std::string& url) {
 		// check argument
 		if(url.empty())
 			throw Exception("Crawler::Thread::crawlingCheckContent(): No URL specified");
 
-		// check whitelist for content types
-		if(!(this->queriesWhiteListContent.empty())) {
-			bool found = false;
+		std::queue<std::string> queryWarnings;
 
-			for(
-					auto i = this->queriesWhiteListContent.begin();
-					i != this->queriesWhiteListContent.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					// run query to determine whether to crawl content
-					try {
-						found = this->getRegExQuery(i->index).getBool(content);
+		// check whitelist for content
+		bool whitelist = false;
+		bool found = false;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
+		for(const auto& query : this->queriesWhiteListContent) {
+			if(query.type != QueryStruct::typeNone)
+				whitelist = true;
 
-					break;
-
-				case QueryStruct::typeXPath:
-					// parse XML/HTML if still necessary
-					if(!(this->parseXml(content)))
-						return false;
-
-					// run query to determine whether to crawl content
-					try {
-						found = this->getXPathQuery(i->index).getBool(this->parsedXML);
-
-						if(found)
-							break;
-					}
-					catch(const XPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: XPath error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPointer:
-					// parse JSON using RapidJSON if still necessary
-					if(!(this->parseJsonRapid(content)))
-						return false;
-
-					// run query to determine whether to crawl content
-					try {
-						found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
-
-						if(found)
-							break;
-					}
-					catch(const JsonPointerException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: JSONPointer error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPath:
-					// parse JSON using jsoncons if still necessary
-					if(!(this->parseJsonCons(content)))
-						return false;
-
-					// run query to determine whether to crawl content
-					try {
-						found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
-
-						if(found)
-							break;
-					}
-					catch(const JsonPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: JSONPath error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Unknown type of query on content type."
-						);
-				}
-			}
-
-			if(!found)
-				return false;
+			if(this->getBoolFromQuery(query, found, queryWarnings) && found)
+				break;
 		}
 
-		// check blacklist for content types
-		if(!(this->queriesBlackListContent.empty())) {
-			bool found = false;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-			for(
-					auto i = this->queriesBlackListContent.begin();
-					i != this->queriesBlackListContent.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					// run query to determine whether to crawl content
-					try {
-						found = this->getRegExQuery(i->index).getBool(content);
+		if(whitelist && !found) {
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log("skipped " + url + " (content not whitelisted).");
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - "
-									+ e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeXPath:
-					// parse XML/HTML if still necessary
-					if(this->parseXml(content)) {
-						// run query to determine whether to crawl content
-						try {
-							found = this->getXPathQuery(i->index).getBool(this->parsedXML);
-
-							if(found)
-								break;
-						}
-						catch(const XPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: XPath error - " +
-										e.whatStr() + " [" + url + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPointer:
-					// parse JSON using RapidJSON if still necessary
-					if(this->parseJsonRapid(content)) {
-						// run query to determine whether to crawl content
-						try {
-							found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
-
-							if(found)
-								break;
-						}
-						catch(const JsonPointerException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPointer error - " +
-										e.whatStr() + " [" + url + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPath:
-					// parse JSON using jsoncons if still necessary
-					if(this->parseJsonCons(content)) {
-						// run query to determine whether to crawl content
-						try {
-							found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
-
-							if(found)
-								break;
-						}
-						catch(const JsonPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPath error - " +
-										e.whatStr() + " [" + url + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Unknown type of query on content type."
-						);
-				}
-			}
-
-			if(found)
-				return false;
+			return false;
 		}
 
-		return true;
+		// check blacklist for content
+		found = false;
+
+		for(const auto& query : this->queriesBlackListContent)
+			if(this->getBoolFromQuery(query, found, queryWarnings) && found)
+				break;
+
+		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("skipped " + url + " (content blacklisted).");
+
+		return !found;
 	}
 
 	// check whether specific content should be used for link extraction, throws Thread::Exception
-	bool Thread::crawlingCheckContentForLinkExtraction(const std::string& url, const std::string& content) {
+	bool Thread::crawlingCheckContentForLinkExtraction(const std::string& url) {
 		// check argument
 		if(url.empty())
 			throw Exception("Crawler::Thread::crawlingCheckContent(): No URL specified");
 
-		// check whitelist for content types
-		if(!(this->queriesLinksWhiteListContent.empty())) {
-			bool found = false;
+		std::queue<std::string> queryWarnings;
 
-			for(
-					auto i = this->queriesLinksWhiteListContent.begin();
-					i != this->queriesLinksWhiteListContent.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					// run query to determine whether to extract links
-					try {
-						found = this->getRegExQuery(i->index).getBool(content);
+		// check whitelist for content
+		bool whitelist = false;
+		bool found = false;
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
+		for(const auto& query : this->queriesLinksWhiteListContent) {
+			if(query.type != QueryStruct::typeNone)
+				whitelist = true;
 
-					break;
-
-				case QueryStruct::typeXPath:
-					// parse XML/HTML if still necessary
-					if(!(this->parseXml(content)))
-						return false;
-
-					// run query to determine whether to extract links
-					try {
-						found = this->getXPathQuery(i->index).getBool(this->parsedXML);
-
-						if(found)
-							break;
-					}
-					catch(const XPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: XPath error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPointer:
-					// parse JSON using RapidJSON if still necessary
-					if(!(this->parseJsonRapid(content)))
-						return false;
-
-					// run query to determine whether to extract links
-					try {
-						found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
-
-						if(found)
-							break;
-					}
-					catch(const JsonPointerException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: JSONPointer error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPath:
-					// parse JSON using jsoncons if still necessary
-					if(!(this->parseJsonCons(content)))
-						return false;
-
-					// run query to determine whether to extract links
-					try {
-						found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
-
-						if(found)
-							break;
-					}
-					catch(const JsonPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: JSONPath error - " +
-									e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Unknown type of query on content type"
-						);
-				}
-			}
-
-			if(!found)
-				return false;
+			if(this->getBoolFromQuery(query, found, queryWarnings) && found)
+				break;
 		}
 
-		// check blacklist for content types
-		if(!(this->queriesLinksBlackListContent.empty())) {
-			bool found = false;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
-			for(
-					auto i = this->queriesLinksBlackListContent.begin();
-					i != this->queriesLinksBlackListContent.end();
-					++i
-			) {
-				switch(i->type) {
-				case QueryStruct::typeRegEx:
-					// run query to determine whether to extract links
-					try {
-						found = this->getRegExQuery(i->index).getBool(content);
+		if(whitelist && !found) {
+			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				this->log("skipped link extraction from " + url + " (content not whitelisted).");
 
-						if(found)
-							break;
-					}
-					catch(const RegExException& e) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: RegEx error - "
-									+ e.whatStr() + " [" + url + "]."
-							);
-					}
-
-					break;
-
-				case QueryStruct::typeXPath:
-					// parse XML/HTML if still necessary
-					if(this->parseXml(content)) {
-						// run query to determine whether to extract links
-						try {
-							found = this->getXPathQuery(i->index).getBool(this->parsedXML);
-
-							if(found)
-								break;
-						}
-						catch(const XPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: XPath error - " +
-										e.whatStr() + " [" + url + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPointer:
-					// parse JSON using RapidJSON if still necessary
-					if(this->parseJsonRapid(content)) {
-						// run query to determine whether to extract links
-						try {
-							found = this->getJsonPointerQuery(i->index).getBool(this->parsedJsonRapid);
-
-							if(found)
-								break;
-						}
-						catch(const JsonPointerException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPointer error - " +
-										e.whatStr() + " [" + url + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPath:
-					// parse JSON using jsoncons if still necessary
-					if(this->parseJsonCons(content)) {
-						// run query to determine whether to extract links
-						try {
-							found = this->getJsonPathQuery(i->index).getBool(this->parsedJsonCons);
-
-							if(found)
-								break;
-						}
-						catch(const JsonPathException& e) {
-							if(this->config.crawlerLogging)
-								this->log(
-										"WARNING: JSONPath error - " +
-										e.whatStr() + " [" + url + "]."
-								);
-						}
-					}
-
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Unknown type of query on content type."
-						);
-				}
-			}
-
-			if(found)
-				return false;
+			return false;
 		}
 
-		return true;
+		// check blacklist for content
+		found = false;
+
+		for(const auto& query : this->queriesLinksBlackListContent)
+			if(this->getBoolFromQuery(query, found, queryWarnings) && found)
+				break;
+
+		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
+			this->log("skipped link extraction from " + url + " (content blacklisted).");
+
+		return !found;
 	}
 
 	// save content to database, throws Thread::Exception
@@ -3132,46 +2257,19 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Crawler::Thread::crawlingSaveContent(): No URL specified");
 
 		if(this->config.crawlerXml) {
-			// parse XML/HTML if still necessary
-			if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-				std::queue<std::string> warnings;
+			std::queue<std::string> warnings;
+			std::string xmlContent;
 
-				try {
-					this->parsedXML.parse(content, warnings, this->config.crawlerRepairCData);
+			if(this->getXml(xmlContent, warnings))
+				this->database.saveContent(url.first, response, type, xmlContent);
+			else
+				xmlContent.clear();
 
-					this->xmlParsed = true;
-				}
-				catch(const XMLException& e) {
-					this->xmlParsingError = e.whatStr();
-				}
+			// log warnings if necessary
+			this->logWarnings(warnings);
 
-				// write warnings to log if necessary
-				if(this->config.crawlerLogging)
-					while(!warnings.empty()) {
-						this->log("WARNING: " + warnings.front());
-
-						warnings.pop();
-					}
-			}
-
-			if(this->xmlParsed) {
-				std::string xmlContent;
-
-				try {
-					this->parsedXML.getContent(xmlContent);
-
-					this->database.saveContent(url.first, response, type, xmlContent);
-
-					return;
-				}
-				catch(const XMLException& e) {
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: Could not clean content"
-								" [" + url.second + "]: " + e.whatStr()
-						);
-				}
-			}
+			if(!xmlContent.empty())
+				return;
 		}
 
 		this->database.saveContent(url.first, response, type, content);
@@ -3180,8 +2278,7 @@ namespace crawlservpp::Module::Crawler {
 	// extract URLs from content, throws Thread::Exception
 	std::vector<std::string> Thread::crawlingExtractUrls(
 			const std::string& url,
-			const std::string& type,
-			const std::string& content
+			const std::string& type
 	) {
 		std::vector<std::string> urls;
 
@@ -3197,219 +2294,38 @@ namespace crawlservpp::Module::Crawler {
 		if(
 				!(this->crawlingCheckUrlForLinkExtraction(url))
 				|| !(this->crawlingCheckContentTypeForLinkExtraction(url, type))
-				|| !(this->crawlingCheckContentForLinkExtraction(url, content))
+				|| !(this->crawlingCheckContentForLinkExtraction(url))
 		)
 			return urls;
 
-		for(
-				auto i = this->queriesLinks.begin();
-				i != this->queriesLinks.end();
-				++i
-		) {
-			switch(i->type) {
-			case QueryStruct::typeRegEx:
-				try {
-					// run query to extract URLs
-					if(i->resultMulti) {
-						std::vector<std::string> results;
+		std::queue<std::string> queryWarnings;
 
-						this->getRegExQuery(i->index).getAll(content, results);
+		for(const auto& query : this->queriesLinks) {
+			if(query.resultMulti) {
+				std::vector<std::string> results;
 
-						urls.reserve(urls.size() + results.size());
+				this->getMultiFromQuery(query, results, queryWarnings);
 
-						urls.insert(urls.end(), results.begin(), results.end());
-					}
-					else {
-						std::string result;
+				urls.reserve(urls.size() + results.size());
 
-						this->getRegExQuery(i->index).getFirst(content, result);
+				urls.insert(urls.end(), results.begin(), results.end());
+			}
+			else {
+				std::string result;
 
-						urls.emplace_back(result);
-					}
-				}
-				catch(const RegExException& e) {
-					if(this->config.crawlerLogging)
-						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
-				}
+				this->getSingleFromQuery(query, result, queryWarnings);
 
-				break;
-
-			case QueryStruct::typeXPath:
-				// parse XML/HTML if still necessary
-				if(this->parseXml(content)) {
-					// run query to extract URLs
-					try {
-						if(i->resultMulti) {
-							std::vector<std::string> results;
-
-							this->getXPathQuery(i->index).getAll(this->parsedXML, results);
-
-							urls.reserve(urls.size() + results.size());
-
-							urls.insert(urls.end(), results.begin(), results.end());
-						}
-						else {
-							std::string result;
-
-							this->getXPathQuery(i->index).getFirst(this->parsedXML, result);
-
-							urls.emplace_back(result);
-						}
-					}
-					catch(const XPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
-					}
-				}
-
-				break;
-
-			case QueryStruct::typeJsonPointer:
-				// parse JSON using RapidJSON if still necessary
-				if(this->parseJsonRapid(content)) {
-					// run query to extract URLs
-					try {
-						if(i->resultMulti) {
-							std::vector<std::string> results;
-
-							this->getJsonPointerQuery(i->index).getAll(this->parsedJsonRapid, results);
-
-							urls.reserve(urls.size() + results.size());
-
-							urls.insert(urls.end(), results.begin(), results.end());
-						}
-						else {
-							std::string result;
-
-							this->getJsonPointerQuery(i->index).getFirst(this->parsedJsonRapid, result);
-
-							urls.emplace_back(result);
-						}
-					}
-					catch(const JsonPointerException& e) {
-						if(this->config.crawlerLogging)
-							this->log("WARNING: JSONPointer error - " + e.whatStr() + " [" + url + "].");
-					}
-				}
-
-				break;
-
-			case QueryStruct::typeJsonPath:
-				// parse JSON using jsoncons if still necessary
-				if(this->parseJsonCons(content)) {
-					// run query to extract URLs
-					try {
-						if(i->resultMulti) {
-							std::vector<std::string> results;
-
-							this->getJsonPathQuery(i->index).getAll(this->parsedJsonCons, results);
-
-							urls.reserve(urls.size() + results.size());
-
-							urls.insert(urls.end(), results.begin(), results.end());
-						}
-						else {
-							std::string result;
-
-							this->getJsonPathQuery(i->index).getFirst(this->parsedJsonCons, result);
-
-							urls.emplace_back(result);
-						}
-					}
-					catch(const JsonPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log("WARNING: JSONPath error - " + e.whatStr() + " [" + url + "].");
-					}
-				}
-
-				break;
-
-			case QueryStruct::typeNone:
-				break;
-
-			default:
-				if(this->config.crawlerLogging)
-					this->log("WARNING: Unknown type of query on content type.");
+				urls.emplace_back(result);
 			}
 		}
 
 		// check number of extracted URLs if necessary
 		std::string expectedStr;
 
-		switch(this->queryExpected.type) {
-		case QueryStruct::typeRegEx:
-			if(this->queryExpected.resultSingle) {
-				try {
-					this->getRegExQuery(this->queryExpected.index).getFirst(content, expectedStr);
-				}
-				catch(const RegExException& e) {
-					if(this->config.crawlerLogging)
-						this->log("WARNING: RegEx error - " + e.whatStr() + " [" + url + "].");
-				}
-			}
-			else if(this->config.crawlerLogging)
-				this->log("WARNING: Invalid result type of query for expected number of results.");
+		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
 
-			break;
-
-		case QueryStruct::typeXPath:
-			if(this->queryExpected.resultSingle) {
-				if(this->parseXml(content)) {
-					try {
-						this->getXPathQuery(this->queryExpected.index).getFirst(this->parsedXML, expectedStr);
-					}
-					catch(const XPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log("WARNING: XPath error - " + e.whatStr() + " [" + url + "].");
-					}
-				}
-			}
-			else if(this->config.crawlerLogging)
-				this->log("WARNING: Invalid result type of query for expected number of results.");
-
-			break;
-
-		case QueryStruct::typeJsonPointer:
-			if(this->queryExpected.resultSingle) {
-				if(this->parseJsonRapid(content)) {
-					try {
-						this->getJsonPointerQuery(this->queryExpected.index).getFirst(this->parsedJsonRapid, expectedStr);
-					}
-					catch(const JsonPointerException& e) {
-						if(this->config.crawlerLogging)
-							this->log("WARNING: JSONPointer error - " + e.whatStr() + " [" + url + "].");
-					}
-				}
-			}
-			else if(this->config.crawlerLogging)
-				this->log("WARNING: Invalid result type of query for expected number of results.");
-
-			break;
-
-		case QueryStruct::typeJsonPath:
-			if(this->queryExpected.resultSingle) {
-				if(this->parseJsonCons(content)) {
-					try {
-						this->getJsonPathQuery(this->queryExpected.index).getFirst(this->parsedJsonCons, expectedStr);
-					}
-					catch(const JsonPathException& e) {
-						if(this->config.crawlerLogging)
-							this->log("WARNING: JSONPath error - " + e.whatStr() + " [" + url + "].");
-					}
-				}
-			}
-			else if(this->config.crawlerLogging)
-				this->log("WARNING: Invalid result type of query for expected number of results.");
-
-			break;
-
-		case QueryStruct::typeNone:
-			break;
-
-		default:
-			if(this->config.crawlerLogging)
-				this->log("WARNING: Unknown type of query for expected number of results.");
-		}
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
 		if(!expectedStr.empty()) {
 			const unsigned long expected = std::stoul(expectedStr);
@@ -3858,8 +2774,8 @@ namespace crawlservpp::Module::Crawler {
 																	" [" + url.second + "].");
 													}
 													else {
-														// reset parsing status
-														this->resetParsingState();
+														// set content as target for subsequent queries
+														this->setQueryTarget(archivedContent, mementos.front().url);
 
 														// get content type
 														const std::string contentType(
@@ -3879,13 +2795,9 @@ namespace crawlservpp::Module::Crawler {
 														std::vector<std::string> urls(
 																this->crawlingExtractUrls(
 																		url.second,
-																		contentType,
-																		archivedContent
+																		contentType
 																)
 														);
-
-														// handle parsing errors
-														this->logParsingErrors(mementos.front().url);
 
 														if(!urls.empty()) {
 															// parse and add URLs
@@ -4192,91 +3104,6 @@ namespace crawlservpp::Module::Crawler {
 			this->archiveRetry = true;
 	}
 
-	// parse XML/HTML if still necessary, return false if parsing failed
-	bool Thread::parseXml(const std::string& content) {
-		if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-			std::queue<std::string> warnings;
-
-			try {
-				this->parsedXML.parse(content, warnings, this->config.crawlerRepairCData);
-
-				this->xmlParsed = true;
-			}
-			catch(const XMLException& e) {
-				this->xmlParsingError = e.whatStr();
-			}
-
-			// write warnings to log if necessary
-			if(this->config.crawlerLogging)
-				while(!warnings.empty()) {
-					this->log("WARNING: " + warnings.front());
-
-					warnings.pop();
-				}
-		}
-
-		return this->xmlParsed;
-	}
-
-	// parse JSON using RapidJSON if still necessary, return false if parsing failed
-	bool Thread::parseJsonRapid(const std::string& content) {
-		if(!(this->jsonParsedRapid) && this->jsonParsingError.empty()) {
-			try {
-				this->parsedJsonRapid = Helper::Json::parseRapid(content);
-
-				this->jsonParsedRapid = true;
-			}
-			catch(const JsonException& e) {
-				this->jsonParsingError = e.whatStr();
-			}
-		}
-
-		return this->jsonParsedRapid;
-	}
-
-	// parse JSON using jsoncons if still necessary, return false if parsing failed
-	bool Thread::parseJsonCons(const std::string& content) {
-		if(!(this->jsonParsedCons) && this->jsonParsingError.empty()) {
-			try {
-				this->parsedJsonCons = Helper::Json::parseCons(content);
-
-				this->jsonParsedCons = true;
-			}
-			catch(const JsonException& e) {
-				this->jsonParsingError = e.whatStr();
-			}
-		}
-
-		return this->jsonParsedCons;
-	}
-
-	// reset parsing state
-	void Thread::resetParsingState() {
-		this->xmlParsed = false;
-		this->jsonParsedRapid = false;
-		this->jsonParsedCons = false;
-
-		this->xmlParsingError.clear();
-		this->jsonParsingError.clear();
-	}
-
-	// write parsing errors as warnings to log if necessary
-	void Thread::logParsingErrors(const std::string& url) {
-		if(!(this->xmlParsingError.empty())) {
-			if(this->config.crawlerLogging)
-				this->log("WARNING: " + this->xmlParsingError + " [" + url + "].");
-
-			this->xmlParsingError.clear();
-		}
-
-		if(!(this->jsonParsingError.empty())) {
-			if(this->config.crawlerLogging)
-				this->log("WARNING: " + this->jsonParsingError + " [" + url + "].");
-
-			this->jsonParsingError.clear();
-		}
-	}
-
 	// parse memento reply, get mementos and link to next page if one exists
 	//  (also convert timestamps to YYYYMMDD HH:MM:SS)
 	std::string Thread::parseMementos(
@@ -4449,6 +3276,18 @@ namespace crawlservpp::Module::Crawler {
 
 		// return next page
 		return nextPage;
+	}
+
+	// write parsing and query errors as warnings to log if necessary
+	void Thread::logWarnings(std::queue<std::string>& warnings) {
+		if(this->config.crawlerLogging < Config::crawlerLoggingDefault)
+			return;
+
+		while(!warnings.empty()) {
+			this->log(warnings.front());
+
+			warnings.pop();
+		}
 	}
 
 } /* crawlservpp::Module::Crawler */

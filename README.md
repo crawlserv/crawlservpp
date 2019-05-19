@@ -126,11 +126,10 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Parsing::HTML`](crawlserv/src/Parsing/HTML.cpp)**: Clean HTML documents and parse them into XML using the [HTML Tidy API](http://www.html-tidy.org/).
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction using [uriparser](https://github.com/uriparser/uriparser).
 * **[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
-* **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for query management in child classes.
+* **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for management and type-independent usage of queries.
 * **[`Query::JsonPath`](crawlserv/src/Query/JsonPath.cpp)**: Using the [jsoncons library](https://github.com/danielaparker/jsoncons/) to implement a JSONPath with boolean, single and/or multiple results.
 * **[`Query::JsonPointer`](crawlserv/src/Query/JsonPointer.cpp)**: Using the [RapidJSON library](https://github.com/Tencent/rapidjson) to implement a JSONPointer with boolean, single and/or multiple results.
 * **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
-* **[`Query::SubSets`](crawlserv/src/Query/SubSets.hpp)**: Handling of multiple subsets resulting from a query of any type.
 * **[`Query::XPath`](crawlserv/src/Query/XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
 * **[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
 * **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.

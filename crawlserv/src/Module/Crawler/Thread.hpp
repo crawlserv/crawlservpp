@@ -16,28 +16,18 @@
 #include "../Thread.hpp"
 
 #include "../../Helper/DateTime.hpp"
-#include "../../Helper/Json.hpp"
 #include "../../Helper/Strings.hpp"
 #include "../../Helper/Utf8.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Network/Curl.hpp"
 #include "../../Parsing/URI.hpp"
-#include "../../Parsing/XML.hpp"
 #include "../../Query/Container.hpp"
-#include "../../Query/JsonPath.hpp"
-#include "../../Query/JsonPointer.hpp"
-#include "../../Query/RegEx.hpp"
-#include "../../Query/XPath.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/QueryStruct.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/DatabaseLock.hpp"
-
-#include "../../_extern/jsoncons/include/jsoncons/json.hpp"
-#include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
-#include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <curl/curl.h>
 
@@ -61,19 +51,15 @@ namespace crawlservpp::Module::Crawler {
 
 	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenienc
-		typedef Helper::Json::Exception JsonException;
 		typedef Helper::Utf8::Exception Utf8Exception;
 		typedef Network::Curl::Exception CurlException;
 		typedef Parsing::URI::Exception URIException;
-		typedef Parsing::XML::Exception XMLException;
+		typedef Query::Container::Exception QueryException;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::QueryStruct QueryStruct;
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::ThreadStatus ThreadStatus;
-		typedef Query::JsonPath::Exception JsonPathException;
-		typedef Query::JsonPointer::Exception JsonPointerException;
-		typedef Query::RegEx::Exception RegExException;
-		typedef Query::XPath::Exception XPathException;
+
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
@@ -178,16 +164,6 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long retryCounter;		// number of retries
 		bool archiveRetry;				// only archive needs to be retried
 
-		// parsing data and state
-		Parsing::XML parsedXML;					// parsed XML/HTML
-		rapidjson::Document parsedJsonRapid;	// parsed JSON (using RapidJSON)
-		jsoncons::json parsedJsonCons;			// parsed JSON (using jsoncons)
-		bool xmlParsed;							// XML/HTML has been parsed
-		bool jsonParsedRapid;					// JSON has been parsed using RapidJSON
-		bool jsonParsedCons;					// JSON has been parsed using jsoncons
-		std::string xmlParsingError;			// error while parsing XML/HTML
-		std::string jsonParsingError;			// error while parsing JSON
-
 		// timing
 		unsigned long long tickCounter;
 		std::chrono::steady_clock::time_point startTime;
@@ -236,7 +212,6 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingDynamicRedirectContent(std::string& url, std::string& content);
 		void crawlingDynamicRedirectContentVars(
 				const std::string& oldUrl,
-				const std::string& oldContent,
 				std::string& strInOut
 		);
 		bool crawlingCheckUrl(const std::string& url, const std::string& from);
@@ -248,11 +223,8 @@ namespace crawlservpp::Module::Crawler {
 				const std::string& url,
 				const std::string& contentType
 		);
-		bool crawlingCheckContent(const std::string& url, const std::string& content);
-		bool crawlingCheckContentForLinkExtraction(
-				const std::string& url,
-				const std::string& content
-		);
+		bool crawlingCheckContent(const std::string& url);
+		bool crawlingCheckContentForLinkExtraction(const std::string& url);
 		void crawlingSaveContent(
 				const IdString& url,
 				unsigned int response,
@@ -261,8 +233,7 @@ namespace crawlservpp::Module::Crawler {
 		);
 		std::vector<std::string> crawlingExtractUrls(
 				const std::string& url,
-				const std::string& type,
-				const std::string& content
+				const std::string& type
 		);
 		void crawlingParseAndAddUrls(
 				const std::string& url,
@@ -280,19 +251,15 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
 
-		// private helper functions
-		bool parseXml(const std::string& content);
-		bool parseJsonRapid(const std::string& content);
-		bool parseJsonCons(const std::string& content);
-		void resetParsingState();
-		void logParsingErrors(const std::string& url);
-
 		// static helper function for memento crawling
 		static std::string parseMementos(
 				std::string mementoContent,
 				std::queue<std::string>& warningsTo,
 				std::queue<Memento>& mementosTo
 		);
+
+		// private helper function
+		void logWarnings(std::queue<std::string>& warnings);
 	};
 
 } /* crawlservpp::Module::Crawler */
