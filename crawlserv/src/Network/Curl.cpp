@@ -54,7 +54,7 @@ namespace crawlservpp::Network {
 			bool limited,
 			std::queue<std::string>& warningsTo
 	) {
-		if(!(this->curl.get()))
+		if(!(this->curl))
 			throw Curl::Exception("cURL not initialized");
 
 		this->curlCode = curl_easy_setopt(
@@ -185,8 +185,7 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.dnsResolves.empty()) {
-			for(const auto& dnsResolve : globalConfig.dnsResolves)
-				this->dnsResolves.append(dnsResolve);
+			this->dnsResolves.append(globalConfig.dnsResolves);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -284,8 +283,7 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.headers.empty() && !limited) {
-			for(const auto& header : globalConfig.headers)
-				this->headers.append(header);
+			this->headers.append(globalConfig.headers);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -298,8 +296,7 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.http200Aliases.empty() && !limited) {
-			for(const auto& alias: globalConfig.http200Aliases)
-				this->http200Aliases.append(alias);
+			this->http200Aliases.append(globalConfig.http200Aliases);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -447,8 +444,7 @@ namespace crawlservpp::Network {
 		}
 
 		if(!globalConfig.proxyHeaders.empty()) {
-			for(const auto& header : globalConfig.proxyHeaders)
-				this->proxyHeaders.append(header);
+			this->proxyHeaders.append(globalConfig.proxyHeaders);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
@@ -820,8 +816,10 @@ namespace crawlservpp::Network {
 	}
 
 	// set custom cookies (independent from cookie engine), throws Curl::Exception
+	//  WARNING: custom cookies will be lost if connection is reset
 	void Curl::setCookies(const std::string& cookies) {
 		if(cookies.empty())
+			// reset cookies if string is empty
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
 					CURLOPT_COOKIE,
@@ -840,6 +838,36 @@ namespace crawlservpp::Network {
 		this->oldCookies = this->tmpCookies;
 		this->tmpCookies = cookies;
 	}
+
+	// set custom headers, throws Curl::Exception
+	//  WARNING: custom headers will be lost if connection is reset
+	void Curl::setHeaders(const std::vector<std::string>& customHeaders) {
+		// clear old temporary headers if necessary
+		this->tmpHeaders.reset();
+
+		if(customHeaders.empty())
+			// reset headers if vector is empty
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_HTTPHEADER,
+					this->headers.get()
+			);
+		else {
+			// temporarily combine global and current headers
+			this->tmpHeaders.append(this->headers);
+			this->tmpHeaders.append(customHeaders);
+
+			this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_HTTPHEADER,
+					this->tmpHeaders.get()
+			);
+		}
+
+		if(this->curlCode != CURLE_OK)
+			throw Curl::Exception(curl_easy_strerror(this->curlCode));
+	}
+
 
 	// unset custom cookies (independent from cookie engine), throws Curl::Exception
 	void Curl::unsetCookies() {
@@ -868,6 +896,19 @@ namespace crawlservpp::Network {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 
+	// unset custom headers, throws Curl::Exception
+	void Curl::unsetHeaders() {
+		// clear temporary headers if necessary
+		this->tmpHeaders.reset();
+
+		// reset headers
+		this->curlCode = curl_easy_setopt(
+				this->curl.get(),
+				CURLOPT_HTTPHEADER,
+				this->headers.get()
+		);
+	}
+
 	// get remote content, throws Curl::Exception
 	void Curl::getContent(
 			const std::string& url,
@@ -883,7 +924,7 @@ namespace crawlservpp::Network {
 
 		this->responseCode = 0;
 
-		// check whether setting of method is needed
+		// check whether the explicit setting of the HTTP method is needed
 		if(usePost) {
 			const auto delim = escapedUrl.find('?');
 
@@ -1067,6 +1108,7 @@ namespace crawlservpp::Network {
 		// cleanup lists
 		this->dnsResolves.reset();
 		this->headers.reset();
+		this->tmpHeaders.reset();
 		this->http200Aliases.reset();
 		this->proxyHeaders.reset();
 
@@ -1123,7 +1165,7 @@ namespace crawlservpp::Network {
 
 	// escape a string
 	std::string Curl::escape(const std::string& stringToEscape, bool usePlusForSpace) {
-		if(!(this->curl.get()) || stringToEscape.empty())
+		if(!(this->curl) || stringToEscape.empty())
 			return "";
 
 		std::string result(
@@ -1156,7 +1198,7 @@ namespace crawlservpp::Network {
 
 	// unescape an escaped string
 	std::string Curl::unescape(const std::string& escapedString, bool usePlusForSpace) {
-		if(!(this->curl.get()) || escapedString.empty())
+		if(!(this->curl) || escapedString.empty())
 			return "";
 
 		std::string result(
