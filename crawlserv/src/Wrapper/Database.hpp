@@ -350,7 +350,8 @@ namespace crawlservpp::Wrapper {
 		return this->database.verbose;
 	}
 
-	// check whether the connection to the database is still valid and try to re-connect if necesssary, throws Exception
+	// check whether the connection to the database is still valid and try to re-connect if necesssary,
+	//  throws Database::Exception
 	//  WARNING: Afterwards, old references to prepared SQL statements may be invalid!
 	inline void Database::checkConnection() {
 		this->database.checkConnection();
@@ -417,7 +418,7 @@ namespace crawlservpp::Wrapper {
 		this->database.setUrlListCaseSensitive(listId, isCaseSensitive);
 	}
 
-	// catch SQL exception and re-throw it as ConnectionException or Exception
+	// catch SQL exception and re-throw it as specific Database::[X]Exception or generic Database::Exception
 	inline void Database::sqlException(const std::string& function, const sql::SQLException& e) {
 		this->database.sqlException(function, e);
 	}
