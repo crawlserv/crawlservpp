@@ -26,6 +26,9 @@ namespace crawlservpp::Query {
 		this->isTextOnly = textOnly;
 	}
 
+	// destructor stub
+	XPath::~XPath() {}
+
 	// get boolean value (at least one match?), throws XPath::Exception
 	bool XPath::getBool(const Parsing::XML& doc) const {
 		// check query and content
