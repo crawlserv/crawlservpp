@@ -42,7 +42,7 @@ namespace crawlservpp::Network {
 		void setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string>& warningsTo);
 		void setConfigCurrent(const Config& currentConfig);
 		void setCookies(const std::string& cookies);
-		void setHeaders(std::vector<std::string>& headers);
+		void setHeaders(const std::vector<std::string>& customHeaders);
 		void unsetCookies();
 		void unsetHeaders();
 
@@ -87,9 +87,15 @@ namespace crawlservpp::Network {
 		// const pointer to network configuration
 		const Network::Config * config;
 
+		// cURL object
 		Wrapper::Curl curl;
 
-		Wrapper::CurlList dnsResolves, headers, http200Aliases, proxyHeaders;
+		// cURL lists
+		Wrapper::CurlList dnsResolves;
+		Wrapper::CurlList headers;
+		Wrapper::CurlList tmpHeaders;
+		Wrapper::CurlList http200Aliases;
+		Wrapper::CurlList proxyHeaders;
 
 		// helper function for cURL strings
 		static std::string curlStringToString(char * curlString);
