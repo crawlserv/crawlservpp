@@ -29,6 +29,17 @@ namespace crawlservpp::Query {
 	// destructor stub
 	Container::~Container() {}
 
+	// set whether to try to repair CData when parsing XML
+	void Container::setRepairCData(bool isRepairCData) {
+		this->repairCData = isRepairCData;
+	}
+
+	// set options for tidy-html reporting errors and warnings
+	void Container::setTidyErrorsAndWarnings(unsigned int errors, bool warnings) {
+		this->parsedXML.setOptions(warnings, errors);
+		this->subSetParsedXML.setOptions(warnings, errors);
+	}
+
 	// set content to use queries on
 	void Container::setQueryTarget(const std::string& content, const std::string& source) {
 		// set new target
@@ -66,15 +77,9 @@ namespace crawlservpp::Query {
 		this->resetSubSetParsingState();
 	}
 
-	// set whether to try to repair CData when parsing XML
-	void Container::setRepairCData(bool isRepairCData) {
-		this->repairCData = isRepairCData;
-	}
-
-	// set options for tidy-html reporting errors and warnings
-	void Container::setTidyErrorsAndWarnings(unsigned int errors, bool warnings) {
-		this->parsedXML.setOptions(warnings, errors);
-		this->subSetParsedXML.setOptions(warnings, errors);
+	// get number of subsets
+	unsigned long Container::getNumberOfSubSets() const {
+		return this->subSetNumber;
 	}
 
 	// add query to internal vectors and return index, throws Container::Exception
