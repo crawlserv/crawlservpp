@@ -1034,6 +1034,7 @@ class Config {
 						if(cobj.cat == cat && cobj.name == opt) {
 							// found option in current configuration: delete it
 							this.config_current.splice(i, 1);
+							
 							break;
 						}
 					}
@@ -1120,16 +1121,17 @@ class Config {
  					}
 					
 					// add new object to the current configuration
-					if(nobj.value != null)
-						this.config_current.push(nobj);
-					
-					else throw new Error(
+					if(nobj.value == null) throw new Error(
 							"Config::updateConf(): Could not get value of '"
 							+ cat
 							+ "."
 							+ opt
-							+ "'. Invalid type?"
+							+ "' (of type "
+							+ obj.type
+							+ ")."
 					);
+					else
+						this.config_current.push(nobj); 
 				}
 			}
 		}
