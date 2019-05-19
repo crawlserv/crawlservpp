@@ -1015,19 +1015,19 @@ namespace crawlservpp::Module::Parser {
 			}
 			else if(i->resultBool) {
 				// only save whether a match for the query exists
-				bool parsedBool = false;
+				bool booleanResult = false;
 
 				// check query source
 				switch(this->config.parsingFieldSources.at(index)) {
 				case Config::parsingSourceUrl:
 					// parse boolean field value by using RegEx query on URL
-					this->getBoolFromRegEx(*i, this->urls.front().second, parsedBool, queryWarnings);
+					this->getBoolFromRegEx(*i, this->urls.front().second, booleanResult, queryWarnings);
 
 					break;
 
 				case Config::parsingSourceContent:
 					// parse boolean field value by using query on content
-					this->getBoolFromQuery(*i, parsedBool, queryWarnings);
+					this->getBoolFromQuery(*i, booleanResult, queryWarnings);
 
 					break;
 				}
@@ -1040,13 +1040,13 @@ namespace crawlservpp::Module::Parser {
 					// stringify and add parsed element as JSON array with one boolean value as string
 					parsedData.fields.emplace_back(
 							Helper::Json::stringify(
-									parsedBool ? std::string("true") : std::string("false")
+									booleanResult ? std::string("true") : std::string("false")
 							)
 					);
 
 				else
 					// save boolean value as string
-					parsedData.fields.emplace_back(parsedBool ? "true" : "false");
+					parsedData.fields.emplace_back(booleanResult ? "true" : "false");
 			}
 			else {
 				if(i->type != QueryStruct::typeNone && this->config.generalLogging)
