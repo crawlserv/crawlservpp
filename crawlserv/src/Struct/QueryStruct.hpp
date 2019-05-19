@@ -35,6 +35,15 @@ namespace crawlservpp::Struct {
 			this->resultMulti = false;
 			this->resultSubSets = false;
 		}
+
+		// boolean operators
+		explicit operator bool() {
+			return this->index != 0;
+		}
+
+		bool operator!() {
+			return this->index == 0;
+		}
 	};
 
 } /* namespace crawlservpp::Query */
