@@ -26,8 +26,9 @@ namespace crawlservpp::Query {
 
 	class XPath {
 	public:
-		// constructor
+		// constructor and destructor
 		XPath(const std::string& xpath, bool textOnly);
+		virtual ~XPath();
 
 		// getters
 		bool getBool(const Parsing::XML& doc) const;
@@ -41,6 +42,12 @@ namespace crawlservpp::Query {
 			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
+
+		// only moveable (using default), not copyable
+		XPath(XPath&) = delete;
+		XPath(XPath&&) = default;
+		XPath& operator=(XPath) = delete;
+		XPath& operator=(XPath&&) = default;
 
 	private:
 		pugi::xpath_query query;
