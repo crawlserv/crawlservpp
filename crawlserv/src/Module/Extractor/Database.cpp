@@ -1,7 +1,7 @@
 /*
  * Database.cpp
  *
- * This class provides database functionality for a extractor thread by implementing the Wrapper::Database interface.
+ * This class provides database functionality for an extractor thread by implementing the Wrapper::Database interface.
  *
  *  Created on: May 9, 2019
  *      Author: ans
