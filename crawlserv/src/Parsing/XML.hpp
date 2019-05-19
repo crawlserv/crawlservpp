@@ -58,8 +58,8 @@ namespace crawlservpp::Parsing {
 		};
 
 		// operators
-		explicit operator bool() const;
-		bool operator!() const;
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
 
 		// only moveable (using default), not copyable
 		XML(XML&) = delete;

@@ -106,12 +106,12 @@ namespace crawlservpp::Parsing {
 	}
 
 	// boolean operator to check document
-	XML::operator bool() const {
+	XML::operator bool() const noexcept {
 		return this->doc != nullptr;
 	}
 
 	// not operator to check document
-	bool XML::operator!() const {
+	bool XML::operator!() const noexcept {
 		return this->doc == nullptr;
 	}
 
