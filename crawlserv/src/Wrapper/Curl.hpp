@@ -68,8 +68,10 @@ namespace crawlservpp::Wrapper {
 
 			this->localInit = true;
 
-			if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
-				throw std::runtime_error("curl_global_init() failed");
+			const auto curlCode = curl_global_init(CURL_GLOBAL_ALL);
+
+			if(curlCode != CURLE_OK)
+				throw std::runtime_error(curl_easy_strerror(curlCode));
 		}
 
 		// initialize cURL
