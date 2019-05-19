@@ -2265,6 +2265,9 @@ namespace crawlservpp::Module::Crawler {
 			if(this->getBoolFromQuery(query, found, queryWarnings) && found)
 				break;
 
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
+
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("skipped " + url + " (content blacklisted).");
 
@@ -2307,6 +2310,9 @@ namespace crawlservpp::Module::Crawler {
 		for(const auto& query : this->queriesLinksBlackListContent)
 			if(this->getBoolFromQuery(query, found, queryWarnings) && found)
 				break;
+
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("skipped link extraction from " + url + " (content blacklisted).");
