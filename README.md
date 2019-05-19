@@ -115,9 +115,9 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.hpp)**: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for configuration entries.
 * **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for crawlers.
-* **[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.hpp)~~**: Extracting configuration. See ~~[extractor.json](crawlserv_frontend/crawlserv/json/extractor.json)~~ for configuration entries.
-* **[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)~~**: Database access for extractors (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
-* **[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)~~**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for extractors.
+* **[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.hpp)**: Extracting configuration. See [extractor.json](crawlserv_frontend/crawlserv/json/extractor.json) for configuration entries.
+* **[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)**: Database access for extractors (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
+* **[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for extractors.
 * **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.hpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for configuration entries.
 * **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for parsers.
@@ -213,7 +213,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`pauseall`**: Pause all running threads.
 * **`pauseanalyzer`** (argument: `id`): Pause a running analyzer by its ID.
 * **`pausecrawler`** (argument: `id`): Pause a running crawler by its ID.
-* **~~`pauseextractor`~~** (argument: `id`): Pause a running extractor by its ID.
+* **`pauseextractor`** (argument: `id`): Pause a running extractor by its ID.
 * **`pauseparser`** (argument: `id`): Pause a running parser by its ID.
 * **`ping`**: Respond with pong.
 * **`resetanalyzingstatus`** (argument: `urllist`): Reset the analyzing status of an ID-specified URL list.
@@ -221,17 +221,17 @@ The server performs commands and sends back their results. Some commands need to
 * **`resetparsingstatus`** (argument: `urllist`): Reset the parsing status of an ID-specified URL list.
 * **`startanalyzer`** (arguments: `website`, `urllist`, `config`): Start an analyzer using the specified website, URL list and configuration.
 * **`startcrawler`** (arguments: `website`, `urllist`, `config`): Start a crawler using the specified website, URL list and configuration.
-* **~~`startextractor`~~** (arguments: `website`, `urllist`, `config`): Start an extractor using the specified website, URL list and configuration.
+* **`startextractor`** (arguments: `website`, `urllist`, `config`): Start an extractor using the specified website, URL list and configuration.
 * **`startparser`** (arguments: `website`, `urllist`, `config`): Start a parser using the specified website, URL list and configuration.
 * **`stopanalyzer`** (argument: `id`): Stop a running analyzer by its ID.
 * **`stopcrawler`** (argument: `id`): Stop a running crawler by its ID.
-* **~~`stopextractor`~~** (argument: `id`): Stop a running extractor by its ID.
+* **`stopextractor`** (argument: `id`): Stop a running extractor by its ID.
 * **`stopparser`** (argument: `id`): Stop a running parser by its ID.
 * **`testquery`** (arguments: `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`, `text`): Test a query on the specified text.
 * **`unpauseall`**: Unpause all paused threads.
 * **`unpauseanalyzer`** (argument: `id`): Unpause a paused analyzer by its ID.
 * **`unpausecrawler`** (argument: `id`): Unpause a paused crawler by its ID.
-* **~~`unpauseextractor`~~** (argument: `id`): Unpause a paused extractor by its ID.
+* **`unpauseextractor`** (argument: `id`): Unpause a paused extractor by its ID.
 * **`unpauseparser`** (argument: `id`): Unpause a paused parser by its ID.
 * **`updateconfig`** (arguments: `id`, `name`, `config`): Update an existing configuration in the database.
 * **`updatequery`** (arguments: `id`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`): Update an existing RegEx, XPath or JSONPointer query in the database.
@@ -292,8 +292,8 @@ For more information on the server commands, see the [source code](crawlserv/src
 As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) template class:
 
 * **crawler**: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://www.mementoweb.org/guide/quick-intro/)).
-* **parser**: Parsing data from URLs and downloaded content using user-defined RegEx, XPath and JSONPointer queries.
-* **~~extractor~~**: Downloading additional data such as comments and social media content.
+* **parser**: Parsing of data from URLs and downloaded content using user-defined RegEx, XPath and JSONPointer queries.
+* **extractor**: Downloading of additional data such as comments and social media content.
 * **analyzer**: Analyzing textual data using different methods and algorithms.
 
 Configurations for these modules are saved as JSON arrays in the shared `configs` table.
@@ -305,7 +305,7 @@ Analyzers are implemented by their own set of subclasses &mdash; algorithm class
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](crawlserv/src/Main/Database.cpp) class. Additionally, thread connections to the database (instances of [`Module::Database`](crawlserv/src/Module/Database.cpp) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
 
-The parser and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler and ~~extractor~~ threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing and analyzing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected as well as some blocking because of simultaneous database access. At the same time, a slow database connection or server can have significant impact on performance in any case.
+The parser, extractor and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing and analyzing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected as well as some blocking because of simultaneous database access. At the same time, a slow database connection or server can have significant impact on performance in any case.
 
 ### Third-party Libraries
 
@@ -342,12 +342,12 @@ It provides the following menu structure:
 * **Queries**: Manage RegEx, XPath and JSONPointer queries saved in the database including the test of such queries on custom texts by the command-and-control server using designated worker threads to avoid interference with the main functionality of the server.
 * **Crawlers**: Manage crawling configurations in simple or advanced mode.
 * **Parsers**: Manage parsing configurations in simple or advanced mode.
-* **~~Extractors~~**: Manage extracting configurations in simple or advanced mode.
+* **Extractors**: Manage extracting configurations in simple or advanced mode.
 * **Analyzers**: Manage analyzing configurations in simple or advanced mode.
 * **Threads**: Currently active threads and their status. Start, pause and stop specific threads.
 * **~~Search:~~** Search crawled content.
-* **Content:** View crawled, parsed, ~~extracted~~ and ~~analyzed~~ content.
-* **~~Import/Export:~~** Import and export URL lists and possibly other data.
+* **Content:** View crawled, parsed, extracted and ~~analyzed~~ content.
+* **Import/Export:** Import and export URL lists and possibly other data.
 * **~~Statistics:~~** Show specific statistics derived from the database.
 * **Logs**: Show and delete log entries.
 
@@ -411,12 +411,12 @@ For each website and each URL list a namespace of at least four allowed characte
 * **`<namespace of website>_<namespace of URL list>_analyzing_<name of target table>`**: Analyzing status.
 * **`<namespace of website>_<namespace of URL list>_crawled`**: Crawled content.
 * **`<namespace of website>_<namespace of URL list>_crawling`**: Crawling status.
-* **~~`<namespace of website>_<namespace of URL list>_extracted_<name of target table>`~~**: Extracting results.
-* **~~`<namespace of website>_<namespace of URL list>_extracting`~~**: Extracting status.
+* **`<namespace of website>_<namespace of URL list>_extracted_<name of target table>`**: Extracting results.
+* **`<namespace of website>_<namespace of URL list>_extracting`**: Extracting status.
 * **`<namespace of website>_<namespace of URL list>_parsed_<name of target table>`**: Parsing results.
 * **`<namespace of website>_<namespace of URL list>_parsing`**: Parsing status.
 
-See the source code of the `addUrlList(...)` function in [`Main::Database`](crawlserv/src/Main/Database.cpp) for details about the structure of the non-result tables. Most of the columns of the result tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `initTargetTable(...)` functions in [`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp), ~~[`Module::Extractor::Database`](crawlserv/src/Extractor/Database.cpp)~~ and [`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp) accordingly.
+See the source code of the `addUrlList(...)` function in [`Main::Database`](crawlserv/src/Main/Database.cpp) for details about the structure of the non-result tables. Most of the columns of the result tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `initTargetTable(...)` functions in [`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp), [`Module::Extractor::Database`](crawlserv/src/Extractor/Database.cpp) and [`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp) accordingly.
 
 ## Platform
 
