@@ -109,12 +109,14 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> customTokensCookies;
 			std::vector<unsigned long> customTokensQuery;
 			std::vector<std::string> customTokensSource;
+			std::vector<std::string> customTokenHeaders;
 			std::vector<bool> customTokensUsePost;
 			std::vector<std::string> customUrls;
 			bool customUsePost;
 
 			// dynamic redirect
 			std::string redirectCookies;
+			std::vector<std::string> redirectHeaders;
 			unsigned long redirectQueryUrl;
 			unsigned long redirectQueryContent;
 			std::string redirectTo;
@@ -263,12 +265,14 @@ namespace crawlservpp::Module::Crawler {
 		this->option("tokens.query", this->config.customTokensQuery);
 		this->option("tokens.source", this->config.customTokensSource);
 		this->option("tokens.use.post", this->config.customTokensUsePost);
+		this->option("token.headers", this->config.customTokenHeaders);	// NOTE: to be used for ALL tokens
 		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
 		this->option("use.post", this->config.customUsePost);
 
 		// dynamic redirect
 		this->category("redirect");
 		this->option("cookies", this->config.redirectCookies);
+		this->option("headers", this->config.redirectHeaders);
 		this->option("query.content", this->config.redirectQueryContent);
 		this->option("query.url", this->config.redirectQueryUrl);
 		this->option("to", this->config.redirectTo);

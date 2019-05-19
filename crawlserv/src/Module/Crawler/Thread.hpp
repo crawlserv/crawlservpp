@@ -202,12 +202,18 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingContent(
 				IdString& url,
 				const std::string& customCookies,
+				const std::vector<std::string>& customHeaders,
 				bool usePost,
 				unsigned long& checkedUrlsTo,
 				unsigned long& newUrlsTo,
 				std::string& timerStrTo
 		);
-		void crawlingDynamicRedirectUrl(std::string& url, std::string& customCookies, bool& usePost);
+		void crawlingDynamicRedirectUrl(
+				std::string& url,
+				std::string& customCookies,
+				std::vector<std::string>& customHeaders,
+				bool& usePost
+		);
 		void crawlingDynamicRedirectUrlVars(const std::string& oldUrl, std::string& strInOut);
 		bool crawlingDynamicRedirectContent(std::string& url, std::string& content);
 		void crawlingDynamicRedirectContentVars(

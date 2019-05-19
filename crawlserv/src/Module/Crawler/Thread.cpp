@@ -230,6 +230,7 @@ namespace crawlservpp::Module::Crawler {
 		Timer::StartStop timerTotal;
 
 		std::string customCookies;
+		std::vector<std::string> customHeaders;
 		std::string timerString;
 
 		unsigned long checkedUrls = 0;
@@ -269,7 +270,7 @@ namespace crawlservpp::Module::Crawler {
 				timerSelect.stop();
 
 			// dynamic redirect on URL if necessary
-			this->crawlingDynamicRedirectUrl(url.second, customCookies, usePost);
+			this->crawlingDynamicRedirectUrl(url.second, customCookies, customHeaders, usePost);
 
 			// add parameters to URL if necessary
 			this->crawlingUrlParams(url.second);
@@ -293,6 +294,7 @@ namespace crawlservpp::Module::Crawler {
 			const bool crawled = this->crawlingContent(
 					url,
 					customCookies,
+					customHeaders,
 					usePost,
 					checkedUrls,
 					newUrls,
@@ -1281,9 +1283,12 @@ namespace crawlservpp::Module::Crawler {
 							// set local network configuration
 							this->networking.setConfigCurrent(*this);
 
-							// set cookies if necessary
+							// set custom headers if necessary
 							if(!(this->config.customTokensCookies.at(index).empty()))
 								this->networking.setCookies(this->config.customTokensCookies.at(index));
+
+							if(!(this->config.customTokenHeaders.empty()))
+								this->networking.setHeaders(this->config.customTokenHeaders);
 
 							// get content
 							this->networking.getContent(
@@ -1293,18 +1298,24 @@ namespace crawlservpp::Module::Crawler {
 									this->config.crawlerRetryHttp
 							);
 
-							// unset cookies if necessary
+							// unset custom headers if necessary
 							if(!(this->config.customTokensCookies.at(index).empty()))
 								this->networking.unsetCookies();
+
+							if(!(this->config.customTokenHeaders.empty()))
+								this->networking.unsetHeaders();
 
 							success = true;
 
 							break;
 						}
 						catch(const CurlException& e) { // error while getting content
-							// unset cookies if necessary
+							// unset custom headers if necessary
 							if(!(this->config.customTokensCookies.at(index).empty()))
 								this->networking.unsetCookies();
+
+							if(!(this->config.customTokenHeaders.empty()))
+								this->networking.unsetHeaders();
 
 							// check type of error i.e. last cURL code
 							if(this->crawlingCheckCurlCode(
@@ -1336,9 +1347,12 @@ namespace crawlservpp::Module::Crawler {
 							}
 						}
 						catch(const Utf8Exception& e) {
-							// unset cookies if necessary
+							// unset custom headers if necessary
 							if(!(this->config.customTokensCookies.at(index).empty()))
 								this->networking.unsetCookies();
+
+							if(!(this->config.customTokenHeaders.empty()))
+								this->networking.unsetHeaders();
 
 							// write UTF-8 error to log if neccessary
 							if(this->config.crawlerLogging)
@@ -1403,6 +1417,7 @@ namespace crawlservpp::Module::Crawler {
 	bool Thread::crawlingContent(
 			IdString& url,
 			const std::string& customCookies,
+			const std::vector<std::string>& customHeaders,
 			bool usePost,
 			unsigned long& checkedUrlsTo,
 			unsigned long& newUrlsTo,
@@ -1472,9 +1487,12 @@ namespace crawlservpp::Module::Crawler {
 			// set local networking options
 			this->networking.setConfigCurrent(*this);
 
-			// set custom cookies header if necessary
+			// set custom headers if necessary
 			if(!customCookies.empty())
 				this->networking.setCookies(customCookies);
+
+			if(!customHeaders.empty())
+				this->networking.setHeaders(customHeaders);
 
 			// get content
 			this->networking.getContent(
@@ -1484,14 +1502,20 @@ namespace crawlservpp::Module::Crawler {
 					this->config.crawlerRetryHttp
 			);
 
-			// unset custom cookies header if necessary
+			// unset custom headers if necessary
 			if(!customCookies.empty())
 				this->networking.unsetCookies();
+
+			if(!customHeaders.empty())
+				this->networking.unsetHeaders();
 		}
 		catch(const CurlException& e) { // error while getting content
-			// unset custom cookies header if necessary
+			// unset custom headers if necessary
 			if(!customCookies.empty())
 				this->networking.unsetCookies();
+
+			if(!customHeaders.empty())
+				this->networking.unsetHeaders();
 
 			// check type of error i.e. last cURL code
 			if(this->crawlingCheckCurlCode(
@@ -1518,9 +1542,12 @@ namespace crawlservpp::Module::Crawler {
 			return false;
 		}
 		catch(const Utf8Exception& e) {
-			// unset custom cookies header if necessary
+			// unset custom headers if necessary
 			if(!customCookies.empty())
 				this->networking.unsetCookies();
+
+			if(!customHeaders.empty())
+				this->networking.unsetHeaders();
 
 			// write UTF-8 error to log if neccessary
 			if(this->config.crawlerLogging)
@@ -1626,7 +1653,12 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// check URL for dynamic redirect and perform it if necessary
-	void Thread::crawlingDynamicRedirectUrl(std::string& url, std::string& customCookies, bool& usePost) {
+	void Thread::crawlingDynamicRedirectUrl(
+			std::string& url,
+			std::string& customCookies,
+			std::vector<std::string>& customHeaders,
+			bool& usePost
+	) {
 		// determine whether to redirect
 		if(!(this->config.redirectQueryUrl))
 			return;
@@ -1660,12 +1692,22 @@ namespace crawlservpp::Module::Crawler {
 			this->crawlingDynamicRedirectUrlVars(oldUrl, customCookies);
 		}
 
+		// set new custom headers if necessary
+		customHeaders.reserve(this->config.redirectHeaders.size());
+
+		for(const auto& header : this->config.redirectHeaders) {
+			customHeaders.push_back(header);
+
+			// handle variables in new custom header
+			this->crawlingDynamicRedirectUrlVars(oldUrl, customHeaders.back());
+		}
+
 		// write to log if necessary
 		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("performed dynamic redirect: " + oldUrl + " -> " + url);
+			this->log("performs dynamic redirect: " + oldUrl + " -> " + url);
 	}
 
-	// resolve variables in string (i.e. URL or custom cookies header) for dynamic redirect by URL
+	// resolve variables in string (i.e. URL or custom cookies/headers) for dynamic redirect by URL
 	void Thread::crawlingDynamicRedirectUrlVars(const std::string& oldUrl, std::string& strInOut) {
 		for(auto i = this->config.redirectVarNames.begin(); i != this->config.redirectVarNames.end(); ++i) {
 			if(strInOut.find(*i) == std::string::npos)
@@ -1745,11 +1787,15 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("performed dynamic redirect: " + oldUrl + " -> " + url);
 
-		// get custom cookie header
+		// get custom headers
 		std::string customCookies(this->config.redirectCookies);
+		std::vector<std::string> customHeaders(this->config.redirectHeaders);
 
-		// resolve variables in custom cookie header
+		// resolve variables in custom headers
 		this->crawlingDynamicRedirectContentVars(oldUrl, customCookies);
+
+		for(auto& header : customHeaders)
+			this->crawlingDynamicRedirectContentVars(oldUrl, header);
 
 		// get new content
 		bool success = false;
@@ -1759,9 +1805,12 @@ namespace crawlservpp::Module::Crawler {
 				// set current network configuration
 				this->networking.setConfigCurrent(*this);
 
-				// set custom cookies header if necessary
+				// set custom headers if necessary
 				if(!customCookies.empty())
 					this->networking.setCookies(customCookies);
+
+				if(!customHeaders.empty())
+					this->networking.setHeaders(customHeaders);
 
 				// get content
 				this->networking.getContent(
@@ -1771,9 +1820,12 @@ namespace crawlservpp::Module::Crawler {
 						this->config.crawlerRetryHttp
 				);
 
-				// unset custom cookies header if necessary
+				// unset custom headers if necessary
 				if(!customCookies.empty())
 					this->networking.unsetCookies();
+
+				if(!customHeaders.empty())
+					this->networking.unsetHeaders();
 
 				// get HTTP response code
 				success = this->crawlingCheckResponseCode(url, this->networking.getResponseCode());
@@ -1781,9 +1833,12 @@ namespace crawlservpp::Module::Crawler {
 				break;
 			}
 			catch(const CurlException& e) { // error while getting content
-				// unset custom cookies header if necessary
+				// unset custom headers if necessary
 				if(!customCookies.empty())
 					this->networking.unsetCookies();
+
+				if(!customHeaders.empty())
+					this->networking.unsetHeaders();
 
 				// check type of error i.e. last cURL code
 				if(this->crawlingCheckCurlCode(
@@ -1808,9 +1863,12 @@ namespace crawlservpp::Module::Crawler {
 				}
 			}
 			catch(const Utf8Exception& e) {
-				// unset custom cookies header if necessary
+				// unset custom headers if necessary
 				if(!customCookies.empty())
 					this->networking.unsetCookies();
+
+				if(!customHeaders.empty())
+					this->networking.unsetHeaders();
 
 				// write UTF-8 error to log if neccessary
 				if(this->config.crawlerLogging)
