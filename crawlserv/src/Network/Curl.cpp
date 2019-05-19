@@ -291,7 +291,7 @@ namespace crawlservpp::Network {
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
 					CURLOPT_HTTPHEADER,
-					this->dnsResolves.get()
+					this->headers.get()
 			);
 
 			if(this->curlCode != CURLE_OK)
@@ -453,7 +453,7 @@ namespace crawlservpp::Network {
 
 		if(!globalConfig.proxyHeaders.empty()) {
 			for(const auto& header : globalConfig.proxyHeaders)
-				this->headers.append(header);
+				this->proxyHeaders.append(header);
 
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
