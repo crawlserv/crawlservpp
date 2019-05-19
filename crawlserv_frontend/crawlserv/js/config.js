@@ -1126,9 +1126,9 @@ class Config {
 							+ cat
 							+ "."
 							+ opt
-							+ "' (of type "
+							+ "' (of type '"
 							+ obj.type
-							+ ")."
+							+ "')."
 					);
 					else
 						this.config_current.push(nobj); 
