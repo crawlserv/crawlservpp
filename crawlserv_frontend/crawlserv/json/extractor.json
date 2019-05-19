@@ -274,6 +274,7 @@
 		},
 		"alias.add": {
 			"type": "number",
+			"default": 0,
 			"label": "Increase alias value by:",
 			"description": "Value to add to the alias of the paging variable.",
 			"simple": true,
