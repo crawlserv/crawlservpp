@@ -60,6 +60,9 @@ namespace crawlservpp::Query {
 		void setTidyErrorsAndWarnings(unsigned int errors, bool warnings);
 		void setQueryTarget(const std::string& content, const std::string& source);
 
+		// protected getter
+		unsigned long getNumberOfSubSets() const;
+
 		// query functions
 		virtual void initQueries() = 0; // children have to initialize their queries on their own (makes the class abstract)
 		QueryStruct addQuery(const QueryProperties& properties);
