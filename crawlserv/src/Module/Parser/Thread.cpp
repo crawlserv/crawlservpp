@@ -1131,8 +1131,7 @@ namespace crawlservpp::Module::Parser {
 		if(!warped)
 			this->setLast(this->lastUrl);
 
-		// set those URLs to finished whose URL lock is okay
-		//	(still locked or re-lockable, and not parsed if re-parsing is disabled)
+		// set those URLs to finished whose URL lock is okay (still locked or re-lockable)
 		this->database.setUrlsFinishedIfLockOk(this->finished);
 
 		// update status
