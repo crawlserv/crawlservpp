@@ -693,7 +693,7 @@ namespace crawlservpp::Module::Analyzer {
 				if((!(i->_isnull)) && !(i->_s.empty())) {
 					// check for datetime (i.e. whether to create a datemap)
 					if(data.values.size() > 1) {
-						const auto datetime = data.values.at(1).begin() + (i - data.values.at(0).begin());
+						const auto& datetime = data.values.at(1).at(i - data.values.at(0).begin());
 
 						/*
 						 * USAGE OF DATE MAP ENTRIES:
@@ -708,9 +708,9 @@ namespace crawlservpp::Module::Analyzer {
 						 */
 
 						// check for current datetime
-						if((!(datetime->_isnull)) && datetime->_s.length() > 9) {
+						if((!(datetime._isnull)) && datetime._s.length() > 9) {
 							// found current datetime -> create date string
-							const std::string date(datetime->_s, 10); // get only date (YYYY-MM-DD) from datetime
+							const std::string date(datetime._s, 10); // get only date (YYYY-MM-DD) from datetime
 
 							// check whether a date is already set
 							if(!std::get<0>(dateMapEntry).empty()) {
