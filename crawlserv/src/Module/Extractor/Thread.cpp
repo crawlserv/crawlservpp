@@ -25,15 +25,12 @@ namespace crawlservpp::Module::Extractor {
 				  ),
 				  database(this->Module::Thread::database),
 				  networking(cookieDirectory),
-				  lastUrl(0),
 				  tickCounter(0),
 				  startTime(std::chrono::steady_clock::time_point::min()),
 				  pauseTime(std::chrono::steady_clock::time_point::min()),
 				  idleTime(std::chrono::steady_clock::time_point::min()),
 				  idle(false),
-				  xmlParsed(false),
-				  jsonParsedRapid(false),
-				  jsonParsedCons(false),
+				  lastUrl(0),
 				  idFirst(0),
 				  idDist(0),
 				  posFirstF(0.),
@@ -48,15 +45,12 @@ namespace crawlservpp::Module::Extractor {
 	) : Module::Thread(dbBase, threadOptions),
 		database(this->Module::Thread::database),
 		networking(cookieDirectory),
-		lastUrl(0),
 		tickCounter(0),
 		startTime(std::chrono::steady_clock::time_point::min()),
 		pauseTime(std::chrono::steady_clock::time_point::min()),
 		idleTime(std::chrono::steady_clock::time_point::min()),
 		idle(false),
-		xmlParsed(false),
-		jsonParsedRapid(false),
-		jsonParsedCons(false),
+		lastUrl(0),
 		idFirst(0),
 		idDist(0),
 		posFirstF(0.),
@@ -72,6 +66,8 @@ namespace crawlservpp::Module::Extractor {
 		std::vector<std::string> fields;
 
 		// load configuration
+		this->setStatusMessage("Loading configuration...");
+
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
@@ -82,6 +78,17 @@ namespace crawlservpp::Module::Extractor {
 				configWarnings.pop();
 			}
 		}
+
+		// check required queries
+		if(this->config.extractingDataSetQueries.empty())
+			throw Exception("Extractor::Thread::onInit(): No dataset extraction query specified");
+
+		if(this->config.extractingIdQueries.empty())
+			throw Exception("Extractor::Thread::onInit(): No ID extraction query specified");
+
+		// set query container options
+		this->setRepairCData(this->config.extractingRepairCData);
+		this->setTidyErrorsAndWarnings(this->config.generalTidyErrors, this->config.generalTidyWarnings);
 
 		// set database options
 		this->setStatusMessage("Setting database options...");
@@ -489,6 +496,7 @@ namespace crawlservpp::Module::Extractor {
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		// reserve memory for queries
+		this->queriesDatasets.reserve(this->config.extractingDataSetQueries.size());
 		this->queriesId.reserve(this->config.extractingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.extractingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.extractingFieldQueries.size());
@@ -506,17 +514,30 @@ namespace crawlservpp::Module::Extractor {
 		);
 
 		try {
-			// create queries and get query IDs
-			for(const auto& query : this->config.extractingIdQueries) {
-				QueryProperties properties;
+			// create queries and get query properties
+			for(const auto& query : this->config.extractingDataSetQueries) {
+				if(query) {
+					QueryProperties properties;
 
-				if(query)
 					this->database.getQueryProperties(query, properties);
 
-				this->queriesId.emplace_back(this->addQuery(properties));
+					this->queriesDatasets.emplace_back(this->addQuery(properties));
+				}
 			}
 
-			for(const auto& query : this->config.extractingDateTimeQueries) {
+			for(const auto& query : this->config.extractingIdQueries) {
+				if(query) {
+					QueryProperties properties;
+
+					this->database.getQueryProperties(query, properties);
+
+					this->queriesId.emplace_back(this->addQuery(properties));
+				}
+			}
+
+			// NOTE: The following queries need to be added even if they are of type 'none'
+			//			as their index needs to correspond to other options
+			for(auto& query : this->config.extractingDateTimeQueries) {
 				QueryProperties properties;
 
 				if(query)
@@ -535,14 +556,15 @@ namespace crawlservpp::Module::Extractor {
 				if(*i)
 					this->database.getQueryProperties(*i, properties);
 				else if(this->config.generalLogging) {
-					const auto name =
-							this->config.extractingFieldNames.begin()
-							+ (i - this->config.extractingFieldQueries.begin());
+					const auto& name =
+							this->config.extractingFieldNames.at(
+									i - this->config.extractingFieldQueries.begin()
+							);
 
-					if(!(name->empty()))
+					if(!(name.empty()))
 						this->log(
 								"WARNING: Ignores field \'"
-								+ *name
+								+ name
 								+ "\' because of missing query."
 						);
 				}
@@ -574,14 +596,15 @@ namespace crawlservpp::Module::Extractor {
 						);
 				}
 				else if(this->config.generalLogging) {
-					const auto name =
-							this->config.variablesTokens.begin()
-							+ (i - this->config.variablesTokensQuery.begin());
+					const auto& name =
+							this->config.variablesTokens.at(
+									i - this->config.variablesTokensQuery.begin()
+							);
 
-					if(!(name->empty()))
+					if(!(name.empty()))
 						this->log(
 								"WARNING: Ignores token \'"
-								+ *name
+								+ name
 								+ "\' because of missing query."
 						);
 				}
@@ -598,14 +621,15 @@ namespace crawlservpp::Module::Extractor {
 						*i == Config::variablesSourcesContent
 						|| *i == Config::variablesSourcesUrl
 				) {
-					const auto query =
-							this->config.variablesQuery.begin()
-							+ (i - this->config.variablesSource.begin());
+					const auto& query =
+							this->config.variablesQuery.at(
+									i - this->config.variablesSource.begin()
+							);
 
 					QueryProperties properties;
 
-					if(*query) {
-						this->database.getQueryProperties(*query, properties);
+					if(query) {
+						this->database.getQueryProperties(query, properties);
 
 						if(this->config.generalLogging) {
 							if(!properties.resultSingle && !properties.resultBool)
@@ -632,14 +656,15 @@ namespace crawlservpp::Module::Extractor {
 
 					}
 					else if(this->config.generalLogging) {
-						const auto name =
-								this->config.variablesName.begin()
-								+ (i - this->config.variablesSource.begin());
+						const auto& name =
+								this->config.variablesName.at(
+										i - this->config.variablesSource.begin()
+								);
 
-						if(!(name->empty()))
+						if(!(name.empty()))
 							this->log(
 									"WARNING: Ignores variable \'"
-									+ *name
+									+ name
 									+ "\' because of missing query."
 							);
 					}
@@ -675,17 +700,8 @@ namespace crawlservpp::Module::Extractor {
 
 			this->queryExpected = this->addQuery(properties);
 		}
-		catch(const RegExException& e) {
-			throw Exception("Extractor::Thread::initQueries(): [RegEx] " + e.whatStr());
-		}
-		catch(const XPathException& e) {
-			throw Exception("Extractor::Thread::initQueries(): [XPath] " + e.whatStr());
-		}
-		catch(const JsonPointerException& e) {
-			throw Exception("Extractor::Thread::initQueries(): [JSONPointer] " + e.whatStr());
-		}
-		catch(const JsonPathException& e) {
-			throw Exception("Extractor::Thread::initQueries(): [JSONPath] " + e.whatStr());
+		catch(const QueryException& e) {
+			throw Exception("Extractor::Thread::initQueries(): " + e.whatStr());
 		}
 	}
 
@@ -779,20 +795,53 @@ namespace crawlservpp::Module::Extractor {
 		// get content ID and - if necessary - the whole content
 		this->database.getContent(this->urls.front().first, content);
 
+		// set raw crawled content as target for subsequent queries
+		this->setQueryTarget(content.second, this->urls.front().second);
+
 		// check content ID
 		if(!content.first)
 			return 0;
 
 		// get values for variables
-		this->extractingGetVariableValues(variables, content);
+		this->extractingGetVariableValues(variables);
 
 		// get values for global tokens
 		this->extractingGetTokenValues(variables);
 
 		// loop over pages
+		std::queue<std::string> queryWarnings;
 		bool pageFirst = true;
 		long pageNum = this->config.pagingFirst;
+		unsigned long pageCounter = 0;
+		unsigned long pageTotal = 0;
 		std::string pageName(this->config.pagingFirstString);
+
+		// get total number of pages if available
+		if(this->queryPagingNumberFrom) {
+			std::string pageTotalString;
+
+			// perform query on content to get the number of pages
+			this->getSingleFromQuery(this->queryPagingNumberFrom, pageTotalString, queryWarnings);
+
+			// log warnings if necessary
+			this->logWarnings(queryWarnings);
+
+			// try to convert number of pages to numeric value
+			try {
+				pageTotal = boost::lexical_cast<unsigned long>(pageTotalString);
+			}
+			catch(const boost::bad_lexical_cast& e) {
+				if(this->config.generalLogging)
+					this->log(
+							"WARNING: Could convert non-numeric query result \'"
+							+ pageTotalString
+							+ "to number of pages."
+					);
+			}
+
+			if(!pageTotal)
+				return 0;
+		}
 
 		while(this->isRunning()) {
 			// resolve paging variable
@@ -818,9 +867,9 @@ namespace crawlservpp::Module::Extractor {
 								+ this->config.pagingAlias
 								+ "\' for non-numeric variable \'"
 								+ this->config.pagingVariable
-								+ "\' [= \'."
+								+ "\' [= \'"
 								+ page
-								+ "\']"
+								+ "\']."
 						);
 				}
 			}
@@ -868,55 +917,90 @@ namespace crawlservpp::Module::Extractor {
 			if(sourceUrl.empty())
 				break;
 
-			// set local network configuration
-			this->networking.setConfigCurrent(*this);
-
-			// set cookies if necessary
-			if(!cookies.empty())
-				this->networking.setCookies(cookies);
-
 			// get and check content of current page
-			std::string pageContent(this->extractingPageContent("https://" + sourceUrl, cookies));
+			std::string pageContent;
+
+			this->extractingPageContent("https://" + sourceUrl, cookies, pageContent);
 
 			if(pageContent.empty())
 				break;
 
-			// extract data from content
-			extracted += this->extractingPage(content.first, sourceUrl, pageContent);
+			// set page content as target for subsequent queries
+			this->setQueryTarget(pageContent, sourceUrl);
 
-			// TODO: check for next page
-			break;
+			// extract data from content
+			extracted += this->extractingPage(content.first, sourceUrl);
+
+			// check for next page
+			bool noLimit = false;
+
+			if(pageNum) {
+				// determine whether next page exists by the extracted total number of pages
+				++pageCounter;
+
+				if(pageCounter >= pageTotal)
+					break;
+			}
+			else if(this->queryPagingIsNextFrom) {
+				// determine whether next page exists by boolean query on page content
+				bool isNext = false;
+
+				this->getBoolFromQuery(this->queryPagingIsNextFrom, isNext, queryWarnings);
+
+				// log warnings if necessary
+				this->logWarnings(queryWarnings);
+
+				if(!isNext)
+					break;
+			}
+			else
+				noLimit = true;
+
+			// get ID of next page
+			if(this->queryPagingNextFrom) {
+				// get ID by performing query on page content
+				this->getSingleFromQuery(this->queryPagingNextFrom, pageName, queryWarnings);
+
+				// log warnings if necessary
+				this->logWarnings(queryWarnings);
+
+				if(pageName.empty())
+					break;
+			}
+			else if(this->config.pagingStep && pageName.empty() && !noLimit)
+				// get ID by incrementing old ID
+				pageNum += this->config.pagingStep;
+			else
+				break;
 		}
 
 		return extracted;
 	}
 
 	// get values of variables
-	void Thread::extractingGetVariableValues(std::vector<StringString>& variables, const IdString& content) {
+	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) {
 		unsigned long parsedSource = 0;
 		unsigned long queryCounter = 0;
 
 		// loop over variables (and their aliases)
 		for(auto i = this->config.variablesName.begin(); i != this->config.variablesName.end(); ++i) {
+			const auto index = i - this->config.variablesName.begin();
+
 			// get value for variable
 			std::string value;
 
-			switch(
-					this->config.variablesSource.at(
-							i - this->config.variablesName.begin()
-					)
-			) {
+			switch(this->config.variablesSource.at(index)) {
 			case Config::variablesSourcesParsed:
-				value = this->database.getParsedData(this->urls.front().first, parsedSource);
+				this->database.getParsedData(this->urls.front().first, parsedSource, value);
 
 				++parsedSource;
 
 				break;
 
 			case Config::variablesSourcesContent:
-				value = this->extractingGetValueFromContent(
+				this->extractingGetValueFromContent(
 						this->queriesVariables.at(queryCounter),
-						content.second
+						value
 				);
 
 				++queryCounter;
@@ -924,8 +1008,9 @@ namespace crawlservpp::Module::Extractor {
 				break;
 
 			case Config::variablesSourcesUrl:
-				value = this->extractingGetValueFromUrl(
-						this->queriesVariables.at(queryCounter)
+				this->extractingGetValueFromUrl(
+						this->queriesVariables.at(queryCounter),
+						value
 				);
 
 				++queryCounter;
@@ -944,44 +1029,46 @@ namespace crawlservpp::Module::Extractor {
 			// get value for alias
 			variables.emplace_back(*i, value);
 
-			const auto alias =
-					this->config.variablesAlias.begin()
-					+ (i - this->config.variablesName.begin());
+			const auto& alias =
+					this->config.variablesAlias.at(
+							i - this->config.variablesName.begin()
+					);
 
-			if(alias->size()) {
-				const auto aliasAdd =
-						this->config.variablesAliasAdd.begin()
-						+ (i - this->config.variablesName.begin());
+			if(alias.size()) {
+				const auto& aliasAdd =
+						this->config.variablesAliasAdd.at(
+								i - this->config.variablesName.begin()
+				);
 
-				if(*aliasAdd != 0) {
+				if(aliasAdd != 0) {
 					// try to add value to variable
 					std::string aliasValue;
 
 					try {
 						aliasValue = std::to_string(
 								boost::lexical_cast<long>(value)
-								+ *aliasAdd
+								+ aliasAdd
 						);
 					}
 					catch(const boost::bad_lexical_cast& e) {
 						if(this->config.generalLogging)
 							this->log(
 									"WARNING: Could not create numeric alias \'"
-									+ *alias
+									+ alias
 									+ "\' for non-numeric variable \'"
 									+ *i
-									+ "\' [= \'."
+									+ "\' [= \'"
 									+ value
-									+ "\']"
+									+ "\']."
 							);
 					}
 
 					// set variable alias to new value
-					variables.emplace_back(*alias, aliasValue);
+					variables.emplace_back(alias, aliasValue);
 				}
 				else
 					// set variable alias to same value
-					variables.emplace_back(*alias, value);
+					variables.emplace_back(alias, value);
 			}
 		}
 	}
@@ -996,6 +1083,7 @@ namespace crawlservpp::Module::Extractor {
 						*i,
 						this->extractingGetTokenValue(
 								this->config.variablesTokensSource.at(index),
+								this->config.variablesTokensCookies.at(index),
 								this->config.variablesTokensUsePost.at(index),
 								this->queriesTokens.at(index)
 						)
@@ -1004,13 +1092,18 @@ namespace crawlservpp::Module::Extractor {
 		else
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 				const unsigned long index = i - this->config.variablesTokens.begin();
-				const auto source = this->config.variablesTokensSource.begin() + index;
+				const auto& source = this->config.variablesTokensSource.at(index);
+				const auto& cookies = this->config.variablesTokensCookies.at(index);
 
-				if(source->find(this->config.pagingVariable) == std::string::npos)
+				if(
+						source.find(this->config.pagingVariable) == std::string::npos
+						&& cookies.find(this->config.pagingVariable) == std::string::npos
+				)
 					variables.emplace_back(
 							*i,
 							this->extractingGetTokenValue(
-									*source,
+									source,
+									cookies,
 									this->config.variablesTokensUsePost.at(index),
 									this->queriesTokens.at(index)
 							)
@@ -1026,14 +1119,20 @@ namespace crawlservpp::Module::Extractor {
 		for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 			const unsigned long index = i - this->config.variablesTokens.begin();
 			std::string source(this->config.variablesTokensSource.at(index));
+			std::string cookies(this->config.variablesTokensCookies.at(index));
 
-			if(source.find(this->config.pagingVariable) != std::string::npos) {
+			if(
+					source.find(this->config.pagingVariable) != std::string::npos
+					|| cookies.find(this->config.pagingVariable) != std::string::npos
+			) {
 				Helper::Strings::replaceAll(source, this->config.pagingVariable, page, true);
+				Helper::Strings::replaceAll(cookies, this->config.pagingVariable, page, true);
 
 				tokens.emplace_back(
 						*i,
 						this->extractingGetTokenValue(
 								source,
+								cookies,
 								this->config.variablesTokensUsePost.at(index),
 								this->queriesTokens.at(index)
 						)
@@ -1043,7 +1142,12 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get value of token
-	std::string Thread::extractingGetTokenValue(const std::string& source, bool usePost, const QueryStruct& query) {
+	std::string Thread::extractingGetTokenValue(
+			const std::string& source,
+			const std::string& cookies,
+			bool usePost,
+			const QueryStruct& query
+	) {
 		// ignore if no or invalid query is specified
 		if(!query.index || (!query.resultBool && !query.resultSingle))
 			return "";
@@ -1060,7 +1164,8 @@ namespace crawlservpp::Module::Extractor {
 				this->networking.setConfigCurrent(*this);
 
 				// set cookies if necessary
-
+				if(!cookies.empty())
+					this->networking.setCookies(cookies);
 
 				// get content
 				this->networking.getContent(
@@ -1070,12 +1175,20 @@ namespace crawlservpp::Module::Extractor {
 						this->config.generalRetryHttp
 				);
 
+				// unset cookies if necessary
+				if(!cookies.empty())
+					this->networking.unsetCookies();
+
 				success = true;
 
 				break;
 			}
-			catch(const CurlException& e) {
-				// error while getting content: check type of error i.e. last cURL code
+			catch(const CurlException& e) { // error while getting content
+				// unset cookies if necessary
+				if(!cookies.empty())
+					this->networking.unsetCookies();
+
+				// check type of error i.e. last cURL code
 				if(this->extractingCheckCurlCode(
 						this->networking.getCurlCode(),
 						sourceUrl
@@ -1103,6 +1216,10 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 			catch(const Utf8Exception& e) {
+				// unset cookies if necessary
+				if(!cookies.empty())
+					this->networking.unsetCookies();
+
 				// write UTF-8 error to log if neccessary
 				if(this->config.generalLogging)
 					this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
@@ -1112,204 +1229,57 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		if(success) {
+			std::queue<std::string> queryWarnings;
+
+			// set token page content as target for subsequent query
+			this->setQueryTarget(content, sourceUrl);
+
 			// get token from content
-			Parsing::XML xmlDoc;
-			rapidjson::Document jsonDoc;
-			jsoncons::json json;
-			std::queue<std::string> warnings;
+			if(query.resultSingle)
+				this->getSingleFromQuery(query, result, queryWarnings);
+			else {
+				bool booleanResult = false;
 
-			// set options for logging
-			xmlDoc.setOptions(this->config.generalTidyWarnings, this->config.generalTidyErrors);
-
-			switch(query.type) {
-			case QueryStruct::typeRegEx:
-				// get token from content
-				try {
-					// check result type of query
-					if(query.resultSingle)
-						this->getRegExQuery(query.index).getFirst(content, result);
-					else
-						result = this->getRegExQuery(query.index).getBool(content) ? "true" : "false";
-				}
-				catch(const RegExException& e) {
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: RegEx error - "
-								+ e.whatStr()
-								+ " ["
-								+ sourceUrl
-								+ "]."
-						);
-				}
-
-				break;
-
-			case QueryStruct::typeXPath:
-				// parse XML content
-				try {
-					xmlDoc.parse(content, warnings, this->config.extractingRepairCData);
-				}
-				catch(const XMLException& e) {
-					// error while parsing content
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: XML error: "
-								+ e.whatStr()
-								+ " ["
-								+ sourceUrl
-								+ "]."
-						);
-
-					break;
-				}
-
-				// write warnings to log if necessary
-				if(this->config.generalLogging)
-					while(!warnings.empty()) {
-						this->log(
-								"WARNING: "
-								+ warnings.front()
-								+ " ["
-								+ sourceUrl
-								+ "]."
-						);
-
-						warnings.pop();
-					}
-
-				// get token from XML
-				try {
-					// check result type of query
-					if(query.resultSingle)
-						this->getXPathQuery(query.index).getFirst(xmlDoc, result);
-					else
-						result = this->getXPathQuery(query.index).getBool(xmlDoc) ? "true" : "false";
-				}
-				catch(const XPathException& e) {
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: XPath error - "
-								+ e.whatStr()
-								+ " ["
-								+ sourceUrl
-								+ "]."
-						);
-				}
-
-				break;
-
-			case QueryStruct::typeJsonPointer:
-				// parse JSON using RapidJSON
-				try {
-					jsonDoc = Helper::Json::parseRapid(content);
-				}
-				catch(const JsonException& e) {
-					// error while parsing content
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: JSON parsing error: "
-								+ e.whatStr()
-								+ " ["
-								+ sourceUrl
-								+ "]."
-						);
-
-					break;
-				}
-
-				// get token from JSON
-				try {
-					// check result type of query
-					if(query.resultSingle)
-						this->getJsonPointerQuery(query.index).getFirst(jsonDoc, result);
-					else
-						result = this->getJsonPointerQuery(query.index).getBool(jsonDoc) ? "true" : "false";
-				}
-				catch(const JsonPointerException& e) {
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: JSONPointer error - "
-								+ e.whatStr() + " ["
-								+ sourceUrl
-								+ "]."
-						);
-				}
-
-				break;
-
-			case QueryStruct::typeJsonPath:
-				// parse JSON using jsoncons
-				try {
-					json = Helper::Json::parseCons(content);
-				}
-				catch(const JsonException& e) {
-					// error while parsing content
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: JSON parsing error: "
-								+ e.whatStr()
-								+ " ["
-								+ sourceUrl
-								+ "]."
-						);
-
-					break;
-				}
-
-				// get token from JSON
-				try {
-					// check query type
-					if(query.resultSingle)
-						this->getJsonPathQuery(query.index).getFirst(json, result);
-					else
-						result = this->getJsonPathQuery(query.index).getBool(json) ? "true" : "false";
-				}
-				catch(const JsonPathException& e) {
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: JSONPointer error - "
-								+ e.whatStr() + " ["
-								+ sourceUrl
-								+ "]."
-						);
-				}
-
-				break;
-
-			case QueryStruct::typeNone:
-				break;
-
-			default:
-				if(this->config.generalLogging)
-					this->log(
-							"WARNING: Unknown type of query for getting token ["
-							+ sourceUrl
-							+ "]."
-					);
+				if(this->getBoolFromQuery(query, booleanResult, queryWarnings))
+					result = booleanResult ? "true" : "false";
 			}
+
+			// log warnings if necessary
+			this->logWarnings(queryWarnings);
 		}
 
 		return result;
 	}
 
 	// get page content from URL
-	std::string Thread::extractingPageContent(const std::string& url, const std::string& cookies) {
-		std::string result;
-
+	void Thread::extractingPageContent(const std::string& url, const std::string& cookies, std::string& resultTo) {
 		while(this->isRunning()) {
-			this->networking.setCookies(cookies);
-
 			try {
+				// set local network configuration
+				this->networking.setConfigCurrent(*this);
+
+				// set cookies if necessary
+				if(!cookies.empty())
+					this->networking.setCookies(cookies);
+
 				this->networking.getContent(
 						url,
 						this->config.sourceUsePost,
-						result,
+						resultTo,
 						this->config.generalRetryHttp
 				);
 
+				// unset cookies if necessary
+				if(!cookies.empty())
+					this->networking.unsetCookies();
+
 				break;
 			}
-			catch(const CurlException& e) {
+			catch(const CurlException& e) { // error while getting content
+				// unset cookies if necessary
+				if(!cookies.empty())
+					this->networking.unsetCookies();
+
 				// error while getting content: check type of error i.e. last cURL code
 				if(this->extractingCheckCurlCode(
 						this->networking.getCurlCode(),
@@ -1338,6 +1308,10 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 			catch(const Utf8Exception& e) {
+				// unset cookies if necessary
+				if(!cookies.empty())
+					this->networking.unsetCookies();
+
 				// write UTF-8 error to log if neccessary
 				if(this->config.generalLogging)
 					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
@@ -1345,500 +1319,300 @@ namespace crawlservpp::Module::Extractor {
 				break;
 			}
 		}
-
-		return result;
 	}
 
 	// extract data from crawled content
-	std::string Thread::extractingGetValueFromContent(const QueryStruct& query, const std::string &content) {
+	void Thread::extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo) {
 		// ignore if no or invalid query is specified
 		if(!query.index || (!query.resultBool && !query.resultSingle))
-			return "";
+			return;
 
-		// extract from content
-		std::string result;
+		// get value by running query of any type on page content
+		std::queue<std::string> queryWarnings;
 
-		switch(query.type) {
-		case QueryStruct::typeRegEx:
-			// get value by running RegEx query on crawled content
-			try {
-				if(query.resultSingle)
-					this->getRegExQuery(query.index).getFirst(content, result);
-				else
-					result = this->getRegExQuery(query.index).getBool(content) ? "true" : "false";
-			}
-			catch(const RegExException& e) {} // ignore query on error
+		if(query.resultSingle)
+			this->getSingleFromQuery(query, resultTo, queryWarnings);
+		else {
+			bool booleanResult = false;
 
-			break;
-
-		case QueryStruct::typeXPath:
-			// parse HTML/XML if still necessary
-			if(this->parseXml(content)) {
-				// get value by running XPath query on crawled content
-				try {
-					if(query.resultSingle)
-						this->getXPathQuery(query.index).getFirst(this->parsedXML, result);
-					else
-						result = this->getXPathQuery(query.index).getBool(this->parsedXML) ? "true" : "false";
-				}
-				catch(const XPathException& e) {} // ignore query on error
-			}
-
-			break;
-
-		case QueryStruct::typeJsonPointer:
-			// parse JSON using RapidJSON if still necessary
-			if(this->parseJsonRapid(content)) {
-				// get value by running JSONPointer query on crawled content
-				try {
-					if(query.resultSingle)
-						this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, result);
-					else
-						result = getJsonPointerQuery(query.index).getBool(this->parsedJsonRapid) ? "true" : "false";
-				}
-				catch(const JsonPointerException& e) {} // ignore query on error
-			}
-
-			break;
-
-		case QueryStruct::typeJsonPath:
-			// parse JSON using jsoncons if still necessary
-			if(this->parseJsonCons(content)) {
-				// get value by running JSONPath query on crawled content
-				try {
-					if(query.resultSingle)
-						this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, result);
-					else
-						result = this->getJsonPathQuery(query.index).getBool(this->parsedJsonCons) ? "true" : "false";
-				}
-				catch(const JsonPathException& e) {} // ignore query on error
-			}
-
-			break;
-
-		case QueryStruct::typeNone:
-			break;
-
-		default:
-			if(this->config.generalLogging)
-				this->log("WARNING: Unknown type of query on crawled content.");
+			if(this->getBoolFromQuery(query, booleanResult, queryWarnings))
+				resultTo = booleanResult ? "true" : "false";
 		}
 
-		return result;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 	}
 
 	// extract data from URL
-	std::string Thread::extractingGetValueFromUrl(const QueryStruct& query) {
+	void Thread::extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo) {
 		// ignore if no or invalid query is specified
 		if(
 				!query.index
 				|| (!query.resultBool && !query.resultSingle)
 				|| query.type != QueryStruct::typeRegEx
 		)
-			return "";
+			return;
 
 		// get value by running RegEx query on URL
-		std::string result;
+		std::queue<std::string> queryWarnings;
 
-		try {
-			if(query.resultSingle)
-				this->getRegExQuery(query.index).getFirst(this->urls.front().second, result);
-			else
-				result = this->getRegExQuery(query.index).getBool(this->urls.front().second) ? "true" : "false";
+		if(query.resultSingle)
+			this->getSingleFromRegEx(query, this->urls.front().second, resultTo, queryWarnings);
+		else {
+			bool booleanResult = false;
+
+			if(this->getBoolFromRegEx(query, this->urls.front().second, booleanResult, queryWarnings))
+				resultTo = booleanResult ? "true" : "false";
 		}
-		catch(const RegExException& e) {} // ignore query on error
 
-		return result;
+		// log warnings if necessary
+		this->logWarnings(queryWarnings);
 	}
 
 	// extract data by parsing page content, return number of extracted datasets
-	unsigned long Thread::extractingPage(
-			unsigned long contentId,
-			const std::string& url,
-			const std::string& content
-	) {
-		// TODO: getAll instead of getFirst
+	unsigned long Thread::extractingPage(unsigned long contentId, const std::string& url) {
+		std::queue<std::string> queryWarnings;
+		unsigned long result = 0;
 
-		DataEntry extractedData(contentId);
+		// get datasets
+		for(const auto& query : this->queriesDatasets) {
+			// get datasets by performing query of any type on page content
+			this->setSubSetsFromQuery(query, queryWarnings);
 
-		// reset parsing state
-		this->resetParsingState();
+			// log warnings if necessary
+			this->logWarnings(queryWarnings);
 
-		// extract IDs
-		unsigned long idQueryCounter = 0;
-
-		for(const auto& query : this->queriesId) {
-			// check result type of query
-			if(query.resultMulti)
-				// check query type
-				switch(query.type) {
-				case QueryStruct::typeRegEx:
-					// extract ID by running RegEx query on content
-					try {
-						this->getRegExQuery(query.index).getFirst(content, extractedData.dataId);
-
-						if(!extractedData.dataId.empty())
-							break;
-					}
-					catch(const RegExException& e) {} // ignore query on error
-
-					break;
-
-				case QueryStruct::typeXPath:
-					// parse HTML/XML if still necessary
-					if(this->parseXml(content)) {
-						// extract ID by running XPath query on content
-						try {
-							this->getXPathQuery(query.index).getFirst(this->parsedXML, extractedData.dataId);
-
-							if(!extractedData.dataId.empty())
-								break;
-						}
-						catch(const XPathException& e) {} // ignore query on error
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPointer:
-					// parse JSON using RapidJSON if still necessary
-					if(this->parseJsonRapid(content)) {
-						// extract ID by running JSONPointer query on content
-						try {
-							this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, extractedData.dataId);
-
-							if(!extractedData.dataId.empty())
-								break;
-						}
-						catch(const JsonPointerException& e) {} // ignore query on error
-					}
-
-					break;
-
-				case QueryStruct::typeJsonPath:
-					// parse JSON using jsoncons if still necessary
-					if(this->parseJsonCons(content)) {
-						// extract ID by running JSONPath query on content
-						try {
-							this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, extractedData.dataId);
-
-							if(!extractedData.dataId.empty())
-								break;
-						}
-						catch(const JsonPathException& e) {} // ignore query on error
-					}
-
-					break;
-
-				case QueryStruct::typeNone:
-					break;
-
-				default:
-					if(this->config.generalLogging)
-						this->log("WARNING: Unknown type of ID query on content.");
-				}
-			else if(this->config.generalLogging)
-				this->log("WARNING: Invalid result type of ID query (not single).");
-
-			if(extractedData.dataId.empty())
-				// not successfull: check next query for parsing the ID (if it exists)
-				++idQueryCounter;
-			else
+			// check whether datasets have been extracted
+			if(this->getNumberOfSubSets())
 				break;
 		}
 
-		// check whether no ID has been extracted
-		if(extractedData.dataId.empty()) {
-			this->logParsingErrors(url);
-
+		// check whether no dataset has been extracted
+		if(!(this->getNumberOfSubSets()))
 			return 0;
-		}
 
-		// extract date/time
-		unsigned long dateTimeQueryCounter = 0;
-		bool dateTimeSuccess = false;
+		// go through all datasets
+		while(this->nextSubSet()) {
+			DataEntry dataset(contentId);
 
-		for(const auto& query : this->queriesDateTime) {
-			bool querySuccess = false;
+			// extract IDs
+			for(const auto& query : this->queriesId) {
+				// get ID by performing query on current subset
+				this->getSingleFromQueryOnSubSet(query, dataset.dataId, queryWarnings);
 
-			// check result type of query
-			if(!query.resultSingle) {
-				if(this->config.generalLogging)
-					this->log("WARNING: Invalid result type of DateTime query (not single).");
+				// log warnings if necessary
+				this->logWarnings(queryWarnings);
 
-				continue;
-			}
-
-			// check query type
-			switch(query.type) {
-			case QueryStruct::typeRegEx:
-				// parse date/time by running RegEx query on content
-				try {
-					this->getRegExQuery(query.index).getFirst(content, extractedData.dateTime);
-
-					querySuccess = true;
-				}
-				catch(const RegExException& e) {} // ignore query on error
-
-				break;
-
-			case QueryStruct::typeXPath:
-				// parse XML/HTML if still necessary
-				if(this->parseXml(content)) {
-					// parse date/time by running XPath query on parsed content
-					try {
-						this->getXPathQuery(query.index).getFirst(this->parsedXML, extractedData.dateTime);
-
-						querySuccess = true;
-					}
-					catch(const XPathException& e) {} // ignore query on error
-				}
-
-				break;
-
-			case QueryStruct::typeJsonPointer:
-				// parse JSON using RapidJSON if still necessary
-				if(this->parseJsonRapid(content)) {
-					// parse date/time by running JSONPointer query on parsed content
-					try {
-						this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, extractedData.dateTime);
-
-						querySuccess = true;
-					}
-					catch(const JsonPointerException& e) {} // ignore query on error
-				}
-
-				break;
-
-			case QueryStruct::typeJsonPath:
-				// parse JSON using jsoncons if still necessary
-				if(this->parseJsonCons(content)) {
-					// parse date/time by running JSONPointer query on parsed content
-					try {
-						this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, extractedData.dateTime);
-
-						querySuccess = true;
-					}
-					catch(const JsonPathException& e) {} // ignore query on error
-				}
-
-				break;
-
-			case QueryStruct::typeNone:
-				break;
-
-			default:
-				if(this->config.generalLogging)
-					this->log("WARNING: Unknown type of DateTime query on content.");
-			}
-
-			if(querySuccess && !extractedData.dateTime.empty()) {
-				// found date/time: try to convert it to SQL time stamp
-				std::string format(this->config.extractingDateTimeFormats.at(dateTimeQueryCounter));
-				const std::string locale(this->config.extractingDateTimeLocales.at(dateTimeQueryCounter));
-
-				// use "%F %T" as default date/time format
-				if(format.empty())
-					format = "%F %T";
-
-				if(!locale.empty()) {
-					// locale hack: The French abbreviation "avr." for April is not stringently supported
-					if(locale.length() > 1
-							&& ::tolower(locale.at(0) == 'f')
-							&& ::tolower(locale.at(1) == 'r'))
-						Helper::Strings::replaceAll(extractedData.dateTime, "avr.", "avril", true);
-
-					try {
-						dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-								extractedData.dateTime, format, std::locale(locale)
-						);
-					}
-					catch(const std::runtime_error& e) {
-						if(this->config.generalLogging)
-							this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
-
-						dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-								extractedData.dateTime, format
-						);
-					}
-				}
-				else
-					dateTimeSuccess = Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-							extractedData.dateTime, format
-					);
-
-				if(dateTimeSuccess && !extractedData.dateTime.empty())
+				// check whether ID has been extracted
+				if(!dataset.dataId.empty())
 					break;
 			}
 
-			// not successfull: check next query for parsing the date/time (if exists)
-			++dateTimeQueryCounter;
-		}
+			// check whether no ID has been extracted
+			if(dataset.dataId.empty())
+				continue;
 
-		// check whether date/time conversion was successful
-		if(!extractedData.dateTime.empty() && !dateTimeSuccess) {
-			if(this->config.generalLogging)
-				this->log(
-						"ERROR: Could not extract date/time \'"
-						+ extractedData.dateTime
-						+ "\' from "
-						+ url
-				);
+			// extract date/time
+			for(auto i = this->queriesDateTime.begin(); i != this->queriesDateTime.end(); ++i) {
+				// extract date/time by performing query on current subset
+				this->getSingleFromQueryOnSubSet(*i, dataset.dateTime, queryWarnings);
 
-			extractedData.dateTime = "";
-		}
+				// log warnings if necessary
+				this->logWarnings(queryWarnings);
 
-		// parse custom fields
-		unsigned long fieldCounter = 0;
+				// check whether date/time has been extracted
+				if(!dataset.dateTime.empty()) {
+					const auto index = i - this->queriesDateTime.begin();
 
-		extractedData.fields.reserve(this->queriesFields.size());
+					// found date/time: try to convert it to SQL time stamp
+					std::string format(this->config.extractingDateTimeFormats.at(index));
+					const std::string locale(this->config.extractingDateTimeLocales.at(index));
 
-		for(const auto& query : this->queriesFields) {
-			try {
-				// determinate whether to get the match as string or as boolean value
-				if(query.resultSingle) {
-					// parse first element only (as string)
-					std::string parsedFieldValue;
+					// use "%F %T" as default date/time format
+					if(format.empty())
+						format = "%F %T";
 
-					// check query type
-					switch(query.type) {
-					case QueryStruct::typeRegEx:
-						// parse single field element by running RegEx query on content string
-						this->getRegExQuery(query.index).getFirst(content, parsedFieldValue);
+					if(!locale.empty()) {
+						// locale hack: The French abbreviation "avr." for April is not stringently supported
+						if(locale.length() > 1
+								&& ::tolower(locale.at(0) == 'f')
+								&& ::tolower(locale.at(1) == 'r'))
+							Helper::Strings::replaceAll(dataset.dateTime, "avr.", "avril", true);
 
+						try {
+							if(
+									!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+											dataset.dateTime,
+											format,
+											std::locale(locale)
+									)
+							)
+								dataset.dateTime.clear();
+						}
+						catch(const std::runtime_error& e) {
+							if(this->config.generalLogging)
+								this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
+
+							if(
+									!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+											dataset.dateTime,
+											format
+									)
+							)
+								dataset.dateTime.clear();
+						}
+					}
+					else
+						if(
+								!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+										dataset.dateTime,
+										format
+								)
+						)
+							dataset.dateTime.clear();
+
+					if(!dataset.dateTime.empty())
 						break;
+				}
+			}
 
-					case QueryStruct::typeXPath:
-						// parse XML/HTML if still necessary
-						if(this->parseXml(content))
-							// parse single field element by running XPath query on parsed content
-							this->getXPathQuery(query.index).getFirst(this->parsedXML, parsedFieldValue);
+			// extract custom fields
+			dataset.fields.reserve(this->queriesFields.size());
 
-						break;
+			for(auto i = this->queriesFields.begin(); i != this->queriesFields.end(); ++i) {
+				const auto index = i - this->queriesFields.begin();
 
-					case QueryStruct::typeJsonPointer:
-						// parse JSON using RapidJSON if still necessary
-						if(this->parseJsonRapid(content))
-							// parse single field element by running JSONPointer query on content string
-							this->getJsonPointerQuery(query.index).getFirst(this->parsedJsonRapid, parsedFieldValue);
+				// determinate whether to get all or just the first match (as string or boolean value) from the query result
+				if(i->resultMulti) {
+					// extract multiple elements
+					std::vector<std::string> extractedFieldValues;
 
-						break;
+					// extract field values by using query on content
+					this->getMultiFromQuery(*i, extractedFieldValues, queryWarnings);
 
-					case QueryStruct::typeJsonPath:
-						// parse JSON using jsoncons if still necessary
-						if(this->parseJsonCons(content))
-							// parse single field element by running JSONPath query on content string
-							this->getJsonPathQuery(query.index).getFirst(this->parsedJsonCons, parsedFieldValue);
+					// log warnings if necessary
+					this->logWarnings(queryWarnings);
 
-						break;
-
-					case QueryStruct::typeNone:
-						break;
-
-					default:
-						if(this->config.generalLogging)
+					// if necessary, check whether array or all values are empty
+					if(this->config.generalLogging && this->config.extractingFieldWarningsEmpty.at(index)) {
+						if(
+								std::find_if(
+										extractedFieldValues.begin(),
+										extractedFieldValues.end(),
+										[](auto const& value) {
+											return !value.empty();
+										}
+								) == extractedFieldValues.end()
+						)
 							this->log(
-									"WARNING: \'" + this->config.extractingFieldNames.at(fieldCounter) + "\'"
-									" query on content is of unknown type."
+									"WARNING: \'" + this->config.extractingFieldNames.at(index) + "\'"
+									" is empty for " + url
 							);
 					}
+
+					// determine how to save result: JSON array or concatenate using delimiting character
+					if(this->config.extractingFieldJSON.at(index)) {
+						// if necessary, tidy texts
+						if(this->config.extractingFieldTidyTexts.at(index))
+							for(auto& value : extractedFieldValues)
+								Helper::Strings::utfTidy(value);
+
+						// stringify and add extracted elements as JSON array
+						dataset.fields.emplace_back(Helper::Json::stringify(extractedFieldValues));
+					}
+					else {
+						// concatenate elements
+						std::string result(
+								Helper::Strings::join(
+										extractedFieldValues,
+										this->config.extractingFieldDelimiters.at(index),
+										this->config.extractingFieldIgnoreEmpty.at(index)
+								)
+							);
+
+						// if necessary, tidy text
+						if(this->config.extractingFieldTidyTexts.at(index))
+							Helper::Strings::utfTidy(result);
+
+						dataset.fields.emplace_back(result);
+					}
+				}
+				else if(i->resultSingle) {
+					// extract first element only (as string)
+					std::string extractedFieldValue;
+
+					// extract single field value by using query on content
+					this->getSingleFromQuery(*i, extractedFieldValue, queryWarnings);
+
+					// log warnings if necessary
+					this->logWarnings(queryWarnings);
 
 					// if necessary, check whether value is empty
 					if(
-							this->config.extractingFieldWarningsEmpty.at(fieldCounter)
-							&& parsedFieldValue.empty()
+							this->config.extractingFieldWarningsEmpty.at(index)
+							&& extractedFieldValue.empty()
 							&& this->config.generalLogging
 					)
 						this->log(
-								"WARNING: \'" + this->config.extractingFieldNames.at(fieldCounter) + "\'"
-								" is empty for " + this->urls.front().second
+								"WARNING: \'" + this->config.extractingFieldNames.at(index) + "\'"
+								" is empty for " + url
 						);
 
 					// if necessary, tidy text
-					if(this->config.extractingFieldTidyTexts.at(fieldCounter))
-						Helper::Strings::utfTidy(parsedFieldValue);
+					if(this->config.extractingFieldTidyTexts.at(index))
+						Helper::Strings::utfTidy(extractedFieldValue);
 
-					// stringify and add parsed element as JSON array with one element
-					extractedData.fields.emplace_back(Helper::Json::stringify(parsedFieldValue));
+					// determine how to save result: JSON array or string as is
+					if(this->config.extractingFieldJSON.at(index))
+						// stringify and add extracted element as JSON array with one element
+						dataset.fields.emplace_back(Helper::Json::stringify(extractedFieldValue));
+
+					else
+						// save as is
+						dataset.fields.emplace_back(extractedFieldValue);
 				}
-				else if(query.resultBool) {
+				else if(i->resultBool) {
 					// only save whether a match for the query exists
-					bool parsedBool = false;
+					bool booleanResult = false;
 
-					// check query type
-					switch(query.type) {
-					case QueryStruct::typeRegEx:
-						// parse boolean value by running RegEx query on content string
-						parsedBool = this->getRegExQuery(query.index).getBool(content);
+					// extract boolean field value by using query on content
+					this->getBoolFromQuery(*i, booleanResult, queryWarnings);
 
-						break;
+					// log warnings if necessary
+					this->logWarnings(queryWarnings);
 
-					case QueryStruct::typeXPath:
-						// parse XML/HTML if still necessary
-						if(this->parseXml(content))
-							// parse boolean value by running XPath query on parsed content
-							parsedBool = this->getXPathQuery(query.index).getBool(this->parsedXML);
-
-						break;
-
-					case QueryStruct::typeJsonPointer:
-						// parse JSON using RapidJSON if still necessary
-						if(this->parseJsonRapid(content))
-							// parse boolean value by running JSONPointer query on content string
-							parsedBool = this->getJsonPointerQuery(query.index).getBool(this->parsedJsonRapid);
-
-						break;
-
-					case QueryStruct::typeJsonPath:
-						// parse JSON using jsoncons if still necessary
-						if(this->parseJsonCons(content))
-							// parse boolean value by running JSONPath query on content string
-							parsedBool = this->getJsonPathQuery(query.index).getBool(this->parsedJsonCons);
-
-						break;
-
-					case QueryStruct::typeNone:
-						break;
-
-					default:
-						if(this->config.generalLogging)
-							this->log(
-									"WARNING: \'" + this->config.extractingFieldNames.at(fieldCounter) + "\'"
-									" query on content is of unknown type."
-							);
-					}
-
-					// stringify and add parsed element as JSON array with one boolean value as string
-					extractedData.fields.emplace_back(
-							Helper::Json::stringify(
-									parsedBool ? std::string("true") : std::string("false")
-							)
-					);
-				}
-				else {
-					if(query.type != QueryStruct::typeNone && this->config.generalLogging)
-						this->log(
-								"WARNING: Ignored \'" + this->config.extractingFieldNames.at(fieldCounter) + "\'"
-								" query without specified result type."
+					// determine how to save result: JSON array or boolean value as string
+					if(this->config.extractingFieldJSON.at(index))
+						// stringify and add extracted element as JSON array with one boolean value as string
+						dataset.fields.emplace_back(
+								Helper::Json::stringify(
+										booleanResult ? std::string("true") : std::string("false")
+								)
 						);
 
-					extractedData.fields.emplace_back();
+					else
+						// save boolean value as string
+						dataset.fields.emplace_back(booleanResult ? "true" : "false");
 				}
+				else {
+					if(i->type != QueryStruct::typeNone && this->config.generalLogging)
+						this->log(
+								"WARNING: Ignored query for \'"
+								+ this->config.extractingFieldNames.at(index)
+								+ "\' without specified result type."
+						);
 
-				++fieldCounter;
+					dataset.fields.emplace_back();
+				}
 			}
-			catch(const RegExException& e) {} // ignore query on RegEx error
-			catch(const XPathException& e) {} // ignore query on XPath error
-			catch(const JsonPointerException& e) {} // ignore query on JSONPointer error
-			catch(const JsonPathException& e) {} // ignore query on JSONPath error
+
+			// add extracted dataset to results
+			this->results.push(dataset);
+
+			++result;
 		}
 
-		// show parsing errors if necessary
-		this->logParsingErrors(url);
-
-		// add parsed data to results
-		this->results.push(extractedData);
-
-		return true;
+		return result;
 	}
 
 	// check cURL code and decide whether to retry or skip
@@ -1937,7 +1711,7 @@ namespace crawlservpp::Module::Extractor {
 			// update or add entries in/to database
 			this->database.updateOrAddEntries(this->results);
 
-			// update parsing table
+			// update target table
 			this->database.updateTargetTable();
 		} // target table unlocked
 
@@ -1945,7 +1719,7 @@ namespace crawlservpp::Module::Extractor {
 		if(!warped)
 			this->setLast(this->lastUrl);
 
-		// set those URLs to finished whose URL lock is okay (still locked or re-lockable (and not parsed when not re-parsing)
+		// set those URLs to finished whose URL lock is okay (still locked or re-lockable)
 		this->database.setUrlsFinishedIfLockOk(this->finished);
 
 		// update status
@@ -1955,93 +1729,15 @@ namespace crawlservpp::Module::Extractor {
 			this->log("saved results in " + timer.tickStr());
 	}
 
-	// parse XML/HTML if still necessary, return false if parsing failed
-	bool Thread::parseXml(const std::string& content) {
-		if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
-			std::queue<std::string> warnings;
+	// write parsing and query errors as warnings to log if necessary
+	void Thread::logWarnings(std::queue<std::string>& warnings) {
+		if(this->config.generalLogging < Config::generalLoggingDefault)
+			return;
 
-			try {
-				this->parsedXML.parse(content, warnings, this->config.extractingRepairCData);
+		while(!warnings.empty()) {
+			this->log(warnings.front());
 
-				this->xmlParsed = true;
-			}
-			catch(const XMLException& e) {
-				this->xmlParsingError = e.whatStr();
-			}
-
-			if(this->config.generalLogging)
-				while(!warnings.empty()) {
-					this->log(warnings.front());
-
-					warnings.pop();
-				}
-		}
-
-		return this->xmlParsed;
-	}
-
-	// parse JSON using RapidJSON if still necessary, return false if parsing failed
-	bool Thread::parseJsonRapid(const std::string& content) {
-		if(!(this->jsonParsedRapid) && this->jsonParsingError.empty()) {
-			try {
-				this->parsedJsonRapid = Helper::Json::parseRapid(content);
-
-				this->jsonParsedRapid = true;
-			}
-			catch(const JsonException& e) {
-				this->jsonParsingError = e.whatStr();
-			}
-		}
-
-		return this->jsonParsedRapid;
-	}
-
-	// parse JSON using jsoncons if still necessary, return false if parsing failed
-	bool Thread::parseJsonCons(const std::string& content) {
-		if(!(this->jsonParsedCons) && this->jsonParsingError.empty()) {
-			try {
-				this->parsedJsonCons = Helper::Json::parseCons(content);
-
-				this->jsonParsedCons = true;
-			}
-			catch(const JsonException& e) {
-				this->jsonParsingError = e.whatStr();
-			}
-		}
-
-		return this->jsonParsedCons;
-	}
-
-	// reset parsing state
-	void Thread::resetParsingState() {
-		this->xmlParsed = false;
-		this->jsonParsedRapid = false;
-		this->jsonParsedCons = false;
-
-		this->xmlParsingError.clear();
-		this->jsonParsingError.clear();
-	}
-
-	// write parsing errors as warnings to log if necessary
-	void Thread::logParsingErrors(const std::string& url) {
-		if(this->config.generalLogging) {
-			if(!(this->xmlParsingError.empty()))
-				this->log(
-						"WARNING: "
-						+ this->xmlParsingError
-						+ " ["
-						+ url
-						+ "]."
-				);
-
-			if(!(this->jsonParsingError.empty()))
-				this->log(
-						"WARNING: "
-						+ this->jsonParsingError
-						+ " ["
-						+ url
-						+ "]."
-				);
+			warnings.pop();
 		}
 	}
 

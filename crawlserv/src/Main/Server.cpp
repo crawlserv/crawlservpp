@@ -603,7 +603,14 @@ namespace crawlservpp::Main {
 							else if(command == "resetparsingstatus")
 								response = this->cmdResetParsingStatus(json);
 
-							//TODO: server commands for extractor
+							else if(command == "startextractor")
+								response = this->cmdStartExtractor(json, ip);
+							else if(command == "pauseextractor")
+								response = this->cmdPauseExtractor(json, ip);
+							else if(command == "unpauseextractor")
+								response = this->cmdUnpauseExtractor(json, ip);
+							else if(command == "stopextractor")
+								response = this->cmdStopExtractor(json, ip);
 							else if(command == "resetextractingstatus")
 								response = this->cmdResetExtractingStatus(json);
 
@@ -1093,7 +1100,8 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("All logs cleared.");
 	}
 
-	// server command startcrawler(website, urllist, config): start a crawler using the specified website, URL list and configuration
+	// server command startcrawler(website, urllist, config):
+	//  start a crawler using the specified website, URL list and configuration
 	Server::ServerCommandResponse Server::cmdStartCrawler(
 			const rapidjson::Document& json,
 			const std::string& ip
@@ -1303,7 +1311,8 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("Crawler is stopping.");
 	}
 
-	// server command startparser(website, urllist, config): start a parser using the specified website, URL list and configuration
+	// server command startparser(website, urllist, config):
+	//  start a parser using the specified website, URL list and configuration
 	Server::ServerCommandResponse Server::cmdStartParser(
 			const rapidjson::Document& json,
 			const std::string& ip
@@ -1363,7 +1372,8 @@ namespace crawlservpp::Main {
 		// create parser
 		this->parsers.push_back(
 				std::make_unique<Module::Parser::Thread>(
-						this->database, options
+						this->database,
+						options
 				)
 		);
 
@@ -1532,6 +1542,217 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("Parsing status reset.");
 	}
 
+	// server command startextractor(website, urllist, config):
+	//  start an extractor using the specified website, URL list and configuration
+	Server::ServerCommandResponse Server::cmdStartExtractor(
+			const rapidjson::Document& json,
+			const std::string& ip
+	) {
+		// get arguments
+		if(!json.HasMember("website"))
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
+
+		if(!json["website"].IsUint64())
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
+
+		if(!json.HasMember("urllist"))
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
+
+		if(!json["urllist"].IsUint64())
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
+
+		if(!json.HasMember("config"))
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
+
+		if(!json["config"].IsUint64())
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
+
+		const ThreadOptions options(
+				"extractor",
+				json["website"].GetUint64(),
+				json["urllist"].GetUint64(),
+				json["config"].GetUint64()
+		);
+
+		// check arguments
+		if(!(this->database.isWebsite(options.website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
+
+		if(!(this->database.isUrlList(options.website, options.urlList)))
+			return ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(options.urlList)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
+
+		if(!(this->database.isConfiguration(options.website, options.config)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(options.config)
+					+ " for website #"
+					+ std::to_string(options.website)
+					+ " not found."
+			);
+
+		// create extractor
+		this->extractors.push_back(
+				std::make_unique<Module::Extractor::Thread>(
+						this->database,
+						this->dirCookies,
+						options
+				)
+		);
+
+		// start extractor
+		this->extractors.back()->Module::Thread::start();
+
+		// startextractor is a logged command
+		this->database.log(
+				"extractor #"
+				+ std::to_string(this->extractors.back()->Module::Thread::getId())
+				+ " started by "
+				+ ip
+				+ "."
+		);
+
+		return ServerCommandResponse("Extractor has been started.");
+	}
+
+	// server command pauseextractor(id): pause an extractor by its ID
+	Server::ServerCommandResponse Server::cmdPauseExtractor(
+			const rapidjson::Document& json,
+			const std::string& ip
+	) {
+		// get argument
+		if(!json.HasMember("id"))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!json["id"].IsUint64())
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		const unsigned long id = json["id"].GetUint64();
+
+		// find extractor
+		auto i = std::find_if(this->extractors.begin(), this->extractors.end(),
+				[&id](const auto& p) {
+					return p->Module::Thread::getId() == id;
+				}
+		);
+
+		if(i == this->extractors.end())
+			return ServerCommandResponse::failed(
+					"Could not find extractor #"
+					+ std::to_string(id)
+					+ "."
+			);
+
+		// pause parser
+		(*i)->Module::Thread::pause();
+
+		// pauseextractor is a logged command
+		this->database.log(
+				"extractor #"
+				+ std::to_string(id)
+				+ " paused by "
+				+ ip
+				+ "."
+		);
+
+		return ServerCommandResponse("Extractor is pausing.");
+	}
+
+	// server command unpauseextractor(id): unpause an extractor by its ID
+	Server::ServerCommandResponse Server::cmdUnpauseExtractor(
+			const rapidjson::Document& json,
+			const std::string& ip
+	) {
+		// get argument
+		if(!json.HasMember("id"))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!json["id"].IsUint64())
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		const unsigned long id = json["id"].GetUint64();
+
+		// find extractor
+		auto i = std::find_if(this->extractors.begin(), this->extractors.end(),
+				[&id](const auto& p) {
+					return p->Module::Thread::getId() == id;
+				}
+		);
+
+		if(i == this->extractors.end())
+			return ServerCommandResponse::failed(
+					"Could not find extractor #"
+					+ std::to_string(id)
+					+ "."
+			);
+
+		// unpause extractor
+		(*i)->Module::Thread::unpause();
+
+		// unpauseextractor is a logged command
+		this->database.log(
+				"extractor #"
+				+ std::to_string(id)
+				+ " unpaused by "
+				+ ip
+				+ "."
+		);
+
+		return ServerCommandResponse("Extractor is unpausing.");
+	}
+
+	// server command stopextractor(id): stop an extractor by its ID
+	Server::ServerCommandResponse Server::cmdStopExtractor(
+			const rapidjson::Document& json,
+			const std::string& ip
+	) {
+		// get argument
+		if(!json.HasMember("id"))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!json["id"].IsUint64())
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		const unsigned long id = json["id"].GetUint64();
+
+		// find extractor
+		auto i = std::find_if(this->extractors.begin(), this->extractors.end(),
+				[&id](const auto& p) {
+					return p->Module::Thread::getId() == id;
+				}
+		);
+
+		if(i == this->extractors.end())
+			return ServerCommandResponse::failed(
+					"Could not find extractor #"
+					+ std::to_string(id)
+					+ "."
+			);
+
+		// interrupt extractor
+		(*i)->Module::Thread::stop();
+
+		// stopextractor is a logged command
+		this->database.log(
+				"extractor #"
+				+ std::to_string(id)
+				+ " stopped by "
+				+ ip
+				+ "."
+		);
+
+		return ServerCommandResponse("Extractor is stopping.");
+	}
+
 	// server command resetextractingstatus(urllist): reset the parsing status of a ID-specificed URL list
 	Server::ServerCommandResponse Server::cmdResetExtractingStatus(const rapidjson::Document& json) {
 		// get argument
@@ -1553,8 +1774,8 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("Extracting status reset.");
 	}
 
-	// server command startanalyzer(website, urllist, config): start an analyzer using the specified website, URL list, module
-	//	and configuration
+	// server command startanalyzer(website, urllist, config):
+	//  start an analyzer using the specified website, URL list, module and configuration
 	Server::ServerCommandResponse Server::cmdStartAnalyzer(
 			const rapidjson::Document& json,
 			const std::string& ip

@@ -818,9 +818,7 @@ namespace crawlservpp::Module::Extractor {
 	// get parsed data for the ID-specified URL from the index-specified source, throws Database::Exception
 	//  NOTE:	The source index is determined by the order of adding the sources (starting with 0).
 	//			Returns an empty string when no data has been found.
-	std::string Database::getParsedData(unsigned long urlId, unsigned long sourceIndex) {
-		std::string result;
-
+	void Database::getParsedData(unsigned long urlId, unsigned long sourceIndex, std::string& resultTo) {
 		// check argument
 		if(!urlId)
 			throw Exception("No URL specified for Database::getParsedData(...)");
@@ -845,11 +843,9 @@ namespace crawlservpp::Module::Extractor {
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())
-				result = sqlResultSet->getString("result");
+				resultTo = sqlResultSet->getString("result");
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Extractor:Database::getParsedData", e); }
-
-		return result;
 	}
 
 	// add extracted data to database (update if row for ID-specified content already exists, throws Database::Exception

@@ -205,7 +205,10 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdStopParser(const rapidjson::Document& json, const std::string& ip);
 		ServerCommandResponse cmdResetParsingStatus(const rapidjson::Document& json);
 
-		//TODO: Server commands for extractor
+		ServerCommandResponse cmdStartExtractor(const rapidjson::Document& json, const std::string& ip);
+		ServerCommandResponse cmdPauseExtractor(const rapidjson::Document& json, const std::string& ip);
+		ServerCommandResponse cmdUnpauseExtractor(const rapidjson::Document& json, const std::string& ip);
+		ServerCommandResponse cmdStopExtractor(const rapidjson::Document& json, const std::string& ip);
 		ServerCommandResponse cmdResetExtractingStatus(const rapidjson::Document& json);
 
 		ServerCommandResponse cmdStartAnalyzer(const rapidjson::Document& json, const std::string& ip);
