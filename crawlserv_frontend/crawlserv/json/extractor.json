@@ -291,7 +291,7 @@
 			"type": "string",
 			"default": "",
 			"label": "First page (string):",
-			"description": "Name of the first page (will overwrite its number).",
+			"description": "Name of the first page (will overwrite 'first' and 'step').",
 			"simple": true,
 			"position": 3
 		},
@@ -313,7 +313,7 @@
 			],
 			"default": 0,
 			"label": "Get next page:",
-			"description": "Query on page content to find the number or the name of the next page (will overwrite step).",
+			"description": "Query on page content to find the number or the name of the next page (will overwrite 'step').",
 			"simple": true,
 			"position": 9
 		},
@@ -420,6 +420,29 @@
 			"description": "Queries used for parsing the date and time. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 3
+		},
+		"field.delimiters": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Delimiters for multiple results when not saved as JSON. Only first character or \\n (default), \\t, \\\\ will be used.",
+			"simple": false
+		},
+		"field.ignore.empty": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"description": "Ignore empty values when extracting multiple elements (default behavior).",
+			"simple": false
+		},
+		"field.json": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Field results as JSON:",
+			"description": "Save extracted data as JSON array.",
+			"simple": true,
+			"position": 10
 		},
 		"field.names": {
 			"type": "array",

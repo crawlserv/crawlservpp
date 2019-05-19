@@ -106,6 +106,9 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<std::string> extractingDateTimeFormats;
 			std::vector<std::string> extractingDateTimeLocales;
 			std::vector<unsigned long> extractingDateTimeQueries;
+			std::vector<char> extractingFieldDelimiters;
+			std::vector<bool> extractingFieldIgnoreEmpty;
+			std::vector<bool> extractingFieldJSON;
 			std::vector<std::string> extractingFieldNames;
 			std::vector<unsigned long> extractingFieldQueries;
 			std::vector<bool> extractingFieldTidyTexts;
@@ -238,6 +241,9 @@ namespace crawlservpp::Module::Extractor {
 		this->option("datetime.formats", this->config.extractingDateTimeFormats);
 		this->option("datetime.locales", this->config.extractingDateTimeLocales);
 		this->option("datetime.queries", this->config.extractingDateTimeQueries);
+		this->option("field.delimiters", this->config.extractingFieldDelimiters, CharParsingOption::FromString);
+		this->option("field.ignore.empty", this->config.extractingFieldIgnoreEmpty);
+		this->option("field.json", this->config.extractingFieldJSON);
 		this->option("field.names", this->config.extractingFieldNames);
 		this->option("field.queries", this->config.extractingFieldQueries);
 		this->option("field.tidy.texts", this->config.extractingFieldTidyTexts);
@@ -450,6 +456,34 @@ namespace crawlservpp::Module::Extractor {
 
 			incompleteFields = false;
 		}
+
+		// remove field delimiters that are not used, add empty delimiter (\0) where none is specified
+		if(this->config.extractingFieldDelimiters.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.extractingFieldDelimiters.resize(completeFields, '\0');
+
+		// replace all empty field delimiters with '\n'
+		std::replace_if(
+				this->config.extractingFieldDelimiters.begin(),
+				this->config.extractingFieldDelimiters.end(),
+				[](char c) {
+					return c == '\0';
+				},
+				'\n'
+		);
+
+		// remove 'ignore empty values' properties that are not used, set to 'true' where none is specified
+		if(this->config.extractingFieldIgnoreEmpty.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.extractingFieldIgnoreEmpty.resize(completeFields, true);
+
+		// remove 'save field as JSON' properties that are not used, set to 'false' where none is specified
+		if(this->config.extractingFieldJSON.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.extractingFieldJSON.resize(completeFields, false);
 
 		// remove 'tidy text' properties that are not used, set to 'false' where none is specified
 		if(this->config.extractingFieldTidyTexts.size() > completeFields)
