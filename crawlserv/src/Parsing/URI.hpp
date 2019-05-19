@@ -27,6 +27,7 @@ namespace crawlservpp::Parsing {
 
 	class URI final {
 	public:
+		// constructor and destructor
 		URI();
 		virtual ~URI();
 
@@ -54,11 +55,11 @@ namespace crawlservpp::Parsing {
 			virtual ~Exception() {}
 		};
 
-		// not moveable, not copyable
+		// only moveable (using default), not copyable
 		URI(URI&) = delete;
-		URI(URI&&) = delete;
+		URI(URI&&) = default;
 		URI& operator=(URI) = delete;
-		URI& operator=(URI&&) = delete;
+		URI& operator=(URI&&) = default;
 
 	private:
 		std::string domain;
