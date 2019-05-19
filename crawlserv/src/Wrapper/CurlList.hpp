@@ -56,7 +56,7 @@ namespace crawlservpp::Wrapper {
 		}
 
 		// bool operator
-		operator bool() const {
+		explicit operator bool() const {
 			return this->ptr != nullptr;
 		}
 
