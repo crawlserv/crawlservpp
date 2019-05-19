@@ -39,10 +39,12 @@ namespace crawlservpp::Network {
 		virtual ~Curl();
 
 		// setters
-		void setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string> * warningsTo);
+		void setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string>& warningsTo);
 		void setConfigCurrent(const Config& currentConfig);
 		void setCookies(const std::string& cookies);
+		void setHeaders(std::vector<std::string>& headers);
 		void unsetCookies();
+		void unsetHeaders();
 
 		// getters
 		void getContent(const std::string& url, bool usePost, std::string& contentTo, const std::vector<unsigned int>& errors);

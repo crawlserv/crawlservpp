@@ -52,7 +52,7 @@ namespace crawlservpp::Network {
 	void Curl::setConfigGlobal(
 			const Config& globalConfig,
 			bool limited,
-			std::queue<std::string> * warningsTo
+			std::queue<std::string>& warningsTo
 	) {
 		if(!(this->curl.get()))
 			throw Curl::Exception("cURL not initialized");
@@ -169,8 +169,7 @@ namespace crawlservpp::Network {
 			if(this->curlCode != CURLE_OK)
 				throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	#else
-			if(warningsTo)
-				warningsTo->emplace("DNS-over-HTTPS currently not supported, \'network.dns.doh\' ignored.");
+			warningsTo.emplace("DNS-over-HTTPS currently not supported, \'network.dns.doh\' ignored.");
 	#endif
 		}
 
@@ -226,8 +225,8 @@ namespace crawlservpp::Network {
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	#else
-		if(globalConfig.dnsShuffle && warningsTo)
-			warningsTo->emplace("DNS shuffling currently not supported, \'network.dns.shuffle\' ignored.");
+		if(globalConfig.dnsShuffle)
+			warningsTo.emplace("DNS shuffling currently not supported, \'network.dns.shuffle\' ignored.");
 	#endif
 
 		if(
@@ -349,8 +348,7 @@ namespace crawlservpp::Network {
 						CURL_HTTP_VERSION_2_0
 				);
 	#else
-				if(warningsTo)
-					warningsTo->emplace("HTTP 2.0 currently not supported, \'http.version\' ignored.");
+				warningsTo.emplace("HTTP 2.0 currently not supported, \'http.version\' ignored.");
 
 				this->curlCode = CURLE_OK;
 	#endif
@@ -365,8 +363,7 @@ namespace crawlservpp::Network {
 						CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE
 				);
 	#else
-				if(warningsTo)
-					warningsTo->emplace("HTTP 2.0 ONLY currently not supported, \'http.version\' ignored.");
+				warningsTo.emplace("HTTP 2.0 ONLY currently not supported, \'http.version\' ignored.");
 
 				this->curlCode = CURLE_OK;
 	#endif
@@ -381,8 +378,7 @@ namespace crawlservpp::Network {
 						CURL_HTTP_VERSION_2TLS
 				);
 #else
-				if(warningsTo)
-					warningsTo->emplace("HTTP 2.0 OVER TLS ONLY currently not supported, \'http.version\' ignored.");
+				warningsTo.emplace("HTTP 2.0 OVER TLS ONLY currently not supported, \'http.version\' ignored.");
 
 				this->curlCode = CURLE_OK;
 #endif
@@ -390,8 +386,7 @@ namespace crawlservpp::Network {
 				break;
 
 			default:
-				if(warningsTo)
-					warningsTo->emplace("Enum value for HTTP version not recognized, \'network.http.version\' ignored.");
+					warningsTo.emplace("Enum value for HTTP version not recognized, \'network.http.version\' ignored.");
 
 				this->curlCode = CURLE_OK;
 			}
@@ -476,8 +471,7 @@ namespace crawlservpp::Network {
 			if(this->curlCode != CURLE_OK)
 				throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	#else
-			if(warningsTo)
-				warningsTo->emplace("Pre-Proxy currently not supported, \' proxy.pre\' ignored.");
+				warningsTo.emplace("Pre-Proxy currently not supported, \' proxy.pre\' ignored.");
 	#endif
 		}
 
@@ -501,11 +495,10 @@ namespace crawlservpp::Network {
 			if(this->curlCode != CURLE_OK)
 				throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	#else
-			if(warningsTo)
-				warningsTo->emplace(
-						"Proxy TLS authentication currently not supported,"
-						" \'proxy.tls.srp.user\' and \'proxy.tls.srp.password\' ignored."
-				);
+			warningsTo.emplace(
+					"Proxy TLS authentication currently not supported,"
+					" \'proxy.tls.srp.user\' and \'proxy.tls.srp.password\' ignored."
+			);
 	#endif
 		}
 
@@ -665,8 +658,8 @@ namespace crawlservpp::Network {
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	#else
-		if((globalConfig.sslVerifyProxyHost || globalConfig.sslVerifyProxyPeer) && warningsTo)
-			warningsTo->emplace(
+		if(globalConfig.sslVerifyProxyHost || globalConfig.sslVerifyProxyPeer)
+			warningsTo.emplace(
 					"SLL verification of proxy host and peer currently not supported,"
 					" \'ssl.verify.proxy.host\' and  \'ssl.verify.proxy.peer\' ignored."
 			);
@@ -691,8 +684,8 @@ namespace crawlservpp::Network {
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	#else
-		if(globalConfig.tcpFastOpen && warningsTo)
-			warningsTo->emplace("TCP Fast Open currently not supported, \'tcp.fast.open\' ignored.");
+		if(globalConfig.tcpFastOpen)
+			warningsTo.emplace("TCP Fast Open currently not supported, \'tcp.fast.open\' ignored.");
 	#endif
 
 		this->curlCode = curl_easy_setopt(
@@ -751,11 +744,10 @@ namespace crawlservpp::Network {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	#else
 		if(globalConfig.timeOutHappyEyeballs)
-			if(warningsTo)
-				warningsTo->emplace(
-						"Happy Eyeballs Configuration currently not supported,"
-						" \'network.timeout.happyeyeballs\' ignored."
-				);
+			warningsTo.emplace(
+					"Happy Eyeballs Configuration currently not supported,"
+					" \'network.timeout.happyeyeballs\' ignored."
+			);
 	#endif
 
 		this->curlCode = curl_easy_setopt(
@@ -1117,8 +1109,11 @@ namespace crawlservpp::Network {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
 		// set configuration
-		if(this->config)
-			this->setConfigGlobal(*(this->config), this->limitedSettings, nullptr);
+		if(this->config) {
+			std::queue<std::string> logDump; // do not log warnings another time
+
+			this->setConfigGlobal(*(this->config), this->limitedSettings, logDump);
+		}
 	}
 
 	// get last cURL code

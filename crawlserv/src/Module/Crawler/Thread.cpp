@@ -171,7 +171,7 @@ namespace crawlservpp::Module::Crawler {
 		if(config.crawlerLogging == Config::crawlerLoggingVerbose)
 			this->log("sets network configuration...");
 
-		this->networking.setConfigGlobal(*this, false, &configWarnings);
+		this->networking.setConfigGlobal(*this, false, configWarnings);
 
 		while(!configWarnings.empty()) {
 			this->log("WARNING: " + configWarnings.front());
@@ -203,7 +203,7 @@ namespace crawlservpp::Module::Crawler {
 
 			this->networkingArchives = std::make_unique<Network::Curl>(this->cookieDir);
 
-			this->networkingArchives->setConfigGlobal(*this, true, &configWarnings);
+			this->networkingArchives->setConfigGlobal(*this, true, configWarnings);
 
 			// log warnings if necessary
 			if(this->config.crawlerLogging)

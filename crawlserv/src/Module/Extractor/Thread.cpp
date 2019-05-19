@@ -176,7 +176,7 @@ namespace crawlservpp::Module::Extractor {
 		if(config.generalLogging == Config::generalLoggingVerbose)
 			this->log("sets network configuration...");
 
-		this->networking.setConfigGlobal(*this, false, &configWarnings);
+		this->networking.setConfigGlobal(*this, false, configWarnings);
 
 		while(!configWarnings.empty()) {
 			this->log("WARNING: " + configWarnings.front());
