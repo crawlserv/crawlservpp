@@ -1390,7 +1390,7 @@ namespace crawlservpp::Module::Crawler {
 
 					if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 						this->log(
-								"Fetched token \'"
+								"fetched token \'"
 								+ *i
 								+ "\' from "
 								+ sourceUrl

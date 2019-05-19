@@ -1309,7 +1309,7 @@ namespace crawlservpp::Module::Extractor {
 
 			if(this->config.generalLogging > Config::generalLoggingDefault)
 					this->log(
-							"Fetched token \'"
+							"fetched token \'"
 							+ name
 							+ "\' from "
 							+ sourceUrl
