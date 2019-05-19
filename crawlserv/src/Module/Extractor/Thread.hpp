@@ -34,7 +34,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <algorithm>	// std::count_if, std::find
+#include <algorithm>	// std::count_if, std::find, std::find_if
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <functional>	// std::bind
@@ -167,10 +167,16 @@ namespace crawlservpp::Module::Extractor {
 		std::string extractingGetTokenValue(
 				const std::string& source,
 				const std::string& cookies,
+				const std::vector<std::string>& headers,
 				bool usePost,
 				const QueryStruct& query
 		);
-		void extractingPageContent(const std::string& url, const std::string& cookies, std::string& resultTo);
+		void extractingPageContent(
+				const std::string& url,
+				const std::string& cookies,
+				const std::vector<std::string>& headers,
+				std::string& resultTo
+		);
 		void extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo);
 		void extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo);
 		unsigned long extractingPage(unsigned long contentId, const std::string& url);

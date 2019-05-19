@@ -82,6 +82,7 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<std::string> variablesTokensCookies;
 			std::vector<unsigned long> variablesTokensQuery;
 			std::vector<std::string> variablesTokensSource;
+			std::vector<std::string> variablesTokenHeaders;
 			std::vector<bool> variablesTokensUsePost;
 
 			// paging entries
@@ -97,6 +98,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// source entries
 			std::string sourceCookies;
+			std::vector<std::string> sourceHeaders;
 			std::string sourceUrl;
 			std::string sourceUrlFirst;
 			bool sourceUsePost;
@@ -215,6 +217,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("tokens.query", this->config.variablesTokensQuery);
 		this->option("tokens.source", this->config.variablesTokensSource);
 		this->option("tokens.use.post", this->config.variablesTokensUsePost);
+		this->option("token.headers", this->config.variablesTokenHeaders); // NOTE: to be used for ALL tokens
 
 		// paging
 		this->category("paging");
@@ -231,6 +234,7 @@ namespace crawlservpp::Module::Extractor {
 		// source
 		this->category("source");
 		this->option("cookies", this->config.sourceCookies);
+		this->option("headers", this->config.sourceHeaders);
 		this->option("url", this->config.sourceUrl);
 		this->option("url.first", this->config.sourceUrlFirst);
 		this->option("use.post", this->config.sourceUsePost);

@@ -161,7 +161,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Variable names:",
-			"description": "Variable names to be replaced in 'source.url' and 'source.cookies'.",
+			"description": "Variable names to be replaced in 'source.url', 'source.cookies' and 'source.headers'.",
 			"simple": true,
 			"position": 1
 		},
@@ -215,7 +215,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Token variables:",
-			"description": "List of token variables to be replaced in 'source.url' and 'source.cookies'.",
+			"description": "List of token variables to be replaced in 'source.url', 'source.cookies' and 'source.headers'.",
 			"simple": true,
 			"position": 12
 		},
@@ -258,6 +258,13 @@
 			"description": "Use HTTP POST instead of GET for the token with the same array index.",
 			"simple": true,
 			"position": 15
+		},
+		"token.headers": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Custom headers to be used for ALL tokens.",
+			"simple": false
 		}
 	},
 	"paging": {
@@ -341,7 +348,7 @@
 			"type": "string",
 			"default": "$p",
 			"label": "Paging variable:",
-			"description": "Paging variable to be used in 'source.url' and 'source.cookies'. Will be overwritten with either page number or page name.",
+			"description": "Paging variable to be used in 'source.url', 'source.cookies' and 'source.headers'. Will be overwritten with either page number or page name.",
 			"simple": true,
 			"position": 1
 		}
@@ -357,6 +364,14 @@
 			"description": "Cookie header for getting data.",
 			"simple": true,
 			"position": 3
+		},
+		"headers": {
+			"type": "array",
+			"item-type": "string",
+			"label": "HTTP headers:",
+			"description": "Custom HTTP headers for getting data.",
+			"simple": true,
+			"position": 4
 		},
 		"url": {
 			"type": "string",

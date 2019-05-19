@@ -881,8 +881,11 @@ namespace crawlservpp::Module::Extractor {
 
 			this->extractingGetPageTokenValues(page, pageTokens);
 
-			// get cookies and source URL
+			// get cookies and custom headers
 			std::string cookies(this->config.sourceCookies);
+			std::vector<std::string> headers(this->config.sourceHeaders);
+
+			// get source URL
 			std::string sourceUrl;
 
 			if(pageFirst) {
@@ -903,14 +906,25 @@ namespace crawlservpp::Module::Extractor {
 			Helper::Strings::replaceAll(sourceUrl, this->config.pagingVariable, page, true);
 			Helper::Strings::replaceAll(sourceUrl, this->config.pagingAlias, pageAlias, true);
 
+			for(auto& header : headers) {
+				Helper::Strings::replaceAll(header, this->config.pagingVariable, page, true);
+				Helper::Strings::replaceAll(header, this->config.pagingAlias, pageAlias, true);
+			}
+
 			for(const auto& variable : variables) {
 				Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
 				Helper::Strings::replaceAll(sourceUrl, variable.first, variable.second, true);
+
+				for(auto& header : headers)
+					Helper::Strings::replaceAll(header, variable.first, variable.second, true);
 			}
 
 			for(const auto& token : pageTokens) {
 				Helper::Strings::replaceAll(cookies, token.first, token.second, true);
 				Helper::Strings::replaceAll(sourceUrl, token.first, token.second, true);
+
+				for(auto& header : headers)
+					Helper::Strings::replaceAll(header, token.first, token.second, true);
 			}
 
 			// check URL
@@ -920,7 +934,7 @@ namespace crawlservpp::Module::Extractor {
 			// get and check content of current page
 			std::string pageContent;
 
-			this->extractingPageContent("https://" + sourceUrl, cookies, pageContent);
+			this->extractingPageContent("https://" + sourceUrl, cookies, headers, pageContent);
 
 			if(pageContent.empty())
 				break;
@@ -1084,12 +1098,21 @@ namespace crawlservpp::Module::Extractor {
 						this->extractingGetTokenValue(
 								this->config.variablesTokensSource.at(index),
 								this->config.variablesTokensCookies.at(index),
+								this->config.variablesTokenHeaders,
 								this->config.variablesTokensUsePost.at(index),
 								this->queriesTokens.at(index)
 						)
 				);
 			}
-		else
+		else if(
+				std::find_if(
+						this->config.variablesTokenHeaders.begin(),
+						this->config.variablesTokenHeaders.end(),
+						[this](const auto& header) {
+							return header.find(this->config.pagingVariable) != std::string::npos;
+						}
+				) == this->config.variablesTokenHeaders.end()
+		) {
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 				const unsigned long index = i - this->config.variablesTokens.begin();
 				const auto& source = this->config.variablesTokensSource.at(index);
@@ -1104,11 +1127,13 @@ namespace crawlservpp::Module::Extractor {
 							this->extractingGetTokenValue(
 									source,
 									cookies,
+									this->config.variablesTokenHeaders,
 									this->config.variablesTokensUsePost.at(index),
 									this->queriesTokens.at(index)
 							)
 					);
 			}
+		}
 	}
 
 	// get values of page-specific tokens
@@ -1116,23 +1141,39 @@ namespace crawlservpp::Module::Extractor {
 		if(this->config.pagingVariable.empty())
 			return;
 
+		std::vector<std::string> headers(this->config.variablesTokenHeaders);
+
+		bool allTokens =
+				std::find_if(
+						headers.begin(),
+						headers.end(),
+						[this](const auto& header) {
+							return header.find(this->config.pagingVariable) != std::string::npos;
+						}
+				) != headers.end();
+
 		for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 			const unsigned long index = i - this->config.variablesTokens.begin();
 			std::string source(this->config.variablesTokensSource.at(index));
 			std::string cookies(this->config.variablesTokensCookies.at(index));
 
 			if(
-					source.find(this->config.pagingVariable) != std::string::npos
+					allTokens
+					|| source.find(this->config.pagingVariable) != std::string::npos
 					|| cookies.find(this->config.pagingVariable) != std::string::npos
 			) {
 				Helper::Strings::replaceAll(source, this->config.pagingVariable, page, true);
 				Helper::Strings::replaceAll(cookies, this->config.pagingVariable, page, true);
+
+				for(auto& header : headers)
+					Helper::Strings::replaceAll(header, this->config.pagingVariable, page, true);
 
 				tokens.emplace_back(
 						*i,
 						this->extractingGetTokenValue(
 								source,
 								cookies,
+								this->config.variablesTokenHeaders,
 								this->config.variablesTokensUsePost.at(index),
 								this->queriesTokens.at(index)
 						)
@@ -1145,6 +1186,7 @@ namespace crawlservpp::Module::Extractor {
 	std::string Thread::extractingGetTokenValue(
 			const std::string& source,
 			const std::string& cookies,
+			const std::vector<std::string>& headers,
 			bool usePost,
 			const QueryStruct& query
 	) {
@@ -1163,9 +1205,12 @@ namespace crawlservpp::Module::Extractor {
 				// set local network configuration
 				this->networking.setConfigCurrent(*this);
 
-				// set cookies if necessary
+				// set custom headers if necessary
 				if(!cookies.empty())
 					this->networking.setCookies(cookies);
+
+				if(!headers.empty())
+					this->networking.setHeaders(headers);
 
 				// get content
 				this->networking.getContent(
@@ -1175,18 +1220,24 @@ namespace crawlservpp::Module::Extractor {
 						this->config.generalRetryHttp
 				);
 
-				// unset cookies if necessary
+				// unset custom headers if necessary
 				if(!cookies.empty())
 					this->networking.unsetCookies();
+
+				if(!headers.empty())
+					this->networking.unsetHeaders();
 
 				success = true;
 
 				break;
 			}
 			catch(const CurlException& e) { // error while getting content
-				// unset cookies if necessary
+				// unset custom headers if necessary
 				if(!cookies.empty())
 					this->networking.unsetCookies();
+
+				if(!headers.empty())
+					this->networking.unsetHeaders();
 
 				// check type of error i.e. last cURL code
 				if(this->extractingCheckCurlCode(
@@ -1216,9 +1267,12 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 			catch(const Utf8Exception& e) {
-				// unset cookies if necessary
+				// unset custom headers if necessary
 				if(!cookies.empty())
 					this->networking.unsetCookies();
+
+				if(!headers.empty())
+					this->networking.unsetHeaders();
 
 				// write UTF-8 error to log if neccessary
 				if(this->config.generalLogging)
@@ -1252,15 +1306,23 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get page content from URL
-	void Thread::extractingPageContent(const std::string& url, const std::string& cookies, std::string& resultTo) {
+	void Thread::extractingPageContent(
+			const std::string& url,
+			const std::string& cookies,
+			const std::vector<std::string>& headers,
+			std::string& resultTo
+	) {
 		while(this->isRunning()) {
 			try {
 				// set local network configuration
 				this->networking.setConfigCurrent(*this);
 
-				// set cookies if necessary
+				// set custom headers if necessary
 				if(!cookies.empty())
 					this->networking.setCookies(cookies);
+
+				if(!headers.empty())
+					this->networking.setHeaders(headers);
 
 				this->networking.getContent(
 						url,
@@ -1269,16 +1331,22 @@ namespace crawlservpp::Module::Extractor {
 						this->config.generalRetryHttp
 				);
 
-				// unset cookies if necessary
+				// unset custom headers if necessary
 				if(!cookies.empty())
 					this->networking.unsetCookies();
+
+				if(!headers.empty())
+					this->networking.unsetHeaders();
 
 				break;
 			}
 			catch(const CurlException& e) { // error while getting content
-				// unset cookies if necessary
+				// unset custom headers if necessary
 				if(!cookies.empty())
 					this->networking.unsetCookies();
+
+				if(!headers.empty())
+					this->networking.unsetHeaders();
 
 				// error while getting content: check type of error i.e. last cURL code
 				if(this->extractingCheckCurlCode(
@@ -1308,9 +1376,12 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 			catch(const Utf8Exception& e) {
-				// unset cookies if necessary
+				// unset custom headers if necessary
 				if(!cookies.empty())
 					this->networking.unsetCookies();
+
+				if(!headers.empty())
+					this->networking.unsetHeaders();
 
 				// write UTF-8 error to log if neccessary
 				if(this->config.generalLogging)
