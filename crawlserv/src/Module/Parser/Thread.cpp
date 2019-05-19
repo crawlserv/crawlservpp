@@ -1123,7 +1123,7 @@ namespace crawlservpp::Module::Parser {
 			// update or add entries in/to database
 			this->database.updateOrAddEntries(this->results);
 
-			// update parsing table
+			// update target table
 			this->database.updateTargetTable();
 		} // target table unlocked
 
