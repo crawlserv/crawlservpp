@@ -42,7 +42,22 @@ namespace crawlservpp::Wrapper {
 			return this->ptr;
 		}
 
-		// append newElement to cURL list
+		// append the elements of another cURL list to the list
+		void append(const CurlList& other) {
+			if(!other)
+				return;
+
+			auto item = other.ptr;
+
+			do {
+				this->append(item->data);
+
+				item = item->next;
+			}
+			while(item->next);
+		}
+
+		// append element to cURL list
 		void append(const std::string& newElement) {
 			this->ptr = curl_slist_append(this->ptr, newElement.c_str());
 		}
