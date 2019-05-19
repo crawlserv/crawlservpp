@@ -87,6 +87,9 @@ namespace crawlservpp::Query {
 			expressionSingle(std::move(other.expressionSingle)),
 			expressionMulti(std::move(other.expressionMulti)) {}
 
+	// destructor stub
+	RegEx::~RegEx() {}
+
 	// get boolean result of RegEx expression (at least one match?), throws RegEx::Exception
 	bool RegEx::getBool(const std::string& text) const {
 		// check compiled expression
