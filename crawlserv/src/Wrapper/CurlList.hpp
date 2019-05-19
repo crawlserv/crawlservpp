@@ -13,82 +13,37 @@
 
 #include <curl/curl.h>
 
-#include <string>	// std::string
+#include <stdexcept>	// std::runtime_error
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Wrapper {
 
+	/*
+	 * DECLARATION
+	 */
+
 	class CurlList {
 	public:
-		// constructor: set pointer to nullptr
-		CurlList() noexcept : ptr(nullptr) {}
+		// constructors and destructor
+		CurlList() noexcept;
+		CurlList(CurlList&& other) noexcept;
+		~CurlList();
 
-		// move constructor
-		CurlList(CurlList&& other) noexcept : ptr(other.ptr) {
-			other.ptr = nullptr;
-		}
+		// getters
+		struct curl_slist * get() noexcept;
+		const struct curl_slist * get() const noexcept;
 
-		// destructor: reset cURL list if necessary
-		~CurlList() {
-			this->reset();
-		}
+		// manipulators
+		void append(const CurlList& other);
+		void append(const std::vector<std::string>& newElements);
+		void append(const std::string& newElement);
+		void reset() noexcept;
 
-		// get pointer to cURL list
-		struct curl_slist * get() {
-			return this->ptr;
-		}
-
-		// get const pointer to cURL list
-		const struct curl_slist * get() const {
-			return this->ptr;
-		}
-
-		// append the elements of another cURL list to the list
-		void append(const CurlList& other) {
-			if(!other)
-				return;
-
-			auto item = other.ptr;
-
-			do {
-				this->append(item->data);
-
-				item = item->next;
-			}
-			while(item->next);
-		}
-
-		// append element to cURL list
-		void append(const std::string& newElement) {
-			this->ptr = curl_slist_append(this->ptr, newElement.c_str());
-		}
-
-		// reset cURL list
-		void reset() {
-			if(this->ptr)
-				curl_slist_free_all(this->ptr);
-
-			this->ptr = nullptr;
-		}
-
-		// bool operator
-		explicit operator bool() const {
-			return this->ptr != nullptr;
-		}
-
-		// not operator
-		bool operator!() const {
-			return this->ptr == nullptr;
-		}
-
-		// move assignment operator
-		CurlList& operator=(CurlList&& other) noexcept {
-			if(&other != this) {
-				this->ptr = other.ptr;
-				other.ptr = nullptr;
-			}
-
-			return *this;
-		}
+		// operators
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
+		CurlList& operator=(CurlList&& other) noexcept;
 
 		// not copyable
 		CurlList(CurlList&) = delete;
@@ -97,6 +52,92 @@ namespace crawlservpp::Wrapper {
 	private:
 		struct curl_slist * ptr;
 	};
+
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor: set pointer to nullptr
+	inline CurlList::CurlList() noexcept : ptr(nullptr) {}
+
+	// move constructor
+	inline CurlList::CurlList(CurlList&& other) noexcept : ptr(other.ptr) {
+		other.ptr = nullptr;
+	}
+
+	// destructor: reset cURL list if necessary
+	inline CurlList::~CurlList() {
+		this->reset();
+	}
+
+	// get pointer to cURL list
+	inline struct curl_slist * CurlList::get() noexcept {
+		return this->ptr;
+	}
+
+	// get const pointer to cURL list
+	inline const struct curl_slist * CurlList::get() const noexcept {
+		return this->ptr;
+	}
+
+	// append the elements of another cURL list to the list, throws std::runtime_error
+	inline void CurlList::append(const CurlList& other) {
+		if(!other)
+			return;
+
+		auto item = other.ptr;
+
+		do {
+			this->append(item->data);
+
+			item = item->next;
+		}
+		while(item->next);
+	}
+
+	// append the elements of a vector to the cURL list, throws std::runtime_error
+	inline void CurlList::append(const std::vector<std::string>& newElements) {
+		for(const auto& element : newElements)
+			this->append(element);
+	}
+
+	// append element to cURL list, throws std::runtime_error
+	inline void CurlList::append(const std::string& newElement) {
+		const auto temp = curl_slist_append(this->ptr, newElement.c_str());
+
+		if(!temp)
+			throw std::runtime_error("curl_slist_append() failed");
+
+		this->ptr = temp;
+	}
+
+	// reset cURL list
+	inline void CurlList::reset() noexcept {
+		if(this->ptr)
+			curl_slist_free_all(this->ptr);
+
+		this->ptr = nullptr;
+	}
+
+	// bool operator
+	inline CurlList::operator bool() const noexcept {
+		return this->ptr != nullptr;
+	}
+
+	// not operator
+	inline bool CurlList::operator!() const noexcept {
+		return this->ptr == nullptr;
+	}
+
+	// move assignment operator
+	inline CurlList& CurlList::operator=(CurlList&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = nullptr;
+		}
+
+		return *this;
+	}
 
 	} /* crawlservpp::Wrapper */
 
