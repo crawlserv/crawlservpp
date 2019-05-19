@@ -1096,6 +1096,7 @@ namespace crawlservpp::Module::Extractor {
 				variables.emplace_back(
 						*i,
 						this->extractingGetTokenValue(
+								*i,
 								this->config.variablesTokensSource.at(index),
 								this->config.variablesTokensCookies.at(index),
 								this->config.variablesTokenHeaders,
@@ -1125,6 +1126,7 @@ namespace crawlservpp::Module::Extractor {
 					variables.emplace_back(
 							*i,
 							this->extractingGetTokenValue(
+									*i,
 									source,
 									cookies,
 									this->config.variablesTokenHeaders,
@@ -1171,6 +1173,7 @@ namespace crawlservpp::Module::Extractor {
 				tokens.emplace_back(
 						*i,
 						this->extractingGetTokenValue(
+								*i,
 								source,
 								cookies,
 								this->config.variablesTokenHeaders,
@@ -1184,6 +1187,7 @@ namespace crawlservpp::Module::Extractor {
 
 	// get value of token
 	std::string Thread::extractingGetTokenValue(
+			const std::string& name,
 			const std::string& source,
 			const std::string& cookies,
 			const std::vector<std::string>& headers,
@@ -1257,7 +1261,9 @@ namespace crawlservpp::Module::Extractor {
 				else {
 					if(this->config.generalLogging)
 						this->log(
-								"WARNING: Could not get value for token from "
+								"WARNING: Could not get token \'"
+								+ name
+								+ "\' from "
 								+ sourceUrl
 								+ ": "
 								+ e.whatStr()
@@ -1298,8 +1304,19 @@ namespace crawlservpp::Module::Extractor {
 					result = booleanResult ? "true" : "false";
 			}
 
-			// log warnings if necessary
+			// logging if necessary
 			this->logWarnings(queryWarnings);
+
+			if(this->config.generalLogging > Config::generalLoggingDefault)
+					this->log(
+							"Fetched token \'"
+							+ name
+							+ "\' from "
+							+ sourceUrl
+							+ " [= \'"
+							+ result
+							+ "\']."
+					);
 		}
 
 		return result;

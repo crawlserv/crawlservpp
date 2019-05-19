@@ -1384,6 +1384,20 @@ namespace crawlservpp::Module::Crawler {
 								+ *i
 								+ "\' - not single and not bool."
 						);
+
+					// logging if necessary
+					this->logWarnings(queryWarnings);
+
+					if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+						this->log(
+								"Fetched token \'"
+								+ *i
+								+ "\' from "
+								+ sourceUrl
+								+ " [= \'"
+								+ value
+								+ "\']."
+						);
 				}
 
 				// replace variable(s) with token(s)

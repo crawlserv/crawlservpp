@@ -165,6 +165,7 @@ namespace crawlservpp::Module::Extractor {
 		void extractingGetTokenValues(std::vector<StringString>& variables);
 		void extractingGetPageTokenValues(const std::string& page, std::vector<StringString>& tokens);
 		std::string extractingGetTokenValue(
+				const std::string& name,
 				const std::string& source,
 				const std::string& cookies,
 				const std::vector<std::string>& headers,
