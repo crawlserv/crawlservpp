@@ -112,10 +112,24 @@ class Config {
 							thisClass.config_base[cat][opt].id = idCounter;
 							
 							// check whether default value exists
-							if(typeof thisClass.config_base[cat][opt].default === "undefined")
-								console.log(
-										"WARNING: Default value for \"" + cat + "." + opt + "\" is missing!"
-								);
+							if(typeof thisClass.config_base[cat][opt].default === "undefined") {
+								var warningStr = "WARNING: Default value for \"" + cat + "." + opt + "\" is missing, ";
+								
+								if(thisClass.config_base[cat][opt].type == "array") {
+									thisClass.config_base[cat][opt].default = [];
+									warningStr += "set to empty array.";
+								}
+								else if(thisClass.config_base[cat][opt].type == "string") {
+									thisClass.config_base[cat][opt].default = "";
+									warningStr += "set to empty string.";
+								}
+								else {
+									thisClass.config_base[cat][opt].default = 0;
+									warningStr += "set to zero.";
+								}
+								
+								console.log(warningStr);
+							}
 						}
 					}
 				}
