@@ -14,101 +14,34 @@
 
 #include <curl/curl.h>
 
+#include <stdexcept>	// std::runtime_error
+
 namespace crawlservpp::Wrapper {
+
+	/*
+	 * DECLARATION
+	 */
 
 	class Curl {
 	public:
-		// constructor: set pointer to nullptr
-		Curl() : ptr(nullptr) {
-			// initialize global instance if necessary
-			if(globalInit)
-				this->localInit = false;
-			else {
-				globalInit = true;
+		// constructors and destructor
+		Curl();
+		Curl(Curl&& other) noexcept;
+		~Curl();
 
-				this->localInit = true;
+		// getters
+		const CURL * get() const noexcept;
+		CURL * get() noexcept;
+		CURL ** getPtr() noexcept;
 
-				curl_global_init(CURL_GLOBAL_ALL);
-			}
+		// controllers
+		void init();
+		void reset();
 
-			// initialize cURL
-			this->init();
-		}
-
-		// move constructor
-		Curl(Curl&& other) noexcept {
-			this->ptr = other.ptr;
-			other.ptr = nullptr;
-
-			this->localInit = other.localInit;
-			other.localInit = false;
-		}
-
-		// destructor: cleanup cURL if necessary
-		~Curl() {
-			this->reset();
-
-			// cleanup global instance if necessary
-			if(globalInit && this->localInit) {
-				curl_global_cleanup();
-
-				globalInit = false;
-
-				this->localInit = false;
-			}
-		}
-
-		// get const pointer to query list
-		const CURL * get() const {
-			return this->ptr;
-		}
-
-		// get non-const pointer to query list
-		CURL * get() {
-			return this->ptr;
-		}
-
-		// get non-const pointer to pointer to query list
-		CURL ** getPtr() {
-			return &(this->ptr);
-		}
-
-		// initialize cURL pointer
-		void init() {
-			this->ptr = curl_easy_init();
-		}
-
-		// reset cURL pointer
-		void reset() {
-			if(this->ptr) {
-				curl_easy_cleanup(this->ptr);
-
-				this->ptr = nullptr;
-			}
-		}
-
-		// bool operator
-		explicit operator bool() const {
-			return this->ptr != nullptr;
-		}
-
-		// not operator
-		bool operator!() const {
-			return this->ptr == nullptr;
-		}
-
-		// move assignment operator
-		Curl& operator=(Curl&& other) noexcept {
-			if(&other != this) {
-				this->ptr = other.ptr;
-				other.ptr = nullptr;
-
-				this->localInit = other.localInit;
-				other.localInit = false;
-			}
-
-			return *this;
-		}
+		// operators
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
+		Curl& operator=(Curl&& other) noexcept;
 
 		// not copyable
 		Curl(Curl&) = delete;
@@ -117,8 +50,109 @@ namespace crawlservpp::Wrapper {
 	private:
 		CURL * ptr;
 		bool localInit;
+
 		static bool globalInit;
 	};
+
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor: set pointer to nullptr, throws std::runtime_error
+	inline Curl::Curl() : ptr(nullptr) {
+		// initialize global instance if necessary
+		if(globalInit)
+			this->localInit = false;
+		else {
+			globalInit = true;
+
+			this->localInit = true;
+
+			if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK)
+				throw std::runtime_error("curl_global_init() failed");
+		}
+
+		// initialize cURL
+		this->init();
+	}
+
+	// move constructor
+	inline Curl::Curl(Curl&& other) noexcept {
+		this->ptr = other.ptr;
+		other.ptr = nullptr;
+
+		this->localInit = other.localInit;
+		other.localInit = false;
+	}
+
+	// destructor: cleanup cURL if necessary
+	inline Curl::~Curl() {
+		this->reset();
+
+		// cleanup global instance if necessary
+		if(globalInit && this->localInit) {
+			curl_global_cleanup();
+
+			globalInit = false;
+
+			this->localInit = false;
+		}
+	}
+
+	// get const pointer to query list
+	inline const CURL * Curl::get() const noexcept {
+		return this->ptr;
+	}
+
+	// get non-const pointer to query list
+	inline CURL * Curl::get() noexcept {
+		return this->ptr;
+	}
+
+	// get non-const pointer to pointer to query list
+	inline CURL ** Curl::getPtr() noexcept {
+		return &(this->ptr);
+	}
+
+	// initialize cURL pointer, throws std::runtime_error
+	inline void Curl::init() {
+		this->ptr = curl_easy_init();
+
+		if(!this->ptr)
+			throw std::runtime_error("curl_easy_init() failed");
+	}
+
+	// reset cURL pointer
+	inline void Curl::reset() {
+		if(this->ptr) {
+			curl_easy_cleanup(this->ptr);
+
+			this->ptr = nullptr;
+		}
+	}
+
+	// bool operator
+	inline Curl::operator bool() const noexcept {
+		return this->ptr != nullptr;
+	}
+
+	// not operator
+	inline bool Curl::operator!() const noexcept {
+		return this->ptr == nullptr;
+	}
+
+	// move assignment operator
+	inline Curl& Curl::operator=(Curl&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = nullptr;
+
+			this->localInit = other.localInit;
+			other.localInit = false;
+		}
+
+		return *this;
+	}
 
 } /* crawlservpp::Wrapper */
 
