@@ -273,7 +273,7 @@ namespace crawlservpp::Module::Parser {
 
 		this->config.parsingFieldIgnoreEmpty.resize(completeFields, true);
 
-		// remove 'save field entry' properties that are not used, set to 'false' where none is specified
+		// remove 'save field as JSON' properties that are not used, set to 'false' where none is specified
 		if(this->config.parsingFieldJSON.size() > completeFields)
 			incompleteFields = true;
 
