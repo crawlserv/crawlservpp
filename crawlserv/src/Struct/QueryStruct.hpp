@@ -37,11 +37,11 @@ namespace crawlservpp::Struct {
 		}
 
 		// boolean operators
-		explicit operator bool() {
+		explicit operator bool() const noexcept {
 			return this->index != 0;
 		}
 
-		bool operator!() {
+		bool operator!() const noexcept {
 			return this->index == 0;
 		}
 	};
