@@ -549,6 +549,13 @@
 			"simple": true,
 			"position": 15
 		},
+		"token.headers": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Custom headers to be used for ALL tokens.",
+			"simple": false
+		},
 		"urls": {
 			"type": "array",
 			"item-type": "string",
@@ -607,6 +614,13 @@
 			"simple": true,
 			"position": 7
 		},
+		"headers": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Custom headers on dynamic redirect.",
+			"simple": false
+		},
 		"query.content" : {
 			"type": "query",
 			"query-results": [
@@ -650,7 +664,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Variable names:",
-			"description": "Variable names to be replaced in 'redirect.to' and 'cookies'.",
+			"description": "Variable names to be replaced in 'redirect.to', 'cookies' and 'headers'.",
 			"simple": true,
 			"position": 3
 		},
