@@ -43,11 +43,11 @@ namespace crawlservpp::Parsing {
 			virtual ~Exception() {}
 		};
 
-		// not moveable, not copyable
+		// only moveable (using default), not copyable
 		HTML(HTML&) = delete;
-		HTML(HTML&&) = delete;
+		HTML(HTML&&) = default;
 		HTML& operator=(HTML&) = delete;
-		HTML& operator=(HTML&&) = delete;
+		HTML& operator=(HTML&&) = default;
 
 	private:
 		TidyDoc doc;
