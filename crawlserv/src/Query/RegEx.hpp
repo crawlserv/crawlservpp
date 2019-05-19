@@ -39,6 +39,7 @@ namespace crawlservpp::Query {
 
 		// operators
 		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
 
 		// sub-class for RegEx exceptions
 		class Exception : public Main::Exception {

@@ -330,4 +330,9 @@ namespace crawlservpp::Query {
 		return this->expressionSingle || this->expressionMulti;
 	}
 
+	// not operator
+	bool RegEx::operator!() const noexcept {
+		return !(this->expressionSingle) && !(this->expressionMulti);
+	}
+
 } /* crawlservpp::Query */
