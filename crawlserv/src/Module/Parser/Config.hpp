@@ -75,6 +75,8 @@ namespace crawlservpp::Module::Parser {
 			std::vector<unsigned long> parsingIdQueries;
 			std::vector<unsigned char> parsingIdSources;
 			bool parsingRepairCData;
+			unsigned int parsingTidyErrors;
+			bool parsingTidyWarnings;
 		} config;
 
 		// sub-class for Parser::Config exceptions
@@ -104,7 +106,9 @@ namespace crawlservpp::Module::Parser {
 										generalSleepIdle(5000),
 										generalSleepMySql(20),
 										generalTiming(false),
-										parsingRepairCData(true) {}
+										parsingRepairCData(true),
+										parsingTidyErrors(0),
+										parsingTidyWarnings(false) {}
 
 	// parse parsing-specific configuration option
 	inline void Config::parseOption() {
@@ -137,6 +141,8 @@ namespace crawlservpp::Module::Parser {
 		this->option("id.queries", this->config.parsingIdQueries);
 		this->option("id.sources", this->config.parsingIdSources);
 		this->option("repair.cdata", this->config.parsingRepairCData);
+		this->option("tidy.errors", this->config.parsingTidyErrors);
+		this->option("tidy.warnings", this->config.parsingTidyWarnings);
 	}
 
 	// check parsing-specific configuration, throws Config::Exception
