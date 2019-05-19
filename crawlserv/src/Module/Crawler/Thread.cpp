@@ -2185,7 +2185,7 @@ namespace crawlservpp::Module::Crawler {
 			if(query.type != QueryStruct::typeNone)
 				whitelist = true;
 
-			if(this->getBoolFromRegEx(query, url, found, queryWarnings) && found)
+			if(this->getBoolFromRegEx(query, contentType, found, queryWarnings) && found)
 				break;
 		}
 
