@@ -5598,7 +5598,7 @@ namespace crawlservpp::Main {
 	 * EXCEPTION HELPER FUNCTION (protected)
 	 */
 
-	// catch SQL exception and re-throw it as ConnectionException or generic Exception
+	// catch SQL exception and re-throw it as specific Database::[X]Exception or generic Database::Exception
 	void Database::sqlException(const std::string& function, const sql::SQLException& e) {
 		// get error code and create error string
 		const int error = e.getErrorCode();
