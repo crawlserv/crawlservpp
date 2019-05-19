@@ -33,11 +33,9 @@ namespace crawlservpp::Parsing {
 		friend class Query::XPath;
 
 	public:
-		// constructors
+		// constructors and destructor
 		XML();
 		XML(const pugi::xml_node& node);
-
-		// destructor
 		virtual ~XML();
 
 		// getter
@@ -46,8 +44,11 @@ namespace crawlservpp::Parsing {
 		// setter
 		void setOptions(bool showWarnings, unsigned int numOfErrors);
 
-		// parse function
+		// parsing function
 		void parse(const std::string& content, std::queue<std::string>& warningsTo, bool repairCData);
+
+		// clearing function
+		void clear();
 
 		// sub-class for XML exceptions
 		class Exception : public Main::Exception {
@@ -56,7 +57,11 @@ namespace crawlservpp::Parsing {
 			virtual ~Exception() {}
 		};
 
-		// moveable (using default), not copyable
+		// operators
+		explicit operator bool() const;
+		bool operator!() const;
+
+		// only moveable (using default), not copyable
 		XML(XML&) = delete;
 		XML(XML&&) = default;
 		XML& operator=(XML) = delete;

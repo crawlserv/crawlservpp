@@ -23,7 +23,9 @@ namespace crawlservpp::Parsing {
 	}
 
 	// destructor stub
-	XML::~XML() {}
+	XML::~XML() {
+		this->clear();
+	}
 
 	// set options for logging
 	void XML::setOptions(bool showWarnings, unsigned int numOfErrors) {
@@ -95,6 +97,22 @@ namespace crawlservpp::Parsing {
 
 			throw XML::Exception(errString);
 		}
+	}
+
+	// clear parsed content
+	void XML::clear() {
+		if(this->doc)
+			this->doc.reset();
+	}
+
+	// boolean operator to check document
+	XML::operator bool() const {
+		return this->doc != nullptr;
+	}
+
+	// not operator to check document
+	bool XML::operator!() const {
+		return this->doc == nullptr;
 	}
 
 	// get content of XML document (saved to resultTo), throws XML::Exception
