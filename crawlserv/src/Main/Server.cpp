@@ -403,7 +403,7 @@ namespace crawlservpp::Main {
 			}
 		}
 
-		/*for(unsigned long n = 1; n <= this->extractors.size(); ++n) {
+		for(unsigned long n = 1; n <= this->extractors.size(); ++n) {
 			if(this->extractors.at(n - 1)->isShutdown() && this->extractors.at(n - 1)->isFinished()) {
 				--n;
 
@@ -411,7 +411,7 @@ namespace crawlservpp::Main {
 
 				this->extractors.erase(this->extractors.begin() + n);
 			}
-		}*/
+		}
 
 		for(unsigned long n = 1; n <= this->analyzers.size(); ++n) {
 			if(this->analyzers.at(n - 1)->isShutdown() && this->analyzers.at(n - 1)->isFinished()) {
