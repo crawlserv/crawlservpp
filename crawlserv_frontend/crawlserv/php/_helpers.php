@@ -416,7 +416,7 @@ function scriptModule() {
             $result->close();
         }
         else
-            $script .= " []\n";
+            $script .= " []";
                                                     
         $script .= ";\n";
     }
