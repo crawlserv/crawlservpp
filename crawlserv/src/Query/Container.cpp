@@ -2336,7 +2336,7 @@ namespace crawlservpp::Query {
 
 				subset.getContent(subsetString);
 
-				this->stringifiedSubSets.emplace_back(std::move(subsetString));
+				this->stringifiedSubSets.emplace_back(subsetString);
 			}
 
 			break;
