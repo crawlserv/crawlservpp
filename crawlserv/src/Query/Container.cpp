@@ -55,7 +55,7 @@ namespace crawlservpp::Query {
 		this->repairCData = isRepairCData;
 	}
 
-	// set options for tidy-html reporting errors and warnings
+	// set how tidy-html reports errors and warnings
 	void Container::setTidyErrorsAndWarnings(unsigned int errors, bool warnings) {
 		this->parsedXML.setOptions(warnings, errors);
 		this->subSetParsedXML.setOptions(warnings, errors);
@@ -168,6 +168,45 @@ namespace crawlservpp::Query {
 
 				newQuery.type = QueryStruct::typeJsonPath;
 			}
+			else if(properties.type == "xpathjsonpointer") {
+				// add combined XPath and JSONPointer query
+				newQuery.index = this->queriesXPathJsonPointer.size();
+
+				try {
+					this->queriesXPathJsonPointer.emplace_back(
+							XPath(properties.text, true),
+							JsonPointer(properties.text)
+					);
+				}
+				catch(const XPathException& e) {
+					throw Exception("[XPath] " + e.whatStr());
+				}
+				catch(const JsonPointerException &e) {
+					throw Exception("[JSONPointer] " + e.whatStr());
+				}
+
+				newQuery.type = QueryStruct::typeXPathJsonPointer;
+
+			}
+			else if(properties.type == "xpathjsonpath") {
+				// add combined XPath and JSONPath query
+				newQuery.index = this->queriesXPathJsonPath.size();
+
+				try {
+					this->queriesXPathJsonPath.emplace_back(
+							XPath(properties.text, true),
+							JsonPath(properties.text)
+					);
+				}
+				catch(const XPathException& e) {
+					throw Exception("[XPath] " + e.whatStr());
+				}
+				catch(const JsonPathException &e) {
+					throw Exception("[JSONPath] " + e.whatStr());
+				}
+
+				newQuery.type = QueryStruct::typeXPathJsonPath;
+			}
 			else throw Exception(
 					"Query::Container::addQuery(): Unknown query type \'"
 					+ properties.type
@@ -185,6 +224,8 @@ namespace crawlservpp::Query {
 		this->queriesRegEx.clear();
 		this->queriesJsonPointer.clear();
 		this->queriesJsonPath.clear();
+		this->queriesXPathJsonPointer.clear();
+		this->queriesXPathJsonPath.clear();
 	}
 
 	// use next subset for queries, return false if no more subsets exist, throws Container::Exception
@@ -459,6 +500,92 @@ namespace crawlservpp::Query {
 
 			break;
 
+		case QueryStruct::typeXPathJsonPointer:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPointer.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(json.empty())
+						resultTo = false;
+					else {
+						// temporarily parse JSON using rapidJSON
+						const auto parsedJson(Helper::Json::parseRapid(json));
+
+						// get boolean result from the JSONPointer query
+						resultTo = this->queriesXPathJsonPointer.at(query.index).second.getBool(parsedJson);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPath.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(json.empty())
+						resultTo = false;
+					else {
+						// temporarily parse JSON using jsoncons
+						const auto parsedJson(Helper::Json::parseCons(json));
+
+						// get boolean result from the JSONPath query
+						resultTo = this->queriesXPathJsonPath.at(query.index).second.getBool(parsedJson);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
 		case QueryStruct::typeNone:
 			break;
 
@@ -608,6 +735,110 @@ namespace crawlservpp::Query {
 
 			break;
 
+		case QueryStruct::typeXPathJsonPointer:
+			// parse current subset as XML/HTML if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						resultTo = false;
+					else {
+						// temporarily parse JSON using rapidJSON
+						const auto parsedJson(Helper::Json::parseRapid(json));
+
+						// get boolean result from the JSONPointer query
+						resultTo = this->queriesXPathJsonPointer.at(query.index).second.getBool(parsedJson);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse current subset as XML/HTML if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						resultTo = false;
+					else {
+						// temporarily parse JSON using jsoncons
+						const auto parsedJson(Helper::Json::parseCons(json));
+
+						// get boolean result from the JSONPath query
+						resultTo = this->queriesXPathJsonPath.at(query.index).second.getBool(parsedJson);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
 		case QueryStruct::typeNone:
 			break;
 
@@ -720,6 +951,92 @@ namespace crawlservpp::Query {
 					this->queriesJsonPath.at(query.index).getFirst(this->parsedJsonCons, resultTo);
 
 					return true;
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPointer:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPointer.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(json.empty())
+						resultTo = "";
+					else {
+						// temporarily parse JSON using rapidJSON
+						const auto parsedJson(Helper::Json::parseRapid(json));
+
+						// get single result from the JSONPointer query
+						this->queriesXPathJsonPointer.at(query.index).second.getFirst(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPath.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(json.empty())
+						resultTo = "";
+					else {
+						// temporarily parse JSON using jsoncons
+						const auto parsedJson(Helper::Json::parseCons(json));
+
+						// get single result from the JSONPath query
+						this->queriesXPathJsonPath.at(query.index).second.getFirst(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
 				}
 				catch(const JsonPathException& e) {
 					warningsTo.emplace(
@@ -890,6 +1207,110 @@ namespace crawlservpp::Query {
 
 			break;
 
+		case QueryStruct::typeXPathJsonPointer:
+			// parse current subset as XML/HTML if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						resultTo = "";
+					else {
+						// temporarily parse JSON using rapidJSON
+						const auto parsedJson(Helper::Json::parseRapid(json));
+
+						// get single result from the JSONPointer query
+						this->queriesXPathJsonPointer.at(query.index).second.getFirst(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse current subset as XML/HTML if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						resultTo = "";
+					else {
+						// temporarily parse JSON using jsoncons
+						const auto parsedJson(Helper::Json::parseCons(json));
+
+						// get single result from the JSONPath query
+						this->queriesXPathJsonPath.at(query.index).second.getFirst(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
 		case QueryStruct::typeNone:
 			break;
 
@@ -932,7 +1353,7 @@ namespace crawlservpp::Query {
 
 		switch(query.type) {
 		case QueryStruct::typeRegEx:
-			// get single result from a RegEx query
+			// get multiple results from a RegEx query
 			try {
 				this->queriesRegEx.at(query.index).getAll(*(this->queryTargetPtr), resultTo);
 
@@ -953,7 +1374,7 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeXPath:
 			// parse content as XML/HTML if still necessary
 			if(this->parseXml(warningsTo)) {
-				// get single result from a XPath query
+				// get multiple results from a XPath query
 				try {
 					this->queriesXPath.at(query.index).getAll(this->parsedXML, resultTo);
 
@@ -975,7 +1396,7 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeJsonPointer:
 			// parse content as JSON using RapidJSON if still necessary
 			if(this->parseJsonRapid(warningsTo)) {
-				// get single result from a JSONPointer query
+				// get multiple results from a JSONPointer query
 				try {
 					this->queriesJsonPointer.at(query.index).getAll(this->parsedJsonRapid, resultTo);
 
@@ -997,11 +1418,97 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeJsonPath:
 			// parse content as JSON using jsoncons if still necessary
 			if(this->parseJsonRapid(warningsTo)) {
-				// get single result from a JSONPath query
+				// get multiple results from a JSONPath query
 				try {
 					this->queriesJsonPath.at(query.index).getAll(this->parsedJsonCons, resultTo);
 
 					return true;
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPointer:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPointer.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(json.empty())
+						resultTo.clear();
+					else {
+						// temporarily parse JSON using rapidJSON
+						const auto parsedJson(Helper::Json::parseRapid(json));
+
+						// get multiple results from the JSONPointer query
+						this->queriesXPathJsonPointer.at(query.index).second.getAll(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPath.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(json.empty())
+						resultTo.clear();
+					else {
+						// temporarily parse JSON using jsoncons
+						const auto parsedJson(Helper::Json::parseCons(json));
+
+						// get multiple results from the JSONPath query
+						this->queriesXPathJsonPath.at(query.index).second.getAll(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
 				}
 				catch(const JsonPathException& e) {
 					warningsTo.emplace(
@@ -1055,7 +1562,7 @@ namespace crawlservpp::Query {
 
 		switch(query.type) {
 		case QueryStruct::typeRegEx:
-			// get single result from a RegEx query on the current subset
+			// get multiple result from a RegEx query on the current subset
 			try {
 				if(this->subSetType != QueryStruct::typeRegEx)
 					this->stringifySubSets(warningsTo);
@@ -1082,7 +1589,7 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeXPath:
 			// parse current subset as XML/HTML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
-				// get single result from a XPath query on the current subset
+				// get multiple results from a XPath query on the current subset
 				try {
 					if(this->subSetType == QueryStruct::typeXPath)
 						this->queriesXPath.at(query.index).getAll(
@@ -1113,7 +1620,7 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeJsonPointer:
 			// parse current subset as JSON using RapidJSON if still necessary
 			if(this->parseSubSetJsonRapid(warningsTo)) {
-				// get single result from a JSONPointer query on the current subset
+				// get multiple results from a JSONPointer query on the current subset
 				try {
 					if(this->subSetType == QueryStruct::typeJsonPointer)
 						this->queriesJsonPointer.at(query.index).getAll(
@@ -1144,7 +1651,7 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeJsonPath:
 			// parse current subset as JSON using jsoncons if still necessary
 			if(this->parseSubSetJsonRapid(warningsTo)) {
-				// get single result from a JSONPath query on the current subset
+				// get multiple results from a JSONPath query on the current subset
 				try {
 					if(this->subSetType == QueryStruct::typeJsonPath)
 						this->queriesJsonPath.at(query.index).getAll(
@@ -1158,6 +1665,110 @@ namespace crawlservpp::Query {
 						);
 
 					return true;
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPointer:
+			// parse current subset as XML/HTML if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						resultTo.clear();
+					else {
+						// temporarily parse JSON using rapidJSON
+						const auto parsedJson(Helper::Json::parseRapid(json));
+
+						// get multiple results from the JSONPointer query
+						this->queriesXPathJsonPointer.at(query.index).second.getAll(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse current subset as XML/HTML if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						resultTo.clear();
+					else {
+						// temporarily parse JSON using jsoncons
+						const auto parsedJson(Helper::Json::parseCons(json));
+
+						// get multiple results from the JSONPath query
+						this->queriesXPathJsonPath.at(query.index).second.getAll(parsedJson, resultTo);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
 				}
 				catch(const JsonPathException& e) {
 					warningsTo.emplace(
@@ -1206,7 +1817,26 @@ namespace crawlservpp::Query {
 			break;
 		}
 
-		this->subSetType = query.type;
+		// set new subset type
+		switch(query.type) {
+		case QueryStruct::typeXPath:
+			this->subSetType = QueryStruct::typeXPath;
+
+			break;
+
+		case QueryStruct::typeJsonPointer:
+		case QueryStruct::typeXPathJsonPointer:
+			this->subSetType = QueryStruct::typeJsonPointer;
+
+			break;
+
+		case QueryStruct::typeJsonPath:
+		case QueryStruct::typeXPathJsonPath:
+			this->subSetType = QueryStruct::typeJsonPath;
+
+			break;
+		}
+
 		this->subSetNumber = 0;
 		this->subSetCurrent = 0;
 
@@ -1289,7 +1919,7 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeJsonPointer:
 			// parse content as JSON using RapidJSON if still necessary
 			if(this->parseJsonRapid(warningsTo)) {
-				// get single result from a JSONPointer query
+				// get subsets from a JSONPointer query
 				try {
 					this->queriesJsonPointer.at(query.index).getSubSets(
 							this->parsedJsonRapid,
@@ -1316,7 +1946,7 @@ namespace crawlservpp::Query {
 		case QueryStruct::typeJsonPath:
 			// parse content as JSON using jsoncons if still necessary
 			if(this->parseJsonRapid(warningsTo)) {
-				// get single result from a JSONPath query
+				// get subsets from a JSONPath query
 				try {
 					this->queriesJsonPath.at(query.index).getSubSets(
 							this->parsedJsonCons,
@@ -1326,6 +1956,94 @@ namespace crawlservpp::Query {
 					this->subSetNumber = this->jsonPathSubSets.size();
 
 					return true;
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPointer:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPointer.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(!json.empty()) {
+						// temporarily parse JSON using rapidJSON
+						const auto parsedJson(Helper::Json::parseRapid(json));
+
+						// get subsets from the JSONPointer query
+						this->queriesXPathJsonPointer.at(query.index).second.getSubSets(
+								parsedJson,
+								this->jsonPointerSubSets
+						);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse content as XML/HTML if still necessary
+			if(this->parseXml(warningsTo)) {
+				// get first result from the XPath query
+				try {
+					std::string json;
+
+					this->queriesXPathJsonPath.at(query.index).first.getFirst(this->parsedXML, json);
+
+					if(!json.empty()) {
+						// temporarily parse JSON using jsoncons
+						const auto parsedJson(Helper::Json::parseCons(json));
+
+						// get subsets from the JSONPointer query
+						this->queriesXPathJsonPath.at(query.index).second.getSubSets(
+								parsedJson,
+								this->jsonPathSubSets
+						);
+					}
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
 				}
 				catch(const JsonPathException& e) {
 					warningsTo.emplace(
@@ -1370,7 +2088,7 @@ namespace crawlservpp::Query {
 	}
 
 	// private helper function to parse content as XML/HTML if still necessary,
-	//  return false if parsing failed,  throws Container::Exception
+	//  return false if parsing failed, throws Container::Exception
 	bool Container::parseXml(std::queue<std::string>& warningsTo) {
 		// check pointers
 		if(!(this->queryTargetPtr))
@@ -1478,7 +2196,7 @@ namespace crawlservpp::Query {
 	}
 
 	// private helper function to parse subset as XML/HTML if still necessary,
-	//  return false if parsing failed,  throws Container::Exception
+	//  return false if parsing failed, throws Container::Exception
 	bool Container::parseSubSetXml(std::queue<std::string>& warningsTo) {
 		// check current subset
 		if(!(this->subSetCurrent))
@@ -1636,9 +2354,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeRegEx:
-			warningsTo.emplace(
-					"WARNING: RegEx subsets cannot be stringified."
-			);
+			warningsTo.emplace("WARNING: RegEx subsets cannot be stringified.");
 
 			break;
 
