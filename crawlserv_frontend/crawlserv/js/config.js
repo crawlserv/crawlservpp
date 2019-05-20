@@ -1387,8 +1387,8 @@ class Config {
 		if(!result)
 			return false;
 		
-		if(filter[4] == "X" && obj.type ==
-			"regex") return true;
+		if(filter[4] == "X" && obj.type == "regex")
+			return true;
 		
 		if(filter[5] == "X" && obj.type == "xpath")
 			return true;
@@ -1397,6 +1397,12 @@ class Config {
 			return true;
 		
 		if(filter[7] == "X" && obj.type == "jsonpath")
+			return true;
+		
+		if(filter[5] == "X" && filter[6] == "X" && obj.type == "xpathjsonpointer")
+			return true;
+		
+		if(filter[5] == "X" && filter[7] == "X" && obj.type == "xpathjsonpath")
 			return true;
 		
 		return false;

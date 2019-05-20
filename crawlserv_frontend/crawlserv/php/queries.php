@@ -226,6 +226,20 @@ if($query && $queryType == "jsonpath")
 
 ?>>JSONPath (jsoncons v<?php echo $jsoncons_version; ?>)</option>
 
+<option value="xpathjsonpointer"<?php
+
+if($query && $queryType == "xpathjsonpointer")
+    echo " selected";
+
+?>>XPath + JSONPointer</option>
+
+<option value="xpathjsonpath"<?php
+
+if($query && $queryType == "xpathjsonpath")
+    echo " selected";
+
+?>>XPath + JSONPath</option>
+
 </select>
 
 </div>
@@ -243,7 +257,7 @@ if(!$query || ($query && $queryResultBool))
 
 <input id="query-result-single" type="checkbox" class="entry-check-next"<?php
 
-if($query && $queryResultSingle)
+if(!$query || ($query && $queryResultSingle))
     echo " checked";
 
 ?> /> single
@@ -365,6 +379,16 @@ for help with your query.</p>
 
 <p>Try <a href="https://jsonpath.herokuapp.com/" target="_blank">Jayway JSONPath Evaluator</a> or <a href="https://jsonpath.curiousconcept.com/" target="_blank">JSONPATH Expression Tester</a>
 for help with your query.</p>
+
+</div>
+</div>
+</div>
+
+<div id="combined-helper" class="content-block">
+<div class="entry-row">
+<div class="entry-label-top helper">Note</div><div class="entry-input">
+
+<p>The 1<sup>st</sup> line of the query text will be used for the XPath and the 2<sup>nd</sup> line for the JSON query.</p>
 
 </div>
 </div>

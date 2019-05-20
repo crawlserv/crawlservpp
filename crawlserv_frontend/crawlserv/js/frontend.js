@@ -39,6 +39,7 @@ var helperRegEx = null;
 var helperXPath = null;
 var helperJSONPointer = null;
 var helperJSONPath = null;
+var helperCombined = null;
 
 // detached options
 var optionUrlListName = null;
@@ -71,57 +72,98 @@ jQuery(function($) {
 			$("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
 		
 		// check query type
-		if($("#query-type-select").val() == "regex") {
-			if(!helperXPath)
-				helperXPath = $("#xpath-helper").detach();
-			
-			if(!helperJSONPointer)
-				helperJSONPointer = $("#jsonpointer-helper").detach();
-			
-			if(!helperJSONPath)
-				helperJSONPath = $("#jsonpath-helper").detach();
-			
-			$("#query-text-only").prop("checked", false);
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
-		}
-		else if($("#query-type-select").val() == "xpath") {
-			if(!helperRegEx)
-				helperRegEx = $("#regex-helper").detach();
-			
-			if(!helperJSONPointer)
-				helperJSONPointer = $("#jsonpointer-helper").detach();
-			
-			if(!helperJSONPath)
-				helperJSONPath = $("#jsonpath-helper").detach();
-		}
-		else if($("#query-type-select").val() == "jsonpointer") {
-			if(!helperRegEx)
-				helperRegEx = $("#regex-helper").detach();
-			
-			if(!helperXPath)
-				helperXPath = $("#xpath-helper").detach();
-			
-			if(!helperJSONPath)
-				helperJSONPath = $("#jsonpath-helper").detach();
-			
-			$("#query-text-only").prop("checked", false);
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
-		}
-		else if($("#query-type-select").val() == "jsonpath") {
-			if(!helperRegEx)
-				helperRegEx = $("#regex-helper").detach();
-			
-			if(!helperXPath)
-				helperXPath = $("#xpath-helper").detach();
-			
-			if(!helperJSONPointer)
-				helperJSONPointer = $("#jsonpointer-helper").detach();
-			
-			$("#query-text-only").prop("checked", false);
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
+		if($("#query-type-select").length) {
+			if($("#query-type-select").val() == "regex") {
+				if(!helperXPath)
+					helperXPath = $("#xpath-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
+				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
+				
+				if(!helperCombined)
+					helperCombined = $("#combined-helper").detach();
+				
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
+			else if($("#query-type-select").val() == "xpath") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
+				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
+				
+				if(!helperCombined)
+					helperCombined = $("#combined-helper").detach();
+			}
+			else if($("#query-type-select").val() == "jsonpointer") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperXPath)
+					helperXPath = $("#xpath-helper").detach();
+				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
+				
+				if(!helperCombined)
+					helperCombined = $("#combined-helper").detach();
+				
+				$("#query-text-only").prop("checked", false);
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
+			else if($("#query-type-select").val() == "jsonpath") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperXPath)
+					helperXPath = $("#xpath-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
+				
+				if(!helperCombined)
+					helperCombined = $("#combined-helper").detach();
+				
+				$("#query-text-only").prop("checked", false);
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
+			else if($("#query-type-select").val() == "xpathjsonpointer") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
+				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
+				
+				$("#query-text-only").prop("checked", false);
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
+			else if($("#query-type-select").val() == "xpathjsonpath") {
+				if(!helperRegEx)
+					helperRegEx = $("#regex-helper").detach();
+				
+				if(!helperJSONPointer)
+					helperJSONPointer = $("#jsonpointer-helper").detach();
+				
+				if(!helperJSONPath)
+					helperJSONPath = $("#jsonpath-helper").detach();
+				
+				$("#query-text-only").prop("checked", false);
+				$("#query-text-only").prop("disabled", true);
+				$("#query-text-only-label").addClass("check-label-disabled");
+			}
 		}
 		
 		// check import/export inputs
@@ -689,12 +731,14 @@ jQuery(function($) {
 // CHANGE EVENT: query type selected
 	$("#query-type-select").on("change", function() {
 		if($(this).val() == "regex") {
-			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("checked", true);
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
-			helperRegEx.insertAfter("#query-properties");
-			helperRegEx = null;
+			if(helperRegEx) {
+				helperRegEx.insertAfter("#query-properties");
+				helperRegEx = null;
+			}
 			
 			if(!helperXPath)
 				helperXPath = $("#xpath-helper").detach();
@@ -704,13 +748,19 @@ jQuery(function($) {
 			
 			if(!helperJSONPath)
 				helperJSONPath = $("#jsonpath-helper").detach();
+			
+			if(!helperCombined)
+				helperCombined = $("#combined-helper").detach();
 		}
 		else if($(this).val() == "xpath") {
 			$("#query-text-only").prop("disabled", false);
+			$("#query-text-only").prop("checked", false);
 			$("#query-text-only-label").removeClass("check-label-disabled");
 			
-			helperXPath.insertAfter("#query-properties");
-			helperXPath = null;
+			if(helperXPath) {
+				helperXPath.insertAfter("#query-properties");
+				helperXPath = null;
+			}
 			
 			if(!helperRegEx)
 				helperRegEx = $("#regex-helper").detach();
@@ -720,14 +770,19 @@ jQuery(function($) {
 			
 			if(!helperJSONPath)
 				helperJSONPath = $("#jsonpath-helper").detach();
+			
+			if(!helperCombined)
+				helperCombined = $("#combined-helper").detach();
 		}
 		else if($(this).val() == "jsonpointer") {
 			$("#query-text-only").prop("checked", false);
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
-			helperJSONPointer.insertAfter("#query-properties");
-			helperJSONPointer = null;
+			if(helperJSONPointer) {
+				helperJSONPointer.insertAfter("#query-properties");
+				helperJSONPointer = null;
+			}
 			
 			if(!helperRegEx)
 				helperRegEx = $("#regex-helper").detach();
@@ -737,14 +792,19 @@ jQuery(function($) {
 			
 			if(!helperJSONPath)
 				helperJSONPath = $("#jsonpath-helper").detach();
+			
+			if(!helperCombined)
+				helperCombined = $("#combined-helper").detach();
 		}
 		else if($(this).val() == "jsonpath") {
 			$("#query-text-only").prop("checked", false);
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
-			helperJSONPath.insertAfter("#query-properties");
-			helperJSONPath = null;
+			if(helperJSONPath) {
+				helperJSONPath.insertAfter("#query-properties");
+				helperJSONPath = null;
+			}
 			
 			if(!helperRegEx)
 				helperRegEx = $("#regex-helper").detach();
@@ -754,6 +814,65 @@ jQuery(function($) {
 			
 			if(!helperJSONPointer)
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			if(!helperCombined)
+				helperCombined = $("#combined-helper").detach();
+		}
+		else if($(this).val() == "xpathjsonpointer") {
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only").prop("checked", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
+			
+			if(helperXPath) {
+				helperXPath.insertAfter("#query-properties");
+				helperXPath = null;
+			}
+			
+			if(helperCombined) {
+				helperCombined.insertAfter("#xpath-helper");
+				helperCombined = null;
+			}
+			
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
+		}
+		else if($(this).val() == "xpathjsonpath") {
+			$("#query-text-only").prop("disabled", true);
+			$("#query-text-only").prop("checked", true);
+			$("#query-text-only-label").addClass("check-label-disabled");
+			
+			$("#query-multi").prop("disabled", true);
+			$("#query-multi").prop("checked", false);
+			$("#query-multi-label").addClass("check-label-disabled");
+			
+			$("#query-subsets").prop("disabled", true);
+			$("#query-subsets").prop("checked", false);
+			$("#query-subsets-label").addClass("check-label-disabled");
+			
+			if(helperXPath) {
+				helperXPath.insertAfter("#query-properties");
+				helperXPath = null;
+			}
+			
+			if(helperCombined) {
+				helperCombined.insertAfter("#xpath-helper");
+				helperCombined = null;
+			}
+			
+			if(!helperRegEx)
+				helperRegEx = $("#regex-helper").detach();
+			
+			if(!helperJSONPointer)
+				helperJSONPointer = $("#jsonpointer-helper").detach();
+			
+			if(!helperJSONPath)
+				helperJSONPath = $("#jsonpath-helper").detach();
 		}
 		
 		return true;
@@ -775,7 +894,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: let XPath helper generate a query
-	$("a.xpath-generate").on("click", function() {
+	$("#xpath-generate").on("click", function() {
 		var query = "";
 		var property = $("input:radio[name='xpath-result']:checked").val() == "property";
 		
@@ -803,7 +922,11 @@ jQuery(function($) {
 			return false;
 		}
 		
-		if($("#query-text").val().length && !confirm("Do you want to override the existing query?"))
+		if(
+				$("#query-text").val().length
+				&& $("#query-text").val().charAt(0) != '\n'
+				&& !confirm("Do you want to override the existing query?")
+		)
 			return false;
 		
 		query = "//"
@@ -815,6 +938,15 @@ jQuery(function($) {
 		
 		if(property)
 			query += "/@" + $("#xpath-result-property").val();
+		
+		var lines = $("#query-text").val().split('\n');
+		
+		if(lines.length > 1) {
+			lines.forEach(function(currentValue, index) {
+				if(index > 0)
+					query += "\n" + currentValue; 
+			});
+		}
 		
 		$("#query-text").val(query);
 		
