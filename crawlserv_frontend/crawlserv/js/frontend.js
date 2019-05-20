@@ -86,8 +86,13 @@ jQuery(function($) {
 				if(!helperCombined)
 					helperCombined = $("#combined-helper").detach();
 				
+				$("#query-text-only").prop("checked", true);
 				$("#query-text-only").prop("disabled", true);
 				$("#query-text-only-label").addClass("check-label-disabled");
+				
+				$("#query-xml-warnings").prop("checked", false);
+				$("#query-xml-warnings").prop("disabled", true);
+				$("#query-xml-warnings-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "xpath") {
 				if(!helperRegEx)
@@ -118,6 +123,10 @@ jQuery(function($) {
 				$("#query-text-only").prop("checked", false);
 				$("#query-text-only").prop("disabled", true);
 				$("#query-text-only-label").addClass("check-label-disabled");
+				
+				$("#query-xml-warnings").prop("checked", false);
+				$("#query-xml-warnings").prop("disabled", true);
+				$("#query-xml-warnings-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "jsonpath") {
 				if(!helperRegEx)
@@ -135,6 +144,10 @@ jQuery(function($) {
 				$("#query-text-only").prop("checked", false);
 				$("#query-text-only").prop("disabled", true);
 				$("#query-text-only-label").addClass("check-label-disabled");
+				
+				$("#query-xml-warnings").prop("checked", false);
+				$("#query-xml-warnings").prop("disabled", true);
+				$("#query-xml-warnings-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "xpathjsonpointer") {
 				if(!helperRegEx)
@@ -735,6 +748,10 @@ jQuery(function($) {
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
+			$("#query-xml-warnings").prop("checked", false);
+			$("#query-xml-warnings").prop("disabled", true);
+			$("#query-xml-warnings-label").addClass("check-label-disabled");
+			
 			if(helperRegEx) {
 				helperRegEx.insertAfter("#query-properties");
 				helperRegEx = null;
@@ -756,6 +773,9 @@ jQuery(function($) {
 			$("#query-text-only").prop("disabled", false);
 			$("#query-text-only").prop("checked", false);
 			$("#query-text-only-label").removeClass("check-label-disabled");
+			
+			$("#query-xml-warnings").prop("disabled", false);
+			$("#query-xml-warnings-label").removeClass("check-label-disabled");
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
@@ -779,6 +799,10 @@ jQuery(function($) {
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
+			$("#query-xml-warnings").prop("checked", false);
+			$("#query-xml-warnings").prop("disabled", true);
+			$("#query-xml-warnings-label").addClass("check-label-disabled");
+			
 			if(helperJSONPointer) {
 				helperJSONPointer.insertAfter("#query-properties");
 				helperJSONPointer = null;
@@ -801,6 +825,10 @@ jQuery(function($) {
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
+			$("#query-xml-warnings").prop("checked", false);
+			$("#query-xml-warnings").prop("disabled", true);
+			$("#query-xml-warnings-label").addClass("check-label-disabled");
+			
 			if(helperJSONPath) {
 				helperJSONPath.insertAfter("#query-properties");
 				helperJSONPath = null;
@@ -822,6 +850,9 @@ jQuery(function($) {
 			$("#query-text-only").prop("disabled", true);
 			$("#query-text-only").prop("checked", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
+			
+			$("#query-xml-warnings").prop("disabled", false);
+			$("#query-xml-warnings-label").removeClass("check-label-disabled");
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
@@ -847,13 +878,8 @@ jQuery(function($) {
 			$("#query-text-only").prop("checked", true);
 			$("#query-text-only-label").addClass("check-label-disabled");
 			
-			$("#query-multi").prop("disabled", true);
-			$("#query-multi").prop("checked", false);
-			$("#query-multi-label").addClass("check-label-disabled");
-			
-			$("#query-subsets").prop("disabled", true);
-			$("#query-subsets").prop("checked", false);
-			$("#query-subsets-label").addClass("check-label-disabled");
+			$("#query-xml-warnings").prop("disabled", false);
+			$("#query-xml-warnings-label").removeClass("check-label-disabled");
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
@@ -1065,17 +1091,24 @@ jQuery(function($) {
 			$("#query-test-result").val("Testing query...");
 			$("#query-test").text("Back to text");
 			
+			var queryText = $("#query-text").val();
+			
+			// remove whitespaces in the end of the query text
+			while(queryText.length > 0 && "\f\n\r\t\v\u00A0\u2028\u2029".indexOf(queryText[queryText.length - 1]) > -1)
+				queryText = queryText.slice(0, -1);
+			
 			var timerStart = +new Date();
 			var args = {
 							"cmd" : "testquery",
-							"query" : $("#query-text").val(),
+							"query" : queryText,
 							"type" : $("#query-type-select").val(),
 							"resultbool": $("#query-result-bool").is(":checked"),
 							"resultsingle" : $("#query-result-single").is(":checked"),
 							"resultmulti" : $("#query-result-multi").is(":checked"),
 							"resultsubsets" : $("#query-result-subsets").is(":checked"),
 							"textonly" : $("#query-text-only").is(":checked"),
-							"text" : $("#query-test-text").val()
+							"text" : $("#query-test-text").val(),
+							"xmlwarnings": $("#query-xml-warnings").is(":checked")
 						};
 			
 			$.ajax({
@@ -1092,8 +1125,36 @@ jQuery(function($) {
 						resultText += "ERROR: " + data["text"] + "\nDEBUG:\n" + data["debug"];
 					else
 						resultText += data["text"];
-					
+						
 					$("#query-test-result").val(resultText);
+					
+					if($("#query-new-tab").is(":checked")) {
+						// open result in new tab
+						newTab = window.open();
+						
+						newTab.document.open();
+						
+						newTab.document.writeln("<!DOCTYPE html>");
+						newTab.document.writeln("<html lang=\"en\">");
+						newTab.document.writeln(" <head>");
+						newTab.document.writeln("  <meta charset=\"utf-8\">");
+						newTab.document.writeln("  <link rel=\"stylesheet\" type=\"text/css\" href=\"css/queryresult.css\">");
+						newTab.document.writeln("  <title>crawlserv++ frontend: Query Test Result</title>");
+						newTab.document.writeln(" </head>");
+						newTab.document.writeln(" <body>");
+						newTab.document.writeln("  <h1>crawlserv++ Query Test Result</h1>");
+						newTab.document.writeln("  <pre id=\"result-target\"></pre>");
+						newTab.document.writeln(" </body>");
+						newTab.document.writeln("</html>");
+						
+						newTab.document.close();
+						
+						newTab.document.getElementById("result-target").appendChild(
+								newTab.document.createTextNode(resultText)
+						);
+						
+						newTab.focus();
+					}
 				}
 			}).fail(function() {
 				$("#query-test-result").val("ERROR: Could not connect to server.");
