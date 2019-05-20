@@ -228,7 +228,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`stopcrawler`** (argument: `id`): Stop a running crawler by its ID.
 * **`stopextractor`** (argument: `id`): Stop a running extractor by its ID.
 * **`stopparser`** (argument: `id`): Stop a running parser by its ID.
-* **`testquery`** (arguments: `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`, `text`): Test a query on the specified text.
+* **`testquery`** (arguments: `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`, `text`, `xmlwarnings`): Test a temporary query on the specified text.
 * **`unpauseall`**: Unpause all paused threads.
 * **`unpauseanalyzer`** (argument: `id`): Unpause a paused analyzer by its ID.
 * **`unpausecrawler`** (argument: `id`): Unpause a paused crawler by its ID.
