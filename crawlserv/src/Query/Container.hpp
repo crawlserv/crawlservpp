@@ -48,6 +48,7 @@
 
 #include <string>	// std::string
 #include <queue>	// std::queue
+#include <utility>	// std::pair
 #include <vector>	// std::vector
 
 namespace crawlservpp::Query {
@@ -62,6 +63,9 @@ namespace crawlservpp::Query {
 		typedef Query::XPath::Exception XPathException;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::QueryStruct QueryStruct;
+
+		typedef std::pair<XPath, JsonPointer> XPathJsonPointer;
+		typedef std::pair<XPath, JsonPath> XPathJsonPath;
 
 	public:
 		// constructor and destructor
@@ -159,6 +163,8 @@ namespace crawlservpp::Query {
 		std::vector<XPath> queriesXPath;
 		std::vector<JsonPointer> queriesJsonPointer;
 		std::vector<JsonPath> queriesJsonPath;
+		std::vector<XPathJsonPointer> queriesXPathJsonPointer;
+		std::vector<XPathJsonPath> queriesXPathJsonPath;
 
 		// parsing option
 		bool repairCData;							// try to repair CData when parsing XML/HTML
