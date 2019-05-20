@@ -309,7 +309,7 @@
 				"bool"
 			],
 			"default": 0,
-			"label": "Does next page exists?",
+			"label": "Does next page exist?",
 			"description": "Boolean query on page content to determine whether there is another page.",
 			"simple": true,
 			"position": 7
