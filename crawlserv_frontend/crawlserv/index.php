@@ -1,11 +1,31 @@
 
-<!--
+<!-- 
 
-    index.php
+   ***
+   
+    Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
 
-    PHP/JavaScript frontend for crawlserv++
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version in addition to the terms of any
+    licences already herein identified.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
     
-    https://github.com/crawlserv/crawlservpp/
+   ***
+  
+   index.php
+
+   PHP/JavaScript frontend for crawlserv++.
+    
+   See https://github.com/crawlserv/crawlservpp/ for the latest version of the application.
 
  -->
 
@@ -265,6 +285,19 @@ if($m == "logs")
 echo $mode_attribute;
 
 ?>>Logs</a></div></div>
+
+<!-- About -->
+
+<div class="menu-row"><div class="menu-item <?php
+
+if($m == "about")
+    echo "menu-item-current";
+
+?>"><a href="" class="post-redirect menu-item-link" data-m="about"<?php
+
+echo $mode_attribute;
+
+?>>About</a></div></div>
 
 </div>
 </div>

@@ -1,7 +1,10 @@
+
+<?php
+
 /*
- *
+ * 
  * ---
- *
+ * 
  *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -20,21 +23,23 @@
  *
  * ---
  *
- * Curl.cpp
+ * _version.php
  *
- * RAII wrapper for pointer to cURL instance, also handles global instance if necessary.
- * 	Does NOT have ownership of the pointer.
- * 	The first instance has to be destructed last.
+ * Version of the PHP/JavaScript frontend for crawlserv++.
  *
- *  Created on: Feb 7, 2019
- *      Author: ans
  */
 
-#include "Curl.hpp"
+$GLOBALS["crawlservpp_version_major"] = 0;
+$GLOBALS["crawlservpp_version_minor"] = 0;
+$GLOBALS["crawlservpp_version_release"] = 0;
+$GLOBALS["crawlservpp_version_suffix"] = "alpha";
 
-namespace crawlservpp::Wrapper {
+$GLOBALS["crawlservpp_version_string"] = 
+                                $GLOBALS["crawlservpp_version_major"]
+                                . "."
+                                . $GLOBALS["crawlservpp_version_minor"]
+                                . "."
+                                . $GLOBALS["crawlservpp_version_release"]
+                                . $GLOBALS["crawlservpp_version_suffix"];
 
-	// set cURL to not initialized
-	bool Curl::globalInit = false;
-
-} /* crawlservpp::Wrapper */
+?>

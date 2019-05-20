@@ -1,4 +1,23 @@
 /*
+ *
+ * ---
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version in addition to the terms of any
+ *  licences already herein identified.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * ---
+ *
  * App.cpp
  *
  * The main application class that processes command line arguments, shows the initial header and component versions, loads the
@@ -14,7 +33,7 @@ namespace crawlservpp::Main {
 	std::atomic<int> App::interruptionSignal(0);
 
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
-	App::App(int argc, char * argv[]) noexcept : running(true), skipLoop(false) {
+	App::App(int argc, char * argv[]) noexcept : running(true), showVersionsOnly(false) {
 		try {
 			DatabaseSettings dbSettings;
 			ServerSettings serverSettings;
@@ -36,18 +55,18 @@ namespace crawlservpp::Main {
 			sigaction(SIGTERM, &sigIntHandler, nullptr);
 #endif
 
-			// show header
-			this->outputHeader();
-
 			// check number of arguments
 			this->checkArgumentNumber(argc);
 
 			// check argument
-			if(std::string(argv[1]) == "-v") {
-				this->skipLoop = true;
+			if(std::string(argv[1]) == "-v")
+				this->showVersionsOnly = true;
 
+			// show header
+			this->outputHeader(this->showVersionsOnly);
+
+			if(this->showVersionsOnly)
 				return;
-			}
 
 			// load configuration file
 			this->loadConfig(argv[1], dbSettings, serverSettings);
@@ -115,7 +134,7 @@ namespace crawlservpp::Main {
 
 	// run app
 	int App::run() noexcept {
-		if(this->skipLoop)
+		if(this->showVersionsOnly)
 			return EXIT_SUCCESS;
 
 		if(this->server) {
@@ -219,10 +238,31 @@ namespace crawlservpp::Main {
 		return true;
 	}
 
-	// static helper function: show version (and library versions)
-	void App::outputHeader() {
-		std::cout << "crawlserv++ v0.1 by Ans using\n";
-		std::cout << Helper::Versions::getLibraryVersionsStr(" ") << std::endl;
+	// static helper function: show version (and library versions if necessary)
+	void App::outputHeader(bool showLibraryVersions) {
+		std::cout
+				<< "crawlserv++ v"
+				<< Version::getString()
+				<< "\nCopyright (C) "
+				<< (__DATE__ + 7)
+				<< " Anselm Schmidt (ans[ät]ohai.su)\n\n"
+				<< "This program is free software: you can redistribute it and/or modify\n"
+				<< "it under the terms of the GNU General Public License as published by\n"
+				<< "the Free Software Foundation, either version 3 of the License, or\n"
+				<< "(at your option) any later version.\n\n"
+				<< "This program is distributed in the hope that it will be useful,\n"
+			    << "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+			    << "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+			    << "GNU General Public License for more details.\n\n"
+				<< "You should have received a copy of the GNU General Public License\n"
+			    << "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n";
+
+		if(showLibraryVersions)
+			std::cout
+					<< "\nusing:"
+					<< Helper::Versions::getLibraryVersionsStr("\t");
+
+		std::cout << std::endl;
 	}
 
 	// static helper function: check number of command line arguments, throws Main::Exception

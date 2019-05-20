@@ -20,21 +20,36 @@
  *
  * ---
  *
- * Curl.cpp
+ * Version.hpp
  *
- * RAII wrapper for pointer to cURL instance, also handles global instance if necessary.
- * 	Does NOT have ownership of the pointer.
- * 	The first instance has to be destructed last.
+ * Version information.
  *
- *  Created on: Feb 7, 2019
+ *  Created on: May 20, 2019
  *      Author: ans
  */
 
-#include "Curl.hpp"
+#ifndef MAIN_VERSION_HPP_
+#define MAIN_VERSION_HPP_
 
-namespace crawlservpp::Wrapper {
+#define CRAWLSERV_VERSION_MAJOR 0
+#define CRAWLSERV_VERSION_MINOR 0
+#define CRAWLSERV_VERSION_RELEASE 0
+#define CRAWLSERV_VERSION_SUFFIX "alpha"
 
-	// set cURL to not initialized
-	bool Curl::globalInit = false;
+#include <string>	// std::string, std::to_string
 
-} /* crawlservpp::Wrapper */
+namespace crawlservpp::Main::Version {
+
+	inline std::string getString() {
+		return
+				std::to_string(CRAWLSERV_VERSION_MAJOR)
+				+ "."
+				+ std::to_string(CRAWLSERV_VERSION_MINOR)
+				+ "."
+				+ std::to_string(CRAWLSERV_VERSION_RELEASE)
+				+ CRAWLSERV_VERSION_SUFFIX;
+	}
+
+} /* crawlservpp::Main::Version */
+
+#endif /* SRC_MAIN_VERSION_HPP_ */

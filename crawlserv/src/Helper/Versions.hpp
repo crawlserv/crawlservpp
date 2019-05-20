@@ -1,4 +1,23 @@
 /*
+ *
+ * ---
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version in addition to the terms of any
+ *  licences already herein identified.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * ---
+ *
  * Versions.hpp
  *
  * Get the versions of the different libraries used by crawlserv.
@@ -10,7 +29,6 @@
 #ifndef HELPER_VERSIONS_HPP_
 #define HELPER_VERSIONS_HPP_
 
-#include "../Helper/Portability/compiler.h"
 #include "../Helper/Portability/mysqlcppconn.h"
 
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
@@ -32,6 +50,7 @@
 #include <vector>	// std::vector
 
 namespace crawlservpp::Helper::Versions {
+
 	// for convenience
 	typedef std::pair<std::string, std::string> StringString;
 
@@ -161,6 +180,9 @@ namespace crawlservpp::Helper::Versions {
 
 			result += "\n";
 		}
+
+		if(!versions.empty())
+			result.pop_back();
 
 		return result;
 	}

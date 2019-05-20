@@ -1,7 +1,28 @@
 /*
+ *
+ * ---
+ *
+ *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version in addition to the terms of any
+ *  licences already herein identified.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * ---
+ *
  * QueryStruct.hpp
  *
- *	Structure to identify a query and its result type(s).
+ *	Structure to identify a query including its type and its result type(s).
  *
  *  Created on: May 17, 2019
  *      Author: ans
@@ -46,6 +67,6 @@ namespace crawlservpp::Struct {
 		}
 	};
 
-} /* namespace crawlservpp::Query */
+} /* crawlservpp::Query */
 
 #endif /* STRUCT_QUERYSTRUCT_HPP_ */

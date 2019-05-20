@@ -1,4 +1,25 @@
 /*
+ *
+ * ---
+ *
+ *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version in addition to the terms of any
+ *  licences already herein identified.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program. If not, see <https://www.gnu.org/licenses/>.
+ *
+ * ---
+ *
  * All.hpp
  *
  * Registration of implemented algorithms.
@@ -19,6 +40,7 @@
 #include <memory>	// std::make_unique, std::unique_ptr
 
 namespace crawlservpp::Module::Analyzer::Algo {
+
 	// for convenience
 	typedef Struct::AlgoThreadProperties AlgoThreadProperties;
 	typedef std::unique_ptr<Module::Analyzer::Thread> AlgoThreadPtr;
