@@ -60,7 +60,7 @@ namespace crawlservpp::Query {
 		};
 
 	private:
-		std::string jsonPath;
+		const std::string jsonPath;
 	};
 
 } /* crawlservpp::Query */

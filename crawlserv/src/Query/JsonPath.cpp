@@ -33,11 +33,9 @@
 namespace crawlservpp::Query {
 
 	// constructor: check and save JSONPath string
-	JsonPath::JsonPath(const std::string& pathString) {
+	JsonPath::JsonPath(const std::string& pathString) : jsonPath(pathString) {
 		if(pathString.empty())
 			throw Exception("No JSONPath defined");
-
-		this->jsonPath = pathString;
 	}
 
 	// get boolean value from parsed JSON document (at least one match?), throws JSONPointer::Exception
