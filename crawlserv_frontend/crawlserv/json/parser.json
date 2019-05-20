@@ -109,7 +109,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Format of date and time to be parsed by the query with the same array index (default: %F %T, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
 			"position": 5
 		},
@@ -118,7 +118,7 @@
 			"item-type": "locale",
 			"default": [],
 			"label": "Date/time locales:",
-			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
+			"description": "Locale used by the query of the same array index for parsing date and time.",
 			"simple": true,
 			"position": 6
 		},
