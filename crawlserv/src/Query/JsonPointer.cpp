@@ -58,9 +58,6 @@ namespace crawlservpp::Query {
 		}
 	}
 
-	// destructor stub
-	JsonPointer::~JsonPointer() {}
-
 	// get boolean value from parsed JSON document (at least one match?), throws JSONPointer::Exception
 	bool JsonPointer::getBool(const rapidjson::Document& doc) const {
 		// check document and pointer

@@ -50,7 +50,6 @@ namespace crawlservpp::Query {
 	public:
 		// constructor and destructor
 		JsonPointer(const std::string& pointerString);
-		virtual ~JsonPointer();
 
 		// getters
 		bool getBool(const rapidjson::Document& doc) const;
@@ -64,12 +63,6 @@ namespace crawlservpp::Query {
 			Exception(const std::string& description) : Main::Exception(description) {}
 			virtual ~Exception() {}
 		};
-
-		// only moveable (using default), not copyable
-		JsonPointer(JsonPointer&) = delete;
-		JsonPointer(JsonPointer&&) = default;
-		JsonPointer& operator=(JsonPointer) = delete;
-		JsonPointer& operator=(JsonPointer&&) = default;
 
 	private:
 		rapidjson::Pointer pointerFirst;
