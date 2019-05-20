@@ -136,7 +136,7 @@
 			"label": "Variable aliases:",
 			"description": "Alias for the variable with same array index.",
 			"simple": true,
-			"position": 10
+			"position": 8
 		},
 		"alias.add": {
 			"type": "array",
@@ -145,16 +145,25 @@
 			"label": "Increase alias value by:",
 			"description": "Value to add to the variable alias with the same array index.",
 			"simple": true,
-			"position": 11
+			"position": 9
 		},
 		"datetime.format": {
 			"type": "array",
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "The date and time format to be used for the variable with the same array index (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Date and time format to be used for the variable with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
 			"position": 6
+		},
+		"datetime.locale": {
+			"type": "array",
+			"item-type": "locale",
+			"default": [],
+			"label": "Date/time locales:",
+			"description": "Date and time locale to be used for the variable with the same array index.",
+			"simple": true,
+			"position": 7
 		},
 		"name": {
 			"type": "array",
@@ -217,7 +226,7 @@
 			"label": "Token variables:",
 			"description": "List of token variables to be replaced in 'source.url', 'source.cookies' and 'source.headers'.",
 			"simple": true,
-			"position": 12
+			"position": 10
 		},
 		"tokens.cookies": {
 			"type": "array",
@@ -226,7 +235,7 @@
 			"label": "Token cookies:",
 			"description": "Custom cookies header for the token with the same array index.",
 			"simple": true,
-			"position": 14
+			"position": 12
 		},
 		"tokens.query": {
 			"type": "array",
@@ -239,7 +248,7 @@
 			"label": "Token queries:",
 			"description": "Query to extract token variable with the same array index.",
 			"simple": true,
-			"position": 16
+			"position": 14
 		},
 		"tokens.source": {
 			"type": "array",
@@ -248,7 +257,7 @@
 			"label": "Token sources:",
 			"description": "Source URL for the token with the same array index (absolute link without protocol).",
 			"simple": true,
-			"position": 13
+			"position": 11
 		},
 		"tokens.use.post": {
 			"type": "array",
@@ -257,7 +266,7 @@
 			"label": "Use POST for tokens:",
 			"description": "Use HTTP POST instead of GET for the token with the same array index.",
 			"simple": true,
-			"position": 15
+			"position": 13
 		},
 		"token.headers": {
 			"type": "array",
@@ -412,7 +421,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "The date and time formats to be parsed (default: %F %T) <br>(see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Format of date and time to be extracted by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
 			"position": 4
 		},
@@ -421,7 +430,7 @@
 			"item-type": "locale",
 			"default": [],
 			"label": "Date/time locales:",
-			"description": "Locales used for parsing the date and time<br>(e.g. 'en_US.UTF8', see C++ 'std::locale' documentary for details).",
+			"description": "Locale used by the query with the same array index for extracting date and time.",
 			"simple": true,
 			"position": 5
 		},
@@ -433,7 +442,7 @@
 			],
 			"default": [],
 			"label": "Date/time queries:",
-			"description": "Queries used for parsing the date and time. The first query that returns a non-empty result will be used.",
+			"description": "Queries used for extracting date and time. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 3
 		},
@@ -465,7 +474,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Field names:",
-			"description": "The names of the custom fields to parse.",
+			"description": "The names of the custom fields to extract.",
 			"simple": true,
 			"position": 6
 		},
@@ -477,7 +486,7 @@
 			],
 			"default": [],
 			"label": "Field queries:",
-			"description": "The queries used to parse the custom fields.",
+			"description": "The queries used to extract the custom fields.",
 			"simple": true,
 			"position": 7
 		},
@@ -505,7 +514,7 @@
 			],
 			"default": [],
 			"label": "ID queries:",
-			"description": "Queries to parse the ID. The first query that returns a non-empty result will be used. Pages with duplicate or empty IDs will not be parsed.",
+			"description": "Queries to extract the ID. The first query that returns a non-empty result will be used. Datasets with duplicate or empty IDs will not be extracted.",
 			"simple": true,
 			"position": 2
 		},
