@@ -231,14 +231,14 @@ if($query && $queryType == "jsonpath")
 if($query && $queryType == "xpathjsonpointer")
     echo " selected";
 
-?>>XPath + JSONPointer</option>
+?>>XPath + JSONPointer [combined]</option>
 
 <option value="xpathjsonpath"<?php
 
 if($query && $queryType == "xpathjsonpath")
     echo " selected";
 
-?>>XPath + JSONPath</option>
+?>>XPath + JSONPath [combined]</option>
 
 </select>
 
