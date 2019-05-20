@@ -3609,6 +3609,8 @@ namespace crawlservpp::Main {
 				&& properties.type != "xpath"
 				&& properties.type != "jsonpointer"
 				&& properties.type != "jsonpath"
+				&& properties.type != "xpathjsonpointer"
+				&& properties.type != "xpathjsonpath"
 		)
 			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
@@ -3726,6 +3728,8 @@ namespace crawlservpp::Main {
 				&& properties.type != "xpath"
 				&& properties.type != "jsonpointer"
 				&& properties.type != "jsonpath"
+				&& properties.type != "xpathjsonpointer"
+				&& properties.type != "xpathjsonpath"
 		)
 			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
@@ -3812,7 +3816,8 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("Query duplicated.", newId);
 	}
 
-	// server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text): test query on text
+	// server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text, xmlwarnings):
+	//  test temporary query on text
 	void Server::cmdTestQuery(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
 		ServerCommandResponse response;
 		rapidjson::Document json;
@@ -3870,6 +3875,12 @@ namespace crawlservpp::Main {
 			else if(!json["text"].IsString())
 				response = ServerCommandResponse::failed("Invalid arguments (\'text\' is not a string).");
 
+			else if(!json.HasMember("xmlwarnings"))
+				response = ServerCommandResponse::failed("Invalid arguments (\'xmlwarnings\' is missing).");
+
+			else if(!json["xmlwarnings"].IsBool())
+				response = ServerCommandResponse::failed("Invalid arguments (\'xmlwarnings\' is not a boolean).");
+
 			else {
 				const QueryProperties properties(
 						std::string(json["query"].GetString(), json["query"].GetStringLength()),
@@ -3886,6 +3897,8 @@ namespace crawlservpp::Main {
 						json["text"].GetStringLength()
 				);
 
+				const bool xmlWarnings = json["xmlwarnings"].GetBool();
+
 				// check query text, query type and result type
 				if(properties.text.empty())
 					response = ServerCommandResponse::failed("Query text is empty.");
@@ -3898,6 +3911,8 @@ namespace crawlservpp::Main {
 						&& properties.type != "xpath"
 						&& properties.type != "jsonpointer"
 						&& properties.type != "jsonpath"
+						&& properties.type != "xpathjsonpointer"
+						&& properties.type != "xpathjsonpath"
 				)
 					response = ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
 
@@ -3980,11 +3995,10 @@ namespace crawlservpp::Main {
 						}
 					}
 					else if(properties.type == "xpath") {
-						Timer::SimpleHR timer;
-						std::queue<std::string> warnings;
-
 						// test XPath expression on text
 						try {
+							Timer::SimpleHR timer;
+							std::queue<std::string> warnings;
 							const Query::XPath xPathTest(
 									properties.text,
 									properties.textOnly
@@ -3994,7 +4008,7 @@ namespace crawlservpp::Main {
 
 							Parsing::XML xmlDocumentTest;
 
-							xmlDocumentTest.setOptions(true, 25);
+							xmlDocumentTest.setOptions(xmlWarnings, 25);
 							xmlDocumentTest.parse(text, warnings, true);
 
 							while(!warnings.empty()) {
@@ -4106,98 +4120,94 @@ namespace crawlservpp::Main {
 
 							rapidjson::Document jsonDocumentTest;
 
-							try {
-								jsonDocumentTest = Helper::Json::parseRapid(text);
+							jsonDocumentTest = Helper::Json::parseRapid(text);
+
+							result += "PARSING TIME: " + timer.tickStr() + '\n';
+
+							if(properties.resultBool) {
+								// get boolean result (does at least one match exist?)
+								result	+= "BOOLEAN RESULT ("
+										+ timer.tickStr() + "): "
+										+ (JSONPointerTest.getBool(jsonDocumentTest) ? "true" : "false")
+										+ '\n';
 							}
-							catch(const JsonException& e) {
-								response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
+
+							if(properties.resultSingle) {
+								// get first result (first full match)
+								std::string tempResult;
+
+								JSONPointerTest.getFirst(jsonDocumentTest, tempResult);
+
+								if(tempResult.empty())
+									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+								else
+									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 							}
 
-							if(!response.fail) {
-								result += "PARSING TIME: " + timer.tickStr() + '\n';
+							if(properties.resultMulti) {
+								// get all results (all full matches)
+								std::vector<std::string> tempResults;
 
-								if(properties.resultBool) {
-									// get boolean result (does at least one match exist?)
-									result	+= "BOOLEAN RESULT ("
-											+ timer.tickStr() + "): "
-											+ (JSONPointerTest.getBool(jsonDocumentTest) ? "true" : "false")
-											+ '\n';
-								}
+								JSONPointerTest.getAll(jsonDocumentTest, tempResults);
 
-								if(properties.resultSingle) {
-									// get first result (first full match)
-									std::string tempResult;
+								result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-									JSONPointerTest.getFirst(jsonDocumentTest, tempResult);
+								if(tempResults.empty())
+									result += " [empty]\n";
+								else {
+									unsigned long counter = 0;
+									std::string toAppend(1, '\n');
 
-									if(tempResult.empty())
-										result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
-									else
-										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
-								}
+									for(const auto& tempResult : tempResults) {
+										++counter;
 
-								if(properties.resultMulti) {
-									// get all results (all full matches)
-									std::vector<std::string> tempResults;
-
-									JSONPointerTest.getAll(jsonDocumentTest, tempResults);
-
-									result += "ALL RESULTS (" + timer.tickStr() + "):";
-
-									if(tempResults.empty())
-										result += " [empty]\n";
-									else {
-										unsigned long counter = 0;
-										std::string toAppend(1, '\n');
-
-										for(const auto& tempResult : tempResults) {
-											++counter;
-
-											toAppend	+= '['
-														+ std::to_string(counter)
-														+ "] "
-														+ tempResult
-														+ '\n';
-										}
-
-										result += toAppend;
+										toAppend	+= '['
+													+ std::to_string(counter)
+													+ "] "
+													+ tempResult
+													+ '\n';
 									}
+
+									result += toAppend;
 								}
+							}
 
-								if(properties.resultSubSets) {
-									// get subsets
-									std::vector<rapidjson::Document> tempResults;
+							if(properties.resultSubSets) {
+								// get subsets
+								std::vector<rapidjson::Document> tempResults;
 
-									JSONPointerTest.getSubSets(jsonDocumentTest, tempResults);
+								JSONPointerTest.getSubSets(jsonDocumentTest, tempResults);
 
-									result += "SUBSETS (" + timer.tickStr() + "):";
+								result += "SUBSETS (" + timer.tickStr() + "):";
 
-									if(tempResults.empty())
-										result += " [empty]\n";
-									else {
-										unsigned long counter = 0;
-										std::string toAppend(1, '\n');
+								if(tempResults.empty())
+									result += " [empty]\n";
+								else {
+									unsigned long counter = 0;
+									std::string toAppend(1, '\n');
 
-										for(const auto& tempResult : tempResults) {
-											++counter;
+									for(const auto& tempResult : tempResults) {
+										++counter;
 
-											toAppend	+= '['
-														+ std::to_string(counter)
-														+ "] "
-														+ Helper::Json::stringify(tempResult)
-														+ '\n';
-										}
-
-										result += toAppend;
+										toAppend	+= '['
+													+ std::to_string(counter)
+													+ "] "
+													+ Helper::Json::stringify(tempResult)
+													+ '\n';
 									}
+
+									result += toAppend;
 								}
 							}
 						}
 						catch(const JSONPointerException& e) {
 							response = ServerCommandResponse::failed("JSONPointer error: " + e.whatStr());
 						}
+						catch(const JsonException& e) {
+							response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
+						}
 					}
-					else {
+					else if(properties.type == "jsonpath") {
 						// test JSONPath query on text
 						try {
 							Timer::SimpleHR timer;
@@ -4208,96 +4218,352 @@ namespace crawlservpp::Main {
 
 							jsoncons::json jsonTest;
 
-							try {
-								jsonTest = Helper::Json::parseCons(text);
+							jsonTest = Helper::Json::parseCons(text);
+
+							result += "PARSING TIME: " + timer.tickStr() + '\n';
+
+							if(properties.resultBool) {
+								// get boolean result (does at least one match exist?)
+								result	+= "BOOLEAN RESULT ("
+										+ timer.tickStr()
+										+ "): "
+										+ (JSONPathTest.getBool(jsonTest) ? "true" : "false")
+										+ '\n';
 							}
-							catch(const JsonException& e) {
-								response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
+
+							if(properties.resultSingle) {
+								// get first result (first full match)
+								std::string tempResult;
+
+								JSONPathTest.getFirst(jsonTest, tempResult);
+
+								if(tempResult.empty())
+									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+								else
+									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
 							}
 
-							if(!response.fail) {
-								result += "PARSING TIME: " + timer.tickStr() + '\n';
+							if(properties.resultMulti) {
+								// get all results (all full matches)
+								std::vector<std::string> tempResults;
 
-								if(properties.resultBool) {
-									// get boolean result (does at least one match exist?)
-									result	+= "BOOLEAN RESULT ("
-											+ timer.tickStr()
-											+ "): "
-											+ (JSONPathTest.getBool(jsonTest) ? "true" : "false")
-											+ '\n';
-								}
+								JSONPathTest.getAll(jsonTest, tempResults);
 
-								if(properties.resultSingle) {
-									// get first result (first full match)
-									std::string tempResult;
+								result += "ALL RESULTS (" + timer.tickStr() + "):";
 
-									JSONPathTest.getFirst(jsonTest, tempResult);
+								if(tempResults.empty())
+									result += " [empty]\n";
+								else {
+									unsigned long counter = 0;
+									std::string toAppend(1, '\n');
 
-									if(tempResult.empty())
-										result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
-									else
-										result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
-								}
+									for(const auto& tempResult : tempResults) {
+										++counter;
 
-								if(properties.resultMulti) {
-									// get all results (all full matches)
-									std::vector<std::string> tempResults;
-
-									JSONPathTest.getAll(jsonTest, tempResults);
-
-									result += "ALL RESULTS (" + timer.tickStr() + "):";
-
-									if(tempResults.empty())
-										result += " [empty]\n";
-									else {
-										unsigned long counter = 0;
-										std::string toAppend(1, '\n');
-
-										for(const auto& tempResult : tempResults) {
-											++counter;
-
-											toAppend	+= '['
-														+ std::to_string(counter)
-														+ "] "
-														+ tempResult
-														+ '\n';
-										}
-
-										result += toAppend;
+										toAppend	+= '['
+													+ std::to_string(counter)
+													+ "] "
+													+ tempResult
+													+ '\n';
 									}
+
+									result += toAppend;
 								}
+							}
 
-								if(properties.resultSubSets) {
-									// get subsets
-									std::vector<jsoncons::json> tempResults;
+							if(properties.resultSubSets) {
+								// get subsets
+								std::vector<jsoncons::json> tempResults;
 
-									JSONPathTest.getSubSets(jsonTest, tempResults);
+								JSONPathTest.getSubSets(jsonTest, tempResults);
 
-									result += "SUBSETS (" + timer.tickStr() + "):";
+								result += "SUBSETS (" + timer.tickStr() + "):";
 
-									if(tempResults.empty())
-										result += " [empty]\n";
-									else {
-										unsigned long counter = 0;
-										std::string toAppend(1, '\n');
+								if(tempResults.empty())
+									result += " [empty]\n";
+								else {
+									unsigned long counter = 0;
+									std::string toAppend(1, '\n');
 
-										for(const auto& tempResult : tempResults) {
-											++counter;
+									for(const auto& tempResult : tempResults) {
+										++counter;
 
-											toAppend	+= '['
-														+ std::to_string(counter)
-														+ "] "
-														+ Helper::Json::stringify(tempResult)
-														+ '\n';
-										}
-
-										result += toAppend;
+										toAppend	+= '['
+													+ std::to_string(counter)
+													+ "] "
+													+ Helper::Json::stringify(tempResult)
+													+ '\n';
 									}
+
+									result += toAppend;
 								}
 							}
 						}
 						catch(const JSONPathException& e) {
 							response = ServerCommandResponse::failed("JSONPath error: " + e.whatStr());
+						}
+						catch(const JsonException& e) {
+							response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
+						}
+					}
+					else { // test combined query (XPath + JSONPointer/JSONPath) on text
+						// show performance warning
+						result =	"NOTE: When using combined queries,"
+									" the JSON needs to be parsed every time the query is used."
+									"\n\n";
+
+						// split XPath query (first line) from JSON query
+						const auto splitPos = properties.text.find('\n');
+						const std::string xPathQuery(
+								properties.text,
+								0,
+								splitPos
+						);
+						std::string jsonQuery;
+
+						if(splitPos != std::string::npos && properties.text.size() > splitPos + 1)
+							jsonQuery = properties.text.substr(splitPos + 1);
+
+						result += "using XPath query \'"
+								+ xPathQuery
+								+ "\'\nusing JSON query \'"
+								+ jsonQuery
+								+ "\'\n\n";
+
+						// perform XPath expression with single result on text first
+						try {
+							Timer::SimpleHR timer;
+							std::queue<std::string> warnings;
+
+							const Query::XPath xPathTest(
+									xPathQuery,
+									true
+							);
+
+							result += "XPATH COMPILING TIME: " + timer.tickStr() + '\n';
+
+							Parsing::XML xmlDocumentTest;
+
+							xmlDocumentTest.setOptions(xmlWarnings, 25);
+							xmlDocumentTest.parse(text, warnings, true);
+
+							while(!warnings.empty()) {
+								result += "WARNING: " + warnings.front() + '\n';
+
+								warnings.pop();
+							}
+
+							result += "HTML/XML PARSING TIME: " + timer.tickStr() + '\n';
+
+							// get first result from XPath (first full match)
+							std::string xpathResult;
+
+							xPathTest.getFirst(xmlDocumentTest, xpathResult);
+
+							if(xpathResult.empty())
+								result += "XPATH RESULT (" + timer.tickStr() + "): [empty]\n";
+							else {
+								result += "XPATH RESULT (" + timer.tickStr() + "): " + xpathResult + '\n';
+
+								if(properties.type == "xpathjsonpointer") {
+									// test JSONPointer query on XPath result
+									Timer::SimpleHR timer;
+
+									const Query::JsonPointer JSONPointerTest(
+											jsonQuery
+									);
+
+									result += "JSONPOINTER COMPILING TIME: " + timer.tickStr() + '\n';
+
+									rapidjson::Document jsonDocumentTest;
+
+									jsonDocumentTest = Helper::Json::parseRapid(xpathResult);
+
+									result += "JSON PARSING TIME: " + timer.tickStr() + '\n';
+
+									if(properties.resultBool) {
+										// get boolean result (does at least one match exist?)
+										result	+= "BOOLEAN RESULT ("
+												+ timer.tickStr() + "): "
+												+ (JSONPointerTest.getBool(jsonDocumentTest) ? "true" : "false")
+												+ '\n';
+									}
+
+									if(properties.resultSingle) {
+										// get first result (first full match)
+										std::string tempResult;
+
+										JSONPointerTest.getFirst(jsonDocumentTest, tempResult);
+
+										if(tempResult.empty())
+											result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+										else
+											result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+									}
+
+									if(properties.resultMulti) {
+										// get all results (all full matches)
+										std::vector<std::string> tempResults;
+
+										JSONPointerTest.getAll(jsonDocumentTest, tempResults);
+
+										result += "ALL RESULTS (" + timer.tickStr() + "):";
+
+										if(tempResults.empty())
+											result += " [empty]\n";
+										else {
+											unsigned long counter = 0;
+											std::string toAppend(1, '\n');
+
+											for(const auto& tempResult : tempResults) {
+												++counter;
+
+												toAppend	+= '['
+															+ std::to_string(counter)
+															+ "] "
+															+ tempResult
+															+ '\n';
+											}
+
+											result += toAppend;
+										}
+									}
+
+									if(properties.resultSubSets) {
+										// get subsets
+										std::vector<rapidjson::Document> tempResults;
+
+										JSONPointerTest.getSubSets(jsonDocumentTest, tempResults);
+
+										result += "SUBSETS (" + timer.tickStr() + "):";
+
+										if(tempResults.empty())
+											result += " [empty]\n";
+										else {
+											unsigned long counter = 0;
+											std::string toAppend(1, '\n');
+
+											for(const auto& tempResult : tempResults) {
+												++counter;
+
+												toAppend	+= '['
+															+ std::to_string(counter)
+															+ "] "
+															+ Helper::Json::stringify(tempResult)
+															+ '\n';
+											}
+
+											result += toAppend;
+										}
+									}
+								}
+								else {
+									// test JSONPath query on XPath result
+									Timer::SimpleHR timer;
+
+									const Query::JsonPath JSONPathTest(
+											jsonQuery
+									);
+
+									jsoncons::json jsonTest;
+
+									jsonTest = Helper::Json::parseCons(xpathResult);
+
+									result += "JSON PARSING TIME: " + timer.tickStr() + '\n';
+
+									if(properties.resultBool) {
+										// get boolean result (does at least one match exist?)
+										result	+= "BOOLEAN RESULT ("
+												+ timer.tickStr()
+												+ "): "
+												+ (JSONPathTest.getBool(jsonTest) ? "true" : "false")
+												+ '\n';
+									}
+
+									if(properties.resultSingle) {
+										// get first result (first full match)
+										std::string tempResult;
+
+										JSONPathTest.getFirst(jsonTest, tempResult);
+
+										if(tempResult.empty())
+											result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+										else
+											result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+									}
+
+									if(properties.resultMulti) {
+										// get all results (all full matches)
+										std::vector<std::string> tempResults;
+
+										JSONPathTest.getAll(jsonTest, tempResults);
+
+										result += "ALL RESULTS (" + timer.tickStr() + "):";
+
+										if(tempResults.empty())
+											result += " [empty]\n";
+										else {
+											unsigned long counter = 0;
+											std::string toAppend(1, '\n');
+
+											for(const auto& tempResult : tempResults) {
+												++counter;
+
+												toAppend	+= '['
+															+ std::to_string(counter)
+															+ "] "
+															+ tempResult
+															+ '\n';
+											}
+
+											result += toAppend;
+										}
+									}
+
+									if(properties.resultSubSets) {
+										// get subsets
+										std::vector<jsoncons::json> tempResults;
+
+										JSONPathTest.getSubSets(jsonTest, tempResults);
+
+										result += "SUBSETS (" + timer.tickStr() + "):";
+
+										if(tempResults.empty())
+											result += " [empty]\n";
+										else {
+											unsigned long counter = 0;
+											std::string toAppend(1, '\n');
+
+											for(const auto& tempResult : tempResults) {
+												++counter;
+
+												toAppend	+= '['
+															+ std::to_string(counter)
+															+ "] "
+															+ Helper::Json::stringify(tempResult)
+															+ '\n';
+											}
+
+											result += toAppend;
+										}
+									}
+								}
+							}
+						}
+						catch(const XPathException& e) {
+							response = ServerCommandResponse::failed("XPath error - " + e.whatStr());
+						}
+						catch(const XMLException& e) {
+							response = ServerCommandResponse::failed("Could not parse HTML/XML: " + e.whatStr());
+						}
+						catch(const JSONPointerException& e) {
+							response = ServerCommandResponse::failed("JSONPointer error: " + e.whatStr());
+						}
+						catch(const JSONPathException& e) {
+							response = ServerCommandResponse::failed("JSONPath error: " + e.whatStr());
+						}
+						catch(const JsonException& e) {
+							response = ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr());
 						}
 					}
 
