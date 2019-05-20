@@ -65,9 +65,9 @@ namespace crawlservpp::Query {
 		};
 
 		// only moveable (using default), not copyable
-		XPath(XPath&) = delete;
+		XPath(const XPath&) = delete;
 		XPath(XPath&&) = default;
-		XPath& operator=(XPath) = delete;
+		XPath& operator=(const XPath&) = delete;
 		XPath& operator=(XPath&&) = default;
 
 	private:
