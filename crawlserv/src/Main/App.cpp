@@ -203,6 +203,11 @@ namespace crawlservpp::Main {
 
 			case '\n':
 				// ENTER: end input loop
+				for(unsigned long n = 0; n < dbSettings.password.size(); n++)
+					std::cout << '\b';
+
+				std::cout << "[DONE]" << std::string(dbSettings.password.size() - 6, ' ') << std::flush;
+
 				inputLoop = false;
 
 				break;
@@ -210,13 +215,20 @@ namespace crawlservpp::Main {
 			case '\b':
 			case 127:
 				// BACKSPACE/DELETE: delete last character from password (if it exists)
-				if(!dbSettings.password.empty())
+				if(!dbSettings.password.empty()) {
 					dbSettings.password.pop_back();
+
+					std::cout << "\b \b" << std::flush;
+				}
 
 				break;
 
+			case -1:
+			case 3:
 			case 27:
-				// ESCAPE -> cancel and end input loop
+				// CTRL+C, ESCAPE -> cancel and end input loop
+				std::cout << " [CANCELLED]";
+
 				inputCancel = true;
 				inputLoop = false;
 
@@ -225,6 +237,8 @@ namespace crawlservpp::Main {
 			default:
 				// add other characters to password
 				dbSettings.password.push_back(input);
+
+				std::cout << '*' << std::flush;
 			}
 
 		}
@@ -241,21 +255,24 @@ namespace crawlservpp::Main {
 	// static helper function: show version (and library versions if necessary)
 	void App::outputHeader(bool showLibraryVersions) {
 		std::cout
-				<< "crawlserv++ v"
-				<< Version::getString()
-				<< "\nCopyright (C) "
-				<< (__DATE__ + 7)
-				<< " Anselm Schmidt (ans[ät]ohai.su)\n\n"
-				<< "This program is free software: you can redistribute it and/or modify\n"
-				<< "it under the terms of the GNU General Public License as published by\n"
-				<< "the Free Software Foundation, either version 3 of the License, or\n"
-				<< "(at your option) any later version.\n\n"
-				<< "This program is distributed in the hope that it will be useful,\n"
-			    << "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-			    << "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-			    << "GNU General Public License for more details.\n\n"
-				<< "You should have received a copy of the GNU General Public License\n"
-			    << "along with this program.  If not, see <https://www.gnu.org/licenses/>.\n";
+				<<	"\n"
+					"crawlserv++\n"
+					"Copyright (C) "
+				<<	(__DATE__ + 7)
+				<<	" Anselm Schmidt (ans[ät]ohai.su)\n"
+					"version "
+				<<	Version::getString()
+				<<	"\n\n"
+					"This program is free software: you can redistribute it and/or modify\n"
+					"it under the terms of the GNU General Public License as published by\n"
+					"the Free Software Foundation, either version 3 of the License, or\n"
+					"(at your option) any later version.\n\n"
+					"This program is distributed in the hope that it will be useful,\n"
+			    	"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+			    	"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+			    	"GNU General Public License for more details.\n\n"
+					"You should have received a copy of the GNU General Public License\n"
+			    	"along with this program.  If not, see <https://www.gnu.org/licenses/>.\n";
 
 		if(showLibraryVersions)
 			std::cout
