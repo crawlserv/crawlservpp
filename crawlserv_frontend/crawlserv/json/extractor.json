@@ -305,7 +305,7 @@
 		},
 		"is.next.from": {
 			"type": "query",
-			"result-types": [
+			"query-results": [
 				"bool"
 			],
 			"default": 0,
@@ -316,7 +316,7 @@
 		},
 		"next.from": {
 			"type": "query",
-			"result-types": [
+			"query-results": [
 				"single"
 			],
 			"default": 0,
@@ -327,7 +327,7 @@
 		},
 		"number.from": {
 			"type": "query",
-			"result-types": [
+			"query-results": [
 				"single"
 			],
 			"default": 0,
@@ -398,7 +398,7 @@
 		"dataset.queries": {
 			"type": "array",
 			"item-type": "query",
-			"result-types": [
+			"query-results": [
 				"subsets"
 			],
 			"default": [],
