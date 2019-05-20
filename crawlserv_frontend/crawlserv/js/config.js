@@ -1125,23 +1125,24 @@ class Config {
 								else if(obj["item-type"] == "string") {
 									// placeholder means default value (except
 									// when default value does not exist)
-									if(!($(this).val().length)
-											&& $(this).attr("placeholder") !== undefined) {
-										if(index < obj.default.length)
-											nobj.value[index] = obj.default[index];
-									}
-									else {
+									if(
+											!($(this).val().length)
+											&& $(this).attr("placeholder") !== undefined
+											&& index < obj.default.length
+									)
+										nobj.value[index] = obj.default[index];
+									else
 										nobj.value[index] = $(this).val();
-									}
 								}
 								else if(obj["item-type"] == "number") {
 									// placeholder means default value (except
 									// when default value does not exist)
-									if(!($(this).val().length)
-											&& $(this).attr("placeholder") !== undefined) {
-										if(index < obj.default.length)
+									if(
+											!($(this).val().length)
+											&& $(this).attr("placeholder") !== undefined
+											&& index < obj.default.length
+									)
 											nobj.value[index] = obj.default[index];
-									}
 									else if($(this).val().length)
 										nobj.value[index] = parseInt($(this).val(), 10);
 								}
