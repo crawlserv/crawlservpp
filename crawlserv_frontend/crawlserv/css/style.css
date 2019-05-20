@@ -44,6 +44,14 @@ table {
 td {
 	word-wrap:break-word;
 }
+textarea {
+	resize:none;
+}
+input[type="checkbox"] {
+	position:relative;
+	top:-1px;
+	vertical-align:middle; 
+}
 
 /* LINK COLOR */
 a, a:visited {
@@ -207,6 +215,7 @@ div.small-text {
 
 /* ACTION LINKS */
 div.action-link-box {
+	padding-top:2px;
 	font-size:14px;
 }
 span.action-link-box {
@@ -267,6 +276,7 @@ option {
 
 /* TOP BOX */
 #top-box {
+	padding-top:0;
 	padding-bottom:5px;
 	font-size:14px;
 	text-align:center;
@@ -342,9 +352,6 @@ select.entry-input {
 	width:435px;
 	height:34px;
 	box-sizing:border-box;
-}
-textarea {
-	resize:none;
 }
 textarea.entry-input {
 	width:430px;
