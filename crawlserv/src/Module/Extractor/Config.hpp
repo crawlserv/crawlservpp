@@ -73,6 +73,7 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<std::string> variablesAlias;
 			std::vector<long> variablesAliasAdd;
 			std::vector<std::string> variablesDateTimeFormat;
+			std::vector<std::string> variablesDateTimeLocale;
 			std::vector<std::string> variablesName;
 			std::vector<std::string> variablesParsedColumn;
 			std::vector<std::string> variablesParsedTable;
@@ -207,6 +208,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("alias", this->config.variablesAlias);
 		this->option("alias.add", this->config.variablesAliasAdd);
 		this->option("datetime.format", this->config.variablesDateTimeFormat);
+		this->option("datetime.locale", this->config.variablesDateTimeLocale);
 		this->option("name", this->config.variablesName);
 		this->option("parsed.column", this->config.variablesParsedColumn);
 		this->option("parsed.table", this->config.variablesParsedTable);
@@ -337,6 +339,12 @@ namespace crawlservpp::Module::Extractor {
 				},
 				"%F %T"
 		);
+
+		// remove variable date/time locales that are not used, add empty locale where none is specified
+		if(this->config.variablesDateTimeLocale.size() > completeVariables)
+			incompleteVariables = true;
+
+		this->config.variablesDateTimeLocale.resize(completeVariables);
 
 		// warn about unused properties
 		if(incompleteVariables)
