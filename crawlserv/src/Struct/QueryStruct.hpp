@@ -39,6 +39,8 @@ namespace crawlservpp::Struct {
 		static const unsigned char typeXPath = 2;
 		static const unsigned char typeJsonPointer = 3;
 		static const unsigned char typeJsonPath = 4;
+		static const unsigned char typeXPathJsonPointer = 5;
+		static const unsigned char typeXPathJsonPath = 6;
 
 		unsigned char type;
 		unsigned long index;
