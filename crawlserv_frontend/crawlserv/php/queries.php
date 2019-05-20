@@ -413,7 +413,11 @@ if(isset($_POST["test"]))
 </div>
 
 <div class="action-link-box">
+
 <div class="action-link">
+
+<input type="checkbox" id="query-xml-warnings" /> <span id="query-xml-warnings-label">Show HTML/XML warnings</span> &ensp;
+<input type="checkbox" id="query-new-tab" checked /> Open new tab &ensp;
 
 <a id="query-test" href="#" class="action-link">Test query</a>
 
