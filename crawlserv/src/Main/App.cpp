@@ -255,14 +255,13 @@ namespace crawlservpp::Main {
 	// static helper function: show version (and library versions if necessary)
 	void App::outputHeader(bool showLibraryVersions) {
 		std::cout
-				<<	"\n"
-					"crawlserv++\n"
-					"Copyright (C) "
-				<<	(__DATE__ + 7)
-				<<	" Anselm Schmidt (ans[ät]ohai.su)\n"
-					"version "
+				<<	"crawlserv++\n"
+					"Version "
 				<<	Version::getString()
 				<<	"\n\n"
+					"Copyright (C) "
+				<<	(__DATE__ + 7)
+				<<	" Anselm Schmidt (ans[ät]ohai.su)\n\n"
 					"This program is free software: you can redistribute it and/or modify\n"
 					"it under the terms of the GNU General Public License as published by\n"
 					"the Free Software Foundation, either version 3 of the License, or\n"
