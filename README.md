@@ -84,7 +84,7 @@ Even without access to the frontend you can shut down the server from the termin
 * `#define MG_ENABLE_HTTP_STREAMING_MULTIPART`
 * `#define PCRE2_CODE_UNIT_WIDTH 8`
 * `#define RAPIDJSON_HAS_STDSTRING`
-* `#define JSONCONS_NO_DEPRECATED` (recommended)
+* `#define JSONCONS_NO_DEPRECATED` (optional, but recommended)
 
 ## Command-and-Control Server
 
