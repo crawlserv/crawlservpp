@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -49,7 +49,6 @@
 #include "../../Timer/Simple.hpp"
 
 #include <algorithm>	// std::find, std::find_if
-#include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <functional>	// std::bind
 #include <iomanip>		// std::setprecision
@@ -67,8 +66,9 @@ namespace crawlservpp::Module::Parser {
 
 	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenience
+		typedef Helper::DateTime::Exception DateTimeException;
+		typedef Helper::DateTime::LocaleException LocaleException;
 		typedef Helper::Json::Exception JsonException;
-		typedef Parsing::XML::Exception XMLException;
 		typedef Struct::DataEntry DataEntry;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::QueryStruct QueryStruct;
@@ -93,11 +93,7 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Thread();
 
 		// sub-class for Parser exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		MAIN_EXCEPTION_CLASS();
 
 	protected:
 		// database for the thread
