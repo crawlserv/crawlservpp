@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -435,7 +435,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get boolean result from a XPath query
 				try {
@@ -501,7 +501,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPointer:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -544,7 +544,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -649,7 +649,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPath:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get boolean result from a XPath query on the current subset
 				try {
@@ -736,7 +736,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPointer:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get first result from the XPath query on the current subset
 				try {
@@ -788,7 +788,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPath:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get first result from the XPath query on the current subset
 				try {
@@ -900,7 +900,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get single result from a XPath query
 				try {
@@ -966,7 +966,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPointer:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -1009,7 +1009,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -1115,7 +1115,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPath:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get single result from a XPath query on the current subset
 				try {
@@ -1208,7 +1208,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPointer:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get first result from the XPath query on the current subset
 				try {
@@ -1260,7 +1260,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPath:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get first result from the XPath query on the current subset
 				try {
@@ -1372,7 +1372,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get multiple results from a XPath query
 				try {
@@ -1438,7 +1438,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPointer:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -1481,7 +1481,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -1587,7 +1587,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPath:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get multiple results from a XPath query on the current subset
 				try {
@@ -1680,7 +1680,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPointer:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get first result from the XPath query on the current subset
 				try {
@@ -1732,7 +1732,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPath:
-			// parse current subset as XML/HTML if still necessary
+			// parse current subset as HTML/XML if still necessary
 			if(this->parseSubSetXml(warningsTo)) {
 				// get first result from the XPath query on the current subset
 				try {
@@ -1890,7 +1890,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get subsets from a XPath query
 				try {
@@ -1971,7 +1971,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPointer:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -2015,7 +2015,7 @@ namespace crawlservpp::Query {
 			break;
 
 		case QueryStruct::typeXPathJsonPath:
-			// parse content as XML/HTML if still necessary
+			// parse content as HTML/XML if still necessary
 			if(this->parseXml(warningsTo)) {
 				// get first result from the XPath query
 				try {
@@ -2068,6 +2068,328 @@ namespace crawlservpp::Query {
 		return false;
 	}
 
+	// add more subsets after the current one based on a query on the current subset (for recursive extracting),
+	//  return whether new subsets have been added
+	bool Container::addSubSetsFromQueryOnSubSet(
+			const QueryStruct& query,
+			std::queue<std::string>& warningsTo
+	) {
+		// check pointer
+		if(!(this->queryTargetSourcePtr))
+			throw Exception("Query::Container::addSubSetsFromQueryOnSubSet(): No content source specified");
+
+		// check current subset
+		if(!(this->subSetCurrent))
+			throw Exception("Query::Container::addSubSetsFromQueryOnSubSet(): No subset specified");
+
+		if(this->subSetCurrent > this->subSetNumber)
+			throw Exception("Query::Container::addSubSetsFromQueryOnSubSet(): Invalid subset specified");
+
+		// check result type
+		if(query.type != QueryStruct::typeNone && !query.resultSubSets) {
+			warningsTo.emplace(
+				"WARNING: Query has invalid result type - not subset."
+			);
+
+			return false;
+		}
+
+		switch(query.type) {
+		case QueryStruct::typeRegEx:
+			// get more subsets from a RegEx query on the current subset
+			try {
+				// stringify old subsets if necessary
+				if(this->subSetType != QueryStruct::typeRegEx)
+					this->stringifySubSets(warningsTo);
+
+				// get new subsets from RegEx query
+				std::vector<std::string> subsets;
+
+				this->queriesRegEx.at(query.index).getAll(
+						this->stringifiedSubSets.at(this->subSetCurrent - 1),
+						subsets
+				);
+
+				// check number of results
+				if(subsets.empty())
+					return false;
+
+				// insert new RegEx subsets
+				this->insertSubSets(subsets);
+
+				return true;
+			}
+			catch(const RegExException& e) {
+				warningsTo.emplace(
+						"WARNING: RegEx error - "
+						+ e.whatStr()
+						+ " ["
+						+ *(this->queryTargetSourcePtr)
+						+ "]."
+				);
+			}
+
+			break;
+
+		case QueryStruct::typeXPath:
+			// parse current subset as HTML/XML (and stringify old subsets) if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get more subsets from a XPath query on the current subset
+				try {
+					std::vector<Parsing::XML> subsets;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPath.at(query.index).getSubSets(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								subsets
+						);
+					else
+						this->queriesXPath.at(query.index).getSubSets(
+								this->subSetParsedXML,
+								subsets
+						);
+
+					// check number of results
+					if(subsets.empty())
+						return false;
+
+					// insert new XPath subsets
+					this->insertSubSets(subsets);
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeJsonPointer:
+			// parse current subset as JSON using RapidJSON (and stringify old subsets) if still necessary
+			if(this->parseSubSetJsonRapid(warningsTo)) {
+				// get more subsets from a JSONPointer query on the current subset
+				try {
+					std::vector<rapidjson::Document> subsets;
+
+					if(this->subSetType == QueryStruct::typeJsonPointer)
+						this->queriesJsonPointer.at(query.index).getSubSets(
+								this->jsonPointerSubSets.at(this->subSetCurrent - 1),
+								subsets
+						);
+					else
+						this->queriesJsonPointer.at(query.index).getSubSets(
+								this->subSetParsedJsonRapid,
+								subsets
+						);
+
+					// check number of results
+					if(subsets.empty())
+						return false;
+
+					// insert new JSONPointer subsets
+					this->insertSubSets(subsets);
+
+					return true;
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeJsonPath:
+			// parse current subset as JSON using jsoncons (and stringify old subsets) if still necessary
+			if(this->parseSubSetJsonRapid(warningsTo)) {
+				// get more subsets from a JSONPath query on the current subset
+				try {
+					std::vector<jsoncons::json> subsets;
+
+					if(this->subSetType == QueryStruct::typeJsonPath)
+						this->queriesJsonPath.at(query.index).getSubSets(
+								this->jsonPathSubSets.at(this->subSetCurrent - 1),
+								subsets
+						);
+					else
+						this->queriesJsonPath.at(query.index).getSubSets(
+								this->subSetParsedJsonCons,
+								subsets
+						);
+
+					// check number of results
+					if(subsets.empty())
+						return false;
+
+					// insert new JSONPath subsets
+					this->insertSubSets(subsets);
+
+					return true;
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPointer:
+			// parse current subset as HTML/XML (and stringify old subsets) if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPointer.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						return false;
+
+					// temporarily parse JSON using rapidJSON
+					const auto parsedJson(Helper::Json::parseRapid(json));
+
+					// get more subsets from the JSONPointer query
+					std::vector<rapidjson::Document> subsets;
+
+					this->queriesXPathJsonPointer.at(query.index).second.getSubSets(parsedJson, subsets);
+
+					// stringify old subsets if necessary (and if it was not already done for HTML/XML parsing)
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->stringifySubSets(warningsTo);
+
+					// check number of results
+					if(subsets.empty())
+						return false;
+
+					// insert new JSONPointer subsets
+					this->insertSubSets(subsets);
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPointerException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPointer error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeXPathJsonPath:
+			// parse current subset as HTML/XML if still necessary
+			if(this->parseSubSetXml(warningsTo)) {
+				// get first result from the XPath query on the current subset
+				try {
+					std::string json;
+
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->xPathSubSets.at(this->subSetCurrent - 1),
+								json
+						);
+					else
+						this->queriesXPathJsonPath.at(query.index).first.getFirst(
+								this->subSetParsedXML,
+								json
+						);
+
+					if(json.empty())
+						return true;
+
+					// temporarily parse JSON using jsoncons
+					const auto parsedJson(Helper::Json::parseCons(json));
+
+					// get more subsets from JSONPath query
+					std::vector<jsoncons::json> subsets;
+
+					// get multiple results from the JSONPath query
+					this->queriesXPathJsonPath.at(query.index).second.getSubSets(parsedJson, subsets);
+
+					// stringify old subsets if necessary (and if it was not already done for HTML/XML parsing)
+					if(this->subSetType == QueryStruct::typeXPath)
+						this->stringifySubSets(warningsTo);
+
+					// check number of results
+					if(subsets.empty())
+						return false;
+
+					// insert new JSONPath subsets
+					this->insertSubSets(subsets);
+
+					return true;
+				}
+				catch(const XPathException& e) {
+					warningsTo.emplace(
+							"WARNING: XPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+			}
+
+			break;
+
+		case QueryStruct::typeNone:
+			break;
+
+		default:
+			throw Exception("Query::Container::addSubSetsFromQueryOnSubSet(): Unknown query type");
+		}
+
+		return false;
+	}
+
 	// get tidied XML code as string
 	bool Container::getXml(std::string& resultTo, std::queue<std::string>& warningsTo) {
 		if(this->parseXml(warningsTo)) {
@@ -2087,7 +2409,7 @@ namespace crawlservpp::Query {
 		return false;
 	}
 
-	// private helper function to parse content as XML/HTML if still necessary,
+	// private helper function to parse content as HTML/XML if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	bool Container::parseXml(std::queue<std::string>& warningsTo) {
 		// check pointers
@@ -2195,7 +2517,7 @@ namespace crawlservpp::Query {
 		rapidjson::Value(rapidjson::kObjectType).Swap(this->parsedJsonRapid);
 	}
 
-	// private helper function to parse subset as XML/HTML if still necessary,
+	// private helper function to parse subset as HTML/XML if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	bool Container::parseSubSetXml(std::queue<std::string>& warningsTo) {
 		// check current subset
@@ -2324,7 +2646,7 @@ namespace crawlservpp::Query {
 		rapidjson::Value(rapidjson::kObjectType).Swap(this->subSetParsedJsonRapid);
 	}
 
-	// private helper function to stringify subsets if still necessary
+	// stringify subsets if still necessary
 	void Container::stringifySubSets(std::queue<std::string>& warningsTo) {
 		if(!(this->stringifiedSubSets.empty()))
 			return;
@@ -2363,6 +2685,192 @@ namespace crawlservpp::Query {
 
 		default:
 			warningsTo.emplace("WARNING: Unknown subset type in Query::Container::stringifySubSets(...).");
+		}
+	}
+
+	// insert RegEx subsets after the current subset
+	//  NOTE:	the new subsets will be moved away from the vector;
+	//			if the subset type is different, the old subsets need to be already stringified
+	void Container::insertSubSets(std::vector<std::string>& subsets) {
+		// update number of subsets
+		this->subSetNumber += subsets.size();
+
+		// insert new subsets
+		this->stringifiedSubSets.insert(
+				this->stringifiedSubSets.begin() + this->subSetCurrent,
+				std::make_move_iterator(subsets.begin()),
+				std::make_move_iterator(subsets.end())
+		);
+
+		// clear non-stringified subsets if necessary
+		switch(this->subSetType) {
+		case QueryStruct::typeXPath:
+			this->xPathSubSets.clear();
+
+			break;
+
+		case QueryStruct::typeJsonPointer:
+			this->jsonPointerSubSets.clear();
+
+			break;
+
+		case QueryStruct::typeJsonPath:
+			this->jsonPathSubSets.clear();
+
+			break;
+		}
+
+		// set the subset type to RegEx (i. e. strings only)
+		this->subSetType = QueryStruct::typeRegEx;
+	}
+
+	// insert XPath subsets after the current subset, stringify new subsets if needed
+	//  NOTE:	the new subsets will be moved away from the vector;
+	//  		if the subset type is different, the old subsets need to be already stringified
+	void Container::insertSubSets(std::vector<Parsing::XML>& subsets) {
+		// update number of subsets
+		this->subSetNumber += subsets.size();
+
+		// check subset type
+		if(this->subSetType == QueryStruct::typeXPath)
+			// insert new XPath subsets
+			this->xPathSubSets.insert(
+					this->xPathSubSets.begin() + this->subSetCurrent,
+					std::make_move_iterator(subsets.begin()),
+					std::make_move_iterator(subsets.end())
+			);
+		else {
+			// stringify new subsets (old ones should already be stringified)
+			std::vector<std::string> stringified;
+
+			stringified.reserve(subsets.size());
+
+			for(const auto& subset : subsets) {
+				stringified.emplace_back();
+
+				subset.getContent(stringified.back());
+			}
+
+			// insert new (stringified) XPath subsets
+			this->stringifiedSubSets.insert(
+				this->stringifiedSubSets.begin() + this->subSetCurrent,
+				stringified.begin(),
+				stringified.end()
+			);
+
+			// clear non-stringified subsets if neccesary
+			switch(this->subSetType) {
+			case QueryStruct::typeJsonPointer:
+				this->jsonPointerSubSets.clear();
+
+				break;
+
+			case QueryStruct::typeJsonPath:
+				this->jsonPathSubSets.clear();
+
+				break;
+			}
+
+			// set the subset type to RegEx (i. e. strings only)
+			this->subSetType = QueryStruct::typeRegEx;
+		}
+	}
+
+	// insert JSONPointer subsets after the current subset, stringify new subsets if needed
+	//  NOTE:	the new subsets will be moved away from the vector;
+	//  		if the subset type is different, the old subsets need to be already stringified
+	void Container::insertSubSets(std::vector<rapidjson::Document>& subsets) {
+		// update number of subsets
+		this->subSetNumber += subsets.size();
+
+		// check subset type
+		if(this->subSetType == QueryStruct::typeJsonPointer)
+			// insert new JSONPointer subsets
+			this->jsonPointerSubSets.insert(
+					this->jsonPointerSubSets.begin() + this->subSetCurrent,
+					std::make_move_iterator(subsets.begin()),
+					std::make_move_iterator(subsets.end())
+			);
+		else {
+			// stringify new subsets
+			std::vector<std::string> stringified;
+
+			stringified.reserve(subsets.size());
+
+			for(const auto& subset : subsets)
+				stringified.emplace_back(Helper::Json::stringify(subset));
+
+			// insert new (stringified) JSONPointer subsets
+			this->stringifiedSubSets.insert(
+				this->stringifiedSubSets.begin() + this->subSetCurrent,
+				stringified.begin(),
+				stringified.end()
+			);
+
+			// clear non-stringified subsets if neccesary
+			switch(this->subSetType) {
+			case QueryStruct::typeXPath:
+				this->xPathSubSets.clear();
+
+				break;
+
+			case QueryStruct::typeJsonPath:
+				this->jsonPathSubSets.clear();
+
+				break;
+			}
+
+			// set the subset type to RegEx (i. e. strings only)
+			this->subSetType = QueryStruct::typeRegEx;
+		}
+	}
+
+	// insert JSONPath subsets after the current subset, stringify subsets if needed
+	//  NOTE:	the new subsets will be moved away from the vector;
+	//  		if the subset type is different, the old subsets need to be already stringified
+	void Container::insertSubSets(std::vector<jsoncons::json>& subsets) {
+		// update number of subsets
+		this->subSetNumber += subsets.size();
+
+		// check subset type
+		if(this->subSetType == QueryStruct::typeJsonPath)
+			// insert new JSONPath subsets
+			this->jsonPathSubSets.insert(
+					this->jsonPathSubSets.begin() + this->subSetCurrent,
+					std::make_move_iterator(subsets.begin()),
+					std::make_move_iterator(subsets.end())
+			);
+		else {
+			// stringify new subsets
+			std::vector<std::string> stringified;
+
+			stringified.reserve(subsets.size());
+
+			for(const auto& subset : subsets)
+				stringified.emplace_back(Helper::Json::stringify(subset));
+
+			// insert new (stringified) JSONPath subsets
+			this->stringifiedSubSets.insert(
+				this->stringifiedSubSets.begin() + this->subSetCurrent,
+				stringified.begin(),
+				stringified.end()
+			);
+
+			// clear non-stringified subsets if neccesary
+			switch(this->subSetType) {
+			case QueryStruct::typeXPath:
+				this->xPathSubSets.clear();
+
+				break;
+
+			case QueryStruct::typeJsonPointer:
+				this->jsonPointerSubSets.clear();
+
+				break;
+			}
+
+			// set the subset type to RegEx (i. e. strings only)
+			this->subSetType = QueryStruct::typeRegEx;
 		}
 	}
 

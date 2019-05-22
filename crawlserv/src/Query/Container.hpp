@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -46,6 +46,7 @@
 #include "../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
+#include <iterator>	// std::make_move_iterator
 #include <string>	// std::string
 #include <queue>	// std::queue
 #include <utility>	// std::pair
@@ -155,6 +156,10 @@ namespace crawlservpp::Query {
 				const QueryStruct& query,
 				std::queue<std::string>& warningsTo
 		);
+		bool addSubSetsFromQueryOnSubSet(
+				const QueryStruct& query,
+				std::queue<std::string>&
+		);
 		bool getXml(std::string& resultTo, std::queue<std::string>& warningsTo);
 
 	private:
@@ -167,31 +172,31 @@ namespace crawlservpp::Query {
 		std::vector<XPathJsonPath> queriesXPathJsonPath;
 
 		// parsing option
-		bool repairCData;							// try to repair CData when parsing XML/HTML
+		bool repairCData;							// try to repair CData when parsing HTML/XML
 
 		// content pointers and parsing
 		const std::string * queryTargetPtr;			// pointer to content to perform queries on
 		const std::string * queryTargetSourcePtr;	// pointer to source of content (used for generating warnings)
-		bool xmlParsed;								// content has been parsed as XML/HTML
+		bool xmlParsed;								// content has been parsed as HTML/XML
 		bool jsonParsedRapid;						// content has been parsed as JSON using RapidJSON
 		bool jsonParsedCons;						// content has been parsed as JSON using jsoncons
-		Parsing::XML parsedXML;						// content parsed as XML/HTML
+		Parsing::XML parsedXML;						// content parsed as HTML/XML
 		rapidjson::Document parsedJsonRapid;		// content parsed as JSON (using RapidJSON)
 		jsoncons::json parsedJsonCons;				// content parsed as JSON (using jsoncons)
-		std::string xmlParsingError;				// error while parsing content as XML/HTML
+		std::string xmlParsingError;				// error while parsing content as HTML/XML
 		std::string jsonParsingError;				// error while parsing content as JSON
 
 		// subset properties and parsing
 		unsigned char subSetType;					// type of subsets
 		unsigned long subSetNumber;					// number of subsets
 		unsigned long subSetCurrent;				// current subset (index + 1)
-		bool subSetXmlParsed;						// current subset has been parsed as XML/HTML
+		bool subSetXmlParsed;						// current subset has been parsed as HTML/XML
 		bool subSetJsonParsedRapid;					// current subset has been parsed as JSON using RapidJSON
 		bool subSetJsonParsedCons;					// current subset has been parsed as JSON using jsoncons
-		Parsing::XML subSetParsedXML;				// current subset parsed as XML/HTML
+		Parsing::XML subSetParsedXML;				// current subset parsed as HTML/XML
 		rapidjson::Document subSetParsedJsonRapid;	// current subset parsed as JSON (using RapidJSON)
 		jsoncons::json subSetParsedJsonCons;		// current subset parsed as JSON (using jsoncons)
-		std::string subSetXmlParsingError;			// error while parsing current subset as XML/HTML
+		std::string subSetXmlParsingError;			// error while parsing current subset as HTML/XML
 		std::string subSetJsonParsingError;			// error while parsing current subset as JSON
 
 		// subset data
@@ -212,6 +217,10 @@ namespace crawlservpp::Query {
 		void resetSubSetParsingState();
 
 		void stringifySubSets(std::queue<std::string>& warningsTo);
+		void insertSubSets(std::vector<std::string>& subsets);
+		void insertSubSets(std::vector<Parsing::XML>& subsets);
+		void insertSubSets(std::vector<rapidjson::Document>& subsets);
+		void insertSubSets(std::vector<jsoncons::json>& subsets);
 	};
 
 } /* crawlservpp::Query */
