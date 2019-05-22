@@ -81,12 +81,8 @@ namespace crawlservpp::Network {
 		std::string unescape(const std::string& escapedString, bool usePlusForSpace);
 		std::string escapeUrl(const std::string& urlToEscape);
 
-		// sub-class for cURL exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for cURL exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// not moveable, not copyable
 		Curl(Curl&) = delete;

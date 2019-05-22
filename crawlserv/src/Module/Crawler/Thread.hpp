@@ -104,12 +104,8 @@ namespace crawlservpp::Module::Crawler {
 		// destructor
 		virtual ~Thread();
 
-		// sub-class for Crawler exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for Crawler exceptions
+		MAIN_EXCEPTION_CLASS();
 
 	protected:
 		// database and networking for thread

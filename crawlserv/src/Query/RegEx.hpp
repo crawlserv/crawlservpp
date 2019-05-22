@@ -62,12 +62,8 @@ namespace crawlservpp::Query {
 		explicit operator bool() const noexcept;
 		bool operator!() const noexcept;
 
-		// sub-class for RegEx exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for RegEx exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// not copyable
 		RegEx(RegEx&) = delete;

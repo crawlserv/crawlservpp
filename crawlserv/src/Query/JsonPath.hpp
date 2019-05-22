@@ -52,12 +52,8 @@ namespace crawlservpp::Query {
 		void getAll(const jsoncons::json& json, std::vector<std::string>& resultTo) const;
 		void getSubSets(const jsoncons::json& json, std::vector<jsoncons::json>& resultTo) const;
 
-		// sub-class for JSONPath exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for JSONPath exceptions
+		MAIN_EXCEPTION_CLASS();
 
 	private:
 		const std::string jsonPath;

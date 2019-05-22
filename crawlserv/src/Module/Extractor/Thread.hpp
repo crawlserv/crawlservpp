@@ -106,12 +106,8 @@ namespace crawlservpp::Module::Extractor {
 		// destructor
 		virtual ~Thread();
 
-		// sub-class for Extractor exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for Extractor exceptions
+		MAIN_EXCEPTION_CLASS();
 
 	protected:
 		// database for the thread

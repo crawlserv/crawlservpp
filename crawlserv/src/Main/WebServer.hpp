@@ -100,11 +100,8 @@ namespace crawlservpp::Main {
 		// static helper function
 		static std::string getIP(ConnectionPtr connection);
 
-		// sub-class for web server exception
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-		};
+		// class for web server exception
+		MAIN_EXCEPTION_CLASS();
 
 		// public access to hard-coded option
 		const unsigned short fileLength;

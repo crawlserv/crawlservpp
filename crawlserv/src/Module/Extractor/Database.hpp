@@ -107,12 +107,8 @@ namespace crawlservpp::Module::Extractor {
 		const std::string extractingTableAlias;
 		const std::string targetTableAlias;
 
-		// sub-class for Parser::Database exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for Parser::Database exceptions
+		MAIN_EXCEPTION_CLASS();
 
 	protected:
 		// options

@@ -72,12 +72,8 @@ namespace crawlservpp::Module {
 		// configuration loader
 		void loadConfig(const std::string& configJson, LogQueue& log);
 
-		// sub-class for configuration exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for configuration exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// not moveable, not copyable
 		Config(Config&) = delete;

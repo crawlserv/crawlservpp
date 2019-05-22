@@ -49,10 +49,7 @@ namespace crawlservpp::Helper::Utf8 {
 	 * CLASS FOR UTF-8 EXCEPTIONS
 	 */
 
-	class Exception : public Main::Exception {
-	public:
-		Exception(const std::string& description) : Main::Exception(description) {}
-	};
+	MAIN_EXCEPTION_CLASS();
 
 	/*
 	 * IMPLEMENTATION

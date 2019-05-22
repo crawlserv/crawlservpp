@@ -71,12 +71,8 @@ namespace crawlservpp::Parsing {
 		// clearing function
 		void clear();
 
-		// sub-class for XML exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for XML exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// operators
 		explicit operator bool() const noexcept;

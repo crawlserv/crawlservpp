@@ -273,31 +273,12 @@ namespace crawlservpp::Main {
 		static unsigned long long getRequestCounter() { return 0; }
 #endif
 
-		// sub-classes for general and specific database exceptions
-		class Exception : public Main::Exception { // general Database exception
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-		};
-
-		class ConnectionException : public Exception { // connection exception (handles lost database connections)
-		public:
-			ConnectionException(const std::string& description) : Exception(description) {}
-		};
-
-		class IncorrectPathException : public Exception { // incorrect path value exception
-		public:
-			IncorrectPathException(const std::string& description) : Exception(description) {}
-		};
-
-		class StorageEngineException : public Exception { // storage engine exception
-		public:
-			StorageEngineException(const std::string& description) : Exception(description) {}
-		};
-
-		class PrivilegesException : public Exception { // insufficient privileges exception
-		public:
-			PrivilegesException(const std::string& description) : Exception(description) {}
-		};
+		// classes for general and specific database exceptions
+		MAIN_EXCEPTION_CLASS();
+		MAIN_EXCEPTION_SUBCLASS(ConnectionException);
+		MAIN_EXCEPTION_SUBCLASS(IncorrectPathException);
+		MAIN_EXCEPTION_SUBCLASS(StorageEngineException);
+		MAIN_EXCEPTION_SUBCLASS(PrivilegesException);
 
 		// not moveable, not copyable
 		Database(Database&) = delete;

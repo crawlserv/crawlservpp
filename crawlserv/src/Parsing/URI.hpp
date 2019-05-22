@@ -69,12 +69,8 @@ namespace crawlservpp::Parsing {
 		static std::string unescape(const std::string& string, bool plusSpace);
 		static std::string escapeUrl(const std::string& urlToEscape);
 
-		// sub-class for URI exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for URI exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// only moveable (using default), not copyable
 		URI(URI&) = delete;

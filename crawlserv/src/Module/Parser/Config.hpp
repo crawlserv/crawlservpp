@@ -102,12 +102,8 @@ namespace crawlservpp::Module::Parser {
 			bool parsingTidyWarnings;
 		} config;
 
-		// sub-class for Parser::Config exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for Parser::Config exceptions
+		MAIN_EXCEPTION_CLASS();
 
 	protected:
 		// parsing of parsing-specific configuration

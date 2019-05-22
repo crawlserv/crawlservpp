@@ -97,12 +97,8 @@ namespace crawlservpp::Module::Analyzer {
 		// shadow pause function not to be used by thread
 		void pause();
 
-		// sub-class for Analyzer exceptions (to be used by algorithms)
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for Analyzer exceptions (to be used by algorithms)
+		MAIN_EXCEPTION_CLASS();
 
 	private:
 		// hide other functions not to be used by thread

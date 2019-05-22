@@ -221,12 +221,8 @@ namespace crawlservpp::Wrapper {
 			return "";
 		}
 
-		// sub-class for TidyDoc exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for TidyDoc exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// not moveable, not copyable
 		TidyDoc(TidyDoc&) = delete;

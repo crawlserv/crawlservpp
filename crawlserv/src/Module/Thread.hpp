@@ -106,12 +106,8 @@ namespace crawlservpp::Module {
 		// time travel
 		void warpTo(unsigned long target);
 
-		// sub-class for Thread exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for Thread exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// not moveable, not copyable
 		Thread(Thread&) = delete;

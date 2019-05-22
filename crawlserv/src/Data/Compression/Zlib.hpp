@@ -53,10 +53,7 @@ namespace crawlservpp::Data::Compression::Zlib {
 	 * CLASS FOR ZLIB EXCEPTIONS
 	 */
 
-	class Exception : public Main::Exception {
-	public:
-		Exception(const std::string& description) : Main::Exception(description) {}
-	};
+	MAIN_EXCEPTION_CLASS();
 
 	/*
 	 * IMPLEMENTATION

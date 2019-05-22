@@ -83,12 +83,8 @@ namespace crawlservpp::Module {
 		void setThreadProgress(unsigned long threadId, float threadProgress, unsigned long threadRunTime);
 		void setThreadLast(unsigned long threadId, unsigned long threadLast);
 
-		// sub-class for Module::Database exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for Module::Database exceptions
+		MAIN_EXCEPTION_CLASS();
 
 	private:
 		// general thread options

@@ -57,12 +57,8 @@ namespace crawlservpp::Query {
 		void getAll(const Parsing::XML& doc, std::vector<std::string>& resultTo) const;
 		void getSubSets(const Parsing::XML& doc, std::vector<Parsing::XML>& resultTo) const;
 
-		// sub-class for XPath exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		// class for XPath exceptions
+		MAIN_EXCEPTION_CLASS();
 
 		// only moveable (using default), not copyable
 		XPath(const XPath&) = delete;

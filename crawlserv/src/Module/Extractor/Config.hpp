@@ -156,12 +156,8 @@ namespace crawlservpp::Module::Extractor {
 
 		} config;
 
-		// sub-class for Crawler::Config exceptions
-		class Exception : public Main::Exception {
-		public:
-			Exception(const std::string& description) : Main::Exception(description) {}
-			virtual ~Exception() {}
-		};
+		//class for Crawler::Config exceptions
+		MAIN_EXCEPTION_CLASS();
 
 	protected:
 		// parsing of crawling-specific configuration
