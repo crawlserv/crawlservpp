@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -130,6 +130,8 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<std::string> extractingDateTimeFormats;
 			std::vector<std::string> extractingDateTimeLocales;
 			std::vector<unsigned long> extractingDateTimeQueries;
+			std::vector<std::string> extractingFieldDateTimeFormats;
+			std::vector<std::string> extractingFieldDateTimeLocales;
 			std::vector<char> extractingFieldDelimiters;
 			std::vector<bool> extractingFieldIgnoreEmpty;
 			std::vector<bool> extractingFieldJSON;
@@ -137,8 +139,11 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<unsigned long> extractingFieldQueries;
 			std::vector<bool> extractingFieldTidyTexts;
 			std::vector<bool> extractingFieldWarningsEmpty;
+			std::vector<std::string> extractingIdIgnore;
 			std::vector<unsigned long> extractingIdQueries;
 			bool extractingOverwrite;
+			std::vector<unsigned long> extractingRecursive;
+			unsigned long extractingRecursiveMaxDepth;
 			bool extractingRepairCData;
 
 			// expected [number of results] entries
@@ -194,6 +199,7 @@ namespace crawlservpp::Module::Extractor {
 										pagingVariable("$p"),
 										sourceUsePost(false),
 										extractingOverwrite(true),
+										extractingRecursiveMaxDepth(100),
 										extractingRepairCData(true),
 										expectedErrorIfLarger(false),
 										expectedErrorIfSmaller(false),
@@ -268,6 +274,8 @@ namespace crawlservpp::Module::Extractor {
 		this->option("datetime.formats", this->config.extractingDateTimeFormats);
 		this->option("datetime.locales", this->config.extractingDateTimeLocales);
 		this->option("datetime.queries", this->config.extractingDateTimeQueries);
+		this->option("field.datetime.formats", this->config.extractingFieldDateTimeFormats);
+		this->option("field.datetime.locales", this->config.extractingFieldDateTimeLocales);
 		this->option("field.delimiters", this->config.extractingFieldDelimiters, CharParsingOption::FromString);
 		this->option("field.ignore.empty", this->config.extractingFieldIgnoreEmpty);
 		this->option("field.json", this->config.extractingFieldJSON);
@@ -275,8 +283,11 @@ namespace crawlservpp::Module::Extractor {
 		this->option("field.queries", this->config.extractingFieldQueries);
 		this->option("field.tidy.texts", this->config.extractingFieldTidyTexts);
 		this->option("field.warnings.empty", this->config.extractingFieldWarningsEmpty);
+		this->option("id.ignore", this->config.extractingIdIgnore);
 		this->option("id.queries", this->config.extractingIdQueries);
 		this->option("overwrite", this->config.extractingOverwrite);
+		this->option("recursive", this->config.extractingRecursive);
+		this->option("recursive.max.depth", this->config.extractingRecursiveMaxDepth);
 		this->option("repair.cdata", this->config.extractingRepairCData);
 
 		// expected [number of results]
@@ -489,6 +500,18 @@ namespace crawlservpp::Module::Extractor {
 
 			incompleteFields = false;
 		}
+
+		// remove date/time formats that are not used, add empty format where none is specified
+		if(this->config.extractingFieldDateTimeFormats.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.extractingFieldDateTimeFormats.resize(completeFields);
+
+		// remove date/time locales that are not used, add empty locale where none is specified
+		if(this->config.extractingFieldDateTimeLocales.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.extractingFieldDateTimeLocales.resize(completeFields);
 
 		// remove field delimiters that are not used, add empty delimiter (\0) where none is specified
 		if(this->config.extractingFieldDelimiters.size() > completeFields)
