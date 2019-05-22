@@ -841,6 +841,9 @@ namespace crawlservpp::Module::Extractor {
 		// get values for global tokens
 		this->extractingGetTokenValues(variables);
 
+		// clear query target
+		this->clearQueryTarget();
+
 		// loop over pages
 		std::queue<std::string> queryWarnings;
 		bool pageFirst = true;
@@ -848,34 +851,6 @@ namespace crawlservpp::Module::Extractor {
 		unsigned long pageCounter = 0;
 		unsigned long pageTotal = 0;
 		std::string pageName(this->config.pagingFirstString);
-
-		// get total number of pages if available
-		if(this->queryPagingNumberFrom) {
-			std::string pageTotalString;
-
-			// perform query on content to get the number of pages
-			this->getSingleFromQuery(this->queryPagingNumberFrom, pageTotalString, queryWarnings);
-
-			// log warnings if necessary
-			if(this->config.generalLogging)
-				this->log(queryWarnings);
-
-			// try to convert number of pages to numeric value
-			try {
-				pageTotal = boost::lexical_cast<unsigned long>(pageTotalString);
-			}
-			catch(const boost::bad_lexical_cast& e) {
-				if(this->config.generalLogging)
-					this->log(
-							"WARNING: Could convert non-numeric query result \'"
-							+ pageTotalString
-							+ "to number of pages."
-					);
-			}
-
-			if(!pageTotal)
-				return 0;
-		}
 
 		while(this->isRunning()) {
 			// resolve paging variable
@@ -923,13 +898,10 @@ namespace crawlservpp::Module::Extractor {
 			std::string sourceUrl;
 
 			if(pageFirst) {
-				if(this->config.sourceUrlFirst.empty()) {
+				if(this->config.sourceUrlFirst.empty())
 					sourceUrl = this->config.sourceUrl;
-				}
 				else
 					sourceUrl = this->config.sourceUrlFirst;
-
-				pageFirst = false;
 			}
 			else
 				sourceUrl = this->config.sourceUrl;
@@ -975,6 +947,38 @@ namespace crawlservpp::Module::Extractor {
 
 			// set page content as target for subsequent queries
 			this->setQueryTarget(pageContent, sourceUrl);
+
+			// get total number of pages if available
+			if(pageFirst) {
+				if(this->queryPagingNumberFrom) {
+					std::string pageTotalString;
+
+					// perform query on content to get the number of pages
+					this->getSingleFromQuery(this->queryPagingNumberFrom, pageTotalString, queryWarnings);
+
+					// log warnings if necessary
+					if(this->config.generalLogging)
+						this->log(queryWarnings);
+
+					// try to convert number of pages to numeric value
+					try {
+						pageTotal = boost::lexical_cast<unsigned long>(pageTotalString);
+					}
+					catch(const boost::bad_lexical_cast& e) {
+						if(this->config.generalLogging)
+							this->log(
+									"WARNING: Could convert non-numeric query result \'"
+									+ pageTotalString
+									+ "to number of pages."
+							);
+					}
+
+					if(!pageTotal)
+						return 0;
+				}
+
+				pageFirst = false;
+			}
 
 			// extract data from content
 			extracted += this->extractingPage(content.first, sourceUrl);
@@ -1022,7 +1026,13 @@ namespace crawlservpp::Module::Extractor {
 				pageNum += this->config.pagingStep;
 			else
 				break;
+
+			// clear query target before continuing to next page
+			this->clearQueryTarget();
 		}
+
+		// clear query target before continuing to next URL (or finish)
+		this->clearQueryTarget();
 
 		return extracted;
 	}
@@ -1340,20 +1350,23 @@ namespace crawlservpp::Module::Extractor {
 					result = booleanResult ? "true" : "false";
 			}
 
+			// clear query target
+			this->clearQueryTarget();
+
 			// logging if necessary
 			if(this->config.generalLogging)
 				this->log(queryWarnings);
 
 			if(this->config.generalLogging > Config::generalLoggingDefault)
-					this->log(
-							"fetched token \'"
-							+ name
-							+ "\' from "
-							+ sourceUrl
-							+ " [= \'"
-							+ result
-							+ "\']."
-					);
+				this->log(
+						"fetched token \'"
+						+ name
+						+ "\' from "
+						+ sourceUrl
+						+ " [= \'"
+						+ result
+						+ "\']."
+				);
 		}
 
 		return result;

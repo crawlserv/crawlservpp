@@ -90,10 +90,10 @@ namespace crawlservpp::Query {
 		virtual void initQueries() = 0; // children have to initialize their queries on their own (makes the class abstract)
 		QueryStruct addQuery(const QueryProperties& properties);
 		void clearQueries();
+		void clearQueryTarget();
 
-		// subset functions
+		// subset function
 		bool nextSubSet();
-		void clearSubSets();
 
 		// specific query functions
 		bool getBoolFromRegEx(
@@ -212,11 +212,11 @@ namespace crawlservpp::Query {
 		bool parseXml(std::queue<std::string>& warningsTo);
 		bool parseJsonRapid(std::queue<std::string>& warningsTo);
 		bool parseJsonCons(std::queue<std::string>& warningsTo);
-		void resetParsingState();
 		bool parseSubSetXml(std::queue<std::string>& warningsTo);
 		bool parseSubSetJsonRapid(std::queue<std::string>& warningsTo);
 		bool parseSubSetJsonCons(std::queue<std::string>& warningsTo);
 		void resetSubSetParsingState();
+		void clearSubSets();
 
 		void stringifySubSets(std::queue<std::string>& warningsTo);
 		void insertSubSets(std::vector<std::string>& subsets);

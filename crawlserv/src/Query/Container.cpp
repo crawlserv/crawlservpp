@@ -69,15 +69,12 @@ namespace crawlservpp::Query {
 
 	// set content to use queries on
 	void Container::setQueryTarget(const std::string& content, const std::string& source) {
+		// clear old target
+		this->clearQueryTarget();
+
 		// set new target
 		this->queryTargetPtr = &content;
 		this->queryTargetSourcePtr = &source;
-
-		// reset parsing state
-		this->resetParsingState();
-
-		// clear subsets
-		this->clearSubSets();
 	}
 
 	// get number of subsets
@@ -210,6 +207,31 @@ namespace crawlservpp::Query {
 		std::vector<XPathJsonPath>().swap(this->queriesXPathJsonPath);
 	}
 
+	// clear query target
+	void Container::clearQueryTarget() {
+		// clear old subsets
+		this->clearSubSets();
+
+		// clear parsed content
+		this->parsedXML.clear();
+
+		jsoncons::json().swap(this->parsedJsonCons);
+		rapidjson::Value(rapidjson::kObjectType).Swap(this->parsedJsonRapid);
+
+		// reset parsing state
+		this->xmlParsed = false;
+		this->jsonParsedRapid = false;
+		this->jsonParsedCons = false;
+
+		// clear parsing errors
+		this->xmlParsingError.clear();
+		this->jsonParsingError.clear();
+
+		// unset pointers
+		this->queryTargetPtr = nullptr;
+		this->queryTargetSourcePtr = nullptr;
+	}
+
 	// use next subset for queries, return false if no more subsets exist, throws Container::Exception
 	bool Container::nextSubSet() {
 		// check subsets
@@ -244,57 +266,6 @@ namespace crawlservpp::Query {
 		++(this->subSetCurrent);
 
 		return true;
-	}
-
-	// clear subsets
-	void Container::clearSubSets() {
-		if(this->minimizeMemory) {
-			switch(this->subSetType) {
-			case QueryStruct::typeXPath:
-				std::vector<Parsing::XML>().swap(this->xPathSubSets);
-
-				break;
-
-			case QueryStruct::typeJsonPointer:
-				std::vector<rapidjson::Document>().swap(this->jsonPointerSubSets);
-
-				break;
-
-			case QueryStruct::typeJsonPath:
-				std::vector<jsoncons::json>().swap(this->jsonPathSubSets);
-
-				break;
-			}
-
-			std::vector<std::string>().swap(this->stringifiedSubSets);
-		}
-		else {
-			switch(this->subSetType) {
-			case QueryStruct::typeXPath:
-				this->xPathSubSets.clear();
-
-				break;
-
-			case QueryStruct::typeJsonPointer:
-				this->jsonPointerSubSets.clear();
-
-				break;
-
-			case QueryStruct::typeJsonPath:
-				this->jsonPathSubSets.clear();
-
-				break;
-			}
-
-			this->stringifiedSubSets.clear();
-		}
-
-		this->subSetType = QueryStruct::typeNone;
-		this->subSetNumber = 0;
-		this->subSetCurrent = 0;
-
-		// reset parsing state for subsets
-		this->resetSubSetParsingState();
 	}
 
 	// get a boolean result from a RegEx query on a separate string,
@@ -2553,24 +2524,6 @@ namespace crawlservpp::Query {
 		return this->jsonParsedCons;
 	}
 
-	// reset parsing state for content
-	void Container::resetParsingState() {
-		// unset parsing state
-		this->xmlParsed = false;
-		this->jsonParsedRapid = false;
-		this->jsonParsedCons = false;
-
-		// clear parsing errors
-		this->xmlParsingError.clear();
-		this->jsonParsingError.clear();
-
-		// clear parsed content
-		this->parsedXML.clear();
-
-		jsoncons::json().swap(this->parsedJsonCons);
-		rapidjson::Value(rapidjson::kObjectType).Swap(this->parsedJsonRapid);
-	}
-
 	// private helper function to parse subset as HTML/XML if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	bool Container::parseSubSetXml(std::queue<std::string>& warningsTo) {
@@ -2698,6 +2651,57 @@ namespace crawlservpp::Query {
 
 		jsoncons::json().swap(this->subSetParsedJsonCons);
 		rapidjson::Value(rapidjson::kObjectType).Swap(this->subSetParsedJsonRapid);
+	}
+
+	// clear subsets
+	void Container::clearSubSets() {
+		if(this->minimizeMemory) {
+			switch(this->subSetType) {
+			case QueryStruct::typeXPath:
+				std::vector<Parsing::XML>().swap(this->xPathSubSets);
+
+				break;
+
+			case QueryStruct::typeJsonPointer:
+				std::vector<rapidjson::Document>().swap(this->jsonPointerSubSets);
+
+				break;
+
+			case QueryStruct::typeJsonPath:
+				std::vector<jsoncons::json>().swap(this->jsonPathSubSets);
+
+				break;
+			}
+
+			std::vector<std::string>().swap(this->stringifiedSubSets);
+		}
+		else {
+			switch(this->subSetType) {
+			case QueryStruct::typeXPath:
+				this->xPathSubSets.clear();
+
+				break;
+
+			case QueryStruct::typeJsonPointer:
+				this->jsonPointerSubSets.clear();
+
+				break;
+
+			case QueryStruct::typeJsonPath:
+				this->jsonPathSubSets.clear();
+
+				break;
+			}
+
+			this->stringifiedSubSets.clear();
+		}
+
+		this->subSetType = QueryStruct::typeNone;
+		this->subSetNumber = 0;
+		this->subSetCurrent = 0;
+
+		// reset parsing state for subset
+		this->resetSubSetParsingState();
 	}
 
 	// stringify subsets if still necessary

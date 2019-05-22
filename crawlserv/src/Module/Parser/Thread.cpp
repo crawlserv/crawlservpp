@@ -787,8 +787,12 @@ namespace crawlservpp::Module::Parser {
 			parsedData.dataId = parsedId;
 
 		// check whether no ID has been parsed
-		if(parsedData.dataId.empty())
+		if(parsedData.dataId.empty()) {
+			// clear query target before continuing to next URL (or finish)
+			this->clearQueryTarget();
+
 			return false;
+		}
 
 		// check whether parsed ID is ought to be ignored
 		if(
@@ -807,6 +811,9 @@ namespace crawlservpp::Module::Parser {
 						+ "]."
 				);
 
+			// clear query target before continuing to next URL (or finish)
+			this->clearQueryTarget();
+
 			return false;
 		}
 
@@ -822,6 +829,9 @@ namespace crawlservpp::Module::Parser {
 						+ this->urls.front().second
 						+ "]."
 				);
+
+			// clear query target before continuing to next URL (or finish)
+			this->clearQueryTarget();
 
 			return false;
 		}
@@ -1199,6 +1209,9 @@ namespace crawlservpp::Module::Parser {
 				parsedData.fields.emplace_back();
 			}
 		}
+
+		// clear query target before continuing to next URL (or finish)
+		this->clearQueryTarget();
 
 		// add parsed data to results
 		this->results.push(parsedData);

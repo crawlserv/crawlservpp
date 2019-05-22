@@ -322,6 +322,9 @@ namespace crawlservpp::Module::Crawler {
 					timerString
 			);
 
+			// clear query target
+			this->clearQueryTarget();
+
 			// get archive (also when crawling failed!)
 			if(this->config.crawlerTiming)
 				timerArchives.start();
@@ -1387,7 +1390,7 @@ namespace crawlservpp::Module::Crawler {
 				if(success) {
 					std::queue<std::string> queryWarnings;
 
-					// set content as target for subsequent query
+					// set token page content as target for subsequent query
 					this->setQueryTarget(content, sourceUrl);
 
 					// get token from content
@@ -1405,6 +1408,9 @@ namespace crawlservpp::Module::Crawler {
 								+ *i
 								+ "\' - not single and not bool."
 						);
+
+					// clear query target
+					this->clearQueryTarget();
 
 					// logging if necessary
 					if(this->config.crawlerLogging)
@@ -1835,6 +1841,9 @@ namespace crawlservpp::Module::Crawler {
 
 		for(auto& header : customHeaders)
 			this->crawlingDynamicRedirectContentVars(oldUrl, header);
+
+		// clear query target
+		this->clearQueryTarget();
 
 		// get new content
 		bool success = false;
@@ -2958,6 +2967,9 @@ namespace crawlservpp::Module::Crawler {
 																	true
 															);
 														}
+
+														// clear query target
+														this->clearQueryTarget();
 													}
 												}
 												catch(const CurlException& e) {
