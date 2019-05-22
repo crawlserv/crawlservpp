@@ -109,7 +109,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "Format of date and time to be parsed by the query with the same array index (default: %F %T, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Format of the date/time to be parsed by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
 			"simple": true,
 			"position": 5
 		},
@@ -118,7 +118,7 @@
 			"item-type": "locale",
 			"default": [],
 			"label": "Date/time locales:",
-			"description": "Locale used by the query of the same array index for parsing date and time.",
+			"description": "Locale used by the query of the same array index for parsing the date/time.",
 			"simple": true,
 			"position": 6
 		},
@@ -130,7 +130,7 @@
 			],
 			"default": [],
 			"label": "Date/time queries:",
-			"description": "Queries used for parsing the date and time. The first query that returns a non-empty result will be used.",
+			"description": "Queries used for parsing the date/time. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 4
 		},
@@ -143,22 +143,36 @@
 			],
 			"default": [],
 			"label": "Date/time sources:",
-			"description": "Where to parse the date and time from.",
+			"description": "Where to parse the date/time from.",
 			"simple": true,
 			"position": 3
+		},
+		"field.datetime.formats": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"simple": false
+		},
+		"field.datetime.locales": {
+			"type": "array",
+			"item-type": "locale",
+			"default": [],
+			"description": "Locale used when converting the field with the same array index to a date/time (ignored if no date/time format has been specified for the field).",
+			"simple": false
 		},
 		"field.delimiters": {
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Delimiters for multiple results when not saved as JSON. Only first character or \\n (default), \\t, \\\\ will be used.",
+			"description": "Delimiter between multiple results for the field with the same array index if not saved as JSON. Only the first character, \\n (default), \\t or \\\\ will be used.",
 			"simple": false
 		},
 		"field.ignore.empty": {
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Ignore empty values when parsing multiple elements (default behavior).",
+			"description": "Ignore empty values when parsing multiple results for the field with the same array index (default).",
 			"simple": false
 		},
 		"field.json": {
@@ -166,7 +180,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Field results as JSON:",
-			"description": "Save parsed data as JSON array.",
+			"description": "Save the value of the field with the same array index as a JSON array.",
 			"simple": true,
 			"position": 10
 		},
@@ -188,7 +202,7 @@
 			],
 			"default": [],
 			"label": "Field queries:",
-			"description": "The queries used to parse the custom fields.",
+			"description": "The query used to parse the custom field with the same array index.",
 			"simple": true,
 			"position": 9
 		},
@@ -201,7 +215,7 @@
 			],
 			"default": [],
 			"label": "Field sources:",
-			"description": "Where to parse the custom fields from.",
+			"description": "Where to parse the custom field with the same array index from.",
 			"simple": true,
 			"position": 8
 		},
@@ -210,7 +224,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Field results as tidied texts:",
-			"description": "Remove line breaks and unnecessary spaces.",
+			"description": "Remove line breaks and unnecessary spaces when parsing the field with the same array index.",
 			"simple": true,
 			"position": 11
 		},
@@ -218,7 +232,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Log warning when field is empty.",
+			"description": "Log warning when the field with the same array index is empty (and logging is enabled).",
 			"simple": false
 		},
 		"id.ignore": {
@@ -249,14 +263,14 @@
 				"content"
 			],
 			"label": "ID sources:",
-			"description": "Where to parse the ID from.",
+			"description": "Where to parse the ID from when using the query with the same array index.",
 			"simple": true,
 			"position": 1
 		},
 		"repair.cdata": {
 			"type": "bool",
 			"default": true,
-			"description": "Try to repair broken CData.",
+			"description": "Try to repair CData when parsing HTML/XML.",
 			"simple": false
 		},
 		"tidy.errors": {
