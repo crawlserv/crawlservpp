@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -320,9 +320,14 @@ namespace crawlservpp::Module {
 		this->database.setThreadProgress(this->id, progress, this->getRunTime());
 	}
 
-	// add a log entry for the thread to the database using the module of the thread (to be used by the thread only)
-	void Thread::log(const std::string& entry) {
-		this->database.log(entry);
+	// add thread-specific log entry to the database (to be used by the thread only)
+	void Thread::log(const std::string& logEntry) {
+		this->database.log(logEntry);
+	}
+
+	// add multiple thread-specific log entries to the database (to be used by the thread only)
+	void Thread::log(std::queue<std::string>& logEntries) {
+		this->database.log(logEntries);
 	}
 
 	// allow the thread to be paused (enabled by default)
