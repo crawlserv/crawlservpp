@@ -2397,15 +2397,14 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& url,
 			const std::string& type
 	) {
+		bool expecting = false;
+		unsigned long expected = 0;
 		std::vector<std::string> urls;
+		std::queue<std::string> queryWarnings;
 
 		// check argument
 		if(url.empty())
 			throw Exception("Crawler::Thread::crawlingExtractUrls(): No URL specified");
-
-		// check queries
-		if(this->queriesLinks.empty())
-			return std::vector<std::string>();
 
 		// check whether to extract URLs
 		if(
@@ -2415,8 +2414,38 @@ namespace crawlservpp::Module::Crawler {
 		)
 			return urls;
 
-		std::queue<std::string> queryWarnings;
+		// get expected number of URLs if possible
+		std::string expectedStr;
 
+		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
+
+		// log warnings if necessary
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
+
+		// try to convert expected number of URLs
+		if(!expectedStr.empty()) {
+			try {
+				expected = std::stoul(expectedStr);
+
+				expecting = true;
+
+				// reserve memory for URLs
+				urls.reserve(expected);
+			}
+			catch(const std::logic_error& e) {
+				if(this->config.crawlerLogging)
+					this->log(
+							"WARNING: \'"
+							+ expectedStr
+							+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
+							+ url
+							+ "]."
+					);
+			}
+		}
+
+		// extract URLs
 		for(const auto& query : this->queriesLinks) {
 			if(query.resultMulti) {
 				std::vector<std::string> results;
@@ -2436,17 +2465,8 @@ namespace crawlservpp::Module::Crawler {
 			}
 		}
 
-		// check number of extracted URLs if necessary
-		std::string expectedStr;
-
-		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
-
-		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
-
-		if(!expectedStr.empty()) {
-			const unsigned long expected = std::stoul(expectedStr);
+		// if necessary, compare the number of extracted URLs with the expected number of URLs
+		if(expecting) {
 			std::ostringstream expectedStrStr;
 
 			expectedStrStr.imbue(std::locale(""));

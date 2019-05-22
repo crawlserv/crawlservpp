@@ -1497,11 +1497,45 @@ namespace crawlservpp::Module::Extractor {
 
 	// extract data by parsing page content, return number of extracted datasets
 	unsigned long Thread::extractingPage(unsigned long contentId, const std::string& url) {
+		bool expecting = false;
+		unsigned long expected = 0;
 		std::queue<std::string> queryWarnings;
 		unsigned long result = 0;
 
+		// get expected number of datasets if possible
+		std::string expectedStr;
+
+		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
+
+		// log warnings if necessary
+		if(this->config.generalLogging)
+			this->log(queryWarnings);
+
+		// try to convert expected number of datasets
+		if(!expectedStr.empty()) {
+			try {
+				expected = std::stoul(expectedStr);
+
+				expecting = true;
+			}
+			catch(const std::logic_error& e) {
+				if(this->config.generalLogging)
+					this->log(
+							"WARNING: \'"
+							+ expectedStr
+							+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
+							+ url
+							+ "]."
+					);
+			}
+		}
+
 		// get datasets
 		for(const auto& query : this->queriesDatasets) {
+			// reserve memory for subsets if possible
+			if(expecting)
+				this->reserveForSubSets(query, expected);
+
 			// get datasets by performing query of any type on page content
 			this->setSubSetsFromQuery(query, queryWarnings);
 
@@ -1894,6 +1928,56 @@ namespace crawlservpp::Module::Extractor {
 				this->log(queryWarnings);
 
 			++result;
+		}
+
+		// if necessary, compare the number of extracted datasets with the number of expected datatsets
+		if(expecting) {
+			std::ostringstream expectedStrStr;
+
+			expectedStrStr.imbue(std::locale(""));
+
+			if(result < expected) {
+				// number of datasets is smaller than expected
+				expectedStrStr	<< "number of extracted datasets ["
+								<< result
+								<< "] is smaller than expected ["
+								<< expected
+								<< "] ["
+								<< url
+								<< "]";
+
+				if(this->config.expectedErrorIfSmaller)
+					throw Exception(expectedStrStr.str());
+				else if(this->config.generalLogging)
+					this->log("WARNING: " + expectedStrStr.str() + ".");
+			}
+			else if(result > expected) {
+				// number of datasets is larger than expected
+				expectedStrStr	<< "number of extracted datasets ["
+								<< result
+								<< "] is larger than expected ["
+								<< expected
+								<< "] ["
+								<< url
+								<< "]";
+
+				// number of URLs is smaller than expected
+				if(this->config.expectedErrorIfLarger)
+					throw Exception(expectedStrStr.str());
+				else if(this->config.generalLogging)
+					this->log("WARNING: " + expectedStrStr.str() + ".");
+			}
+			else if(this->config.generalLogging == Config::generalLoggingVerbose) {
+				expectedStrStr	<< "number of extracted URLs ["
+								<< result
+								<< "] as expected ["
+								<< expected
+								<< "] ["
+								<< url
+								<< "].";
+
+				this->log(expectedStrStr.str());
+			}
 		}
 
 		return result;
