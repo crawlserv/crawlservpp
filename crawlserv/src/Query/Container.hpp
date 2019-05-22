@@ -79,27 +79,23 @@ namespace crawlservpp::Query {
 	protected:
 		// protected setters
 		void setRepairCData(bool isRepairCData);
+		void setMinimizeMemory(bool isMinimizeMemory);
 		void setTidyErrorsAndWarnings(unsigned int errors, bool warnings);
 		void setQueryTarget(const std::string& content, const std::string& source);
 
 		// protected getter
 		unsigned long getNumberOfSubSets() const;
 
-		// query functions
+		// general query functions
 		virtual void initQueries() = 0; // children have to initialize their queries on their own (makes the class abstract)
 		QueryStruct addQuery(const QueryProperties& properties);
 		void clearQueries();
 
-		// subset function
+		// subset functions
 		bool nextSubSet();
+		void clearSubSets();
 
-		// not moveable, not copyable
-		Container(Container&) = delete;
-		Container(Container&&) = delete;
-		Container& operator=(Container&) = delete;
-		Container& operator=(Container&&) = delete;
-
-		// query functions
+		// specific query functions
 		bool getBoolFromRegEx(
 				const QueryStruct& query,
 				const std::string& target,
@@ -161,6 +157,12 @@ namespace crawlservpp::Query {
 		bool getXml(std::string& resultTo, std::queue<std::string>& warningsTo);
 		void reserveForSubSets(const QueryStruct& query, unsigned long n);
 
+		// only moveable (using default), not copyable
+		Container(const Container&) = delete;
+		Container(Container&&) = default;
+		Container& operator=(const Container&) = delete;
+		Container& operator=(Container&&) = default;
+
 	private:
 		// queries
 		std::vector<RegEx> queriesRegEx;
@@ -170,8 +172,9 @@ namespace crawlservpp::Query {
 		std::vector<XPathJsonPointer> queriesXPathJsonPointer;
 		std::vector<XPathJsonPath> queriesXPathJsonPath;
 
-		// parsing option
+		// options
 		bool repairCData;							// try to repair CData when parsing HTML/XML
+		bool minimizeMemory;						// minimize memory usage
 
 		// content pointers and parsing
 		const std::string * queryTargetPtr;			// pointer to content to perform queries on
