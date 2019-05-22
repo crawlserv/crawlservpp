@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -62,7 +62,7 @@
 #include <locale>		// std::locale
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <sstream>		// std::ostringstream
-#include <stdexcept>	// std::logic_error, std::runtime_error
+#include <stdexcept>	// std::logic_error
 #include <string>		// std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <utility>		// std::pair
@@ -72,6 +72,7 @@ namespace crawlservpp::Module::Crawler {
 
 	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenienc
+		typedef Helper::DateTime::Exception DateTimeException;
 		typedef Helper::Utf8::Exception Utf8Exception;
 		typedef Network::Curl::Exception CurlException;
 		typedef Parsing::URI::Exception URIException;
@@ -284,9 +285,6 @@ namespace crawlservpp::Module::Crawler {
 				std::queue<std::string>& warningsTo,
 				std::queue<Memento>& mementosTo
 		);
-
-		// private helper function
-		void logWarnings(std::queue<std::string>& warnings);
 	};
 
 } /* crawlservpp::Module::Crawler */
