@@ -43,6 +43,12 @@
 			"simple": true,
 			"position": 5
 		},
+		"minimize.memory": {
+			"type": "bool",
+			"default": false,
+			"description": "Free a small amount of unused memory more often at the expense of performance.",
+			"simple": false
+		},
 		"reextract": {
 			"type": "bool",
 			"default": false,

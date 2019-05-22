@@ -78,6 +78,7 @@ namespace crawlservpp::Module::Extractor {
 			bool generalExtractCustom;
 			unsigned int generalLock;
 			unsigned char generalLogging;
+			bool generalMinimizeMemory;
 			bool generalReExtract;
 			std::string generalResultTable;
 			long generalReTries;
@@ -177,6 +178,7 @@ namespace crawlservpp::Module::Extractor {
 										generalExtractCustom(false),
 										generalLock(300),
 										generalLogging(generalLoggingDefault),
+										generalMinimizeMemory(false),
 										generalReExtract(false),
 										generalReTries(720),
 										generalSleepError(10000),
@@ -214,6 +216,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("extract.custom", this->config.generalExtractCustom);
 		this->option("lock", this->config.generalLock);
 		this->option("logging", this->config.generalLogging);
+		this->option("minimize.memory", this->config.generalMinimizeMemory);
 		this->option("reextract", this->config.generalReExtract);
 		this->option("result.table", this->config.generalResultTable);
 		this->option("retries", this->config.generalReTries);

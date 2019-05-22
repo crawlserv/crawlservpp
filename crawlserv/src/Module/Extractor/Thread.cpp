@@ -109,6 +109,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// set query container options
 		this->setRepairCData(this->config.extractingRepairCData);
+		this->setMinimizeMemory(this->config.generalMinimizeMemory);
 		this->setTidyErrorsAndWarnings(this->config.generalTidyErrors, this->config.generalTidyWarnings);
 
 		// set database options
