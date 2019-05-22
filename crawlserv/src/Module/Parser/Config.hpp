@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -84,6 +84,8 @@ namespace crawlservpp::Module::Parser {
 			std::vector<std::string> parsingDateTimeLocales;
 			std::vector<unsigned long> parsingDateTimeQueries;
 			std::vector<unsigned short> parsingDateTimeSources;
+			std::vector<std::string> parsingFieldDateTimeFormats;
+			std::vector<std::string> parsingFieldDateTimeLocales;
 			std::vector<char> parsingFieldDelimiters;
 			std::vector<bool> parsingFieldIgnoreEmpty;
 			std::vector<bool> parsingFieldJSON;
@@ -150,6 +152,8 @@ namespace crawlservpp::Module::Parser {
 		this->option("datetime.locales", this->config.parsingDateTimeLocales);
 		this->option("datetime.queries", this->config.parsingDateTimeQueries);
 		this->option("datetime.sources", this->config.parsingDateTimeSources);
+		this->option("field.datetime.formats", this->config.parsingFieldDateTimeFormats);
+		this->option("field.datetime.locales", this->config.parsingFieldDateTimeLocales);
 		this->option("field.delimiters", this->config.parsingFieldDelimiters, CharParsingOption::FromString);
 		this->option("field.ignore.empty", this->config.parsingFieldIgnoreEmpty);
 		this->option("field.json", this->config.parsingFieldJSON);
@@ -271,6 +275,18 @@ namespace crawlservpp::Module::Parser {
 
 			incompleteFields = false;
 		}
+
+		// remove date/time formats that are not used, add empty format where none is specified
+		if(this->config.parsingFieldDateTimeFormats.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.parsingFieldDateTimeFormats.resize(completeFields);
+
+		// remove date/time locales that are not used, add empty locale where none is specified
+		if(this->config.parsingFieldDateTimeLocales.size() > completeFields)
+			incompleteFields = true;
+
+		this->config.parsingFieldDateTimeLocales.resize(completeFields);
 
 		// remove field delimiters that are not used, add empty delimiter (\0) where none is specified
 		if(this->config.parsingFieldDelimiters.size() > completeFields)
