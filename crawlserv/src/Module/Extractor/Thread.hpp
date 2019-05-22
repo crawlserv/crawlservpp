@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -74,6 +74,8 @@ namespace crawlservpp::Module::Extractor {
 
 	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenience
+		typedef Helper::DateTime::Exception DateTimeException;
+		typedef Helper::DateTime::LocaleException LocaleException;
 		typedef Helper::Utf8::Exception Utf8Exception;
 		typedef Network::Curl::Exception CurlException;
 		typedef Query::Container::Exception QueryException;
@@ -144,12 +146,13 @@ namespace crawlservpp::Module::Extractor {
 		void interrupt();
 
 		// queries
+		std::vector<QueryStruct> queriesVariables;
+		std::vector<QueryStruct> queriesTokens;
 		std::vector<QueryStruct> queriesDatasets;
 		std::vector<QueryStruct> queriesId;
 		std::vector<QueryStruct> queriesDateTime;
 		std::vector<QueryStruct> queriesFields;
-		std::vector<QueryStruct> queriesVariables;
-		std::vector<QueryStruct> queriesTokens;
+		std::vector<QueryStruct> queriesRecursive;
 		QueryStruct queryPagingIsNextFrom;
 		QueryStruct queryPagingNextFrom;
 		QueryStruct queryPagingNumberFrom;
@@ -206,9 +209,6 @@ namespace crawlservpp::Module::Extractor {
 		bool extractingCheckResponseCode(const std::string& url, long responseCode);
 		void extractingUrlFinished();
 		void extractingSaveResults(bool warped);
-
-		// private helper function
-		void logWarnings(std::queue<std::string>& warnings);
 	};
 
 } /* crawlservpp::Module::Extractor */
