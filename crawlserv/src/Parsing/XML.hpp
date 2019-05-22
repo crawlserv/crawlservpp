@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -83,10 +83,10 @@ namespace crawlservpp::Parsing {
 		bool operator!() const noexcept;
 
 		// only moveable (using default), not copyable
-		XML(XML&) = delete;
-		XML(XML&&) = default;
-		XML& operator=(XML) = delete;
-		XML& operator=(XML&&) = default;
+		XML(const XML&) = delete;
+		XML(XML&&) noexcept = default;
+		XML& operator=(const XML&) = delete;
+		XML& operator=(XML&&) noexcept = default;
 
 	protected:
 		// unique pointer to (pugi)XML document
