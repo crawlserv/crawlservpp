@@ -446,18 +446,32 @@
 			"simple": true,
 			"position": 3
 		},
+		"field.datetime.formats": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"simple": false
+		},
+		"field.datetime.locales": {
+			"type": "array",
+			"item-type": "locale",
+			"default": [],
+			"description": "Locale used when converting the field with the same array index to a date/time (ignored if no date/time format has been specified for the field).",
+			"simple": false
+		},
 		"field.delimiters": {
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Delimiters for multiple results when not saved as JSON. Only first character or \\n (default), \\t, \\\\ will be used.",
+			"description": "Delimiter between multiple results for the field with the same array index if not saved as JSON. Only the first character, \\n (default), \\t or \\\\ will be used.",
 			"simple": false
 		},
 		"field.ignore.empty": {
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Ignore empty values when extracting multiple elements (default behavior).",
+			"description": "Ignore empty values when parsing multiple results for the field with the same array index (default).",
 			"simple": false
 		},
 		"field.json": {
@@ -465,7 +479,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Field results as JSON:",
-			"description": "Save extracted data as JSON array.",
+			"description": "Save the value of the field with the same array index as a JSON array.",
 			"simple": true,
 			"position": 10
 		},
@@ -486,7 +500,7 @@
 			],
 			"default": [],
 			"label": "Field queries:",
-			"description": "The queries used to extract the custom fields.",
+			"description": "The query used to extract the custom field with the same array index.",
 			"simple": true,
 			"position": 7
 		},
@@ -495,7 +509,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Field results as tidied texts:",
-			"description": "Remove line breaks and unnecessary spaces.",
+			"description": "Remove line breaks and unnecessary spaces when extracting the field with the same array index.",
 			"simple": true,
 			"position": 8
 		},
@@ -503,7 +517,14 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Log warning when field is empty.",
+			"description": "Log warning when the field with the same array index is empty (and logging is enabled).",
+			"simple": false
+		},
+		"id.ignore": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Extracted IDs to be ignored.",
 			"simple": false
 		},
 		"id.queries": {
@@ -526,10 +547,31 @@
 			"simple": true,
 			"position": 9
 		},
+		"recursive": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"subsets"
+			],
+			"default": [],
+			"label": "Recursive extracting:",
+			"description": "Queries for extracting more datasets from a dataset. The first query that returns a non-empty result will be used.",
+			"simple": true,
+			"position": 11
+		},
+		"recursive.max.depth": {
+			"type": "number",
+			"min": 0,
+			"default": 100,
+			"label": "Max. depth of recursion:",
+			"description": "Maximum depth of recursive extracting.",
+			"simple": true,
+			"position": 12
+		},
 		"repair.cdata": {
 			"type": "bool",
 			"default": true,
-			"description": "Try to repair broken CData.",
+			"description": "Try to repair CData when parsing HTML/XML.",
 			"simple": false
 		}
 	},
