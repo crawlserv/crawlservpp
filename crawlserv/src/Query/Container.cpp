@@ -250,7 +250,7 @@ namespace crawlservpp::Query {
 			const std::string& target,
 			bool& resultTo,
 			std::queue<std::string>& warningsTo
-	) {
+	) const {
 		// check query type
 		if(query.type != QueryStruct::typeRegEx) {
 			if(query.type != QueryStruct::typeNone)
@@ -297,7 +297,7 @@ namespace crawlservpp::Query {
 			const std::string& target,
 			std::string& resultTo,
 			std::queue<std::string>& warningsTo
-	) {
+	) const {
 		// check query type
 		if(query.type != QueryStruct::typeRegEx) {
 			if(query.type != QueryStruct::typeNone)
@@ -344,7 +344,7 @@ namespace crawlservpp::Query {
 			const std::string& target,
 			std::vector<std::string>& resultTo,
 			std::queue<std::string>& warningsTo
-	) {
+	) const {
 		// check query type
 		if(query.type != QueryStruct::typeRegEx) {
 			if(query.type != QueryStruct::typeNone)
@@ -2407,6 +2407,28 @@ namespace crawlservpp::Query {
 			);
 
 		return false;
+	}
+
+	// reserve memory for a specific number of subsets
+	void Container::reserveForSubSets(const QueryStruct& query, unsigned long n) {
+		this->stringifiedSubSets.reserve(n);
+
+		switch(query.type) {
+		case QueryStruct::typeXPath:
+			this->xPathSubSets.reserve(n);
+
+			break;
+
+		case QueryStruct::typeJsonPointer:
+		case QueryStruct::typeXPathJsonPointer:
+			this->jsonPointerSubSets.reserve(n);
+
+			break;
+
+		case QueryStruct::typeJsonPath:
+		case QueryStruct::typeXPathJsonPath:
+			this->jsonPathSubSets.reserve(n);
+		}
 	}
 
 	// private helper function to parse content as HTML/XML if still necessary,

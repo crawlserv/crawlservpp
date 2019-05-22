@@ -105,19 +105,19 @@ namespace crawlservpp::Query {
 				const std::string& target,
 				bool& resultTo,
 				std::queue<std::string>& warningsTo
-		);
+		) const;
 		bool getSingleFromRegEx(
 				const QueryStruct& query,
 				const std::string& target,
 				std::string& resultTo,
 				std::queue<std::string>& warningsTo
-		);
+		) const;
 		bool getMultiFromRegEx(
 				const QueryStruct& query,
 				const std::string& target,
 				std::vector<std::string>& resultTo,
 				std::queue<std::string>& warningsTo
-		);
+		) const;
 		bool getBoolFromQuery(
 				const QueryStruct& query,
 				bool& resultTo,
@@ -156,7 +156,10 @@ namespace crawlservpp::Query {
 				const QueryStruct& query,
 				std::queue<std::string>&
 		);
+
+		// helper functions
 		bool getXml(std::string& resultTo, std::queue<std::string>& warningsTo);
+		void reserveForSubSets(const QueryStruct& query, unsigned long n);
 
 	private:
 		// queries
