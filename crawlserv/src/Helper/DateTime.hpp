@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -31,11 +31,17 @@
 #ifndef HELPER_DATETIME_HPP_
 #define HELPER_DATETIME_HPP_
 
+#include "Strings.hpp"
+
+#include "../Main/Exception.hpp"
+
 #include "../_extern/date/include/date/date.h"
 
-#include <locale>	// std::locale
-#include <sstream>	// std::istringstream
-#include <string>	// std::string, std::to_string
+#include <cctype>		// ::tolower
+#include <locale>		// std::locale
+#include <sstream>		// std::istringstream
+#include <stdexcept>	// std::runtime_error
+#include <string>		// std::string, std::to_string
 
 namespace crawlservpp::Helper::DateTime {
 
@@ -44,11 +50,15 @@ namespace crawlservpp::Helper::DateTime {
 	 */
 
 	// date/time conversions
-	bool convertLongDateTimeToSQLTimeStamp(std::string& dateTime);
-	bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat);
-	bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat, const std::locale& locale);
-	bool convertTimeStampToSQLTimeStamp(std::string& timeStamp);
-	bool convertSQLTimeStampToTimeStamp(std::string& timeStamp);
+	void convertLongDateTimeToSQLTimeStamp(std::string& dateTime);
+	void convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat);
+	void convertCustomDateTimeToSQLTimeStamp(
+			std::string& dateTime,
+			const std::string& customFormat,
+			const std::string& locale
+	);
+	void convertTimeStampToSQLTimeStamp(std::string& timeStamp);
+	void convertSQLTimeStampToTimeStamp(std::string& timeStamp);
 
 	// date/time verification
 	bool isValidISODate(const std::string& isoDate);
@@ -62,69 +72,125 @@ namespace crawlservpp::Helper::DateTime {
 	std::string secondsToString(unsigned long long seconds);
 
 	/*
+	 * CLASSES FOR DATE/TIME EXCEPTIONS
+	 */
+
+	MAIN_EXCEPTION_CLASS();
+	MAIN_EXCEPTION_SUBCLASS(LocaleException);
+
+	/*
 	 * IMPLEMENTATION
 	 */
 
-	// convert time stamp from WEEKDAY[short], DD MONTH[short] YYYY HH:MM:SS TIMEZONE[short] to YYYY-MM-DD HH:MM:SS
-	inline bool convertLongDateTimeToSQLTimeStamp(std::string& dateTime) {
-		return convertCustomDateTimeToSQLTimeStamp(dateTime, "%a, %d %b %Y %T %Z");
+	// convert timestamp from WEEKDAY[short], DD MONTH[short] YYYY HH:MM:SS TIMEZONE[short] to YYYY-MM-DD HH:MM:SS
+	inline void convertLongDateTimeToSQLTimeStamp(std::string& dateTime) {
+		convertCustomDateTimeToSQLTimeStamp(dateTime, "%a, %d %b %Y %T %Z");
 	}
 
 	// convert date and time with custom format to YYYY-MM-DD HH:MM:SS
-	inline bool convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat) {
+	inline void convertCustomDateTimeToSQLTimeStamp(std::string& dateTime, const std::string& customFormat) {
+		// check arguments
+		if(dateTime.empty())
+			return;
+
+		if(customFormat.empty())
+			throw Exception("DateTime::convertCustomDateTimeToSQLTimeStamp(): No custom format specified");
+
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
 
 		in >> date::parse(customFormat, tp);
 
 		if(!bool(in))
-			return false;
+			throw Exception(
+					"Could not convert \'"
+					+ dateTime
+					+ "\' [expected format: \'"
+					+ customFormat
+					+ "\'] to date/time "
+			);
 
 		dateTime = date::format("%F %T", tp);
-
-		return true;
 	}
 
 	// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale),
 	//  return whether conversion was successful
-	inline bool convertCustomDateTimeToSQLTimeStamp(
+	inline void convertCustomDateTimeToSQLTimeStamp(
 			std::string& dateTime,
 			const std::string& customFormat,
-			const std::locale& locale
+			const std::string& locale
 	) {
+		// check arguments
+		if(dateTime.empty())
+			return;
+
+		if(customFormat.empty())
+			throw Exception("DateTime::convertCustomDateTimeToSQLTimeStamp(): No custom format specified");
+
+		if(locale.empty()) {
+			convertCustomDateTimeToSQLTimeStamp(dateTime, customFormat);
+
+			return;
+		}
+
+		// locale hack: The French abbreviation "avr." for April is not stringently supported
+		if(
+				locale.size() > 1
+				&& ::tolower(locale.at(0) == 'f')
+				&& ::tolower(locale.at(1) == 'r')
+		)
+			Helper::Strings::replaceAll(dateTime, "avr.", "avril", true);
+
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
 
-		in.imbue(locale);
+		try {
+			in.imbue(std::locale(locale));
+		}
+		catch(const std::runtime_error& e) {
+			throw LocaleException("Unknown locale \'" + locale + "\'");
+		}
 
 		in >> date::parse(customFormat, tp);
 
 		if(!bool(in))
-			return false;
+			throw Exception(
+					"Could not convert \'"
+					+ dateTime
+					+ "\' [expected format: \'"
+					+ customFormat
+					+ "\', locale: \'"
+					+ locale
+					+ "\'] to date/time"
+			);
 
 		dateTime = date::format("%F %T", tp);
-
-		return true;
 	}
 
-	// convert time stamp from YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
-	inline bool convertTimeStampToSQLTimeStamp(std::string& timeStamp) {
-		return convertCustomDateTimeToSQLTimeStamp(timeStamp, "%Y%m%d%H%M%S");
+	// convert timestamp from YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
+	inline void convertTimeStampToSQLTimeStamp(std::string& timeStamp) {
+		convertCustomDateTimeToSQLTimeStamp(timeStamp, "%Y%m%d%H%M%S");
 	}
 
-	// convert time stamp from YYYY-MM-DD HH:MM:SS to YYYYMMDDHHMMSS
-	inline bool convertSQLTimeStampToTimeStamp(std::string& timeStamp) {
+	// convert timestamp from YYYY-MM-DD HH:MM:SS to YYYYMMDDHHMMSS
+	inline void convertSQLTimeStampToTimeStamp(std::string& timeStamp) {
+		// check argument
+		if(timeStamp.empty())
+			return;
+
 		std::istringstream in(timeStamp);
 		date::sys_seconds tp;
 
 		in >> date::parse("%F %T", tp);
 
 		if(!bool(in))
-			return false;
+			throw Exception(
+					"Could not convert SQL timestamp \'"
+					+ timeStamp
+					+ "\' to date/time"
+			);
 
 		timeStamp = date::format("%Y%m%d%H%M%S", tp);
-
-		return true;
 	}
 
 	// check whether a string contains a valid ISO date
