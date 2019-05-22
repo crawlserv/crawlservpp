@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -792,14 +792,23 @@ namespace crawlservpp::Module::Parser {
 
 		// check whether parsed ID is ought to be ignored
 		if(
-				!(this->config.parsingIdIgnore.empty())
-				&& std::find(
+				std::find(
 						this->config.parsingIdIgnore.begin(),
 						this->config.parsingIdIgnore.end(),
 						parsedData.dataId
 				) != this->config.parsingIdIgnore.end()
-		)
+		) {
+			if(this->config.generalLogging > Config::generalLoggingDefault)
+				this->log(
+						"ignored parsed ID \'"
+						+ parsedData.dataId
+						+ "\' ["
+						+ this->urls.front().second
+						+ "]."
+				);
+
 			return false;
+		}
 
 		// check whether parsed ID already exists and the current content differs from the one in the database
 		const unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
@@ -842,73 +851,51 @@ namespace crawlservpp::Module::Parser {
 			if(!parsedData.dateTime.empty()) {
 				// found date/time: try to convert it to SQL time stamp
 				std::string format(this->config.parsingDateTimeFormats.at(index));
-				const std::string locale(this->config.parsingDateTimeLocales.at(index));
 
 				// use "%F %T" as default date/time format
 				if(format.empty())
 					format = "%F %T";
 
-				if(!locale.empty()) {
-					// locale hack: The French abbreviation "avr." for April is not stringently supported
-					if(locale.length() > 1
-							&& ::tolower(locale.at(0) == 'f')
-							&& ::tolower(locale.at(1) == 'r'))
-						Helper::Strings::replaceAll(parsedData.dateTime, "avr.", "avril", true);
+				try {
+					Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+							parsedData.dateTime,
+							format,
+							this->config.parsingDateTimeLocales.at(index)
+					);
+				}
+				catch(const LocaleException& e) {
+					if(this->config.generalLogging)
+						this->log("WARNING: " + e.whatStr() + " - locale ignored.");
 
 					try {
-						if(
-								!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-										parsedData.dateTime, format, std::locale(locale)
-								)
-						) {
-							if(this->config.generalLogging)
-								this->log(
-										"WARNING: Could not parse date/time \'"
-										+ parsedData.dateTime
-										+ "\' from "
-										+ this->urls.front().second
-								);
-
-							parsedData.dateTime.clear();
-						}
+						Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+								parsedData.dateTime,
+								format
+						);
 					}
-					catch(const std::runtime_error& e) {
-						if(this->config.generalLogging)
-							this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
-
-						if(
-								!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-										parsedData.dateTime, format
-								)
-						) {
-							if(this->config.generalLogging)
-								this->log(
-										"WARNING: Could not parse date/time \'"
-										+ parsedData.dateTime
-										+ "\' from "
-										+ this->urls.front().second
-								);
-
-							parsedData.dateTime.clear();
-						}
-					}
-				}
-				else
-					if(
-							!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-									parsedData.dateTime, format
-							)
-					) {
-						if(this->config.generalLogging)
+					catch(const DateTimeException& e) {
+						if(this->config.generalLogging > Config::generalLoggingDefault)
 							this->log(
-									"WARNING: Could not parse date/time \'"
-									+ parsedData.dateTime
-									+ "\' from "
+									e.whatStr()
+									+ " - query skipped ["
 									+ this->urls.front().second
+									+ "]."
 							);
 
 						parsedData.dateTime.clear();
 					}
+				}
+				catch(const DateTimeException & e) {
+					if(this->config.generalLogging > Config::generalLoggingDefault)
+						this->log(
+								e.whatStr()
+								+ " - query skipped ["
+								+ this->urls.front().second
+								+ "]."
+						);
+
+					parsedData.dateTime.clear();
+				}
 
 				if(!parsedData.dateTime.empty())
 					break; // date/time successfully parsed and converted
@@ -920,6 +907,7 @@ namespace crawlservpp::Module::Parser {
 
 		for(auto i = this->queriesFields.begin(); i != this->queriesFields.end(); ++i) {
 			const auto index = i - this->queriesFields.begin();
+			const auto dateTimeFormat(this->config.parsingFieldDateTimeFormats.at(index));
 
 			// determinate whether to get all or just the first match (as string or boolean value) from the query result
 			if(i->resultMulti) {
@@ -944,6 +932,65 @@ namespace crawlservpp::Module::Parser {
 				// log warnings if necessary
 				this->logWarnings(queryWarnings);
 
+				// if necessary, try to convert the parsed values to date/times
+				if(!dateTimeFormat.empty()) {
+					for(auto& value : parsedFieldValues) {
+						try {
+							Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+									value,
+									dateTimeFormat,
+									this->config.parsingFieldDateTimeLocales.at(index)
+							);
+						}
+						catch(const LocaleException& e) {
+							try {
+								if(this->config.generalLogging)
+									this->log(
+											"WARNING: "
+											+ e.whatStr()
+											+ " for field \'"
+											+ this->config.parsingFieldNames.at(index)
+											+ "\' ["
+											+ this->urls.front().second
+											+ "]."
+									);
+
+								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+										value,
+										dateTimeFormat
+								);
+							}
+							catch(const DateTimeException& e) {
+								if(this->config.generalLogging)
+									this->log(
+											"WARNING: "
+											+ e.whatStr()
+											+ " for field \'"
+											+ this->config.parsingFieldNames.at(index)
+											+ "\' ["
+											+ this->urls.front().second
+											+ "]."
+									);
+
+								value.clear();
+							}
+						}
+						catch(const DateTimeException& e) {
+							this->log(
+									"WARNING: "
+									+ e.whatStr()
+									+ " for field \'"
+									+ this->config.parsingFieldNames.at(index)
+									+ "\' ["
+									+ this->urls.front().second
+									+ "]."
+							);
+
+							value.clear();
+						}
+					}
+				}
+
 				// if necessary, check whether array or all values are empty
 				if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(index)) {
 					if(
@@ -956,15 +1003,17 @@ namespace crawlservpp::Module::Parser {
 							) == parsedFieldValues.end()
 					)
 						this->log(
-								"WARNING: \'" + this->config.parsingFieldNames.at(index) + "\'"
-								" is empty for " + this->urls.front().second
+								"WARNING: \'"
+								+ this->config.parsingFieldNames.at(index) + "\'"
+								" is empty for "
+								+ this->urls.front().second
 						);
 				}
 
 				// determine how to save result: JSON array or concatenate using delimiting character
 				if(this->config.parsingFieldJSON.at(index)) {
 					// if necessary, tidy texts
-					if(this->config.parsingFieldTidyTexts.at(index))
+					if(dateTimeFormat.empty() && this->config.parsingFieldTidyTexts.at(index))
 						for(auto& value : parsedFieldValues)
 							Helper::Strings::utfTidy(value);
 
@@ -982,7 +1031,7 @@ namespace crawlservpp::Module::Parser {
 						);
 
 					// if necessary, tidy text
-					if(this->config.parsingFieldTidyTexts.at(index))
+					if(dateTimeFormat.empty() && this->config.parsingFieldTidyTexts.at(index))
 						Helper::Strings::utfTidy(result);
 
 					parsedData.fields.emplace_back(result);
@@ -1010,6 +1059,64 @@ namespace crawlservpp::Module::Parser {
 				// log warnings if necessary
 				this->logWarnings(queryWarnings);
 
+				// if necessary, try to convert the parsed value to date/time
+				if(!dateTimeFormat.empty()) {
+					try {
+						Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+								parsedFieldValue,
+								dateTimeFormat,
+								this->config.parsingFieldDateTimeLocales.at(index)
+						);
+					}
+					catch(const LocaleException& e) {
+						try {
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: "
+										+ e.whatStr()
+										+ " for field \'"
+										+ this->config.parsingFieldNames.at(index)
+										+ "\' ["
+										+ this->urls.front().second
+										+ "]."
+								);
+
+							Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+									parsedFieldValue,
+									dateTimeFormat
+							);
+						}
+						catch(const DateTimeException& e) {
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: "
+										+ e.whatStr()
+										+ " for field \'"
+										+ this->config.parsingFieldNames.at(index)
+										+ "\' ["
+										+ this->urls.front().second
+										+ "]."
+								);
+
+							parsedFieldValue.clear();
+						}
+					}
+					catch(const DateTimeException& e) {
+						if(this->config.generalLogging)
+							this->log(
+									"WARNING: "
+									+ e.whatStr()
+									+ " for field \'"
+									+ this->config.parsingFieldNames.at(index)
+									+ "\' ["
+									+ this->urls.front().second
+									+ "]."
+							);
+
+						parsedFieldValue.clear();
+					}
+				}
+
 				// if necessary, check whether value is empty
 				if(
 						this->config.parsingFieldWarningsEmpty.at(index)
@@ -1017,12 +1124,14 @@ namespace crawlservpp::Module::Parser {
 						&& this->config.generalLogging
 				)
 					this->log(
-							"WARNING: \'" + this->config.parsingFieldNames.at(index) + "\'"
-							" is empty for " + this->urls.front().second
+							"WARNING: \'"
+							+ this->config.parsingFieldNames.at(index) + "\'"
+							" is empty for "
+							+ this->urls.front().second
 					);
 
 				// if necessary, tidy text
-				if(this->config.parsingFieldTidyTexts.at(index))
+				if(dateTimeFormat.empty() && this->config.parsingFieldTidyTexts.at(index))
 					Helper::Strings::utfTidy(parsedFieldValue);
 
 				// determine how to save result: JSON array or string as is
@@ -1055,6 +1164,16 @@ namespace crawlservpp::Module::Parser {
 
 				// log warnings if necessary
 				this->logWarnings(queryWarnings);
+
+				// date/time conversion is not possible for boolean values
+				if(!dateTimeFormat.empty() && this->config.generalLogging)
+					this->log(
+							"WARNING: Cannot convert boolean value for field \'"
+							+ this->config.parsingFieldNames.at(index)
+							+ "\' to date/time\' ["
+							+ this->urls.front().second
+							+ "]."
+					);
 
 				// determine how to save result: JSON array or boolean value as string
 				if(this->config.parsingFieldJSON.at(index))
