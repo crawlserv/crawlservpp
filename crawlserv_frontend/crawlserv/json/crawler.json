@@ -281,7 +281,7 @@
 		"repair.cdata": {
 			"type": "bool",
 			"default": true,
-			"description": "Try to repair broken CData.",
+			"description": "Try to repair CData when parsing HTML/XML.",
 			"simple": false
 		},
 		"retries": {
