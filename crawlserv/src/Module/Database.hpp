@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -40,6 +40,7 @@
 #include "../Struct/ModuleOptions.hpp"
 
 #include <memory>	// std::unique_ptr
+#include <queue>	// std::queue
 #include <string>	// std::string, std::to_string
 
 namespace crawlservpp::Wrapper {
@@ -73,8 +74,9 @@ namespace crawlservpp::Module {
 		// command function
 		void prepare();
 
-		// logging function
+		// logging functions
 		void log(const std::string& logEntry);
+		void log(std::queue<std::string>& logEntries);
 
 		// thread functions
 		void setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);

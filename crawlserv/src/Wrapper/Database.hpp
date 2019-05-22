@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -82,6 +82,7 @@ namespace crawlservpp::Wrapper {
 
 		// wrapper for logging function
 		void log(const std::string& logEntry);
+		void log(std::queue<std::string>& logEntries);
 
 		// wrapper for website function
 		std::string getWebsiteDomain(unsigned long websiteId);
@@ -201,9 +202,14 @@ namespace crawlservpp::Wrapper {
 		this->database.setSleepOnError(seconds);
 	}
 
-	// add a log entry to the database
+	// write thread-specific log entry to the database
 	inline void Database::log(const std::string& logEntry) {
 		this->database.log(logEntry);
+	}
+
+	// write multiple thread-specific log entries to the databse
+	inline void Database::log(std::queue<std::string>& logEntries) {
+		this->database.log(logEntries);
 	}
 
 	// get website domain from the database by its ID

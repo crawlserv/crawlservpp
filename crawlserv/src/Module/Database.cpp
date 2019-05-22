@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -118,8 +118,18 @@ namespace crawlservpp::Module {
 			);
 	}
 
+	// write thread-specific log entry to the database
 	void Database::log(const std::string& logEntry) {
 		this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
+	}
+
+	// write multiple thread-specific log entries to the database
+	void Database::log(std::queue<std::string>& logEntries) {
+		while(!logEntries.empty()) {
+			this->Main::Database::log("[#" + this->threadIdString + "] " + logEntries.front());
+
+			logEntries.pop();
+		}
 	}
 
 	// set the status message of a thread (and add the pause state), throws Database::Exception

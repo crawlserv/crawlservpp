@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -55,6 +55,7 @@
 #include <exception>			// std::exception
 #include <iostream>				// std::cout, std::flush
 #include <mutex>				// std::lock_guard, std::mutex, std::unique_lock
+#include <queue>				// std::queue
 #include <string>				// std::string
 #include <thread>				// std::this_thread, std::thread
 
@@ -132,7 +133,8 @@ namespace crawlservpp::Module {
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
 		void setProgress(float progress);
-		void log(const std::string& entry);
+		void log(const std::string& logEntry);
+		void log(std::queue<std::string>& logEntries);
 		void allowPausing();
 		void disallowPausing();
 
