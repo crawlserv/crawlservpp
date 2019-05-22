@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -517,11 +517,12 @@ namespace crawlservpp::Module::Extractor {
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		// reserve memory for queries
+		this->queriesTokens.reserve(this->config.variablesTokensQuery.size());
 		this->queriesDatasets.reserve(this->config.extractingDataSetQueries.size());
 		this->queriesId.reserve(this->config.extractingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.extractingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.extractingFieldQueries.size());
-		this->queriesTokens.reserve(this->config.variablesTokensQuery.size());
+		this->queriesRecursive.reserve(this->config.extractingRecursive.size());
 
 		this->queriesVariables.reserve(
 				std::count_if(
@@ -553,6 +554,16 @@ namespace crawlservpp::Module::Extractor {
 					this->database.getQueryProperties(query, properties);
 
 					this->queriesId.emplace_back(this->addQuery(properties));
+				}
+			}
+
+			for(const auto& query : this->config.extractingRecursive) {
+				if(query) {
+					QueryProperties properties;
+
+					this->database.getQueryProperties(query, properties);
+
+					this->queriesRecursive.emplace_back(this->addQuery(properties));
 				}
 			}
 
@@ -845,7 +856,8 @@ namespace crawlservpp::Module::Extractor {
 			this->getSingleFromQuery(this->queryPagingNumberFrom, pageTotalString, queryWarnings);
 
 			// log warnings if necessary
-			this->logWarnings(queryWarnings);
+			if(this->config.generalLogging)
+				this->log(queryWarnings);
 
 			// try to convert number of pages to numeric value
 			try {
@@ -983,7 +995,8 @@ namespace crawlservpp::Module::Extractor {
 				this->getBoolFromQuery(this->queryPagingIsNextFrom, isNext, queryWarnings);
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				if(this->config.generalLogging)
+					this->log(queryWarnings);
 
 				if(!isNext)
 					break;
@@ -997,7 +1010,8 @@ namespace crawlservpp::Module::Extractor {
 				this->getSingleFromQuery(this->queryPagingNextFrom, pageName, queryWarnings);
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				if(this->config.generalLogging)
+					this->log(queryWarnings);
 
 				if(pageName.empty())
 					break;
@@ -1326,7 +1340,8 @@ namespace crawlservpp::Module::Extractor {
 			}
 
 			// logging if necessary
-			this->logWarnings(queryWarnings);
+			if(this->config.generalLogging)
+				this->log(queryWarnings);
 
 			if(this->config.generalLogging > Config::generalLoggingDefault)
 					this->log(
@@ -1449,7 +1464,8 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.generalLogging)
+			this->log(queryWarnings);
 	}
 
 	// extract data from URL
@@ -1475,7 +1491,8 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.generalLogging)
+			this->log(queryWarnings);
 	}
 
 	// extract data by parsing page content, return number of extracted datasets
@@ -1489,7 +1506,8 @@ namespace crawlservpp::Module::Extractor {
 			this->setSubSetsFromQuery(query, queryWarnings);
 
 			// log warnings if necessary
-			this->logWarnings(queryWarnings);
+			if(this->config.generalLogging)
+				this->log(queryWarnings);
 
 			// check whether datasets have been extracted
 			if(this->getNumberOfSubSets())
@@ -1510,7 +1528,8 @@ namespace crawlservpp::Module::Extractor {
 				this->getSingleFromQueryOnSubSet(query, dataset.dataId, queryWarnings);
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				if(this->config.generalLogging)
+					this->log(queryWarnings);
 
 				// check whether ID has been extracted
 				if(!dataset.dataId.empty())
@@ -1521,13 +1540,34 @@ namespace crawlservpp::Module::Extractor {
 			if(dataset.dataId.empty())
 				continue;
 
+			// check whether extracted ID ought to be ignored
+			if(
+					std::find(
+							this->config.extractingIdIgnore.begin(),
+							this->config.extractingIdIgnore.end(),
+							dataset.dataId
+					) != this->config.extractingIdIgnore.end()
+			) {
+				if(this->config.generalLogging > Config::generalLoggingDefault)
+					this->log(
+							"ignored parsed ID \'"
+							+ dataset.dataId
+							+ "\' ["
+							+ url
+							+ "]."
+					);
+
+				return false;
+			}
+
 			// extract date/time
 			for(auto i = this->queriesDateTime.begin(); i != this->queriesDateTime.end(); ++i) {
 				// extract date/time by performing query on current subset
 				this->getSingleFromQueryOnSubSet(*i, dataset.dateTime, queryWarnings);
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				if(this->config.generalLogging)
+					this->log(queryWarnings);
 
 				// check whether date/time has been extracted
 				if(!dataset.dateTime.empty()) {
@@ -1535,50 +1575,41 @@ namespace crawlservpp::Module::Extractor {
 
 					// found date/time: try to convert it to SQL time stamp
 					std::string format(this->config.extractingDateTimeFormats.at(index));
-					const std::string locale(this->config.extractingDateTimeLocales.at(index));
 
 					// use "%F %T" as default date/time format
 					if(format.empty())
 						format = "%F %T";
 
-					if(!locale.empty()) {
-						// locale hack: The French abbreviation "avr." for April is not stringently supported
-						if(locale.length() > 1
-								&& ::tolower(locale.at(0) == 'f')
-								&& ::tolower(locale.at(1) == 'r'))
-							Helper::Strings::replaceAll(dataset.dateTime, "avr.", "avril", true);
+					try {
+						Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+								dataset.dateTime,
+								format,
+								this->config.extractingDateTimeLocales.at(index)
+						);
+					}
+					catch(const LocaleException& e) {
+						if(this->config.generalLogging)
+							this->log("WARNING: " + e.whatStr() + " - locale ignored.");
 
 						try {
-							if(
-									!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-											dataset.dateTime,
-											format,
-											std::locale(locale)
-									)
-							)
-								dataset.dateTime.clear();
-						}
-						catch(const std::runtime_error& e) {
-							if(this->config.generalLogging)
-								this->log("WARNING: Unknown locale \'" + locale + "\' ignored.");
-
-							if(
-									!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-											dataset.dateTime,
-											format
-									)
-							)
-								dataset.dateTime.clear();
-						}
-					}
-					else
-						if(
-								!Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
 										dataset.dateTime,
 										format
-								)
-						)
+								);
+						}
+						catch(const DateTimeException& e) {
+							if(this->config.generalLogging > Config::generalLoggingDefault)
+								this->log(e.whatStr() + " - query skipped [" + url + "].");
+
 							dataset.dateTime.clear();
+						}
+					}
+					catch(const DateTimeException& e) {
+						if(this->config.generalLogging > Config::generalLoggingDefault)
+							this->log(e.whatStr() + " - query skipped [" + url + "].");
+
+						dataset.dateTime.clear();
+					}
 
 					if(!dataset.dateTime.empty())
 						break;
@@ -1590,6 +1621,7 @@ namespace crawlservpp::Module::Extractor {
 
 			for(auto i = this->queriesFields.begin(); i != this->queriesFields.end(); ++i) {
 				const auto index = i - this->queriesFields.begin();
+				const auto dateTimeFormat(this->config.extractingFieldDateTimeFormats.at(index));
 
 				// determinate whether to get all or just the first match (as string or boolean value) from the query result
 				if(i->resultMulti) {
@@ -1600,7 +1632,67 @@ namespace crawlservpp::Module::Extractor {
 					this->getMultiFromQuery(*i, extractedFieldValues, queryWarnings);
 
 					// log warnings if necessary
-					this->logWarnings(queryWarnings);
+					if(this->config.generalLogging)
+						this->log(queryWarnings);
+
+					// if necessary, try to convert the parsed values to date/times
+					if(!dateTimeFormat.empty()) {
+						for(auto& value : extractedFieldValues) {
+							try {
+								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+										value,
+										dateTimeFormat,
+										this->config.extractingFieldDateTimeLocales.at(index)
+								);
+							}
+							catch(const LocaleException& e) {
+								try {
+									if(this->config.generalLogging)
+										this->log(
+												"WARNING: "
+												+ e.whatStr()
+												+ " for field \'"
+												+ this->config.extractingFieldNames.at(index)
+												+ "\' ["
+												+ url
+												+ "]."
+										);
+
+									Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+											value,
+											dateTimeFormat
+									);
+								}
+								catch(const DateTimeException& e) {
+									if(this->config.generalLogging)
+										this->log(
+												"WARNING: "
+												+ e.whatStr()
+												+ " for field \'"
+												+ this->config.extractingFieldNames.at(index)
+												+ "\' ["
+												+ url
+												+ "]."
+										);
+
+									value.clear();
+								}
+							}
+							catch(const DateTimeException& e) {
+								this->log(
+										"WARNING: "
+										+ e.whatStr()
+										+ " for field \'"
+										+ this->config.extractingFieldNames.at(index)
+										+ "\' ["
+										+ url
+										+ "]."
+								);
+
+								value.clear();
+							}
+						}
+					}
 
 					// if necessary, check whether array or all values are empty
 					if(this->config.generalLogging && this->config.extractingFieldWarningsEmpty.at(index)) {
@@ -1614,8 +1706,10 @@ namespace crawlservpp::Module::Extractor {
 								) == extractedFieldValues.end()
 						)
 							this->log(
-									"WARNING: \'" + this->config.extractingFieldNames.at(index) + "\'"
-									" is empty for " + url
+									"WARNING: \'"
+									+ this->config.extractingFieldNames.at(index) + "\'"
+									" is empty for "
+									+ url
 							);
 					}
 
@@ -1654,7 +1748,66 @@ namespace crawlservpp::Module::Extractor {
 					this->getSingleFromQuery(*i, extractedFieldValue, queryWarnings);
 
 					// log warnings if necessary
-					this->logWarnings(queryWarnings);
+					if(this->config.generalLogging)
+						this->log(queryWarnings);
+
+					// if necessary, try to convert the parsed value to date/time
+					if(!dateTimeFormat.empty()) {
+						try {
+							Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+									extractedFieldValue,
+									dateTimeFormat,
+									this->config.extractingFieldDateTimeLocales.at(index)
+							);
+						}
+						catch(const LocaleException& e) {
+							try {
+								if(this->config.generalLogging)
+									this->log(
+											"WARNING: "
+											+ e.whatStr()
+											+ " for field \'"
+											+ this->config.extractingFieldNames.at(index)
+											+ "\' ["
+											+ url
+											+ "]."
+									);
+
+								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+										extractedFieldValue,
+										dateTimeFormat
+								);
+							}
+							catch(const DateTimeException& e) {
+								if(this->config.generalLogging)
+									this->log(
+											"WARNING: "
+											+ e.whatStr()
+											+ " for field \'"
+											+ this->config.extractingFieldNames.at(index)
+											+ "\' ["
+											+ url
+											+ "]."
+									);
+
+								extractedFieldValue.clear();
+							}
+						}
+						catch(const DateTimeException& e) {
+							if(this->config.generalLogging)
+								this->log(
+										"WARNING: "
+										+ e.whatStr()
+										+ " for field \'"
+										+ this->config.extractingFieldNames.at(index)
+										+ "\' ["
+										+ url
+										+ "]."
+								);
+
+							extractedFieldValue.clear();
+						}
+					}
 
 					// if necessary, check whether value is empty
 					if(
@@ -1663,8 +1816,10 @@ namespace crawlservpp::Module::Extractor {
 							&& this->config.generalLogging
 					)
 						this->log(
-								"WARNING: \'" + this->config.extractingFieldNames.at(index) + "\'"
-								" is empty for " + url
+								"WARNING: \'"
+								+ this->config.extractingFieldNames.at(index) + "\'"
+								" is empty for "
+								+ url
 						);
 
 					// if necessary, tidy text
@@ -1688,7 +1843,18 @@ namespace crawlservpp::Module::Extractor {
 					this->getBoolFromQuery(*i, booleanResult, queryWarnings);
 
 					// log warnings if necessary
-					this->logWarnings(queryWarnings);
+					if(this->config.generalLogging)
+						this->log(queryWarnings);
+
+					// date/time conversion is not possible for boolean values
+					if(!dateTimeFormat.empty() && this->config.generalLogging)
+						this->log(
+								"WARNING: Cannot convert boolean value for field \'"
+								+ this->config.extractingFieldNames.at(index)
+								+ "\' to date/time\' ["
+								+ this->urls.front().second
+								+ "]."
+						);
 
 					// determine how to save result: JSON array or boolean value as string
 					if(this->config.extractingFieldJSON.at(index))
@@ -1717,6 +1883,15 @@ namespace crawlservpp::Module::Extractor {
 
 			// add extracted dataset to results
 			this->results.push(dataset);
+
+			// recursive extracting
+			for(const auto& query : this->queriesRecursive)
+				if(this->addSubSetsFromQueryOnSubSet(query, queryWarnings))
+					break;
+
+			// log warnings if necessary
+			if(this->config.generalLogging)
+				this->log(queryWarnings);
 
 			++result;
 		}
@@ -1837,17 +2012,4 @@ namespace crawlservpp::Module::Extractor {
 		if(this->config.generalTiming && this->config.generalLogging)
 			this->log("saved results in " + timer.tickStr());
 	}
-
-	// write parsing and query errors as warnings to log if necessary
-	void Thread::logWarnings(std::queue<std::string>& warnings) {
-		if(this->config.generalLogging < Config::generalLoggingDefault)
-			return;
-
-		while(!warnings.empty()) {
-			this->log(warnings.front());
-
-			warnings.pop();
-		}
-	}
-
 } /* crawlservpp::Module::Extractor */
