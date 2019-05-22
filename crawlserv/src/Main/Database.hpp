@@ -90,6 +90,7 @@
 #include <mutex>		// std::lock_guard, std::mutex
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
+#include <stdexcept>	// std::logic_error
 #include <string>		// std::getline, std::stoul, std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <tuple>		// std::get(std::tuple)

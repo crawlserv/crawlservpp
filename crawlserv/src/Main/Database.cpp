@@ -1122,14 +1122,12 @@ namespace crawlservpp::Main {
 		const unsigned long end = websiteNamespace.find_last_not_of("0123456789");
 
 		// separate number at the end of string from the rest of the string
-		if(end == std::string::npos) {
+		if(end == std::string::npos)
 			// string is number
 			numberString = websiteNamespace;
-		}
-		else if(end == websiteNamespace.length() - 1) {
+		else if(end == websiteNamespace.length() - 1)
 			// no number at the end of the string
 			nameString = websiteNamespace;
-		}
 		else {
 			// number at the end of the string
 			nameString = websiteNamespace.substr(0, end + 1);
@@ -1139,8 +1137,18 @@ namespace crawlservpp::Main {
 		unsigned long n = 1;
 		std::string result;
 
-		if(!numberString.empty())
-			n = std::stoul(numberString, nullptr);
+		if(!numberString.empty()) {
+			try {
+				n = std::stoul(numberString, nullptr);
+			}
+			catch(const std::logic_error& e) {
+				throw Exception(
+						"Main::Database::duplicateWebsiteNamespace(): Could not convert \'"
+						+ numberString
+						+ "\' to numeric value"
+				);
+			}
+		}
 
 		// check whether number needs to be incremented
 		while(true) {
