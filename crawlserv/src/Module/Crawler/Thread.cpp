@@ -12,7 +12,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
@@ -1407,7 +1407,8 @@ namespace crawlservpp::Module::Crawler {
 						);
 
 					// logging if necessary
-					this->logWarnings(queryWarnings);
+					if(this->config.crawlerLogging)
+						this->log(queryWarnings);
 
 					if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
 						this->log(
@@ -1704,7 +1705,8 @@ namespace crawlservpp::Module::Crawler {
 		this->getBoolFromRegEx(this->queryRedirectUrl, url, redirect, queryWarnings);
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(!redirect)
 			return;
@@ -1779,7 +1781,8 @@ namespace crawlservpp::Module::Crawler {
 				);
 
 			// log warnings if necessary
-			this->logWarnings(queryWarnings);
+			if(this->config.crawlerLogging)
+				this->log(queryWarnings);
 
 			// replace variable in string
 			Helper::Strings::replaceAll(strInOut, *i, value, true);
@@ -1803,7 +1806,8 @@ namespace crawlservpp::Module::Crawler {
 		this->getBoolFromQuery(this->queryRedirectContent, booleanResult, queryWarnings);
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		// check whether no redirect is necessary
 		if(!booleanResult)
@@ -1986,7 +1990,8 @@ namespace crawlservpp::Module::Crawler {
 			}
 
 			// log warnings if necessary
-			this->logWarnings(queryWarnings);
+			if(this->config.crawlerLogging)
+				this->log(queryWarnings);
 
 			// replace variable with value
 			Helper::Strings::replaceAll(strInOut, *i, value, true);
@@ -2042,7 +2047,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(whitelist && !found) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2059,7 +2065,8 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("skipped " + url + " (blacklisted).");
@@ -2088,7 +2095,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(whitelist && !found) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2105,7 +2113,8 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("skipped " + url + " (blacklisted).");
@@ -2169,7 +2178,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(whitelist && !found) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2186,7 +2196,8 @@ namespace crawlservpp::Module::Crawler {
 				 break;
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("skipped " + url + " (content type \'" + contentType + "\' blacklisted).");
@@ -2211,7 +2222,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(whitelist && !found) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2234,7 +2246,8 @@ namespace crawlservpp::Module::Crawler {
 				 break;
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2270,7 +2283,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(whitelist && !found) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2287,7 +2301,8 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("skipped " + url + " (content blacklisted).");
@@ -2316,7 +2331,8 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(whitelist && !found) {
 			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
@@ -2333,7 +2349,8 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
 			this->log("skipped link extraction from " + url + " (content blacklisted).");
@@ -2356,16 +2373,17 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Crawler::Thread::crawlingSaveContent(): No URL specified");
 
 		if(this->config.crawlerXml) {
-			std::queue<std::string> warnings;
+			std::queue<std::string> parsingWarnings;
 			std::string xmlContent;
 
-			if(this->getXml(xmlContent, warnings))
+			if(this->getXml(xmlContent, parsingWarnings))
 				this->database.saveContent(url.first, response, type, xmlContent);
 			else
 				xmlContent.clear();
 
 			// log warnings if necessary
-			this->logWarnings(warnings);
+			if(this->config.crawlerLogging)
+				this->log(parsingWarnings);
 
 			if(!xmlContent.empty())
 				return;
@@ -2424,7 +2442,8 @@ namespace crawlservpp::Module::Crawler {
 		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		if(this->config.crawlerLogging)
+			this->log(queryWarnings);
 
 		if(!expectedStr.empty()) {
 			const unsigned long expected = std::stoul(expectedStr);
@@ -2735,8 +2754,8 @@ namespace crawlservpp::Module::Crawler {
 
 									archivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
 
+									// if there are warnings, just log them (maybe mementos were partially parsed)
 									if(this->config.crawlerLogging) {
-										// if there are warnings, just log them (maybe mementos were partially parsed)
 										while(!warnings.empty()) {
 											this->log(
 													"Memento parsing WARNING: " +
@@ -2822,11 +2841,11 @@ namespace crawlservpp::Module::Crawler {
 													if(archivedContent.substr(0, 17) == "found capture at ") {
 
 														// found a reference string: get timestamp
-														if(
-																Helper::DateTime::convertSQLTimeStampToTimeStamp(
-																		timeStamp
-																)
-														) {
+														try {
+															Helper::DateTime::convertSQLTimeStampToTimeStamp(
+																	timeStamp
+															);
+
 															unsigned long subUrlPos = mementos.front().url.find(timeStamp);
 
 															if(subUrlPos != std::string::npos) {
@@ -2839,25 +2858,27 @@ namespace crawlservpp::Module::Crawler {
 																		+ timeStamp
 																		+ mementos.front().url.substr(subUrlPos);
 
-																if(
-																		Helper::DateTime::convertTimeStampToSQLTimeStamp(
-																				timeStamp
-																		)
-																)
+																try {
+																	Helper::DateTime::convertTimeStampToSQLTimeStamp(
+																			timeStamp
+																	);
+
 																	// follow reference
 																	continue;
-
-																else if(this->config.crawlerLogging)
-																	// log warning (and ignore reference)
-																	this->log(
-																			"WARNING: Invalid timestamp \'"
-																			+ timeStamp
-																			+ "\' from "
-																			+ this->config.crawlerArchivesNames.at(n)
-																			+ " ["
-																			+ url.second
-																			+ "]."
-																	);
+																}
+																catch(const DateTimeException& e) {
+																	if(this->config.crawlerLogging)
+																		// log warning (and ignore reference)
+																		this->log(
+																				"WARNING: "
+																				+ e.whatStr()
+																				+ " from "
+																				+ this->config.crawlerArchivesNames.at(n)
+																				+ " ["
+																				+ url.second
+																				+ "]."
+																		);
+																}
 															}
 															else if(this->config.crawlerLogging)
 																// log warning (and ignore reference)
@@ -2866,11 +2887,19 @@ namespace crawlservpp::Module::Crawler {
 																		" in " + mementos.front().url +
 																		" [" + url.second + "].");
 														}
-														else if(this->config.crawlerLogging)
-															// log warning (and ignore reference)
-															this->log("WARNING: Could not convert timestamp"
-																	" in " + mementos.front().url +
-																	" [" + url.second + "].");
+														catch(const DateTimeException &e) {
+															if(this->config.crawlerLogging)
+																// log warning (and ignore reference)
+																this->log(
+																		"WARNING: "
+																		+ e.whatStr()
+																		+ " in "
+																		+ mementos.front().url
+																		+ " ["
+																		+ url.second
+																		+ "]."
+																);
+														}
 													}
 													else {
 														// set content as target for subsequent queries
@@ -3341,21 +3370,25 @@ namespace crawlservpp::Module::Crawler {
 
 					if(fieldName == "datetime") {
 						// parse timestamp
-						if(Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue))
+						try {
+							Helper::DateTime::convertLongDateTimeToSQLTimeStamp(fieldValue);
+
 							newMemento.timeStamp = fieldValue;
-						else
+						}
+						catch(const DateTimeException& e) {
 							warningsTo.emplace(
-									"Could not convert timestamp \'"
-									+ fieldValue
-									+ "\' at "
+									e.whatStr()
+									+ " at "
 									+ std::to_string(pos)
 									+ "."
 							);
+						}
 					}
 					else if(fieldName == "rel") {
 						// parse link to next page
 						if(fieldValue == "timemap" && !newMemento.url.empty()) {
 							nextPage = newMemento.url;
+
 							newMemento.url = "";
 						}
 					}
@@ -3375,18 +3408,6 @@ namespace crawlservpp::Module::Crawler {
 
 		// return next page
 		return nextPage;
-	}
-
-	// write parsing and query errors as warnings to log if necessary
-	void Thread::logWarnings(std::queue<std::string>& warnings) {
-		if(this->config.crawlerLogging < Config::crawlerLoggingDefault)
-			return;
-
-		while(!warnings.empty()) {
-			this->log(warnings.front());
-
-			warnings.pop();
-		}
 	}
 
 } /* crawlservpp::Module::Crawler */
