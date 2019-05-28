@@ -255,7 +255,7 @@ namespace crawlservpp::Main {
 	// static helper function: show version (and library versions if necessary)
 	void App::outputHeader(bool showLibraryVersions) {
 		std::cout
-				<<	"crawlserv++\n"
+				<<	"crawlserv++ Command-and-Control Server\n"
 					"Version "
 				<<	Version::getString()
 				<<	"\n\n"
