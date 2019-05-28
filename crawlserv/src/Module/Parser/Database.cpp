@@ -901,7 +901,8 @@ namespace crawlservpp::Module::Parser {
 		this->checkConnection();
 
 		// check prepared SQL statements
-		if(		!(this->ps.updateOrAddEntry)
+		if(
+				!(this->ps.updateOrAddEntry)
 				|| !(this->ps.updateOrAdd10Entries)
 				|| !(this->ps.updateOrAdd100Entries)
 				|| !(this->ps.updateOrAdd1000Entries)
