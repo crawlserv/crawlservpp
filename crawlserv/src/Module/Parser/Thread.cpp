@@ -820,7 +820,7 @@ namespace crawlservpp::Module::Parser {
 		// check whether parsed ID already exists and the current content differs from the one in the database
 		const unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
 
-		if(contentId && contentId != content.first) {
+		if(contentId && contentId < content.first) {
 			if(this->config.generalLogging)
 				this->log(
 						"skipped content with already existing ID \'"
