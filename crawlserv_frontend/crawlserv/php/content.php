@@ -613,8 +613,10 @@ if($website && $urllist) {
                     $result = $dbConnection->query(
                             "SELECT COLUMN_NAME AS name".
                             " FROM INFORMATION_SCHEMA.COLUMNS".
-                            " WHERE TABLE_SCHEMA = 'crawled'".
-                            " AND TABLE_NAME = N'$ptable'"
+                            " WHERE TABLE_SCHEMA LIKE 'crawled'".
+                            " AND TABLE_NAME LIKE '$ptable'".
+                            " AND COLUMN_NAME LIKE 'parsed_%'".
+                            " ORDER BY REPLACE(REPLACE(name, '__', ''), 'parsed_id', '')"
                     );
                     
                     if(!$result) 
@@ -623,8 +625,7 @@ if($website && $urllist) {
                     $columns = array();
                     
                     while($row = $result->fetch_assoc())
-                        if(strlen($row["name"]) > 7 && substr($row["name"], 0, 7) == "parsed_")
-                            $columns[] = $row["name"];
+                        $columns[] = $row["name"];
 
                     $result->close();
                     
