@@ -398,7 +398,7 @@ for help with your query.</p>
 <div class="entry-row">
 <div id="query-test-label" class="entry-label-top">Test text:</div><div class="entry-input">
 
-<textarea id="query-test-text" class="entry-input" spellcheck="false" autocomplete="off"><?php
+<textarea id="query-test-text" class="entry-input trigger" spellcheck="false" autocomplete="off" data-trigger="query-test"><?php
 
 if(isset($_POST["test"]))
     echo htmlspecialchars($_POST["test"], ENT_QUOTES);
