@@ -1744,7 +1744,7 @@ jQuery(function($) {
 			
 			temp.css({
 				"position" : "absolute",
-				"width" : "100%",
+				"width" : "calc(100% - 5px)",
 				"height" : "100%",
 				"margin-left" : "5px",
 				"z-index": "2"
