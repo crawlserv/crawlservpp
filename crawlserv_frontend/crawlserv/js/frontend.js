@@ -264,8 +264,15 @@ jQuery(function($) {
 		return false;
 	});
 	
-// KEYDOWN EVENT: trigger event on CTRL+ENTER
+// KEYDOWN EVENT: trigger event on CTRL+ENTER (text fields)
 	$(document).on("keydown", "input.trigger[type='text']", function(event) {
+		if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey)
+			if(hasData($(this), "trigger"))
+				$("#" + $(this).data("trigger")).trigger("click");
+	});
+	
+// KEYDOWN EVENT: trigger event on CTRL+ENTER (text areas)
+	$(document).on("keydown", "textarea.trigger", function(event) {
 		if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey)
 			if(hasData($(this), "trigger"))
 				$("#" + $(this).data("trigger")).trigger("click");
