@@ -912,6 +912,16 @@ namespace crawlservpp::Module::Parser {
 			}
 		}
 
+		// warn about empty date/time if necessary
+		if(
+				this->config.parsingDateTimeWarningEmpty
+				&& parsedData.dateTime.empty()
+				&& !(this->queriesDateTime.empty())
+				&& this->config.generalLogging
+
+		)
+			this->log("WARNING: date/time is empty for " + this->urls.front().second);
+
 		// parse custom fields
 		parsedData.fields.reserve(this->queriesFields.size());
 

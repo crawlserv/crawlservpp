@@ -147,6 +147,12 @@
 			"simple": true,
 			"position": 3
 		},
+		"datetime.warning.empty": {
+			"type": "bool",
+			"default": true,
+			"description": "Log warning if no date/time could be parsed although a query is specified (and logging is enabled).",
+			"simple": false
+		},
 		"field.datetime.formats": {
 			"type": "array",
 			"item-type": "string",
@@ -232,7 +238,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Log warning when the field with the same array index is empty (and logging is enabled).",
+			"description": "Log warning if the field with the same array index is empty (and logging is enabled).",
 			"simple": false
 		},
 		"id.ignore": {

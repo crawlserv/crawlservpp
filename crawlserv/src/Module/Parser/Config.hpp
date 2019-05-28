@@ -84,6 +84,7 @@ namespace crawlservpp::Module::Parser {
 			std::vector<std::string> parsingDateTimeLocales;
 			std::vector<unsigned long> parsingDateTimeQueries;
 			std::vector<unsigned short> parsingDateTimeSources;
+			bool parsingDateTimeWarningEmpty;
 			std::vector<std::string> parsingFieldDateTimeFormats;
 			std::vector<std::string> parsingFieldDateTimeLocales;
 			std::vector<char> parsingFieldDelimiters;
@@ -125,6 +126,7 @@ namespace crawlservpp::Module::Parser {
 										generalSleepIdle(5000),
 										generalSleepMySql(20),
 										generalTiming(false),
+										parsingDateTimeWarningEmpty(true),
 										parsingRepairCData(true),
 										parsingTidyErrors(0),
 										parsingTidyWarnings(false) {}
@@ -148,6 +150,7 @@ namespace crawlservpp::Module::Parser {
 		this->option("datetime.locales", this->config.parsingDateTimeLocales);
 		this->option("datetime.queries", this->config.parsingDateTimeQueries);
 		this->option("datetime.sources", this->config.parsingDateTimeSources);
+		this->option("datetime.warning.empty", this->config.parsingDateTimeWarningEmpty);
 		this->option("field.datetime.formats", this->config.parsingFieldDateTimeFormats);
 		this->option("field.datetime.locales", this->config.parsingFieldDateTimeLocales);
 		this->option("field.delimiters", this->config.parsingFieldDelimiters, CharParsingOption::FromString);
