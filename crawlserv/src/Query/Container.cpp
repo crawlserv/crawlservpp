@@ -224,8 +224,8 @@ namespace crawlservpp::Query {
 		this->jsonParsedCons = false;
 
 		// clear parsing errors
-		this->xmlParsingError.clear();
-		this->jsonParsingError.clear();
+		std::string().swap(this->xmlParsingError);
+		std::string().swap(this->jsonParsingError);
 
 		// unset pointers
 		this->queryTargetPtr = nullptr;
@@ -2643,13 +2643,14 @@ namespace crawlservpp::Query {
 		this->subSetJsonParsedCons = false;
 
 		// clear parsing errors
-		this->subSetXmlParsingError.clear();
-		this->subSetJsonParsingError.clear();
+		std::string().swap(this->subSetXmlParsingError);
+		std::string().swap(this->subSetJsonParsingError);
 
 		// clear parsed content
 		this->subSetParsedXML.clear();
 
 		jsoncons::json().swap(this->subSetParsedJsonCons);
+
 		rapidjson::Value(rapidjson::kObjectType).Swap(this->subSetParsedJsonRapid);
 	}
 
