@@ -781,3 +781,9 @@ div.version-info {
 	padding-right:1%;
 	width:98%;
 }
+
+/* TOOLTIP REQUIREMENTS */
+span.tippy-requirement {
+	color: #C70039;
+	font-weight:bold;
+}

@@ -326,7 +326,7 @@ class Config {
 		
 		result += this.startOpt(cat, obj.id, name, obj.type, value, false);
 		result += this.label(name + ":");
-		result += this.startValue(obj.description);
+		result += this.startValue(obj);
 		
 		if(obj.type == "bool")
 			result += this.check(
@@ -440,9 +440,7 @@ class Config {
 					obj.label
 			);
 		
-		result += this.startValue(
-				obj.description
-		);
+		result += this.startValue(obj);
 		
 		if(obj.type == "bool") {
 			result += this.check(
@@ -580,22 +578,81 @@ class Config {
 		return result;
 	}
 	
-	// start value
-	startValue(ttip)  {
-		var result = "";
+	// start value (and create tooltip text)
+	startValue(obj)  {
+		var types = [];
+		var results = [];
+		var requires = "";
 		
-		result += "<div class=\"opt-value\" data-tippy-content=\"" + ttip + "\">\n";
+		if(
+				obj.type == "query"
+				|| obj["item-type"] == "query"
+		) {
+			if(
+					typeof obj["query-types"] !== "undefined"
+					&& obj["query-types"].length
+			) {
+				
+				if(obj["query-types"].includes("regex"))
+					types.push("RegEx");
+				
+				if(obj["query-types"].includes("xpath"))
+					types.push("XPath");
+				
+				if(obj["query-types"].includes("jsonpointer"))
+					types.push("JSONPointer");
+				
+				if(obj["query-types"].includes("jsonpath"))
+					types.push("JSONPath");
+				
+				if(types.length)
+					requires = join(types, ", ", " or ");
+			}
 		
-		return result;
+			if(
+					typeof obj["query-results"] !== "undefined"
+					&& obj["query-results"].length
+			) {		
+				if(obj["query-results"].includes("bool"))
+					results.push("boolean");
+				
+				if(obj["query-results"].includes("single"))
+					results.push("single")
+				
+				if(obj["query-results"].includes("multi"))
+					results.push("multiple");
+				
+				if(obj["query-results"].includes("subsets"))
+					results.push("subset");
+				
+				if(results.length) {
+					if(requires.length)
+						requires += " queries with ";
+					else
+						requires = "Queries with ";
+					
+					requires += join(results, ", ", " or ");
+					
+					requires += " results only.";
+				}
+			}
+			
+			if(requires.length)
+				return "<div class=\"opt-value\" data-tippy-content=\""
+						+ obj.description
+						+ "&#x3C;br&#x3E;&#x3C;span class=&#x22;tippy-requirement&#x22;&#x3E;"
+						+ requires
+						+ "&#x3C;/span&#x3E;\">\n";
+		}
+		
+		return "<div class=\"opt-value\" data-tippy-content=\""
+				+ obj.description
+				+ "\">\n";
 	}
 	
 	// end value
 	endValue() {
-		var result = "";
-		
-		result += "</div>\n";
-		
-		return result;
+		return "</div>\n";
 	}
 	
 	// show label
@@ -1348,7 +1405,7 @@ class Config {
 			else
 				filter += "0";
 			
-			if(obj["query-types"].includes("jquery"))
+			if(obj["query-types"].includes("xpath"))
 				filter += "X";
 			else
 				filter += "0";
