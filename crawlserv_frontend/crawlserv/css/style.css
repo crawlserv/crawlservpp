@@ -601,39 +601,38 @@ div.opt-empty {
 	color:#b3b3b3;
 	font-size:10px;
 }
-input[type=text].opt {
+input[type="text"].opt {
 	width:325px;
 	font-size:12px;
 	box-sizing:border-box;
 }
-input[type=text].opt-array{
+input[type="text"].opt-array{
 	width:250px;
 	box-sizing:border-box;
 }
-input[type=number].opt {
+input[type="number"].opt {
 	width:325px;
 	font-size:12px;
 	box-sizing:border-box;
 }
-input[type=number].opt-array {
+input[type="number"].opt-array {
 	width:250px;
 	box-sizing:border-box;
 }
-input[type=date].opt {
+input[type="date"].opt {
 	width:325px;
 	font-size:12px;
 	box-sizing:border-box;
 	height:2.2em;
 }
-input[type=date].opt-array {
+input[type="date"].opt-array {
 	width:250px;
 	box-sizing:border-box;
 	height:2.2em;
 }
-input[type=checkbox].opt {
+input[type="checkbox"].opt {
 	margin-left:5px;
 	margin-right:5px;
-	margin-top:6px;
 	transform:scale(1.2);
 }
 select.opt {
@@ -646,7 +645,7 @@ select.opt-array {
 	font-size:14px;
 	box-sizing:border-box;
 }
-input[type=button].opt-array-btn {
+input[type="button"].opt-array-btn {
 	margin:1px;
 	padding:0;
 	width:25px;
