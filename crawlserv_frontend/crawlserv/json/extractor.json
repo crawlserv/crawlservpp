@@ -382,6 +382,7 @@
 		},
 		"headers": {
 			"type": "array",
+			"default": [],
 			"item-type": "string",
 			"label": "HTTP headers:",
 			"description": "Custom HTTP headers for getting data.",
