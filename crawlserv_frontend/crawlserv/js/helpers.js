@@ -88,6 +88,19 @@ function msToStr(ms) {
 	return result.substr(0, result.length - 1);
 }
 
+// join array, but use different separator for last element
+function join(array, separator, lastSeparator) {
+	switch(array.length) {
+	case 0:
+		return "";
+		
+	case 1:
+		return array[0];
+	}
+	
+	return array.slice(0, -1).join(separator) + lastSeparator + array.slice(-1);
+}
+
 /*
  * FRONTEND
  */
