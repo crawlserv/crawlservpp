@@ -75,7 +75,7 @@
 			],
 			"default": [],
 			"label": "Skip URLs:",
-			"description": "Boolean RegEx queries on URLs that will not be parsed.",
+			"description": "Queries on URLs that will not be parsed.",
 			"simple": true,
 			"position": 5
 		},

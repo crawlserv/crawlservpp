@@ -418,7 +418,7 @@
 			],
 			"default": [],
 			"label": "Dataset queries:",
-			"description": "Queries to extract subsets containing one dataset each. The first query that returns a non-empty result will be used.",
+			"description": "Queries to extract datasets. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 1
 		},
@@ -448,7 +448,7 @@
 			],
 			"default": [],
 			"label": "Date/time queries:",
-			"description": "Queries used for extracting date and time. The first query that returns a non-empty result will be used.",
+			"description": "Queries used for extracting date/time. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 3
 		},

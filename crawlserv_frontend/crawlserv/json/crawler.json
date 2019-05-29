@@ -99,7 +99,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "Boolean queries on content that will not be crawled.",
+			"description": "Content matching one of these will not be crawled.",
 			"simple": false
 		},
 		"queries.blacklist.types": {
@@ -112,7 +112,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "Boolean RegEx queries on content types that will not be crawled.",
+			"description": "Content types matching one of these will not be crawled.",
 			"simple": false
 		},
 		"queries.blacklist.urls": {
@@ -126,7 +126,7 @@
 			],
 			"default": [],
 			"label": "Always skip:",
-			"description": "Boolean RegEx queries on URLs that will not be crawled.",
+			"description": "URLs matching one of these will not be crawled.",
 			"simple": true,
 			"position": 9
 		},
@@ -150,7 +150,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "Boolean queries on content that will not be used for link extraction.",
+			"description": "Content matching one of these will not be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.blacklist.types": {
@@ -163,7 +163,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "Boolean RegEx queries on content types that will not be used for link extraction.",
+			"description": "Content types matching one of these will not be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.blacklist.urls": {
@@ -176,7 +176,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "Boolean RegEx queries on URLs that will not be used for link extraction.",
+			"description": "URLs matching one of these will not be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.whitelist.cont": {
@@ -186,7 +186,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "If not empty, only content according to these boolean queries will be used for link extraction.",
+			"description": "If not empty, only content matching one of these will be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.whitelist.types": {
@@ -200,7 +200,7 @@
 			],
 			"default": [],
 			"label": "",
-			"description": "If not empty, only content types according to these boolean RegEx queries will be used for link extraction.",
+			"description": "If not empty, only content types matching one of these will be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.whitelist.urls": {
@@ -213,7 +213,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "If not empty, only URLs according to these boolean RegEx queries will be used for link extraction.",
+			"description": "If not empty, only URLs matching one of these will be used for link extraction.",
 			"simple": false
 		},
 		"queries.whitelist.cont": {
@@ -223,7 +223,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "If not empty, only content according to these boolean queries will be crawled.",
+			"description": "If not empty, only content matching one of these will be crawled.",
 			"simple": false
 		},
 		"queries.whitelist.types": {
@@ -237,7 +237,7 @@
 			],
 			"default": [],
 			"label": "",
-			"description": "If not empty, only content types according to these boolean RegEx queries will be crawled.",
+			"description": "If not empty, only content types matching one of these will be crawled.",
 			"simple": false
 		},
 		"queries.whitelist.urls": {
@@ -250,7 +250,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "If not empty, only URLs according to these boolean RegEx queries will be crawled.",
+			"description": "If not empty, only URLs matching one of these will be crawled.",
 			"simple": false
 		},
 		"recrawl": {
@@ -628,7 +628,7 @@
 			],
 			"default": [],
 			"label": "Query on content:",
-			"description": "Boolean queries on content that specify whether to redirect to different URL.",
+			"description": "Queries on content that specify whether to redirect to different URL.",
 			"simple": true,
 			"position": 2
 		},
@@ -642,7 +642,7 @@
 			],
 			"default": [],
 			"label": "Query on URL:",
-			"description": "Boolean queries on URL that specify whether to redirect to different URL.",
+			"description": "Queries on URL that specify whether to redirect to different URL.",
 			"simple": true,
 			"position": 1
 		},
