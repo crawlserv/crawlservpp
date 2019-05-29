@@ -823,8 +823,24 @@ namespace crawlservpp::Module::Parser {
 
 		// check whether content with the parsed ID already exists and the current one differs from the one in the database
 		const unsigned long contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
+		bool duplicateInCache = false;
 
-		if(contentId && contentId != content.first) {
+		if(!contentId) {
+			// check cached results
+			auto cachedResults(this->results);
+
+			while(!cachedResults.empty()) {
+				if(cachedResults.front().dataId == parsedData.dataId) {
+					duplicateInCache = true;
+
+					break;
+				}
+
+				cachedResults.pop();
+			}
+		}
+
+		if((contentId && contentId != content.first) || duplicateInCache) {
 			if(this->config.generalLogging)
 				this->log(
 						"skipped content with already existing ID \'"
