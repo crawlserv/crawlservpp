@@ -490,6 +490,7 @@ namespace crawlservpp::Module::Extractor {
 		this->queriesDateTime.clear();
 		this->queriesFields.clear();
 		this->queriesId.clear();
+
 		this->clearQueries();
 
 		// restore previous status message
@@ -503,19 +504,19 @@ namespace crawlservpp::Module::Extractor {
 
 	// hide functions not to be used by thread
 	void Thread::start() {
-		throw(std::logic_error("Thread::start() not to be used by thread itself"));
+		throw std::logic_error("Thread::start() not to be used by thread itself");
 	}
 
 	void Thread::unpause() {
-		throw(std::logic_error("Thread::unpause() not to be used by thread itself"));
+		throw std::logic_error("Thread::unpause() not to be used by thread itself");
 	}
 
 	void Thread::stop() {
-		throw(std::logic_error("Thread::stop() not to be used by thread itself"));
+		throw std::logic_error("Thread::stop() not to be used by thread itself");
 	}
 
 	void Thread::interrupt() {
-		throw(std::logic_error("Thread::interrupt() not to be used by thread itself"));
+		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
 	}
 
 	// initialize queries, throws Thread::Exception

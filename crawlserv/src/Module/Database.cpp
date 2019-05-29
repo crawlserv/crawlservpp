@@ -44,7 +44,7 @@ namespace crawlservpp::Module {
 		if(Main::Database::driver)
 			Main::Database::driver->threadInit();
 		else
-			throw(Exception("MySQL driver not loaded"));
+			throw Exception("MySQL driver not loaded");
 	}
 
 	// destructor stub
