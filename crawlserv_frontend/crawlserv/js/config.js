@@ -564,7 +564,7 @@ class Config {
 					"\" data-id=\"" + id +
 					"\" data-cat=\"" + cat +
 					"\" data-type=\"" + type +
-					"\" data-value=\'" + $.parseHTML(JSON.stringify(value)) +
+					"\" data-value=\'" + htmlentities(JSON.stringify(value)) +
 					"\"'>\n";
 					
 		return result;
