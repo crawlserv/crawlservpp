@@ -101,6 +101,28 @@ function join(array, separator, lastSeparator) {
 	return array.slice(0, -1).join(separator) + lastSeparator + array.slice(-1);
 }
 
+// encode HTML entities
+var entityMap = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+  '/': '&#x2F;',
+  '`': '&#x60;',
+  '=': '&#x3D;'
+};
+
+function htmlentities(string) {
+	return String(string).replace(
+			/[&<>"'`=\/]/g,
+			function(s) {
+					return entityMap[s];
+			}
+	);
+}
+
+
 /*
  * FRONTEND
  */
