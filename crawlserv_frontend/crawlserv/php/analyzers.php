@@ -219,11 +219,11 @@ var algo = new Algo(
     	    	
     	config = new Config(
     	    "analyzer",
-    	    '<?php
+    	    <?php
     	    
-    	    echo $current;
+    	    echo json_encode($current);
     	    
-    	    ?>',
+    	    ?>,
     	    "<?php
     	    
     	    echo $mode;

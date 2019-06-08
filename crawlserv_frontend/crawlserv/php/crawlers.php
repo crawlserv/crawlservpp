@@ -166,11 +166,11 @@ echo scriptModule();
 
 // create configuration object
 
-var config = new Config("crawler", '<?php
+var config = new Config("crawler", <?php
 
-echo $current;
+echo json_encode($current);
 
-?>', "<?php
+?>, "<?php
 
 echo $mode;
 

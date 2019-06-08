@@ -164,11 +164,11 @@ echo scriptModule();
 	
 // create configuration object
 
-var config = new Config("extractor", '<?php
+var config = new Config("extractor", <?php
 
-echo $current;
+echo json_encode($current);
 
-?>', "<?php
+?>, "<?php
 
 echo $mode;
 
