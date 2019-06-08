@@ -38,6 +38,7 @@ class Config {
 	// constructor: create or load configuration
 	constructor(module, json, mode, filter = null, removal = null, callback_when_finished = null) {
 		console.log("Config::constructor(): Loading configuration...");
+		console.log(json);
 		
 		// link class to view
 		this.view = $("#config-view");
@@ -294,7 +295,7 @@ class Config {
 				if(callback_when_finished != null)
 					callback_when_finished();
 			})
-			.fail(function(jqXHR, textStatus, errorThrown) {
+			.fail(function(jqXHR, textStatus, errorThrown) {				
 				handleJsonError(
 						"Config::constructor(): Could not load configuration data.",
 						jqXHR,
@@ -563,7 +564,7 @@ class Config {
 					"\" data-id=\"" + id +
 					"\" data-cat=\"" + cat +
 					"\" data-type=\"" + type +
-					"\" data-value=\'" + JSON.stringify(value) +
+					"\" data-value=\'" + $.parseHTML(JSON.stringify(value)) +
 					"\"'>\n";
 					
 		return result;
@@ -705,7 +706,7 @@ class Config {
 		result += "\"";
 		
 		if(def != value)
-			result += " value=\"" + value + "\"";
+			result += " value=\"" + htmlentities(value) + "\"";
 		
 		result += " />";
 		
