@@ -627,7 +627,7 @@
 				"single"
 			],
 			"default": 0,
-			"label": "Query for number of URLs:",
+			"label": "Query for no. of results:",
 			"description": "Query to be performed on content to get the expected number of datasets.",
 			"simple": true,
 			"position": 2
