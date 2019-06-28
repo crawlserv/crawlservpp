@@ -121,8 +121,6 @@ jQuery(function($) {
 					helperCombined = $("#combined-helper").detach();
 				
 				$("#query-text-only").prop("checked", false);
-				$("#query-text-only").prop("disabled", true);
-				$("#query-text-only-label").addClass("check-label-disabled");
 				
 				$("#query-xml-warnings").prop("checked", false);
 				$("#query-xml-warnings").prop("disabled", true);
@@ -142,8 +140,6 @@ jQuery(function($) {
 					helperCombined = $("#combined-helper").detach();
 				
 				$("#query-text-only").prop("checked", false);
-				$("#query-text-only").prop("disabled", true);
-				$("#query-text-only-label").addClass("check-label-disabled");
 				
 				$("#query-xml-warnings").prop("checked", false);
 				$("#query-xml-warnings").prop("disabled", true);
@@ -160,8 +156,6 @@ jQuery(function($) {
 					helperJSONPath = $("#jsonpath-helper").detach();
 				
 				$("#query-text-only").prop("checked", false);
-				$("#query-text-only").prop("disabled", true);
-				$("#query-text-only-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "xpathjsonpath") {
 				if(!helperRegEx)
@@ -174,8 +168,6 @@ jQuery(function($) {
 					helperJSONPath = $("#jsonpath-helper").detach();
 				
 				$("#query-text-only").prop("checked", false);
-				$("#query-text-only").prop("disabled", true);
-				$("#query-text-only-label").addClass("check-label-disabled");
 			}
 		}
 		
@@ -803,8 +795,8 @@ jQuery(function($) {
 		}
 		else if($(this).val() == "jsonpointer") {
 			$("#query-text-only").prop("checked", false);
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
+			$("#query-text-only").prop("disabled", false);
+			$("#query-text-only-label").removeClass("check-label-disabled");
 			
 			$("#query-xml-warnings").prop("checked", false);
 			$("#query-xml-warnings").prop("disabled", true);
@@ -829,8 +821,8 @@ jQuery(function($) {
 		}
 		else if($(this).val() == "jsonpath") {
 			$("#query-text-only").prop("checked", false);
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
+			$("#query-text-only").prop("disabled", false);
+			$("#query-text-only-label").removeClass("check-label-disabled");
 			
 			$("#query-xml-warnings").prop("checked", false);
 			$("#query-xml-warnings").prop("disabled", true);
@@ -854,9 +846,9 @@ jQuery(function($) {
 				helperCombined = $("#combined-helper").detach();
 		}
 		else if($(this).val() == "xpathjsonpointer") {
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only").prop("checked", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", false);
+			$("#query-text-only-label").removeClass("check-label-disabled");
 			
 			$("#query-xml-warnings").prop("disabled", false);
 			$("#query-xml-warnings-label").removeClass("check-label-disabled");
@@ -881,9 +873,9 @@ jQuery(function($) {
 				helperJSONPath = $("#jsonpath-helper").detach();
 		}
 		else if($(this).val() == "xpathjsonpath") {
-			$("#query-text-only").prop("disabled", true);
-			$("#query-text-only").prop("checked", true);
-			$("#query-text-only-label").addClass("check-label-disabled");
+			$("#query-text-only").prop("checked", false);
+			$("#query-text-only").prop("disabled", false);
+			$("#query-text-only-label").removeClass("check-label-disabled");
 			
 			$("#query-xml-warnings").prop("disabled", false);
 			$("#query-xml-warnings-label").removeClass("check-label-disabled");
