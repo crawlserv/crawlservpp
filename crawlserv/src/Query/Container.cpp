@@ -126,7 +126,7 @@ namespace crawlservpp::Query {
 				newQuery.index = this->queriesJsonPointer.size();
 
 				try {
-					this->queriesJsonPointer.emplace_back(properties.text);
+					this->queriesJsonPointer.emplace_back(properties.text, properties.textOnly);
 				}
 				catch(const JsonPointerException &e) {
 					throw Exception("[JSONPointer] " + e.whatStr());
@@ -139,7 +139,7 @@ namespace crawlservpp::Query {
 				newQuery.index = this->queriesJsonPath.size();
 
 				try {
-					this->queriesJsonPath.emplace_back(properties.text);
+					this->queriesJsonPath.emplace_back(properties.text, properties.textOnly);
 				}
 				catch(const JsonPathException &e) {
 					throw Exception("[JSONPath] " + e.whatStr());
@@ -154,7 +154,7 @@ namespace crawlservpp::Query {
 				try {
 					this->queriesXPathJsonPointer.emplace_back(
 							XPath(properties.text, true),
-							JsonPointer(properties.text)
+							JsonPointer(properties.text, properties.textOnly)
 					);
 				}
 				catch(const XPathException& e) {
@@ -174,7 +174,7 @@ namespace crawlservpp::Query {
 				try {
 					this->queriesXPathJsonPath.emplace_back(
 							XPath(properties.text, true),
-							JsonPath(properties.text)
+							JsonPath(properties.text, properties.textOnly)
 					);
 				}
 				catch(const XPathException& e) {

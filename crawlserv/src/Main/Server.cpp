@@ -4113,7 +4113,8 @@ namespace crawlservpp::Main {
 							Timer::SimpleHR timer;
 
 							const Query::JsonPointer JSONPointerTest(
-									properties.text
+									properties.text,
+									properties.textOnly
 							);
 
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
@@ -4213,7 +4214,8 @@ namespace crawlservpp::Main {
 							Timer::SimpleHR timer;
 
 							const Query::JsonPath JSONPathTest(
-									properties.text
+									properties.text,
+									properties.textOnly
 							);
 
 							jsoncons::json jsonTest;
@@ -4370,7 +4372,8 @@ namespace crawlservpp::Main {
 									Timer::SimpleHR timer;
 
 									const Query::JsonPointer JSONPointerTest(
-											jsonQuery
+											jsonQuery,
+											properties.textOnly
 									);
 
 									result += "JSONPOINTER COMPILING TIME: " + timer.tickStr() + '\n';
@@ -4462,7 +4465,8 @@ namespace crawlservpp::Main {
 									Timer::SimpleHR timer;
 
 									const Query::JsonPath JSONPathTest(
-											jsonQuery
+											jsonQuery,
+											properties.textOnly
 									);
 
 									jsoncons::json jsonTest;
