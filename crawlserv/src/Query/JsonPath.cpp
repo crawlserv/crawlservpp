@@ -33,7 +33,9 @@
 namespace crawlservpp::Query {
 
 	// constructor: check and save JSONPath string
-	JsonPath::JsonPath(const std::string& pathString) : jsonPath(pathString) {
+	JsonPath::JsonPath(const std::string& pathString, bool textOnlyQuery)
+			: jsonPath(pathString),
+			  textOnly(textOnlyQuery) {
 		if(pathString.empty())
 			throw Exception("No JSONPath defined");
 	}
@@ -73,15 +75,29 @@ namespace crawlservpp::Query {
 			// get result
 			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
 
-			// check for array
-			if(result.is_array()) {
-				if(!result.empty())
-					// stringify first element of array
+			// check validity of result
+			if(!result.is_array())
+				throw Exception("jsoncons::jsonpath::json_query() did not return an array");
+
+			// check number of matches
+			switch(result.array_value().size()) {
+			case 0:
+				break;
+
+			case 1:
+				if(result[0].is_array() && !(this->textOnly))
+					// return first array member of first match
+					resultTo = result[0][0].as<std::string>();
+				else
+					// return first match only
 					resultTo = result[0].as<std::string>();
+
+				break;
+
+			default:
+				// return first match only
+				resultTo = result[0].as<std::string>();
 			}
-			else
-				// stringify value
-				resultTo = result.as<std::string>();
 		}
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
@@ -105,17 +121,35 @@ namespace crawlservpp::Query {
 			// get result
 			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
 
-			// check for array
-			if(result.is_array()) {
-				// return all array members
+			// check validity of result
+			if(!result.is_array())
+				throw Exception("jsoncons::jsonpath::json_query() did not return an array");
+
+			// check number of matches
+			switch(result.array_value().size()) {
+			case 0:
+				break;
+
+			case 1:
+				if(result[0].is_array() && !(this->textOnly)) {
+					// return all array members of first match
+					resultTo.reserve(result[0].array_value().size());
+
+					for(const auto& element : result[0].array_range())
+						resultTo.emplace_back(element.as<std::string>());
+				}
+				else
+					resultTo.emplace_back(result[0].as<std::string>());
+
+				break;
+
+			default:
+				// return all matches
 				resultTo.reserve(result.array_value().size());
 
 				for(const auto& element : result.array_range())
 					resultTo.emplace_back(element.as<std::string>());
 			}
-			else
-				// return result as single object
-				resultTo.emplace_back(result.as<std::string>());
 		}
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
@@ -139,15 +173,35 @@ namespace crawlservpp::Query {
 			// get result
 			const auto result(jsoncons::jsonpath::json_query(json, this->jsonPath));
 
-			// check for array
-			if(result.is_array()) {
-				// copy all array members
+			// check validity of result
+			if(!result.is_array())
+				throw Exception("jsoncons::jsonpath::json_query() did not return an array");
+
+			// check number of matches
+			switch(result.array_value().size()) {
+			case 0:
+				break;
+
+			case 1:
+				if(result[0].is_array() && !(this->textOnly)) {
+					// return all array members of first match
+					resultTo.reserve(result[0].array_value().size());
+
+					for(const auto& element : result[0].array_range())
+						resultTo.emplace_back(element);
+				}
+				else
+					resultTo.emplace_back(result[0]);
+
+				break;
+
+			default:
+				// return all matches
+				resultTo.reserve(result.array_value().size());
+
 				for(const auto& element : result.array_range())
 					resultTo.emplace_back(element);
 			}
-			else
-				// copy JSON object
-				resultTo.emplace_back(result);
 		}
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(

@@ -44,7 +44,7 @@ namespace crawlservpp::Query {
 	class JsonPath {
 	public:
 		// constructor
-		JsonPath(const std::string& pathString);
+		JsonPath(const std::string& pathString, bool textOnlyQuery);
 
 		// getters
 		bool getBool(const jsoncons::json& json) const;
@@ -57,6 +57,7 @@ namespace crawlservpp::Query {
 
 	private:
 		const std::string jsonPath;
+		const bool textOnly;
 	};
 
 } /* crawlservpp::Query */
