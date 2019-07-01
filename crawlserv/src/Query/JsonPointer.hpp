@@ -49,7 +49,7 @@ namespace crawlservpp::Query {
 	class JsonPointer {
 	public:
 		// constructor and destructor
-		JsonPointer(const std::string& pointerString);
+		JsonPointer(const std::string& pointerString, bool textOnlyQuery);
 
 		// getters
 		bool getBool(const rapidjson::Document& doc) const;
@@ -63,6 +63,7 @@ namespace crawlservpp::Query {
 	private:
 		rapidjson::Pointer pointerFirst;
 		std::string pointerStringMulti;
+		const bool textOnly;
 	};
 
 } /* crawlservpp::Query */

@@ -36,7 +36,7 @@
 namespace crawlservpp::Query {
 
 	// constructor: check for placeholder and create JSONPointer for first result, throws JSONPointer::Exception
-	JsonPointer::JsonPointer(const std::string& pointerString) {
+	JsonPointer::JsonPointer(const std::string& pointerString, bool textOnlyQuery) : textOnly(textOnlyQuery) {
 		if(pointerString.find("$$") != std::string::npos)
 			this->pointerStringMulti = pointerString;
 
@@ -72,6 +72,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get first match from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	//  NOTE: if the match is an array, only the first element will be returned, unless the query is text-only
 	void JsonPointer::getFirst(const rapidjson::Document& doc, std::string& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError())
@@ -84,23 +85,36 @@ namespace crawlservpp::Query {
 		resultTo.clear();
 
 		// get result
-		const auto result(this->pointerFirst.Get(doc));
+		const auto match(this->pointerFirst.Get(doc));
 
-		if(result != nullptr) {
+		// check whether match exists
+		if(match != nullptr) {
 			// check type of result
-			if(result->IsString())
-				resultTo = std::string(result->GetString(), result->GetStringLength());
+			if(match->IsString())
+				resultTo = std::string(match->GetString(), match->GetStringLength());
+			else if(match->IsArray() && !(this->textOnly)) {
+				const auto& iterator = match->GetArray().Begin();
+
+				if(iterator->IsString())
+					resultTo = std::string(iterator->GetString(), iterator->GetStringLength());
+				else
+					resultTo = Helper::Json::stringify(*iterator);
+			}
 			else
 				// stringify result
-				resultTo = Helper::Json::stringify(*result);
+				resultTo = Helper::Json::stringify(*match);
 		}
 	}
 
 	// get all matches from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	//  NOTE: if there is only one match and it is an array, its members will be returned separately unless text-only is enabled
 	void JsonPointer::getAll(const rapidjson::Document& doc, std::vector<std::string>& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError())
 			throw JsonPointer::Exception("Invalid JSON");
+
+		if(!(this->pointerFirst.IsValid()))
+			throw JsonPointer::Exception("Invalid JSONPointer");
 
 		// empty result
 		resultTo.clear();
@@ -108,12 +122,31 @@ namespace crawlservpp::Query {
 		// check whether multiple matches are possible
 		if(this->pointerStringMulti.empty()) {
 			// get first match only, because multiple matches are not possible
-			std::string result;
+			const auto match(this->pointerFirst.Get(doc));
 
-			this->getFirst(doc, result);
+			// check whether match exists
+			if(match != nullptr) {
+				// check for array
+				if(match->IsArray() && !(this->textOnly)) {
+					// reserve memory for array members
+					resultTo.reserve(match->GetArray().Size());
 
-			if(result.size())
-				resultTo.emplace_back(result);
+					// go through all array members
+					for(const auto& member : match->GetArray())
+						// check for string
+						if(member.IsString())
+							resultTo.emplace_back(member.GetString(), member.GetStringLength());
+						else
+							// stringify array member
+							resultTo.emplace_back(Helper::Json::stringify(member));
+				}
+				// check for string
+				else if(match->IsString())
+					resultTo.emplace_back(match->GetString(), match->GetStringLength());
+				else
+					// stringify match
+					resultTo.emplace_back(Helper::Json::stringify(*match));
+			}
 		}
 		else {
 			// get all matches
@@ -147,6 +180,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get matching sub-sets from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	//  NOTE: if there is only one match possible and it is an array, its members will be returned separately unless text-only is enabled
 	void JsonPointer::getSubSets(const rapidjson::Document& doc, std::vector<rapidjson::Document>& resultTo) const {
 		// check document and pointer
 		if(doc.HasParseError())
@@ -160,29 +194,56 @@ namespace crawlservpp::Query {
 
 		// check whether multiple matches are possible
 		if(this->pointerStringMulti.empty()) { // get first match only, because multiple matches are not possible
-			// create a new document for the match at the end of the results
-			resultTo.emplace_back();
+			// get single match
+			const auto match(this->pointerFirst.Get(doc));
 
-			// copy the match to the new document
-			resultTo.back().CopyFrom(*this->pointerFirst.Get(doc), resultTo.back().GetAllocator());
+			// check whether match exists
+			if(match != nullptr) {
+				// check whether match is an array (and query is not text-only)
+				if(match->IsArray() && !(this->textOnly)) {
+					// reserve memory for results
+					resultTo.reserve(match->GetArray().Size());
+
+					// go through all array members
+					for(const auto& member : match->GetArray()) {
+						// create new document for the array member at the end of the results
+						resultTo.emplace_back();
+
+						// copy the array member to the new document
+						resultTo.back().CopyFrom(member, resultTo.back().GetAllocator());
+					}
+				}
+				else {
+					// create a new document for the match at the end of the results
+					resultTo.emplace_back();
+
+					// copy the match to the new document
+					resultTo.back().CopyFrom(*match, resultTo.back().GetAllocator());
+				}
+			}
 		}
 		else {
 			// get all matches
 			unsigned long counter = 0;
 
+			// loop through all possible matches
 			while(true) {
+				// copy JSONPointer string for placeholder replacement
 				std::string pointerString(this->pointerStringMulti);
 
+				// replace placeholders with counter value
 				Helper::Strings::replaceAll(pointerString, "$$", std::to_string(counter), true);
 
+				// create (and check) JSONPointer
 				const rapidjson::Pointer pointer(pointerString);
 
 				if(!(pointer.IsValid()))
 					throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
 
+				// get (and check) match
 				const auto match(pointer.Get(doc));
 
-				if(match == nullptr)
+				if(match == nullptr || match->IsNull())
 					break;
 
 				// create a new document for the match at the end of the results
@@ -191,6 +252,7 @@ namespace crawlservpp::Query {
 				// copy the match to the new document
 				resultTo.back().CopyFrom(*match, resultTo.back().GetAllocator());
 
+				// increment counter
 				++counter;
 			}
 		}
