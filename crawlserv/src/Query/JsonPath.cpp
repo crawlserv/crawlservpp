@@ -63,6 +63,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get first match from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	//  NOTE: if the match is an array, only the first element will be returned, unless the query is text-only
 	void JsonPath::getFirst(const jsoncons::json& json, std::string& resultTo) const {
 		// check JSONPath
 		if(this->jsonPath.empty())
@@ -79,24 +80,14 @@ namespace crawlservpp::Query {
 			if(!result.is_array())
 				throw Exception("jsoncons::jsonpath::json_query() did not return an array");
 
-			// check number of matches
-			switch(result.array_value().size()) {
-			case 0:
-				break;
-
-			case 1:
+			// check whether there are matches
+			if(result.array_value().size()) {
 				if(result[0].is_array() && !(this->textOnly))
 					// return first array member of first match
 					resultTo = result[0][0].as<std::string>();
 				else
 					// return first match only
 					resultTo = result[0].as<std::string>();
-
-				break;
-
-			default:
-				// return first match only
-				resultTo = result[0].as<std::string>();
 			}
 		}
 		catch(const jsoncons::json_exception& e) {
@@ -109,6 +100,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get all matches from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	//  NOTE: if there is only one match and it is an array, its members will be returned separately unless text-only is enabled
 	void JsonPath::getAll(const jsoncons::json& json, std::vector<std::string>& resultTo) const {
 		// check JSONPath
 		if(this->jsonPath.empty())
@@ -161,6 +153,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get matching sub-sets from parsed JSON document (saved to resultTo), throws JSONPointer::Exception
+	//  NOTE: if there is only one match and it is an array, its members will be returned separately unless text-only is enabled
 	void JsonPath::getSubSets(const jsoncons::json& json, std::vector<jsoncons::json>& resultTo) const {
 		// check JSONPath
 		if(this->jsonPath.empty())
