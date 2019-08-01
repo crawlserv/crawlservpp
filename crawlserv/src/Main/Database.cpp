@@ -1653,7 +1653,7 @@ namespace crawlservpp::Main {
 
 				// create new namespace and new name
 				const std::string newNamespace(Database::duplicateWebsiteNamespace(websiteNamespace));
-				const std::string newName(websiteName + " (copy)", websiteName.size() + 7);
+				const std::string newName(websiteName + " (copy)");
 
 				// add website
 				result = this->addWebsite(WebsiteProperties(websiteDomain, newNamespace, newName, websiteDir));
