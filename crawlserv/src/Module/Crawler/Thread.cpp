@@ -614,14 +614,7 @@ namespace crawlservpp::Module::Crawler {
 			}
 		}
 
-		// create cache for token values
-		this->customTokens = std::vector<TimeString>(
-				this->config.customTokens.size(),
-				TimeString(
-						std::chrono::steady_clock::time_point::min(),
-						""
-				)
-		);
+		this->initTokenCache();
 	}
 
 	// add sitemap(s) from 'robots.txt' as custom URLs
@@ -662,6 +655,9 @@ namespace crawlservpp::Module::Crawler {
 						this->networking.getCurlCode(),
 						url
 				)) {
+					// clear token cache
+					this->initTokenCache();
+
 					// reset connection and retry
 					if(this->config.crawlerLogging) {
 						this->log(e.whatStr() + " [" + url + "].");
@@ -874,6 +870,18 @@ namespace crawlservpp::Module::Crawler {
 			newUrlList.emplace_back(url);
 
 		return newUrlList;
+	}
+
+	// initialize (or reset) cache for token values
+	void Thread::initTokenCache() {
+		// create cache for token values
+		std::vector<TimeString>(
+				this->config.customTokens.size(),
+				TimeString(
+						std::chrono::steady_clock::time_point::min(),
+						""
+				)
+		).swap(this->customTokens);
 	}
 
 	// initialize queries, throws Thread::Exception
@@ -1341,14 +1349,14 @@ namespace crawlservpp::Module::Crawler {
 				std::string value;
 
 				// check token cache
-				const unsigned int seconds = this->config.customTokensKeep.at(index);
+				const unsigned int cachedSeconds = this->config.customTokensKeep.at(index);
 				const TimeString& cachedToken = this->customTokens.at(index);
 
 				if(
-						seconds
+						cachedSeconds
 						&& cachedToken.first > std::chrono::steady_clock::time_point::min()
 						&& std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
-							- cachedToken.first).count() <= seconds
+							- cachedToken.first).count() <= cachedSeconds
 				) {
 					// use token value from cache
 					value = cachedToken.second;
@@ -1406,6 +1414,9 @@ namespace crawlservpp::Module::Crawler {
 										this->networking.getCurlCode(),
 										sourceUrl
 								)) {
+									// clear token cache
+									this->initTokenCache();
+
 									// reset connection and retry
 									if(this->config.crawlerLogging) {
 										this->log(e.whatStr() + " [" + sourceUrl + "].");
@@ -1453,7 +1464,7 @@ namespace crawlservpp::Module::Crawler {
 						// set token page content as target for subsequent query
 						this->setQueryTarget(content, sourceUrl);
 
-						// get token from content
+						// get token value from content
 						if(this->queriesTokens.at(index).resultSingle)
 							this->getSingleFromQuery(this->queriesTokens.at(index), value, queryWarnings);
 						else if(this->queriesTokens.at(index).resultBool) {
@@ -1468,6 +1479,12 @@ namespace crawlservpp::Module::Crawler {
 									+ *i
 									+ "\' - not single and not bool."
 							);
+
+						// save token value in cache if necessary
+						if(cachedSeconds) {
+							this->customTokens.at(index).first = std::chrono::steady_clock::now();
+							this->customTokens.at(index).second = value;
+						}
 
 						// clear query target
 						this->clearQueryTarget();
@@ -1625,6 +1642,9 @@ namespace crawlservpp::Module::Crawler {
 					this->networking.getCurlCode(),
 					url.second
 			)) {
+				// clear token cache
+				this->initTokenCache();
+
 				// reset connection and retry
 				if(this->config.crawlerLogging) {
 					this->log(e.whatStr() + " [" + url.second + "].");
@@ -1954,6 +1974,9 @@ namespace crawlservpp::Module::Crawler {
 						this->networking.getCurlCode(),
 						url
 				)) {
+					// clear token cache
+					this->initTokenCache();
+
 					// reset connection and retry
 					if(this->config.crawlerLogging) {
 						this->log(e.whatStr() + " [" + url + "].");
@@ -3059,7 +3082,7 @@ namespace crawlservpp::Module::Crawler {
 																);
 															}
 
-															// reset connection
+															// reset connection and retry
 															this->setStatusMessage(
 																	"ERROR "
 																	+ e.whatStr()
@@ -3072,7 +3095,6 @@ namespace crawlservpp::Module::Crawler {
 																	this->config.crawlerSleepError
 															);
 
-															// retry
 															this->crawlingRetry(url, true);
 
 															return false;

@@ -213,6 +213,7 @@ namespace crawlservpp::Module::Crawler {
 				long step,
 				long aliasAdd
 		);
+		void initTokenCache();
 		void initQueries() override;
 
 		// crawling functions
