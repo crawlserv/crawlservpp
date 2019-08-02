@@ -524,7 +524,10 @@ jQuery(function($) {
 		
 		runCmd(
 				"duplicatewebsite",
-				{ "id" : id },
+				{
+					"id" : id,
+					"queries": queries
+				},
 				true,
 				{ "m" : "websites" },
 				"id",

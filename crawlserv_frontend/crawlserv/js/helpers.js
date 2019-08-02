@@ -521,6 +521,97 @@ function areConfigsEqual(config1, config2, logging = true) {
 	return true;
 };
 
+// helper function to enumerate all queries 
+function enumQueries(result) {
+	const modules = [ "crawler", "parser", "extractor", "analyzer" ];
+	
+	modules.forEach(function(module) {
+		// add module to result
+		result[module] = [];
+		
+		let moduleResult = result[module];
+		
+		// parse configuration data from JSON file for module
+		console.log("> json/" + module + ".json");
+		
+		$.getJSON("json/" + module + ".json", function(data) {
+			// get algo data
+			var deferreds = [];
+			var categories = [];
+			var results = [];
+			var includes = [];
+			
+			// get data for algorithms from external JSONs
+			if(typeof algo !== 'undefined') {
+				$.each(algo.config_cats, function(index, category) {
+					if(category != "general") {
+						categories.push(category);
+						
+						console.log("> json/algos/" + category + ".json");
+						
+						deferreds.push($.getJSON("json/algos/" + category + ".json", function(data) {
+							results.push(data);
+						}));
+					}
+				});
+			}
+			
+			// get included data from external JSONs
+			if(data.hasOwnProperty("#include")) {
+				if($.isArray(data["#include"])) {
+					$.each(data["#include"], function(index, include) {
+						console.log("> json/" + include);
+						
+						deferreds.push($.getJSON("json/" + include, function(data) {
+							includes.push(data);
+						}));
+					});
+				}
+				else {
+					console.log("> json/" + data["#include"]);
+					
+					deferreds.push($.getJSON("json/" + data["#include"], function(data) {
+						includes.push(data);
+					}));
+				}
+				
+				delete data["#include"];
+			}
+			
+			$.when.apply($, deferreds).then(function() {
+				// include algo data				
+				$.each(results, function(index, algoData) {
+					data[categories[index]] = algoData;
+				});
+				
+				// merge with included JSON data
+				$.each(includes, function(index, include) {
+					$.extend(data, include);
+				})
+				
+				$.each(data, function(cat, entry) {
+					$.each(entry, function(name, properties) {
+						if(properties.hasOwnProperty("type")) {
+							if(
+									(
+											properties["type"] == "array"
+											&& properties.hasOwnProperty("item-type")
+											&& properties["item-type"] == "query"
+									)
+									|| properties["type"] == "query") {
+								moduleResult.push({
+									"cat": cat,
+									"name": name
+								})
+							}
+						}
+					});
+				});
+			});
+		});
+	});
+}
+
 /*
  * IMPORT/EXPORT [DATA]
  */

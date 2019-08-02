@@ -530,3 +530,11 @@ if($website) {
 }
 
 ?>
+
+<script>
+
+var queries = {};
+
+enumQueries(queries);
+
+</script>
