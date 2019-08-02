@@ -362,7 +362,14 @@ if($website) {
     echo "<div class=\"entry-row\">\n";
     echo "<div class=\"entry-label\">Name:</div><div class=\"entry-input\">\n";
     
-    echo "<input type=\"text\" class=\"entry-input\" id=\"urllist-name\" value=\"";
+    echo "<input type=\"text\" class=\"entry-input trigger\" id=\"urllist-name\"";
+    
+    if($urllist)
+        echo " data-trigger=\"urllist-update\"";
+    else
+        echo " data-trigger=\"urllist-add\"";
+
+    echo " value=\"";
     
     echo htmlspecialchars($urllistName);
     
@@ -373,7 +380,14 @@ if($website) {
     echo "<div class=\"entry-row\">\n";
     echo "<div class=\"entry-label\">Namespace:</div><div class=\"entry-input\">\n";
     
-    echo "<input type=\"text\" class=\"entry-input\" id=\"urllist-namespace\" value=\"";
+    echo "<input type=\"text\" class=\"entry-input trigger\" id=\"urllist-namespace\"";
+    
+    if($urllist)
+        echo " data-trigger=\"urllist-update\"";
+    else
+        echo " data-trigger=\"urllist-add\"";
+    
+    echo " value=\"";
     
     echo htmlspecialchars($urllistNamespace);
     
