@@ -606,7 +606,7 @@ namespace crawlservpp::Module::Crawler {
 
 				statusStrStr.imbue(std::locale(""));
 
-				statusStrStr << "Adding custom URLs [" << counter << "/" << this->customPages.size() << "]...";
+				statusStrStr << "Checking or adding custom URLs [" << counter << "/" << this->customPages.size() << "]...";
 
 				this->setStatusMessage(statusStrStr.str());
 			}
