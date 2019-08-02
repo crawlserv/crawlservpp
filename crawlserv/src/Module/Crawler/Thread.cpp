@@ -526,6 +526,9 @@ namespace crawlservpp::Module::Crawler {
 					newUrls.reserve(newUrls.size() + temp.size());
 
 					newUrls.insert(newUrls.end(), temp.begin(), temp.end());
+
+					if(!(this->isRunning()))
+						break;
 				}
 			}
 
@@ -562,8 +565,16 @@ namespace crawlservpp::Module::Crawler {
 			// add sitemap(s) from 'robots.txt' as custom URLs
 			this->initRobotsTxt();
 
-		// get IDs and lock IDs for custom URLs (and add them to the URL list if necessary)
+		// get IDs of custom URLs and their locks (or add them to the URL list if necessary)
+		this->setStatusMessage("Adding custom URLs...");
+
+		unsigned long counter = 0;
+
 		for(auto& customPage : this->customPages) {
+			// check whether thread is still supposed to run
+			if(!(this->isRunning()))
+				break;
+
 			try {
 				// check URI
 				this->parser->setCurrentUrl(customPage.second);
@@ -584,7 +595,25 @@ namespace crawlservpp::Module::Crawler {
 					this->log(" skipped invalid custom URL " + customPage.second);
 				}
 			}
+
+			// update counter, progress and status (if necessary)
+			++counter;
+
+			this->setProgress((float) counter / this->customPages.size());
+
+			if(counter % 100 == 0) {
+				std::ostringstream statusStrStr;
+
+				statusStrStr.imbue(std::locale(""));
+
+				statusStrStr << "Adding custom URLs [" << counter << "/" << this->customPages.size() << "]...";
+
+				this->setStatusMessage(statusStrStr.str());
+			}
 		}
+
+		// reset progress
+		this->setProgress(0);
 	}
 
 	// add sitemap(s) from 'robots.txt' as custom URLs
@@ -781,6 +810,9 @@ namespace crawlservpp::Module::Crawler {
 			}
 			else
 				newUrlList.emplace_back(url); // variable not in URL
+
+			if(!(this->isRunning()))
+				break;
 		}
 
 		urlList.swap(newUrlList);
