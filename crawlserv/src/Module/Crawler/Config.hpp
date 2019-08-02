@@ -128,6 +128,7 @@ namespace crawlservpp::Module::Crawler {
 			bool customRobots;
 			std::vector<std::string> customTokens;
 			std::vector<std::string> customTokensCookies;
+			std::vector<unsigned int> customTokensKeep;
 			std::vector<unsigned long> customTokensQuery;
 			std::vector<std::string> customTokensSource;
 			std::vector<std::string> customTokenHeaders;
@@ -201,6 +202,7 @@ namespace crawlservpp::Module::Crawler {
 										customCountersGlobal(true),
 										customReCrawl(true),
 										customRobots(false),
+										customTokensKeep(0),
 										customUsePost(false),
 										redirectQueryUrl(0),
 										redirectQueryContent(0),
@@ -279,6 +281,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("robots", this->config.customRobots);
 		this->option("tokens", this->config.customTokens);
 		this->option("tokens.cookies", this->config.customTokensCookies);
+		this->option("tokens.keep", this->config.customTokensKeep);
 		this->option("tokens.query", this->config.customTokensQuery);
 		this->option("tokens.source", this->config.customTokensSource);
 		this->option("tokens.use.post", this->config.customTokensUsePost);
@@ -500,6 +503,12 @@ namespace crawlservpp::Module::Crawler {
 			incompleteTokens = true;
 
 		this->config.customTokensCookies.resize(completeTokens);
+
+		// remove token expiration times that are not used, set to '0' where none is specified
+		if(this->config.customTokensKeep.size() > completeTokens)
+			incompleteTokens = true;
+
+		this->config.customTokensKeep.resize(completeTokens, 0);
 
 		// remove token POST options that are not used, set to 'false' where none is specified
 		if(this->config.customTokensUsePost.size() > completeTokens)

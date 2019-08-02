@@ -518,14 +518,16 @@
 			"simple": true,
 			"position": 13
 		},
-		"tokens.source": {
+		"tokens.keep": {
 			"type": "array",
-			"item-type": "string",
-			"default": [],
-			"label": "Token sources:",
-			"description": "Source URL for the token with the same array index (absolute link without protocol).",
+			"item-type": "number",
+			"default": 0,
+			"min": 0,
+			"max": 4000000,
+			"label": "Keep token for (s)",
+			"description": "Time in seconds until token with the same array index gets invalid.",
 			"simple": true,
-			"position": 14
+			"position": 17
 		},
 		"tokens.query": {
 			"type": "array",
@@ -539,6 +541,15 @@
 			"description": "Query to extract the token with the same array index.",
 			"simple": true,
 			"position": 16
+		},
+		"tokens.source": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Token sources:",
+			"description": "Source URL for the token with the same array index (absolute link without protocol).",
+			"simple": true,
+			"position": 14
 		},
 		"tokens.use.post": {
 			"type": "array",
