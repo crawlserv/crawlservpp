@@ -85,6 +85,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
 
 		typedef std::pair<unsigned long, std::string> IdString;
+		typedef std::pair<std::chrono::steady_clock::time_point, std::string> TimeString;
 
 	public:
 		// constructors
@@ -170,6 +171,7 @@ namespace crawlservpp::Module::Crawler {
 		// custom URLs
 		IdString startPage;
 		std::vector<IdString> customPages;
+		std::vector<TimeString> customTokens;
 
 		// crawling state
 		IdString nextUrl;				// next URL (currently crawled URL in automatic mode)

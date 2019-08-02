@@ -613,6 +613,15 @@ namespace crawlservpp::Module::Crawler {
 				this->setStatusMessage(statusStrStr.str());
 			}
 		}
+
+		// create cache for token values
+		this->customTokens = std::vector<TimeString>(
+				this->config.customTokens.size(),
+				TimeString(
+						std::chrono::steady_clock::time_point::min(),
+						""
+				)
+		);
 	}
 
 	// add sitemap(s) from 'robots.txt' as custom URLs
@@ -1124,6 +1133,7 @@ namespace crawlservpp::Module::Crawler {
 				else {
 					// use custom URL
 					urlTo = this->crawlingReplaceTokens(this->manualUrl);
+
 					usePostTo = this->config.customUsePost;
 				}
 			}
@@ -1328,138 +1338,154 @@ namespace crawlservpp::Module::Crawler {
 			const auto index = i - this->config.customTokens.begin();
 
 			if(result.second.find(*i)) {
-				const std::string sourceUrl("https://" + this->config.customTokensSource.at(index));
-				std::string content;
 				std::string value;
-				bool success = false;
 
-				// check token source
-				if(!(this->config.customTokensSource.at(index).empty())) {
-					// get content for extracting token
-					while(this->isRunning()) {
-						try {
-							// set local network configuration
-							this->networking.setConfigCurrent(*this);
+				// check token cache
+				const unsigned int seconds = this->config.customTokensKeep.at(index);
+				const TimeString& cachedToken = this->customTokens.at(index);
 
-							// set custom headers if necessary
-							if(!(this->config.customTokensCookies.at(index).empty()))
-								this->networking.setCookies(this->config.customTokensCookies.at(index));
+				if(
+						seconds
+						&& cachedToken.first > std::chrono::steady_clock::time_point::min()
+						&& std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
+							- cachedToken.first).count() <= seconds
+				) {
+					value = cachedToken.second;
+				}
+				else {
+					// get token
+					const std::string sourceUrl("https://" + this->config.customTokensSource.at(index));
+					std::string content;
+					bool success = false;
 
-							if(!(this->config.customTokenHeaders.empty()))
-								this->networking.setHeaders(this->config.customTokenHeaders);
+					// check token source
+					if(!(this->config.customTokensSource.at(index).empty())) {
+						// get content for extracting token
+						while(this->isRunning()) {
+							try {
+								// set local network configuration
+								this->networking.setConfigCurrent(*this);
 
-							// get content
-							this->networking.getContent(
-									sourceUrl,
-									this->config.customTokensUsePost.at(index),
-									content,
-									this->config.crawlerRetryHttp
-							);
+								// set custom headers if necessary
+								if(!(this->config.customTokensCookies.at(index).empty()))
+									this->networking.setCookies(this->config.customTokensCookies.at(index));
 
-							// unset custom headers if necessary
-							if(!(this->config.customTokensCookies.at(index).empty()))
-								this->networking.unsetCookies();
+								if(!(this->config.customTokenHeaders.empty()))
+									this->networking.setHeaders(this->config.customTokenHeaders);
 
-							if(!(this->config.customTokenHeaders.empty()))
-								this->networking.unsetHeaders();
+								// get content
+								this->networking.getContent(
+										sourceUrl,
+										this->config.customTokensUsePost.at(index),
+										content,
+										this->config.crawlerRetryHttp
+								);
 
-							success = true;
+								// unset custom headers if necessary
+								if(!(this->config.customTokensCookies.at(index).empty()))
+									this->networking.unsetCookies();
 
-							break;
-						}
-						catch(const CurlException& e) { // error while getting content
-							// unset custom headers if necessary
-							if(!(this->config.customTokensCookies.at(index).empty()))
-								this->networking.unsetCookies();
+								if(!(this->config.customTokenHeaders.empty()))
+									this->networking.unsetHeaders();
 
-							if(!(this->config.customTokenHeaders.empty()))
-								this->networking.unsetHeaders();
+								success = true;
 
-							// check type of error i.e. last cURL code
-							if(this->crawlingCheckCurlCode(
-									this->networking.getCurlCode(),
-									sourceUrl
-							)) {
-								// reset connection and retry
-								if(this->config.crawlerLogging) {
-									this->log(e.whatStr() + " [" + sourceUrl + "].");
-									this->log("resets connection...");
-								}
-
-								this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
-
-								this->networking.resetConnection(this->config.crawlerSleepError);
+								break;
 							}
-							else {
+							catch(const CurlException& e) { // error while getting content
+								// unset custom headers if necessary
+								if(!(this->config.customTokensCookies.at(index).empty()))
+									this->networking.unsetCookies();
+
+								if(!(this->config.customTokenHeaders.empty()))
+									this->networking.unsetHeaders();
+
+								// check type of error i.e. last cURL code
+								if(this->crawlingCheckCurlCode(
+										this->networking.getCurlCode(),
+										sourceUrl
+								)) {
+									// reset connection and retry
+									if(this->config.crawlerLogging) {
+										this->log(e.whatStr() + " [" + sourceUrl + "].");
+										this->log("resets connection...");
+									}
+
+									this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
+
+									this->networking.resetConnection(this->config.crawlerSleepError);
+								}
+								else {
+									if(this->config.crawlerLogging)
+										this->log(
+												"WARNING: Could not get token \'"
+												+ *i
+												+ "\' from "
+												+ sourceUrl
+												+ ": "
+												+ e.whatStr()
+										);
+
+									break;
+								}
+							}
+							catch(const Utf8Exception& e) {
+								// unset custom headers if necessary
+								if(!(this->config.customTokensCookies.at(index).empty()))
+									this->networking.unsetCookies();
+
+								if(!(this->config.customTokenHeaders.empty()))
+									this->networking.unsetHeaders();
+
+								// write UTF-8 error to log if neccessary
 								if(this->config.crawlerLogging)
-									this->log(
-											"WARNING: Could not get token \'"
-											+ *i
-											+ "\' from "
-											+ sourceUrl
-											+ ": "
-											+ e.whatStr()
-									);
+									this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
 
 								break;
 							}
 						}
-						catch(const Utf8Exception& e) {
-							// unset custom headers if necessary
-							if(!(this->config.customTokensCookies.at(index).empty()))
-								this->networking.unsetCookies();
+					}
 
-							if(!(this->config.customTokenHeaders.empty()))
-								this->networking.unsetHeaders();
+					if(success) {
+						std::queue<std::string> queryWarnings;
 
-							// write UTF-8 error to log if neccessary
-							if(this->config.crawlerLogging)
-								this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
+						// set token page content as target for subsequent query
+						this->setQueryTarget(content, sourceUrl);
 
-							break;
+						// get token from content
+						if(this->queriesTokens.at(index).resultSingle)
+							this->getSingleFromQuery(this->queriesTokens.at(index), value, queryWarnings);
+						else if(this->queriesTokens.at(index).resultBool) {
+							bool booleanResult = false;
+
+							if(this->getBoolFromQuery(this->queriesTokens.at(index), booleanResult, queryWarnings))
+								value = booleanResult ? "true" : "false";
 						}
+						else
+							queryWarnings.emplace(
+									"WARNING: Invalid result type of query for token \'"
+									+ *i
+									+ "\' - not single and not bool."
+							);
+
+						// clear query target
+						this->clearQueryTarget();
+
+						// logging if necessary
+						if(this->config.crawlerLogging)
+							this->log(queryWarnings);
+
+						if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
+							this->log(
+									"fetched token \'"
+									+ *i
+									+ "\' from "
+									+ sourceUrl
+									+ " [= \'"
+									+ value
+									+ "\']."
+							);
 					}
-				}
-
-				if(success) {
-					std::queue<std::string> queryWarnings;
-
-					// set token page content as target for subsequent query
-					this->setQueryTarget(content, sourceUrl);
-
-					// get token from content
-					if(this->queriesTokens.at(index).resultSingle)
-						this->getSingleFromQuery(this->queriesTokens.at(index), value, queryWarnings);
-					else if(this->queriesTokens.at(index).resultBool) {
-						bool booleanResult = false;
-
-						if(this->getBoolFromQuery(this->queriesTokens.at(index), booleanResult, queryWarnings))
-							value = booleanResult ? "true" : "false";
-					}
-					else
-						queryWarnings.emplace(
-								"WARNING: Invalid result type of query for token \'"
-								+ *i
-								+ "\' - not single and not bool."
-						);
-
-					// clear query target
-					this->clearQueryTarget();
-
-					// logging if necessary
-					if(this->config.crawlerLogging)
-						this->log(queryWarnings);
-
-					if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-						this->log(
-								"fetched token \'"
-								+ *i
-								+ "\' from "
-								+ sourceUrl
-								+ " [= \'"
-								+ value
-								+ "\']."
-						);
 				}
 
 				// replace variable(s) with token(s)
