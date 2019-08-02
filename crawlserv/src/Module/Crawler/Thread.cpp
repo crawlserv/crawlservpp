@@ -474,7 +474,7 @@ namespace crawlservpp::Module::Crawler {
 		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
 	}
 
-	// initialize custom URLs
+	// initialize custom URLs, throws Thread::Exception
 	void Thread::initCustomUrls() {
 		if(this->config.crawlerLogging == Config::crawlerLoggingVerbose)
 			this->log("initializes start page and custom URLs...");
@@ -566,7 +566,7 @@ namespace crawlservpp::Module::Crawler {
 			this->initRobotsTxt();
 
 		// get IDs of custom URLs and their locks (or add them to the URL list if necessary)
-		this->setStatusMessage("Adding custom URLs...");
+		this->setStatusMessage("Checking custom URLs...");
 
 		unsigned long counter = 0;
 
@@ -588,6 +588,10 @@ namespace crawlservpp::Module::Crawler {
 
 				// get the ID of the custom URL (and of its URL lock if one already exists)
 				customPage.first = this->database.getUrlId(customPage.second);
+
+				// check ID of the custom URL
+				if(!customPage.first)
+					throw Exception("Thread::initCustomUrls(): Could not find ID of \'" + customPage.second + "\'");
 			}
 			catch(const URIException& e) {
 				if(this->config.crawlerLogging) {
@@ -596,24 +600,19 @@ namespace crawlservpp::Module::Crawler {
 				}
 			}
 
-			// update counter, progress and status (if necessary)
+			// update counter and status (if necessary)
 			++counter;
-
-			this->setProgress((float) counter / this->customPages.size());
 
 			if(counter % 100 == 0) {
 				std::ostringstream statusStrStr;
 
 				statusStrStr.imbue(std::locale(""));
 
-				statusStrStr << "Checking or adding custom URLs [" << counter << "/" << this->customPages.size() << "]...";
+				statusStrStr << "Checking custom URLs [" << counter << "/" << this->customPages.size() << "]...";
 
 				this->setStatusMessage(statusStrStr.str());
 			}
 		}
-
-		// reset progress
-		this->setProgress(0);
 	}
 
 	// add sitemap(s) from 'robots.txt' as custom URLs
