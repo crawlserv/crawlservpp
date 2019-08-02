@@ -505,7 +505,7 @@ namespace crawlservpp::Query {
 
 		case QueryStruct::typeJsonPath:
 			// parse content as JSON using jsoncons if still necessary
-			if(this->parseJsonRapid(warningsTo)) {
+			if(this->parseJsonCons(warningsTo)) {
 				// get boolean result from a JSONPath query
 				try {
 					resultTo = this->queriesJsonPath.at(query.index).getBool(this->parsedJsonCons);
@@ -970,7 +970,7 @@ namespace crawlservpp::Query {
 
 		case QueryStruct::typeJsonPath:
 			// parse content as JSON using jsoncons if still necessary
-			if(this->parseJsonRapid(warningsTo)) {
+			if(this->parseJsonCons(warningsTo)) {
 				// get single result from a JSONPath query
 				try {
 					this->queriesJsonPath.at(query.index).getFirst(this->parsedJsonCons, resultTo);
@@ -1442,7 +1442,7 @@ namespace crawlservpp::Query {
 
 		case QueryStruct::typeJsonPath:
 			// parse content as JSON using jsoncons if still necessary
-			if(this->parseJsonRapid(warningsTo)) {
+			if(this->parseJsonCons(warningsTo)) {
 				// get multiple results from a JSONPath query
 				try {
 					this->queriesJsonPath.at(query.index).getAll(this->parsedJsonCons, resultTo);
@@ -1948,7 +1948,7 @@ namespace crawlservpp::Query {
 
 		case QueryStruct::typeJsonPath:
 			// parse content as JSON using jsoncons if still necessary
-			if(this->parseJsonRapid(warningsTo)) {
+			if(this->parseJsonCons(warningsTo)) {
 				// get subsets from a JSONPath query
 				try {
 					this->queriesJsonPath.at(query.index).getSubSets(
