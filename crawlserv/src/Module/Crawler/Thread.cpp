@@ -1350,10 +1350,11 @@ namespace crawlservpp::Module::Crawler {
 						&& std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
 							- cachedToken.first).count() <= seconds
 				) {
+					// use token value from cache
 					value = cachedToken.second;
 				}
 				else {
-					// get token
+					// get token value
 					const std::string sourceUrl("https://" + this->config.customTokensSource.at(index));
 					std::string content;
 					bool success = false;
