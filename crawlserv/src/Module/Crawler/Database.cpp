@@ -107,15 +107,22 @@ namespace crawlservpp::Module::Crawler {
 				this->log("prepares getUrlId()...");
 
 			this->ps.getUrlId = this->addPreparedStatement(
-					"SELECT `" + this->urlListTableAlias + "1`.id"
-					" AS id"
-					" FROM `" + this->urlListTable + "`"
-					" AS `" + this->urlListTableAlias + "1`"
-					" LEFT OUTER JOIN `" + this->crawlingTable + "`"
-					" AS `" + this->crawlingTableAlias + "1`"
-					" ON `" + this->urlListTableAlias + "1`.id"
-					" = `" + this->crawlingTableAlias + "1`.url"
-					" WHERE `" + this->urlListTableAlias + "1`.url = ?"
+					"SELECT id"
+					" FROM "
+					" ("
+						"SELECT `" + this->urlListTableAlias + "1`.id"
+						" AS id,"
+						" `" + this->urlListTableAlias + "1`.url"
+						" AS url"
+						" FROM `" + this->urlListTable + "`"
+						" AS `" + this->urlListTableAlias + "1`"
+						" LEFT OUTER JOIN `" + this->crawlingTable + "`"
+						" AS `" + this->crawlingTableAlias + "1`"
+						" ON `" + this->urlListTableAlias + "1`.id"
+						" = `" + this->crawlingTableAlias + "1`.url"
+						" WHERE `" + this->urlListTableAlias + "1`.hash = " + hashQuery +
+					" ) AS tmp"
+					" WHERE url = ?"
 					" LIMIT 1"
 			);
 		}
@@ -369,7 +376,8 @@ namespace crawlservpp::Module::Crawler {
 					" ("
 						"SELECT *"
 						" FROM `" + crawledTable + "`"
-						" WHERE url = ? AND crawltime = ?"
+						" WHERE url = ?"
+						" AND crawltime = ?"
 					" )"
 					" AS result"
 			);
@@ -387,12 +395,20 @@ namespace crawlservpp::Module::Crawler {
 				groupBy = "LOWER(url)";
 
 			this->ps.urlDuplicationCheck = this->addPreparedStatement(
-					"SELECT CAST( " + groupBy + " AS BINARY )"
+					"SELECT CAST("
+						+ groupBy +
+						" AS BINARY"
+					" )"
 					" AS url,"
 					" COUNT( " + groupBy + " )"
 					" FROM `" + this->urlListTable + "`"
-					" GROUP BY CAST( " + groupBy + " AS BINARY )"
-					" HAVING COUNT( " + groupBy + " ) > 1"
+					" GROUP BY CAST( "
+						+ groupBy +
+						" AS BINARY "
+					")"
+					" HAVING COUNT("
+						+ groupBy + " "
+					") > 1"
 			);
 		}
 
@@ -465,6 +481,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// execute SQL query for getting URL
 			sqlStatement.setString(1, url);
+			sqlStatement.setString(2, url);
 
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
