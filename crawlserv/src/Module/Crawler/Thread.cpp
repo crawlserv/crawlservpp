@@ -565,8 +565,39 @@ namespace crawlservpp::Module::Crawler {
 			// add sitemap(s) from 'robots.txt' as custom URLs
 			this->initRobotsTxt();
 
-		// get IDs of custom URLs and their locks (or add them to the URL list if necessary)
+		// check custom URLs and prepare to add the ones that do not exist yet
 		this->setStatusMessage("Checking custom URLs...");
+
+		std::queue<std::string> urlsToAdd;
+
+		for(auto& customPage : this->customPages) {
+			try {
+				// check URI
+				this->parser->setCurrentUrl(customPage.second);
+
+				// prepare to add URL if necessary
+				urlsToAdd.push(customPage.second);
+			}
+			catch(const URIException& e) {
+				if(this->config.crawlerLogging) {
+					this->log("URI Parser error: " + e.whatStr());
+					this->log(" skipped invalid custom URL " + customPage.second);
+				}
+			}
+
+		}
+
+		// add custom URLs that do not exist yet
+		this->setStatusMessage("Adding custom URLs...");
+
+		this->database.addUrlsIfNotExist(urlsToAdd);
+
+		// check for duplicates if URL debugging is active
+		if(this->config.crawlerUrlDebug)
+			this->database.urlDuplicationCheck();
+
+		// get IDs of custom URLs
+		this->setStatusMessage("Getting IDs of custom URLs...");
 
 		unsigned long counter = 0;
 
@@ -579,26 +610,14 @@ namespace crawlservpp::Module::Crawler {
 				// check URI
 				this->parser->setCurrentUrl(customPage.second);
 
-				// add URL (if it does not exist)
-				this->database.addUrlIfNotExists(customPage.second, true);
-
-				// check for duplicates if URL debugging is active
-				if(this->config.crawlerUrlDebug)
-					this->database.urlDuplicationCheck();
-
-				// get the ID of the custom URL (and of its URL lock if one already exists)
+				// get the ID of the custom URL
 				customPage.first = this->database.getUrlId(customPage.second);
 
 				// check ID of the custom URL
 				if(!customPage.first)
 					throw Exception("Thread::initCustomUrls(): Could not find ID of \'" + customPage.second + "\'");
 			}
-			catch(const URIException& e) {
-				if(this->config.crawlerLogging) {
-					this->log("URI Parser error: " + e.whatStr());
-					this->log(" skipped invalid custom URL " + customPage.second);
-				}
-			}
+			catch(const URIException& e) {}
 
 			// update counter and status (if necessary)
 			++counter;
@@ -608,7 +627,7 @@ namespace crawlservpp::Module::Crawler {
 
 				statusStrStr.imbue(std::locale(""));
 
-				statusStrStr << "Checking custom URLs [" << counter << "/" << this->customPages.size() << "]...";
+				statusStrStr << "Getting IDs of custom URLs [" << counter << "/" << this->customPages.size() << "]...";
 
 				this->setStatusMessage(statusStrStr.str());
 			}
