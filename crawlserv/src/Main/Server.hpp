@@ -37,7 +37,14 @@
 // hard-coded constants
 #define MAIN_SERVER_DIR_CACHE "cache"			// directory for file cache
 #define MAIN_SERVER_DIR_COOKIES "cookies"		// directory for cookies
-#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5	// server-side sleep on mySQL error
+#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5	// server-side sleep on mySQL error#
+
+// macro for basic server commands
+#define MAIN_SERVER_BASIC_CMD(X, Y)	if(name == X) { \
+										response = Y(); \
+										return true; \
+									}
+
 
 // macros for exception handling of worker threads
 #define MAIN_SERVER_WORKER_BEGIN	try {
@@ -173,6 +180,10 @@ namespace crawlservpp::Main {
 		std::vector<bool> workersRunning;
 		mutable std::mutex workersLock;
 
+		// pointer to information for basic commands
+		rapidjson::Document cmdJson;
+		std::string cmdIp;
+
 		// access to hard-coded constants
 		const std::string dirCache;
 		const std::string dirCookies;
@@ -191,6 +202,7 @@ namespace crawlservpp::Main {
 				bool& threadStartedTo,
 				bool& fileDownloadTo
 		);
+		bool cmd(const std::string& name, ServerCommandResponse& response);
 
 		// set server status
 		void setStatus(const std::string& statusString);
@@ -204,71 +216,68 @@ namespace crawlservpp::Main {
 				void * data
 		);
 
-		// static helper function for the class
-		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
-
 		// server commands used by Server::cmd(...) only
-		ServerCommandResponse cmdKill(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdAllow(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdDisallow(const std::string& ip);
+		ServerCommandResponse cmdKill();
+		ServerCommandResponse cmdAllow();
+		ServerCommandResponse cmdDisallow();
 
-		ServerCommandResponse cmdLog(const rapidjson::Document& json);
-		ServerCommandResponse cmdClearLog(const rapidjson::Document& jsonts, const std::string& ip);
+		ServerCommandResponse cmdLog();
+		ServerCommandResponse cmdClearLogs();
 
-		ServerCommandResponse cmdStartCrawler(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdPauseCrawler(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdUnpauseCrawler(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdStopCrawler(const rapidjson::Document& json, const std::string& ip);
+		ServerCommandResponse cmdStartCrawler();
+		ServerCommandResponse cmdPauseCrawler();
+		ServerCommandResponse cmdUnpauseCrawler();
+		ServerCommandResponse cmdStopCrawler();
 
-		ServerCommandResponse cmdStartParser(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdPauseParser(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdUnpauseParser(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdStopParser(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdResetParsingStatus(const rapidjson::Document& json);
+		ServerCommandResponse cmdStartParser();
+		ServerCommandResponse cmdPauseParser();
+		ServerCommandResponse cmdUnpauseParser();
+		ServerCommandResponse cmdStopParser();
+		ServerCommandResponse cmdResetParsingStatus();
 
-		ServerCommandResponse cmdStartExtractor(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdPauseExtractor(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdUnpauseExtractor(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdStopExtractor(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdResetExtractingStatus(const rapidjson::Document& json);
+		ServerCommandResponse cmdStartExtractor();
+		ServerCommandResponse cmdPauseExtractor();
+		ServerCommandResponse cmdUnpauseExtractor();
+		ServerCommandResponse cmdStopExtractor();
+		ServerCommandResponse cmdResetExtractingStatus();
 
-		ServerCommandResponse cmdStartAnalyzer(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdPauseAnalyzer(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdUnpauseAnalyzer(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdStopAnalyzer(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdResetAnalyzingStatus(const rapidjson::Document& json);
+		ServerCommandResponse cmdStartAnalyzer();
+		ServerCommandResponse cmdPauseAnalyzer();
+		ServerCommandResponse cmdUnpauseAnalyzer();
+		ServerCommandResponse cmdStopAnalyzer();
+		ServerCommandResponse cmdResetAnalyzingStatus();
 
-		ServerCommandResponse cmdPauseAll(const std::string& ip);
-		ServerCommandResponse cmdUnpauseAll(const std::string& ip);
+		ServerCommandResponse cmdPauseAll();
+		ServerCommandResponse cmdUnpauseAll();
 
-		ServerCommandResponse cmdAddWebsite(const rapidjson::Document& json);
-		ServerCommandResponse cmdUpdateWebsite(const rapidjson::Document& json);
-		ServerCommandResponse cmdDeleteWebsite(const rapidjson::Document& json, const std::string& ip);
-		ServerCommandResponse cmdDuplicateWebsite(const rapidjson::Document& json);
+		ServerCommandResponse cmdAddWebsite();
+		ServerCommandResponse cmdUpdateWebsite();
+		ServerCommandResponse cmdDeleteWebsite();
+		ServerCommandResponse cmdDuplicateWebsite();
 
-		ServerCommandResponse cmdAddUrlList(const rapidjson::Document& json);
-		ServerCommandResponse cmdUpdateUrlList(const rapidjson::Document& json);
-		ServerCommandResponse cmdDeleteUrlList(const rapidjson::Document& json, const std::string& ip);
+		ServerCommandResponse cmdAddUrlList();
+		ServerCommandResponse cmdUpdateUrlList();
+		ServerCommandResponse cmdDeleteUrlList();
+
+		ServerCommandResponse cmdAddQuery();
+		ServerCommandResponse cmdUpdateQuery();
+		ServerCommandResponse cmdDeleteQuery();
+		ServerCommandResponse cmdDuplicateQuery();
+
+		ServerCommandResponse cmdAddConfig();
+		ServerCommandResponse cmdUpdateConfig();
+		ServerCommandResponse cmdDeleteConfig();
+		ServerCommandResponse cmdDuplicateConfig();
+
+		ServerCommandResponse cmdWarp();
+
+		ServerCommandResponse cmdDownload();
 
 		void cmdImport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
 		void cmdMerge(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
 		void cmdExport(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
 
-		ServerCommandResponse cmdAddQuery(const rapidjson::Document& json);
-		ServerCommandResponse cmdUpdateQuery(const rapidjson::Document& json);
-		ServerCommandResponse cmdDeleteQuery(const rapidjson::Document& json);
-		ServerCommandResponse cmdDuplicateQuery(const rapidjson::Document& json);
-
 		void cmdTestQuery(ConnectionPtr connection, unsigned long threadIndex, const std::string& message);
-
-		ServerCommandResponse cmdAddConfig(const rapidjson::Document& json);
-		ServerCommandResponse cmdUpdateConfig(const rapidjson::Document& json);
-		ServerCommandResponse cmdDeleteConfig(const rapidjson::Document& json);
-		ServerCommandResponse cmdDuplicateConfig(const rapidjson::Document& json);
-
-		ServerCommandResponse cmdWarp(const rapidjson::Document& json);
-
-		ServerCommandResponse cmdDownload(const rapidjson::Document& json);
 
 		// private helper functions
 		static bool workerBegin(
@@ -282,6 +291,9 @@ namespace crawlservpp::Main {
 				const std::string& message,
 				const ServerCommandResponse& response
 		);
+
+		// private static helper functions
+		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
 		static std::string generateReply(const ServerCommandResponse& response, const std::string& msgBody);
 	};
 

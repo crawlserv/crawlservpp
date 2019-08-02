@@ -566,15 +566,13 @@ namespace crawlservpp::Main {
 			if(!connection)
 				throw Exception("Server::cmd(): No connection specified");
 
-			const std::string ip(WebServer::getIP(connection));
+			this->cmdIp = WebServer::getIP(connection);
 
 			// parse JSON
-			rapidjson::Document json;
-
 			try {
-				json = Helper::Json::parseRapid(msgBody);
+				this->cmdJson = Helper::Json::parseRapid(msgBody);
 
-				if(!json.IsObject())
+				if(!(this->cmdJson.IsObject()))
 					response = ServerCommandResponse::failed("Parsed JSON is not an object.");
 			}
 			catch(const JsonException& e) {
@@ -583,202 +581,105 @@ namespace crawlservpp::Main {
 
 			if(!response.fail){
 				// get server command
-				if(json.HasMember("cmd")) {
-					if(json["cmd"].IsString()) {
+				if(this->cmdJson.HasMember("cmd")) {
+					if(this->cmdJson["cmd"].IsString()) {
 						try {
 							// handle server commands
 							const std::string command(
-									json["cmd"].GetString(),
-									json["cmd"].GetStringLength()
+									this->cmdJson["cmd"].GetString(),
+									this->cmdJson["cmd"].GetStringLength()
 							);
 
-							if(command == "kill")
-								response = this->cmdKill(json, ip);
-							else if(command == "allow")
-								response = this->cmdAllow(json, ip);
-							else if(command == "disallow")
-								response = this->cmdDisallow(ip);
+							if(!(this->cmd(command, response))) {
+								if(command == "import") {
+									// create a worker thread for importing (to not block the server)
+									{
+										std::lock_guard<std::mutex> workersLocked(this->workersLock);
 
-							else if(command == "log")
-								response = this->cmdLog(json);
-							else if(command == "clearlogs")
-								response = this->cmdClearLog(json, ip);
+										this->workersRunning.push_back(true);
 
-							else if(command == "startcrawler")
-								response = this->cmdStartCrawler(json, ip);
-							else if(command == "pausecrawler")
-								response = this->cmdPauseCrawler(json, ip);
-							else if(command == "unpausecrawler")
-								response = this->cmdUnpauseCrawler(json, ip);
-							else if(command == "stopcrawler")
-								response = this->cmdStopCrawler(json, ip);
+										this->workers.emplace_back(
+												&Server::cmdImport,
+												this,
+												connection,
+												this->workers.size(),
+												msgBody
+										);
+									}
 
-							else if(command == "startparser")
-								response = this->cmdStartParser(json, ip);
-							else if(command == "pauseparser")
-								response = this->cmdPauseParser(json, ip);
-							else if(command == "unpauseparser")
-								response = this->cmdUnpauseParser(json, ip);
-							else if(command == "stopparser")
-								response = this->cmdStopParser(json, ip);
-							else if(command == "resetparsingstatus")
-								response = this->cmdResetParsingStatus(json);
-
-							else if(command == "startextractor")
-								response = this->cmdStartExtractor(json, ip);
-							else if(command == "pauseextractor")
-								response = this->cmdPauseExtractor(json, ip);
-							else if(command == "unpauseextractor")
-								response = this->cmdUnpauseExtractor(json, ip);
-							else if(command == "stopextractor")
-								response = this->cmdStopExtractor(json, ip);
-							else if(command == "resetextractingstatus")
-								response = this->cmdResetExtractingStatus(json);
-
-							else if(command == "startanalyzer")
-								response = this->cmdStartAnalyzer(json, ip);
-							else if(command == "pauseanalyzer")
-								response = this->cmdPauseAnalyzer(json, ip);
-							else if(command == "unpauseanalyzer")
-								response = this->cmdUnpauseAnalyzer(json, ip);
-							else if(command == "stopanalyzer")
-								response = this->cmdStopAnalyzer(json, ip);
-							else if(command == "resetanalyzingstatus")
-								response = this->cmdResetAnalyzingStatus(json);
-
-							else if(command == "pauseall")
-								response = this->cmdPauseAll(ip);
-							else if(command == "unpauseall")
-								response = this->cmdUnpauseAll(ip);
-
-							else if(command == "addwebsite")
-								response = this->cmdAddWebsite(json);
-							else if(command == "updatewebsite")
-								response = this->cmdUpdateWebsite(json);
-							else if(command == "deletewebsite")
-								response = this->cmdDeleteWebsite(json, ip);
-							else if(command == "duplicatewebsite")
-								response = this->cmdDuplicateWebsite(json);
-
-							else if(command == "addurllist")
-								response = this->cmdAddUrlList(json);
-							else if(command == "updateurllist")
-								response = this->cmdUpdateUrlList(json);
-							else if(command == "deleteurllist")
-								response = this->cmdDeleteUrlList(json, ip);
-
-							else if(command == "import") {
-								// create a worker thread for importing (to not block the server)
-								{
-									std::lock_guard<std::mutex> workersLocked(this->workersLock);
-
-									this->workersRunning.push_back(true);
-
-									this->workers.emplace_back(
-											&Server::cmdImport,
-											this,
-											connection,
-											this->workers.size(),
-											msgBody
-									);
+									threadStartedTo = true;
 								}
+								else if(command == "merge") {
+									// create a worker thread for merging (to not block the server)
+									{
+										std::lock_guard<std::mutex> workersLocked(this->workersLock);
 
-								threadStartedTo = true;
-							}
-							else if(command == "merge") {
-								// create a worker thread for merging (to not block the server)
-								{
-									std::lock_guard<std::mutex> workersLocked(this->workersLock);
+										this->workersRunning.push_back(true);
 
-									this->workersRunning.push_back(true);
+										this->workers.emplace_back(
+												&Server::cmdMerge,
+												this,
+												connection,
+												this->workers.size(),
+												msgBody
+										);
+									}
 
-									this->workers.emplace_back(
-											&Server::cmdMerge,
-											this, connection,
-											this->workers.size(),
-											msgBody
-									);
+									threadStartedTo = true;
 								}
+								else if(command == "export") {
+									// create a worker thread for exporting (to not block the server)
+									{
+										std::lock_guard<std::mutex> workersLocked(this->workersLock);
 
-								threadStartedTo = true;
-							}
-							else if(command == "export") {
-								// create a worker thread for exporting (to not block the server)
-								{
-									std::lock_guard<std::mutex> workersLocked(this->workersLock);
+										this->workersRunning.push_back(true);
 
-									this->workersRunning.push_back(true);
+										this->workers.emplace_back(
+												&Server::cmdExport,
+												this,
+												connection,
+												this->workers.size(),
+												msgBody
+										);
+									}
 
-									this->workers.emplace_back(
-											&Server::cmdExport,
-											this,
-											connection,
-											this->workers.size(),
-											msgBody
-									);
+									threadStartedTo = true;
 								}
+								else if(command == "testquery") {
+									// create a worker thread for testing query (to not block the server)
+									{
+										std::lock_guard<std::mutex> workersLocked(this->workersLock);
 
-								threadStartedTo = true;
-							}
+										this->workersRunning.push_back(true);
 
-							else if(command == "addquery")
-								response = this->cmdAddQuery(json);
-							else if(command == "updatequery")
-								response = this->cmdUpdateQuery(json);
-							else if(command == "deletequery")
-								response = this->cmdDeleteQuery(json);
-							else if(command == "duplicatequery")
-								response = this->cmdDuplicateQuery(json);
+										this->workers.emplace_back(
+												&Server::cmdTestQuery,
+												this,
+												connection,
+												this->workers.size(),
+												msgBody
+										);
+									}
 
-							else if(command == "testquery") {
-								// create a worker thread for testing query (to not block the server)
-								{
-									std::lock_guard<std::mutex> workersLocked(this->workersLock);
-
-									this->workersRunning.push_back(true);
-
-									this->workers.emplace_back(
-											&Server::cmdTestQuery,
-											this, connection,
-											this->workers.size(),
-											msgBody
-									);
+									threadStartedTo = true;
 								}
+								else if(command == "download") {
+									response = this->cmdDownload();
 
-								threadStartedTo = true;
-							}
+									if(!response.fail) {
+										fileDownloadTo = true;
 
-							else if(command == "addconfig")
-								response = this->cmdAddConfig(json);
-							else if(command == "updateconfig")
-								response = this->cmdUpdateConfig(json);
-							else if(command == "deleteconfig")
-								response = this->cmdDeleteConfig(json);
-							else if(command == "duplicateconfig")
-								response = this->cmdDuplicateConfig(json);
-
-							else if(command == "warp")
-								response = this->cmdWarp(json);
-
-							else if(command == "download") {
-								response = this->cmdDownload(json);
-
-								if(!response.fail) {
-									fileDownloadTo = true;
-
-									return response.text;
+										return response.text;
+									}
 								}
+								else if(command == "ping")
+									response = ServerCommandResponse("pong");
+								else if(!command.empty())
+									// unknown command: debug the command and its arguments
+									response = ServerCommandResponse::failed("Unknown command \'" + command + "\'.");
+								else
+									response = ServerCommandResponse::failed("Empty command.");
 							}
-
-							else if(command == "ping")
-								response = ServerCommandResponse("pong");
-
-							else if(!command.empty())
-								// unknown command: debug the command and its arguments
-								response = ServerCommandResponse::failed("Unknown command \'" + command + "\'.");
-
-							else
-								response = ServerCommandResponse::failed("Empty command.");
 						}
 						catch(const std::exception &e) {
 							// exceptions caused by server commands should not kill the server
@@ -794,10 +695,73 @@ namespace crawlservpp::Main {
 				else
 					response = ServerCommandResponse::failed("No command specified.");
 			}
+
+			// clear IP and JSON
+			std::string().swap(this->cmdIp);
+
+			rapidjson::Value(rapidjson::kObjectType).Swap(this->cmdJson);
 		}
 
 		// return the reply
 		return Server::generateReply(response, msgBody);
+	}
+
+	// perform a basic server command, return whether such a command has been found, throws Main::Exception
+	//  NOTE: Server::cmdJson and Server::cmdIp need to be set!
+	bool Server::cmd(const std::string& name, ServerCommandResponse& response) {
+		MAIN_SERVER_BASIC_CMD("kill", this->cmdKill);
+		MAIN_SERVER_BASIC_CMD("allow", this->cmdAllow);
+		MAIN_SERVER_BASIC_CMD("disallow", this->cmdDisallow);
+
+		MAIN_SERVER_BASIC_CMD("log", this->cmdLog);
+		MAIN_SERVER_BASIC_CMD("clearlogs", this->cmdClearLogs);
+
+		MAIN_SERVER_BASIC_CMD("startcrawler", this->cmdStartCrawler);
+		MAIN_SERVER_BASIC_CMD("pausecrawler", this->cmdPauseCrawler);
+		MAIN_SERVER_BASIC_CMD("unpausecrawler", this->cmdUnpauseCrawler);
+		MAIN_SERVER_BASIC_CMD("stopcrawler", this->cmdStopCrawler);
+
+		MAIN_SERVER_BASIC_CMD("startparser", this->cmdStartParser);
+		MAIN_SERVER_BASIC_CMD("pauseparser", this->cmdPauseParser);
+		MAIN_SERVER_BASIC_CMD("unpauseparser", this->cmdUnpauseParser);
+		MAIN_SERVER_BASIC_CMD("stopparser", this->cmdStopParser);
+		MAIN_SERVER_BASIC_CMD("resetparsingstatus", this->cmdResetParsingStatus);
+
+		MAIN_SERVER_BASIC_CMD("startextractor", this->cmdStartExtractor);
+		MAIN_SERVER_BASIC_CMD("pauseextractor", this->cmdPauseExtractor);
+		MAIN_SERVER_BASIC_CMD("unpauseextractor", this->cmdUnpauseExtractor);
+		MAIN_SERVER_BASIC_CMD("stopextractor", this->cmdStopExtractor);
+		MAIN_SERVER_BASIC_CMD("resetextractingstatus", this->cmdResetExtractingStatus);
+
+		MAIN_SERVER_BASIC_CMD("startanalyzer", this->cmdStartAnalyzer);
+		MAIN_SERVER_BASIC_CMD("pauseanalyzer", this->cmdPauseAnalyzer);
+		MAIN_SERVER_BASIC_CMD("unpauseanalyzer", this->cmdUnpauseAnalyzer);
+		MAIN_SERVER_BASIC_CMD("stopanalyzer", this->cmdStopAnalyzer);
+		MAIN_SERVER_BASIC_CMD("resetanalyzingstatus", this->cmdResetAnalyzingStatus);
+
+		MAIN_SERVER_BASIC_CMD("pauseall", this->cmdPauseAll);
+		MAIN_SERVER_BASIC_CMD("unpauseall", this->cmdUnpauseAll);
+
+		MAIN_SERVER_BASIC_CMD("addwebsite", this->cmdAddWebsite);
+		MAIN_SERVER_BASIC_CMD("updatewebsite", this->cmdUpdateWebsite);
+		MAIN_SERVER_BASIC_CMD("deletewebsite", this->cmdDeleteWebsite);
+		MAIN_SERVER_BASIC_CMD("duplicatewebsite", this->cmdDuplicateWebsite);
+
+		MAIN_SERVER_BASIC_CMD("addurllist", this->cmdAddUrlList);
+		MAIN_SERVER_BASIC_CMD("updateurllist", this->cmdUpdateUrlList);
+		MAIN_SERVER_BASIC_CMD("deleteurllist", this->cmdDeleteUrlList);
+		MAIN_SERVER_BASIC_CMD("addquery", this->cmdAddQuery);
+		MAIN_SERVER_BASIC_CMD("updatequery", this->cmdUpdateQuery);
+		MAIN_SERVER_BASIC_CMD("deletequery", this->cmdDeleteQuery);
+		MAIN_SERVER_BASIC_CMD("duplicatequery", this->cmdDuplicateQuery);
+		MAIN_SERVER_BASIC_CMD("addconfig", this->cmdAddConfig);
+		MAIN_SERVER_BASIC_CMD("updateconfig", this->cmdUpdateConfig);
+		MAIN_SERVER_BASIC_CMD("deleteconfig", this->cmdDeleteConfig);
+		MAIN_SERVER_BASIC_CMD("duplicateconfig", this->cmdDuplicateConfig);
+
+		MAIN_SERVER_BASIC_CMD("warp", this->cmdWarp);
+
+		return false;
 	}
 
 	// set status of the server
@@ -915,76 +879,15 @@ namespace crawlservpp::Main {
 			this->webServer.send(connection, 200, "", "");
 	}
 
-	// static helper function: get algorithm ID from configuration JSON, throws Main::Exception
-	unsigned int Server::getAlgoFromConfig(const rapidjson::Document& json) {
-		unsigned int result = 0;
-
-		if(!json.IsArray())
-			throw Exception("Server::getAlgoFromConfig(): Configuration is no array");
-
-		// go through all array items i.e. configuration entries
-		for(const auto& item : json.GetArray()) {
-			bool algoItem = false;
-
-			if(item.IsObject()) {
-				// go through all item properties
-				for(const auto& property : item.GetObject()) {
-					if(property.name.IsString()) {
-						const std::string itemName(
-								property.name.GetString(),
-								property.name.GetStringLength()
-						);
-
-						if(itemName == "name") {
-							if(property.value.IsString()) {
-								if(
-										std::string(
-												property.value.GetString(),
-												property.value.GetStringLength()
-										) == "_algo"
-								) {
-									algoItem = true;
-
-									if(result)
-										break;
-								}
-								else
-									break;
-							}
-						}
-						else if(itemName == "value") {
-							if(property.value.IsUint()) {
-								result = property.value.GetUint();
-
-								if(algoItem)
-									break;
-							}
-						}
-					}
-				}
-
-				if(algoItem)
-					break;
-				else
-					result = 0;
-			}
-		}
-
-		return result;
-	}
-
 	// server command kill: kill the server
-	Server::ServerCommandResponse Server::cmdKill(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdKill() {
 		// kill needs to be confirmed
-		if(json.HasMember("confirmed")) {
+		if(this->cmdJson.HasMember("confirmed")) {
 			// kill server
 			this->running = false;
 
 			// kill is a logged command
-			this->database.log("killed by " + ip + ".");
+			this->database.log("killed by " + this->cmdIp + ".");
 
 			// send bye message
 			return ServerCommandResponse("Bye bye.");
@@ -994,65 +897,61 @@ namespace crawlservpp::Main {
 	}
 
 	// server command allow(ip): allow acces for the specified IP(s)
-	Server::ServerCommandResponse Server::cmdAllow(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdAllow() {
 		// get argument
-		if(!json.HasMember("ip"))
+		if(!(this->cmdJson.HasMember("ip")))
 			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is missing).");
 
-		if(!json["ip"].IsString())
+		if(!(this->cmdJson["ip"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is not a string).");
 
 		const std::string toAllow(
-				json["ip"].GetString(),
-				json["ip"].GetStringLength()
+				this->cmdJson["ip"].GetString(),
+				this->cmdJson["ip"].GetStringLength()
 		);
 
 		if(toAllow.empty())
 			return ServerCommandResponse::failed("Invalid arguments (\'ip\' is empty).");
 
 		// allow needs to be confirmed
-		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse::toBeConfirmed(
-					"Do you really want to allow " + toAllow + " access to the server?"
-			);
+		if(this->cmdJson.HasMember("confirmed")) {
+			// add IP(s)
+			this->allowed += "," + toAllow;
 
-		// add IP(s)
-		this->allowed += "," + toAllow;
+			// allow is a logged command
+			this->database.log(toAllow + " allowed by " + this->cmdIp + ".");
 
-		// allow is a logged command
-		this->database.log(toAllow + " allowed by " + ip + ".");
+			return ServerCommandResponse("Allowed IPs: " + this->allowed + ".");
+		}
 
-		return ServerCommandResponse("Allowed IPs: " + this->allowed + ".");
+		return ServerCommandResponse::toBeConfirmed(
+				"Do you really want to allow " + toAllow + " access to the server?"
+		);
 	}
 
 	// server command disallow: revoke access from all except the initial IP(s) specified by the configuration file
-	Server::ServerCommandResponse Server::cmdDisallow(
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdDisallow() {
 		// reset alled IP(s)
 		this->allowed = this->settings.allowedClients;
 
 		// disallow is a logged command
-		this->database.log("Allowed IPs reset by " + ip + ".");
+		this->database.log("Allowed IPs reset by " + this->cmdIp + ".");
 
 		return ServerCommandResponse("Allowed IP(s): " + this->allowed + ".");
 	}
 
 	// server command log(entry): write a log entry by the frontend into the database
-	Server::ServerCommandResponse Server::cmdLog(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdLog() {
 		// get argument
-		if(!json.HasMember("entry"))
+		if(!(this->cmdJson.HasMember("entry")))
 			return ServerCommandResponse::failed("Invalid arguments (\'entry\' is missing).");
 
-		if(!json["entry"].IsString())
+		if(!(this->cmdJson["entry"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'entry\' is not a string).");
 
 		const std::string entry(
-				json["entry"].GetString(),
-				json["entry"].GetStringLength()
+				this->cmdJson["entry"].GetString(),
+				this->cmdJson["entry"].GetStringLength()
 		);
 
 		// write log entry
@@ -1063,10 +962,7 @@ namespace crawlservpp::Main {
 
 	// server command clearlog([module]):	remove all log entries or the log entries of a specific module
 	// 										(or all log entries when module is empty/not given)
-	Server::ServerCommandResponse Server::cmdClearLog(
-			const rapidjson::Document& json,
-			const std::string& ip
-		) {
+	Server::ServerCommandResponse Server::cmdClearLogs() {
 		// check whether the clearing of logs is allowed
 		if(!(this->settings.logsDeletable))
 			return ServerCommandResponse::failed("Not allowed.");
@@ -1074,83 +970,80 @@ namespace crawlservpp::Main {
 		// get argument
 		std::string module;
 
-		if(json.HasMember("module") && json["module"].IsString())
+		if(this->cmdJson.HasMember("module") && this->cmdJson["module"].IsString())
 			module = std::string(
-					json["module"].GetString(),
-					json["module"].GetStringLength()
+					this->cmdJson["module"].GetString(),
+					this->cmdJson["module"].GetStringLength()
 			);
 
 		// clearlog needs to be confirmed
-		if(!json.HasMember("confirmed")) {
-			std::ostringstream replyStrStr;
+		if(this->cmdJson.HasMember("confirmed")) {
+			this->database.clearLogs(module);
 
-			replyStrStr << "Are you sure to delete ";
+			// clearlog is a logged command
+			if(!module.empty()) {
+				this->database.log("Logs of " + module + " cleared by " + this->cmdIp + ".");
 
-			const unsigned long num = this->database.getNumberOfLogEntries(module);
-
-			switch(num) {
-			case 0:
-				return ServerCommandResponse("No log entries to delete.");
-
-			case 1:
-				replyStrStr << "one log entry";
-				break;
-
-			default:
-				replyStrStr.imbue(std::locale(""));
-
-				replyStrStr << num << " log entries";
+				return ServerCommandResponse("Logs of " + module + " cleared.");
 			}
 
-			replyStrStr << "?";
+			this->database.log("All logs cleared by " + this->cmdIp + ".");
 
-			return ServerCommandResponse::toBeConfirmed(replyStrStr.str());
+			return ServerCommandResponse("All logs cleared.");
 		}
 
-		this->database.clearLogs(module);
+		std::ostringstream replyStrStr;
 
-		// clearlog is a logged command
-		if(!module.empty()) {
-			this->database.log("Logs of " + module + " cleared by " + ip + ".");
+		replyStrStr << "Are you sure to delete ";
 
-			return ServerCommandResponse("Logs of " + module + " cleared.");
+		const unsigned long num = this->database.getNumberOfLogEntries(module);
+
+		switch(num) {
+		case 0:
+			return ServerCommandResponse("No log entries to delete.");
+
+		case 1:
+			replyStrStr << "one log entry";
+			break;
+
+		default:
+			replyStrStr.imbue(std::locale(""));
+
+			replyStrStr << num << " log entries";
 		}
 
-		this->database.log("All logs cleared by " + ip + ".");
+		replyStrStr << "?";
 
-		return ServerCommandResponse("All logs cleared.");
+		return ServerCommandResponse::toBeConfirmed(replyStrStr.str());
 	}
 
 	// server command startcrawler(website, urllist, config):
 	//  start a crawler using the specified website, URL list and configuration
-	Server::ServerCommandResponse Server::cmdStartCrawler(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStartCrawler() {
 		// get arguments
-		if(!json.HasMember("website"))
+		if(!(this->cmdJson.HasMember("website")))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
-		if(!json["website"].IsUint64())
+		if(!(this->cmdJson["website"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		if(!json.HasMember("urllist"))
+		if(!(this->cmdJson.HasMember("urllist")))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
-		if(!json["urllist"].IsUint64())
+		if(!(this->cmdJson["urllist"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		if(!json.HasMember("config"))
+		if(!(this->cmdJson.HasMember("config")))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
-		if(!json["config"].IsUint64())
+		if(!(this->cmdJson["config"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
 		const ThreadOptions options(
 				"crawler",
-				json["website"].GetUint64(),
-				json["urllist"].GetUint64(),
-				json["config"].GetUint64()
+				this->cmdJson["website"].GetUint64(),
+				this->cmdJson["urllist"].GetUint64(),
+				this->cmdJson["config"].GetUint64()
 		);
 
 		// check arguments
@@ -1196,7 +1089,7 @@ namespace crawlservpp::Main {
 				"crawler #"
 				+ std::to_string(this->crawlers.back()->Module::Thread::getId())
 				+ " started by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1204,18 +1097,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command pausecrawler(id): pause a crawler by its ID
-	Server::ServerCommandResponse Server::cmdPauseCrawler(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdPauseCrawler() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find crawler
 		auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
@@ -1239,7 +1129,7 @@ namespace crawlservpp::Main {
 				"crawler #"
 				+ std::to_string(id)
 				+ " paused by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1247,18 +1137,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command unpausecrawler(id): unpause a crawler by its ID
-	Server::ServerCommandResponse Server::cmdUnpauseCrawler(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdUnpauseCrawler() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find crawler
 		auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
@@ -1282,7 +1169,7 @@ namespace crawlservpp::Main {
 				"crawler #"
 				+ std::to_string(id)
 				+ " unpaused by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1290,18 +1177,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command stopcrawler(id): stop a crawler by its ID
-	Server::ServerCommandResponse Server::cmdStopCrawler(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStopCrawler() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find crawler
 		auto i = std::find_if(this->crawlers.begin(), this->crawlers.end(),
@@ -1325,7 +1209,7 @@ namespace crawlservpp::Main {
 				"crawler #"
 				+ std::to_string(id)
 				+ " stopped by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1334,34 +1218,31 @@ namespace crawlservpp::Main {
 
 	// server command startparser(website, urllist, config):
 	//  start a parser using the specified website, URL list and configuration
-	Server::ServerCommandResponse Server::cmdStartParser(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStartParser() {
 		// get arguments
-		if(!json.HasMember("website"))
+		if(!(this->cmdJson.HasMember("website")))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
-		if(!json["website"].IsUint64())
+		if(!(this->cmdJson["website"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		if(!json.HasMember("urllist"))
+		if(!(this->cmdJson.HasMember("urllist")))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
-		if(!json["urllist"].IsUint64())
+		if(!(this->cmdJson["urllist"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		if(!json.HasMember("config"))
+		if(!(this->cmdJson.HasMember("config")))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
-		if(!json["config"].IsUint64())
+		if(!(this->cmdJson["config"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
 		const ThreadOptions options(
 				"parser",
-				json["website"].GetUint64(),
-				json["urllist"].GetUint64(),
-				json["config"].GetUint64()
+				this->cmdJson["website"].GetUint64(),
+				this->cmdJson["urllist"].GetUint64(),
+				this->cmdJson["config"].GetUint64()
 		);
 
 		// check arguments
@@ -1406,7 +1287,7 @@ namespace crawlservpp::Main {
 				"parser #"
 				+ std::to_string(this->parsers.back()->Module::Thread::getId())
 				+ " started by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1414,18 +1295,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command pauseparser(id): pause a parser by its ID
-	Server::ServerCommandResponse Server::cmdPauseParser(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdPauseParser() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find parser
 		auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
@@ -1449,7 +1327,7 @@ namespace crawlservpp::Main {
 				"parser #"
 				+ std::to_string(id)
 				+ " paused by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1457,18 +1335,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command unpauseparser(id): unpause a parser by its ID
-	Server::ServerCommandResponse Server::cmdUnpauseParser(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdUnpauseParser() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find parser
 		auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
@@ -1492,7 +1367,7 @@ namespace crawlservpp::Main {
 				"parser #"
 				+ std::to_string(id)
 				+ " unpaused by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1500,18 +1375,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command stopparser(id): stop a parser by its ID
-	Server::ServerCommandResponse Server::cmdStopParser(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStopParser() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find parser
 		auto i = std::find_if(this->parsers.begin(), this->parsers.end(),
@@ -1535,7 +1407,7 @@ namespace crawlservpp::Main {
 				"parser #"
 				+ std::to_string(id)
 				+ " stopped by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1543,56 +1415,54 @@ namespace crawlservpp::Main {
 	}
 
 	// server command resetparsingstatus(urllist): reset the parsing status of a ID-specificed URL list
-	Server::ServerCommandResponse Server::cmdResetParsingStatus(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdResetParsingStatus() {
 		// get argument
-		if(!json.HasMember("urllist"))
+		if(!(this->cmdJson.HasMember("urllist")))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
-		if(!json["urllist"].IsUint64())
+		if(!(this->cmdJson["urllist"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		// resetparsingstatus needs to be confirmed
-		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse::toBeConfirmed(
-					"Are you sure that you want to reset the parsing status of this URL list?"
-			);
+		if(this->cmdJson.HasMember("confirmed")) {
+			// reset parsing status
+			this->database.resetParsingStatus(this->cmdJson["urllist"].GetUint64());
 
-		// reset parsing status
-		this->database.resetParsingStatus(json["urllist"].GetUint64());
+			return ServerCommandResponse("Parsing status reset.");
+		}
 
-		return ServerCommandResponse("Parsing status reset.");
+		return ServerCommandResponse::toBeConfirmed(
+				"Are you sure that you want to reset the parsing status of this URL list?"
+		);
 	}
 
 	// server command startextractor(website, urllist, config):
 	//  start an extractor using the specified website, URL list and configuration
-	Server::ServerCommandResponse Server::cmdStartExtractor(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStartExtractor() {
 		// get arguments
-		if(!json.HasMember("website"))
+		if(!(this->cmdJson.HasMember("website")))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
-		if(!json["website"].IsUint64())
+		if(!(this->cmdJson["website"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		if(!json.HasMember("urllist"))
+		if(!(this->cmdJson.HasMember("urllist")))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
-		if(!json["urllist"].IsUint64())
+		if(!(this->cmdJson["urllist"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		if(!json.HasMember("config"))
+		if(!(this->cmdJson.HasMember("config")))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
-		if(!json["config"].IsUint64())
+		if(!(this->cmdJson["config"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
 		const ThreadOptions options(
 				"extractor",
-				json["website"].GetUint64(),
-				json["urllist"].GetUint64(),
-				json["config"].GetUint64()
+				this->cmdJson["website"].GetUint64(),
+				this->cmdJson["urllist"].GetUint64(),
+				this->cmdJson["config"].GetUint64()
 		);
 
 		// check arguments
@@ -1638,7 +1508,7 @@ namespace crawlservpp::Main {
 				"extractor #"
 				+ std::to_string(this->extractors.back()->Module::Thread::getId())
 				+ " started by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1646,18 +1516,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command pauseextractor(id): pause an extractor by its ID
-	Server::ServerCommandResponse Server::cmdPauseExtractor(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdPauseExtractor() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find extractor
 		auto i = std::find_if(this->extractors.begin(), this->extractors.end(),
@@ -1681,7 +1548,7 @@ namespace crawlservpp::Main {
 				"extractor #"
 				+ std::to_string(id)
 				+ " paused by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1689,18 +1556,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command unpauseextractor(id): unpause an extractor by its ID
-	Server::ServerCommandResponse Server::cmdUnpauseExtractor(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdUnpauseExtractor() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find extractor
 		auto i = std::find_if(this->extractors.begin(), this->extractors.end(),
@@ -1724,7 +1588,7 @@ namespace crawlservpp::Main {
 				"extractor #"
 				+ std::to_string(id)
 				+ " unpaused by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1732,18 +1596,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command stopextractor(id): stop an extractor by its ID
-	Server::ServerCommandResponse Server::cmdStopExtractor(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStopExtractor() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find extractor
 		auto i = std::find_if(this->extractors.begin(), this->extractors.end(),
@@ -1767,7 +1628,7 @@ namespace crawlservpp::Main {
 				"extractor #"
 				+ std::to_string(id)
 				+ " stopped by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1775,56 +1636,54 @@ namespace crawlservpp::Main {
 	}
 
 	// server command resetextractingstatus(urllist): reset the parsing status of a ID-specificed URL list
-	Server::ServerCommandResponse Server::cmdResetExtractingStatus(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdResetExtractingStatus() {
 		// get argument
-		if(!json.HasMember("urllist"))
+		if(!(this->cmdJson.HasMember("urllist")))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
-		if(!json["urllist"].IsUint64())
+		if(!(this->cmdJson["urllist"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		// resetextractingstatus needs to be confirmed
-		if(!json.HasMember("confirmed"))
-				return ServerCommandResponse::toBeConfirmed(
-						"Are you sure that you want to reset the extracting status of this URL list?"
-				);
+		if(this->cmdJson.HasMember("confirmed")) {
+			// reset extracting status
+			this->database.resetExtractingStatus(this->cmdJson["urllist"].GetUint64());
 
-		// reset extracting status
-		this->database.resetExtractingStatus(json["urllist"].GetUint64());
+			return ServerCommandResponse("Extracting status reset.");
+		}
 
-		return ServerCommandResponse("Extracting status reset.");
+		return ServerCommandResponse::toBeConfirmed(
+				"Are you sure that you want to reset the extracting status of this URL list?"
+		);
 	}
 
 	// server command startanalyzer(website, urllist, config):
 	//  start an analyzer using the specified website, URL list, module and configuration
-	Server::ServerCommandResponse Server::cmdStartAnalyzer(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStartAnalyzer() {
 		// get arguments
-		if(!json.HasMember("website"))
+		if(!(this->cmdJson.HasMember("website")))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
-		if(!json["website"].IsUint64())
+		if(!(this->cmdJson["website"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		if(!json.HasMember("urllist"))
+		if(!(this->cmdJson.HasMember("urllist")))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
-		if(!json["urllist"].IsUint64())
+		if(!(this->cmdJson["urllist"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
-		if(!json.HasMember("config"))
+		if(!(this->cmdJson.HasMember("config")))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
 
-		if(!json["config"].IsUint64())
+		if(!(this->cmdJson["config"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a valid number).");
 
 		const ThreadOptions options(
 				"analyzer",
-				json["website"].GetUint64(),
-				json["urllist"].GetUint64(),
-				json["config"].GetUint64()
+				this->cmdJson["website"].GetUint64(),
+				this->cmdJson["urllist"].GetUint64(),
+				this->cmdJson["config"].GetUint64()
 		);
 
 		// check arguments
@@ -1904,7 +1763,7 @@ namespace crawlservpp::Main {
 				"analyzer #"
 				+ std::to_string(this->analyzers.back()->Module::Thread::getId())
 				+ " started by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -1912,18 +1771,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command pauseparser(id): pause a parser by its ID
-	Server::ServerCommandResponse Server::cmdPauseAnalyzer(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdPauseAnalyzer() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find analyzer
 		auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
@@ -1946,7 +1802,7 @@ namespace crawlservpp::Main {
 					"analyzer #"
 					+ std::to_string(id)
 					+ " paused by "
-					+ ip
+					+ this->cmdIp
 					+ "."
 			);
 
@@ -1958,18 +1814,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command unpauseanalyzer(id): unpause a parser by its ID
-	Server::ServerCommandResponse Server::cmdUnpauseAnalyzer(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdUnpauseAnalyzer() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find analyzer
 		auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
@@ -1993,7 +1846,7 @@ namespace crawlservpp::Main {
 				"analyzer #"
 				+ std::to_string(id)
 				+ " unpaused by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -2001,18 +1854,15 @@ namespace crawlservpp::Main {
 	}
 
 	// server command stopanalyzer(id): stop a parser by its ID
-	Server::ServerCommandResponse Server::cmdStopAnalyzer(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdStopAnalyzer() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// find analyzer
 		auto i = std::find_if(this->analyzers.begin(), this->analyzers.end(),
@@ -2036,7 +1886,7 @@ namespace crawlservpp::Main {
 				"analyzer #"
 				+ std::to_string(id)
 				+ " stopped by "
-				+ ip
+				+ this->cmdIp
 				+ "."
 		);
 
@@ -2044,28 +1894,29 @@ namespace crawlservpp::Main {
 	}
 
 	// server command resetanalyzingstatus(urllist): reset the parsing status of a ID-specificed URL list
-	Server::ServerCommandResponse Server::cmdResetAnalyzingStatus(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdResetAnalyzingStatus() {
 		// get argument
-		if(!json.HasMember("urllist"))
+		if(!(this->cmdJson.HasMember("urllist")))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
 
-		if(!json["urllist"].IsUint64())
+		if(!(this->cmdJson["urllist"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
 
 		// resetanalyzingstatus needs to be confirmed
-		if(!json.HasMember("confirmed"))
-				return ServerCommandResponse::toBeConfirmed(
-						"Are you sure that you want to reset the analyzing status of this URL list?"
-				);
+		if(this->cmdJson.HasMember("confirmed")) {
+			// reset analyzing status
+			this->database.resetAnalyzingStatus(this->cmdJson["urllist"].GetUint64());
 
-		// reset analyzing status
-		this->database.resetAnalyzingStatus(json["urllist"].GetUint64());
+			return ServerCommandResponse("Analyzing status reset.");
+		}
 
-		return ServerCommandResponse("Analyzing status reset.");
+		return ServerCommandResponse::toBeConfirmed(
+				"Are you sure that you want to reset the analyzing status of this URL list?"
+		);
 	}
 
 	// server command pauseall(): pause all running threads
-	Server::ServerCommandResponse Server::cmdPauseAll(const std::string& ip) {
+	Server::ServerCommandResponse Server::cmdPauseAll() {
 		unsigned long counter = 0;
 
 		// pause crawlers
@@ -2077,7 +1928,7 @@ namespace crawlservpp::Main {
 						"crawler #"
 						+ std::to_string(thread->getId())
 						+ " paused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2094,7 +1945,7 @@ namespace crawlservpp::Main {
 						"parser #"
 						+ std::to_string(thread->getId())
 						+ " paused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2111,7 +1962,7 @@ namespace crawlservpp::Main {
 						"extractor #"
 						+ std::to_string(thread->getId())
 						+ " paused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2128,7 +1979,7 @@ namespace crawlservpp::Main {
 						"analyzer #"
 						+ std::to_string(thread->getId())
 						+ " paused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2149,7 +2000,7 @@ namespace crawlservpp::Main {
 	}
 
 	// server command unpauseall(): unpause all paused threads
-	Server::ServerCommandResponse Server::cmdUnpauseAll(const std::string& ip) {
+	Server::ServerCommandResponse Server::cmdUnpauseAll() {
 		unsigned long counter = 0;
 
 		// unpause crawlers
@@ -2161,7 +2012,7 @@ namespace crawlservpp::Main {
 						"crawler #"
 						+ std::to_string(thread->getId())
 						+ " unpaused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2178,7 +2029,7 @@ namespace crawlservpp::Main {
 						"parser #"
 						+ std::to_string(thread->getId())
 						+ " unpaused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2195,7 +2046,7 @@ namespace crawlservpp::Main {
 						"extractor #"
 						+ std::to_string(thread->getId())
 						+ " unpaused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2212,7 +2063,7 @@ namespace crawlservpp::Main {
 						"analyzer #"
 						+ std::to_string(thread->getId())
 						+ " unpaused by "
-						+ ip
+						+ this->cmdIp
 						+ "."
 				);
 
@@ -2233,50 +2084,62 @@ namespace crawlservpp::Main {
 	}
 
 	// server command addwebsite([crossdomain], [domain], namespace, name, [dir]): add a website
-	Server::ServerCommandResponse Server::cmdAddWebsite(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdAddWebsite() {
 		WebsiteProperties properties;
 		bool crossDomain = false;
 		unsigned long id = 0;
 
 		// get arguments
-		if(json.HasMember("crossdomain")) {
-			if(!json["crossdomain"].IsBool())
+		if(this->cmdJson.HasMember("crossdomain")) {
+			if(!(this->cmdJson["crossdomain"].IsBool()))
 				return ServerCommandResponse::failed("Invalid arguments (\'crossdomain\' is not a boolean).");
 
-			crossDomain = json["crossdomain"].GetBool();
+			crossDomain = this->cmdJson["crossdomain"].GetBool();
 		}
 
 		if(!crossDomain) {
-			if(!json.HasMember("domain"))
+			if(!(this->cmdJson.HasMember("domain")))
 				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is missing).");
 
-			if(!json["domain"].IsString())
+			if(!(this->cmdJson["domain"].IsString()))
 				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is not a string).");
 
-			properties.domain = std::string(json["domain"].GetString(), json["domain"].GetStringLength());
+			properties.domain = std::string(
+					this->cmdJson["domain"].GetString(),
+					this->cmdJson["domain"].GetStringLength()
+			);
 		}
 
-		if(!json.HasMember("namespace"))
+		if(!(this->cmdJson.HasMember("namespace")))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
-		if(!json["namespace"].IsString())
+		if(!(this->cmdJson["namespace"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
-		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
+		properties.nameSpace = std::string(
+				this->cmdJson["namespace"].GetString(),
+				this->cmdJson["namespace"].GetStringLength()
+		);
 
-		if(!json.HasMember("name"))
+		if(!(this->cmdJson.HasMember("name")))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
-		if(!json["name"].IsString())
+		if(!(this->cmdJson["name"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
+		properties.name = std::string(
+				this->cmdJson["name"].GetString(),
+				this->cmdJson["name"].GetStringLength()
+		);
 
-		if(json.HasMember("dir")) {
-			if(!json["dir"].IsString())
+		if(this->cmdJson.HasMember("dir")) {
+			if(!(this->cmdJson["dir"].IsString()))
 				return ServerCommandResponse::failed("Invalid arguments (\'dir\' is not a string).");
 
-			properties.dir = std::string(json["dir"].GetString(), json["dir"].GetStringLength());
+			properties.dir = std::string(
+					this->cmdJson["dir"].GetString(),
+					this->cmdJson["dir"].GetStringLength()
+			);
 		}
 
 		// check domain name
@@ -2319,34 +2182,35 @@ namespace crawlservpp::Main {
 				return ServerCommandResponse::failed("External directory does not exist");
 
 			// adding a website using an external directory needs to be confirmed
-			if(!json.HasMember("confirmed"))
+			if(this->cmdJson.HasMember("confirmed")) {
+				// try adding website to the database using an external directory
+				try {
+					id = this->database.addWebsite(properties);
+				}
+				catch(const IncorrectPathException &e) {
+					return ServerCommandResponse::failed(
+							"Incorrect path for external directory"
+					);
+				}
+				catch(const PrivilegesException &e) {
+					return ServerCommandResponse::failed(
+							"The MySQL user used by the server needs to have FILE privilege to use an external directory"
+					);
+				}
+				catch(const StorageEngineException &e) {
+					return ServerCommandResponse::failed(
+							"Could not access external directory. Make sure that\n"
+							"* the MySQL server has permission to write into the directory\n"
+							"* the AppArmor profile of the MySQL server allows access to the directory (if applicable)\n"
+							"* file-per-table tablespace (innodb_file_per_table) is enabled"
+					);
+				}
+			}
+			else
 				return ServerCommandResponse::toBeConfirmed(
 						"Do you really want to use an external directory?\n"
 						"!!! The directory cannot be changed once the website has been added !!!"
 				);
-
-			// try adding website to the database using an external directory
-			try {
-				id = this->database.addWebsite(properties);
-			}
-			catch(const IncorrectPathException &e) {
-				return ServerCommandResponse::failed(
-						"Incorrect path for external directory"
-				);
-			}
-			catch(const PrivilegesException &e) {
-				return ServerCommandResponse::failed(
-						"The MySQL user used by the server needs to have FILE privilege to use an external directory"
-				);
-			}
-			catch(const StorageEngineException &e) {
-				return ServerCommandResponse::failed(
-						"Could not access external directory. Make sure that\n"
-						"* the MySQL server has permission to write into the directory\n"
-						"* the AppArmor profile of the MySQL server allows access to the directory (if applicable)\n"
-						"* file-per-table tablespace (innodb_file_per_table) is enabled"
-				);
-			}
 		}
 
 		if(!id)
@@ -2356,51 +2220,60 @@ namespace crawlservpp::Main {
 	}
 
 	// server command updatewebsite(id, crossdomain, domain, namespace, name): edit a website
-	Server::ServerCommandResponse Server::cmdUpdateWebsite(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdUpdateWebsite() {
 		WebsiteProperties properties;
 		bool crossDomain = false;
 
 		// get arguments
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
-		if(json.HasMember("crossdomain")) {
-			if(!json["crossdomain"].IsBool())
+		if(this->cmdJson.HasMember("crossdomain")) {
+			if(!(this->cmdJson["crossdomain"].IsBool()))
 				return ServerCommandResponse::failed("Invalid arguments (\'crossdomain\' is not a boolean).");
 
-			crossDomain = json["crossdomain"].GetBool();
+			crossDomain = this->cmdJson["crossdomain"].GetBool();
 		}
 
 		if(!crossDomain) {
-			if(!json.HasMember("domain"))
+			if(!(this->cmdJson.HasMember("domain")))
 				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is missing).");
 
-			if(!json["domain"].IsString())
+			if(!(this->cmdJson["domain"].IsString()))
 				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is not a string).");
 
-			properties.domain = std::string(json["domain"].GetString(), json["domain"].GetStringLength());
+			properties.domain = std::string(
+					this->cmdJson["domain"].GetString(),
+					this->cmdJson["domain"].GetStringLength()
+			);
 		}
 
-		if(!json.HasMember("namespace"))
+		if(!(this->cmdJson.HasMember("namespace")))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
-		if(!json["namespace"].IsString())
+		if(!(this->cmdJson["namespace"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
-		properties.nameSpace = std::string(json["namespace"].GetString(), json["namespace"].GetStringLength());
+		properties.nameSpace = std::string(
+				this->cmdJson["namespace"].GetString(),
+				this->cmdJson["namespace"].GetStringLength()
+		);
 
-		if(!json.HasMember("name"))
+		if(!(this->cmdJson.HasMember("name")))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
-		if(!json["name"].IsString())
+		if(!(this->cmdJson["name"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
-		properties.name = std::string(json["name"].GetString(), json["name"].GetStringLength());
+		properties.name = std::string(
+				this->cmdJson["name"].GetString(),
+				this->cmdJson["name"].GetStringLength()
+		);
 
 		// check name
 		if(properties.name.empty())
@@ -2464,72 +2337,69 @@ namespace crawlservpp::Main {
 			);
 
 		// check whether URLs will be changed or lost by changing type of website from cross-domain to specific domain
-		if(!json.HasMember("confirmed")) {
-			const unsigned long toModify = this->database.getChangedUrlsByWebsiteUpdate(id, properties);
-			const unsigned long toDelete = this->database.getLostUrlsByWebsiteUpdate(id, properties);
+		if(this->cmdJson.HasMember("confirmed")) {
+			// update website in database
+			this->database.updateWebsite(id, properties);
 
-			if(toModify || toDelete) {
-				std::ostringstream confirmationStrStr;
+			return ServerCommandResponse("Website updated.");
+		}
 
-				switch(toModify) {
-				case 0:
-					break;
+		const unsigned long toModify = this->database.getChangedUrlsByWebsiteUpdate(id, properties);
+		const unsigned long toDelete = this->database.getLostUrlsByWebsiteUpdate(id, properties);
 
-				case 1:
-					confirmationStrStr << "One URL will be modified.\n";
+		std::ostringstream confirmationStrStr;
 
-					break;
+		if(toModify || toDelete) {
+			switch(toModify) {
+			case 0:
+				break;
 
-				default:
-					confirmationStrStr.imbue(std::locale(""));
+			case 1:
+				confirmationStrStr << "One URL will be modified.\n";
 
-					confirmationStrStr << toModify << " URLs will be modified.\n";
-				}
+				break;
 
-				switch(toDelete) {
-				case 0:
-					break;
+			default:
+				confirmationStrStr.imbue(std::locale(""));
 
-				case 1:
-					confirmationStrStr << "One URL will be IRRECOVERABLY LOST.\n";
+				confirmationStrStr << toModify << " URLs will be modified.\n";
+			}
 
-					break;
+			switch(toDelete) {
+			case 0:
+				break;
 
-				default:
-					confirmationStrStr.imbue(std::locale(""));
+			case 1:
+				confirmationStrStr << "One URL will be IRRECOVERABLY LOST.\n";
 
-					confirmationStrStr << toDelete << " URL(s) will be IRRECOVERABLY LOST.\n";
-				}
+				break;
 
-				confirmationStrStr << "Do you really want to change the domain?";
+			default:
+				confirmationStrStr.imbue(std::locale(""));
 
-				return ServerCommandResponse::toBeConfirmed(confirmationStrStr.str());
+				confirmationStrStr << toDelete << " URL(s) will be IRRECOVERABLY LOST.\n";
 			}
 		}
 
-		// update website in database
-		this->database.updateWebsite(id, properties);
+		confirmationStrStr << "Do you really want to change the domain?";
 
-		return ServerCommandResponse("Website updated.");
+		return ServerCommandResponse::toBeConfirmed(confirmationStrStr.str());
 	}
 
 	// server command deletewebsite(id): delete a website and all associated data from the database by its ID
-	Server::ServerCommandResponse Server::cmdDeleteWebsite(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdDeleteWebsite() {
 		// check whether the deletion of data is allowed
 		if(!(this->settings.dataDeletable))
 			return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// check website
 		if(!(this->database.isWebsite(id)))
@@ -2569,37 +2439,38 @@ namespace crawlservpp::Main {
 			);
 
 		// deletewebsite needs to be confirmed
-		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse::toBeConfirmed(
-					"Do you really want to delete this website?\n"
-					"!!! All associated data will be lost !!!"
+		if(this->cmdJson.HasMember("confirmed")) {
+			// delete website from database
+			this->database.deleteWebsite(id);
+
+			// deletewebsite is a logged command
+			this->database.log(
+					"website #"
+					+ std::to_string(id)
+					+ " deleted by "
+					+ this->cmdIp
+					+ "."
 			);
 
-		// delete website from database
-		this->database.deleteWebsite(id);
+			return ServerCommandResponse("Website deleted.");
+		}
 
-		// deletewebsite is a logged command
-		this->database.log(
-				"website #"
-				+ std::to_string(id)
-				+ " deleted by "
-				+ ip
-				+ "."
+		return ServerCommandResponse::toBeConfirmed(
+				"Do you really want to delete this website?\n"
+				"!!! All associated data will be lost !!!"
 		);
-
-		return ServerCommandResponse("Website deleted.");
 	}
 
 	// server command duplicatewebsite(id): Duplicate a website by its ID (no processed data will be duplicated)
-	Server::ServerCommandResponse Server::cmdDuplicateWebsite(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdDuplicateWebsite() {
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// check website
 		if(!(this->database.isWebsite(id)))
@@ -2619,32 +2490,38 @@ namespace crawlservpp::Main {
 	}
 
 	// server command addurllist(website, namespace, name): add a URL list to the ID-specified website
-	Server::ServerCommandResponse Server::cmdAddUrlList(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdAddUrlList() {
 
 		// get arguments
-		if(!json.HasMember("website"))
+		if(!(this->cmdJson.HasMember("website")))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
 
-		if(!json["website"].IsUint64())
+		if(!(this->cmdJson["website"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
 
-		const unsigned long website = json["website"].GetUint64();
-
-		if(!json.HasMember("namespace"))
+		if(!(this->cmdJson.HasMember("namespace")))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
-		if(!json["namespace"].IsString())
+		if(!(this->cmdJson["namespace"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
-		if(!json.HasMember("name"))
+		if(!(this->cmdJson.HasMember("name")))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
-		if(!json["name"].IsString())
+		if(!(this->cmdJson["name"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
+		const unsigned long website = this->cmdJson["website"].GetUint64();
+
 		const UrlListProperties properties(
-				std::string(json["namespace"].GetString(), json["namespace"].GetStringLength()),
-				std::string(json["name"].GetString(), json["name"].GetStringLength())
+				std::string(
+						this->cmdJson["namespace"].GetString(),
+						this->cmdJson["namespace"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["name"].GetString(),
+						this->cmdJson["name"].GetStringLength()
+				)
 		);
 
 		// check namespace
@@ -2679,31 +2556,37 @@ namespace crawlservpp::Main {
 	}
 
 	// server command updateurllist(id, namespace, name): edit a URL list
-	Server::ServerCommandResponse Server::cmdUpdateUrlList(const rapidjson::Document& json) {
+	Server::ServerCommandResponse Server::cmdUpdateUrlList() {
 		// get arguments
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
-
-		if(!json.HasMember("namespace"))
+		if(!(this->cmdJson.HasMember("namespace")))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is missing).");
 
-		if(!json["namespace"].IsString())
+		if(!(this->cmdJson["namespace"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'namespace\' is not a string).");
 
-		if(!json.HasMember("name"))
+		if(!(this->cmdJson.HasMember("name")))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
 
-		if(!json["name"].IsString())
+		if(!(this->cmdJson["name"].IsString()))
 			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
 
+		const unsigned long id = this->cmdJson["id"].GetUint64();
+
 		const UrlListProperties properties(
-				std::string(json["namespace"].GetString(), json["namespace"].GetStringLength()),
-				std::string(json["name"].GetString(), json["name"].GetStringLength())
+				std::string(
+						this->cmdJson["namespace"].GetString(),
+						this->cmdJson["namespace"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["name"].GetString(),
+						this->cmdJson["name"].GetStringLength()
+				)
 		);
 
 		// check namespace
@@ -2764,22 +2647,19 @@ namespace crawlservpp::Main {
 	}
 
 	// server command deleteurllist(id): delete a URL list and all associated data from the database by its ID
-	Server::ServerCommandResponse Server::cmdDeleteUrlList(
-			const rapidjson::Document& json,
-			const std::string& ip
-	) {
+	Server::ServerCommandResponse Server::cmdDeleteUrlList() {
 		// check whether the deletion of data is allowed
 		if(!(this->settings.dataDeletable))
 			return ServerCommandResponse::failed("Not allowed.");
 
 		// get argument
-		if(!json.HasMember("id"))
+		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
-		if(!json["id"].IsUint64())
+		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
-		const unsigned long id = json["id"].GetUint64();
+		const unsigned long id = this->cmdJson["id"].GetUint64();
 
 		// check URL list
 		if(!(this->database.isUrlList(id)))
@@ -2819,25 +2699,661 @@ namespace crawlservpp::Main {
 			);
 
 		// deleteurllist needs to be confirmed
-		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse::toBeConfirmed(
-					"Do you really want to delete this URL list?\n"
-					"!!! All associated data will be lost !!!"
+		if(this->cmdJson.HasMember("confirmed")) {
+			// delete URL list from database
+			this->database.deleteUrlList(id);
+
+			// deleteurllist is a logged command
+			this->database.log(
+					"URL list #"
+					+ std::to_string(id)
+					+ " deleted by "
+					+ this->cmdIp
+					+ "."
 			);
 
-		// delete URL list from database
-		this->database.deleteUrlList(id);
+			return ServerCommandResponse("URL list deleted.");
+		}
 
-		// deleteurllist is a logged command
-		this->database.log(
-				"URL list #"
-				+ std::to_string(id)
-				+ " deleted by "
-				+ ip
-				+ "."
+		return ServerCommandResponse::toBeConfirmed(
+				"Do you really want to delete this URL list?\n"
+				"!!! All associated data will be lost !!!"
+		);
+	}
+
+	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
+	//  add a query
+	Server::ServerCommandResponse Server::cmdAddQuery() {
+		// get arguments
+		if(!(this->cmdJson.HasMember("website")))
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
+
+		if(!(this->cmdJson["website"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
+
+		if(!(this->cmdJson.HasMember("name")))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
+
+		if(!(this->cmdJson["name"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("query")))
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
+
+		if(!(this->cmdJson["query"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("type")))
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
+
+		if(!(this->cmdJson["type"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("resultbool")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
+
+		if(!(this->cmdJson["resultbool"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("resultsingle")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
+
+		if(!(this->cmdJson["resultsingle"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("resultmulti")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
+
+		if(!(this->cmdJson["resultmulti"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("resultsubsets")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is missing).");
+
+		if(!(this->cmdJson["resultsubsets"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("textonly")))
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
+
+		if(!(this->cmdJson["textonly"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
+
+		const unsigned long website = this->cmdJson["website"].GetUint64();
+
+		const QueryProperties properties(
+				std::string(
+						this->cmdJson["name"].GetString(),
+						this->cmdJson["name"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["query"].GetString(),
+						this->cmdJson["query"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["type"].GetString(),
+						this->cmdJson["type"].GetStringLength()
+				),
+				this->cmdJson["resultbool"].GetBool(),
+				this->cmdJson["resultsingle"].GetBool(),
+				this->cmdJson["resultmulti"].GetBool(),
+				this->cmdJson["resultsubsets"].GetBool(),
+				this->cmdJson["textonly"].GetBool()
 		);
 
-		return ServerCommandResponse("URL list deleted.");
+		// check name
+		if(properties.name.empty())
+			return ServerCommandResponse::failed("Name is empty.");
+
+		// check query text
+		if(properties.text.empty())
+			return ServerCommandResponse::failed("Query text is empty.");
+
+		// check query type
+		if(properties.type.empty())
+			return ServerCommandResponse::failed("Query type is empty.");
+
+		if(
+				properties.type != "regex"
+				&& properties.type != "xpath"
+				&& properties.type != "jsonpointer"
+				&& properties.type != "jsonpath"
+				&& properties.type != "xpathjsonpointer"
+				&& properties.type != "xpathjsonpath"
+		)
+			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
+
+		// check result type
+		if(
+				!properties.resultBool
+				&& !properties.resultSingle
+				&& !properties.resultMulti
+				&& !properties.resultSubSets
+		)
+			return ServerCommandResponse::failed("No result type selected.");
+
+		// check website
+		if(website && !(this->database.isWebsite(website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
+
+		// add query to database
+		const unsigned long id = this->database.addQuery(website, properties);
+
+		if(id)
+			return ServerCommandResponse("Query added.", id);
+
+		return ServerCommandResponse("Could not add query to database.");
+	}
+
+	// server command updatequery(id, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
+	//  edit a query
+	Server::ServerCommandResponse Server::cmdUpdateQuery() {
+		// get arguments
+		if(!(this->cmdJson.HasMember("id")))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!(this->cmdJson["id"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		if(!(this->cmdJson.HasMember("name")))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
+
+		if(!(this->cmdJson["name"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("query")))
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
+
+		if(!(this->cmdJson["query"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("type")))
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
+
+		if(!(this->cmdJson["type"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("resultbool")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
+
+		if(!(this->cmdJson["resultbool"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("resultsingle")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
+
+		if(!(this->cmdJson["resultsingle"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("resultmulti")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
+
+		if(!(this->cmdJson["resultmulti"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("resultsubsets")))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is missing).");
+
+		if(!(this->cmdJson["resultsubsets"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is not a boolean).");
+
+		if(!(this->cmdJson.HasMember("textonly")))
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
+
+		if(!(this->cmdJson["textonly"].IsBool()))
+			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
+
+		const unsigned long id = this->cmdJson["id"].GetUint64();
+
+		const QueryProperties properties(
+				std::string(
+						this->cmdJson["name"].GetString(),
+						this->cmdJson["name"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["query"].GetString(),
+						this->cmdJson["query"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["type"].GetString(),
+						this->cmdJson["type"].GetStringLength()
+				),
+				this->cmdJson["resultbool"].GetBool(),
+				this->cmdJson["resultsingle"].GetBool(),
+				this->cmdJson["resultmulti"].GetBool(),
+				this->cmdJson["resultsubsets"].GetBool(),
+				this->cmdJson["textonly"].GetBool()
+		);
+
+		// check name
+		if(properties.name.empty())
+			return ServerCommandResponse::failed("Name is empty.");
+
+		// check query text
+		if(properties.text.empty())
+			return ServerCommandResponse::failed("Query text is empty.");
+
+		// check query type
+		if(properties.type.empty())
+			return ServerCommandResponse::failed("Query type is empty.");
+
+		if(
+				properties.type != "regex"
+				&& properties.type != "xpath"
+				&& properties.type != "jsonpointer"
+				&& properties.type != "jsonpath"
+				&& properties.type != "xpathjsonpointer"
+				&& properties.type != "xpathjsonpath"
+		)
+			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
+
+		// check result type
+		if(
+				!properties.resultBool
+				&& !properties.resultSingle
+				&& !properties.resultMulti
+				&& !properties.resultSubSets
+		)
+			return ServerCommandResponse::failed("No result type selected.");
+
+		// check query
+		if(!(this->database.isQuery(id)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+		// update query in database
+		this->database.updateQuery(id, properties);
+
+		return ServerCommandResponse("Query updated.");
+	}
+
+	// server command deletequery(id): delete a query from the database by its ID
+	Server::ServerCommandResponse Server::cmdDeleteQuery() {
+		// check whether the deletion of data is allowed
+		if(!(this->settings.dataDeletable))
+			return ServerCommandResponse::failed("Not allowed.");
+
+		// get argument
+		if(!(this->cmdJson.HasMember("id")))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!(this->cmdJson["id"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		const unsigned long id = this->cmdJson["id"].GetUint64();
+
+		// check query
+		if(!(this->database.isQuery(id)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+		if(this->cmdJson.HasMember("confirmed")) {
+			// delete URL list from database
+			this->database.deleteQuery(id);
+
+			return ServerCommandResponse("Query deleted.");
+		}
+
+		return ServerCommandResponse::toBeConfirmed("Do you really want to delete this query?");
+	}
+
+	// server command duplicatequery(id): Duplicate a query by its ID
+	Server::ServerCommandResponse Server::cmdDuplicateQuery() {
+		// get argument
+		if(!(this->cmdJson.HasMember("id")))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!(this->cmdJson["id"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		const unsigned long id = this->cmdJson["id"].GetUint64();
+
+		// check query
+		if(!(this->database.isQuery(id)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+		// duplicate query
+		const unsigned long newId = this->database.duplicateQuery(id);
+
+		if(!newId)
+			return ServerCommandResponse::failed("Could not add duplicate to database.");
+
+		return ServerCommandResponse("Query duplicated.", newId);
+	}
+
+	// server command addconfig(website, module, name, config): Add configuration to database
+	Server::ServerCommandResponse Server::cmdAddConfig() {
+		// get arguments
+		if(!(this->cmdJson.HasMember("website")))
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
+
+		if(!(this->cmdJson["website"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
+
+		if(!(this->cmdJson.HasMember("module")))
+			return ServerCommandResponse::failed("Invalid arguments (\'module\' is missing).");
+
+		if(!(this->cmdJson["module"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'module\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("name")))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
+
+		if(!(this->cmdJson["name"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("config")))
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
+
+		if(!(this->cmdJson["config"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
+
+		const unsigned long website = this->cmdJson["website"].GetUint64();
+
+		const ConfigProperties properties(
+				std::string(
+						this->cmdJson["module"].GetString(),
+						this->cmdJson["module"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["name"].GetString(),
+						this->cmdJson["name"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["config"].GetString(),
+						this->cmdJson["config"].GetStringLength()
+				)
+		);
+
+		// check name
+		if(properties.name.empty())
+			return ServerCommandResponse::failed("Name is empty.");
+
+		// check configuration JSON
+		rapidjson::Document configJson;
+
+		try {
+			configJson = Helper::Json::parseRapid(properties.config);
+		}
+		catch(const JsonException& e) {
+			return ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
+		}
+
+		if(!configJson.IsArray())
+			return ServerCommandResponse::failed("Parsed JSON is not an array.");
+
+		// check analyzer configuration for algorithm
+		if(properties.module == "analyzer") {
+			if(!Server::getAlgoFromConfig(configJson))
+				return ServerCommandResponse::failed("No algorithm selected.");
+		}
+
+		// check website
+		if(!(this->database.isWebsite(website)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
+
+		// add configuration to database
+		const unsigned long id = this->database.addConfiguration(website, properties);
+
+		if(!id)
+			return ServerCommandResponse::failed("Could not add configuration to database.");
+
+		return ServerCommandResponse("Configuration added.", id);
+	}
+
+	// server command updateconfig(id, name, config): Update a configuration in the database by its ID
+	Server::ServerCommandResponse Server::cmdUpdateConfig() {
+		// get arguments
+		if(!(this->cmdJson.HasMember("id")))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!(this->cmdJson["id"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		if(!(this->cmdJson.HasMember("name")))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
+
+		if(!(this->cmdJson["name"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
+
+		if(!(this->cmdJson.HasMember("config")))
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
+
+		if(!(this->cmdJson["config"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
+
+		const unsigned long id = this->cmdJson["id"].GetUint64();
+
+		const ConfigProperties properties(
+				std::string(
+						this->cmdJson["name"].GetString(),
+						this->cmdJson["name"].GetStringLength()
+				),
+				std::string(
+						this->cmdJson["config"].GetString(),
+						this->cmdJson["config"].GetStringLength()
+				)
+		);
+
+		// check name
+		if(properties.name.empty())
+			return ServerCommandResponse::failed("Name is empty.");
+
+		// check configuration JSON
+		rapidjson::Document configJson;
+
+		try {
+			configJson = Helper::Json::parseRapid(properties.config);
+		}
+		catch(const JsonException& e) {
+			return ServerCommandResponse::failed("Could not parse JSON.");
+		}
+
+		if(!configJson.IsArray())
+			return ServerCommandResponse::failed("Parsed JSON is not an array.");
+
+		// check configuration
+		if(!(this->database.isConfiguration(id)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+		// update configuration in database
+		this->database.updateConfiguration(id, properties);
+
+		return ServerCommandResponse("Configuration updated.");
+	}
+
+	// server command deleteconfig(id): delete a configuration from the database by its ID
+	Server::ServerCommandResponse Server::cmdDeleteConfig() {
+		// check whether the deletion of data is allowed
+		if(!(this->settings.dataDeletable))
+			return ServerCommandResponse::failed("Not allowed.");
+
+		// get argument
+		if(!(this->cmdJson.HasMember("id")))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!(this->cmdJson["id"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		const unsigned long id = this->cmdJson["id"].GetUint64();
+
+		// check configuration
+		if(!(this->database.isConfiguration(id)))
+			ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+
+		// deleteconfig needs to be confirmed
+		if(this->cmdJson.HasMember("confirmed")) {
+			// delete configuration from database
+			this->database.deleteConfiguration(id);
+
+			return ServerCommandResponse("Configuration deleted.");
+		}
+
+		return ServerCommandResponse::toBeConfirmed("Do you really want to delete this configuration?");
+	}
+
+	// server command duplicateconfig(id): Duplicate a configuration by its ID
+	Server::ServerCommandResponse Server::cmdDuplicateConfig() {
+		// get argument
+		if(!(this->cmdJson.HasMember("id")))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!(this->cmdJson["id"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		const unsigned long id = this->cmdJson["id"].GetUint64();
+
+		// check configuration
+		if(!(this->database.isConfiguration(id)))
+			return ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+		// duplicate configuration
+		const unsigned long newId = this->database.duplicateConfiguration(id);
+
+		if(!newId)
+			return ServerCommandResponse::failed("Could not add duplicate to database.");
+
+		return ServerCommandResponse("Configuration duplicated.", newId);
+	}
+
+	// server command warp(thread, target): Let thread jump to specified ID
+	Server::ServerCommandResponse Server::cmdWarp() {
+		// get arguments
+		if(!(this->cmdJson.HasMember("thread")))
+			return ServerCommandResponse::failed("Invalid arguments (\'thread\' is missing).");
+
+		if(!(this->cmdJson["thread"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'thread\' is not a valid number).");
+
+		if(!(this->cmdJson.HasMember("target")))
+			return ServerCommandResponse::failed("Invalid arguments (\'target\' is missing).");
+
+		if(!(this->cmdJson["target"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'target\' is not a valid number).");
+
+		const unsigned long thread = this->cmdJson["thread"].GetUint64();
+		const unsigned long target = this->cmdJson["target"].GetUint64();
+
+		// find thread
+		auto c = std::find_if(this->crawlers.begin(), this->crawlers.end(),
+				[&thread](const auto& p) {
+					return p->Module::Thread::getId() == thread;
+				}
+		);
+
+		if(c != this->crawlers.end()) {
+			(*c)->Module::Thread::warpTo(target);
+
+			return ServerCommandResponse(
+					"Crawler #"
+					+ std::to_string(thread)
+					+ " will warp to #"
+					+ std::to_string(target)
+					+ "."
+			);
+		}
+
+		auto p = std::find_if(this->parsers.begin(), this->parsers.end(),
+				[&thread](const auto& p) {
+					return p->Module::Thread::getId() == thread;
+				}
+		);
+
+		if(p != this->parsers.end()) {
+			(*p)->Module::Thread::warpTo(target);
+
+			return ServerCommandResponse(
+					"Parser #"
+					+ std::to_string(thread)
+					+ " will warp to #"
+					+ std::to_string(target)
+					+ "."
+			);
+		}
+
+		auto e = std::find_if(this->extractors.begin(), this->extractors.end(),
+				[&thread](const auto& p) {
+					return p->Module::Thread::getId() == thread;
+				}
+		);
+
+		if(e != this->extractors.end()) {
+			(*e)->Module::Thread::warpTo(target);
+
+			return ServerCommandResponse(
+					"Extractor #"
+					+ std::to_string(thread)
+					+ " will warp to #"
+					+ std::to_string(target)
+					+ "."
+			);
+		}
+
+		auto a = std::find_if(this->analyzers.begin(), this->analyzers.end(),
+				[&thread](const auto& p) {
+					return p->Module::Thread::getId() == thread;
+				}
+		);
+
+		if(a != this->analyzers.end())
+			return ServerCommandResponse::failed(
+					"Time travel is not supported for analyzers."
+			);
+		else
+			return ServerCommandResponse::failed(
+					"Could not find thread #"
+					+ std::to_string(thread)
+					+ "."
+			);
+	}
+
+	// server command download(filename): Download the specified file from the file cache of the web server
+	//  NOTE: Returns the name of the file to download
+	Server::ServerCommandResponse Server::cmdDownload() {
+		// get argument
+		if(!(this->cmdJson.HasMember("filename")))
+			return ServerCommandResponse::failed("Invalid arguments (\'filename\' is missing).");
+
+		if(!(this->cmdJson["filename"].IsString()))
+			return ServerCommandResponse::failed("Invalid arguments (\'filename\' is not a string).");
+
+		return ServerCommandResponse(
+				std::string(
+						this->cmdJson["filename"].GetString(),
+						this->cmdJson["filename"].GetStringLength()
+				)
+		);
 	}
 
 	// server command import(datatype, filetype, compression, filename, [...]): import data from a file into the database
@@ -3519,301 +4035,6 @@ namespace crawlservpp::Main {
 		MAIN_SERVER_WORKER_END(response)
 
 		this->workerEnd(threadIndex, connection, message, response);
-	}
-
-	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
-	//  add a query
-	Server::ServerCommandResponse Server::cmdAddQuery(const rapidjson::Document& json) {
-		// get arguments
-		if(!json.HasMember("website"))
-			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
-
-		if(!json["website"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
-
-		const unsigned long website = json["website"].GetUint64();
-
-		if(!json.HasMember("name"))
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
-
-		if(!json["name"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
-
-		if(!json.HasMember("query"))
-			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
-
-		if(!json["query"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
-
-		if(!json.HasMember("type"))
-			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
-
-		if(!json["type"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
-
-		if(!json.HasMember("resultbool"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
-
-		if(!json["resultbool"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
-
-		if(!json.HasMember("resultsingle"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
-
-		if(!json["resultsingle"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
-
-		if(!json.HasMember("resultmulti"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
-
-		if(!json["resultmulti"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
-
-		if(!json.HasMember("resultsubsets"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is missing).");
-
-		if(!json["resultsubsets"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is not a boolean).");
-
-		if(!json.HasMember("textonly"))
-			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
-
-		if(!json["textonly"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
-
-		const QueryProperties properties(
-				std::string(json["name"].GetString(), json["name"].GetStringLength()),
-				std::string(json["query"].GetString(), json["query"].GetStringLength()),
-				std::string(json["type"].GetString(), json["type"].GetStringLength()),
-				json["resultbool"].GetBool(),
-				json["resultsingle"].GetBool(),
-				json["resultmulti"].GetBool(),
-				json["resultsubsets"].GetBool(),
-				json["textonly"].GetBool()
-		);
-
-		// check name
-		if(properties.name.empty())
-			return ServerCommandResponse::failed("Name is empty.");
-
-		// check query text
-		if(properties.text.empty())
-			return ServerCommandResponse::failed("Query text is empty.");
-
-		// check query type
-		if(properties.type.empty())
-			return ServerCommandResponse::failed("Query type is empty.");
-
-		if(
-				properties.type != "regex"
-				&& properties.type != "xpath"
-				&& properties.type != "jsonpointer"
-				&& properties.type != "jsonpath"
-				&& properties.type != "xpathjsonpointer"
-				&& properties.type != "xpathjsonpath"
-		)
-			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
-
-		// check result type
-		if(
-				!properties.resultBool
-				&& !properties.resultSingle
-				&& !properties.resultMulti
-				&& !properties.resultSubSets
-		)
-			return ServerCommandResponse::failed("No result type selected.");
-
-		// check website
-		if(website && !(this->database.isWebsite(website)))
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(website)
-					+ " not found."
-			);
-
-		// add query to database
-		const unsigned long id = this->database.addQuery(website, properties);
-
-		if(!id)
-			return ServerCommandResponse("Could not add query to database.");
-
-		return ServerCommandResponse("Query added.", id);
-	}
-
-	// server command updatequery(id, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
-	//  edit a query
-	Server::ServerCommandResponse Server::cmdUpdateQuery(const rapidjson::Document& json) {
-		// get arguments
-		if(!json.HasMember("id"))
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
-
-		if(!json["id"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
-
-		const unsigned long id = json["id"].GetUint64();
-
-		if(!json.HasMember("name"))
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
-
-		if(!json["name"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
-
-		if(!json.HasMember("query"))
-			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
-
-		if(!json["query"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a string).");
-
-		if(!json.HasMember("type"))
-			return ServerCommandResponse::failed("Invalid arguments (\'type\' is missing).");
-
-		if(!json["type"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'type\' is not a string).");
-
-		if(!json.HasMember("resultbool"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is missing).");
-
-		if(!json["resultbool"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultbool\' is not a boolean).");
-
-		if(!json.HasMember("resultsingle"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is missing).");
-
-		if(!json["resultsingle"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsingle\' is not a boolean).");
-
-		if(!json.HasMember("resultmulti"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is missing).");
-
-		if(!json["resultmulti"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultmulti\' is not a boolean).");
-
-		if(!json.HasMember("resultsubsets"))
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is missing).");
-
-		if(!json["resultsubsets"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'resultsubsets\' is not a boolean).");
-
-		if(!json.HasMember("textonly"))
-			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is missing).");
-
-		if(!json["textonly"].IsBool())
-			return ServerCommandResponse::failed("Invalid arguments (\'textonly\' is not a boolean).");
-
-		const QueryProperties properties(
-				std::string(json["name"].GetString(), json["name"].GetStringLength()),
-				std::string(json["query"].GetString(), json["query"].GetStringLength()),
-				std::string(json["type"].GetString(), json["type"].GetStringLength()),
-				json["resultbool"].GetBool(),
-				json["resultsingle"].GetBool(),
-				json["resultmulti"].GetBool(),
-				json["resultsubsets"].GetBool(),
-				json["textonly"].GetBool()
-		);
-
-		// check name
-		if(properties.name.empty())
-			return ServerCommandResponse::failed("Name is empty.");
-
-		// check query text
-		if(properties.text.empty())
-			return ServerCommandResponse::failed("Query text is empty.");
-
-		// check query type
-		if(properties.type.empty())
-			return ServerCommandResponse::failed("Query type is empty.");
-
-		if(
-				properties.type != "regex"
-				&& properties.type != "xpath"
-				&& properties.type != "jsonpointer"
-				&& properties.type != "jsonpath"
-				&& properties.type != "xpathjsonpointer"
-				&& properties.type != "xpathjsonpath"
-		)
-			return ServerCommandResponse::failed("Unknown query type: \'" + properties.type + "\'.");
-
-		// check result type
-		if(
-				!properties.resultBool
-				&& !properties.resultSingle
-				&& !properties.resultMulti
-				&& !properties.resultSubSets
-		)
-			return ServerCommandResponse::failed("No result type selected.");
-
-		// check query
-		if(!(this->database.isQuery(id)))
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(id)
-					+ " not found."
-			);
-
-		// update query in database
-		this->database.updateQuery(id, properties);
-
-		return ServerCommandResponse("Query updated.");
-	}
-
-	// server command deletequery(id): delete a query from the database by its ID
-	Server::ServerCommandResponse Server::cmdDeleteQuery(const rapidjson::Document& json) {
-		// check whether the deletion of data is allowed
-		if(!(this->settings.dataDeletable))
-			return ServerCommandResponse::failed("Not allowed.");
-
-		// get argument
-		if(!json.HasMember("id"))
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
-
-		if(!json["id"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
-
-		const unsigned long id = json["id"].GetUint64();
-
-		// check query
-		if(!(this->database.isQuery(id)))
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(id)
-					+ " not found."
-			);
-
-		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse::toBeConfirmed("Do you really want to delete this query?");
-
-		// delete URL list from database
-		this->database.deleteQuery(id);
-
-		return ServerCommandResponse("Query deleted.");
-	}
-
-	// server command duplicatequery(id): Duplicate a query by its ID
-	Server::ServerCommandResponse Server::cmdDuplicateQuery(const rapidjson::Document& json) {
-		// get argument
-		if(!json.HasMember("id"))
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
-
-		if(!json["id"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
-
-		const unsigned long id = json["id"].GetUint64();
-
-		// check query
-		if(!(this->database.isQuery(id)))
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(id)
-					+ " not found."
-			);
-
-		// duplicate query
-		const unsigned long newId = this->database.duplicateQuery(id);
-
-		if(!newId)
-			return ServerCommandResponse::failed("Could not add duplicate to database.");
-
-		return ServerCommandResponse("Query duplicated.", newId);
 	}
 
 	// server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text, xmlwarnings):
@@ -4586,311 +4807,6 @@ namespace crawlservpp::Main {
 		this->workerEnd(threadIndex, connection, message, response);
 	}
 
-	// server command addconfig(website, module, name, config): Add configuration to database
-	Server::ServerCommandResponse Server::cmdAddConfig(const rapidjson::Document& json) {
-		// get arguments
-		if(!json.HasMember("website"))
-			return ServerCommandResponse::failed("Invalid arguments (\'website\' is missing).");
-
-		if(!json["website"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'website\' is not a valid number).");
-
-		const unsigned long website = json["website"].GetUint64();
-
-		if(!json.HasMember("module"))
-			return ServerCommandResponse::failed("Invalid arguments (\'module\' is missing).");
-
-		if(!json["module"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'module\' is not a string).");
-
-		if(!json.HasMember("name"))
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
-
-		if(!json["name"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
-
-		if(!json.HasMember("config"))
-			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
-
-		if(!json["config"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
-
-		const ConfigProperties properties(
-				std::string(json["module"].GetString(), json["module"].GetStringLength()),
-				std::string(json["name"].GetString(), json["name"].GetStringLength()),
-				std::string(json["config"].GetString(), json["config"].GetStringLength())
-		);
-
-		// check name
-		if(properties.name.empty())
-			return ServerCommandResponse::failed("Name is empty.");
-
-		// check configuration JSON
-		rapidjson::Document configJson;
-
-		try {
-			configJson = Helper::Json::parseRapid(properties.config);
-		}
-		catch(const JsonException& e) {
-			return ServerCommandResponse::failed("Could not parse JSON: " + e.whatStr() + ".");
-		}
-
-		if(!configJson.IsArray())
-			return ServerCommandResponse::failed("Parsed JSON is not an array.");
-
-		// check analyzer configuration for algorithm
-		if(properties.module == "analyzer") {
-			if(!Server::getAlgoFromConfig(configJson))
-				return ServerCommandResponse::failed("No algorithm selected.");
-		}
-
-		// check website
-		if(!(this->database.isWebsite(website)))
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(website)
-					+ " not found."
-			);
-
-		// add configuration to database
-		const unsigned long id = this->database.addConfiguration(website, properties);
-
-		if(!id)
-			return ServerCommandResponse::failed("Could not add configuration to database.");
-
-		return ServerCommandResponse("Configuration added.", id);
-	}
-
-	// server command updateconfig(id, name, config): Update a configuration in the database by its ID
-	Server::ServerCommandResponse Server::cmdUpdateConfig(const rapidjson::Document& json) {
-		// get arguments
-		if(!json.HasMember("id"))
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
-
-		if(!json["id"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
-
-		const unsigned long id = json["id"].GetUint64();
-
-		if(!json.HasMember("name"))
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is missing).");
-
-		if(!json["name"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'name\' is not a string).");
-
-		if(!json.HasMember("config"))
-			return ServerCommandResponse::failed("Invalid arguments (\'config\' is missing).");
-
-		if(!json["config"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'config\' is not a string).");
-
-		const ConfigProperties properties(
-				std::string(json["name"].GetString(), json["name"].GetStringLength()),
-				std::string(json["config"].GetString(), json["config"].GetStringLength())
-		);
-
-		// check name
-		if(properties.name.empty())
-			return ServerCommandResponse::failed("Name is empty.");
-
-		// check configuration JSON
-		rapidjson::Document configJson;
-
-		try {
-			configJson = Helper::Json::parseRapid(properties.config);
-		}
-		catch(const JsonException& e) {
-			return ServerCommandResponse::failed("Could not parse JSON.");
-		}
-
-		if(!configJson.IsArray())
-			return ServerCommandResponse::failed("Parsed JSON is not an array.");
-
-		// check configuration
-		if(!(this->database.isConfiguration(id)))
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(id)
-					+ " not found."
-			);
-
-		// update configuration in database
-		this->database.updateConfiguration(id, properties);
-
-		return ServerCommandResponse("Configuration updated.");
-	}
-
-	// server command deleteconfig(id): delete a configuration from the database by its ID
-	Server::ServerCommandResponse Server::cmdDeleteConfig(const rapidjson::Document& json) {
-		// check whether the deletion of data is allowed
-		if(!(this->settings.dataDeletable))
-			return ServerCommandResponse::failed("Not allowed.");
-
-		// get argument
-		if(!json.HasMember("id"))
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
-
-		if(!json["id"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
-
-		const unsigned long id = json["id"].GetUint64();
-
-		// check configuration
-		if(!(this->database.isConfiguration(id)))
-			ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(id)
-					+ " not found."
-			);
-
-
-		// deleteconfig needs to be confirmed
-		if(!json.HasMember("confirmed"))
-			return ServerCommandResponse::toBeConfirmed("Do you really want to delete this configuration?");
-
-		// delete configuration from database
-		this->database.deleteConfiguration(id);
-
-		return ServerCommandResponse("Configuration deleted.");
-	}
-
-	// server command duplicateconfig(id): Duplicate a configuration by its ID
-	Server::ServerCommandResponse Server::cmdDuplicateConfig(const rapidjson::Document& json) {
-		// get argument
-		if(!json.HasMember("id"))
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
-
-		if(!json["id"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
-
-		const unsigned long id = json["id"].GetUint64();
-
-		// check configuration
-		if(!(this->database.isConfiguration(id)))
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(id)
-					+ " not found."
-			);
-
-		// duplicate configuration
-		const unsigned long newId = this->database.duplicateConfiguration(id);
-
-		if(!newId)
-			return ServerCommandResponse::failed("Could not add duplicate to database.");
-
-		return ServerCommandResponse("Configuration duplicated.", newId);
-	}
-
-	// server command warp(thread, target): Let thread jump to specified ID
-	Server::ServerCommandResponse Server::cmdWarp(const rapidjson::Document& json) {
-		// get arguments
-		if(!json.HasMember("thread"))
-			return ServerCommandResponse::failed("Invalid arguments (\'thread\' is missing).");
-
-		if(!json["thread"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'thread\' is not a valid number).");
-
-		if(!json.HasMember("target"))
-			return ServerCommandResponse::failed("Invalid arguments (\'target\' is missing).");
-
-		if(!json["target"].IsUint64())
-			return ServerCommandResponse::failed("Invalid arguments (\'target\' is not a valid number).");
-
-		const unsigned long thread = json["thread"].GetUint64();
-		const unsigned long target = json["target"].GetUint64();
-
-		// find thread
-		auto c = std::find_if(this->crawlers.begin(), this->crawlers.end(),
-				[&thread](const auto& p) {
-					return p->Module::Thread::getId() == thread;
-				}
-		);
-
-		if(c != this->crawlers.end()) {
-			(*c)->Module::Thread::warpTo(target);
-
-			return ServerCommandResponse(
-					"Crawler #"
-					+ std::to_string(thread)
-					+ " will warp to #"
-					+ std::to_string(target)
-					+ "."
-			);
-		}
-
-		auto p = std::find_if(this->parsers.begin(), this->parsers.end(),
-				[&thread](const auto& p) {
-					return p->Module::Thread::getId() == thread;
-				}
-		);
-
-		if(p != this->parsers.end()) {
-			(*p)->Module::Thread::warpTo(target);
-
-			return ServerCommandResponse(
-					"Parser #"
-					+ std::to_string(thread)
-					+ " will warp to #"
-					+ std::to_string(target)
-					+ "."
-			);
-		}
-
-		auto e = std::find_if(this->extractors.begin(), this->extractors.end(),
-				[&thread](const auto& p) {
-					return p->Module::Thread::getId() == thread;
-				}
-		);
-
-		if(e != this->extractors.end()) {
-			(*e)->Module::Thread::warpTo(target);
-
-			return ServerCommandResponse(
-					"Extractor #"
-					+ std::to_string(thread)
-					+ " will warp to #"
-					+ std::to_string(target)
-					+ "."
-			);
-		}
-
-		auto a = std::find_if(this->analyzers.begin(), this->analyzers.end(),
-				[&thread](const auto& p) {
-					return p->Module::Thread::getId() == thread;
-				}
-		);
-
-		if(a != this->analyzers.end())
-			return ServerCommandResponse::failed(
-					"Time travel is not supported for analyzers."
-			);
-		else
-			return ServerCommandResponse::failed(
-					"Could not find thread #"
-					+ std::to_string(thread)
-					+ "."
-			);
-	}
-
-	// server command download(filename): Download the specified file from the file cache of the web server
-	//  NOTE: Returns the name of the file to download
-	Server::ServerCommandResponse Server::cmdDownload(const rapidjson::Document& json) {
-		// get argument
-		if(!json.HasMember("filename"))
-			return ServerCommandResponse::failed("Invalid arguments (\'filename\' is missing).");
-
-		if(!json["filename"].IsString())
-			return ServerCommandResponse::failed("Invalid arguments (\'filename\' is not a string).");
-
-		return ServerCommandResponse(
-				std::string(
-						json["filename"].GetString(),
-						json["filename"].GetStringLength()
-				)
-		);
-	}
-
 	// private static helper function: begin of worker thread
 	bool Server::workerBegin(
 			const std::string& message,
@@ -4935,6 +4851,64 @@ namespace crawlservpp::Main {
 
 			this->workersRunning.at(threadIndex) = false;
 		}
+	}
+
+	// private static helper function: get algorithm ID from configuration JSON, throws Main::Exception
+	unsigned int Server::getAlgoFromConfig(const rapidjson::Document& json) {
+		unsigned int result = 0;
+
+		if(!json.IsArray())
+			throw Exception("Server::getAlgoFromConfig(): Configuration is no array");
+
+		// go through all array items i.e. configuration entries
+		for(const auto& item : json.GetArray()) {
+			bool algoItem = false;
+
+			if(item.IsObject()) {
+				// go through all item properties
+				for(const auto& property : item.GetObject()) {
+					if(property.name.IsString()) {
+						const std::string itemName(
+								property.name.GetString(),
+								property.name.GetStringLength()
+						);
+
+						if(itemName == "name") {
+							if(property.value.IsString()) {
+								if(
+										std::string(
+												property.value.GetString(),
+												property.value.GetStringLength()
+										) == "_algo"
+								) {
+									algoItem = true;
+
+									if(result)
+										break;
+								}
+								else
+									break;
+							}
+						}
+						else if(itemName == "value") {
+							if(property.value.IsUint()) {
+								result = property.value.GetUint();
+
+								if(algoItem)
+									break;
+							}
+						}
+					}
+				}
+
+				if(algoItem)
+					break;
+				else
+					result = 0;
+			}
+		}
+
+		return result;
 	}
 
 	// private static helper function: generate server reply
