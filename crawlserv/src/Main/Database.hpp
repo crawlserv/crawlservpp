@@ -53,6 +53,7 @@
 #include "Version.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Json.hpp"
 #include "../Helper/Portability/locale.h"
 #include "../Helper/Portability/mysqlcppconn.h"
 #include "../Helper/Utf8.hpp"
@@ -72,6 +73,8 @@
 #include "../Wrapper/DatabaseLock.hpp"
 #include "../Wrapper/PreparedSqlStatement.hpp"
 
+#include "../_extern/rapidjson/include/rapidjson/document.h"
+
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
@@ -79,7 +82,7 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <algorithm>	// std::find, std::remove, std::transform
+#include <algorithm>	// std::find, std::find_if, std::remove, std::transform
 #include <chrono>		// std::chrono
 #include <cmath>		// std::round
 #include <fstream>		// std::ifstream
@@ -112,6 +115,7 @@ namespace crawlservpp::Main {
 
 	class Database {
 		// for convenience
+		typedef Helper::Json::Exception JsonException;
 		typedef Struct::ConfigProperties ConfigProperties;
 		typedef Struct::TableProperties TableProperties;
 		typedef Struct::TargetTableProperties TargetTableProperties;
@@ -124,11 +128,14 @@ namespace crawlservpp::Main {
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
 
+		typedef std::vector<std::pair<unsigned long, unsigned long>> IdPairs;
 		typedef std::pair<unsigned long, std::string> IdString;
 		typedef std::function<bool()> IsRunningCallback;
 		typedef std::unique_ptr<sql::PreparedStatement> SqlPreparedStatementPtr;
 		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
 		typedef std::unique_ptr<sql::Statement> SqlStatementPtr;
+		typedef std::pair<std::string, std::string> StringString;
+		typedef std::vector<std::pair<std::string, std::vector<StringString>>> Queries;
 
 	public:
 		// allow wrapper and locking class access to protected functions
@@ -189,7 +196,7 @@ namespace crawlservpp::Main {
 		unsigned long getLostUrlsByWebsiteUpdate(unsigned long websiteId, const WebsiteProperties& websiteProperties);
 		void updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
 		void deleteWebsite(unsigned long websiteId);
-		unsigned long duplicateWebsite(unsigned long websiteId);
+		unsigned long duplicateWebsite(unsigned long websiteId, const Queries& queries);
 
 		// URL list functions
 		unsigned long addUrlList(unsigned long websiteId, const UrlListProperties& listProperties);

@@ -2461,16 +2461,119 @@ namespace crawlservpp::Main {
 		);
 	}
 
-	// server command duplicatewebsite(id): Duplicate a website by its ID (no processed data will be duplicated)
+	// server command duplicatewebsite(id, queries): Duplicate a website by its ID (no processed data will be duplicated)
+	//  NOTE:	'queries' needs to be a JSON object that includes all modules (as key names)
+	//			 and their queries (as key values i.e. arrays with objects including "cat" and "name" keys)
 	Server::ServerCommandResponse Server::cmdDuplicateWebsite() {
-		// get argument
+		// get arguments
 		if(!(this->cmdJson.HasMember("id")))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
 
 		if(!(this->cmdJson["id"].IsUint64()))
 			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
 
+		if(!(this->cmdJson.HasMember("queries")))
+			return ServerCommandResponse::failed("Invalid arguments (\'queries\' is missing).");
+
+		if(!(this->cmdJson["queries"].IsObject()))
+			return ServerCommandResponse::failed("Invalid arguments (\'queries\' is not a valid JSON object).");
+
 		const unsigned long id = this->cmdJson["id"].GetUint64();
+
+		// get queries from JSON
+		Queries queries;
+
+		for(const auto& pair : this->cmdJson["queries"].GetObject()) {
+			const std::string moduleName(
+					pair.name.GetString(),
+					pair.name.GetStringLength()
+			);
+
+			if(moduleName.empty())
+				continue;
+
+			if(!pair.value.IsArray())
+				return ServerCommandResponse::failed(
+						"Invalid arguments (\'"
+						+ Helper::Json::stringify(pair.value)
+						+ "\' in \'queries\' is not a valid JSON array)."
+				);
+
+			auto moduleIt = std::find_if(queries.begin(), queries.end(),
+					[&moduleName](const auto& p) {
+						return p.first == moduleName;
+					}
+			);
+
+			if(moduleIt == queries.end()) {
+				queries.emplace_back(
+					moduleName,
+					std::vector<StringString>()
+				);
+
+				moduleIt = queries.end();
+
+				--moduleIt;
+			}
+
+			for(const auto& queryCatName : pair.value.GetArray()) {
+				if(!queryCatName.IsObject())
+					return ServerCommandResponse::failed(
+							"Invalid arguments (\'"
+							+ Helper::Json::stringify(queryCatName)
+							+ "\' in \'queries[\'"
+							+ moduleName
+							+ "\']\' is not a valid JSON object)."
+					);
+
+				if(!queryCatName.HasMember("cat"))
+					return ServerCommandResponse::failed(
+							"Invalid arguments (\'"
+							+ Helper::Json::stringify(queryCatName)
+							+ "\' in \'queries[\'"
+							+ moduleName
+							+ "\']\' does not contain \'cat\')."
+					);
+
+				if(!queryCatName["cat"].IsString())
+					return ServerCommandResponse::failed(
+							"Invalid arguments (\'"
+							+ Helper::Json::stringify(queryCatName["cat"])
+							+ "\' in \'queries[\'"
+							+ moduleName
+							+ "\']\' is not a valid string)."
+					);
+
+				if(!queryCatName.HasMember("name"))
+					return ServerCommandResponse::failed(
+							"Invalid arguments (\'"
+							+ Helper::Json::stringify(queryCatName)
+							+ "\' in \'queries[\'"
+							+ moduleName
+							+ "\']\' does not contain \'name\')."
+					);
+
+				if(!queryCatName["name"].IsString())
+					return ServerCommandResponse::failed(
+							"Invalid arguments (\'"
+							+ Helper::Json::stringify(queryCatName["name"])
+							+ "\' in \'queries[\'"
+							+ moduleName
+							+ "\']\' is not a valid string)."
+					);
+
+				moduleIt->second.emplace_back(
+						std::string(
+								queryCatName["cat"].GetString(),
+								queryCatName["cat"].GetStringLength()
+						),
+						std::string(
+								queryCatName["name"].GetString(),
+								queryCatName["name"].GetStringLength()
+						)
+				);
+			}
+		}
 
 		// check website
 		if(!(this->database.isWebsite(id)))
@@ -2481,7 +2584,7 @@ namespace crawlservpp::Main {
 			);
 
 		// duplicate website configuration
-		const unsigned long newId = this->database.duplicateWebsite(id);
+		const unsigned long newId = this->database.duplicateWebsite(id, queries);
 
 		if(!newId)
 			return ServerCommandResponse::failed("Could not add duplicate to database.");

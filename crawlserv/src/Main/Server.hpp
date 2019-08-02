@@ -107,6 +107,7 @@
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
 #include <thread>		// std::thread
+#include <utility>		// std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Main {
@@ -132,7 +133,10 @@ namespace crawlservpp::Main {
 		typedef Struct::ThreadOptions ThreadOptions;
 		typedef Struct::UrlListProperties UrlListProperties;
 		typedef Struct::WebsiteProperties WebsiteProperties;
+
 		typedef struct mg_connection * ConnectionPtr;
+		typedef std::pair<std::string, std::string> StringString;
+		typedef std::vector<std::pair<std::string, std::vector<StringString>>> Queries;
 
 	public:
 		// constructor

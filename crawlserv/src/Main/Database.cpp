@@ -1611,7 +1611,7 @@ namespace crawlservpp::Main {
 
 	// duplicate website in the database by its ID (no processed data will be duplicated),
 	//  throws Database::Exception
-	unsigned long Database::duplicateWebsite(unsigned long websiteId) {
+	unsigned long Database::duplicateWebsite(unsigned long websiteId, const Queries& queries) {
 		unsigned long result = 0;
 
 		// check argument
@@ -1682,9 +1682,11 @@ namespace crawlservpp::Main {
 				}
 
 				// prepare SQL statement for getting queries
+				IdPairs ids;
+
 				sqlStatement.reset(
 						this->connection->prepareStatement(
-							"SELECT name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly"
+							"SELECT id, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly"
 							" FROM crawlserv_queries"
 							" WHERE website = ?"
 						)
@@ -1698,7 +1700,9 @@ namespace crawlservpp::Main {
 				// get results
 				while(sqlResultSet && sqlResultSet->next()) {
 					// add query
-					this->addQuery(
+					const unsigned long oldId = sqlResultSet->getUInt64("id");
+
+					const unsigned long newId = this->addQuery(
 							result,
 							QueryProperties(
 									sqlResultSet->getString("name"),
@@ -1712,6 +1716,7 @@ namespace crawlservpp::Main {
 							)
 					);
 
+					ids.emplace_back(oldId, newId);
 				}
 
 				// prepare SQL statement for getting configurations
@@ -1730,13 +1735,160 @@ namespace crawlservpp::Main {
 
 				// get results
 				while(sqlResultSet && sqlResultSet->next()) {
+					const std::string module(sqlResultSet->getString("module"));
+					std::string config(sqlResultSet->getString("config"));
+
+					// find module in queries
+					auto modIt = std::find_if(queries.begin(), queries.end(), [&module](const auto& p) {
+						return p.first == module;
+					});
+
+					if(modIt != queries.end()) {
+						// update queries in configuration
+						rapidjson::Document jsonConfig;
+
+						try {
+							jsonConfig = Helper::Json::parseRapid(config);
+						}
+						catch(const JsonException& e) {
+							throw Exception("Main::Database::duplicateWebsite(): Could not parse configuration (" + e.whatStr() + ")");
+						}
+
+						if(!jsonConfig.IsArray())
+							throw Exception(
+									"Main::Database::duplicateWebsite(): Configuration is no valid JSON array: \'"
+									+ Helper::Json::stringify(jsonConfig)
+									+ "\'"
+							);
+
+						for(auto& configEntry : jsonConfig.GetArray()) {
+							if(!configEntry.IsObject())
+								throw Exception(
+										"Main::Database::duplicateWebsite(): Configuration contains invalid entry \'"
+										+ Helper::Json::stringify(configEntry)
+										+ "\'"
+								);
+
+							if(!configEntry.HasMember("cat"))
+								throw Exception(
+										"Main::Database::duplicateWebsite(): Configuration entry \'"
+										+ Helper::Json::stringify(configEntry)
+										+ "\' does not include \'cat\'"
+								);
+
+							if(!configEntry["cat"].IsString())
+								throw Exception(
+										"Main::Database::duplicateWebsite(): Configuration entry \'"
+										+ Helper::Json::stringify(configEntry)
+										+ "\' does not include valid string for \'cat\'"
+								);
+
+							if(!configEntry.HasMember("name"))
+								throw Exception(
+										"Main::Database::duplicateWebsite(): Configuration entry \'"
+										+ Helper::Json::stringify(configEntry)
+										+ "\' does not include \'name\'"
+								);
+
+							if(!configEntry["name"].IsString())
+								throw Exception(
+										"Main::Database::duplicateWebsite(): Configuration entry \'"
+										+ Helper::Json::stringify(configEntry)
+										+ "\' does not include valid string for \'name\'"
+								);
+
+							if(!configEntry.HasMember("value"))
+								throw Exception(
+										"Main::Database::duplicateWebsite(): Configuration entry \'"
+										+ Helper::Json::stringify(configEntry)
+										+ "\' does not include \'value\'"
+								);
+
+							const std::string cat(
+									configEntry["cat"].GetString(),
+									configEntry["cat"].GetStringLength()
+							);
+							const std::string name(
+									configEntry["name"].GetString(),
+									configEntry["name"].GetStringLength()
+							);
+
+							const auto queryIt = std::find_if(
+									modIt->second.begin(),
+									modIt->second.end(),
+									[&cat, &name](const auto& p) {
+										return p.first == cat && p.second == name;
+									}
+							);
+
+							if(queryIt != modIt->second.end()) {
+								if(configEntry["value"].IsArray()) {
+									for(auto& arrayElement : configEntry["value"].GetArray()) {
+										if(!arrayElement.IsUint64())
+											throw Exception(
+													"Main::Database::duplicateWebsite(): Configuration entry \'"
+													+ Helper::Json::stringify(configEntry)
+													+ "\' includes invalid query ID \'"
+													+ Helper::Json::stringify(arrayElement)
+													+ "\'"
+											);
+
+										const unsigned long queryId = arrayElement.GetUint64();
+
+										const auto idsIt = std::find_if(
+												ids.begin(),
+												ids.end(),
+												[&queryId](const auto& p) {
+													return p.first == queryId;
+												}
+										);
+
+										if(idsIt != ids.end()) {
+											rapidjson::Value newValue(idsIt->second);
+
+											arrayElement.Swap(newValue);
+										}
+									}
+								}
+								else {
+									if(!configEntry["value"].IsUint64())
+										throw Exception(
+												"Main::Database::duplicateWebsite(): Configuration entry \'"
+												+ Helper::Json::stringify(configEntry)
+												+ "\' includes invalid query ID \'"
+												+ Helper::Json::stringify(configEntry["value"])
+												+ "\'"
+										);
+
+									const unsigned long queryId = configEntry["value"].GetUint64();
+
+									const auto idsIt = std::find_if(
+											ids.begin(),
+											ids.end(),
+											[&queryId](const auto& p) {
+												return p.first == queryId;
+											}
+									);
+
+									if(idsIt != ids.end()) {
+										rapidjson::Value newValue(idsIt->second);
+
+										configEntry["value"].Swap(newValue);
+									}
+								}
+							}
+						}
+
+						config = Helper::Json::stringify(jsonConfig);
+					}
+
 					// add configuration
 					this->addConfiguration(
 							result,
 							ConfigProperties(
-									sqlResultSet->getString("module"),
+									module,
 									sqlResultSet->getString("name"),
-									sqlResultSet->getString("config")
+									config
 							)
 					);
 				}
