@@ -227,7 +227,7 @@ namespace crawlservpp::Main {
 			case 3:
 			case 27:
 				// CTRL+C, ESCAPE -> cancel and end input loop
-				std::cout << " [CANCELLED]";
+				std::cout << "[CANCELLED]";
 
 				inputCancel = true;
 				inputLoop = false;
@@ -289,8 +289,10 @@ namespace crawlservpp::Main {
 
 	// static helper function: load database and server settings from configuration file, throws Main::Exception
 	void App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings,	ServerSettings& serverSettings) {
+		// read file
 		const ConfigFile configFile(fileName);
 
+		// set database settings
 		dbSettings.host = configFile.getValue("db_host");
 
 		try {
@@ -307,6 +309,23 @@ namespace crawlservpp::Main {
 		dbSettings.user = configFile.getValue("db_user");
 		dbSettings.name = configFile.getValue("db_name");
 
+		if(!configFile.getValue("db_debug_logging").empty()) {
+			try {
+				dbSettings.debugLogging = boost::lexical_cast<bool>(configFile.getValue("db_debug_logging"));
+			}
+			catch(const boost::bad_lexical_cast& e) {
+				throw Exception(
+						fileName + ":"
+						" Could not convert config file entry \"db_debug_logging\""
+						" (=\"" + configFile.getValue("db_debug_logging") + "\")"
+						" to boolean value"
+				);
+			}
+		}
+		else
+			dbSettings.debugLogging = false;
+
+		// set server settings
 		if(!configFile.getValue("server_client_compress").empty()) {
 			try {
 				dbSettings.compression = boost::lexical_cast<bool>(configFile.getValue("server_client_compress"));

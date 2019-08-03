@@ -44,17 +44,6 @@ namespace crawlservpp::Struct {
 
 		// constructors
 		ServerSettings() : corsOrigins("*"), logsDeletable(false), dataDeletable(false) {}
-		ServerSettings(
-				const std::string& setPort,
-				const std::string& setAllowedClients,
-				const std::string& setCorsOrigins,
-				bool setLogsDeletable,
-				bool setDataDeletable
-		) : port(setPort),
-			allowedClients(setAllowedClients),
-			corsOrigins(setCorsOrigins),
-			logsDeletable(setLogsDeletable),
-			dataDeletable(setDataDeletable) {}
 	};
 
 } /* crawlservpp::Struct */

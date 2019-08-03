@@ -42,22 +42,21 @@ namespace crawlservpp::Struct {
 		std::string password;	// user password for database
 		std::string name;		// name/schema of database
 		bool compression;		// use compression protocol
+		std::string debugDir;	// debug directory
+		bool debugLogging;		// enable debug logging (to file) for thread
 
 		// constructors
-		DatabaseSettings() : port(0), compression(false) {}
-		DatabaseSettings(
-				const std::string& setHost,
-				unsigned short setPort,
-				const std::string& setUser,
-				const std::string& setPassword,
-				const std::string& setName,
-				bool setCompression
-		) : host(setHost),
-			port(setPort),
-			user(setUser),
-			password(setPassword),
-			name(setName),
-			compression(setCompression) {}
+		DatabaseSettings() : port(0), compression(false), debugLogging(false) {}
+		DatabaseSettings(const DatabaseSettings& dbSettings, const std::string& setDebugDir) {
+			this->host = dbSettings.host;
+			this->port = dbSettings.port;
+			this->user = dbSettings.user;
+			this->password = dbSettings.password;
+			this->name = dbSettings.name;
+			this->compression = dbSettings.compression;
+			this->debugLogging = dbSettings.debugLogging;
+			this->debugDir = setDebugDir;
+		}
 	};
 
 } /* crawlservpp::Struct */

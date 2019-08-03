@@ -41,23 +41,27 @@ namespace crawlservpp::Main {
 			const ServerSettings& serverSettings
 	)
 			: settings(serverSettings),
-			  dbSettings(databaseSettings),
-			  database(databaseSettings, "server"),
+			  dbSettings(databaseSettings, MAIN_SERVER_DIR_DEBUG),
+			  database(dbSettings, "server"),
 			  allowed(serverSettings.allowedClients),
 			  running(true),
 			  offline(true),
 			  dirCache(MAIN_SERVER_DIR_CACHE),
 			  dirCookies(MAIN_SERVER_DIR_COOKIES),
 			  webServer(this->dirCache) {
+
 		// clear or create cache directory
 		if(Helper::FileSystem::isValidDirectory(this->dirCache))
 			Helper::FileSystem::clearDirectory(this->dirCache);
 		else
 			Helper::FileSystem::createDirectory(this->dirCache);
 
-
 		// create cookies directory if it does not exist
 		Helper::FileSystem::createDirectoryIfNotExists(this->dirCookies);
+
+		// create and save debug directory if needed
+		if(dbSettings.debugLogging)
+			Helper::FileSystem::createDirectoryIfNotExists(dbSettings.debugDir);
 
 		// set database option
 		this->database.setSleepOnError(MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC);

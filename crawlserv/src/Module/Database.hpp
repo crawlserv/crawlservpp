@@ -34,12 +34,14 @@
 #ifndef MODULE_DATABASE_HPP_
 #define MODULE_DATABASE_HPP_
 
+#include "../Helper/FileSystem.hpp"
 #include "../Main/Database.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ModuleOptions.hpp"
 
 #include <climits>	// USHRT_MAX
+#include <fstream>	// std::ofstream
 #include <memory>	// std::unique_ptr
 #include <queue>	// std::queue
 #include <string>	// std::string, std::to_string
@@ -96,6 +98,12 @@ namespace crawlservpp::Module {
 		unsigned short loggingLevel;
 		unsigned short loggingMin;
 		unsigned short loggingVerbose;
+		std::ofstream loggingFile;
+		bool debugLogging;
+		std::string debugDir;
+
+		// private helper function
+		void initDebugLogging();
 
 		// IDs of prepared SQL statements
 		struct _ps {

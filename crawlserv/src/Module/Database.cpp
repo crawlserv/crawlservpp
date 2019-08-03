@@ -41,6 +41,8 @@ namespace crawlservpp::Module {
 							  loggingLevel(USHRT_MAX),
 							  loggingMin(1),
 							  loggingVerbose(USHRT_MAX),
+							  debugLogging(dbSettings.debugLogging),
+							  debugDir(dbSettings.debugDir),
 							  ps(_ps()) {
 		if(Main::Database::driver)
 			Main::Database::driver->threadInit();
@@ -52,6 +54,9 @@ namespace crawlservpp::Module {
 	Database::~Database() {
 		if(Main::Database::driver)
 			Main::Database::driver->threadEnd();
+
+		if(this->loggingFile.is_open())
+			this->loggingFile.close();
 	}
 
 	// set general module options and convert IDs to strings
@@ -79,6 +84,21 @@ namespace crawlservpp::Module {
 		this->loggingLevel = level;
 		this->loggingMin = min;
 		this->loggingVerbose = verbose;
+
+		// initialize debug logging if necessary
+		if(this->debugLogging && !(this->threadIdString.empty())) {
+			const std::string loggingFileName(this->debugDir + Helper::FileSystem::getPathSeparator() + this->threadIdString);
+
+			if(this->loggingFile.is_open()) {
+				this->loggingFile.close();
+				this->loggingFile.clear();
+			}
+
+			this->loggingFile.open(this->debugDir + Helper::FileSystem::getPathSeparator() + this->threadIdString.c_str());
+
+			if(!(this->loggingFile.is_open()))
+				throw Exception("Could not open \'" + loggingFileName + "\' for writing.");
+		}
 	}
 
 	// prepare SQL statements for thread management
@@ -125,6 +145,9 @@ namespace crawlservpp::Module {
 	void Database::log(unsigned short level, const std::string& logEntry) {
 		if(level <= this->loggingLevel)
 			this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
+
+		if(this->debugLogging && this->loggingFile.is_open())
+			this->loggingFile << logEntry << "\n" << std::flush;
 	}
 
 	// write multiple thread-specific log entries to the database
@@ -134,8 +157,14 @@ namespace crawlservpp::Module {
 			while(!logEntries.empty()) {
 				this->Main::Database::log("[#" + this->threadIdString + "] " + logEntries.front());
 
+				if(this->debugLogging && this->loggingFile.is_open())
+					this->loggingFile << logEntries.front() << "\n";
+
 				logEntries.pop();
 			}
+
+			if(this->debugLogging && this->loggingFile.is_open())
+				this->loggingFile.flush();
 		}
 		else
 			std::queue<std::string>().swap(logEntries);
