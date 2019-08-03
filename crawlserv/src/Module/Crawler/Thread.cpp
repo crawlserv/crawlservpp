@@ -287,10 +287,6 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL selection
 		if(this->crawlingUrlSelection(url, usePost)) {
-			// DEBUG
-			if(url.second.find("$t") != std::string::npos)
-				bool debug = true;
-
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
@@ -1361,12 +1357,16 @@ namespace crawlservpp::Module::Crawler {
 
 	// replace token variables in custom URL
 	Thread::IdString Thread::crawlingReplaceTokens(const IdString& url) {
+		// check whether token variables exist
 		if(this->config.customTokens.empty())
 			return url;
 
+		// copy URL for result
 		IdString result(url);
 
+		// go through all existing token variables
 		for(auto i = this->config.customTokens.begin(); i != this->config.customTokens.end(); ++i) {
+			// check URL for token variable
 			if(result.second.find(*i) != std::string::npos) {
 				const auto index = i - this->config.customTokens.begin();
 				std::string value;
@@ -1377,6 +1377,7 @@ namespace crawlservpp::Module::Crawler {
 
 				if(
 						cachedSeconds
+						&& !cachedToken.second.empty()
 						&& cachedToken.first > std::chrono::steady_clock::time_point::min()
 						&& std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
 							- cachedToken.first).count() <= cachedSeconds
@@ -1503,8 +1504,13 @@ namespace crawlservpp::Module::Crawler {
 									+ "\' - not single and not bool."
 							);
 
-						// save token value in cache if necessary
-						if(cachedSeconds) {
+						// check value
+						if(value.empty())
+							queryWarnings.emplace(
+									"WARNING: Empty value for token \'" + *i + "\'."
+							);
+						else if(cachedSeconds) {
+							// save token value in cache
 							this->customTokens.at(index).first = std::chrono::steady_clock::now();
 							this->customTokens.at(index).second = value;
 						}
