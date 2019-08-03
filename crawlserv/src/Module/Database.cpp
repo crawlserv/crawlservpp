@@ -38,8 +38,9 @@ namespace crawlservpp::Module {
 	// constructor
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 							: Main::Database(dbSettings, dbModule),
-							  logging(true),
-							  verbose(false),
+							  loggingLevel(USHRT_MAX),
+							  loggingMin(1),
+							  loggingVerbose(USHRT_MAX),
 							  ps(_ps()) {
 		if(Main::Database::driver)
 			Main::Database::driver->threadInit();
@@ -73,10 +74,11 @@ namespace crawlservpp::Module {
 		this->threadIdString = std::to_string(threadId);
 	}
 
-	// set logging options
-	void Database::setLogging(bool isLogging, bool isVerbose) {
-		this->logging = isLogging;
-		this->verbose = isVerbose;
+	// set current, minimal and verbose logging levels
+	void Database::setLogging(unsigned short level, unsigned short min, unsigned short verbose) {
+		this->loggingLevel = level;
+		this->loggingMin = min;
+		this->loggingVerbose = verbose;
 	}
 
 	// prepare SQL statements for thread management
@@ -119,17 +121,24 @@ namespace crawlservpp::Module {
 	}
 
 	// write thread-specific log entry to the database
-	void Database::log(const std::string& logEntry) {
-		this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
+	//  NOTE: log entry will not be written if the logging level is lower than the specified level for the entry
+	void Database::log(unsigned short level, const std::string& logEntry) {
+		if(level <= this->loggingLevel)
+			this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
 	}
 
 	// write multiple thread-specific log entries to the database
-	void Database::log(std::queue<std::string>& logEntries) {
-		while(!logEntries.empty()) {
-			this->Main::Database::log("[#" + this->threadIdString + "] " + logEntries.front());
+	//  NOTE: log entries will not be written if the logging level is lower than the specified level for the entries
+	void Database::log(unsigned short level, std::queue<std::string>& logEntries) {
+		if(level <= this->loggingLevel) {
+			while(!logEntries.empty()) {
+				this->Main::Database::log("[#" + this->threadIdString + "] " + logEntries.front());
 
-			logEntries.pop();
+				logEntries.pop();
+			}
 		}
+		else
+			std::queue<std::string>().swap(logEntries);
 	}
 
 	// set the status message of a thread (and add the pause state), throws Database::Exception

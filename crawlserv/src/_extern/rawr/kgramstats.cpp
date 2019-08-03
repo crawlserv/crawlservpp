@@ -58,7 +58,7 @@ bool rawr::compile(unsigned short maxK)
 	  delete_aspell_config(spell_config);
 	  if (aspell_error_number(possible_err) != 0)
 	    {
-	      if(_log) _log("Aspell ERROR: " + std::string(aspell_error_message(possible_err)));
+	      if(_log) _log(1, "Aspell ERROR: " + std::string(aspell_error_message(possible_err)));
 	      return false;
 	    }
   }
@@ -120,12 +120,12 @@ bool rawr::compile(unsigned short maxK)
         	return false;
         }
         if(_setprogress) _setprogress((float) per / 10000);
-        if(per % 1000 == 0 && _verbose && _log) {
+        if(per % 1000 == 0 && _log) {
         	// log every 10%
         	std::ostringstream logStrStr;
         	logStrStr.imbue(std::locale(""));
         	logStrStr << " " << per / 100 << "%";
-        	_log(logStrStr.str());
+        	_log(_verbose, logStrStr.str());
         }
       }
     
@@ -350,17 +350,17 @@ bool rawr::compile(unsigned short maxK)
 
   if(_log) {
 	  if(_timing) {
-		  _log("tokenized corpus in " + timer->tickStr() + ".");
+		  _log(1, "tokenized corpus in " + timer->tickStr() + ".");
 		  delete timer;
 	  }
 	  std::ostringstream logStrStr;
 	  logStrStr.imbue(std::locale(""));
 	  logStrStr << canonical_form.size() << " distinct forms.";
-	  _log(logStrStr.str());
+	  _log(1, logStrStr.str());
 	  logStrStr.str("");
 	  logStrStr.clear();
 	  logStrStr << words.size() << " distinct words.";
-	  _log(logStrStr.str());
+	  _log(1, logStrStr.str());
   }
   
   // Time to condense the distribution stuff for the words
@@ -419,12 +419,12 @@ bool rawr::compile(unsigned short maxK)
         	  return false;
           }
           if(_setprogress) _setprogress((float) per / 10000);
-          if(per % 1000 == 0 && _verbose && _log) {
+          if(per % 1000 == 0 && _log) {
 			// log every 10%
 			std::ostringstream logStrStr;
 			logStrStr.imbue(std::locale(""));
 			logStrStr << " " << per / 100 << "%";
-			_log(logStrStr.str());
+			_log(_verbose, logStrStr.str());
 		  }
         }
       
@@ -481,7 +481,7 @@ bool rawr::compile(unsigned short maxK)
     corpid++;
   }
 
-  if(_timing && _log) _log("created Markov chain in " + timer->tickStr() + ".");
+  if(_timing && _log) _log(1, "created Markov chain in " + timer->tickStr() + ".");
 
   // Condense the kgram distribution
   if(_setstatus) _setstatus("Compiling kgram distributions...");
@@ -503,12 +503,12 @@ bool rawr::compile(unsigned short maxK)
     	  return false;
       }
       if(_setprogress) _setprogress((float) per / 10000);
-      if(per % 1000 == 0 && _verbose && _log) {
+      if(per % 1000 == 0 && _log) {
 		// log every 10%
 		std::ostringstream logStrStr;
 		logStrStr.imbue(std::locale(""));
 		logStrStr << " " << per / 100 << "%";
-		_log(logStrStr.str());
+		_log(_verbose, logStrStr.str());
 	  }
     }
     
@@ -526,7 +526,7 @@ bool rawr::compile(unsigned short maxK)
   }
   
   if(_timing && _log) {
-	  _log("compiled kgram distributions in " + timer->tickStr() + ".");
+	  _log(1, "compiled kgram distributions in " + timer->tickStr() + ".");
 	  delete timer;
   }
   if(_setprogress) _setprogress(1.f);
@@ -589,7 +589,7 @@ void rawr::setSpellChecking(bool enable, std::string language) {
 	_language = language;
 }
 
-void rawr::setVerbose(bool verbose) {
+void rawr::setVerbose(unsigned short verbose) {
 	_verbose = verbose;
 }
 
@@ -811,7 +811,7 @@ std::string rawr::randomSentence(unsigned int maxL) const
     }
 		
     /* DEBUG */
-    if(_verbose && _log) {
+    if(_log) {
     	std::ostringstream logStrStr;
 
     	logStrStr << cur << "-> \"" << nextToken << "\" (" << next.all << "/" << max << ")" << " in corp";
@@ -820,7 +820,7 @@ std::string rawr::randomSentence(unsigned int maxL) const
 		  logStrStr << " " << cor;
 		}
 		logStrStr << "; l=" << cur.size() << ",cuts=" << cuts << std::endl;
-		_log(logStrStr.str());
+		_log(_verbose, logStrStr.str());
     }
 
     cur.push_back(next.tok);

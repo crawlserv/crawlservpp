@@ -65,22 +65,23 @@ namespace crawlservpp::Module::Analyzer {
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
-		if(this->config.generalLogging) {
-			while(!configWarnings.empty()) {
-				this->log("WARNING: " + configWarnings.front());
-				configWarnings.pop();
-			}
+		while(!configWarnings.empty()) {
+			this->log(Config::generalLoggingDefault, "WARNING: " + configWarnings.front());
+
+			configWarnings.pop();
 		}
 
 		// set database configuration
 		this->setStatusMessage("Setting database configuration...");
 
-		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
+		this->database.setLogging(
+				this->config.generalLogging,
+				Config::generalLoggingDefault,
+				Config::generalLoggingVerbose
+		);
 
-		if(verbose)
-			this->log("sets database configuration...");
+		this->log(Config::generalLoggingVerbose, "sets database configuration...");
 
-		this->database.setLogging(this->config.generalLogging, verbose);
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 		this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
@@ -88,16 +89,14 @@ namespace crawlservpp::Module::Analyzer {
 		// prepare SQL statements for analyzer
 		this->setStatusMessage("Preparing SQL statements...");
 
-		if(verbose)
-			this->log("prepares SQL statements...");
+		this->log(Config::generalLoggingVerbose, "prepares SQL statements...");
 
 		this->database.prepare();
 
 		// initialize algorithm
 		this->setStatusMessage("Initializing algorithm...");
 
-		if(verbose)
-			this->log("initializes algorithm...");
+		this->log(Config::generalLoggingVerbose, "initializes algorithm...");
 
 		this->onAlgoInit();
 

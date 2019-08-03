@@ -126,6 +126,8 @@ namespace crawlservpp::Module::Analyzer {
 
 	// prepare SQL statements for analyzer, throws Main::Database::Exception
 	void Database::prepare() {
+		const unsigned short verbose = this->getLoggingVerbose();
+
 		// check connection to database
 		this->checkConnection();
 
@@ -135,8 +137,7 @@ namespace crawlservpp::Module::Analyzer {
 		try {
 			// prepare SQL statements for analyzer
 			if(!(this->ps.getCorpus)) {
-				if(this->isVerbose())
-					this->log("prepares getCorpus()...");
+				this->log(verbose, "prepares getCorpus()...");
 
 				this->ps.getCorpus = this->addPreparedStatement(
 						"SELECT corpus, datemap, sources"
@@ -152,8 +153,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.isCorpusChanged)) {
-				if(this->isVerbose())
-					this->log("prepares isCorpusChanged() [1/4]...");
+				this->log(verbose, "prepares isCorpusChanged() [1/4]...");
 
 				this->ps.isCorpusChanged = this->addPreparedStatement(
 						"SELECT EXISTS"
@@ -172,8 +172,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.isCorpusChangedParsing)) {
-				if(this->isVerbose())
-					this->log("prepares isCorpusChanged() [2/4]...");
+				this->log(verbose, "prepares isCorpusChanged() [2/4]...");
 
 				this->ps.isCorpusChangedParsing = this->addPreparedStatement(
 						"SELECT updated"
@@ -185,8 +184,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.isCorpusChangedExtracting)) {
-				if(this->isVerbose())
-					this->log("prepares isCorpusChanged() [3/4]...");
+				this->log(verbose, "prepares isCorpusChanged() [3/4]...");
 
 				this->ps.isCorpusChangedExtracting = this->addPreparedStatement(
 						"SELECT updated"
@@ -198,8 +196,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.isCorpusChangedAnalyzing)) {
-				if(this->isVerbose())
-					this->log("prepares isCorpusChanged() [4/4]...");
+				this->log(verbose, "prepares isCorpusChanged() [4/4]...");
 
 				this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement(
 						"SELECT updated"
@@ -211,8 +208,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.deleteCorpus)) {
-				if(this->isVerbose())
-					this->log("prepares createCorpus() [1/2]...");
+				this->log(verbose, "prepares createCorpus() [1/2]...");
 
 				this->ps.deleteCorpus = this->addPreparedStatement(
 						"DELETE"
@@ -227,8 +223,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.addCorpus)) {
-				if(this->isVerbose())
-					this->log("prepares createCorpus() [2/2]...");
+				this->log(verbose, "prepares createCorpus() [2/2]...");
 
 				this->ps.addCorpus = this->addPreparedStatement(
 						"INSERT INTO crawlserv_corpora"
@@ -249,12 +244,10 @@ namespace crawlservpp::Module::Analyzer {
 		this->reserveForPreparedStatements(statements.size());
 
 		// prepare SQL statements for algorithm
-		if(this->isVerbose())
-			this->log(
-					"prepares "
-					+ std::to_string(statements.size())
-					+ " SQL statements for algorithm..."
-			);
+		this->log(
+				this->getLoggingVerbose(),
+				"prepares " + std::to_string(statements.size()) + " SQL statements for algorithm..."
+		);
 
 		for(const auto& statement : statements)
 			idsTo.push_back(this->addPreparedStatement(statement));
@@ -278,15 +271,13 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check arguments
 		if(corpusProperties.sourceTable.empty()) {
-			if(this->isLogging())
-				this->log("WARNING: Name of source table is empty.");
+			this->log(this->getLoggingMin(), "WARNING: Name of source table is empty.");
 
 			return;
 		}
 
 		if(corpusProperties.sourceField.empty()) {
-			if(this->isLogging())
-				this->log("WARNING: Name of source field is empty.");
+			this->log(this->getLoggingMin(), "WARNING: Name of source field is empty.");
 
 			return;
 		}
@@ -322,17 +313,15 @@ namespace crawlservpp::Module::Analyzer {
 
 					sourcesTo = sqlResultSet->getUInt64("sources");
 
-					if(this->isLogging()) {
-						std::ostringstream logStrStr;
+					std::ostringstream logStrStr;
 
-						logStrStr.imbue(std::locale(""));
+					logStrStr.imbue(std::locale(""));
 
-						logStrStr	<< "got text corpus of "
-									<< corpusTo.size()
-									<< " bytes.";
+					logStrStr	<< "got text corpus of "
+								<< corpusTo.size()
+								<< " bytes.";
 
-						this->log(logStrStr.str());
-					}
+					this->log(this->getLoggingMin(), logStrStr.str());
 				}
 			}
 			catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::getCorpus", e); }
@@ -398,17 +387,15 @@ namespace crawlservpp::Module::Analyzer {
 
 				corpusTo.swap(filteredCorpus);
 
-				if(this->isLogging()) {
-					std::ostringstream logStrStr;
+				std::ostringstream logStrStr;
 
-					logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(std::locale(""));
 
-					logStrStr	<< "filtered corpus to "
-								<< corpusTo.length()
-								<< " bytes.";
+				logStrStr	<< "filtered corpus to "
+							<< corpusTo.length()
+							<< " bytes.";
 
-					this->log(logStrStr.str());
-				}
+				this->log(this->getLoggingMin(), logStrStr.str());
 			}
 			else
 				throw Exception("Analyzer::Database::getCorpus(): No datemap for corpus found");
@@ -462,12 +449,11 @@ namespace crawlservpp::Module::Analyzer {
 	void Database::checkSources(
 			std::vector<unsigned char>& types,
 			std::vector<std::string>& tables,
-			std::vector<std::string>& columns,
-			bool logging
+			std::vector<std::string>& columns
 	) {
 		// remove invalid sources
 		for(unsigned long n = 1; n <= tables.size(); ++n) {
-			if(!this->checkSource(types.at(n - 1), tables.at(n - 1), columns.at(n - 1), logging)) {
+			if(!this->checkSource(types.at(n - 1), tables.at(n - 1), columns.at(n - 1))) {
 				--n;
 
 				types.erase(types.begin() + n);
@@ -485,8 +471,7 @@ namespace crawlservpp::Module::Analyzer {
 	bool Database::checkSource(
 			unsigned short type,
 			const std::string& table,
-			const std::string& column,
-			bool logging
+			const std::string& column
 	) {
 		// get full table name
 		const std::string tableName(this->getSourceTableName(type, table));
@@ -498,25 +483,25 @@ namespace crawlservpp::Module::Analyzer {
 
 			// check existence of column
 			if(!(this->database.isColumnExists(tableName, columnName))) {
-				if(logging)
-					this->log(
-							"WARNING: Non-existing column `"
-							+ columnName
-							+ "` in input table `"
-							+ tableName
-							+ "` ignored"
-					);
+				this->log(
+						this->getLoggingMin(),
+						"WARNING: Non-existing column `"
+						+ columnName
+						+ "` in input table `"
+						+ tableName
+						+ "` ignored"
+				);
 
 				return false;
 			}
 		}
 		else {
-			if(logging)
-				this->log(
-						"WARNING: Non-existing input table `"
-						+ tableName
-						+ "` ignored"
-				);
+			this->log(
+					this->getLoggingMin(),
+					"WARNING: Non-existing input table `"
+					+ tableName
+					+ "` ignored"
+			);
 
 			return false;
 		}
@@ -637,26 +622,19 @@ namespace crawlservpp::Module::Analyzer {
 		this->checkSource(
 				corpusProperties.sourceType,
 				corpusProperties.sourceTable,
-				corpusProperties.sourceField,
-				this->isLogging()
+				corpusProperties.sourceField
 		);
 
 		// show warning when using raw crawled data and logging is enabled
-		if(
-				corpusProperties.sourceType == Config::generalInputSourcesCrawling
-				&& this->isLogging()
-		) {
-			if(this->isLogging()) {
-				this->log("WARNING: Corpus will always be re-created when created from raw crawled data.");
+		if(corpusProperties.sourceType == Config::generalInputSourcesCrawling) {
+			this->log(this->getLoggingMin(), "WARNING: Corpus will always be re-created when created from raw crawled data.");
+			this->log(this->getLoggingMin(), "It is highly recommended to use parsed data instead!");
 
-				this->log("It is highly recommended to use parsed data instead!");
+			if(!corpusProperties.sourceTable.empty())
+				this->log(this->getLoggingMin(), "WARNING: Source table name ignored.");
 
-				if(!corpusProperties.sourceTable.empty())
-					this->log("WARNING: Source table name ignored.");
-
-				if(!corpusProperties.sourceField.empty())
-					this->log("WARNING: Source field name ignored.");
-			}
+			if(!corpusProperties.sourceField.empty())
+				this->log(this->getLoggingMin(), "WARNING: Source field name ignored.");
 		}
 
 		// start timing and write log entry
@@ -675,14 +653,14 @@ namespace crawlservpp::Module::Analyzer {
 				)
 		);
 
-		if(this->isLogging())
-			this->log(
-					"compiles text corpus from "
-					+ tableName
-					+ "."
-					+ columnName
-					+ "..."
-			);
+		this->log(
+				this->getLoggingMin(),
+				"compiles text corpus from "
+				+ tableName
+				+ "."
+				+ columnName
+				+ "..."
+		);
 
 		try {
 			// execute SQL query for deleting old text corpus (if it exists)
@@ -794,7 +772,7 @@ namespace crawlservpp::Module::Analyzer {
 
 					Database::sqlExecute(addStatement);
 				}
-				else if(this->isLogging()) {
+				else {
 					// show warning about text corpus size
 					bool adjustServerSettings = false;
 					std::ostringstream logStrStr;
@@ -813,29 +791,27 @@ namespace crawlservpp::Module::Analyzer {
 						adjustServerSettings = true;
 					}
 
-					this->log(logStrStr.str());
+					this->log(this->getLoggingMin(), logStrStr.str());
 
 					if(adjustServerSettings)
-						this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
+						this->log(this->getLoggingMin(), "Adjust the server's \'max_allowed_packet\' setting accordingly.");
 				}
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::createCorpus", e); }
 
-		if(this->isLogging()) {
-			// write log entry
-			std::ostringstream logStrStr;
+		// write log entry if necessary
+		std::ostringstream logStrStr;
 
-			logStrStr.imbue(std::locale(""));
+		logStrStr.imbue(std::locale(""));
 
-			logStrStr	<< "compiled text corpus of "
-						<< corpusTo.size()
-						<< " bytes in "
-						<< timer.tickStr()
-						<< ".";
+		logStrStr	<< "compiled text corpus of "
+					<< corpusTo.size()
+					<< " bytes in "
+					<< timer.tickStr()
+					<< ".";
 
-			this->log(logStrStr.str());
-		}
+		this->log(this->getLoggingMin(), logStrStr.str());
 	}
 
 } /* crawlservpp::Module::Analyzer */

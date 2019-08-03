@@ -92,12 +92,10 @@ namespace crawlservpp::Module::Extractor {
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
-		if(this->config.generalLogging) {
-			while(!configWarnings.empty()) {
-				this->log("WARNING: " + configWarnings.front());
+		while(!configWarnings.empty()) {
+			this->log(Config::generalLoggingDefault, "WARNING: " + configWarnings.front());
 
-				configWarnings.pop();
-			}
+			configWarnings.pop();
 		}
 
 		// check required queries
@@ -115,12 +113,14 @@ namespace crawlservpp::Module::Extractor {
 		// set database options
 		this->setStatusMessage("Setting database options...");
 
-		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
+		this->database.setLogging(
+				this->config.generalLogging,
+				Config::generalLoggingDefault,
+				Config::generalLoggingVerbose
+		);
 
-		if(verbose)
-			this->log("sets database options...");
+		this->log(Config::generalLoggingVerbose, "sets database options...");
 
-		this->database.setLogging(this->config.generalLogging, verbose);
 		this->database.setCacheSize(this->config.generalCacheSize);
 		this->database.setReextract(this->config.generalReExtract);
 		this->database.setExtractCustom(this->config.generalExtractCustom);
@@ -176,43 +176,33 @@ namespace crawlservpp::Module::Extractor {
 		// initialize target table
 		this->setStatusMessage("Initializing target table...");
 
-		if(verbose)
-			this->log("initializes target table...");
-
-		if(config.generalLogging == Config::generalLoggingVerbose)
-			this->log("initializes target table...");
+		this->log(Config::generalLoggingVerbose, "initializes target table...");
 
 		this->database.initTargetTable();
 
 		// prepare SQL statements for extractor
 		this->setStatusMessage("Preparing SQL statements...");
 
-		if(verbose)
-			this->log("prepares SQL statements...");
+		this->log(Config::generalLoggingVerbose, "prepares SQL statements...");
 
 		this->database.prepare();
 
 		// set network configuration
 		this->setStatusMessage("Setting network configuration...");
 
-		if(config.generalLogging == Config::generalLoggingVerbose)
-			this->log("sets network configuration...");
+		this->log(Config::generalLoggingVerbose, "sets network configuration...");
 
 		this->networking.setConfigGlobal(*this, false, configWarnings);
 
 		while(!configWarnings.empty()) {
-			this->log("WARNING: " + configWarnings.front());
+			this->log(Config::generalLoggingDefault, "WARNING: " + configWarnings.front());
 			configWarnings.pop();
 		}
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
 
-		if(verbose)
-			this->log("initializes custom queries...");
-
-		if(config.generalLogging == Config::generalLoggingVerbose)
-			this->log("initializes custom queries...");
+		this->log(Config::generalLoggingVerbose, "initializes custom queries...");
 
 		this->initQueries();
 
@@ -220,8 +210,7 @@ namespace crawlservpp::Module::Extractor {
 			// wait for extracting table lock
 			this->setStatusMessage("Waiting for extracting table...");
 
-			if(verbose)
-				this->log("waits for extracting table...");
+			this->log(Config::generalLoggingVerbose, "waits for extracting table...");
 
 			DatabaseLock(
 					this->database,
@@ -235,30 +224,27 @@ namespace crawlservpp::Module::Extractor {
 			// check extracting table
 			this->setStatusMessage("Checking extracting table...");
 
-			if(verbose)
-					this->log("checks extracting table...");
+			this->log(Config::generalLoggingVerbose, "checks extracting table...");
 
 			const unsigned int deleted = this->database.checkExtractingTable();
 
-			if(this->config.generalLogging) {
-				switch(deleted) {
-				case 0:
-					break;
+			switch(deleted) {
+			case 0:
+				break;
 
-				case 1:
-					this->log("WARNING: Deleted a duplicate URL lock.");
+			case 1:
+				this->log(Config::generalLoggingDefault, "WARNING: Deleted a duplicate URL lock.");
 
-					break;
+				break;
 
-				default:
-					std::ostringstream logStrStr;
+			default:
+				std::ostringstream logStrStr;
 
-					logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(std::locale(""));
 
-					logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+				logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
 
-					this->log(logStrStr.str());
-				}
+				this->log(Config::generalLoggingDefault, logStrStr.str());
 			}
 		}
 
@@ -324,8 +310,7 @@ namespace crawlservpp::Module::Extractor {
 			return;
 
 		// write log entry if necessary
-		if(this->config.generalLogging > Config::generalLoggingExtended)
-			this->log("extracts data for " + this->urls.front().second + "...");
+		this->log(Config::generalLoggingExtended, "extracts data for " + this->urls.front().second + "...");
 
 		// try to renew URL lock
 		this->lockTime = this->database.renewUrlLockIfOk(
@@ -336,11 +321,9 @@ namespace crawlservpp::Module::Extractor {
 
 		skip = this->lockTime.empty();
 
-		if(skip) {
+		if(skip)
 			// skip locked URL
-			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log("skips (locked) " + this->urls.front().second);
-		}
+			this->log(Config::generalLoggingExtended, "skips (locked) " + this->urls.front().second);
 		else {
 			// set status
 			this->setStatusMessage(this->urls.front().second);
@@ -376,43 +359,41 @@ namespace crawlservpp::Module::Extractor {
 				this->database.unLockUrlIfOk(this->urls.front().first, this->lockTime);
 
 			// stop timer
-			if(this->config.generalTiming && this->config.generalLogging)
+			if(this->config.generalTiming)
 				timerStr = timer.tickStr();
 
 			// reset lock time
 			this->lockTime = "";
 
 			// write to log if necessary
-			if(
-					(this->config.generalLogging > Config::generalLoggingDefault)
-					|| (this->config.generalTiming && this->config.generalLogging)
-			) {
-				std::ostringstream logStrStr;
+			std::ostringstream logStrStr;
 
-				switch(extracted) {
-				case 0:
-					logStrStr << "skipped ";
+			switch(extracted) {
+			case 0:
+				logStrStr << "skipped ";
 
-					break;
+				break;
 
-				case 1:
-					logStrStr << "extracted one dataset from ";
+			case 1:
+				logStrStr << "extracted one dataset from ";
 
-					break;
+				break;
 
-				default:
-					logStrStr.imbue(std::locale(""));
+			default:
+				logStrStr.imbue(std::locale(""));
 
-					logStrStr << "extracted " << extracted << " datasets from ";
-				}
-
-				logStrStr << this->urls.front().second;
-
-				if(this->config.generalTiming)
-					logStrStr << " in " << timerStr;
-
-				this->log(logStrStr.str());
+				logStrStr << "extracted " << extracted << " datasets from ";
 			}
+
+			logStrStr << this->urls.front().second;
+
+			if(this->config.generalTiming)
+				logStrStr << " in " << timerStr;
+
+			this->log(
+					this->config.generalTiming ? Config::generalLoggingDefault : Config::generalLoggingExtended,
+					logStrStr.str()
+			);
 		}
 
 		// URL finished
@@ -471,7 +452,7 @@ namespace crawlservpp::Module::Extractor {
 
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
-			this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
+			this->log(Config::generalLoggingDefault, "average speed: " + tpsStrStr.str() + " ticks per second.");
 		}
 
 		// save results if necessary
@@ -592,7 +573,7 @@ namespace crawlservpp::Module::Extractor {
 
 				if(*i)
 					this->database.getQueryProperties(*i, properties);
-				else if(this->config.generalLogging) {
+				else {
 					const auto& name =
 							this->config.extractingFieldNames.at(
 									i - this->config.extractingFieldQueries.begin()
@@ -600,6 +581,7 @@ namespace crawlservpp::Module::Extractor {
 
 					if(!(name.empty()))
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: Ignores field \'"
 								+ name
 								+ "\' because of missing query."
@@ -620,11 +602,11 @@ namespace crawlservpp::Module::Extractor {
 					this->database.getQueryProperties(*i, properties);
 
 					if(
-							this->config.generalLogging
-							&& !properties.resultSingle
+							!properties.resultSingle
 							&& !properties.resultBool
 					)
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: Ignores token \'"
 								+ this->config.variablesTokens.at(
 										i - this->config.variablesTokensQuery.begin()
@@ -632,7 +614,7 @@ namespace crawlservpp::Module::Extractor {
 								+ "\' because of wrong query result type."
 						);
 				}
-				else if(this->config.generalLogging) {
+				else {
 					const auto& name =
 							this->config.variablesTokens.at(
 									i - this->config.variablesTokensQuery.begin()
@@ -640,6 +622,7 @@ namespace crawlservpp::Module::Extractor {
 
 					if(!(name.empty()))
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: Ignores token \'"
 								+ name
 								+ "\' because of missing query."
@@ -668,31 +651,31 @@ namespace crawlservpp::Module::Extractor {
 					if(query) {
 						this->database.getQueryProperties(query, properties);
 
-						if(this->config.generalLogging) {
-							if(!properties.resultSingle && !properties.resultBool)
-								this->log(
-										"WARNING: Ignores variable \'"
-										+ this->config.variablesName.at(
-												i - this->config.variablesSource.begin()
-										)
-										+ "\' because of wrong query result type."
-								);
-							else if(
-									*i == Config::variablesSourcesUrl
-									&& !properties.type.empty()
-									&& properties.type != "regex"
-							)
-								this->log(
-										"WARNING: Ignores variable \'"
-										+ this->config.variablesName.at(
-												i - this->config.variablesSource.begin()
-										)
-										+ "\' because of wrong query type for URL."
-								);
-						}
+						if(!properties.resultSingle && !properties.resultBool)
+							this->log(
+									Config::generalLoggingDefault,
+									"WARNING: Ignores variable \'"
+									+ this->config.variablesName.at(
+											i - this->config.variablesSource.begin()
+									)
+									+ "\' because of wrong query result type."
+							);
+						else if(
+								*i == Config::variablesSourcesUrl
+								&& !properties.type.empty()
+								&& properties.type != "regex"
+						)
+							this->log(
+									Config::generalLoggingDefault,
+									"WARNING: Ignores variable \'"
+									+ this->config.variablesName.at(
+											i - this->config.variablesSource.begin()
+									)
+									+ "\' because of wrong query type for URL."
+							);
 
 					}
-					else if(this->config.generalLogging) {
+					else {
 						const auto& name =
 								this->config.variablesName.at(
 										i - this->config.variablesSource.begin()
@@ -700,6 +683,7 @@ namespace crawlservpp::Module::Extractor {
 
 						if(!(name.empty()))
 							this->log(
+									Config::generalLoggingDefault,
 									"WARNING: Ignores variable \'"
 									+ name
 									+ "\' because of missing query."
@@ -752,15 +736,14 @@ namespace crawlservpp::Module::Extractor {
 		this->setStatusMessage("Fetching URLs...");
 
 		// fill cache with next URLs
-		if(this->config.generalLogging > Config::generalLoggingDefault)
-			this->log("fetches URLs...");
+		this->log(Config::generalLoggingExtended, "fetches URLs...");
 
 		// get next URL(s)
 		this->extractingFetchUrls();
 
 		// write to log if necessary
-		if(this->config.generalTiming && this->config.generalLogging)
-			this->log("fetched URLs in " + timer.tickStr());
+		if(this->config.generalTiming)
+			this->log(Config::generalLoggingDefault, "fetched URLs in " + timer.tickStr());
 
 		// update status
 		this->setStatusMessage("Checking URLs...");
@@ -769,8 +752,7 @@ namespace crawlservpp::Module::Extractor {
 		if(this->urls.empty()) {
 			// no more URLs to extract data from
 			if(!(this->idle)) {
-				if(this->config.generalLogging > Config::generalLoggingDefault)
-					this->log("finished.");
+				this->log(Config::generalLoggingExtended, "finished.");
 
 				this->setStatusMessage("IDLE Waiting for new URLs to extract data from.");
 				this->setProgress(1.f);
@@ -807,8 +789,7 @@ namespace crawlservpp::Module::Extractor {
 		while(!(this->urls.empty()) && this->isRunning()) {
 			// check whether URL needs to be skipped because of invalid ID
 			if(!(this->urls.front().first)) {
-				if(this->config.generalLogging)
-					this->log("skips (INVALID ID) " + this->urls.front().second);
+				this->log(Config::generalLoggingDefault, "skips (INVALID ID) " + this->urls.front().second);
 
 				// unlock URL if necessary
 				this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
@@ -874,16 +855,16 @@ namespace crawlservpp::Module::Extractor {
 					);
 				}
 				catch(const boost::bad_lexical_cast& e) {
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: Could not create numeric alias \'"
-								+ this->config.pagingAlias
-								+ "\' for non-numeric variable \'"
-								+ this->config.pagingVariable
-								+ "\' [= \'"
-								+ page
-								+ "\']."
-						);
+					this->log(
+							Config::generalLoggingDefault,
+							"WARNING: Could not create numeric alias \'"
+							+ this->config.pagingAlias
+							+ "\' for non-numeric variable \'"
+							+ this->config.pagingVariable
+							+ "\' [= \'"
+							+ page
+							+ "\']."
+					);
 				}
 			}
 			else
@@ -961,20 +942,19 @@ namespace crawlservpp::Module::Extractor {
 					this->getSingleFromQuery(this->queryPagingNumberFrom, pageTotalString, queryWarnings);
 
 					// log warnings if necessary
-					if(this->config.generalLogging)
-						this->log(queryWarnings);
+					this->log(Config::generalLoggingDefault, queryWarnings);
 
 					// try to convert number of pages to numeric value
 					try {
 						pageTotal = boost::lexical_cast<unsigned long>(pageTotalString);
 					}
 					catch(const boost::bad_lexical_cast& e) {
-						if(this->config.generalLogging)
-							this->log(
-									"WARNING: Could convert non-numeric query result \'"
-									+ pageTotalString
-									+ "to number of pages."
-							);
+						this->log(
+								Config::generalLoggingDefault,
+								"WARNING: Could convert non-numeric query result \'"
+								+ pageTotalString
+								+ "to number of pages."
+						);
 					}
 
 					if(!pageTotal)
@@ -1004,8 +984,7 @@ namespace crawlservpp::Module::Extractor {
 				this->getBoolFromQuery(this->queryPagingIsNextFrom, isNext, queryWarnings);
 
 				// log warnings if necessary
-				if(this->config.generalLogging)
-					this->log(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				if(!isNext)
 					break;
@@ -1019,8 +998,7 @@ namespace crawlservpp::Module::Extractor {
 				this->getSingleFromQuery(this->queryPagingNextFrom, pageName, queryWarnings);
 
 				// log warnings if necessary
-				if(this->config.generalLogging)
-					this->log(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				if(pageName.empty())
 					break;
@@ -1082,12 +1060,12 @@ namespace crawlservpp::Module::Extractor {
 				break;
 
 			default:
-				if(this->config.generalLogging)
-					this->log(
-							"WARNING: Invalid source for value of variable \'"
-							+ *i
-							+ "\'."
-					);
+				this->log(
+						Config::generalLoggingDefault,
+						"WARNING: Invalid source for value of variable \'"
+						+ *i
+						+ "\'."
+				);
 			}
 
 			// get value for alias
@@ -1115,16 +1093,16 @@ namespace crawlservpp::Module::Extractor {
 						);
 					}
 					catch(const boost::bad_lexical_cast& e) {
-						if(this->config.generalLogging)
-							this->log(
-									"WARNING: Could not create numeric alias \'"
-									+ alias
-									+ "\' for non-numeric variable \'"
-									+ *i
-									+ "\' [= \'"
-									+ value
-									+ "\']."
-							);
+						this->log(
+								Config::generalLoggingDefault,
+								"WARNING: Could not create numeric alias \'"
+								+ alias
+								+ "\' for non-numeric variable \'"
+								+ *i
+								+ "\' [= \'"
+								+ value
+								+ "\']."
+						);
 					}
 
 					// set variable alias to new value
@@ -1299,25 +1277,23 @@ namespace crawlservpp::Module::Extractor {
 						sourceUrl
 				)) {
 					// reset connection and retry
-					if(this->config.generalLogging) {
-						this->log(e.whatStr() + " [" + sourceUrl + "].");
-						this->log("resets connection...");
-					}
+					this->log(Config::generalLoggingDefault, e.whatStr() + " [" + sourceUrl + "].");
+					this->log(Config::generalLoggingDefault, "resets connection...");
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
 
 					this->networking.resetConnection(this->config.generalSleepError);
 				}
 				else {
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: Could not get token \'"
-								+ name
-								+ "\' from "
-								+ sourceUrl
-								+ ": "
-								+ e.whatStr()
-						);
+					this->log(
+							Config::generalLoggingDefault,
+							"WARNING: Could not get token \'"
+							+ name
+							+ "\' from "
+							+ sourceUrl
+							+ ": "
+							+ e.whatStr()
+					);
 
 					break;
 				}
@@ -1331,8 +1307,7 @@ namespace crawlservpp::Module::Extractor {
 					this->networking.unsetHeaders();
 
 				// write UTF-8 error to log if neccessary
-				if(this->config.generalLogging)
-					this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
+				this->log(Config::generalLoggingDefault, "WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
 
 				break;
 			}
@@ -1358,19 +1333,18 @@ namespace crawlservpp::Module::Extractor {
 			this->clearQueryTarget();
 
 			// logging if necessary
-			if(this->config.generalLogging)
-				this->log(queryWarnings);
+			this->log(Config::generalLoggingDefault, queryWarnings);
 
-			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log(
-						"fetched token \'"
-						+ name
-						+ "\' from "
-						+ sourceUrl
-						+ " [= \'"
-						+ result
-						+ "\']."
-				);
+			this->log(
+					Config::generalLoggingExtended,
+					"fetched token \'"
+					+ name
+					+ "\' from "
+					+ sourceUrl
+					+ " [= \'"
+					+ result
+					+ "\']."
+			);
 		}
 
 		return result;
@@ -1425,23 +1399,21 @@ namespace crawlservpp::Module::Extractor {
 						url
 				)) {
 					// reset connection and retry
-					if(this->config.generalLogging) {
-						this->log(e.whatStr() + " [" + url + "].");
-						this->log("resets connection...");
-					}
+					this->log(Config::generalLoggingDefault, e.whatStr() + " [" + url + "].");
+					this->log(Config::generalLoggingDefault, "resets connection...");
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
 
 					this->networking.resetConnection(this->config.generalSleepError);
 				}
 				else {
-					if(this->config.generalLogging)
-						this->log(
-								"WARNING: Could not extract data from "
-								+ url
-								+ ": "
-								+ e.whatStr()
-						);
+					this->log(
+							Config::generalLoggingDefault,
+							"WARNING: Could not extract data from "
+							+ url
+							+ ": "
+							+ e.whatStr()
+					);
 
 					break;
 				}
@@ -1455,8 +1427,7 @@ namespace crawlservpp::Module::Extractor {
 					this->networking.unsetHeaders();
 
 				// write UTF-8 error to log if neccessary
-				if(this->config.generalLogging)
-					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
+				this->log(Config::generalLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "].");
 
 				break;
 			}
@@ -1482,8 +1453,7 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// log warnings if necessary
-		if(this->config.generalLogging)
-			this->log(queryWarnings);
+		this->log(Config::generalLoggingDefault, queryWarnings);
 	}
 
 	// extract data from URL
@@ -1509,8 +1479,7 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// log warnings if necessary
-		if(this->config.generalLogging)
-			this->log(queryWarnings);
+		this->log(Config::generalLoggingDefault, queryWarnings);
 	}
 
 	// extract data by parsing page content, return number of extracted datasets
@@ -1526,8 +1495,7 @@ namespace crawlservpp::Module::Extractor {
 		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
 
 		// log warnings if necessary
-		if(this->config.generalLogging)
-			this->log(queryWarnings);
+		this->log(Config::generalLoggingDefault, queryWarnings);
 
 		// try to convert expected number of datasets
 		if(!expectedStr.empty()) {
@@ -1537,14 +1505,14 @@ namespace crawlservpp::Module::Extractor {
 				expecting = true;
 			}
 			catch(const std::logic_error& e) {
-				if(this->config.generalLogging)
-					this->log(
-							"WARNING: \'"
-							+ expectedStr
-							+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
-							+ url
-							+ "]."
-					);
+				this->log(
+						Config::generalLoggingDefault,
+						"WARNING: \'"
+						+ expectedStr
+						+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
+						+ url
+						+ "]."
+				);
 			}
 		}
 
@@ -1558,8 +1526,7 @@ namespace crawlservpp::Module::Extractor {
 			this->setSubSetsFromQuery(query, queryWarnings);
 
 			// log warnings if necessary
-			if(this->config.generalLogging)
-				this->log(queryWarnings);
+			this->log(Config::generalLoggingDefault, queryWarnings);
 
 			// check whether datasets have been extracted
 			if(this->getNumberOfSubSets())
@@ -1580,8 +1547,7 @@ namespace crawlservpp::Module::Extractor {
 				this->getSingleFromQueryOnSubSet(query, dataset.dataId, queryWarnings);
 
 				// log warnings if necessary
-				if(this->config.generalLogging)
-					this->log(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				// check whether ID has been extracted
 				if(!dataset.dataId.empty())
@@ -1600,14 +1566,14 @@ namespace crawlservpp::Module::Extractor {
 							dataset.dataId
 					) != this->config.extractingIdIgnore.end()
 			) {
-				if(this->config.generalLogging > Config::generalLoggingDefault)
-					this->log(
-							"ignored parsed ID \'"
-							+ dataset.dataId
-							+ "\' ["
-							+ url
-							+ "]."
-					);
+				this->log(
+						Config::generalLoggingExtended,
+						"ignored parsed ID \'"
+						+ dataset.dataId
+						+ "\' ["
+						+ url
+						+ "]."
+				);
 
 				return false;
 			}
@@ -1618,8 +1584,7 @@ namespace crawlservpp::Module::Extractor {
 				this->getSingleFromQueryOnSubSet(*i, dataset.dateTime, queryWarnings);
 
 				// log warnings if necessary
-				if(this->config.generalLogging)
-					this->log(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				// check whether date/time has been extracted
 				if(!dataset.dateTime.empty()) {
@@ -1640,8 +1605,10 @@ namespace crawlservpp::Module::Extractor {
 						);
 					}
 					catch(const LocaleException& e) {
-						if(this->config.generalLogging)
-							this->log("WARNING: " + e.whatStr() + " - locale ignored.");
+						this->log(
+								Config::generalLoggingDefault,
+								"WARNING: " + e.whatStr() + " - locale ignored."
+						);
 
 						try {
 								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
@@ -1650,15 +1617,19 @@ namespace crawlservpp::Module::Extractor {
 								);
 						}
 						catch(const DateTimeException& e) {
-							if(this->config.generalLogging > Config::generalLoggingDefault)
-								this->log(e.whatStr() + " - query skipped [" + url + "].");
+							this->log(
+									Config::generalLoggingExtended,
+									e.whatStr() + " - query skipped [" + url + "]."
+							);
 
 							dataset.dateTime.clear();
 						}
 					}
 					catch(const DateTimeException& e) {
-						if(this->config.generalLogging > Config::generalLoggingDefault)
-							this->log(e.whatStr() + " - query skipped [" + url + "].");
+						this->log(
+								Config::generalLoggingExtended,
+								e.whatStr() + " - query skipped [" + url + "]."
+						);
 
 						dataset.dateTime.clear();
 					}
@@ -1684,8 +1655,7 @@ namespace crawlservpp::Module::Extractor {
 					this->getMultiFromQuery(*i, extractedFieldValues, queryWarnings);
 
 					// log warnings if necessary
-					if(this->config.generalLogging)
-						this->log(queryWarnings);
+					this->log(Config::generalLoggingDefault, queryWarnings);
 
 					// if necessary, try to convert the parsed values to date/times
 					if(!dateTimeFormat.empty()) {
@@ -1699,16 +1669,16 @@ namespace crawlservpp::Module::Extractor {
 							}
 							catch(const LocaleException& e) {
 								try {
-									if(this->config.generalLogging)
-										this->log(
-												"WARNING: "
-												+ e.whatStr()
-												+ " for field \'"
-												+ this->config.extractingFieldNames.at(index)
-												+ "\' ["
-												+ url
-												+ "]."
-										);
+									this->log(
+											Config::generalLoggingDefault,
+											"WARNING: "
+											+ e.whatStr()
+											+ " for field \'"
+											+ this->config.extractingFieldNames.at(index)
+											+ "\' ["
+											+ url
+											+ "]."
+									);
 
 									Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
 											value,
@@ -1716,22 +1686,23 @@ namespace crawlservpp::Module::Extractor {
 									);
 								}
 								catch(const DateTimeException& e) {
-									if(this->config.generalLogging)
-										this->log(
-												"WARNING: "
-												+ e.whatStr()
-												+ " for field \'"
-												+ this->config.extractingFieldNames.at(index)
-												+ "\' ["
-												+ url
-												+ "]."
-										);
+									this->log(
+											Config::generalLoggingDefault,
+											"WARNING: "
+											+ e.whatStr()
+											+ " for field \'"
+											+ this->config.extractingFieldNames.at(index)
+											+ "\' ["
+											+ url
+											+ "]."
+									);
 
 									value.clear();
 								}
 							}
 							catch(const DateTimeException& e) {
 								this->log(
+										Config::generalLoggingDefault,
 										"WARNING: "
 										+ e.whatStr()
 										+ " for field \'"
@@ -1747,7 +1718,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// if necessary, check whether array or all values are empty
-					if(this->config.generalLogging && this->config.extractingFieldWarningsEmpty.at(index)) {
+					if(this->config.extractingFieldWarningsEmpty.at(index)) {
 						if(
 								std::find_if(
 										extractedFieldValues.begin(),
@@ -1758,6 +1729,7 @@ namespace crawlservpp::Module::Extractor {
 								) == extractedFieldValues.end()
 						)
 							this->log(
+									Config::generalLoggingDefault,
 									"WARNING: \'"
 									+ this->config.extractingFieldNames.at(index) + "\'"
 									" is empty for "
@@ -1800,8 +1772,7 @@ namespace crawlservpp::Module::Extractor {
 					this->getSingleFromQuery(*i, extractedFieldValue, queryWarnings);
 
 					// log warnings if necessary
-					if(this->config.generalLogging)
-						this->log(queryWarnings);
+					this->log(Config::generalLoggingDefault, queryWarnings);
 
 					// if necessary, try to convert the parsed value to date/time
 					if(!dateTimeFormat.empty()) {
@@ -1814,40 +1785,8 @@ namespace crawlservpp::Module::Extractor {
 						}
 						catch(const LocaleException& e) {
 							try {
-								if(this->config.generalLogging)
-									this->log(
-											"WARNING: "
-											+ e.whatStr()
-											+ " for field \'"
-											+ this->config.extractingFieldNames.at(index)
-											+ "\' ["
-											+ url
-											+ "]."
-									);
-
-								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-										extractedFieldValue,
-										dateTimeFormat
-								);
-							}
-							catch(const DateTimeException& e) {
-								if(this->config.generalLogging)
-									this->log(
-											"WARNING: "
-											+ e.whatStr()
-											+ " for field \'"
-											+ this->config.extractingFieldNames.at(index)
-											+ "\' ["
-											+ url
-											+ "]."
-									);
-
-								extractedFieldValue.clear();
-							}
-						}
-						catch(const DateTimeException& e) {
-							if(this->config.generalLogging)
 								this->log(
+										Config::generalLoggingDefault,
 										"WARNING: "
 										+ e.whatStr()
 										+ " for field \'"
@@ -1857,6 +1796,38 @@ namespace crawlservpp::Module::Extractor {
 										+ "]."
 								);
 
+								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+										extractedFieldValue,
+										dateTimeFormat
+								);
+							}
+							catch(const DateTimeException& e) {
+								this->log(
+										Config::generalLoggingDefault,
+										"WARNING: "
+										+ e.whatStr()
+										+ " for field \'"
+										+ this->config.extractingFieldNames.at(index)
+										+ "\' ["
+										+ url
+										+ "]."
+								);
+
+								extractedFieldValue.clear();
+							}
+						}
+						catch(const DateTimeException& e) {
+							this->log(
+									Config::generalLoggingDefault,
+									"WARNING: "
+									+ e.whatStr()
+									+ " for field \'"
+									+ this->config.extractingFieldNames.at(index)
+									+ "\' ["
+									+ url
+									+ "]."
+							);
+
 							extractedFieldValue.clear();
 						}
 					}
@@ -1865,9 +1836,9 @@ namespace crawlservpp::Module::Extractor {
 					if(
 							this->config.extractingFieldWarningsEmpty.at(index)
 							&& extractedFieldValue.empty()
-							&& this->config.generalLogging
 					)
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: \'"
 								+ this->config.extractingFieldNames.at(index) + "\'"
 								" is empty for "
@@ -1895,12 +1866,12 @@ namespace crawlservpp::Module::Extractor {
 					this->getBoolFromQuery(*i, booleanResult, queryWarnings);
 
 					// log warnings if necessary
-					if(this->config.generalLogging)
-						this->log(queryWarnings);
+					this->log(Config::generalLoggingDefault, queryWarnings);
 
 					// date/time conversion is not possible for boolean values
-					if(!dateTimeFormat.empty() && this->config.generalLogging)
+					if(!dateTimeFormat.empty())
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: Cannot convert boolean value for field \'"
 								+ this->config.extractingFieldNames.at(index)
 								+ "\' to date/time\' ["
@@ -1922,8 +1893,9 @@ namespace crawlservpp::Module::Extractor {
 						dataset.fields.emplace_back(booleanResult ? "true" : "false");
 				}
 				else {
-					if(i->type != QueryStruct::typeNone && this->config.generalLogging)
+					if(i->type != QueryStruct::typeNone)
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: Ignored query for \'"
 								+ this->config.extractingFieldNames.at(index)
 								+ "\' without specified result type."
@@ -1942,8 +1914,7 @@ namespace crawlservpp::Module::Extractor {
 					break;
 
 			// log warnings if necessary
-			if(this->config.generalLogging)
-				this->log(queryWarnings);
+			this->log(Config::generalLoggingDefault, queryWarnings);
 
 			++result;
 		}
@@ -1966,8 +1937,8 @@ namespace crawlservpp::Module::Extractor {
 
 				if(this->config.expectedErrorIfSmaller)
 					throw Exception(expectedStrStr.str());
-				else if(this->config.generalLogging)
-					this->log("WARNING: " + expectedStrStr.str() + ".");
+				else
+					this->log(Config::generalLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
 			}
 			else if(result > expected) {
 				// number of datasets is larger than expected
@@ -1982,10 +1953,10 @@ namespace crawlservpp::Module::Extractor {
 				// number of URLs is smaller than expected
 				if(this->config.expectedErrorIfLarger)
 					throw Exception(expectedStrStr.str());
-				else if(this->config.generalLogging)
-					this->log("WARNING: " + expectedStrStr.str() + ".");
+				else
+					this->log(Config::generalLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
 			}
-			else if(this->config.generalLogging == Config::generalLoggingVerbose) {
+			else {
 				expectedStrStr	<< "number of extracted URLs ["
 								<< result
 								<< "] as expected ["
@@ -1994,7 +1965,7 @@ namespace crawlservpp::Module::Extractor {
 								<< url
 								<< "].";
 
-				this->log(expectedStrStr.str());
+				this->log(Config::generalLoggingVerbose, expectedStrStr.str());
 			}
 		}
 
@@ -2005,8 +1976,7 @@ namespace crawlservpp::Module::Extractor {
 	bool Thread::extractingCheckCurlCode(CURLcode curlCode, const std::string& url) {
 		if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
 			// redirection error: skip URL
-			if(this->config.generalLogging)
-				this->log("redirection error at " + url + " - skips...");
+			this->log(Config::generalLoggingDefault, "redirection error at " + url + " - skips...");
 
 			return false;
 		}
@@ -2017,19 +1987,20 @@ namespace crawlservpp::Module::Extractor {
 	// check the HTTP response code for an error and decide whether to continue or skip
 	bool Thread::extractingCheckResponseCode(const std::string& url, long responseCode) {
 		if(responseCode >= 400 && responseCode < 600) {
-			if(this->config.generalLogging)
-				this->log(
-						"HTTP error "
-						+ std::to_string(responseCode)
-						+ " from "
-						+ url
-						+ " - skips..."
-				);
+			this->log(
+					Config::generalLoggingDefault,
+					"HTTP error "
+					+ std::to_string(responseCode)
+					+ " from "
+					+ url
+					+ " - skips..."
+			);
 
 			return false;
 		}
-		else if(responseCode != 200 && this->config.generalLogging)
+		else if(responseCode != 200)
 			this->log(
+					Config::generalLoggingDefault,
 					"WARNING: HTTP response code "
 					+ std::to_string(responseCode)
 					+ " from "
@@ -2091,8 +2062,7 @@ namespace crawlservpp::Module::Extractor {
 			// save results
 			this->setStatusMessage("Saving results...");
 
-			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log("saves results...");
+			this->log(Config::generalLoggingExtended, "saves results...");
 
 			// update or add entries in/to database
 			this->database.updateOrAddEntries(this->results);
@@ -2111,7 +2081,7 @@ namespace crawlservpp::Module::Extractor {
 		// update status
 		this->setStatusMessage("Results saved. [" + status + "]");
 
-		if(this->config.generalTiming && this->config.generalLogging)
-			this->log("saved results in " + timer.tickStr());
+		if(this->config.generalTiming)
+			this->log(Config::generalLoggingDefault, "saved results in " + timer.tickStr());
 	}
 } /* crawlservpp::Module::Extractor */

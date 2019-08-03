@@ -71,6 +71,8 @@ namespace crawlservpp::Module::Crawler {
 
 	// prepare SQL statements for crawler, throws Main::Database::Exception
 	void Database::prepare() {
+		const unsigned short verbose = this->getLoggingVerbose();
+
 		// create table names
 		this->urlListTable = "crawlserv_" + this->getOptions().websiteNamespace + "_" + this->getOptions().urlListNamespace;
 		this->crawlingTable = this->urlListTable + "_crawling";
@@ -103,8 +105,7 @@ namespace crawlservpp::Module::Crawler {
 		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
 
 		if(!(this->ps.getUrlId)) {
-			if(this->isVerbose())
-				this->log("prepares getUrlId()...");
+			this->log(verbose, "prepares getUrlId()...");
 
 			this->ps.getUrlId = this->addPreparedStatement(
 					"SELECT id"
@@ -128,8 +129,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getNextUrl)) {
-			if(this->isVerbose())
-				this->log("prepares getNextUrl()...");
+			this->log(verbose, "prepares getNextUrl()...");
 
 			std::string sqlQueryString(
 					"SELECT `" + this->urlListTableAlias + "1`.id"
@@ -166,8 +166,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.addUrlIfNotExists)) {
-			if(this->isVerbose())
-				this->log("prepares addUrlIfNotExists()...");
+			this->log(verbose, "prepares addUrlIfNotExists()...");
 
 			this->ps.addUrlIfNotExists = this->addPreparedStatement(
 					"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, hash, manual)"
@@ -192,29 +191,25 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.add10UrlsIfNotExist)) {
-			if(this->isVerbose())
-				this->log("prepares addUrlsIfNotExist() [1/3]...");
+			this->log(verbose, "prepares addUrlsIfNotExist() [1/3]...");
 
 			this->ps.add10UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(10, hashQuery));
 		}
 
 		if(!(this->ps.add100UrlsIfNotExist)) {
-			if(this->isVerbose())
-				this->log("prepares addUrlsIfNotExist() [2/3]...");
+			this->log(verbose, "prepares addUrlsIfNotExist() [2/3]...");
 
 			this->ps.add100UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(100, hashQuery));
 		}
 
 		if(!(this->ps.add1000UrlsIfNotExist)) {
-			if(this->isVerbose())
-				this->log("prepares addUrlsIfNotExist() [3/3]...");
+			this->log(verbose, "prepares addUrlsIfNotExist() [3/3]...");
 
 			this->ps.add1000UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(1000, hashQuery));
 		}
 
 		if(!(this->ps.getUrlPosition)) {
-			if(this->isVerbose())
-				this->log("prepares getUrlPosition()...");
+			this->log(verbose, "prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
 					"SELECT COUNT(*)"
@@ -225,8 +220,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getNumberOfUrls)) {
-			if(this->isVerbose())
-				this->log("prepares getNumberOfUrls()...");
+			this->log(verbose, "prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
 					"SELECT COUNT(*)"
@@ -236,8 +230,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getUrlLockTime)) {
-			if(this->isVerbose())
-				this->log("prepares getUrlLock()...");
+			this->log(verbose, "prepares getUrlLock()...");
 
 			this->ps.getUrlLockTime = this->addPreparedStatement(
 					"SELECT locktime"
@@ -248,8 +241,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.isUrlCrawled)) {
-			if(this->isVerbose())
-				this->log("prepares isUrlCrawled()...");
+			this->log(verbose, "prepares isUrlCrawled()...");
 
 			this->ps.isUrlCrawled = this->addPreparedStatement(
 					"SELECT success"
@@ -260,8 +252,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.renewUrlLockIfOk)) {
-			if(this->isVerbose())
-				this->log("prepares lockUrlIfOk() [1/2]...");
+			this->log(verbose, "prepares lockUrlIfOk() [1/2]...");
 
 			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->crawlingTable + "`"
@@ -282,8 +273,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.addUrlLockIfOk)) {
-			if(this->isVerbose())
-				this->log("prepares lockUrlIfOk() [2/2]...");
+			this->log(verbose, "prepares lockUrlIfOk() [2/2]...");
 
 			this->ps.addUrlLockIfOk = this->addPreparedStatement(
 					"INSERT INTO `" + this->crawlingTable + "`(id, url, locktime)"
@@ -312,8 +302,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
-			if(this->isVerbose())
-				this->log("prepares unLockUrlIfOk()...");
+			this->log(verbose, "prepares unLockUrlIfOk()...");
 
 			this->ps.unLockUrlIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->crawlingTable + "`"
@@ -330,8 +319,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.setUrlFinishedIfOk)) {
-			if(this->isVerbose())
-				this->log("prepares setUrlFinishedIfOk()...");
+			this->log(verbose, "prepares setUrlFinishedIfOk()...");
 
 			this->ps.setUrlFinishedIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->crawlingTable + "`"
@@ -348,8 +336,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.saveContent)) {
-			if(this->isVerbose())
-				this->log("prepares saveContent()...");
+			this->log(verbose, "prepares saveContent()...");
 
 			this->ps.saveContent = this->addPreparedStatement(
 					"INSERT INTO `" + crawledTable + "`(url, response, type, content)"
@@ -358,8 +345,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.saveArchivedContent)) {
-			if(this->isVerbose())
-				this->log("prepares saveArchivedContent()...");
+			this->log(verbose, "prepares saveArchivedContent()...");
 
 			this->ps.saveArchivedContent = this->addPreparedStatement(
 					"INSERT INTO `" + crawledTable + "`(url, crawltime, archived, response, type, content)"
@@ -368,8 +354,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.isArchivedContentExists)) {
-			if(this->isVerbose())
-				this->log("prepares isArchivedContentExists()...");
+			this->log(verbose, "prepares isArchivedContentExists()...");
 
 			this->ps.isArchivedContentExists = this->addPreparedStatement(
 					"SELECT EXISTS"
@@ -384,8 +369,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlDuplicationCheck) && (this->urlStartupCheck || this->urlDebug)) {
-			if(this->isVerbose())
-				this->log("prepares urlDuplicationCheck()...");
+			this->log(verbose, "prepares urlDuplicationCheck()...");
 
 			std::string groupBy;
 
@@ -413,8 +397,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlHashCheck)) {
-			if(this->isVerbose())
-				this->log("prepares urlHashCheck() [1/2]...");
+			this->log(verbose, "prepares urlHashCheck() [1/2]...");
 
 			this->ps.urlHashCheck = this->addPreparedStatement(
 					"SELECT EXISTS"
@@ -428,8 +411,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlHashCorrect)) {
-			if(this->isVerbose())
-				this->log("prepares urlHashCheck() [1/2]...");
+			this->log(verbose, "prepares urlHashCheck() [1/2]...");
 
 			this->ps.urlHashCorrect = this->addPreparedStatement(
 					"UPDATE `" + this->urlListTable + "`"
@@ -438,8 +420,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.urlEmptyCheck) && this->urlStartupCheck) {
-			if(this->isVerbose())
-				this->log("prepares urlHashCheck()...");
+			this->log(verbose, "prepares urlHashCheck()...");
 
 			this->ps.urlEmptyCheck = this->addPreparedStatement(
 					"SELECT id"
@@ -450,8 +431,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(!(this->ps.getUrls) && this->urlStartupCheck) {
-			if(this->isVerbose())
-				this->log("prepares getUrls()...");
+			this->log(verbose, "prepares getUrls()...");
 
 			this->ps.getUrls = this->addPreparedStatement(
 					"SELECT url"
@@ -806,7 +786,7 @@ namespace crawlservpp::Module::Crawler {
 
 				int updated = Database::sqlExecuteUpdate(correctStatement);
 
-				if(updated > 0 && this->isLogging()) {
+				if(updated > 0) {
 					std::ostringstream logStrStr;
 
 					logStrStr << "corrected hash ";
@@ -823,7 +803,7 @@ namespace crawlservpp::Module::Crawler {
 						logStrStr << "values for " << updated << " URLs.";
 					}
 
-					this->log(logStrStr.str());
+					this->log(this->getLoggingMin(), logStrStr.str());
 				}
 			}
 
@@ -1110,7 +1090,7 @@ namespace crawlservpp::Module::Crawler {
 
 				Database::sqlExecute(sqlStatement);
 			}
-			else if(this->isLogging()) {
+			else {
 				// show warning about content size
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
@@ -1130,10 +1110,10 @@ namespace crawlservpp::Module::Crawler {
 					adjustServerSettings = true;
 				}
 
-				this->log(logStrStr.str());
+				this->log(this->getLoggingMin(), logStrStr.str());
 
 				if(adjustServerSettings)
-					this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
+					this->log(this->getLoggingMin(), "Adjust the server's \'max_allowed_packet\' setting accordingly.");
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveContent", e); }
@@ -1173,7 +1153,7 @@ namespace crawlservpp::Module::Crawler {
 
 				Database::sqlExecute(sqlStatement);
 			}
-			else if(this->isLogging()) {
+			else {
 				// show warning about content size
 				bool adjustServerSettings = false;
 				std::ostringstream logStrStr;
@@ -1193,10 +1173,10 @@ namespace crawlservpp::Module::Crawler {
 					adjustServerSettings = true;
 				}
 
-				this->log(logStrStr.str());
+				this->log(this->getLoggingMin(), logStrStr.str());
 
 				if(adjustServerSettings)
-					this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
+					this->log(this->getLoggingMin(), "Adjust the server's \'max_allowed_packet\' setting accordingly.");
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveArchivedContent", e); }

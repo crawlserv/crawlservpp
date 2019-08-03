@@ -97,7 +97,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		bool _isRunning();
 		void _setStatus(const std::string& status);
 		void _setProgress(float progress);
-		void _log(const std::string& entry);
+		void _log(unsigned short level, const std::string& entry);
 
 	private:
 		rawr generator;

@@ -169,7 +169,6 @@ namespace crawlservpp::Module::Parser {
 		bool parseJsonRapid(const std::string& content);
 		bool parseJsonCons(const std::string& content);
 		void resetParsingState();
-		void logWarnings(std::queue<std::string>& warnings);
 	};
 
 } /* crawlservpp::Module::Parser */

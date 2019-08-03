@@ -105,6 +105,8 @@ namespace crawlservpp::Module::Parser {
 
 	// prepare SQL statements for parser
 	void Database::prepare() {
+		const unsigned short verbose = this->getLoggingVerbose();
+
 		// check connection to database
 		this->checkConnection();
 
@@ -113,8 +115,7 @@ namespace crawlservpp::Module::Parser {
 
 		// prepare SQL statements
 		if(!(this->ps.fetchUrls)) {
-			if(this->isVerbose())
-				this->log("prepares fetchUrls()...");
+			this->log(verbose, "prepares fetchUrls()...");
 
 			std::string sqlQueryString(
 									"SELECT tmp1.id, tmp1.url"
@@ -170,43 +171,37 @@ namespace crawlservpp::Module::Parser {
 			if(this->cacheSize)
 				sqlQueryString +=	" LIMIT " + std::to_string(this->cacheSize);
 
-			if(this->isVerbose())
-				this->log("> " + sqlQueryString);
+			this->log(verbose, "> " + sqlQueryString);
 
 			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryString);
 		}
 
 		if(!(this->ps.lockUrl)) {
-			if(this->isVerbose())
-				this->log("prepares lockUrls() [1/4]...");
+			this->log(verbose, "prepares lockUrls() [1/4]...");
 
 			this->ps.lockUrl = this->addPreparedStatement(this->queryLockUrls(1));
 		}
 
 		if(!(this->ps.lock10Urls)) {
-			if(this->isVerbose())
-				this->log("prepares lockUrls() [2/4]...");
+			this->log(verbose, "prepares lockUrls() [2/4]...");
 
 			this->ps.lock10Urls = this->addPreparedStatement(this->queryLockUrls(10));
 		}
 
 		if(!(this->ps.lock100Urls)) {
-			if(this->isVerbose())
-				this->log("prepares lockUrls() [3/4]...");
+			this->log(verbose, "prepares lockUrls() [3/4]...");
 
 			this->ps.lock100Urls = this->addPreparedStatement(this->queryLockUrls(100));
 		}
 
 		if(!(this->ps.lock1000Urls)) {
-			if(this->isVerbose())
-				this->log("prepares lockUrls() [4/4]...");
+			this->log(verbose, "prepares lockUrls() [4/4]...");
 
 			this->ps.lock1000Urls = this->addPreparedStatement(this->queryLockUrls(1000));
 		}
 
 		if(!(this->ps.getUrlPosition)) {
-			if(this->isVerbose())
-				this->log("prepares getUrlPosition()...");
+			this->log(verbose, "prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
 					"SELECT COUNT(id)"
@@ -217,8 +212,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getNumberOfUrls)) {
-			if(this->isVerbose())
-				this->log("prepares getNumberOfUrls()...");
+			this->log(verbose, "prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
 					"SELECT COUNT(id)"
@@ -228,8 +222,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getLockTime)) {
-			if(this->isVerbose())
-				this->log("prepares getLockTime()...");
+			this->log(verbose, "prepares getLockTime()...");
 
 			this->ps.getLockTime = this->addPreparedStatement(
 					"SELECT NOW() + INTERVAL ? SECOND"
@@ -238,8 +231,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getUrlLockTime)) {
-			if(this->isVerbose())
-				this->log("prepares getUrlLockTime()...");
+			this->log(verbose, "prepares getUrlLockTime()...");
 
 			this->ps.getUrlLockTime = this->addPreparedStatement(
 					"SELECT MAX(locktime)"
@@ -253,8 +245,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.renewUrlLockIfOk)) {
-			if(this->isVerbose())
-				this->log("prepares renewUrlLockIfOk()...");
+			this->log(verbose, "prepares renewUrlLockIfOk()...");
 
 			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->parsingTable + "`"
@@ -275,8 +266,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.unLockUrlIfOk)) {
-			if(this->isVerbose())
-				this->log("prepares unLockUrlIfOk()...");
+			this->log(verbose, "prepares unLockUrlIfOk()...");
 
 			this->ps.unLockUrlIfOk = this->addPreparedStatement(
 					"UPDATE `" + this->parsingTable + "`"
@@ -292,8 +282,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.checkParsingTable)) {
-			if(this->isVerbose())
-				this->log("prepares checkParsingTable()...");
+			this->log(verbose, "prepares checkParsingTable()...");
 
 			this->ps.checkParsingTable = this->addPreparedStatement(
 					"DELETE t1"
@@ -307,8 +296,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getContentIdFromParsedId)) {
-			if(this->isVerbose())
-				this->log("prepares getContentIdFromParsedId()...");
+			this->log(verbose, "prepares getContentIdFromParsedId()...");
 
 			this->ps.getContentIdFromParsedId = this->addPreparedStatement(
 					"SELECT content"
@@ -325,8 +313,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getLatestContent)) {
-			if(this->isVerbose())
-				this->log("prepares getLatestContent()...");
+			this->log(verbose, "prepares getLatestContent()...");
 
 			this->ps.getLatestContent = this->addPreparedStatement(
 					"SELECT id, content"
@@ -338,8 +325,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.getAllContents)) {
-			if(this->isVerbose())
-				this->log("prepares getAllContents()...");
+			this->log(verbose, "prepares getAllContents()...");
 
 			this->ps.getAllContents = this->addPreparedStatement(
 					"SELECT id, content"
@@ -349,64 +335,55 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(!(this->ps.setUrlFinishedIfLockOk)) {
-			if(this->isVerbose())
-				this->log("prepares setUrlFinished() [1/4]...");
+			this->log(verbose, "prepares setUrlFinished() [1/4]...");
 
 			this->ps.setUrlFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(1));
 		}
 
 		if(!(this->ps.set10UrlsFinishedIfLockOk)) {
-			if(this->isVerbose())
-				this->log("prepares setUrlFinished() [2/4]...");
+			this->log(verbose, "prepares setUrlFinished() [2/4]...");
 
 			this->ps.set10UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(10));
 		}
 
 		if(!(this->ps.set100UrlsFinishedIfLockOk)) {
-			if(this->isVerbose())
-				this->log("prepares setUrlFinished() [3/4]...");
+			this->log(verbose, "prepares setUrlFinished() [3/4]...");
 
 			this->ps.set100UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(100));
 		}
 
 		if(!(this->ps.set1000UrlsFinishedIfLockOk)) {
-			if(this->isVerbose())
-				this->log("prepares setUrlFinished() [4/4]...");
+			this->log(verbose, "prepares setUrlFinished() [4/4]...");
 
 			this->ps.set1000UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(1000));
 		}
 
 		if(!(this->ps.updateOrAddEntry)) {
-			if(this->isVerbose())
-				this->log("prepares updateOrAddEntries() [1/4]...");
+			this->log(verbose, "prepares updateOrAddEntries() [1/4]...");
 
 			this->ps.updateOrAddEntry = this->addPreparedStatement(this->queryUpdateOrAddEntries(1));
 		}
 
 		if(!(this->ps.updateOrAdd10Entries)) {
-			if(this->isVerbose())
-				this->log("prepares updateOrAddEntries() [2/4]...");
+			this->log(verbose, "prepares updateOrAddEntries() [2/4]...");
 
 			this->ps.updateOrAdd10Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(10));
 		}
 
 		if(!(this->ps.updateOrAdd100Entries)) {
-			if(this->isVerbose())
-				this->log("prepares updateOrAddEntries() [3/4]...");
+			this->log(verbose, "prepares updateOrAddEntries() [3/4]...");
 
 			this->ps.updateOrAdd100Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(100));
 		}
 
 		if(!(this->ps.updateOrAdd1000Entries)) {
-			if(this->isVerbose())
-				this->log("prepares updateOrAddEntries() [4/4]...");
+			this->log(verbose, "prepares updateOrAddEntries() [4/4]...");
 
 			this->ps.updateOrAdd1000Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(1000));
 		}
 
 		if(!(this->ps.updateTargetTable)) {
-			if(this->isVerbose())
-				this->log("prepares updateTargetTable()...");
+			this->log(verbose, "prepares updateTargetTable()...");
 
 			this->ps.updateTargetTable = this->addPreparedStatement(
 					"UPDATE crawlserv_parsedtables"
@@ -1189,34 +1166,32 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if(tooLarge) {
-			if(this->isLogging()) {
-				// show warning about data size
-				bool adjustServerSettings = false;
+			// show warning about data size
+			bool adjustServerSettings = false;
 
-				std::ostringstream logStrStr;
+			std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(std::locale(""));
 
-				logStrStr	<<	"WARNING: An entry could not be saved to the database,"
-								" because the size of a parsed value ("
-							<<	tooLarge
-							<< " bytes) exceeds the ";
+			logStrStr	<<	"WARNING: An entry could not be saved to the database,"
+							" because the size of a parsed value ("
+						<<	tooLarge
+						<< " bytes) exceeds the ";
 
-				if(tooLarge > 1073741824)
-					logStrStr << "MySQL maximum of 1 GiB.";
-				else {
-					logStrStr	<< "current MySQL server maximum of "
-								<< this->getMaxAllowedPacketSize()
-								<< " bytes.";
+			if(tooLarge > 1073741824)
+				logStrStr << "MySQL maximum of 1 GiB.";
+			else {
+				logStrStr	<< "current MySQL server maximum of "
+							<< this->getMaxAllowedPacketSize()
+							<< " bytes.";
 
-					adjustServerSettings = true;
-				}
-
-				this->log(logStrStr.str());
-
-				if(adjustServerSettings)
-					this->log("Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				adjustServerSettings = true;
 			}
+
+			this->log(this->getLoggingMin(), logStrStr.str());
+
+			if(adjustServerSettings)
+				this->log(this->getLoggingMin(), "Adjust the server's \'max_allowed_packet\' setting accordingly.");
 
 			return false;
 		}

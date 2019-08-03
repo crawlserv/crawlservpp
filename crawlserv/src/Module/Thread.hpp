@@ -129,8 +129,8 @@ namespace crawlservpp::Module {
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
 		void setProgress(float progress);
-		void log(const std::string& logEntry);
-		void log(std::queue<std::string>& logEntries);
+		void log(unsigned short level, const std::string& logEntry);
+		void log(unsigned short level, std::queue<std::string>& logEntries);
 		void allowPausing();
 		void disallowPausing();
 

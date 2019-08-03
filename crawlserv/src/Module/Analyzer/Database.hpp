@@ -109,14 +109,12 @@ namespace crawlservpp::Module::Analyzer {
 		void checkSources(
 				std::vector<unsigned char>& types,
 				std::vector<std::string>& tables,
-				std::vector<std::string>& columns,
-				bool logging
+				std::vector<std::string>& columns
 		);
 		bool checkSource(
 				unsigned short type,
 				const std::string& table,
-				const std::string& column,
-				bool logging
+				const std::string& column
 		);
 
 		// class for Analyzer::Database exceptions

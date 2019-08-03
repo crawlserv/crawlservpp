@@ -97,7 +97,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// show warnings if necessary
 		while(!configWarnings.empty()) {
-			this->log("WARNING: " + configWarnings.front());
+			this->log(Config::crawlerLoggingDefault, "WARNING: " + configWarnings.front());
 
 			configWarnings.pop();
 		}
@@ -113,12 +113,14 @@ namespace crawlservpp::Module::Crawler {
 		// set database options
 		this->setStatusMessage("Setting database options...");
 
-		const bool verbose = this->config.crawlerLogging == Config::crawlerLoggingVerbose;
+		this->database.setLogging(
+				this->config.crawlerLogging,
+				Config::crawlerLoggingDefault,
+				Config::crawlerLoggingVerbose
+		);
 
-		if(verbose)
-			this->log("sets database options...");
+		this->log(Config::crawlerLoggingVerbose, "sets database options...");
 
-		this->database.setLogging(this->config.crawlerLogging, verbose);
 		this->database.setRecrawl(this->config.crawlerReCrawl);
 		this->database.setUrlCaseSensitive(this->config.crawlerUrlCaseSensitive);
 		this->database.setUrlDebug(this->config.crawlerUrlDebug);
@@ -132,16 +134,14 @@ namespace crawlservpp::Module::Crawler {
 		// prepare SQL statements for crawler
 		this->setStatusMessage("Preparing SQL statements...");
 
-		if(verbose)
-			this->log("prepares SQL statements...");
+		this->log(Config::crawlerLoggingVerbose, "prepares SQL statements...");
 
 		this->database.prepare();
 
 		{ // lock URL list
 			this->setStatusMessage("Waiting for URL list...");
 
-			if(verbose)
-				this->log("waits for URL list...");
+			this->log(Config::crawlerLoggingVerbose, "waits for URL list...");
 
 			DatabaseLock urlListLock(
 					this->database,
@@ -155,8 +155,7 @@ namespace crawlservpp::Module::Crawler {
 			// check URL list
 			this->setStatusMessage("Checking URL list...");
 
-			if(verbose)
-				this->log("checks URL list...");
+			this->log(Config::crawlerLoggingVerbose, "checks URL list...");
 
 			// check hashs of URLs
 			this->database.urlHashCheck();
@@ -172,16 +171,14 @@ namespace crawlservpp::Module::Crawler {
 		// get domain
 		this->setStatusMessage("Getting website domain...");
 
-		if(verbose)
-			this->log("gets website domain...");
+		this->log(Config::crawlerLoggingVerbose, "gets website domain...");
 
 		this->domain = this->database.getWebsiteDomain(this->getWebsite());
 
 		// create URI parser
 		this->setStatusMessage("Creating URI parser...");
 
-		if(verbose)
-			this->log("creates URI parser...");
+		this->log(Config::crawlerLoggingVerbose, "creates URI parser...");
 
 		this->parser = std::make_unique<Parsing::URI>();
 		this->parser->setCurrentDomain(this->domain);
@@ -189,29 +186,27 @@ namespace crawlservpp::Module::Crawler {
 		// set network configuration
 		this->setStatusMessage("Setting network configuration...");
 
-		if(config.crawlerLogging == Config::crawlerLoggingVerbose)
-			this->log("sets network configuration...");
+		this->log(Config::crawlerLoggingVerbose, "sets network configuration...");
 
 		this->networking.setConfigGlobal(*this, false, configWarnings);
 
 		while(!configWarnings.empty()) {
-			this->log("WARNING: " + configWarnings.front());
+			this->log(Config::crawlerLoggingDefault, "WARNING: " + configWarnings.front());
+
 			configWarnings.pop();
 		}
 
 		// initialize custom URLs
 		this->setStatusMessage("Generating custom URLs...");
 
-		if(verbose)
-			this->log("generates custom URLs...");
+		this->log(Config::crawlerLoggingVerbose, "generates custom URLs...");
 
 		this->initCustomUrls();
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
 
-		if(verbose)
-			this->log("initializes custom queries...");
+		this->log(Config::crawlerLoggingVerbose, "initializes custom queries...");
 
 		this->initQueries();
 
@@ -219,20 +214,18 @@ namespace crawlservpp::Module::Crawler {
 		if(this->config.crawlerArchives && !(this->networkingArchives)) {
 			this->setStatusMessage("Initializing networking for archives...");
 
-			if(verbose)
-				this->log("initializes networking for archives...");
+			this->log(Config::crawlerLoggingVerbose, "initializes networking for archives...");
 
 			this->networkingArchives = std::make_unique<Network::Curl>(this->cookieDir);
 
 			this->networkingArchives->setConfigGlobal(*this, true, configWarnings);
 
 			// log warnings if necessary
-			if(this->config.crawlerLogging)
-				while(!configWarnings.empty()) {
-					this->log("WARNING: " + configWarnings.front());
+			while(!configWarnings.empty()) {
+				this->log(Config::crawlerLoggingDefault, "WARNING: " + configWarnings.front());
 
-					configWarnings.pop();
-				}
+				configWarnings.pop();
+			}
 		}
 
 		// save start time and initialize counter
@@ -308,8 +301,7 @@ namespace crawlservpp::Module::Crawler {
 			++(this->tickCounter);
 
 			// start crawling
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("crawls " + url.second + "...");
+			this->log(Config::crawlerLoggingExtended, "crawls " + url.second + "...");
 
 			// crawl content
 			const bool crawled = this->crawlingContent(
@@ -341,39 +333,39 @@ namespace crawlservpp::Module::Crawler {
 					this->crawlingSuccess(url);
 
 					// log if necessary
-					if((this->config.crawlerLogging > Config::crawlerLoggingDefault)
-							|| (this->config.crawlerTiming && this->config.crawlerLogging)) {
-						std::ostringstream logStrStr;
+					std::ostringstream logStrStr;
 
-						logStrStr.imbue(std::locale(""));
+					logStrStr.imbue(std::locale(""));
 
-						logStrStr << "finished " << url.second;
+					logStrStr << "finished " << url.second;
 
-						if(this->config.crawlerTiming) {
-							logStrStr	<< " after " << timerTotal.totalStr()
-										<< " (select: " << timerSelect.totalStr() << ", "
-										<< timerString;
+					if(this->config.crawlerTiming) {
+						logStrStr	<< " after " << timerTotal.totalStr()
+									<< " (select: " << timerSelect.totalStr() << ", "
+									<< timerString;
 
-							if(this->config.crawlerArchives)
-								logStrStr << ", archive: " << timerArchives.totalStr();
+						if(this->config.crawlerArchives)
+							logStrStr << ", archive: " << timerArchives.totalStr();
 
-							logStrStr << ")";
-						}
-
-						logStrStr << " - checked " << checkedUrls;
-
-						if(checkedUrlsArchive)
-							logStrStr << " (+" << checkedUrlsArchive << " archived)";
-
-						logStrStr << ", added " << newUrls;
-
-						if(newUrlsArchive)
-							logStrStr << " (+" << newUrlsArchive << " archived)";
-
-						logStrStr << " URL(s).";
-
-						this->log(logStrStr.str());
+						logStrStr << ")";
 					}
+
+					logStrStr << " - checked " << checkedUrls;
+
+					if(checkedUrlsArchive)
+						logStrStr << " (+" << checkedUrlsArchive << " archived)";
+
+					logStrStr << ", added " << newUrls;
+
+					if(newUrlsArchive)
+						logStrStr << " (+" << newUrlsArchive << " archived)";
+
+					logStrStr << " URL(s).";
+
+					this->log(
+							this->config.crawlerTiming ? Config::crawlerLoggingDefault : Config::crawlerLoggingExtended,
+							logStrStr.str()
+					);
 				}
 			}
 			else if(!crawled)
@@ -437,7 +429,7 @@ namespace crawlservpp::Module::Crawler {
 
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
-			this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
+			this->log(Config::crawlerLoggingDefault, "average speed: " + tpsStrStr.str() + " ticks per second.");
 		}
 
 		// delete queries
@@ -476,8 +468,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// initialize custom URLs, throws Thread::Exception
 	void Thread::initCustomUrls() {
-		if(this->config.crawlerLogging == Config::crawlerLoggingVerbose)
-			this->log("initializes start page and custom URLs...");
+		this->log(Config::crawlerLoggingVerbose, "initializes start page and custom URLs...");
 
 		if(!(this->config.customCounters.empty())) {
 			// run custom counters
@@ -579,10 +570,8 @@ namespace crawlservpp::Module::Crawler {
 				urlsToAdd.push(customPage.second);
 			}
 			catch(const URIException& e) {
-				if(this->config.crawlerLogging) {
-					this->log("URI Parser error: " + e.whatStr());
-					this->log(" skipped invalid custom URL " + customPage.second);
-				}
+				this->log(Config::crawlerLoggingDefault, "URI Parser error: " + e.whatStr());
+				this->log(Config::crawlerLoggingDefault, " skipped invalid custom URL " + customPage.second);
 			}
 
 		}
@@ -640,8 +629,7 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::initRobotsTxt() {
 		// check for cross-domain website
 		if(this->domain.empty()) {
-			if(this->config.crawlerLogging)
-				this->log("WARNING: Cannot get \'robots.txt\' for cross-domain website.");
+			this->log(Config::crawlerLoggingDefault, "WARNING: Cannot get \'robots.txt\' for cross-domain website.");
 
 			return;
 		}
@@ -651,8 +639,7 @@ namespace crawlservpp::Module::Crawler {
 		const std::string url("https://" + this->domain + "/robots.txt");
 		bool success = false;
 
-		if(this->config.crawlerLogging == Config::crawlerLoggingVerbose)
-			this->log("fetches \'robots.txt\'...");
+		this->log(Config::crawlerLoggingVerbose, "fetches \'robots.txt\'...");
 
 		// get robots.txt
 		while(this->isRunning()) {
@@ -678,26 +665,22 @@ namespace crawlservpp::Module::Crawler {
 					this->initTokenCache();
 
 					// reset connection and retry
-					if(this->config.crawlerLogging) {
-						this->log(e.whatStr() + " [" + url + "].");
-						this->log("resets connection...");
-					}
+					this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + url + "].");
+					this->log(Config::crawlerLoggingDefault, "resets connection...");
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
 
 					this->networking.resetConnection(this->config.crawlerSleepError);
 				}
 				else {
-					if(this->config.crawlerLogging)
-						this->log("WARNING: " + e.whatStr() + " [" + url + "]");
+					this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "]");
 
 					break;
 				}
 			}
 			catch(const Utf8Exception& e) {
 				// write UTF-8 error to log if neccessary
-				if(this->config.crawlerLogging)
-					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
+				this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "].");
 
 				break;
 			}
@@ -740,12 +723,12 @@ namespace crawlservpp::Module::Crawler {
 					uriParser.parseLink(sitemap);
 
 					if(!uriParser.isSameDomain()) {
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: Cross-domain sitemaps not supported ["
-									+ sitemap
-									+ "]."
-							);
+						this->log(
+								Config::crawlerLoggingDefault,
+								"WARNING: Cross-domain sitemaps not supported ["
+								+ sitemap
+								+ "]."
+						);
 
 						continue;
 					}
@@ -753,14 +736,14 @@ namespace crawlservpp::Module::Crawler {
 					sitemap = uriParser.getSubUrl();
 				}
 				catch(const URIException& e) {
-					if(this->config.crawlerLogging)
-						this->log(
-								"WARNING: URI parser error: "
-								+ e.whatStr()
-								+ "["
-								+ sitemap
-								+ "]"
-						);
+					this->log(
+							Config::crawlerLoggingDefault,
+							"WARNING: URI parser error: "
+							+ e.whatStr()
+							+ "["
+							+ sitemap
+							+ "]"
+					);
 
 					continue;
 				}
@@ -777,8 +760,7 @@ namespace crawlservpp::Module::Crawler {
 				) {
 					this->customPages.emplace_back(0, sitemap);
 
-					if(this->config.crawlerLogging)
-						this->log("fetched sitemap \"" + sitemap + "\" from 'robots.txt'.");
+					this->log(Config::crawlerLoggingDefault, "fetched sitemap \"" + sitemap + "\" from 'robots.txt'.");
 				}
 			}
 		}
@@ -1064,11 +1046,12 @@ namespace crawlservpp::Module::Crawler {
 
 				if(*i)
 					this->database.getQueryProperties(*i, properties);
-				else if(this->config.crawlerLogging) {
+				else {
 					const auto index = i - this->config.customTokensQuery.begin();
 
 					if(!(this->config.customTokens.at(index).empty()))
 						this->log(
+								Config::crawlerLoggingDefault,
 								"WARNING: Ignores token \'"
 								+ this->config.customTokens.at(index)
 								+ "\' because of missing query."
@@ -1103,11 +1086,12 @@ namespace crawlservpp::Module::Crawler {
 
 				if(*i)
 					this->database.getQueryProperties(*i, properties);
-				else if(this->config.crawlerLogging) {
+				else {
 					const auto index = i - this->config.redirectVarQueries.begin();
 
 					if(!(this->config.redirectVarNames.at(index).empty()))
 						this->log(
+								Config::crawlerLoggingDefault,
 								"WARNING: Ignores variable \'"
 								+ this->config.redirectVarNames.at(index)
 								+ " because of missing query."
@@ -1149,11 +1133,11 @@ namespace crawlservpp::Module::Crawler {
 
 				if(this->lockTime.empty()) {
 					// skip locked URL
-					if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-						this->log(
-								"URL lock active - " +
-								this->manualUrl.second + " skipped."
-						);
+					this->log(
+							Config::crawlerLoggingExtended,
+							"URL lock active - " +
+							this->manualUrl.second + " skipped."
+					);
 
 					this->manualUrl = IdString();
 				}
@@ -1168,9 +1152,9 @@ namespace crawlservpp::Module::Crawler {
 			if(!this->manualUrl.first) {
 				// no retry: check custom URLs
 				if(!(this->customPages.empty())) {
-					if(!(this->manualCounter) && this->config.crawlerLogging)
+					if(!(this->manualCounter))
 						// start manual crawling with custom URLs
-						this->log("starts crawling in non-recoverable MANUAL mode.");
+						this->log(Config::crawlerLoggingDefault, "starts crawling in non-recoverable MANUAL mode.");
 
 					// check for custom URLs to crawl
 					if(this->manualCounter < this->customPages.size()) {
@@ -1196,11 +1180,11 @@ namespace crawlservpp::Module::Crawler {
 
 							if(this->lockTime.empty()) {
 								// skip locked custom URL
-								if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-									this->log(
-											"URL lock active - " +
-											this->manualUrl.second + " skipped."
-									);
+								this->log(
+										Config::crawlerLoggingExtended,
+										"URL lock active - " +
+										this->manualUrl.second + " skipped."
+								);
 
 								++(this->manualCounter);
 
@@ -1223,9 +1207,9 @@ namespace crawlservpp::Module::Crawler {
 				if(this->manualCounter == this->customPages.size()) {
 					// no more custom URLs to go: get start page (if not crawled, not ignored and lockable)
 					if(!(this->config.crawlerStartIgnore) && !(this->startCrawled)) {
-						if(this->customPages.empty() && this->config.crawlerLogging) {
+						if(this->customPages.empty()) {
 							// start manual crawling with start page
-							this->log("starts crawling in non-recoverable MANUAL mode.");
+							this->log(Config::crawlerLoggingDefault, "starts crawling in non-recoverable MANUAL mode.");
 						}
 
 						// check whether start page was already crawled (or needs to be re-crawled anyway)
@@ -1239,11 +1223,11 @@ namespace crawlservpp::Module::Crawler {
 
 							if(this->lockTime.empty()) {
 								// start page is locked: write skipping of entry to log if enabled
-								if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-									this->log(
-											"URL lock active - " +
-											this->startPage.second + " skipped."
-									);
+								this->log(
+										Config::crawlerLoggingExtended,
+										"URL lock active - " +
+										this->startPage.second + " skipped."
+								);
 
 								// start page is done
 								this->startCrawled = true;
@@ -1273,8 +1257,7 @@ namespace crawlservpp::Module::Crawler {
 			// check whether manual crawling mode was already set off
 			if(!(this->manualOff)) {
 				// start manual crawling with start page
-				if(this->config.crawlerLogging)
-					this->log("switches to recoverable AUTOMATIC mode.");
+				this->log(Config::crawlerLoggingDefault, "switches to recoverable AUTOMATIC mode.");
 
 				this->manualOff = true;
 			}
@@ -1292,8 +1275,7 @@ namespace crawlservpp::Module::Crawler {
 
 				if(!(this->lockTime.empty())) {
 					// log retry
-					if(this->config.crawlerLogging)
-						this->log("retries " + this->nextUrl.second + "...");
+					this->log(Config::crawlerLoggingDefault, "retries " + this->nextUrl.second + "...");
 
 					// set URL to last URL
 					urlTo = this->nextUrl;
@@ -1305,8 +1287,9 @@ namespace crawlservpp::Module::Crawler {
 
 			if(!retry) {
 				// log failed retry if necessary
-				if(this->nextUrl.first && this->config.crawlerLogging > Config::crawlerLoggingDefault)
+				if(this->nextUrl.first)
 					this->log(
+							Config::crawlerLoggingExtended,
 							"could not retry " + this->nextUrl.second + ","
 							" because it is locked."
 					);
@@ -1325,8 +1308,10 @@ namespace crawlservpp::Module::Crawler {
 
 						if(this->lockTime.empty()) {
 							// skip locked URL
-							if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-								this->log("skipped " + this->nextUrl.second + ", because it is locked.");
+							this->log(
+									Config::crawlerLoggingExtended,
+									"skipped " + this->nextUrl.second + ", because it is locked."
+							);
 						}
 						else {
 							urlTo = this->nextUrl;
@@ -1442,25 +1427,23 @@ namespace crawlservpp::Module::Crawler {
 									this->initTokenCache();
 
 									// reset connection and retry
-									if(this->config.crawlerLogging) {
-										this->log(e.whatStr() + " [" + sourceUrl + "].");
-										this->log("resets connection...");
-									}
+									this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + sourceUrl + "].");
+									this->log(Config::crawlerLoggingDefault, "resets connection...");
 
 									this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
 
 									this->networking.resetConnection(this->config.crawlerSleepError);
 								}
 								else {
-									if(this->config.crawlerLogging)
-										this->log(
-												"WARNING: Could not get token \'"
-												+ *i
-												+ "\' from "
-												+ sourceUrl
-												+ ": "
-												+ e.whatStr()
-										);
+									this->log(
+											Config::crawlerLoggingDefault,
+											"WARNING: Could not get token \'"
+											+ *i
+											+ "\' from "
+											+ sourceUrl
+											+ ": "
+											+ e.whatStr()
+									);
 
 									break;
 								}
@@ -1474,8 +1457,10 @@ namespace crawlservpp::Module::Crawler {
 									this->networking.unsetHeaders();
 
 								// write UTF-8 error to log if neccessary
-								if(this->config.crawlerLogging)
-									this->log("WARNING: " + e.whatStr() + " [" + sourceUrl + "].");
+								this->log(
+										Config::crawlerLoggingDefault,
+										"WARNING: " + e.whatStr() + " [" + sourceUrl + "]."
+								);
 
 								break;
 							}
@@ -1519,19 +1504,18 @@ namespace crawlservpp::Module::Crawler {
 						this->clearQueryTarget();
 
 						// logging if necessary
-						if(this->config.crawlerLogging)
-							this->log(queryWarnings);
+						this->log(Config::crawlerLoggingDefault, queryWarnings);
 
-						if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-							this->log(
-									"fetched token \'"
-									+ *i
-									+ "\' from "
-									+ sourceUrl
-									+ " [= \'"
-									+ value
-									+ "\']."
-							);
+						this->log(
+								Config::crawlerLoggingExtended,
+								"fetched token \'"
+								+ *i
+								+ "\' from "
+								+ sourceUrl
+								+ " [= \'"
+								+ value
+								+ "\']."
+						);
 					}
 				}
 
@@ -1589,8 +1573,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// skip crawling if only archive needs to be retried
 		if(this->config.crawlerArchives && this->archiveRetry) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("Retrying archive only [" + url.second + "].");
+			this->log(Config::crawlerLoggingExtended, "Retrying archive only [" + url.second + "].");
 
 			return true;
 		}
@@ -1675,10 +1658,8 @@ namespace crawlservpp::Module::Crawler {
 				this->initTokenCache();
 
 				// reset connection and retry
-				if(this->config.crawlerLogging) {
-					this->log(e.whatStr() + " [" + url.second + "].");
-					this->log("resets connection...");
-				}
+				this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + url.second + "].");
+				this->log(Config::crawlerLoggingDefault, "resets connection...");
 
 				this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
 
@@ -1702,8 +1683,7 @@ namespace crawlservpp::Module::Crawler {
 				this->networking.unsetHeaders();
 
 			// write UTF-8 error to log if neccessary
-			if(this->config.crawlerLogging)
-				this->log("WARNING: " + e.whatStr() + " [" + url.second + "].");
+			this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url.second + "].");
 
 			// skip URL
 			this->crawlingSkip(url, !(this->config.crawlerArchives));
@@ -1821,8 +1801,7 @@ namespace crawlservpp::Module::Crawler {
 		this->getBoolFromRegEx(this->queryRedirectUrl, url, redirect, queryWarnings);
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		if(!redirect)
 			return;
@@ -1856,8 +1835,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// write to log if necessary
-		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("performs dynamic redirect: " + oldUrl + " -> " + url);
+		this->log(Config::crawlerLoggingExtended, "performs dynamic redirect: " + oldUrl + " -> " + url);
 	}
 
 	// resolve variables in string (i.e. URL or custom cookies/headers) for dynamic redirect by URL
@@ -1872,14 +1850,14 @@ namespace crawlservpp::Module::Crawler {
 			std::string value;
 
 			// check source type
-			if(this->config.redirectVarSources.at(index) != Config::redirectSourceUrl) {
-				if(this->config.crawlerLogging)
-					this->log(
-							"WARNING: Invalid source type for variable \'"
-							+ *i
-							+ "\' for dynamic redirect - set to empty."
-					);
-			}
+			if(this->config.redirectVarSources.at(index) != Config::redirectSourceUrl)
+				this->log(
+						Config::crawlerLoggingDefault,
+						"WARNING: Invalid source type for variable \'"
+						+ *i
+						+ "\' for dynamic redirect - set to empty."
+				);
+
 			// check result type
 			else if(this->queriesRedirectVars.at(index).resultSingle)
 				this->getSingleFromRegEx(this->queriesRedirectVars.at(index), oldUrl, value, queryWarnings);
@@ -1889,16 +1867,16 @@ namespace crawlservpp::Module::Crawler {
 				if(this->getBoolFromRegEx(this->queriesRedirectVars.at(index), oldUrl, booleanResult, queryWarnings))
 					value = booleanResult ? "true" : "false";
 			}
-			else if(this->config.crawlerLogging)
+			else
 				this->log(
+						Config::crawlerLoggingDefault,
 						"WARNING: Could not get value of variable \'"
 						+ *i
 						+ "\' for dynamic redirect - set to empty."
 				);
 
 			// log warnings if necessary
-			if(this->config.crawlerLogging)
-				this->log(queryWarnings);
+			this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 			// replace variable in string
 			Helper::Strings::replaceAll(strInOut, *i, value, true);
@@ -1922,8 +1900,7 @@ namespace crawlservpp::Module::Crawler {
 		this->getBoolFromQuery(this->queryRedirectContent, booleanResult, queryWarnings);
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		// check whether no redirect is necessary
 		if(!booleanResult)
@@ -1939,8 +1916,7 @@ namespace crawlservpp::Module::Crawler {
 		this->crawlingDynamicRedirectContentVars(oldUrl, url);
 
 		// write to log if necessary
-		if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("performed dynamic redirect: " + oldUrl + " -> " + url);
+		this->log(Config::crawlerLoggingExtended, "performed dynamic redirect: " + oldUrl + " -> " + url);
 
 		// get custom headers
 		std::string customCookies(this->config.redirectCookies);
@@ -2007,18 +1983,15 @@ namespace crawlservpp::Module::Crawler {
 					this->initTokenCache();
 
 					// reset connection and retry
-					if(this->config.crawlerLogging) {
-						this->log(e.whatStr() + " [" + url + "].");
-						this->log("resets connection...");
-					}
+					this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + url + "].");
+					this->log(Config::crawlerLoggingDefault, "resets connection...");
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
 
 					this->networking.resetConnection(this->config.crawlerSleepError);
 				}
 				else {
-					if(this->config.crawlerLogging)
-						this->log("WARNING: " + e.whatStr() + " [" + url + "]");
+					this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "]");
 
 					break;
 				}
@@ -2032,8 +2005,7 @@ namespace crawlservpp::Module::Crawler {
 					this->networking.unsetHeaders();
 
 				// write UTF-8 error to log if neccessary
-				if(this->config.crawlerLogging)
-					this->log("WARNING: " + e.whatStr() + " [" + url + "].");
+				this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "].");
 
 				break;
 			}
@@ -2076,6 +2048,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 				else
 					this->log(
+							Config::crawlerLoggingDefault,
 							"WARNING: Invalid result type of query for dynamic redirect variable \'"
 							+ *i
 							+ "\' - set to empty."
@@ -2095,6 +2068,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 				else
 					this->log(
+							Config::crawlerLoggingDefault,
 							"WARNING: Invalid result type of query for dynamic redirect variable \'"
 							+ *i
 							+ "\' - set to empty."
@@ -2103,17 +2077,16 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 			default:
-				if(this->config.crawlerLogging)
-					this->log(
-							"WARNING: Unknown source type for dynamic redirect variable \'"
-							+ *i
-							+ "\' - set to empty."
-					);
+				this->log(
+						Config::crawlerLoggingDefault,
+						"WARNING: Unknown source type for dynamic redirect variable \'"
+						+ *i
+						+ "\' - set to empty."
+				);
 			}
 
 			// log warnings if necessary
-			if(this->config.crawlerLogging)
-				this->log(queryWarnings);
+			this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 			// replace variable with value
 			Helper::Strings::replaceAll(strInOut, *i, value, true);
@@ -2130,26 +2103,26 @@ namespace crawlservpp::Module::Crawler {
 		std::string utf8Error;
 
 		if(!Helper::Utf8::isValidUtf8(url, utf8Error)) {
-			if(this->config.crawlerLogging) {
-				if(utf8Error.empty())
-					this->log(
-							"ignored URL containing invalid UTF-8 character(s) ["
-							+ url
-							+ " from "
-							+ from
-							+ "]."
-					);
-				else
-					this->log(
-							"ignored URL because "
-							+ utf8Error
-							+ " ["
-							+ url
-							+ " from "
-							+ from
-							+ "]."
-					);
-			}
+			if(utf8Error.empty())
+				this->log(
+						Config::crawlerLoggingDefault,
+						"ignored URL containing invalid UTF-8 character(s) ["
+						+ url
+						+ " from "
+						+ from
+						+ "]."
+				);
+			else
+				this->log(
+						Config::crawlerLoggingDefault,
+						"ignored URL because "
+						+ utf8Error
+						+ " ["
+						+ url
+						+ " from "
+						+ from
+						+ "]."
+				);
 
 			return false;
 		}
@@ -2169,12 +2142,10 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		if(whitelist && !found) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("skipped " + url + " (not whitelisted).");
+			this->log(Config::crawlerLoggingExtended, "skipped " + url + " (not whitelisted).");
 
 			return false;
 		}
@@ -2187,13 +2158,15 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
-		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("skipped " + url + " (blacklisted).");
+		if(found) {
+			this->log(Config::crawlerLoggingExtended, "skipped " + url + " (blacklisted).");
 
-		return !found;
+			return false;
+		}
+
+		return true;
 	}
 
 	// check whether links should be extracted from URL
@@ -2217,12 +2190,10 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		if(whitelist && !found) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("skipped " + url + " (not whitelisted).");
+			this->log(Config::crawlerLoggingExtended, "skipped " + url + " (not whitelisted).");
 
 			return false;
 		}
@@ -2235,21 +2206,22 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
-		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("skipped " + url + " (blacklisted).");
+		if(found) {
+			this->log(Config::crawlerLoggingExtended, "skipped " + url + " (blacklisted).");
 
-		return !found;
+			return false;
+		}
+
+		return true;
 	}
 
 	// check cURL code and decide whether to retry or skip
 	bool Thread::crawlingCheckCurlCode(CURLcode curlCode, const std::string& url) {
 		if(curlCode == CURLE_TOO_MANY_REDIRECTS) {
 			// redirection error: skip URL
-			if(this->config.crawlerLogging)
-				this->log("redirection error at " + url + " - skips...");
+			this->log(Config::crawlerLoggingDefault, "redirection error at " + url + " - skips...");
 
 			return false;
 		}
@@ -2260,19 +2232,20 @@ namespace crawlservpp::Module::Crawler {
 	// check the HTTP response code for an error and decide whether to continue or skip
 	bool Thread::crawlingCheckResponseCode(const std::string& url, long responseCode) {
 		if(responseCode >= 400 && responseCode < 600) {
-			if(this->config.crawlerLogging)
-				this->log(
-						"HTTP error "
-						+ std::to_string(responseCode)
-						+ " from "
-						+ url
-						+ " - skips..."
-				);
+			this->log(
+					Config::crawlerLoggingDefault,
+					"HTTP error "
+					+ std::to_string(responseCode)
+					+ " from "
+					+ url
+					+ " - skips..."
+			);
 
 			return false;
 		}
-		else if(responseCode != 200 && this->config.crawlerLogging)
+		else if(responseCode != 200)
 			this->log(
+					Config::crawlerLoggingDefault,
 					"WARNING: HTTP response code "
 					+ std::to_string(responseCode)
 					+ " from "
@@ -2300,12 +2273,13 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		if(whitelist && !found) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("skipped " + url + " (content type \'" + contentType + "\' not whitelisted).");
+			this->log(
+					Config::crawlerLoggingExtended,
+					"skipped " + url + " (content type \'" + contentType + "\' not whitelisted)."
+			);
 
 			return false;
 		}
@@ -2318,13 +2292,18 @@ namespace crawlservpp::Module::Crawler {
 				 break;
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
-		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("skipped " + url + " (content type \'" + contentType + "\' blacklisted).");
+		if(found) {
+			this->log(
+					Config::crawlerLoggingExtended,
+					"skipped " + url + " (content type \'" + contentType + "\' blacklisted)."
+			);
 
-		return !found;
+			return false;
+		}
+
+		return true;
 	}
 
 	// check whether specific content type should be used for link extraction
@@ -2344,18 +2323,17 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		if(whitelist && !found) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log(
-						"skipped link extraction for "
-						+ url
-						+ " (content type \'"
-						+ contentType
-						+ "\' not whitelisted)."
-				);
+			this->log(
+					Config::crawlerLoggingExtended,
+					"skipped link extraction for "
+					+ url
+					+ " (content type \'"
+					+ contentType
+					+ "\' not whitelisted)."
+			);
 
 			return false;
 		}
@@ -2368,20 +2346,22 @@ namespace crawlservpp::Module::Crawler {
 				 break;
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
-		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log(
-						"skipped link extraction for "
-						+ url
-						+ " (content type \'"
-						+ contentType
-						+ "\' blacklisted)."
-				);
+		if(found) {
+			this->log(
+					Config::crawlerLoggingExtended,
+					"skipped link extraction for "
+					+ url
+					+ " (content type \'"
+					+ contentType
+					+ "\' blacklisted)."
+			);
 
-		return !found;
+			return false;
+		}
+
+		return true;
 	}
 
 	// check whether specific content should be crawled, throws Thread::Exception
@@ -2405,12 +2385,10 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		if(whitelist && !found) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("skipped " + url + " (content not whitelisted).");
+			this->log(Config::crawlerLoggingExtended, "skipped " + url + " (content not whitelisted).");
 
 			return false;
 		}
@@ -2423,11 +2401,10 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
-		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("skipped " + url + " (content blacklisted).");
+		if(found)
+			this->log(Config::crawlerLoggingExtended, "skipped " + url + " (content blacklisted).");
 
 		return !found;
 	}
@@ -2453,12 +2430,13 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		if(whitelist && !found) {
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("skipped link extraction from " + url + " (content not whitelisted).");
+			this->log(
+					Config::crawlerLoggingExtended,
+					"skipped link extraction from " + url + " (content not whitelisted)."
+			);
 
 			return false;
 		}
@@ -2471,13 +2449,18 @@ namespace crawlservpp::Module::Crawler {
 				break;
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
-		if(found && this->config.crawlerLogging > Config::crawlerLoggingDefault)
-			this->log("skipped link extraction from " + url + " (content blacklisted).");
+		if(found) {
+			this->log(
+					Config::crawlerLoggingExtended,
+					"skipped link extraction from " + url + " (content blacklisted)."
+			);
 
-		return !found;
+			return false;
+		}
+
+		return true;
 	}
 
 	// save content to database, throws Thread::Exception
@@ -2504,8 +2487,7 @@ namespace crawlservpp::Module::Crawler {
 				xmlContent.clear();
 
 			// log warnings if necessary
-			if(this->config.crawlerLogging)
-				this->log(parsingWarnings);
+			this->log(Config::crawlerLoggingDefault, parsingWarnings);
 
 			if(!xmlContent.empty())
 				return;
@@ -2542,8 +2524,7 @@ namespace crawlservpp::Module::Crawler {
 		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
 
 		// log warnings if necessary
-		if(this->config.crawlerLogging)
-			this->log(queryWarnings);
+		this->log(Config::crawlerLoggingDefault, queryWarnings);
 
 		// try to convert expected number of URLs
 		if(!expectedStr.empty()) {
@@ -2556,14 +2537,14 @@ namespace crawlservpp::Module::Crawler {
 				urls.reserve(expected);
 			}
 			catch(const std::logic_error& e) {
-				if(this->config.crawlerLogging)
-					this->log(
-							"WARNING: \'"
-							+ expectedStr
-							+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
-							+ url
-							+ "]."
-					);
+				this->log(
+						Config::crawlerLoggingDefault,
+						"WARNING: \'"
+						+ expectedStr
+						+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
+						+ url
+						+ "]."
+				);
 			}
 		}
 
@@ -2605,8 +2586,8 @@ namespace crawlservpp::Module::Crawler {
 
 				if(this->config.expectedErrorIfSmaller)
 					throw Exception(expectedStrStr.str());
-				else if(this->config.crawlerLogging)
-					this->log("WARNING: " + expectedStrStr.str() + ".");
+				else
+					this->log(Config::crawlerLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
 			}
 			else if(urls.size() > expected) {
 				// number of URLs is larger than expected
@@ -2621,10 +2602,10 @@ namespace crawlservpp::Module::Crawler {
 				// number of URLs is smaller than expected
 				if(this->config.expectedErrorIfLarger)
 					throw Exception(expectedStrStr.str());
-				else if(this->config.crawlerLogging)
-					this->log("WARNING: " + expectedStrStr.str() + ".");
+				else
+					this->log(Config::crawlerLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
 			}
-			else if(this->config.crawlerLogging == Config::crawlerLoggingVerbose) {
+			else {
 				expectedStrStr	<< "number of extracted URLs ["
 								<< urls.size()
 								<< "] as expected ["
@@ -2633,7 +2614,7 @@ namespace crawlservpp::Module::Crawler {
 								<< url
 								<< "].";
 
-				this->log(expectedStrStr.str());
+				this->log(Config::crawlerLoggingVerbose, expectedStrStr.str());
 			}
 		}
 
@@ -2735,11 +2716,13 @@ namespace crawlservpp::Module::Crawler {
 								}
 
 								if(
-										this->config.crawlerLogging
-										&& urls.at(n - 1).length() > 1
+										urls.at(n - 1).length() > 1
 										&& urls.at(n - 1).at(1) == '#'
 								)
-									this->log("WARNING: Found anchor \'" + urls.at(n - 1) + "\'. [" + url + "]");
+									this->log(
+											Config::crawlerLoggingDefault,
+											"WARNING: Found anchor \'" + urls.at(n - 1) + "\'. [" + url + "]"
+									);
 
 								continue;
 							}
@@ -2747,8 +2730,10 @@ namespace crawlservpp::Module::Crawler {
 					}
 				}
 				catch(const URIException& e) {
-					if(this->config.crawlerLogging)
-						this->log("WARNING: URI Parser error - " + e.whatStr() + " [" + url + "]");
+					this->log(
+							Config::crawlerLoggingDefault,
+							"WARNING: URI Parser error - " + e.whatStr() + " [" + url + "]"
+					);
 				}
 			}
 
@@ -2770,21 +2755,30 @@ namespace crawlservpp::Module::Crawler {
 				}
 		), urls.end());
 
-		if(this->config.crawlerLogging && urls.size() < oldSize)
-			this->log("WARNING: URLs longer than 2,000 Bytes ignored [" + url + "]");
+		if(urls.size() < oldSize)
+			this->log(
+					Config::crawlerLoggingDefault,
+					"WARNING: URLs longer than 2,000 Bytes ignored [" + url + "]"
+			);
 
 		// if necessary, check for file endings and show warnings
-		if(this->config.crawlerLogging && this->config.crawlerWarningsFile)
+		if(this->config.crawlerWarningsFile)
 			for(const auto& url : urls)
 				if(url.back() != '/'){
 					const auto lastSlash = url.rfind('/');
 
 					if(lastSlash == std::string::npos) {
 						if(url.find('.') != std::string::npos)
-							this->log("WARNING: Found file \'" + url + "\' [" + url + "]");
+							this->log(
+									Config::crawlerLoggingDefault,
+									"WARNING: Found file \'" + url + "\' [" + url + "]"
+							);
 					}
 					else if(url.find('.', lastSlash + 1) != std::string::npos)
-						this->log("WARNING: Found file \'" + url + "\' [" + url + "]");
+						this->log(
+								Config::crawlerLoggingDefault,
+								"WARNING: Found file \'" + url + "\' [" + url + "]"
+						);
 				}
 
 		// save status message
@@ -2850,8 +2844,7 @@ namespace crawlservpp::Module::Crawler {
 			bool skip = false;
 
 			// write to log if necessary
-			if(this->config.crawlerLogging > Config::crawlerLoggingDefault)
-				this->log("gets archives of " + url.second + "...");
+			this->log(Config::crawlerLoggingExtended, "gets archives of " + url.second + "...");
 
 			// loop over different archives
 			for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); ++n) {
@@ -2897,16 +2890,17 @@ namespace crawlservpp::Module::Crawler {
 									archivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
 
 									// if there are warnings, just log them (maybe mementos were partially parsed)
-									if(this->config.crawlerLogging) {
-										while(!warnings.empty()) {
-											this->log(
-													"Memento parsing WARNING: " +
-													warnings.front() +
-													" [" + url.second + "]"
-											);
+									while(!warnings.empty()) {
+										this->log(
+												Config::crawlerLoggingDefault,
+												"Memento parsing WARNING: "
+												+ warnings.front()
+												+ " ["
+												+ url.second
+												+ "]"
+										);
 
-											warnings.pop();
-										}
+										warnings.pop();
 									}
 
 									// save status message
@@ -3009,38 +3003,42 @@ namespace crawlservpp::Module::Crawler {
 																	continue;
 																}
 																catch(const DateTimeException& e) {
-																	if(this->config.crawlerLogging)
-																		// log warning (and ignore reference)
-																		this->log(
-																				"WARNING: "
-																				+ e.whatStr()
-																				+ " from "
-																				+ this->config.crawlerArchivesNames.at(n)
-																				+ " ["
-																				+ url.second
-																				+ "]."
-																		);
+																	// log warning if necessary (and ignore reference)
+																	this->log(
+																			Config::crawlerLoggingDefault,
+																			"WARNING: "
+																			+ e.whatStr()
+																			+ " from "
+																			+ this->config.crawlerArchivesNames.at(n)
+																			+ " ["
+																			+ url.second
+																			+ "]."
+																	);
 																}
 															}
-															else if(this->config.crawlerLogging)
-																// log warning (and ignore reference)
+															else
+																// log warning if necessary (and ignore reference)
 																this->log(
-																		"WARNING: Could not find timestamp"
-																		" in " + mementos.front().url +
-																		" [" + url.second + "].");
-														}
-														catch(const DateTimeException &e) {
-															if(this->config.crawlerLogging)
-																// log warning (and ignore reference)
-																this->log(
-																		"WARNING: "
-																		+ e.whatStr()
-																		+ " in "
+																		Config::crawlerLoggingDefault,
+																		"WARNING: Could not find timestamp in "
 																		+ mementos.front().url
 																		+ " ["
 																		+ url.second
 																		+ "]."
 																);
+														}
+														catch(const DateTimeException &e) {
+															// log warning (and ignore reference)
+															this->log(
+																	Config::crawlerLoggingDefault,
+																	"WARNING: "
+																	+ e.whatStr()
+																	+ " in "
+																	+ mementos.front().url
+																	+ " ["
+																	+ url.second
+																	+ "]."
+															);
 														}
 													}
 													else {
@@ -3095,21 +3093,21 @@ namespace crawlservpp::Module::Crawler {
 																		mementos.front().url
 																)
 														) {
-															// log error
-															if(this->config.crawlerLogging) {
-																this->log(
-																		e.whatStr()
-																		+ " ["
-																		+ mementos.front().url
-																		+ "]."
-																);
+															// log error if necessary
+															this->log(
+																	Config::crawlerLoggingDefault,
+																	e.whatStr()
+																	+ " ["
+																	+ mementos.front().url
+																	+ "]."
+															);
 
-																this->log(
-																		"resets connection to "
-																		+ this->config.crawlerArchivesNames.at(n)
-																		+ "..."
-																);
-															}
+															this->log(
+																	Config::crawlerLoggingDefault,
+																	"resets connection to "
+																	+ this->config.crawlerArchivesNames.at(n)
+																	+ "..."
+															);
 
 															// reset connection and retry
 															this->setStatusMessage(
@@ -3129,9 +3127,10 @@ namespace crawlservpp::Module::Crawler {
 															return false;
 														}
 													}
-													// log cURL error and skip
-													else if(this->config.crawlerLogging)
+													// log cURL error if necessary and skip
+													else
 														this->log(
+																Config::crawlerLoggingDefault,
 																e.whatStr()
 																+ " - skips..."
 																+ " ["
@@ -3141,15 +3140,15 @@ namespace crawlservpp::Module::Crawler {
 												}
 												catch(const Utf8Exception& e) {
 													// write UTF-8 error to log if necessary (and skip)
-													if(this->config.crawlerLogging)
-														this->log(
-																"WARNING: "
-																+ e.whatStr()
-																+ " - skips..."
-																+ " ["
-																+ mementos.front().url
-																+ "]"
-														);
+													this->log(
+															Config::crawlerLoggingDefault,
+															"WARNING: "
+															+ e.whatStr()
+															+ " - skips..."
+															+ " ["
+															+ mementos.front().url
+															+ "]"
+													);
 												}
 											}
 
@@ -3193,15 +3192,17 @@ namespace crawlservpp::Module::Crawler {
 								archivedUrl
 						)) {
 							// reset connection and retry
-							if(this->config.crawlerLogging) {
-								this->log(e.whatStr() + " [" + archivedUrl + "].");
+							this->log(
+									Config::crawlerLoggingDefault,
+									e.whatStr() + " [" + archivedUrl + "]."
+							);
 
-								this->log(
-										"resets connection to "
-										+ this->config.crawlerArchivesNames.at(n)
-										+ "..."
-								);
-							}
+							this->log(
+									Config::crawlerLoggingDefault,
+									"resets connection to "
+									+ this->config.crawlerArchivesNames.at(n)
+									+ "..."
+							);
 
 							this->setStatusMessage(
 									"ERROR "
@@ -3220,14 +3221,14 @@ namespace crawlservpp::Module::Crawler {
 					}
 					catch(const Utf8Exception& e) {
 						// write UTF-8 error to log if necessary
-						if(this->config.crawlerLogging)
-							this->log(
-									"WARNING: "
-									+ e.whatStr()
-									+ " ["
-									+ archivedUrl
-									+ "]"
-							);
+						this->log(
+								Config::crawlerLoggingDefault,
+								"WARNING: "
+								+ e.whatStr()
+								+ " ["
+								+ archivedUrl
+								+ "]"
+						);
 
 						success = false;
 						skip = true;

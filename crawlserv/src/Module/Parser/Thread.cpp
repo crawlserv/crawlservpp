@@ -91,12 +91,10 @@ namespace crawlservpp::Module::Parser {
 		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
 
 		// show warnings if necessary
-		if(this->config.generalLogging) {
-			while(!configWarnings.empty()) {
-				this->log("WARNING: " + configWarnings.front());
+		while(!configWarnings.empty()) {
+			this->log(Config::generalLoggingDefault, "WARNING: " + configWarnings.front());
 
-				configWarnings.pop();
-			}
+			configWarnings.pop();
 		}
 
 		// set query container options
@@ -106,12 +104,14 @@ namespace crawlservpp::Module::Parser {
 		// set database options
 		this->setStatusMessage("Setting database options...");
 
-		const bool verbose = this->config.generalLogging == Config::generalLoggingVerbose;
+		this->database.setLogging(
+				this->config.generalLogging,
+				Config::generalLoggingDefault,
+				Config::generalLoggingVerbose
+		);
 
-		if(verbose)
-			this->log("sets database options...");
+		this->log(Config::generalLoggingVerbose, "sets database options...");
 
-		this->database.setLogging(this->config.generalLogging, verbose);
 		this->database.setCacheSize(this->config.generalCacheSize);
 		this->database.setReparse(this->config.generalReParse);
 		this->database.setParseCustom(this->config.generalParseCustom);
@@ -133,38 +133,28 @@ namespace crawlservpp::Module::Parser {
 		// initialize target table
 		this->setStatusMessage("Initializing target table...");
 
-		if(verbose)
-			this->log("initializes target table...");
-
-		if(config.generalLogging == Config::generalLoggingVerbose)
-			this->log("initializes target table...");
+		this->log(Config::generalLoggingVerbose, "initializes target table...");
 
 		this->database.initTargetTable();
 
 		// prepare SQL statements for parser
 		this->setStatusMessage("Preparing SQL statements...");
 
-		if(verbose)
-			this->log("prepares SQL statements...");
+		this->log(Config::generalLoggingVerbose, "prepares SQL statements...");
 
 		this->database.prepare();
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
 
-		if(verbose)
-			this->log("initializes custom queries...");
-
-		if(config.generalLogging == Config::generalLoggingVerbose)
-			this->log("initializes custom queries...");
+		this->log(Config::generalLoggingVerbose, "initializes custom queries...");
 
 		this->initQueries();
 
 		// check whether ID can be parsed from URL only
 		this->setStatusMessage("Checking for URL-only parsing...");
 
-		if(verbose)
-			this->log("checks for URL-only parsing...");
+		this->log(Config::generalLoggingVerbose, "checks for URL-only parsing...");
 
 		this->idFromUrlOnly = std::find(
 				this->config.parsingIdSources.begin(),
@@ -176,8 +166,7 @@ namespace crawlservpp::Module::Parser {
 			// wait for parsing table lock
 			this->setStatusMessage("Waiting for parsing table...");
 
-			if(verbose)
-				this->log("waits for parsing table...");
+			this->log(Config::generalLoggingVerbose, "waits for parsing table...");
 
 			DatabaseLock(
 					this->database,
@@ -191,30 +180,27 @@ namespace crawlservpp::Module::Parser {
 			// check parsing table
 			this->setStatusMessage("Checking parsing table...");
 
-			if(verbose)
-					this->log("checks parsing table...");
+			this->log(Config::generalLoggingVerbose, "checks parsing table...");
 
 			const unsigned int deleted = this->database.checkParsingTable();
 
-			if(this->config.generalLogging) {
-				switch(deleted) {
-				case 0:
-					break;
+			switch(deleted) {
+			case 0:
+				break;
 
-				case 1:
-					this->log("WARNING: Deleted a duplicate URL lock.");
+			case 1:
+				this->log(Config::generalLoggingDefault, "WARNING: Deleted a duplicate URL lock.");
 
-					break;
+				break;
 
-				default:
-					std::ostringstream logStrStr;
+			default:
+				std::ostringstream logStrStr;
 
-					logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(std::locale(""));
 
-					logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+				logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
 
-					this->log(logStrStr.str());
-				}
+				this->log(Config::generalLoggingDefault, logStrStr.str());
 			}
 		}
 
@@ -281,8 +267,7 @@ namespace crawlservpp::Module::Parser {
 			return;
 
 		// write log entry if necessary
-		if(this->config.generalLogging > Config::generalLoggingExtended)
-			this->log("parses " + this->urls.front().second + "...");
+		this->log(Config::generalLoggingExtended, "parses " + this->urls.front().second + "...");
 
 		// try to renew URL lock
 		this->lockTime = this->database.renewUrlLockIfOk(
@@ -295,8 +280,7 @@ namespace crawlservpp::Module::Parser {
 
 		if(skip) {
 			// skip locked URL
-			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log("skips (locked) " + this->urls.front().second);
+			this->log(Config::generalLoggingExtended, "skips (locked) " + this->urls.front().second);
 		}
 		else {
 			// set status
@@ -327,7 +311,7 @@ namespace crawlservpp::Module::Parser {
 			parsed = this->parsingNext();
 
 			// stop timer
-			if(this->config.generalTiming && this->config.generalLogging)
+			if(this->config.generalTiming)
 				timerStr = timer.tickStr();
 
 			// save expiration time of URL lock if parsing was successful or unlock URL if parsing failed
@@ -341,28 +325,26 @@ namespace crawlservpp::Module::Parser {
 			this->lockTime = "";
 
 			// write to log if necessary
-			if(
-					(this->config.generalLogging > Config::generalLoggingDefault)
-					|| (this->config.generalTiming && this->config.generalLogging)
-			) {
-				std::ostringstream logStrStr;
+			std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(std::locale(""));
 
-				if(parsed > 1)
-					logStrStr << "parsed " << parsed << " versions of ";
-				else if(parsed == 1)
-					logStrStr << "parsed ";
-				else
-					logStrStr << "skipped ";
+			if(parsed > 1)
+				logStrStr << "parsed " << parsed << " versions of ";
+			else if(parsed == 1)
+				logStrStr << "parsed ";
+			else
+				logStrStr << "skipped ";
 
-				logStrStr << this->urls.front().second;
+			logStrStr << this->urls.front().second;
 
-				if(this->config.generalTiming)
-					logStrStr << " in " << timerStr;
+			if(this->config.generalTiming)
+				logStrStr << " in " << timerStr;
 
-				this->log(logStrStr.str());
-			}
+			this->log(
+					this->config.generalTiming ? Config::generalLoggingDefault : Config::generalLoggingExtended,
+					logStrStr.str()
+			);
 		}
 
 		// URL finished
@@ -420,7 +402,7 @@ namespace crawlservpp::Module::Parser {
 
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
-			this->log("average speed: " + tpsStrStr.str() + " ticks per second.");
+			this->log(Config::generalLoggingDefault, "average speed: " + tpsStrStr.str() + " ticks per second.");
 		}
 
 		// save results if necessary
@@ -518,7 +500,7 @@ namespace crawlservpp::Module::Parser {
 
 				if(*i)
 					this->database.getQueryProperties(*i, properties);
-				else if(this->config.generalLogging) {
+				else {
 					const auto& name =
 							this->config.parsingFieldNames.at(
 									i - this->config.parsingFieldQueries.begin()
@@ -526,6 +508,7 @@ namespace crawlservpp::Module::Parser {
 
 					if(!(name.empty()))
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: Ignores field \'"
 								+ name
 								+ "\' because of missing query."
@@ -557,15 +540,14 @@ namespace crawlservpp::Module::Parser {
 		this->setStatusMessage("Fetching URLs...");
 
 		// fill cache with next URLs
-		if(this->config.generalLogging > Config::generalLoggingDefault)
-			this->log("fetches URLs...");
+		this->log(Config::generalLoggingExtended, "fetches URLs...");
 
 		// get next URL(s)
 		this->parsingFetchUrls();
 
 		// write to log if necessary
-		if(this->config.generalTiming && this->config.generalLogging)
-			this->log("fetched URLs in " + timer.tickStr());
+		if(this->config.generalTiming)
+			this->log(Config::generalLoggingDefault, "fetched URLs in " + timer.tickStr());
 
 		// update status
 		this->setStatusMessage("Checking URLs...");
@@ -574,8 +556,7 @@ namespace crawlservpp::Module::Parser {
 		if(this->urls.empty()) {
 			// no more URLs to parse
 			if(!(this->idle)) {
-				if(this->config.generalLogging > Config::generalLoggingDefault)
-					this->log("finished.");
+				this->log(Config::generalLoggingExtended, "finished.");
 
 				this->setStatusMessage("IDLE Waiting for new URLs to parse.");
 				this->setProgress(1.f);
@@ -615,8 +596,7 @@ namespace crawlservpp::Module::Parser {
 		while(!(this->urls.empty()) && this->isRunning()) {
 			// check whether URL needs to be skipped because of invalid ID
 			if(!(this->urls.front().first)) {
-				if(this->config.generalLogging)
-					this->log("skips (INVALID ID) " + this->urls.front().second);
+				this->log(Config::generalLoggingDefault, "skips (INVALID ID) " + this->urls.front().second);
 
 				// unlock URL if necessary
 				this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
@@ -637,12 +617,11 @@ namespace crawlservpp::Module::Parser {
 						break;
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				if(skip) {
 					// skip URL because of query
-					if(this->config.generalLogging > Config::generalLoggingDefault)
-						this->log("skips (query) " + this->urls.front().second);
+					this->log(Config::generalLoggingExtended, "skips (query) " + this->urls.front().second);
 
 					// unlock URL if necessary
 					this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
@@ -658,7 +637,7 @@ namespace crawlservpp::Module::Parser {
 		} // end of loop over URLs in cache
 
 		// log warnings if necessary
-		this->logWarnings(queryWarnings);
+		this->log(Config::generalLoggingDefault, queryWarnings);
 	}
 
 	// parse URL and content(s) of next URL, return number of successfully parsed contents
@@ -683,7 +662,7 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			// write warnings to log if necessary
-			this->logWarnings(queryWarnings);
+			this->log(Config::generalLoggingDefault, queryWarnings);
 
 			// check ID
 			if(parsedId.empty())
@@ -785,7 +764,7 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			// log warnings if necessary
-			this->logWarnings(queryWarnings);
+			this->log(Config::generalLoggingDefault, queryWarnings);
 		}
 		else
 			parsedData.dataId = parsedId;
@@ -806,14 +785,14 @@ namespace crawlservpp::Module::Parser {
 						parsedData.dataId
 				) != this->config.parsingIdIgnore.end()
 		) {
-			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log(
-						"ignored parsed ID \'"
-						+ parsedData.dataId
-						+ "\' ["
-						+ this->urls.front().second
-						+ "]."
-				);
+			this->log(
+					Config::generalLoggingExtended,
+					"ignored parsed ID \'"
+					+ parsedData.dataId
+					+ "\' ["
+					+ this->urls.front().second
+					+ "]."
+			);
 
 			// clear query target before continuing to next URL (or finish)
 			this->clearQueryTarget();
@@ -841,14 +820,14 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		if((contentId && contentId != content.first) || duplicateInCache) {
-			if(this->config.generalLogging)
-				this->log(
-						"skipped content with already existing ID \'"
-						+ parsedData.dataId
-						+ "\' ["
-						+ this->urls.front().second
-						+ "]."
-				);
+			this->log(
+					Config::generalLoggingDefault,
+					"skipped content with already existing ID \'"
+					+ parsedData.dataId
+					+ "\' ["
+					+ this->urls.front().second
+					+ "]."
+			);
 
 			// clear query target before continuing to next URL (or finish)
 			this->clearQueryTarget();
@@ -876,7 +855,7 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			// log warnings if necessary
-			this->logWarnings(queryWarnings);
+			this->log(Config::generalLoggingDefault, queryWarnings);
 
 			if(!parsedData.dateTime.empty()) {
 				// found date/time: try to convert it to SQL time stamp
@@ -894,8 +873,7 @@ namespace crawlservpp::Module::Parser {
 					);
 				}
 				catch(const LocaleException& e) {
-					if(this->config.generalLogging)
-						this->log("WARNING: " + e.whatStr() + " - locale ignored.");
+					this->log(Config::generalLoggingDefault, "WARNING: " + e.whatStr() + " - locale ignored.");
 
 					try {
 						Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
@@ -904,25 +882,25 @@ namespace crawlservpp::Module::Parser {
 						);
 					}
 					catch(const DateTimeException& e) {
-						if(this->config.generalLogging > Config::generalLoggingDefault)
-							this->log(
-									e.whatStr()
-									+ " - query skipped ["
-									+ this->urls.front().second
-									+ "]."
-							);
-
-						parsedData.dateTime.clear();
-					}
-				}
-				catch(const DateTimeException & e) {
-					if(this->config.generalLogging > Config::generalLoggingDefault)
 						this->log(
+								Config::generalLoggingExtended,
 								e.whatStr()
 								+ " - query skipped ["
 								+ this->urls.front().second
 								+ "]."
 						);
+
+						parsedData.dateTime.clear();
+					}
+				}
+				catch(const DateTimeException & e) {
+					this->log(
+							Config::generalLoggingExtended,
+							e.whatStr()
+							+ " - query skipped ["
+							+ this->urls.front().second
+							+ "]."
+					);
 
 					parsedData.dateTime.clear();
 				}
@@ -937,10 +915,9 @@ namespace crawlservpp::Module::Parser {
 				this->config.parsingDateTimeWarningEmpty
 				&& parsedData.dateTime.empty()
 				&& !(this->queriesDateTime.empty())
-				&& this->config.generalLogging
 
 		)
-			this->log("WARNING: date/time is empty for " + this->urls.front().second);
+			this->log(Config::generalLoggingDefault, "WARNING: date/time is empty for " + this->urls.front().second);
 
 		// parse custom fields
 		parsedData.fields.reserve(this->queriesFields.size());
@@ -970,7 +947,7 @@ namespace crawlservpp::Module::Parser {
 				}
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				// if necessary, try to convert the parsed values to date/times
 				if(!dateTimeFormat.empty()) {
@@ -984,16 +961,16 @@ namespace crawlservpp::Module::Parser {
 						}
 						catch(const LocaleException& e) {
 							try {
-								if(this->config.generalLogging)
-									this->log(
-											"WARNING: "
-											+ e.whatStr()
-											+ " for field \'"
-											+ this->config.parsingFieldNames.at(index)
-											+ "\' ["
-											+ this->urls.front().second
-											+ "]."
-									);
+								this->log(
+										Config::generalLoggingDefault,
+										"WARNING: "
+										+ e.whatStr()
+										+ " for field \'"
+										+ this->config.parsingFieldNames.at(index)
+										+ "\' ["
+										+ this->urls.front().second
+										+ "]."
+								);
 
 								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
 										value,
@@ -1001,22 +978,23 @@ namespace crawlservpp::Module::Parser {
 								);
 							}
 							catch(const DateTimeException& e) {
-								if(this->config.generalLogging)
-									this->log(
-											"WARNING: "
-											+ e.whatStr()
-											+ " for field \'"
-											+ this->config.parsingFieldNames.at(index)
-											+ "\' ["
-											+ this->urls.front().second
-											+ "]."
-									);
+								this->log(
+										Config::generalLoggingDefault,
+										"WARNING: "
+										+ e.whatStr()
+										+ " for field \'"
+										+ this->config.parsingFieldNames.at(index)
+										+ "\' ["
+										+ this->urls.front().second
+										+ "]."
+								);
 
 								value.clear();
 							}
 						}
 						catch(const DateTimeException& e) {
 							this->log(
+									Config::generalLoggingDefault,
 									"WARNING: "
 									+ e.whatStr()
 									+ " for field \'"
@@ -1032,7 +1010,7 @@ namespace crawlservpp::Module::Parser {
 				}
 
 				// if necessary, check whether array or all values are empty
-				if(this->config.generalLogging && this->config.parsingFieldWarningsEmpty.at(index)) {
+				if(this->config.parsingFieldWarningsEmpty.at(index)) {
 					if(
 							std::find_if(
 									parsedFieldValues.begin(),
@@ -1043,6 +1021,7 @@ namespace crawlservpp::Module::Parser {
 							) == parsedFieldValues.end()
 					)
 						this->log(
+								Config::generalLoggingDefault,
 								"WARNING: \'"
 								+ this->config.parsingFieldNames.at(index) + "\'"
 								" is empty for "
@@ -1097,7 +1076,7 @@ namespace crawlservpp::Module::Parser {
 				}
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				// if necessary, try to convert the parsed value to date/time
 				if(!dateTimeFormat.empty()) {
@@ -1110,40 +1089,8 @@ namespace crawlservpp::Module::Parser {
 					}
 					catch(const LocaleException& e) {
 						try {
-							if(this->config.generalLogging)
-								this->log(
-										"WARNING: "
-										+ e.whatStr()
-										+ " for field \'"
-										+ this->config.parsingFieldNames.at(index)
-										+ "\' ["
-										+ this->urls.front().second
-										+ "]."
-								);
-
-							Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
-									parsedFieldValue,
-									dateTimeFormat
-							);
-						}
-						catch(const DateTimeException& e) {
-							if(this->config.generalLogging)
-								this->log(
-										"WARNING: "
-										+ e.whatStr()
-										+ " for field \'"
-										+ this->config.parsingFieldNames.at(index)
-										+ "\' ["
-										+ this->urls.front().second
-										+ "]."
-								);
-
-							parsedFieldValue.clear();
-						}
-					}
-					catch(const DateTimeException& e) {
-						if(this->config.generalLogging)
 							this->log(
+									Config::generalLoggingDefault,
 									"WARNING: "
 									+ e.whatStr()
 									+ " for field \'"
@@ -1153,6 +1100,38 @@ namespace crawlservpp::Module::Parser {
 									+ "]."
 							);
 
+							Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+									parsedFieldValue,
+									dateTimeFormat
+							);
+						}
+						catch(const DateTimeException& e) {
+							this->log(
+									Config::generalLoggingDefault,
+									"WARNING: "
+									+ e.whatStr()
+									+ " for field \'"
+									+ this->config.parsingFieldNames.at(index)
+									+ "\' ["
+									+ this->urls.front().second
+									+ "]."
+							);
+
+							parsedFieldValue.clear();
+						}
+					}
+					catch(const DateTimeException& e) {
+						this->log(
+								Config::generalLoggingDefault,
+								"WARNING: "
+								+ e.whatStr()
+								+ " for field \'"
+								+ this->config.parsingFieldNames.at(index)
+								+ "\' ["
+								+ this->urls.front().second
+								+ "]."
+						);
+
 						parsedFieldValue.clear();
 					}
 				}
@@ -1161,9 +1140,9 @@ namespace crawlservpp::Module::Parser {
 				if(
 						this->config.parsingFieldWarningsEmpty.at(index)
 						&& parsedFieldValue.empty()
-						&& this->config.generalLogging
 				)
 					this->log(
+							Config::generalLoggingDefault,
 							"WARNING: \'"
 							+ this->config.parsingFieldNames.at(index) + "\'"
 							" is empty for "
@@ -1203,11 +1182,12 @@ namespace crawlservpp::Module::Parser {
 				}
 
 				// log warnings if necessary
-				this->logWarnings(queryWarnings);
+				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				// date/time conversion is not possible for boolean values
-				if(!dateTimeFormat.empty() && this->config.generalLogging)
+				if(!dateTimeFormat.empty())
 					this->log(
+							Config::generalLoggingDefault,
 							"WARNING: Cannot convert boolean value for field \'"
 							+ this->config.parsingFieldNames.at(index)
 							+ "\' to date/time\' ["
@@ -1229,8 +1209,9 @@ namespace crawlservpp::Module::Parser {
 					parsedData.fields.emplace_back(booleanResult ? "true" : "false");
 			}
 			else {
-				if(i->type != QueryStruct::typeNone && this->config.generalLogging)
+				if(i->type != QueryStruct::typeNone)
 					this->log(
+							Config::generalLoggingDefault,
 							"WARNING: Ignored query for \'"
 							+ this->config.parsingFieldNames.at(index)
 							+ "\' without specified result type."
@@ -1300,8 +1281,7 @@ namespace crawlservpp::Module::Parser {
 			// save results
 			this->setStatusMessage("Saving results...");
 
-			if(this->config.generalLogging > Config::generalLoggingDefault)
-				this->log("saves results...");
+			this->log(Config::generalLoggingExtended, "saves results...");
 
 			// update or add entries in/to database
 			this->database.updateOrAddEntries(this->results);
@@ -1320,20 +1300,8 @@ namespace crawlservpp::Module::Parser {
 		// update status
 		this->setStatusMessage("Results saved. [" + status + "]");
 
-		if(this->config.generalTiming && this->config.generalLogging)
-			this->log("saved results in " + timer.tickStr());
-	}
-
-	// write parsing and query errors as warnings to log if necessary
-	void Thread::logWarnings(std::queue<std::string>& warnings) {
-		if(this->config.generalLogging < Config::generalLoggingDefault)
-			return;
-
-		while(!warnings.empty()) {
-			this->log(warnings.front());
-
-			warnings.pop();
-		}
+		if(this->config.generalTiming)
+			this->log(Config::generalLoggingDefault, "saved results in " + timer.tickStr());
 	}
 
 } /* crawlservpp::Module::Parser */

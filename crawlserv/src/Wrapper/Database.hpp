@@ -77,12 +77,12 @@ namespace crawlservpp::Wrapper {
 		~Database();
 
 		// wrapper for setters
-		void setLogging(bool logging, bool verbose);
+		void setLogging(unsigned short level, unsigned short min, unsigned short verbose);
 		void setSleepOnError(unsigned long seconds);
 
 		// wrapper for logging function
-		void log(const std::string& logEntry);
-		void log(std::queue<std::string>& logEntries);
+		void log(unsigned short level, const std::string& logEntry);
+		void log(unsigned short level, std::queue<std::string>& logEntries);
 
 		// wrapper for website function
 		std::string getWebsiteDomain(unsigned long websiteId);
@@ -146,8 +146,8 @@ namespace crawlservpp::Wrapper {
 		const ModuleOptions& getOptions() const;
 		const std::string& getWebsiteIdString() const;
 		const std::string& getUrlListIdString() const;
-		bool isLogging() const;
-		bool isVerbose() const;
+		unsigned short getLoggingMin() const;
+		unsigned short getLoggingVerbose() const;
 
 		// wrapper for validation function (changed from public to protected)
 		void checkConnection();
@@ -191,10 +191,9 @@ namespace crawlservpp::Wrapper {
 	// destructor stub
 	inline Database::~Database() {}
 
-	// set logging options
-	inline void Database::setLogging(bool isLogging, bool isVerbose) {
-		this->database.logging = isLogging;
-		this->database.verbose = isVerbose;
+	// set current, minimal and verbose logging levels
+	inline void Database::setLogging(unsigned short level, unsigned short min, unsigned short verbose) {
+		this->database.setLogging(level, min, verbose);
 	}
 
 	// set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
@@ -203,13 +202,13 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// write thread-specific log entry to the database
-	inline void Database::log(const std::string& logEntry) {
-		this->database.log(logEntry);
+	inline void Database::log(unsigned short level, const std::string& logEntry) {
+		this->database.log(level, logEntry);
 	}
 
 	// write multiple thread-specific log entries to the databse
-	inline void Database::log(std::queue<std::string>& logEntries) {
-		this->database.log(logEntries);
+	inline void Database::log(unsigned short level, std::queue<std::string>& logEntries) {
+		this->database.log(level, logEntries);
 	}
 
 	// get website domain from the database by its ID
@@ -367,14 +366,14 @@ namespace crawlservpp::Wrapper {
 		return this->database.urlListIdString;
 	}
 
-	// get whether logging is enabled
-	inline bool Database::isLogging() const {
-		return this->database.logging;
+	// get minimal logging level (where logging is still not deactivated)
+	inline unsigned short Database::getLoggingMin() const {
+		return this->database.loggingMin;
 	}
 
-	// get whether verbose logging is enabled
-	inline bool Database::isVerbose() const {
-		return this->database.verbose;
+	// get verbose logging level
+	inline unsigned short Database::getLoggingVerbose() const {
+		return this->database.loggingVerbose;
 	}
 
 	// check whether the connection to the database is still valid and try to re-connect if necesssary,

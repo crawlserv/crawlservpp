@@ -138,7 +138,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// set options
 		this->generator.setSpellChecking(this->markovTweetSpellcheck, this->markovTweetLanguage);
-		this->generator.setVerbose(this->config.generalLogging == Module::Analyzer::Config::generalLoggingVerbose);
+		this->generator.setVerbose(Module::Analyzer::Config::generalLoggingVerbose);
 		this->generator.setTiming(this->markovTweetTiming);
 
 		// set callbacks (suppressing wrong error messages by Eclipse IDE)
@@ -155,7 +155,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		this->generator.setLogCallback( // @suppress("Invalid arguments")
-				std::bind(&MarkovTweet::_log, this, std::placeholders::_1)
+				std::bind(&MarkovTweet::_log, this, std::placeholders::_1, std::placeholders::_2)
 		);
 
 		// compile text corpus
@@ -269,8 +269,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->database.checkSources(
 				this->config.generalInputSources,
 				this->config.generalInputTables,
-				this->config.generalInputFields,
-				this->config.generalLogging
+				this->config.generalInputFields
 		);
 	}
 
@@ -287,8 +286,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setProgress(progress);
 	}
 
-	void MarkovTweet::_log(const std::string& entry) {
-		this->log(entry);
+	void MarkovTweet::_log(unsigned short level, const std::string& entry) {
+		this->log(level, entry);
 	}
 
 }  /* crawlservpp::Module::Analyzer::Algo */

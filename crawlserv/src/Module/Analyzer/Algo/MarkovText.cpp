@@ -135,14 +135,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::unique_ptr<Timer::Simple> timer;
 
-		if(this->config.generalLogging && this->markovTextTiming)
+		if(this->markovTextTiming)
 			timer = std::make_unique<Timer::Simple>();
 
 		this->createDictionary();
 
 		if(this->isRunning()) {
 			if(timer)
-				this->log("created dictionary in " + timer->tickStr() + ".");
+				this->log(1, "created dictionary in " + timer->tickStr() + ".");
 
 			// re-allow pausing the thread
 			this->allowPausing();
@@ -163,13 +163,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::unique_ptr<Timer::Simple> timer;
 
-		if(this->config.generalLogging && this->markovTextTiming)
+		if(this->markovTextTiming)
 			timer = std::make_unique<Timer::Simple>();
 
 		const std::string text(this->createText());
 
 		if(timer)
-			this->log("created text in " + timer->tickStr() + ".");
+			this->log(1, "created text in " + timer->tickStr() + ".");
 
 		// insert text into result table in the database
 		if(!text.empty()) {
@@ -201,8 +201,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->setProgress(static_cast<float>(this->getLast()) / this->markovTextMax);
 			}
 		}
-		else if(this->isRunning() && this->config.generalLogging)
-			this->log("WARNING: Created text was empty.");
+		else if(this->isRunning())
+			this->log(1, "WARNING: Created text was empty.");
 
 		// sleep if necessary
 		if(this->markovTextSleep) {
@@ -253,8 +253,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->database.checkSources(
 				this->config.generalInputSources,
 				this->config.generalInputTables,
-				this->config.generalInputFields,
-				this->config.generalLogging
+				this->config.generalInputFields
 		);
 	}
 

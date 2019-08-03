@@ -39,6 +39,7 @@
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ModuleOptions.hpp"
 
+#include <climits>	// USHRT_MAX
 #include <memory>	// std::unique_ptr
 #include <queue>	// std::queue
 #include <string>	// std::string, std::to_string
@@ -69,14 +70,14 @@ namespace crawlservpp::Module {
 		// setters
 		void setOptions(const ModuleOptions& moduleOptions);
 		void setThreadId(unsigned long id);
-		void setLogging(bool isLogging, bool isVerbose);
+		void setLogging(unsigned short level, unsigned short min, unsigned short verbose);
 
 		// command function
 		void prepare();
 
 		// logging functions
-		void log(const std::string& logEntry);
-		void log(std::queue<std::string>& logEntries);
+		void log(unsigned short level, const std::string& logEntry);
+		void log(unsigned short level, std::queue<std::string>& logEntries);
 
 		// thread functions
 		void setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
@@ -92,8 +93,9 @@ namespace crawlservpp::Module {
 		std::string threadIdString;
 		std::string websiteIdString;
 		std::string urlListIdString;
-		bool logging;
-		bool verbose;
+		unsigned short loggingLevel;
+		unsigned short loggingMin;
+		unsigned short loggingVerbose;
 
 		// IDs of prepared SQL statements
 		struct _ps {

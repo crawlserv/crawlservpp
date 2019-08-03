@@ -320,14 +320,14 @@ namespace crawlservpp::Module {
 		this->database.setThreadProgress(this->id, progress, this->getRunTime());
 	}
 
-	// add thread-specific log entry to the database (to be used by the thread only)
-	void Thread::log(const std::string& logEntry) {
-		this->database.log(logEntry);
+	// add thread-specific log entry to the database if logging level is high enough (to be used by the thread only)
+	void Thread::log(unsigned short level, const std::string& logEntry) {
+		this->database.log(level, logEntry);
 	}
 
-	// add multiple thread-specific log entries to the database (to be used by the thread only)
-	void Thread::log(std::queue<std::string>& logEntries) {
-		this->database.log(logEntries);
+	// add multiple thread-specific log entries to the database if logging level is high enough (to be used by the thread only)
+	void Thread::log(unsigned short level, std::queue<std::string>& logEntries) {
+		this->database.log(level, logEntries);
 	}
 
 	// allow the thread to be paused (enabled by default)
@@ -449,7 +449,7 @@ namespace crawlservpp::Module {
 		catch(const std::exception& e) {
 			// log error
 			try {
-				this->log("failed - " + std::string(e.what()) + ".");
+				this->log(1, "failed - " + std::string(e.what()) + ".");
 
 				// try to set status
 				this->setStatusMessage("ERROR " + std::string(e.what()));
@@ -489,7 +489,7 @@ namespace crawlservpp::Module {
 		// handle other exceptions by trying to log, set status and pause thread
 		catch(const std::exception& e) {
 			// log error
-			this->log("failed - " + std::string(e.what()) + ".");
+			this->log(1, "failed - " + std::string(e.what()) + ".");
 
 			// set status
 			this->setStatusMessage("ERROR " + std::string(e.what()));
@@ -499,7 +499,7 @@ namespace crawlservpp::Module {
 		}
 		catch(...) {
 			// log error
-			this->log("failed - Unknown exception.");
+			this->log(1, "failed - Unknown exception.");
 
 			// set status
 			this->setStatusMessage("ERROR Unknown exception");
@@ -626,7 +626,7 @@ namespace crawlservpp::Module {
 
 			logStr += ".";
 
-			this->log(logStr);
+			this->log(1, logStr);
 		}
 	}
 
@@ -635,6 +635,7 @@ namespace crawlservpp::Module {
 		// try to log the (known) exception
 		try {
 			this->database.log(
+					1,
 					"[WARNING] Exception in Thread::"
 					+ inFunction
 					+ "() - "
@@ -656,6 +657,7 @@ namespace crawlservpp::Module {
 		// try to log the unknown exception
 		try {
 			this->database.log(
+					1,
 					"[WARNING] Unknown exception in Thread::on"
 					+ inFunction
 					+ "()"
@@ -705,7 +707,7 @@ namespace crawlservpp::Module {
 		catch(const std::exception& e) {
 			try {
 				// log error
-				this->log("failed - " + std::string(e.what()) + ".");
+				this->log(1, "failed - " + std::string(e.what()) + ".");
 
 				// update run or pause time
 				this->updateRunTime();

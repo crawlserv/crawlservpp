@@ -10,6 +10,7 @@
 #include <aspell.h>
 
 #include <algorithm>
+#include <climits>
 #include <cstring>
 #include <fstream>
 #include <functional>
@@ -26,7 +27,7 @@
 class rawr {
   public:
     typedef std::function<std::string(std::string, std::string)> transform_callback;
-    typedef std::function<void(const std::string&)> log_callback;
+    typedef std::function<void(unsigned short, const std::string&)> log_callback;
     typedef std::function<void(const std::string&)> setstatus_callback;
     typedef std::function<void(float)> setprogress_callback;
     typedef std::function<bool()> isrunning_callback;
@@ -41,7 +42,7 @@ class rawr {
     void setIsRunningCallback(isrunning_callback _arg);
 
     void setSpellChecking(bool enable, std::string language);
-    void setVerbose(bool verbose);
+    void setVerbose(unsigned short verbose);
     void setTiming(bool timing);
 
     void setMinCorpora(unsigned int _arg);
@@ -181,7 +182,7 @@ class rawr {
     setstatus_callback _setstatus;
     setprogress_callback _setprogress;
     unsigned int _min_corpora = 1;
-    bool _verbose = false;
+    unsigned short _verbose = USHRT_MAX;
     bool _timing = false;
   
     // Words

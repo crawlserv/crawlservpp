@@ -3672,7 +3672,7 @@ namespace crawlservpp::Main {
 
 											logStrStr << "...";
 
-											db.log(logStrStr.str());
+											db.log(0, logStrStr.str());
 
 											// add URLs that do not exist already to URL list
 											added = db.mergeUrls(target, urls);
@@ -3711,7 +3711,7 @@ namespace crawlservpp::Main {
 
 										response = ServerCommandResponse(responseStrStr.str());
 
-										db.log(logStrStr.str());
+										db.log(0, logStrStr.str());
 									}
 								}
 							}
@@ -3846,7 +3846,7 @@ namespace crawlservpp::Main {
 
 								logStrStr << "...";
 
-								db.log(logStrStr.str());
+								db.log(0, logStrStr.str());
 
 								logStrStr.str("");
 
@@ -3888,7 +3888,7 @@ namespace crawlservpp::Main {
 								logStrStr << " after " << timerStr << ").";
 
 								// write to log
-								db.log(logStrStr.str());
+								db.log(0, logStrStr.str());
 							}
 						}
 					}
@@ -4025,7 +4025,7 @@ namespace crawlservpp::Main {
 
 							logStrStr << "...";
 
-							db.log(logStrStr.str());
+							db.log(0, logStrStr.str());
 						}
 					}
 				}
@@ -4128,7 +4128,7 @@ namespace crawlservpp::Main {
 
 						logStrStr << " after " << timer.tickStr() << ").";
 
-						db.log(logStrStr.str());
+						db.log(0, logStrStr.str());
 					}
 				}
 			}
