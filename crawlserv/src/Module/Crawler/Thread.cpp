@@ -287,6 +287,10 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL selection
 		if(this->crawlingUrlSelection(url, usePost)) {
+			// DEBUG
+			if(url.second.find("$t") != std::string::npos)
+				bool debug = true;
+
 			if(this->config.crawlerTiming)
 				timerSelect.stop();
 
@@ -1209,6 +1213,7 @@ namespace crawlservpp::Module::Crawler {
 							else {
 								// use custom URL
 								urlTo = this->crawlingReplaceTokens(this->manualUrl);
+
 								usePostTo = this->config.customUsePost;
 
 								break;
@@ -1362,9 +1367,8 @@ namespace crawlservpp::Module::Crawler {
 		IdString result(url);
 
 		for(auto i = this->config.customTokens.begin(); i != this->config.customTokens.end(); ++i) {
-			const auto index = i - this->config.customTokens.begin();
-
-			if(result.second.find(*i)) {
+			if(result.second.find(*i) != std::string::npos) {
+				const auto index = i - this->config.customTokens.begin();
 				std::string value;
 
 				// check token cache
