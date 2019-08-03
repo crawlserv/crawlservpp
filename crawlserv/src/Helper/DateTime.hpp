@@ -37,8 +37,10 @@
 
 #include "../_extern/date/include/date/date.h"
 
-#include <cctype>		// ::tolower
-#include <ctime>		// struct tm, strftime, strptime
+#include <algorithm>	// std::min
+#include <cctype>		// ::ispunct, ::isspace, ::tolower
+#include <clocale>		// ::setlocale
+#include <ctime>		// struct ::tm, ::strftime, ::strptime
 #include <locale>		// std::locale
 #include <sstream>		// std::istringstream
 #include <stdexcept>	// std::runtime_error
@@ -97,6 +99,48 @@ namespace crawlservpp::Helper::DateTime {
 		if(customFormat.empty())
 			throw Exception("DateTime::convertCustomDateTimeToSQLTimeStamp(): No custom format specified");
 
+		// ordinal hack: remove ordinal endings (st, nd, rd, th)
+		unsigned long pos = 0;
+
+		while(pos + 2 <= dateTime.length()) {
+			pos = std::min(
+					dateTime.find("st", pos),
+					std::min(
+							dateTime.find("nd", pos),
+							std::min(
+									dateTime.find("rd", pos),
+									dateTime.find("th", pos)
+							)
+					)
+			);
+
+			if(pos == std::string::npos)
+				break;
+
+			if(pos > 0) {
+				if(::isdigit(dateTime.at(pos - 1))) {
+					if(
+							pos + 2 == dateTime.length()
+							|| ::isspace(dateTime.at(pos + 2))
+							|| ::ispunct(dateTime.at(pos + 2))
+					) {
+						// remove st, nd, rd or th
+						dateTime.erase(pos, 2);
+
+						// skip whitespace/punctuation afterwards
+						++pos;
+					}
+					else
+						pos += 3;
+				}
+				else
+					pos += 3;
+			}
+			else
+				pos += 3;
+		}
+		// end of ordinal hack
+
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
 
@@ -106,9 +150,9 @@ namespace crawlservpp::Helper::DateTime {
 			dateTime = date::format("%F %T", tp);
 		else {
 			// try good old C time
-			struct tm cTime = {};
+			struct ::tm cTime = {};
 
-			if(!strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
+			if(!::strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
 				throw Exception(
 						"Could not convert \'"
 						+ dateTime
@@ -119,7 +163,7 @@ namespace crawlservpp::Helper::DateTime {
 
 			char out[20] = { 0 };
 
-			size_t len = strftime(out, 20, "%F %T", &cTime);
+			size_t len = ::strftime(out, 20, "%F %T", &cTime);
 
 			if(len)
 				dateTime = std::string(out, len);
@@ -160,6 +204,49 @@ namespace crawlservpp::Helper::DateTime {
 				&& ::tolower(locale.at(1) == 'r')
 		)
 			Helper::Strings::replaceAll(dateTime, "avr.", "avril", true);
+		// end of locale hack
+
+		// ordinal hack: remove ordinal endings (st, nd, rd, th)
+		unsigned long pos = 0;
+
+		while(pos + 2 <= dateTime.length()) {
+			pos = std::min(
+					dateTime.find("st", pos),
+					std::min(
+							dateTime.find("nd", pos),
+							std::min(
+									dateTime.find("rd", pos),
+									dateTime.find("th", pos)
+							)
+					)
+			);
+
+			if(pos == std::string::npos)
+				break;
+
+			if(pos > 0) {
+				if(::isdigit(dateTime.at(pos - 1))) {
+					if(
+							pos + 2 == dateTime.length()
+							|| ::isspace(dateTime.at(pos + 2))
+							|| ::ispunct(dateTime.at(pos + 2))
+					) {
+						// remove st, nd, rd or th
+						dateTime.erase(pos, 2);
+
+						// skip whitespace/punctuation afterwards
+						++pos;
+					}
+					else
+						pos += 3;
+				}
+				else
+					pos += 3;
+			}
+			else
+				pos += 3;
+		}
+		// end of ordinal hack
 
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
@@ -173,14 +260,18 @@ namespace crawlservpp::Helper::DateTime {
 
 		in >> date::parse(customFormat, tp);
 
-		if(bool(in)) {
+		if(bool(in))
 			dateTime = date::format("%F %T", tp);
-		}
 		else {
 			// try good old C time
-			struct tm cTime = {};
+			struct ::tm cTime = {};
 
-			if(!strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
+			const char * oldLocale = ::setlocale(LC_TIME, locale.c_str());
+
+			if(!oldLocale)
+				throw LocaleException("Could not set C locale \'" + locale + "\'");
+
+			if(!::strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
 				throw Exception(
 						"Could not convert \'"
 						+ dateTime
@@ -191,9 +282,11 @@ namespace crawlservpp::Helper::DateTime {
 						+ "\'] to date/time"
 				);
 
+			::setlocale(LC_TIME, oldLocale);
+
 			char out[20] = { 0 };
 
-			size_t len = strftime(out, 20, "%F %T", &cTime);
+			size_t len = ::strftime(out, 20, "%F %T", &cTime);
 
 			if(len)
 				dateTime = std::string(out, len);
