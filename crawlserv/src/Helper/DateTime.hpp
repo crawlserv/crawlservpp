@@ -38,6 +38,7 @@
 #include "../_extern/date/include/date/date.h"
 
 #include <cctype>		// ::tolower
+#include <ctime>		// struct tm, strftime, strptime
 #include <locale>		// std::locale
 #include <sstream>		// std::istringstream
 #include <stdexcept>	// std::runtime_error
@@ -101,16 +102,36 @@ namespace crawlservpp::Helper::DateTime {
 
 		in >> date::parse(customFormat, tp);
 
-		if(!bool(in))
-			throw Exception(
-					"Could not convert \'"
-					+ dateTime
-					+ "\' [expected format: \'"
-					+ customFormat
-					+ "\'] to date/time "
-			);
+		if(bool(in))
+			dateTime = date::format("%F %T", tp);
+		else {
+			// try good old C time
+			struct tm cTime = {};
 
-		dateTime = date::format("%F %T", tp);
+			if(!strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
+				throw Exception(
+						"Could not convert \'"
+						+ dateTime
+						+ "\' [expected format: \'"
+						+ customFormat
+						+ "\'] to date/time "
+				);
+
+			char out[20] = { 0 };
+
+			size_t len = strftime(out, 20, "%F %T", &cTime);
+
+			if(len)
+				dateTime = std::string(out, len);
+			else
+				throw Exception(
+						"Could not convert \'"
+						+ dateTime
+						+ "\' [expected format: \'"
+						+ customFormat
+						+ "\'] to date/time "
+				);
+		}
 	}
 
 	// convert date and time with custom format to YYYY-MM-DD HH:MM:SS (using specific locale),
@@ -152,18 +173,41 @@ namespace crawlservpp::Helper::DateTime {
 
 		in >> date::parse(customFormat, tp);
 
-		if(!bool(in))
-			throw Exception(
-					"Could not convert \'"
-					+ dateTime
-					+ "\' [expected format: \'"
-					+ customFormat
-					+ "\', locale: \'"
-					+ locale
-					+ "\'] to date/time"
-			);
+		if(bool(in)) {
+			dateTime = date::format("%F %T", tp);
+		}
+		else {
+			// try good old C time
+			struct tm cTime = {};
 
-		dateTime = date::format("%F %T", tp);
+			if(!strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
+				throw Exception(
+						"Could not convert \'"
+						+ dateTime
+						+ "\' [expected format: \'"
+						+ customFormat
+						+ "\', locale: \'"
+						+ locale
+						+ "\'] to date/time"
+				);
+
+			char out[20] = { 0 };
+
+			size_t len = strftime(out, 20, "%F %T", &cTime);
+
+			if(len)
+				dateTime = std::string(out, len);
+			else
+				throw Exception(
+						"Could not convert \'"
+						+ dateTime
+						+ "\' [expected format: \'"
+						+ customFormat
+						+ "\', locale: \'"
+						+ locale
+						+ "\'] to date/time"
+				);
+		}
 	}
 
 	// convert timestamp from YYYYMMDDHHMMSS to YYYY-MM-DD HH:MM:SS
