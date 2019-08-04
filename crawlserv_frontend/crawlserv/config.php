@@ -30,7 +30,7 @@
  * 
  */
 
-$cc_host = "http://localhost:8080"; // URL to the host of the command-and-control server
+$cc_host = "http://".$_SERVER['SERVER_NAME'].":8080"; // URL to the host of the command-and-control server
 
 $db_host = "localhost";             // host of the database
 $db_user = "frontend";              // user name (for security reasons, this user should only have SELECT privileges!)
