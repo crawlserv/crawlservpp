@@ -144,10 +144,21 @@ namespace crawlservpp::Module {
 	//  NOTE: log entry will not be written if the logging level is lower than the specified level for the entry
 	void Database::log(unsigned short level, const std::string& logEntry) {
 		if(level <= this->loggingLevel)
+			// write log entry to database
 			this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
 
-		if(this->debugLogging && this->loggingFile.is_open())
-			this->loggingFile << "[" << Helper::DateTime::now() << "] " << logEntry << "\n" << std::flush;
+		if(this->debugLogging && this->loggingFile.is_open()) {
+			// repair log entry if necessary
+			std::string repairedEntry;
+
+			const bool repaired = Helper::Utf8::repairUtf8(logEntry, repairedEntry);
+
+			if(repaired)
+				repairedEntry += " [invalid UTF-8 character(s) removed from log]";
+
+			// write log entry to file
+			this->loggingFile << "[" << Helper::DateTime::now() << "] " << repairedEntry << "\n" << std::flush;
+		}
 	}
 
 	// write multiple thread-specific log entries to the database
@@ -155,10 +166,21 @@ namespace crawlservpp::Module {
 	void Database::log(unsigned short level, std::queue<std::string>& logEntries) {
 		if(level <= this->loggingLevel) {
 			while(!logEntries.empty()) {
+				// write log entry to database
 				this->Main::Database::log("[#" + this->threadIdString + "] " + logEntries.front());
 
-				if(this->debugLogging && this->loggingFile.is_open())
-					this->loggingFile << logEntries.front() << "\n";
+				if(this->debugLogging && this->loggingFile.is_open()) {
+					// repair log entry if necessary
+					std::string repairedEntry;
+
+					const bool repaired = Helper::Utf8::repairUtf8(logEntries.front(), repairedEntry);
+
+					if(repaired)
+						repairedEntry += " [invalid UTF-8 character(s) removed from log]";
+
+					// write log entry to file
+					this->loggingFile << repairedEntry << "\n";
+				}
 
 				logEntries.pop();
 			}
