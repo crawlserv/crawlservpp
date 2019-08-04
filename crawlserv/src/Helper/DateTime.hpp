@@ -39,6 +39,7 @@
 
 #include <algorithm>	// std::min
 #include <cctype>		// ::ispunct, ::isspace, ::tolower
+#include <chrono>		// std::chrono::system_clock::now()
 #include <clocale>		// ::setlocale
 #include <ctime>		// struct ::tm, ::strftime, ::strptime
 #include <locale>		// std::locale
@@ -62,6 +63,7 @@ namespace crawlservpp::Helper::DateTime {
 	);
 	void convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	void convertSQLTimeStampToTimeStamp(std::string& timeStamp);
+	std::string now();
 
 	// date/time verification
 	bool isValidISODate(const std::string& isoDate);
@@ -327,6 +329,11 @@ namespace crawlservpp::Helper::DateTime {
 			);
 
 		timeStamp = date::format("%Y%m%d%H%M%S", tp);
+	}
+
+	// get the current date/time as YYYY-MM-DD HH:MM:SS
+	inline std::string now() {
+		return date::format("%F %T", std::chrono::system_clock::now());
 	}
 
 	// check whether a string contains a valid ISO date
