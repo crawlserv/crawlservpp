@@ -147,7 +147,7 @@ namespace crawlservpp::Module {
 			this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
 
 		if(this->debugLogging && this->loggingFile.is_open())
-			this->loggingFile << logEntry << "\n" << std::flush;
+			this->loggingFile << "[" << Helper::DateTime::now() << "] " << logEntry << "\n" << std::flush;
 	}
 
 	// write multiple thread-specific log entries to the database

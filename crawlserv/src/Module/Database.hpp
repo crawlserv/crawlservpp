@@ -34,6 +34,7 @@
 #ifndef MODULE_DATABASE_HPP_
 #define MODULE_DATABASE_HPP_
 
+#include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Main/Database.hpp"
 #include "../Main/Exception.hpp"
