@@ -162,7 +162,7 @@ function refreshData() {
 		
 		$("#server-status").load(cc_host, function(response, status, xhr) {
 			if(status == "error") {
-				$("#server-status").html("<div class='no-server-status'>crawlserv++ not found</div>");
+				$("#server-status").html("<div class='no-server-status'>crawlserv++ not found [" + cc_host + "]</div>");
 				
 				$("#server-ping-value").text("");
 				
