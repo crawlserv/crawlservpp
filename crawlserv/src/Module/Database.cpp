@@ -153,11 +153,23 @@ namespace crawlservpp::Module {
 
 			const bool repaired = Helper::Utf8::repairUtf8(logEntry, repairedEntry);
 
-			if(repaired)
-				repairedEntry += " [invalid UTF-8 character(s) removed from log]";
-
 			// write log entry to file
-			this->loggingFile << "[" << Helper::DateTime::now() << "] " << repairedEntry << "\n" << std::flush;
+			if(repaired)
+				this->loggingFile
+						<< "["
+						<< Helper::DateTime::now()
+						<< "] "
+						<< repairedEntry
+						<< " [invalid UTF-8 character(s) removed from log]\n"
+						<< std::flush;
+			else
+				this->loggingFile
+						<< "["
+						<< Helper::DateTime::now()
+						<< "] "
+						<< logEntry
+						<< "\n"
+						<< std::flush;
 		}
 	}
 
