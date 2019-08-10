@@ -39,7 +39,7 @@
 
 #include <algorithm>	// std::min
 #include <cctype>		// ::ispunct, ::isspace, ::tolower
-#include <chrono>		// std::chrono::system_clock::now()
+#include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// ::setlocale
 #include <ctime>		// struct ::tm, ::strftime, ::strptime
 #include <locale>		// std::locale
@@ -208,7 +208,7 @@ namespace crawlservpp::Helper::DateTime {
 			Helper::Strings::replaceAll(dateTime, "avr.", "avril", true);
 		// end of locale hack
 
-		// ordinal hack: remove ordinal endings (st, nd, rd, th)
+		// ordinal hack: remove ordinal endings (st, nd, rd, th) after numbers
 		unsigned long pos = 0;
 
 		while(pos + 2 <= dateTime.length()) {
@@ -333,7 +333,7 @@ namespace crawlservpp::Helper::DateTime {
 
 	// get the current date/time as YYYY-MM-DD HH:MM:SS
 	inline std::string now() {
-		return date::format("%F %T", std::chrono::system_clock::now());
+		return date::format("%F %T", date::floor<std::chrono::seconds>(std::chrono::system_clock::now()));
 	}
 
 	// check whether a string contains a valid ISO date
