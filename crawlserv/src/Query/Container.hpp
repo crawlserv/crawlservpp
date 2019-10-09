@@ -154,6 +154,7 @@ namespace crawlservpp::Query {
 		);
 
 		// helper functions
+		bool getTargetAndSource(std::string& targetTo, std::string& sourceTo);
 		bool getXml(std::string& resultTo, std::queue<std::string>& warningsTo);
 		void reserveForSubSets(const QueryStruct& query, unsigned long n);
 

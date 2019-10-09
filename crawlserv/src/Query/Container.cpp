@@ -2418,6 +2418,19 @@ namespace crawlservpp::Query {
 		return false;
 	}
 
+	// get target and source if possible
+	bool Container::getTargetAndSource(std::string& targetTo, std::string& sourceTo) {
+		if(!(this->queryTargetPtr))
+			return false;
+
+		targetTo = *(this->queryTargetPtr);
+
+		if(this->queryTargetSourcePtr)
+			sourceTo = *(this->queryTargetSourcePtr);
+
+		return true;
+	}
+
 	// get tidied XML code as string
 	bool Container::getXml(std::string& resultTo, std::queue<std::string>& warningsTo) {
 		if(this->parseXml(warningsTo)) {
