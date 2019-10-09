@@ -393,7 +393,7 @@
 			"type": "string",
 			"default": "",
 			"label": "URL:",
-			"description": "URL to get data from.",
+			"description": "URL to get data from (absolute link without protocol).",
 			"simple": true,
 			"position": 1
 		},
@@ -401,7 +401,7 @@
 			"type": "string",
 			"default": "",
 			"label": "URL (first page):",
-			"description": "URL of the first page to get data from (will be ignored if empty).",
+			"description": "URL of the first page to get data from (absolute link without protocol, will be ignored if empty).",
 			"simple": true,
 			"position": 2
 		},
@@ -452,11 +452,11 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
-				"multi"
+				"single"
 			],
 			"default": [],
 			"label": "Date/time queries:",
-			"description": "Queries used for extracting date/time. The first query that returns a non-empty result will be used.",
+			"description": "Queries used for extracting date/time from the dataset. The first query that returns a non-empty result will be used.",
 			"simple": true,
 			"position": 3
 		},
@@ -510,11 +510,11 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
-				"multi"
+				"single"
 			],
 			"default": [],
 			"label": "Field queries:",
-			"description": "The query used to extract the custom field with the same array index.",
+			"description": "The query used to extract the custom field with the same array index from the dataset.",
 			"simple": true,
 			"position": 7
 		},
@@ -545,11 +545,11 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
-				"multi"
+				"single"
 			],
 			"default": [],
 			"label": "ID queries:",
-			"description": "Queries to extract the ID. The first query that returns a non-empty result will be used. Datasets with duplicate or empty IDs will not be extracted.",
+			"description": "Queries to extract the ID from the dataset. The first query that returns a non-empty result will be used. Datasets with duplicate or empty IDs will not be extracted.",
 			"simple": true,
 			"position": 2
 		},
