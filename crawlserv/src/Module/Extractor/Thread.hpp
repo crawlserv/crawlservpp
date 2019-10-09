@@ -144,6 +144,7 @@ namespace crawlservpp::Module::Extractor {
 		// queries
 		std::vector<QueryStruct> queriesVariables;
 		std::vector<QueryStruct> queriesTokens;
+		std::vector<QueryStruct> queriesError;
 		std::vector<QueryStruct> queriesDatasets;
 		std::vector<QueryStruct> queriesId;
 		std::vector<QueryStruct> queriesDateTime;

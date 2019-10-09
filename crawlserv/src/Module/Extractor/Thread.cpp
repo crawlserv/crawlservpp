@@ -504,6 +504,7 @@ namespace crawlservpp::Module::Extractor {
 	void Thread::initQueries() {
 		// reserve memory for queries
 		this->queriesTokens.reserve(this->config.variablesTokensQuery.size());
+		this->queriesError.reserve(this->config.extractingError.size());
 		this->queriesDatasets.reserve(this->config.extractingDataSetQueries.size());
 		this->queriesId.reserve(this->config.extractingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.extractingDateTimeQueries.size());
@@ -523,6 +524,16 @@ namespace crawlservpp::Module::Extractor {
 
 		try {
 			// create queries and get query properties
+			for(const auto& query : this->config.extractingError) {
+				if(query) {
+					QueryProperties properties;
+
+					this->database.getQueryProperties(query, properties);
+
+					this->queriesError.emplace_back(this->addQuery(properties));
+				}
+			}
+
 			for(const auto& query : this->config.extractingDataSetQueries) {
 				if(query) {
 					QueryProperties properties;
@@ -1488,6 +1499,20 @@ namespace crawlservpp::Module::Extractor {
 		unsigned long expected = 0;
 		std::queue<std::string> queryWarnings;
 		unsigned long result = 0;
+
+		// check for errors if necessary
+		for(const auto& query : this->queriesError) {
+			bool error = false;
+
+			if(this->getBoolFromQuery(query, error, queryWarnings) && error) {
+				std::string target, source;
+
+				if(this->getTargetAndSource(target, source))
+					throw Exception("Error in data: " +  target + " [" + source + ", " + url + "]");
+				else
+					throw Exception("Error in data from " + url);
+			}
+		}
 
 		// get expected number of datasets if possible
 		std::string expectedStr;
