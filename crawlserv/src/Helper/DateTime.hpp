@@ -37,6 +37,8 @@
 
 #include "../_extern/date/include/date/date.h"
 
+#include <boost/lexical_cast.hpp>
+
 #include <algorithm>	// std::min
 #include <cctype>		// ::ispunct, ::isspace, ::tolower
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
@@ -101,36 +103,88 @@ namespace crawlservpp::Helper::DateTime {
 		if(customFormat.empty())
 			throw Exception("DateTime::convertCustomDateTimeToSQLTimeStamp(): No custom format specified");
 
-		// ordinal hack: remove ordinal endings (st, nd, rd, th)
-		unsigned long pos = 0;
-
-		while(pos + 2 <= dateTime.length()) {
-			pos = std::min(
-					dateTime.find("st", pos),
-					std::min(
-							dateTime.find("nd", pos),
-							std::min(
-									dateTime.find("rd", pos),
-									dateTime.find("th", pos)
-							)
+		// check for UNIX time (TODO: document hidden feature)
+		if(
+				customFormat == "UNIX"
+				|| (
+						customFormat.length() > 5
+						&& (
+								customFormat.substr(0, 5) == "UNIX+" || customFormat.substr(0, 5) == "UNIX-"
+						)
 					)
-			);
+		) {
+			// get (optional) offset from UNIX time
+			long offset = 0;
 
-			if(pos == std::string::npos)
-				break;
+			if(customFormat.length() > 5) {
+				try {
+					offset = boost::lexical_cast<unsigned long>(customFormat.substr(4));
+				}
+				catch(const boost::bad_lexical_cast& e) {
+					throw Exception(
+							"DateTime::convertCustomDateTimeToSQLTimeStamp(): Invalid date/time format - "
+							+ customFormat
+							+ " [expected: UNIX, UNIX+N or UNIX-N where N is a valid number]"
+					);
+				}
+			}
 
-			if(pos > 0) {
-				if(::isdigit(dateTime.at(pos - 1))) {
-					if(
-							pos + 2 == dateTime.length()
-							|| ::isspace(dateTime.at(pos + 2))
-							|| ::ispunct(dateTime.at(pos + 2))
-					) {
-						// remove st, nd, rd or th
-						dateTime.erase(pos, 2);
+			// get UNIX time
+			time_t unixTime = 0;
 
-						// skip whitespace/punctuation afterwards
-						++pos;
+			try {
+				unixTime = boost::lexical_cast<time_t>(dateTime);
+			}
+			catch(const boost::bad_lexical_cast& e) {
+				throw Exception(
+						"Could not convert \'"
+						+ dateTime
+						+ "\' [expected format: \'"
+						+ customFormat
+						+ "\'] to date/time "
+				);
+			}
+
+			// remove (optional) offset
+			unixTime -= offset;
+
+			// conversion
+			dateTime = date::format("%F %T", std::chrono::system_clock::from_time_t(unixTime));
+		}
+		else {
+			// ordinal hack: remove ordinal endings (st, nd, rd, th)
+			unsigned long pos = 0;
+
+			while(pos + 2 <= dateTime.length()) {
+				pos = std::min(
+						dateTime.find("st", pos),
+						std::min(
+								dateTime.find("nd", pos),
+								std::min(
+										dateTime.find("rd", pos),
+										dateTime.find("th", pos)
+								)
+						)
+				);
+
+				if(pos == std::string::npos)
+					break;
+
+				if(pos > 0) {
+					if(::isdigit(dateTime.at(pos - 1))) {
+						if(
+								pos + 2 == dateTime.length()
+								|| ::isspace(dateTime.at(pos + 2))
+								|| ::ispunct(dateTime.at(pos + 2))
+						) {
+							// remove st, nd, rd or th
+							dateTime.erase(pos, 2);
+
+							// skip whitespace/punctuation afterwards
+							++pos;
+						}
+						else
+							pos += 3;
 					}
 					else
 						pos += 3;
@@ -138,45 +192,43 @@ namespace crawlservpp::Helper::DateTime {
 				else
 					pos += 3;
 			}
-			else
-				pos += 3;
-		}
-		// end of ordinal hack
+			// end of ordinal hack
 
-		std::istringstream in(dateTime);
-		date::sys_seconds tp;
+			std::istringstream in(dateTime);
+			date::sys_seconds tp;
 
-		in >> date::parse(customFormat, tp);
+			in >> date::parse(customFormat, tp);
 
-		if(bool(in))
-			dateTime = date::format("%F %T", tp);
-		else {
-			// try good old C time
-			struct ::tm cTime = {};
+			if(bool(in))
+				dateTime = date::format("%F %T", tp);
+			else {
+				// try good old C time
+				struct ::tm cTime = {};
 
-			if(!::strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
-				throw Exception(
-						"Could not convert \'"
-						+ dateTime
-						+ "\' [expected format: \'"
-						+ customFormat
-						+ "\'] to date/time "
-				);
+				if(!::strptime(dateTime.c_str(), customFormat.c_str(), &cTime))
+					throw Exception(
+							"Could not convert \'"
+							+ dateTime
+							+ "\' [expected format: \'"
+							+ customFormat
+							+ "\'] to date/time "
+					);
 
-			char out[20] = { 0 };
+				char out[20] = { 0 };
 
-			size_t len = ::strftime(out, 20, "%F %T", &cTime);
+				size_t len = ::strftime(out, 20, "%F %T", &cTime);
 
-			if(len)
-				dateTime = std::string(out, len);
-			else
-				throw Exception(
-						"Could not convert \'"
-						+ dateTime
-						+ "\' [expected format: \'"
-						+ customFormat
-						+ "\'] to date/time "
-				);
+				if(len)
+					dateTime = std::string(out, len);
+				else
+					throw Exception(
+							"Could not convert \'"
+							+ dateTime
+							+ "\' [expected format: \'"
+							+ customFormat
+							+ "\'] to date/time "
+					);
+			}
 		}
 	}
 
