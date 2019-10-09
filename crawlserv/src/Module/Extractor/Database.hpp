@@ -98,7 +98,7 @@ namespace crawlservpp::Module::Extractor {
 		// extracting functions
 		unsigned int checkExtractingTable();
 		bool getContent(unsigned long urlId, IdString& contentTo);
-		void getParsedData(unsigned long urlId, unsigned long sourceIndex, std::string& resultTo);
+		void getLatestParsedData(unsigned long urlId, unsigned long sourceIndex, std::string& resultTo);
 		void updateOrAddEntries(std::queue<DataEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
@@ -157,7 +157,7 @@ namespace crawlservpp::Module::Extractor {
 		} ps;
 
 		// prepared SQL statements for getting parsed data
-		std::vector<unsigned short> psGetParsedData;
+		std::vector<unsigned short> psGetLatestParsedData;
 
 		// internal helper function
 		bool checkEntrySize(DataEntry& entry);
