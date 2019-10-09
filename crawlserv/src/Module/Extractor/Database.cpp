@@ -390,16 +390,22 @@ namespace crawlservpp::Module::Extractor {
 			);
 		}
 
-		if(this->psGetParsedData.empty()) {
-			this->log(verbose, "prepares getParsedData()...");
+		if(this->psGetLatestParsedData.empty()) {
+			this->log(verbose, "prepares getLatestParsedData()...");
 
 			while(!(this->sources.empty())) {
-				this->psGetParsedData.push_back(
+				this->psGetLatestParsedData.push_back(
 						this->addPreparedStatement(
 								"SELECT `" + this->sources.front().second + "`"
 								" AS result"
 								" FROM `" + this->urlListTable + "_parsed_" + this->sources.front().first + "`"
-								" WHERE url = ?"
+								" WHERE content = ("
+								"	SELECT id"
+								"    FROM `" + this->urlListTable + "_crawled`"
+								"    WHERE url = ?"
+								"    ORDER BY id DESC"
+								"    LIMIT 1"
+								" )"
 								" ORDER BY id DESC"
 								" LIMIT 1"
 						)
@@ -815,24 +821,24 @@ namespace crawlservpp::Module::Extractor {
 		return false;
 	}
 
-	// get parsed data for the ID-specified URL from the index-specified source, throws Database::Exception
+	// get the latest parsed data for the ID-specified URL from the index-specified source, throws Database::Exception
 	//  NOTE:	The source index is determined by the order of adding the sources (starting with 0).
 	//			Returns an empty string when no data has been found.
-	void Database::getParsedData(unsigned long urlId, unsigned long sourceIndex, std::string& resultTo) {
+	void Database::getLatestParsedData(unsigned long urlId, unsigned long sourceIndex, std::string& resultTo) {
 		// check argument
 		if(!urlId)
-			throw Exception("No URL specified for Database::getParsedData(...)");
+			throw Exception("No URL specified for Database::getLatestParsedData(...)");
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(sourceIndex >= this->psGetParsedData.size() || !(this->psGetParsedData.at(sourceIndex)))
-			throw Exception("Missing prepared SQL statement for Database::getParsedData(...)");
+		if(sourceIndex >= this->psGetLatestParsedData.size() || !(this->psGetLatestParsedData.at(sourceIndex)))
+			throw Exception("Missing prepared SQL statement for Database::getLatestParsedData(...)");
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement = this->getPreparedStatement(
-				this->psGetParsedData.at(sourceIndex)
+				this->psGetLatestParsedData.at(sourceIndex)
 		);
 
 		try {
@@ -845,7 +851,7 @@ namespace crawlservpp::Module::Extractor {
 			if(sqlResultSet && sqlResultSet->next())
 				resultTo = sqlResultSet->getString("result");
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Extractor:Database::getParsedData", e); }
+		catch(const sql::SQLException &e) { this->sqlException("Extractor:Database::getLatestParsedData", e); }
 	}
 
 	// add extracted data to database (update if row for ID-specified content already exists, throws Database::Exception
