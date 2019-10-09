@@ -222,6 +222,9 @@ namespace crawlservpp::Module {
 				this->pauseCondition.notify_one();
 			}
 		}
+
+		// reset interrupted status to allow thread deletion from database on manual stop
+		this->interrupted = false;
 	}
 
 	// interrupt the thread due to an exception (may not be used by the thread itself!)
