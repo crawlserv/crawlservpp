@@ -30,7 +30,7 @@
  *
  * main.cpp
  *
- * Entry point of the application. One line only! Use the App class for basic application functionality instead (OOP).
+ * Entry point of the application. One line only! Use the Main::App class for basic application functionality instead (OOP).
  *
  *  Created on: Sep 29, 2018
  *      Author: ans
