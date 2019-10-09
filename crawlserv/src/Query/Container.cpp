@@ -89,6 +89,7 @@ namespace crawlservpp::Query {
 		newQuery.resultBool = properties.resultBool;
 		newQuery.resultSingle = properties.resultSingle;
 		newQuery.resultMulti = properties.resultMulti;
+		newQuery.resultSubSets = properties.resultSubSets;
 
 		if(!properties.text.empty()) {
 			if(properties.type == "regex") {
