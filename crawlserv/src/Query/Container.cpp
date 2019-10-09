@@ -151,10 +151,22 @@ namespace crawlservpp::Query {
 				// add combined XPath and JSONPointer query
 				newQuery.index = this->queriesXPathJsonPointer.size();
 
+				// split XPath query (first line) from JSON query
+				const auto splitPos = properties.text.find('\n');
+				const std::string xPathQuery(
+						properties.text,
+						0,
+						splitPos
+				);
+				std::string jsonQuery;
+
+				if(splitPos != std::string::npos && properties.text.size() > splitPos + 1)
+					jsonQuery = properties.text.substr(splitPos + 1);
+
 				try {
 					this->queriesXPathJsonPointer.emplace_back(
-							XPath(properties.text, true),
-							JsonPointer(properties.text, properties.textOnly)
+							XPath(xPathQuery, true),
+							JsonPointer(jsonQuery, properties.textOnly)
 					);
 				}
 				catch(const XPathException& e) {
@@ -171,10 +183,22 @@ namespace crawlservpp::Query {
 				// add combined XPath and JSONPath query
 				newQuery.index = this->queriesXPathJsonPath.size();
 
+				// split XPath query (first line) from JSON query
+				const auto splitPos = properties.text.find('\n');
+				const std::string xPathQuery(
+						properties.text,
+						0,
+						splitPos
+				);
+				std::string jsonQuery;
+
+				if(splitPos != std::string::npos && properties.text.size() > splitPos + 1)
+					jsonQuery = properties.text.substr(splitPos + 1);
+
 				try {
 					this->queriesXPathJsonPath.emplace_back(
-							XPath(properties.text, true),
-							JsonPath(properties.text, properties.textOnly)
+							XPath(xPathQuery, true),
+							JsonPath(jsonQuery, properties.textOnly)
 					);
 				}
 				catch(const XPathException& e) {
