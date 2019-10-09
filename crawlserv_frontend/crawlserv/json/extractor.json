@@ -460,6 +460,16 @@
 			"simple": true,
 			"position": 3
 		},
+		"error": {
+			"type": "array",
+			"item-type": "query",
+			"query-result": [
+				"bool"
+			],
+			"default": [],
+			"description": "Queries to detect errors in the data. The extractor fails if any of these return 'true'.",
+			"simple": false
+		},
 		"field.datetime.formats": {
 			"type": "array",
 			"item-type": "string",
