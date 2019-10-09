@@ -304,10 +304,10 @@ namespace crawlservpp::Module::Extractor {
 		// check properties of variables
 		bool incompleteVariables = false;
 
-		const unsigned long completeVariables = std::min({ // number of complete variables (= minimum size of arrays)
+		const unsigned long completeVariables = std::min({
+				/* number of complete variables (= minimum size of name and source arrays) */
 				this->config.variablesName.size(),
-				this->config.variablesSource.size(),
-				this->config.variablesQuery.size()
+				this->config.variablesSource.size()
 		});
 
 		// remove variable names that are not used
@@ -324,17 +324,10 @@ namespace crawlservpp::Module::Extractor {
 			incompleteVariables = true;
 		}
 
-		// remove variable queries that are not used
-		if(this->config.variablesQuery.size() > completeVariables) {
-			this->config.variablesQuery.resize(completeVariables);
-
-			incompleteVariables = true;
-		}
-
 		// warn about incomplete variables
 		if(incompleteVariables) {
 			this->warning(
-					"\'variables.name\', \'.source\' and \'.query\'"
+					"\'variables.name\' and \'.source\'"
 					" should have the same number of elements."
 			);
 
@@ -342,6 +335,12 @@ namespace crawlservpp::Module::Extractor {
 
 			incompleteVariables = false;
 		}
+
+		// remove variable queries that are not used, add empty query where none is specified
+		if(this->config.variablesQuery.size() > completeVariables)
+			incompleteVariables = true;
+
+		this->config.variablesQuery.resize(completeVariables);
 
 		// remove variable tables that are not used, add empty table where none is specified
 		if(this->config.variablesParsedTable.size() > completeVariables)
@@ -384,7 +383,8 @@ namespace crawlservpp::Module::Extractor {
 		// check properties of tokens
 		bool incompleteTokens = false;
 
-		const unsigned long completeTokens = std::min({ // number of complete tokens (= minimum size of arrays)
+		const unsigned long completeTokens = std::min({
+				/* number of complete tokens (= minimum size of arrays) */
 				this->config.variablesTokens.size(),
 				this->config.variablesTokensSource.size(),
 				this->config.variablesTokensQuery.size()
