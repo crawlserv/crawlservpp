@@ -376,6 +376,18 @@ namespace crawlservpp::Module::Extractor {
 
 		this->config.variablesDateTimeLocale.resize(completeVariables);
 
+		// remove variable aliases that are not used, add empty alias where none is specified
+		if(this->config.variablesAlias.size() > completeVariables)
+			incompleteVariables = true;
+
+		this->config.variablesAlias.resize(completeVariables);
+
+		// remove variable alias values that are not used, add empty alias value where none is specified
+		if(this->config.variablesAliasAdd.size() > completeVariables)
+			incompleteVariables = true;
+
+		this->config.variablesAliasAdd.resize(completeVariables);
+
 		// warn about unused properties
 		if(incompleteVariables)
 			this->warning("Unused variable properties removed from configuration.");
