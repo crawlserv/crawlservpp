@@ -821,15 +821,21 @@ namespace crawlservpp::Module::Extractor {
 			return 0;
 
 		// get values for variables
+		this->log(Config::generalLoggingVerbose, "gets values for variables...");
+
 		this->extractingGetVariableValues(variables);
 
 		// get values for global tokens
+		this->log(Config::generalLoggingVerbose, "gets values for global tokens...");
+
 		this->extractingGetTokenValues(variables);
 
 		// clear query target
 		this->clearQueryTarget();
 
 		// loop over pages
+		this->log(Config::generalLoggingVerbose, "loops over pages...");
+
 		std::queue<std::string> queryWarnings;
 		bool pageFirst = true;
 		long pageNum = this->config.pagingFirst;
@@ -1033,7 +1039,7 @@ namespace crawlservpp::Module::Extractor {
 
 			switch(this->config.variablesSource.at(index)) {
 			case Config::variablesSourcesParsed:
-				this->database.getParsedData(this->urls.front().first, parsedSource, value);
+				this->database.getLatestParsedData(this->urls.front().first, parsedSource, value);
 
 				++parsedSource;
 
@@ -1068,19 +1074,13 @@ namespace crawlservpp::Module::Extractor {
 				);
 			}
 
-			// get value for alias
 			variables.emplace_back(*i, value);
 
-			const auto& alias =
-					this->config.variablesAlias.at(
-							i - this->config.variablesName.begin()
-					);
+			// get value for alias
+			const auto& alias = this->config.variablesAlias.at(index);
 
-			if(alias.size()) {
-				const auto& aliasAdd =
-						this->config.variablesAliasAdd.at(
-								i - this->config.variablesName.begin()
-				);
+			if(!alias.empty()) {
+				const auto& aliasAdd = this->config.variablesAliasAdd.at(index);
 
 				if(aliasAdd != 0) {
 					// try to add value to variable
