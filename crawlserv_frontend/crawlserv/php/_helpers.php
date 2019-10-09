@@ -396,7 +396,7 @@ function scriptModule() {
         $script .= "var db_queries = [\n";
                 
         $result = $dbConnection->query(
-                "SELECT id, name, type, resultbool, resultsingle, resultmulti".
+                "SELECT id, name, type, resultbool, resultsingle, resultmulti, resultsubsets".
                 " FROM crawlserv_queries".
                 " WHERE website=".$website.
                 " OR website IS NULL".
@@ -419,6 +419,8 @@ function scriptModule() {
                     .($row["resultsingle"] ? "true" : "false")
                     .", \"resultmulti\": "
                     .($row["resultmulti"] ? "true" : "false")
+                    .", \"resultsubsets\": "
+                    .($row["resultsubsets"] ? "true" : "false")
                     ." },\n";
                                                 
         $result->close();
