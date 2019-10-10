@@ -36,7 +36,9 @@ namespace crawlservpp::Query {
 	JsonPath::JsonPath(const std::string& pathString, bool textOnlyQuery)
 			: jsonPath(pathString),
 			  textOnly(textOnlyQuery) {
-		if(pathString.empty())
+		Helper::Strings::trim(this->jsonPath);
+
+		if(this->jsonPath.empty())
 			throw Exception("No JSONPath defined");
 	}
 
