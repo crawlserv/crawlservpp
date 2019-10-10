@@ -31,6 +31,7 @@
 #ifndef QUERY_JSONPATH_HPP_
 #define QUERY_JSONPATH_HPP_
 
+#include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
 
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"
@@ -56,7 +57,7 @@ namespace crawlservpp::Query {
 		MAIN_EXCEPTION_CLASS();
 
 	private:
-		const std::string jsonPath;
+		std::string jsonPath;
 		const bool textOnly;
 	};
 
