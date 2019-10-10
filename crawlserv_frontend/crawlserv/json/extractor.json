@@ -176,7 +176,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Variable names:",
-			"description": "Variable names to be replaced in 'source.url', 'source.cookies' and 'source.headers'.",
+			"description": "Variable names to be replaced in 'tokens.source', 'tokens.cookies', 'tokens.headers' as well as in 'source.url', 'source.cookies' and 'source.headers'.",
 			"simple": true,
 			"position": 1
 		},
