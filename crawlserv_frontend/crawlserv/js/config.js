@@ -434,11 +434,13 @@ class Config {
 		
 		if(obj.type == "bool")
 			result += this.label(
-					""
+					".",
+					name
 			);
 		else
 			result += this.label(
-					obj.label
+					obj.label,
+					name
 			);
 		
 		result += this.startValue(obj);
@@ -657,10 +659,18 @@ class Config {
 	}
 	
 	// show label
-	label(name) {
+	label(name, ttip = "") {
 		var result = "";
 		
-		result += "<div class=\"opt-label\">" + name + "</div>\n";
+		result += "<div class=\"opt-label";
+		
+		if(name == ".")
+			result += " opt-dot"
+		
+		if(ttip.length)
+			result += " opt-tippy\" data-tippy-content=\"" + ttip
+		
+		result += "\">" + name + "</div>\n";
 		
 		return result;
 	}
@@ -1027,7 +1037,7 @@ class Config {
 		
 		// activate tooltips
 		tippy(
-				".opt-value",
+				".opt-tippy, .opt-value",
 				{ delay : 0, duration: 0, arrow : true, placement: "left-start", size : "small" }
 		);
 		

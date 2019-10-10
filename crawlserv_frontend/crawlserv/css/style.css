@@ -580,6 +580,9 @@ div.opt-block-alternate {
 div.opt-hidden {
 	display:none;
 }
+div.opt-dot {
+	color:rgba(255,255,255,0);
+}
 div.opt-label {
 	font-size:16px;
 	display:inline-block;
