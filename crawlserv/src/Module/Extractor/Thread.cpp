@@ -1460,16 +1460,12 @@ namespace crawlservpp::Module::Extractor {
 				if(!headers.empty())
 					this->networking.setHeaders(headers);
 
-				this->networking.setVerbose(true);
-
 				this->networking.getContent(
 						url,
 						this->config.sourceUsePost,
 						resultTo,
 						this->config.generalRetryHttp
 				);
-
-				this->networking.setVerbose(false);
 
 				// unset custom headers if necessary
 				if(!cookies.empty())
