@@ -160,7 +160,7 @@
 		"insecure": {
 			"type": "bool",
 			"default": false,
-			"description": "Use insecure protocol. NOT RECOMMENDED!",
+			"description": "Use insecure protocol (NOT RECOMMENDED!).",
 			"simple": false
 		},
 		"local.interface": {
