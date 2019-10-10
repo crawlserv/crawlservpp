@@ -951,6 +951,12 @@ namespace crawlservpp::Network {
 		std::string escapedUrl;
 		char errorBuffer[CURL_ERROR_SIZE];
 
+		/*
+		 * NOTE:	The following string needs to be available until after the request,
+		 * 			because cURL does not create its own copy of it by default!
+		 */
+		std::string postFields;
+
 		this->content.clear();
 		this->contentType.clear();
 
@@ -974,20 +980,31 @@ namespace crawlservpp::Network {
 
 					if(this->curlCode != CURLE_OK)
 						throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+					this->post = true;
 				}
+
+				// set POST field size to zero
+				this->curlCode = curl_easy_setopt(
+					this->curl.get(),
+					CURLOPT_POSTFIELDSIZE,
+					0L
+				);
+
+				if(this->curlCode != CURLE_OK)
+					throw Curl::Exception(curl_easy_strerror(this->curlCode));
 			}
 			else {
-				// get POST data
-				const std::string postFields(url, delim + 1);
+				// split POST data from URL (and escape the latter)
+				postFields = std::string(url, delim + 1);
 
-				// remove POST data from URL (and escape it)
 				escapedUrl = this->escapeUrl(url.substr(0, delim));
 
 				// set POST data size
 				this->curlCode = curl_easy_setopt(
 						this->curl.get(),
 						CURLOPT_POSTFIELDSIZE,
-						postFields.length()
+						postFields.size()
 				);
 
 				if(this->curlCode != CURLE_OK)
@@ -1000,13 +1017,11 @@ namespace crawlservpp::Network {
 						postFields.c_str()
 				);
 
-				std::cout << "\n" << postFields << "[" << postFields.length() << "]" << std::flush;
-
 				if(this->curlCode != CURLE_OK)
 					throw Curl::Exception(curl_easy_strerror(this->curlCode));
-			}
 
-			this->post = true;
+				this->post = true;
+			}
 		}
 		else {
 			// using GET: escape whole URL
