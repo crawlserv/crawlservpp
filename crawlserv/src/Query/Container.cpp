@@ -267,24 +267,26 @@ namespace crawlservpp::Query {
 			return false;
 
 		// clear previous subset
-		if(!(this->stringifiedSubSets.empty()))
-			std::string().swap(this->stringifiedSubSets.at(this->subSetCurrent - 1));
+		if(this->subSetCurrent) {
+			if(!(this->stringifiedSubSets.empty()))
+				std::string().swap(this->stringifiedSubSets.at(this->subSetCurrent - 1));
 
-		switch(this->subSetType) {
-		case QueryStruct::typeXPath:
-			this->xPathSubSets.at(this->subSetCurrent - 1).clear();
+			switch(this->subSetType) {
+			case QueryStruct::typeXPath:
+				this->xPathSubSets.at(this->subSetCurrent - 1).clear();
 
-			break;
+				break;
 
-		case QueryStruct::typeJsonPointer:
-			rapidjson::Value(rapidjson::kObjectType).Swap(this->jsonPointerSubSets.at(this->subSetCurrent - 1));
+			case QueryStruct::typeJsonPointer:
+				rapidjson::Value(rapidjson::kObjectType).Swap(this->jsonPointerSubSets.at(this->subSetCurrent - 1));
 
-			break;
+				break;
 
-		case QueryStruct::typeJsonPath:
-			jsoncons::json().swap(this->jsonPathSubSets.at(this->subSetCurrent - 1));
+			case QueryStruct::typeJsonPath:
+				jsoncons::json().swap(this->jsonPathSubSets.at(this->subSetCurrent - 1));
 
-			break;
+				break;
+			}
 		}
 
 		// increment index (+ 1) of current subset
