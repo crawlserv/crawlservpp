@@ -940,6 +940,15 @@ namespace crawlservpp::Module::Extractor {
 				break;
 
 			// get and check content of current page
+			this->log(Config::generalLoggingVerbose, "https://" + sourceUrl + "...");
+
+			if(!cookies.empty())
+				this->log(Config::generalLoggingVerbose, "[cookies] " + cookies);
+
+			for(auto& header : headers)
+				if(!header.empty())
+					this->log(Config::generalLoggingVerbose, "[header] " + header);
+
 			std::string pageContent;
 
 			this->extractingPageContent("https://" + sourceUrl, cookies, headers, pageContent);
@@ -1128,17 +1137,37 @@ namespace crawlservpp::Module::Extractor {
 
 	// get values of global tokens
 	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) {
+		// copy headers
+		std::vector<std::string> headers(this->config.variablesTokenHeaders);
+
+		// replace already existing variables in headers
+		for(auto& header : headers)
+			for(const auto& variable : variables)
+				Helper::Strings::replaceAll(header, variable.first, variable.second, true);
+
 		if(this->config.pagingVariable.empty())
+			// no paging variable: resolve all tokens
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 				const unsigned long index = i - this->config.variablesTokens.begin();
 
+				// copy source URL and cookies
+				std::string source(this->config.variablesTokensSource.at(index));
+				std::string cookies(this->config.variablesTokensCookies.at(index));
+
+				// replace already existing variables in source URL and cookies
+				for(const auto& variable : variables) {
+					Helper::Strings::replaceAll(source, variable.first, variable.second, true);
+					Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
+				}
+
+				// add token
 				variables.emplace_back(
 						*i,
 						this->extractingGetTokenValue(
 								*i,
-								this->config.variablesTokensSource.at(index),
-								this->config.variablesTokensCookies.at(index),
-								this->config.variablesTokenHeaders,
+								source,
+								cookies,
+								headers,
 								this->config.variablesTokensUsePost.at(index),
 								this->queriesTokens.at(index)
 						)
@@ -1152,27 +1181,43 @@ namespace crawlservpp::Module::Extractor {
 							return header.find(this->config.pagingVariable) != std::string::npos;
 						}
 				) == this->config.variablesTokenHeaders.end()
-		) {
+		) { /* if headers are page-dependent, all tokens are also dependent on the current page */
+			// paging variable exists: resolve only page-independent tokens
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 				const unsigned long index = i - this->config.variablesTokens.begin();
-				const auto& source = this->config.variablesTokensSource.at(index);
-				const auto& cookies = this->config.variablesTokensCookies.at(index);
+
+				// copy source URL and cookies
+				std::string source(this->config.variablesTokensSource.at(index));
+				std::string cookies(this->config.variablesTokensCookies.at(index));
+
+				// replace already existing variables in source URL and cookies
+				for(const auto& variable : variables) {
+					Helper::Strings::replaceAll(source, variable.first, variable.second, true);
+					Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
+				}
 
 				if(
 						source.find(this->config.pagingVariable) == std::string::npos
 						&& cookies.find(this->config.pagingVariable) == std::string::npos
-				)
+				) {
+					// replace already existing variables in source URL and cookies
+					for(const auto& variable : variables) {
+						Helper::Strings::replaceAll(source, variable.first, variable.second, true);
+						Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
+					}
+
 					variables.emplace_back(
 							*i,
 							this->extractingGetTokenValue(
 									*i,
 									source,
 									cookies,
-									this->config.variablesTokenHeaders,
+									headers,
 									this->config.variablesTokensUsePost.at(index),
 									this->queriesTokens.at(index)
 							)
 					);
+				}
 			}
 		}
 	}
@@ -1220,6 +1265,11 @@ namespace crawlservpp::Module::Extractor {
 								this->queriesTokens.at(index)
 						)
 				);
+
+				this->log(
+						Config::generalLoggingVerbose,
+						"got token: " + tokens.back().first + "=" + tokens.back().second
+				);
 			}
 		}
 	}
@@ -1233,15 +1283,17 @@ namespace crawlservpp::Module::Extractor {
 			bool usePost,
 			const QueryStruct& query
 	) {
-		// ignore if no or invalid query is specified
-		if(!query.index || (!query.resultBool && !query.resultSingle))
+		// ignore if invalid query is specified
+		if(!query.resultBool && !query.resultSingle)
 			return "";
 
 		// get content for extracting token
-		const std::string sourceUrl("https://" + source);
+		std::string sourceUrl(source);
 		std::string content;
 		std::string result;
 		bool success = false;
+
+		sourceUrl.insert(0, "https://");
 
 		while(this->isRunning()) {
 			try {
@@ -1447,8 +1499,8 @@ namespace crawlservpp::Module::Extractor {
 
 	// extract data from crawled content
 	void Thread::extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo) {
-		// ignore if no or invalid query is specified
-		if(!query.index || (!query.resultBool && !query.resultSingle))
+		// ignore if invalid query is specified
+		if(!query.resultBool && !query.resultSingle)
 			return;
 
 		// get value by running query of any type on page content
@@ -1469,10 +1521,9 @@ namespace crawlservpp::Module::Extractor {
 
 	// extract data from URL
 	void Thread::extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo) {
-		// ignore if no or invalid query is specified
+		// ignore if invalid query is specified
 		if(
-				!query.index
-				|| (!query.resultBool && !query.resultSingle)
+				(!query.resultBool && !query.resultSingle)
 				|| query.type != QueryStruct::typeRegEx
 		)
 			return;
