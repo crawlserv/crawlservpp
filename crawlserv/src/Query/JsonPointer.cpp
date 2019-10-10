@@ -37,24 +37,28 @@ namespace crawlservpp::Query {
 
 	// constructor: check for placeholder and create JSONPointer for first result, throws JSONPointer::Exception
 	JsonPointer::JsonPointer(const std::string& pointerString, bool textOnlyQuery) : textOnly(textOnlyQuery) {
-		if(pointerString.find("$$") != std::string::npos)
-			this->pointerStringMulti = pointerString;
+		// copy and trim pointer string
+		std::string string(pointerString);
+
+		Helper::Strings::trim(string);
+
+		// check whether multiple JSONPointers need to be constructed
+		if(string.find("$$") != std::string::npos)
+			this->pointerStringMulti = string;
 
 		if(this->pointerStringMulti.empty()) {
-			this->pointerFirst = rapidjson::Pointer(pointerString);
+			this->pointerFirst = rapidjson::Pointer(string);
 
 			if(!(this->pointerFirst.IsValid()))
-				throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
+				throw JsonPointer::Exception("Invalid JSONPointer \'" + string + "\'");
 		}
 		else {
-			std::string pointerFirstString(pointerString);
+			Helper::Strings::replaceAll(string, "$$", "0", true);
 
-			Helper::Strings::replaceAll(pointerFirstString, "$$", "0", true);
-
-			this->pointerFirst = rapidjson::Pointer(pointerFirstString);
+			this->pointerFirst = rapidjson::Pointer(string);
 
 			if(!(this->pointerFirst.IsValid()))
-				throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerFirstString + "\'");
+				throw JsonPointer::Exception("Invalid JSONPointer \'" + string + "\'");
 		}
 	}
 
