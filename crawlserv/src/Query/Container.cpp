@@ -2418,15 +2418,13 @@ namespace crawlservpp::Query {
 		return false;
 	}
 
-	// get target and source if possible
-	bool Container::getTargetAndSource(std::string& targetTo, std::string& sourceTo) {
-		if(!(this->queryTargetPtr))
-			return false;
+	// get target string if available
+	bool Container::getTarget(std::string& targetTo) {
+		if(this->queryTargetPtr) {
+			targetTo = *(this->queryTargetPtr);
 
-		targetTo = *(this->queryTargetPtr);
-
-		if(this->queryTargetSourcePtr)
-			sourceTo = *(this->queryTargetSourcePtr);
+			return true;
+		}
 
 		return true;
 	}
