@@ -205,7 +205,7 @@ namespace crawlservpp::Helper::Strings {
 	}
 
 	// trim a string (NOTE: Only ASCII white spaces will be processed!)
-	inline void trim(std::string & stringToTrim) {
+	inline void trim(std::string& stringToTrim) {
 		stringToTrim.erase(stringToTrim.begin(), std::find_if(stringToTrim.begin(), stringToTrim.end(), [](int ch) {
 			return !std::isspace(ch);
 		}));
