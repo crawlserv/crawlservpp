@@ -184,7 +184,11 @@ namespace crawlservpp::Module::Extractor {
 		unsigned long extractingNext();
 		void extractingGetVariableValues(std::vector<StringString>& variables);
 		void extractingGetTokenValues(std::vector<StringString>& variables);
-		void extractingGetPageTokenValues(const std::string& page, std::vector<StringString>& tokens);
+		void extractingGetPageTokenValues(
+				const std::string& page,
+				std::vector<StringString>& tokens,
+				const std::vector<StringString>& variables
+		);
 		std::string extractingGetTokenValue(
 				const std::string& name,
 				const std::string& source,

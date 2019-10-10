@@ -890,7 +890,7 @@ namespace crawlservpp::Module::Extractor {
 			// get page-specific tokens
 			std::vector<StringString> pageTokens;
 
-			this->extractingGetPageTokenValues(page, pageTokens);
+			this->extractingGetPageTokenValues(page, pageTokens, variables);
 
 			// get cookies and custom headers
 			std::string cookies(this->config.sourceCookies);
@@ -940,7 +940,7 @@ namespace crawlservpp::Module::Extractor {
 				break;
 
 			// get and check content of current page
-			this->log(Config::generalLoggingVerbose, "https://" + sourceUrl + "...");
+			this->log(Config::generalLoggingVerbose, "fetches https://" + sourceUrl + "...");
 
 			if(!cookies.empty())
 				this->log(Config::generalLoggingVerbose, "[cookies] " + cookies);
@@ -951,7 +951,7 @@ namespace crawlservpp::Module::Extractor {
 
 			std::string pageContent;
 
-			this->extractingPageContent("https://" + sourceUrl, cookies, headers, pageContent);
+			this->extractingPageContent(this->getProtocol() + sourceUrl, cookies, headers, pageContent);
 
 			if(pageContent.empty())
 				break;
@@ -1137,15 +1137,15 @@ namespace crawlservpp::Module::Extractor {
 
 	// get values of global tokens
 	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) {
-		// copy headers
-		std::vector<std::string> headers(this->config.variablesTokenHeaders);
+		if(this->config.pagingVariable.empty()) {
+			// copy headers
+			std::vector<std::string> headers(this->config.variablesTokenHeaders);
 
-		// replace already existing variables in headers
-		for(auto& header : headers)
-			for(const auto& variable : variables)
-				Helper::Strings::replaceAll(header, variable.first, variable.second, true);
+			// replace already existing variables in headers
+			for(auto& header : headers)
+				for(const auto& variable : variables)
+					Helper::Strings::replaceAll(header, variable.first, variable.second, true);
 
-		if(this->config.pagingVariable.empty())
 			// no paging variable: resolve all tokens
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 				const unsigned long index = i - this->config.variablesTokens.begin();
@@ -1173,6 +1173,7 @@ namespace crawlservpp::Module::Extractor {
 						)
 				);
 			}
+		}
 		else if(
 				std::find_if(
 						this->config.variablesTokenHeaders.begin(),
@@ -1182,30 +1183,35 @@ namespace crawlservpp::Module::Extractor {
 						}
 				) == this->config.variablesTokenHeaders.end()
 		) { /* if headers are page-dependent, all tokens are also dependent on the current page */
+			// copy headers
+			std::vector<std::string> headers(this->config.variablesTokenHeaders);
+
+			// replace already existing variables in headers
+			for(auto& header : headers)
+				for(const auto& variable : variables)
+					Helper::Strings::replaceAll(header, variable.first, variable.second, true);
+
 			// paging variable exists: resolve only page-independent tokens
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 				const unsigned long index = i - this->config.variablesTokens.begin();
-
-				// copy source URL and cookies
-				std::string source(this->config.variablesTokensSource.at(index));
-				std::string cookies(this->config.variablesTokensCookies.at(index));
-
-				// replace already existing variables in source URL and cookies
-				for(const auto& variable : variables) {
-					Helper::Strings::replaceAll(source, variable.first, variable.second, true);
-					Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
-				}
+				const std::string& sourceRef = this->config.variablesTokensSource.at(index);
+				const std::string& cookiesRef = this->config.variablesTokensCookies.at(index);
 
 				if(
-						source.find(this->config.pagingVariable) == std::string::npos
-						&& cookies.find(this->config.pagingVariable) == std::string::npos
+						sourceRef.find(this->config.pagingVariable) == std::string::npos
+						&& cookiesRef.find(this->config.pagingVariable) == std::string::npos
 				) {
+					// copy source URL and cookies
+					std::string source(sourceRef);
+					std::string cookies(cookiesRef);
+
 					// replace already existing variables in source URL and cookies
 					for(const auto& variable : variables) {
 						Helper::Strings::replaceAll(source, variable.first, variable.second, true);
 						Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
 					}
 
+					// get value of variable
 					variables.emplace_back(
 							*i,
 							this->extractingGetTokenValue(
@@ -1223,12 +1229,26 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get values of page-specific tokens
-	void Thread::extractingGetPageTokenValues(const std::string& page, std::vector<StringString>& tokens) {
+	void Thread::extractingGetPageTokenValues(
+			const std::string& page,
+			std::vector<StringString>& tokens,
+			const std::vector<StringString>& variables
+	) {
 		if(this->config.pagingVariable.empty())
 			return;
 
+		// copy headers
 		std::vector<std::string> headers(this->config.variablesTokenHeaders);
 
+		// replace variables in headers
+		for(auto& header : headers) {
+			for(const auto& variable : variables)
+				Helper::Strings::replaceAll(header, variable.first, variable.second, true);
+
+			Helper::Strings::replaceAll(header, this->config.pagingVariable, page, true);
+		}
+
+		// check whether all tokens are page-specific
 		bool allTokens =
 				std::find_if(
 						headers.begin(),
@@ -1240,19 +1260,27 @@ namespace crawlservpp::Module::Extractor {
 
 		for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
 			const unsigned long index = i - this->config.variablesTokens.begin();
-			std::string source(this->config.variablesTokensSource.at(index));
-			std::string cookies(this->config.variablesTokensCookies.at(index));
+			const auto& sourceRef = this->config.variablesTokensSource.at(index);
+			const auto& cookiesRef = this->config.variablesTokensCookies.at(index);
 
+			// check whether token is page-specific
 			if(
 					allTokens
-					|| source.find(this->config.pagingVariable) != std::string::npos
-					|| cookies.find(this->config.pagingVariable) != std::string::npos
+					|| sourceRef.find(this->config.pagingVariable) != std::string::npos
+					|| cookiesRef.find(this->config.pagingVariable) != std::string::npos
 			) {
+				// copy source URL and cookies
+				std::string source(sourceRef);
+				std::string cookies(cookiesRef);
+
+				// replace variables in source URL and cookies
+				for(const auto& variable : variables) {
+					Helper::Strings::replaceAll(source, variable.first, variable.second, true);
+					Helper::Strings::replaceAll(cookies, variable.first, variable.second, true);
+				}
+
 				Helper::Strings::replaceAll(source, this->config.pagingVariable, page, true);
 				Helper::Strings::replaceAll(cookies, this->config.pagingVariable, page, true);
-
-				for(auto& header : headers)
-					Helper::Strings::replaceAll(header, this->config.pagingVariable, page, true);
 
 				tokens.emplace_back(
 						*i,
@@ -1260,7 +1288,7 @@ namespace crawlservpp::Module::Extractor {
 								*i,
 								source,
 								cookies,
-								this->config.variablesTokenHeaders,
+								headers,
 								this->config.variablesTokensUsePost.at(index),
 								this->queriesTokens.at(index)
 						)
@@ -1293,7 +1321,7 @@ namespace crawlservpp::Module::Extractor {
 		std::string result;
 		bool success = false;
 
-		sourceUrl.insert(0, "https://");
+		sourceUrl.insert(0, this->getProtocol());
 
 		while(this->isRunning()) {
 			try {
@@ -1432,12 +1460,16 @@ namespace crawlservpp::Module::Extractor {
 				if(!headers.empty())
 					this->networking.setHeaders(headers);
 
+				this->networking.setVerbose(true);
+
 				this->networking.getContent(
 						url,
 						this->config.sourceUsePost,
 						resultTo,
 						this->config.generalRetryHttp
 				);
+
+				this->networking.setVerbose(false);
 
 				// unset custom headers if necessary
 				if(!cookies.empty())
