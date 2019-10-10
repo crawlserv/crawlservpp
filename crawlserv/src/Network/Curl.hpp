@@ -64,6 +64,7 @@ namespace crawlservpp::Network {
 		void setConfigCurrent(const Config& currentConfig);
 		void setCookies(const std::string& cookies);
 		void setHeaders(const std::vector<std::string>& customHeaders);
+		void setVerbose(bool isVerbose);
 		void unsetCookies();
 		void unsetHeaders();
 

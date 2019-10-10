@@ -889,6 +889,17 @@ namespace crawlservpp::Network {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 	}
 
+	// enable or disable verbose mode (WARNING: overrides any configuration!)
+	void Curl::setVerbose(bool isVerbose) {
+		this->curlCode = curl_easy_setopt(
+				this->curl.get(),
+				CURLOPT_VERBOSE,
+				isVerbose
+		);
+
+		if(this->curlCode != CURLE_OK)
+			throw Curl::Exception(curl_easy_strerror(this->curlCode));
+	}
 
 	// unset custom cookies (independent from cookie engine), throws Curl::Exception
 	void Curl::unsetCookies() {
@@ -937,7 +948,7 @@ namespace crawlservpp::Network {
 			std::string& contentTo,
 			const std::vector<unsigned int>& errors
 	) {
-		std::string escapedUrl(this->escapeUrl(url));
+		std::string escapedUrl;
 		char errorBuffer[CURL_ERROR_SIZE];
 
 		this->content.clear();
@@ -947,9 +958,12 @@ namespace crawlservpp::Network {
 
 		// check whether the explicit setting of the HTTP method is needed
 		if(usePost) {
-			const auto delim = escapedUrl.find('?');
+			const auto delim = url.find('?');
 
 			if(delim == std::string::npos) {
+				// no POST data found: escape whole URL
+				escapedUrl = this->escapeUrl(url);
+
 				if(!(this->post)) {
 					// set POST method
 					this->curlCode = curl_easy_setopt(
@@ -964,7 +978,10 @@ namespace crawlservpp::Network {
 			}
 			else {
 				// get POST data
-				const std::string postFields(escapedUrl, delim + 1);
+				const std::string postFields(url, delim + 1);
+
+				// remove POST data from URL (and escape it)
+				escapedUrl = this->escapeUrl(url.substr(0, delim));
 
 				// set POST data size
 				this->curlCode = curl_easy_setopt(
@@ -983,27 +1000,31 @@ namespace crawlservpp::Network {
 						postFields.c_str()
 				);
 
+				std::cout << "\n" << postFields << "[" << postFields.length() << "]" << std::flush;
+
 				if(this->curlCode != CURLE_OK)
 					throw Curl::Exception(curl_easy_strerror(this->curlCode));
-
-				// remove POST data from URL
-				escapedUrl.erase(delim);
 			}
 
 			this->post = true;
 		}
-		else if(this->post) {
-			// unset POST method
-			this->curlCode = curl_easy_setopt(
-					this->curl.get(),
-					CURLOPT_POST,
-					0L
-			);
+		else {
+			// using GET: escape whole URL
+			escapedUrl = this->escapeUrl(url);
 
-			if(this->curlCode != CURLE_OK)
-				throw Curl::Exception(curl_easy_strerror(this->curlCode));
+			if(this->post) {
+				// unset POST method
+				this->curlCode = curl_easy_setopt(
+						this->curl.get(),
+						CURLOPT_POST,
+						0L
+				);
 
-			this->post = false;
+				if(this->curlCode != CURLE_OK)
+					throw Curl::Exception(curl_easy_strerror(this->curlCode));
+
+				this->post = false;
+			}
 		}
 
 		// set URL
