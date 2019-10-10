@@ -940,7 +940,7 @@ namespace crawlservpp::Module::Extractor {
 				break;
 
 			// get and check content of current page
-			this->log(Config::generalLoggingVerbose, "fetches https://" + sourceUrl + "...");
+			this->log(Config::generalLoggingVerbose, "fetches " + this->getProtocol() + sourceUrl + "...");
 
 			if(!cookies.empty())
 				this->log(Config::generalLoggingVerbose, "[cookies] " + cookies);
