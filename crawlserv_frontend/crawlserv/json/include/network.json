@@ -157,6 +157,12 @@
 			"description": "Use HTTP 1.0 only.",
 			"simple": false
 		},
+		"insecure": {
+			"type": "bool",
+			"default": false,
+			"description": "Use insecure protocol. NOT RECOMMENDED!",
+			"simple": false
+		},
 		"local.interface": {
 			"type": "string",
 			"default": "",

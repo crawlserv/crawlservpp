@@ -636,7 +636,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// get content for extracting sitemap(s)
 		std::string content;
-		const std::string url("https://" + this->domain + "/robots.txt");
+		const std::string url(this->getProtocol() + this->domain + "/robots.txt");
 		bool success = false;
 
 		this->log(Config::crawlerLoggingVerbose, "fetches \'robots.txt\'...");
@@ -1372,7 +1372,10 @@ namespace crawlservpp::Module::Crawler {
 				}
 				else {
 					// get token value
-					const std::string sourceUrl("https://" + this->config.customTokensSource.at(index));
+					const std::string sourceUrl(
+							this->getProtocol()
+							+ this->config.customTokensSource.at(index)
+					);
 					std::string content;
 					bool success = false;
 
@@ -1628,7 +1631,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// get content
 			this->networking.getContent(
-					"https://" + this->domain + url.second,
+					this->getProtocol() + this->domain + url.second,
 					usePost,
 					content,
 					this->config.crawlerRetryHttp
@@ -1948,7 +1951,7 @@ namespace crawlservpp::Module::Crawler {
 
 				// get content
 				this->networking.getContent(
-						"https://" + this->domain + url,
+						this->getProtocol() + this->domain + url,
 						this->config.redirectUsePost,
 						content,
 						this->config.crawlerRetryHttp

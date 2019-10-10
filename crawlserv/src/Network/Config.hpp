@@ -118,11 +118,16 @@ namespace crawlservpp::Network {
 		std::string userAgent;
 		bool verbose;
 
+		std::string protocol;
+
 		// parse network configuration option
 		void parseBasicOption() override;
 
 		// parse additional configuration options
 		virtual void parseOption() = 0;
+
+		// get network protocol
+		const std::string& getProtocol() const;
 	};
 
 	/*
@@ -169,7 +174,8 @@ namespace crawlservpp::Network {
 								timeOut(300),
 								timeOutHappyEyeballs(0),
 								timeOutRequest(300),
-								verbose(false) {}
+								verbose(false),
+								protocol("https://") {}
 
 	// destructor stub
 	inline Config::~Config() {}
@@ -177,6 +183,7 @@ namespace crawlservpp::Network {
 	// parse configuration option
 	inline void Config::parseBasicOption() {
 		this->category("network");
+
 		this->option("connections.max", this->connectionsMax);
 		this->option("contentlength.ignore", this->contentLengthIgnore);
 		this->option("cookies", this->cookies);
@@ -238,7 +245,21 @@ namespace crawlservpp::Network {
 		this->option("useragent", this->userAgent);
 		this->option("verbose", this->verbose);
 
+		bool insecure = false;
+
+		this->option("insecure", insecure);
+
+		if(insecure) {
+			this->warning("Using INSECURE connections.");
+
+			this->protocol = "http://";
+		}
+
 		this->parseOption();
+	}
+
+	inline const std::string& Config::getProtocol() const {
+		return this->protocol;
 	}
 
 } /* crawlservpp::Network */
