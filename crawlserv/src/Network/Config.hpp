@@ -258,6 +258,7 @@ namespace crawlservpp::Network {
 		this->parseOption();
 	}
 
+	// get the protocol to use for networking
 	inline const std::string& Config::getProtocol() const {
 		return this->protocol;
 	}
