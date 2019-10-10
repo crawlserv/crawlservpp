@@ -1505,10 +1505,10 @@ namespace crawlservpp::Module::Extractor {
 			bool error = false;
 
 			if(this->getBoolFromQuery(query, error, queryWarnings) && error) {
-				std::string target, source;
+				std::string target;
 
-				if(this->getTargetAndSource(target, source))
-					throw Exception("Error in data: " +  target + " [" + source + ", " + url + "]");
+				if(this->getTarget(target))
+					throw Exception("Error in data: " +  target + " [" + url + "]");
 				else
 					throw Exception("Error in data from " + url);
 			}
