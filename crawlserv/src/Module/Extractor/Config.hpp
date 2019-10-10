@@ -168,6 +168,8 @@ namespace crawlservpp::Module::Extractor {
 
 	private:
 		bool crossDomain;
+
+		static void removeProtocolsFromUrl(std::string& inOut);
 	};
 
 	/*
@@ -303,6 +305,13 @@ namespace crawlservpp::Module::Extractor {
 
 	// check extracting-specific configuration, throws Config::Exception
 	inline void Config::checkOptions() {
+		// remove obvious protocols from given URLs
+		for(auto& url : this->config.variablesTokensSource)
+			Config::removeProtocolsFromUrl(url);
+
+		Config::removeProtocolsFromUrl(this->config.sourceUrl);
+		Config::removeProtocolsFromUrl(this->config.sourceUrlFirst);
+
 		// check properties of variables
 		bool incompleteVariables = false;
 
@@ -569,6 +578,15 @@ namespace crawlservpp::Module::Extractor {
 		// warn about unused properties
 		if(incompleteFields)
 			this->warning("Unused field properties removed from configuration.");
+	}
+
+	// remove obvious protocol(s) from beginning of URL
+	inline void Config::removeProtocolsFromUrl(std::string& inOut) {
+		while(inOut.length() > 6 && inOut.substr(0, 7) == "http://")
+			inOut = inOut.substr(7);
+
+		while(inOut.length() > 7 && inOut.substr(0, 8) == "https://")
+			inOut = inOut.substr(8);
 	}
 
 } /* crawlservpp::Module::Extractor */
