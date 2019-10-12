@@ -206,6 +206,7 @@ namespace crawlservpp::Module::Extractor {
 										expectedErrorIfSmaller(false),
 										expectedQuery(0),
 										expectedSource(expectedSourceExtracting) {
+		this->generalRetryHttp.push_back(429);
 		this->generalRetryHttp.push_back(502);
 		this->generalRetryHttp.push_back(503);
 		this->generalRetryHttp.push_back(504);

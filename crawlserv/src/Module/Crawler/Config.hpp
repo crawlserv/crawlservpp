@@ -213,6 +213,7 @@ namespace crawlservpp::Module::Crawler {
 		this->crawlerArchivesNames.emplace_back("archives.org");
 		this->crawlerArchivesUrlsMemento.emplace_back("http://web.archive.org/web/");
 		this->crawlerArchivesUrlsTimemap.emplace_back("http://web.archive.org/web/timemap/link/");
+		this->crawlerRetryHttp.push_back(429);
 		this->crawlerRetryHttp.push_back(502);
 		this->crawlerRetryHttp.push_back(503);
 		this->crawlerRetryHttp.push_back(504);
