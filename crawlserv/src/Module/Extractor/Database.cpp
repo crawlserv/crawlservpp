@@ -108,7 +108,7 @@ namespace crawlservpp::Module::Extractor {
 
 		properties.columns.reserve(4 + this->targetFieldNames.size());
 
-		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL UNIQUE");
+		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL");
 		properties.columns.emplace_back("extracted_id", "TEXT NOT NULL");
 		properties.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
 		properties.columns.emplace_back("extracted_datetime", "DATETIME DEFAULT NULL");
@@ -1257,7 +1257,7 @@ namespace crawlservpp::Module::Extractor {
 				sqlQueryString += ", ";
 		}
 
-		// crate ON DUPLICATE KEY UPDATE clause
+		// create ON DUPLICATE KEY UPDATE clause
 		sqlQueryString +=		" ON DUPLICATE KEY"
 								" UPDATE locktime = VALUES(locktime)";
 
