@@ -409,9 +409,9 @@ function scriptModule() {
         while($row = $result->fetch_assoc())
             $script .= " { \"id\": "
                     .$row["id"]
-                    .", \"name\": \""
-                    .$row["name"]
-                    ."\", \"type\": \""
+                    .", \"name\": "
+                    .json_encode($row["name"])
+                    .", \"type\": \""
                     .$row["type"]
                     ."\", \"resultbool\": "
                     .($row["resultbool"] ? "true" : "false")
