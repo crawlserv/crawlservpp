@@ -1769,20 +1769,6 @@ namespace crawlservpp::Main {
 										+ "\'"
 								);
 
-							if(!configEntry.HasMember("cat"))
-								throw Exception(
-										"Main::Database::duplicateWebsite(): Configuration entry \'"
-										+ Helper::Json::stringify(configEntry)
-										+ "\' does not include \'cat\'"
-								);
-
-							if(!configEntry["cat"].IsString())
-								throw Exception(
-										"Main::Database::duplicateWebsite(): Configuration entry \'"
-										+ Helper::Json::stringify(configEntry)
-										+ "\' does not include valid string for \'cat\'"
-								);
-
 							if(!configEntry.HasMember("name"))
 								throw Exception(
 										"Main::Database::duplicateWebsite(): Configuration entry \'"
@@ -1804,14 +1790,32 @@ namespace crawlservpp::Main {
 										+ "\' does not include \'value\'"
 								);
 
-							const std::string cat(
-									configEntry["cat"].GetString(),
-									configEntry["cat"].GetStringLength()
-							);
+							std::string cat;
 							const std::string name(
 									configEntry["name"].GetString(),
 									configEntry["name"].GetStringLength()
 							);
+
+							if(name != "_algo") {
+								if(!configEntry.HasMember("cat"))
+									throw Exception(
+											"Main::Database::duplicateWebsite(): Configuration entry \'"
+											+ Helper::Json::stringify(configEntry)
+											+ "\' does not include \'cat\'"
+									);
+
+								if(!configEntry["cat"].IsString())
+									throw Exception(
+											"Main::Database::duplicateWebsite(): Configuration entry \'"
+											+ Helper::Json::stringify(configEntry)
+											+ "\' does not include valid string for \'cat\'"
+									);
+
+								std::string(
+										configEntry["cat"].GetString(),
+										configEntry["cat"].GetStringLength()
+								).swap(cat);
+							}
 
 							const auto queryIt = std::find_if(
 									modIt->second.begin(),
