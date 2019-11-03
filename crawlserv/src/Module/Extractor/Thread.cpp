@@ -281,7 +281,7 @@ namespace crawlservpp::Module::Extractor {
 			this->extractingUrlSelection();
 
 		if(this->urls.empty()) {
-			// no URLs left in database: set timer if just finished, sleep
+			// no URLs left in database: set timer if just finished and sleep
 			if(this->idleTime == std::chrono::steady_clock::time_point::min())
 				this->idleTime = std::chrono::steady_clock::now();
 
@@ -953,8 +953,29 @@ namespace crawlservpp::Module::Extractor {
 
 			this->extractingPageContent(this->getProtocol() + sourceUrl, cookies, headers, pageContent);
 
+			// log progress if necessary
+			if(this->config.generalLogging >= Config::generalLoggingExtended) {
+				std::ostringstream logStrStr;
+
+				logStrStr.imbue(std::locale(""));
+
+				logStrStr << "fetched " << pageContent.size() << " byte(s) from " << this->getProtocol() << sourceUrl;
+
+				this->log(Config::generalLoggingExtended, logStrStr.str());
+			}
+
 			if(pageContent.empty())
 				break;
+
+			// TODO DEBUG
+			std::ostringstream fn;
+			fn << "debug/e_" << this->networking.escape(sourceUrl, false) << ".json";
+			std::ofstream out(fn.str());
+			if(!out.is_open())
+				throw Exception("Could not write to " + fn.str());
+			out << pageContent;
+			out.close();
+			// TODO END DEBUG
 
 			// set page content as target for subsequent queries
 			this->setQueryTarget(pageContent, sourceUrl);
@@ -1577,8 +1598,8 @@ namespace crawlservpp::Module::Extractor {
 	unsigned long Thread::extractingPage(unsigned long contentId, const std::string& url) {
 		bool expecting = false;
 		unsigned long expected = 0;
-		std::queue<std::string> queryWarnings;
 		unsigned long result = 0;
+		std::queue<std::string> queryWarnings;
 
 		// check for errors if necessary
 		for(const auto& query : this->queriesError) {
