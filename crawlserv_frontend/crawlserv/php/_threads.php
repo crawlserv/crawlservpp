@@ -267,6 +267,10 @@ if($num) {
                 http_response_code(503);
             
             switch($row2["result"]) {
+                case 0:
+                    echo "done";
+                    break;
+                    
                 case 1:
                     echo "one more URL";
                     
