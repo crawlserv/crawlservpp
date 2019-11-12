@@ -29,8 +29,8 @@ You can clone the complete source code into a sub-folder named `crawlserv` using
 
 ```
 git clone https://github.com/crawlserv/crawlservpp crawlserv
-git submodules init
-git submodules update
+git submodule init
+git submodule update
 ```
 
 The following additional components are required to build crawlserv++ on your system:
