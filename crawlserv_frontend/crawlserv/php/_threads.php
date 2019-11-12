@@ -243,7 +243,7 @@ if($num) {
         
         if($row["remaining"] === null)
             echo "+&infin;";
-        else if($row["remaining"] >= 0.5)
+        else if($row["remaining"] >= 0.5 || $row["module"] == "analyzer")
             echo "+".formatTime($row["remaining"]);
         else {         
             // no significant amount of time remaining: show number of remaining URLs
