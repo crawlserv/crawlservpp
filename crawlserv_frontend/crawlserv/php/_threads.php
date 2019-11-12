@@ -104,6 +104,11 @@ function formatTime($seconds) {
         $seconds -= $minutes * 60;
     }
     
+    $s = round($seconds);
+    
+    if($s >= 1)
+        $result .= $s."s ";
+    
     if(strlen($result))
         return substr($result, 0, strlen($result) - 1);
     
@@ -238,8 +243,40 @@ if($num) {
         
         if($row["remaining"] === null)
             echo "+&infin;";
-        else    
+        else if($row["remaining"] >= 0.5)
             echo "+".formatTime($row["remaining"]);
+        else {         
+            // no significant amount of time remaining: show number of remaining URLs
+            $result2 = $dbConnection->query(
+                "SELECT COUNT(*) AS result".
+                " FROM `crawlserv_".$website."_".$urllist."`".
+                " WHERE id > (".
+                "   SELECT last".  
+                "    FROM crawlserv_threads".
+                "    WHERE id=".$row["id"].
+                "    LIMIT 1".
+                " )"
+            );
+            
+            if(!$result2)
+                http_response_code(503);
+                
+            $row2 = $result2->fetch_assoc();
+            
+            if(!$row2)
+                http_response_code(503);
+            
+            switch($row2["result"]) {
+                case 1:
+                    echo "one more URL";
+                    
+                    break;
+                default:
+                    echo $row2["result"]." more URLs";
+            }
+            
+            $result2->close();
+        }
             
         echo "</span>";
         echo "</div>\n";
