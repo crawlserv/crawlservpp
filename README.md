@@ -312,6 +312,7 @@ The parser, extractor and analyzer threads may pre-cache (and therefore temporar
 
 The following third-party libraries are used by the command-and-control server:
 
+* [Asio C++ Library](http://think-async.com/Asio/) (included in `crawlserv/src/_extern/asio`)
 * [Boost C++ Libraries](https://www.boost.org/) (`Boost.Iostreams`, `Boost.Strings` and `Boost.System`)
 * [GNU Aspell](http://aspell.net/)
 * [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html) (included in `crawlserv/src/_extern/date.h`)
@@ -328,7 +329,7 @@ The following third-party libraries are used by the command-and-control server:
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8`)
 * [zlib](https://www.zlib.net/)
 
-While `date.h`, `jsoncons`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
+While `Asio`, `date.h`, `jsoncons`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
 
 ## Frontend
 
