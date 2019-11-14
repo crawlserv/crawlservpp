@@ -34,16 +34,21 @@
 namespace crawlservpp::Query {
 
 	// constructor stub
-	RegEx::RegEx(const std::string& expression, bool single, bool multi) : queryString(expression) {
+	RegEx::RegEx(const std::string& expression, bool single, bool multi) {
 		int errorNumber = 0;
 		PCRE2_SIZE errorOffset = 0;
+		std::string queryString(expression);
 
 		// delete old expressions if necessary
 		this->expressionSingle.reset();
 		this->expressionMulti.reset();
 
+		// remove newlines at the end of the expression
+		while(queryString.back() == '\n')
+			queryString.pop_back();
+
 		// check arguments
-		if(expression.empty())
+		if(queryString.empty())
 			throw RegEx::Exception("Expression is empty");
 
 		if(!single && !multi)
@@ -53,7 +58,7 @@ namespace crawlservpp::Query {
 		if(single) {
 			this->expressionSingle.reset(
 					pcre2_compile(
-							(PCRE2_SPTR) expression.c_str(),
+							(PCRE2_SPTR) queryString.c_str(),
 							PCRE2_ZERO_TERMINATED, PCRE2_UTF | PCRE2_UCP,
 							&errorNumber,
 							&errorOffset,
@@ -339,11 +344,6 @@ namespace crawlservpp::Query {
 			// get resulting match
 			resultTo.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 		}
-	}
-
-	// get the expression string of the query
-	const std::string& RegEx::getString() const {
-		return this->queryString;
 	}
 
 	// bool operator
