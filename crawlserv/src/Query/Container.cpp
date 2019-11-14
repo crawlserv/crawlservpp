@@ -98,7 +98,8 @@ namespace crawlservpp::Query {
 
 				try {
 					this->queriesRegEx.emplace_back(
-							properties.text, properties.resultBool || properties.resultSingle,
+							properties.text,
+							properties.resultBool || properties.resultSingle,
 							properties.resultMulti
 					);
 				}
