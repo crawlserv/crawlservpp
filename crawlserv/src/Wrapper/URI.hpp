@@ -65,6 +65,7 @@ namespace crawlservpp::Wrapper {
 		// create URI structure, free old structure if necessary
 		void create() {
 			this->reset();
+
 			this->ptr = std::make_unique<UriUriA>();
 		}
 
@@ -72,6 +73,7 @@ namespace crawlservpp::Wrapper {
 		void reset() {
 			if(this->ptr) {
 				uriFreeUriMembersA(this->ptr.get());
+
 				this->ptr.reset();
 			}
 		}
