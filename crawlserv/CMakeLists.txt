@@ -219,6 +219,11 @@ else()
 	endif()
 endif()
 
+# set include directory for asio to sub-directory of source code
+set(asio_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/asio/asio/include")
+
+message("asio include directory set to: \"${asio_INCLUDE}\".")
+
 # set include directory for jsoncons to sub-directory of source code
 set(jsoncons_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/jsoncons/include")
 
@@ -246,6 +251,7 @@ add_executable(${PROJECT_NAME}
 		src/Module/Database.cpp
 		src/Module/Thread.cpp
 		src/Network/Curl.cpp
+		src/Network/TorControl.cpp
 		src/Parsing/HTML.cpp
 		src/Parsing/URI.cpp
 		src/Parsing/XML.cpp
@@ -273,9 +279,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 # set include directories
+target_include_directories(${PROJECT_NAME} PRIVATE ${asio_INCLUDE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncons_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${mysqlcppconn_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${tidy_INCLUDE})
-target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncons_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 
 # set libraries
@@ -324,6 +331,7 @@ else()
 		target_compile_options(${PROJECT_NAME} PRIVATE -O0)
 	else()
 		message("Using \"${CMAKE_CXX_COMPILER}\" with maximum optimization and without debugging information.")
+		target_compile_definitions(${PROJECT_NAME} PRIVATE NDEBUG)
 		target_compile_options(${PROJECT_NAME} PRIVATE -g0)
 		target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 	endif()
