@@ -50,7 +50,6 @@ namespace crawlservpp::Query {
 	public:
 		// constructors and destructor
 		RegEx(const std::string& expression, bool single, bool multi);
-		RegEx(RegEx&& other) noexcept;
 		virtual ~RegEx();
 
 		// getters
@@ -65,9 +64,11 @@ namespace crawlservpp::Query {
 		// class for RegEx exceptions
 		MAIN_EXCEPTION_CLASS();
 
-		// not copyable
-		RegEx(RegEx&) = delete;
-		RegEx& operator=(RegEx) = delete;
+		// only moveable (using default), not copyable
+		RegEx(const RegEx&) = delete;
+		RegEx(RegEx&& other) = default;
+		RegEx& operator=(const RegEx&) = delete;
+		RegEx& operator=(RegEx&&) = default;
 
 	private:
 		Wrapper::PCRE expressionSingle, expressionMulti;

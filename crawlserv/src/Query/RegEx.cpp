@@ -107,16 +107,6 @@ namespace crawlservpp::Query {
 		}
 	}
 
-	// move constructor
-	RegEx::RegEx(RegEx&& other) noexcept :
-			expressionSingle(std::move(other.expressionSingle)),
-			expressionMulti(std::move(other.expressionMulti))
-#ifndef NDEBUG
-			,
-			queryString(std::move(other.queryString))
-#endif
-	{}
-
 	// destructor stub
 	RegEx::~RegEx() {}
 
