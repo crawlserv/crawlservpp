@@ -342,7 +342,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get the expression string of the query
-	const std::string& getQueryString() const {
+	const std::string& RegEx::getString() const {
 		return this->queryString;
 	}
 
