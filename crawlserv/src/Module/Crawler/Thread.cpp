@@ -181,6 +181,7 @@ namespace crawlservpp::Module::Crawler {
 		this->log(Config::crawlerLoggingVerbose, "creates URI parser...");
 
 		this->parser = std::make_unique<Parsing::URI>();
+
 		this->parser->setCurrentDomain(this->domain);
 
 		// set network configuration
