@@ -41,7 +41,6 @@
 #include <pcre2.h>
 
 #include <string>	// std::string, std::to_string
-#include <utility>	// std::move
 #include <vector>	// std::vector
 
 namespace crawlservpp::Query {
