@@ -55,6 +55,7 @@ namespace crawlservpp::Query {
 		bool getBool(const std::string& text) const;
 		void getFirst(const std::string& text, std::string& resultTo) const;
 		void getAll(const std::string& text, std::vector<std::string>& resultTo) const;
+		const std::string getString() const;
 
 		// operators
 		explicit operator bool() const noexcept;
@@ -72,9 +73,7 @@ namespace crawlservpp::Query {
 	private:
 		Wrapper::PCRE expressionSingle, expressionMulti;
 
-#ifndef NDEBUG
 		const std::string queryString;
-#endif
 	};
 
 } /* crawlservpp::Query */

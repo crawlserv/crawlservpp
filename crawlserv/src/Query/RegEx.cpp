@@ -34,11 +34,7 @@
 namespace crawlservpp::Query {
 
 	// constructor stub
-	RegEx::RegEx(const std::string& expression, bool single, bool multi)
-#ifndef NDEBUG
-		: queryString(expression)
-#endif
-	{
+	RegEx::RegEx(const std::string& expression, bool single, bool multi) : queryString(expression) {
 		int errorNumber = 0;
 		PCRE2_SIZE errorOffset = 0;
 
@@ -343,6 +339,11 @@ namespace crawlservpp::Query {
 			// get resulting match
 			resultTo.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 		}
+	}
+
+	// get the expression string of the query
+	const std::string& getQueryString() const {
+		return this->queryString;
 	}
 
 	// bool operator
