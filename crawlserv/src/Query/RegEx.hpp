@@ -71,6 +71,10 @@ namespace crawlservpp::Query {
 
 	private:
 		Wrapper::PCRE expressionSingle, expressionMulti;
+
+#ifndef NDEBUG
+		const std::string queryString;
+#endif
 	};
 
 } /* crawlservpp::Query */

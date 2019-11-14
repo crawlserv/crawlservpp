@@ -34,7 +34,11 @@
 namespace crawlservpp::Query {
 
 	// constructor stub
-	RegEx::RegEx(const std::string& expression, bool single, bool multi) {
+	RegEx::RegEx(const std::string& expression, bool single, bool multi)
+#ifndef NDEBUG
+		: queryString(expression)
+#endif
+	{
 		int errorNumber = 0;
 		PCRE2_SIZE errorOffset = 0;
 
@@ -106,7 +110,12 @@ namespace crawlservpp::Query {
 	// move constructor
 	RegEx::RegEx(RegEx&& other) noexcept :
 			expressionSingle(std::move(other.expressionSingle)),
-			expressionMulti(std::move(other.expressionMulti)) {}
+			expressionMulti(std::move(other.expressionMulti))
+#ifndef NDEBUG
+			,
+			queryString(std::move(other.queryString))
+#endif
+	{}
 
 	// destructor stub
 	RegEx::~RegEx() {}
