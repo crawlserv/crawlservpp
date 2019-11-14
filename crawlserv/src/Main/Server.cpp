@@ -4269,14 +4269,13 @@ namespace crawlservpp::Main {
 
 							result = "COMPILING TIME: " + timer.tickStr() + '\n';
 
-							if(properties.resultBool) {
+							if(properties.resultBool)
 								// get boolean result (does at least one match exist?)
 								result	+= "BOOLEAN RESULT ("
 										+ timer.tickStr()
 										+ "): "
 										+ (regExTest.getBool(text) ? "true" : "false")
 										+ '\n';
-							}
 
 							if(properties.resultSingle) {
 								// get first result (first full match)
