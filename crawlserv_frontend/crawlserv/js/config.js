@@ -1070,6 +1070,7 @@ class Config {
 	onDelElement(cat, id, item) {
 		var array = $("div.opt-array[data-cat=\'" + cat + "\'][data-id=\'" + id + "\']");
 		var count = array.data("count");
+		var isPlaceholder = false;
 		var toRemove = null;
 		
 		// rename and renumber
@@ -1079,11 +1080,36 @@ class Config {
   				toRemove = obj;
   			else if(item < objn) {
 				objn--;
+				
   				$(obj).find("span.opt-array-count").text("[" + objn + "] ");
   				$(obj).find("input.opt-array-del").data("item", objn);
   				$(obj).data("item", objn);
+  				
+  				var element = $(obj).find("input.opt-array");
+  				
+  				if(
+  						element.attr("type") == "text"
+  						|| element.attr("type") == "number"
+  						|| element.attr("type") == "date"
+  				)
+  					isPlaceholder = !($(element).val().length) && $(element).attr("placeholder") !== undefined;
   			}
 		});
+		
+		// if a placeholder is removed, all other empty elements with placeholders need to be set
+		if(isPlaceholder) {
+			array.find("div.opt-array-item").each(function(i, obj) {
+				var element = $(obj).find("input.opt-array");
+				
+				if(
+  						element.attr("type") == "text"
+  						|| element.attr("type") == "number"
+  						|| element.attr("type") == "date"
+  				)
+					if(!($(element).val().length) && $(element).attr("placeholder") !== undefined)
+						$(element).val($(element).attr("placeholder"));
+			});
+		}
 		
 		// refresh item count
 		array.data("count", count - 1);
