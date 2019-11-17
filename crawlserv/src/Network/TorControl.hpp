@@ -44,21 +44,31 @@ namespace crawlservpp::Network {
 
 	class TorControl {
 	public:
-		TorControl(const std::string& controlServer, unsigned short port, const std::string& controlPassword);
+		// constructor and destructor
+		TorControl(
+				const std::string& controlServer,
+				unsigned short controlPort,
+				const std::string& controlPassword
+		);
 		~TorControl();
 
+		// request new identity
 		void newIdentity();
 
+		// operator
 		operator bool() const;
 
 	private:
+		// settings
 		const std::string server;
 		const unsigned short port;
 		const std::string password;
 
+		// asio context and socket
 		asio::io_context context;
 		asio::ip::tcp::socket socket;
 
+		// class for TorControl exceptions
 		MAIN_EXCEPTION_CLASS();
 	};
 
