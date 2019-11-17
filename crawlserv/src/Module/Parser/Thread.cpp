@@ -37,45 +37,46 @@ namespace crawlservpp::Module::Parser {
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
 			const ThreadStatus& threadStatus
-	)
-				: Module::Thread(
+	)		:	Module::Thread(
 						dbBase,
 						threadOptions,
 						threadStatus
-				  ),
-				  database(this->Module::Thread::database),
-				  tickCounter(0),
-				  startTime(std::chrono::steady_clock::time_point::min()),
-				  pauseTime(std::chrono::steady_clock::time_point::min()),
-				  idleTime(std::chrono::steady_clock::time_point::min()),
-				  idle(false),
-				  idFromUrlOnly(false),
-				  lastUrl(0),
-				  idFirst(0),
-				  idDist(0),
-				  posFirstF(0.),
-				  posDist(0),
-				  total(0) {}
+				),
+				database(this->Module::Thread::database),
+				tickCounter(0),
+				startTime(std::chrono::steady_clock::time_point::min()),
+				pauseTime(std::chrono::steady_clock::time_point::min()),
+				idleTime(std::chrono::steady_clock::time_point::min()),
+				idle(false),
+				idFromUrlOnly(false),
+				lastUrl(0),
+				idFirst(0),
+				idDist(0),
+				posFirstF(0.),
+				posDist(0),
+				total(0) {}
 
 	// constructor B: start a new parser
-	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(
+	Thread::Thread(
+			Main::Database& dbBase,
+			const ThreadOptions& threadOptions
+	)		:	Module::Thread(
 						dbBase,
 						threadOptions
-				  ),
-				  database(this->Module::Thread::database),
-				  tickCounter(0),
-				  startTime(std::chrono::steady_clock::time_point::min()),
-				  pauseTime(std::chrono::steady_clock::time_point::min()),
-				  idleTime(std::chrono::steady_clock::time_point::min()),
-				  idle(false),
-				  idFromUrlOnly(false),
-				  lastUrl(0),
-				  idFirst(0),
-				  idDist(0),
-				  posFirstF(0.),
-				  posDist(0),
-				  total(0) {}
+				),
+				database(this->Module::Thread::database),
+				tickCounter(0),
+				startTime(std::chrono::steady_clock::time_point::min()),
+				pauseTime(std::chrono::steady_clock::time_point::min()),
+				idleTime(std::chrono::steady_clock::time_point::min()),
+				idle(false),
+				idFromUrlOnly(false),
+				lastUrl(0),
+				idFirst(0),
+				idDist(0),
+				posFirstF(0.),
+				posDist(0),
+				total(0) {}
 
 	// destructor stub
 	Thread::~Thread() {}
