@@ -74,12 +74,12 @@ namespace crawlservpp::Network {
 			this->socket.write_some(asio::buffer(auth.data(), auth.size()));
 
 			// read response code (response should be "250 OK" or "515 Bad authentication")
-			std::string response(4, 0);
+			char response[3]{ 0 };
 
-			this->socket.read_some(asio::mutable_buffer(response.data(), 3));
+			this->socket.read_some(asio::mutable_buffer(response, 3));
 
 			// check response code
-			if(response != "250")
+			if(response[0] != '2' || response[1] != '5' || response[2] != '0')
 				throw Exception("TorControl::newIdentity(): Authentication failed");
 
 			// asynchronosly send command to request a new identity
