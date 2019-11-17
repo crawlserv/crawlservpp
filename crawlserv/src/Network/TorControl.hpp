@@ -34,6 +34,7 @@
 #include "Config.hpp"
 
 #include "../Main/Exception.hpp"
+#include "../Timer/Simple.hpp"
 
 #include "asio.hpp"
 
@@ -52,24 +53,44 @@ namespace crawlservpp::Network {
 		);
 		~TorControl();
 
+		// setter
+		void setNewIdentityTimer(unsigned long newIdentityAfterSeconds);
+
 		// request new identity
 		void newIdentity();
 
+		// check whether to request new identity
+		void tick();
+
 		// operator
-		operator bool() const;
+		inline operator bool() const {
+			return this->active;
+		}
+
+		// class for TorControl exceptions
+		MAIN_EXCEPTION_CLASS();
+
+		// not moveable, not copyable
+		TorControl(TorControl&) = delete;
+		TorControl(TorControl&&) = delete;
+		TorControl& operator=(TorControl&) = delete;
+		TorControl& operator=(TorControl&&) = delete;
 
 	private:
 		// settings
+		const bool active;
 		const std::string server;
 		const unsigned short port;
 		const std::string password;
+		unsigned long newIdentityAfter;
 
 		// asio context and socket
 		asio::io_context context;
 		asio::ip::tcp::socket socket;
 
-		// class for TorControl exceptions
-		MAIN_EXCEPTION_CLASS();
+		// identity time and timer
+		Timer::Simple timer;
+		unsigned long long elapsed;
 	};
 
 } /* crawlservpp::Network */

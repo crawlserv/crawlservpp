@@ -37,22 +37,40 @@ namespace crawlservpp::Network {
 			const std::string& controlServer,
 			unsigned short controlPort,
 			const std::string& controlPassword
-	)	: server(controlServer), port(controlPort), password(controlPassword), socket(this->context) {}
+	)		:	active(!controlServer.empty()),
+				server(controlServer),
+				port(controlPort),
+				password(controlPassword),
+				newIdentityAfter(0),
+				socket(this->context),
+				elapsed(0) {}
 
 	// destructor: shutdown remaining connection if necessary
 	TorControl::~TorControl() {
-		asio::error_code error;
+		if(this->socket.is_open()) {
+			asio::error_code error;
 
-		this->socket.shutdown(asio::ip::tcp::socket::shutdown_both, error);
+			this->socket.shutdown(asio::ip::tcp::socket::shutdown_both, error);
 
-		if(error)
-			std::cerr << "TorControl::~TorControl(): " << error.message() << std::endl;
+			if(error)
+				std::cerr << "TorControl::~TorControl(): " << error.message() << std::endl;
+		}
+	}
+
+	// set time in seconds after which to request a new identity (or 0 for disabled)
+	void TorControl::setNewIdentityTimer(unsigned long newIdentityAfterSeconds) {
+		this->newIdentityAfter = newIdentityAfterSeconds;
+
+		// reset timer
+		this->elapsed = 0;
+
+		this->timer.tick();
 	}
 
 	// request new identitiy, throws TorControl::Exception
 	void TorControl::newIdentity() {
-		if(this->server.empty())
-			throw Exception("TorControl::newIdentity(): No control server specified");
+		if(!(this->active))
+			throw Exception("TorControl::newIdentity(): No TOR control server set");
 
 		// create context and resolver
 		asio::ip::tcp::resolver resolver(this->context);
@@ -71,7 +89,7 @@ namespace crawlservpp::Network {
 			// send authentification
 			const std::string auth("AUTHENTICATE \"" + this->password + "\"\n");
 
-			this->socket.write_some(asio::buffer(auth.data(), auth.size()));
+			asio::write(this->socket, asio::buffer(auth.data(), auth.size()));
 
 			// read response code (response should be "250 OK" or "515 Bad authentication")
 			char response[3]{ 0 };
@@ -82,37 +100,41 @@ namespace crawlservpp::Network {
 			if(response[0] != '2' || response[1] != '5' || response[2] != '0')
 				throw Exception("TorControl::newIdentity(): Authentication failed");
 
-			// asynchronosly send command to request a new identity
+			// send command to request a new identity
 			const std::string command("SIGNAL NEWNYM\r\n");
 
-			this->socket.async_write_some(
-					asio::buffer(
-							command.data(),
-							command.size()
-					),
-					[&command](const asio::error_code& error, std::size_t bytes_transferred) {
-						// data has been sent: check for error and whether data has been completely sent off
-						if(error)
-							throw Exception("TorControl::newIdentity(): " + error.message());
-						else if(bytes_transferred < command.size())
-							throw Exception(
-									"TorControl::newIdentity(): TOR command not fully sent (only "
-									+ std::to_string(bytes_transferred)
-									+ "/"
-									+ std::to_string(command.size())
-									+ "B)"
-							);
-					}
-			);
+			asio::write(this->socket, asio::buffer(command.data(), command.size()));
+
+			// reset timer if necessary
+			if(this->newIdentityAfter) {
+				this->elapsed = 0;
+
+				this->timer.tick();
+			}
 		}
 		catch(const asio::system_error& e) {
 			throw Exception("TorControl::newIdentity(): " + std::string(e.what()));
 		}
 	}
 
-	// return whether TOR control server is specified
-	TorControl::operator bool() const {
-		return !(this->server.empty());
+	// check whether to get a new identity
+	void TorControl::tick() {
+		// check whether enabled
+		if(this->active && this->newIdentityAfter) {
+			// get elapsed time (in ms)
+			this->elapsed += this->timer.tick();
+
+			// check elapsed time (in s)
+			if(this->elapsed / 1000 > this->newIdentityAfter) {
+				// request new identity
+				this->newIdentity();
+
+				// reset timer
+				this->elapsed = 0;
+
+				this->timer.tick();
+			}
+		}
 	}
 
 } /* crawlservpp::Network */
