@@ -36,21 +36,23 @@ namespace crawlservpp::Module::Analyzer {
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
-			const ThreadStatus& threadStatus)
-				: Module::Thread(
+			const ThreadStatus& threadStatus
+	)		:	Module::Thread(
 						dbBase,
 						threadOptions,
 						threadStatus
-				  ),
-				  database(this->Module::Thread::database) {}
+				),
+				database(this->Module::Thread::database) {}
 
 	// constructor B: start a new analyzer
-	Thread::Thread(Main::Database& dbBase, const ThreadOptions& threadOptions)
-				: Module::Thread(
+	Thread::Thread(
+			Main::Database& dbBase,
+			const ThreadOptions& threadOptions
+	)		:	Module::Thread(
 						dbBase,
 						threadOptions
-				  ),
-				  database(this->Module::Thread::database) {}
+				),
+				database(this->Module::Thread::database) {}
 
 	// destructor stub
 	Thread::~Thread() {}
