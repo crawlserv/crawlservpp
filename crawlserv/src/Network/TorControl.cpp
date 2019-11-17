@@ -76,7 +76,7 @@ namespace crawlservpp::Network {
 			// read response code (response should be "250 OK" or "515 Bad authentication")
 			std::string response(4, 0);
 
-			this->socket.read_some(asio::buffer(response.data(), 3));
+			this->socket.read_some(asio::mutable_buffer(response.data(), 3));
 
 			// check response code
 			if(response != "250")
