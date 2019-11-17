@@ -37,49 +37,62 @@ namespace crawlservpp::Module::Crawler {
 			Main::Database& dbBase,
 			const std::string& cookieDirectory,
 			const ThreadOptions& threadOptions,
+			const NetworkSettings& serverNetworkSettings,
 			const ThreadStatus& threadStatus
-	)
-				: Module::Thread(
+	)		:	Module::Thread(
 						dbBase,
 						threadOptions,
 						threadStatus
-				  ),
-				  database(this->Module::Thread::database),
-				  networking(cookieDirectory),
-				  cookieDir(cookieDirectory),
-				  manualCounter(0),
-				  startCrawled(false),
-				  manualOff(false),
-				  retryCounter(0),
-				  archiveRetry(false),
-				  tickCounter(0),
-				  startTime(std::chrono::steady_clock::time_point::min()),
-				  pauseTime(std::chrono::steady_clock::time_point::min()),
-				  idleTime(std::chrono::steady_clock::time_point::min()),
-				  httpTime(std::chrono::steady_clock::time_point::min()) {}
+				),
+				database(this->Module::Thread::database),
+				networkOptions(serverNetworkSettings),
+				networking(cookieDirectory, this->networkOptions),
+				torControl(
+						this->networkOptions.torControlServer,
+						this->networkOptions.torControlPort,
+						this->networkOptions.torControlPassword
+				),
+				cookieDir(cookieDirectory),
+				manualCounter(0),
+				startCrawled(false),
+				manualOff(false),
+				retryCounter(0),
+				archiveRetry(false),
+				tickCounter(0),
+				startTime(std::chrono::steady_clock::time_point::min()),
+				pauseTime(std::chrono::steady_clock::time_point::min()),
+				idleTime(std::chrono::steady_clock::time_point::min()),
+				httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 	// constructor B: start a new crawler
 	Thread::Thread(
 			Main::Database& dbBase,
 			const std::string& cookieDirectory,
-			const ThreadOptions& threadOptions)
-				: Module::Thread(
+			const ThreadOptions& threadOptions,
+			const NetworkSettings& serverNetworkSettings
+	)		:	Module::Thread(
 						dbBase,
 						threadOptions
 				),
-				  database(this->Module::Thread::database),
-				  networking(cookieDirectory),
-				  cookieDir(cookieDirectory),
-				  manualCounter(0),
-				  startCrawled(false),
-				  manualOff(false),
-				  retryCounter(0),
-				  archiveRetry(false),
-				  tickCounter(0),
-				  startTime(std::chrono::steady_clock::time_point::min()),
-				  pauseTime(std::chrono::steady_clock::time_point::min()),
-				  idleTime(std::chrono::steady_clock::time_point::min()),
-				  httpTime(std::chrono::steady_clock::time_point::min()) {}
+				database(this->Module::Thread::database),
+				networkOptions(serverNetworkSettings),
+				networking(cookieDirectory, this->networkOptions),
+				torControl(
+						this->networkOptions.torControlServer,
+						this->networkOptions.torControlPort,
+						this->networkOptions.torControlPassword
+				),
+				cookieDir(cookieDirectory),
+				manualCounter(0),
+				startCrawled(false),
+				manualOff(false),
+				retryCounter(0),
+				archiveRetry(false),
+				tickCounter(0),
+				startTime(std::chrono::steady_clock::time_point::min()),
+				pauseTime(std::chrono::steady_clock::time_point::min()),
+				idleTime(std::chrono::steady_clock::time_point::min()),
+				httpTime(std::chrono::steady_clock::time_point::min()) {}
 
 	// destructor stub
 	Thread::~Thread() {}
@@ -217,7 +230,7 @@ namespace crawlservpp::Module::Crawler {
 
 			this->log(Config::crawlerLoggingVerbose, "initializes networking for archives...");
 
-			this->networkingArchives = std::make_unique<Network::Curl>(this->cookieDir);
+			this->networkingArchives = std::make_unique<Network::Curl>(this->cookieDir, this->networkOptions);
 
 			this->networkingArchives->setConfigGlobal(*this, true, configWarnings);
 

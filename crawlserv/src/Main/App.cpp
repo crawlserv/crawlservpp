@@ -35,8 +35,10 @@ namespace crawlservpp::Main {
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 	App::App(int argc, char * argv[]) noexcept : running(true), showVersionsOnly(false) {
 		try {
-			DatabaseSettings dbSettings;
 			ServerSettings serverSettings;
+			DatabaseSettings dbSettings;
+			NetworkSettings networkSettings;
+
 			std::string error;
 
 #ifdef _WIN32
@@ -69,12 +71,12 @@ namespace crawlservpp::Main {
 				return;
 
 			// load configuration file
-			this->loadConfig(argv[1], dbSettings, serverSettings);
+			this->loadConfig(argv[1], serverSettings, dbSettings, networkSettings);
 
 			// get password
 			if(this->getPassword(dbSettings) && this->running) {
 				// create server and run!
-				this->server = std::make_unique<Server>(dbSettings, serverSettings);
+				this->server = std::make_unique<Server>(serverSettings, dbSettings, networkSettings);
 
 				std::cout << "Server is up and running." << std::flush;
 			}
@@ -288,7 +290,12 @@ namespace crawlservpp::Main {
 	}
 
 	// static helper function: load database and server settings from configuration file, throws Main::Exception
-	void App::loadConfig(const std::string& fileName, DatabaseSettings& dbSettings,	ServerSettings& serverSettings) {
+	void App::loadConfig(
+			const std::string& fileName,
+			ServerSettings& serverSettings,
+			DatabaseSettings& dbSettings,
+			NetworkSettings& networkSettings
+	) {
 		// read file
 		const ConfigFile configFile(fileName);
 
@@ -377,6 +384,26 @@ namespace crawlservpp::Main {
 		}
 		else
 			serverSettings.dataDeletable = false;
+
+		networkSettings.defaultProxy = configFile.getValue("network_default_proxy");
+		networkSettings.torControlServer = configFile.getValue("network_tor_control_server");
+
+		if(!networkSettings.torControlServer.empty()) {
+			try {
+				networkSettings.torControlPort = boost::lexical_cast<unsigned short>(
+						configFile.getValue("network_tor_control_port")
+				);
+			}
+			catch(const boost::bad_lexical_cast& e) {
+				throw Exception(
+								fileName + ":"
+								" Could not convert config file entry \"network_tor_control_port\""
+								" (=\"" + configFile.getValue("network_tor_control_port") + "\") to numeric value"
+				);
+			}
+
+			networkSettings.torControlPassword = configFile.getValue("network_tor_control_password");
+		}
 	}
 
 } /* crawlservpp::App */

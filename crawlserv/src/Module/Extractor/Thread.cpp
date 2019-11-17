@@ -37,46 +37,57 @@ namespace crawlservpp::Module::Extractor {
 			Main::Database& dbBase,
 			const std::string& cookieDirectory,
 			const ThreadOptions& threadOptions,
+			const NetworkSettings& serverNetworkSettings,
 			const ThreadStatus& threadStatus
-	)
-				: Module::Thread(
+	)		:	Module::Thread(
 						dbBase,
 						threadOptions,
 						threadStatus
-				  ),
-				  database(this->Module::Thread::database),
-				  networking(cookieDirectory),
-				  tickCounter(0),
-				  startTime(std::chrono::steady_clock::time_point::min()),
-				  pauseTime(std::chrono::steady_clock::time_point::min()),
-				  idleTime(std::chrono::steady_clock::time_point::min()),
-				  idle(false),
-				  lastUrl(0),
-				  idFirst(0),
-				  idDist(0),
-				  posFirstF(0.),
-				  posDist(0),
-				  total(0) {}
+				),
+				database(this->Module::Thread::database),
+				networking(cookieDirectory, serverNetworkSettings),
+				torControl(
+						serverNetworkSettings.torControlServer,
+						serverNetworkSettings.torControlPort,
+						serverNetworkSettings.torControlPassword
+				),
+				tickCounter(0),
+				startTime(std::chrono::steady_clock::time_point::min()),
+				pauseTime(std::chrono::steady_clock::time_point::min()),
+				idleTime(std::chrono::steady_clock::time_point::min()),
+				idle(false),
+				lastUrl(0),
+				idFirst(0),
+				idDist(0),
+				posFirstF(0.),
+				posDist(0),
+				total(0) {}
 
 	// constructor B: start a new extractor
 	Thread::Thread(
 			Main::Database& dbBase,
 			const std::string& cookieDirectory,
-			const ThreadOptions& threadOptions
-	) : Module::Thread(dbBase, threadOptions),
-		database(this->Module::Thread::database),
-		networking(cookieDirectory),
-		tickCounter(0),
-		startTime(std::chrono::steady_clock::time_point::min()),
-		pauseTime(std::chrono::steady_clock::time_point::min()),
-		idleTime(std::chrono::steady_clock::time_point::min()),
-		idle(false),
-		lastUrl(0),
-		idFirst(0),
-		idDist(0),
-		posFirstF(0.),
-		posDist(0),
-		total(0) {}
+			const ThreadOptions& threadOptions,
+			const NetworkSettings& serverNetworkSettings
+	)		:	Module::Thread(dbBase, threadOptions),
+				database(this->Module::Thread::database),
+				networking(cookieDirectory, serverNetworkSettings),
+				torControl(
+						serverNetworkSettings.torControlServer,
+						serverNetworkSettings.torControlPort,
+						serverNetworkSettings.torControlPassword
+				),
+				tickCounter(0),
+				startTime(std::chrono::steady_clock::time_point::min()),
+				pauseTime(std::chrono::steady_clock::time_point::min()),
+				idleTime(std::chrono::steady_clock::time_point::min()),
+				idle(false),
+				lastUrl(0),
+				idFirst(0),
+				idDist(0),
+				posFirstF(0.),
+				posDist(0),
+				total(0) {}
 
 	// destructor stub
 	Thread::~Thread() {}

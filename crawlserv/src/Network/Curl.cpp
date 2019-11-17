@@ -35,12 +35,13 @@
 namespace crawlservpp::Network {
 
 	// constructor, throws Curl::Exception
-	Curl::Curl(const std::string& cookieDirectory)
+	Curl::Curl(const std::string& cookieDirectory, const NetworkOptions& serverNetworkOptions)
 			: cookieDir(cookieDirectory),
 			  curlCode(CURLE_OK),
 			  responseCode(0),
 			  limitedSettings(false),
 			  post(false),
+			  networkOptions(serverNetworkOptions),
 			  config(nullptr) {
 		// check pointer to cURL instance
 		if(!(this->curl))
@@ -442,7 +443,20 @@ namespace crawlservpp::Network {
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 
-		if(!globalConfig.proxy.empty()) {
+		if(globalConfig.proxy.empty()) {
+			if(!(this->networkOptions.defaultProxy.empty())) {
+				// no proxy is given, but default proxy is set: use default proxy
+				this->curlCode = curl_easy_setopt(
+						this->curl.get(),
+						CURLOPT_PROXY,
+						this->networkOptions.defaultProxy.c_str()
+				);
+
+				if(this->curlCode != CURLE_OK)
+					throw Curl::Exception(curl_easy_strerror(this->curlCode));
+			}
+		}
+		else {
 			this->curlCode = curl_easy_setopt(
 					this->curl.get(),
 					CURLOPT_PROXY,
@@ -1327,11 +1341,11 @@ namespace crawlservpp::Network {
 	}
 
 	// static cURL writer function
-	int Curl::writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer) {
-		if(!thisPointer)
+	int Curl::writer(char * data, unsigned long size, unsigned long nmemb, void * thisPtr) {
+		if(!thisPtr)
 			return 0;
 
-		return static_cast<Curl *>(thisPointer)->writerInClass(data, size, nmemb);
+		return static_cast<Curl *>(thisPtr)->writerInClass(data, size, nmemb);
 	}
 
 	// in-class cURL writer function

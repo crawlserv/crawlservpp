@@ -37,11 +37,13 @@ namespace crawlservpp::Main {
 
 	// constructor, throws Main::Exception
 	Server::Server(
+			const ServerSettings& serverSettings,
 			const DatabaseSettings& databaseSettings,
-			const ServerSettings& serverSettings
+			const NetworkSettings& networkSettings
 	)
 			: settings(serverSettings),
 			  dbSettings(databaseSettings, MAIN_SERVER_DIR_DEBUG),
+			  netSettings(networkSettings),
 			  database(dbSettings, "server"),
 			  allowed(serverSettings.allowedClients),
 			  running(true),
@@ -108,6 +110,7 @@ namespace crawlservpp::Main {
 								this->database,
 								this->dirCookies,
 								thread.options,
+								this->netSettings,
 								thread.status
 						)
 				);
@@ -146,6 +149,7 @@ namespace crawlservpp::Main {
 								this->database,
 								this->dirCookies,
 								thread.options,
+								this->netSettings,
 								thread.status
 						)
 				);
@@ -1081,7 +1085,8 @@ namespace crawlservpp::Main {
 				std::make_unique<Module::Crawler::Thread>(
 						this->database,
 						this->dirCookies,
-						options
+						options,
+						this->netSettings
 				)
 		);
 
@@ -1500,7 +1505,8 @@ namespace crawlservpp::Main {
 				std::make_unique<Module::Extractor::Thread>(
 						this->database,
 						this->dirCookies,
-						options
+						options,
+						this->netSettings
 				)
 		);
 

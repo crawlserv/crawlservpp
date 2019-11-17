@@ -51,16 +51,30 @@
 #include <string>		// std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <vector>		// std::vector
+#include "../Struct/NetworkSettings.hpp"
 
 namespace crawlservpp::Network {
 
 	class Curl {
+
+		// for convenience
+		typedef Struct::NetworkSettings NetworkOptions;
+		typedef Wrapper::CurlList CurlList;
+
 	public:
-		Curl(const std::string& cookieDirectory);
+		// constructor and destructor
+		Curl(
+				const std::string& cookieDirectory,
+				const NetworkOptions& serverNetworkOptions
+		);
 		virtual ~Curl();
 
 		// setters
-		void setConfigGlobal(const Config& globalConfig, bool limited, std::queue<std::string>& warningsTo);
+		void setConfigGlobal(
+				const Config& globalConfig,
+				bool limited,
+				std::queue<std::string>& warningsTo
+		);
 		void setConfigCurrent(const Config& currentConfig);
 		void setCookies(const std::string& cookies);
 		void setHeaders(const std::vector<std::string>& customHeaders);
@@ -69,7 +83,12 @@ namespace crawlservpp::Network {
 		void unsetHeaders();
 
 		// getters
-		void getContent(const std::string& url, bool usePost, std::string& contentTo, const std::vector<unsigned int>& errors);
+		void getContent(
+				const std::string& url,
+				bool usePost,
+				std::string& contentTo,
+				const std::vector<unsigned int>& errors
+		);
 		unsigned int getResponseCode() const;
 		std::string getContentType() const;
 		CURLcode getCurlCode() const;
@@ -101,6 +120,7 @@ namespace crawlservpp::Network {
 		bool post;
 		std::string tmpCookies;
 		std::string oldCookies;
+		const NetworkOptions networkOptions;
 
 		// const pointer to network configuration
 		const Network::Config * config;
@@ -109,17 +129,17 @@ namespace crawlservpp::Network {
 		Wrapper::Curl curl;
 
 		// cURL lists
-		Wrapper::CurlList dnsResolves;
-		Wrapper::CurlList headers;
-		Wrapper::CurlList tmpHeaders;
-		Wrapper::CurlList http200Aliases;
-		Wrapper::CurlList proxyHeaders;
+		CurlList dnsResolves;
+		CurlList headers;
+		CurlList tmpHeaders;
+		CurlList http200Aliases;
+		CurlList proxyHeaders;
 
 		// helper function for cURL strings
 		static std::string curlStringToString(char * curlString);
 
 		// static and in-class writer functions
-		static int writer(char * data, unsigned long size, unsigned long nmemb, void * thisPointer);
+		static int writer(char * data, unsigned long size, unsigned long nmemb, void * thisPtr);
 		int writerInClass(char * data, unsigned long size, unsigned long nmemb);
 	};
 

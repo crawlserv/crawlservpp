@@ -40,6 +40,7 @@
 #include "../Helper/Portability/getch.h"
 #include "../Helper/Versions.hpp"
 #include "../Struct/DatabaseSettings.hpp"
+#include "../Struct/NetworkSettings.hpp"
 #include "../Struct/ServerSettings.hpp"
 
 #include <boost/filesystem.hpp>
@@ -57,6 +58,7 @@ namespace crawlservpp::Main {
 	class App {
 		// for convenience
 		typedef Struct::DatabaseSettings DatabaseSettings;
+		typedef Struct::NetworkSettings NetworkSettings;
 		typedef Struct::ServerSettings ServerSettings;
 
 	public:
@@ -87,7 +89,12 @@ namespace crawlservpp::Main {
 		// static helper functions
 		static void outputHeader(bool showLibraryVersions);
 		static void checkArgumentNumber(int argc);
-		static void loadConfig(const std::string& fileName, DatabaseSettings& dbSettings, ServerSettings& serverSettings);
+		static void loadConfig(
+				const std::string& fileName,
+				ServerSettings& serverSettings,
+				DatabaseSettings& dbSettings,
+				NetworkSettings& networkSettings
+		);
 	};
 
 } /* crawlservpp::Main */

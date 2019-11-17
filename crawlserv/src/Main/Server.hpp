@@ -80,6 +80,7 @@
 #include "../Timer/SimpleHR.hpp"
 #include "../Struct/AlgoThreadProperties.hpp"
 #include "../Struct/ConfigProperties.hpp"
+#include "../Struct/NetworkSettings.hpp"
 #include "../Struct/QueryProperties.hpp"
 #include "../Struct/ServerCommandResponse.hpp"
 #include "../Struct/ServerSettings.hpp"
@@ -127,6 +128,7 @@ namespace crawlservpp::Main {
 		typedef Struct::AlgoThreadProperties AlgoThreadProperties;
 		typedef Struct::ConfigProperties ConfigProperties;
 		typedef Struct::DatabaseSettings DatabaseSettings;
+		typedef Struct::NetworkSettings NetworkSettings;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::ServerCommandResponse ServerCommandResponse;
 		typedef Struct::ServerSettings ServerSettings;
@@ -141,7 +143,11 @@ namespace crawlservpp::Main {
 
 	public:
 		// constructor
-		Server(const DatabaseSettings& databaseSettings, const ServerSettings& serverSettings);
+		Server(
+				const ServerSettings& serverSettings,
+				const DatabaseSettings& databaseSettings,
+				const NetworkSettings& networkSettings
+		);
 
 		// destructor
 		virtual ~Server();
@@ -165,6 +171,7 @@ namespace crawlservpp::Main {
 		// settings
 		ServerSettings settings;
 		DatabaseSettings dbSettings;
+		NetworkSettings netSettings;
 
 		// database
 		Database database;

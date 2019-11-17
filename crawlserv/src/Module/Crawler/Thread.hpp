@@ -41,8 +41,10 @@
 #include "../../Helper/Utf8.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Network/Curl.hpp"
+#include "../../Network/TorControl.hpp"
 #include "../../Parsing/URI.hpp"
 #include "../../Query/Container.hpp"
+#include "../../Struct/NetworkSettings.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/QueryStruct.hpp"
 #include "../../Struct/ThreadOptions.hpp"
@@ -77,6 +79,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Network::Curl::Exception CurlException;
 		typedef Parsing::URI::Exception URIException;
 		typedef Query::Container::Exception QueryException;
+		typedef Struct::NetworkSettings NetworkSettings;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::QueryStruct QueryStruct;
 		typedef Struct::ThreadOptions ThreadOptions;
@@ -93,13 +96,15 @@ namespace crawlservpp::Module::Crawler {
 				Main::Database& dbBase,
 				const std::string& cookieDirectory,
 				const ThreadOptions& threadOptions,
+				const NetworkSettings& serverNetworkSettings,
 				const ThreadStatus& threadStatus
 		);
 
 		Thread(
 				Main::Database& dbBase,
 				const std::string& cookieDirectory,
-				const ThreadOptions& threadOptions
+				const ThreadOptions& threadOptions,
+				const NetworkSettings& serverNetworkSettings
 		);
 
 		// destructor
@@ -111,7 +116,9 @@ namespace crawlservpp::Module::Crawler {
 	protected:
 		// database and networking for thread
 		Database database;
+		const NetworkSettings networkOptions;
 		Network::Curl networking;
+		Network::TorControl torControl;
 
 		// table names for locking
 		std::string urlListTable;

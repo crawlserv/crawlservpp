@@ -41,8 +41,10 @@
 #include "../../Helper/Utf8.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Network/Curl.hpp"
+#include "../../Network/TorControl.hpp"
 #include "../../Query/Container.hpp"
 #include "../../Struct/DataEntry.hpp"
+#include "../../Struct/NetworkSettings.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/QueryStruct.hpp"
 #include "../../Struct/ThreadOptions.hpp"
@@ -73,6 +75,7 @@
 namespace crawlservpp::Module::Extractor {
 
 	class Thread: public Module::Thread, private Query::Container, private Config {
+
 		// for convenience
 		typedef Helper::DateTime::Exception DateTimeException;
 		typedef Helper::DateTime::LocaleException LocaleException;
@@ -80,6 +83,7 @@ namespace crawlservpp::Module::Extractor {
 		typedef Network::Curl::Exception CurlException;
 		typedef Query::Container::Exception QueryException;
 		typedef Struct::DataEntry DataEntry;
+		typedef Struct::NetworkSettings NetworkSettings;
 		typedef Struct::QueryProperties QueryProperties;
 		typedef Struct::QueryStruct QueryStruct;
 		typedef Struct::ThreadOptions ThreadOptions;
@@ -95,13 +99,16 @@ namespace crawlservpp::Module::Extractor {
 				Main::Database& dbBase,
 				const std::string& cookieDirectory,
 				const ThreadOptions& threadOptions,
+				const NetworkSettings& serverNetworkSettings,
 				const ThreadStatus& threadStatus
 		);
 
 		Thread(
 				Main::Database& dbBase,
 				const std::string& cookieDirectory,
-				const ThreadOptions& threadOptions);
+				const ThreadOptions& threadOptions,
+				const NetworkSettings& serverNetworkSettings
+		);
 
 		// destructor
 		virtual ~Thread();
@@ -113,6 +120,7 @@ namespace crawlservpp::Module::Extractor {
 		// database for the thread
 		Database database;
 		Network::Curl networking;
+		Network::TorControl torControl;
 
 		// table names for locking
 		std::string extractingTable;
