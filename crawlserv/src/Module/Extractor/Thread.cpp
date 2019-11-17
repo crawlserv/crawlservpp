@@ -2240,13 +2240,13 @@ namespace crawlservpp::Module::Extractor {
 			if(this->torControl && this->resetTor) {
 				this->torControl.newIdentity();
 
-				this->log(Config::generalLoggingDefault, "New TOR identity has been requested.");
+				this->log(Config::generalLoggingDefault, "requested a new TOR identity.");
 			}
 		}
 		catch(const TorControlException& e) {
 			this->log(
 					Config::generalLoggingDefault,
-					"Could not request new TOR identity: " + e.whatStr()
+					"could not request new TOR identity - " + e.whatStr()
 			);
 		}
 	}

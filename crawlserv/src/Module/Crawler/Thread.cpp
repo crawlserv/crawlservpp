@@ -3418,11 +3418,11 @@ namespace crawlservpp::Module::Crawler {
 			if(this->torControl && this->resetTor) {
 				this->torControl.newIdentity();
 
-				this->log(Config::crawlerLoggingDefault, "New TOR identity has been requested.");
+				this->log(Config::crawlerLoggingDefault, "requested a new TOR identity.");
 			}
 		}
 		catch(const TorControlException& e) {
-			this->log(Config::crawlerLoggingDefault, "Could not request new TOR identity: " + e.whatStr());
+			this->log(Config::crawlerLoggingDefault, "could not request new TOR identity - " + e.whatStr());
 		}
 	}
 
