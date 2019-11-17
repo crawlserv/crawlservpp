@@ -166,7 +166,10 @@ protected:
 	inline Config::~Config() {}
 
 	// load configuration, throws Config::Exception
-	inline void Config::loadConfig(const std::string& configJson, std::queue<std::string>& warningsTo) {
+	inline void Config::loadConfig(
+			const std::string& configJson,
+			std::queue<std::string>& warningsTo
+	) {
 		// save pointer to logging queue
 		this->logPtr = &warningsTo;
 
@@ -197,7 +200,7 @@ protected:
 				return;
 			}
 
-			// go through all members of the JSON object and find its properties (name, category, value)
+			// go through all members of the JSON object, find its properties (name, category, value)
 			bool empty = true;
 			bool ignore = false;
 
