@@ -81,6 +81,7 @@ namespace crawlservpp::Module::Extractor {
 		typedef Helper::DateTime::LocaleException LocaleException;
 		typedef Helper::Utf8::Exception Utf8Exception;
 		typedef Network::Curl::Exception CurlException;
+		typedef Network::TorControl::Exception TorControlException;
 		typedef Query::Container::Exception QueryException;
 		typedef Struct::DataEntry DataEntry;
 		typedef Struct::NetworkSettings NetworkSettings;
@@ -218,6 +219,7 @@ namespace crawlservpp::Module::Extractor {
 		bool extractingCheckResponseCode(const std::string& url, long responseCode);
 		void extractingUrlFinished();
 		void extractingSaveResults(bool warped);
+		void extractingResetTor();
 	};
 
 } /* crawlservpp::Module::Extractor */

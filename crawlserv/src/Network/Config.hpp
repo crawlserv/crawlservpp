@@ -96,6 +96,8 @@ namespace crawlservpp::Network {
 		bool redirectPost303;
 		std::string referer;
 		bool refererAutomatic;
+		bool resetTor;
+		unsigned long resetTorAfter;
 		unsigned long speedDownLimit;
 		unsigned long speedLowLimit;
 		unsigned long speedLowTime;
@@ -157,6 +159,8 @@ namespace crawlservpp::Network {
 								redirectPost302(false),
 								redirectPost303(false),
 								refererAutomatic(false),
+								resetTor(true),
+								resetTorAfter(0),
 								speedDownLimit(0),
 								speedLowLimit(0),
 								speedLowTime(0),
@@ -223,6 +227,8 @@ namespace crawlservpp::Network {
 		this->option("redirect.post303", this->redirectPost303);
 		this->option("referer", this->referer);
 		this->option("referer.automatic", this->refererAutomatic);
+		this->option("reset.tor", this->resetTor);
+		this->option("reset.tor.after", this->resetTorAfter);
 		this->option("speed.downlimit", this->speedDownLimit);
 		this->option("speed.lowlimit", this->speedLowLimit);
 		this->option("speed.lowtime", this->speedLowTime);

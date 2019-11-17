@@ -210,6 +210,9 @@ namespace crawlservpp::Module::Crawler {
 			configWarnings.pop();
 		}
 
+		if(this->resetTorAfter)
+			this->torControl.setNewIdentityTimer(resetTorAfter);
+
 		// initialize custom URLs
 		this->setStatusMessage("Generating custom URLs...");
 
@@ -267,6 +270,9 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long newUrlsArchive = 0;
 
 		bool usePost = false;
+
+		// check whether a new TOR identity needs to be requested
+		this->torControl.tick();
 
 		// check for jump in last ID ("time travel")
 		const long warpedOver = this->getWarpedOverAndReset();
@@ -683,6 +689,8 @@ namespace crawlservpp::Module::Crawler {
 					this->log(Config::crawlerLoggingDefault, "resets connection...");
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
+
+					this->crawlingResetTor();
 
 					this->networking.resetConnection(this->config.crawlerSleepError);
 				}
@@ -1449,6 +1457,8 @@ namespace crawlservpp::Module::Crawler {
 
 									this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
 
+									this->crawlingResetTor();
+
 									this->networking.resetConnection(this->config.crawlerSleepError);
 								}
 								else {
@@ -1679,6 +1689,8 @@ namespace crawlservpp::Module::Crawler {
 				this->log(Config::crawlerLoggingDefault, "resets connection...");
 
 				this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
+
+				this->crawlingResetTor();
 
 				this->networking.resetConnection(this->config.crawlerSleepError);
 
@@ -2004,6 +2016,8 @@ namespace crawlservpp::Module::Crawler {
 					this->log(Config::crawlerLoggingDefault, "resets connection...");
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
+
+					this->crawlingResetTor();
 
 					this->networking.resetConnection(this->config.crawlerSleepError);
 				}
@@ -3135,6 +3149,8 @@ namespace crawlservpp::Module::Crawler {
 																	+ "]"
 															);
 
+															this->crawlingResetTor();
+
 															this->networkingArchives->resetConnection(
 																	this->config.crawlerSleepError
 															);
@@ -3228,6 +3244,8 @@ namespace crawlservpp::Module::Crawler {
 									+ archivedUrl
 									+ "]"
 							);
+
+							this->crawlingResetTor();
 
 							this->networkingArchives->resetConnection(
 									this->config.crawlerSleepError
@@ -3392,6 +3410,20 @@ namespace crawlservpp::Module::Crawler {
 
 		if(archiveOnly)
 			this->archiveRetry = true;
+	}
+
+	// request a new TOR identity if necessary
+	void Thread::crawlingResetTor() {
+		try {
+			if(this->torControl && this->resetTor) {
+				this->torControl.newIdentity();
+
+				this->log(Config::crawlerLoggingDefault, "New TOR identity has been requested.");
+			}
+		}
+		catch(const TorControlException& e) {
+			this->log(Config::crawlerLoggingDefault, "Could not request new TOR identity: " + e.whatStr());
+		}
 	}
 
 	// parse memento reply, get mementos and link to next page if one exists

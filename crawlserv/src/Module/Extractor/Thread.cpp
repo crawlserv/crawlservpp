@@ -207,8 +207,12 @@ namespace crawlservpp::Module::Extractor {
 
 		while(!configWarnings.empty()) {
 			this->log(Config::generalLoggingDefault, "WARNING: " + configWarnings.front());
+
 			configWarnings.pop();
 		}
+
+		if(this->resetTorAfter)
+			this->torControl.setNewIdentityTimer(resetTorAfter);
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
@@ -269,6 +273,10 @@ namespace crawlservpp::Module::Extractor {
 	// extractor tick, throws Thread::Exception
 	void Thread::onTick() {
 		bool skip = false;
+
+		// check whether a new TOR identity needs to be requested
+		if(this->torControl)
+			this->torControl.tick();
 
 		// check for jump in last ID ("time travel")
 		long warpedOver = this->getWarpedOverAndReset();
@@ -1405,6 +1413,8 @@ namespace crawlservpp::Module::Extractor {
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
 
+					this->extractingResetTor();
+
 					this->networking.resetConnection(this->config.generalSleepError);
 				}
 				else {
@@ -1527,6 +1537,8 @@ namespace crawlservpp::Module::Extractor {
 					this->log(Config::generalLoggingDefault, "resets connection...");
 
 					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
+
+					this->extractingResetTor();
 
 					this->networking.resetConnection(this->config.generalSleepError);
 				}
@@ -2220,5 +2232,22 @@ namespace crawlservpp::Module::Extractor {
 
 		if(this->config.generalTiming)
 			this->log(Config::generalLoggingDefault, "saved results in " + timer.tickStr());
+	}
+
+	// request a new TOR identity if necessary
+	void Thread::extractingResetTor() {
+		try {
+			if(this->torControl && this->resetTor) {
+				this->torControl.newIdentity();
+
+				this->log(Config::generalLoggingDefault, "New TOR identity has been requested.");
+			}
+		}
+		catch(const TorControlException& e) {
+			this->log(
+					Config::generalLoggingDefault,
+					"Could not request new TOR identity: " + e.whatStr()
+			);
+		}
 	}
 } /* crawlservpp::Module::Extractor */

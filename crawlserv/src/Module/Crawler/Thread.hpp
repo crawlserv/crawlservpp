@@ -77,6 +77,7 @@ namespace crawlservpp::Module::Crawler {
 		typedef Helper::DateTime::Exception DateTimeException;
 		typedef Helper::Utf8::Exception Utf8Exception;
 		typedef Network::Curl::Exception CurlException;
+		typedef Network::TorControl::Exception TorControlException;
 		typedef Parsing::URI::Exception URIException;
 		typedef Query::Container::Exception QueryException;
 		typedef Struct::NetworkSettings NetworkSettings;
@@ -284,6 +285,7 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
+		void crawlingResetTor();
 
 		// static helper function for memento crawling
 		static std::string parseMementos(

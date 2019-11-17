@@ -273,6 +273,18 @@
 			"description": "Send Referer header when automatically redirected.",
 			"simple": false
 		},
+		"reset.tor": {
+			"type": "bool",
+			"default": true,
+			"description": "Use the TOR control server to request a new identity on connection reset.",
+			"simple": false
+		},
+		"reset.tor.after": {
+			"type": "number",
+			"default": 0,
+			"description": "Use the TOR control server to request a new identity after the given time (in seconds).",
+			"simple": false
+		},
 		"speed.downlimit": {
 			"type": "number",
 			"default": 0,
