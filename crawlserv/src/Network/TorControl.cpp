@@ -93,15 +93,15 @@ namespace crawlservpp::Network {
 					[&command](const asio::error_code& error, std::size_t bytes_transferred) {
 						// data has been sent: check for error and whether data has been completely sent off
 						if(error)
-							std::cerr << "TorControl::newIdentity(): " << error.message() << std::endl;
+							throw Exception("TorControl::newIdentity(): " + error.message());
 						else if(bytes_transferred < command.size())
-							std::cerr
-									<< "TorControl::newIdentity(): TOR command not fully sent ("
-									<< bytes_transferred
-									<< "/"
-									<< command.size()
-									<< "B)"
-									<< std::endl;
+							throw Exception(
+									"TorControl::newIdentity(): TOR command not fully sent (only "
+									+ std::to_string(bytes_transferred)
+									+ "/"
+									+ std::to_string(command.size())
+									+ "B)"
+							);
 					}
 			);
 		}
