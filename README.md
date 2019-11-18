@@ -73,7 +73,7 @@ The program should have been built inside the newly created `build` directory.
 
 Leave this directory with `cd ..` before running it.
 
-Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting the server with `./build/crawlserv config` or any other configuration file as argument. If you want to change the location of the program, make sure to take the [`sql`](crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables on first connection).
+Note that you need to setup a MySQL server, a frontend (e.g. the one in `crawlserv_frontend` on a web server with PHP support) and personalize your configuration before finally starting the server with `./build/crawlserv config` or any other configuration file as argument. Note that the fiven default configuration file **needs the TOR service running** at its default ports 9050 (SOCKS5 proxy) and 9051 (control port). Also note that, if you want to change the location of the program, make sure to take the [`sql`](crawlserv/sql) folder with you as it provides basic commands to initialize the database (creating all the global tables on first connection).
 
 The program will ask you for the password of the chosen MySQL user before it proceeds. When `Server is up and running.` is displayed, switch to the frontend to take control of the command-and-control server.
 
