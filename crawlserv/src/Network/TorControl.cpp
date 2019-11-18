@@ -70,9 +70,9 @@ namespace crawlservpp::Network {
 	// request new identitiy, throws TorControl::Exception
 	void TorControl::newIdentity() {
 		if(!(this->active))
-			throw Exception("TorControl::newIdentity(): No TOR control server set");
+			throw Exception("No TOR control server set");
 
-		// create context and resolver
+		// create resolver
 		asio::ip::tcp::resolver resolver(this->context);
 
 		try {
@@ -98,7 +98,7 @@ namespace crawlservpp::Network {
 
 			// check response code
 			if(response[0] != '2' || response[1] != '5' || response[2] != '0')
-				throw Exception("TorControl::newIdentity(): Authentication failed");
+				throw Exception("Authentication failed");
 
 			// send command to request a new identity
 			const std::string command("SIGNAL NEWNYM\r\n");
@@ -113,13 +113,13 @@ namespace crawlservpp::Network {
 			}
 		}
 		catch(const asio::system_error& e) {
-			throw Exception("TorControl::newIdentity(): " + std::string(e.what()));
+			throw Exception(e.what());
 		}
 	}
 
 	// check whether to get a new identity
 	void TorControl::tick() {
-		// check whether enabled
+		// check whether timer is enabled
 		if(this->active && this->newIdentityAfter) {
 			// get elapsed time (in ms)
 			this->elapsed += this->timer.tick();
