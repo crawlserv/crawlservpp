@@ -188,7 +188,7 @@ if($query)
 <div class="entry-row">
 <div class="entry-label">Name:</div><div class="entry-input">
 
-<input id="query-name" type="text" class="entry-input" value="<?php if($query) echo $queryName; ?>" />
+<input id="query-name" type="text" class="entry-input" value="<?php if($query) echo htmlspecialchars($queryName); ?>" />
 
 </div>
 </div>
