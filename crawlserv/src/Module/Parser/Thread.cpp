@@ -152,17 +152,6 @@ namespace crawlservpp::Module::Parser {
 
 		this->initQueries();
 
-		// check whether ID can be parsed from URL only
-		this->setStatusMessage("Checking for URL-only parsing...");
-
-		this->log(Config::generalLoggingVerbose, "checks for URL-only parsing...");
-
-		this->idFromUrlOnly = std::find(
-				this->config.parsingIdSources.begin(),
-				this->config.parsingIdSources.end(),
-				static_cast<unsigned char>(Config::parsingSourceUrl)
-		) != this->config.parsingIdSources.end();
-
 		{
 			// wait for parsing table lock
 			this->setStatusMessage("Waiting for parsing table...");
