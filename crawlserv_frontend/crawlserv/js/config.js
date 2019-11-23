@@ -1106,7 +1106,10 @@ class Config {
   						|| element.attr("type") == "number"
   						|| element.attr("type") == "date"
   				)
-					if(!($(element).val().length) && $(element).attr("placeholder") !== undefined)
+					if(
+							!($(element).val().length) && $(element).attr("placeholder") !== undefined
+							&& (element.attr("type") != "text" || $(element).attr("placeholder") != "[empty]")
+					)
 						$(element).val($(element).attr("placeholder"));
 			});
 		}
