@@ -361,8 +361,7 @@ namespace crawlservpp::Module::Crawler {
 		const unsigned long completeCounters = std::min({ // number of complete counters (= minimum size of arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
-				this->config.customCountersEnd.size(),
-				this->config.customCountersStep.size()
+				this->config.customCountersEnd.size()
 		});
 
 		// remove counter variable names that are not used
@@ -387,13 +386,6 @@ namespace crawlservpp::Module::Crawler {
 			incompleteCounters = true;
 		}
 
-		// remove step values that are not used
-		if(this->config.customCountersStep.size() > completeCounters) {
-			this->config.customCountersStep.resize(completeCounters);
-
-			incompleteCounters = true;
-		}
-
 		// warn about incomplete counters
 		if(incompleteCounters) {
 			this->warning(
@@ -405,6 +397,12 @@ namespace crawlservpp::Module::Crawler {
 
 			incompleteCounters = false;
 		}
+
+		// remove step values that are not used, add one as step value where none is specified
+		if(this->config.customCountersStep.size() > completeCounters)
+			incompleteCounters = true;
+
+		this->config.customCountersStep.resize(completeCounters, 1);
 
 		// remove aliases that are not used, add empty aliases where none exist
 		if(this->config.customCountersAlias.size() > completeCounters)
