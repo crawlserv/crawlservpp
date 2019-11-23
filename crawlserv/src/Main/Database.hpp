@@ -146,8 +146,9 @@ namespace crawlservpp::Main {
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
 		virtual ~Database();
 
-		// setter
+		// setters
 		void setSleepOnError(unsigned long seconds);
+		void setTimeOut(unsigned long milliseconds);
 
 		// getters
 		const DatabaseSettings& getSettings() const;

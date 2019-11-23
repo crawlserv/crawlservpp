@@ -79,6 +79,7 @@ namespace crawlservpp::Wrapper {
 		// wrapper for setters
 		void setLogging(unsigned short level, unsigned short min, unsigned short verbose);
 		void setSleepOnError(unsigned long seconds);
+		void setTimeOut(unsigned long milliseconds);
 
 		// wrapper for logging function
 		void log(unsigned short level, const std::string& logEntry);
@@ -199,6 +200,12 @@ namespace crawlservpp::Wrapper {
 	// set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
 	inline void Database::setSleepOnError(unsigned long seconds) {
 		this->database.setSleepOnError(seconds);
+	}
+
+	// set the maximum amount of milliseconds for a query before it cancels execution (or 0 for none)
+	//  NOTE: database connection needs to be established
+	inline void Database::setTimeOut(unsigned long milliseconds) {
+		this->database.setTimeOut(milliseconds);
 	}
 
 	// write thread-specific log entry to the database

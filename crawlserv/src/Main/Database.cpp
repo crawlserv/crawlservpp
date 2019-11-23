@@ -114,12 +114,31 @@ namespace crawlservpp::Main {
 	}
 
 	/*
-	 * SETTER
+	 * SETTERS
 	 */
 
 	// set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
 	void Database::setSleepOnError(unsigned long seconds) {
 		this->sleepOnError = seconds;
+	}
+
+	// set the maximum amount of milliseconds for a query before it cancels execution (or 0 for none)
+	//  NOTE: database connection needs to be established
+	void Database::setTimeOut(unsigned long milliseconds) {
+		this->checkConnection();
+
+		try {
+			// create mySQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// set execution timeout if necessary
+			Database::sqlExecute(
+					sqlStatement,
+					"SET SESSION MAX_EXECUTION_TIME = "
+					+ std::to_string(milliseconds)
+			);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setTimeOut", e); }
 	}
 
 	/*
