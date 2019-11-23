@@ -120,6 +120,9 @@ namespace crawlservpp::Module::Parser {
 		this->database.setTargetFields(this->config.parsingFieldNames);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 
+		if(this->config.generalDbTimeOut)
+			this->database.setTimeOut(this->config.generalDbTimeOut);
+
 		// create table names for locking
 		const std::string urlListTable(
 				"crawlserv_"
