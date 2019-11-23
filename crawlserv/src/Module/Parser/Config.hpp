@@ -68,6 +68,7 @@ namespace crawlservpp::Module::Parser {
 
 			// general entries
 			unsigned long generalCacheSize;
+			unsigned long generalDbTimeOut;
 			unsigned int generalLock;
 			unsigned char generalLogging;
 			bool generalNewestOnly;
@@ -118,6 +119,7 @@ namespace crawlservpp::Module::Parser {
 
 	// constructor: set default values
 	inline Config::Entries::Entries() :	generalCacheSize(2500),
+										generalDbTimeOut(0),
 										generalLock(300),
 										generalLogging(Config::generalLoggingDefault),
 										generalNewestOnly(true),
@@ -135,6 +137,7 @@ namespace crawlservpp::Module::Parser {
 	inline void Config::parseOption() {
 		this->category("general");
 		this->option("cache.size", this->config.generalCacheSize);
+		this->option("db.timeout", this->config.generalDbTimeOut);
 		this->option("logging", this->config.generalLogging);
 		this->option("newest.only", this->config.generalNewestOnly);
 		this->option("parse.custom", this->config.generalParseCustom);

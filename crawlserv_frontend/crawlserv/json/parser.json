@@ -12,7 +12,13 @@
 			"simple": true,
 			"position": 7
 		},
-		
+		"db.timeout": {
+			"type": "number",
+			"default": 5000,
+			"min": 0,
+			"decription": "Timeout on mySQL query execution (in milliseconds).",
+			"simple": false
+		},
 		"lock": {
 			"type": "number",
 			"default": 300,
