@@ -674,9 +674,11 @@ namespace crawlservpp::Module::Parser {
 
 		if(this->config.generalNewestOnly) {
 			// parse newest content of URL
+			unsigned long numberOfContents = 0;
 			unsigned long index = 0;
+			bool changedStatus = false;
 
-			while(true) {
+			while(this->isRunning()) {
 				IdString latestContent;
 
 				if(
@@ -686,14 +688,43 @@ namespace crawlservpp::Module::Parser {
 								latestContent
 						)
 				) {
-					if(this->parsingContent(latestContent, parsedId))
+					if(this->parsingContent(latestContent, parsedId)) {
+						if(changedStatus)
+							this->setStatusMessage(this->urls.front().second);
+
 						return 1;
+					}
 
 					++index;
+
+					if(index % 100 == 0) {
+						if(!numberOfContents)
+							numberOfContents = this->database.getNumberOfContents(
+									this->urls.front().first
+							);
+
+						std::ostringstream statusStrStr;
+
+						statusStrStr.imbue(std::locale(""));
+
+						statusStrStr	<< "["
+										<< index
+										<< "/"
+										<< numberOfContents
+										<< "] "
+										<< this->urls.front().second;
+
+						this->setStatusMessage(statusStrStr.str());
+
+						changedStatus = true;
+					}
 				}
 				else
 					break;
 			}
+
+			if(changedStatus)
+				this->setStatusMessage(this->urls.front().second);
 		}
 		else {
 			// parse all contents of URL

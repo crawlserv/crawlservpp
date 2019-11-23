@@ -312,6 +312,17 @@ namespace crawlservpp::Module::Parser {
 			);
 		}
 
+		if(!(this->ps.getNumberOfContents)) {
+			this->log(verbose, "prepares getNumberOfContents()...");
+
+			this->ps.getNumberOfContents = this->addPreparedStatement(
+					"SELECT COUNT(*)"
+					" AS result"
+					" FROM `" + this->urlListTable + "_crawled`"
+					" WHERE url = ?"
+			);
+		}
+
 		if(!(this->ps.getLatestContent)) {
 			this->log(verbose, "prepares getLatestContent()...");
 
@@ -796,6 +807,38 @@ namespace crawlservpp::Module::Parser {
 		return 0;
 	}
 
+	// get number of crawled contents for the ID-specified URL
+	unsigned long Database::getNumberOfContents(unsigned long urlId) {
+		// check argument
+		if(!urlId)
+			throw Exception("Parser::Database::getNumberOfContents(): No URL ID specified");
+
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(!(this->ps.getNumberOfContents))
+			throw Exception("Missing prepared SQL statement for Parser::Database::getNumberOfContents(...)");
+
+		// get prepared SQL statement
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getNumberOfContents));
+
+		// get number of contents for URL from database
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(1, urlId);
+
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next())
+				return sqlResultSet->getUInt64("result");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Parser::Database::getNumberOfContents", e); }
+
+		return 0;
+	}
+
 	// get latest content for the ID-specified URL, return false if there is no content,
 	//  throws Database::Exception
 	bool Database::getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo) {
@@ -813,7 +856,7 @@ namespace crawlservpp::Module::Parser {
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getLatestContent));
 
-		// get URL latest content from database
+		// get latest content for URL from database
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(1, urlId);

@@ -94,6 +94,7 @@ namespace crawlservpp::Module::Parser {
 
 		// parsing functions
 		unsigned int checkParsingTable();
+		unsigned long getNumberOfContents(unsigned long urlId);
 		bool getLatestContent(unsigned long urlId, unsigned long index, IdString& contentTo);
 		std::queue<IdString> getAllContents(unsigned long urlId);
 		unsigned long getContentIdFromParsedId(const std::string& parsedId);
@@ -138,6 +139,7 @@ namespace crawlservpp::Module::Parser {
 			unsigned short renewUrlLockIfOk;
 			unsigned short unLockUrlIfOk;
 			unsigned short checkParsingTable;
+			unsigned short getNumberOfContents;
 			unsigned short getLatestContent;
 			unsigned short getAllContents;
 			unsigned short getContentIdFromParsedId;
