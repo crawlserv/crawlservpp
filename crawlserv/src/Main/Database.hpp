@@ -340,7 +340,7 @@ namespace crawlservpp::Main {
 				}
 				catch(const sql::SQLException &e) {
 					if(e.getErrorCode() != 1213)
-						throw;
+						throw; // no deadlock: re-throw exception
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
@@ -383,7 +383,7 @@ namespace crawlservpp::Main {
 				}
 				catch(const sql::SQLException &e) {
 					if(e.getErrorCode() != 1213)
-						throw;
+						throw; // no deadlock: re-throw exception
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
@@ -426,7 +426,7 @@ namespace crawlservpp::Main {
 				}
 				catch(const sql::SQLException &e) {
 					if(e.getErrorCode() != 1213)
-						throw;
+						throw; // no deadlock: re-throw exception
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
