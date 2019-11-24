@@ -42,7 +42,6 @@ else
 
 if(isset($_POST["query"]))
     $query = $_POST["query"];
-
 ?>
 
 <h2>Queries</h2>
@@ -114,7 +113,8 @@ while($row = $result->fetch_assoc()) {
     $name = $row["name"];
     
     if($first) {
-        if(!isset($query)) $query = $id;
+        if(!isset($query))
+            $query = $id;
         
         $first = false;
     }
@@ -417,7 +417,12 @@ if(isset($_POST["test"]))
 <div class="action-link">
 
 <input type="checkbox" id="query-xml-warnings" /> <span id="query-xml-warnings-label">Show HTML/XML warnings</span> &ensp;
-<input type="checkbox" id="query-new-tab" checked /> Open new tab &ensp;
+<input type="checkbox" id="query-new-tab" <?php 
+
+if(!isset($_POST["test-nonewtab"]))
+    echo "checked";
+
+?> /> Open new tab &ensp;
 
 <a id="query-test" href="#" class="action-link">Test query</a>
 
