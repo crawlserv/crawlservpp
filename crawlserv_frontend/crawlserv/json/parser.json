@@ -251,8 +251,10 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
+			"label": "Ignore IDs:",
 			"description": "Parsed IDs to be ignored.",
-			"simple": false
+			"simple": true,
+			"position": 12
 		},
 		"id.queries": {
 			"type": "array",
