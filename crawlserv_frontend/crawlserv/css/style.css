@@ -609,8 +609,8 @@ input[type="text"].opt {
 	font-size:12px;
 	box-sizing:border-box;
 }
-input[type="text"].opt-array{
-	width:250px;
+input[type="text"].opt-array {
+	width:245px;
 	box-sizing:border-box;
 }
 input[type="number"].opt {
@@ -619,7 +619,7 @@ input[type="number"].opt {
 	box-sizing:border-box;
 }
 input[type="number"].opt-array {
-	width:250px;
+	width:245px;
 	box-sizing:border-box;
 }
 input[type="date"].opt {
@@ -629,7 +629,7 @@ input[type="date"].opt {
 	height:2.2em;
 }
 input[type="date"].opt-array {
-	width:250px;
+	width:245px;
 	box-sizing:border-box;
 	height:2.2em;
 }
@@ -644,7 +644,7 @@ select.opt {
 	box-sizing:border-box;
 }
 select.opt-array {
-	width:250px;
+	width:245px;
 	font-size:14px;
 	box-sizing:border-box;
 }
