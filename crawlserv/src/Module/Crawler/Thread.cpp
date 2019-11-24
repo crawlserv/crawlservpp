@@ -341,7 +341,7 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerTiming)
 				timerArchives.start();
 
-			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive, crawled)) {
+			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive, !crawled)) {
 				if(crawled) {
 					// stop timers
 					if(this->config.crawlerTiming) {
@@ -2912,306 +2912,306 @@ namespace crawlservpp::Module::Crawler {
 							// check content type
 							const std::string contentType(this->networkingArchives->getContentType());
 
-							if(contentType == "application/link-format") {
-								if(!archivedContent.empty()) {
-									// parse memento response and get next memento page if available
-									std::queue<Memento> mementos;
-									std::queue<std::string> warnings;
+							if(contentType != "application/link-format")
+								break;
 
-									archivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
+							if(archivedContent.empty())
+								break;
 
-									// if there are warnings, just log them (maybe mementos were partially parsed)
-									while(!warnings.empty()) {
-										this->log(
-												Config::crawlerLoggingDefault,
-												"Memento parsing WARNING: "
-												+ warnings.front()
-												+ " ["
-												+ url.second
-												+ "]"
-										);
+							// parse memento response and get next memento page if available
+							std::queue<Memento> mementos;
+							std::queue<std::string> warnings;
 
-										warnings.pop();
-									}
+							archivedUrl = Thread::parseMementos(archivedContent, warnings, mementos);
 
-									// save status message
-									const std::string statusMessage(this->getStatusMessage());
+							// if there are warnings, just log them (maybe mementos were partially parsed)
+							while(!warnings.empty()) {
+								this->log(
+										Config::crawlerLoggingDefault,
+										"Memento parsing WARNING: "
+										+ warnings.front()
+										+ " ["
+										+ url.second
+										+ "]"
+								);
 
-									// go through all mementos
-									unsigned long counter = 0;
-									const unsigned long total = mementos.size();
+								warnings.pop();
+							}
 
-									while(!mementos.empty() && this->isRunning()) {
-										std::string timeStamp(mementos.front().timeStamp);
+							// save status message
+							const std::string statusMessage(this->getStatusMessage());
 
-										// set status
-										++counter;
+							// go through all mementos
+							unsigned long counter = 0;
+							const unsigned long total = mementos.size();
 
-										std::ostringstream statusStrStr;
+							while(!mementos.empty() && this->isRunning()) {
+								std::string timeStamp(mementos.front().timeStamp);
 
-										statusStrStr.imbue(std::locale(""));
+								// set status
+								++counter;
 
-										statusStrStr << "[" + this->config.crawlerArchivesNames.at(n) + ": "
-													 << counter << "/" << total << "] " << statusMessage;
+								std::ostringstream statusStrStr;
 
-										this->setStatusMessage(statusStrStr.str());
+								statusStrStr.imbue(std::locale(""));
 
-										// lock URL if possible
-										this->lockTime = this->database.lockUrlIfOk(
-												url.first,
-												this->lockTime,
-												this->config.crawlerLock
-										);
+								statusStrStr << "[" + this->config.crawlerArchivesNames.at(n) + ": "
+											 << counter << "/" << total << "] " << statusMessage;
 
-										if(this->lockTime.empty()) {
-											success = false;
-											skip = true;
+								this->setStatusMessage(statusStrStr.str());
 
-											break;
-										}
+								// lock URL if possible
+								this->lockTime = this->database.lockUrlIfOk(
+										url.first,
+										this->lockTime,
+										this->config.crawlerLock
+								);
 
-										// loop over references / memento retries
-										// [while checking whether thread is still running]
-										while(this->isRunning()) {
-											// check whether archived content already exists in database
-											if(!(this->database.isArchivedContentExists(
-													url.first,
-													timeStamp)))
-											{
-												// check whether thread is till running
-												if(!(this->isRunning()))
-													break;
+								if(this->lockTime.empty()) {
+									success = false;
+									skip = true;
 
-												// get archived content
-												archivedContent = "";
+									break;
+								}
 
-												try {
-													this->networkingArchives->getContent(
-															mementos.front().url,
-															false,
-															archivedContent,
-															this->config.crawlerRetryHttp
-													);
-
-													// check HTTP response code
-													if(!(this->crawlingCheckResponseCode(
-															mementos.front().url,
-															this->networkingArchives->getResponseCode()
-													)))
-														break;
-
-													// check whether thread is still running
-													if(!(this->isRunning()))
-														break;
-
-													// check archived content
-													if(archivedContent.substr(0, 17) == "found capture at ") {
-
-														// found a reference string: get timestamp
-														try {
-															Helper::DateTime::convertSQLTimeStampToTimeStamp(
-																	timeStamp
-															);
-
-															unsigned long subUrlPos = mementos.front().url.find(timeStamp);
-
-															if(subUrlPos != std::string::npos) {
-																subUrlPos += timeStamp.length();
-																timeStamp = archivedContent.substr(17, 14);
-
-																// get URL and validate timestamp
-																mementos.front().url =
-																		this->config.crawlerArchivesUrlsMemento.at(n)
-																		+ timeStamp
-																		+ mementos.front().url.substr(subUrlPos);
-
-																try {
-																	Helper::DateTime::convertTimeStampToSQLTimeStamp(
-																			timeStamp
-																	);
-
-																	// follow reference
-																	continue;
-																}
-																catch(const DateTimeException& e) {
-																	// log warning if necessary (and ignore reference)
-																	this->log(
-																			Config::crawlerLoggingDefault,
-																			"WARNING: "
-																			+ e.whatStr()
-																			+ " from "
-																			+ this->config.crawlerArchivesNames.at(n)
-																			+ " ["
-																			+ url.second
-																			+ "]."
-																	);
-																}
-															}
-															else
-																// log warning if necessary (and ignore reference)
-																this->log(
-																		Config::crawlerLoggingDefault,
-																		"WARNING: Could not find timestamp in "
-																		+ mementos.front().url
-																		+ " ["
-																		+ url.second
-																		+ "]."
-																);
-														}
-														catch(const DateTimeException &e) {
-															// log warning (and ignore reference)
-															this->log(
-																	Config::crawlerLoggingDefault,
-																	"WARNING: "
-																	+ e.whatStr()
-																	+ " in "
-																	+ mementos.front().url
-																	+ " ["
-																	+ url.second
-																	+ "]."
-															);
-														}
-													}
-													else {
-														// set content as target for subsequent queries
-														this->setQueryTarget(archivedContent, mementos.front().url);
-
-														// get content type
-														const std::string contentType(
-																this->networkingArchives->getContentType()
-														);
-
-														// add archived content to database
-														this->database.saveArchivedContent(
-																url.first,
-																mementos.front().timeStamp,
-																this->networkingArchives->getResponseCode(),
-																contentType,
-																archivedContent
-														);
-
-														// extract URLs
-														std::vector<std::string> urls(
-																this->crawlingExtractUrls(
-																		url.second,
-																		contentType
-																)
-														);
-
-														if(!urls.empty()) {
-															// parse and add URLs
-															checkedUrlsTo += urls.size();
-
-															this->crawlingParseAndAddUrls(
-																	url.second,
-																	urls,
-																	newUrlsTo,
-																	true
-															);
-														}
-
-														// clear query target
-														this->clearQueryTarget();
-													}
-												}
-												catch(const CurlException& e) {
-													if(this->config.crawlerRetryArchive) {
-														// error while getting content:
-														//  check type of error i.e. last cURL code
-														if(
-																this->crawlingCheckCurlCode(
-																		this->networkingArchives->getCurlCode(),
-																		mementos.front().url
-																)
-														) {
-															// log error if necessary
-															this->log(
-																	Config::crawlerLoggingDefault,
-																	e.whatStr()
-																	+ " ["
-																	+ mementos.front().url
-																	+ "]."
-															);
-
-															this->log(
-																	Config::crawlerLoggingDefault,
-																	"resets connection to "
-																	+ this->config.crawlerArchivesNames.at(n)
-																	+ "..."
-															);
-
-															// reset connection and retry
-															this->setStatusMessage(
-																	"ERROR "
-																	+ e.whatStr()
-																	+ " ["
-																	+ mementos.front().url
-																	+ "]"
-															);
-
-															this->crawlingResetTor();
-
-															this->networkingArchives->resetConnection(
-																	this->config.crawlerSleepError
-															);
-
-															this->crawlingRetry(url, true);
-
-															return false;
-														}
-													}
-													// log cURL error if necessary and skip
-													else
-														this->log(
-																Config::crawlerLoggingDefault,
-																e.whatStr()
-																+ " - skips..."
-																+ " ["
-																+ mementos.front().url
-																+ "]"
-														);
-												}
-												catch(const Utf8Exception& e) {
-													// write UTF-8 error to log if necessary (and skip)
-													this->log(
-															Config::crawlerLoggingDefault,
-															"WARNING: "
-															+ e.whatStr()
-															+ " - skips..."
-															+ " ["
-															+ mementos.front().url
-															+ "]"
-													);
-												}
-											}
-
-											// exit loop over references/memento retries
-											break;
-
-										} // [end of loop over references/memento retries]
-
-										// check whether thread is till running
-										if(!(this->isRunning()))
-											break;
-
-										// remove memento from queue
-										mementos.pop();
-									} // [end of loop over mementos]
+								// loop over references / memento retries
+								// [while checking whether thread is still running]
+								while(this->isRunning()) {
+									// check whether archived content already exists in database
+									if(this->database.isArchivedContentExists(
+											url.first,
+											timeStamp))
+										break;
 
 									// check whether thread is till running
 									if(!(this->isRunning()))
 										break;
 
-									// restore previous status message
-									this->setStatusMessage(statusMessage);
+									// get archived content
+									archivedContent = "";
 
-									// check for next memento page
-									if(archivedUrl.empty())
-										break;
-								}
-								else break;
-							}
-							else break;
+									try {
+										this->networkingArchives->getContent(
+												mementos.front().url,
+												false,
+												archivedContent,
+												this->config.crawlerRetryHttp
+										);
+
+										// check HTTP response code
+										if(!(this->crawlingCheckResponseCode(
+												mementos.front().url,
+												this->networkingArchives->getResponseCode()
+										)))
+											break;
+
+										// check whether thread is still running
+										if(!(this->isRunning()))
+											break;
+
+										// check archived content
+										if(archivedContent.substr(0, 17) == "found capture at ") {
+
+											// found a reference string: get timestamp
+											try {
+												Helper::DateTime::convertSQLTimeStampToTimeStamp(
+														timeStamp
+												);
+
+												unsigned long subUrlPos = mementos.front().url.find(timeStamp);
+
+												if(subUrlPos != std::string::npos) {
+													subUrlPos += timeStamp.length();
+													timeStamp = archivedContent.substr(17, 14);
+
+													// get URL and validate timestamp
+													mementos.front().url =
+															this->config.crawlerArchivesUrlsMemento.at(n)
+															+ timeStamp
+															+ mementos.front().url.substr(subUrlPos);
+
+													try {
+														Helper::DateTime::convertTimeStampToSQLTimeStamp(
+																timeStamp
+														);
+
+														// follow reference
+														continue;
+													}
+													catch(const DateTimeException& e) {
+														// log warning if necessary (and ignore reference)
+														this->log(
+																Config::crawlerLoggingDefault,
+																"WARNING: "
+																+ e.whatStr()
+																+ " from "
+																+ this->config.crawlerArchivesNames.at(n)
+																+ " ["
+																+ url.second
+																+ "]."
+														);
+													}
+												}
+												else
+													// log warning if necessary (and ignore reference)
+													this->log(
+															Config::crawlerLoggingDefault,
+															"WARNING: Could not find timestamp in "
+															+ mementos.front().url
+															+ " ["
+															+ url.second
+															+ "]."
+													);
+											}
+											catch(const DateTimeException &e) {
+												// log warning (and ignore reference)
+												this->log(
+														Config::crawlerLoggingDefault,
+														"WARNING: "
+														+ e.whatStr()
+														+ " in "
+														+ mementos.front().url
+														+ " ["
+														+ url.second
+														+ "]."
+												);
+											}
+										}
+										else {
+											// set content as target for subsequent queries
+											this->setQueryTarget(archivedContent, mementos.front().url);
+
+											// get content type
+											const std::string contentType(
+													this->networkingArchives->getContentType()
+											);
+
+											// add archived content to database
+											this->database.saveArchivedContent(
+													url.first,
+													mementos.front().timeStamp,
+													this->networkingArchives->getResponseCode(),
+													contentType,
+													archivedContent
+											);
+
+											// extract URLs
+											std::vector<std::string> urls(
+													this->crawlingExtractUrls(
+															url.second,
+															contentType
+													)
+											);
+
+											if(!urls.empty()) {
+												// parse and add URLs
+												checkedUrlsTo += urls.size();
+
+												this->crawlingParseAndAddUrls(
+														url.second,
+														urls,
+														newUrlsTo,
+														true
+												);
+											}
+
+											// clear query target
+											this->clearQueryTarget();
+										}
+									}
+									catch(const CurlException& e) {
+										if(this->config.crawlerRetryArchive) {
+											// error while getting content:
+											//  check type of error i.e. last cURL code
+											if(
+													this->crawlingCheckCurlCode(
+															this->networkingArchives->getCurlCode(),
+															mementos.front().url
+													)
+											) {
+												// log error if necessary
+												this->log(
+														Config::crawlerLoggingDefault,
+														e.whatStr()
+														+ " ["
+														+ mementos.front().url
+														+ "]."
+												);
+
+												this->log(
+														Config::crawlerLoggingDefault,
+														"resets connection to "
+														+ this->config.crawlerArchivesNames.at(n)
+														+ "..."
+												);
+
+												// reset connection and retry
+												this->setStatusMessage(
+														"ERROR "
+														+ e.whatStr()
+														+ " ["
+														+ mementos.front().url
+														+ "]"
+												);
+
+												this->crawlingResetTor();
+
+												this->networkingArchives->resetConnection(
+														this->config.crawlerSleepError
+												);
+
+												this->crawlingRetry(url, true);
+
+												return false;
+											}
+										}
+										// log cURL error if necessary and skip
+										else
+											this->log(
+													Config::crawlerLoggingDefault,
+													e.whatStr()
+													+ " - skips..."
+													+ " ["
+													+ mementos.front().url
+													+ "]"
+											);
+									}
+									catch(const Utf8Exception& e) {
+										// write UTF-8 error to log if necessary (and skip)
+										this->log(
+												Config::crawlerLoggingDefault,
+												"WARNING: "
+												+ e.whatStr()
+												+ " - skips..."
+												+ " ["
+												+ mementos.front().url
+												+ "]"
+										);
+									}
+
+									// exit loop over references/memento retries
+									break;
+
+								} // [end of loop over references/memento retries]
+
+								// check whether thread is till running
+								if(!(this->isRunning()))
+									break;
+
+								// remove memento from queue
+								mementos.pop();
+							} // [end of loop over mementos]
+
+							// check whether thread is till running
+							if(!(this->isRunning()))
+								break;
+
+							// restore previous status message
+							this->setStatusMessage(statusMessage);
+
+							// check for next memento page
+							if(archivedUrl.empty())
+								break;
 						}
 						else {
 							success = false;
@@ -3271,7 +3271,7 @@ namespace crawlservpp::Module::Crawler {
 
 					if(!success && this->config.crawlerRetryArchive) {
 						if(skip)
-							this->crawlingSkip(url, unlockUrl);
+							this->crawlingSkip(url, true);
 						else
 							this->crawlingRetry(url, true);
 
@@ -3300,14 +3300,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Crawler::Thread::crawlingSkip(): No URL specified");
 
 		// set URL to finished if URL lock is okay
-		try {
-			this->database.setUrlFinishedIfOk(url.first, this->lockTime);
-		}
-		catch(Main::Exception& e) {
-			e.append("[" + url.second + "]");
-
-			throw e;
-		}
+		this->database.setUrlFinishedIfOk(url.first, this->lockTime);
 
 		// reset lock time
 		this->lockTime = "";
@@ -3321,7 +3314,7 @@ namespace crawlservpp::Module::Crawler {
 			else
 				this->startCrawled = true;
 		}
-		else {
+		else if(this->manualOff) {
 			// automatic mode: update thread status
 			this->setLast(url.first);
 
@@ -3364,7 +3357,7 @@ namespace crawlservpp::Module::Crawler {
 			else
 				this->startCrawled = true;
 		}
-		else {
+		else if(this->manualOff) {
 			// automatic mode: update thread status
 			this->setLast(url.first);
 
