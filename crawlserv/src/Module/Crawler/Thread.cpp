@@ -1282,6 +1282,9 @@ namespace crawlservpp::Module::Crawler {
 				this->log(Config::crawlerLoggingDefault, "switches to recoverable AUTOMATIC mode.");
 
 				this->manualOff = true;
+
+				// reset last URL (start from the beginning)
+				this->nextUrl = IdString();
 			}
 
 			// check for retry
