@@ -697,7 +697,7 @@ namespace crawlservpp::Module::Parser {
 
 					++index;
 
-					if(index % 10 == 0) {
+					if(index % 100 == 0) {
 						if(!numberOfContents)
 							numberOfContents = this->database.getNumberOfContents(
 									this->urls.front().first
