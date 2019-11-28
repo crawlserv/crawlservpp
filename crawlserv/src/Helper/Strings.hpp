@@ -124,6 +124,8 @@ namespace crawlservpp::Helper::Strings {
 
 	char getFirstOrEscapeChar(const std::string& from);
 
+	void encodePercentage(std::string& stringToEncode);
+
 	void utfTidy(std::string& stringToTidy);
 
 	bool checkDomainName(const std::string& name);
@@ -577,6 +579,29 @@ namespace crawlservpp::Helper::Strings {
 		}
 
 		return 0;
+	}
+
+	// encode percentage sign if not followed by two-digit hexadecimal number
+	inline void encodePercentage(std::string& stringToEncode) {
+		unsigned long pos = 0;
+
+		do {
+			pos = stringToEncode.find('%', pos);
+
+			if(pos == std::string::npos)
+				break;
+
+			if(
+					pos + 3 > stringToEncode.length()
+					|| !isHex(stringToEncode.substr(pos + 1, 2))
+			) {
+				stringToEncode.insert(pos + 1, "25");
+
+				pos += 3;
+			}
+			else
+				++pos;
+		} while(pos < stringToEncode.length());
 	}
 
 	// remove new lines and unnecessary spaces (including Unicode white spaces)

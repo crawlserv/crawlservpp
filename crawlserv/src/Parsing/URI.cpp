@@ -388,6 +388,9 @@ namespace crawlservpp::Parsing {
 			pos = end + 1;
 		}
 
+		// replace % with %25 if not followed by a two-digit hexadecimal number
+		Helper::Strings::encodePercentage(result);
+
 		return result;
 	}
 

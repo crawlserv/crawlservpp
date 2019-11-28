@@ -2714,27 +2714,6 @@ namespace crawlservpp::Module::Crawler {
 				// replace &amp; with &
 				Helper::Strings::replaceAll(urls.at(n - 1), "&amp;", "&", true);
 
-				// replace % with %25 if not followed by a two-digit hexadecimal number
-				unsigned long p = 0;
-
-				do {
-					p = urls.at(n - 1).find('%', p);
-
-					if(p == std::string::npos)
-						break;
-
-					if(
-							p + 3 > urls.at(n - 1).length()
-							|| !Helper::Strings::isHex(urls.at(n - 1).substr(p + 1, 2))
-					) {
-						urls.at(n - 1).insert(p + 1, "25");
-
-						p += 3;
-					}
-					else
-						++p;
-				} while(p < urls.at(n - 1).length());
-
 				// parse link
 				try {
 					if(this->parser->parseLink(urls.at(n - 1))) {
