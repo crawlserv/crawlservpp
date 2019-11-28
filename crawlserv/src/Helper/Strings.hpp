@@ -57,6 +57,7 @@ namespace crawlservpp::Helper::Strings {
 	);
 
 	bool stringToBool(std::string inputString);
+	bool isHex(const std::string& inputString);
 
 	void trim(std::string& stringToTrim);
 
@@ -202,6 +203,11 @@ namespace crawlservpp::Helper::Strings {
 		strStr >> std::boolalpha >> result;
 
 		return result;
+	}
+
+	// check whether a string contains hexadecimal digits only
+	inline bool isHex(const std::string& inputString) {
+		return inputString.find_first_not_of("0123456789AaBbCcDdEeFf") == std::string::npos;
 	}
 
 	// trim a string (NOTE: Only ASCII white spaces will be processed!)
