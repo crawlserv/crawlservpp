@@ -304,7 +304,7 @@
 		"retry.http": {
 			"type": "array",
 			"item-type": "number",
-			"default": [ 429, 502, 503, 504 ],
+			"default": [ 429, 502, 503, 504, 521, 522, 524 ],
 			"min": 400,
 			"max": 599,
 			"description": "HTTP errors that will be handled like connection errors.",
