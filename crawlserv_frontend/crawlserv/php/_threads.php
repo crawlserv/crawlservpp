@@ -360,7 +360,7 @@ if($num) {
         echo "</div>\n";
         
         echo "<div class=\"action-link-box\">\n";
-        echo "<div class=\"action-link\">\n";
+        echo "<div class=\"action-link\">";
         
         if($row["paused"])
             echo "<a href=\"#\" class=\"action-link thread-unpause\" data-id=\""

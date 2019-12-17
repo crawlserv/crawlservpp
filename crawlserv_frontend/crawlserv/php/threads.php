@@ -76,28 +76,28 @@ echo rowWebsiteSelect(false, false, true);
 
 <select id="module-select" class="entry-input" data-m="threads">
 
-<option value="crawler" <?php
+<option value="crawler"<?php
 
 if($module == "crawler")
     echo " selected";
 
 ?>>Crawler</option>
 
-<option value="parser" <?php
+<option value="parser"<?php
 
 if($module == "parser")
     echo " selected";
 
 ?>>Parser</option>
 
-<option value="extractor" <?php
+<option value="extractor"<?php
 
 if($module == "extractor")
     echo " selected";
 
 ?>>Extractor</option>
 
-<option value="analyzer" <?php
+<option value="analyzer"<?php
 if($module == "analyzer")
     echo " selected";
 
