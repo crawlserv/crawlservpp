@@ -586,7 +586,7 @@ div.opt-dot {
 div.opt-label {
 	font-size:16px;
 	display:inline-block;
-	width:220px;
+	width:219px;
 }
 div.opt-value {
 	display:inline-block;
@@ -600,7 +600,7 @@ div.opt-array-item {
 }
 div.opt-empty {
 	display:inline-block;
-	width:288px;
+	width:292px;
 	color:#b3b3b3;
 	font-size:10px;
 }
@@ -610,7 +610,7 @@ input[type="text"].opt {
 	box-sizing:border-box;
 }
 input[type="text"].opt-array {
-	width:245px;
+	width:254px;
 	box-sizing:border-box;
 }
 input[type="number"].opt {
@@ -619,7 +619,7 @@ input[type="number"].opt {
 	box-sizing:border-box;
 }
 input[type="number"].opt-array {
-	width:245px;
+	width:254px;
 	box-sizing:border-box;
 }
 input[type="date"].opt {
@@ -629,7 +629,7 @@ input[type="date"].opt {
 	height:2.2em;
 }
 input[type="date"].opt-array {
-	width:245px;
+	width:254px;
 	box-sizing:border-box;
 	height:2.2em;
 }
@@ -644,7 +644,7 @@ select.opt {
 	box-sizing:border-box;
 }
 select.opt-array {
-	width:245px;
+	width:254px;
 	font-size:14px;
 	box-sizing:border-box;
 }
