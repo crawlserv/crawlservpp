@@ -592,6 +592,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -627,6 +636,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
@@ -836,6 +854,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -880,6 +907,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
@@ -1036,8 +1072,6 @@ namespace crawlservpp::Query {
 						// get single result from the JSONPointer query
 						this->queriesXPathJsonPointer.at(query.index).second.getFirst(parsedJson, resultTo);
 					}
-
-					return true;
 				}
 				catch(const XPathException& e) {
 					warningsTo.emplace(
@@ -1057,6 +1091,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -1070,17 +1113,31 @@ namespace crawlservpp::Query {
 
 					this->queriesXPathJsonPath.at(query.index).first.getFirst(this->parsedXML, json);
 
-					if(json.empty())
+					if(json.empty()) {
 						resultTo = "";
-					else {
-						// temporarily parse JSON using jsoncons
-						const auto parsedJson(Helper::Json::parseCons(json));
 
-						// get single result from the JSONPath query
-						this->queriesXPathJsonPath.at(query.index).second.getFirst(parsedJson, resultTo);
+						return true;
 					}
+					else {
+						try {
+							// temporarily parse JSON using jsoncons
+							const auto parsedJson(Helper::Json::parseCons(json));
 
-					return true;
+							// get single result from the JSONPath query
+							this->queriesXPathJsonPath.at(query.index).second.getFirst(parsedJson, resultTo);
+
+							return true;
+						}
+						catch(const JsonException& e) {
+							warningsTo.emplace(
+									"WARNING: JSONPath error - "
+									+ e.whatStr()
+									+ " ["
+									+ *(this->queryTargetSourcePtr)
+									+ "]."
+							);
+						}
+					}
 				}
 				catch(const XPathException& e) {
 					warningsTo.emplace(
@@ -1092,6 +1149,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
@@ -1308,6 +1374,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -1352,6 +1427,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
@@ -1529,6 +1613,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -1564,6 +1657,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
@@ -1780,6 +1882,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -1824,6 +1935,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
@@ -2041,6 +2161,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -2077,6 +2206,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
@@ -2342,6 +2480,15 @@ namespace crawlservpp::Query {
 							+ "]."
 					);
 				}
+				catch(const JsonException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
 			}
 
 			break;
@@ -2399,6 +2546,15 @@ namespace crawlservpp::Query {
 					);
 				}
 				catch(const JsonPathException& e) {
+					warningsTo.emplace(
+							"WARNING: JSONPath error - "
+							+ e.whatStr()
+							+ " ["
+							+ *(this->queryTargetSourcePtr)
+							+ "]."
+					);
+				}
+				catch(const JsonException& e) {
 					warningsTo.emplace(
 							"WARNING: JSONPath error - "
 							+ e.whatStr()
