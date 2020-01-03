@@ -80,6 +80,9 @@ namespace crawlservpp::Parsing {
 		if(repairCData)
 			cDataRepair(xml);
 
+		// remove invalid conditional comments
+		replaceInvalidConditionalComments(xml);
+
 		// create XML document
 		this->doc = std::make_unique<pugi::xml_document>();
 
@@ -150,7 +153,7 @@ namespace crawlservpp::Parsing {
 		resultTo += out.str();
 	}
 
-	// internal static helper function: try to fix CData error (illegal ']]>' inside CData tag)
+	// internal static helper function: try to fix CData error (invalid ']]>' inside CData tag)
 	void XML::cDataRepair(std::string& content) {
 		auto pos = content.find("<![CDATA[");
 
@@ -182,6 +185,32 @@ namespace crawlservpp::Parsing {
 
 				pos = next + 9;
 			}
+		}
+	}
+
+	// internal static helper function: replace invalid conditional comments (e.g. created by MS Excel)
+	void XML::replaceInvalidConditionalComments(std::string& content) {
+		size_t pos = 0;
+
+		while(pos < content.length()) {
+			// find next invalid conditional comment
+			pos = content.find("<![if ", pos);
+
+			if(pos == std::string::npos)
+				break;
+
+			// find end of invalid conditional comment
+			const auto end = content.find("<![endif]>", pos + 6);
+
+			if(end == std::string::npos)
+				break;
+
+			// insert commenting to make conditional comment valid (X)HTML
+			content.insert(pos + 2, "--");
+			content.insert(end - 6, "--"); // end - 8 (jump before "[endif]>") + 2 (consider that "--" has been added)
+
+			// jump to the end of the changed conditional comment
+			pos = end + 4; // (consider that 2x "--" have been added)
 		}
 	}
 

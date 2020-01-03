@@ -88,13 +88,14 @@ namespace crawlservpp::Parsing {
 		// unique pointer to (pugi)XML document
 		std::unique_ptr<pugi::xml_document> doc;
 
-		// internal static helper function
-		static void cDataRepair(std::string& content);
-
 	private:
 		// options
 		bool warnings;
 		unsigned int errors;
+
+		// internal static helper functions
+		static void cDataRepair(std::string& content);
+		static void replaceInvalidConditionalComments(std::string& content);
 	};
 
 } /* crawlservpp::Parsing */
