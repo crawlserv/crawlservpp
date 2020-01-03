@@ -292,7 +292,7 @@ namespace crawlservpp::Helper::Json {
 			if(json[n] == '\\') {
 				bool validEscape = false;
 
-				if(n > json.length() - 1)
+				if(n < json.length() - 1)
 					switch(::tolower(json[n + 1])) {
 					// check for escaped backslash
 					case '\\':
@@ -302,7 +302,7 @@ namespace crawlservpp::Helper::Json {
 
 						break;
 
-					// check for other single-digit escape sequence names
+					// check for single-digit escape sequence names
 					case 'b':
 					case 'f':
 					case 'n':
@@ -317,12 +317,12 @@ namespace crawlservpp::Helper::Json {
 
 					// check for Unicode character references
 					case 'u':
-						if(n > json.length() - 5)
+						if(n < json.length() - 5)
 							validEscape =
-									isxdigit(json[n + 2])
-									&& isxdigit(json[n + 3])
-									&& isxdigit(json[n + 4])
-									&& isxdigit(json[n + 5]);
+									::isxdigit(json[n + 2])
+									&& ::isxdigit(json[n + 3])
+									&& ::isxdigit(json[n + 4])
+									&& ::isxdigit(json[n + 5]);
 
 						break;
 
