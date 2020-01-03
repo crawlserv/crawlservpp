@@ -296,7 +296,9 @@ namespace crawlservpp::Helper::Json {
 					switch(::tolower(json[n + 1])) {
 					// check for escaped backslash
 					case '\\':
-						++n;	// do not check the following (escaped) backslash
+						++n;					// do not check the following (escaped) backslash...
+
+						result.push_back('\\');	// ...but add the ignored backslash to the result
 
 						validEscape = true;
 
