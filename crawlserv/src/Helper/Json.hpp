@@ -41,6 +41,7 @@
 #include "../_extern/rapidjson/include/rapidjson/stringbuffer.h"
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
 
+#include <cctype>	// ::iscntrl
 #include <string>	// std::string
 #include <tuple>	// std::get(std::tuple), std::tuple
 #include <utility>	// std::pair
@@ -275,9 +276,16 @@ namespace crawlservpp::Helper::Json {
 
 	// parse JSON using RapidJSON, throws Json::Exception
 	inline rapidjson::Document parseRapid(const std::string& json) {
+		// remove control characters from input
+		std::string jsonCopy;
+
+		for(auto c : json)
+			if(!::iscntrl(c))
+				jsonCopy.push_back(c);
+
 		rapidjson::Document doc;
 
-		doc.Parse(json);
+		doc.Parse(jsonCopy);
 
 		if(doc.HasParseError()) {
 			std::string exceptionStr(rapidjson::GetParseError_En(doc.GetParseError()));
@@ -285,16 +293,16 @@ namespace crawlservpp::Helper::Json {
 			exceptionStr += " at \'";
 
 			if(doc.GetErrorOffset() > 25)
-				exceptionStr += json.substr(doc.GetErrorOffset() - 25, 25);
+				exceptionStr += jsonCopy.substr(doc.GetErrorOffset() - 25, 25);
 			else if(doc.GetErrorOffset() > 0)
-				exceptionStr += json.substr(0, doc.GetErrorOffset());
+				exceptionStr += jsonCopy.substr(0, doc.GetErrorOffset());
 
 			exceptionStr += "[!]";
 
-			if(json.size() > doc.GetErrorOffset() + 25)
-				exceptionStr += json.substr(doc.GetErrorOffset(), 25);
-			else if(json.size() > doc.GetErrorOffset())
-				exceptionStr += json.substr(doc.GetErrorOffset());
+			if(jsonCopy.size() > doc.GetErrorOffset() + 25)
+				exceptionStr += jsonCopy.substr(doc.GetErrorOffset(), 25);
+			else if(jsonCopy.size() > doc.GetErrorOffset())
+				exceptionStr += jsonCopy.substr(doc.GetErrorOffset());
 
 			exceptionStr += "\'";
 
@@ -306,6 +314,13 @@ namespace crawlservpp::Helper::Json {
 
 	// parse JSON using jsoncons, throws Json::Exception
 	inline jsoncons::json parseCons(const std::string& json) {
+		// remove control characters from input
+		std::string jsonCopy;
+
+		for(auto c : json)
+			if(!::iscntrl(c))
+				jsonCopy.push_back(c);
+
 		try {
 			jsoncons::json result = jsoncons::json::parse(json);
 
