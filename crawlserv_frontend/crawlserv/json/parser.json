@@ -163,15 +163,19 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
+			"label": "Field date/time formats:",
 			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
-			"simple": false
+			"simple": true,
+			"position": 12
 		},
 		"field.datetime.locales": {
 			"type": "array",
 			"item-type": "locale",
 			"default": [],
+			"label": "Field date/time locales:",
 			"description": "Locale used when converting the field with the same array index to a date/time (ignored if no date/time format has been specified for the field).",
-			"simple": false
+			"simple": true,
+			"position": 13
 		},
 		"field.delimiters": {
 			"type": "array",
@@ -235,7 +239,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"label": "Field results as tidied texts:",
+			"label": "Field results as tidied text:",
 			"description": "Remove line breaks and unnecessary spaces when parsing the field with the same array index.",
 			"simple": true,
 			"position": 11
@@ -254,7 +258,7 @@
 			"label": "Ignore IDs:",
 			"description": "Parsed IDs to be ignored.",
 			"simple": true,
-			"position": 12
+			"position": 14
 		},
 		"id.queries": {
 			"type": "array",
