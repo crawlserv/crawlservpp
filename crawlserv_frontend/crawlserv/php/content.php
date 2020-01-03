@@ -342,8 +342,10 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     $result->close();
     
     // search for matching URL with content
-    if(strlen($_POST["urltext"]) > 0 AND substr($_POST["urltext"], 0, 1) == "/")
-        $_POST["urltext"] = substr($_POST["urltext"], 1);
+    $trimmedUrl = trim($_POST["urltext"]);
+    
+    if(strlen($trimmedUrl) > 0 AND substr($trimmedUrl, 0, 1) == "/")
+        $trimmedUrl = substr($trimmedUrl, 1);
     
     $sql = "SELECT a.id AS id, a.url AS url".
             " FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a,".
@@ -358,7 +360,7 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     if(!$stmt)
         die("ERROR: Could not prepare SQL statement to search for URL");
     
-    $argument = "/".$_POST["urltext"]."%";
+        $argument = "/".$trimmedUrl."%";
     
     $stmt->bind_param("s", $argument);
     
@@ -379,7 +381,7 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     else {
         $is404 = true;
         $url = 0;
-        $urltext = "/".$_POST["urltext"];
+        $urltext = "/".$trimmedUrl;
     }
     
     $result->close();
