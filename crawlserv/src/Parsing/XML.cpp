@@ -207,7 +207,7 @@ namespace crawlservpp::Parsing {
 
 			// insert commenting to make conditional comment valid (X)HTML
 			content.insert(pos + 2, "--");
-			content.insert(end - 6, "--"); // end - 8 (jump before "[endif]>") + 2 (consider that "--" has been added)
+			content.insert(end + 11, "--"); // (consider that "--" has been added)
 
 			// jump to the end of the changed conditional comment
 			pos = end + 4; // (consider that 2x "--" have been added)
