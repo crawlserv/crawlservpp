@@ -41,7 +41,7 @@
 #include "../_extern/rapidjson/include/rapidjson/stringbuffer.h"
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
 
-#include <cctype>	// ::iscntrl
+#include <cctype>	// ::iscntrl, ::isxdigit, ::tolower
 #include <string>	// std::string
 #include <tuple>	// std::get(std::tuple), std::tuple
 #include <utility>	// std::pair
@@ -66,6 +66,7 @@ namespace crawlservpp::Helper::Json {
 	std::string stringify(const jsoncons::json& json);
 
 	// parsing functions
+	std::string cleanCopy(const std::string& json);
 	rapidjson::Document parseRapid(const std::string& json);
 	jsoncons::json parseCons(const std::string& json);
 
@@ -274,18 +275,79 @@ namespace crawlservpp::Helper::Json {
 		return result;
 	}
 
+	// copy and clean JSON before parsing (remove control characters, correct escape sequences)
+	// NOTE: in standard JSON, allowed escape sequence names are: " \ / b f n r t as well as u + 4 hex digits
+	inline std::string cleanCopy(const std::string &json) {
+		if(json.empty())
+			return "";
+
+		std::string result;
+
+		for(size_t n = 0; n < json.length(); ++n) {
+			// ignore control characters
+			if(::iscntrl(json[n]))
+				continue;
+
+			// check escape sequences
+			if(json[n] == '\\') {
+				bool validEscape = false;
+
+				if(n > json.length() - 1)
+					switch(::tolower(json[n + 1])) {
+					// check for escaped backslash
+					case '\\':
+						++n;	// do not check the following (escaped) backslash
+
+						validEscape = true;
+
+						break;
+
+					// check for other single-digit escape sequence names
+					case 'b':
+					case 'f':
+					case 'n':
+					case 'r':
+					case 't':
+					case '\"':
+					case '\'':	// non-standard lenience
+					case '/':
+						validEscape = true;
+
+						break;
+
+					// check for Unicode character references
+					case 'u':
+						if(n > json.length() - 5)
+							validEscape =
+									isxdigit(json[n + 2])
+									&& isxdigit(json[n + 3])
+									&& isxdigit(json[n + 4])
+									&& isxdigit(json[n + 5]);
+
+						break;
+
+				}
+
+				if(!validEscape)
+					result.push_back('\\');	// simply escape the backslash of an invalid escape sequences
+
+				result.push_back('\\');
+			}
+			else
+				result.push_back(json[n]);
+		}
+
+		return result;
+	}
+
 	// parse JSON using RapidJSON, throws Json::Exception
 	inline rapidjson::Document parseRapid(const std::string& json) {
-		// remove control characters from input
-		std::string jsonCopy;
-
-		for(auto c : json)
-			if(!::iscntrl(c))
-				jsonCopy.push_back(c);
+		// clean input
+		std::string cleanJson(cleanCopy(json));
 
 		rapidjson::Document doc;
 
-		doc.Parse(jsonCopy);
+		doc.Parse(cleanJson);
 
 		if(doc.HasParseError()) {
 			std::string exceptionStr(rapidjson::GetParseError_En(doc.GetParseError()));
@@ -293,16 +355,16 @@ namespace crawlservpp::Helper::Json {
 			exceptionStr += " at \'";
 
 			if(doc.GetErrorOffset() > 25)
-				exceptionStr += jsonCopy.substr(doc.GetErrorOffset() - 25, 25);
+				exceptionStr += cleanJson.substr(doc.GetErrorOffset() - 25, 25);
 			else if(doc.GetErrorOffset() > 0)
-				exceptionStr += jsonCopy.substr(0, doc.GetErrorOffset());
+				exceptionStr += cleanJson.substr(0, doc.GetErrorOffset());
 
 			exceptionStr += "[!]";
 
-			if(jsonCopy.size() > doc.GetErrorOffset() + 25)
-				exceptionStr += jsonCopy.substr(doc.GetErrorOffset(), 25);
-			else if(jsonCopy.size() > doc.GetErrorOffset())
-				exceptionStr += jsonCopy.substr(doc.GetErrorOffset());
+			if(cleanJson.size() > doc.GetErrorOffset() + 25)
+				exceptionStr += cleanJson.substr(doc.GetErrorOffset(), 25);
+			else if(cleanJson.size() > doc.GetErrorOffset())
+				exceptionStr += cleanJson.substr(doc.GetErrorOffset());
 
 			exceptionStr += "\'";
 
@@ -314,15 +376,11 @@ namespace crawlservpp::Helper::Json {
 
 	// parse JSON using jsoncons, throws Json::Exception
 	inline jsoncons::json parseCons(const std::string& json) {
-		// remove control characters from input
-		std::string jsonCopy;
-
-		for(auto c : json)
-			if(!::iscntrl(c))
-				jsonCopy.push_back(c);
+		// clean input
+		std::string cleanJson(cleanCopy(json));
 
 		try {
-			jsoncons::json result = jsoncons::json::parse(json);
+			jsoncons::json result = jsoncons::json::parse(cleanJson);
 
 			return result;
 		}
