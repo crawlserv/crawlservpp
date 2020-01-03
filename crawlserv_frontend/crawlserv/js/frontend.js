@@ -171,6 +171,20 @@ jQuery(function($) {
 			}
 		}
 		
+		// check query date test
+		if($("#query-datetime").length && $("#query-datetime").is(":checked")) {
+			// add locales to selection if necessary
+			if($("#query-datetime-locale option").length == 1)
+				for(const locale of db_locales)
+					$("#query-datetime-locale").append("\n<option value=\"" + locale + "\">" + locale + "</option>");
+			
+			// show date-related options
+			$("#query-datetime-format-label").show();
+			$("#query-datetime-format").show();
+			$("#query-datetime-locale-label").show();
+			$("#query-datetime-locale").show();
+		}
+		
 		// check import/export inputs
 		disableImportExport();
 		
@@ -1118,7 +1132,9 @@ jQuery(function($) {
 							"resultsubsets" : $("#query-result-subsets").is(":checked"),
 							"textonly" : $("#query-text-only").is(":checked"),
 							"text" : $("#query-test-text").val(),
-							"xmlwarnings": $("#query-xml-warnings").is(":checked")
+							"xmlwarnings" : $("#query-xml-warnings").is(":checked"),
+							"datetimeformat" : $("#query-datetime").is(":checked") ? $("#query-datetime-format").val() : "",
+							"datetimelocale" : $("#query-datetime").is(":checked") ? $("#query-datetime-locale").val() : ""
 						};
 			
 			$.ajax({
@@ -1178,6 +1194,29 @@ jQuery(function($) {
 		}
 		
 		return false;
+	});
+	
+// CHANGE EVENT: "test date/time" toggled
+	$("#query-datetime").on("change", function() {
+		if($(this).is(":checked")) {
+			// add locales to selection if necessary
+			if($("#query-datetime-locale option").length == 1)
+				for(const locale of db_locales)
+					$("#query-datetime-locale").append("\n<option value=\"" + locale + "\">" + locale + "</option>");
+			
+			// show date-related options
+			$("#query-datetime-format-label").show();
+			$("#query-datetime-format").show();
+			$("#query-datetime-locale-label").show();
+			$("#query-datetime-locale").show();
+		}
+		else {
+			// hide date-related options
+			$("#query-datetime-format-label").hide();
+			$("#query-datetime-format").hide();
+			$("#query-datetime-locale-label").hide();
+			$("#query-datetime-locale").hide();
+		}
 	});
 
 /*

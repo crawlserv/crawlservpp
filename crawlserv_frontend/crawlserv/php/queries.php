@@ -386,7 +386,7 @@ for help with your query.</p>
 
 <div id="combined-helper" class="content-block">
 <div class="entry-row">
-<div class="entry-label-top helper">Note</div><div class="entry-input">
+<div class="entry-label-top helper">Note</div><div class="entry-input helper">
 
 <p>The 1<sup>st</sup> line of the query text will be used for the XPath and the 2<sup>nd</sup> line for the JSON query.</p>
 
@@ -424,8 +424,34 @@ if(!isset($_POST["test-nonewtab"]))
 
 ?> /> Open new tab &ensp;
 
+<input type="checkbox" id="query-datetime" /> Date/time
+
+<br>
+
+<span id="query-datetime-format-label">Format: </span>
+
+<input id="query-datetime-format" class="entry-input-inline" type="input" />
+
+<span id="query-datetime-locale-label">Locale: </span>
+
+<select id="query-datetime-locale">
+
+<option value="">[none]</option>
+
+</select>
+
 <a id="query-test" href="#" class="action-link">Test query</a>
 
 </div>
 </div>
 </div>
+
+<script>
+
+<?php
+
+echo scriptLocales();
+
+?>
+
+</script>

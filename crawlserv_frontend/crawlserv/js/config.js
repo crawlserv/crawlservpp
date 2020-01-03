@@ -809,14 +809,14 @@ class Config {
 		result += ">[none]</option>\n";
 		
 		// get locales from database
-		for(var i = 0; i < db_locales.length; i++) {
+		for(const locale of db_locales) {
 			// show locale as option
-			result += "<option value=\"" + db_locales[i] + "\"";
+			result += "<option value=\"" + locale + "\"";
 			
-			if(value && value.toLowerCase() == db_locales[i].toLowerCase())
+			if(value && value.toLowerCase() == locale.toLowerCase())
 				result += " selected";
 			
-			result += ">" + db_locales[i] + "</option>\n";
+			result += ">" + locale + "</option>\n";
 		}
 		
 		return result;

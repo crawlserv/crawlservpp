@@ -116,9 +116,12 @@ namespace crawlservpp::Main {
 
 	class Server final {
 		// for convenience
+		typedef Database::Exception DatabaseException;
 		typedef Database::IncorrectPathException IncorrectPathException;
 		typedef Database::PrivilegesException PrivilegesException;
 		typedef Database::StorageEngineException StorageEngineException;
+		typedef Helper::DateTime::Exception DateTimeException;
+		typedef Helper::DateTime::LocaleException LocaleException;
 		typedef Helper::Json::Exception JsonException;
 		typedef Parsing::XML::Exception XMLException;
 		typedef Query::JsonPath::Exception JSONPathException;
@@ -307,6 +310,7 @@ namespace crawlservpp::Main {
 		// private static helper functions
 		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
 		static std::string generateReply(const ServerCommandResponse& response, const std::string& msgBody);
+		static std::string dateTimeTest(const std::string& input, const std::string& format, const std::string& locale);
 	};
 
 } /* crawlservpp::Main */

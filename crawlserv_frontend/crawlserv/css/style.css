@@ -488,6 +488,27 @@ span.content {
 	display:none;
 }
 
+/* QUERY DATE TEST PROPERTIES (not shown by default) */
+#query-datetime-format-label {
+	display:none;
+}
+
+#query-datetime-format {
+	width:140px;
+	display:none;
+	font-size:0.8em;
+}
+
+#query-datetime-locale-label {
+	display:none;
+}
+
+#query-datetime-locale {
+	width:85px;
+	display:none;
+	font-size:0.8em;
+}
+
 /* REDIRECT TIME */
 #redirect-time {
 	position:fixed;

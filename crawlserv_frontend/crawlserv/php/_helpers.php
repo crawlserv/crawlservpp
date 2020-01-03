@@ -369,6 +369,33 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
     return $html;
 }
 
+// generate script for locales
+function scriptLocales() {
+    global $dbConnection;
+    
+    $script = "";
+    
+    $script .= "// load locales\n\n"; // JavaScript comment
+    
+    $script .= "var db_locales = [\n";
+    
+    $result = $dbConnection->query("SELECT name FROM crawlserv_locales ORDER BY name");
+    
+    if(!$result)
+        die("ERROR: Could not get locales from database.");
+        
+    $locales = "";
+        
+    while($row = $result->fetch_assoc())
+        $locales .= " \"".$row["name"]."\",";
+            
+    $locales = substr($locales, 0, -1);
+    
+    $script .= "$locales];\n\n";
+    
+    return $script;
+}
+
 // generate script for locales, queries and current configuration
 function scriptModule() {
     global $website, $dbConnection, $config;
@@ -376,22 +403,9 @@ function scriptModule() {
     $script = "";
     
     if($website) {
-        $script .= "// load locales, queries and configuration\n\n"; // JavaScript comment
-        $script .= "var db_locales = [\n";
+        $script .= scriptLocales();
         
-        $result = $dbConnection->query("SELECT name FROM crawlserv_locales ORDER BY name");
-        
-        if(!$result)
-            die("ERROR: Could not get locales from database.");
-            
-        $locales = "";
-            
-        while($row = $result->fetch_assoc())
-            $locales .= " \"".$row["name"]."\",";
-                
-        $locales = substr($locales, 0, -1);
-                
-        $script .= "$locales];\n\n";
+        $script .= "// load queries and configuration\n\n"; // JavaScript comment
                 
         $script .= "var db_queries = [\n";
                 

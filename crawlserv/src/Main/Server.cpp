@@ -267,7 +267,7 @@ namespace crawlservpp::Main {
 				try {
 					this->database.log(logString);
 				}
-				catch(const Database::Exception& e) {
+				catch(const DatabaseException& e) {
 					std::cout	<< '\n'
 								<< logString
 								<< "\nCould not write to log: "
@@ -297,7 +297,7 @@ namespace crawlservpp::Main {
 				try {
 					this->database.log(logString);
 				}
-				catch(const Database::Exception& e) {
+				catch(const DatabaseException& e) {
 					std::cout	<< '\n'
 								<< logString
 								<< "\nCould not write to log: "
@@ -327,7 +327,7 @@ namespace crawlservpp::Main {
 				try {
 					this->database.log(logString);
 				}
-				catch(const Database::Exception& e) {
+				catch(const DatabaseException& e) {
 					std::cout	<< '\n'
 								<< logString
 								<< "\nCould not write to log: "
@@ -357,7 +357,7 @@ namespace crawlservpp::Main {
 				try {
 					this->database.log(logString);
 				}
-				catch(const Database::Exception& e) {
+				catch(const DatabaseException& e) {
 					std::cout	<< '\n'
 								<< logString
 								<< "\nCould not write to log: "
@@ -381,7 +381,7 @@ namespace crawlservpp::Main {
 			this->database.log("shuts down after up-time of "
 					+ Helper::DateTime::secondsToString(this->getUpTime()) + ".");
 		}
-		catch(const Database::Exception& e) {
+		catch(const DatabaseException& e) {
 			std::cout << "server shuts down after up-time of"
 					<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
 					<< "\nCould not write to log: " << e.what() << std::flush;
@@ -399,13 +399,13 @@ namespace crawlservpp::Main {
 		try {
 			this->webServer.poll(1000);
 		}
-		catch(const Database::Exception& e) {
+		catch(const DatabaseException& e) {
 			// try to re-connect once on database exception
 			try {
 				this->database.checkConnection();
 				this->database.log("re-connected to database after error: " + e.whatStr());
 			}
-			catch(const Database::Exception& e) {
+			catch(const DatabaseException& e) {
 				// database is offline
 				this->offline = true;
 			}
@@ -480,7 +480,7 @@ namespace crawlservpp::Main {
 
 				this->offline = false;
 			}
-			catch(const Database::Exception &e) {}
+			catch(const DatabaseException &e) {}
 		}
 
 		return this->running;
@@ -796,7 +796,7 @@ namespace crawlservpp::Main {
 					try {
 						this->database.log("rejected client " + ip + ".");
 					}
-					catch(const Database::Exception& e) {
+					catch(const DatabaseException& e) {
 						// try to re-connect once on database exception
 						try {
 							this->database.checkConnection();
@@ -804,7 +804,7 @@ namespace crawlservpp::Main {
 							this->database.log("re-connected to database after error: " + e.whatStr());
 							this->database.log("rejected client " + ip + ".");
 						}
-						catch(const Database::Exception& e) {
+						catch(const DatabaseException& e) {
 							std::cout << "\nserver rejected client " + ip + "." << std::flush;
 
 							this->offline = true;
@@ -819,7 +819,7 @@ namespace crawlservpp::Main {
 					try {
 						this->database.log("accepted client " + ip + ".");
 					}
-					catch(const Database::Exception& e) {
+					catch(const DatabaseException& e) {
 						// try to re-connect once on database exception
 						try {
 							this->database.checkConnection();
@@ -827,7 +827,7 @@ namespace crawlservpp::Main {
 							this->database.log("re-connected to database after error: " + e.whatStr());
 							this->database.log("accepted client " + ip + ".");
 						}
-						catch(const Database::Exception& e) {
+						catch(const DatabaseException& e) {
 							std::cout << "\nserver rejected client " + ip + "." << std::flush;
 
 							this->offline = true;
@@ -4150,8 +4150,8 @@ namespace crawlservpp::Main {
 		this->workerEnd(threadIndex, connection, message, response);
 	}
 
-	// server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text, xmlwarnings):
-	//  test temporary query on text
+	// server command testquery(query, type, resultbool, resultsingle, resultmulti, textonly, text,
+	//	xmlwarnings, datetimeformat, datetimelocale): test temporary query on text
 	void Server::cmdTestQuery(ConnectionPtr connection, unsigned long threadIndex, const std::string& message) {
 		ServerCommandResponse response;
 		rapidjson::Document json;
@@ -4215,6 +4215,18 @@ namespace crawlservpp::Main {
 			else if(!json["xmlwarnings"].IsBool())
 				response = ServerCommandResponse::failed("Invalid arguments (\'xmlwarnings\' is not a boolean).");
 
+			else if(!json.HasMember("datetimeformat"))
+				response = ServerCommandResponse::failed("Invalid arguments (\'datetimeformat\' is missing).");
+
+			else if(!json["datetimeformat"].IsString())
+				response = ServerCommandResponse::failed("Invalid arguments (\'datetimeformat\' is not a string).");
+
+			else if(!json.HasMember("datetimelocale"))
+				response = ServerCommandResponse::failed("Invalid arguments (\'datetimelocale\' is missing).");
+
+			else if(!json["datetimelocale"].IsString())
+				response = ServerCommandResponse::failed("Invalid arguments (\'datetimelocale\' is not a string).");
+
 			else {
 				const QueryProperties properties(
 						std::string(json["query"].GetString(), json["query"].GetStringLength()),
@@ -4229,6 +4241,16 @@ namespace crawlservpp::Main {
 				const std::string text(
 						json["text"].GetString(),
 						json["text"].GetStringLength()
+				);
+
+				const std::string dateTimeFormat(
+						json["datetimeformat"].GetString(),
+						json["datetimeformat"].GetStringLength()
+				);
+
+				const std::string dateTimeLocale(
+						json["datetimelocale"].GetString(),
+						json["datetimelocale"].GetStringLength()
 				);
 
 				const bool xmlWarnings = json["xmlwarnings"].GetBool();
@@ -4289,10 +4311,14 @@ namespace crawlservpp::Main {
 
 								regExTest.getFirst(text, tempResult);
 
+								result += "FIRST RESULT (" + timer.tickStr() + "): ";
+
 								if(tempResult.empty())
-									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+									result += "[empty]";
 								else
-									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+									result += tempResult + dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale);
+
+								result.push_back('\n');
 							}
 
 							if(properties.resultMulti || properties.resultSubSets) {
@@ -4316,7 +4342,8 @@ namespace crawlservpp::Main {
 													+ std::to_string(counter)
 													+ "] "
 													+ tempResult
-													+ '\n';
+													+ dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale)
+													+ "\n";
 									}
 
 									result += toAppend;
@@ -4352,14 +4379,13 @@ namespace crawlservpp::Main {
 
 							result += "PARSING TIME: " + timer.tickStr() + '\n';
 
-							if(properties.resultBool) {
+							if(properties.resultBool)
 								// get boolean result (does at least one match exist?)
 								result	+= "BOOLEAN RESULT ("
 										+ timer.tickStr()
 										+ "): "
 										+ (xPathTest.getBool(xmlDocumentTest) ? "true" : "false")
 										+ '\n';
-							}
 
 							if(properties.resultSingle) {
 								// get first result (first full match)
@@ -4367,10 +4393,14 @@ namespace crawlservpp::Main {
 
 								xPathTest.getFirst(xmlDocumentTest, tempResult);
 
+								result += "FIRST RESULT (" + timer.tickStr() + "): ";
+
 								if(tempResult.empty())
-									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+									result += "[empty]";
 								else
-									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+									result += tempResult + dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale);
+
+								result.push_back('\n');
 							}
 
 							if(properties.resultMulti) {
@@ -4394,6 +4424,7 @@ namespace crawlservpp::Main {
 													+ std::to_string(counter)
 													+ "] "
 													+ tempResult
+													+ dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale)
 													+ '\n';
 									}
 
@@ -4472,10 +4503,14 @@ namespace crawlservpp::Main {
 
 								JSONPointerTest.getFirst(jsonDocumentTest, tempResult);
 
+								result += "FIRST RESULT (" + timer.tickStr() + "): ";
+
 								if(tempResult.empty())
-									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+									result += "[empty]";
 								else
-									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+									result += tempResult + dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale);
+
+								result.push_back('\n');
 							}
 
 							if(properties.resultMulti) {
@@ -4499,6 +4534,7 @@ namespace crawlservpp::Main {
 													+ std::to_string(counter)
 													+ "] "
 													+ tempResult
+													+ dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale)
 													+ '\n';
 									}
 
@@ -4572,10 +4608,14 @@ namespace crawlservpp::Main {
 
 								JSONPathTest.getFirst(jsonTest, tempResult);
 
+								result += "FIRST RESULT (" + timer.tickStr() + "): ";
+
 								if(tempResult.empty())
-									result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+									result += "[empty]";
 								else
-									result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+									result += tempResult + dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale);
+
+								result.push_back('\n');
 							}
 
 							if(properties.resultMulti) {
@@ -4599,6 +4639,7 @@ namespace crawlservpp::Main {
 													+ std::to_string(counter)
 													+ "] "
 													+ tempResult
+													+ dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale)
 													+ '\n';
 									}
 
@@ -4695,10 +4736,12 @@ namespace crawlservpp::Main {
 
 							xPathTest.getFirst(xmlDocumentTest, xpathResult);
 
+							result += "XPATH RESULT (" + timer.tickStr() + "): ";
+
 							if(xpathResult.empty())
-								result += "XPATH RESULT (" + timer.tickStr() + "): [empty]\n";
+								result += "[empty]\n";
 							else {
-								result += "XPATH RESULT (" + timer.tickStr() + "): " + xpathResult + '\n';
+								result += xpathResult + '\n';
 
 								if(properties.type == "xpathjsonpointer") {
 									// test JSONPointer query on XPath result
@@ -4731,10 +4774,14 @@ namespace crawlservpp::Main {
 
 										JSONPointerTest.getFirst(jsonDocumentTest, tempResult);
 
+										result += "FIRST RESULT (" + timer.tickStr() + "): ";
+
 										if(tempResult.empty())
-											result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+											result += "[empty]";
 										else
-											result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+											result += tempResult + dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale);
+
+										result.push_back('\n');
 									}
 
 									if(properties.resultMulti) {
@@ -4758,6 +4805,7 @@ namespace crawlservpp::Main {
 															+ std::to_string(counter)
 															+ "] "
 															+ tempResult
+															+ dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale)
 															+ '\n';
 											}
 
@@ -4823,10 +4871,14 @@ namespace crawlservpp::Main {
 
 										JSONPathTest.getFirst(jsonTest, tempResult);
 
+										result += "FIRST RESULT (" + timer.tickStr() + "): ";
+
 										if(tempResult.empty())
-											result += "FIRST RESULT (" + timer.tickStr() + "): [empty]\n";
+											result += "[empty]";
 										else
-											result += "FIRST RESULT (" + timer.tickStr() + "): " + tempResult + '\n';
+											result += tempResult + dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale);
+
+										result.push_back('\n');
 									}
 
 									if(properties.resultMulti) {
@@ -4850,6 +4902,7 @@ namespace crawlservpp::Main {
 															+ std::to_string(counter)
 															+ "] "
 															+ tempResult
+															+ dateTimeTest(tempResult, dateTimeFormat, dateTimeLocale)
 															+ '\n';
 											}
 
@@ -5050,6 +5103,35 @@ namespace crawlservpp::Main {
 		reply.EndObject();
 
 		return std::string(replyBuffer.GetString(), replyBuffer.GetLength());
+	}
+
+	// private static helper function: test query result for date/time
+	std::string Server::dateTimeTest(const std::string& input, const std::string& format, const std::string& locale) {
+		if(format.empty())
+			return "";
+
+		std::string dateTimeString(input);
+		std::string result(" [");
+
+		try {
+			Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+					dateTimeString,
+					format,
+					locale
+			);
+
+			result += dateTimeString;
+		}
+		catch(const LocaleException& e) {
+			result += "LOCALE ERROR: " + e.whatStr();
+		}
+		catch(const DateTimeException& e) {
+			result += "DATE/TIME ERROR: " + e.whatStr();
+		}
+
+		result += "]";
+
+		return result;
 	}
 
 } /* crawlservpp::Main */
