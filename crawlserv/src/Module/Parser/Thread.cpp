@@ -448,6 +448,7 @@ namespace crawlservpp::Module::Parser {
 	void Thread::initQueries() {
 		// reserve memory for queries
 		this->queriesSkip.reserve(this->config.generalSkip.size());
+		this->queriesContentIgnore.reserve(this->config.parsingContentIgnoreQueries.size());
 		this->queriesId.reserve(this->config.parsingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.parsingDateTimeQueries.size());
 		this->queriesFields.reserve(this->config.parsingFieldQueries.size());
@@ -461,6 +462,16 @@ namespace crawlservpp::Module::Parser {
 					this->database.getQueryProperties(query, properties);
 
 					this->queriesSkip.emplace_back(this->addQuery(properties));
+				}
+			}
+
+			for(const auto& query : this->config.parsingContentIgnoreQueries) {
+				if(query) {
+					QueryProperties properties;
+
+					this->database.getQueryProperties(query, properties);
+
+					this->queriesContentIgnore.emplace_back(this->addQuery(properties));
 				}
 			}
 
@@ -640,11 +651,11 @@ namespace crawlservpp::Module::Parser {
 
 		if(this->idFromUrlOnly) {
 			// parse ID from URL only
-			for(auto i = this->queriesId.begin(); i != this->queriesId.end(); ++i) {
+			for(const auto& query : this->queriesId) {
 				// parse ID by running RegEx on URL
 				if(
 						this->getSingleFromRegEx(
-								*i,
+								query,
 								this->urls.front().second,
 								parsedId,
 								queryWarnings
@@ -795,7 +806,7 @@ namespace crawlservpp::Module::Parser {
 
 		// check whether no ID has been parsed
 		if(parsedData.dataId.empty()) {
-			// clear query target before continuing to next URL (or finish)
+			// clear query target before continuing to next URL (or finishing up)
 			this->clearQueryTarget();
 
 			return false;
@@ -818,10 +829,31 @@ namespace crawlservpp::Module::Parser {
 					+ "]."
 			);
 
-			// clear query target before continuing to next URL (or finish)
+			// clear query target before continuing to next URL (or finishing up)
 			this->clearQueryTarget();
 
 			return false;
+		}
+
+		// check whether content is ought to be ignored
+		for(const auto& query : this->queriesContentIgnore) {
+			bool ignore = false;
+
+			this->getBoolFromQuery(query, ignore, queryWarnings);
+
+			if(ignore) {
+				this->log(
+						Config::generalLoggingExtended,
+						"ignored because of query on content ["
+						+ this->urls.front().second
+						+ "]."
+				);
+
+				// clear query target before continuing to next URL (or finishing up)
+				this->clearQueryTarget();
+
+				return false;
+			}
 		}
 
 		// check whether content with the parsed ID already exists and the current one differs from the one in the database
@@ -853,7 +885,7 @@ namespace crawlservpp::Module::Parser {
 					+ "]."
 			);
 
-			// clear query target before continuing to next URL (or finish)
+			// clear query target before continuing to next URL (or finishing up)
 			this->clearQueryTarget();
 
 			return false;
@@ -1245,7 +1277,7 @@ namespace crawlservpp::Module::Parser {
 			}
 		}
 
-		// clear query target before continuing to next URL (or finish)
+		// clear query target before continuing to next URL (or finishing up)
 		this->clearQueryTarget();
 
 		// add parsed data to results

@@ -81,6 +81,7 @@ namespace crawlservpp::Module::Parser {
 			bool generalTiming;
 
 			// parsing entries
+			std::vector<unsigned long> parsingContentIgnoreQueries;
 			std::vector<std::string> parsingDateTimeFormats;
 			std::vector<std::string> parsingDateTimeLocales;
 			std::vector<unsigned long> parsingDateTimeQueries;
@@ -149,6 +150,7 @@ namespace crawlservpp::Module::Parser {
 		this->option("timing", this->config.generalTiming);
 
 		this->category("parser");
+		this->option("content.ignore.queries", this->config.parsingContentIgnoreQueries);
 		this->option("datetime.formats", this->config.parsingDateTimeFormats);
 		this->option("datetime.locales", this->config.parsingDateTimeLocales);
 		this->option("datetime.queries", this->config.parsingDateTimeQueries);

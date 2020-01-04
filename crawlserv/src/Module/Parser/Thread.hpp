@@ -131,6 +131,7 @@ namespace crawlservpp::Module::Parser {
 
 		// queries
 		std::vector<QueryStruct> queriesSkip;
+		std::vector<QueryStruct> queriesContentIgnore;
 		std::vector<QueryStruct> queriesId;
 		std::vector<QueryStruct> queriesDateTime;
 		std::vector<QueryStruct> queriesFields;
