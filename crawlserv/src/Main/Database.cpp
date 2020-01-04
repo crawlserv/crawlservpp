@@ -2651,6 +2651,62 @@ namespace crawlservpp::Main {
 		this->deleteTable("crawlserv_" + websiteNamespace.second + "_" + listNamespace);
 	}
 
+	// delete URLs with the specified IDs from the URL list specified by its ID, return the number of deleted URLs
+	unsigned long Database::deleteUrls(unsigned long listId, std::queue<unsigned long>& urlIds) {
+		// check arguments
+		if(!listId)
+			throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
+
+		if(urlIds.empty())
+			return 0;
+
+		// get website namespace and URL list name
+		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
+		const std::string listNamespace(this->getUrlListNamespace(listId));
+
+		// check connection
+		this->checkConnection();
+
+		unsigned long result = 0;
+
+		try {
+			while(!urlIds.empty()) {
+				// create SQL query
+				std::string sqlQuery(
+						"DELETE FROM `crawlserv_" + websiteNamespace.second + "_" + listNamespace + "`"
+						" WHERE"
+				);
+
+				// add a maximum of 1,000 URLs to the SQL query
+				for(auto n = 0; n < 1000; ++n) {
+					if(urlIds.empty())
+						break;
+
+					sqlQuery += " id=";
+					sqlQuery += std::to_string(urlIds.front());
+					sqlQuery += " OR";
+
+					urlIds.pop();
+				}
+
+				// remove last " OR"
+				sqlQuery.pop_back();
+				sqlQuery.pop_back();
+				sqlQuery.pop_back();
+
+				// execute query and get number of deleted URLs
+				const auto removed = this->executeUpdate(sqlQuery);
+
+				if(removed > 0)
+					result += removed;
+			}
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteUrls", e); }
+
+		return result;
+	}
+
+
 	// reset parsing status of ID-specified URL list, throws Database::Exception
 	void Database::resetParsingStatus(unsigned long listId) {
 		// check argument
@@ -2660,6 +2716,9 @@ namespace crawlservpp::Main {
 		// get website namespace and URL list name
 		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
 		const std::string listNamespace(this->getUrlListNamespace(listId));
+
+		// check connection
+		this->checkConnection();
 
 		try {
 			// update parsing table
@@ -2681,6 +2740,9 @@ namespace crawlservpp::Main {
 		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
 		const std::string listNamespace(this->getUrlListNamespace(listId));
 
+		// check connection
+		this->checkConnection();
+
 		try {
 			// update extracting table
 			this->execute(
@@ -2700,6 +2762,9 @@ namespace crawlservpp::Main {
 		// get website namespace and URL list name
 		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
 		const std::string listNamespace(this->getUrlListNamespace(listId));
+
+		// check connection
+		this->checkConnection();
 
 		try {
 			// update URL list
@@ -5983,6 +6048,29 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement, sqlQuery);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::execute", e); }
+	}
+
+	// execute a SQL query and return updated rows, throws Database::Exception
+	int Database::executeUpdate(const std::string& sqlQuery) {
+		int result = -1;
+
+		// check argument
+		if(sqlQuery.empty())
+			throw Database::Exception("Main::Database::execute(): No SQL query specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			result = Database::sqlExecuteUpdate(sqlStatement, sqlQuery);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::execute", e); }
+
+		return result;
 	}
 
 	// escape string for usage in SQL commands

@@ -210,6 +210,7 @@ namespace crawlservpp::Main {
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
 		void updateUrlList(unsigned long listId, const UrlListProperties& listProperties);
 		void deleteUrlList(unsigned long listId);
+		unsigned long deleteUrls(unsigned long listId, std::queue<unsigned long>& urlIds);
 		void resetParsingStatus(unsigned long listId);
 		void resetExtractingStatus(unsigned long listId);
 		void resetAnalyzingStatus(unsigned long listId);
@@ -499,6 +500,7 @@ namespace crawlservpp::Main {
 		// internal helper functions
 		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
+		int executeUpdate(const std::string& sqlQuery);
 		std::string sqlEscapeString(const std::string& in);
 
 		// IDs of prepared SQL statements
