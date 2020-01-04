@@ -99,7 +99,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "Content matching one of these will not be crawled.",
+			"description": "Content matching one of these queries will not be crawled.",
 			"simple": false
 		},
 		"queries.blacklist.types": {
@@ -112,7 +112,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "Content types matching one of these will not be crawled.",
+			"description": "Content types matching one of these queries will not be crawled.",
 			"simple": false
 		},
 		"queries.blacklist.urls": {
@@ -125,8 +125,8 @@
 				"regex"
 			],
 			"default": [],
-			"label": "Always skip:",
-			"description": "URLs matching one of these will not be crawled.",
+			"label": "Skip URLs:",
+			"description": "URLs matching one of these queries will not be added.",
 			"simple": true,
 			"position": 9
 		},
@@ -150,7 +150,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "Content matching one of these will not be used for link extraction.",
+			"description": "Content matching one of these queries will not be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.blacklist.types": {
@@ -163,7 +163,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "Content types matching one of these will not be used for link extraction.",
+			"description": "Content types matching one of these queries will not be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.blacklist.urls": {
@@ -176,7 +176,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "URLs matching one of these will not be used for link extraction.",
+			"description": "URLs matching one of these queries will not be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.whitelist.cont": {
@@ -186,7 +186,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "If not empty, only content matching one of these will be used for link extraction.",
+			"description": "If not empty, only content matching one of these queries will be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.whitelist.types": {
@@ -200,7 +200,7 @@
 			],
 			"default": [],
 			"label": "",
-			"description": "If not empty, only content types matching one of these will be used for link extraction.",
+			"description": "If not empty, only content types matching one of these queries will be used for link extraction.",
 			"simple": false
 		},
 		"queries.links.whitelist.urls": {
@@ -213,7 +213,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "If not empty, only URLs matching one of these will be used for link extraction.",
+			"description": "If not empty, only URLs matching one of these queries will be used for link extraction.",
 			"simple": false
 		},
 		"queries.whitelist.cont": {
@@ -223,7 +223,7 @@
 				"bool"
 			],
 			"default": [],
-			"description": "If not empty, only content matching one of these will be crawled.",
+			"description": "If not empty, only content matching one of these queries will be crawled.",
 			"simple": false
 		},
 		"queries.whitelist.types": {
@@ -237,7 +237,7 @@
 			],
 			"default": [],
 			"label": "",
-			"description": "If not empty, only content types matching one of these will be crawled.",
+			"description": "If not empty, only content types matching one of these queries will be crawled.",
 			"simple": false
 		},
 		"queries.whitelist.urls": {
@@ -250,7 +250,7 @@
 				"regex"
 			],
 			"default": [],
-			"description": "If not empty, only URLs matching one of these will be crawled.",
+			"description": "If not empty, only URLs matching one of these queries will be crawled.",
 			"simple": false
 		},
 		"recrawl": {
