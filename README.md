@@ -201,10 +201,11 @@ The server performs commands and sends back their results. Some commands need to
 * **`addurllist`** (arguments: `website`, `name`, `namespace`): Add a URL list to a website in the database.
 * **`addwebsite`** (arguments: `name`, `namespace`, `domain`): Add a website to the database.
 * **`allow`** (argument: `ip`): Allow access for the specified IP(s).
-* **`clearlog`** (optional argument: `module`): Clear the logs of a specified module or all logs if no module is specified.
+* **`clearlogs`** (optional argument: `module`): Clear the logs of a specified module or all logs if no module is specified.
 * **`deleteconfig`** (argument: `id`): Delete a configuration from the database.
 * **`deletequery`** (argument: `id`): Delete a RegEx, XPath or JSONPpinter query from the database.
 * **`deleteurllist`** (argument: `id`): Delete a URL list (and all associated data) from the database.
+* **`deleteurls`** (arguments: `urllist`, `query`): Delete all URLs from the URL list that match the specified query.
 * **`deletewebsite`** (argument: `id`): Delete a website (and all associated data) from the database.
 * **`disallow`**: Revoke access from all except the initial IP(s) specified by the configuration file.
 * **`download`** (argument: `filename`): Download file from the file cache of the server.
@@ -221,7 +222,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`pausecrawler`** (argument: `id`): Pause a running crawler by its ID.
 * **`pauseextractor`** (argument: `id`): Pause a running extractor by its ID.
 * **`pauseparser`** (argument: `id`): Pause a running parser by its ID.
-* **`ping`**: Respond with pong.
+* **`ping`**: Respond with `pong`.
 * **`resetanalyzingstatus`** (argument: `urllist`): Reset the analyzing status of an ID-specified URL list.
 * **`resetextractingstatus`** (argument: `urllist`): Reset the extracting status of an ID-specified URL list.
 * **`resetparsingstatus`** (argument: `urllist`): Reset the parsing status of an ID-specified URL list.
