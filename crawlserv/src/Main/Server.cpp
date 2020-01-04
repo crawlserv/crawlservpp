@@ -2885,7 +2885,7 @@ namespace crawlservpp::Main {
 					+ " not found."
 			);
 
-		if(!(this->database.isQuery(website.first, query)) && !(this->database.isQuery(0, query)))
+		if(!(this->database.isQuery(website.first, query)))
 			return ServerCommandResponse::failed(
 					"Query #"
 					+ std::to_string(query)
