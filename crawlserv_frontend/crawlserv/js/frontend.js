@@ -691,7 +691,8 @@ jQuery(function($) {
 					true,
 					{
 						"m" : "websites",
-						"website" : website
+						"website" : website,
+						"urllist" : urllist
 					}
 			);
 		
@@ -710,7 +711,8 @@ jQuery(function($) {
 					true,
 					{
 						"m" : "websites",
-						"website" : website
+						"website" : website,
+						"urllist" : urllist
 					}
 			);
 		
@@ -729,7 +731,32 @@ jQuery(function($) {
 					true,
 					{
 						"m" : "websites",
-						"website" : website
+						"website" : website,
+						"urllist" : urllist
+					}
+			);
+		
+		return false;
+	});
+	
+// CLICK EVENT: delete URLs from URL list
+	$("#urls-delete").on("click", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var query = parseInt($("#urls-delete-query").val(), 10);
+		
+		if(urllist)
+			runCmd(
+					"deleteurls", 
+					{
+						"urllist" : urllist,
+						"query": query
+					},
+					true,
+					{
+						"m" : "websites",
+						"website" : website,
+						"urllist" : urllist
 					}
 			);
 		
