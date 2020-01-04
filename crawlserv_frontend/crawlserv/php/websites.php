@@ -41,6 +41,9 @@ if(isset($_POST["website"]))
 if(isset($_POST["urllist"]))
     $urllist = $_POST["urllist"];
 
+if(isset($_POST["query"]))
+    $query = $_POST["query"];
+
 ?>
 
 <h2>Websites</h2>
@@ -496,8 +499,8 @@ if($website) {
     echo "</div>\n";
     echo "</div>\n";
     
-    // delete URLs by query
     if(isset($urllist) && $urllist) {
+        // delete URLs by query
         echo "<div class=\"content-block\">\n";
         
         echo "<div id=\"urls-delete-div\" class=\"entry-row\">\n";
@@ -526,6 +529,9 @@ if($website) {
             $name = $row["name"];
             
             echo "<option value=\"".$id."\"";
+            
+            if(isset($query) && $id == $query)
+                echo " selected";
            
             echo ">".htmlspecialchars($name)."</option>\n";
         }
@@ -544,6 +550,9 @@ if($website) {
         echo "</div>\n";
         echo "</div>\n";
     }
+    else if(isset($query))
+        // temporarily save selected query
+        echo "<input id=\"urls-delete-query\" type=\"hidden\" value=\"$query\" />\n";
 }
 
 ?>

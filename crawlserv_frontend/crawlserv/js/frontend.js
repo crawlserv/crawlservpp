@@ -481,6 +481,7 @@ jQuery(function($) {
 			
 			var website = parseInt($("#website-select").val(), 10);
 			var id = parseInt($(this).val(), 10);
+			
 			var args = {
 					"m" : $(this).data("m"),
 					"website" : website,
@@ -489,6 +490,9 @@ jQuery(function($) {
 			
 			if(typeof $(this).data("tab") !== "undefined")
 				args["tab"] = $(this).data("tab");
+			
+			if($("#urls-delete-query").length)
+				args["query"] = parseInt($("#urls-delete-query").val(), 10);
 			
 			reload(args);
 			
@@ -619,6 +623,7 @@ jQuery(function($) {
 	$("#urllist-update").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
+		var query = parseInt($("#urls-delete-query").val(), 10);
 		
 		runCmd(
 				"updateurllist",
@@ -631,7 +636,8 @@ jQuery(function($) {
 				{
 					"m" : "websites",
 					"website" : website,
-					"urllist" : id
+					"urllist" : id,
+					"query" : query
 				}
 		);
 		
@@ -642,6 +648,7 @@ jQuery(function($) {
 	$("#urllist-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
+		var query = parseInt($("#urls-delete-query").val(), 10);
 		
 		if(id)
 			runCmd(
@@ -650,7 +657,8 @@ jQuery(function($) {
 					true,
 					{
 						"m" : "websites",
-						"website" : website
+						"website" : website,
+						"query" : query
 					}
 			);
 		
@@ -683,6 +691,7 @@ jQuery(function($) {
 	$("#urllist-reset-parsing").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
+		var query = parseInt($("#urls-delete-query").val(), 10);
 		
 		if(urllist)
 			runCmd(
@@ -692,7 +701,8 @@ jQuery(function($) {
 					{
 						"m" : "websites",
 						"website" : website,
-						"urllist" : urllist
+						"urllist" : urllist,
+						"query" : query
 					}
 			);
 		
@@ -703,6 +713,7 @@ jQuery(function($) {
 	$("#urllist-reset-extracting").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
+		var query = parseInt($("#urls-delete-query").val(), 10);
 		
 		if(urllist)
 			runCmd(
@@ -712,7 +723,8 @@ jQuery(function($) {
 					{
 						"m" : "websites",
 						"website" : website,
-						"urllist" : urllist
+						"urllist" : urllist,
+						"query" : query
 					}
 			);
 		
@@ -723,6 +735,7 @@ jQuery(function($) {
 	$("#urllist-reset-analyzing").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
+		var query = parseInt($("#urls-delete-query").val(), 10);
 		
 		if(urllist)
 			runCmd(
@@ -732,7 +745,8 @@ jQuery(function($) {
 					{
 						"m" : "websites",
 						"website" : website,
-						"urllist" : urllist
+						"urllist" : urllist,
+						"query" : query
 					}
 			);
 		
@@ -750,13 +764,14 @@ jQuery(function($) {
 					"deleteurls", 
 					{
 						"urllist" : urllist,
-						"query": query
+						"query" : query
 					},
 					true,
 					{
 						"m" : "websites",
 						"website" : website,
-						"urllist" : urllist
+						"urllist" : urllist,
+						"query" : query
 					}
 			);
 		
