@@ -33,7 +33,7 @@
 
 namespace crawlservpp::Query {
 
-	// constructor stub
+	// constructor, throws RegEx::Exception
 	RegEx::RegEx(const std::string& expression, bool single, bool multi) {
 		int errorNumber = 0;
 		PCRE2_SIZE errorOffset = 0;
