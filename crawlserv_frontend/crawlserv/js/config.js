@@ -816,7 +816,7 @@ class Config {
 			if(value && value.toLowerCase() == locale.toLowerCase())
 				result += " selected";
 			
-			result += ">" + locale + "</option>\n";
+			result += ">" + htmlentities(locale) + "</option>\n";
 		}
 		
 		return result;
@@ -856,7 +856,7 @@ class Config {
 				if(value == db_queries[i].id)
 					result += " selected";
 				
-				result += ">" + db_queries[i].name + "</option>\n";
+				result += ">" + htmlentities(db_queries[i].name) + "</option>\n";
 			}
 		}
 		
@@ -888,7 +888,7 @@ class Config {
 			if(value == i)
 				result += " selected";
 			
-			result += ">" + enumvalues[i] + "</option>\n";
+			result += ">" + htmlentities(enumvalues[i]) + "</option>\n";
 		}
 		
 		result += "</select>";
