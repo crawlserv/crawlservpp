@@ -758,10 +758,13 @@ namespace crawlservpp::Main {
 		MAIN_SERVER_BASIC_CMD("addurllist", this->cmdAddUrlList);
 		MAIN_SERVER_BASIC_CMD("updateurllist", this->cmdUpdateUrlList);
 		MAIN_SERVER_BASIC_CMD("deleteurllist", this->cmdDeleteUrlList);
+		MAIN_SERVER_BASIC_CMD("deleteurls", this->cmdDeleteUrls);
+
 		MAIN_SERVER_BASIC_CMD("addquery", this->cmdAddQuery);
 		MAIN_SERVER_BASIC_CMD("updatequery", this->cmdUpdateQuery);
 		MAIN_SERVER_BASIC_CMD("deletequery", this->cmdDeleteQuery);
 		MAIN_SERVER_BASIC_CMD("duplicatequery", this->cmdDuplicateQuery);
+
 		MAIN_SERVER_BASIC_CMD("addconfig", this->cmdAddConfig);
 		MAIN_SERVER_BASIC_CMD("updateconfig", this->cmdUpdateConfig);
 		MAIN_SERVER_BASIC_CMD("deleteconfig", this->cmdDeleteConfig);
@@ -2831,6 +2834,136 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse::toBeConfirmed(
 				"Do you really want to delete this URL list?\n"
 				"!!! All associated data will be lost !!!"
+		);
+	}
+
+	// server command deleteurls(urllist,query): delete all URLs from the specified URL list that match the specified query
+	Server::ServerCommandResponse Server::cmdDeleteUrls() {
+		// check whether the deletion of data is allowed
+		if(!(this->settings.dataDeletable))
+			return ServerCommandResponse::failed("Not allowed.");
+
+		// get arguments
+		if(!(this->cmdJson.HasMember("urllist")))
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is missing).");
+
+		if(!(this->cmdJson["urllist"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'urllist\' is not a valid number).");
+
+		if(!(this->cmdJson.HasMember("query")))
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is missing).");
+
+		if(!(this->cmdJson["urllist"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'query\' is not a valid number).");
+
+		const unsigned long urlList = this->cmdJson["urllist"].GetUint64();
+		const unsigned long query = this->cmdJson["query"].GetUint64();
+
+		// check URL list
+		if(!(this->database.isUrlList(urlList)))
+			return ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(urlList)
+					+ " not found."
+			);
+
+		// get website from URL list
+		const auto website = this->database.getWebsiteNamespaceFromUrlList(urlList);
+
+		if(!website.first)
+			return ServerCommandResponse::failed(
+					"Could not get website for URL list #"
+					+ std::to_string(urlList)
+					+ "."
+			);
+
+		// check query
+		if(!(this->database.isQuery(query)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(query)
+					+ " not found."
+			);
+
+		if(!(this->database.isQuery(website.first, query)) && !(this->database.isQuery(0, query)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(query)
+					+ " is not valid for website #"
+					+ std::to_string(website.first)
+					+ "."
+			);
+
+		// get query properties
+		QueryProperties properties{};
+
+		this->database.getQueryProperties(query, properties);
+
+		// check query type (must be RegEx)
+		if(properties.type != "regex")
+			return ServerCommandResponse::failed(
+				"Query #"
+				+ std::to_string(query)
+				+ " has invalid type (must be RegEx)."
+			);
+
+		// check query result type (must be boolean)
+		if(!properties.resultBool)
+			return ServerCommandResponse::failed(
+				"Query #"
+				+ std::to_string(query)
+				+ " has invalid result type (must be boolean)."
+			);
+
+		std::queue<unsigned long> toDelete;
+
+		try {
+			// create RegEx query
+			const Query::RegEx query(
+					properties.text,
+					true,
+					false
+			);
+
+			// get URLs from URL list
+			auto urls = this->database.getUrlsWithIds(urlList);
+
+			// perform query on each URL in the URL list to identify which URLs to delete
+			while(!urls.empty()) {
+				if(query.getBool(urls.front().second))
+					toDelete.push(urls.front().first);
+
+				urls.pop();
+			}
+		}
+		catch(const RegExException& e) {
+			return ServerCommandResponse::failed(
+					"RegEx error: "
+					+ e.whatStr()
+			);
+		}
+
+		// check for URLs matching the query
+		if(toDelete.empty())
+			return ServerCommandResponse("The query did not match any URLs in the URL list.");
+
+		// deleteurls needs to be confirmed
+		if(this->cmdJson.HasMember("confirmed")) {
+			const auto numDeleted = this->database.deleteUrls(urlList, toDelete);
+
+			if(numDeleted == 1)
+				return ServerCommandResponse("One URL has been deleted.");
+			else
+				return ServerCommandResponse(
+					std::to_string(numDeleted)
+					+ " URLs have been deleted."
+				);
+		}
+
+		return ServerCommandResponse::toBeConfirmed(
+				"Do you really want to delete "
+				+ std::to_string(toDelete.size())
+				+ " URLs?\n!!! All associated data will be lost !!!"
 		);
 	}
 

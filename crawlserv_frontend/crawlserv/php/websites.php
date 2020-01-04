@@ -495,6 +495,55 @@ if($website) {
     echo "</div>\n";
     echo "</div>\n";
     echo "</div>\n";
+    
+    // delete URLs by query
+    if(isset($urllist) && $urllist) {
+        echo "<div class=\"content-block\">\n";
+        
+        echo "<div id=\"urls-delete-div\" class=\"entry-row\">\n";
+        
+        echo "<div class=\"entry-label\">URL deletion:</div><div class=\"entry-input\">\n";
+        
+        echo "<select id=\"urls-delete-query\" class=\"entry-input\">\n";
+        
+        $result = $dbConnection->query(
+                "SELECT id,name".
+                " FROM crawlserv_queries".
+                " WHERE (".
+                        "website=$website".
+                        " OR website IS NULL".
+                ")".
+                " AND type LIKE 'regex'".
+                " AND resultbool".
+                " ORDER BY name"
+        );
+        
+        if(!$result)
+            die("ERROR: Could not get IDs and names of queries.");
+        
+        while($row = $result->fetch_assoc()) {
+            $id = $row["id"];
+            $name = $row["name"];
+            
+            echo "<option value=\"".$id."\"";
+           
+            echo ">".htmlspecialchars($name)."</option>\n";
+        }
+        
+        echo "</select>\n";
+        
+        echo "</div>\n";
+        echo "</div>\n";
+        
+        echo "<div class=\"action-link-box\">\n";
+        echo "<div class=\"action-link\">\n";
+        
+        echo "<a id=\"urls-delete\" href=\"#\" class=\"action-link\">Delete all matching URLs</a>\n";
+        
+        echo "</div>\n";
+        echo "</div>\n";
+        echo "</div>\n";
+    }
 }
 
 ?>

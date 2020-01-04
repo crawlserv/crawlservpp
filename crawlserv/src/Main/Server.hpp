@@ -273,6 +273,7 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdAddUrlList();
 		ServerCommandResponse cmdUpdateUrlList();
 		ServerCommandResponse cmdDeleteUrlList();
+		ServerCommandResponse cmdDeleteUrls();
 
 		ServerCommandResponse cmdAddQuery();
 		ServerCommandResponse cmdUpdateQuery();
