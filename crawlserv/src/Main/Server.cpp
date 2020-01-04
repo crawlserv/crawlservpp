@@ -2953,18 +2953,33 @@ namespace crawlservpp::Main {
 
 			if(numDeleted == 1)
 				return ServerCommandResponse("One URL has been deleted.");
-			else
-				return ServerCommandResponse(
-					std::to_string(numDeleted)
-					+ " URLs have been deleted."
-				);
+			else {
+				std::ostringstream responseStrStr;
+
+				responseStrStr.imbue(std::locale(""));
+
+				responseStrStr << numDeleted << " URLs have been deleted.";
+
+				return ServerCommandResponse(responseStrStr.str());
+			}
 		}
 
-		return ServerCommandResponse::toBeConfirmed(
-				"Do you really want to delete "
-				+ std::to_string(toDelete.size())
-				+ " URLs?\n!!! All associated data will be lost !!!"
-		);
+		if(toDelete.size() == 1)
+			return ServerCommandResponse::toBeConfirmed(
+					"Do you really want to delete one URL?"
+					"\n!!! All associated data will be lost !!!"
+			);
+		else {
+			std::ostringstream responseStrStr;
+
+			responseStrStr.imbue(std::locale(""));
+
+			responseStrStr	<< "Do you really want to delete "
+							<< toDelete.size()
+							<< " URLs?\n!!! All associated data will be lost !!!";
+
+			return ServerCommandResponse::toBeConfirmed(responseStrStr.str());
+		}
 	}
 
 	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
