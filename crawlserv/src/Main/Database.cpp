@@ -3751,7 +3751,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// check whether a query ID is valid for the ID-specified website (look for global queries if websiteID is zero),
+	// check whether a query ID is valid for the ID-specified website (including global queries),
 	//  throws Database::Exception
 	bool Database::isQuery(unsigned long websiteId, unsigned long queryId) {
 		bool result = false;
@@ -3774,7 +3774,7 @@ namespace crawlservpp::Main {
 								" WHERE"
 								" ("
 									" website = ?"
-									" OR website = 0"
+									" OR website IS NULL"
 								" )"
 								" AND id = ?"
 							" )"
