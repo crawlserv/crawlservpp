@@ -204,6 +204,7 @@ namespace crawlservpp::Main {
 		std::queue<IdString> getUrlLists(unsigned long websiteId);
 		unsigned long mergeUrls(unsigned long listId, std::queue<std::string>& urls);
 		std::queue<std::string> getUrls(unsigned long listId);
+		std::queue<IdString> getUrlsWithIds(unsigned long listId);
 		std::string getUrlListNamespace(unsigned long listId);
 		IdString getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long listId);
 		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);

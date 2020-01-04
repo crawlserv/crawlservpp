@@ -2251,6 +2251,9 @@ namespace crawlservpp::Main {
 				+ this->getUrlListNamespace(listId)
 		);
 
+		// check connection
+		this->checkConnection();
+
 		try {
 			// create SQL statement
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
@@ -2267,6 +2270,48 @@ namespace crawlservpp::Main {
 					result.emplace(sqlResultSet->getString("url"));
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getUrls", e); }
+
+		return result;
+	}
+
+	// get all URLs with their IDs from the specified URL list, throws Database::Exception
+	std::queue<Database::IdString> Database::getUrlsWithIds(unsigned long listId) {
+		std::queue<IdString> result;
+
+		// check argument
+		if(!listId)
+			throw Database::Exception("Main::Database::getUrlsWithIds(): No URL list ID specified");
+
+		// get ID and namespaces of website
+		const IdString website(this->getWebsiteNamespaceFromUrlList(listId));
+
+		// get namespace of URL list and generate name of URL list table
+		const std::string urlListTable(
+				"crawlserv_"
+				+ website.second
+				+ "_"
+				+ this->getUrlListNamespace(listId)
+		);
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(
+					sqlStatement,
+					"SELECT id, url FROM `" + urlListTable + "`"
+			));
+
+			// get results
+			if(sqlResultSet)
+				while(sqlResultSet->next())
+					result.emplace(sqlResultSet->getUInt64("id"), sqlResultSet->getString("url"));
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getUrlsWithIds", e); }
 
 		return result;
 	}
