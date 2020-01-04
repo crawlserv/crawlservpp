@@ -455,6 +455,11 @@ span.remove-entry {
 	padding-bottom:2px;
 }
 
+/* DIV FOR DELETION OF URLS */
+#urls-delete-div {
+	color:#ff0000;
+}
+
 /* XPATH and REGEX HELPER */
 div.helper {
 	font-size:0.8em;
