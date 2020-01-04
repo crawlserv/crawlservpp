@@ -56,17 +56,20 @@ namespace crawlservpp::Query {
 
 	class Container {
 		// for convenience
-		typedef Helper::Json::Exception JsonException;
-		typedef Parsing::XML::Exception XMLException;
-		typedef Query::JsonPath::Exception JsonPathException;
-		typedef Query::JsonPointer::Exception JsonPointerException;
-		typedef Query::RegEx::Exception RegExException;
-		typedef Query::XPath::Exception XPathException;
-		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::QueryStruct QueryStruct;
+		using JsonException = Helper::Json::Exception;
 
-		typedef std::pair<XPath, JsonPointer> XPathJsonPointer;
-		typedef std::pair<XPath, JsonPath> XPathJsonPath;
+		using XMLException = Parsing::XML::Exception;
+
+		using JsonPathException = Query::JsonPath::Exception;
+		using JsonPointerException = Query::JsonPointer::Exception;
+		using RegExException = Query::RegEx::Exception;
+		using XPathException = Query::XPath::Exception;
+
+		using QueryProperties = Struct::QueryProperties;
+		using QueryStruct = Struct::QueryStruct;
+
+		using XPathJsonPointer = std::pair<XPath, JsonPointer>;
+		using XPathJsonPath = std::pair<XPath, JsonPath>;
 
 	public:
 		// constructor and destructor

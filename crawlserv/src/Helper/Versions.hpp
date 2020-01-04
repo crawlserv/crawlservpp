@@ -52,7 +52,7 @@
 namespace crawlservpp::Helper::Versions {
 
 	// for convenience
-	typedef std::pair<std::string, std::string> StringString;
+	using StringString = std::pair<std::string, std::string>;
 
 	/*
 	 * DEFINITION

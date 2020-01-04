@@ -77,22 +77,26 @@ namespace crawlservpp::Module::Extractor {
 	class Thread: public Module::Thread, private Query::Container, private Config {
 
 		// for convenience
-		typedef Helper::DateTime::Exception DateTimeException;
-		typedef Helper::DateTime::LocaleException LocaleException;
-		typedef Helper::Utf8::Exception Utf8Exception;
-		typedef Network::Curl::Exception CurlException;
-		typedef Network::TorControl::Exception TorControlException;
-		typedef Query::Container::Exception QueryException;
-		typedef Struct::DataEntry DataEntry;
-		typedef Struct::NetworkSettings NetworkSettings;
-		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::QueryStruct QueryStruct;
-		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::ThreadStatus ThreadStatus;
-		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
+		using DateTimeException = Helper::DateTime::Exception;
+		using LocaleException = Helper::DateTime::LocaleException;
+		using Utf8Exception = Helper::Utf8::Exception;
 
-		typedef std::pair<unsigned long, std::string> IdString;
-		typedef std::pair<std::string, std::string> StringString;
+		using CurlException = Network::Curl::Exception;
+		using TorControlException = Network::TorControl::Exception;
+
+		using QueryException = Query::Container::Exception;
+
+		using DataEntry = Struct::DataEntry;
+		using NetworkSettings = Struct::NetworkSettings;
+		using QueryProperties = Struct::QueryProperties;
+		using QueryStruct = Struct::QueryStruct;
+		using ThreadOptions = Struct::ThreadOptions;
+		using ThreadStatus = Struct::ThreadStatus;
+
+		using DatabaseLock = Wrapper::DatabaseLock<Database>;
+
+		using IdString = std::pair<unsigned long, std::string>;
+		using StringString = std::pair<std::string, std::string>;
 
 	public:
 		// constructors

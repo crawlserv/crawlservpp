@@ -57,9 +57,9 @@ namespace crawlservpp::Main {
 
 	class App {
 		// for convenience
-		typedef Struct::DatabaseSettings DatabaseSettings;
-		typedef Struct::NetworkSettings NetworkSettings;
-		typedef Struct::ServerSettings ServerSettings;
+		using DatabaseSettings = Struct::DatabaseSettings;
+		using NetworkSettings = Struct::NetworkSettings;
+		using ServerSettings = Struct::ServerSettings;
 
 	public:
 		App(int argc, char * argv[]) noexcept;

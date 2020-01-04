@@ -115,27 +115,28 @@ namespace crawlservpp::Main {
 
 	class Database {
 		// for convenience
-		typedef Helper::Json::Exception JsonException;
-		typedef Struct::ConfigProperties ConfigProperties;
-		typedef Struct::TableProperties TableProperties;
-		typedef Struct::TargetTableProperties TargetTableProperties;
-		typedef Struct::DatabaseSettings DatabaseSettings;
-		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::TableColumn TableColumn;
-		typedef Struct::ThreadDatabaseEntry ThreadDatabaseEntry;
-		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::ThreadStatus ThreadStatus;
-		typedef Struct::UrlListProperties UrlListProperties;
-		typedef Struct::WebsiteProperties WebsiteProperties;
+		using JsonException = Helper::Json::Exception;
 
-		typedef std::vector<std::pair<unsigned long, unsigned long>> IdPairs;
-		typedef std::pair<unsigned long, std::string> IdString;
-		typedef std::function<bool()> IsRunningCallback;
-		typedef std::unique_ptr<sql::PreparedStatement> SqlPreparedStatementPtr;
-		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
-		typedef std::unique_ptr<sql::Statement> SqlStatementPtr;
-		typedef std::pair<std::string, std::string> StringString;
-		typedef std::vector<std::pair<std::string, std::vector<StringString>>> Queries;
+		using ConfigProperties = Struct::ConfigProperties;
+		using DatabaseSettings = Struct::DatabaseSettings;
+		using QueryProperties = Struct::QueryProperties;
+		using TableColumn = Struct::TableColumn;
+		using TableProperties = Struct::TableProperties;
+		using TargetTableProperties = Struct::TargetTableProperties;
+		using ThreadDatabaseEntry = Struct::ThreadDatabaseEntry ;
+		using ThreadOptions = Struct::ThreadOptions;
+		using ThreadStatus = Struct::ThreadStatus;
+		using UrlListProperties = Struct::UrlListProperties;
+		using WebsiteProperties = Struct::WebsiteProperties;
+
+		using IdPairs = std::vector<std::pair<unsigned long, unsigned long>>;
+		using IdString = std::pair<unsigned long, std::string>;
+		using IsRunningCallback = std::function<bool()>;
+		using SqlPreparedStatementPtr = std::unique_ptr<sql::PreparedStatement>;
+		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
+		using SqlStatementPtr = std::unique_ptr<sql::Statement>;
+		using StringString = std::pair<std::string, std::string>;
+		using Queries = std::vector<std::pair<std::string, std::vector<StringString>>>;
 
 	public:
 		// allow wrapper and locking class access to protected functions

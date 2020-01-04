@@ -59,14 +59,14 @@ namespace crawlservpp::Wrapper {
 
 	class Database {
 		// for convenience
-		typedef Struct::ModuleOptions ModuleOptions;
-		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::TableColumn TableColumn;
-		typedef Struct::TableProperties TableProperties;
-		typedef Struct::TargetTableProperties TargetTableProperties;
+		using ModuleOptions = Struct::ModuleOptions;
+		using QueryProperties = Struct::QueryProperties;
+		using TableColumn = Struct::TableColumn;
+		using TableProperties = Struct::TableProperties;
+		using TargetTableProperties = Struct::TargetTableProperties;
 
-		typedef std::pair<unsigned long, std::string> IdString;
-		typedef std::function<bool()> IsRunningCallback;
+		using IdString = std::pair<unsigned long, std::string>;
+		using IsRunningCallback = std::function<bool()>;
 
 	public:
 		// allow locking class access to protected functions

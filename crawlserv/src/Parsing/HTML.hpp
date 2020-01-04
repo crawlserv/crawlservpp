@@ -42,7 +42,7 @@ namespace crawlservpp::Parsing {
 	class HTML final {
 	private:
 		// for convenience
-		typedef Wrapper::TidyDoc TidyDoc;
+		using TidyDoc = Wrapper::TidyDoc;
 
 	public:
 		// constructor and destructor

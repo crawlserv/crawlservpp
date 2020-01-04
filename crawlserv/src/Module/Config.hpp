@@ -59,11 +59,12 @@ namespace crawlservpp::Module {
 
 	class Config {
 		// for convenience
-		typedef Helper::Json::Exception JsonException;
-		typedef Struct::ConfigItem ConfigItem;
+		using JsonException = Helper::Json::Exception;
 
-		typedef std::queue<std::string>& LogQueue;
-		typedef std::queue<std::string> * LogPtr;
+		using ConfigItem = Struct::ConfigItem;
+
+		using LogQueue = std::queue<std::string>&;
+		using LogPtr = std::queue<std::string> *;
 
 	public:
 		Config();

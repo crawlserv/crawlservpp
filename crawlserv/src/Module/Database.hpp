@@ -60,10 +60,11 @@ namespace crawlservpp::Module {
 		friend class Wrapper::Database;
 
 		// for convenience
-		typedef Struct::DatabaseSettings DatabaseSettings;
-		typedef Struct::ModuleOptions ModuleOptions;
+		using DatabaseSettings = Struct::DatabaseSettings;
+		using ModuleOptions = Struct::ModuleOptions;
 
-		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
+		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
+
 	public:
 		// constructor
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);

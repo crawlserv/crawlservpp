@@ -39,7 +39,7 @@ namespace crawlservpp::Wrapper {
 	template<class DB> // DB needs to be a Database connection class w/ .lockDatabase(...) and .unlockDatabase()
 	class DatabaseLock {
 		// for convenience
-		typedef std::function<bool()> IsRunningCallback;
+		using IsRunningCallback = std::function<bool()>;
 
 	public:
 		// constructor: lock the database

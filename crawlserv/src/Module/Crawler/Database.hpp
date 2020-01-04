@@ -55,8 +55,8 @@ namespace crawlservpp::Module::Crawler {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef std::pair<unsigned long, std::string> IdString;
-		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
+		using IdString = std::pair<unsigned long, std::string>;
+		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
 		// constructor

@@ -74,22 +74,26 @@ namespace crawlservpp::Module::Crawler {
 
 	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenienc
-		typedef Helper::DateTime::Exception DateTimeException;
-		typedef Helper::Utf8::Exception Utf8Exception;
-		typedef Network::Curl::Exception CurlException;
-		typedef Network::TorControl::Exception TorControlException;
-		typedef Parsing::URI::Exception URIException;
-		typedef Query::Container::Exception QueryException;
-		typedef Struct::NetworkSettings NetworkSettings;
-		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::QueryStruct QueryStruct;
-		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::ThreadStatus ThreadStatus;
+		using DateTimeException = Helper::DateTime::Exception;
+		using Utf8Exception = Helper::Utf8::Exception;
 
-		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
+		using CurlException = Network::Curl::Exception;
+		using TorControlException = Network::TorControl::Exception;
 
-		typedef std::pair<unsigned long, std::string> IdString;
-		typedef std::pair<std::chrono::steady_clock::time_point, std::string> TimeString;
+		using URIException = Parsing::URI::Exception;
+
+		using QueryException = Query::Container::Exception;
+
+		using NetworkSettings = Struct::NetworkSettings;
+		using QueryProperties = Struct::QueryProperties;
+		using QueryStruct = Struct::QueryStruct;
+		using ThreadOptions = Struct::ThreadOptions;
+		using ThreadStatus = Struct::ThreadStatus;
+
+		using DatabaseLock = Wrapper::DatabaseLock<Database>;
+
+		using IdString = std::pair<unsigned long, std::string>;
+		using TimeString = std::pair<std::chrono::steady_clock::time_point, std::string>;
 
 	public:
 		// constructors

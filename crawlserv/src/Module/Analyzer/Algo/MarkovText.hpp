@@ -59,12 +59,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	class MarkovText: public Module::Analyzer::Thread {
 		// for convenience
-		typedef Main::Data::Type DataType;
-		typedef Main::Data::Value DataValue;
-		typedef Module::Analyzer::Thread::Exception Exception;
-		typedef Struct::CorpusProperties CorpusProperties;
-		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::ThreadStatus ThreadStatus;
+		using DataType = Main::Data::Type;
+		using DataValue = Main::Data::Value;
+
+		using Exception = Module::Analyzer::Thread::Exception;
+
+		using CorpusProperties = Struct::CorpusProperties;
+		using ThreadOptions = Struct::ThreadOptions;
+		using ThreadStatus = Struct::ThreadStatus;
 
 	public:
 		MarkovText(

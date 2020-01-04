@@ -65,17 +65,19 @@ namespace crawlservpp::Module::Analyzer {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef Helper::Json::Exception JsonException;
-		typedef Main::Data::Type DataType;
-		typedef Struct::TargetTableProperties CustomTableProperties;
-		typedef Struct::CorpusProperties CorpusProperties;
-		typedef Struct::TableColumn TableColumn;
+		using JsonException = Helper::Json::Exception;
 
-		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
+		using DataType = Main::Data::Type;
+
+		using CustomTableProperties = Struct::TargetTableProperties;
+		using CorpusProperties = Struct::CorpusProperties;
+		using TableColumn = Struct::TableColumn;
+
+		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 		// text maps are used to describe certain parts of a text
 		//  defined by their positions and lengths with certain strings (words, dates etc.)
-		typedef std::tuple<std::string, unsigned long, unsigned long> TextMapEntry;
+		using TextMapEntry = std::tuple<std::string, unsigned long, unsigned long>;
 
 	public:
 		Database(Module::Database& dbRef);

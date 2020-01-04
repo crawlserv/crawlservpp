@@ -66,18 +66,21 @@ namespace crawlservpp::Module::Parser {
 
 	class Thread: public Module::Thread, private Query::Container, private Config {
 		// for convenience
-		typedef Helper::DateTime::Exception DateTimeException;
-		typedef Helper::DateTime::LocaleException LocaleException;
-		typedef Helper::Json::Exception JsonException;
-		typedef Struct::DataEntry DataEntry;
-		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::QueryStruct QueryStruct;
-		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::ThreadStatus ThreadStatus;
-		typedef Query::Container::Exception QueryException;
-		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
+		using DateTimeException = Helper::DateTime::Exception;
+		using LocaleException = Helper::DateTime::LocaleException;
+		using JsonException = Helper::Json::Exception;
 
-		typedef std::pair<unsigned long, std::string> IdString;
+		using DataEntry = Struct::DataEntry;
+		using QueryProperties = Struct::QueryProperties;
+		using QueryStruct = Struct::QueryStruct;
+		using ThreadOptions = Struct::ThreadOptions;
+		using ThreadStatus = Struct::ThreadStatus;
+
+		using QueryException = Query::Container::Exception;
+
+		using DatabaseLock = Wrapper::DatabaseLock<Database>;
+
+		using IdString = std::pair<unsigned long, std::string>;
 
 	public:
 		// constructors

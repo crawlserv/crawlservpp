@@ -55,7 +55,7 @@ namespace crawlservpp::Helper::Json {
 
 	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings
 	//  (words, dates etc.)
-	typedef std::vector<std::tuple<std::string, unsigned long, unsigned long>> TextMap;
+	using TextMap = std::vector<std::tuple<std::string, unsigned long, unsigned long>>;
 
 	// stringify different kind of data to a JSON string
 	std::string stringify(const std::vector<std::string>& vectorToStringify);

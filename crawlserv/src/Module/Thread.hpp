@@ -63,11 +63,13 @@ namespace crawlservpp::Module {
 
 	class Thread {
 		// for convenience
-		typedef Main::Database::ConnectionException ConnectionException;
-		typedef Struct::ModuleOptions ModuleOptions;
-		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::ThreadStatus ThreadStatus;
-		typedef Wrapper::DatabaseLock<Database> DatabaseLock;
+		using ConnectionException = Main::Database::ConnectionException;
+
+		using ModuleOptions = Struct::ModuleOptions;
+		using ThreadOptions = Struct::ThreadOptions;
+		using ThreadStatus = Struct::ThreadStatus;
+
+		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
 	public:
 		// constructors

@@ -57,13 +57,13 @@ namespace crawlservpp::Module::Extractor {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef Struct::DataEntry DataEntry;
-		typedef Struct::TargetTableProperties TargetTableProperties;
-		typedef Struct::TableColumn TableColumn;
+		using DataEntry = Struct::DataEntry;
+		using TargetTableProperties = Struct::TargetTableProperties;
+		using TableColumn = Struct::TableColumn;
 
-		typedef std::pair<unsigned long, std::string> IdString;
-		typedef std::pair<std::string, std::string> StringString;
-		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
+		using IdString = std::pair<unsigned long, std::string>;
+		using StringString = std::pair<std::string, std::string>;
+		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
 		Database(Module::Database& dbRef);

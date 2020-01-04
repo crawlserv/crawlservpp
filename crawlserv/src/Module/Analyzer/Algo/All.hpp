@@ -42,9 +42,11 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	// for convenience
-	typedef Struct::AlgoThreadProperties AlgoThreadProperties;
-	typedef std::unique_ptr<Module::Analyzer::Thread> AlgoThreadPtr;
+	using AlgoThreadProperties = Struct::AlgoThreadProperties;
 
+	using AlgoThreadPtr = std::unique_ptr<Module::Analyzer::Thread>;
+
+	// registration function
 	AlgoThreadPtr initAlgo(const AlgoThreadProperties& thread);
 
 } /* crawlservpp::Module::Analyzer */

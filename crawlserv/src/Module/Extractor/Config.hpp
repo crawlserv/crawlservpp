@@ -48,7 +48,7 @@ namespace crawlservpp::Module::Extractor {
 
 	class Config : protected Network::Config {
 		// for convenience
-		typedef Struct::ConfigItem ConfigItem;
+		using ConfigItem = Struct::ConfigItem;
 
 	public:
 		Config() : crossDomain(false) {}

@@ -58,12 +58,12 @@ namespace crawlservpp::Module::Parser {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		typedef Struct::TargetTableProperties TargetTableProperties;
-		typedef Struct::DataEntry DataEntry;
-		typedef Struct::TableColumn TableColumn;
+		using TargetTableProperties = Struct::TargetTableProperties;
+		using DataEntry = Struct::DataEntry;
+		using TableColumn = Struct::TableColumn;
 
-		typedef std::pair<unsigned long, std::string> IdString;
-		typedef std::unique_ptr<sql::ResultSet> SqlResultSetPtr;
+		using IdString = std::pair<unsigned long, std::string>;
+		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
 		Database(Module::Database& dbRef);

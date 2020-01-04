@@ -116,33 +116,37 @@ namespace crawlservpp::Main {
 
 	class Server final {
 		// for convenience
-		typedef Database::Exception DatabaseException;
-		typedef Database::IncorrectPathException IncorrectPathException;
-		typedef Database::PrivilegesException PrivilegesException;
-		typedef Database::StorageEngineException StorageEngineException;
-		typedef Helper::DateTime::Exception DateTimeException;
-		typedef Helper::DateTime::LocaleException LocaleException;
-		typedef Helper::Json::Exception JsonException;
-		typedef Parsing::XML::Exception XMLException;
-		typedef Query::JsonPath::Exception JSONPathException;
-		typedef Query::JsonPointer::Exception JSONPointerException;
-		typedef Query::RegEx::Exception RegExException;
-		typedef Query::XPath::Exception XPathException;
-		typedef Struct::AlgoThreadProperties AlgoThreadProperties;
-		typedef Struct::ConfigProperties ConfigProperties;
-		typedef Struct::DatabaseSettings DatabaseSettings;
-		typedef Struct::NetworkSettings NetworkSettings;
-		typedef Struct::QueryProperties QueryProperties;
-		typedef Struct::ServerCommandResponse ServerCommandResponse;
-		typedef Struct::ServerSettings ServerSettings;
-		typedef Struct::ThreadDatabaseEntry ThreadDatabaseEntry;
-		typedef Struct::ThreadOptions ThreadOptions;
-		typedef Struct::UrlListProperties UrlListProperties;
-		typedef Struct::WebsiteProperties WebsiteProperties;
+		using DatabaseException = Database::Exception;
+		using IncorrectPathException = Database::IncorrectPathException;
+		using PrivilegesException = Database::PrivilegesException;
+		using StorageEngineException = Database::StorageEngineException;
 
-		typedef struct mg_connection * ConnectionPtr;
-		typedef std::pair<std::string, std::string> StringString;
-		typedef std::vector<std::pair<std::string, std::vector<StringString>>> Queries;
+		using DateTimeException = Helper::DateTime::Exception;
+		using JsonException = Helper::Json::Exception;
+		using LocaleException = Helper::DateTime::LocaleException;
+
+		using XMLException = Parsing::XML::Exception;
+
+		using JSONPathException = Query::JsonPath::Exception;
+		using JSONPointerException = Query::JsonPointer::Exception;
+		using RegExException = Query::RegEx::Exception;
+		using XPathException = Query::XPath::Exception;
+
+		using AlgoThreadProperties = Struct::AlgoThreadProperties;
+		using ConfigProperties = Struct::ConfigProperties;
+		using DatabaseSettings = Struct::DatabaseSettings;
+		using NetworkSettings = Struct::NetworkSettings;
+		using QueryProperties = Struct::QueryProperties;
+		using ServerCommandResponse = Struct::ServerCommandResponse;
+		using ServerSettings = Struct::ServerSettings;
+		using ThreadDatabaseEntry = Struct::ThreadDatabaseEntry;
+		using ThreadOptions = Struct::ThreadOptions;
+		using UrlListProperties = Struct::UrlListProperties;
+		using WebsiteProperties = Struct::WebsiteProperties;
+
+		using ConnectionPtr = mg_connection *;
+		using StringString = std::pair<std::string, std::string>;
+		using Queries = std::vector<std::pair<std::string, std::vector<StringString>>>;
 
 	public:
 		// constructor

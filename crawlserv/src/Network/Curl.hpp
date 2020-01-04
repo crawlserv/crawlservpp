@@ -58,8 +58,9 @@ namespace crawlservpp::Network {
 	class Curl {
 
 		// for convenience
-		typedef Struct::NetworkSettings NetworkOptions;
-		typedef Wrapper::CurlList CurlList;
+		using NetworkOptions = Struct::NetworkSettings;
+
+		using CurlList = Wrapper::CurlList;
 
 	public:
 		// constructor and destructor

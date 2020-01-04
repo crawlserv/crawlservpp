@@ -54,14 +54,15 @@ namespace crawlservpp::Main {
 
 	class WebServer final {
 		// for convenience
-		typedef mg_connection * ConnectionPtr;
-		typedef std::function<void(ConnectionPtr)> AcceptCallback;
-		typedef std::function<void(
+		using ConnectionPtr = mg_connection *;
+		using AcceptCallback = std::function<void(ConnectionPtr)>;
+		using RequestCallback =
+				std::function<void(
 						ConnectionPtr,
 						const std::string&,
 						const std::string&,
 						void *
-				)> RequestCallback;
+				)>;
 
 	public:
 		WebServer(const std::string& fileCacheDirectory);
