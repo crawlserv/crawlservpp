@@ -110,6 +110,16 @@
 		"label": "Parsing",
 		"open": true,
 		
+		"content.ignore.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"default": [],
+			"description": "Content matching one of these queries will be excluded from parsing.",
+			"simple": false
+		},
 		"datetime.formats": {
 			"type": "array",
 			"item-type": "string",
