@@ -43,6 +43,8 @@ error_reporting(E_ALL);
 // get navigation
 if(isset($_POST["m"]))
     $m = $_POST["m"];
+else if(isset($_GET["m"]))
+    $m = $_GET["m"];
 else
     $m = "server";
 
@@ -101,6 +103,8 @@ echo isset($_POST["scrolldown"]) ? "true" : "false";
 
 ?>;
 
+window.history.pushState("object or string", "Title", location.protocol + '//' + location.host + location.pathname);
+
 </script>
 
 </head>
@@ -124,7 +128,7 @@ echo isset($_POST["scrolldown"]) ? "true" : "false";
 if($m == "server")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="server"<?php
+?>"><a href="?m=server" class="post-redirect menu-item-link" data-m="server"<?php
 
 echo $mode_attribute;
 
@@ -137,7 +141,7 @@ echo $mode_attribute;
 if($m == "websites")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="websites"<?php
+?>"><a href="?m=websites" class="post-redirect menu-item-link" data-m="websites"<?php
 
 echo $mode_attribute;
 
@@ -150,7 +154,7 @@ echo $mode_attribute;
 if($m == "queries")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="queries"<?php
+?>"><a href="?m=queries" class="post-redirect menu-item-link" data-m="queries"<?php
 
 echo $mode_attribute;
 
@@ -163,7 +167,7 @@ echo $mode_attribute;
 if($m == "crawlers")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="crawlers"<?php
+?>"><a href="?m=crawlers" class="post-redirect menu-item-link" data-m="crawlers"<?php
 
 echo $mode_attribute;
 
@@ -176,7 +180,7 @@ echo $mode_attribute;
 if($m == "parsers")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="parsers"<?php
+?>"><a href="?m=parsers" class="post-redirect menu-item-link" data-m="parsers"<?php
 
 echo $mode_attribute;
 
@@ -189,7 +193,7 @@ echo $mode_attribute;
 if($m == "extractors")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="extractors"<?php
+?>"><a href="?m=extractors" class="post-redirect menu-item-link" data-m="extractors"<?php
 
 echo $mode_attribute;
 
@@ -202,7 +206,7 @@ echo $mode_attribute;
 if($m == "analyzers")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="analyzers"<?php
+?>"><a href="?m=analyzers" class="post-redirect menu-item-link" data-m="analyzers"<?php
 
 echo $mode_attribute;
 
@@ -215,7 +219,7 @@ echo $mode_attribute;
 if($m == "threads")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="threads"<?php
+?>"><a href="?m=threads" class="post-redirect menu-item-link" data-m="threads"<?php
 
 echo $mode_attribute;
 
@@ -228,7 +232,7 @@ echo $mode_attribute;
 if($m == "search")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="search"<?php
+?>"><a href="?m=search" class="post-redirect menu-item-link" data-m="search"<?php
 
 echo $mode_attribute;
 
@@ -241,7 +245,7 @@ echo $mode_attribute;
 if($m == "content")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="content"<?php
+?>"><a href="?m=content" class="post-redirect menu-item-link" data-m="content"<?php
 
 echo $mode_attribute;
 
@@ -254,7 +258,7 @@ echo $mode_attribute;
 if($m == "data")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="data"<?php
+?>"><a href="?m=data" class="post-redirect menu-item-link" data-m="data"<?php
 
 echo $mode_attribute;
 
@@ -267,7 +271,7 @@ echo $mode_attribute;
 if($m == "statistics")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="statistics"<?php
+?>"><a href="?m=statistics" class="post-redirect menu-item-link" data-m="statistics"<?php
 
 echo $mode_attribute;
 
@@ -280,7 +284,7 @@ echo $mode_attribute;
 if($m == "logs")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="logs"<?php
+?>"><a href="?m=logs" class="post-redirect menu-item-link" data-m="logs"<?php
 
 echo $mode_attribute;
 
@@ -293,7 +297,7 @@ echo $mode_attribute;
 if($m == "about")
     echo "menu-item-current";
 
-?>"><a href="" class="post-redirect menu-item-link" data-m="about"<?php
+?>"><a href="?m=about" class="post-redirect menu-item-link" data-m="about"<?php
 
 echo $mode_attribute;
 
