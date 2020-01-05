@@ -117,8 +117,10 @@
 				"bool"
 			],
 			"default": [],
+			"label": "Ignore contents:",
 			"description": "Content matching one of these queries will be excluded from parsing.",
-			"simple": false
+			"simple": true,
+			"position": 15
 		},
 		"datetime.formats": {
 			"type": "array",
