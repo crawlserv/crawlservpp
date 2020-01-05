@@ -521,6 +521,10 @@ namespace crawlservpp::Main {
 
 			Database::sqlExecute(sqlStatement);
 
+			// reset auto-increment if table is (still) empty
+			if(this->isTableEmpty("crawlserv_log"))
+				this->resetAutoIncrement("crawlserv_log");
+
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::clearLogs", e); }
 	}
