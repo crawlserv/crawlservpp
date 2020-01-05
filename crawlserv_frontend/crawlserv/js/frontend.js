@@ -1684,6 +1684,32 @@ jQuery(function($) {
 		return false;
 	});
 	
+// CLICK EVENT: go to specific content
+	$("#content-goto").on("click", function() {
+		$("#website-select").prop("disabled", true);
+		$("#urllist-select").prop("disabled", true);
+		$("#content-last").prop("disabled", true);
+		$("#content-url").prop("disabled", true);
+		$("#content-url-text").prop("disabled", true);
+		$("#content-next").prop("disabled", true);
+		$("#content-version").prop("disabled", true);
+		
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var url = parseInt($("#content-url").val(), 10);
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : "crawled",
+			"website" : website,
+			"urllist" : urllist,
+			"url": url,
+			"version": $(this).data("version")
+		});
+		
+		return false;
+	});
+	
 // CLICK EVENT: last URL
 	$("#content-last").on("click", function() {
 		disableInputs();

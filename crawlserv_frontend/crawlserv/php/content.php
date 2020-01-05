@@ -636,8 +636,8 @@ if($website && $urllist) {
                         
                         foreach($columns as $column)
                             $query .= "b.`".$column."`, ";
-
-                        $query = substr($query, 0, -2);
+                        
+                        $query .= "b.content";
                         
                         $query .=   " FROM `$ctable` AS a,".
                                     " `$ptable` AS b".
@@ -674,6 +674,7 @@ if($website && $urllist) {
                             
                             echo "<tbody>\n";
                             
+                            // show parsed values
                             foreach($columns as $column) {
                                 if(strlen($column) > 8 && substr($column, 0, 8) == "parsed__")
                                     $cname = substr($column, 8);
@@ -700,6 +701,20 @@ if($website && $urllist) {
                                 echo "</td>\n";
                                 echo "</tr>\n";
                             }
+                            
+                            // show content ID of and link to the source for the parsed data 
+                            echo "<tr>\n";
+                            echo "<td>[source]</td>\n";
+                            echo "<td>\n";
+                            
+                            echo "<a href=\"#\" id=\"content-goto\" class=\"action-link\" data-m=\"$m\" data-version=\""
+                                    .$row["content"]
+                                    ."\">";
+                            echo "#".$row["content"];
+                            echo "</a>\n";
+                            
+                            echo "</td>\n";
+                            echo "</tr>\n";
                             
                             echo "</tbody>\n";
                             echo "</table>\n";
