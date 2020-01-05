@@ -80,7 +80,7 @@ namespace crawlservpp::Parsing {
 		if(repairCData)
 			cDataRepair(xml);
 
-		// remove invalid conditional comments
+		// replace invalid conditional comments
 		replaceInvalidConditionalComments(xml);
 
 		// create XML document
@@ -209,8 +209,37 @@ namespace crawlservpp::Parsing {
 			content.insert(pos + 2, "--");
 			content.insert(end + 11, "--"); // (consider that "--" has been added)
 
+			// replace "--" inside new comment with "=="
+			size_t subPos = pos + 8; // (consider that "--" has been added)
+
+			while(subPos < end) {
+				subPos = content.find("--", subPos);
+
+				if(subPos > end)
+					break;
+
+				content.replace(subPos, 2, "==");
+
+				subPos += 2;
+			}
+
 			// jump to the end of the changed conditional comment
-			pos = end + 4; // (consider that 2x "--" have been added)
+			pos = end + 14; // (consider that 2x "--" have been added)
+		}
+
+		// replace remaining invalid end tags
+		pos = 0;
+
+		while(pos < content.length()) {
+			pos = content.find("<![endif]>", pos);
+
+			if(pos == std::string::npos)
+				break;
+
+			content.insert(pos + 2, "--");
+			content.insert(pos + 11, "--"); // (consider that '--' has been added)
+
+			pos += 14; // (consider that 2x "--" have been added)
 		}
 	}
 
