@@ -53,6 +53,7 @@ namespace crawlservpp::Module::Crawler {
 						this->networkOptions.torControlPassword
 				),
 				cookieDir(cookieDirectory),
+				noSubDomain(false),
 				manualCounter(0),
 				startCrawled(false),
 				manualOff(false),
@@ -83,6 +84,7 @@ namespace crawlservpp::Module::Crawler {
 						this->networkOptions.torControlPassword
 				),
 				cookieDir(cookieDirectory),
+				noSubDomain(false),
 				manualCounter(0),
 				startCrawled(false),
 				manualOff(false),
@@ -187,6 +189,9 @@ namespace crawlservpp::Module::Crawler {
 		this->log(Config::crawlerLoggingVerbose, "gets website domain...");
 
 		this->domain = this->database.getWebsiteDomain(this->getWebsite());
+
+		this->noSubDomain = std::count(this->domain.begin(), this->domain.end(), '.') < 2
+				&& (this->domain.length() < 4 || this->domain.substr(0, 4) != "www."); // handle "www.*" as sub-domain
 
 		// create URI parser
 		this->setStatusMessage("Creating URI parser...");
@@ -2704,8 +2709,17 @@ namespace crawlservpp::Module::Crawler {
 				else if(pos2 != std::string::npos)
 					pos = pos2;
 
-				if(pos)
+				if(pos) {
 					urls.at(n - 1) = Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
+
+					// ignore "www." in front of domain if domain has no sub-domain
+					if(this->noSubDomain) {
+						if(urls.at(n - 1).length() > 12 && urls.at(n - 1).substr(0, 12) == "https://www.")
+							urls.at(n - 1) = "https://" + urls.at(n - 1).substr(12);
+						else if(urls.at(n - 1).length() > 11 && urls.at(n - 1).substr(0, 11) == "http://www.")
+							urls.at(n - 1) = "http://" + urls.at(n - 1).substr(11);
+					}
+				}
 				else
 					urls.at(n - 1) = "";
 			}

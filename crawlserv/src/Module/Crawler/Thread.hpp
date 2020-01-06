@@ -54,7 +54,7 @@
 
 #include <curl/curl.h>
 
-#include <algorithm>	// std::find
+#include <algorithm>	// std::count, std::find
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <queue>		// std::queue
@@ -157,6 +157,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// domain, URI parser and separate networking for archives
 		std::string domain;
+		bool noSubDomain;
 		std::unique_ptr<Parsing::URI> parser;
 		std::unique_ptr<Network::Curl> networkingArchives;
 
