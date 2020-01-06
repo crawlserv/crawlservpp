@@ -612,7 +612,12 @@ div.opt-dot {
 div.opt-label {
 	font-size:16px;
 	display:inline-block;
-	width:219px;
+	width:213px;
+}
+div.opt-check-label {
+	font-size:16px;
+	display:inline-block;
+	width:220px;
 }
 div.opt-value {
 	display:inline-block;

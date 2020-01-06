@@ -452,7 +452,9 @@ class Config {
 					value
 			);
 			result += this.label(
-					obj.label
+					obj.label,
+					"",
+					true
 			);
 		}
 		else if(obj.type == "string")
@@ -659,10 +661,13 @@ class Config {
 	}
 	
 	// show label
-	label(name, ttip = "") {
+	label(name, ttip = "", check = false) {
 		var result = "";
 		
-		result += "<div class=\"opt-label";
+		if(check)
+			result += "<div class=\"opt-check-label";
+		else
+			result += "<div class=\"opt-label";
 		
 		if(name == ".")
 			result += " opt-dot"
@@ -979,7 +984,7 @@ class Config {
 		
 		if(type == "bool") {
 			result += this.check(cat, id, value, true);
-			result += this.label("");
+			result += this.label("", "", true);
 		}
 		else if(type == "string") {
 			if(isdef)
