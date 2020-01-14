@@ -96,6 +96,7 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> crawlerReCrawlAlways;
 			bool crawlerReCrawlStart;
 			bool crawlerRepairCData;
+			bool crawlerRepairComments;
 			long crawlerReTries;
 			bool crawlerRetryArchive;
 			std::vector<unsigned int> crawlerRetryHttp;
@@ -181,6 +182,7 @@ namespace crawlservpp::Module::Crawler {
 										crawlerReCrawl(false),
 										crawlerReCrawlStart(true),
 										crawlerRepairCData(true),
+										crawlerRepairComments(true),
 										crawlerReTries(720),
 										crawlerRetryArchive(true),
 										crawlerSleepError(10000),
@@ -253,6 +255,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("recrawl.always", this->config.crawlerReCrawlAlways);
 		this->option("recrawl.start", this->config.crawlerReCrawlStart);
 		this->option("repair.cdata", this->config.crawlerRepairCData);
+		this->option("repair.comments", this->config.crawlerRepairComments);
 		this->option("retries", this->config.crawlerReTries);
 		this->option("retry.archive", this->config.crawlerRetryArchive);
 		this->option("retry.http", this->config.crawlerRetryHttp);

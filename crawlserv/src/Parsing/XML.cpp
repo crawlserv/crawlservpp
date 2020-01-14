@@ -55,7 +55,12 @@ namespace crawlservpp::Parsing {
 	}
 
 	// parse XML content, throws XML::Exception
-	void XML::parse(const std::string& content, std::queue<std::string>& warningsTo, bool repairCData) {
+	void XML::parse(
+			const std::string& content,
+			bool repairCData,
+			bool repairComments,
+			std::queue<std::string>& warningsTo
+	) {
 		// remove whitespaces
 		unsigned long begin = 0;
 
@@ -81,8 +86,10 @@ namespace crawlservpp::Parsing {
 			cDataRepair(xml);
 
 		// replace invalid comments
-		replaceInvalidConditionalComments(xml);
-		replaceInvalidComments(xml);
+		if(repairComments) {
+			replaceInvalidConditionalComments(xml);
+			replaceInvalidComments(xml);
+		}
 
 		// create XML document
 		this->doc = std::make_unique<pugi::xml_document>();

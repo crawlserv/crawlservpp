@@ -303,6 +303,12 @@
 			"description": "Try to repair CData when parsing HTML/XML.",
 			"simple": false
 		},
+		"repair.comments": {
+			"type": "bool",
+			"default": true,
+			"description": "Try to repair broken HTML/XML comments.",
+			"simple": false
+		},
 		"tidy.errors": {
 			"type": "number",
 			"min": 0,

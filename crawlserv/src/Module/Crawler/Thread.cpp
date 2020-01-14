@@ -123,6 +123,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// set query container options
 		this->setRepairCData(this->config.crawlerRepairCData);
+		this->setRepairComments(this->config.crawlerRepairComments);
 		this->setTidyErrorsAndWarnings(this->config.crawlerTidyErrors, this->config.crawlerTidyWarnings);
 
 		// set database options

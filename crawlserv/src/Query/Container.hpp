@@ -82,6 +82,7 @@ namespace crawlservpp::Query {
 	protected:
 		// protected setters
 		void setRepairCData(bool isRepairCData);
+		void setRepairComments(bool isRepairComments);
 		void setMinimizeMemory(bool isMinimizeMemory);
 		void setTidyErrorsAndWarnings(unsigned int errors, bool warnings);
 		void setQueryTarget(const std::string& content, const std::string& source);
@@ -178,6 +179,7 @@ namespace crawlservpp::Query {
 
 		// options
 		bool repairCData;							// try to repair CData when parsing HTML/XML
+		bool repairComments;						// try to repair broken HTML/XML comments
 		bool minimizeMemory;						// minimize memory usage
 
 		// content pointers and parsing

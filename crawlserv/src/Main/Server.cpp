@@ -4517,7 +4517,7 @@ namespace crawlservpp::Main {
 							Parsing::XML xmlDocumentTest;
 
 							xmlDocumentTest.setOptions(xmlWarnings, 25);
-							xmlDocumentTest.parse(text, warnings, true);
+							xmlDocumentTest.parse(text, true, true, warnings);
 
 							while(!warnings.empty()) {
 								result += "WARNING: " + warnings.front() + '\n';
@@ -4869,7 +4869,7 @@ namespace crawlservpp::Main {
 							Parsing::XML xmlDocumentTest;
 
 							xmlDocumentTest.setOptions(xmlWarnings, 25);
-							xmlDocumentTest.parse(text, warnings, true);
+							xmlDocumentTest.parse(text, true, true, warnings);
 
 							while(!warnings.empty()) {
 								result += "WARNING: " + warnings.front() + '\n';

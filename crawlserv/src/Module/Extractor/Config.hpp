@@ -147,6 +147,7 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<unsigned long> extractingRecursive;
 			unsigned long extractingRecursiveMaxDepth;
 			bool extractingRepairCData;
+			bool extractingRepairComments;
 
 			// expected [number of results] entries
 			bool expectedErrorIfLarger;
@@ -202,6 +203,7 @@ namespace crawlservpp::Module::Extractor {
 										extractingOverwrite(true),
 										extractingRecursiveMaxDepth(100),
 										extractingRepairCData(true),
+										extractingRepairComments(true),
 										expectedErrorIfLarger(false),
 										expectedErrorIfSmaller(false),
 										expectedQuery(0),
@@ -293,6 +295,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("recursive", this->config.extractingRecursive);
 		this->option("recursive.max.depth", this->config.extractingRecursiveMaxDepth);
 		this->option("repair.cdata", this->config.extractingRepairCData);
+		this->option("repair.comments", this->config.extractingRepairComments);
 
 		// expected [number of results]
 		this->category("expected");

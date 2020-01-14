@@ -66,7 +66,12 @@ namespace crawlservpp::Parsing {
 		void setOptions(bool showWarnings, unsigned int numOfErrors);
 
 		// parsing function
-		void parse(const std::string& content, std::queue<std::string>& warningsTo, bool repairCData);
+		void parse(
+				const std::string& content,
+				bool repairCData,
+				bool repairComments,
+				std::queue<std::string>& warningsTo
+		);
 
 		// clearing function
 		void clear();

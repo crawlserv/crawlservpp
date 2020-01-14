@@ -35,6 +35,7 @@ namespace crawlservpp::Query {
 	// constructor stub
 	Container::Container()
 			: repairCData(true),
+			  repairComments(true),
 			  minimizeMemory(false),
 			  queryTargetPtr(nullptr),
 			  queryTargetSourcePtr(nullptr),
@@ -54,6 +55,11 @@ namespace crawlservpp::Query {
 	// set whether to try to repair CData when parsing XML
 	void Container::setRepairCData(bool isRepairCData) {
 		this->repairCData = isRepairCData;
+	}
+
+	// set whether to try to repair broken HTML/XML comments
+	void Container::setRepairComments(bool isRepairComments) {
+		this->repairComments = isRepairComments;
 	}
 
 	// set whether to minimize memory usage (may affect performance)
@@ -2641,7 +2647,12 @@ namespace crawlservpp::Query {
 
 		if(!(this->xmlParsed) && this->xmlParsingError.empty()) {
 			try {
-				this->parsedXML.parse(*(this->queryTargetPtr), warningsTo, this->repairCData);
+				this->parsedXML.parse(
+						*(this->queryTargetPtr),
+						this->repairCData,
+						this->repairComments,
+						warningsTo
+				);
 
 				this->xmlParsed = true;
 			}
@@ -2744,8 +2755,9 @@ namespace crawlservpp::Query {
 			try {
 				this->subSetParsedXML.parse(
 						this->stringifiedSubSets.at(this->subSetCurrent - 1),
-						warningsTo,
-						this->repairCData
+						this->repairCData,
+						this->repairComments,
+						warningsTo
 				);
 
 				this->subSetXmlParsed = true;
