@@ -195,9 +195,9 @@ if(isset($_POST["urllist"]))
     $urllist = $_POST["urllist"];
 
 if(isset($_POST["url"]) && isset($website) && $website && isset($urllist) && $urllist) {
-    // get namespace of website
+    // get namespace of website and whether it is cross-domain
     $result = $dbConnection->query(
-            "SELECT namespace".
+            "SELECT namespace, domain".
             " FROM crawlserv_websites".
             " WHERE id=$website".
             " LIMIT 1"
@@ -212,6 +212,7 @@ if(isset($_POST["url"]) && isset($website) && $website && isset($urllist) && $ur
         die("ERROR: Could not get namespace of website.");
     
     $namespace = $row["namespace"];
+    $crossDomain = is_null($row["domain"]);
     
     $result->close();
     
@@ -300,9 +301,9 @@ if(isset($_POST["url"]) && isset($website) && $website && isset($urllist) && $ur
 }
 
 if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($website) && $website && isset($urllist) && $urllist) {
-    // get namespace of website
+    // get namespace of website and whether it is cross-domain
     $result = $dbConnection->query(
-            "SELECT namespace ".
+            "SELECT namespace, domain ".
             " FROM crawlserv_websites".
             " WHERE id=$website".
             " LIMIT 1"
@@ -317,6 +318,7 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
         die("ERROR: Could not get namespace of website.");
     
     $namespace = $row["namespace"];
+    $crossDomain = is_null($row["domain"]);
     
     $result->close();
     
@@ -344,7 +346,7 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     // search for matching URL with content
     $trimmedUrl = trim($_POST["urltext"]);
     
-    if(strlen($trimmedUrl) > 0 AND substr($trimmedUrl, 0, 1) == "/")
+    if(!$crossDomain AND strlen($trimmedUrl) > 0 AND substr($trimmedUrl, 0, 1) == "/")
         $trimmedUrl = substr($trimmedUrl, 1);
     
     $sql = "SELECT a.id AS id, a.url AS url".
@@ -360,7 +362,12 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     if(!$stmt)
         die("ERROR: Could not prepare SQL statement to search for URL");
     
-        $argument = "/".$trimmedUrl."%";
+    $argument = "";
+    
+    if(!$crossDomain)
+        $argument = "/";
+    
+    $argument .= $trimmedUrl."%";
     
     $stmt->bind_param("s", $argument);
     
@@ -381,7 +388,11 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     else {
         $is404 = true;
         $url = 0;
-        $urltext = "/".$trimmedUrl;
+        
+        if($crossDomain)
+            $urltext = $trimmedUrl;
+        else
+            $urltext = "/".$trimmedUrl;
     }
     
     $result->close();
@@ -447,9 +458,9 @@ if($website)
 
 if($website && $urllist) {
     if(!$is404 && (!isset($url) || !$url)) {
-        // get namespace of website
+        // get namespace of website and whether it is cross-domain
         $result = $dbConnection->query(
-                "SELECT namespace".
+                "SELECT namespace, domain".
                 " FROM crawlserv_websites".
                 " WHERE id=$website".
                 " LIMIT 1"
@@ -464,6 +475,7 @@ if($website && $urllist) {
             die("ERROR: Could not get namespace of website.");
         
         $namespace = $row["namespace"];
+        $crossDomain = is_null($row["domain"]);
         
         $result->close();
         
@@ -521,10 +533,15 @@ if($website && $urllist) {
     
     echo "<span id=\"content-slash\">/</span>";
     
+    if($crossDomain)
+        $displayedUrl = htmlspecialchars($urltext);
+    else
+        $displayedUrl = htmlspecialchars(substr($urltext, 1));
+    
     echo "<input type=\"text\" id=\"content-url-text\" data-m=\"$m\" data-tab=\"$tab\" value=\""
-        .htmlspecialchars(substr($urltext, 1))
+        .$displayedUrl
         ."\" title=\""
-        .htmlspecialchars(substr($urltext, 1))
+        .$displayedUrl
         ."\" />";
     
     echo "<button id=\"content-next\" class=\"fs-insert-after\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
