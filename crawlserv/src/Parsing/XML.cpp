@@ -80,8 +80,9 @@ namespace crawlservpp::Parsing {
 		if(repairCData)
 			cDataRepair(xml);
 
-		// replace invalid conditional comments
+		// replace invalid comments
 		replaceInvalidConditionalComments(xml);
+		replaceInvalidComments(xml);
 
 		// create XML document
 		this->doc = std::make_unique<pugi::xml_document>();
@@ -240,6 +241,46 @@ namespace crawlservpp::Parsing {
 			content.insert(pos + 11, "--"); // (consider that '--' has been added)
 
 			pos += 14; // (consider that 2x "--" have been added)
+		}
+	}
+
+	// internal static helper function: replace invalid comments (<? ... ?>)
+	void XML::replaceInvalidComments(std::string& content) {
+		size_t pos = 0;
+
+		while(pos < content.length()) {
+			// find next invalid conditional comment
+			pos = content.find("<? ", pos);
+
+			if(pos == std::string::npos)
+				break;
+
+			// find end of invalid conditional comment
+			const auto end = content.find(" ?>", pos + 3);
+
+			if(end == std::string::npos)
+				break;
+
+			// insert commenting to make conditional comment valid (X)HTML
+			content.insert(pos + 1, "!--");
+			content.insert(end + 5, "--"); // (consider that "!--" has been added)
+
+			// replace "--" inside new comment with "=="
+			size_t subPos = pos + 6; // (consider that "!--" has been added)
+
+			while(subPos < end) {
+				subPos = content.find("--", subPos);
+
+				if(subPos > end)
+					break;
+
+				content.replace(subPos, 2, "==");
+
+				subPos += 2;
+			}
+
+			// jump to the end of the changed conditional comment
+			pos = end + 9; // (consider that 2x "!--" have been added)
 		}
 	}
 

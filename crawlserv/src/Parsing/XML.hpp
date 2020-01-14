@@ -96,6 +96,7 @@ namespace crawlservpp::Parsing {
 		// internal static helper functions
 		static void cDataRepair(std::string& content);
 		static void replaceInvalidConditionalComments(std::string& content);
+		static void replaceInvalidComments(std::string& content);
 	};
 
 } /* crawlservpp::Parsing */
