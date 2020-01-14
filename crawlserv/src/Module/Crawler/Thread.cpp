@@ -191,7 +191,8 @@ namespace crawlservpp::Module::Crawler {
 
 		this->domain = this->database.getWebsiteDomain(this->getWebsite());
 
-		this->noSubDomain = std::count(this->domain.begin(), this->domain.end(), '.') < 2
+		this->noSubDomain = !(this->domain.empty())
+				&& std::count(this->domain.begin(), this->domain.end(), '.') < 2
 				&& (this->domain.length() < 4 || this->domain.substr(0, 4) != "www."); // handle "www.*" as sub-domain
 
 		// create URI parser
@@ -2693,10 +2694,13 @@ namespace crawlservpp::Module::Crawler {
 		newUrlsTo = 0;
 
 		for(unsigned long n = 1; n <= urls.size(); ++n) {
+			// reference to linked URL (for convenience)
+			auto& linked = urls.at(n - 1);
+
 			// parse archive URLs (only absolute links behind archive links!)
 			if(archived) {
-				const unsigned long pos1 = urls.at(n - 1).find("https://", 1);
-				const unsigned long pos2 = urls.at(n - 1).find("http://", 1);
+				const unsigned long pos1 = linked.find("https://", 1);
+				const unsigned long pos2 = linked.find("http://", 1);
 				unsigned long pos = 0;
 
 				if(pos1 != std::string::npos && pos2 != std::string::npos) {
@@ -2711,52 +2715,52 @@ namespace crawlservpp::Module::Crawler {
 					pos = pos2;
 
 				if(pos) {
-					urls.at(n - 1) = Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
+					linked = Parsing::URI::unescape(urls.at(n - 1).substr(pos), false);
 
 					// ignore "www." in front of domain if domain has no sub-domain
 					if(this->noSubDomain) {
-						if(urls.at(n - 1).length() > 12 && urls.at(n - 1).substr(0, 12) == "https://www.")
-							urls.at(n - 1) = "https://" + urls.at(n - 1).substr(12);
-						else if(urls.at(n - 1).length() > 11 && urls.at(n - 1).substr(0, 11) == "http://www.")
-							urls.at(n - 1) = "http://" + urls.at(n - 1).substr(11);
+						if(linked.length() > 12 && linked.substr(0, 12) == "https://www.")
+							linked = "https://" + linked.substr(12);
+						else if(linked.length() > 11 && linked.substr(0, 11) == "http://www.")
+							linked = "http://" + linked.substr(11);
 					}
 				}
 				else
 					urls.at(n - 1) = "";
 			}
 
-			if(!urls.at(n - 1).empty()) {
+			if(!linked.empty()) {
 				// replace &amp; with &
-				Helper::Strings::replaceAll(urls.at(n - 1), "&amp;", "&", true);
+				Helper::Strings::replaceAll(linked, "&amp;", "&", true);
 
 				// parse link
 				try {
-					if(this->parser->parseLink(urls.at(n - 1))) {
+					if(this->parser->parseLink(linked)) {
 						if(this->parser->isSameDomain()) {
 							if(!(this->config.crawlerParamsBlackList.empty())) {
-								urls.at(n - 1) = this->parser->getSubUrl(
+								linked = this->parser->getSubUrl(
 										this->config.crawlerParamsBlackList,
 										false
 								);
 							}
 							else
-								urls.at(n - 1) = this->parser->getSubUrl(
+								linked = this->parser->getSubUrl(
 										this->config.crawlerParamsWhiteList,
 										true
 								);
 
-							if(!(this->crawlingCheckUrl(urls.at(n - 1), url)))
-								urls.at(n - 1) = "";
+							if(!(this->crawlingCheckUrl(linked, url)))
+								linked = "";
 
-							if(!urls.at(n - 1).empty()) {
+							if(!linked.empty()) {
 								if(this->domain.empty()) {
 									// check URL (has to contain at least one slash)
-									if(urls.at(n - 1).find('/') == std::string::npos)
-										urls.at(n - 1).append(1, '/');
+									if(linked.find('/') == std::string::npos)
+										linked.append(1, '/');
 								}
 								else {
 									// check sub-URL (needs to start with slash)
-									if(urls.at(n - 1).at(0) != '/')
+									if(linked.at(0) != '/')
 										throw Exception(
 												"Crawler::Thread::crawlingParseAndAddUrls():"
 												" " + urls.at(n - 1) + " is no sub-URL!"
@@ -2764,13 +2768,10 @@ namespace crawlservpp::Module::Crawler {
 										);
 								}
 
-								if(
-										urls.at(n - 1).length() > 1
-										&& urls.at(n - 1).at(1) == '#'
-								)
+								if(linked.length() > 1 && linked.at(1) == '#')
 									this->log(
 											Config::crawlerLoggingDefault,
-											"WARNING: Found anchor \'" + urls.at(n - 1) + "\'. [" + url + "]"
+											"WARNING: Found anchor \'" + linked + "\'. [" + url + "]"
 									);
 
 								continue;
