@@ -103,12 +103,12 @@ namespace crawlservpp::Parsing {
 					+ ": \'"
 			);
 
-			if(end.size() < current.size())
-				errString	+= current.substr(0, current.size() - end.size())
+			if(end.size() < this->current.size())
+				errString	+= this->current.substr(0, this->current.size() - end.size())
 							+ "[!!!]"
 							+ end;
 			else
-				errString += current + "[!!!]";
+				errString += this->current + "[!!!]";
 
 			errString += "\' in URI::setCurrentSubUrl()";
 
@@ -300,8 +300,8 @@ namespace crawlservpp::Parsing {
 		)
 			throw URI::Exception(
 					"Reference resolving failed for \'"
-					+ this->toString(relativeSource)
-					+ "\'"
+					+ URI::toString(relativeSource)
+					+ "\' in URI::parseLink()"
 			);
 
 		// normalize URI
@@ -318,8 +318,8 @@ namespace crawlservpp::Parsing {
 		)
 			throw URI::Exception(
 					"Normalizing failed for \'"
-					+ this->toString(this->uri)
-					+ "\'"
+					+ URI::toString(this->uri)
+					+ "\' in URI::parseLink()"
 			);
 
 		return true;
@@ -365,7 +365,7 @@ namespace crawlservpp::Parsing {
 		return std::string(cString.get());
 	}
 
-	// escape an URL but leave reserved characters (; / ? : @ = & # %) intact
+	// public static helper function: escape an URL but leave reserved characters (; / ? : @ = & # %) intact
 	std::string URI::escapeUrl(const std::string& urlToEscape) {
 		std::string result;
 		unsigned long pos = 0;
@@ -392,6 +392,100 @@ namespace crawlservpp::Parsing {
 		Helper::Strings::encodePercentage(result);
 
 		return result;
+	}
+
+	// public static helper function: make vector of (possibly) relative URLs absolute, throws URI::Exception
+	//  NOTE: ignores errors for single URLs inside the vector (just skips those URLs)
+	void URI::makeAbsolute(const std::string& base, std::vector<std::string>& urls) {
+		UriParserStateA state;
+
+		// create URI for base URL
+		Wrapper::URI baseUri;
+
+		baseUri.create();
+
+		// parse base URI
+		state.uri = baseUri.get();
+
+		if(uriParseUriA(&state, base.c_str()) != URI_SUCCESS) {
+			const std::string end(state.errorPos);
+
+			std::string errString(
+					"URI Parser error #"
+					+ std::to_string(state.errorCode)
+					+ ": \'"
+			);
+
+			if(end.size() < base.size())
+				errString	+= base.substr(0, base.size() - end.size())
+							+ "[!!!]"
+							+ end;
+			else
+				errString += base + "[!!!]";
+
+			errString += "\' in URI::makeAbsolute()";
+
+			throw URI::Exception(errString);
+		}
+
+		// go through (possibly) relative URLs
+		std::vector<std::string> result;
+
+		for(const auto& url : urls) {
+			// skip empty URLs
+			if(url.empty())
+				continue;
+
+			// create URI for relative URL
+			Wrapper::URI relativeSource;
+
+			relativeSource.create();
+
+			// create URI for absolute URL
+			Wrapper::URI absoluteDest;
+
+			absoluteDest.create();
+
+			// parse relative URL
+			state.uri = relativeSource.get();
+
+			if(uriParseUriA(&state, url.c_str()) != URI_SUCCESS)
+				// ignore single URLs that cannot be parsed
+				continue;
+
+			// resolve reference
+			if(
+					uriAddBaseUriExA(
+							absoluteDest.get(),
+							relativeSource.get(),
+							baseUri.get(),
+							URI_RESOLVE_IDENTICAL_SCHEME_COMPAT
+					) != URI_SUCCESS
+			)
+				// ignore single URLs that cannot be resolved
+				continue;
+
+			// normalize absolute URL
+			const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(
+					absoluteDest.get()
+			);
+
+			if(
+					dirtyParts != URI_NORMALIZED
+					&& uriNormalizeSyntaxExA(
+							absoluteDest.get(),
+							dirtyParts
+					) != URI_SUCCESS
+			)
+				// ignore single URLs that cannot be normalized
+				continue;
+
+			// add normalized absolute URL
+			result.emplace_back(URI::toString(absoluteDest));
+		}
+
+		// swap (possibly) relative with absolute URLs
+		result.swap(urls);
 	}
 
 	// static helper function: convert URITextRangeA to std::string

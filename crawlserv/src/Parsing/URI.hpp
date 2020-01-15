@@ -64,10 +64,11 @@ namespace crawlservpp::Parsing {
 		// parser function
 		bool parseLink(const std::string& linkToParse);
 
-		// escape functions
+		// static helper functions
 		static std::string escape(const std::string& string, bool plusSpace);
 		static std::string unescape(const std::string& string, bool plusSpace);
 		static std::string escapeUrl(const std::string& urlToEscape);
+		static void makeAbsolute(const std::string& base, std::vector<std::string>& urls);
 
 		// class for URI exceptions
 		MAIN_EXCEPTION_CLASS();
