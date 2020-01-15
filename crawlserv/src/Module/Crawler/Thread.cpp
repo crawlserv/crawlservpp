@@ -3123,15 +3123,31 @@ namespace crawlservpp::Module::Crawler {
 											);
 
 											if(!urls.empty()) {
-												// parse and add URLs
-												checkedUrlsTo += urls.size();
+												try {
+													// make URLs absolute
+													Parsing::URI::makeAbsolute(mementos.front().url, urls);
 
-												this->crawlingParseAndAddUrls(
-														url.second,
-														urls,
-														newUrlsTo,
-														true
-												);
+													// parse and add URLs
+													checkedUrlsTo += urls.size();
+
+													this->crawlingParseAndAddUrls(
+															url.second,
+															urls,
+															newUrlsTo,
+															true
+													);
+												}
+												catch(const Parsing::URI::Exception& e) {
+													this->log(
+															Config::crawlerLoggingDefault,
+															"WARNING: "
+															+ e.whatStr()
+															+ " - skips adding URLs..."
+															+ " ["
+															+ mementos.front().url
+															+ "]"
+													);
+												}
 											}
 
 											// clear query target
