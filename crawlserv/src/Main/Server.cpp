@@ -2471,8 +2471,8 @@ namespace crawlservpp::Main {
 
 				if(!(this->database.checkDataDir(properties.dir)))
 					confirmationStrStr <<	"\n\n"
-											"WARNING: The external directory seems to be unknown to the MySQL server.\n"
-											"Add it to \'innodb_directories\' to ensure fail-safe operations.";
+											"WARNING: The external directory seems to be unknown to the MySQL server\n"
+											" - add it to \'innodb_directories\' to ensure fail-safe operations.";
 			}
 		}
 
