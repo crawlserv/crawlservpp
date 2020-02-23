@@ -1102,9 +1102,9 @@ namespace crawlservpp::Module::Crawler {
 							<< " bytes) exceeds the ";
 
 				if(content.size() > 1073741824)
-					logStrStr << "mySQL maximum of 1 GiB.";
+					logStrStr << "MySQL maximum of 1 GiB.";
 				else {
-					logStrStr	<< "current mySQL server maximum of "
+					logStrStr	<< "current MySQL server maximum of "
 								<< this->getMaxAllowedPacketSize() << " bytes.";
 
 					adjustServerSettings = true;
@@ -1165,9 +1165,9 @@ namespace crawlservpp::Module::Crawler {
 							<< " bytes) exceeds the ";
 
 				if(content.size() > 1073741824)
-					logStrStr << "mySQL maximum of 1 GiB.";
+					logStrStr << "MySQL maximum of 1 GiB.";
 				else {
-					logStrStr	<< "current mySQL server maximum of "
+					logStrStr	<< "current MySQL server maximum of "
 								<< this->getMaxAllowedPacketSize() << " bytes.";
 
 					adjustServerSettings = true;
