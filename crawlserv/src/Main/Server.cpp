@@ -2157,6 +2157,13 @@ namespace crawlservpp::Main {
 					this->cmdJson["dir"].GetStringLength()
 			);
 
+			// trim path and remove last separator if necessary
+			Helper::Strings::trim(properties.dir);
+
+			if(properties.dir.size() > 1 && properties.dir.back() == Helper::FileSystem::getPathSeparator())
+				properties.dir.pop_back();
+
+			// check for empty path
 			if(properties.dir.empty())
 				return ServerCommandResponse::failed("External directory cannot be empty when used.");
 		}
@@ -2202,22 +2209,33 @@ namespace crawlservpp::Main {
 				try {
 					id = this->database.addWebsite(properties);
 				}
-				catch(const IncorrectPathException &e) {
+				catch(const IncorrectPathException& e) {
 					return ServerCommandResponse::failed(
-							"Incorrect path for external directory"
+							"Incorrect path for external directory.\n\n"
+							+ e.whatStr()
 					);
 				}
-				catch(const PrivilegesException &e) {
+				catch(const PrivilegesException& e) {
 					return ServerCommandResponse::failed(
-							"The MySQL user used by the server needs to have FILE privilege to use an external directory"
+							"The MySQL user used by the server needs to have FILE privilege to use an external directory.\n\n"
+							+ e.whatStr()
 					);
 				}
-				catch(const StorageEngineException &e) {
+				catch(const WrongArgumentsException& e) {
 					return ServerCommandResponse::failed(
-							"Could not access external directory. Make sure that\n"
+							"The MySQL server did not accept the external data directory.\n"
+							"Make sure it is not located inside its main data directory\n"
+							"as such an external directory cannot be symlinked to.\n\n"
+							+ e.whatStr()
+					);
+				}
+				catch(const StorageEngineException& e) {
+					return ServerCommandResponse::failed(
+							"Could not access the external directory. Make sure that\n"
 							"* the MySQL server has permission to write into the directory\n"
 							"* the AppArmor profile of the MySQL server allows access to the directory (if applicable)\n"
-							"* file-per-table tablespace (innodb_file_per_table) is enabled"
+							"* file-per-table tablespace (innodb_file_per_table) is enabled\n\n"
+							+ e.whatStr()
 					);
 				}
 			}
@@ -2315,6 +2333,13 @@ namespace crawlservpp::Main {
 					this->cmdJson["dir"].GetStringLength()
 			);
 
+			// trim path and remove last separator if necessary
+			Helper::Strings::trim(properties.dir);
+
+			if(properties.dir.size() > 1 && properties.dir.back() == Helper::FileSystem::getPathSeparator())
+				properties.dir.pop_back();
+
+			// check for empty path
 			if(properties.dir.empty())
 				return ServerCommandResponse::failed("External directory cannot be empty when used.");
 		}
@@ -2394,20 +2419,31 @@ namespace crawlservpp::Main {
 			}
 			catch(const IncorrectPathException &e) {
 				return ServerCommandResponse::failed(
-						"Incorrect path for external directory"
+						"Incorrect path for external directory.\n\n"
+						 + e.whatStr()
 				);
 			}
 			catch(const PrivilegesException &e) {
 				return ServerCommandResponse::failed(
-						"The MySQL user used by the server needs to have FILE privilege to use an external directory"
+						"The MySQL user used by the server needs to have FILE privilege to use an external directory.\n\n"
+						 + e.whatStr()
+				);
+			}
+			catch(const WrongArgumentsException& e) {
+				return ServerCommandResponse::failed(
+						"The MySQL server did not accept the external directory.\n"
+						"Make sure it is not located inside its main data directory\n"
+						"as such an external directory cannot be symlinked to.\n\n"
+						+ e.whatStr()
 				);
 			}
 			catch(const StorageEngineException &e) {
 				return ServerCommandResponse::failed(
-						"Could not access external directory. Make sure that\n"
+						"Could not access the external directory. Make sure that\n"
 						"* the MySQL server has permission to write into the directory\n"
 						"* the AppArmor profile of the MySQL server allows access to the directory (if applicable)\n"
-						"* file-per-table tablespace (innodb_file_per_table) is enabled"
+						"* file-per-table tablespace (innodb_file_per_table) is enabled\n\n"
+						+ e.whatStr()
 				);
 			}
 		}
