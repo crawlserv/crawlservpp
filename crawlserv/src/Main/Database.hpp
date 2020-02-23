@@ -56,6 +56,7 @@
 #include "../Helper/Json.hpp"
 #include "../Helper/Portability/locale.h"
 #include "../Helper/Portability/mysqlcppconn.h"
+#include "../Helper/Strings.hpp"
 #include "../Helper/Utf8.hpp"
 #include "../Helper/Versions.hpp"
 #include "../Struct/ConfigProperties.hpp"

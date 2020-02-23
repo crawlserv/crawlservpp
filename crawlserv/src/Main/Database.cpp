@@ -265,6 +265,12 @@ namespace crawlservpp::Main {
 
 				this->dataDir = sqlDataDirResult->getString("value");
 
+				// trim path and remove last separator if necessary
+				Helper::Strings::trim(this->dataDir);
+
+				if(this->dataDir.size() > 1 && this->dataDir.back() == Helper::FileSystem::getPathSeparator())
+					this->dataDir.pop_back();
+
 				if(this->dataDir.empty())
 					throw Database::Exception(
 							"Main::Database::connect(): database variable \'datadir\' is empty"
