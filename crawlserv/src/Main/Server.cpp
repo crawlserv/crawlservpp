@@ -2254,7 +2254,15 @@ namespace crawlservpp::Main {
 			crossDomain = this->cmdJson["crossdomain"].GetBool();
 		}
 
-		if(!crossDomain) {
+		if(crossDomain) {
+			if(
+					this->cmdJson.HasMember("domain")
+					&& this->cmdJson["domain"].IsString()
+					&& this->cmdJson["domain"].GetStringLength()
+			)
+				return ServerCommandResponse::failed("Cannot use domain when website is cross-domain.");
+		}
+		else {
 			if(!(this->cmdJson.HasMember("domain")))
 				return ServerCommandResponse::failed("Invalid arguments (\'domain\' is missing).");
 
@@ -2449,8 +2457,10 @@ namespace crawlservpp::Main {
 			// check for external directory
 			if(properties.dir.empty())
 				confirmationStrStr << "Do you really want to change the data directory to default?";
-			else
+			else if(this->database.getWebsiteDataDirectory(id).empty())
 				confirmationStrStr << "Do you really want to change the data directory to an external directory?";
+			else
+				confirmationStrStr << "Do you really want to change the data directory to another external directory?";
 		}
 
 		return ServerCommandResponse::toBeConfirmed(confirmationStrStr.str());
