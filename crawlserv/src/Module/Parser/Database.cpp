@@ -73,8 +73,11 @@ namespace crawlservpp::Module::Parser {
 
 	// create target table if it does not exists or add custom field columns if they do not exist
 	void Database::initTargetTable() {
+		// get namespaces
+		const auto& options = this->getOptions();
+
 		// create table names
-		this->urlListTable = "crawlserv_" + this->getOptions().websiteNamespace + "_" + this->getOptions().urlListNamespace;
+		this->urlListTable = "crawlserv_" + options.websiteNamespace + "_" + options.urlListNamespace;
 		this->parsingTable = this->urlListTable + "_parsing";
 		this->targetTableFull = this->urlListTable + "_parsed_" + this->targetTableName;
 
@@ -90,7 +93,12 @@ namespace crawlservpp::Module::Parser {
 
 		properties.columns.reserve(4 + this->targetFieldNames.size());
 
-		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL UNIQUE");
+		properties.columns.emplace_back(
+				"content",
+				"BIGINT UNSIGNED NOT NULL UNIQUE",
+				this->urlListTable + "_crawled",
+				"id"
+		);
 		properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
 		properties.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
 		properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
