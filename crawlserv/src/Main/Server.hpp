@@ -120,6 +120,7 @@ namespace crawlservpp::Main {
 		using IncorrectPathException = Database::IncorrectPathException;
 		using PrivilegesException = Database::PrivilegesException;
 		using StorageEngineException = Database::StorageEngineException;
+		using WrongArgumentsException = Database::WrongArgumentsException;
 
 		using DateTimeException = Helper::DateTime::Exception;
 		using JsonException = Helper::Json::Exception;
