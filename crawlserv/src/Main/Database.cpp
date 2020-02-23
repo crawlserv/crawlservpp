@@ -134,7 +134,7 @@ namespace crawlservpp::Main {
 			// set execution timeout if necessary
 			Database::sqlExecute(
 					sqlStatement,
-					"SET SESSION MAX_EXECUTION_TIME = "
+					"SET @@max_execution_time = "
 					+ std::to_string(milliseconds)
 			);
 		}
@@ -202,10 +202,13 @@ namespace crawlservpp::Main {
 				throw Database::Exception("Main::Database::connect(): Connection to database is invalid");
 
 			// set max_allowed_packet size to maximum of 1 GiB
-			//  NOTE: needs to be set independently, setting it in the connection options somehow leads to invalid read of size 8
+			//  NOTE: needs to be set independently, setting it in the connection options leads to "invalid read of size 8"
 			const int maxAllowedPacket = 1073741824;
 
-			this->connection->setClientOption("OPT_MAX_ALLOWED_PACKET", static_cast<const void *>(&maxAllowedPacket));
+			this->connection->setClientOption(
+					"OPT_MAX_ALLOWED_PACKET",
+					static_cast<const void *>(&maxAllowedPacket)
+			);
 
 			// run initializing session commands
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
@@ -216,7 +219,7 @@ namespace crawlservpp::Main {
 			// set lock timeout
 			Database::sqlExecute(
 					sqlStatement,
-					"SET SESSION innodb_lock_wait_timeout = "
+					"SET @@innodb_lock_wait_timeout = "
 					+ std::to_string(MAIN_DATABASE_LOCK_TIMEOUT_SEC)
 			);
 
@@ -224,32 +227,124 @@ namespace crawlservpp::Main {
 			SqlResultSetPtr sqlMaxAllowedPacketResult(
 					Database::sqlExecuteQuery(
 							sqlStatement,
-							"SHOW VARIABLES LIKE 'max_allowed_packet'"
+							"SELECT @@max_allowed_packet AS value"
 					)
 			);
 
 			if(sqlMaxAllowedPacketResult && sqlMaxAllowedPacketResult->next()) {
-				this->maxAllowedPacketSize = sqlMaxAllowedPacketResult->getUInt64("Value");
+				if(sqlMaxAllowedPacketResult->isNull("value"))
+					throw Database::Exception(
+							"Main::Database::connect(): database variable \'max_allowed_packet\' is NULL"
+					);
+
+				this->maxAllowedPacketSize = sqlMaxAllowedPacketResult->getUInt64("value");
 
 				if(!(this->maxAllowedPacketSize))
-					throw Database::Exception("Main::Database::connect(): \'max_allowed_packet\' is zero");
+					throw Database::Exception(
+							"Main::Database::connect(): database variable \'max_allowed_packet\' is zero"
+					);
 			}
 			else
-				throw Database::Exception("Main::Database::connect(): Could not get \'max_allowed_packet\'");
+				throw Database::Exception(
+						"Main::Database::connect(): Could not get \'max_allowed_packet\' from database"
+				);
 
-			// get and save data directory
+			// get and save main data directory
 			SqlResultSetPtr sqlDataDirResult(
 					Database::sqlExecuteQuery(
 							sqlStatement,
-							"SHOW VARIABLES LIKE 'datadir'"
+							"SELECT @@datadir AS value"
 					)
 			);
 
 			if(sqlDataDirResult && sqlDataDirResult->next()) {
-				this->dataDir = sqlDataDirResult->getString("Value");
+				if(sqlDataDirResult->isNull("value"))
+					throw Database::Exception(
+							"Main::Database::connect(): database variable \'datadir\' is NULL"
+					);
+
+				this->dataDir = sqlDataDirResult->getString("value");
+
+				if(this->dataDir.empty())
+					throw Database::Exception(
+							"Main::Database::connect(): database variable \'datadir\' is empty"
+					);
+
+				// add main data directory to all data directories
+				this->dirs.emplace_back(this->dataDir);
 			}
 			else
-				throw Database::Exception("Main::Database::connect(): Could not get \'datadir\'");
+				throw Database::Exception(
+						"Main::Database::connect(): Could not get variable \'datadir\' from database"
+				);
+
+			// get and save InnoDB directories
+			SqlResultSetPtr sqlInnoDirsResult(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT @@innodb_directories AS value"
+					)
+			);
+
+			if(sqlInnoDirsResult && sqlInnoDirsResult->next()) {
+				if(!(sqlInnoDirsResult->isNull("value"))) {
+					const std::vector innoDirs(
+							Helper::Strings::split(
+									sqlInnoDirsResult->getString("value"),
+									';'
+							)
+					);
+
+					// add InnoDB directories to all data directories
+					this->dirs.insert(this->dirs.end(), innoDirs.begin(), innoDirs.end());
+				}
+			}
+			else
+				throw Database::Exception(
+						"Main::Database::connect(): Could not get variable \'innodb_directories\' from database"
+				);
+
+			// get additional directories
+			SqlResultSetPtr sqlInnoHomeDirResult(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT @@innodb_data_home_dir AS value"
+					)
+			);
+
+			if(
+					sqlInnoHomeDirResult
+					&& sqlInnoHomeDirResult->next()
+					&& !(sqlInnoHomeDirResult->isNull("value"))
+			) {
+				const std::string innoHomeDir(sqlInnoHomeDirResult->getString("value"));
+
+				if(!innoHomeDir.empty())
+					this->dirs.emplace_back(innoHomeDir);
+			}
+
+			SqlResultSetPtr sqlInnoUndoDirResult(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT @@innodb_undo_directory AS value"
+					)
+			);
+
+			if(
+					sqlInnoUndoDirResult
+					&& sqlInnoUndoDirResult->next()
+					&& !(sqlInnoUndoDirResult->isNull("value"))
+			) {
+				const std::string innoUndoDir(sqlInnoUndoDirResult->getString("value"));
+
+				if(!innoUndoDir.empty())
+					this->dirs.emplace_back(innoUndoDir);
+			}
+
+			// sort directories and remvove duplicates
+			std::sort(this->dirs.begin(), this->dirs.end());
+
+			this->dirs.erase(std::unique(this->dirs.begin(), this->dirs.end()), this->dirs.end());
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::connect", e); }
 	}
@@ -3887,16 +3982,22 @@ namespace crawlservpp::Main {
 
 	// disable locking
 	void Database::beginNoLock() {
-		SqlStatementPtr sqlStatement(this->connection->createStatement());
+		try {
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
-		sqlStatement->execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+			sqlStatement->execute("SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::beginNoLock", e); }
 	}
 
 	// re-enable locking by ending (non-existing) transaction
 	void Database::endNoLock() {
-		SqlStatementPtr sqlStatement(this->connection->createStatement());
+		try {
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
-		sqlStatement->execute("COMMIT");
+			sqlStatement->execute("COMMIT");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::endNoLock", e); }
 	}
 
 	/*
