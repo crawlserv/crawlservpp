@@ -258,6 +258,7 @@ namespace crawlservpp::Main {
 		// database functions
 		void beginNoLock();
 		void endNoLock();
+		bool checkDataDir(const std::string& dir);
 
 		// general table functions
 		bool isTableEmpty(const std::string& tableName);
@@ -479,7 +480,7 @@ namespace crawlservpp::Main {
 		const DatabaseSettings settings;	// database settings
 		unsigned long maxAllowedPacketSize;	// maximum packet size
 		unsigned long sleepOnError;			// number of seconds to sleep on database error
-		std::string mysqlVersion;			// mySQL version
+		std::string mysqlVersion;			// MySQL version
 		std::string dataDir;				// main data directory
 		std::vector<std::string> dirs;		// all known data directories
 		std::string module;					// module for which the database connection was established
@@ -489,7 +490,7 @@ namespace crawlservpp::Main {
 		Timer::Simple reconnectTimer;		// timer for reconnecting to the database
 #endif
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		static std::atomic<unsigned long long> requestCounter; // mySQL request counter
+		static std::atomic<unsigned long long> requestCounter; // MySQL request counter
 #endif
 
 		// locking state
