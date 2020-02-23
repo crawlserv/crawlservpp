@@ -129,12 +129,7 @@ if($website && !strlen($domain))
 <div class="entry-label"></div>
 <div class="entry-input">
 
-<?php
-
-if(!$website)
-    echo "<input id=\"website-externaldir\" type=\"checkbox\" /> use external directory";
-
-?>
+<input id="website-externaldir" type="checkbox" /> use external directory
 
 </div>
 </div>
@@ -143,14 +138,7 @@ if(!$website)
 <div class="entry-label">Directory:</div>
 <div class="entry-input">
 
-<input type="text" class="entry-input" <?php
-
-if($website)
-    echo "disabled";
-else
-    echo "id=\"website-dir\"";
-
-?> value="<?php
+<input type="text" class="entry-input" id="website-dir" value="<?php
 
 echo $website && strlen($dir) ? htmlspecialchars($dir) : "[default]";
 
