@@ -117,7 +117,7 @@ namespace crawlservpp::Main {
 	 * SETTERS
 	 */
 
-	// set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
+	// set the number of seconds to wait before (first and last) re-try on connection loss to MySQL server
 	void Database::setSleepOnError(unsigned long seconds) {
 		this->sleepOnError = seconds;
 	}
@@ -128,7 +128,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		try {
-			// create mySQL statement
+			// create MySQL statement
 			SqlStatementPtr sqlStatement(this->connection->createStatement());
 
 			// set execution timeout if necessary
@@ -4000,6 +4000,11 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::endNoLock", e); }
 	}
 
+	// check whether a data directory is known to the database
+	bool Database::checkDataDir(const std::string& dir) {
+		return std::find(this->dirs.begin(), this->dirs.end(), dir) != this->dirs.end();
+	}
+
 	/*
 	 * GENERAL TABLE FUNCTIONS
 	 */
@@ -4819,9 +4824,9 @@ namespace crawlservpp::Main {
 										<< "` exceeds the ";
 
 							if(data.value._s.size() > 1073741824)
-								errStrStr << "mySQL data limit of 1 GiB";
+								errStrStr << "MySQL data limit of 1 GiB";
 							else
-								errStrStr	<< "current mySQL server limit of "
+								errStrStr	<< "current MySQL server limit of "
 											<< this->getMaxAllowedPacketSize()
 											<< " bytes - adjust the \'max_allowed_packet\'"
 												" setting on the server accordingly"
@@ -4976,9 +4981,9 @@ namespace crawlservpp::Main {
 										<< "` exceeds the ";
 
 							if(column_value.second._s.size() > 1073741824)
-								errStrStr << "mySQL data limit of 1 GiB";
+								errStrStr << "MySQL data limit of 1 GiB";
 							else
-								errStrStr	<< "current mySQL server limit of "
+								errStrStr	<< "current MySQL server limit of "
 											<< this->getMaxAllowedPacketSize()
 											<< " bytes - adjust the \'max_allowed_packet\'"
 												" setting on the server accordingly"
@@ -5126,9 +5131,9 @@ namespace crawlservpp::Main {
 											<< "` exceeds the ";
 
 								if(std::get<2>(column_type_value)._s.size() > 1073741824)
-									errStrStr << "mySQL data limit of 1 GiB";
+									errStrStr << "MySQL data limit of 1 GiB";
 								else
-									errStrStr	<< "current mySQL server limit of "
+									errStrStr	<< "current MySQL server limit of "
 												<< this->getMaxAllowedPacketSize()
 												<< " bytes - adjust the \'max_allowed_packet\'"
 													" setting on the server accordingly"
@@ -5247,9 +5252,9 @@ namespace crawlservpp::Main {
 										<< "` exceeds the ";
 
 							if(data.value._s.size() > 1073741824)
-								errStrStr << "mySQL data limit of 1 GiB";
+								errStrStr << "MySQL data limit of 1 GiB";
 							else
-								errStrStr	<< "current mySQL server limit of "
+								errStrStr	<< "current MySQL server limit of "
 											<< this->getMaxAllowedPacketSize()
 											<< " bytes - adjust the \'max_allowed_packet\'"
 												" setting on the server accordingly"
@@ -5398,9 +5403,9 @@ namespace crawlservpp::Main {
 										<< "` exceeds the ";
 
 							if(column_value.second._s.size() > 1073741824)
-								errStrStr << "mySQL data limit of 1 GiB";
+								errStrStr << "MySQL data limit of 1 GiB";
 							else
-								errStrStr	<< "current mySQL server limit of "
+								errStrStr	<< "current MySQL server limit of "
 											<< this->getMaxAllowedPacketSize()
 											<< " bytes - adjust the \'max_allowed_packet\'"
 												" setting on the server accordingly"
@@ -5542,9 +5547,9 @@ namespace crawlservpp::Main {
 											<< "` exceeds the ";
 
 								if(std::get<2>(column_type_value)._s.size() > 1073741824)
-									errStrStr << "mySQL data limit of 1 GiB";
+									errStrStr << "MySQL data limit of 1 GiB";
 								else
-									errStrStr	<< "current mySQL server limit of "
+									errStrStr	<< "current MySQL server limit of "
 												<< this->getMaxAllowedPacketSize()
 												<< " bytes - adjust the \'max_allowed_packet\'"
 													" setting on the server accordingly"
