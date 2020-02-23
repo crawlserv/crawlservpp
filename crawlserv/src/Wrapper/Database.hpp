@@ -197,7 +197,7 @@ namespace crawlservpp::Wrapper {
 		this->database.setLogging(level, min, verbose);
 	}
 
-	// set the number of seconds to wait before (first and last) re-try on connection loss to mySQL server
+	// set the number of seconds to wait before (first and last) re-try on connection loss to MySQL server
 	inline void Database::setSleepOnError(unsigned long seconds) {
 		this->database.setSleepOnError(seconds);
 	}
