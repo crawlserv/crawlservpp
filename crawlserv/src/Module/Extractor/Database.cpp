@@ -91,8 +91,10 @@ namespace crawlservpp::Module::Extractor {
 
 	// create target table if it does not exists or add custom field columns if they do not exist
 	void Database::initTargetTable() {
+		const auto& options = this->getOptions();
+
 		// create table names
-		this->urlListTable = "crawlserv_" + this->getOptions().websiteNamespace + "_" + this->getOptions().urlListNamespace;
+		this->urlListTable = "crawlserv_" + options.websiteNamespace + "_" + options.urlListNamespace;
 		this->extractingTable = this->urlListTable + "_extracting";
 		this->targetTableFull = this->urlListTable + "_extracted_" + this->targetTableName;
 
@@ -108,7 +110,12 @@ namespace crawlservpp::Module::Extractor {
 
 		properties.columns.reserve(4 + this->targetFieldNames.size());
 
-		properties.columns.emplace_back("content", "BIGINT UNSIGNED NOT NULL");
+		properties.columns.emplace_back(
+				"content",
+				"BIGINT UNSIGNED NOT NULL",
+				this->urlListTable + "_crawled",
+				"id"
+		);
 		properties.columns.emplace_back("extracted_id", "TEXT NOT NULL");
 		properties.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
 		properties.columns.emplace_back("extracted_datetime", "DATETIME DEFAULT NULL");
