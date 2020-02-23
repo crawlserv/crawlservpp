@@ -292,6 +292,7 @@ namespace crawlservpp::Main {
 		MAIN_EXCEPTION_SUBCLASS(IncorrectPathException);
 		MAIN_EXCEPTION_SUBCLASS(StorageEngineException);
 		MAIN_EXCEPTION_SUBCLASS(PrivilegesException);
+		MAIN_EXCEPTION_SUBCLASS(WrongArgumentsException);
 
 		// not moveable, not copyable
 		Database(Database&) = delete;

@@ -6091,6 +6091,10 @@ namespace crawlservpp::Main {
 		case 1045:
 			throw Database::PrivilegesException(errorStr);
 
+		// check for wrong arguments error
+		case 1210:
+			throw Database::WrongArgumentsException(errorStr);
+
 		// check for incorrect path value error
 		case 1525:
 			throw Database::IncorrectPathException(errorStr);
