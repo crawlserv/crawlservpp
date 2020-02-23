@@ -165,7 +165,7 @@ namespace crawlservpp::Helper::FileSystem {
 	// check whether a path is located inside directory (including its subdirectories), throws FileSystem::Exception
 	//  NOTE: While the directory needs to exist, the path does not
 	inline bool contains(const std::string& pathToDir, const std::string& pathToCheck) {
-		if(!FileSystem::isValidDirectory(pathToCheck))
+		if(!FileSystem::isValidDirectory(pathToDir))
 			throw Exception("\'" + pathToDir + "\' is not a valid directory");
 
 		// make paths absolute
