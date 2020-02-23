@@ -2221,10 +2221,16 @@ namespace crawlservpp::Main {
 					);
 				}
 			}
-			else
-				return ServerCommandResponse::toBeConfirmed(
-						"Do you really want to use an external directory?"
-				);
+			else {
+				std::string confirmation("Do you really want to use an external directory?");
+
+				if(!(this->database.checkDataDir(properties.dir)))
+					confirmation += "\n\n"
+									"WARNING: The external directory seems to be unknown to the MySQL server.\n"
+									"Add it to \'innodb_directories\' to ensure fail-safe operations.";
+
+				return ServerCommandResponse::toBeConfirmed(confirmation);
+			}
 		}
 
 		if(!id)
@@ -2457,10 +2463,17 @@ namespace crawlservpp::Main {
 			// check for external directory
 			if(properties.dir.empty())
 				confirmationStrStr << "Do you really want to change the data directory to default?";
-			else if(this->database.getWebsiteDataDirectory(id).empty())
-				confirmationStrStr << "Do you really want to change the data directory to an external directory?";
-			else
-				confirmationStrStr << "Do you really want to change the data directory to another external directory?";
+			else {
+				if(this->database.getWebsiteDataDirectory(id).empty())
+					confirmationStrStr << "Do you really want to change the data directory to an external directory?";
+				else
+					confirmationStrStr << "Do you really want to change the data directory to another external directory?";
+
+				if(!(this->database.checkDataDir(properties.dir)))
+					confirmationStrStr <<	"\n\n"
+											"WARNING: The external directory seems to be unknown to the MySQL server.\n"
+											"Add it to \'innodb_directories\' to ensure fail-safe operations.";
+			}
 		}
 
 		return ServerCommandResponse::toBeConfirmed(confirmationStrStr.str());
