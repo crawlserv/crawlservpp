@@ -2121,6 +2121,9 @@ namespace crawlservpp::Main {
 					this->cmdJson["domain"].GetString(),
 					this->cmdJson["domain"].GetStringLength()
 			);
+
+			if(properties.domain.empty())
+				return ServerCommandResponse::failed("Domain cannot be empty when website is not cross-domain.");
 		}
 
 		if(!(this->cmdJson.HasMember("namespace")))
@@ -2153,6 +2156,9 @@ namespace crawlservpp::Main {
 					this->cmdJson["dir"].GetString(),
 					this->cmdJson["dir"].GetStringLength()
 			);
+
+			if(properties.dir.empty())
+				return ServerCommandResponse::failed("External directory cannot be empty when used.");
 		}
 
 		// check domain name
@@ -2190,10 +2196,6 @@ namespace crawlservpp::Main {
 			// add website to database
 			id = this->database.addWebsite(properties);
 		else {
-			// check external directory
-			if(!Helper::FileSystem::isValidDirectory(properties.dir))
-				return ServerCommandResponse::failed("External directory does not exist");
-
 			// adding a website using an external directory needs to be confirmed
 			if(this->cmdJson.HasMember("confirmed")) {
 				// try adding website to the database using an external directory
@@ -2221,8 +2223,7 @@ namespace crawlservpp::Main {
 			}
 			else
 				return ServerCommandResponse::toBeConfirmed(
-						"Do you really want to use an external directory?\n"
-						"!!! The directory cannot be changed once the website has been added !!!"
+						"Do you really want to use an external directory?"
 				);
 		}
 
@@ -2232,7 +2233,7 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("Website added.", id);
 	}
 
-	// server command updatewebsite(id, crossdomain, domain, namespace, name): edit a website
+	// server command updatewebsite(id, crossdomain, domain, namespace, name, [dir]): edit a website
 	Server::ServerCommandResponse Server::cmdUpdateWebsite() {
 		WebsiteProperties properties;
 		bool crossDomain = false;
@@ -2264,6 +2265,9 @@ namespace crawlservpp::Main {
 					this->cmdJson["domain"].GetString(),
 					this->cmdJson["domain"].GetStringLength()
 			);
+
+			if(properties.domain.empty())
+				return ServerCommandResponse::failed("Domain cannot be empty when website is not cross-domain.");
 		}
 
 		if(!(this->cmdJson.HasMember("namespace")))
@@ -2287,6 +2291,19 @@ namespace crawlservpp::Main {
 				this->cmdJson["name"].GetString(),
 				this->cmdJson["name"].GetStringLength()
 		);
+
+		if(this->cmdJson.HasMember("dir")) {
+			if(!(this->cmdJson["dir"].IsString()))
+				return ServerCommandResponse::failed("Invalid arguments (\'dir\' is not a string).");
+
+			properties.dir = std::string(
+					this->cmdJson["dir"].GetString(),
+					this->cmdJson["dir"].GetStringLength()
+			);
+
+			if(properties.dir.empty())
+				return ServerCommandResponse::failed("External directory cannot be empty when used.");
+		}
 
 		// check name
 		if(properties.name.empty())
@@ -2349,52 +2366,92 @@ namespace crawlservpp::Main {
 					"Website cannot be changed while analyzer is active."
 			);
 
-		// check whether URLs will be changed or lost by changing type of website from cross-domain to specific domain
-		if(this->cmdJson.HasMember("confirmed")) {
-			// update website in database
-			this->database.updateWebsite(id, properties);
+		// check for domain and directory change
+		const bool domainChanged = this->database.getWebsiteDomain(id) != properties.domain;
+		const bool dirChanged = this->database.getWebsiteDataDirectory(id) != properties.dir;
 
-			return ServerCommandResponse("Website updated.");
+		// check for confirmation if domain or directory have been changed
+		if(this->cmdJson.HasMember("confirmed") || (!domainChanged && !dirChanged)) {
+			// update website in database
+			try {
+				this->database.updateWebsite(id, properties);
+
+				return ServerCommandResponse("Website updated.");
+			}
+			catch(const IncorrectPathException &e) {
+				return ServerCommandResponse::failed(
+						"Incorrect path for external directory"
+				);
+			}
+			catch(const PrivilegesException &e) {
+				return ServerCommandResponse::failed(
+						"The MySQL user used by the server needs to have FILE privilege to use an external directory"
+				);
+			}
+			catch(const StorageEngineException &e) {
+				return ServerCommandResponse::failed(
+						"Could not access external directory. Make sure that\n"
+						"* the MySQL server has permission to write into the directory\n"
+						"* the AppArmor profile of the MySQL server allows access to the directory (if applicable)\n"
+						"* file-per-table tablespace (innodb_file_per_table) is enabled"
+				);
+			}
 		}
 
-		const unsigned long toModify = this->database.getChangedUrlsByWebsiteUpdate(id, properties);
-		const unsigned long toDelete = this->database.getLostUrlsByWebsiteUpdate(id, properties);
-
+		// change of domain or directory needs to be confirmed
 		std::ostringstream confirmationStrStr;
 
-		if(toModify || toDelete) {
-			switch(toModify) {
-			case 0:
-				break;
+		// handle domain change
+		if(domainChanged) {
+			const unsigned long toModify = this->database.getChangedUrlsByWebsiteUpdate(id, properties);
+			const unsigned long toDelete = this->database.getLostUrlsByWebsiteUpdate(id, properties);
 
-			case 1:
-				confirmationStrStr << "One URL will be modified.\n";
+			if(toModify || toDelete) {
+				switch(toModify) {
+				case 0:
+					break;
 
-				break;
+				case 1:
+					confirmationStrStr << "One URL will be modified.\n";
 
-			default:
-				confirmationStrStr.imbue(std::locale(""));
+					break;
 
-				confirmationStrStr << toModify << " URLs will be modified.\n";
+				default:
+					confirmationStrStr.imbue(std::locale(""));
+
+					confirmationStrStr << toModify << " URLs will be modified.\n";
+				}
+
+				switch(toDelete) {
+				case 0:
+					break;
+
+				case 1:
+					confirmationStrStr << "One URL will be IRRECOVERABLY LOST.\n";
+
+					break;
+
+				default:
+					confirmationStrStr.imbue(std::locale(""));
+
+					confirmationStrStr << toDelete << " URL(s) will be IRRECOVERABLY LOST.\n";
+				}
 			}
 
-			switch(toDelete) {
-			case 0:
-				break;
-
-			case 1:
-				confirmationStrStr << "One URL will be IRRECOVERABLY LOST.\n";
-
-				break;
-
-			default:
-				confirmationStrStr.imbue(std::locale(""));
-
-				confirmationStrStr << toDelete << " URL(s) will be IRRECOVERABLY LOST.\n";
-			}
+			confirmationStrStr << "Do you really want to change the domain?";
 		}
 
-		confirmationStrStr << "Do you really want to change the domain?";
+		// handle directory change
+		if(dirChanged) {
+			if(domainChanged)
+				confirmationStrStr << '\n';
+
+			// check for external directory
+			if(properties.dir.empty())
+				confirmationStrStr << "Do you really want to change the data directory to default?";
+			else
+				confirmationStrStr << "Do you really want to change the data directory to an external directory?";
+		}
 
 		return ServerCommandResponse::toBeConfirmed(confirmationStrStr.str());
 	}
