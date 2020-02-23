@@ -82,7 +82,7 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <algorithm>	// std::find, std::find_if, std::remove, std::transform
+#include <algorithm>	// std::find, std::find_if, std::remove, std::sort, std::transform, std::unique
 #include <chrono>		// std::chrono
 #include <cmath>		// std::round
 #include <fstream>		// std::ifstream
@@ -476,19 +476,20 @@ namespace crawlservpp::Main {
 
 	private:
 		// private connection information
-		const DatabaseSettings settings;
-		unsigned long maxAllowedPacketSize;
-		unsigned long sleepOnError;
-		std::string mysqlVersion;
-		std::string dataDir;
-		std::string module;
+		const DatabaseSettings settings;	// database settings
+		unsigned long maxAllowedPacketSize;	// maximum packet size
+		unsigned long sleepOnError;			// number of seconds to sleep on database error
+		std::string mysqlVersion;			// mySQL version
+		std::string dataDir;				// main data directory
+		std::vector<std::string> dirs;		// all known data directories
+		std::string module;					// module for which the database connection was established
 
 		// optional private variables
 #ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC
-		Timer::Simple reconnectTimer;
+		Timer::Simple reconnectTimer;		// timer for reconnecting to the database
 #endif
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		static std::atomic<unsigned long long> requestCounter;
+		static std::atomic<unsigned long long> requestCounter; // mySQL request counter
 #endif
 
 		// locking state
