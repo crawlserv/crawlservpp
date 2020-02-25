@@ -47,6 +47,7 @@
 // optional debugging option
 //#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER		// enable database request counter for debugging purposes
 //#define MAIN_DATABASE_DEBUG_DEADLOCKS				// enable documentation of deadlocks by writing hashes ('#') to stdout
+#define MAIN_DATABASE_LOG_MOVING					// log the moving of websites from one data directory to another to stdout
 
 #include "Data.hpp"
 #include "Exception.hpp"
@@ -93,7 +94,7 @@
 #include <memory>		// std::unique_ptr
 #include <mutex>		// std::lock_guard, std::mutex
 #include <queue>		// std::queue
-#include <sstream>		// std::ostringstream
+#include <sstream>		// std::istringstream, std::ostringstream
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::getline, std::stoul, std::string, std::to_string
 #include <thread>		// std::this_thread
@@ -137,10 +138,12 @@ namespace crawlservpp::Main {
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 		using SqlStatementPtr = std::unique_ptr<sql::Statement>;
 		using StringString = std::pair<std::string, std::string>;
+		using StringQueueOfStrings = std::pair<std::string, std::queue<std::string>>;
+		using TableNameWriteAccess = std::pair<std::string, bool>;
 		using Queries = std::vector<std::pair<std::string, std::vector<StringString>>>;
 
 	public:
-		// allow wrapper and locking class access to protected functions
+		// allow wrapper and locking classes access to protected functions
 		friend class Wrapper::Database;
 		template<class DB> friend class Wrapper::DatabaseLock;
 
@@ -200,6 +203,7 @@ namespace crawlservpp::Main {
 		void updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
 		void deleteWebsite(unsigned long websiteId);
 		unsigned long duplicateWebsite(unsigned long websiteId, const Queries& queries);
+		void moveWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
 
 		// URL list functions
 		unsigned long addUrlList(unsigned long websiteId, const UrlListProperties& listProperties);
@@ -266,6 +270,10 @@ namespace crawlservpp::Main {
 		bool isTableExists(const std::string& tableName);
 		bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		std::string getColumnType(const std::string& tableName, const std::string& columnName);
+		void lockTables(std::queue<TableNameWriteAccess>& locks);
+		void unlockTables();
+		void startTransaction(const std::string& isolationLevel);
+		void endTransaction(bool success);
 
 		// custom data functions for algorithms
 		void getCustomData(Data::GetValue& data);
@@ -322,6 +330,7 @@ namespace crawlservpp::Main {
 		void compressTable(const std::string& tableName);
 		void deleteTable(const std::string& tableName);
 		void checkDirectory(const std::string& dir);
+		std::queue<std::string> cloneTable(const std::string& tableName, const std::string& dataDir);
 
 		// URL list helper functions
 		bool isUrlListCaseSensitive(unsigned long listId);
@@ -476,6 +485,84 @@ namespace crawlservpp::Main {
 		static int sqlExecuteUpdate(std::unique_ptr<T>& statement, Args... args) {
 			return sqlExecuteUpdate(*statement, args...);
 		}
+
+		// wrapper class for in-scope table locks
+		class TableLock {
+		public:
+			// constructor: lock the table(s)
+			TableLock(Main::Database& db, std::queue<TableNameWriteAccess>& locks) : ref(db), active(false) {
+				this->ref.lockTables(locks);
+
+				this->active = true;
+			}
+
+			// destructor: unlock the table(s) if lock is active
+			virtual ~TableLock() {
+				if(this->active) {
+					this->ref.unlockTables();
+
+					this->active = false;
+				}
+			}
+
+			// not moveable, not copyable
+			TableLock(TableLock&) = delete;
+			TableLock(TableLock&&) = delete;
+			TableLock& operator=(TableLock&) = delete;
+			TableLock& operator=(TableLock&&) = delete;
+
+		private:
+			Main::Database& ref;	// reference to database
+			bool active;			// lock is active
+		};
+
+		// wrapper class for in-scope transactions
+		class Transaction {
+		public:
+			// constructor #1: lock the table(s) using specified isolation level
+			Transaction(
+					Main::Database& db,
+					const std::string& isolationLevel
+			) : ref(db), active(false), successful(false) {
+				this->ref.startTransaction(isolationLevel);
+
+				this->active = true;
+			}
+
+			// constructor #2: lock the table(s) using the default isolation level
+			Transaction(
+					Main::Database& db
+			) : ref(db), active(false), successful(false) {
+				this->ref.startTransaction("");
+
+				this->active = true;
+			}
+
+			// transaction was successful
+			void success() {
+				this->successful = true;
+			}
+
+			// destructor: unlock the table(s) if lock is active
+			virtual ~Transaction() {
+				if(this->active) {
+					this->ref.endTransaction(this->successful);
+
+					this->active = false;
+				}
+			}
+
+			// not moveable, not copyable
+			Transaction(Transaction&) = delete;
+			Transaction(Transaction&&) = delete;
+			Transaction& operator=(Transaction&) = delete;
+			Transaction& operator=(Transaction&&) = delete;
+
+		private:
+			Main::Database& ref;	// reference to database
+			bool active;			// transaction is active
+			bool successful;		// transaction was successful
+		};
 
 	private:
 		// private connection information

@@ -1552,7 +1552,7 @@ namespace crawlservpp::Main {
 				// create SQL statement for renaming
 				SqlStatementPtr renameStatement(this->connection->createStatement());
 
-				// rename sub-tables
+				// rename tables
 				std::queue<IdString> urlLists(this->getUrlLists(websiteId));
 				std::queue<IdString> tables;
 
@@ -1688,6 +1688,10 @@ namespace crawlservpp::Main {
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateWebsite", e); }
+
+		// check whether data directory has to be changed
+		if(this->getWebsiteDataDirectory(websiteId) != websiteProperties.dir)
+			this->moveWebsite(websiteId, websiteProperties);
 	}
 
 	// delete website (and all associated data) from the database by its ID, throws Database::Exception
@@ -2025,6 +2029,364 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::duplicateWebsite", e); }
 
 		return result;
+	}
+
+	// move website (and all associated data) to another data directory
+	void Database::moveWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties) {
+#ifdef MAIN_DATABASE_LOG_MOVING
+		Timer::Simple timer;
+
+		std::cout	<< "\n\nMOVING website "
+					<< websiteProperties.name
+					<< " to \'"
+					<< websiteProperties.dir
+					<< "\'..."
+					<< std::flush;
+#endif
+		// create table list
+		std::vector<std::string> tables;
+
+		// go through all affected URL lists
+		std::queue<IdString> urlLists(this->getUrlLists(websiteId));
+		std::queue<IdString> subTables;
+
+		while(!urlLists.empty()) {
+			// add main table for URL list
+			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second);
+
+			// add status tables for URL list
+			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawling");
+			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_parsing");
+			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_extracting");
+			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_analyzing");
+
+			// add table with crawled content for URL list
+			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawled");
+
+			// add tables with parsed content for URL list
+			subTables = this->getTargetTables("parsed", urlLists.front().first);
+
+			while(!subTables.empty()) {
+				tables.emplace_back(subTables.front().second);
+
+				subTables.pop();
+			}
+
+			// add tables with extracted content for URL list
+			subTables = this->getTargetTables("extracted", urlLists.front().first);
+
+			while(!subTables.empty()) {
+				tables.emplace_back(subTables.front().second);
+
+				subTables.pop();
+			}
+
+			// add tables with analyzed content for URL list
+			subTables = this->getTargetTables("analyzed", urlLists.front().first);
+
+			while(!subTables.empty()) {
+				tables.emplace_back(subTables.front().second);
+
+				subTables.pop();
+			}
+
+			// go to next URL list
+			urlLists.pop();
+		}
+
+		// remove temporary tables in reverse order (to avoid problems with constraints)
+		for(std::vector<std::string>::const_reverse_iterator i = tables.rbegin(); i != tables.rend(); ++i)
+			this->dropTable(*i + "_tmp");
+
+		// clone tables to new data directory (without data or constraints)
+		std::queue<StringQueueOfStrings> constraints;
+
+		for(const auto& table : tables) {
+#ifdef MAIN_DATABASE_LOG_MOVING
+			std::cout << "\n Cloning: `" << table << "`" << std::flush;
+#endif
+
+			constraints.emplace(table, this->cloneTable(table, websiteProperties.dir));
+		}
+
+		// check connection
+		this->checkConnection();
+
+		try { // start first transaction in-scope (copying data)
+			Transaction transaction(*this, "READ UNCOMMITTED");
+
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// add constraints to tables
+			while(!constraints.empty()) {
+				if(constraints.front().second.empty()) {
+					constraints.pop();
+
+					continue;
+				}
+
+				std::string toAdd;
+
+				while(!constraints.front().second.empty()) {
+					std::string constraint = constraints.front().second.front();
+
+					// check reference and use temporary table if the table lies inside the namespace of the website
+					const auto pos = constraint.find(" `");
+					const auto end = constraint.find("` ");
+
+					if(pos != std::string::npos && end != std::string::npos) {
+						const std::string nspace("crawlserv_" + websiteProperties.nameSpace + "_");
+						const std::string referenced(constraint, pos + 2, end - pos - 2);
+
+						if(referenced.substr(0, nspace.length()) == nspace)
+							constraint.insert(end, "_tmp");
+
+						toAdd += " ADD " + constraint;
+
+						if(constraint.back() != ',')
+							toAdd += ',';
+					}
+
+					constraints.front().second.pop();
+				}
+
+				if(toAdd.empty()) {
+					constraints.pop();
+
+					continue;
+				}
+
+#ifdef MAIN_DATABASE_LOG_MOVING
+				std::cout	<< "\n Adding constraint(s) to `"
+							<< constraints.front().first
+							<< "_tmp`"
+							<< std::flush;
+#endif
+
+				toAdd.pop_back();
+
+				Database::sqlExecute(
+						sqlStatement,
+						"ALTER TABLE `" + constraints.front().first + "_tmp`" + toAdd
+				);
+
+				constraints.pop();
+			}
+
+			// disable key checking to speed up copying
+			Database::sqlExecute(
+					sqlStatement,
+					"SET UNIQUE_CHECKS = 0, FOREIGN_KEY_CHECKS = 0"
+			);
+
+			// copy data to tables
+			for(const auto& table : tables) {
+#ifdef MAIN_DATABASE_LOG_MOVING
+				std::cout << "\n Copying: `" << table << "`" << std::flush;
+#endif
+
+				// get number of rows to copy
+				unsigned long count = 0;
+
+				SqlResultSetPtr result1(
+						Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT COUNT(*) AS count FROM `" + table + "`"
+						)
+				);
+
+				if(result1->next() && !(result1->isNull("count")))
+					count = result1->getUInt64("count");
+
+				// get names of columns to copy
+				std::string columns;
+
+				SqlResultSetPtr result2(
+						Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT "
+							" COLUMN_NAME AS name "
+							"FROM INFORMATION_SCHEMA.COLUMNS "
+							"WHERE"
+							" TABLE_SCHEMA = '" + this->settings.name + "'"
+							" AND TABLE_NAME = '" + table + "'"
+						)
+				);
+
+				while(result2->next())
+					if(!(result2->isNull("name")))
+						columns += "`" + result2->getString("name") + "`, ";
+
+				if(columns.empty())
+					continue;
+
+				columns.pop_back();
+				columns.pop_back();
+
+#ifdef MAIN_DATABASE_LOG_MOVING
+				if(count < 100)
+#endif
+					// copy all at once
+					Database::sqlExecute(
+							sqlStatement,
+							"INSERT INTO `" + table + "_tmp`(" + columns + ")"
+							" SELECT " + columns +
+							" FROM `" + table + "`"
+					);
+#ifdef MAIN_DATABASE_LOG_MOVING
+				else {
+					// copy in 100 (or 101) steps for logging the progress
+					std::cout << "     " << std::flush;
+
+					unsigned long step = count / 100;
+
+					for(unsigned long n = 0; n <= 100; ++n) {
+						Database::sqlExecute(
+								sqlStatement,
+								"INSERT INTO `"
+								+ table
+								+ "_tmp`(" + columns + ")"
+								  " SELECT "
+								+    columns
+								+ " FROM `"
+								+ table
+								+ "` AS t"
+								  " JOIN "
+								  " ("
+								   " SELECT"
+								   " COALESCE(MAX(id), 0) AS offset"
+								   " FROM `"
+								+    table
+								+    "_tmp`"
+								  " ) AS m"
+								" ON t.id > m.offset"
+								" ORDER BY t.id"
+								" LIMIT "
+								+ std::to_string(step)
+						);
+
+						std::cout << "\b\b\b\b";
+
+						if(n < 100)
+							std::cout << ' ';
+
+						if(n < 10)
+							std::cout << ' ';
+
+						std::cout << std::to_string(n) << '%' << std::flush;
+					}
+				}
+#endif
+			}
+
+			// re-enable key checking
+			Database::sqlExecute(
+					sqlStatement,
+					"SET UNIQUE_CHECKS = 1, FOREIGN_KEY_CHECKS = 1"
+			);
+
+			// first transaction successful (data copied)
+			transaction.success();
+
+#ifdef MAIN_DATABASE_LOG_MOVING
+			std::cout << "\n Committing changes" << std::flush;
+#endif
+		} // transaction will be committed on success or rolled back on exception
+
+		// <EXCEPTION HANDLING>
+		catch(const sql::SQLException &e) {
+#ifdef MAIN_DATABASE_LOG_MOVING
+			std::cout << "\n " << e.what() << std::endl;
+#endif
+
+			this->sqlException("Main::Database::moveWebsite", e);
+		}
+#ifdef MAIN_DATABASE_LOG_MOVING
+		catch(const Exception& e) {
+			std::cout << "\n " << e.what() << std::endl;
+
+			throw;
+		}
+#endif
+		// </EXCEPTION HANDLING>
+
+		// check connection
+		this->checkConnection();
+
+		try { // start second transaction in-scope (replacing tables)
+			Transaction transaction(*this);
+
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// delete old tables in reverse order (to avoid problems with constraints)
+			for(std::vector<std::string>::const_reverse_iterator i = tables.rbegin(); i != tables.rend(); ++i) {
+#ifdef MAIN_DATABASE_LOG_MOVING
+				std::cout << "\n Deleting: `" << *i << "`" << std::flush;
+#endif
+
+				Database::sqlExecute(
+						sqlStatement,
+						"DROP TABLE IF EXISTS `" + *i + "`"
+				);
+			}
+
+			// rename new tables
+			for(const auto& table : tables) {
+#ifdef MAIN_DATABASE_LOG_MOVING
+				std::cout << "\n Renaming: `" << table << "_tmp`" << std::flush;
+#endif
+
+				Database::sqlExecute(
+						sqlStatement,
+						"RENAME TABLE `" + table + "_tmp` TO `" + table + "`"
+				);
+			}
+
+			// update directory for website
+			Database::sqlExecute(
+					sqlStatement,
+					"UPDATE `crawlserv_websites`"
+					" SET dir = '" + websiteProperties.dir + "'"
+					" WHERE id = " + std::to_string(websiteId) +
+					" LIMIT 1"
+			);
+
+			// second transaction successful (tables replaced)
+			transaction.success();
+
+#ifdef MAIN_DATABASE_LOG_MOVING
+			std::cout << "\n Committing changes" << std::flush;
+#endif
+		} // transaction will be committed on success or rolled back on exception
+
+		// <EXCEPTION HANDLING>
+		catch(const sql::SQLException &e) {
+#ifdef MAIN_DATABASE_LOG_MOVING
+			std::cout << "\n " << e.what() << std::endl;
+#endif
+
+			this->sqlException("Main::Database::moveWebsite", e);
+		}
+#ifdef MAIN_DATABASE_LOG_MOVING
+		catch(const Exception& e) {
+			std::cout << "\n " << e.what() << std::endl;
+
+			throw;
+		}
+#endif
+		// </EXCEPTION HANDLING>
+
+#ifdef MAIN_DATABASE_LOG_MOVING
+		// log success and elapsed time
+		std::cout	<< "\n MOVED website "
+					<< websiteProperties.name
+					<< " in "
+					<< timer.tickStr()
+					<< '.'
+					<< std::endl;
+#endif
 	}
 
 	/*
@@ -4177,6 +4539,86 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
+	// lock tables
+	void Database::lockTables(std::queue<TableNameWriteAccess>& locks) {
+		// check argument
+		if(locks.empty())
+			return;
+
+		// create lock string
+		std::string lockString;
+
+		while(!locks.empty()) {
+			lockString += "`" + locks.front().first + "` ";
+
+			if(locks.front().second)
+				lockString += "WRITE";
+			else
+				lockString += "READ";
+
+			lockString += ", ";
+
+			locks.pop();
+		}
+
+		lockString.pop_back();
+		lockString.pop_back();
+
+		// execute SQL query
+		try {
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			sqlStatement->execute("LOCK TABLES " + lockString);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::lockTables", e); }
+	}
+
+	// unlock tables
+	void Database::unlockTables() {
+		// execute SQL query
+		try {
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			sqlStatement->execute("UNLOCK TABLES");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::unlockTables", e); }
+	}
+
+	// start a new transaction with the specified isolation level
+	//  NOTE: the default isolation level will be used if isolationLevel is an empty string
+	void Database::startTransaction(const std::string& isolationLevel) {
+		// check connection
+		this->checkConnection();
+
+		// execute SQL query
+		try {
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			if(!isolationLevel.empty())
+				sqlStatement->execute("SET TRANSACTION ISOLATION LEVEL " + isolationLevel);
+
+			sqlStatement->execute("START TRANSACTION");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::startTransaction", e); }
+	}
+
+	// end the current transaction, commit the commands
+	void Database::endTransaction(bool success) {
+		// check connection
+		this->checkConnection();
+
+		// execute SQL query
+		try {
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			if(success)
+				sqlStatement->execute("COMMIT");
+			else
+				sqlStatement->execute("ROLLBACK");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::endTransaction", e); }
+	}
+
 	/*
 	 * CUSTOM DATA FUNCTIONS FOR ALGORITHMS
 	 */
@@ -5954,6 +6396,109 @@ namespace crawlservpp::Main {
 			);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::checkDirectory", e); }
+	}
+
+	// clone table as '<tablename>_tmp' into different data directory (without data or constraints),
+	// 	return the constraints that have been dropped - NOTE: <tablename>_tmp may not exist!
+	std::queue<std::string> Database::cloneTable(const std::string& tableName, const std::string& dataDir) {
+		std::queue<std::string> constraints;
+
+		// check argument
+		if(tableName.empty())
+			throw Database::Exception("Main::Database::cloneTable(): No table specified.");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// drop temporary table if necessary
+			Database::sqlExecute(
+					sqlStatement,
+					"DROP TABLE IF EXISTS `crawlserv_tmp`"
+			);
+
+			// get constraints that will be dropped
+			std::string result;
+
+			SqlResultSetPtr sqlResultSet1(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SHOW CREATE TABLE `" + tableName + "`"
+					)
+			);
+
+			if(sqlResultSet1 && sqlResultSet1->next())
+				result = sqlResultSet1->getString("Create Table");
+			else
+				throw Database::Exception(
+						"Main::Database::cloneTable(): Could not get properties of table `"
+						+ tableName
+						+ "`"
+				);
+
+			std::istringstream stream(result);
+			std::string line;
+
+			// parse single constraints
+			while(std::getline(stream, line)) {
+				Helper::Strings::trim(line);
+
+				if(line.length() > 11 && line.substr(0, 11) == "CONSTRAINT ") {
+					line.erase(0, 11);
+
+					const auto pos = line.find("` ");
+
+					if(pos != std::string::npos) {
+						line.erase(0, pos + 2);
+
+						constraints.emplace(line);
+					}
+				}
+			}
+
+			// create temporary table with similar properties (no data, directory, constraints or increment value)
+			Database::sqlExecute(
+				sqlStatement,
+				"CREATE TABLE `crawlserv_tmp` LIKE `" + tableName + "`"
+			);
+
+			// get command to create similar table
+			SqlResultSetPtr sqlResultSet2(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SHOW CREATE TABLE `crawlserv_tmp`"
+					)
+			);
+
+			if(sqlResultSet2 && sqlResultSet2->next())
+				result = sqlResultSet2->getString("Create Table");
+			else
+				throw Database::Exception(
+						"Main::Database::cloneTable(): Could not get properties of table `crawlserv_tmp`"
+				);
+
+			// drop temporary table
+			Database::sqlExecute(
+					sqlStatement,
+					"DROP TABLE `crawlserv_tmp`"
+			);
+
+			// replace table name and add new data directory
+			const auto pos = result.find("` ") + 2;
+
+			result = "CREATE TABLE `" + tableName + "_tmp` " + result.substr(pos);
+
+			result += " DATA DIRECTORY=\'" + dataDir + "\'";
+
+			// create new table
+			Database::sqlExecute(sqlStatement, result);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::cloneTable", e); }
+
+		return constraints;
 	}
 
 	/*
