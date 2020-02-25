@@ -294,7 +294,7 @@ namespace crawlservpp::Main {
 
 			if(sqlInnoDirsResult && sqlInnoDirsResult->next()) {
 				if(!(sqlInnoDirsResult->isNull("value"))) {
-					const std::vector innoDirs(
+					const std::vector<std::string> innoDirs(
 							Helper::Strings::split(
 									sqlInnoDirsResult->getString("value"),
 									';'
