@@ -2510,6 +2510,10 @@ namespace crawlservpp::Main {
 											"WARNING: The external directory seems to be unknown to the MySQL server\n"
 											" - add it to \'innodb_directories\' to ensure fail-safe operations.";
 			}
+
+			confirmationStrStr <<	"\n\n"
+									"NOTE: This change might occupy the server for a while\n"
+									" - no other commands will be processed during that time.";
 		}
 
 		return ServerCommandResponse::toBeConfirmed(confirmationStrStr.str());
