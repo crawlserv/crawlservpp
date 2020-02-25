@@ -603,31 +603,32 @@ namespace crawlservpp::Main {
 
 	// remove the log entries of a specific module from the database (or all log entries if logModule is an empty string)
 	void Database::clearLogs(const std::string& logModule) {
-		// check connection
-		this->checkConnection();
+		if(logModule.empty())
+			// execute SQL query
+			this->execute("TRUNCATE TABLE `crawlserv_log`");
+		else {
+			// check connection
+			this->checkConnection();
 
-		// create SQL query string
-		std::string sqlQuery("DELETE FROM crawlserv_log");
+			try {
+				// prepare SQL statement
+				SqlPreparedStatementPtr sqlStatement(
+						this->connection->prepareStatement(
+								"DELETE FROM `crawlserv_log` WHERE module = ?"
+						)
+				);
 
-		if(!logModule.empty())
-			sqlQuery += " WHERE module = ?";
-
-		try {
-			// prepare SQL statement
-			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
-
-			// execute SQL statement
-			if(!logModule.empty())
+				// execute SQL statement
 				sqlStatement->setString(1, logModule);
 
-			Database::sqlExecute(sqlStatement);
+				Database::sqlExecute(sqlStatement);
 
-			// reset auto-increment if table is (still) empty
-			if(this->isTableEmpty("crawlserv_log"))
-				this->resetAutoIncrement("crawlserv_log");
-
+				// reset auto-increment if table is (still) empty
+				if(this->isTableEmpty("crawlserv_log"))
+					this->resetAutoIncrement("crawlserv_log");
+			}
+			catch(const sql::SQLException &e) { this->sqlException("Main::Database::clearLogs", e); }
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::clearLogs", e); }
 	}
 
 	/*
