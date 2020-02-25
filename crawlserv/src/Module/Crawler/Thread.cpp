@@ -700,6 +700,8 @@ namespace crawlservpp::Module::Crawler {
 					this->crawlingResetTor();
 
 					this->networking.resetConnection(this->config.crawlerSleepError);
+
+					this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
 				}
 				else {
 					this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "]");
@@ -1470,6 +1472,8 @@ namespace crawlservpp::Module::Crawler {
 									this->crawlingResetTor();
 
 									this->networking.resetConnection(this->config.crawlerSleepError);
+
+									this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
 								}
 								else {
 									this->log(
@@ -1703,6 +1707,8 @@ namespace crawlservpp::Module::Crawler {
 				this->crawlingResetTor();
 
 				this->networking.resetConnection(this->config.crawlerSleepError);
+
+				this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
 
 				this->crawlingRetry(url, false);
 			}
@@ -2030,6 +2036,8 @@ namespace crawlservpp::Module::Crawler {
 					this->crawlingResetTor();
 
 					this->networking.resetConnection(this->config.crawlerSleepError);
+
+					this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
 				}
 				else {
 					this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "]");
@@ -3195,6 +3203,11 @@ namespace crawlservpp::Module::Crawler {
 														this->config.crawlerSleepError
 												);
 
+												this->log(
+														Config::crawlerLoggingDefault,
+														"public IP: " + this->networking.getPublicIp()
+												);
+
 												this->crawlingRetry(url, true);
 
 												return false;
@@ -3284,6 +3297,11 @@ namespace crawlservpp::Module::Crawler {
 
 							this->networkingArchives->resetConnection(
 									this->config.crawlerSleepError
+							);
+
+							this->log(
+									Config::crawlerLoggingDefault,
+									"public IP: " + this->networking.getPublicIp()
 							);
 
 							success = false;

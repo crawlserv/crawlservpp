@@ -33,11 +33,15 @@
 #ifndef NETWORK_CURL_HPP_
 #define NETWORK_CURL_HPP_
 
+// hard-coded constant
+#define NETWORK_CURL_RAW_IP_FROM "https://myexternalip.com/raw"
+
 #include "Config.hpp"
 
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Utf8.hpp"
 #include "../Main/Exception.hpp"
+#include "../Struct/NetworkSettings.hpp"
 #include "../Wrapper/Curl.hpp"
 #include "../Wrapper/CurlList.hpp"
 
@@ -51,7 +55,6 @@
 #include <string>		// std::string, std::to_string
 #include <thread>		// std::this_thread
 #include <vector>		// std::vector
-#include "../Struct/NetworkSettings.hpp"
 
 namespace crawlservpp::Network {
 
@@ -93,6 +96,7 @@ namespace crawlservpp::Network {
 		unsigned int getResponseCode() const;
 		std::string getContentType() const;
 		CURLcode getCurlCode() const;
+		std::string getPublicIp();
 
 		// resetter
 		void resetConnection(unsigned long sleep);

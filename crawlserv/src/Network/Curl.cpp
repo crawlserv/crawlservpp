@@ -390,17 +390,17 @@ namespace crawlservpp::Network {
 				break;
 
 			case Config::httpVersionV2tls:
-#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 47)
+	#if LIBCURL_VERSION_MAJOR > 7 || (LIBCURL_VERSION_MAJOR == 7 && LIBCURL_VERSION_MINOR >= 47)
 				this->curlCode = curl_easy_setopt(
 						this->curl.get(),
 						CURLOPT_HTTP_VERSION,
 						CURL_HTTP_VERSION_2TLS
 				);
-#else
+	#else
 				warningsTo.emplace("HTTP 2.0 OVER TLS ONLY currently not supported, \'http.version\' ignored.");
 
 				this->curlCode = CURLE_OK;
-#endif
+	#endif
 
 				break;
 
@@ -1232,6 +1232,29 @@ namespace crawlservpp::Network {
 	// get last cURL code
 	CURLcode Curl::getCurlCode() const {
 		return this->curlCode;
+	}
+
+	// get public IP address from NETWORK_CURL_RAW_IP_FROM
+	std::string Curl::getPublicIp() {
+		const std::vector<unsigned int> errors{429, 502, 503, 504, 521, 522, 524};
+		std::string ip;
+
+		try {
+			this->getContent(
+					NETWORK_CURL_RAW_IP_FROM,
+					false,
+					ip,
+					errors
+			);
+		}
+		catch(const Curl::Exception& e) {
+			return "N/A (" + e.whatStr() + ")";
+		}
+
+		if(ip.empty())
+			return "N/A";
+
+		return ip;
 	}
 
 	// escape a string

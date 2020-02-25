@@ -1417,6 +1417,11 @@ namespace crawlservpp::Module::Extractor {
 					this->extractingResetTor();
 
 					this->networking.resetConnection(this->config.generalSleepError);
+
+					this->log(
+							Config::generalLoggingDefault,
+							"public IP: " + this->networking.getPublicIp()
+					);
 				}
 				else {
 					this->log(
@@ -1542,6 +1547,11 @@ namespace crawlservpp::Module::Extractor {
 					this->extractingResetTor();
 
 					this->networking.resetConnection(this->config.generalSleepError);
+
+					this->log(
+							Config::generalLoggingDefault,
+							"public IP: " + this->networking.getPublicIp()
+					);
 				}
 				else {
 					this->log(
