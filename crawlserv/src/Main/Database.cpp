@@ -2049,9 +2049,16 @@ namespace crawlservpp::Main {
 
 		// go through all affected URL lists
 		std::queue<IdString> urlLists(this->getUrlLists(websiteId));
-		std::queue<IdString> subTables;
 
 		while(!urlLists.empty()) {
+			// get tables with parsed, extracted and analyzed content
+			std::queue<IdString> parsedTables(this->getTargetTables("parsed", urlLists.front().first));
+			std::queue<IdString> extractedTables(this->getTargetTables("extracted", urlLists.front().first));
+			std::queue<IdString> analyzedTables(this->getTargetTables("analyzed", urlLists.front().first));
+
+			// reserve additional memory for all table names of the current URL list
+			tables.reserve(tables.size() + 6 + parsedTables.size() + extractedTables.size() + analyzedTables.size());
+
 			// add main table for URL list
 			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second);
 
@@ -2065,30 +2072,45 @@ namespace crawlservpp::Main {
 			tables.emplace_back("crawlserv_" + websiteProperties.nameSpace + "_" + urlLists.front().second + "_crawled");
 
 			// add tables with parsed content for URL list
-			subTables = this->getTargetTables("parsed", urlLists.front().first);
+			while(!parsedTables.empty()) {
+				tables.emplace_back(
+						"crawlserv_"
+						+ websiteProperties.nameSpace
+						+ "_"
+						+ urlLists.front().second
+						+ "_parsed_"
+						+ parsedTables.front().second
+				);
 
-			while(!subTables.empty()) {
-				tables.emplace_back(subTables.front().second);
-
-				subTables.pop();
+				parsedTables.pop();
 			}
 
 			// add tables with extracted content for URL list
-			subTables = this->getTargetTables("extracted", urlLists.front().first);
+			while(!extractedTables.empty()) {
+				tables.emplace_back(
+						"crawlserv_"
+						+ websiteProperties.nameSpace
+						+ "_"
+						+ urlLists.front().second
+						+ "_extracted_"
+						+ extractedTables.front().second
+				);
 
-			while(!subTables.empty()) {
-				tables.emplace_back(subTables.front().second);
-
-				subTables.pop();
+				extractedTables.pop();
 			}
 
 			// add tables with analyzed content for URL list
-			subTables = this->getTargetTables("analyzed", urlLists.front().first);
+			while(!analyzedTables.empty()) {
+				tables.emplace_back(
+						"crawlserv_"
+						+ websiteProperties.nameSpace
+						+ "_"
+						+ urlLists.front().second
+						+ "_analyzed_"
+						+ analyzedTables.front().second
+				);
 
-			while(!subTables.empty()) {
-				tables.emplace_back(subTables.front().second);
-
-				subTables.pop();
+				analyzedTables.pop();
 			}
 
 			// go to next URL list
