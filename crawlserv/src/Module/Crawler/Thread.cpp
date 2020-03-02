@@ -257,6 +257,9 @@ namespace crawlservpp::Module::Crawler {
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 
 		this->tickCounter = 0;
+
+		// crawler is ready
+		this->log(Config::crawlerLoggingExtended, " is ready.");
 	}
 
 	// crawler tick
@@ -606,7 +609,7 @@ namespace crawlservpp::Module::Crawler {
 		// add custom URLs that do not exist yet
 		this->setStatusMessage("Adding custom URLs...");
 
-		this->database.addUrlsIfNotExist(urlsToAdd);
+		this->database.addUrlsIfNotExist(urlsToAdd, true);
 
 		// check for duplicates if URL debugging is active
 		if(this->config.crawlerUrlDebug)
@@ -2861,7 +2864,7 @@ namespace crawlservpp::Module::Crawler {
 			pos += this->config.crawlerUrlChunks;
 
 			// add URLs that do not exist already
-			newUrlsTo += this->database.addUrlsIfNotExist(chunk);
+			newUrlsTo += this->database.addUrlsIfNotExist(chunk, false);
 
 			// check for duplicates if URL debugging is active
 			if(this->config.crawlerUrlDebug)
