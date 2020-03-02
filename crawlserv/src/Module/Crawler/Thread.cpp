@@ -690,22 +690,9 @@ namespace crawlservpp::Module::Crawler {
 				if(this->crawlingCheckCurlCode(
 						this->networking.getCurlCode(),
 						url
-				)) {
-					// clear token cache
-					this->initTokenCache();
-
+				))
 					// reset connection and retry
-					this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + url + "].");
-					this->log(Config::crawlerLoggingDefault, "resets connection...");
-
-					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
-
-					this->crawlingResetTor();
-
-					this->networking.resetConnection(this->config.crawlerSleepError);
-
-					this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
-				}
+					this->crawlingReset(e.whatStr(), url);
 				else {
 					this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "]");
 
@@ -1463,20 +1450,10 @@ namespace crawlservpp::Module::Crawler {
 										this->networking.getCurlCode(),
 										sourceUrl
 								)) {
-									// clear token cache
-									this->initTokenCache();
+									// reset and retry
+									this->crawlingReset(e.whatStr(), sourceUrl);
 
-									// reset connection and retry
-									this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + sourceUrl + "].");
-									this->log(Config::crawlerLoggingDefault, "resets connection...");
-
-									this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
-
-									this->crawlingResetTor();
-
-									this->networking.resetConnection(this->config.crawlerSleepError);
-
-									this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
+									return this->crawlingReplaceTokens(url);
 								}
 								else {
 									this->log(
@@ -1698,21 +1675,7 @@ namespace crawlservpp::Module::Crawler {
 					this->networking.getCurlCode(),
 					url.second
 			)) {
-				// clear token cache
-				this->initTokenCache();
-
-				// reset connection and retry
-				this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + url.second + "].");
-				this->log(Config::crawlerLoggingDefault, "resets connection...");
-
-				this->setStatusMessage("ERROR " + e.whatStr() + " [" + url.second + "]");
-
-				this->crawlingResetTor();
-
-				this->networking.resetConnection(this->config.crawlerSleepError);
-
-				this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
-
+				this->crawlingReset(e.whatStr(), url.second);
 				this->crawlingRetry(url, false);
 			}
 			else {
@@ -2026,22 +1989,9 @@ namespace crawlservpp::Module::Crawler {
 				if(this->crawlingCheckCurlCode(
 						this->networking.getCurlCode(),
 						url
-				)) {
-					// clear token cache
-					this->initTokenCache();
-
+				))
 					// reset connection and retry
-					this->log(Config::crawlerLoggingDefault, e.whatStr() + " [" + url + "].");
-					this->log(Config::crawlerLoggingDefault, "resets connection...");
-
-					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
-
-					this->crawlingResetTor();
-
-					this->networking.resetConnection(this->config.crawlerSleepError);
-
-					this->log(Config::crawlerLoggingDefault, "public IP: " + this->networking.getPublicIp());
-				}
+					this->crawlingReset(e.whatStr(), url);
 				else {
 					this->log(Config::crawlerLoggingDefault, "WARNING: " + e.whatStr() + " [" + url + "]");
 
@@ -3208,7 +3158,7 @@ namespace crawlservpp::Module::Crawler {
 
 												this->log(
 														Config::crawlerLoggingDefault,
-														"public IP: " + this->networking.getPublicIp()
+														"new public IP: " + this->networking.getPublicIp()
 												);
 
 												this->crawlingRetry(url, true);
@@ -3304,7 +3254,7 @@ namespace crawlservpp::Module::Crawler {
 
 							this->log(
 									Config::crawlerLoggingDefault,
-									"public IP: " + this->networking.getPublicIp()
+									"new public IP: " + this->networking.getPublicIp()
 							);
 
 							success = false;
@@ -3459,6 +3409,28 @@ namespace crawlservpp::Module::Crawler {
 
 		if(archiveOnly)
 			this->archiveRetry = true;
+	}
+
+	// reset connection after an error occured
+	void Thread::crawlingReset(const std::string& error, const std::string& url) {
+		// clear token cache
+		this->initTokenCache();
+
+		// show error
+		this->log(Config::crawlerLoggingDefault, error + " [" + url + "].");
+
+		this->setStatusMessage("ERROR " + error + " [" + url + "]");
+
+		// reset connection and retry (if still running)
+		if(this->isRunning()) {
+			this->log(Config::crawlerLoggingDefault, "resets connection...");
+
+			this->crawlingResetTor();
+
+			this->networking.resetConnection(this->config.crawlerSleepError);
+
+			this->log(Config::crawlerLoggingDefault, "new public IP: " + this->networking.getPublicIp());
+		}
 	}
 
 	// request a new TOR identity if necessary

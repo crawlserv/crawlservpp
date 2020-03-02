@@ -290,6 +290,7 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
+		void crawlingReset(const std::string& error, const std::string& url);
 		void crawlingResetTor();
 
 		// static helper function for memento crawling
