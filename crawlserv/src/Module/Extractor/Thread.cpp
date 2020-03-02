@@ -271,7 +271,7 @@ namespace crawlservpp::Module::Extractor {
 		this->tickCounter = 0;
 
 		// extractor is ready
-		this->log(Config::generalLoggingExtended, " is ready.");
+		this->log(Config::generalLoggingExtended, "is ready.");
 	}
 
 	// extractor tick, throws Thread::Exception

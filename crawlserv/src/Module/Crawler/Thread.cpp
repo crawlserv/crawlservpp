@@ -259,7 +259,7 @@ namespace crawlservpp::Module::Crawler {
 		this->tickCounter = 0;
 
 		// crawler is ready
-		this->log(Config::crawlerLoggingExtended, " is ready.");
+		this->log(Config::crawlerLoggingExtended, "is ready.");
 	}
 
 	// crawler tick

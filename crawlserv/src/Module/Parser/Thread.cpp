@@ -204,7 +204,7 @@ namespace crawlservpp::Module::Parser {
 		this->tickCounter = 0;
 
 		// parser is ready
-		this->log(Config::generalLoggingExtended, " is ready.");
+		this->log(Config::generalLoggingExtended, "is ready.");
 	}
 
 	// parser tick, throws Thread::Exception
