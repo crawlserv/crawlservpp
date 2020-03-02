@@ -202,6 +202,9 @@ namespace crawlservpp::Module::Parser {
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 
 		this->tickCounter = 0;
+
+		// parser is ready
+		this->log(Config::generalLoggingExtended, " is ready.");
 	}
 
 	// parser tick, throws Thread::Exception

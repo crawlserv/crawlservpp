@@ -122,6 +122,7 @@ namespace crawlservpp::Module::Crawler {
 						" ON `" + this->urlListTableAlias + "1`.id"
 						" = `" + this->crawlingTableAlias + "1`.url"
 						" WHERE `" + this->urlListTableAlias + "1`.hash = " + hashQuery +
+						" ORDER BY id"
 					" ) AS tmp"
 					" WHERE url = ?"
 					" LIMIT 1"
@@ -169,7 +170,7 @@ namespace crawlservpp::Module::Crawler {
 			this->log(verbose, "prepares addUrlIfNotExists()...");
 
 			this->ps.addUrlIfNotExists = this->addPreparedStatement(
-					"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, hash, manual)"
+					"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, manual, hash)"
 						"VALUES ("
 							" ("
 								"SELECT id"
@@ -183,9 +184,9 @@ namespace crawlservpp::Module::Crawler {
 								" WHERE url = ?"
 								" LIMIT 1"
 							" ),"
+							"?, "
 							"?, " +
-							hashQuery + ", "
-							"?"
+							hashQuery +
 						")"
 			);
 		}
@@ -379,7 +380,8 @@ namespace crawlservpp::Module::Crawler {
 				groupBy = "LOWER(url)";
 
 			this->ps.urlDuplicationCheck = this->addPreparedStatement(
-					"SELECT CAST("
+					"SELECT "
+					" CAST("
 						+ groupBy +
 						" AS BINARY"
 					" )"
@@ -436,6 +438,24 @@ namespace crawlservpp::Module::Crawler {
 			this->ps.getUrls = this->addPreparedStatement(
 					"SELECT url"
 					" FROM `" + this->urlListTable + "`"
+			);
+		}
+
+		if(!(this->ps.removeDuplicates) && (this->urlStartupCheck || this->urlDebug)) {
+			this->log(verbose, "prepares removeDuplicates()...");
+
+			std::string urlComparison;
+
+			if(this->urlCaseSensitive)
+				urlComparison = "url LIKE ?";
+			else
+				urlComparison = "LOWER(url) LIKE LOWER(?)";
+
+			this->ps.removeDuplicates = this->addPreparedStatement(
+					" DELETE"
+					"  FROM `" + this->urlListTable + "`"
+					"  WHERE id > ?" // ignore the first occurence
+					"  AND " + urlComparison
 			);
 		}
 	}
@@ -531,8 +551,8 @@ namespace crawlservpp::Module::Crawler {
 			sqlStatement.setString(1, urlString);
 			sqlStatement.setString(2, urlString);
 			sqlStatement.setString(3, urlString);
-			sqlStatement.setString(4, urlString);
-			sqlStatement.setBoolean(5, manual);
+			sqlStatement.setBoolean(4, manual);
+			sqlStatement.setString(5, urlString);
 
 			return Database::sqlExecuteUpdate(sqlStatement) > 0;
 		}
@@ -543,7 +563,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// add URLs that do not exist already to the database, return the number of added URLs,
 	//  throws Database::Exception
-	unsigned long Database::addUrlsIfNotExist(std::queue<std::string>& urls) {
+	unsigned long Database::addUrlsIfNotExist(std::queue<std::string>& urls, bool manual) {
 		unsigned long result = 0;
 
 		// check argument
@@ -572,10 +592,11 @@ namespace crawlservpp::Module::Crawler {
 			// add 1.000 URLs at once
 			while(urls.size() >= 1000) {
 				for(unsigned long n = 0; n < 1000; ++n) {
-					sqlStatement1000.setString((n * 4) + 1, urls.front());
-					sqlStatement1000.setString((n * 4) + 2, urls.front());
-					sqlStatement1000.setString((n * 4) + 3, urls.front());
-					sqlStatement1000.setString((n * 4) + 4, urls.front());
+					sqlStatement1000.setString((n * 5) + 1, urls.front());
+					sqlStatement1000.setString((n * 5) + 2, urls.front());
+					sqlStatement1000.setString((n * 5) + 3, urls.front());
+					sqlStatement1000.setBoolean((n * 5) + 4, manual);
+					sqlStatement1000.setString((n * 5) + 5, urls.front());
 
 					urls.pop();
 				}
@@ -589,10 +610,11 @@ namespace crawlservpp::Module::Crawler {
 			// add 100 URLs at once
 			while(urls.size() >= 100) {
 				for(unsigned long n = 0; n < 100; ++n) {
-					sqlStatement100.setString((n * 4) + 1, urls.front());
-					sqlStatement100.setString((n * 4) + 2, urls.front());
-					sqlStatement100.setString((n * 4) + 3, urls.front());
-					sqlStatement100.setString((n * 4) + 4, urls.front());
+					sqlStatement100.setString((n * 5) + 1, urls.front());
+					sqlStatement100.setString((n * 5) + 2, urls.front());
+					sqlStatement100.setString((n * 5) + 3, urls.front());
+					sqlStatement100.setBoolean((n * 5) + 4, manual);
+					sqlStatement100.setString((n * 5) + 5, urls.front());
 
 					urls.pop();
 				}
@@ -606,10 +628,11 @@ namespace crawlservpp::Module::Crawler {
 			// add 10 URLs at once
 			while(urls.size() >= 10) {
 				for(unsigned long n = 0; n < 10; ++n) {
-					sqlStatement10.setString((n * 4) + 1, urls.front());
-					sqlStatement10.setString((n * 4) + 2, urls.front());
-					sqlStatement10.setString((n * 4) + 3, urls.front());
-					sqlStatement10.setString((n * 4) + 4, urls.front());
+					sqlStatement10.setString((n * 5) + 1, urls.front());
+					sqlStatement10.setString((n * 5) + 2, urls.front());
+					sqlStatement10.setString((n * 5) + 3, urls.front());
+					sqlStatement10.setBoolean((n * 5) + 4, manual);
+					sqlStatement10.setString((n * 5) + 5, urls.front());
 
 					urls.pop();
 				}
@@ -625,8 +648,8 @@ namespace crawlservpp::Module::Crawler {
 				sqlStatement1.setString(1, urls.front());
 				sqlStatement1.setString(2, urls.front());
 				sqlStatement1.setString(3, urls.front());
-				sqlStatement1.setString(4, urls.front());
-				sqlStatement1.setBoolean(5, false);
+				sqlStatement1.setBoolean(4, manual);
+				sqlStatement1.setString(5, urls.front());
 
 				urls.pop();
 
@@ -730,7 +753,7 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
-	// check the URL list for duplicates, throw Exception if duplicates are found, throws Database::Exception
+	// check the URL list for duplicates, throw Exception if duplicates are found and removed, throws Database::Exception
 	void Database::urlDuplicationCheck() {
 		// check connection
 		this->checkConnection();
@@ -748,13 +771,30 @@ namespace crawlservpp::Module::Crawler {
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next())
-				throw Exception(
-						"Crawler::Database::urlDuplicationCheck(): Duplicate URL \'"
-						+ sqlResultSet->getString("url")
-						+ "\" in `"
-						+ this->urlListTable + "`"
-				);
+			if(sqlResultSet) {
+				const unsigned long numDuplicates = sqlResultSet->rowsCount();
+
+				if(numDuplicates) {
+					std::queue<std::string> duplicates;
+
+					while(sqlResultSet->next())
+						duplicates.push(sqlResultSet->getString("url"));
+
+					while(!duplicates.empty()) {
+						this->removeDuplicates(duplicates.front());
+
+						duplicates.pop();
+					}
+
+					// throw exception on duplicates
+					throw Exception(
+							"Crawler::Database::urlDuplicationCheck(): removed "
+							+ std::to_string(numDuplicates)
+							+ " duplicate URL(s) in `"
+							+ this->urlListTable + "`"
+					);
+				}
+			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
 	}
@@ -1225,7 +1265,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// generate INSERT INTO ... VALUES clause
 		std::string sqlQueryString(
-				"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, hash) VALUES "
+				"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, manual, hash) VALUES "
 		);
 
 		// generate placeholders
@@ -1243,6 +1283,7 @@ namespace crawlservpp::Module::Crawler {
 										" WHERE url = ?"
 										" LIMIT 1"
 									" ),"
+									"?, "
 									"?, " +
 									hashQuery +
 									"), "; // end of VALUES arguments
@@ -1267,7 +1308,7 @@ namespace crawlservpp::Module::Crawler {
 			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrls()");
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.urlDuplicationCheck));
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrls));
 
 		// get URLs from database
 		try {
@@ -1282,6 +1323,36 @@ namespace crawlservpp::Module::Crawler {
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrls", e); }
 
 		return result;
+	}
+
+	// remove duplicates of the specified URL from the URL list (NOT its first occurence), throws Database::Exception
+	void Database::removeDuplicates(const std::string& url) {
+		// get ID of first occurence
+		const unsigned long first = this->getUrlId(url);
+
+		// check argument
+		if(url.empty())
+			throw Exception("Crawler::Database::removeDuplicates(): No URL specified");
+
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(!(this->ps.removeDuplicates))
+			throw Exception("Missing prepared SQL statement for Crawler::Database::removeDuplicates()");
+
+		// get prepared SQL statement
+		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.removeDuplicates));
+
+		// remove URLs from database
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(1, first);
+			sqlStatement.setString(2, url);
+
+			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::removeDuplicates", e); }
 	}
 
 } /* crawlservpp::Module::Crawler */

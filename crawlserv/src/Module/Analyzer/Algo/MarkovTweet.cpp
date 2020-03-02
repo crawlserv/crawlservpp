@@ -164,6 +164,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// re-allow pausing the thread
 		this->allowPausing();
+
+		// algorithm is ready
+		this->log(Config::generalLoggingExtended, "is ready.");
 	}
 
 	// algorithm tick

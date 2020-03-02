@@ -142,11 +142,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		if(this->isRunning()) {
 			if(timer)
-				this->log(1, "created dictionary in " + timer->tickStr() + ".");
+				this->log(Config::generalLoggingDefault, "created dictionary in " + timer->tickStr() + ".");
 
 			// re-allow pausing the thread
 			this->allowPausing();
 		}
+
+		// algorithm is ready
+		this->log(Config::generalLoggingExtended, "is ready.");
 	}
 
 	// algorithm tick
@@ -169,7 +172,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		const std::string text(this->createText());
 
 		if(timer)
-			this->log(1, "created text in " + timer->tickStr() + ".");
+			this->log(Config::generalLoggingDefault, "created text in " + timer->tickStr() + ".");
 
 		// insert text into result table in the database
 		if(!text.empty()) {

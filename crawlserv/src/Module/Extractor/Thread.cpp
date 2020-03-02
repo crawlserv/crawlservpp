@@ -269,6 +269,9 @@ namespace crawlservpp::Module::Extractor {
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 
 		this->tickCounter = 0;
+
+		// extractor is ready
+		this->log(Config::generalLoggingExtended, " is ready.");
 	}
 
 	// extractor tick, throws Thread::Exception
