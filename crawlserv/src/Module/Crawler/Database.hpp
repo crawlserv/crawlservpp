@@ -78,7 +78,7 @@ namespace crawlservpp::Module::Crawler {
 		unsigned long getUrlId(const std::string& url);
 		IdString getNextUrl(unsigned long currentUrlId);
 		bool addUrlIfNotExists(const std::string& urlString, bool manual);
-		unsigned long addUrlsIfNotExist(std::queue<std::string>& urls);
+		unsigned long addUrlsIfNotExist(std::queue<std::string>& urls, bool manual);
 		unsigned long addUrlGetId(const std::string& urlString, bool manual);
 		unsigned long getUrlPosition(unsigned long urlId);
 		unsigned long getNumberOfUrls();
@@ -154,11 +154,13 @@ namespace crawlservpp::Module::Crawler {
 			unsigned short urlHashCorrect;
 			unsigned short urlEmptyCheck;
 			unsigned short getUrls;
+			unsigned short removeDuplicates;
 		} ps;
 
 		// helper functions
 		std::string queryAddUrlsIfNotExist(unsigned int numberOfUrls, const std::string& hashQuery);
 		std::queue<std::string> getUrls();
+		unsigned int removeDuplicates(const std::string& url);
 	};
 
 	} /* crawlservpp::Module::Crawler */

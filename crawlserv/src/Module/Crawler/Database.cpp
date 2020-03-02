@@ -111,17 +111,9 @@ namespace crawlservpp::Module::Crawler {
 					"SELECT id"
 					" FROM "
 					" ("
-						"SELECT `" + this->urlListTableAlias + "1`.id"
-						" AS id,"
-						" `" + this->urlListTableAlias + "1`.url"
-						" AS url"
+						"SELECT id, url"
 						" FROM `" + this->urlListTable + "`"
-						" AS `" + this->urlListTableAlias + "1`"
-						" LEFT OUTER JOIN `" + this->crawlingTable + "`"
-						" AS `" + this->crawlingTableAlias + "1`"
-						" ON `" + this->urlListTableAlias + "1`.id"
-						" = `" + this->crawlingTableAlias + "1`.url"
-						" WHERE `" + this->urlListTableAlias + "1`.hash = " + hashQuery +
+						" WHERE hash = " + hashQuery +
 						" ORDER BY id"
 					" ) AS tmp"
 					" WHERE url = ?"
@@ -454,8 +446,15 @@ namespace crawlservpp::Module::Crawler {
 			this->ps.removeDuplicates = this->addPreparedStatement(
 					" DELETE"
 					"  FROM `" + this->urlListTable + "`"
-					"  WHERE id > ?" // ignore the first occurence
-					"  AND " + urlComparison
+					"  WHERE id IN "
+						" ("
+							" SELECT id FROM ("
+								" SELECT id FROM `" + this->urlListTable + "`"
+								"  WHERE id > ?" // ignore the first occurence
+								"  AND hash = " + hashQuery +
+							" ) AS tmp"
+							" WHERE " + urlComparison +
+						" )"
 			);
 		}
 	}
@@ -770,27 +769,28 @@ namespace crawlservpp::Module::Crawler {
 			// execute SQL query
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
-			// get result
+			// get result and remove possible duplicates
 			if(sqlResultSet) {
-				const unsigned long numDuplicates = sqlResultSet->rowsCount();
-
-				if(numDuplicates) {
+				if(sqlResultSet->next()) {
 					std::queue<std::string> duplicates;
 
-					while(sqlResultSet->next())
+					do
 						duplicates.push(sqlResultSet->getString("url"));
+					while(sqlResultSet->next());
+
+					unsigned long numDuplicates = 0;
 
 					while(!duplicates.empty()) {
-						this->removeDuplicates(duplicates.front());
+						numDuplicates += this->removeDuplicates(duplicates.front());
 
 						duplicates.pop();
 					}
 
-					// throw exception on duplicates
+					// throw exception after duplicates have been removed
 					throw Exception(
 							"Crawler::Database::urlDuplicationCheck(): removed "
 							+ std::to_string(numDuplicates)
-							+ " duplicate URL(s) in `"
+							+ " duplicate URL(s) from `"
 							+ this->urlListTable + "`"
 					);
 				}
@@ -1325,8 +1325,11 @@ namespace crawlservpp::Module::Crawler {
 		return result;
 	}
 
-	// remove duplicates of the specified URL from the URL list (NOT its first occurence), throws Database::Exception
-	void Database::removeDuplicates(const std::string& url) {
+	// remove duplicates of the specified URL from the URL list (NOT its first occurence)
+	//	return the number of deleted duplicates, throws Database::Exception
+	unsigned int Database::removeDuplicates(const std::string& url) {
+		int result = 0;
+
 		// get ID of first occurence
 		const unsigned long first = this->getUrlId(url);
 
@@ -1349,10 +1352,16 @@ namespace crawlservpp::Module::Crawler {
 			// execute SQL query
 			sqlStatement.setUInt64(1, first);
 			sqlStatement.setString(2, url);
+			sqlStatement.setString(3, url);
 
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			result = Database::sqlExecuteUpdate(sqlStatement);
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::removeDuplicates", e); }
+
+		if(result > 0)
+			return static_cast<unsigned int>(result);
+
+		return 0;
 	}
 
 } /* crawlservpp::Module::Crawler */
