@@ -66,7 +66,6 @@
 #include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::stoul, std::string, std::to_string
-#include <thread>		// std::this_thread
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
@@ -291,6 +290,11 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
 		void crawlingReset(const std::string& error, const std::string& url);
+		void crawlingResetArchive(
+				const std::string& error,
+				const std::string& url,
+				const std::string& archive
+		);
 		void crawlingResetTor();
 
 		// static helper function for memento crawling
