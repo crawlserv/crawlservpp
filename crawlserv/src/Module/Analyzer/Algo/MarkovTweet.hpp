@@ -52,10 +52,8 @@
 
 #include "../../../_extern/rawr/rawr.h"
 
-#include <chrono>		// std::chrono
 #include <functional>	// std::bind, std::placeholders
 #include <string>		// std::string
-#include <thread>		// std::this_thread
 #include <vector>		// std::vector
 
 

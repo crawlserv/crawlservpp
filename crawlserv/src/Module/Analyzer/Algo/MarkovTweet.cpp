@@ -225,7 +225,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		if(this->markovTweetSleep) {
 			this->setStatusMessage("Sleeping...");
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->markovTweetSleep));
+			this->sleep(this->markovTweetSleep);
 		}
 	}
 

@@ -279,6 +279,21 @@ namespace crawlservpp::Module {
 		return this->resumed;
 	}
 
+	// sleep for the specified number of milliseconds (unless the thread is stopped)
+	void Thread::sleep(unsigned long ms) const {
+		while(ms > 500) {
+			if(!(this->isRunning()))
+				return;
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+			ms -= 500;
+		}
+
+		if(this->isRunning())
+			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+	}
+
 	// return whether thread has been interrupted by shutdown
 	bool Thread::isInterrupted() const {
 		return this->interrupted;

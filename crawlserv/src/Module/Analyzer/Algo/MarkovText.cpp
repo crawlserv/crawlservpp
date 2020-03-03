@@ -211,7 +211,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		if(this->markovTextSleep) {
 			this->setStatusMessage("Sleeping...");
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->markovTextSleep));
+			this->sleep(this->markovTextSleep);
 		}
 	}
 

@@ -37,22 +37,13 @@
 #include "../Config.hpp"
 #include "../Thread.hpp"
 
-#include "../../Helper/DateTime.hpp"
-#include "../../Helper/Strings.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
-#include "../../Timer/StartStop.hpp"
 
-#include <algorithm>
-#include <cctype>
-#include <chrono>
-#include <locale>
-#include <queue>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <thread>
+#include <queue>		// std::queue
+#include <stdexcept>	// std::logic_error
+#include <string>		// std::string
 
 namespace crawlservpp::Module::Analyzer {
 

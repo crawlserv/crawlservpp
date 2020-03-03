@@ -135,7 +135,7 @@ namespace crawlservpp::Module::Analyzer {
 		this->setStatusMessage("IDLE Finished.");
 
 		// sleep
-		std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepWhenFinished));
+		this->sleep(this->config.generalSleepWhenFinished);
 	}
 
 	// shadow pause function not to be used by thread

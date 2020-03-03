@@ -308,7 +308,7 @@ namespace crawlservpp::Module::Extractor {
 			if(this->idleTime == std::chrono::steady_clock::time_point::min())
 				this->idleTime = std::chrono::steady_clock::now();
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->config.generalSleepIdle));
+			this->sleep(this->config.generalSleepIdle);
 
 			return;
 		}

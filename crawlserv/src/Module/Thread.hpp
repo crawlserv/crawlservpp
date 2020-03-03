@@ -127,6 +127,7 @@ namespace crawlservpp::Module {
 		// thread helper functions
 		bool isInterrupted() const;
 		bool isResumed() const;
+		void sleep(unsigned long ms) const;
 
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
