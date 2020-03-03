@@ -89,6 +89,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovTweet::onAlgoInit() {
 		// set target fields
 		std::vector<std::string> fields, types;
+		std::vector<TextMapEntry> articleMap, dateMap;
 
 		fields.reserve(2);
 		types.reserve(2);
@@ -128,7 +129,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					corpus,
 					corpusSources,
 					dateFrom,
-					dateTo
+					dateTo,
+					articleMap,
+					dateMap
 			);
 
 			this->generator.addCorpus(corpus);

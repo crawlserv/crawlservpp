@@ -44,6 +44,7 @@
 #include <queue>		// std::queue
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::string
+#include <tuple>		// std::tuple
 
 namespace crawlservpp::Module::Analyzer {
 
@@ -62,6 +63,10 @@ namespace crawlservpp::Module::Analyzer {
 		virtual ~Thread();
 
 	protected:
+		// text maps are used to describe certain parts of a text
+		//  defined by their positions and lengths with certain strings (words, dates etc.)
+		using TextMapEntry = std::tuple<std::string, unsigned long, unsigned long>;
+
 		// analyzing configuration and database functionality for thread
 		Database database;
 

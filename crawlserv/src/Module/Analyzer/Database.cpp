@@ -140,7 +140,7 @@ namespace crawlservpp::Module::Analyzer {
 				this->log(verbose, "prepares getCorpus()...");
 
 				this->ps.getCorpus = this->addPreparedStatement(
-						"SELECT corpus, datemap, sources"
+						"SELECT corpus, articlemap, datemap, sources"
 						" FROM crawlserv_corpora"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
@@ -227,8 +227,29 @@ namespace crawlservpp::Module::Analyzer {
 
 				this->ps.addCorpus = this->addPreparedStatement(
 						"INSERT INTO crawlserv_corpora"
-							"(website, urllist, source_type, source_table, source_field, corpus, datemap, sources)"
-							" VALUES (" + this->getWebsiteIdString() + ", " + this->getUrlListIdString() + ", ?, ?, ?, ?, ?, ?)"
+						" ("
+							" website,"
+							" urllist,"
+							" source_type,"
+							" source_table,"
+							" source_field,"
+							" corpus,"
+							" articlemap,"
+							" datemap,"
+							" sources"
+						") "
+						"VALUES"
+						" (" +
+							this->getWebsiteIdString() + ", " +
+							this->getUrlListIdString() + ","
+							" ?, "
+							" ?,"
+							" ?,"
+							" ?,"
+							" ?,"
+							" ?,"
+							" ?"
+						")"
 				);
 			}
 		}
@@ -265,9 +286,11 @@ namespace crawlservpp::Module::Analyzer {
 			std::string& corpusTo,
 			unsigned long& sourcesTo,
 			const std::string& filterDateFrom,
-			const std::string& filterDateTo
+			const std::string& filterDateTo,
+			std::vector<TextMapEntry>& articleMapTo,
+			std::vector<TextMapEntry>& dateMapTo
 	) {
-		std::string dateMap;
+		std::string dateMap, articleMap;
 
 		// check arguments
 		if(corpusProperties.sourceTable.empty()) {
@@ -284,7 +307,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check whether text corpus needs to be created
 		if(this->isCorpusChanged(corpusProperties))
-			this->createCorpus(corpusProperties, corpusTo, dateMap, sourcesTo);
+			this->createCorpus(corpusProperties, corpusTo, articleMap, dateMap, sourcesTo);
 		else {
 			// check connection
 			this->checkConnection();
@@ -308,6 +331,9 @@ namespace crawlservpp::Module::Analyzer {
 				if(sqlResultSet && sqlResultSet->next()) {
 					corpusTo = sqlResultSet->getString("corpus");
 
+					if(!(sqlResultSet->isNull("articlemap")))
+						articleMap = sqlResultSet->getString("articlemap");
+
 					if(!(sqlResultSet->isNull("datemap")))
 						dateMap = sqlResultSet->getString("datemap");
 
@@ -327,58 +353,150 @@ namespace crawlservpp::Module::Analyzer {
 			catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::getCorpus", e); }
 		}
 
-		// filter corpus by dates
-		if(!filterDateFrom.empty()) {
-			if(!dateMap.empty()) {
+		std::vector<TextMapEntry> parsedArticleMap;
+		std::vector<TextMapEntry> parsedDateMap;
+
+		if(!articleMap.empty()) {
+			// parse article map
+			rapidjson::Document document;
+
+			try {
+				document = Helper::Json::parseRapid(dateMap);
+			}
+			catch(const JsonException& e) {
+				throw Exception(
+						"Analyzer::Database::getCorpus(): Could not parse article map of corpus - "
+						+ e.whatStr()
+				);
+			}
+
+			if(!document.IsArray())
+				throw Exception("Analyzer::Database::getCorpus(): Invalid article map (is not an array)");
+
+			for(const auto& element : document.GetArray()) {
+				if(!element.IsObject())
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid article map (an array element is not an object"
+					);
+
+				auto p = element.FindMember("p");
+				auto l = element.FindMember("l");
+				auto v = element.FindMember("v");
+
+				if(p == element.MemberEnd() || !(p->value.IsUint64()))
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid article map (could not find valid position)"
+					);
+
+				if(l == element.MemberEnd() || !(l->value.IsUint64()))
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid article map (could not find valid length)"
+					);
+
+				if(v == element.MemberEnd() || !(v->value.IsString()))
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid article map (could not find valid value)"
+					);
+
+				parsedArticleMap.emplace_back(v->value.GetString(), p->value.GetUint64(), l->value.GetUint64());
+			}
+		}
+
+		if(dateMap.empty()) {
+			if(!filterDateFrom.empty())
+				throw Exception("Analyzer::Database::getCorpus(): No date map for corpus found");
+
+			// forward article map as is
+			if(!articleMap.empty())
+				articleMapTo.swap(parsedArticleMap);
+		}
+		else {
+			// parse date map
+			rapidjson::Document document;
+
+			try {
+				document = Helper::Json::parseRapid(dateMap);
+			}
+			catch(const JsonException& e) {
+				throw Exception(
+						"Analyzer::Database::getCorpus(): Could not parse date map of corpus - "
+						+ e.whatStr()
+				);
+			}
+
+			if(!document.IsArray())
+				throw Exception("Analyzer::Database::getCorpus(): Invalid date map (is not an array)");
+
+			for(const auto& element : document.GetArray()) {
+				if(!element.IsObject())
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid date map (an array element is not an object"
+					);
+
+				auto p = element.FindMember("p");
+				auto l = element.FindMember("l");
+				auto v = element.FindMember("v");
+
+				if(p == element.MemberEnd() || !(p->value.IsUint64()))
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid date map (could not find valid position)"
+					);
+
+				if(l == element.MemberEnd() || !(l->value.IsUint64()))
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid date map (could not find valid length)"
+					);
+
+				if(v == element.MemberEnd() || !(v->value.IsString()))
+					throw Exception(
+							"Analyzer::Database::getCorpus(): Invalid date map (could not find valid value)"
+					);
+
+				parsedDateMap.emplace_back(v->value.GetString(), p->value.GetUint64(), l->value.GetUint64());
+			}
+
+			// clear-and-minimize JSON document
+			rapidjson::Document(rapidjson::kObjectType).Swap(document);
+
+			if(filterDateFrom.empty()) {
+				// forward date and article maps as they are
+				articleMapTo.swap(parsedArticleMap);
+				dateMapTo.swap(parsedDateMap);
+			}
+			else {
+				// filter corpus by dates
+				unsigned long p = 0;
 				std::string filteredCorpus;
+				std::vector<TextMapEntry> newArticleMap, newDateMap;
 
 				filteredCorpus.reserve(corpusTo.length());
 
-				// parse datemap
-				rapidjson::Document document;
+				auto articleIt = parsedArticleMap.begin();
 
-				try {
-					document = Helper::Json::parseRapid(dateMap);
-				}
-				catch(const JsonException& e) {
-					throw Exception(
-							"Analyzer::Database::getCorpus(): Could not parse datemap of corpus - "
-							+ e.whatStr()
-					);
-				}
+				for(const auto& date : parsedDateMap) {
+					if(Helper::DateTime::isISODateInRange(std::get<0>(date), filterDateFrom, filterDateTo)) {
+						filteredCorpus += corpusTo.substr(std::get<1>(date), std::get<2>(date));
 
-				if(!document.IsArray())
-					throw Exception("Analyzer::Database::getCorpus(): Invalid datemap (is not an array)");
-
-				for(const auto& element : document.GetArray()) {
-					if(!element.IsObject())
-						throw Exception(
-								"Analyzer::Database::getCorpus(): Invalid datemap (an array element is not an object"
-						);
-
-					auto p = element.FindMember("p");
-					auto l = element.FindMember("l");
-					auto v = element.FindMember("v");
-
-					if(p == element.MemberEnd() || !(p->value.IsUint64()))
-						throw Exception(
-								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid position)"
-						);
-
-					if(l == element.MemberEnd() || !(l->value.IsUint64()))
-						throw Exception(
-								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid length)"
-						);
-
-					if(v == element.MemberEnd() || !(v->value.IsString()))
-						throw Exception(
-								"Analyzer::Database::getCorpus(): Invalid datemap (could not find valid value)"
-						);
-
-					if(Helper::DateTime::isISODateInRange(v->value.GetString(), filterDateFrom, filterDateTo)) {
-						filteredCorpus += corpusTo.substr(p->value.GetUint64(), l->value.GetUint64());
+						newDateMap.emplace_back(std::get<0>(date), p, std::get<2>(date));
 
 						filteredCorpus.push_back(' ');
+
+						// skip articles that have been filtered out
+						while(std::get<1>(*articleIt) < std::get<1>(date))
+							++articleIt;
+
+						// add articles that are located inside the current date to the new article map
+						while(std::get<1>(*articleIt) < std::get<1>(date) + std::get<2>(date)) {
+							newArticleMap.emplace_back(
+									std::get<0>(*articleIt),
+									p + std::get<1>(*articleIt) - std::get<1>(date),
+									std::get<2>(*articleIt)
+							);
+
+							++articleIt;
+						}
+
+						p += std::get<2>(date) + 1;
 					}
 				}
 
@@ -386,6 +504,8 @@ namespace crawlservpp::Module::Analyzer {
 					filteredCorpus.pop_back();
 
 				corpusTo.swap(filteredCorpus);
+				articleMapTo.swap(newArticleMap);
+				dateMapTo.swap(newDateMap);
 
 				std::ostringstream logStrStr;
 
@@ -397,8 +517,6 @@ namespace crawlservpp::Module::Analyzer {
 
 				this->log(this->getLoggingMin(), logStrStr.str());
 			}
-			else
-				throw Exception("Analyzer::Database::getCorpus(): No datemap for corpus found");
 		}
 	}
 
@@ -581,15 +699,19 @@ namespace crawlservpp::Module::Analyzer {
 		return result;
 	}
 
-	// create and add text corpus (old corpus will be deleted if it exists, a datemap will be created when using parsed data),
+	// create and add text corpus
+	// 	if an old corpus exists, it will be deleted, when using parsed data, date and article maps will be created,
 	//  throws Database::Exception
 	void Database::createCorpus(
 			const CorpusProperties& corpusProperties,
 			std::string& corpusTo,
+			std::string& articleMapTo,
 			std::string& dateMapTo,
 			unsigned long& sourcesTo
 	) {
+		std::vector<TextMapEntry> articleMap;
 		std::vector<TextMapEntry> dateMap;
+		TextMapEntry articleMapEntry;
 		TextMapEntry dateMapEntry;
 
 		// initialize values
@@ -598,6 +720,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		sourcesTo = 0;
 
+		articleMapEntry = std::make_tuple("", 0, 0);
 		dateMapEntry = std::make_tuple("", 0, 0);
 
 		// check connection
@@ -670,15 +793,19 @@ namespace crawlservpp::Module::Analyzer {
 
 			Database::sqlExecute(deleteStatement);
 
-			// get texts and possibly parsed datetimes from database
+			// get texts and possibly parsed datetimes and IDs from database
 			Main::Data::GetColumns data;
 
 			data.table = tableName;
-			data.columns.reserve(2);
+
+			data.columns.reserve(3);
+
 			data.columns.emplace_back(columnName);
 
 			if(corpusProperties.sourceType == Config::generalInputSourcesParsing) {
+				data.columns.emplace_back("parsed_id");
 				data.columns.emplace_back("parsed_datetime");
+
 				data.order = "parsed_datetime";
 			}
 
@@ -690,50 +817,79 @@ namespace crawlservpp::Module::Analyzer {
 			for(auto i = data.values.at(0).begin(); i != data.values.at(0).end(); ++i) {
 				// check string
 				if((!(i->_isnull)) && !(i->_s.empty())) {
-					// check for datetime (i.e. whether to create a datemap)
+					const auto index = i - data.values.at(0).begin();
+
+					// check for article ID (i.e. whether to create an article map)
 					if(data.values.size() > 1) {
-						const auto& datetime = data.values.at(1).at(i - data.values.at(0).begin());
+						const auto& articleId = data.values.at(1).at(index);
 
 						/*
-						 * USAGE OF DATE MAP ENTRIES:
+						 * USAGE OF ARTICLE MAP ENTRIES:
 						 *
-						 *	[std::string&] std::get<0>(DateMapEntry)
-						 *		-> date of the text part as string ("YYYY-MM-DD")
-						 *	[unsigned long&] std::get<1>(DateMapEntry)
-						 *		-> position of the text part in the text corpus (starts with 1!)
-						 * 	[unsigned long&] std::get<2>(DateMapEntry)
+						 *	[std::string&] std::get<0>(TextMapEntry)
+						 *		-> ID of the text part as string
+						 *	[unsigned long&] std::get<1>(TextMapEntry)
+						 *		-> position of the text part in the text corpus
+						 * 	[unsigned long&] std::get<2>(TextMapEntry)
 						 * 		-> length of the text part
 						 *
 						 */
 
-						// check for current datetime
-						if((!(datetime._isnull)) && datetime._s.length() > 9) {
-							// found current datetime -> create date string
-							const std::string date(datetime._s, 10); // get only date (YYYY-MM-DD) from datetime
+						if((!articleId._isnull) && !(articleId._s.empty()))
+							// found current article ID -> add to article map
+							articleMap.emplace_back(
+									std::make_tuple(
+											articleId._s,
+											corpusTo.length(),
+											i->_s.length()
+									)
+							);
 
-							// check whether a date is already set
-							if(!std::get<0>(dateMapEntry).empty()) {
-								// date is already set -> compare last with current date
-								if(std::get<0>(dateMapEntry) == date)
-									// last date equals current date -> append last date
-									std::get<2>(dateMapEntry) += i->_s.length() + 1; // include space before current string to add
+						// check for date time (i.e. whether to create a date map)
+						if(data.values.size() > 2) {
+							const auto& dateTime = data.values.at(2).at(index);
+
+							/*
+							 * USAGE OF DATE MAP ENTRIES:
+							 *
+							 *	[std::string&] std::get<0>(TextMapEntry)
+							 *		-> date of the text part as string ("YYYY-MM-DD")
+							 *	[unsigned long&] std::get<1>(TextMapEntry)
+							 *		-> position of the text part in the text corpus
+							 * 	[unsigned long&] std::get<2>(TextMapEntry)
+							 * 		-> length of the text part
+							 *
+							 */
+
+							// check for current datetime
+							if((!(dateTime._isnull)) && dateTime._s.length() > 9) {
+								// found current datetime -> create date string
+								const std::string date(dateTime._s, 10); // get only date (YYYY-MM-DD) from datetime
+
+								// check whether a date is already set
+								if(!std::get<0>(dateMapEntry).empty()) {
+									// date is already set -> compare last with current date
+									if(std::get<0>(dateMapEntry) == date)
+										// last date equals current date -> append last date
+										std::get<2>(dateMapEntry) += i->_s.length() + 1; // include space before current string to add
+									else {
+										// last date differs from current date -> conclude last date and start new date
+										dateMap.emplace_back(dateMapEntry);
+
+										dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
+									}
+								}
 								else {
-									// last date differs from current date -> conclude last date and start new date
-									dateMap.emplace_back(dateMapEntry);
-
+									// no date is set yet -> start new date
 									dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
 								}
 							}
-							else {
-								// no date is set yet -> start new date
-								dateMapEntry = std::make_tuple(date, corpusTo.length(), i->_s.length());
-							}
-						}
-						else if(!std::get<0>(dateMapEntry).empty()) {
-							// no valid datetime was found, but last date is set -> conclude last date
-							dateMap.emplace_back(dateMapEntry);
+							else if(!std::get<0>(dateMapEntry).empty()) {
+								// no valid datetime was found, but last date is set -> conclude last date
+								dateMap.emplace_back(dateMapEntry);
 
-							dateMapEntry = std::make_tuple("", 0, 0);
+								dateMapEntry = std::make_tuple("", 0, 0);
+							}
 						}
 					}
 
@@ -761,14 +917,18 @@ namespace crawlservpp::Module::Analyzer {
 					addStatement.setString(4, corpusTo);
 
 					if(corpusProperties.sourceType == Config::generalInputSourcesParsing) {
+						articleMapTo = Helper::Json::stringify(articleMap);
 						dateMapTo = Helper::Json::stringify(dateMap);
 
-						addStatement.setString(5, dateMapTo);
+						addStatement.setString(5, articleMapTo);
+						addStatement.setString(6, dateMapTo);
 					}
-					else
+					else {
 						addStatement.setNull(5, 0);
+						addStatement.setNull(6, 0);
+					}
 
-					addStatement.setUInt64(6, sourcesTo);
+					addStatement.setUInt64(7, sourcesTo);
 
 					Database::sqlExecute(addStatement);
 				}

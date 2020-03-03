@@ -102,7 +102,9 @@ namespace crawlservpp::Module::Analyzer {
 				std::string& corpusTo,
 				unsigned long& sourcesTo,
 				const std::string& filterDateFrom,
-				const std::string& filterDateTo
+				const std::string& filterDateTo,
+				std::vector<TextMapEntry>& articleMapTo,
+				std::vector<TextMapEntry>& dateMapTo
 		);
 
 		// public helper functions
@@ -139,6 +141,7 @@ namespace crawlservpp::Module::Analyzer {
 		void createCorpus(
 				const CorpusProperties& corpusProperties,
 				std::string& corpusTo,
+				std::string& articleMapTo,
 				std::string& dateMapTo,
 				unsigned long& sourcesTo
 		);

@@ -106,6 +106,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string corpus, dateFrom, dateTo;
+			std::vector<TextMapEntry> articleMap, dateMap;
 
 			unsigned long corpusSources = 0;
 
@@ -117,7 +118,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			this->database.getCorpus(
 					CorpusProperties(this->config.generalInputSources.at(n), this->config.generalInputTables.at(n),
 
-					this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo
+					this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo, articleMap, dateMap
 			);
 
 			this->source += corpus;
