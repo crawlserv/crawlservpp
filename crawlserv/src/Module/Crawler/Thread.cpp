@@ -407,7 +407,7 @@ namespace crawlservpp::Module::Crawler {
 			if(this->idleTime == std::chrono::steady_clock::time_point::min())
 				this->idleTime = std::chrono::steady_clock::now();
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(this->config.crawlerSleepIdle));
+			this->sleep(this->config.crawlerSleepIdle);
 		}
 	}
 
@@ -1613,9 +1613,7 @@ namespace crawlservpp::Module::Crawler {
 				if(this->config.crawlerTiming)
 					sleepTimer.start();
 
-				std::this_thread::sleep_for(
-						std::chrono::milliseconds(this->config.crawlerSleepHttp - httpElapsed)
-				);
+				this->sleep(this->config.crawlerSleepHttp - httpElapsed);
 
 				if(this->config.crawlerTiming) {
 					sleepTimer.stop();
@@ -1676,6 +1674,7 @@ namespace crawlservpp::Module::Crawler {
 					url.second
 			)) {
 				this->crawlingReset(e.whatStr(), url.second);
+
 				this->crawlingRetry(url, false);
 			}
 			else {
@@ -3125,40 +3124,10 @@ namespace crawlservpp::Module::Crawler {
 															mementos.front().url
 													)
 											) {
-												// log error if necessary
-												this->log(
-														Config::crawlerLoggingDefault,
-														e.whatStr()
-														+ " ["
-														+ mementos.front().url
-														+ "]."
-												);
-
-												this->log(
-														Config::crawlerLoggingDefault,
-														"resets connection to "
-														+ this->config.crawlerArchivesNames.at(n)
-														+ "..."
-												);
-
-												// reset connection and retry
-												this->setStatusMessage(
-														"ERROR "
-														+ e.whatStr()
-														+ " ["
-														+ mementos.front().url
-														+ "]"
-												);
-
-												this->crawlingResetTor();
-
-												this->networkingArchives->resetConnection(
-														this->config.crawlerSleepError
-												);
-
-												this->log(
-														Config::crawlerLoggingDefault,
-														"new public IP: " + this->networking.getPublicIp()
+												this->crawlingResetArchive(
+														e.whatStr(),
+														mementos.front().url,
+														this->config.crawlerArchivesNames.at(n)
 												);
 
 												this->crawlingRetry(url, true);
@@ -3226,35 +3195,10 @@ namespace crawlservpp::Module::Crawler {
 								archivedUrl
 						)) {
 							// reset connection and retry
-							this->log(
-									Config::crawlerLoggingDefault,
-									e.whatStr() + " [" + archivedUrl + "]."
-							);
-
-							this->log(
-									Config::crawlerLoggingDefault,
-									"resets connection to "
-									+ this->config.crawlerArchivesNames.at(n)
-									+ "..."
-							);
-
-							this->setStatusMessage(
-									"ERROR "
-									+ e.whatStr()
-									+ " ["
-									+ archivedUrl
-									+ "]"
-							);
-
-							this->crawlingResetTor();
-
-							this->networkingArchives->resetConnection(
-									this->config.crawlerSleepError
-							);
-
-							this->log(
-									Config::crawlerLoggingDefault,
-									"new public IP: " + this->networking.getPublicIp()
+							this->crawlingResetArchive(
+									e.whatStr(),
+									archivedUrl,
+									this->config.crawlerArchivesNames.at(n)
 							);
 
 							success = false;
@@ -3430,6 +3374,39 @@ namespace crawlservpp::Module::Crawler {
 			this->networking.resetConnection(this->config.crawlerSleepError);
 
 			this->log(Config::crawlerLoggingDefault, "new public IP: " + this->networking.getPublicIp());
+		}
+	}
+
+	// reset connection to the archive after an error occured
+	void Thread::crawlingResetArchive(
+			const std::string& error,
+			const std::string& url,
+			const std::string& archive
+	) {
+		// show error
+		this->log(Config::crawlerLoggingDefault, error + " [" + url + "].");
+
+		this->setStatusMessage("ERROR " + error + " [" + url + "]");
+
+		this->log(
+				Config::crawlerLoggingDefault,
+				"resets connection to "
+				+ archive
+				+ "..."
+		);
+
+		// reset connection and retry (if still running)
+		if(this->isRunning()) {
+			this->crawlingResetTor();
+
+			this->networkingArchives->resetConnection(
+					this->config.crawlerSleepError
+			);
+
+			this->log(
+					Config::crawlerLoggingDefault,
+					"new public IP: " + this->networking.getPublicIp()
+			);
 		}
 	}
 
