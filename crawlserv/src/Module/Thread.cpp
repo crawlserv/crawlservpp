@@ -290,7 +290,7 @@ namespace crawlservpp::Module {
 			ms -= 500;
 		}
 
-		if(this->isRunning())
+		if(ms && this->isRunning())
 			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 	}
 
