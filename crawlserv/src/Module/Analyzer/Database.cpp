@@ -36,6 +36,7 @@ namespace crawlservpp::Module::Analyzer {
 	Database::Database(Module::Database& dbThread)
 							: Wrapper::Database(dbThread),
 							  timeoutTargetLock(0),
+							  corpusSlicing(30),
 							  targetTableId(0),
 							  ps(_ps()) {}
 
