@@ -35,8 +35,9 @@
 // do not catch thread exceptions: use only for debugging!
 //#define MODULE_THREAD_DEBUG_NOCATCH
 
-// hard-coded constant
+// hard-coded constants
 #define MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC 10
+#define MODULE_THREAD_SLEEP_ON_SLEEP_MS 800
 
 #include "Database.hpp"
 

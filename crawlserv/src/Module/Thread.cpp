@@ -281,13 +281,13 @@ namespace crawlservpp::Module {
 
 	// sleep for the specified number of milliseconds (unless the thread is stopped)
 	void Thread::sleep(unsigned long ms) const {
-		while(ms > 500) {
+		while(ms > MODULE_THREAD_SLEEP_ON_SLEEP_MS) {
 			if(!(this->isRunning()))
 				return;
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			std::this_thread::sleep_for(std::chrono::milliseconds(MODULE_THREAD_SLEEP_ON_SLEEP_MS));
 
-			ms -= 500;
+			ms -= MODULE_THREAD_SLEEP_ON_SLEEP_MS;
 		}
 
 		if(ms && this->isRunning())
