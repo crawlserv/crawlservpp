@@ -35,14 +35,14 @@
 #include "../Thread.hpp"
 
 #include "../../../Data/Corpus.hpp"
-#include "../../../Data/Data.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
-#include "../../../Struct/TextMap.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
-#include "../../../Timer/Simple.hpp"
 
-#include <string>		// std::string
+#include <limits>	// std::numeric_limits
+#include <locale>	// std::locale
+#include <sstream>	// std::ostringstream
+#include <string>	// std::string
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
@@ -79,6 +79,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// overwritten configuration functions
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+
+	private:
+		std::string status;
 	};
 
 } /* crawlservpp::Module::Analyzer::Algo */

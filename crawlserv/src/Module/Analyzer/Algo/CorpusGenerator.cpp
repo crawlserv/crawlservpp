@@ -70,10 +70,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->config.generalInputFields
 		);
 
-		// get text corpus
-		this->setStatusMessage("Getting text corpus...");
+		// request text corpus
+		this->setStatusMessage("Requesting text corpus...");
 
-		this->log(Config::generalLoggingVerbose, "gets text corpus...");
+		this->log(Config::generalLoggingVerbose, "requests text corpus...");
+
+		size_t corpora = 0;
+		size_t bytes = 0;
+		size_t sources = 0;
 
 		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
 			unsigned long corpusSources = 0;
@@ -91,16 +95,61 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					corpus,
 					corpusSources
 			);
+
+			if(!corpus.empty()) {
+				++corpora;
+
+				bytes += corpus.size();
+
+				sources += corpusSources;
+			}
 		}
 
 		// algorithm has finished
 		this->log(Config::generalLoggingExtended, "has finished.");
 
 		this->setProgress(1.f);
+
+		/*
+		 * NOTE: The status will be saved in-class and not set here, because
+		 * 	the parent class will revert to the original status after initialization
+		 */
+
+		std::ostringstream statusStrStr;
+
+		statusStrStr.imbue(std::locale(""));
+
+		if(corpora) {
+			statusStrStr << "IDLE ";
+
+			if(corpora == 1)
+				statusStrStr << "Corpus of ";
+			else
+				statusStrStr << corpora << " corpora of ";
+
+			if(bytes == 1)
+				statusStrStr << "one byte";
+			else
+				statusStrStr << bytes << " bytes";
+
+			if(sources == 1)
+				statusStrStr << " from one source";
+			else if(sources > 1)
+				statusStrStr << " from " << sources << " sources";
+
+			this->status = statusStrStr.str();
+		}
+		else
+			this->status = "IDLE No corpus created.";
+
 	}
 
 	// algorithm tick
-	void CorpusGenerator::onAlgoTick() {}
+	void CorpusGenerator::onAlgoTick() {
+		this->setStatusMessage(this->status);
+
+		this->sleep(std::numeric_limits<unsigned long>::max());
+	}
 
 	// pause algorithm run
 	void CorpusGenerator::onAlgoPause() {}
