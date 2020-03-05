@@ -80,6 +80,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// initialize algorithm run
 	void MarkovText::onAlgoInit() {
+		this->log(Config::generalLoggingVerbose, "initializes algorithm...");
+
 		// initialize random number generator
 		srand(unsigned(time(nullptr)));
 
@@ -99,10 +101,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// initialize target table
 		this->setStatusMessage("Creating result table...");
 
+		this->log(Config::generalLoggingVerbose, "creates result table...");
+
 		this->database.initTargetTable(true);
 
 		// get text corpus
 		this->setStatusMessage("Getting text corpus...");
+
+		this->log(Config::generalLoggingVerbose, "gets text corpus...");
 
 		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string dateFrom, dateTo;
@@ -140,6 +146,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// create dictionary
 		this->setStatusMessage("Creating dictionary...");
+
+		this->log(Config::generalLoggingVerbose, "creates dictionary...");
 
 		std::unique_ptr<Timer::Simple> timer;
 
@@ -260,12 +268,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		if(!(this->markovTextLength))
 			throw Exception("Algo::MarkovText::checkOptions(): Result text length is zero");
 
-		// check your sources
-		this->database.checkSources(
-				this->config.generalInputSources,
-				this->config.generalInputTables,
-				this->config.generalInputFields
-		);
+		/*
+		 * WARNING: The existence of the sources cannot be checked here,
+		 * 	because the database has not been prepared yet.
+		 */
 	}
 
 	// create dictionary (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator)

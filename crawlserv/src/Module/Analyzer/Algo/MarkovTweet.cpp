@@ -269,12 +269,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		if(!(this->markovTweetLength))
 			throw Exception("Algo::MarkovTweet::checkOptions(): Result tweet length is zero");
 
-		// check your sources
-		this->database.checkSources(
-				this->config.generalInputSources,
-				this->config.generalInputTables,
-				this->config.generalInputFields
-		);
+		/*
+		 * WARNING: The existence of the sources cannot be checked here,
+		 * 	because the database has not been prepared yet.
+		 */
 	}
 
 	// external access to thread functionality for rawr
