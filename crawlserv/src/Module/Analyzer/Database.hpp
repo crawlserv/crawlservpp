@@ -144,7 +144,8 @@ namespace crawlservpp::Module::Analyzer {
 	private:
 		// IDs of prepared SQL statements
 		struct _ps {
-			unsigned short getCorpus;
+			unsigned short getCorpusFirst;
+			unsigned short getCorpusNext;
 			unsigned short isCorpusChanged;
 			unsigned short isCorpusChangedParsing;
 			unsigned short isCorpusChangedExtracting;

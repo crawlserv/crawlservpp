@@ -151,19 +151,30 @@ namespace crawlservpp::Module::Analyzer {
 
 		try {
 			// prepare SQL statements for analyzer
-			if(!(this->ps.getCorpus)) {
-				this->log(verbose, "prepares getCorpus()...");
+			if(!(this->ps.getCorpusFirst)) {
+				this->log(verbose, "prepares getCorpus() [1/2]...");
 
-				this->ps.getCorpus = this->addPreparedStatement(
+				this->ps.getCorpusFirst = this->addPreparedStatement(
 						"SELECT id, corpus, articlemap, datemap, sources"
 						" FROM crawlserv_corpora"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
-						" AND source_table = ?"
-						" AND source_field = ?"
-						" AND previous = ?"
+						" AND source_table LIKE ?"
+						" AND source_field LIKE ?"
+						" AND previous IS NULL"
 						" ORDER BY created DESC"
+						" LIMIT 1"
+				);
+			}
+
+			if(!(this->ps.getCorpusNext)) {
+				this->log(verbose, "prepares getCorpus() [2/2]...");
+
+				this->ps.getCorpusNext = this->addPreparedStatement(
+						"SELECT id, corpus, articlemap, datemap, sources"
+						" FROM crawlserv_corpora"
+						" WHERE previous = ?"
 						" LIMIT 1"
 				);
 			}
@@ -336,27 +347,31 @@ namespace crawlservpp::Module::Analyzer {
 			this->checkConnection();
 
 			// check prepared SQL statement
-			if(!(this->ps.getCorpus))
+			if(!(this->ps.getCorpusFirst) || !(this->ps.getCorpusNext))
 				throw Exception("Analyzer::Database::getCorpus(): Missing prepared SQL statement for getting the corpus");
 
-			// get prepared SQL statement
-			sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getCorpus));
+			// get prepared SQL statements
+			sql::PreparedStatement& sqlStatementFirst(this->getPreparedStatement(this->ps.getCorpusFirst));
+			sql::PreparedStatement& sqlStatementNext(this->getPreparedStatement(this->ps.getCorpusNext));
 
 			try {
 				// execute SQL query for getting a chunk of the corpus
 				size_t previous = 0;
 
-				sqlStatement.setUInt(1, corpusProperties.sourceType);
-				sqlStatement.setString(2, corpusProperties.sourceTable);
-				sqlStatement.setString(3, corpusProperties.sourceField);
+				sqlStatementFirst.setUInt(1, corpusProperties.sourceType);
+				sqlStatementFirst.setString(2, corpusProperties.sourceTable);
+				sqlStatementFirst.setString(3, corpusProperties.sourceField);
 
 				while(true) {
-					if(previous)
-						sqlStatement.setUInt64(4, previous);
-					else
-						sqlStatement.setNull(4, 0);
+					SqlResultSetPtr sqlResultSet;
 
-					SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+					if(previous) {
+						sqlStatementNext.setUInt64(1, previous);
+
+						SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementNext)).swap(sqlResultSet);
+					}
+					else
+						SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementFirst)).swap(sqlResultSet);
 
 					if(sqlResultSet && sqlResultSet->next()) {
 						// get chunk
@@ -396,6 +411,8 @@ namespace crawlservpp::Module::Analyzer {
 
 						if(!previous)
 							sourcesTo = sqlResultSet->getUInt64("sources");
+
+						previous = sqlResultSet->getUInt64("id");
 					}
 					else
 						break;
