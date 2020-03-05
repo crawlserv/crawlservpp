@@ -33,14 +33,15 @@
 
 #include "Config.hpp"
 
+#include "../../Data/Corpus.hpp"
+#include "../../Data/Data.hpp"
 #include "../../Helper/Portability/mysqlcppconn.h"
-#include "../../Main/Data.hpp"
 #include "../../Main/Exception.hpp"
-#include "../../Helper/DateTime.hpp"
 #include "../../Helper/Json.hpp"
 #include "../../Struct/CorpusProperties.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
+#include "../../Struct/TextMap.hpp"
 #include "../../Timer/Simple.hpp"
 #include "../../Wrapper/Database.hpp"
 
@@ -58,7 +59,7 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
-#include <tuple>		// std::get(std::tuple), std::make_tuple, std::tuple
+#include <utility>		// std::move
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer {
@@ -67,17 +68,13 @@ namespace crawlservpp::Module::Analyzer {
 		// for convenience
 		using JsonException = Helper::Json::Exception;
 
-		using DataType = Main::Data::Type;
+		using DataType = Data::Type;
 
 		using CustomTableProperties = Struct::TargetTableProperties;
 		using CorpusProperties = Struct::CorpusProperties;
 		using TableColumn = Struct::TableColumn;
 
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
-
-		// text maps are used to describe certain parts of a text
-		//  defined by their positions and lengths with certain strings (words, dates etc.)
-		using TextMapEntry = std::tuple<std::string, unsigned long, unsigned long>;
 
 	public:
 		Database(Module::Database& dbRef);
@@ -99,12 +96,10 @@ namespace crawlservpp::Module::Analyzer {
 		// corpus functions
 		void getCorpus(
 				const CorpusProperties& corpusProperties,
-				std::string& corpusTo,
-				unsigned long& sourcesTo,
 				const std::string& filterDateFrom,
 				const std::string& filterDateTo,
-				std::vector<TextMapEntry>& articleMapTo,
-				std::vector<TextMapEntry>& dateMapTo
+				Data::Corpus& corpusTo,
+				unsigned long& sourcesTo
 		);
 
 		// public helper functions
@@ -140,9 +135,7 @@ namespace crawlservpp::Module::Analyzer {
 		bool isCorpusChanged(const CorpusProperties& corpusProperties);
 		void createCorpus(
 				const CorpusProperties& corpusProperties,
-				std::string& corpusTo,
-				std::string& articleMapTo,
-				std::string& dateMapTo,
+				Data::Corpus& corpusTo,
 				unsigned long& sourcesTo
 		);
 

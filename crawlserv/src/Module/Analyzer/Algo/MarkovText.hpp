@@ -40,8 +40,10 @@
 
 #include "../Thread.hpp"
 
-#include "../../../Main/Data.hpp"
+#include "../../../Data/Corpus.hpp"
+#include "../../../Data/Data.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
+#include "../../../Struct/TextMap.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 #include "../../../Timer/Simple.hpp"
@@ -57,8 +59,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	class MarkovText: public Module::Analyzer::Thread {
 		// for convenience
-		using DataType = Main::Data::Type;
-		using DataValue = Main::Data::Value;
+		using DataType = Data::Type;
+		using DataValue = Data::Value;
 
 		using Exception = Module::Analyzer::Thread::Exception;
 

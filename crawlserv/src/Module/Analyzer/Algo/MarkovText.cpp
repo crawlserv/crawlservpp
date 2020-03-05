@@ -105,8 +105,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage("Getting text corpus...");
 
 		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
-			std::string corpus, dateFrom, dateTo;
-			std::vector<TextMapEntry> articleMap, dateMap;
+			std::string dateFrom, dateTo;
 
 			unsigned long corpusSources = 0;
 
@@ -115,13 +114,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				dateTo = this->config.filterDateTo;
 			}
 
-			this->database.getCorpus(
-					CorpusProperties(this->config.generalInputSources.at(n), this->config.generalInputTables.at(n),
+			Data::Corpus corpus;
 
-					this->config.generalInputFields.at(n)), corpus, corpusSources, dateFrom, dateTo, articleMap, dateMap
+			this->database.getCorpus(
+					CorpusProperties(
+							this->config.generalInputSources.at(n),
+							this->config.generalInputTables.at(n),
+							this->config.generalInputFields.at(n)
+					),
+					dateFrom,
+					dateTo,
+					corpus,
+					corpusSources
 			);
 
-			this->source += corpus;
+			this->source += corpus.getCorpus();
 
 			this->source.push_back(' ');
 
@@ -177,7 +184,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// insert text into result table in the database
 		if(!text.empty()) {
-			Main::Data::InsertFieldsMixed data;
+			Data::InsertFieldsMixed data;
 
 			data.columns_types_values.reserve(2);
 

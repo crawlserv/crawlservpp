@@ -32,6 +32,7 @@
 #define HELPER_JSON_HPP_
 
 #include "../Main/Exception.hpp"
+#include "../Struct/TextMap.hpp"
 
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"
 
@@ -43,7 +44,6 @@
 
 #include <cctype>	// ::iscntrl, ::isxdigit, ::tolower
 #include <string>	// std::string
-#include <tuple>	// std::get(std::tuple), std::tuple
 #include <utility>	// std::pair
 #include <vector>	// std::vector
 
@@ -53,15 +53,11 @@ namespace crawlservpp::Helper::Json {
 	 * DECLARATION
 	 */
 
-	// text maps are used to describe certain parts of a text defined by their positions and lengths with certain strings
-	//  (words, dates etc.)
-	using TextMap = std::vector<std::tuple<std::string, unsigned long, unsigned long>>;
-
 	// stringify different kind of data to a JSON string
 	std::string stringify(const std::vector<std::string>& vectorToStringify);
 	std::string stringify(const std::string& stringToStringify);
 	std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify);
-	std::string stringify(const TextMap& textMapToStringify);
+	std::string stringify(const Struct::TextMap& textMapToStringify);
 	std::string stringify(const rapidjson::Value& value);
 	std::string stringify(const jsoncons::json& json);
 
@@ -69,6 +65,7 @@ namespace crawlservpp::Helper::Json {
 	std::string cleanCopy(const std::string& json);
 	rapidjson::Document parseRapid(const std::string& json);
 	jsoncons::json parseCons(const std::string& json);
+	Struct::TextMap parseTextMapJson(const std::string& json);
 
 	/*
 	 * CLASS FOR JSON EXCEPTIONS
@@ -190,7 +187,7 @@ namespace crawlservpp::Helper::Json {
 	}
 
 	// stringify a text map to a JSON array with corresponding objects containing [key, value] pairs
-	inline std::string stringify(const TextMap& textmapToStringify) {
+	inline std::string stringify(const Struct::TextMap& textMapToStringify) {
 		// create document as array and get refference to allocator
 		rapidjson::Document document;
 		
@@ -199,25 +196,14 @@ namespace crawlservpp::Helper::Json {
 		rapidjson::Document::AllocatorType& allocator = document.GetAllocator();
 
 		// reserve memory for all array elements
-		document.Reserve(textmapToStringify.size(), allocator);
+		document.Reserve(textMapToStringify.size(), allocator);
 
 		// go through the vector elements representing the objects in the array
-		for(const auto& element : textmapToStringify) {
+		for(const auto& textMapEntry : textMapToStringify) {
 			// create object and reserve memory for all [key, value] pairs
 			rapidjson::Value objectValue;
 			
 			objectValue.SetObject();
-
-			// create and add [key, value] pair for describing string
-			rapidjson::Value keyValue;
-			
-			keyValue.SetString("v", 1, allocator);
-			
-			rapidjson::Value valueValue;
-			
-			valueValue.SetString(std::get<0>(element), allocator);
-			
-			objectValue.AddMember(keyValue, valueValue, allocator);
 
 			// create and add [key, value] pair for position
 			rapidjson::Value keyPos;
@@ -226,7 +212,7 @@ namespace crawlservpp::Helper::Json {
 			
 			rapidjson::Value valuePos;
 			
-			valuePos.SetUint64(std::get<1>(element));
+			valuePos.SetUint64(textMapEntry.pos);
 			
 			objectValue.AddMember(keyPos, valuePos, allocator);
 
@@ -237,9 +223,20 @@ namespace crawlservpp::Helper::Json {
 			
 			rapidjson::Value valueLength;
 			
-			valueLength.SetUint64(std::get<2>(element));
+			valueLength.SetUint64(textMapEntry.length);
 			
 			objectValue.AddMember(keyLength, valueLength, allocator);
+
+			// create and add [key, value] pair for describing string
+			rapidjson::Value keyValue;
+
+			keyValue.SetString("v", 1, allocator);
+
+			rapidjson::Value valueValue;
+
+			valueValue.SetString(textMapEntry.value, allocator);
+
+			objectValue.AddMember(keyValue, valueValue, allocator);
 
 			// add object to array
 			document.PushBack(objectValue, allocator);
@@ -263,7 +260,7 @@ namespace crawlservpp::Helper::Json {
 
 		value.Accept(writer);
 
-		return buffer.GetString();
+		return std::string(buffer.GetString(), buffer.GetSize());
 	}
 
 	// stringify JSON using jsoncons
@@ -276,7 +273,7 @@ namespace crawlservpp::Helper::Json {
 	}
 
 	// copy and clean JSON before parsing (remove control characters, correct escape sequences)
-	// NOTE: in standard JSON, allowed escape sequence names are: " \ / b f n r t as well as u + 4 hex digits
+	// 	NOTE: in standard JSON, allowed escape sequence names are: " \ / b f n r t as well as u + 4 hex digits
 	inline std::string cleanCopy(const std::string &json) {
 		if(json.empty())
 			return "";
@@ -352,8 +349,9 @@ namespace crawlservpp::Helper::Json {
 		doc.Parse(cleanJson);
 
 		if(doc.HasParseError()) {
-			std::string exceptionStr(rapidjson::GetParseError_En(doc.GetParseError()));
+			std::string exceptionStr("Json::parseRapid(): ");
 
+			exceptionStr += rapidjson::GetParseError_En(doc.GetParseError());
 			exceptionStr += " at \'";
 
 			if(doc.GetErrorOffset() > 25)
@@ -387,8 +385,59 @@ namespace crawlservpp::Helper::Json {
 			return result;
 		}
 		catch(const jsoncons::json_exception& e) {
-			throw Exception(e.what());
+			throw Exception(
+					"Json::parseCons(): "
+					+ std::string(e.what())
+			);
 		}
+	}
+
+	// parse JSON using rapidjson and convert it into a text map, throws Json::Exception
+	inline Struct::TextMap parseTextMapJson(const std::string& json) {
+		Struct::TextMap result;
+
+		if(json.empty())
+			return result;
+
+		// parse JSON
+		rapidjson::Document document = parseRapid(json);
+
+		if(!document.IsArray())
+			throw Exception("Json::parseTextMapJson(): Invalid text map (is not an array)");
+
+		for(const auto& element : document.GetArray()) {
+			if(!element.IsObject())
+				throw Exception(
+						"Json::parseTextMapJson(): Invalid text map (an array element is not an object"
+				);
+
+			auto p = element.FindMember("p");
+			auto l = element.FindMember("l");
+			auto v = element.FindMember("v");
+
+			if(p == element.MemberEnd() || !(p->value.IsUint64()))
+				throw Exception(
+						"Json::parseTextMapJson(): Invalid text map (could not find valid position)"
+				);
+
+			if(l == element.MemberEnd() || !(l->value.IsUint64()))
+				throw Exception(
+						"Json::parseTextMapJson(): Invalid text map (could not find valid length)"
+				);
+
+			if(v == element.MemberEnd() || !(v->value.IsString()))
+				throw Exception(
+						"Json::parseTextMapJson(): Invalid text map (could not find valid value)"
+				);
+
+			result.emplace_back(
+					p->value.GetUint64(),
+					l->value.GetUint64(),
+					std::string(v->value.GetString(), v->value.GetStringLength())
+			);
+		}
+
+		return result;
 	}
 
 } /* crawlservpp::Helper::Json */

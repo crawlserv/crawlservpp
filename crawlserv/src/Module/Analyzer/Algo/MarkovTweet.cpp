@@ -89,7 +89,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovTweet::onAlgoInit() {
 		// set target fields
 		std::vector<std::string> fields, types;
-		std::vector<TextMapEntry> articleMap, dateMap;
+		std::vector<Struct::TextMapEntry> articleMap, dateMap;
 
 		fields.reserve(2);
 		types.reserve(2);
@@ -111,8 +111,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage("Getting text corpus...");
 
 		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
-			std::string corpus, dateFrom, dateTo;
-
+			std::string dateFrom, dateTo;
+			Data::Corpus corpus;
 			unsigned long corpusSources = 0;
 
 			if(this->config.filterDateEnable) {
@@ -126,15 +126,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 							this->config.generalInputTables.at(n),
 							this->config.generalInputFields.at(n)
 					),
-					corpus,
-					corpusSources,
 					dateFrom,
 					dateTo,
-					articleMap,
-					dateMap
+					corpus,
+					corpusSources
 			);
 
-			this->generator.addCorpus(corpus);
+			this->generator.addCorpus(corpus.getCorpus());
 
 			this->sources += corpusSources;
 		}
@@ -191,7 +189,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// insert tweet into result table in the database
-		Main::Data::InsertFieldsMixed data;
+		Data::InsertFieldsMixed data;
 
 		data.columns_types_values.reserve(2);
 
