@@ -460,7 +460,8 @@ namespace crawlservpp::Module {
 			this->onInit();
 
 			// set status message (useful when the thread is paused on startup)
-			this->setStatusMessage(oldStatus);
+			if(!oldStatus.empty())
+				this->setStatusMessage(oldStatus);
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
 		}
 		// handle exceptions by trying to log and set status
