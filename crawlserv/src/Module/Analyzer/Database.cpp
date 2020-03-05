@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2018-2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -127,6 +127,15 @@ namespace crawlservpp::Module::Analyzer {
 	// prepare SQL statements for analyzer, throws Main::Database::Exception
 	void Database::prepare() {
 		const unsigned short verbose = this->getLoggingVerbose();
+
+		// create table prefix
+		this->tablePrefix = "crawlserv_";
+
+		if(!(this->getOptions().websiteNamespace.empty()))
+			this->tablePrefix += this->getOptions().websiteNamespace + "_";
+
+		if(!(this->getOptions().urlListNamespace.empty()))
+			this->tablePrefix += this->getOptions().urlListNamespace + "_";
 
 		// check connection to database
 		this->checkConnection();
