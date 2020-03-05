@@ -80,16 +80,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// initialize algorithm run
 	void MarkovText::onAlgoInit() {
+		// check your sources
+		this->setStatusMessage("Checking sources...");
+
 		this->log(Config::generalLoggingVerbose, "checks sources...");
 
-		// check your sources
 		this->database.checkSources(
 				this->config.generalInputSources,
 				this->config.generalInputTables,
 				this->config.generalInputFields
 		);
-
-		this->log(Config::generalLoggingVerbose, "initializes algorithm...");
 
 		// initialize random number generator
 		srand(unsigned(time(nullptr)));

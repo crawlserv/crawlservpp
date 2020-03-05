@@ -87,9 +87,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// initialize algorithm run, throws Thread::Exception
 	void MarkovTweet::onAlgoInit() {
+		// check your sources
+		this->setStatusMessage("Creating result table...");
+
 		this->log(Config::generalLoggingVerbose, "checks sources...");
 
-		// check your sources
 		this->database.checkSources(
 				this->config.generalInputSources,
 				this->config.generalInputTables,
@@ -114,10 +116,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// initialize target table
 		this->setStatusMessage("Creating result table...");
 
+		this->log(Config::generalLoggingVerbose, "creates result table...");
+
 		this->database.initTargetTable(true);
 
 		// get text corpus
 		this->setStatusMessage("Getting text corpus...");
+
+		this->log(Config::generalLoggingVerbose, "gets text corpus...");
 
 		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string dateFrom, dateTo;
@@ -147,6 +153,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// set options
+		this->setStatusMessage("Setting options...");
+
+		this->log(Config::generalLoggingVerbose, "sets options...");
+
 		this->generator.setSpellChecking(this->markovTweetSpellcheck, this->markovTweetLanguage);
 		this->generator.setVerbose(Module::Analyzer::Config::generalLoggingVerbose);
 		this->generator.setTiming(this->markovTweetTiming);
@@ -169,6 +179,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// compile text corpus
+		this->setStatusMessage("Compiling text corpus...");
+
+		this->log(Config::generalLoggingVerbose, "compiles text corpus...");
+
 		if(!(this->generator.compile(this->markovTweetDimension)))
 			throw Exception("Error while compiling corpus for tweet generation");
 
