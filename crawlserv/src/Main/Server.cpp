@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -104,6 +104,7 @@ namespace crawlservpp::Main {
 		// load threads from database
 		for(const auto& thread : this->database.getThreads()) {
 			if(thread.options.module == "crawler") {
+#ifndef MAIN_SERVER_DEBUG_NOCRAWLERS
 				// load crawler thread
 				this->crawlers.push_back(
 						std::make_unique<Module::Crawler::Thread>(
@@ -123,8 +124,10 @@ namespace crawlservpp::Main {
 						+ std::to_string(thread.status.id)
 						+ " continued."
 				);
+#endif
 			}
 			else if(thread.options.module == "parser") {
+#ifndef MAIN_SERVER_DEBUG_NOPARSERS
 				// load parser thread
 				this->parsers.push_back(
 						std::make_unique<Module::Parser::Thread>(
@@ -142,7 +145,9 @@ namespace crawlservpp::Main {
 						+ std::to_string(thread.status.id)
 						+ " continued."
 				);
+#endif
 			}
+#ifndef MAIN_SERVER_DEBUG_NOEXTRACTORS
 			else if(thread.options.module == "extractor") {
 				this->extractors.push_back(
 						std::make_unique<Module::Extractor::Thread>(
@@ -162,8 +167,10 @@ namespace crawlservpp::Main {
 						+ std::to_string(thread.status.id)
 						+ " continued."
 				);
+#endif
 			}
 			else if(thread.options.module == "analyzer") {
+#ifndef MAIN_SERVER_DEBUG_NOANALYZERS
 				// get JSON
 				const std::string config(
 						this->database.getConfiguration(
@@ -213,6 +220,7 @@ namespace crawlservpp::Main {
 						+ std::to_string(thread.status.id)
 						+ " continued."
 				);
+#endif
 			}
 			else
 				throw Exception("Unknown thread module \'" + thread.options.module + "\'");
@@ -1083,6 +1091,7 @@ namespace crawlservpp::Main {
 					+ " not found."
 			);
 
+#ifndef MAIN_SERVER_DEBUG_NOCRAWLERS
 		// create crawler
 		this->crawlers.push_back(
 				std::make_unique<Module::Crawler::Thread>(
@@ -1106,6 +1115,9 @@ namespace crawlservpp::Main {
 		);
 
 		return ServerCommandResponse("Crawler has been started.");
+#else
+		return ServerCommandResponse("Crawlers are deactivated.");
+#endif
 	}
 
 	// server command pausecrawler(id): pause a crawler by its ID
@@ -1283,6 +1295,7 @@ namespace crawlservpp::Main {
 					+ " not found."
 			);
 
+#ifndef MAIN_SERVER_DEBUG_NOPARSERS
 		// create parser
 		this->parsers.push_back(
 				std::make_unique<Module::Parser::Thread>(
@@ -1304,6 +1317,9 @@ namespace crawlservpp::Main {
 		);
 
 		return ServerCommandResponse("Parser has been started.");
+#else
+		return ServerCommandResponse("Parsers are deactivated.");
+#endif
 	}
 
 	// server command pauseparser(id): pause a parser by its ID
@@ -1503,6 +1519,7 @@ namespace crawlservpp::Main {
 					+ " not found."
 			);
 
+#ifndef MAIN_SERVER_DEBUG_NOEXTRACTORS
 		// create extractor
 		this->extractors.push_back(
 				std::make_unique<Module::Extractor::Thread>(
@@ -1526,6 +1543,9 @@ namespace crawlservpp::Main {
 		);
 
 		return ServerCommandResponse("Extractor has been started.");
+#else
+		return ServerCommandResponse("Extractors are deactivated.");
+#endif
 	}
 
 	// server command pauseextractor(id): pause an extractor by its ID
@@ -1747,6 +1767,7 @@ namespace crawlservpp::Main {
 		if(!algo)
 			return ServerCommandResponse::failed("Analyzing configuration does not include an algorithm.");
 
+#ifndef MAIN_SERVER_DEBUG_NOANALYZERS
 		// try to create algorithm thread
 		this->analyzers.push_back(
 				Module::Analyzer::Algo::initAlgo(
@@ -1781,6 +1802,9 @@ namespace crawlservpp::Main {
 		);
 
 		return ServerCommandResponse("Analyzer has been started.");
+#else
+		return ServerCommandResponse("Analyzers are deactivated.");
+#endif
 	}
 
 	// server command pauseparser(id): pause a parser by its ID

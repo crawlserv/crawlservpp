@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,11 +34,31 @@
 #ifndef MAIN_SERVER_HPP_
 #define MAIN_SERVER_HPP_
 
+/*
+ * CONSTANTS
+ */
+
 // hard-coded constants
 #define MAIN_SERVER_DIR_CACHE "cache"			// directory for file cache
 #define MAIN_SERVER_DIR_COOKIES "cookies"		// directory for cookies
 #define MAIN_SERVER_DIR_DEBUG "debug"			// directory for debugging threads
-#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5	// server-side sleep on MySQL error#
+#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5	// server-side sleep on MySQL error
+
+/*
+ * DEBUGGING
+ */
+
+// directives that allow to deactivate whole components for debugging purposes ONLY
+#ifndef NDEBUG
+	//#define MAIN_SERVER_DEBUG_NOCRAWLERS
+	//#define MAIN_SERVER_DEBUG_NOPARSERS
+	//#define MAIN_SERVER_DEBUG_NOEXTRACTORS
+	//#define MAIN_SERVER_DEBUG_NOANALYZERS
+#endif
+
+/*
+ * MACROS
+ */
 
 // macro for basic server commands
 #define MAIN_SERVER_BASIC_CMD(X, Y)	if(name == X) { \
@@ -55,6 +75,10 @@
 												e.what() \
 										); \
 									}
+
+/*
+ * INCLUDES AND DECLARATIONS
+ */
 
 #include "Database.hpp"
 #include "Exception.hpp"
