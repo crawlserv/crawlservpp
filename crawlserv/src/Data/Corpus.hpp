@@ -25,7 +25,8 @@
  * Class representing a text corpus with optional article and date maps
  * 	that can be sliced into smaller chunks to fit into the database.
  *
- * 	NOTE: All input data needs to be sorted by its date.
+ * 	NOTE:	All input data needs to be sorted by date.
+ * 			Text without dates need to be added first.
  *
  *  Created on: Mar 4, 2020
  *      Author: ans
@@ -321,11 +322,11 @@ namespace crawlservpp::Data {
 							++dateIt;
 
 #ifdef DATA_CORPUS_CONSISTENCY_CHECKS
-						if(articleIt->pos < dateIt->pos || articleIt->pos > dateIt->pos + dateIt->length)
+						if(articleIt->pos > dateIt->pos + dateIt->length)
 							throw Exception(
 									"Article position (#"
 									+ std::to_string(articleIt->pos)
-									+ ") is outside of date bounds [#"
+									+ ") lies behind date at [#"
 									+ std::to_string(dateIt->pos)
 									+ ";#"
 									+ std::to_string(dateIt->pos + dateIt->length)
@@ -345,7 +346,7 @@ namespace crawlservpp::Data {
 							if(!(this->dateMap.empty())) {
 								if(!chunkDateMap.empty() && chunkDateMap.back().value == dateIt->value)
 									chunkDateMap.back().length += remaining + 1; /* including space before article */
-								else
+								else if(corpusPos >= dateIt->pos)
 									chunkDateMap.emplace_back(chunk.size(), remaining, dateIt->value);
 							}
 
@@ -392,7 +393,7 @@ namespace crawlservpp::Data {
 							if(!(this->dateMap.empty())) {
 								if(!chunkDateMap.empty() && chunkDateMap.back().value == dateIt->value)
 									chunkDateMap.back().length += fill + 1; /* including space before the article */
-								else
+								else if(corpusPos >= dateIt->pos)
 									chunkDateMap.emplace_back(chunk.size(), fill, dateIt->value);
 							}
 
@@ -664,17 +665,6 @@ namespace crawlservpp::Data {
 
 				if(!map.empty()) {
 					const auto& first = map.at(0);
-
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
-					// consistency check
-					if(first.pos > 1)
-						throw Exception(
-								"Corpus::combine(): Date map in corpus chunk starts at #"
-								+ std::to_string(first.pos)
-								+ " instead of #0 or #1"
-						);
-#endif /* DATA_CONSISTENCY_CHECKS */
-
 
 					auto it = map.begin();
 
