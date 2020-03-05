@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -126,7 +126,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::vector<std::string> targetFieldTypes;
 		unsigned long timeoutTargetLock;
 
-		// table prefix, target table ID and name
+		// table prefix, target table ID and its name
 		std::string tablePrefix;
 		unsigned long targetTableId;
 		std::string targetTableFull;
