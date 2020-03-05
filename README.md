@@ -103,6 +103,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 The source code of the server consists of the following classes (as of April 2019):
 
+* **[`Data::Corpus`](crawlserv/src/Data/Corpus.hpp)**: Class representing a text corpus with optional article and date maps that can be sliced into smaller chunks to fit into the database.
 * **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
 * **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
 * **[`Main::Database`](crawlserv/src/Main/Database.cpp)**: Database access for the server and its threads (parent class with server-specific and basic functionality only).
@@ -180,6 +181,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 * **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.hpp)**: Structure for table columns (name, type, reference, indexed).
 * **[`Struct::TableProperties`](crawlserv/src/Struct/TableProperties.hpp)**: Table properties (name, columns, data directory, compression).
 * **[`Struct::TargetTableProperties`](crawlserv/src/Struct/TargetTableProperties.hpp)**: Target table properties (type, website, URL list, name and full name, columns, data directory, compression).
+* **[`Struct::TextMap`](crawlserv/src/Struct/TextMap.hpp)**: Text map used to annotate parts of a text corpus.
 * **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.hpp)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
 * **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.hpp)**: Basic thread options (thread module, IDs of website, URL list and configuration).
 * **[`Struct::ThreadStatus`](crawlserv/src/Struct/ThreadStatus.hpp)**: Thread status (thread ID, status message, pause state and progress).
@@ -188,7 +190,7 @@ The following custom structures are globally used (to be found in [`crawlserv/sr
 
 Algorithms are registered in [`crawlserv/src/Module/Analyzer/Algo/All.cpp`](crawlserv/src/Module/Analyzer/Algo/All.cpp).
 
-Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Main/Data.hpp`](crawlserv/src/Main/Data.hpp).
+Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Data/Data.hpp`](crawlserv/src/Data/Data.hpp).
 
 The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the [`Main::App`](crawlserv/src/Main/App.cpp) class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
