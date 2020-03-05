@@ -40,9 +40,10 @@
 #include "../Main/Exception.hpp"
 #include "../Struct/TextMap.hpp"
 
-#include <iterator>	// std::distance
-#include <string>	// std::string, std::to_string
-#include <vector>	// std::vector
+#include <algorithm>	// std::find_if
+#include <iterator>		// std::distance
+#include <string>		// std::string, std::to_string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Data {
 
@@ -57,6 +58,9 @@ namespace crawlservpp::Data {
 		const Struct::TextMap& getArticleMap() const;
 		Struct::TextMap& getDateMap();
 		const Struct::TextMap& getDateMap() const;
+		std::string get(size_t index) const;
+		std::string get(const std::string& id) const;
+		std::string getDate(const std::string& date) const;
 		size_t size() const;
 		bool empty() const;
 
@@ -90,6 +94,7 @@ namespace crawlservpp::Data {
 
 		// functionality
 		bool filterByDate(const std::string& from, const std::string& to);
+		std::string substr(size_t from, size_t len);
 		void clear();
 
 		// class for corpus exceptions
@@ -101,15 +106,6 @@ namespace crawlservpp::Data {
 		Struct::TextMap dateMap;
 
 	private:
-		// private helper functions
-		void updateChunkDate(
-				size_t pos,
-				size_t& n,
-				Struct::TextMap& chunkDateMap,
-				size_t articlePos,
-				size_t articleLen
-		) const;
-
 #ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 		static void checkMap(
 				const Struct::TextMap& map,
@@ -150,6 +146,82 @@ namespace crawlservpp::Data {
 		return this->dateMap;
 	}
 
+	// get the article with the specified index, throws Corpus::Exception
+	inline std::string Corpus::get(size_t index) const {
+		if(this->articleMap.empty())
+			throw Exception(
+					"Corpus::at(): requested article #"
+					+ std::to_string(index)
+					+ ", but article map is empty"
+			);
+
+		if(index >= this->articleMap.size())
+			throw Exception(
+					"Corpus::at(): index (#"
+					+ std::to_string(index)
+					+ ") is out of bounds [#0;#"
+					+ std::to_string(this->articleMap.size() - 1)
+					+ "]"
+			);
+
+		const auto& article = this->articleMap.at(index);
+
+		return this->corpus.substr(
+				article.pos,
+				article.length
+		);
+	}
+
+	// get the article with the specified ID, return empty string if the ID does not exist, throws Corpus::Exception
+	inline std::string Corpus::get(const std::string& id) const {
+		// check argument
+		if(id.empty())
+			throw Exception("Corpus::get(): No ID specified");
+
+		const auto& articleEntry = std::find_if(
+				this->articleMap.begin(),
+				this->articleMap.end(),
+				[&id](const auto& entry) {
+					return entry.value == id;
+				}
+		);
+
+		if(articleEntry == this->articleMap.end())
+			return std::string();
+
+		return this->corpus.substr(
+				articleEntry->pos,
+				articleEntry->length
+		);
+	}
+
+	// get all articles at the specified date, return empty string if none exist, throws Corpus::Exception
+	inline std::string Corpus::getDate(const std::string& date) const {
+		// check argument
+		if(date.length() != 10)
+			throw Exception(
+					"Corpus::getDate(): Invalid length of date: "
+					+ std::to_string(date.length())
+					+ " instead of 10"
+			);
+
+		const auto& dateEntry = std::find_if(
+				this->dateMap.begin(),
+				this->dateMap.end(),
+				[&date](const auto& entry) {
+					return entry.value == date;
+				}
+		);
+
+		if(dateEntry == this->dateMap.end())
+			return std::string();
+
+		return this->corpus.substr(
+				dateEntry->pos,
+				dateEntry->length
+		);
+	}
+
 	// get size of corpus
 	inline size_t Corpus::size() const {
 		return this->corpus.size();
@@ -181,8 +253,12 @@ namespace crawlservpp::Data {
 			std::vector<Struct::TextMap>& dateMapsTo
 	) const {
 		// check arguments
-		if(!chunkSize & !(this->corpus.empty()))
-			throw Exception("Corpus::copyChunks(): Invalid chunk size for non-empty corpus");
+		if(!chunkSize) {
+			if(this->corpus.empty())
+				return;
+			else
+				throw Exception("Corpus::copyChunks(): Invalid chunk size zero for non-empty corpus");
+		}
 
 		// check whether slicing is necessary
 		if(this->corpus.size() <= chunkSize) {
@@ -194,115 +270,193 @@ namespace crawlservpp::Data {
 		}
 
 		// reserve approx. memory for chunks
-		const size_t chunks = this->corpus.size() / chunkSize + 2; /* plus buffer */
+		const size_t chunks = this->corpus.size() / chunkSize
+				+ (this->corpus.size() % chunkSize > 0 ? 1 : 0);
 
 		to.reserve(chunks);
-		articleMapsTo.reserve(chunks);
-		dateMapsTo.reserve(chunks);
+
+		if(!(this->articleMap.empty()))
+			articleMapsTo.reserve(chunks);
+
+		if(!(this->dateMap.empty()))
+			dateMapsTo.reserve(chunks);
 
 		// slice corpus into chunks
-		size_t pos = 0;			// position in corpus
-		size_t articleN = 0;	// number of articles added so far
-		size_t dateN = 0;		// number of dates added so far
-		size_t size = 0;		// size of current chunk so far
+		bool noSpace = false;
 
-		while(pos < this->corpus.size()) {
-			if(this->articleMap.empty()) {
-				// simply add next part of the corpus
+		if(this->articleMap.empty()) {
+			// no article part: simply add parts of the corpus
+			size_t pos = 0;
+
+			while(pos < this->corpus.size()) {
 				to.emplace_back(this->corpus.substr(pos, chunkSize));
 
 				pos += chunkSize;
 			}
-			else {
-				// create chunk from remaining articles
+
+			noSpace = true;
+		}
+		else {
+			size_t corpusPos = 0, articlePos = 0;
+			auto articleIt = this->articleMap.begin(), dateIt = this->dateMap.begin();
+
+			while(corpusPos < this->corpus.size()) { /* loop for chunks */
+				// create chunk
 				std::string chunk;
 				Struct::TextMap chunkArticleMap, chunkDateMap;
 
-				for(; articleN < this->articleMap.size(); ++articleN) {
-					// get current article
-					const auto& article = this->articleMap.at(articleN);
+				// add space if necessary
+				if(noSpace) {
+					chunk.push_back(' ');
 
-					// concistency check
-					if(article.pos != pos)
-						throw Exception(
-								"Corpus::copyChunks(): Error in article map - expected begin of article at #"
-								+ std::to_string(pos)
-								+ " instead of #"
-								+ std::to_string(article.pos)
-						);
+					++corpusPos;
 
-					// check whether article is too large to fit into any chunk
-					if(article.length > chunkSize) {
-						// fill up current chunk with the beginning of the article
-						size_t posInArticle = chunkSize - chunk.size();
+					noSpace = false;
+				}
 
-						chunk.append(this->corpus.substr(article.pos, posInArticle));
+				for(; articleIt != this->articleMap.end(); ++articleIt) { /* loop for multiple articles inside one chunk */
+					if(!(this->dateMap.empty())) {
+						// check date of the article
+						if(!articlePos && articleIt->pos > dateIt->pos + dateIt->length)
+							++dateIt;
 
-						chunkArticleMap.emplace_back(pos, posInArticle, article.value);
+#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
+						if(articleIt->pos < dateIt->pos || articleIt->pos > dateIt->pos + dateIt->length)
+							throw Exception(
+									"Article position (#"
+									+ std::to_string(articleIt->pos)
+									+ ") is outside of date bounds [#"
+									+ std::to_string(dateIt->pos)
+									+ ";#"
+									+ std::to_string(dateIt->pos + dateIt->length)
+									+ "]"
+							);
+#endif
+					}
 
-						// update date map of the chunk
-						this->updateChunkDate(pos, dateN, chunkDateMap, article.pos, posInArticle);
+					// get remaining article length
+					const size_t remaining = articleIt->length - articlePos;
 
-						to.emplace_back(chunk);
-						articleMapsTo.emplace_back(chunkArticleMap);
-						dateMapsTo.emplace_back(chunkDateMap);
+					if(chunk.size() + remaining <= chunkSize) {
+						if(remaining) {
+							// add the remainder of the article to the chunk
+							chunkArticleMap.emplace_back(chunk.size(), remaining, articleIt->value);
 
-						// add article-only chunks
-						while(article.length - posInArticle > chunkSize) {
-							Struct::TextMap oneArticleMap, oneDateMap;
+							if(!(this->dateMap.empty())) {
+								if(!chunkDateMap.empty() && chunkDateMap.back().value == dateIt->value)
+									chunkDateMap.back().length += remaining + 1; /* including space before article */
+								else
+									chunkDateMap.emplace_back(chunk.size(), remaining, dateIt->value);
+							}
 
-							oneArticleMap.emplace_back(0, chunkSize, article.value);
+							chunk.append(this->corpus, corpusPos, remaining);
 
-							if(!(this->dateMap.empty()))
-								oneDateMap.emplace_back(0, chunkSize, this->dateMap.at(dateN).value);
-
-							to.emplace_back(this->corpus.substr(article.pos + posInArticle, chunkSize));
-
-							articleMapsTo.emplace_back(oneArticleMap);
-							dateMapsTo.emplace_back(oneDateMap);
-
-							posInArticle += chunkSize;
+							// update position in corpus
+							corpusPos += remaining;
 						}
 
-						// begin next chunk
-						Struct::TextMap oneArticleMap, oneDateMap;
+						// reset position in (next) article
+						articlePos = 0;
 
-						oneArticleMap.emplace_back(0, article.length - posInArticle, article.value);
+						if(chunk.size() < chunkSize) {
+							// add space to the end of the article
+							chunk.push_back(' ');
 
-						if(!(this->dateMap.empty()))
-							oneDateMap.emplace_back(0, article.length - posInArticle, this->dateMap.at(dateN).value);
+							++corpusPos;
 
-						chunk = this->corpus.substr(article.pos + posInArticle, article.length - posInArticle);
+							// check for end of chunk
+							if(chunk.size() == chunkSize) {
+								// start next chunk with next article
+								++articleIt;
 
-						chunkArticleMap.swap(oneArticleMap);
-						chunkDateMap.swap(oneDateMap);
+								break; // chunk is full
+							}
+						}
+						else {
+							// add space to the beginning of the next chunk instead
+							noSpace = true;
+
+							// start next chunk with next article
+							++articleIt;
+
+							break; // chunk is full
+						}
 					}
-					// check whether article is too large to fit into current chunk
-					else if(size + article.length > chunkSize)
-						break;
 					else {
-						// save current length of chunk
-						const auto len = chunk.length();
+						// fill the remainder of the chunk with part of the article
+						const size_t fill = chunkSize - chunk.size();
 
-						// add article to current chunk
-						chunk.append(this->corpus.substr(article.pos, article.length));
+						if(fill) {
+							chunkArticleMap.emplace_back(chunk.size(), fill, articleIt->value);
 
-						// add article to current article map
-						chunkArticleMap.emplace_back(len, article.length, article.value);
+							if(!(this->dateMap.empty())) {
+								if(!chunkDateMap.empty() && chunkDateMap.back().value == dateIt->value)
+									chunkDateMap.back().length += fill + 1; /* including space before the article */
+								else
+									chunkDateMap.emplace_back(chunk.size(), fill, dateIt->value);
+							}
 
-						// update date map of the chunk
-						this->updateChunkDate(pos, dateN, chunkDateMap, article.pos, article.length);
+							chunk.append(this->corpus, corpusPos, fill);
+
+							// update positions
+							corpusPos += fill;
+							articlePos += fill;
+						}
+
+						break; // chunk is full
 					}
-
-					// update position in corpus
-					pos = article.pos + article.length;
 				}
+
+#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
+				// consistency checks
+				if(chunk.size() > chunkSize)
+					throw Exception(
+							"Corpus::copyChunks(): Chunk is too large: "
+							+ std::to_string(chunk.size())
+							+ " > "
+							+ std::to_string(chunkSize)
+					);
+
+				if(articleIt == this->articleMap.end() && corpusPos < this->corpus.size())
+					throw Exception(
+							"Corpus::copyChunks(): End of articles, but not of corpus: #"
+							+ std::to_string(corpusPos)
+							+ " < #"
+							+ std::to_string(this->corpus.size())
+					);
+#endif
+
+				// check for empty chunk (should not happen)
+				if(chunk.empty())
+					break;
 
 				// add current chunk
 				to.emplace_back(chunk);
 				articleMapsTo.emplace_back(chunkArticleMap);
 				dateMapsTo.emplace_back(chunkDateMap);
 			}
+		}
+
+		if(!(this->articleMap.empty()) && !to.empty()) {
+#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
+			// consistency check
+			if(to.back().empty())
+				throw Exception("Corpus::copyChunks(): End chunk is empty");
+#endif
+
+			// remove last space
+			if(!noSpace)
+				to.back().pop_back();
+
+			// remove last chunk if it is empty
+			if(to.back().empty())
+				to.pop_back();
+
+#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
+			// consistency check
+			if(to.back().empty())
+				throw Exception("Corpus::copyChunks(): End chunk is empty");
+#endif
 		}
 	}
 
@@ -356,20 +510,23 @@ namespace crawlservpp::Data {
 		Struct::TextMapEntry dateMapEntry;
 
 		for(size_t n = 0; n < texts.size(); ++n) {
+			size_t pos = this->corpus.size();
+
 			auto& text = texts.at(n);
 
 			// add article ID (or empty string) to article map
 			if(articleIds.size() > n) {
 				auto& articleId = articleIds.at(n);
 
-				this->articleMap.emplace_back(this->corpus.size(), text.length(), articleId);
+				this->articleMap.emplace_back(pos, text.length(), articleId
+				);
 
 				if(deleteInputData && !articleId.empty())
 					// free memory early
 					std::string().swap(articleId);
 			}
 			else
-				this->articleMap.emplace_back(this->corpus.size(), text.length());
+				this->articleMap.emplace_back(pos, text.length());
 
 			// add date to date map if necessary
 			if(dateTimes.size() > n) {
@@ -378,7 +535,7 @@ namespace crawlservpp::Data {
 				// check for valid (long enough) date/time
 				if(dateTime.length() > 9) {
 					// get only date (YYYY-MM-DD) from date/time
-					const std::string date(dateTime, 10);
+					const std::string date(dateTime, 0, 10);
 
 					// check whether a date is already set
 					if(!dateMapEntry.value.empty()) {
@@ -460,6 +617,8 @@ namespace crawlservpp::Data {
 				// free memory early
 				std::string().swap(chunks.at(n));
 
+			bool beginsWithNewArticle = false;
+
 			if(articleMaps.size() > n) {
 				// add article map
 				auto& map = articleMaps.at(n);
@@ -469,8 +628,12 @@ namespace crawlservpp::Data {
 
 #ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 					// consistency check
-					if(first.pos)
-						throw Exception("Corpus::combine(): Article map in corpus chunk does not start at #0");
+					if(first.pos > 1)
+						throw Exception(
+								"Corpus::combine(): Article map in corpus chunk starts at #"
+								+ std::to_string(first.pos)
+								+ " instead of #0 or #1"
+					);
 #endif /* DATA_CONSISTENCY_CHECKS */
 
 					auto it = map.begin();
@@ -482,6 +645,8 @@ namespace crawlservpp::Data {
 
 						++it;
 					}
+					else
+						beginsWithNewArticle = true;
 
 					// add remaining articles to map
 					for(; it != map.end(); ++it)
@@ -502,9 +667,14 @@ namespace crawlservpp::Data {
 
 #ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 					// consistency check
-					if(first.pos)
-						throw("Corpus::combine(): Date map in corpus chunk does not start at #0");
+					if(first.pos > 1)
+						throw Exception(
+								"Corpus::combine(): Date map in corpus chunk starts at #"
+								+ std::to_string(first.pos)
+								+ " instead of #0 or #1"
+						);
 #endif /* DATA_CONSISTENCY_CHECKS */
+
 
 					auto it = map.begin();
 
@@ -512,6 +682,10 @@ namespace crawlservpp::Data {
 					if(!(this->dateMap.empty()) && this->dateMap.back().value == first.value) {
 						// append current date to last one
 						this->dateMap.back().length += first.length;
+
+						// add missing space between articles if chunk begins with a new article and the date has been extended
+						if(beginsWithNewArticle)
+							++(this->dateMap.back().length);
 
 						++it;
 					}
@@ -640,7 +814,7 @@ namespace crawlservpp::Data {
 		++end; /* current article is in range as has already been checked */
 
 		for(; end != this->articleMap.end(); ++end)
-			if(end->pos > last)
+			if(end->pos > len)
 				break;
 
 		// trim article map
@@ -649,7 +823,7 @@ namespace crawlservpp::Data {
 			Struct::TextMap(begin, end).swap(this->articleMap);
 		else
 			// only remove trailing articles
-			this->dateMap.resize(std::distance(this->articleMap.begin(), end));
+			this->articleMap.resize(std::distance(this->articleMap.begin(), end));
 
 		// update positions in date and article maps
 		for(auto& date : this->dateMap)
@@ -666,54 +840,16 @@ namespace crawlservpp::Data {
 		return true;
 	}
 
+	// get a substring from the corpus
+	inline std::string Corpus::substr(size_t from, size_t len) {
+		return this->corpus.substr(from, len);
+	}
+
 	// clear corpus
 	inline void Corpus::clear() {
 		this->corpus.clear();
 		this->articleMap.clear();
 		this->dateMap.clear();
-	}
-
-	// private helper function: check whether date has changed and update the date map accordingly
-	inline void Corpus::updateChunkDate(
-			size_t pos,
-			size_t& n,
-			Struct::TextMap& chunkDateMap,
-			size_t articlePos,
-			size_t articleLen
-	) const {
-		if(this->dateMap.empty())
-			return;
-
-		const auto& date = this->dateMap.at(n);
-
-		if(chunkDateMap.empty()) {
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
-			// consistency check
-			if(articlePos < date.pos || articlePos > date.pos + date.length)
-				throw Exception("Corpus::updateChunkDate(): Error in article map or date map");
-#endif /* DATA_CONSISTENCY_CHECKS */
-
-			// use first date
-			chunkDateMap.emplace_back(pos, articleLen, date.value);
-		}
-		else if(articlePos > date.pos + date.length) {
-			// go to next date
-			++n;
-
-			const auto& nextDate = this->dateMap.at(n);
-
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
-			// consistency check
-			if(articlePos < nextDate.pos || articlePos > nextDate.pos + nextDate.length)
-				throw Exception("Corpus::copyChunks(): Error in article map or date map");
-#endif /* DATA_CONSISTENCY_CHECKS */
-
-			// use next date
-			chunkDateMap.emplace_back(pos, articleLen, nextDate.value);
-		}
-		else
-			// extend current date
-			chunkDateMap.back().length += articleLen;
 	}
 
 #ifdef DATA_CORPUS_CONSISTENCY_CHECKS
@@ -722,10 +858,10 @@ namespace crawlservpp::Data {
 		if(map.empty())
 			return;
 
-		size_t last = 0;
+		size_t last = -1;
 
 		for(const auto& entry : map) {
-			if(entry.pos != last)
+			if(entry.pos != last + 1)
 				throw Exception(
 						"Corpus::checkMap(): Invalid position #"
 						+ std::to_string(entry.pos)
