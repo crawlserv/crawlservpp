@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
-	class MarkovTweet: public Module::Analyzer::Thread {
+	class MarkovTweet : public Module::Analyzer::Thread {
 		// for convenience
 		using DataType = Data::Type;
 		using DataValue = Data::Value;
