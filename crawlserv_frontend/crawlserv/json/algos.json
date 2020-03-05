@@ -2,6 +2,10 @@
 	"Metadata Analyses": {
 	},
 	"Corpus Analyses": {
+		"Corpus Generator": {
+			"algo-id": 40,
+			"config-cats": []
+		},
 		"Markov Text Generator": {
 			"algo-id": 43,
 			"config-cats": [ "markov-text", "filter-date" ]

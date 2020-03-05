@@ -114,6 +114,7 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Module::Config`](crawlserv/src/Module/Config.hpp)**: Abstract class as base for module-specific configuration classes.
 * **[`Module::Database`](crawlserv/src/Module/Database.cpp)**: Database functionality for threads (child of the [`Main::Database`](crawlserv/src/Main/Database.cpp) class).
 * **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Abstract class for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
+* **[`Module::Analyzer::Algo::CorpusGenerator`](crawlserv/src/Module/Analyzer/Algo/CorpusGenerator.cpp)**: Uses the built-in functionality for building text corpora.
 * **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
 * **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
 * **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.hpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for configuration entries.
@@ -307,8 +308,9 @@ As can be seen from the commands, the server also manages threads for performing
 
 Configurations for these modules are saved as JSON arrays in the shared `configs` table.
 
-Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of February 2019):
+Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of March 2020):
  
+* **CorpusGenerator**: Uses the built-in functionality for building text corpora from its input data and quits.
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
 
@@ -369,7 +371,7 @@ The frontend uses the [`config.php`](crawlserv_frontend/crawlserv/config.php) to
 
 The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (using ``localhost``). Therefore, the (randomly created) password in [`config.php`](crawlserv_frontend/crawlserv/config.php) is irrelevant for usage outside the original test environment and needs to be replaced! In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the web server running the frontend uses port 80 for interaction with the user (i.e. his\*her web browser). The mySQL database server uses (default) port 3306.
 
-Please note, that the mySQL server used by crawlserv++ might need some adjustments. First of all, the default character set should be set to standard UTF-8 (`utf8mb4`). Second of all, when processing large corpora, the `max_allowed_packet` should be adjusted, and maybe even set to the maximum value of 1 GiB. See this example `mysql.cnf`:
+Please note, that the mySQL server used by crawlserv++ might need some adjustments. First of all, the default character set should be set to standard UTF-8 (`utf8mb4`). Second of all, when processing large data, the `max_allowed_packet` should be adjusted, and maybe even set to the maximum value of 1 GiB. See this example `mysql.cnf`:
 
 ```
 [mysqld]
@@ -377,7 +379,7 @@ character-set-server = utf8mb4
 max_allowed_packet = 1G
 ```
 
-On the client side, crawlserv++ will set these values automatically. Due to the restrictions of mySQL, saving corpora (and other field values) larger than 1 GiB is not supported. Larger text corpora will be re-created every time they are used. If logging has been enabled for the module, respective warnings will be written to the log table. Algorithms may either trim or ignore larger data values or throw exceptions logged by the server and stop to work.
+On the client side, crawlserv++ will set these values automatically.
 
 Using some algorithms on large corpora may require a large amount of memory. Consider [adjusting the size of your swap](https://bogdancornianu.com/change-swap-size-in-ubuntu/) if memory usage reaches its limit to avoid the server from being killed by the operating system.
 
@@ -406,7 +408,6 @@ The following main tables are created and used:
 * **`log`**: Log entries.
 * **`parsedtables`**: Index of result tables for parsing.
 * **`queries`**: RegEx, XPath and JSONPointer queries.
-* **`targetlocks`**: Locks for target tables.
 * **`threads`**: Thread status.
 * **`urllists`**: URL lists.
 * **`versions`**: Versions of external libraries.

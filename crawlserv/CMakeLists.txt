@@ -238,6 +238,7 @@ add_executable(${PROJECT_NAME}
 		src/Main/Server.cpp
 		src/Main/WebServer.cpp
 		src/Module/Analyzer/Algo/All.cpp
+		src/Module/Analyzer/Algo/CorpusGenerator.cpp
 		src/Module/Analyzer/Algo/MarkovText.cpp
 		src/Module/Analyzer/Algo/MarkovTweet.cpp
 		src/Module/Analyzer/Database.cpp

@@ -37,6 +37,7 @@
  */
 
 // <ADD HEADER OF ALGORITHM HERE>
+#include "CorpusGenerator.hpp"
 #include "MarkovText.hpp"
 #include "MarkovTweet.hpp"
 // </ADD HEADER OF ALGORITHM HERE>
@@ -51,6 +52,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 
 		// <ADD REGISTRATION OF ALGORITHM HERE>
+		REGISTER_ALGORITHM(40, CorpusGenerator);
 		REGISTER_ALGORITHM(43, MarkovText);
 		REGISTER_ALGORITHM(44, MarkovTweet);
 		// </ADD REGISTRATION OF ALGORITHM HERE>
