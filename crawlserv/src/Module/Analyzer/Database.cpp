@@ -736,6 +736,9 @@ namespace crawlservpp::Module::Analyzer {
 				auto& text = data.values.at(0).at(n);
 
 				if(!text._isnull && !text._s.empty()) {
+					// add text as source
+					++sourcesTo;
+
 					// move text to vector
 					texts.emplace_back(std::move(text._s));
 
