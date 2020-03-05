@@ -263,7 +263,7 @@ namespace crawlservpp::Module::Analyzer {
 							" ?,"
 							" ?,"
 							" ?,"
-							" ?,"
+							" CONVERT( ?  USING utf8mb4 ),"
 							" ?,"
 							" ?,"
 							" ?"
