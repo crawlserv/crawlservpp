@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,15 +28,15 @@
  *      Author: ans
  */
 
-#ifndef MAIN_DATA_HPP_
-#define MAIN_DATA_HPP_
+#ifndef DATA_DATA_HPP_
+#define DATA_DATA_HPP_
 
 #include <string>	// std::string
 #include <tuple>	// std::tuple
 #include <utility>	// std::pair
 #include <vector>	// std:vector
 
-namespace crawlservpp::Main::Data {
+namespace crawlservpp::Data {
 
 	// data types
 	enum Type {
@@ -188,6 +188,6 @@ namespace crawlservpp::Main::Data {
 		std::string condition;
 	};
 
-} /* crawlservpp::Main */
+} /* crawlservpp::Data */
 
-#endif /* MAIN_DATA_HPP_ */
+#endif /* DATA_DATA_HPP_ */

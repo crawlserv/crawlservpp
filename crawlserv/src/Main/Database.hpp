@@ -49,10 +49,10 @@
 //#define MAIN_DATABASE_DEBUG_DEADLOCKS				// enable documentation of deadlocks by writing hashes ('#') to stdout
 #define MAIN_DATABASE_LOG_MOVING					// log the moving of websites from one data directory to another to stdout
 
-#include "Data.hpp"
 #include "Exception.hpp"
 #include "Version.hpp"
 
+#include "../Data/Data.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
 #include "../Helper/Portability/locale.h"

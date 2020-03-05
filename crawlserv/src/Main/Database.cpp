@@ -4652,7 +4652,7 @@ namespace crawlservpp::Main {
 		if(data.column.empty())
 			throw Database::Exception("Main::Database::getCustomData(): No column name specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 
 		// check connection
@@ -4730,7 +4730,7 @@ namespace crawlservpp::Main {
 		if(data.columns.empty())
 			throw Database::Exception("Main::Database::getCustomData(): No column names specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 
 		// clear and reserve memory
@@ -4925,7 +4925,7 @@ namespace crawlservpp::Main {
 		if(data.column.empty())
 			throw Database::Exception("Main::Database::getCustomData(): No columns specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 
 		// clear memory
@@ -5012,7 +5012,7 @@ namespace crawlservpp::Main {
 		if(data.columns.empty())
 			throw Database::Exception("Main::Database::getCustomData(): No column name specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::getCustomData(): No column type specified");
 
 		// clear and reserve memory
@@ -5223,7 +5223,7 @@ namespace crawlservpp::Main {
 		if(data.column.empty())
 			throw Database::Exception("Main::Database::insertCustomData(): No column name specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::insertCustomData(): No column type specified");
 
 		// check connection
@@ -5341,7 +5341,7 @@ namespace crawlservpp::Main {
 		if(data.columns_values.empty())
 			throw Database::Exception("Main::Database::insertCustomData(): No columns specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::insertCustomData(): No column type specified");
 
 		// check connection
@@ -5650,7 +5650,7 @@ namespace crawlservpp::Main {
 		if(data.column.empty())
 			throw Database::Exception("Main::Database::updateCustomData(): No column name specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::updateCustomData(): No column type specified");
 
 		// check connection
@@ -5766,7 +5766,7 @@ namespace crawlservpp::Main {
 		if(data.columns_values.empty())
 			throw Database::Exception("Main::Database::updateCustomData(): No columns specified");
 
-		if(data.type == Main::Data::Type::_unknown)
+		if(data.type == Data::Type::_unknown)
 			throw Database::Exception("Main::Database::updateCustomData(): No column type specified");
 
 		// check connection

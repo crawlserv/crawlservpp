@@ -32,8 +32,8 @@
 #ifndef WRAPPER_DATABASE_HPP_
 #define WRAPPER_DATABASE_HPP_
 
+#include "../Data/Data.hpp"
 #include "../Helper/Portability/mysqlcppconn.h"
-#include "../Main/Data.hpp"
 #include "../Module/Database.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ModuleOptions.hpp"
@@ -117,18 +117,18 @@ namespace crawlservpp::Wrapper {
 		std::string getColumnType(const std::string& tableName, const std::string& columnName);
 
 		// wrappers for custom data functions for algorithms
-		void getCustomData(Main::Data::GetValue& data);
-		void getCustomData(Main::Data::GetFields& data);
-		void getCustomData(Main::Data::GetFieldsMixed& data);
-		void getCustomData(Main::Data::GetColumn& data);
-		void getCustomData(Main::Data::GetColumns& data);
-		void getCustomData(Main::Data::GetColumnsMixed& data);
-		void insertCustomData(const Main::Data::InsertValue& data);
-		void insertCustomData(const Main::Data::InsertFields& data);
-		void insertCustomData(const Main::Data::InsertFieldsMixed& data);
-		void updateCustomData(const Main::Data::UpdateValue& data);
-		void updateCustomData(const Main::Data::UpdateFields& data);
-		void updateCustomData(const Main::Data::UpdateFieldsMixed& data);
+		void getCustomData(Data::GetValue& data);
+		void getCustomData(Data::GetFields& data);
+		void getCustomData(Data::GetFieldsMixed& data);
+		void getCustomData(Data::GetColumn& data);
+		void getCustomData(Data::GetColumns& data);
+		void getCustomData(Data::GetColumnsMixed& data);
+		void insertCustomData(const Data::InsertValue& data);
+		void insertCustomData(const Data::InsertFields& data);
+		void insertCustomData(const Data::InsertFieldsMixed& data);
+		void updateCustomData(const Data::UpdateValue& data);
+		void updateCustomData(const Data::UpdateFields& data);
+		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
 		// wrapper for static function
 		static unsigned long long getRequestCounter();
@@ -294,62 +294,62 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// get one custom value from one field of a row in the database
-	inline void Database::getCustomData(Main::Data::GetValue& data) {
+	inline void Database::getCustomData(Data::GetValue& data) {
 		this->database.getCustomData(data);
 	}
 
 	// get custom values from multiple fields of a row in the database
-	inline void Database::getCustomData(Main::Data::GetFields& data) {
+	inline void Database::getCustomData(Data::GetFields& data) {
 		this->database.getCustomData(data);
 	}
 
 	// get custom values from multiple fields of a row with different types in the database
-	inline void Database::getCustomData(Main::Data::GetFieldsMixed& data) {
+	inline void Database::getCustomData(Data::GetFieldsMixed& data) {
 		this->database.getCustomData(data);
 	}
 
 	// get custom values from one column in the database
-	inline void Database::getCustomData(Main::Data::GetColumn& data) {
+	inline void Database::getCustomData(Data::GetColumn& data) {
 		this->database.getCustomData(data);
 	}
 
 	// get custom values from multiple columns of the same type in the database
-	inline void Database::getCustomData(Main::Data::GetColumns& data) {
+	inline void Database::getCustomData(Data::GetColumns& data) {
 		this->database.getCustomData(data);
 	}
 
 	// get custom values from multiple columns of different types in the database
-	inline void Database::getCustomData(Main::Data::GetColumnsMixed& data) {
+	inline void Database::getCustomData(Data::GetColumnsMixed& data) {
 		this->database.getCustomData(data);
 	}
 
 	// insert one custom value into a row in the database
-	inline void Database::insertCustomData(const Main::Data::InsertValue& data) {
+	inline void Database::insertCustomData(const Data::InsertValue& data) {
 		this->database.insertCustomData(data);
 	}
 
 	// insert custom values into multiple fields of the same type into a row in the database
-	inline void Database::insertCustomData(const Main::Data::InsertFields& data) {
+	inline void Database::insertCustomData(const Data::InsertFields& data) {
 		this->database.insertCustomData(data);
 	}
 
 	// insert custom values into multiple fields of different types into a row in the database
-	inline void Database::insertCustomData(const Main::Data::InsertFieldsMixed& data) {
+	inline void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 		this->database.insertCustomData(data);
 	}
 
 	// update one custom value in one field of a row in the database
-	inline void Database::updateCustomData(const Main::Data::UpdateValue& data) {
+	inline void Database::updateCustomData(const Data::UpdateValue& data) {
 		this->database.updateCustomData(data);
 	}
 
 	// update custom values in multiple fields of a row with the same type in the database
-	inline void Database::updateCustomData(const Main::Data::UpdateFields& data) {
+	inline void Database::updateCustomData(const Data::UpdateFields& data) {
 		this->database.updateCustomData(data);
 	}
 
 	// update custom values in multiple fields of a row with different types in the database
-	inline void Database::updateCustomData(const Main::Data::UpdateFieldsMixed& data) {
+	inline void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 		this->database.updateCustomData(data);
 	}
 
