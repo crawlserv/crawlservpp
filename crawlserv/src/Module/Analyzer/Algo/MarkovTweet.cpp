@@ -87,6 +87,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// initialize algorithm run, throws Thread::Exception
 	void MarkovTweet::onAlgoInit() {
+		this->log(Config::generalLoggingVerbose, "checks sources...");
+
+		// check your sources
+		this->database.checkSources(
+				this->config.generalInputSources,
+				this->config.generalInputTables,
+				this->config.generalInputFields
+		);
+
 		// set target fields
 		std::vector<std::string> fields, types;
 		std::vector<Struct::TextMapEntry> articleMap, dateMap;
@@ -270,8 +279,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			throw Exception("Algo::MarkovTweet::checkOptions(): Result tweet length is zero");
 
 		/*
-		 * WARNING: The existence of the sources cannot be checked here,
-		 * 	because the database has not been prepared yet.
+		 * WARNING: The existence of sources cannot be checked here, because
+		 * 	the database has not been prepared yet. Check them in onAlgoInit() instead.
 		 */
 	}
 

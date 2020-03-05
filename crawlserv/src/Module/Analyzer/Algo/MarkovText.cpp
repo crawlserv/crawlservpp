@@ -80,6 +80,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// initialize algorithm run
 	void MarkovText::onAlgoInit() {
+		this->log(Config::generalLoggingVerbose, "checks sources...");
+
+		// check your sources
+		this->database.checkSources(
+				this->config.generalInputSources,
+				this->config.generalInputTables,
+				this->config.generalInputFields
+		);
+
 		this->log(Config::generalLoggingVerbose, "initializes algorithm...");
 
 		// initialize random number generator
@@ -269,8 +278,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			throw Exception("Algo::MarkovText::checkOptions(): Result text length is zero");
 
 		/*
-		 * WARNING: The existence of the sources cannot be checked here,
-		 * 	because the database has not been prepared yet.
+		 * WARNING: The existence of sources cannot be checked here, because
+		 * 	the database has not been prepared yet. Check them in onAlgoInit() instead.
 		 */
 	}
 
