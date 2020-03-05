@@ -408,8 +408,10 @@
 		"url.startup.check": {
 			"type": "bool",
 			"default": true,
+			"label": "Check URL list on startup",
 			"description": "Check the URL list before starting to crawl.",
-			"simple": false
+			"simple": true,
+			"position": 14
 		},
 		"warnings.file": {
 			"type": "bool",
