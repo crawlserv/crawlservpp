@@ -87,6 +87,7 @@ namespace crawlservpp::Module::Analyzer {
 		this->database.setTargetTable(this->config.generalResultTable);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 		this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
+		this->database.setCorpusSlicing(this->config.generalCorpusSlicing);
 
 		// prepare SQL statements for analyzer
 		this->setStatusMessage("Preparing SQL statements...");

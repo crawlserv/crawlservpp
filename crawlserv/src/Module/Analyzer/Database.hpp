@@ -84,6 +84,7 @@ namespace crawlservpp::Module::Analyzer {
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
 		void setTimeoutTargetLock(unsigned long timeOut);
+		void setCorpusSlicing(unsigned char percentageOfMaxAllowedPackageSize);
 
 		// prepare target table and SQL statements for analyzer
 		void initTargetTable(bool compressed);
@@ -125,6 +126,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
 		unsigned long timeoutTargetLock;
+		unsigned char corpusSlicing;
 
 		// table prefix, target table ID and its name
 		std::string tablePrefix;

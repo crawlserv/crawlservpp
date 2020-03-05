@@ -63,6 +63,11 @@ namespace crawlservpp::Module::Analyzer {
 		this->timeoutTargetLock = timeOut;
 	}
 
+	// set size of corpus chunks in percentage of the maximum package size allowed by the MySQL server
+	void Database::setCorpusSlicing(unsigned char percentageOfMaxAllowedPackageSize) {
+		this->corpusSlicing = percentageOfMaxAllowedPackageSize;
+	}
+
 	// create target table if it does not exists or add field columns if they do not exist
 	// 	NOTE:	Needs to be called by algorithm class in order to get the required field names!
 	//  throws Database::Exception
@@ -765,7 +770,15 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string> chunks;
 			std::vector<Struct::TextMap> articleMaps, dateMaps;
 
-			corpusTo.copyChunks(this->getMaxAllowedPacketSize(), chunks, articleMaps, dateMaps);
+			corpusTo.copyChunks(
+					static_cast<size_t>(
+							this->getMaxAllowedPacketSize()
+							* (static_cast<float>(this->corpusSlicing) / 100)
+					),
+					chunks,
+					articleMaps,
+					dateMaps
+			);
 
 			// add corpus chunks to the database
 			size_t last = 0;

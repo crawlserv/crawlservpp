@@ -68,9 +68,9 @@ namespace crawlservpp::Module::Analyzer {
 			Entries();
 
 			// general entries
+			unsigned char generalCorpusSlicing;
 			std::vector<std::string> generalInputFields;
 			std::vector<unsigned char> generalInputSources;
-
 			std::vector<std::string> generalInputTables;
 			unsigned char generalLogging;
 			std::string generalResultTable;
@@ -99,7 +99,8 @@ namespace crawlservpp::Module::Analyzer {
 	 */
 
 	// constructor: set default values
-	inline Config::Entries::Entries() :	generalLogging(Config::generalLoggingDefault),
+	inline Config::Entries::Entries() :	generalCorpusSlicing(30),
+										generalLogging(Config::generalLoggingDefault),
 										generalSleepMySql(20),
 										generalSleepWhenFinished(5000),
 										generalTimeoutTargetLock(30),
@@ -110,6 +111,7 @@ namespace crawlservpp::Module::Analyzer {
 	inline void Config::parseOption() {
 		// general options
 		this->category("general");
+		this->option("corpus.slicing", this->config.generalCorpusSlicing);
 		this->option("input.fields", this->config.generalInputFields, StringParsingOption::SQL);
 		this->option("input.sources", this->config.generalInputSources);
 		this->option("input.tables", this->config.generalInputTables, StringParsingOption::SQL);
@@ -131,6 +133,13 @@ namespace crawlservpp::Module::Analyzer {
 
 	// check analyzing-specific configuration
 	inline void Config::checkOptions() {
+		// check corpus chunk size (in percent of the maximum packet size allowed by the MySQL server)
+		if(this->config.generalCorpusSlicing < 1 || this->config.generalCorpusSlicing > 99) {
+			this->config.generalCorpusSlicing = 30;
+
+			this->warning("Invalid corpus chunk size reset to 30% of the maximum packet size allowed by the MySQL server.");
+		}
+
 		// check properties of input fields
 		const unsigned long completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
 				this->config.generalInputFields.size(),

@@ -3,6 +3,14 @@
 		"label": "General",
 		"open": true,
 		
+		"corpus.slicing": {
+			"type": "number",
+			"default": 30,
+			"min": 1,
+			"max": 99,
+			"simple": false,
+			"description": "Corpus chunk size in percent of the maximum allowed package size by the MySQL server."
+		},
 		"input.fields": {
 			"type": "array",
 			"item-type": "string",
