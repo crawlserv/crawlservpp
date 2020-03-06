@@ -158,7 +158,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "Date and time format to be used for the variable with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Date and time format to be used for the variable with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": true,
 			"position": 6
 		},
@@ -338,7 +338,7 @@
 			],
 			"default": 0,
 			"label": "Get next page:",
-			"description": "Query on page content to find the number or the name of the next page (will overwrite 'step').",
+			"description": "Query on page content to find the number(s) or name(s) of additional pages (will overwrite 'step').",
 			"simple": true,
 			"position": 9
 		},
@@ -437,7 +437,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "Format of date and time to be extracted by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Format of date and time to be extracted by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": true,
 			"position": 4
 		},
@@ -476,7 +476,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": false
 		},
 		"field.datetime.locales": {
