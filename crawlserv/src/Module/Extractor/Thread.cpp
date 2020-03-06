@@ -871,26 +871,28 @@ namespace crawlservpp::Module::Extractor {
 		this->log(Config::generalLoggingVerbose, "loops over pages...");
 
 		std::queue<std::string> queryWarnings;
-		bool pageFirst = true;
+		std::queue<std::string> pageNames;
 		long pageNum = this->config.pagingFirst;
-		unsigned long pageCounter = 0;
-		unsigned long pageTotal = 0;
-		std::string pageName(this->config.pagingFirstString);
+		bool pageFirst = true;
+		bool noPageString = this->config.pagingFirstString.empty();
+		bool queryTargetSet = false;
+		size_t pageCounter = 0;
+		size_t pageTotal = 0;
 
-		while(this->isRunning()) {
-			// resolve paging variable
-			std::string page(pageName);
+		// add first page
+		if(noPageString)
+			pageNames.emplace(std::to_string(pageNum));
+		else
+			pageNames.emplace(this->config.pagingFirstString);
 
-			if(page.empty())
-				page = std::to_string(pageNum);
-
+		while(this->isRunning() && !pageNames.empty()) {
 			// resolve alias for paging variable
 			std::string pageAlias;
 
 			if(this->config.pagingAliasAdd) {
 				try {
 					pageAlias = std::to_string(
-							boost::lexical_cast<long>(page)
+							boost::lexical_cast<long>(pageNames.front())
 							+ this->config.pagingAliasAdd
 					);
 				}
@@ -902,18 +904,18 @@ namespace crawlservpp::Module::Extractor {
 							+ "\' for non-numeric variable \'"
 							+ this->config.pagingVariable
 							+ "\' [= \'"
-							+ page
+							+ pageNames.front()
 							+ "\']."
 					);
 				}
 			}
 			else
-				pageAlias = page;
+				pageAlias = pageNames.front();
 
 			// get page-specific tokens
 			std::vector<StringString> pageTokens;
 
-			this->extractingGetPageTokenValues(page, pageTokens, variables);
+			this->extractingGetPageTokenValues(pageNames.front(), pageTokens, variables);
 
 			// get cookies and custom headers
 			std::string cookies(this->config.sourceCookies);
@@ -932,13 +934,13 @@ namespace crawlservpp::Module::Extractor {
 				sourceUrl = this->config.sourceUrl;
 
 			// replace variables, their aliases and tokens
-			Helper::Strings::replaceAll(cookies, this->config.pagingVariable, page, true);
+			Helper::Strings::replaceAll(cookies, this->config.pagingVariable, pageNames.front(), true);
 			Helper::Strings::replaceAll(cookies, this->config.pagingAlias, pageAlias, true);
-			Helper::Strings::replaceAll(sourceUrl, this->config.pagingVariable, page, true);
+			Helper::Strings::replaceAll(sourceUrl, this->config.pagingVariable, pageNames.front(), true);
 			Helper::Strings::replaceAll(sourceUrl, this->config.pagingAlias, pageAlias, true);
 
 			for(auto& header : headers) {
-				Helper::Strings::replaceAll(header, this->config.pagingVariable, page, true);
+				Helper::Strings::replaceAll(header, this->config.pagingVariable, pageNames.front(), true);
 				Helper::Strings::replaceAll(header, this->config.pagingAlias, pageAlias, true);
 			}
 
@@ -958,9 +960,12 @@ namespace crawlservpp::Module::Extractor {
 					Helper::Strings::replaceAll(header, token.first, token.second, true);
 			}
 
+			// remove current page from queue
+			pageNames.pop();
+
 			// check URL
 			if(sourceUrl.empty())
-				break;
+				continue;	// continue with next page (if one exists)
 
 			// get and check content of current page
 			this->log(Config::generalLoggingVerbose, "fetches " + this->getProtocol() + sourceUrl + "...");
@@ -988,7 +993,7 @@ namespace crawlservpp::Module::Extractor {
 			}
 
 			if(pageContent.empty())
-				break;
+				continue;	// continue with next page (if one exists)
 
 			// TODO DEBUG
 			std::ostringstream fn;
@@ -1002,6 +1007,8 @@ namespace crawlservpp::Module::Extractor {
 
 			// set page content as target for subsequent queries
 			this->setQueryTarget(pageContent, sourceUrl);
+
+			queryTargetSet = true;
 
 			// get total number of pages if available
 			if(pageFirst) {
@@ -1045,7 +1052,7 @@ namespace crawlservpp::Module::Extractor {
 				++pageCounter;
 
 				if(pageCounter >= pageTotal)
-					break;
+					break;	// always cancel when maximum number of pages is reached
 			}
 			else if(this->queryPagingIsNextFrom) {
 				// determine whether next page exists by boolean query on page content
@@ -1057,23 +1064,27 @@ namespace crawlservpp::Module::Extractor {
 				this->log(Config::generalLoggingDefault, queryWarnings);
 
 				if(!isNext)
-					break;
+					break;	// always cancel when query says that the last page is reached
 			}
 			else
 				noLimit = true;
 
-			// get ID of next page
+			// get IDs of next pages
 			if(this->queryPagingNextFrom) {
-				// get ID by performing query on page content
-				this->getSingleFromQuery(this->queryPagingNextFrom, pageName, queryWarnings);
+				// get ID(s) by performing query on page content
+				std::vector<std::string> pagesToAdd;
+
+				this->getMultiFromQuery(this->queryPagingNextFrom, pagesToAdd, queryWarnings);
 
 				// log warnings if necessary
 				this->log(Config::generalLoggingDefault, queryWarnings);
 
-				if(pageName.empty())
-					break;
+				// copy new ID(s) into page queue
+				for(const auto& page : pagesToAdd)
+					if(!page.empty())	// add only non-empty pages
+						pageNames.push(page);
 			}
-			else if(this->config.pagingStep && pageName.empty() && !noLimit)
+			else if(this->config.pagingStep && noPageString && !noLimit)
 				// get ID by incrementing old ID
 				pageNum += this->config.pagingStep;
 			else
@@ -1081,10 +1092,13 @@ namespace crawlservpp::Module::Extractor {
 
 			// clear query target before continuing to next page
 			this->clearQueryTarget();
+
+			queryTargetSet = false;
 		}
 
 		// clear query target before continuing to next URL (or finish)
-		this->clearQueryTarget();
+		if(queryTargetSet)
+			this->clearQueryTarget();
 
 		return extracted;
 	}
