@@ -333,11 +333,8 @@
 		},
 		"next.from": {
 			"type": "query",
-			"query-results": [
-				"single"
-			],
 			"default": 0,
-			"label": "Get next page:",
+			"label": "Get next page(s):",
 			"description": "Query on page content to find the number(s) or name(s) of additional pages (will overwrite 'step').",
 			"simple": true,
 			"position": 9
