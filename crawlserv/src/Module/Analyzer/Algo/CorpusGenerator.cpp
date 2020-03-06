@@ -59,6 +59,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// initialize algorithm run
 	void CorpusGenerator::onAlgoInit() {
+		// reset progress
+		this->setProgress(0.f);
+
 		// check your sources
 		this->setStatusMessage("Checking sources...");
 
