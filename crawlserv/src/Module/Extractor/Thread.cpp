@@ -1035,7 +1035,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					if(!pageTotal)
-						return 0;
+						return 0;	// no pages, no data
 				}
 
 				pageFirst = false;
@@ -1047,7 +1047,7 @@ namespace crawlservpp::Module::Extractor {
 			// check for next page
 			bool noLimit = false;
 
-			if(pageNum) {
+			if(pageTotal) {
 				// determine whether next page exists by the extracted total number of pages
 				++pageCounter;
 
