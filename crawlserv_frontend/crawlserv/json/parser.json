@@ -127,7 +127,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "Format of the date/time to be parsed by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Format of the date/time to be parsed by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": true,
 			"position": 5
 		},
@@ -176,7 +176,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Field date/time formats:",
-			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details).",
+			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": true,
 			"position": 12
 		},
