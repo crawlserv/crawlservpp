@@ -339,6 +339,9 @@ namespace crawlservpp::Module::Analyzer {
 		if(this->isCorpusChanged(corpusProperties))
 			this->createCorpus(corpusProperties, corpusTo, sourcesTo);
 		else {
+			// start timer
+			Timer::Simple timer;
+
 			// get all the chunks of the corpus from the database
 			std::vector<std::string> chunks;
 			std::vector<Struct::TextMap> articleMaps, dateMaps;
@@ -423,14 +426,16 @@ namespace crawlservpp::Module::Analyzer {
 			// combine chunks to corpus (and delete the input data)
 			corpusTo.combine(chunks, articleMaps, dateMaps, true);
 
-			// log size of text combined corpus
+			// log size of text combined corpus and time it took to receive it
 			std::ostringstream logStrStr;
 
 			logStrStr.imbue(std::locale(""));
 
 			logStrStr	<< "got text corpus of "
 						<< corpusTo.size()
-						<< " bytes.";
+						<< " bytes in "
+						<< timer.tickStr()
+						<< ".";
 
 			this->log(this->getLoggingMin(), logStrStr.str());
 		}
