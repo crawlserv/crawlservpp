@@ -218,7 +218,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 		void extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo);
 		void extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo);
-		bool extractingPageIsRetry();
+		bool extractingPageIsRetry(std::queue<std::string>& queryWarningsTo);
 		size_t extractingPage(size_t contentId, const std::string& url);
 		bool extractingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool extractingCheckResponseCode(const std::string& url, long responseCode);
