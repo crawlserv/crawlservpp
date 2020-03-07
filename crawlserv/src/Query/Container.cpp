@@ -3007,13 +3007,33 @@ namespace crawlservpp::Query {
 		this->subSetNumber += subsets.size();
 
 		// check subset type
-		if(this->subSetType == QueryStruct::typeXPath)
+		if(this->subSetType == QueryStruct::typeXPath) {
 			// insert new XPath subsets
 			this->xPathSubSets.insert(
 					this->xPathSubSets.begin() + this->subSetCurrent,
 					std::make_move_iterator(subsets.begin()),
 					std::make_move_iterator(subsets.end())
 			);
+
+			// stringify new subsets if the others are also stringified
+			if(!(this->stringifiedSubSets.empty())) {
+				std::vector<std::string> stringified;
+
+				for(const auto& subset : subsets) {
+					std::string subsetString;
+
+					subset.getContent(subsetString);
+
+					stringified.emplace_back(subsetString);
+				}
+
+				this->stringifiedSubSets.insert(
+						this->stringifiedSubSets.begin() + this->subSetCurrent,
+						std::make_move_iterator(stringified.begin()),
+						std::make_move_iterator(stringified.end())
+				);
+			}
+		}
 		else {
 			// stringify new subsets (old ones should already be stringified)
 			std::vector<std::string> stringified;
@@ -3057,61 +3077,6 @@ namespace crawlservpp::Query {
 		}
 	}
 
-	// insert JSONPointer subsets after the current subset, stringify new subsets if needed
-	//  NOTE:	the new subsets will be moved away from the vector;
-	//  		if the subset type is different, the old subsets need to be already stringified
-	void Container::insertSubSets(std::vector<rapidjson::Document>& subsets) {
-		// update number of subsets
-		this->subSetNumber += subsets.size();
-
-		// check subset type
-		if(this->subSetType == QueryStruct::typeJsonPointer)
-			// insert new JSONPointer subsets
-			this->jsonPointerSubSets.insert(
-					this->jsonPointerSubSets.begin() + this->subSetCurrent,
-					std::make_move_iterator(subsets.begin()),
-					std::make_move_iterator(subsets.end())
-			);
-		else {
-			// stringify new subsets
-			std::vector<std::string> stringified;
-
-			stringified.reserve(subsets.size());
-
-			for(const auto& subset : subsets)
-				stringified.emplace_back(Helper::Json::stringify(subset));
-
-			// insert new (stringified) JSONPointer subsets
-			this->stringifiedSubSets.insert(
-				this->stringifiedSubSets.begin() + this->subSetCurrent,
-				stringified.begin(),
-				stringified.end()
-			);
-
-			// clear non-stringified subsets if neccesary
-			switch(this->subSetType) {
-			case QueryStruct::typeXPath:
-				if(this->minimizeMemory)
-					std::vector<Parsing::XML>().swap(this->xPathSubSets);
-				else
-					this->xPathSubSets.clear();
-
-				break;
-
-			case QueryStruct::typeJsonPath:
-				if(this->minimizeMemory)
-					std::vector<jsoncons::json>().swap(this->jsonPathSubSets);
-				else
-					this->jsonPathSubSets.clear();
-
-				break;
-			}
-
-			// set the subset type to RegEx (i. e. strings only)
-			this->subSetType = QueryStruct::typeRegEx;
-		}
-	}
-
 	// insert JSONPath subsets after the current subset, stringify subsets if needed
 	//  NOTE:	the new subsets will be moved away from the vector;
 	//  		if the subset type is different, the old subsets need to be already stringified
@@ -3120,13 +3085,28 @@ namespace crawlservpp::Query {
 		this->subSetNumber += subsets.size();
 
 		// check subset type
-		if(this->subSetType == QueryStruct::typeJsonPath)
+		if(this->subSetType == QueryStruct::typeJsonPath) {
 			// insert new JSONPath subsets
 			this->jsonPathSubSets.insert(
 					this->jsonPathSubSets.begin() + this->subSetCurrent,
 					std::make_move_iterator(subsets.begin()),
 					std::make_move_iterator(subsets.end())
 			);
+
+			// stringify new subsets if the others are also stringified
+			if(!(this->stringifiedSubSets.empty())) {
+				std::vector<std::string> stringified;
+
+				for(const auto& subset : subsets)
+					stringified.emplace_back(Helper::Json::stringify(subset));
+
+				this->stringifiedSubSets.insert(
+						this->stringifiedSubSets.begin() + this->subSetCurrent,
+						std::make_move_iterator(stringified.begin()),
+						std::make_move_iterator(stringified.end())
+				);
+			}
+		}
 		else {
 			// stringify new subsets
 			std::vector<std::string> stringified;
@@ -3158,6 +3138,76 @@ namespace crawlservpp::Query {
 					std::vector<rapidjson::Document>().swap(this->jsonPointerSubSets);
 				else
 					this->jsonPointerSubSets.clear();
+
+				break;
+			}
+
+			// set the subset type to RegEx (i. e. strings only)
+			this->subSetType = QueryStruct::typeRegEx;
+		}
+	}
+
+	// insert JSONPointer subsets after the current subset, stringify new subsets if needed
+	//  NOTE:	the new subsets will be moved away from the vector;
+	//  		if the subset type is different, the old subsets need to be already stringified
+	void Container::insertSubSets(std::vector<rapidjson::Document>& subsets) {
+		// update number of subsets
+		this->subSetNumber += subsets.size();
+
+		// check subset type
+		if(this->subSetType == QueryStruct::typeJsonPointer) {
+			// insert new JSONPointer subsets
+			this->jsonPointerSubSets.insert(
+					this->jsonPointerSubSets.begin() + this->subSetCurrent,
+					std::make_move_iterator(subsets.begin()),
+					std::make_move_iterator(subsets.end())
+			);
+
+			// stringify new subsets if the others are also stringified
+			if(!(this->stringifiedSubSets.empty())) {
+				std::vector<std::string> stringified;
+
+				for(const auto& subset : subsets)
+					stringified.emplace_back(Helper::Json::stringify(subset));
+
+				this->stringifiedSubSets.insert(
+						this->stringifiedSubSets.begin() + this->subSetCurrent,
+						std::make_move_iterator(stringified.begin()),
+						std::make_move_iterator(stringified.end())
+				);
+			}
+		}
+		else {
+			// stringify new subsets
+			std::vector<std::string> stringified;
+
+			stringified.reserve(subsets.size());
+
+			for(const auto& subset : subsets)
+				stringified.emplace_back(Helper::Json::stringify(subset));
+
+			// insert new (stringified) JSONPointer subsets
+			this->stringifiedSubSets.insert(
+				this->stringifiedSubSets.begin() + this->subSetCurrent,
+				stringified.begin(),
+				stringified.end()
+			);
+
+			// clear non-stringified subsets if neccesary
+			switch(this->subSetType) {
+			case QueryStruct::typeXPath:
+				if(this->minimizeMemory)
+					std::vector<Parsing::XML>().swap(this->xPathSubSets);
+				else
+					this->xPathSubSets.clear();
+
+				break;
+
+			case QueryStruct::typeJsonPath:
+				if(this->minimizeMemory)
+					std::vector<jsoncons::json>().swap(this->jsonPathSubSets);
+				else
+					this->jsonPathSubSets.clear();
 
 				break;
 			}

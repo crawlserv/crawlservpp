@@ -227,8 +227,8 @@ namespace crawlservpp::Query {
 		void stringifySubSets(std::queue<std::string>& warningsTo);
 		void insertSubSets(std::vector<std::string>& subsets);
 		void insertSubSets(std::vector<Parsing::XML>& subsets);
-		void insertSubSets(std::vector<rapidjson::Document>& subsets);
 		void insertSubSets(std::vector<jsoncons::json>& subsets);
+		void insertSubSets(std::vector<rapidjson::Document>& subsets);
 	};
 
 } /* crawlservpp::Query */
