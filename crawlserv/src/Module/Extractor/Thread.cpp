@@ -1211,7 +1211,7 @@ namespace crawlservpp::Module::Extractor {
 					this->log(Config::generalLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
 			}
 			else {
-				expectedStrStr	<< "number of extracted URLs ["
+				expectedStrStr	<< "number of extracted datasets ["
 								<< extracted
 								<< "] as expected ["
 								<< expected
