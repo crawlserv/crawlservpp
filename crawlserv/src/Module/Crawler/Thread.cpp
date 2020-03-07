@@ -1673,6 +1673,7 @@ namespace crawlservpp::Module::Crawler {
 					this->networking.getCurlCode(),
 					url.second
 			)) {
+				// reset connection and retry
 				this->crawlingReset(e.whatStr(), url.second);
 
 				this->crawlingRetry(url, false);
@@ -3373,7 +3374,10 @@ namespace crawlservpp::Module::Crawler {
 
 			this->networking.resetConnection(this->config.crawlerSleepError);
 
-			this->log(Config::crawlerLoggingDefault, "new public IP: " + this->networking.getPublicIp());
+			this->log(
+					Config::crawlerLoggingDefault,
+					"new public IP: " + this->networking.getPublicIp()
+			);
 		}
 	}
 
