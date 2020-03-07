@@ -40,6 +40,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <algorithm>	// std::min
+#include <cmath>		// std::round
 #include <cctype>		// ::ispunct, ::isspace, ::tolower
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// ::setlocale
@@ -133,7 +134,14 @@ namespace crawlservpp::Helper::DateTime {
 			time_t unixTime = 0;
 
 			try {
-				unixTime = boost::lexical_cast<time_t>(dateTime);
+				if(dateTime.find('.') != std::string::npos) {
+					// handle values with comma as floats (and round them)
+					float f = boost::lexical_cast<float>(dateTime);
+
+					unixTime = static_cast<time_t>(std::round(f));
+				}
+				else
+					unixTime = boost::lexical_cast<time_t>(dateTime);
 			}
 			catch(const boost::bad_lexical_cast& e) {
 				throw Exception(
