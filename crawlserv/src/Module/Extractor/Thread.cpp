@@ -995,16 +995,6 @@ namespace crawlservpp::Module::Extractor {
 			if(pageContent.empty())
 				continue;	// continue with next page (if one exists)
 
-			// TODO DEBUG
-			std::ostringstream fn;
-			fn << "debug/e_" << this->networking.escape(sourceUrl, false) << ".json";
-			std::ofstream out(fn.str());
-			if(!out.is_open())
-				throw Exception("Could not write to " + fn.str());
-			out << pageContent;
-			out.close();
-			// TODO END DEBUG
-
 			// set page content as target for subsequent queries
 			this->setQueryTarget(pageContent, sourceUrl);
 
