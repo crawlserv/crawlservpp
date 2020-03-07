@@ -156,7 +156,8 @@ namespace crawlservpp::Module::Extractor {
 		// queries
 		std::vector<QueryStruct> queriesVariables;
 		std::vector<QueryStruct> queriesTokens;
-		std::vector<QueryStruct> queriesError;
+		std::vector<QueryStruct> queriesErrorFail;
+		std::vector<QueryStruct> queriesErrorRetry;
 		std::vector<QueryStruct> queriesDatasets;
 		std::vector<QueryStruct> queriesId;
 		std::vector<QueryStruct> queriesDateTime;
@@ -217,11 +218,13 @@ namespace crawlservpp::Module::Extractor {
 		);
 		void extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo);
 		void extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo);
+		bool extractingPageIsRetry();
 		size_t extractingPage(size_t contentId, const std::string& url);
 		bool extractingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool extractingCheckResponseCode(const std::string& url, long responseCode);
 		void extractingUrlFinished();
 		void extractingSaveResults(bool warped);
+		void extractingReset(const std::string& error, const std::string& url);
 		void extractingResetTor();
 	};
 
