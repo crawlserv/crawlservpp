@@ -1036,9 +1036,9 @@ namespace crawlservpp::Module::Extractor {
 				std::string error;
 
 				if(this->getTarget(error))
-					error = "retries after error in data: " + error + " [" + sourceUrl + "]";
+					error = "Error in data: " + error + " - retries";
 				else
-					error = "retries after error in data from " + sourceUrl;
+					error = "Error in data - retries";
 
 				this->extractingReset(error, sourceUrl);
 
@@ -2298,9 +2298,9 @@ namespace crawlservpp::Module::Extractor {
 		this->clearQueryTarget();
 
 		// show error
-		this->log(Config::generalLoggingDefault, error + " [" + url + "].");
+		this->log(Config::generalLoggingDefault, error + " - retrying [" + url + "].");
 
-		this->setStatusMessage("ERROR " + error + " [" + url + "]");
+		this->setStatusMessage("ERROR " + error + " - retrying [" + url + "]");
 
 		// reset connection and retry (if still running)
 		if(this->isRunning()) {
