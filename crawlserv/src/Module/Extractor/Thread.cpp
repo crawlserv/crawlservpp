@@ -152,7 +152,7 @@ namespace crawlservpp::Module::Extractor {
 		// set sources
 		std::queue<StringString> sources;
 
-		for(unsigned long n = 0; n < this->config.variablesName.size(); ++n)
+		for(size_t n = 0; n < this->config.variablesName.size(); ++n)
 			if(this->config.variablesSource.at(n) == Config::variablesSourcesParsed) {
 				if(
 						this->config.variablesParsedColumn.at(n) == "id"
@@ -372,7 +372,7 @@ namespace crawlservpp::Module::Extractor {
 			std::string timerStr;
 
 			// extract from content
-			const unsigned long extracted = this->extractingNext();
+			const auto extracted = this->extractingNext();
 
 			// save expiration time of URL lock if extracting was successful or unlock URL if extracting failed
 			if(extracted)
@@ -816,7 +816,7 @@ namespace crawlservpp::Module::Extractor {
 		this->idFirst = this->urls.front().first;
 		this->idDist = this->urls.back().first - this->idFirst;
 
-		const unsigned long posFirst = this->database.getUrlPosition(this->idFirst);
+		const auto posFirst = this->database.getUrlPosition(this->idFirst);
 
 		this->posFirstF = static_cast<float>(posFirst);
 		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
@@ -844,12 +844,21 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// extract data from next URL, return number of extracted datasets
-	unsigned long Thread::extractingNext() {
-		unsigned long extracted = 0;
-		std::vector<StringString> variables;
-		IdString content;
+	size_t Thread::extractingNext() {
+		std::queue<std::string> queryWarnings;
+		size_t expected = 0, extracted = 0;
+		bool expecting = false;
+
+		// get datasets
+		for(const auto& query : this->queriesDatasets) {
+			// reserve memory for subsets if possible
+			if(expecting)
+				this->reserveForSubSets(query, expected);
+		}
 
 		// get content ID and - if necessary - the whole content
+		IdString content;
+
 		this->database.getContent(this->urls.front().first, content);
 
 		// set raw crawled content as target for subsequent queries
@@ -860,6 +869,8 @@ namespace crawlservpp::Module::Extractor {
 			return 0;
 
 		// get values for variables
+		std::vector<StringString> variables;
+
 		this->log(Config::generalLoggingVerbose, "gets values for variables...");
 
 		this->extractingGetVariableValues(variables);
@@ -875,7 +886,6 @@ namespace crawlservpp::Module::Extractor {
 		// loop over pages
 		this->log(Config::generalLoggingVerbose, "loops over pages...");
 
-		std::queue<std::string> queryWarnings;
 		std::queue<std::string> pageNames;
 		long pageNum = this->config.pagingFirst;
 		bool pageFirst = true;
@@ -1005,8 +1015,9 @@ namespace crawlservpp::Module::Extractor {
 
 			queryTargetSet = true;
 
-			// get total number of pages if available
+			// check for first page
 			if(pageFirst) {
+				// get total number of pages if available
 				if(this->queryPagingNumberFrom) {
 					std::string pageTotalString;
 
@@ -1018,7 +1029,7 @@ namespace crawlservpp::Module::Extractor {
 
 					// try to convert number of pages to numeric value
 					try {
-						pageTotal = boost::lexical_cast<unsigned long>(pageTotalString);
+						pageTotal = boost::lexical_cast<size_t>(pageTotalString);
 					}
 					catch(const boost::bad_lexical_cast& e) {
 						this->log(
@@ -1031,6 +1042,35 @@ namespace crawlservpp::Module::Extractor {
 
 					if(!pageTotal)
 						return 0;	// no pages, no data
+				}
+
+				// get expected number of datasets if necessary
+				if(this->queryExpected) {
+					std::string expectedStr;
+
+					this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
+
+					// log warnings if necessary
+					this->log(Config::generalLoggingDefault, queryWarnings);
+
+					// try to convert expected number of datasets
+					if(!expectedStr.empty()) {
+						try {
+							expected = std::stoul(expectedStr);
+
+							expecting = true;
+						}
+						catch(const std::logic_error& e) {
+							this->log(
+									Config::generalLoggingDefault,
+									"WARNING: \'"
+									+ expectedStr
+									+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
+									+ sourceUrl
+									+ "]."
+							);
+						}
+					}
 				}
 
 				pageFirst = false;
@@ -1064,20 +1104,33 @@ namespace crawlservpp::Module::Extractor {
 			else
 				noLimit = true;
 
-			// get IDs of next pages
+			// get ID(s) of next pages
 			if(this->queryPagingNextFrom) {
-				// get ID(s) by performing query on page content
-				std::vector<std::string> pagesToAdd;
+				if(this->queryPagingNextFrom.resultMulti) {
+					// get possibly multiple IDs by performing query on page content
+					std::vector<std::string> pagesToAdd;
 
-				this->getMultiFromQuery(this->queryPagingNextFrom, pagesToAdd, queryWarnings);
+					this->getMultiFromQuery(this->queryPagingNextFrom, pagesToAdd, queryWarnings);
+
+					// copy non-empty new ID(s) into page queue
+					for(const auto& page : pagesToAdd)
+						if(!page.empty())	// add only non-empty pages
+							pageNames.push(page);
+				}
+				else {
+					// get possibly one ID by performing query on page content
+					std::string page;
+
+					this->getSingleFromQuery(this->queryPagingNextFrom, page, queryWarnings);
+
+					if(!page.empty())
+						pageNames.push(page);
+				}
 
 				// log warnings if necessary
 				this->log(Config::generalLoggingDefault, queryWarnings);
 
-				// copy new ID(s) into page queue
-				for(const auto& page : pagesToAdd)
-					if(!page.empty())	// add only non-empty pages
-						pageNames.push(page);
+
 			}
 			else if(this->config.pagingStep && noPageString && !noLimit)
 				// get ID by incrementing old ID
@@ -1095,13 +1148,63 @@ namespace crawlservpp::Module::Extractor {
 		if(queryTargetSet)
 			this->clearQueryTarget();
 
+		// if necessary, compare the number of extracted datasets with the number of expected datatsets
+		if(expecting) {
+			std::ostringstream expectedStrStr;
+
+			expectedStrStr.imbue(std::locale(""));
+
+			if(extracted < expected) {
+				// number of datasets is smaller than expected
+				expectedStrStr	<< "number of extracted datasets ["
+								<< extracted
+								<< "] is smaller than expected ["
+								<< expected
+								<< "] ["
+								<< this->urls.front().second
+								<< "]";
+
+				if(this->config.expectedErrorIfSmaller)
+					throw Exception(expectedStrStr.str());
+				else
+					this->log(Config::generalLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
+			}
+			else if(extracted > expected) {
+				// number of datasets is larger than expected
+				expectedStrStr	<< "number of extracted datasets ["
+								<< extracted
+								<< "] is larger than expected ["
+								<< expected
+								<< "] ["
+								<< this->urls.front().second
+								<< "]";
+
+				// number of URLs is smaller than expected
+				if(this->config.expectedErrorIfLarger)
+					throw Exception(expectedStrStr.str());
+				else
+					this->log(Config::generalLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
+			}
+			else {
+				expectedStrStr	<< "number of extracted URLs ["
+								<< extracted
+								<< "] as expected ["
+								<< expected
+								<< "] ["
+								<< this->urls.front().second
+								<< "].";
+
+				this->log(Config::generalLoggingVerbose, expectedStrStr.str());
+			}
+		}
+
 		return extracted;
 	}
 
 	// get values of variables
 	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) {
-		unsigned long parsedSource = 0;
-		unsigned long queryCounter = 0;
+		size_t parsedSource = 0;
+		size_t queryCounter = 0;
 
 		// loop over variables (and their aliases)
 		for(auto i = this->config.variablesName.begin(); i != this->config.variablesName.end(); ++i) {
@@ -1201,7 +1304,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// no paging variable: resolve all tokens
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
-				const unsigned long index = i - this->config.variablesTokens.begin();
+				const auto index = i - this->config.variablesTokens.begin();
 
 				// copy source URL and cookies
 				std::string source(this->config.variablesTokensSource.at(index));
@@ -1246,7 +1349,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// paging variable exists: resolve only page-independent tokens
 			for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
-				const unsigned long index = i - this->config.variablesTokens.begin();
+				const auto index = i - this->config.variablesTokens.begin();
 				const std::string& sourceRef = this->config.variablesTokensSource.at(index);
 				const std::string& cookiesRef = this->config.variablesTokensCookies.at(index);
 
@@ -1312,7 +1415,7 @@ namespace crawlservpp::Module::Extractor {
 				) != headers.end();
 
 		for(auto i = this->config.variablesTokens.begin(); i != this->config.variablesTokens.end(); ++i) {
-			const unsigned long index = i - this->config.variablesTokens.begin();
+			const auto index = i - this->config.variablesTokens.begin();
 			const auto& sourceRef = this->config.variablesTokensSource.at(index);
 			const auto& cookiesRef = this->config.variablesTokensCookies.at(index);
 
@@ -1641,10 +1744,8 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// extract data by parsing page content, return number of extracted datasets
-	unsigned long Thread::extractingPage(unsigned long contentId, const std::string& url) {
-		bool expecting = false;
-		unsigned long expected = 0;
-		unsigned long result = 0;
+	size_t Thread::extractingPage(size_t contentId, const std::string& url) {
+		size_t result = 0;
 		std::queue<std::string> queryWarnings;
 
 		// check for errors if necessary
@@ -1661,39 +1762,8 @@ namespace crawlservpp::Module::Extractor {
 			}
 		}
 
-		// get expected number of datasets if possible
-		std::string expectedStr;
-
-		this->getSingleFromQuery(this->queryExpected, expectedStr, queryWarnings);
-
-		// log warnings if necessary
-		this->log(Config::generalLoggingDefault, queryWarnings);
-
-		// try to convert expected number of datasets
-		if(!expectedStr.empty()) {
-			try {
-				expected = std::stoul(expectedStr);
-
-				expecting = true;
-			}
-			catch(const std::logic_error& e) {
-				this->log(
-						Config::generalLoggingDefault,
-						"WARNING: \'"
-						+ expectedStr
-						+ "\' cannot be converted to a numeric value when extracting the expected number of URLs ["
-						+ url
-						+ "]."
-				);
-			}
-		}
-
 		// get datasets
 		for(const auto& query : this->queriesDatasets) {
-			// reserve memory for subsets if possible
-			if(expecting)
-				this->reserveForSubSets(query, expected);
-
 			// get datasets by performing query of any type on page content
 			this->setSubSetsFromQuery(query, queryWarnings);
 
@@ -2089,56 +2159,6 @@ namespace crawlservpp::Module::Extractor {
 			this->log(Config::generalLoggingDefault, queryWarnings);
 
 			++result;
-		}
-
-		// if necessary, compare the number of extracted datasets with the number of expected datatsets
-		if(expecting) {
-			std::ostringstream expectedStrStr;
-
-			expectedStrStr.imbue(std::locale(""));
-
-			if(result < expected) {
-				// number of datasets is smaller than expected
-				expectedStrStr	<< "number of extracted datasets ["
-								<< result
-								<< "] is smaller than expected ["
-								<< expected
-								<< "] ["
-								<< url
-								<< "]";
-
-				if(this->config.expectedErrorIfSmaller)
-					throw Exception(expectedStrStr.str());
-				else
-					this->log(Config::generalLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
-			}
-			else if(result > expected) {
-				// number of datasets is larger than expected
-				expectedStrStr	<< "number of extracted datasets ["
-								<< result
-								<< "] is larger than expected ["
-								<< expected
-								<< "] ["
-								<< url
-								<< "]";
-
-				// number of URLs is smaller than expected
-				if(this->config.expectedErrorIfLarger)
-					throw Exception(expectedStrStr.str());
-				else
-					this->log(Config::generalLoggingDefault, "WARNING: " + expectedStrStr.str() + ".");
-			}
-			else {
-				expectedStrStr	<< "number of extracted URLs ["
-								<< result
-								<< "] as expected ["
-								<< expected
-								<< "] ["
-								<< url
-								<< "].";
-
-				this->log(Config::generalLoggingVerbose, expectedStrStr.str());
-			}
 		}
 
 		return result;
