@@ -131,7 +131,8 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<std::string> extractingDateTimeFormats;
 			std::vector<std::string> extractingDateTimeLocales;
 			std::vector<unsigned long> extractingDateTimeQueries;
-			std::vector<unsigned long> extractingError;
+			std::vector<unsigned long> extractingErrorFail;
+			std::vector<unsigned long> extractingErrorRetry;
 			std::vector<std::string> extractingFieldDateTimeFormats;
 			std::vector<std::string> extractingFieldDateTimeLocales;
 			std::vector<char> extractingFieldDelimiters;
@@ -279,7 +280,8 @@ namespace crawlservpp::Module::Extractor {
 		this->option("datetime.formats", this->config.extractingDateTimeFormats);
 		this->option("datetime.locales", this->config.extractingDateTimeLocales);
 		this->option("datetime.queries", this->config.extractingDateTimeQueries);
-		this->option("error", this->config.extractingError);
+		this->option("error.fail", this->config.extractingErrorFail);
+		this->option("error.retry", this->config.extractingErrorRetry);
 		this->option("field.datetime.formats", this->config.extractingFieldDateTimeFormats);
 		this->option("field.datetime.locales", this->config.extractingFieldDateTimeLocales);
 		this->option("field.delimiters", this->config.extractingFieldDelimiters, CharParsingOption::FromString);
