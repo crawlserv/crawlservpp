@@ -134,6 +134,7 @@ namespace crawlservpp::Module::Extractor {
 		std::queue<IdString> urls;
 		std::string cacheLockTime;
 		std::queue<DataEntry> results;
+		std::set<std::string> ids;
 		std::queue<IdString> finished;
 
 		// implemented thread functions

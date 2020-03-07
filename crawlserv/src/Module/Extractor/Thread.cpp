@@ -1760,7 +1760,6 @@ namespace crawlservpp::Module::Extractor {
 
 	// extract data by parsing page content, return number of extracted datasets
 	size_t Thread::extractingPage(size_t contentId, const std::string& url) {
-		size_t result = 0;
 		std::queue<std::string> queryWarnings;
 
 		// check for errors if necessary
@@ -1793,6 +1792,9 @@ namespace crawlservpp::Module::Extractor {
 		// check whether no dataset has been extracted
 		if(!(this->getNumberOfSubSets()))
 			return 0;
+
+		// save old number of results
+		size_t before = this->results.size();
 
 		// go through all datasets
 		while(this->nextSubSet()) {
@@ -2162,8 +2164,10 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 
-			// add extracted dataset to results
-			this->results.push(dataset);
+			// check for duplicate ID
+			if(!(this->ids.insert(dataset.dataId).second))
+				// add extracted dataset to results
+				this->results.push(dataset);
 
 			// recursive extracting
 			for(const auto& query : this->queriesRecursive)
@@ -2172,11 +2176,9 @@ namespace crawlservpp::Module::Extractor {
 
 			// log warnings if necessary
 			this->log(Config::generalLoggingDefault, queryWarnings);
-
-			++result;
 		}
 
-		return result;
+		return this->results.size() - before;
 	}
 
 	// check cURL code and decide whether to retry or skip
@@ -2276,6 +2278,9 @@ namespace crawlservpp::Module::Extractor {
 
 			// update target table
 			this->database.updateTargetTable();
+
+			// clear ID cache
+			this->ids.clear();
 		} // target table unlocked
 
 		// set last URL
