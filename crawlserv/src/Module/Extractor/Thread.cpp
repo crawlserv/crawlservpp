@@ -1829,7 +1829,7 @@ namespace crawlservpp::Module::Extractor {
 					std::vector<std::string> extractedFieldValues;
 
 					// extract field values by using query on content
-					this->getMultiFromQuery(*i, extractedFieldValues, queryWarnings);
+					this->getMultiFromQueryOnSubSet(*i, extractedFieldValues, queryWarnings);
 
 					// log warnings if necessary
 					this->log(Config::generalLoggingDefault, queryWarnings);
@@ -1946,7 +1946,7 @@ namespace crawlservpp::Module::Extractor {
 					std::string extractedFieldValue;
 
 					// extract single field value by using query on content
-					this->getSingleFromQuery(*i, extractedFieldValue, queryWarnings);
+					this->getSingleFromQueryOnSubSet(*i, extractedFieldValue, queryWarnings);
 
 					// log warnings if necessary
 					this->log(Config::generalLoggingDefault, queryWarnings);
@@ -2040,7 +2040,7 @@ namespace crawlservpp::Module::Extractor {
 					bool booleanResult = false;
 
 					// extract boolean field value by using query on content
-					this->getBoolFromQuery(*i, booleanResult, queryWarnings);
+					this->getBoolFromQueryOnSubSet(*i, booleanResult, queryWarnings);
 
 					// log warnings if necessary
 					this->log(Config::generalLoggingDefault, queryWarnings);

@@ -303,8 +303,8 @@ namespace crawlservpp::Module::Extractor {
 		this->option("error.if.smaller", this->config.expectedErrorIfSmaller);
 		this->option("parsed.column", this->config.expectedParsedColumn);
 		this->option("parsed.table", this->config.expectedParsedTable);
-		this->option("expected.query", this->config.expectedQuery);
-		this->option("expected.source", this->config.expectedSource);
+		this->option("query", this->config.expectedQuery);
+		this->option("source", this->config.expectedSource);
 	}
 
 	// check extracting-specific configuration, throws Config::Exception
