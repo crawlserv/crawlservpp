@@ -733,27 +733,37 @@ namespace crawlservpp::Module::Extractor {
 			QueryStruct queryPagingNumberFrom;
 			QueryStruct queryExpected;
 
-			QueryProperties properties;
+			if(this->config.pagingIsNextFrom) {
+				QueryProperties properties;
 
-			if(this->config.pagingIsNextFrom)
 				this->database.getQueryProperties(this->config.pagingIsNextFrom, properties);
 
-			this->queryPagingIsNextFrom = this->addQuery(properties);
+				this->queryPagingIsNextFrom = this->addQuery(properties);
+			}
 
-			if(this->config.pagingNextFrom)
+			if(this->config.pagingNextFrom) {
+				QueryProperties properties;
+
 				this->database.getQueryProperties(this->config.pagingNextFrom, properties);
 
-			this->queryPagingNextFrom = this->addQuery(properties);
+				this->queryPagingNextFrom = this->addQuery(properties);
+			}
 
-			if(this->config.pagingNumberFrom)
+			if(this->config.pagingNumberFrom) {
+				QueryProperties properties;
+
 				this->database.getQueryProperties(this->config.pagingNumberFrom, properties);
 
-			this->queryPagingNumberFrom = this->addQuery(properties);
+				this->queryPagingNumberFrom = this->addQuery(properties);
+			}
 
-			if(this->config.expectedQuery)
+			if(this->config.expectedQuery) {
+				QueryProperties properties;
+
 				this->database.getQueryProperties(this->config.expectedQuery, properties);
 
-			this->queryExpected = this->addQuery(properties);
+				this->queryExpected = this->addQuery(properties);
+			}
 		}
 		catch(const QueryException& e) {
 			throw Exception("Extractor::Thread::initQueries(): " + e.whatStr());
