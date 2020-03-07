@@ -728,11 +728,6 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 
-			QueryStruct queryPagingIsNextFrom;
-			QueryStruct queryPagingNextFrom;
-			QueryStruct queryPagingNumberFrom;
-			QueryStruct queryExpected;
-
 			if(this->config.pagingIsNextFrom) {
 				QueryProperties properties;
 
