@@ -88,6 +88,9 @@ namespace crawlservpp::Module::Analyzer {
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 		this->database.setTimeoutTargetLock(this->config.generalTimeoutTargetLock);
 		this->database.setCorpusSlicing(this->config.generalCorpusSlicing);
+		this->database.setIsRunningCallback(  // @suppress("Invalid arguments")
+				std::bind(&Thread::isRunning, this)
+		);
 
 		// prepare SQL statements for analyzer
 		this->setStatusMessage("Preparing SQL statements...");

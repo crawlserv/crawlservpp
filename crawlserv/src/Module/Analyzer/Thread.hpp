@@ -41,6 +41,7 @@
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 
+#include <functional>	// std::bind
 #include <queue>		// std::queue
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::string

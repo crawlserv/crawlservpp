@@ -69,6 +69,11 @@ namespace crawlservpp::Module::Analyzer {
 		this->corpusSlicing = percentageOfMaxAllowedPackageSize;
 	}
 
+	// set callback for checking whether the parent thread is still running (needed for corpus creation)
+	void Database::setIsRunningCallback(IsRunningCallback isRunningCallback) {
+		this->isRunning = isRunningCallback;
+	}
+
 	// create target table if it does not exists or add field columns if they do not exist
 	// 	NOTE:	Needs to be called by algorithm class in order to get the required field names!
 	//  throws Database::Exception
@@ -335,109 +340,125 @@ namespace crawlservpp::Module::Analyzer {
 
 		sourcesTo = 0;
 
-		// check whether text corpus needs to be created
-		if(this->isCorpusChanged(corpusProperties))
-			this->createCorpus(corpusProperties, corpusTo, sourcesTo);
-		else {
-			// start timer
-			Timer::Simple timer;
+		{ // wait for source table lock
+			DatabaseLock(
+					*this,
+					"corpusCreation."
+					+ std::to_string(corpusProperties.sourceType)
+					+ "."
+					+ corpusProperties.sourceTable
+					+ "."
+					+ corpusProperties.sourceField,
+					this->isRunning
+			);
 
-			// get all the chunks of the corpus from the database
-			std::vector<std::string> chunks;
-			std::vector<Struct::TextMap> articleMaps, dateMaps;
+			if(!(this->isRunning()))
+				return;
 
-			// check connection
-			this->checkConnection();
+			// check whether text corpus needs to be created
+			if(this->isCorpusChanged(corpusProperties))
+				this->createCorpus(corpusProperties, corpusTo, sourcesTo);
+			else {
+				// start timer
+				Timer::Simple timer;
 
-			// check prepared SQL statement
-			if(!(this->ps.getCorpusFirst) || !(this->ps.getCorpusNext))
-				throw Exception("Analyzer::Database::getCorpus(): Missing prepared SQL statement for getting the corpus");
+				// get all the chunks of the corpus from the database
+				std::vector<std::string> chunks;
+				std::vector<Struct::TextMap> articleMaps, dateMaps;
 
-			// get prepared SQL statements
-			sql::PreparedStatement& sqlStatementFirst(this->getPreparedStatement(this->ps.getCorpusFirst));
-			sql::PreparedStatement& sqlStatementNext(this->getPreparedStatement(this->ps.getCorpusNext));
+				// check connection
+				this->checkConnection();
 
-			try {
-				// execute SQL query for getting a chunk of the corpus
-				size_t previous = 0;
+				// check prepared SQL statement
+				if(!(this->ps.getCorpusFirst) || !(this->ps.getCorpusNext))
+					throw Exception("Analyzer::Database::getCorpus(): Missing prepared SQL statement for getting the corpus");
 
-				sqlStatementFirst.setUInt(1, corpusProperties.sourceType);
-				sqlStatementFirst.setString(2, corpusProperties.sourceTable);
-				sqlStatementFirst.setString(3, corpusProperties.sourceField);
+				// get prepared SQL statements
+				sql::PreparedStatement& sqlStatementFirst(this->getPreparedStatement(this->ps.getCorpusFirst));
+				sql::PreparedStatement& sqlStatementNext(this->getPreparedStatement(this->ps.getCorpusNext));
 
-				while(true) {
-					SqlResultSetPtr sqlResultSet;
+				try {
+					// execute SQL query for getting a chunk of the corpus
+					size_t previous = 0;
 
-					if(previous) {
-						sqlStatementNext.setUInt64(1, previous);
+					sqlStatementFirst.setUInt(1, corpusProperties.sourceType);
+					sqlStatementFirst.setString(2, corpusProperties.sourceTable);
+					sqlStatementFirst.setString(3, corpusProperties.sourceField);
 
-						SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementNext)).swap(sqlResultSet);
+					while(true) {
+						SqlResultSetPtr sqlResultSet;
+
+						if(previous) {
+							sqlStatementNext.setUInt64(1, previous);
+
+							SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementNext)).swap(sqlResultSet);
+						}
+						else
+							SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementFirst)).swap(sqlResultSet);
+
+						if(sqlResultSet && sqlResultSet->next()) {
+							// get chunk
+							chunks.emplace_back(sqlResultSet->getString("corpus"));
+
+							if(!(sqlResultSet->isNull("articlemap")))
+								// parse article map
+								try {
+									articleMaps.emplace_back(
+											Helper::Json::parseTextMapJson(
+													sqlResultSet->getString("articlemap")
+											)
+									);
+								}
+								catch(const JsonException& e) {
+									throw Exception(
+											"Analyzer::Database::getCorpus(): Could not parse article map - "
+											+ e.whatStr()
+									);
+								}
+
+							if(!(sqlResultSet->isNull("datemap")))
+								// parse date map
+								try {
+									dateMaps.emplace_back(
+											Helper::Json::parseTextMapJson(
+													sqlResultSet->getString("datemap")
+											)
+									);
+								}
+								catch(const JsonException& e) {
+									throw Exception(
+											"Analyzer::Database::getCorpus(): Could not parse date map - "
+											+ e.whatStr()
+									);
+								}
+
+							if(!previous)
+								sourcesTo = sqlResultSet->getUInt64("sources");
+
+							previous = sqlResultSet->getUInt64("id");
+						}
+						else
+							break;
 					}
-					else
-						SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementFirst)).swap(sqlResultSet);
-
-					if(sqlResultSet && sqlResultSet->next()) {
-						// get chunk
-						chunks.emplace_back(sqlResultSet->getString("corpus"));
-
-						if(!(sqlResultSet->isNull("articlemap")))
-							// parse article map
-							try {
-								articleMaps.emplace_back(
-										Helper::Json::parseTextMapJson(
-												sqlResultSet->getString("articlemap")
-										)
-								);
-							}
-							catch(const JsonException& e) {
-								throw Exception(
-										"Analyzer::Database::getCorpus(): Could not parse article map - "
-										+ e.whatStr()
-								);
-							}
-
-						if(!(sqlResultSet->isNull("datemap")))
-							// parse date map
-							try {
-								dateMaps.emplace_back(
-										Helper::Json::parseTextMapJson(
-												sqlResultSet->getString("datemap")
-										)
-								);
-							}
-							catch(const JsonException& e) {
-								throw Exception(
-										"Analyzer::Database::getCorpus(): Could not parse date map - "
-										+ e.whatStr()
-								);
-							}
-
-						if(!previous)
-							sourcesTo = sqlResultSet->getUInt64("sources");
-
-						previous = sqlResultSet->getUInt64("id");
-					}
-					else
-						break;
 				}
+				catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::getCorpus", e); }
+
+				// combine chunks to corpus (and delete the input data)
+				corpusTo.combine(chunks, articleMaps, dateMaps, true);
+
+				// log size of text combined corpus and time it took to receive it
+				std::ostringstream logStrStr;
+
+				logStrStr.imbue(std::locale(""));
+
+				logStrStr	<< "got text corpus of "
+							<< corpusTo.size()
+							<< " bytes in "
+							<< timer.tickStr()
+							<< ".";
+
+				this->log(this->getLoggingMin(), logStrStr.str());
 			}
-			catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::getCorpus", e); }
-
-			// combine chunks to corpus (and delete the input data)
-			corpusTo.combine(chunks, articleMaps, dateMaps, true);
-
-			// log size of text combined corpus and time it took to receive it
-			std::ostringstream logStrStr;
-
-			logStrStr.imbue(std::locale(""));
-
-			logStrStr	<< "got text corpus of "
-						<< corpusTo.size()
-						<< " bytes in "
-						<< timer.tickStr()
-						<< ".";
-
-			this->log(this->getLoggingMin(), logStrStr.str());
 		}
 
 		// filter corpus by date(s) if necessary

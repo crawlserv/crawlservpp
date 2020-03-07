@@ -44,6 +44,7 @@
 #include "../../Struct/TextMap.hpp"
 #include "../../Timer/Simple.hpp"
 #include "../../Wrapper/Database.hpp"
+#include "../../Wrapper/DatabaseLock.hpp"
 
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
@@ -55,6 +56,7 @@
 
 #include <algorithm>	// std::find_if
 #include <chrono>		// std::chrono
+#include <functional>	// std::function
 #include <locale>		// std::locale
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
@@ -74,6 +76,9 @@ namespace crawlservpp::Module::Analyzer {
 		using CorpusProperties = Struct::CorpusProperties;
 		using TableColumn = Struct::TableColumn;
 
+		using DatabaseLock = Wrapper::DatabaseLock<Database>;
+
+		using IsRunningCallback = std::function<bool()>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
@@ -85,6 +90,7 @@ namespace crawlservpp::Module::Analyzer {
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
 		void setTimeoutTargetLock(unsigned long timeOut);
 		void setCorpusSlicing(unsigned char percentageOfMaxAllowedPackageSize);
+		void setIsRunningCallback(IsRunningCallback isRunningCallback);
 
 		// prepare target table and SQL statements for analyzer
 		void initTargetTable(bool compressed);
@@ -155,6 +161,9 @@ namespace crawlservpp::Module::Analyzer {
 
 			std::vector<unsigned short> algo;
 		} ps;
+
+		// function for checking whether the parent thread is still running
+		IsRunningCallback isRunning;
 	};
 
 } /* crawlservpp::Module::Analyzer */
