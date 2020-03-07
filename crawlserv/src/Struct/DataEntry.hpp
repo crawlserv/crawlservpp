@@ -44,6 +44,19 @@ namespace crawlservpp::Struct {
 
 		// constructor
 		DataEntry(unsigned long setContentId) : contentId(setContentId) {}
+
+		// operators (for sorting by data ID
+		bool operator<(const DataEntry& other) {
+			return this->dataId < other.dataId;
+		}
+
+		bool operator>(const DataEntry& other) {
+			return this->dataId > other.dataId;
+		}
+
+		bool operator==(const DataEntry& other) {
+			return this->dataId == other.dataId;
+		}
 	};
 
 } /* crawlservpp::Struct */
