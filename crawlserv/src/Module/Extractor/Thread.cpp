@@ -527,7 +527,8 @@ namespace crawlservpp::Module::Extractor {
 	void Thread::initQueries() {
 		// reserve memory for queries
 		this->queriesTokens.reserve(this->config.variablesTokensQuery.size());
-		this->queriesError.reserve(this->config.extractingError.size());
+		this->queriesErrorFail.reserve(this->config.extractingErrorFail.size());
+		this->queriesErrorRetry.reserve(this->config.extractingErrorRetry.size());
 		this->queriesDatasets.reserve(this->config.extractingDataSetQueries.size());
 		this->queriesId.reserve(this->config.extractingIdQueries.size());
 		this->queriesDateTime.reserve(this->config.extractingDateTimeQueries.size());
@@ -547,13 +548,23 @@ namespace crawlservpp::Module::Extractor {
 
 		try {
 			// create queries and get query properties
-			for(const auto& query : this->config.extractingError) {
+			for(const auto& query : this->config.extractingErrorFail) {
 				if(query) {
 					QueryProperties properties;
 
 					this->database.getQueryProperties(query, properties);
 
-					this->queriesError.emplace_back(this->addQuery(properties));
+					this->queriesErrorFail.emplace_back(this->addQuery(properties));
+				}
+			}
+
+			for(const auto& query : this->config.extractingErrorRetry) {
+				if(query) {
+					QueryProperties properties;
+
+					this->database.getQueryProperties(query, properties);
+
+					this->queriesErrorRetry.emplace_back(this->addQuery(properties));
 				}
 			}
 
@@ -983,7 +994,7 @@ namespace crawlservpp::Module::Extractor {
 				continue;	// continue with next page (if one exists)
 
 			// get and check content of current page
-			this->log(Config::generalLoggingVerbose, "fetches " + this->getProtocol() + sourceUrl + "...");
+			this->log(Config::generalLoggingVerbose, "fetches " + sourceUrl + "...");
 
 			if(!cookies.empty())
 				this->log(Config::generalLoggingVerbose, "[cookies] " + cookies);
@@ -994,7 +1005,7 @@ namespace crawlservpp::Module::Extractor {
 
 			std::string pageContent;
 
-			this->extractingPageContent(this->getProtocol() + sourceUrl, cookies, headers, pageContent);
+			this->extractingPageContent(sourceUrl, cookies, headers, pageContent);
 
 			// log progress if necessary
 			if(this->config.generalLogging >= Config::generalLoggingExtended) {
@@ -1002,7 +1013,7 @@ namespace crawlservpp::Module::Extractor {
 
 				logStrStr.imbue(std::locale(""));
 
-				logStrStr << "fetched " << pageContent.size() << " byte(s) from " << this->getProtocol() << sourceUrl;
+				logStrStr << "fetched " << pageContent.size() << " byte(s) from " << sourceUrl;
 
 				this->log(Config::generalLoggingExtended, logStrStr.str());
 			}
@@ -1014,6 +1025,20 @@ namespace crawlservpp::Module::Extractor {
 			this->setQueryTarget(pageContent, sourceUrl);
 
 			queryTargetSet = true;
+
+			// check for an error in the page because of which the page needs to be retried
+			if(this->extractingPageIsRetry(queryWarnings)) {
+				std::string error;
+
+				if(this->getTarget(error))
+					error = "retries after error in data: " + error + " [" + sourceUrl + "]";
+				else
+					error = "retries after error in data from " + sourceUrl;
+
+				this->extractingReset(error, sourceUrl);
+
+				continue;
+			}
 
 			// check for first page
 			if(pageFirst) {
@@ -1477,8 +1502,6 @@ namespace crawlservpp::Module::Extractor {
 		std::string result;
 		bool success = false;
 
-		sourceUrl.insert(0, this->getProtocol());
-
 		while(this->isRunning()) {
 			try {
 				// set local network configuration
@@ -1493,7 +1516,7 @@ namespace crawlservpp::Module::Extractor {
 
 				// get content
 				this->networking.getContent(
-						sourceUrl,
+						this->getProtocol() + sourceUrl,
 						usePost,
 						content,
 						this->config.generalRetryHttp
@@ -1522,22 +1545,9 @@ namespace crawlservpp::Module::Extractor {
 				if(this->extractingCheckCurlCode(
 						this->networking.getCurlCode(),
 						sourceUrl
-				)) {
+				))
 					// reset connection and retry
-					this->log(Config::generalLoggingDefault, e.whatStr() + " [" + sourceUrl + "].");
-					this->log(Config::generalLoggingDefault, "resets connection...");
-
-					this->setStatusMessage("ERROR " + e.whatStr() + " [" + sourceUrl + "]");
-
-					this->extractingResetTor();
-
-					this->networking.resetConnection(this->config.generalSleepError);
-
-					this->log(
-							Config::generalLoggingDefault,
-							"public IP: " + this->networking.getPublicIp()
-					);
-				}
+					this->extractingReset(e.whatStr(), sourceUrl);
 				else {
 					this->log(
 							Config::generalLoggingDefault,
@@ -1625,7 +1635,7 @@ namespace crawlservpp::Module::Extractor {
 
 				// get content
 				this->networking.getContent(
-						url,
+						this->getProtocol() + url,
 						this->config.sourceUsePost,
 						resultTo,
 						this->config.generalRetryHttp
@@ -1652,22 +1662,9 @@ namespace crawlservpp::Module::Extractor {
 				if(this->extractingCheckCurlCode(
 						this->networking.getCurlCode(),
 						url
-				)) {
+				))
 					// reset connection and retry
-					this->log(Config::generalLoggingDefault, e.whatStr() + " [" + url + "].");
-					this->log(Config::generalLoggingDefault, "resets connection...");
-
-					this->setStatusMessage("ERROR " + e.whatStr() + " [" + url + "]");
-
-					this->extractingResetTor();
-
-					this->networking.resetConnection(this->config.generalSleepError);
-
-					this->log(
-							Config::generalLoggingDefault,
-							"public IP: " + this->networking.getPublicIp()
-					);
-				}
+					this->extractingReset(e.whatStr(), url);
 				else {
 					this->log(
 							Config::generalLoggingDefault,
@@ -1743,13 +1740,25 @@ namespace crawlservpp::Module::Extractor {
 		this->log(Config::generalLoggingDefault, queryWarnings);
 	}
 
+	// check for an error in the page because of which the page needs to be retried
+	bool Thread::extractingPageIsRetry(std::queue<std::string>& queryWarningsTo) {
+		for(const auto& query : this->queriesErrorRetry) {
+			bool error = false;
+
+			if(this->getBoolFromQuery(query, error, queryWarningsTo) && error)
+				return true;
+		}
+
+		return false;
+	}
+
 	// extract data by parsing page content, return number of extracted datasets
 	size_t Thread::extractingPage(size_t contentId, const std::string& url) {
 		size_t result = 0;
 		std::queue<std::string> queryWarnings;
 
 		// check for errors if necessary
-		for(const auto& query : this->queriesError) {
+		for(const auto& query : this->queriesErrorFail) {
 			bool error = false;
 
 			if(this->getBoolFromQuery(query, error, queryWarnings) && error) {
@@ -2275,6 +2284,31 @@ namespace crawlservpp::Module::Extractor {
 
 		if(this->config.generalTiming)
 			this->log(Config::generalLoggingDefault, "saved results in " + timer.tickStr());
+	}
+
+	// reset connection and retry
+	void Thread::extractingReset(const std::string& error, const std::string& url) {
+		// clear query target
+		this->clearQueryTarget();
+
+		// show error
+		this->log(Config::generalLoggingDefault, error + " [" + url + "].");
+
+		this->setStatusMessage("ERROR " + error + " [" + url + "]");
+
+		// reset connection and retry (if still running)
+		if(this->isRunning()) {
+			this->log(Config::generalLoggingDefault, "resets connection...");
+
+			this->extractingResetTor();
+
+			this->networking.resetConnection(this->config.generalSleepError);
+
+			this->log(
+					Config::generalLoggingDefault,
+					"new public IP: " + this->networking.getPublicIp()
+			);
+		}
 	}
 
 	// request a new TOR identity if necessary
