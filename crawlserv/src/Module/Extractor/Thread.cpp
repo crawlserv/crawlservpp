@@ -986,12 +986,13 @@ namespace crawlservpp::Module::Extractor {
 					Helper::Strings::replaceAll(header, token.first, token.second, true);
 			}
 
-			// remove current page from queue
-			pageNames.pop();
-
 			// check URL
-			if(sourceUrl.empty())
+			if(sourceUrl.empty()) {
+				// remove current page from queue
+				pageNames.pop();
+
 				continue;	// continue with next page (if one exists)
+			}
 
 			// get and check content of current page
 			this->log(Config::generalLoggingVerbose, "fetches " + sourceUrl + "...");
@@ -1018,8 +1019,12 @@ namespace crawlservpp::Module::Extractor {
 				this->log(Config::generalLoggingExtended, logStrStr.str());
 			}
 
-			if(pageContent.empty())
+			if(pageContent.empty()) {
+				// remove current page from queue
+				pageNames.pop();
+
 				continue;	// continue with next page (if one exists)
+			}
 
 			// set page content as target for subsequent queries
 			this->setQueryTarget(pageContent, sourceUrl);
@@ -1039,6 +1044,9 @@ namespace crawlservpp::Module::Extractor {
 
 				continue;
 			}
+
+			// remove current page from queue
+			pageNames.pop();
 
 			// check for first page
 			if(pageFirst) {
@@ -1160,8 +1168,6 @@ namespace crawlservpp::Module::Extractor {
 			else if(this->config.pagingStep && noPageString && !noLimit)
 				// get ID by incrementing old ID
 				pageNum += this->config.pagingStep;
-			else
-				break;
 
 			// clear query target before continuing to next page
 			this->clearQueryTarget();
