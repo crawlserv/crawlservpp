@@ -466,8 +466,10 @@
 				"bool"
 			],
 			"default": [],
+			"label": "Retry on:",
 			"description": "Queries to detect errors in the data. The extractor will retry if any of these return 'true'.",
-			"simple": false
+			"simple": true,
+			"position": 13
 		},
 		"error.fail": {
 			"type": "array",
@@ -476,8 +478,10 @@
 				"bool"
 			],
 			"default": [],
+			"label": "Error on:",
 			"description": "Queries to detect errors in the data. The extractor will fail if any of these return 'true'.",
-			"simple": false
+			"simple": true,
+			"position": 14
 		},
 		"field.datetime.formats": {
 			"type": "array",
@@ -541,7 +545,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"label": "Field results as tidied texts:",
+			"label": "Field results as tidied text:",
 			"description": "Remove line breaks and unnecessary spaces when extracting the field with the same array index.",
 			"simple": true,
 			"position": 8
