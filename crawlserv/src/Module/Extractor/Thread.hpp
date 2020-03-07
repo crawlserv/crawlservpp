@@ -94,7 +94,7 @@ namespace crawlservpp::Module::Extractor {
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
-		using IdString = std::pair<unsigned long, std::string>;
+		using IdString = std::pair<size_t, std::string>;
 		using StringString = std::pair<std::string, std::string>;
 
 	public:
@@ -174,16 +174,16 @@ namespace crawlservpp::Module::Extractor {
 		std::chrono::steady_clock::time_point idleTime;
 
 		// state
-		bool idle;					// waiting for new URLs to be crawled
-		unsigned long lastUrl;		// last extracted URL
-		std::string lockTime;		// last locking time for currently extracted URL
+		bool idle;				// waiting for new URLs to be crawled
+		size_t lastUrl;			// last extracted URL
+		std::string lockTime;	// last locking time for currently extracted URL
 
 		// properties used for progress calculation
-		unsigned long idFirst;		// ID of the first URL fetched
-		unsigned long idDist;		// distance between the IDs of first and last URL fetched
-		float posFirstF;			// position of the first URL fetched as float
-		unsigned long posDist;		// distance between the positions of first and last URL fetched
-		unsigned long total;		// number of total URLs in URL list
+		size_t idFirst;			// ID of the first URL fetched
+		size_t idDist;			// distance between the IDs of first and last URL fetched
+		float posFirstF;		// position of the first URL fetched as float
+		size_t posDist;			// distance between the positions of first and last URL fetched
+		size_t total;			// number of total URLs in URL list
 
 		// initializing function
 		void initTargetTable();
@@ -193,7 +193,7 @@ namespace crawlservpp::Module::Extractor {
 		void extractingUrlSelection();
 		void extractingFetchUrls();
 		void extractingCheckUrls();
-		unsigned long extractingNext();
+		size_t extractingNext();
 		void extractingGetVariableValues(std::vector<StringString>& variables);
 		void extractingGetTokenValues(std::vector<StringString>& variables);
 		void extractingGetPageTokenValues(
@@ -217,7 +217,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 		void extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo);
 		void extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo);
-		unsigned long extractingPage(unsigned long contentId, const std::string& url);
+		size_t extractingPage(size_t contentId, const std::string& url);
 		bool extractingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool extractingCheckResponseCode(const std::string& url, long responseCode);
 		void extractingUrlFinished();
