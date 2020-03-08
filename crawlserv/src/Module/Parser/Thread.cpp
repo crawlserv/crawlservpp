@@ -177,23 +177,26 @@ namespace crawlservpp::Module::Parser {
 
 			const unsigned int deleted = this->database.checkParsingTable();
 
-			switch(deleted) {
-			case 0:
-				break;
+			// log deleted URL locks if necessary
+			if(this->isLogLevel(Config::generalLoggingDefault)) {
+				switch(deleted) {
+				case 0:
+					break;
 
-			case 1:
-				this->log(Config::generalLoggingDefault, "WARNING: Deleted a duplicate URL lock.");
+				case 1:
+					this->log(Config::generalLoggingDefault, "WARNING: Deleted a duplicate URL lock.");
 
-				break;
+					break;
 
-			default:
-				std::ostringstream logStrStr;
+				default:
+					std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+					logStrStr.imbue(std::locale(""));
 
-				logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+					logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
 
-				this->log(Config::generalLoggingDefault, logStrStr.str());
+					this->log(Config::generalLoggingDefault, logStrStr.str());
+				}
 			}
 		}
 
@@ -321,26 +324,29 @@ namespace crawlservpp::Module::Parser {
 			this->lockTime = "";
 
 			// write to log if necessary
-			std::ostringstream logStrStr;
+			const auto logLevel = this->config.generalTiming
+					? Config::generalLoggingDefault
+					: Config::generalLoggingExtended;
 
-			logStrStr.imbue(std::locale(""));
+			if(this->isLogLevel(logLevel)) {
+				std::ostringstream logStrStr;
 
-			if(parsed > 1)
-				logStrStr << "parsed " << parsed << " versions of ";
-			else if(parsed == 1)
-				logStrStr << "parsed ";
-			else
-				logStrStr << "skipped ";
+				logStrStr.imbue(std::locale(""));
 
-			logStrStr << this->urls.front().second;
+				if(parsed > 1)
+					logStrStr << "parsed " << parsed << " versions of ";
+				else if(parsed == 1)
+					logStrStr << "parsed ";
+				else
+					logStrStr << "skipped ";
 
-			if(this->config.generalTiming)
-				logStrStr << " in " << timerStr;
+				logStrStr << this->urls.front().second;
 
-			this->log(
-					this->config.generalTiming ? Config::generalLoggingDefault : Config::generalLoggingExtended,
-					logStrStr.str()
-			);
+				if(this->config.generalTiming)
+					logStrStr << " in " << timerStr;
+
+				this->log(logLevel, logStrStr.str());
+			}
 		}
 
 		// URL finished
@@ -369,7 +375,7 @@ namespace crawlservpp::Module::Parser {
 
 	// clear parser
 	void Thread::onClear() {
-		// check counter and process timers
+		// check counter and process timers if necessary
 		if(this->tickCounter) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
