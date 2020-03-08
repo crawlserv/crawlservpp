@@ -154,12 +154,14 @@ namespace crawlservpp::Main {
 		// setters
 		void setSleepOnError(size_t seconds);
 		void setTimeOut(size_t milliseconds);
+		void setGroupConcatToMax();
 
 		// getters
 		const DatabaseSettings& getSettings() const;
 		const std::string& getMysqlVersion() const;
 		const std::string& getDataDir() const;
 		size_t getMaxAllowedPacketSize() const;
+		size_t getConnectionId() const;
 
 		// initializing functions
 		void connect();
@@ -322,7 +324,6 @@ namespace crawlservpp::Main {
 
 		// database helper functions
 		size_t getLastInsertedId();
-		size_t getConnectionId();
 		void resetAutoIncrement(const std::string& tableName);
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
 		void removeDatabaseLock(const std::string& name);
@@ -569,8 +570,9 @@ namespace crawlservpp::Main {
 	private:
 		// private connection information
 		const DatabaseSettings settings;	// database settings
-		size_t maxAllowedPacketSize;	// maximum packet size
-		size_t sleepOnError;			// number of seconds to sleep on database error
+		size_t connectionId;				// MySQL connection ID
+		size_t maxAllowedPacketSize;		// maximum packet size
+		size_t sleepOnError;				// number of seconds to sleep on database error
 		std::string mysqlVersion;			// MySQL version
 		std::string dataDir;				// main data directory
 		std::vector<std::string> dirs;		// all known data directories

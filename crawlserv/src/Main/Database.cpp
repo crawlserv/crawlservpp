@@ -144,6 +144,43 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setTimeOut", e); }
 	}
 
+	// enable concatenation of very long strings (setting `group_concat_max_len` to its maximum)
+	void Database::setGroupConcatToMax() {
+		this->checkConnection();
+
+		try {
+			// create MySQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// try setting 64-bit value
+			Database::sqlExecute(
+					sqlStatement,
+					"SET @@group_concat_max_len = 18446744073709551615"
+			);
+		}
+		catch(const sql::SQLException &e) {
+			if(e.getErrorCode() == 1232)
+				try {
+					// create MySQL statement
+					SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+					// try setting 32-bit value
+					Database::sqlExecute(
+							sqlStatement,
+							"SET @@group_concat_max_len = 4294967295"
+					);
+
+					// write warning to log
+					this->log("WARNING: MySQL server appears to be 32-bit and may not support very long texts.");
+				}
+				catch(const sql::SQLException& e) {
+					this->sqlException("Main::Database::setGroupConcatToMax", e);
+				}
+			else
+				this->sqlException("Main::Database::setGroupConcatToMax", e);
+		}
+	}
+
 	/*
 	 * GETTERS
 	 */
@@ -166,6 +203,11 @@ namespace crawlservpp::Main {
 	// get the maximum allowed packet size
 	size_t Database::getMaxAllowedPacketSize() const {
 		return this->maxAllowedPacketSize;
+	}
+
+	// get MySQL connection ID
+	size_t Database::getConnectionId() const {
+		return this->connectionId;
 	}
 
 	/*
@@ -250,6 +292,22 @@ namespace crawlservpp::Main {
 			else
 				throw Database::Exception(
 						"Main::Database::connect(): Could not get \'max_allowed_packet\' from database"
+				);
+
+			// get and save connection ID
+			SqlResultSetPtr sqlResultSet(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT CONNECTION_ID() AS id"
+					)
+			);
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next())
+				this->connectionId = sqlResultSet->getUInt64("id");
+			else
+				throw Database::Exception(
+						"Main::Database::connect(): Could not get MySQL connection ID"
 				);
 
 			// get and save main data directory
@@ -6160,34 +6218,6 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// get connection ID from the database, throws Database::Exception
-	size_t Database::getConnectionId() {
-		size_t result = 0;
-
-		// check connection
-		this->checkConnection();
-
-		try {
-			// create SQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-			// execute SQL statement
-			SqlResultSetPtr sqlResultSet(
-					Database::sqlExecuteQuery(
-							sqlStatement,
-							"SELECT CONNECTION_ID() AS id"
-					)
-			);
-
-			// get result
-			if(sqlResultSet && sqlResultSet->next())
-				result = sqlResultSet->getUInt64("id");
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getConnectionId", e); }
-
-		return result;
-	}
-
 	// reset the auto increment of an (empty) table in the database, throws Database::Exception
 	void Database::resetAutoIncrement(const std::string& tableName) {
 		// check argument
@@ -6770,7 +6800,7 @@ namespace crawlservpp::Main {
 					if(!line.empty())
 						Database::sqlExecute(sqlStatement, line);
 				}
-				catch(const sql::SQLException &e) { this->sqlException("Main::Database::run", e); }
+				catch(const sql::SQLException &e) { this->sqlException("(in " + sqlFile + ")", e); }
 			}
 
 			// close SQL file
