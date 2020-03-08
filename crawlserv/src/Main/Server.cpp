@@ -237,6 +237,8 @@ namespace crawlservpp::Main {
 				+ this->database.getDataDir()
 				+ "\'; maxAllowedPacketSize="
 				+ std::to_string(this->database.getMaxAllowedPacketSize())
+				+ "; connection_id="
+				+ std::to_string(this->database.getConnectionId())
 				+ "]."
 		);
 	}
