@@ -607,6 +607,14 @@ namespace crawlservpp::Data {
 		// clear old corpus
 		this->clear();
 
+		// reserve memory
+		size_t size = 0;
+
+		for(const auto& chunk : chunks)
+			size += chunk.size();
+
+		this->corpus.reserve(size);
+
 		// add chunks
 		for(size_t n = 0; n < chunks.size(); ++n) {
 			// save current position in new corpus
