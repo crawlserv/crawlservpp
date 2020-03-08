@@ -157,7 +157,8 @@ namespace crawlservpp::Module::Analyzer {
 			unsigned short isCorpusChangedExtracting;
 			unsigned short isCorpusChangedAnalyzing;
 			unsigned short deleteCorpus;
-			unsigned short addCorpus;
+			unsigned short addChunk;
+			unsigned short measureChunk;
 			unsigned short measureCorpus;
 
 			std::vector<unsigned short> algo;

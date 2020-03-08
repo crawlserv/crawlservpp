@@ -240,7 +240,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.deleteCorpus)) {
-				this->log(verbose, "prepares createCorpus() [1/3]...");
+				this->log(verbose, "prepares createCorpus() [1/4]...");
 
 				this->ps.deleteCorpus = this->addPreparedStatement(
 						"DELETE"
@@ -254,10 +254,10 @@ namespace crawlservpp::Module::Analyzer {
 				);
 			}
 
-			if(!(this->ps.addCorpus)) {
-				this->log(verbose, "prepares createCorpus() [2/3]...");
+			if(!(this->ps.addChunk)) {
+				this->log(verbose, "prepares createCorpus() [2/4]...");
 
-				this->ps.addCorpus = this->addPreparedStatement(
+				this->ps.addChunk = this->addPreparedStatement(
 						"INSERT INTO `crawlserv_corpora`"
 						" ("
 							" website,"
@@ -289,8 +289,20 @@ namespace crawlservpp::Module::Analyzer {
 				);
 			}
 
+			if(!(this->ps.measureChunk)) {
+				this->log(verbose, "prepares createCorpus() [3/4]...");
+
+				this->ps.measureChunk = this->addPreparedStatement(
+						"UPDATE `crawlserv_corpora`"
+						" SET chunk_length = CHAR_LENGTH(corpus),"
+						" chunk_size = LENGTH(corpus)"
+						" WHERE id = ?"
+						" LIMIT 1"
+				);
+			}
+
 			if(!(this->ps.measureCorpus)) {
-				this->log(verbose, "prepares createCorpus() [3/3]...");
+				this->log(verbose, "prepares createCorpus() [4/4]...");
 
 				this->ps.measureCorpus = this->addPreparedStatement(
 						"UPDATE `crawlserv_corpora` AS dest,"
@@ -716,9 +728,9 @@ namespace crawlservpp::Module::Analyzer {
 					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for deleting text corpus"
 			);
 
-		if(!(this->ps.addCorpus))
+		if(!(this->ps.addChunk))
 			throw Exception(
-					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for adding text corpus"
+					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for adding chunk to text corpus"
 			);
 
 		if(!(this->ps.measureCorpus))
@@ -728,8 +740,9 @@ namespace crawlservpp::Module::Analyzer {
 
 		// get prepared SQL statements
 		sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->ps.deleteCorpus);
-		sql::PreparedStatement& addStatement = this->getPreparedStatement(this->ps.addCorpus);
-		sql::PreparedStatement& measureStatement = this->getPreparedStatement(this->ps.measureCorpus);
+		sql::PreparedStatement& addStatement = this->getPreparedStatement(this->ps.addChunk);
+		sql::PreparedStatement& measureChunkStatement = this->getPreparedStatement(this->ps.measureChunk);
+		sql::PreparedStatement& measureCorpusStatement = this->getPreparedStatement(this->ps.measureCorpus);
 
 		// check your sources
 		this->checkSource(
@@ -911,6 +924,11 @@ namespace crawlservpp::Module::Analyzer {
 
 				if(dateMaps.size() > n)
 					Struct::TextMap().swap(dateMaps.at(n));
+
+				// measure chunk
+				measureChunkStatement.setUInt64(1, last);
+
+				Database::sqlExecute(measureChunkStatement);
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::createCorpus", e); }
@@ -920,14 +938,14 @@ namespace crawlservpp::Module::Analyzer {
 
 		try {
 			// measure corpus
-			measureStatement.setUInt(1, corpusProperties.sourceType);
-			measureStatement.setString(2, corpusProperties.sourceTable);
-			measureStatement.setString(3, corpusProperties.sourceField);
-			measureStatement.setUInt(4, corpusProperties.sourceType);
-			measureStatement.setString(5, corpusProperties.sourceTable);
-			measureStatement.setString(6, corpusProperties.sourceField);
+			measureCorpusStatement.setUInt(1, corpusProperties.sourceType);
+			measureCorpusStatement.setString(2, corpusProperties.sourceTable);
+			measureCorpusStatement.setString(3, corpusProperties.sourceField);
+			measureCorpusStatement.setUInt(4, corpusProperties.sourceType);
+			measureCorpusStatement.setString(5, corpusProperties.sourceTable);
+			measureCorpusStatement.setString(6, corpusProperties.sourceField);
 
-			Database::sqlExecute(measureStatement);
+			Database::sqlExecute(measureCorpusStatement);
 		}
 		catch(const sql::SQLException &e) {
 			// log and ignore errors when measuring corpus (total text might be too long)
