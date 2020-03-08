@@ -83,6 +83,7 @@ namespace crawlservpp::Module {
 		// logging functions
 		void log(unsigned short level, const std::string& logEntry);
 		void log(unsigned short level, std::queue<std::string>& logEntries);
+		bool isLogLevel(unsigned short level) const;
 
 		// thread functions
 		void setThreadStatusMessage(size_t threadId, bool threadPaused, const std::string& threadStatusMessage);

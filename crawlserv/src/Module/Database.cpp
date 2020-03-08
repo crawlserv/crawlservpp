@@ -204,6 +204,11 @@ namespace crawlservpp::Module {
 			std::queue<std::string>().swap(logEntries);
 	}
 
+	// check whether a certain log level is active
+	bool Database::isLogLevel(unsigned short level) const {
+		return level <= this->loggingLevel;
+	}
+
 	// set the status message of a thread (and add the pause state), throws Database::Exception
 	void Database::setThreadStatusMessage(size_t threadId, bool threadPaused, const std::string& threadStatusMessage) {
 		// check connection
