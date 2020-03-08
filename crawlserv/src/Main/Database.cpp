@@ -100,7 +100,10 @@ namespace crawlservpp::Main {
 				catch(...) { // could not log -> write to stdout
 					std::cout.imbue(std::locale(""));
 
-					std::cout << '\n' << requests << " SQL requests performed." << std::flush;
+					std::cout	<< '\n'
+								<< requests
+								<< " SQL requests performed."
+								<< std::flush;
 				}
 			}
 		}
@@ -184,7 +187,7 @@ namespace crawlservpp::Main {
 			connectOptions["password"] = this->settings.password; // set password
 			connectOptions["schema"] = this->settings.name; // set schema
 			connectOptions["port"] = this->settings.port; // set port
-			connectOptions["OPT_RECONNECT"] = false; // do not automatically re-connect to manually recover prepared statements
+			connectOptions["OPT_RECONNECT"] = false; // don't automatically re-connect (manually recover prepared statements)
 			connectOptions["OPT_CHARSET_NAME"] = "utf8mb4"; // set charset
 			connectOptions["characterSetResults"] = "utf8mb4"; // set charset for results
 			connectOptions["preInit"] = "SET NAMES utf8mb4"; // set charset for names
@@ -569,7 +572,8 @@ namespace crawlservpp::Main {
 		this->log(this->module, logEntry);
 	}
 
-	// get the number of log entries for a specific module from the database (or for all modules if logModule is an empty string)
+	// get the number of log entries for a specific module from the database
+	//	(or for all modules if logModule is an empty string), throws Database::Exception
 	size_t Database::getNumberOfLogEntries(const std::string& logModule) {
 		size_t result = 0;
 
@@ -601,7 +605,8 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// remove the log entries of a specific module from the database (or all log entries if logModule is an empty string)
+	// remove the log entries of a specific module from the database
+	// 	(or all log entries if logModule is an empty string), throws Database::Exception
 	void Database::clearLogs(const std::string& logModule) {
 		if(logModule.empty())
 			// execute SQL query
@@ -635,7 +640,7 @@ namespace crawlservpp::Main {
 	 * THREAD FUNCTIONS
 	 */
 
-	// get all threads from the database
+	// get all threads from the database, throws Database::Exception
 	std::vector<Database::ThreadDatabaseEntry> Database::getThreads() {
 		std::vector<ThreadDatabaseEntry> result;
 
@@ -6109,7 +6114,9 @@ namespace crawlservpp::Main {
 
 		// check prepared SQL statement
 		if(!(this->ps.lastId))
-			throw Database::Exception("Main::Database::getLastInsertedId: Missing prepared SQL statement for last inserted ID");
+			throw Database::Exception(
+					"Main::Database::getLastInsertedId: Missing prepared SQL statement for last inserted ID"
+			);
 
 		// get prepared SQL statement
 		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.lastId));
@@ -6123,6 +6130,34 @@ namespace crawlservpp::Main {
 				result = sqlResultSet->getUInt64("id");
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getLastInsertedId", e); }
+
+		return result;
+	}
+
+	// get connection ID from the database, throws Database::Exception
+	size_t Database::getConnectionId() {
+		size_t result = 0;
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement(this->connection->createStatement());
+
+			// execute SQL statement
+			SqlResultSetPtr sqlResultSet(
+					Database::sqlExecuteQuery(
+							sqlStatement,
+							"SELECT CONNECTION_ID() AS id"
+					)
+			);
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next())
+				result = sqlResultSet->getUInt64("id");
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::getConnectionId", e); }
 
 		return result;
 	}
