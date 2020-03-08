@@ -244,23 +244,26 @@ namespace crawlservpp::Module::Extractor {
 
 			const unsigned int deleted = this->database.checkExtractingTable();
 
-			switch(deleted) {
-			case 0:
-				break;
+			// log deletion warning if necessary
+			if(this->isLogLevel(Config::generalLoggingDefault)) {
+				switch(deleted) {
+				case 0:
+					break;
 
-			case 1:
-				this->log(Config::generalLoggingDefault, "WARNING: Deleted a duplicate URL lock.");
+				case 1:
+					this->log(Config::generalLoggingDefault, "WARNING: Deleted a duplicate URL lock.");
 
-				break;
+					break;
 
-			default:
-				std::ostringstream logStrStr;
+				default:
+					std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+					logStrStr.imbue(std::locale(""));
 
-				logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+					logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
 
-				this->log(Config::generalLoggingDefault, logStrStr.str());
+					this->log(Config::generalLoggingDefault, logStrStr.str());
+				}
 			}
 		}
 
@@ -392,34 +395,37 @@ namespace crawlservpp::Module::Extractor {
 			this->lockTime = "";
 
 			// write to log if necessary
-			std::ostringstream logStrStr;
+			const auto logLevel = this->config.generalTiming ?
+					Config::generalLoggingDefault
+					: Config::generalLoggingExtended;
 
-			switch(extracted) {
-			case 0:
-				logStrStr << "skipped ";
+			if(this->isLogLevel(logLevel)) {
+				std::ostringstream logStrStr;
 
-				break;
+				switch(extracted) {
+				case 0:
+					logStrStr << "skipped ";
 
-			case 1:
-				logStrStr << "extracted one dataset from ";
+					break;
 
-				break;
+				case 1:
+					logStrStr << "extracted one dataset from ";
 
-			default:
-				logStrStr.imbue(std::locale(""));
+					break;
 
-				logStrStr << "extracted " << extracted << " datasets from ";
+				default:
+					logStrStr.imbue(std::locale(""));
+
+					logStrStr << "extracted " << extracted << " datasets from ";
+				}
+
+				logStrStr << this->urls.front().second;
+
+				if(this->config.generalTiming)
+					logStrStr << " in " << timerStr;
+
+				this->log(logLevel, logStrStr.str());
 			}
-
-			logStrStr << this->urls.front().second;
-
-			if(this->config.generalTiming)
-				logStrStr << " in " << timerStr;
-
-			this->log(
-					this->config.generalTiming ? Config::generalLoggingDefault : Config::generalLoggingExtended,
-					logStrStr.str()
-			);
 		}
 
 		// URL finished
@@ -449,7 +455,7 @@ namespace crawlservpp::Module::Extractor {
 	// clear extractor
 	void Thread::onClear() {
 		// check counter and process timers
-		if(this->tickCounter) {
+		if(this->tickCounter && this->isLogLevel(Config::generalLoggingDefault)) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
 
@@ -1012,7 +1018,7 @@ namespace crawlservpp::Module::Extractor {
 			this->extractingPageContent(sourceUrl, cookies, headers, pageContent);
 
 			// log progress if necessary
-			if(this->config.generalLogging >= Config::generalLoggingExtended) {
+			if(this->isLogLevel(Config::generalLoggingExtended)) {
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
@@ -1183,7 +1189,7 @@ namespace crawlservpp::Module::Extractor {
 			this->clearQueryTarget();
 
 		// if necessary, compare the number of extracted datasets with the number of expected datatsets
-		if(expecting) {
+		if(expecting && this->isLogLevel(Config::generalLoggingDefault)) {
 			std::ostringstream expectedStrStr;
 
 			expectedStrStr.imbue(std::locale(""));
