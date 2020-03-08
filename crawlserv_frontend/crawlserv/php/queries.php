@@ -181,7 +181,42 @@ if($query)
 ?>
 
 </div>
+
+<div class="action-link">
+
+<?php
+
+if($query)
+    echo "<a id=\"query-move-toggle\" href=\"#\" class=\"action-link\">Move query &dArr;</a>\n";
+
+?>
+
 </div>
+
+</div>
+</div>
+
+<div class="content-block content-block-hidden" id="query-move-div">
+
+<?php
+
+echo rowWebsiteSelect(false, true, false, "move-to", "Move to", [ $website ]);
+
+?>
+
+<div class="action-link-box">
+<div class="action-link">
+
+<?php
+
+if($query)
+    echo "<a id=\"query-move\" href=\"#\" class=\"action-link\">Move to website</a>\n";
+
+?>
+
+</div>
+</div>
+
 </div>
 
 <div id="query-properties" class="content-block">

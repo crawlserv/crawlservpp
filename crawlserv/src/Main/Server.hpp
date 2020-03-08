@@ -60,8 +60,8 @@
  * MACROS
  */
 
-// macro for basic server commands
-#define MAIN_SERVER_BASIC_CMD(X, Y)	if(name == X) { \
+// macro for server commands
+#define MAIN_SERVER_CMD(X, Y)	if(name == X) { \
 										response = Y(); \
 										return true; \
 									}
@@ -306,6 +306,7 @@ namespace crawlservpp::Main {
 
 		ServerCommandResponse cmdAddQuery();
 		ServerCommandResponse cmdUpdateQuery();
+		ServerCommandResponse cmdMoveQuery();
 		ServerCommandResponse cmdDeleteQuery();
 		ServerCommandResponse cmdDuplicateQuery();
 

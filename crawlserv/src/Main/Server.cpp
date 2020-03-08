@@ -725,60 +725,67 @@ namespace crawlservpp::Main {
 	// perform a basic server command, return whether such a command has been found, throws Main::Exception
 	//  NOTE: Server::cmdJson and Server::cmdIp need to be set!
 	bool Server::cmd(const std::string& name, ServerCommandResponse& response) {
-		MAIN_SERVER_BASIC_CMD("kill", this->cmdKill);
-		MAIN_SERVER_BASIC_CMD("allow", this->cmdAllow);
-		MAIN_SERVER_BASIC_CMD("disallow", this->cmdDisallow);
+		/*
+		 * NOTE:	Use the MAIN_SERVER_CMD macro to add commands to the server
+		 * 			and bind them to the respective member function returning a
+		 * 			server response of the type Server::ServerCommandResponse.
+		 */
 
-		MAIN_SERVER_BASIC_CMD("log", this->cmdLog);
-		MAIN_SERVER_BASIC_CMD("clearlogs", this->cmdClearLogs);
+		MAIN_SERVER_CMD("kill", this->cmdKill);
+		MAIN_SERVER_CMD("allow", this->cmdAllow);
+		MAIN_SERVER_CMD("disallow", this->cmdDisallow);
 
-		MAIN_SERVER_BASIC_CMD("startcrawler", this->cmdStartCrawler);
-		MAIN_SERVER_BASIC_CMD("pausecrawler", this->cmdPauseCrawler);
-		MAIN_SERVER_BASIC_CMD("unpausecrawler", this->cmdUnpauseCrawler);
-		MAIN_SERVER_BASIC_CMD("stopcrawler", this->cmdStopCrawler);
+		MAIN_SERVER_CMD("log", this->cmdLog);
+		MAIN_SERVER_CMD("clearlogs", this->cmdClearLogs);
 
-		MAIN_SERVER_BASIC_CMD("startparser", this->cmdStartParser);
-		MAIN_SERVER_BASIC_CMD("pauseparser", this->cmdPauseParser);
-		MAIN_SERVER_BASIC_CMD("unpauseparser", this->cmdUnpauseParser);
-		MAIN_SERVER_BASIC_CMD("stopparser", this->cmdStopParser);
-		MAIN_SERVER_BASIC_CMD("resetparsingstatus", this->cmdResetParsingStatus);
+		MAIN_SERVER_CMD("startcrawler", this->cmdStartCrawler);
+		MAIN_SERVER_CMD("pausecrawler", this->cmdPauseCrawler);
+		MAIN_SERVER_CMD("unpausecrawler", this->cmdUnpauseCrawler);
+		MAIN_SERVER_CMD("stopcrawler", this->cmdStopCrawler);
 
-		MAIN_SERVER_BASIC_CMD("startextractor", this->cmdStartExtractor);
-		MAIN_SERVER_BASIC_CMD("pauseextractor", this->cmdPauseExtractor);
-		MAIN_SERVER_BASIC_CMD("unpauseextractor", this->cmdUnpauseExtractor);
-		MAIN_SERVER_BASIC_CMD("stopextractor", this->cmdStopExtractor);
-		MAIN_SERVER_BASIC_CMD("resetextractingstatus", this->cmdResetExtractingStatus);
+		MAIN_SERVER_CMD("startparser", this->cmdStartParser);
+		MAIN_SERVER_CMD("pauseparser", this->cmdPauseParser);
+		MAIN_SERVER_CMD("unpauseparser", this->cmdUnpauseParser);
+		MAIN_SERVER_CMD("stopparser", this->cmdStopParser);
+		MAIN_SERVER_CMD("resetparsingstatus", this->cmdResetParsingStatus);
 
-		MAIN_SERVER_BASIC_CMD("startanalyzer", this->cmdStartAnalyzer);
-		MAIN_SERVER_BASIC_CMD("pauseanalyzer", this->cmdPauseAnalyzer);
-		MAIN_SERVER_BASIC_CMD("unpauseanalyzer", this->cmdUnpauseAnalyzer);
-		MAIN_SERVER_BASIC_CMD("stopanalyzer", this->cmdStopAnalyzer);
-		MAIN_SERVER_BASIC_CMD("resetanalyzingstatus", this->cmdResetAnalyzingStatus);
+		MAIN_SERVER_CMD("startextractor", this->cmdStartExtractor);
+		MAIN_SERVER_CMD("pauseextractor", this->cmdPauseExtractor);
+		MAIN_SERVER_CMD("unpauseextractor", this->cmdUnpauseExtractor);
+		MAIN_SERVER_CMD("stopextractor", this->cmdStopExtractor);
+		MAIN_SERVER_CMD("resetextractingstatus", this->cmdResetExtractingStatus);
 
-		MAIN_SERVER_BASIC_CMD("pauseall", this->cmdPauseAll);
-		MAIN_SERVER_BASIC_CMD("unpauseall", this->cmdUnpauseAll);
+		MAIN_SERVER_CMD("startanalyzer", this->cmdStartAnalyzer);
+		MAIN_SERVER_CMD("pauseanalyzer", this->cmdPauseAnalyzer);
+		MAIN_SERVER_CMD("unpauseanalyzer", this->cmdUnpauseAnalyzer);
+		MAIN_SERVER_CMD("stopanalyzer", this->cmdStopAnalyzer);
+		MAIN_SERVER_CMD("resetanalyzingstatus", this->cmdResetAnalyzingStatus);
 
-		MAIN_SERVER_BASIC_CMD("addwebsite", this->cmdAddWebsite);
-		MAIN_SERVER_BASIC_CMD("updatewebsite", this->cmdUpdateWebsite);
-		MAIN_SERVER_BASIC_CMD("deletewebsite", this->cmdDeleteWebsite);
-		MAIN_SERVER_BASIC_CMD("duplicatewebsite", this->cmdDuplicateWebsite);
+		MAIN_SERVER_CMD("pauseall", this->cmdPauseAll);
+		MAIN_SERVER_CMD("unpauseall", this->cmdUnpauseAll);
 
-		MAIN_SERVER_BASIC_CMD("addurllist", this->cmdAddUrlList);
-		MAIN_SERVER_BASIC_CMD("updateurllist", this->cmdUpdateUrlList);
-		MAIN_SERVER_BASIC_CMD("deleteurllist", this->cmdDeleteUrlList);
-		MAIN_SERVER_BASIC_CMD("deleteurls", this->cmdDeleteUrls);
+		MAIN_SERVER_CMD("addwebsite", this->cmdAddWebsite);
+		MAIN_SERVER_CMD("updatewebsite", this->cmdUpdateWebsite);
+		MAIN_SERVER_CMD("deletewebsite", this->cmdDeleteWebsite);
+		MAIN_SERVER_CMD("duplicatewebsite", this->cmdDuplicateWebsite);
 
-		MAIN_SERVER_BASIC_CMD("addquery", this->cmdAddQuery);
-		MAIN_SERVER_BASIC_CMD("updatequery", this->cmdUpdateQuery);
-		MAIN_SERVER_BASIC_CMD("deletequery", this->cmdDeleteQuery);
-		MAIN_SERVER_BASIC_CMD("duplicatequery", this->cmdDuplicateQuery);
+		MAIN_SERVER_CMD("addurllist", this->cmdAddUrlList);
+		MAIN_SERVER_CMD("updateurllist", this->cmdUpdateUrlList);
+		MAIN_SERVER_CMD("deleteurllist", this->cmdDeleteUrlList);
+		MAIN_SERVER_CMD("deleteurls", this->cmdDeleteUrls);
 
-		MAIN_SERVER_BASIC_CMD("addconfig", this->cmdAddConfig);
-		MAIN_SERVER_BASIC_CMD("updateconfig", this->cmdUpdateConfig);
-		MAIN_SERVER_BASIC_CMD("deleteconfig", this->cmdDeleteConfig);
-		MAIN_SERVER_BASIC_CMD("duplicateconfig", this->cmdDuplicateConfig);
+		MAIN_SERVER_CMD("addquery", this->cmdAddQuery);
+		MAIN_SERVER_CMD("updatequery", this->cmdUpdateQuery);
+		MAIN_SERVER_CMD("movequery", this->cmdMoveQuery);
+		MAIN_SERVER_CMD("deletequery", this->cmdDeleteQuery);
+		MAIN_SERVER_CMD("duplicatequery", this->cmdDuplicateQuery);
 
-		MAIN_SERVER_BASIC_CMD("warp", this->cmdWarp);
+		MAIN_SERVER_CMD("addconfig", this->cmdAddConfig);
+		MAIN_SERVER_CMD("updateconfig", this->cmdUpdateConfig);
+		MAIN_SERVER_CMD("deleteconfig", this->cmdDeleteConfig);
+		MAIN_SERVER_CMD("duplicateconfig", this->cmdDuplicateConfig);
+
+		MAIN_SERVER_CMD("warp", this->cmdWarp);
 
 		return false;
 	}
@@ -3379,6 +3386,51 @@ namespace crawlservpp::Main {
 		return ServerCommandResponse("Query updated.");
 	}
 
+	// server command movequery(id, to): move a query to another website by their IDs
+	Server::ServerCommandResponse Server::cmdMoveQuery() {
+		// get arguments
+		if(!(this->cmdJson.HasMember("id")))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is missing).");
+
+		if(!(this->cmdJson["id"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'id\' is not a valid number).");
+
+		if(!(this->cmdJson.HasMember("to")))
+			return ServerCommandResponse::failed("Invalid arguments (\'to\' is missing).");
+
+		if(!(this->cmdJson["to"].IsUint64()))
+			return ServerCommandResponse::failed("Invalid arguments (\'to\' is not a valid number).");
+
+		const size_t id = this->cmdJson["id"].GetUint64();
+		const size_t to = this->cmdJson["to"].GetUint64();
+
+		// check query
+		if(!(this->database.isQuery(id)))
+			return ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+		// check website
+		if(!(this->database.isWebsite(to)))
+			return ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(id)
+					+ " not found."
+			);
+
+		// move query needs to be confirmed
+		if(this->cmdJson.HasMember("confirmed")) {
+			// move query to the other website
+			this->database.moveQuery(id, to);
+
+			return ServerCommandResponse("Query moved.");
+		}
+
+		return ServerCommandResponse::toBeConfirmed("Do you really want to move this query?");
+	}
+
 	// server command deletequery(id): delete a query from the database by its ID
 	Server::ServerCommandResponse Server::cmdDeleteQuery() {
 		// check whether the deletion of data is allowed
@@ -3402,6 +3454,7 @@ namespace crawlservpp::Main {
 					+ " not found."
 			);
 
+		// deletequery needs to be confirmed
 		if(this->cmdJson.HasMember("confirmed")) {
 			// delete URL list from database
 			this->database.deleteQuery(id);
@@ -3611,7 +3664,6 @@ namespace crawlservpp::Main {
 					+ std::to_string(id)
 					+ " not found."
 			);
-
 
 		// deleteconfig needs to be confirmed
 		if(this->cmdJson.HasMember("confirmed")) {

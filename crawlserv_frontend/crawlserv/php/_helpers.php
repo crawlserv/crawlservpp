@@ -30,7 +30,14 @@
  */
 
 // render row with website selection
-function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown = false) {
+function rowWebsiteSelect(
+    $adddelete = false,
+    $showglobal = false,
+    $scrolldown = false,
+    $select_id = "website-select",
+    $label = "Website",
+    $filter = []
+) {
     global  $m,
             $mode,
             $tab,
@@ -55,10 +62,10 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     
     $html = "<div class=\"entry-row\">\n";
     
-    $html .= "<div class=\"entry-label\">Website:</div>";
+    $html .= "<div class=\"entry-label\">$label:</div>";
     $html .= "<div class=\"$class\">";
     
-    $html .= "<select class=\"$class\" id=\"website-select\"";
+    $html .= "<select class=\"$class\" id=\"$select_id\"";
     
     if(isset($m))
         $html .= " data-m=\"$m\"";
@@ -89,7 +96,7 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     
     $html .= ">\n";
     
-    if($showglobal) {
+    if($showglobal && !in_array(0, $filter, true)) {
         $html .= "<option value=\"0\"";
     
         if(!$website)
@@ -110,7 +117,11 @@ function rowWebsiteSelect($adddelete = false, $showglobal = false, $scrolldown =
     $first = true;
     
     while($row = $result->fetch_assoc()) {
-        $id = $row["id"];
+        $id = $row["id"];    
+        
+        if(in_array($id, $filter, true))
+            continue;
+        
         $name = $row["name"];
         $data_namespace = $row["namespace"];
         

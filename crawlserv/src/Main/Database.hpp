@@ -225,6 +225,7 @@ namespace crawlservpp::Main {
 		size_t addQuery(size_t websiteId, const QueryProperties& queryProperties);
 		void getQueryProperties(size_t queryId, QueryProperties& queryPropertiesTo);
 		void updateQuery(size_t queryId, const QueryProperties& queryProperties);
+		void moveQuery(size_t queryId, size_t toWebsiteId);
 		void deleteQuery(size_t queryId);
 		size_t duplicateQuery(size_t queryId);
 

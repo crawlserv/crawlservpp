@@ -173,6 +173,10 @@ div.content-block {
 	margin-top:2px;
 }
 
+div.content-block-hidden {
+	display:none;
+}
+
 /* SERVER STATUS */
 #server-status {
 	display:inline-block;

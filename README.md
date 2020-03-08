@@ -220,6 +220,7 @@ The server performs commands and sends back their results. Some commands need to
 * **`kill`**: Kill the server.
 * **`log`** (argument: `entry`): Write a log entry by the frontend into the database.
 * **`merge`** (arguments: `datatype`, [...]): Merge two tables in the database.
+* **`movequery`** (arguments: `id`, `to`): Moves a query to another website.
 * **`pauseall`**: Pause all running threads.
 * **`pauseanalyzer`** (argument: `id`): Pause a running analyzer by its ID.
 * **`pausecrawler`** (argument: `id`): Pause a running crawler by its ID.

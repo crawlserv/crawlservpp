@@ -581,7 +581,7 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		// create SQL query string
-		std::string sqlQuery("SELECT COUNT(*) FROM crawlserv_log");
+		std::string sqlQuery("SELECT COUNT(*) FROM `crawlserv_log`");
 
 		if(!logModule.empty())
 			sqlQuery += " WHERE module = ?";
@@ -654,7 +654,7 @@ namespace crawlservpp::Main {
 			// execute SQL query
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement,
 					"SELECT id, module, status, paused, website, urllist, config, last"
-					" FROM crawlserv_threads"
+					" FROM `crawlserv_threads`"
 			));
 
 			// get results
@@ -740,7 +740,7 @@ namespace crawlservpp::Main {
 		try {
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(
-					"SELECT runtime FROM crawlserv_threads WHERE id = ? LIMIT 1"
+					"SELECT runtime FROM `crawlserv_threads` WHERE id = ? LIMIT 1"
 			));
 
 			// execute SQL statement
@@ -773,7 +773,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT pausetime"
-							" FROM crawlserv_threads"
+							" FROM `crawlserv_threads`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -931,7 +931,7 @@ namespace crawlservpp::Main {
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
-							"DELETE FROM crawlserv_threads"
+							"DELETE FROM `crawlserv_threads`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -1035,7 +1035,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT domain"
-							" FROM crawlserv_websites"
+							" FROM `crawlserv_websites`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -1071,7 +1071,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT namespace"
-							" FROM crawlserv_websites"
+							" FROM `crawlserv_websites`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -1107,7 +1107,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT website"
-							" FROM crawlserv_urllists"
+							" FROM `crawlserv_urllists`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -1143,7 +1143,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT website"
-							" FROM crawlserv_configs"
+							" FROM `crawlserv_configs`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -1221,7 +1221,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_websites"
+								" FROM `crawlserv_websites`"
 								" WHERE namespace = ?"
 							" )"
 							" AS result"
@@ -1310,7 +1310,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT dir"
-							" FROM crawlserv_websites"
+							" FROM `crawlserv_websites`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -1726,7 +1726,7 @@ namespace crawlservpp::Main {
 			// prepare SQL statement for deletion of website
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
-							"DELETE FROM crawlserv_websites"
+							"DELETE FROM `crawlserv_websites`"
 							" WHERE id = ? LIMIT 1"
 					)
 			);
@@ -1760,7 +1760,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT name, namespace, domain, dir"
-							" FROM crawlserv_websites"
+							" FROM `crawlserv_websites`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -1796,7 +1796,7 @@ namespace crawlservpp::Main {
 				sqlStatement.reset(
 						this->connection->prepareStatement(
 								"SELECT name, namespace"
-								" FROM crawlserv_urllists"
+								" FROM `crawlserv_urllists`"
 								" WHERE website = ?"
 						)
 				);
@@ -1821,7 +1821,7 @@ namespace crawlservpp::Main {
 				sqlStatement.reset(
 						this->connection->prepareStatement(
 							"SELECT id, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly"
-							" FROM crawlserv_queries"
+							" FROM `crawlserv_queries`"
 							" WHERE website = ?"
 						)
 				);
@@ -1857,7 +1857,7 @@ namespace crawlservpp::Main {
 				sqlStatement.reset(
 						this->connection->prepareStatement(
 								"SELECT module, name, config"
-								" FROM crawlserv_configs"
+								" FROM `crawlserv_configs`"
 								" WHERE website = ?"
 						)
 				);
@@ -2613,7 +2613,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT id, namespace"
-							" FROM crawlserv_urllists"
+							" FROM `crawlserv_urllists`"
 							" WHERE website = ?"
 					)
 			);
@@ -2827,7 +2827,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT namespace"
-							" FROM crawlserv_urllists"
+							" FROM `crawlserv_urllists`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -2909,7 +2909,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_urllists"
+								" FROM `crawlserv_urllists`"
 								" WHERE website = ?"
 								" AND namespace = ?"
 							" )"
@@ -3120,7 +3120,7 @@ namespace crawlservpp::Main {
 			// prepare SQL statement for deleting URL list
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
-						"DELETE FROM crawlserv_urllists"
+						"DELETE FROM `crawlserv_urllists`"
 						" WHERE id = ?"
 						" LIMIT 1"
 					)
@@ -3351,7 +3351,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly"
-							" FROM crawlserv_queries WHERE id = ? LIMIT 1"
+							" FROM `crawlserv_queries` WHERE id = ? LIMIT 1"
 					)
 			);
 
@@ -3432,6 +3432,32 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::updateQuery", e); }
 	}
 
+	// move query to another website by their IDs, throws Database::Exception
+	void Database::moveQuery(size_t queryId, size_t toWebsiteId) {
+		// check argument
+		if(!queryId)
+			throw Database::Exception("Main::Database::moveQuery(): No query ID specified");
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// prepare SQL statement
+			SqlPreparedStatementPtr sqlStatement(
+					this->connection->prepareStatement(
+							"UPDATE `crawlserv_queries` SET website = ? WHERE id = ? LIMIT 1"
+					)
+			);
+
+			// execute SQL statement
+			sqlStatement->setUInt64(1, toWebsiteId);
+			sqlStatement->setUInt64(2, queryId);
+
+			Database::sqlExecute(sqlStatement);
+		}
+		catch(const sql::SQLException &e) { this->sqlException("Main::Database::deleteQuery", e); }
+	}
+
 	// delete query from the database by its ID, throws Database::Exception
 	void Database::deleteQuery(size_t queryId) {
 		// check argument
@@ -3445,7 +3471,7 @@ namespace crawlservpp::Main {
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
-							"DELETE FROM crawlserv_queries"
+							"DELETE FROM `crawlserv_queries`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -3488,7 +3514,7 @@ namespace crawlservpp::Main {
 						" resultmulti,"
 						" resultsubsets,"
 						" textonly"
-						" FROM crawlserv_queries"
+						" FROM `crawlserv_queries`"
 						" WHERE id = ?"
 						" LIMIT 1"
 					)
@@ -3585,7 +3611,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT config"
-							" FROM crawlserv_configs"
+							" FROM `crawlserv_configs`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -3655,7 +3681,7 @@ namespace crawlservpp::Main {
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
-							"DELETE FROM crawlserv_configs"
+							"DELETE FROM `crawlserv_configs`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -3689,7 +3715,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(
 					this->connection->prepareStatement(
 							"SELECT website, module, name, config"
-							" FROM crawlserv_configs"
+							" FROM `crawlserv_configs`"
 							" WHERE id = ?"
 							" LIMIT 1"
 					)
@@ -4103,7 +4129,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_websites"
+								" FROM `crawlserv_websites`"
 								" WHERE id = ?"
 							" )"
 							" AS result"
@@ -4142,7 +4168,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_urllists"
+								" FROM `crawlserv_urllists`"
 								" WHERE id = ?"
 							" )"
 							" AS result"
@@ -4184,7 +4210,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_urllists"
+								" FROM `crawlserv_urllists`"
 								" WHERE website = ?"
 								" AND id = ?"
 							")"
@@ -4225,7 +4251,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_queries"
+								" FROM `crawlserv_queries`"
 								" WHERE id = ?"
 							" )"
 							" AS result"
@@ -4265,7 +4291,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_queries"
+								" FROM `crawlserv_queries`"
 								" WHERE"
 								" ("
 									" website = ?"
@@ -4309,7 +4335,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_configs"
+								" FROM `crawlserv_configs`"
 								" WHERE id = ?"
 							" )"
 							" AS result"
@@ -4349,7 +4375,7 @@ namespace crawlservpp::Main {
 							"SELECT EXISTS"
 							" ("
 								" SELECT *"
-								" FROM crawlserv_configs"
+								" FROM `crawlserv_configs`"
 								" WHERE website = ?"
 								" AND id = ?"
 							" )"

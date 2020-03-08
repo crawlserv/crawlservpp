@@ -264,7 +264,9 @@ jQuery(function($) {
   				$(this).data("cmd"),
   				{},
   				hasData($(this), "reload"),
-  				{ "m" : $(this).data("m") }
+  				{
+  					"m" : $(this).data("m") 
+  				}
   		);
   		
 		return false;
@@ -302,7 +304,9 @@ jQuery(function($) {
 	$("#cmd-allow").on("click", function() {
 	    runCmd(
 	    		"allow",
-	    		{ "ip" : document.getElementById("cmd-allow-form-ip").value },
+	    		{
+	    			"ip" : document.getElementById("cmd-allow-form-ip").value
+	    		},
 	    		false,
 	    		null
 	    );
@@ -361,7 +365,7 @@ jQuery(function($) {
 // CLICK EVENT: run custom command with custom arguments
 	$("#cmd-custom").on("click", function() {
   		var args = {};
-  		$("#cmd-args .cmd-custom-arg").each(function(i, obj) { 
+  		$("#cmd-args .cmd-custom-arg").each(function(i, obj) {
   			var argname = $(this).find(".cmd-custom-arg-name").val();
   			var argvalue = $(this).find(".cmd-custom-arg-value").val();
   			
@@ -401,7 +405,9 @@ jQuery(function($) {
 	$("a.logs-clear").on("click", function() {
 		runCmd(
 				"clearlogs",
-				{ "module" : $(this).data("filter") },
+				{
+					"module" : $(this).data("filter")
+				},
 				true,
 				{
 					"m": "logs",
@@ -423,7 +429,10 @@ jQuery(function($) {
 		disableInputs();
 		
 		var id = parseInt($(this).val(), 10);
-		var args = { "m" : $(this).data("m"), "website" : id };
+		var args = {
+				"m" : $(this).data("m"), 
+				"website" : id
+		};
 		
 		if($("#query-test-text").length)
 			args["test"] = $("#query-test-text").val();
@@ -531,7 +540,9 @@ jQuery(function($) {
 					"dir" : $("#website-externaldir").prop("checked") ? $("#website-dir").val() : undefined
 				},
 				true,
-				{ "m" : "websites" },
+				{
+					"m" : "websites"
+				},
 				"id",
 				"website"
 		);
@@ -550,7 +561,9 @@ jQuery(function($) {
 					"queries": queries
 				},
 				true,
-				{ "m" : "websites" },
+				{
+					"m" : "websites"
+				},
 				"id",
 				"website"
 		);
@@ -589,9 +602,13 @@ jQuery(function($) {
 		if(id)
 			runCmd(
 					"deletewebsite",
-					{ "id" : id },
+					{
+						"id" : id
+					},
 					true,
-					{ "m" : "websites" }
+					{
+						"m" : "websites"
+					}
 		);
 		
 		return false;
@@ -654,7 +671,9 @@ jQuery(function($) {
 		if(id)
 			runCmd(
 					"deleteurllist",
-					{ "id" : id },
+					{
+						"id" : id
+					},
 					true,
 					{
 						"m" : "websites",
@@ -697,7 +716,9 @@ jQuery(function($) {
 		if(urllist)
 			runCmd(
 					"resetparsingstatus",
-					{ "urllist" : urllist },
+					{
+						"urllist" : urllist
+					},
 					true,
 					{
 						"m" : "websites",
@@ -719,7 +740,9 @@ jQuery(function($) {
 		if(urllist)
 			runCmd(
 					"resetextractingstatus",
-					{ "urllist" : urllist },
+					{
+						"urllist" : urllist
+					},
 					true,
 					{
 						"m" : "websites",
@@ -741,7 +764,9 @@ jQuery(function($) {
 		if(urllist)
 			runCmd(
 					"resetanalyzingstatus", 
-					{ "urllist" : urllist },
+					{
+						"urllist" : urllist
+					},
 					true,
 					{
 						"m" : "websites",
@@ -1081,7 +1106,9 @@ jQuery(function($) {
 		if(id)
 			runCmd(
 					"duplicatequery",
-					{ "id" : id },
+					{
+						"id" : id
+					},
 					true,
 					{
 						"m" : "queries",
@@ -1094,6 +1121,38 @@ jQuery(function($) {
 			);
 		
 		return false;
+	});
+	
+// CLICK EVENT: show options to move query to another website
+	$("#query-move-toggle").on("click", function() {
+		$("#query-move-div").toggle();
+		
+		if($("#query-move-div").is(":hidden"))
+			$("#query-move-toggle").html("Move query &dArr;");
+		else
+			$("#query-move-toggle").html("Move query &uArr;");
+	});
+
+// CLICK EVENT: move query to another website
+	$("#query-move").on("click", function() {
+		var id = parseInt($("#query-select").val(), 10);
+		var to = parseInt($("#move-to").val(), 10);
+		
+		runCmd(
+				"movequery",
+				{
+					"id" : id,
+					"to" : to
+				},
+				true,
+				{
+					"m" : "queries",
+					"website" : to,
+					"query" : id,
+					"test" : $("#query-test-text").val(),
+					"test-nonewtab" : $("#query-new-tab").is(":checked") ? null : true
+				}
+		);
 	});
 	
 // CLICK EVENT: update query
@@ -1135,7 +1194,9 @@ jQuery(function($) {
 		if(id) {
 			runCmd(
 					"deletequery",
-					{ "id" : id },
+					{
+						"id" : id
+					},
 					true,
 					{
 						"m" : "queries",
@@ -1580,7 +1641,9 @@ jQuery(function($) {
 		
 		runCmd(
 				"pause" + module,
-				{ "id" : id },
+				{
+					"id" : id
+				},
 				false
 		);
 		
@@ -1594,7 +1657,9 @@ jQuery(function($) {
 		
 		runCmd(
 				"unpause" + module,
-				{ "id" : id },
+				{
+					"id" : id
+				},
 				false
 		);
 		
@@ -1608,7 +1673,9 @@ jQuery(function($) {
 		
 		runCmd(
 				"stop" + module,
-				{ "id" : id },
+				{
+					"id" : id
+				},
 				false
 		);
 		
@@ -2173,7 +2240,14 @@ jQuery(function($) {
 										+ props["urllist-namespace"]
 										+ props["ending"];
 									
-									runCmd("download", { "filename": response["text"], "as": downloadAs }, false);
+									runCmd(
+											"download",
+											{
+												"filename": response["text"],
+												"as": downloadAs
+											},
+											false
+									);
 							},
 							failure: function(response) {
 								alert("Error performing the export: " + response);
