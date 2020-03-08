@@ -160,8 +160,8 @@ namespace crawlservpp::Module::Analyzer {
 				this->log(verbose, "prepares getCorpus() [1/2]...");
 
 				this->ps.getCorpusFirst = this->addPreparedStatement(
-						"SELECT id, corpus, articlemap, datemap, sources"
-						" FROM crawlserv_corpora"
+						"SELECT id, corpus, articlemap, datemap, sources, chunks"
+						" FROM `crawlserv_corpora`"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
@@ -177,8 +177,8 @@ namespace crawlservpp::Module::Analyzer {
 				this->log(verbose, "prepares getCorpus() [2/2]...");
 
 				this->ps.getCorpusNext = this->addPreparedStatement(
-						"SELECT id, corpus, articlemap, datemap, sources"
-						" FROM crawlserv_corpora"
+						"SELECT id, corpus, articlemap, datemap"
+						" FROM `crawlserv_corpora`"
 						" WHERE previous = ?"
 						" LIMIT 1"
 				);
@@ -191,7 +191,7 @@ namespace crawlservpp::Module::Analyzer {
 						"SELECT EXISTS"
 						" ("
 							" SELECT *"
-							" FROM crawlserv_corpora"
+							" FROM `crawlserv_corpora`"
 							" WHERE website = "	+ this->getWebsiteIdString() + ""
 							" AND urllist = " + this->getUrlListIdString() +
 							" AND source_type = ?"
@@ -220,7 +220,7 @@ namespace crawlservpp::Module::Analyzer {
 
 				this->ps.isCorpusChangedExtracting = this->addPreparedStatement(
 						"SELECT updated"
-						" FROM crawlserv_extractedtables"
+						" FROM `crawlserv_extractedtables`"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -232,7 +232,7 @@ namespace crawlservpp::Module::Analyzer {
 
 				this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement(
 						"SELECT updated"
-						" FROM crawlserv_analyzedtables"
+						" FROM `crawlserv_analyzedtables`"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -240,11 +240,11 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.deleteCorpus)) {
-				this->log(verbose, "prepares createCorpus() [1/2]...");
+				this->log(verbose, "prepares createCorpus() [1/3]...");
 
 				this->ps.deleteCorpus = this->addPreparedStatement(
 						"DELETE"
-						" FROM crawlserv_corpora"
+						" FROM `crawlserv_corpora`"
 						" WHERE website = " + this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
@@ -255,10 +255,10 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(!(this->ps.addCorpus)) {
-				this->log(verbose, "prepares createCorpus() [2/2]...");
+				this->log(verbose, "prepares createCorpus() [2/3]...");
 
 				this->ps.addCorpus = this->addPreparedStatement(
-						"INSERT INTO crawlserv_corpora"
+						"INSERT INTO `crawlserv_corpora`"
 						" ("
 							" website,"
 							" urllist,"
@@ -269,7 +269,8 @@ namespace crawlservpp::Module::Analyzer {
 							" articlemap,"
 							" datemap,"
 							" previous,"
-							" sources"
+							" sources,"
+							" chunks"
 						") "
 						"VALUES"
 						" (" +
@@ -282,12 +283,46 @@ namespace crawlservpp::Module::Analyzer {
 							" CONVERT( ?  USING utf8mb4 ),"
 							" ?,"
 							" ?,"
+							" ?,"
 							" ?"
 						")"
 				);
 			}
+
+			if(!(this->ps.measureCorpus)) {
+				this->log(verbose, "prepares createCorpus() [3/3]...");
+
+				this->ps.measureCorpus = this->addPreparedStatement(
+						"UPDATE `crawlserv_corpora` AS dest,"
+						" ("
+							"SELECT *"
+						    " FROM"
+						    " ("
+								"SELECT LENGTH(all_text) AS size, CHAR_LENGTH(all_text) AS length"
+								" FROM"
+								" ("
+									"SELECT GROUP_CONCAT(corpus SEPARATOR '') AS all_text"
+									" FROM `crawlserv_corpora`"
+									" WHERE source_type = ?"
+									" AND source_table = ?"
+									" AND source_field = ?"
+								" ) tmp1"
+							") tmp2"
+						    " LIMIT 1"
+						") AS src"
+						" SET"
+						" dest.length = src.length,"
+						" dest.size = src.size"
+						" WHERE dest.source_type = ?"
+						" AND dest.source_table = ?"
+						" AND dest.source_field = ?"
+				);
+			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::prepare", e); }
+
+		// enable concatening long strings
+		this->database.setGroupConcatToMax();
 	}
 
 	// prepare SQL statements for algorithm, throws Main::Database::Exception
@@ -397,7 +432,14 @@ namespace crawlservpp::Module::Analyzer {
 							SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementFirst)).swap(sqlResultSet);
 
 						if(sqlResultSet && sqlResultSet->next()) {
-							// get chunk
+							if(!previous) {
+								// first chunk: save sources and reserve memory
+								sourcesTo = sqlResultSet->getUInt64("sources");
+
+								chunks.reserve(sqlResultSet->getUInt64("chunks"));
+							}
+
+							// get text of chunk
 							chunks.emplace_back(sqlResultSet->getString("corpus"));
 
 							if(!(sqlResultSet->isNull("articlemap")))
@@ -431,9 +473,6 @@ namespace crawlservpp::Module::Analyzer {
 											+ e.whatStr()
 									);
 								}
-
-							if(!previous)
-								sourcesTo = sqlResultSet->getUInt64("sources");
 
 							previous = sqlResultSet->getUInt64("id");
 						}
@@ -682,9 +721,15 @@ namespace crawlservpp::Module::Analyzer {
 					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for adding text corpus"
 			);
 
+		if(!(this->ps.measureCorpus))
+			throw Exception(
+					"Analyzer::Database::createCorpus(): Missing prepared SQL statement for measuring text corpus"
+			);
+
 		// get prepared SQL statements
 		sql::PreparedStatement& deleteStatement = this->getPreparedStatement(this->ps.deleteCorpus);
 		sql::PreparedStatement& addStatement = this->getPreparedStatement(this->ps.addCorpus);
+		sql::PreparedStatement& measureStatement = this->getPreparedStatement(this->ps.measureCorpus);
 
 		// check your sources
 		this->checkSource(
@@ -852,6 +897,7 @@ namespace crawlservpp::Module::Analyzer {
 					addStatement.setNull(7, 0);
 
 				addStatement.setUInt64(8, sourcesTo);
+				addStatement.setUInt64(9, chunks.size());
 
 				Database::sqlExecute(addStatement);
 
@@ -868,6 +914,28 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Analyzer::Database::createCorpus", e); }
+
+		// check connection to MySQL server
+		this->checkConnection();
+
+		try {
+			// measure corpus
+			measureStatement.setUInt(1, corpusProperties.sourceType);
+			measureStatement.setString(2, corpusProperties.sourceTable);
+			measureStatement.setString(3, corpusProperties.sourceField);
+			measureStatement.setUInt(4, corpusProperties.sourceType);
+			measureStatement.setString(5, corpusProperties.sourceTable);
+			measureStatement.setString(6, corpusProperties.sourceField);
+
+			Database::sqlExecute(measureStatement);
+		}
+		catch(const sql::SQLException &e) {
+			// log and ignore errors when measuring corpus (total text might be too long)
+			this->log(
+					this->getLoggingMin(),
+					"WARNING: Could not measure corpus - "
+					+ std::string(e.what()));
+		}
 
 		// write log entry if necessary
 		std::ostringstream logStrStr;
