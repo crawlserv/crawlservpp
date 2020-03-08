@@ -85,7 +85,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		for(size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
 			size_t corpusSources = 0;
 
-			Data::Corpus corpus;
+			Data::Corpus corpus(this->config.generalCorpusChecks);
 
 			this->database.getCorpus(
 					CorpusProperties(

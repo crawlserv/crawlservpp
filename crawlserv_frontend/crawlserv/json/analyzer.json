@@ -3,6 +3,11 @@
 		"label": "General",
 		"open": true,
 		
+		"corpus.checks": {
+			"type": "bool",
+			"default": true,
+			"description": "Check the consistency of corpora."
+		},
 		"corpus.slicing": {
 			"type": "number",
 			"default": 30,

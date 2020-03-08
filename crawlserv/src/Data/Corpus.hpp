@@ -35,8 +35,6 @@
 #ifndef DATA_CORPUS_HPP_
 #define DATA_CORPUS_HPP_
 
-#define DATA_CORPUS_CONSISTENCY_CHECKS
-
 #include "../Helper/DateTime.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/TextMap.hpp"
@@ -52,6 +50,10 @@ namespace crawlservpp::Data {
 
 	class Corpus {
 	public:
+		// constructor and destructor
+		Corpus(bool consistencyChecks);
+		virtual ~Corpus();
+
 		// getters
 		std::string& getCorpus();
 		const std::string& getCorpus() const;
@@ -105,17 +107,22 @@ namespace crawlservpp::Data {
 		std::string corpus;
 		Struct::TextMap articleMap;
 		Struct::TextMap dateMap;
+		bool checkConsistency;
 
 	private:
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 		static void checkMap(
 				const Struct::TextMap& map,
 				size_t corpusSize
 		);
-#endif /* DATA_CONSISTENCY_CHECKS */
 	};
 
 	/* IMPLEMENTATION */
+
+	// constructor
+	inline Corpus::Corpus(bool consistencyChecks) : checkConsistency(consistencyChecks) {}
+
+	// destructor
+	inline Corpus::~Corpus() {}
 
 	// get reference to corpus
 	inline std::string& Corpus::getCorpus() {
@@ -321,8 +328,7 @@ namespace crawlservpp::Data {
 						if(!articlePos && articleIt->pos > dateIt->pos + dateIt->length)
 							++dateIt;
 
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
-						if(articleIt->pos > dateIt->pos + dateIt->length)
+						if(this->checkConsistency && articleIt->pos > dateIt->pos + dateIt->length)
 							throw Exception(
 									"Article position (#"
 									+ std::to_string(articleIt->pos)
@@ -332,7 +338,6 @@ namespace crawlservpp::Data {
 									+ std::to_string(dateIt->pos + dateIt->length)
 									+ "]"
 							);
-#endif
 					}
 
 					// get remaining article length
@@ -408,24 +413,24 @@ namespace crawlservpp::Data {
 					}
 				}
 
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 				// consistency checks
-				if(chunk.size() > chunkSize)
-					throw Exception(
-							"Corpus::copyChunks(): Chunk is too large: "
-							+ std::to_string(chunk.size())
-							+ " > "
-							+ std::to_string(chunkSize)
-					);
+				if(this->checkConsistency) {
+					if(chunk.size() > chunkSize)
+						throw Exception(
+								"Corpus::copyChunks(): Chunk is too large: "
+								+ std::to_string(chunk.size())
+								+ " > "
+								+ std::to_string(chunkSize)
+						);
 
-				if(articleIt == this->articleMap.end() && corpusPos < this->corpus.size())
-					throw Exception(
-							"Corpus::copyChunks(): End of articles, but not of corpus: #"
-							+ std::to_string(corpusPos)
-							+ " < #"
-							+ std::to_string(this->corpus.size())
-					);
-#endif
+					if(articleIt == this->articleMap.end() && corpusPos < this->corpus.size())
+						throw Exception(
+								"Corpus::copyChunks(): End of articles, but not of corpus: #"
+								+ std::to_string(corpusPos)
+								+ " < #"
+								+ std::to_string(this->corpus.size())
+						);
+				}
 
 				// check for empty chunk (should not happen)
 				if(chunk.empty())
@@ -439,11 +444,9 @@ namespace crawlservpp::Data {
 		}
 
 		if(!(this->articleMap.empty()) && !to.empty()) {
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 			// consistency check
-			if(to.back().empty())
+			if(this->checkConsistency && to.back().empty())
 				throw Exception("Corpus::copyChunks(): End chunk is empty");
-#endif
 
 			// remove last space
 			if(!noSpace)
@@ -453,11 +456,9 @@ namespace crawlservpp::Data {
 			if(to.back().empty())
 				to.pop_back();
 
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 			// consistency check
-			if(to.back().empty())
+			if(this->checkConsistency && to.back().empty())
 				throw Exception("Corpus::copyChunks(): End chunk is empty");
-#endif
 		}
 	}
 
@@ -627,15 +628,13 @@ namespace crawlservpp::Data {
 				if(!map.empty()) {
 					const auto& first = map.at(0);
 
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 					// consistency check
-					if(first.pos > 1)
+					if(this->checkConsistency && first.pos > 1)
 						throw Exception(
 								"Corpus::combine(): Article map in corpus chunk starts at #"
 								+ std::to_string(first.pos)
 								+ " instead of #0 or #1"
 					);
-#endif /* DATA_CONSISTENCY_CHECKS */
 
 					auto it = map.begin();
 
@@ -715,11 +714,9 @@ namespace crawlservpp::Data {
 			return true;
 		}
 
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 		// consistency check
-		if(this->dateMap.front().pos)
+		if(this->checkConsistency && this->dateMap.front().pos)
 			throw Exception("Corpus::filterByDate(): Date map does not start at index #0");
-#endif /* DATA_CONSISTENCY_CHECKS */
 
 		// find first date in range
 		auto begin = this->dateMap.begin();
@@ -775,10 +772,8 @@ namespace crawlservpp::Data {
 		for(; begin != this->articleMap.end(); ++begin)
 			if(begin->pos == offset)
 				break;
-
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 			// consistency check
-			else if(begin->pos > offset)
+			else if(this->checkConsistency && begin->pos > offset)
 				throw Exception(
 						"Corpus::filterByDate(): mismatch between positions of article (at #"
 						+ std::to_string(begin->pos)
@@ -788,7 +783,7 @@ namespace crawlservpp::Data {
 				);
 
 		// consistency check
-		if(begin == this->articleMap.end())
+		if(this->checkConsistency && begin == this->articleMap.end())
 			throw Exception(
 					"Corpus::filterByDate(): position of identified date (at #"
 					+ std::to_string(offset)
@@ -796,7 +791,6 @@ namespace crawlservpp::Data {
 					+ std::to_string(this->articleMap.back().pos)
 					+ ") in article and date maps of the corpus"
 			);
-#endif /* DATA_CONSISTENCY_CHECKS */
 
 		// find first article not in range anymore
 		end = begin;
@@ -822,10 +816,10 @@ namespace crawlservpp::Data {
 		for(auto& article : this->articleMap)
 			article.pos -= offset;
 
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
-		Corpus::checkMap(this->dateMap, this->corpus.size());
-		Corpus::checkMap(this->articleMap, this->corpus.size());
-#endif /* DATA_CONSISTENCY_CHECKS */
+		if(this->checkConsistency) {
+			Corpus::checkMap(this->dateMap, this->corpus.size());
+			Corpus::checkMap(this->articleMap, this->corpus.size());
+		}
 
 		return true;
 	}
@@ -842,7 +836,6 @@ namespace crawlservpp::Data {
 		this->dateMap.clear();
 	}
 
-#ifdef DATA_CORPUS_CONSISTENCY_CHECKS
 	// check text map for inconsistencies, throws Corpus::Exception
 	inline void Corpus::checkMap(const Struct::TextMap& map, size_t corpusSize) {
 		if(map.empty())
@@ -874,7 +867,6 @@ namespace crawlservpp::Data {
 					+ ")"
 			);
 	}
-#endif /* DATA_CONSISTENCY_CHECKS */
 
 } /* crawlservpp::Data */
 

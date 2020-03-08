@@ -127,13 +127,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		for(size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string dateFrom, dateTo;
-			Data::Corpus corpus;
 			size_t corpusSources = 0;
 
 			if(this->config.filterDateEnable) {
 				dateFrom = this->config.filterDateFrom;
 				dateTo = this->config.filterDateTo;
 			}
+
+			Data::Corpus corpus(this->config.generalCorpusChecks);
 
 			this->database.getCorpus(
 					CorpusProperties(
@@ -147,9 +148,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					corpusSources
 			);
 
-			this->generator.addCorpus(corpus.getCorpus());
-
 			this->sources += corpusSources;
+
+			this->generator.addCorpus(corpus.getCorpus());
 		}
 
 		// set options

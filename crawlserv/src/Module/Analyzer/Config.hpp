@@ -68,6 +68,7 @@ namespace crawlservpp::Module::Analyzer {
 			Entries();
 
 			// general entries
+			bool generalCorpusChecks;
 			unsigned char generalCorpusSlicing;
 			std::vector<std::string> generalInputFields;
 			std::vector<unsigned char> generalInputSources;
@@ -99,7 +100,8 @@ namespace crawlservpp::Module::Analyzer {
 	 */
 
 	// constructor: set default values
-	inline Config::Entries::Entries() :	generalCorpusSlicing(30),
+	inline Config::Entries::Entries() :	generalCorpusChecks(true),
+										generalCorpusSlicing(30),
 										generalLogging(Config::generalLoggingDefault),
 										generalSleepMySql(20),
 										generalSleepWhenFinished(5000),
@@ -111,6 +113,7 @@ namespace crawlservpp::Module::Analyzer {
 	inline void Config::parseOption() {
 		// general options
 		this->category("general");
+		this->option("corpus.checks", this->config.generalCorpusChecks);
 		this->option("corpus.slicing", this->config.generalCorpusSlicing);
 		this->option("input.fields", this->config.generalInputFields, StringParsingOption::SQL);
 		this->option("input.sources", this->config.generalInputSources);
