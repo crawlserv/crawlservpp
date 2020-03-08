@@ -2165,7 +2165,7 @@ namespace crawlservpp::Module::Extractor {
 			}
 
 			// check for duplicate ID
-			if(!(this->ids.insert(dataset.dataId).second))
+			if(this->ids.insert(dataset.dataId).second)
 				// add extracted dataset to results
 				this->results.push(dataset);
 
