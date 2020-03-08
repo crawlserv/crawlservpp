@@ -1036,9 +1036,9 @@ namespace crawlservpp::Module::Extractor {
 				std::string error;
 
 				if(this->getTarget(error))
-					error = "Error in data: " + error + " - retries";
+					error = "Error in data: " + error;
 				else
-					error = "Error in data - retries";
+					error = "Error in data";
 
 				this->extractingReset(error, sourceUrl);
 
