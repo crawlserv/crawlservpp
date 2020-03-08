@@ -1189,7 +1189,7 @@ namespace crawlservpp::Module::Extractor {
 			this->clearQueryTarget();
 
 		// if necessary, compare the number of extracted datasets with the number of expected datatsets
-		if(expecting && this->isLogLevel(Config::generalLoggingDefault)) {
+		if(expecting) {
 			std::ostringstream expectedStrStr;
 
 			expectedStrStr.imbue(std::locale(""));
