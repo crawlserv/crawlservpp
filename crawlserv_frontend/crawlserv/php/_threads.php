@@ -335,12 +335,18 @@ if($num) {
         else {
             echo "<progress value=\"";
             
-            if(floatval($row["progress"]))
+            if(floatval($row["progress"])) {
                 echo $row["progress"]."\" title=\""
                     .number_format(round(floatval($row["progress"]) * 100, 2), 2)
-                    ."%\n&gt; #"
-                    .number_format($row["last"])
-                    ."\" max=\"1";
+                    ."%\nlast: ";
+                
+                if($row["last"] > 0)
+                    echo "#".number_format($row["last"]);
+                else
+                    echo "&lt;none&gt";
+                    
+                echo "\" max=\"1";        
+            }
             
             echo "\"></progress>\n";
             
