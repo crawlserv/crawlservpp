@@ -606,10 +606,22 @@
 			"simple": true,
 			"position": 12
 		},
+		"remove.duplicates": {
+			"type": "bool",
+			"default": true,
+			"description": "Remove duplicate datasets over multiple pages before checking the expected number of datasets.",
+			"simple": false
+		},
 		"repair.cdata": {
 			"type": "bool",
 			"default": true,
 			"description": "Try to repair CData when parsing HTML/XML.",
+			"simple": false
+		},
+		"repair.comments": {
+			"type": "bool",
+			"default": true,
+			"description": "Try to repair broken HTML/XML comments.",
 			"simple": false
 		}
 	},

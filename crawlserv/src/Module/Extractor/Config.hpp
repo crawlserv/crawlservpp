@@ -147,6 +147,7 @@ namespace crawlservpp::Module::Extractor {
 			bool extractingOverwrite;
 			std::vector<size_t> extractingRecursive;
 			size_t extractingRecursiveMaxDepth;
+			bool extractingRemoveDuplicates;
 			bool extractingRepairCData;
 			bool extractingRepairComments;
 
@@ -203,6 +204,7 @@ namespace crawlservpp::Module::Extractor {
 										sourceUsePost(false),
 										extractingOverwrite(true),
 										extractingRecursiveMaxDepth(100),
+										extractingRemoveDuplicates(true),
 										extractingRepairCData(true),
 										extractingRepairComments(true),
 										expectedErrorIfLarger(false),
@@ -296,6 +298,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("overwrite", this->config.extractingOverwrite);
 		this->option("recursive", this->config.extractingRecursive);
 		this->option("recursive.max.depth", this->config.extractingRecursiveMaxDepth);
+		this->option("remove.duplicates", this->config.extractingRemoveDuplicates);
 		this->option("repair.cdata", this->config.extractingRepairCData);
 		this->option("repair.comments", this->config.extractingRepairComments);
 

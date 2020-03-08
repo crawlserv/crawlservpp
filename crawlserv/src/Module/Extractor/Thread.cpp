@@ -378,7 +378,8 @@ namespace crawlservpp::Module::Extractor {
 			const auto extracted = this->extractingNext();
 
 			// clear ID cache
-			this->ids.clear();
+			if(this->config.extractingRemoveDuplicates)
+				this->ids.clear();
 
 			// save expiration time of URL lock if extracting was successful or unlock URL if extracting failed
 			if(extracted)
@@ -2173,10 +2174,10 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 
-			// check for duplicate ID
-			if(this->ids.insert(dataset.dataId).second)
-				// add extracted dataset to results
-				this->results.push(dataset);
+			// check for duplicate IDs if necessary
+			if(this->config.extractingRemoveDuplicates && this->ids.insert(dataset.dataId).second)
+					// add extracted dataset to results
+					this->results.push(dataset);
 
 			// recursive extracting
 			for(const auto& query : this->queriesRecursive)
