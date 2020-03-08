@@ -533,7 +533,8 @@
 			"type": "array",
 			"item-type": "query",
 			"query-results": [
-				"single"
+				"single",
+				"multi"
 			],
 			"default": [],
 			"label": "Field queries:",
