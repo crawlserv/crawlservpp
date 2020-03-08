@@ -348,6 +348,11 @@ namespace crawlservpp::Module {
 		this->database.log(level, logEntries);
 	}
 
+	// check whether a certain log level is active
+	bool Thread::isLogLevel(unsigned short level) const {
+		return this->database.isLogLevel(level);
+	}
+
 	// allow the thread to be paused (enabled by default)
 	void Thread::allowPausing() {
 		this->pausable = true;

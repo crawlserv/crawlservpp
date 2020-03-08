@@ -135,6 +135,7 @@ namespace crawlservpp::Module {
 		void setProgress(float progress);
 		void log(unsigned short level, const std::string& logEntry);
 		void log(unsigned short level, std::queue<std::string>& logEntries);
+		bool isLogLevel(unsigned short level) const;
 		void allowPausing();
 		void disallowPausing();
 
