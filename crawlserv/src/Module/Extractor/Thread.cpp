@@ -374,6 +374,9 @@ namespace crawlservpp::Module::Extractor {
 			// extract from content
 			const auto extracted = this->extractingNext();
 
+			// clear ID cache
+			this->ids.clear();
+
 			// save expiration time of URL lock if extracting was successful or unlock URL if extracting failed
 			if(extracted)
 				this->finished.emplace(this->urls.front().first, this->lockTime);
@@ -2278,9 +2281,6 @@ namespace crawlservpp::Module::Extractor {
 
 			// update target table
 			this->database.updateTargetTable();
-
-			// clear ID cache
-			this->ids.clear();
 		} // target table unlocked
 
 		// set last URL
