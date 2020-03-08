@@ -433,7 +433,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// clear crawler
 	void Thread::onClear() {
-		if(this->tickCounter && this->isLogLevel(Config::crawlerLoggingDefault)) {
+		if(this->tickCounter) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
 

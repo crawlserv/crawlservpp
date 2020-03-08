@@ -455,7 +455,7 @@ namespace crawlservpp::Module::Extractor {
 	// clear extractor
 	void Thread::onClear() {
 		// check counter and process timers
-		if(this->tickCounter && this->isLogLevel(Config::generalLoggingDefault)) {
+		if(this->tickCounter) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
 
