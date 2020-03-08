@@ -88,7 +88,7 @@ namespace crawlservpp::Module::Analyzer {
 		// setters
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
-		void setTimeoutTargetLock(unsigned long timeOut);
+		void setTimeoutTargetLock(size_t timeOut);
 		void setCorpusSlicing(unsigned char percentageOfMaxAllowedPackageSize);
 		void setIsRunningCallback(IsRunningCallback isRunningCallback);
 
@@ -106,7 +106,7 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string& filterDateFrom,
 				const std::string& filterDateTo,
 				Data::Corpus& corpusTo,
-				unsigned long& sourcesTo
+				size_t& sourcesTo
 		);
 
 		// public helper functions
@@ -131,12 +131,12 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
-		unsigned long timeoutTargetLock;
+		size_t timeoutTargetLock;
 		unsigned char corpusSlicing;
 
 		// table prefix, target table ID and its name
 		std::string tablePrefix;
-		unsigned long targetTableId;
+		size_t targetTableId;
 		std::string targetTableFull;
 
 		// corpus helper function
@@ -144,7 +144,7 @@ namespace crawlservpp::Module::Analyzer {
 		void createCorpus(
 				const CorpusProperties& corpusProperties,
 				Data::Corpus& corpusTo,
-				unsigned long& sourcesTo
+				size_t& sourcesTo
 		);
 
 	private:

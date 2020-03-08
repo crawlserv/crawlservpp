@@ -36,19 +36,19 @@
 namespace crawlservpp::Struct {
 
 	struct ModuleOptions {
-		unsigned long threadId;
-		unsigned long websiteId;
+		size_t threadId;
+		size_t websiteId;
 		std::string websiteNamespace;
-		unsigned long urlListId;
+		size_t urlListId;
 		std::string urlListNamespace;
 
 		ModuleOptions() : threadId(0), websiteId(0), urlListId(0) {}
 
 		ModuleOptions(
-				unsigned long setThreadId,
-				unsigned long setWebsiteId,
+				size_t setThreadId,
+				size_t setWebsiteId,
 				const std::string& setWebsiteNamespace,
-				unsigned long setUrlListId,
+				size_t setUrlListId,
 				const std::string& setUrlListNamespace
 		) : threadId(setThreadId),
 			websiteId(setWebsiteId),

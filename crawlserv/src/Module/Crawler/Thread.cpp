@@ -274,10 +274,10 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<std::string> customHeaders;
 		std::string timerString;
 
-		unsigned long checkedUrls = 0;
-		unsigned long newUrls = 0;
-		unsigned long checkedUrlsArchive = 0;
-		unsigned long newUrlsArchive = 0;
+		size_t checkedUrls = 0;
+		size_t newUrls = 0;
+		size_t checkedUrlsArchive = 0;
+		size_t newUrlsArchive = 0;
 
 		bool usePost = false;
 
@@ -510,7 +510,7 @@ namespace crawlservpp::Module::Crawler {
 				// run each counter over every URL
 				newUrls = this->config.customUrls;
 
-				for(unsigned long n = 0; n < this->config.customCounters.size(); ++n)
+				for(size_t n = 0; n < this->config.customCounters.size(); ++n)
 					this->initDoGlobalCounting(
 							newUrls,
 							this->config.customCounters.at(n),
@@ -524,7 +524,7 @@ namespace crawlservpp::Module::Crawler {
 			else {
 				// run each counter over one URL
 				for(
-						unsigned long n = 0;
+						size_t n = 0;
 						n < std::min(
 								this->config.customCounters.size(),
 								this->config.customUrls.size()
@@ -618,7 +618,7 @@ namespace crawlservpp::Module::Crawler {
 		// get IDs of custom URLs
 		this->setStatusMessage("Getting IDs of custom URLs...");
 
-		unsigned long counter = 0;
+		size_t counter = 0;
 
 		for(auto& customPage : this->customPages) {
 			// check whether thread is still supposed to run
@@ -1573,8 +1573,8 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& customCookies,
 			const std::vector<std::string>& customHeaders,
 			bool usePost,
-			unsigned long& checkedUrlsTo,
-			unsigned long& newUrlsTo,
+			size_t& checkedUrlsTo,
+			size_t& newUrlsTo,
 			std::string& timerStrTo
 	) {
 		Timer::StartStop sleepTimer;
@@ -1602,7 +1602,7 @@ namespace crawlservpp::Module::Crawler {
 		// check HTTP sleeping time
 		if(this->config.crawlerSleepHttp) {
 			// calculate elapsed time since last HTTP request and sleep if necessary
-			const unsigned long httpElapsed =
+			const size_t httpElapsed =
 					std::chrono::duration_cast<std::chrono::milliseconds>(
 							std::chrono::steady_clock::now() - this->httpTime
 					).count();
@@ -2504,7 +2504,7 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& type
 	) {
 		bool expecting = false;
-		unsigned long expected = 0;
+		size_t expected = 0;
 		std::vector<std::string> urls;
 		std::queue<std::string> queryWarnings;
 
@@ -2631,7 +2631,7 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::crawlingParseAndAddUrls(
 			const std::string& url,
 			std::vector<std::string>& urls,
-			unsigned long& newUrlsTo,
+			size_t& newUrlsTo,
 			bool archived
 	) {
 		// check argument
@@ -2654,15 +2654,15 @@ namespace crawlservpp::Module::Crawler {
 		// parse URLs
 		newUrlsTo = 0;
 
-		for(unsigned long n = 1; n <= urls.size(); ++n) {
+		for(size_t n = 1; n <= urls.size(); ++n) {
 			// reference to linked URL (for convenience)
 			auto& linked = urls.at(n - 1);
 
 			// parse archive URLs (only absolute links behind archive links!)
 			if(archived) {
-				const unsigned long pos1 = linked.find("https://", 1);
-				const unsigned long pos2 = linked.find("http://", 1);
-				unsigned long pos = 0;
+				const size_t pos1 = linked.find("https://", 1);
+				const size_t pos2 = linked.find("http://", 1);
+				size_t pos = 0;
 
 				if(pos1 != std::string::npos && pos2 != std::string::npos) {
 					if(pos1 < pos2)
@@ -2796,8 +2796,8 @@ namespace crawlservpp::Module::Crawler {
 		const std::string statusMessage(this->getStatusMessage());
 
 		// add URLs that do not exist already in chunks of config-defined size
-		unsigned long pos = 0;
-		unsigned long chunkSize = 0;
+		size_t pos = 0;
+		size_t chunkSize = 0;
 
 		// check for infinite chunk size
 		if(this->config.crawlerUrlChunks)
@@ -2839,8 +2839,8 @@ namespace crawlservpp::Module::Crawler {
 	// crawl archives, throws Thread::Exception
 	bool Thread::crawlingArchive(
 			IdString& url,
-			unsigned long& checkedUrlsTo,
-			unsigned long& newUrlsTo,
+			size_t& checkedUrlsTo,
+			size_t& newUrlsTo,
 			bool unlockUrl
 	) {
 		// check arguments
@@ -2858,7 +2858,7 @@ namespace crawlservpp::Module::Crawler {
 			this->log(Config::crawlerLoggingExtended, "gets archives of " + url.second + "...");
 
 			// loop over different archives
-			for(unsigned long n = 0; n < this->config.crawlerArchivesNames.size(); ++n) {
+			for(size_t n = 0; n < this->config.crawlerArchivesNames.size(); ++n) {
 				// skip empty archive and timemap URLs
 				if((this->config.crawlerArchivesUrlsMemento.at(n).empty())
 						|| (this->config.crawlerArchivesUrlsTimemap.at(n).empty()))
@@ -2922,8 +2922,8 @@ namespace crawlservpp::Module::Crawler {
 							const std::string statusMessage(this->getStatusMessage());
 
 							// go through all mementos
-							unsigned long counter = 0;
-							const unsigned long total = mementos.size();
+							size_t counter = 0;
+							const size_t total = mementos.size();
 
 							while(!mementos.empty() && this->isRunning()) {
 								std::string timeStamp(mementos.front().timeStamp);
@@ -2998,7 +2998,7 @@ namespace crawlservpp::Module::Crawler {
 														timeStamp
 												);
 
-												unsigned long subUrlPos = mementos.front().url.find(timeStamp);
+												size_t subUrlPos = mementos.front().url.find(timeStamp);
 
 												if(subUrlPos != std::string::npos) {
 													subUrlPos += timeStamp.length();
@@ -3269,7 +3269,7 @@ namespace crawlservpp::Module::Crawler {
 			// automatic mode: update thread status
 			this->setLast(url.first);
 
-			const unsigned long total = this->database.getNumberOfUrls();
+			const size_t total = this->database.getNumberOfUrls();
 
 			if(total)
 				this->setProgress(
@@ -3344,7 +3344,7 @@ namespace crawlservpp::Module::Crawler {
 			// increment and check retry counter
 			++(this->retryCounter);
 
-			if(this->retryCounter > (unsigned long) this->config.crawlerReTries) {
+			if(this->retryCounter > (size_t) this->config.crawlerReTries) {
 				// do not retry, but skip
 				this->crawlingSkip(url, true);
 
@@ -3438,8 +3438,8 @@ namespace crawlservpp::Module::Crawler {
 		Memento newMemento;				// object for new memento
 		bool mementoStarted = false;	// memento has been started
 		std::string nextPage;			// link to next page
-		unsigned long pos = 0;			// position of memento
-		unsigned long end = 0;			// end of memento
+		size_t pos = 0;			// position of memento
+		size_t end = 0;			// end of memento
 		bool newField = true;			// not in the middle of a field
 
 		while(pos < mementoContent.length()) {
@@ -3534,7 +3534,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 				else {
 					const std::string fieldName(mementoContent.substr(pos, end - pos));
-					const unsigned long oldPos = pos;
+					const size_t oldPos = pos;
 
 					pos = mementoContent.find_first_of("\"\'", pos + 1);
 

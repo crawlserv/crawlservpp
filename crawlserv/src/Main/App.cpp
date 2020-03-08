@@ -101,8 +101,8 @@ namespace crawlservpp::Main {
 			// server up-time message
 			std::cout << "\nUp-time: " << Helper::DateTime::secondsToString(server->getUpTime()) << ".";
 
-			const unsigned long threads = this->server->getActiveThreads();
-			const unsigned long workers = this->server->getActiveWorkers();
+			const size_t threads = this->server->getActiveThreads();
+			const size_t workers = this->server->getActiveWorkers();
 
 			if(threads || workers) {
 				std::cout << "\n> Waiting for threads (";
@@ -205,7 +205,7 @@ namespace crawlservpp::Main {
 
 			case '\n':
 				// ENTER: end input loop
-				for(unsigned long n = 0; n < dbSettings.password.size(); n++)
+				for(size_t n = 0; n < dbSettings.password.size(); n++)
 					std::cout << '\b';
 
 				std::cout << "[DONE]" << std::string(dbSettings.password.size() - 6, ' ') << std::flush;

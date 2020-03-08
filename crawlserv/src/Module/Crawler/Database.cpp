@@ -461,7 +461,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// get the ID of an URL (uses hash check for first checking the probable existence of the URL),
 	//  throws Database::Exception
-	unsigned long Database::getUrlId(const std::string& url) {
+	size_t Database::getUrlId(const std::string& url) {
 		// check argument
 		if(url.empty())
 			throw Exception("Crawler::Database::getUrlId(): No URL specified");
@@ -496,7 +496,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// get the next URL to crawl from database, return ID and URL or empty IdString if all URLs have been parsed,
 	//  throws Database::Exception
-	Database::IdString Database::getNextUrl(unsigned long currentUrlId) {
+	Database::IdString Database::getNextUrl(size_t currentUrlId) {
 		// check connection
 		this->checkConnection();
 
@@ -562,8 +562,8 @@ namespace crawlservpp::Module::Crawler {
 
 	// add URLs that do not exist already to the database, return the number of added URLs,
 	//  throws Database::Exception
-	unsigned long Database::addUrlsIfNotExist(std::queue<std::string>& urls, bool manual) {
-		unsigned long result = 0;
+	size_t Database::addUrlsIfNotExist(std::queue<std::string>& urls, bool manual) {
+		size_t result = 0;
 
 		// check argument
 		if(urls.empty())
@@ -590,7 +590,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// add 1.000 URLs at once
 			while(urls.size() >= 1000) {
-				for(unsigned long n = 0; n < 1000; ++n) {
+				for(size_t n = 0; n < 1000; ++n) {
 					sqlStatement1000.setString((n * 5) + 1, urls.front());
 					sqlStatement1000.setString((n * 5) + 2, urls.front());
 					sqlStatement1000.setString((n * 5) + 3, urls.front());
@@ -608,7 +608,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// add 100 URLs at once
 			while(urls.size() >= 100) {
-				for(unsigned long n = 0; n < 100; ++n) {
+				for(size_t n = 0; n < 100; ++n) {
 					sqlStatement100.setString((n * 5) + 1, urls.front());
 					sqlStatement100.setString((n * 5) + 2, urls.front());
 					sqlStatement100.setString((n * 5) + 3, urls.front());
@@ -626,7 +626,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// add 10 URLs at once
 			while(urls.size() >= 10) {
-				for(unsigned long n = 0; n < 10; ++n) {
+				for(size_t n = 0; n < 10; ++n) {
 					sqlStatement10.setString((n * 5) + 1, urls.front());
 					sqlStatement10.setString((n * 5) + 2, urls.front());
 					sqlStatement10.setString((n * 5) + 3, urls.front());
@@ -662,8 +662,8 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// add URL to database and return ID of newly added URL
-	unsigned long Database::addUrlGetId(const std::string& urlString, bool manual) {
-		unsigned long result = 0;
+	size_t Database::addUrlGetId(const std::string& urlString, bool manual) {
+		size_t result = 0;
 
 		// add URL to database
 		this->addUrlIfNotExists(urlString, manual);
@@ -679,8 +679,8 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// get the position of the URL in the URL list, throws Database::Exception
-	unsigned long Database::getUrlPosition(unsigned long urlId) {
-		unsigned long result = 0;
+	size_t Database::getUrlPosition(size_t urlId) {
+		size_t result = 0;
 
 		// check argument
 		if(!urlId)
@@ -719,8 +719,8 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// get the number of URLs in the URL list, throws Database::Exception
-	unsigned long Database::getNumberOfUrls() {
-		unsigned long result = 0;
+	size_t Database::getNumberOfUrls() {
+		size_t result = 0;
 
 		// check connection
 		this->checkConnection();
@@ -778,7 +778,7 @@ namespace crawlservpp::Module::Crawler {
 						duplicates.push(sqlResultSet->getString("url"));
 					while(sqlResultSet->next());
 
-					unsigned long numDuplicates = 0;
+					size_t numDuplicates = 0;
 
 					while(!duplicates.empty()) {
 						numDuplicates += this->removeDuplicates(duplicates.front());
@@ -918,7 +918,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// get the URL lock end time of a specific URL from database, throws Database::Exception
-	std::string Database::getUrlLockTime(unsigned long urlId) {
+	std::string Database::getUrlLockTime(size_t urlId) {
 		// check argument
 		if(!urlId)
 			return std::string();
@@ -951,7 +951,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// get the URL lock ID for a specific URL from the database, return whether the URL has been crawled),
 	//  throws Database::Exception
-	bool Database::isUrlCrawled(unsigned long urlId) {
+	bool Database::isUrlCrawled(size_t urlId) {
 		// check arguments
 		if(!urlId)
 			throw Exception("Crawler::Database::isUrlCrawled(): No URL ID specified");
@@ -985,9 +985,9 @@ namespace crawlservpp::Module::Crawler {
 	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful,
 	//  throws Database::Exception
 	std::string Database::lockUrlIfOk(
-			unsigned long urlId,
+			size_t urlId,
 			const std::string& lockTime,
-			unsigned long lockTimeout
+			size_t lockTimeout
 	) {
 		// check argument
 		if(!urlId)
@@ -1039,7 +1039,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// unlock a URL in the database, throws Database::Exception
-	void Database::unLockUrlIfOk(unsigned long urlId, const std::string& lockTime) {
+	void Database::unLockUrlIfOk(size_t urlId, const std::string& lockTime) {
 		// check argument
 		if(!urlId)
 			throw Exception("Crawler::Database::unLockUrlIfOk(): No URL lock ID specified");
@@ -1069,7 +1069,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// set URL as crawled in the database, throws Database::Exception
-	void Database::setUrlFinishedIfOk(unsigned long urlId, const std::string& lockTime) {
+	void Database::setUrlFinishedIfOk(size_t urlId, const std::string& lockTime) {
 		// check argument
 		if(!urlId)
 			throw Exception("Crawler::Database::setUrlFinishedIfOk(): No crawling ID specified");
@@ -1100,7 +1100,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// save content to database, throws Database::Exception
 	void Database::saveContent(
-			unsigned long urlId,
+			size_t urlId,
 			unsigned int response,
 			const std::string& type,
 			const std::string& content
@@ -1161,7 +1161,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// save archived content to database, throws Database::Exception
 	void Database::saveArchivedContent(
-			unsigned long urlId,
+			size_t urlId,
 			const std::string& timeStamp,
 			unsigned int response,
 			const std::string& type,
@@ -1223,7 +1223,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// chck whether archived content with specific timestamp exists, throws Database::Exception
-	bool Database::isArchivedContentExists(unsigned long urlId, const std::string& timeStamp) {
+	bool Database::isArchivedContentExists(size_t urlId, const std::string& timeStamp) {
 		bool result = false;
 
 		// check argument
@@ -1331,7 +1331,7 @@ namespace crawlservpp::Module::Crawler {
 		int result = 0;
 
 		// get ID of first occurence
-		const unsigned long first = this->getUrlId(url);
+		const size_t first = this->getUrlId(url);
 
 		// check argument
 		if(url.empty())

@@ -67,24 +67,24 @@ namespace crawlservpp::Module::Parser {
 			Entries();
 
 			// general entries
-			unsigned long generalCacheSize;
-			unsigned long generalDbTimeOut;
+			size_t generalCacheSize;
+			size_t generalDbTimeOut;
 			unsigned int generalLock;
 			unsigned char generalLogging;
 			bool generalNewestOnly;
 			bool generalParseCustom;
 			bool generalReParse;
 			std::string generalResultTable;
-			std::vector<unsigned long> generalSkip;
-			unsigned long generalSleepIdle;
-			unsigned long generalSleepMySql;
+			std::vector<size_t> generalSkip;
+			size_t generalSleepIdle;
+			size_t generalSleepMySql;
 			bool generalTiming;
 
 			// parsing entries
-			std::vector<unsigned long> parsingContentIgnoreQueries;
+			std::vector<size_t> parsingContentIgnoreQueries;
 			std::vector<std::string> parsingDateTimeFormats;
 			std::vector<std::string> parsingDateTimeLocales;
-			std::vector<unsigned long> parsingDateTimeQueries;
+			std::vector<size_t> parsingDateTimeQueries;
 			std::vector<unsigned short> parsingDateTimeSources;
 			bool parsingDateTimeWarningEmpty;
 			std::vector<std::string> parsingFieldDateTimeFormats;
@@ -93,12 +93,12 @@ namespace crawlservpp::Module::Parser {
 			std::vector<bool> parsingFieldIgnoreEmpty;
 			std::vector<bool> parsingFieldJSON;
 			std::vector<std::string> parsingFieldNames;
-			std::vector<unsigned long> parsingFieldQueries;
+			std::vector<size_t> parsingFieldQueries;
 			std::vector<unsigned char> parsingFieldSources;
 			std::vector<bool> parsingFieldTidyTexts;
 			std::vector<bool> parsingFieldWarningsEmpty;
 			std::vector<std::string> parsingIdIgnore;
-			std::vector<unsigned long> parsingIdQueries;
+			std::vector<size_t> parsingIdQueries;
 			std::vector<unsigned char> parsingIdSources;
 			bool parsingRepairCData;
 			unsigned int parsingTidyErrors;
@@ -181,7 +181,7 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Parser::Config::checkOptions(): No result table specified.");
 		
 		// check properties of date/time queries
-		const unsigned long completeDateTimes = std::min( // number of complete date/time queries (= minimum size of all arrays)
+		const size_t completeDateTimes = std::min( // number of complete date/time queries (= minimum size of all arrays)
 				this->config.parsingDateTimeQueries.size(),
 				this->config.parsingDateTimeSources.size()
 		);
@@ -239,7 +239,7 @@ namespace crawlservpp::Module::Parser {
 			this->warning("Unused date/time properties removed from configuration.");
 
 		// check properties of parsing fields
-		const unsigned long completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
+		const size_t completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
 				this->config.parsingFieldNames.size(),
 				this->config.parsingFieldQueries.size(),
 				this->config.parsingFieldSources.size()
@@ -337,7 +337,7 @@ namespace crawlservpp::Module::Parser {
 			this->warning("Unused field properties removed from configuration.");
 
 		// check properties of ID queries
-		const unsigned long completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
+		const size_t completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
 				this->config.parsingIdQueries.size(),
 				this->config.parsingIdSources.size()
 		);

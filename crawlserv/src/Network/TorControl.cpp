@@ -58,7 +58,7 @@ namespace crawlservpp::Network {
 	}
 
 	// set time in seconds after which to request a new identity (or 0 for disabled)
-	void TorControl::setNewIdentityTimer(unsigned long newIdentityAfterSeconds) {
+	void TorControl::setNewIdentityTimer(size_t newIdentityAfterSeconds) {
 		this->newIdentityAfter = newIdentityAfterSeconds;
 
 		// reset timer

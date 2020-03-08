@@ -66,7 +66,7 @@ namespace crawlservpp::Module::Analyzer {
 	protected:
 		// text maps are used to describe certain parts of a text
 		//  defined by their positions and lengths with certain strings (words, dates etc.)
-		using TextMapEntry = std::tuple<std::string, unsigned long, unsigned long>;
+		using TextMapEntry = std::tuple<std::string, size_t, size_t>;
 
 		// analyzing configuration and database functionality for thread
 		Database database;

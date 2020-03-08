@@ -119,10 +119,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(Config::generalLoggingVerbose, "gets text corpus...");
 
-		for(unsigned long n = 0; n < this->config.generalInputSources.size(); ++n) {
+		for(size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string dateFrom, dateTo;
 
-			unsigned long corpusSources = 0;
+			size_t corpusSources = 0;
 
 			if(this->config.filterDateEnable) {
 				dateFrom = this->config.filterDateFrom;

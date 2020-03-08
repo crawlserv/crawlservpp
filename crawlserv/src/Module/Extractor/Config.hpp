@@ -74,7 +74,7 @@ namespace crawlservpp::Module::Extractor {
 			Entries();
 
 			// general entries
-			unsigned long generalCacheSize;
+			size_t generalCacheSize;
 			bool generalExtractCustom;
 			unsigned int generalLock;
 			unsigned char generalLogging;
@@ -83,10 +83,10 @@ namespace crawlservpp::Module::Extractor {
 			std::string generalResultTable;
 			long generalReTries;
 			std::vector<unsigned int> generalRetryHttp;
-			unsigned long generalSleepError;
-			unsigned long generalSleepHttp;
-			unsigned long generalSleepIdle;
-			unsigned long generalSleepMySql;
+			size_t generalSleepError;
+			size_t generalSleepHttp;
+			size_t generalSleepIdle;
+			size_t generalSleepMySql;
 			unsigned int generalTidyErrors;
 			bool generalTidyWarnings;
 			bool generalTiming;
@@ -99,11 +99,11 @@ namespace crawlservpp::Module::Extractor {
 			std::vector<std::string> variablesName;
 			std::vector<std::string> variablesParsedColumn;
 			std::vector<std::string> variablesParsedTable;
-			std::vector<unsigned long> variablesQuery;
+			std::vector<size_t> variablesQuery;
 			std::vector<unsigned char> variablesSource;
 			std::vector<std::string> variablesTokens;
 			std::vector<std::string> variablesTokensCookies;
-			std::vector<unsigned long> variablesTokensQuery;
+			std::vector<size_t> variablesTokensQuery;
 			std::vector<std::string> variablesTokensSource;
 			std::vector<std::string> variablesTokenHeaders;
 			std::vector<bool> variablesTokensUsePost;
@@ -113,9 +113,9 @@ namespace crawlservpp::Module::Extractor {
 			long pagingAliasAdd;
 			long pagingFirst;
 			std::string pagingFirstString;
-			unsigned long pagingIsNextFrom;
-			unsigned long pagingNextFrom;
-			unsigned long pagingNumberFrom;
+			size_t pagingIsNextFrom;
+			size_t pagingNextFrom;
+			size_t pagingNumberFrom;
 			long pagingStep;
 			std::string pagingVariable;
 
@@ -127,26 +127,26 @@ namespace crawlservpp::Module::Extractor {
 			bool sourceUsePost;
 
 			// extracting entries
-			std::vector<unsigned long> extractingDataSetQueries;
+			std::vector<size_t> extractingDataSetQueries;
 			std::vector<std::string> extractingDateTimeFormats;
 			std::vector<std::string> extractingDateTimeLocales;
-			std::vector<unsigned long> extractingDateTimeQueries;
-			std::vector<unsigned long> extractingErrorFail;
-			std::vector<unsigned long> extractingErrorRetry;
+			std::vector<size_t> extractingDateTimeQueries;
+			std::vector<size_t> extractingErrorFail;
+			std::vector<size_t> extractingErrorRetry;
 			std::vector<std::string> extractingFieldDateTimeFormats;
 			std::vector<std::string> extractingFieldDateTimeLocales;
 			std::vector<char> extractingFieldDelimiters;
 			std::vector<bool> extractingFieldIgnoreEmpty;
 			std::vector<bool> extractingFieldJSON;
 			std::vector<std::string> extractingFieldNames;
-			std::vector<unsigned long> extractingFieldQueries;
+			std::vector<size_t> extractingFieldQueries;
 			std::vector<bool> extractingFieldTidyTexts;
 			std::vector<bool> extractingFieldWarningsEmpty;
 			std::vector<std::string> extractingIdIgnore;
-			std::vector<unsigned long> extractingIdQueries;
+			std::vector<size_t> extractingIdQueries;
 			bool extractingOverwrite;
-			std::vector<unsigned long> extractingRecursive;
-			unsigned long extractingRecursiveMaxDepth;
+			std::vector<size_t> extractingRecursive;
+			size_t extractingRecursiveMaxDepth;
 			bool extractingRepairCData;
 			bool extractingRepairComments;
 
@@ -155,7 +155,7 @@ namespace crawlservpp::Module::Extractor {
 			bool expectedErrorIfSmaller;
 			std::string expectedParsedColumn;
 			std::string expectedParsedTable;
-			unsigned long expectedQuery;
+			size_t expectedQuery;
 			unsigned char expectedSource;
 
 		} config;
@@ -321,7 +321,7 @@ namespace crawlservpp::Module::Extractor {
 		// check properties of variables
 		bool incompleteVariables = false;
 
-		const unsigned long completeVariables = std::min({
+		const size_t completeVariables = std::min({
 				/* number of complete variables (= minimum size of name and source arrays) */
 				this->config.variablesName.size(),
 				this->config.variablesSource.size()
@@ -412,7 +412,7 @@ namespace crawlservpp::Module::Extractor {
 		// check properties of tokens
 		bool incompleteTokens = false;
 
-		const unsigned long completeTokens = std::min({
+		const size_t completeTokens = std::min({
 				/* number of complete tokens (= minimum size of arrays) */
 				this->config.variablesTokens.size(),
 				this->config.variablesTokensSource.size(),
@@ -498,7 +498,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 
 		// check properties of fields
-		const unsigned long completeFields = std::min(
+		const size_t completeFields = std::min(
 				this->config.extractingFieldNames.size(),
 				this->config.extractingFieldQueries.size()
 		);

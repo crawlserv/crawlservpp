@@ -89,10 +89,10 @@ namespace crawlservpp::Module {
 		virtual ~Thread();
 
 		// getters
-		unsigned long getId() const;
-		unsigned long getWebsite() const;
-		unsigned long getUrlList() const;
-		unsigned long getConfig() const;
+		size_t getId() const;
+		size_t getWebsite() const;
+		size_t getUrlList() const;
+		size_t getConfig() const;
 		bool isShutdown() const;
 		bool isRunning() const;
 		bool isFinished() const;
@@ -107,7 +107,7 @@ namespace crawlservpp::Module {
 		void end();
 
 		// time travel
-		void warpTo(unsigned long target);
+		void warpTo(size_t target);
 
 		// class for Thread exceptions
 		MAIN_EXCEPTION_CLASS();
@@ -128,7 +128,7 @@ namespace crawlservpp::Module {
 		// thread helper functions
 		bool isInterrupted() const;
 		bool isResumed() const;
-		void sleep(unsigned long ms) const;
+		void sleep(size_t ms) const;
 
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
@@ -138,8 +138,8 @@ namespace crawlservpp::Module {
 		void allowPausing();
 		void disallowPausing();
 
-		unsigned long getLast() const;
-		void setLast(unsigned long last);
+		size_t getLast() const;
+		void setLast(size_t last);
 		void incrementLast();
 		std::string getStatusMessage() const;
 		long getWarpedOverAndReset();
@@ -163,10 +163,10 @@ namespace crawlservpp::Module {
 		std::atomic<bool> finished;					// shutdown is finished
 
 		const std::string module;					// the module of the thread (used for logging)
-		std::atomic<unsigned long> id;				// the ID of the thread in the database
+		std::atomic<size_t> id;				// the ID of the thread in the database
 		const ThreadOptions options;				// options for the thread
-		unsigned long last;							// last ID for the thread
-		std::atomic<unsigned long> overwriteLast;	// ID to overwrite last ID with ("time travel")
+		size_t last;							// last ID for the thread
+		std::atomic<size_t> overwriteLast;	// ID to overwrite last ID with ("time travel")
 		long warpedOver;							// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
 		std::condition_variable pauseCondition; 	// condition variable to wait for unpause
@@ -180,9 +180,9 @@ namespace crawlservpp::Module {
 		// timing statistics (in seconds)
 		std::chrono::steady_clock::time_point startTimePoint;
 		std::chrono::steady_clock::time_point pauseTimePoint;
-		std::chrono::duration<unsigned long> runTime;
-		std::chrono::duration<unsigned long> pauseTime;
-		unsigned long getRunTime() const;
+		std::chrono::duration<size_t> runTime;
+		std::chrono::duration<size_t> pauseTime;
+		size_t getRunTime() const;
 		void updateRunTime();
 		void updatePauseTime();
 

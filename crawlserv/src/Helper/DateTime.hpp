@@ -119,7 +119,7 @@ namespace crawlservpp::Helper::DateTime {
 
 			if(customFormat.length() > 5) {
 				try {
-					offset = boost::lexical_cast<unsigned long>(customFormat.substr(4));
+					offset = boost::lexical_cast<size_t>(customFormat.substr(4));
 				}
 				catch(const boost::bad_lexical_cast& e) {
 					throw Exception(
@@ -161,7 +161,7 @@ namespace crawlservpp::Helper::DateTime {
 		}
 		else {
 			// ordinal hack: remove ordinal endings (st, nd, rd, th)
-			unsigned long pos = 0;
+			size_t pos = 0;
 
 			while(pos + 2 <= dateTime.length()) {
 				pos = std::min(
@@ -269,7 +269,7 @@ namespace crawlservpp::Helper::DateTime {
 		// end of locale hack
 
 		// ordinal hack: remove ordinal endings (st, nd, rd, th) after numbers
-		unsigned long pos = 0;
+		size_t pos = 0;
 
 		while(pos + 2 <= dateTime.length()) {
 			pos = std::min(
@@ -430,7 +430,7 @@ namespace crawlservpp::Helper::DateTime {
 	// convert microseconds to string
 	inline std::string microsecondsToString(unsigned long long microseconds) {
 		unsigned long long rest = microseconds;
-		unsigned long days = rest / 86400000000;
+		size_t days = rest / 86400000000;
 		std::string result;
 
 		rest -= days * 86400000000;
@@ -482,7 +482,7 @@ namespace crawlservpp::Helper::DateTime {
 		unsigned long long rest = milliseconds;
 		std::string result;
 
-		const unsigned long days = rest / 86400000;
+		const size_t days = rest / 86400000;
 
 		rest -= days * 86400000;
 
@@ -526,7 +526,7 @@ namespace crawlservpp::Helper::DateTime {
 		unsigned long long rest = seconds;
 		std::string result;
 
-		const unsigned long days = rest / 86400;
+		const size_t days = rest / 86400;
 
 		rest -= days * 86400;
 

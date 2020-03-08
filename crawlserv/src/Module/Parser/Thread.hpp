@@ -79,7 +79,7 @@ namespace crawlservpp::Module::Parser {
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
-		using IdString = std::pair<unsigned long, std::string>;
+		using IdString = std::pair<size_t, std::string>;
 
 	public:
 		// constructors
@@ -144,15 +144,15 @@ namespace crawlservpp::Module::Parser {
 		// parsing state
 		bool idle;					// waiting for new URLs to be crawled
 		bool idFromUrlOnly;			// ID is exclusively parsed from URL
-		unsigned long lastUrl;		// last URL
+		size_t lastUrl;		// last URL
 		std::string lockTime;		// last locking time for currently parsed URL
 
 		// properties used for progress calculation
-		unsigned long idFirst;		// ID of the first URL fetched
-		unsigned long idDist;		// distance between the IDs of first and last URL fetched
+		size_t idFirst;		// ID of the first URL fetched
+		size_t idDist;		// distance between the IDs of first and last URL fetched
 		float posFirstF;			// position of the first URL fetched as float
-		unsigned long posDist;		// distance between the positions of first and last URL fetched
-		unsigned long total;		// number of total URLs in URL list
+		size_t posDist;		// distance between the positions of first and last URL fetched
+		size_t total;		// number of total URLs in URL list
 
 		// initializing function
 		void initTargetTable();
@@ -162,7 +162,7 @@ namespace crawlservpp::Module::Parser {
 		void parsingUrlSelection();
 		void parsingFetchUrls();
 		void parsingCheckUrls();
-		unsigned long parsingNext();
+		size_t parsingNext();
 		bool parsingContent(const IdString& content, const std::string& parsedId);
 		void parsingUrlFinished();
 		void parsingSaveResults(bool warped);

@@ -49,7 +49,7 @@ namespace crawlservpp::Module::Extractor {
 	Database::~Database() {}
 
 	// set maximum cache size for URLs
-	void Database::setCacheSize(unsigned long setCacheSize) {
+	void Database::setCacheSize(size_t setCacheSize) {
 		this->cacheSize = setCacheSize;
 	}
 
@@ -425,9 +425,9 @@ namespace crawlservpp::Module::Extractor {
 
 	// fetch and lock next URLs to extract from database, add them to the cache (i. e. queue), return the lock expiration time
 	//  throws Database::Exception
-	std::string Database::fetchUrls(unsigned long lastId, std::queue<IdString>& cache, unsigned long lockTimeout) {
+	std::string Database::fetchUrls(size_t lastId, std::queue<IdString>& cache, size_t lockTimeout) {
 		// queue for locking URLs
-		std::queue<unsigned long> lockingQueue;
+		std::queue<size_t> lockingQueue;
 
 		// check connection
 		this->checkConnection();
@@ -473,7 +473,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// set 1,000 locks at once
 		while(lockingQueue.size() >= 1000) {
-			for(unsigned long n = 0; n < 1000; ++n) {
+			for(size_t n = 0; n < 1000; ++n) {
 				sqlStatementLock1000.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock1000.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock1000.setString(n * 3 + 3, lockTime);
@@ -487,7 +487,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// set 100 locks at once
 		while(lockingQueue.size() >= 100) {
-			for(unsigned long n = 0; n < 100; ++n) {
+			for(size_t n = 0; n < 100; ++n) {
 				sqlStatementLock100.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock100.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock100.setString(n * 3 + 3, lockTime);
@@ -501,7 +501,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// set 10 locks at once
 		while(lockingQueue.size() >= 10) {
-			for(unsigned long n = 0; n < 10; ++n) {
+			for(size_t n = 0; n < 10; ++n) {
 				sqlStatementLock10.setUInt64(n * 3 + 1, lockingQueue.front());
 				sqlStatementLock10.setUInt64(n * 3 + 2, lockingQueue.front());
 				sqlStatementLock10.setString(n * 3 + 3, lockTime);
@@ -530,8 +530,8 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get the position of the URL in the URL list, throws Database::Exception
-	unsigned long Database::getUrlPosition(unsigned long urlId) {
-		unsigned long result = 0;
+	size_t Database::getUrlPosition(size_t urlId) {
+		size_t result = 0;
 
 		// check argument
 		if(!urlId)
@@ -564,8 +564,8 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get the number of URLs in the URL list, throws Database::Exception
-	unsigned long Database::getNumberOfUrls() {
-		unsigned long result = 0;
+	size_t Database::getNumberOfUrls() {
+		size_t result = 0;
 
 		// check connection
 		this->checkConnection();
@@ -592,7 +592,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// let the database calculate the current URL lock expiration time, throws Database::Exception
-	std::string Database::getLockTime(unsigned long lockTimeout) {
+	std::string Database::getLockTime(size_t lockTimeout) {
 		std::string result;
 
 		// check connection
@@ -622,7 +622,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get the URL lock expiration time for a specific URL from the database, throws Database::Exception
-	std::string Database::getUrlLockTime(unsigned long urlId) {
+	std::string Database::getUrlLockTime(size_t urlId) {
 		std::string result;
 
 		// check argument
@@ -657,7 +657,7 @@ namespace crawlservpp::Module::Extractor {
 
 	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful,
 	//  throws Database::Exception
-	std::string Database::renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout) {
+	std::string Database::renewUrlLockIfOk(size_t urlId, const std::string& lockTime, size_t lockTimeout) {
 		// check argument
 		if(!urlId)
 			throw Exception("Extractor:Database::renewUrlLockIfOk(): No URL ID specified");
@@ -693,7 +693,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// unlock a URL in the database, return whether unlocking was successful, throws Database::Exception
-	bool Database::unLockUrlIfOk(unsigned long urlId, const std::string& lockTime) {
+	bool Database::unLockUrlIfOk(size_t urlId, const std::string& lockTime) {
 		// check argument
 		if(!urlId)
 			return true; // no URL lock to unlock
@@ -743,7 +743,7 @@ namespace crawlservpp::Module::Extractor {
 		// unlock URLs in database
 		try {
 			// set placeholders
-			unsigned long counter = 1;
+			size_t counter = 1;
 
 			while(!urls.empty()) {
 				sqlStatement.setUInt64(counter, urls.front().first);
@@ -791,7 +791,7 @@ namespace crawlservpp::Module::Extractor {
 
 	// get latest content for the ID-specified URL, return false if there is no content,
 	//  throws Database::Exception
-	bool Database::getContent(unsigned long urlId, IdString& contentTo) {
+	bool Database::getContent(size_t urlId, IdString& contentTo) {
 		// check argument
 		if(!urlId)
 			throw Exception("Extractor:Database::getContent(): No URL ID specified");
@@ -831,7 +831,7 @@ namespace crawlservpp::Module::Extractor {
 	// get the latest parsed data for the ID-specified URL from the index-specified source, throws Database::Exception
 	//  NOTE:	The source index is determined by the order of adding the sources (starting with 0).
 	//			Returns an empty string when no data has been found.
-	void Database::getLatestParsedData(unsigned long urlId, unsigned long sourceIndex, std::string& resultTo) {
+	void Database::getLatestParsedData(size_t urlId, size_t sourceIndex, std::string& resultTo) {
 		// check argument
 		if(!urlId)
 			throw Exception("No URL specified for Database::getLatestParsedData(...)");
@@ -885,7 +885,7 @@ namespace crawlservpp::Module::Extractor {
 		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.updateOrAdd1000Entries);
 
 		// count fields
-		unsigned long fields = 4 + std::count_if(
+		size_t fields = 4 + std::count_if(
 				this->targetFieldNames.begin(),
 				this->targetFieldNames.end(),
 				[](const auto& fieldName) {
@@ -1103,7 +1103,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// set 1,000 URLs at once
 			while(finished.size() > 1000) {
-				for(unsigned long n = 0; n < 1000; ++n) {
+				for(size_t n = 0; n < 1000; ++n) {
 					sqlStatement1000.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement1000.setString(n * 2 + 2, finished.front().second);
 
@@ -1115,7 +1115,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// set 100 URLs at once
 			while(finished.size() > 100) {
-				for(unsigned long n = 0; n < 100; ++n) {
+				for(size_t n = 0; n < 100; ++n) {
 					sqlStatement100.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement100.setString(n * 2 + 2, finished.front().second);
 
@@ -1127,7 +1127,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// set 10 URLs at once
 			while(finished.size() > 10) {
-				for(unsigned long n = 0; n < 10; ++n) {
+				for(size_t n = 0; n < 10; ++n) {
 					sqlStatement10.setUInt64(n * 2 + 1, finished.front().first);
 					sqlStatement10.setString(n * 2 + 2, finished.front().second);
 
@@ -1172,7 +1172,7 @@ namespace crawlservpp::Module::Extractor {
 	// check the value sizes in a extracting entry and remove values that are too large for the database
 	bool Database::checkEntrySize(DataEntry& entry) {
 		// check data sizes
-		unsigned long tooLarge = 0;
+		size_t tooLarge = 0;
 
 		if(entry.dataId.size() > this->getMaxAllowedPacketSize()) {
 			tooLarge = entry.dataId.size();
@@ -1288,7 +1288,7 @@ namespace crawlservpp::Module::Extractor {
 									" hash,"
 									" extracted_datetime";
 
-		unsigned long counter = 0;
+		size_t counter = 0;
 
 		for(const auto& targetFieldName : this->targetFieldNames) {
 			if(!targetFieldName.empty()) {
@@ -1323,7 +1323,7 @@ namespace crawlservpp::Module::Extractor {
 
 			sqlQueryStr +=			"?, ?, CRC32( ? ), ?";
 
-			for(unsigned long c = 0; c < counter; ++c)
+			for(size_t c = 0; c < counter; ++c)
 				sqlQueryStr +=	 		", ?";
 
 			sqlQueryStr +=		")";
@@ -1393,7 +1393,7 @@ namespace crawlservpp::Module::Extractor {
 							" ("
 		);
 
-		for(unsigned long n = 1; n <= numberOfUrls; ++n) {
+		for(size_t n = 1; n <= numberOfUrls; ++n) {
 			sqlQueryString += " url = ?";
 
 			if(n < numberOfUrls)

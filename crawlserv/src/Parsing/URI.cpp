@@ -235,7 +235,7 @@ namespace crawlservpp::Parsing {
 		std::string linkCopy(linkToParse);
 
 		// remove anchor if necessary
-		const unsigned long end = linkCopy.find('#');
+		const size_t end = linkCopy.find('#');
 
 		if(end != std::string::npos && linkCopy.size() > end) {
 			if(end)
@@ -355,7 +355,7 @@ namespace crawlservpp::Parsing {
 				)
 		);
 
-		for(unsigned long n = 0; n < string.size(); ++n)
+		for(size_t n = 0; n < string.size(); ++n)
 			cString[n] = string.at(n);
 
 		cString[string.size()] = '\0';
@@ -368,10 +368,10 @@ namespace crawlservpp::Parsing {
 	// public static helper function: escape an URL but leave reserved characters (; / ? : @ = & # %) intact
 	std::string URI::escapeUrl(const std::string& urlToEscape) {
 		std::string result;
-		unsigned long pos = 0;
+		size_t pos = 0;
 
 		while(pos < urlToEscape.size()) {
-			unsigned long end = urlToEscape.find_first_of(";/?:@=&#%", pos);
+			size_t end = urlToEscape.find_first_of(";/?:@=&#%", pos);
 
 			if(end == std::string::npos)
 				end = urlToEscape.size();

@@ -43,8 +43,8 @@ namespace crawlservpp::Struct {
 
 	struct TargetTableProperties {
 		std::string type;
-		unsigned long website;
-		unsigned long urlList;
+		size_t website;
+		size_t urlList;
 		std::string name;
 		std::string fullName;
 		std::vector<TableColumn> columns;
@@ -55,8 +55,8 @@ namespace crawlservpp::Struct {
 
 		TargetTableProperties(
 				const std::string& setType,
-				unsigned long setWebsite,
-				unsigned long setUrlList,
+				size_t setWebsite,
+				size_t setUrlList,
 				const std::string& setName,
 				const std::string& setFullName,
 				bool setCompressed
@@ -69,8 +69,8 @@ namespace crawlservpp::Struct {
 
 		TargetTableProperties(
 				const std::string& setType,
-				unsigned long setWebsite,
-				unsigned long setUrlList,
+				size_t setWebsite,
+				size_t setUrlList,
 				const std::string& setName,
 				const std::string& setFullName,
 				const std::vector<TableColumn>& setColumns,

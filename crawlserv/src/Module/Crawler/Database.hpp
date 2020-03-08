@@ -55,7 +55,7 @@ namespace crawlservpp::Module::Crawler {
 
 	class Database : public Wrapper::Database {
 		// for convenience
-		using IdString = std::pair<unsigned long, std::string>;
+		using IdString = std::pair<size_t, std::string>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
@@ -75,13 +75,13 @@ namespace crawlservpp::Module::Crawler {
 		void prepare();
 
 		// URL functions
-		unsigned long getUrlId(const std::string& url);
-		IdString getNextUrl(unsigned long currentUrlId);
+		size_t getUrlId(const std::string& url);
+		IdString getNextUrl(size_t currentUrlId);
 		bool addUrlIfNotExists(const std::string& urlString, bool manual);
-		unsigned long addUrlsIfNotExist(std::queue<std::string>& urls, bool manual);
-		unsigned long addUrlGetId(const std::string& urlString, bool manual);
-		unsigned long getUrlPosition(unsigned long urlId);
-		unsigned long getNumberOfUrls();
+		size_t addUrlsIfNotExist(std::queue<std::string>& urls, bool manual);
+		size_t addUrlGetId(const std::string& urlString, bool manual);
+		size_t getUrlPosition(size_t urlId);
+		size_t getNumberOfUrls();
 
 		// URL checking functions
 		void urlDuplicationCheck();
@@ -90,26 +90,26 @@ namespace crawlservpp::Module::Crawler {
 		void urlUtf8Check();
 
 		// URL locking functions
-		std::string getUrlLockTime(unsigned long urlId);
-		bool isUrlCrawled(unsigned long urlId);
-		std::string lockUrlIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout);
-		void unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
-		void setUrlFinishedIfOk(unsigned long urlId, const std::string& lockTime);
+		std::string getUrlLockTime(size_t urlId);
+		bool isUrlCrawled(size_t urlId);
+		std::string lockUrlIfOk(size_t urlId, const std::string& lockTime, size_t lockTimeout);
+		void unLockUrlIfOk(size_t urlId, const std::string& lockTime);
+		void setUrlFinishedIfOk(size_t urlId, const std::string& lockTime);
 
 		// crawling functions
 		void saveContent(
-				unsigned long urlId,
+				size_t urlId,
 				unsigned int response,
 				const std::string& type,
 				const std::string& content
 		);
 		void saveArchivedContent(
-				unsigned long urlId,
+				size_t urlId,
 				const std::string& timeStamp,
 				unsigned int response,
 				const std::string& type,
 				const std::string& content);
-		bool isArchivedContentExists(unsigned long urlId, const std::string& timeStamp);
+		bool isArchivedContentExists(size_t urlId, const std::string& timeStamp);
 
 		// constant strings for table aliases (public)
 		const std::string crawlingTableAlias;

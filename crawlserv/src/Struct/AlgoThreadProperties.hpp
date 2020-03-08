@@ -43,14 +43,14 @@ namespace crawlservpp::Struct {
 
 	public:
 		bool recreate;
-		unsigned long algoId;
+		size_t algoId;
 		Main::Database& dbBase;
 		const ThreadOptions& options;
 		const ThreadStatus& status;
 
 		// properties for newly created thread
 		AlgoThreadProperties(
-				unsigned long setAlgoId,
+				size_t setAlgoId,
 				Main::Database& setDatabase,
 				const ThreadOptions& setOptions
 		)
@@ -63,7 +63,7 @@ namespace crawlservpp::Struct {
 
 		// properties for previously interrupted thread
 		AlgoThreadProperties(
-				unsigned long setAlgoId,
+				size_t setAlgoId,
 				Main::Database& setDatabase,
 				const ThreadOptions& setOptions,
 				const ThreadStatus& setStatus

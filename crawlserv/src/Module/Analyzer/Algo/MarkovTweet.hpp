@@ -102,15 +102,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	private:
 		rawr generator;
-		unsigned long sources;
+		size_t sources;
 
 		// algorithm options
 		unsigned char markovTweetDimension;
 		std::string markovTweetLanguage;
-		unsigned long markovTweetLength;
-		unsigned long markovTweetMax;
+		size_t markovTweetLength;
+		size_t markovTweetMax;
 		std::string markovTweetResultField;
-		unsigned long markovTweetSleep;
+		size_t markovTweetSleep;
 		std::string markovTweetSourcesField;
 		bool markovTweetSpellcheck;
 		bool markovTweetTiming;

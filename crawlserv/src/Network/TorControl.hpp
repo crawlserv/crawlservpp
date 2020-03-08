@@ -54,7 +54,7 @@ namespace crawlservpp::Network {
 		~TorControl();
 
 		// setter
-		void setNewIdentityTimer(unsigned long newIdentityAfterSeconds);
+		void setNewIdentityTimer(size_t newIdentityAfterSeconds);
 
 		// request new identity
 		void newIdentity();
@@ -82,7 +82,7 @@ namespace crawlservpp::Network {
 		const std::string server;
 		const unsigned short port;
 		const std::string password;
-		unsigned long newIdentityAfter;
+		size_t newIdentityAfter;
 
 		// asio context and socket
 		asio::io_context context;

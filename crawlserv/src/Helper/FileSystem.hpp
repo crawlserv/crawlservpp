@@ -63,7 +63,7 @@ namespace crawlservpp::Helper::FileSystem {
 	void createDirectory(const std::string& pathToDir);
 	void createDirectoryIfNotExists(const std::string& pathToDir);
 	void clearDirectory(const std::string& pathToDir);
-	unsigned long getFreeSpace(const std::string& path);
+	size_t getFreeSpace(const std::string& path);
 
 	/*
 	 * CLASS FOR FILE SYSTEM EXCEPTIONS
@@ -247,7 +247,7 @@ namespace crawlservpp::Helper::FileSystem {
 	}
 
 	// get the free disk space for a directory (in bytes), throws FileSystem::Exception
-	inline unsigned long getFreeSpace(const std::string& path) {
+	inline size_t getFreeSpace(const std::string& path) {
 		try {
 			return std::filesystem::space(path).available;
 		}

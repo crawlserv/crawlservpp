@@ -65,7 +65,7 @@ namespace crawlservpp::Wrapper {
 		using TableProperties = Struct::TableProperties;
 		using TargetTableProperties = Struct::TargetTableProperties;
 
-		using IdString = std::pair<unsigned long, std::string>;
+		using IdString = std::pair<size_t, std::string>;
 		using IsRunningCallback = std::function<bool()>;
 
 	public:
@@ -78,37 +78,37 @@ namespace crawlservpp::Wrapper {
 
 		// wrapper for setters
 		void setLogging(unsigned short level, unsigned short min, unsigned short verbose);
-		void setSleepOnError(unsigned long seconds);
-		void setTimeOut(unsigned long milliseconds);
+		void setSleepOnError(size_t seconds);
+		void setTimeOut(size_t milliseconds);
 
 		// wrapper for logging function
 		void log(unsigned short level, const std::string& logEntry);
 		void log(unsigned short level, std::queue<std::string>& logEntries);
 
 		// wrapper for website function
-		std::string getWebsiteDomain(unsigned long websiteId);
+		std::string getWebsiteDomain(size_t websiteId);
 
 		// wrapper for query function
-		void getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo);
+		void getQueryProperties(size_t queryId, QueryProperties& queryPropertiesTo);
 
 		// wrapper for configuration function
-		std::string getConfiguration(unsigned long configId);
+		std::string getConfiguration(size_t configId);
 
 		// wrappers for database functions
 		void beginNoLock();
 		void endNoLock();
 
 		// wrappers for target table functions
-		unsigned long addTargetTable(const TargetTableProperties& properties);
-		std::queue<IdString> getTargetTables(const std::string& type, unsigned long listId);
-		unsigned long getTargetTableId(
+		size_t addTargetTable(const TargetTableProperties& properties);
+		std::queue<IdString> getTargetTables(const std::string& type, size_t listId);
+		size_t getTargetTableId(
 				const std::string& type,
-				unsigned long websiteId,
-				unsigned long listId,
+				size_t websiteId,
+				size_t listId,
 				const std::string& tableName
 		);
-		std::string getTargetTableName(const std::string& type, unsigned long tableId);
-		void deleteTargetTable(const std::string& type, unsigned long tableId);
+		std::string getTargetTableName(const std::string& type, size_t tableId);
+		void deleteTargetTable(const std::string& type, size_t tableId);
 
 		// wrappers for general table functions
 		bool isTableEmpty(const std::string& tableName);
@@ -154,15 +154,15 @@ namespace crawlservpp::Wrapper {
 		void checkConnection();
 
 		// wrapper for protected getter
-		unsigned long getMaxAllowedPacketSize() const;
+		size_t getMaxAllowedPacketSize() const;
 
 		// wrappers for managing prepared SQL statements
-		void reserveForPreparedStatements(unsigned long numberOfAdditionalPreparedStatements);
+		void reserveForPreparedStatements(size_t numberOfAdditionalPreparedStatements);
 		unsigned short addPreparedStatement(const std::string& sqlQuery);
 		sql::PreparedStatement& getPreparedStatement(unsigned short id);
 
 		// wrappers for database helper functions
-		unsigned long getLastInsertedId();
+		size_t getLastInsertedId();
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
 		void removeDatabaseLock(const std::string& name);
 		void createTable(const TableProperties& properties);
@@ -171,7 +171,7 @@ namespace crawlservpp::Wrapper {
 		void deleteTable(const std::string& tableName);
 
 		// wrapper for URL list helper function
-		void setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive);
+		void setUrlListCaseSensitive(size_t listId, bool isCaseSensitive);
 
 		// wrapper for exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
@@ -198,13 +198,13 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// set the number of seconds to wait before (first and last) re-try on connection loss to MySQL server
-	inline void Database::setSleepOnError(unsigned long seconds) {
+	inline void Database::setSleepOnError(size_t seconds) {
 		this->database.setSleepOnError(seconds);
 	}
 
 	// set the maximum amount of milliseconds for a query before it cancels execution (or 0 for none)
 	//  NOTE: database connection needs to be established
-	inline void Database::setTimeOut(unsigned long milliseconds) {
+	inline void Database::setTimeOut(size_t milliseconds) {
 		this->database.setTimeOut(milliseconds);
 	}
 
@@ -219,17 +219,17 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// get website domain from the database by its ID
-	inline std::string Database::getWebsiteDomain(unsigned long websiteId) {
+	inline std::string Database::getWebsiteDomain(size_t websiteId) {
 		return this->database.getWebsiteDomain(websiteId);
 	}
 
 	// get the properties of a query from the database by its ID
-	inline void Database::getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo) {
+	inline void Database::getQueryProperties(size_t queryId, QueryProperties& queryPropertiesTo) {
 		this->database.getQueryProperties(queryId, queryPropertiesTo);
 	}
 
 	// get a configuration from the database by its ID
-	inline std::string Database::getConfiguration(unsigned long configId) {
+	inline std::string Database::getConfiguration(size_t configId) {
 		return this->database.getConfiguration(configId);
 	}
 
@@ -244,32 +244,32 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// add a target table of the specified type to the database if such a table does not exist already, return table ID
-	inline unsigned long Database::addTargetTable(const TargetTableProperties& properties) {
+	inline size_t Database::addTargetTable(const TargetTableProperties& properties) {
 		return this->database.addTargetTable(properties);
 	}
 
 	// get target tables of the specified type for an ID-specified URL list from the database
-	inline std::queue<Database::IdString> Database::getTargetTables(const std::string& type, unsigned long listId) {
+	inline std::queue<Database::IdString> Database::getTargetTables(const std::string& type, size_t listId) {
 		return this->database.getTargetTables(type, listId);
 	}
 
 	// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name
-	inline unsigned long Database::getTargetTableId(
+	inline size_t Database::getTargetTableId(
 			const std::string& type,
-			unsigned long websiteId,
-			unsigned long listId,
+			size_t websiteId,
+			size_t listId,
 			const std::string& tableName
 	) {
 		return this->database.getTargetTableId(type, websiteId, listId, tableName);
 	}
 
 	// get the name of a target table of the specified type from the database by its ID
-	inline std::string Database::getTargetTableName(const std::string& type, unsigned long tableId) {
+	inline std::string Database::getTargetTableName(const std::string& type, size_t tableId) {
 		return this->database.getTargetTableName(type, tableId);
 	}
 
 	// delete target table of the specified type from the database by its ID
-	inline void Database::deleteTargetTable(const std::string& type, unsigned long tableId) {
+	inline void Database::deleteTargetTable(const std::string& type, size_t tableId) {
 		this->database.deleteTargetTable(type, tableId);
 	}
 
@@ -391,12 +391,12 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// get the maximum allowed packet size
-	inline unsigned long Database::getMaxAllowedPacketSize() const {
+	inline size_t Database::getMaxAllowedPacketSize() const {
 		return this->database.getMaxAllowedPacketSize();
 	}
 
 	// reserve memory for prepared SQL statements
-	inline void Database::reserveForPreparedStatements(unsigned long numberOfAdditionalPreparedStatements) {
+	inline void Database::reserveForPreparedStatements(size_t numberOfAdditionalPreparedStatements) {
 		this->database.reserveForPreparedStatements(numberOfAdditionalPreparedStatements);
 	}
 
@@ -412,7 +412,7 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// get the last inserted ID from the database
-	inline unsigned long Database::getLastInsertedId() {
+	inline size_t Database::getLastInsertedId() {
 		return this->database.getLastInsertedId();
 	}
 
@@ -447,7 +447,7 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// set whether the specified URL list is case-sensitive
-	inline void Database::setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive) {
+	inline void Database::setUrlListCaseSensitive(size_t listId, bool isCaseSensitive) {
 		this->database.setUrlListCaseSensitive(listId, isCaseSensitive);
 	}
 

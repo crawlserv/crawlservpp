@@ -60,7 +60,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// set time-out for target table lock
-	void Database::setTimeoutTargetLock(unsigned long timeOut) {
+	void Database::setTimeoutTargetLock(size_t timeOut) {
 		this->timeoutTargetLock = timeOut;
 	}
 
@@ -320,7 +320,7 @@ namespace crawlservpp::Module::Analyzer {
 			const std::string& filterDateFrom,
 			const std::string& filterDateTo,
 			Data::Corpus& corpusTo,
-			unsigned long& sourcesTo
+			size_t& sourcesTo
 	) {
 		// check arguments
 		if(corpusProperties.sourceTable.empty()) {
@@ -526,7 +526,7 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string>& columns
 	) {
 		// remove invalid sources
-		for(unsigned long n = 1; n <= tables.size(); ++n) {
+		for(size_t n = 1; n <= tables.size(); ++n) {
 			if(!this->checkSource(types.at(n - 1), tables.at(n - 1), columns.at(n - 1))) {
 				--n;
 
@@ -661,7 +661,7 @@ namespace crawlservpp::Module::Analyzer {
 	void Database::createCorpus(
 			const CorpusProperties& corpusProperties,
 			Data::Corpus& corpusTo,
-			unsigned long& sourcesTo
+			size_t& sourcesTo
 	) {
 		// initialize values
 		corpusTo.clear();

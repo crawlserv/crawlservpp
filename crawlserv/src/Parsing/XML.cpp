@@ -62,7 +62,7 @@ namespace crawlservpp::Parsing {
 			std::queue<std::string>& warningsTo
 	) {
 		// remove whitespaces
-		unsigned long begin = 0;
+		size_t begin = 0;
 
 		while(content.size() > begin && isspace(content.at(begin)))
 			++begin;

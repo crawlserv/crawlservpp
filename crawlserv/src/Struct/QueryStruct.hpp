@@ -43,7 +43,7 @@ namespace crawlservpp::Struct {
 		static const unsigned char typeXPathJsonPath = 6;
 
 		unsigned char type;
-		unsigned long index;
+		size_t index;
 		bool resultBool;
 		bool resultSingle;
 		bool resultMulti;

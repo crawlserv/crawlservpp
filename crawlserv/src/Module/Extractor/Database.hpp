@@ -61,7 +61,7 @@ namespace crawlservpp::Module::Extractor {
 		using TargetTableProperties = Struct::TargetTableProperties;
 		using TableColumn = Struct::TableColumn;
 
-		using IdString = std::pair<unsigned long, std::string>;
+		using IdString = std::pair<size_t, std::string>;
 		using StringString = std::pair<std::string, std::string>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
@@ -70,7 +70,7 @@ namespace crawlservpp::Module::Extractor {
 		virtual ~Database();
 
 		// setters
-		void setCacheSize(unsigned long setCacheSize);
+		void setCacheSize(size_t setCacheSize);
 		void setReextract(bool isReextract);
 		void setExtractCustom(bool isParseCustom);
 		void setRawContentIsSource(bool isRawContentIsSource);
@@ -84,21 +84,21 @@ namespace crawlservpp::Module::Extractor {
 		void prepare();
 
 		// URL functions
-		std::string fetchUrls(unsigned long lastId, std::queue<IdString>& cache, unsigned long lockTimeout);
-		unsigned long getUrlPosition(unsigned long urlId);
-		unsigned long getNumberOfUrls();
+		std::string fetchUrls(size_t lastId, std::queue<IdString>& cache, size_t lockTimeout);
+		size_t getUrlPosition(size_t urlId);
+		size_t getNumberOfUrls();
 
 		// URL locking functions
-		std::string getLockTime(unsigned long lockTimeout);
-		std::string getUrlLockTime(unsigned long urlId);
-		std::string renewUrlLockIfOk(unsigned long urlId, const std::string& lockTime, unsigned long lockTimeout);
-		bool unLockUrlIfOk(unsigned long urlId, const std::string& lockTime);
+		std::string getLockTime(size_t lockTimeout);
+		std::string getUrlLockTime(size_t urlId);
+		std::string renewUrlLockIfOk(size_t urlId, const std::string& lockTime, size_t lockTimeout);
+		bool unLockUrlIfOk(size_t urlId, const std::string& lockTime);
 		void unLockUrlsIfOk(std::queue<IdString>& urls, std::string& lockTime);
 
 		// extracting functions
 		unsigned int checkExtractingTable();
-		bool getContent(unsigned long urlId, IdString& contentTo);
-		void getLatestParsedData(unsigned long urlId, unsigned long sourceIndex, std::string& resultTo);
+		bool getContent(size_t urlId, IdString& contentTo);
+		void getLatestParsedData(size_t urlId, size_t sourceIndex, std::string& resultTo);
 		void updateOrAddEntries(std::queue<DataEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
@@ -112,7 +112,7 @@ namespace crawlservpp::Module::Extractor {
 
 	protected:
 		// options
-		unsigned long cacheSize;
+		size_t cacheSize;
 		bool reextract;
 		bool extractCustom;
 		std::string targetTableName;
@@ -126,7 +126,7 @@ namespace crawlservpp::Module::Extractor {
 		// table names and target table ID
 		std::string urlListTable;
 		std::string extractingTable;
-		unsigned long targetTableId;
+		size_t targetTableId;
 		std::string targetTableFull;
 
 	private:

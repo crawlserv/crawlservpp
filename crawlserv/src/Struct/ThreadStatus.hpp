@@ -39,18 +39,18 @@
 namespace crawlservpp::Struct {
 
 	struct ThreadStatus {
-		unsigned long id;	// ID
+		size_t id;	// ID
 		std::string status;	// status message
 		bool paused;		// pause state
-		unsigned long last;	// progress i.e. last ID
+		size_t last;	// progress i.e. last ID
 
 		// constructors
 		ThreadStatus() : id(0), paused(false), last(0) {}
 		ThreadStatus(
-				unsigned long setId,
+				size_t setId,
 				const std::string& setStatus,
 				bool setPaused,
-				unsigned long setLast
+				size_t setLast
 		) : id(setId), status(setStatus), paused(setPaused), last(setLast) {}
 	};
 

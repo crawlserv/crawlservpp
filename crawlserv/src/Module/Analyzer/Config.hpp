@@ -74,9 +74,9 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string> generalInputTables;
 			unsigned char generalLogging;
 			std::string generalResultTable;
-			unsigned long generalSleepMySql;
-			unsigned long generalSleepWhenFinished;
-			unsigned long generalTimeoutTargetLock;
+			size_t generalSleepMySql;
+			size_t generalSleepWhenFinished;
+			size_t generalTimeoutTargetLock;
 
 			// filter by date entries
 			bool filterDateEnable;
@@ -141,7 +141,7 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// check properties of input fields
-		const unsigned long completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
+		const size_t completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
 				this->config.generalInputFields.size(),
 				this->config.generalInputSources.size(),
 				this->config.generalInputTables.size()

@@ -88,7 +88,7 @@ namespace crawlservpp::Query {
 		void setQueryTarget(const std::string& content, const std::string& source);
 
 		// protected getter
-		unsigned long getNumberOfSubSets() const;
+		size_t getNumberOfSubSets() const;
 
 		// general query functions
 		virtual void initQueries() = 0; // children have to initialize their queries on their own (makes the class abstract)
@@ -160,7 +160,7 @@ namespace crawlservpp::Query {
 		// helper functions
 		bool getTarget(std::string& targetTo);
 		bool getXml(std::string& resultTo, std::queue<std::string>& warningsTo);
-		void reserveForSubSets(const QueryStruct& query, unsigned long n);
+		void reserveForSubSets(const QueryStruct& query, size_t n);
 
 		// only moveable (using default), not copyable
 		Container(const Container&) = delete;
@@ -196,8 +196,8 @@ namespace crawlservpp::Query {
 
 		// subset properties and parsing
 		unsigned char subSetType;					// type of subsets
-		unsigned long subSetNumber;					// number of subsets
-		unsigned long subSetCurrent;				// current subset (index + 1)
+		size_t subSetNumber;					// number of subsets
+		size_t subSetCurrent;				// current subset (index + 1)
 		bool subSetXmlParsed;						// current subset has been parsed as HTML/XML
 		bool subSetJsonParsedRapid;					// current subset has been parsed as JSON using RapidJSON
 		bool subSetJsonParsedCons;					// current subset has been parsed as JSON using jsoncons

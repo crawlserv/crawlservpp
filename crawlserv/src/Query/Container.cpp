@@ -84,7 +84,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get number of subsets
-	unsigned long Container::getNumberOfSubSets() const {
+	size_t Container::getNumberOfSubSets() const {
 		return this->subSetNumber;
 	}
 
@@ -2614,7 +2614,7 @@ namespace crawlservpp::Query {
 	}
 
 	// reserve memory for a specific number of subsets
-	void Container::reserveForSubSets(const QueryStruct& query, unsigned long n) {
+	void Container::reserveForSubSets(const QueryStruct& query, size_t n) {
 		this->stringifiedSubSets.reserve(n);
 
 		switch(query.type) {

@@ -37,13 +37,13 @@
 namespace crawlservpp::Struct {
 
 	struct DataEntry {
-		unsigned long contentId;
+		size_t contentId;
 		std::string dataId;
 		std::string dateTime;
 		std::vector<std::string> fields;
 
 		// constructor
-		DataEntry(unsigned long setContentId) : contentId(setContentId) {}
+		DataEntry(size_t setContentId) : contentId(setContentId) {}
 	};
 
 } /* crawlservpp::Struct */

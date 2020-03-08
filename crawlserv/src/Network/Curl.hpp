@@ -99,7 +99,7 @@ namespace crawlservpp::Network {
 		std::string getPublicIp();
 
 		// resetter
-		void resetConnection(unsigned long sleep);
+		void resetConnection(size_t sleep);
 
 		// URL escaping
 		std::string escape(const std::string& stringToEscape, bool usePlusForSpace);
@@ -144,8 +144,8 @@ namespace crawlservpp::Network {
 		static std::string curlStringToString(char * curlString);
 
 		// static and in-class writer functions
-		static int writer(char * data, unsigned long size, unsigned long nmemb, void * thisPtr);
-		int writerInClass(char * data, unsigned long size, unsigned long nmemb);
+		static int writer(char * data, size_t size, size_t nmemb, void * thisPtr);
+		int writerInClass(char * data, size_t size, size_t nmemb);
 	};
 
 } /* crawlservpp::Network */

@@ -94,14 +94,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		std::string source;
 		std::map<std::string, std::vector<std::string>> dictionary;
-		unsigned long sources;
+		size_t sources;
 
 		// algorithm options
 		unsigned char markovTextDimension;
-		unsigned long markovTextLength;
-		unsigned long markovTextMax;
+		size_t markovTextLength;
+		size_t markovTextMax;
 		std::string markovTextResultField;
-		unsigned long markovTextSleep;
+		size_t markovTextSleep;
 		std::string markovTextSourcesField;
 		bool markovTextTiming;
 

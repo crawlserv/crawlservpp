@@ -115,8 +115,8 @@ protected:
 		void option(const std::string& name, std::vector<unsigned short>& target);
 		void option(const std::string& name, unsigned int& target);
 		void option(const std::string& name, std::vector<unsigned int>& target);
-		void option(const std::string& name, unsigned long& target);
-		void option(const std::string& name, std::vector<unsigned long>& target);
+		void option(const std::string& name, size_t& target);
+		void option(const std::string& name, std::vector<size_t>& target);
 		void option(const std::string& name, std::string &target, StringParsingOption opt = Default);
 		void option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt = Default);
 
@@ -1155,8 +1155,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned long), throws Config::Exception
-	inline void Config::option(const std::string& name, unsigned long& target) {
+	// check for a configuration option (size_t), throws Config::Exception
+	inline void Config::option(const std::string& name, size_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -1188,8 +1188,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned longs), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<unsigned long>& target) {
+	// check for a configuration option (array of size_ts), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<size_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -1223,7 +1223,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned long)."
+								" ignored because of wrong type (not size_t)."
 						);
 				}
 			}

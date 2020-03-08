@@ -131,8 +131,8 @@ namespace crawlservpp::Main {
 		using UrlListProperties = Struct::UrlListProperties;
 		using WebsiteProperties = Struct::WebsiteProperties;
 
-		using IdPairs = std::vector<std::pair<unsigned long, unsigned long>>;
-		using IdString = std::pair<unsigned long, std::string>;
+		using IdPairs = std::vector<std::pair<size_t, size_t>>;
+		using IdString = std::pair<size_t, std::string>;
 		using IsRunningCallback = std::function<bool()>;
 		using SqlPreparedStatementPtr = std::unique_ptr<sql::PreparedStatement>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
@@ -152,14 +152,14 @@ namespace crawlservpp::Main {
 		virtual ~Database();
 
 		// setters
-		void setSleepOnError(unsigned long seconds);
-		void setTimeOut(unsigned long milliseconds);
+		void setSleepOnError(size_t seconds);
+		void setTimeOut(size_t milliseconds);
 
 		// getters
 		const DatabaseSettings& getSettings() const;
 		const std::string& getMysqlVersion() const;
 		const std::string& getDataDir() const;
-		unsigned long getMaxAllowedPacketSize() const;
+		size_t getMaxAllowedPacketSize() const;
 
 		// initializing functions
 		void connect();
@@ -170,95 +170,95 @@ namespace crawlservpp::Main {
 		// logging functions
 		void log(const std::string& logEntry);
 		void log(const std::string& logModule, const std::string& logEntry);
-		unsigned long getNumberOfLogEntries(const std::string& logModule);
+		size_t getNumberOfLogEntries(const std::string& logModule);
 		void clearLogs(const std::string& logModule);
 
 		// thread functions
 		std::vector<ThreadDatabaseEntry> getThreads();
-		unsigned long addThread(const ThreadOptions& threadOptions);
-		unsigned long getThreadRunTime(unsigned long threadId);
-		unsigned long getThreadPauseTime(unsigned long threadId);
+		size_t addThread(const ThreadOptions& threadOptions);
+		size_t getThreadRunTime(size_t threadId);
+		size_t getThreadPauseTime(size_t threadId);
 		void setThreadStatus(
-				unsigned long threadId,
+				size_t threadId,
 				bool threadPaused,
 				const std::string& threadStatusMessage
 		);
-		void setThreadStatus(unsigned long threadId, const std::string& threadStatusMessage);
-		void setThreadRunTime(unsigned long threadId, unsigned long threadRunTime);
-		void setThreadPauseTime(unsigned long threadId, unsigned long threadPauseTime);
-		void deleteThread(unsigned long threadId);
+		void setThreadStatus(size_t threadId, const std::string& threadStatusMessage);
+		void setThreadRunTime(size_t threadId, size_t threadRunTime);
+		void setThreadPauseTime(size_t threadId, size_t threadPauseTime);
+		void deleteThread(size_t threadId);
 
 		// website functions
-		unsigned long addWebsite(const WebsiteProperties& websiteProperties);
-		std::string getWebsiteDomain(unsigned long id);
-		std::string getWebsiteNamespace(unsigned long websiteId);
-		IdString getWebsiteNamespaceFromUrlList(unsigned long listId);
-		IdString getWebsiteNamespaceFromConfig(unsigned long configId);
-		IdString getWebsiteNamespaceFromTargetTable(const std::string& type, unsigned long tableId);
+		size_t addWebsite(const WebsiteProperties& websiteProperties);
+		std::string getWebsiteDomain(size_t id);
+		std::string getWebsiteNamespace(size_t websiteId);
+		IdString getWebsiteNamespaceFromUrlList(size_t listId);
+		IdString getWebsiteNamespaceFromConfig(size_t configId);
+		IdString getWebsiteNamespaceFromTargetTable(const std::string& type, size_t tableId);
 		bool isWebsiteNamespace(const std::string& nameSpace);
 		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
-		std::string getWebsiteDataDirectory(unsigned long websiteId);
-		unsigned long getChangedUrlsByWebsiteUpdate(unsigned long websiteId, const WebsiteProperties& websiteProperties);
-		unsigned long getLostUrlsByWebsiteUpdate(unsigned long websiteId, const WebsiteProperties& websiteProperties);
-		void updateWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
-		void deleteWebsite(unsigned long websiteId);
-		unsigned long duplicateWebsite(unsigned long websiteId, const Queries& queries);
-		void moveWebsite(unsigned long websiteId, const WebsiteProperties& websiteProperties);
+		std::string getWebsiteDataDirectory(size_t websiteId);
+		size_t getChangedUrlsByWebsiteUpdate(size_t websiteId, const WebsiteProperties& websiteProperties);
+		size_t getLostUrlsByWebsiteUpdate(size_t websiteId, const WebsiteProperties& websiteProperties);
+		void updateWebsite(size_t websiteId, const WebsiteProperties& websiteProperties);
+		void deleteWebsite(size_t websiteId);
+		size_t duplicateWebsite(size_t websiteId, const Queries& queries);
+		void moveWebsite(size_t websiteId, const WebsiteProperties& websiteProperties);
 
 		// URL list functions
-		unsigned long addUrlList(unsigned long websiteId, const UrlListProperties& listProperties);
-		std::queue<IdString> getUrlLists(unsigned long websiteId);
-		unsigned long mergeUrls(unsigned long listId, std::queue<std::string>& urls);
-		std::queue<std::string> getUrls(unsigned long listId);
-		std::queue<IdString> getUrlsWithIds(unsigned long listId);
-		std::string getUrlListNamespace(unsigned long listId);
-		IdString getUrlListNamespaceFromTargetTable(const std::string& type, unsigned long listId);
-		bool isUrlListNamespace(unsigned long websiteId, const std::string& nameSpace);
-		void updateUrlList(unsigned long listId, const UrlListProperties& listProperties);
-		void deleteUrlList(unsigned long listId);
-		unsigned long deleteUrls(unsigned long listId, std::queue<unsigned long>& urlIds);
-		void resetParsingStatus(unsigned long listId);
-		void resetExtractingStatus(unsigned long listId);
-		void resetAnalyzingStatus(unsigned long listId);
+		size_t addUrlList(size_t websiteId, const UrlListProperties& listProperties);
+		std::queue<IdString> getUrlLists(size_t websiteId);
+		size_t mergeUrls(size_t listId, std::queue<std::string>& urls);
+		std::queue<std::string> getUrls(size_t listId);
+		std::queue<IdString> getUrlsWithIds(size_t listId);
+		std::string getUrlListNamespace(size_t listId);
+		IdString getUrlListNamespaceFromTargetTable(const std::string& type, size_t listId);
+		bool isUrlListNamespace(size_t websiteId, const std::string& nameSpace);
+		void updateUrlList(size_t listId, const UrlListProperties& listProperties);
+		void deleteUrlList(size_t listId);
+		size_t deleteUrls(size_t listId, std::queue<size_t>& urlIds);
+		void resetParsingStatus(size_t listId);
+		void resetExtractingStatus(size_t listId);
+		void resetAnalyzingStatus(size_t listId);
 
 		// query functions
-		unsigned long addQuery(unsigned long websiteId, const QueryProperties& queryProperties);
-		void getQueryProperties(unsigned long queryId, QueryProperties& queryPropertiesTo);
-		void updateQuery(unsigned long queryId, const QueryProperties& queryProperties);
-		void deleteQuery(unsigned long queryId);
-		unsigned long duplicateQuery(unsigned long queryId);
+		size_t addQuery(size_t websiteId, const QueryProperties& queryProperties);
+		void getQueryProperties(size_t queryId, QueryProperties& queryPropertiesTo);
+		void updateQuery(size_t queryId, const QueryProperties& queryProperties);
+		void deleteQuery(size_t queryId);
+		size_t duplicateQuery(size_t queryId);
 
 		// configuration functions
-		unsigned long addConfiguration(
-				unsigned long websiteId,
+		size_t addConfiguration(
+				size_t websiteId,
 				const ConfigProperties& configProperties
 		);
-		const std::string getConfiguration(unsigned long configId);
-		void updateConfiguration(unsigned long configId, const ConfigProperties& configProperties);
-		void deleteConfiguration(unsigned long configId);
-		unsigned long duplicateConfiguration(unsigned long configId);
+		const std::string getConfiguration(size_t configId);
+		void updateConfiguration(size_t configId, const ConfigProperties& configProperties);
+		void deleteConfiguration(size_t configId);
+		size_t duplicateConfiguration(size_t configId);
 
 		// target table functions
-		unsigned long addTargetTable(const TargetTableProperties& properties);
-		std::queue<IdString> getTargetTables(const std::string& type, unsigned long listId);
-		unsigned long getTargetTableId(
+		size_t addTargetTable(const TargetTableProperties& properties);
+		std::queue<IdString> getTargetTables(const std::string& type, size_t listId);
+		size_t getTargetTableId(
 				const std::string& type,
-				unsigned long websiteId,
-				unsigned long listId,
+				size_t websiteId,
+				size_t listId,
 				const std::string& tableName
 		);
-		std::string getTargetTableName(const std::string& type, unsigned long tableId);
-		void deleteTargetTable(const std::string& type, unsigned long tableId);
+		std::string getTargetTableName(const std::string& type, size_t tableId);
+		void deleteTargetTable(const std::string& type, size_t tableId);
 
 		// validation functions
 		void checkConnection();
-		bool isWebsite(unsigned long websiteId);
-		bool isUrlList(unsigned long urlListId);
-		bool isUrlList(unsigned long websiteId, unsigned long urlListId);
-		bool isQuery(unsigned long queryId);
-		bool isQuery(unsigned long websiteId, unsigned long queryId);
-		bool isConfiguration(unsigned long configId);
-		bool isConfiguration(unsigned long websiteId, unsigned long configId);
+		bool isWebsite(size_t websiteId);
+		bool isUrlList(size_t urlListId);
+		bool isUrlList(size_t websiteId, size_t urlListId);
+		bool isQuery(size_t queryId);
+		bool isQuery(size_t websiteId, size_t queryId);
+		bool isConfiguration(size_t configId);
+		bool isConfiguration(size_t websiteId, size_t configId);
 
 		// database functions
 		void beginNoLock();
@@ -320,7 +320,8 @@ namespace crawlservpp::Main {
 		sql::PreparedStatement& getPreparedStatement(unsigned short id);
 
 		// database helper functions
-		unsigned long getLastInsertedId();
+		size_t getLastInsertedId();
+		size_t getConnectionId();
 		void resetAutoIncrement(const std::string& tableName);
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
 		void removeDatabaseLock(const std::string& name);
@@ -333,8 +334,8 @@ namespace crawlservpp::Main {
 		std::queue<std::string> cloneTable(const std::string& tableName, const std::string& dataDir);
 
 		// URL list helper functions
-		bool isUrlListCaseSensitive(unsigned long listId);
-		void setUrlListCaseSensitive(unsigned long listId, bool isCaseSensitive);
+		bool isUrlListCaseSensitive(size_t listId);
+		void setUrlListCaseSensitive(size_t listId, bool isCaseSensitive);
 
 		// exception helper function
 		void sqlException(const std::string& function, const sql::SQLException& e);
@@ -567,8 +568,8 @@ namespace crawlservpp::Main {
 	private:
 		// private connection information
 		const DatabaseSettings settings;	// database settings
-		unsigned long maxAllowedPacketSize;	// maximum packet size
-		unsigned long sleepOnError;			// number of seconds to sleep on database error
+		size_t maxAllowedPacketSize;	// maximum packet size
+		size_t sleepOnError;			// number of seconds to sleep on database error
 		std::string mysqlVersion;			// MySQL version
 		std::string dataDir;				// main data directory
 		std::vector<std::string> dirs;		// all known data directories

@@ -38,9 +38,9 @@ namespace crawlservpp::Struct {
 	struct ThreadOptions {
 		std::string module; // module of the thread
 
-		unsigned long website; // website ID for the thread
-		unsigned long urlList; // URL list ID for the thread
-		unsigned long config; // configuration ID for the thread
+		size_t website; // website ID for the thread
+		size_t urlList; // URL list ID for the thread
+		size_t config; // configuration ID for the thread
 
 		// constructors
 		ThreadOptions() // create empty thread options
@@ -50,9 +50,9 @@ namespace crawlservpp::Struct {
 
 		ThreadOptions( // create thread options
 				const std::string& setModule,
-				unsigned long setWebsite,
-				unsigned long setUrlList,
-				unsigned long setConfig)
+				size_t setWebsite,
+				size_t setUrlList,
+				size_t setConfig)
 				: module(setModule),
 				  website(setWebsite),
 				  urlList(setUrlList),

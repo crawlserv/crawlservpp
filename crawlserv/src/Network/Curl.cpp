@@ -1175,7 +1175,7 @@ namespace crawlservpp::Network {
 	}
 
 	// reset connection, throws Curl::Exception
-	void Curl::resetConnection(unsigned long sleep) {
+	void Curl::resetConnection(size_t sleep) {
 		// cleanup lists
 		this->dnsResolves.reset();
 		this->headers.reset();
@@ -1273,7 +1273,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			unsigned long pos = 0;
+			size_t pos = 0;
 
 			while(true) {
 				pos = result.find("%20", pos);
@@ -1307,7 +1307,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			unsigned long pos = 0;
+			size_t pos = 0;
 
 			while(true) {
 				pos = result.find("+", pos);
@@ -1327,11 +1327,11 @@ namespace crawlservpp::Network {
 
 	// escape an URL but leave reserved characters (; / ? : @ = & #) intact
 	std::string Curl::escapeUrl(const std::string& urlToEncode) {
-		unsigned long pos = 0;
+		size_t pos = 0;
 		std::string result;
 
 		while(pos < urlToEncode.length()) {
-			unsigned long end = urlToEncode.find_first_of(";/?:@=&#", pos);
+			size_t end = urlToEncode.find_first_of(";/?:@=&#", pos);
 
 			if(end == std::string::npos)
 				end = urlToEncode.length();
@@ -1364,7 +1364,7 @@ namespace crawlservpp::Network {
 	}
 
 	// static cURL writer function
-	int Curl::writer(char * data, unsigned long size, unsigned long nmemb, void * thisPtr) {
+	int Curl::writer(char * data, size_t size, size_t nmemb, void * thisPtr) {
 		if(!thisPtr)
 			return 0;
 
@@ -1372,7 +1372,7 @@ namespace crawlservpp::Network {
 	}
 
 	// in-class cURL writer function
-	int Curl::writerInClass(char * data, unsigned long size, unsigned long nmemb) {
+	int Curl::writerInClass(char * data, size_t size, size_t nmemb) {
 		this->content.append(data, size * nmemb);
 
 		return size * nmemb;

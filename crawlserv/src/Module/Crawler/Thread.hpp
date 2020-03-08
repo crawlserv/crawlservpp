@@ -91,7 +91,7 @@ namespace crawlservpp::Module::Crawler {
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
-		using IdString = std::pair<unsigned long, std::string>;
+		using IdString = std::pair<size_t, std::string>;
 		using TimeString = std::pair<std::chrono::steady_clock::time_point, std::string>;
 
 	public:
@@ -189,11 +189,11 @@ namespace crawlservpp::Module::Crawler {
 		IdString nextUrl;				// next URL (currently crawled URL in automatic mode)
 		std::string lockTime;			// last locking time for currently crawled URL
 		IdString manualUrl;				// custom URL to be retried
-		unsigned long manualCounter;	// number of crawled custom URLs
+		size_t manualCounter;	// number of crawled custom URLs
 		bool startCrawled;				// start page has been successfully crawled
 		bool manualOff;					// manual mode has been turned off (after first URL is crawled)
 		std::string crawledContent;		// crawled content
-		unsigned long retryCounter;		// number of retries
+		size_t retryCounter;		// number of retries
 		bool archiveRetry;				// only archive needs to be retried
 
 		// timing
@@ -237,8 +237,8 @@ namespace crawlservpp::Module::Crawler {
 				const std::string& customCookies,
 				const std::vector<std::string>& customHeaders,
 				bool usePost,
-				unsigned long& checkedUrlsTo,
-				unsigned long& newUrlsTo,
+				size_t& checkedUrlsTo,
+				size_t& newUrlsTo,
 				std::string& timerStrTo
 		);
 		void crawlingDynamicRedirectUrl(
@@ -277,13 +277,13 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingParseAndAddUrls(
 				const std::string& url,
 				std::vector<std::string>& urls,
-				unsigned long& newUrlsTo,
+				size_t& newUrlsTo,
 				bool archived
 		);
 		bool crawlingArchive(
 				IdString& url,
-				unsigned long& checkedUrlsTo,
-				unsigned long& newUrlsTo,
+				size_t& checkedUrlsTo,
+				size_t& newUrlsTo,
 				bool unlockUrl
 		);
 		void crawlingSuccess(const IdString& url);

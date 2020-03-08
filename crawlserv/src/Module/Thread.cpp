@@ -56,8 +56,8 @@ namespace crawlservpp::Module {
 			  warpedOver(0),
 			  startTimePoint(std::chrono::steady_clock::time_point::min()),
 			  pauseTimePoint(std::chrono::steady_clock::time_point::min()),
-			  runTime(std::chrono::duration<unsigned long>::zero()),
-			  pauseTime(std::chrono::duration<unsigned long>::zero()) {
+			  runTime(std::chrono::duration<size_t>::zero()),
+			  pauseTime(std::chrono::duration<size_t>::zero()) {
 		// remove paused or interrupted thread status from status message
 		if(
 				threadStatus.status.length() >= 12
@@ -113,22 +113,22 @@ namespace crawlservpp::Module {
 	Thread::~Thread() {}
 
 	// get ID of the thread (thread-safe)
-	unsigned long Thread::getId() const {
+	size_t Thread::getId() const {
 		return this->id;
 	}
 
 	// get ID of the website (thread-safe)
-	unsigned long Thread::getWebsite() const {
+	size_t Thread::getWebsite() const {
 		return this->options.website;
 	}
 
 	// get ID of URL list (thread-safe)
-	unsigned long Thread::getUrlList() const {
+	size_t Thread::getUrlList() const {
 		return this->options.urlList;
 	}
 
 	// get ID of the configuration (thread-safe)
-	unsigned long Thread::getConfig() const {
+	size_t Thread::getConfig() const {
 		return this->options.config;
 	}
 
@@ -265,7 +265,7 @@ namespace crawlservpp::Module {
 	}
 
 	// jump to specified target ID ("time travel"), throws Thread::Exception
-	void Thread::warpTo(unsigned long target) {
+	void Thread::warpTo(size_t target) {
 		// check argument
 		if(!target)
 			throw Exception("Target ID cannot be zero");
@@ -280,7 +280,7 @@ namespace crawlservpp::Module {
 	}
 
 	// sleep for the specified number of milliseconds (unless the thread is stopped)
-	void Thread::sleep(unsigned long ms) const {
+	void Thread::sleep(size_t ms) const {
 		while(ms > MODULE_THREAD_SLEEP_ON_SLEEP_MS) {
 			if(!(this->isRunning()))
 				return;
@@ -359,12 +359,12 @@ namespace crawlservpp::Module {
 	}
 
 	// get value of last ID (to be used by the thread only)
-	unsigned long Thread::getLast() const {
+	size_t Thread::getLast() const {
 		return this->last;
 	}
 
 	// set last ID (to be used by the thread only)
-	void Thread::setLast(unsigned long last) {
+	void Thread::setLast(size_t last) {
 		// set last ID internally
 		this->last = last;
 
@@ -398,7 +398,7 @@ namespace crawlservpp::Module {
 	}
 
 	// get current run time in seconds
-	unsigned long Thread::getRunTime() const {
+	size_t Thread::getRunTime() const {
 		if(this->startTimePoint > std::chrono::steady_clock::time_point::min())
 			return	(
 							this->runTime +
@@ -531,7 +531,7 @@ namespace crawlservpp::Module {
 		// check for "time travel" to another ID
 		if(this->overwriteLast) {
 			// save old values for time calculation
-			const unsigned long oldId = this->last;
+			const size_t oldId = this->last;
 			const double oldTime = static_cast<double>(this->getRunTime());
 
 			// change status

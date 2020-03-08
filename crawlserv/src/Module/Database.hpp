@@ -74,7 +74,7 @@ namespace crawlservpp::Module {
 
 		// setters
 		void setOptions(const ModuleOptions& moduleOptions);
-		void setThreadId(unsigned long id);
+		void setThreadId(size_t id);
 		void setLogging(unsigned short level, unsigned short min, unsigned short verbose);
 
 		// command function
@@ -85,9 +85,9 @@ namespace crawlservpp::Module {
 		void log(unsigned short level, std::queue<std::string>& logEntries);
 
 		// thread functions
-		void setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage);
-		void setThreadProgress(unsigned long threadId, float threadProgress, unsigned long threadRunTime);
-		void setThreadLast(unsigned long threadId, unsigned long threadLast);
+		void setThreadStatusMessage(size_t threadId, bool threadPaused, const std::string& threadStatusMessage);
+		void setThreadProgress(size_t threadId, float threadProgress, size_t threadRunTime);
+		void setThreadLast(size_t threadId, size_t threadLast);
 
 		// class for Module::Database exceptions
 		MAIN_EXCEPTION_CLASS();

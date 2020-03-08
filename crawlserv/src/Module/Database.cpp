@@ -71,7 +71,7 @@ namespace crawlservpp::Module {
 	}
 
 	// set ID of thread and convert it to string
-	void Database::setThreadId(unsigned long threadId) {
+	void Database::setThreadId(size_t threadId) {
 		if(!threadId)
 			throw Exception("No thread ID specified");
 
@@ -205,7 +205,7 @@ namespace crawlservpp::Module {
 	}
 
 	// set the status message of a thread (and add the pause state), throws Database::Exception
-	void Database::setThreadStatusMessage(unsigned long threadId, bool threadPaused, const std::string& threadStatusMessage) {
+	void Database::setThreadStatusMessage(size_t threadId, bool threadPaused, const std::string& threadStatusMessage) {
 		// check connection
 		this->checkConnection();
 
@@ -241,7 +241,7 @@ namespace crawlservpp::Module {
 
 	// set the progress of a thread to between 0 for 0% and 1 for 100% in database (and update runtime),
 	//  throws Database::Exception
-	void Database::setThreadProgress(unsigned long threadId, float threadProgress, unsigned long threadRunTime) {
+	void Database::setThreadProgress(size_t threadId, float threadProgress, size_t threadRunTime) {
 		// check connection
 		this->checkConnection();
 
@@ -264,7 +264,7 @@ namespace crawlservpp::Module {
 	}
 
 	// set last ID of thread in database, throws Database::Exception
-	void Database::setThreadLast(unsigned long threadId, unsigned long threadLast) {
+	void Database::setThreadLast(size_t threadId, size_t threadLast) {
 		// check connection
 		this->checkConnection();
 

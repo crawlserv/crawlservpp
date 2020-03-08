@@ -131,7 +131,7 @@ namespace crawlservpp::Helper::Strings {
 	bool checkDomainName(const std::string& name);
 	bool checkSQLName(const std::string& name);
 
-	std::string randomGenerate(unsigned long length);
+	std::string randomGenerate(size_t length);
 
 	// Unicode white spaces
 	const std::string utfWhitespaces[] = {
@@ -167,8 +167,8 @@ namespace crawlservpp::Helper::Strings {
 			const std::string& to,
 			bool onlyOnce
 	) {
-		unsigned long startPos = 0;
-		unsigned long jump = 0;
+		size_t startPos = 0;
+		size_t jump = 0;
 
 		if(from.empty())
 			return;
@@ -229,7 +229,7 @@ namespace crawlservpp::Helper::Strings {
 			char delimiter,
 			bool ignoreEmpty
 	) {
-		unsigned long size = 0;
+		size_t size = 0;
 		std::string result;
 
 		// calculate and reserve needed memory
@@ -260,7 +260,7 @@ namespace crawlservpp::Helper::Strings {
 		std::string result;
 
 		// calculate and reserve needed memory
-		unsigned long size = 0;
+		size_t size = 0;
 
 		for(const auto& string : strings)
 			if(!ignoreEmpty || !string.empty())
@@ -334,10 +334,10 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const unsigned long oldSize = appendTo.size();
+		const size_t oldSize = appendTo.size();
 
 		// calculate and reserve needed memory
-		unsigned long size = oldSize;
+		size_t size = oldSize;
 
 		for(const auto& string : strings)
 			if(!ignoreEmpty || !string.empty())
@@ -362,10 +362,10 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const unsigned long oldSize = appendTo.size();
+		const size_t oldSize = appendTo.size();
 
 		// calculate and reserve needed memory
-		unsigned long size = oldSize;
+		size_t size = oldSize;
 
 		for(const auto& string : strings)
 			if(!ignoreEmpty || !string.empty())
@@ -390,7 +390,7 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const unsigned long oldSize = appendTo.size();
+		const size_t oldSize = appendTo.size();
 
 		// append string
 		while(!strings.empty()) {
@@ -412,7 +412,7 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const unsigned long oldSize = appendTo.size();
+		const size_t oldSize = appendTo.size();
 
 		// append string
 		while(!strings.empty()) {
@@ -583,7 +583,7 @@ namespace crawlservpp::Helper::Strings {
 
 	// encode percentage sign if not followed by two-digit hexadecimal number
 	inline void encodePercentage(std::string& stringToEncode) {
-		unsigned long pos = 0;
+		size_t pos = 0;
 
 		do {
 			pos = stringToEncode.find('%', pos);
@@ -607,7 +607,7 @@ namespace crawlservpp::Helper::Strings {
 	// remove new lines and unnecessary spaces (including Unicode white spaces)
 	inline void utfTidy(std::string& stringToTidy) {
 		// replace Unicode white spaces with spaces
-		for(unsigned long n = 0; n < sizeof(utfWhitespaces) / sizeof(std::string); ++n)
+		for(size_t n = 0; n < sizeof(utfWhitespaces) / sizeof(std::string); ++n)
 			replaceAll(stringToTidy, utfWhitespaces[n], " ", true);
 
 		// replace special ASCII characters with spaces
@@ -645,7 +645,7 @@ namespace crawlservpp::Helper::Strings {
 	}
 
 	// generate a random alphanumerical string of a specific length
-	inline std::string generateRandom(unsigned long length) {
+	inline std::string generateRandom(size_t length) {
 		static const std::string charSet(
 				"01234567890"
 				"abcdefghijklmnopqrstuvwxyz"
