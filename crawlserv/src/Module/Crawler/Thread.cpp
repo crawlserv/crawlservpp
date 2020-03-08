@@ -363,39 +363,42 @@ namespace crawlservpp::Module::Crawler {
 					this->crawlingSuccess(url);
 
 					// log if necessary
-					std::ostringstream logStrStr;
+					const auto logLevel = this->config.crawlerTiming
+							? Config::crawlerLoggingDefault
+							: Config::crawlerLoggingExtended;
 
-					logStrStr.imbue(std::locale(""));
+					if(this->isLogLevel(logLevel)) {
+						std::ostringstream logStrStr;
 
-					logStrStr << "finished " << url.second;
+						logStrStr.imbue(std::locale(""));
 
-					if(this->config.crawlerTiming) {
-						logStrStr	<< " after " << timerTotal.totalStr()
-									<< " (select: " << timerSelect.totalStr() << ", "
-									<< timerString;
+						logStrStr << "finished " << url.second;
 
-						if(this->config.crawlerArchives)
-							logStrStr << ", archive: " << timerArchives.totalStr();
+						if(this->config.crawlerTiming) {
+							logStrStr	<< " after " << timerTotal.totalStr()
+										<< " (select: " << timerSelect.totalStr() << ", "
+										<< timerString;
 
-						logStrStr << ")";
+							if(this->config.crawlerArchives)
+								logStrStr << ", archive: " << timerArchives.totalStr();
+
+							logStrStr << ")";
+						}
+
+						logStrStr << " - checked " << checkedUrls;
+
+						if(checkedUrlsArchive)
+							logStrStr << " (+" << checkedUrlsArchive << " archived)";
+
+						logStrStr << ", added " << newUrls;
+
+						if(newUrlsArchive)
+							logStrStr << " (+" << newUrlsArchive << " archived)";
+
+						logStrStr << " URL(s).";
+
+						this->log(logLevel, logStrStr.str());
 					}
-
-					logStrStr << " - checked " << checkedUrls;
-
-					if(checkedUrlsArchive)
-						logStrStr << " (+" << checkedUrlsArchive << " archived)";
-
-					logStrStr << ", added " << newUrls;
-
-					if(newUrlsArchive)
-						logStrStr << " (+" << newUrlsArchive << " archived)";
-
-					logStrStr << " URL(s).";
-
-					this->log(
-							this->config.crawlerTiming ? Config::crawlerLoggingDefault : Config::crawlerLoggingExtended,
-							logStrStr.str()
-					);
 				}
 			}
 			else if(!crawled)
@@ -430,7 +433,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// clear crawler
 	void Thread::onClear() {
-		if(this->tickCounter) {
+		if(this->tickCounter && this->isLogLevel(Config::crawlerLoggingDefault)) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
 
