@@ -310,11 +310,11 @@ namespace crawlservpp::Module::Analyzer {
 							"SELECT SUM(chunk_size) AS size, SUM(chunk_length) AS length"
 							" FROM"
 							" `crawlserv_corpora`"
-							" WHERE dest.website = " + this->getWebsiteIdString() +
-							" AND dest.urllist = " + this->getUrlListIdString() +
-							" AND dest.source_type = ?"
-							" AND dest.source_table LIKE ?"
-							" AND dest.source_field LIKE ?"
+							" WHERE website = " + this->getWebsiteIdString() +
+							" AND urllist = " + this->getUrlListIdString() +
+							" AND source_type = ?"
+							" AND source_table LIKE ?"
+							" AND source_field LIKE ?"
 						    " LIMIT 1"
 						") AS src"
 						" SET"
@@ -325,7 +325,6 @@ namespace crawlservpp::Module::Analyzer {
 						" AND dest.source_type = ?"
 						" AND dest.source_table LIKE ?"
 						" AND dest.source_field LIKE ?"
-						" LIMIT ?"
 				);
 			}
 		}
@@ -710,8 +709,6 @@ namespace crawlservpp::Module::Analyzer {
 			size_t& sourcesTo
 	) {
 		// initialize values
-		size_t numChunks = 0;
-
 		corpusTo.clear();
 
 		sourcesTo = 0;
@@ -882,8 +879,6 @@ namespace crawlservpp::Module::Analyzer {
 					dateMaps
 			);
 
-			numChunks = chunks.size();
-
 			// add corpus chunks to the database
 			size_t last = 0;
 
@@ -943,7 +938,6 @@ namespace crawlservpp::Module::Analyzer {
 			measureCorpusStatement.setUInt(4, corpusProperties.sourceType);
 			measureCorpusStatement.setString(5, corpusProperties.sourceTable);
 			measureCorpusStatement.setString(6, corpusProperties.sourceField);
-			measureCorpusStatement.setUInt64(7, numChunks);
 
 			Database::sqlExecute(measureCorpusStatement);
 		}
