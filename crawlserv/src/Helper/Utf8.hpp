@@ -43,6 +43,7 @@ namespace crawlservpp::Helper::Utf8 {
 
 	std::string iso88591ToUtf8(const std::string& strIn);
 	bool isValidUtf8(const std::string& stringToCheck, std::string& errTo);
+	bool isLastCharValidUtf8(const std::string& stringToCheck);
 	bool repairUtf8(const std::string& strIn, std::string& strOut);
 
 	/*
@@ -82,6 +83,47 @@ namespace crawlservpp::Helper::Utf8 {
 
 			return false;
 		}
+	}
+
+	// check ending of string for valid UTF-8 character, also return true if string is empty
+	inline bool isLastCharValidUtf8(const std::string& stringToCheck) {
+		if(stringToCheck.empty())
+			return true;
+
+		// check for valid one-byte character
+		size_t pos = stringToCheck.size() - 1;
+
+		if(utf8::is_valid(stringToCheck.substr(pos, 1)))
+			return true;
+
+		if(stringToCheck.size() < 2)
+			return false;
+
+		--pos;
+
+		// check for valid two-byte character
+		if(utf8::is_valid(stringToCheck.substr(pos, 2)))
+			return true;
+
+		if(stringToCheck.size() < 3)
+			return false;
+
+		--pos;
+
+		// check for valid three-byte character
+		if(utf8::is_valid(stringToCheck.substr(pos, 3)))
+			return true;
+
+		if(stringToCheck.size() < 4)
+			return false;
+
+		--pos;
+
+		// check for valid four-byte character
+		if(utf8::is_valid(stringToCheck.substr(pos, 3)))
+			return true;
+
+		return false;
 	}
 
 	// replace invalid UTF-8 characters, return whether invalid characters occured, throws Utf8::Exception
