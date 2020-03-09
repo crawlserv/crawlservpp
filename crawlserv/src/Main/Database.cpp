@@ -144,43 +144,6 @@ namespace crawlservpp::Main {
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::setTimeOut", e); }
 	}
 
-	// enable concatenation of very long strings (setting `group_concat_max_len` to its maximum)
-	void Database::setGroupConcatToMax() {
-		this->checkConnection();
-
-		try {
-			// create MySQL statement
-			SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-			// try setting 64-bit value
-			Database::sqlExecute(
-					sqlStatement,
-					"SET @@group_concat_max_len = 18446744073709551615"
-			);
-		}
-		catch(const sql::SQLException &e) {
-			if(e.getErrorCode() == 1232)
-				try {
-					// create MySQL statement
-					SqlStatementPtr sqlStatement(this->connection->createStatement());
-
-					// try setting 32-bit value
-					Database::sqlExecute(
-							sqlStatement,
-							"SET @@group_concat_max_len = 4294967295"
-					);
-
-					// write warning to log
-					this->log("WARNING: MySQL server appears to be 32-bit and may not support very long texts.");
-				}
-				catch(const sql::SQLException& e) {
-					this->sqlException("Main::Database::setGroupConcatToMax", e);
-				}
-			else
-				this->sqlException("Main::Database::setGroupConcatToMax", e);
-		}
-	}
-
 	/*
 	 * GETTERS
 	 */

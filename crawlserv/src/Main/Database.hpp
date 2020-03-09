@@ -154,7 +154,6 @@ namespace crawlservpp::Main {
 		// setters
 		void setSleepOnError(size_t seconds);
 		void setTimeOut(size_t milliseconds);
-		void setGroupConcatToMax();
 
 		// getters
 		const DatabaseSettings& getSettings() const;
