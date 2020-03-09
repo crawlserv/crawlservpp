@@ -36,6 +36,7 @@
 #define DATA_CORPUS_HPP_
 
 #include "../Helper/DateTime.hpp"
+#include "../Helper/Utf8.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/TextMap.hpp"
 
@@ -110,6 +111,10 @@ namespace crawlservpp::Data {
 		bool checkConsistency;
 
 	private:
+		// private helper function
+		size_t getValidLengthOfSlice(size_t pos, size_t maxLength, size_t maxChunkSize) const;
+
+		// private static helper function
 		static void checkMap(
 				const Struct::TextMap& map,
 				size_t corpusSize
@@ -277,7 +282,7 @@ namespace crawlservpp::Data {
 			return;
 		}
 
-		// reserve approx. memory for chunks
+		// reserve probable memory for chunks
 		const size_t chunks = this->corpus.size() / chunkSize
 				+ (this->corpus.size() % chunkSize > 0 ? 1 : 0);
 
@@ -297,9 +302,9 @@ namespace crawlservpp::Data {
 			size_t pos = 0;
 
 			while(pos < this->corpus.size()) {
-				to.emplace_back(this->corpus.substr(pos, chunkSize));
+				to.emplace_back(this->corpus, pos, this->getValidLengthOfSlice(pos, chunkSize, chunkSize));
 
-				pos += chunkSize;
+				pos += to.back().size();
 			}
 
 			noSpace = true;
@@ -310,8 +315,8 @@ namespace crawlservpp::Data {
 
 			while(corpusPos < this->corpus.size()) { /* loop for chunks */
 				// create chunk
-				std::string chunk;
 				Struct::TextMap chunkArticleMap, chunkDateMap;
+				std::string chunk;
 
 				// add space if necessary
 				if(noSpace) {
@@ -323,7 +328,7 @@ namespace crawlservpp::Data {
 				}
 
 				for(; articleIt != this->articleMap.end(); ++articleIt) { /* loop for multiple articles inside one chunk */
-					if(!(this->dateMap.empty())) {
+					if(dateIt != this->dateMap.end()) {
 						// check date of the article
 						if(!articlePos && articleIt->pos > dateIt->pos + dateIt->length)
 							++dateIt;
@@ -348,7 +353,7 @@ namespace crawlservpp::Data {
 							// add the remainder of the article to the chunk
 							chunkArticleMap.emplace_back(chunk.size(), remaining, articleIt->value);
 
-							if(!(this->dateMap.empty())) {
+							if(dateIt != this->dateMap.end()) {
 								if(!chunkDateMap.empty() && chunkDateMap.back().value == dateIt->value)
 									chunkDateMap.back().length += remaining + 1; /* including space before article */
 								else if(corpusPos >= dateIt->pos)
@@ -390,26 +395,33 @@ namespace crawlservpp::Data {
 					}
 					else {
 						// fill the remainder of the chunk with part of the article
-						const size_t fill = chunkSize - chunk.size();
+						size_t fill = chunkSize - chunk.size();
 
-						if(fill) {
-							chunkArticleMap.emplace_back(chunk.size(), fill, articleIt->value);
+						if(!fill)
+							break;	/* chunk is full */
 
-							if(!(this->dateMap.empty())) {
-								if(!chunkDateMap.empty() && chunkDateMap.back().value == dateIt->value)
-									chunkDateMap.back().length += fill + 1; /* including space before the article */
-								else if(corpusPos >= dateIt->pos)
-									chunkDateMap.emplace_back(chunk.size(), fill, dateIt->value);
-							}
+						// check the end for valid UTF-8
+						fill = this->getValidLengthOfSlice(corpusPos, fill, chunkSize);
 
-							chunk.append(this->corpus, corpusPos, fill);
+						if(!fill)
+							break;	/* not enough space in chunk for last (UTF-8) character */
 
-							// update positions
-							corpusPos += fill;
-							articlePos += fill;
+						chunkArticleMap.emplace_back(chunk.size(), fill, articleIt->value);
+
+						if(dateIt != this->dateMap.end()) {
+							if(!chunkDateMap.empty() && chunkDateMap.back().value == dateIt->value)
+								chunkDateMap.back().length += fill + 1; /* including space before the article */
+							else if(corpusPos >= dateIt->pos)
+								chunkDateMap.emplace_back(chunk.size(), fill, dateIt->value);
 						}
 
-						break; // chunk is full
+						chunk.append(this->corpus, corpusPos, fill);
+
+						// update positions
+						corpusPos += fill;
+						articlePos += fill;
+
+						break; /* chunk is full */
 					}
 				}
 
@@ -516,7 +528,7 @@ namespace crawlservpp::Data {
 
 			auto& text = texts.at(n);
 
-			// add article ID (or empty string) to article map
+			// add article ID (or empty article) to article map
 			if(articleIds.size() > n) {
 				auto& articleId = articleIds.at(n);
 
@@ -527,7 +539,11 @@ namespace crawlservpp::Data {
 					// free memory early
 					std::string().swap(articleId);
 			}
+			else if(!(this->articleMap.empty()) && this->articleMap.back().value.empty())
+				// expand empty article in the end of the article map
+				this->articleMap.back().length += text.length() + 1; /* include space before current text */
 			else
+				// add empty article to the end of the article map
 				this->articleMap.emplace_back(pos, text.length());
 
 			// add date to date map if necessary
@@ -844,8 +860,59 @@ namespace crawlservpp::Data {
 		this->dateMap.clear();
 	}
 
+	// get a valid end of the current slice (without cutting off UTF-8 characters), throws Corpus::Exception
+	//	NOTE: the result is between (maxLength - 3) and maxLength and at least zero
+	inline size_t Corpus::getValidLengthOfSlice(size_t pos, size_t maxLength, size_t maxChunkSize) const {
+		// check arguments
+		if(maxLength > maxChunkSize)
+			throw Exception(
+					"Corpus::getValidLengthOfSlice(): Invalid maximum chunk size given ("
+					+ std::to_string(maxLength)
+					+ " > "
+					+ std::to_string(maxChunkSize)
+					+ ")"
+			);
+
+		if(!maxChunkSize)
+			throw Exception(
+					"Corpus::getValidLengthOfSlice(): Invalid maximum chunk size of zero"
+			);
+
+		if(!maxLength)
+			return 0;
+
+		// cut a maximum of three bytes
+		unsigned char cut = 0;
+
+		for(; cut < 4; ++cut) {
+			if(cut > maxLength)
+				break;
+
+			// check last four of the remaining characters (if available)
+			const unsigned char maxBack = cut + 4;
+			const size_t checkFrom = maxLength > maxBack ? pos + maxLength - maxBack : pos;
+			const size_t checkLength = maxLength > maxBack ? 4 : maxLength - cut;
+
+			if(Helper::Utf8::isLastCharValidUtf8(this->corpus.substr(checkFrom, checkLength)))
+				return maxLength - cut;
+		}
+
+		if(cut == 4)
+			throw Exception(
+					"Corpus::getValidLengthOfSlice(): Could not slice corpus because of invalid UTF-8 character"
+			);
+		else if(maxLength >= maxChunkSize) {
+			throw Exception(
+					"Corpus::getValidLengthOfSlice(): The chunk size is too small to slice a corpus with UTF-8 character(s)"
+			);
+		}
+
+		return 0;
+	}
+
 	// check text map for inconsistencies, throws Corpus::Exception
 	inline void Corpus::checkMap(const Struct::TextMap& map, size_t corpusSize) {
+		// check argument
 		if(map.empty())
 			return;
 
