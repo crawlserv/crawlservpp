@@ -120,7 +120,7 @@ namespace crawlservpp::Helper::Utf8 {
 		--pos;
 
 		// check for valid four-byte character
-		if(utf8::is_valid(stringToCheck.substr(pos, 3)))
+		if(utf8::is_valid(stringToCheck.substr(pos, 4)))
 			return true;
 
 		return false;
