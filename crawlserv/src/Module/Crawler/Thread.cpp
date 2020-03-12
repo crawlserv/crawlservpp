@@ -1662,6 +1662,14 @@ namespace crawlservpp::Module::Crawler {
 
 			if(!customHeaders.empty())
 				this->networking.unsetHeaders();
+
+			// check for empty content
+			if(content.empty()) {
+				// skip URL
+				this->crawlingSkip(url, !(this->config.crawlerArchives));
+
+				return false;
+			}
 		}
 		catch(const CurlException& e) { // error while getting content
 			// unset custom headers if necessary
@@ -1681,10 +1689,9 @@ namespace crawlservpp::Module::Crawler {
 
 				this->crawlingRetry(url, false);
 			}
-			else {
+			else
 				// skip URL
 				this->crawlingSkip(url, !(this->config.crawlerArchives));
-			}
 
 			return false;
 		}
