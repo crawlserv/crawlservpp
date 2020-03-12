@@ -115,11 +115,23 @@ namespace crawlservpp::Module::Analyzer {
 		this->category("general");
 		this->option("corpus.checks", this->config.generalCorpusChecks);
 		this->option("corpus.slicing", this->config.generalCorpusSlicing);
-		this->option("input.fields", this->config.generalInputFields, StringParsingOption::SQL);
+		this->option(
+				"input.fields",
+				this->config.generalInputFields,
+				StringParsingOption::SQL
+		);
 		this->option("input.sources", this->config.generalInputSources);
-		this->option("input.tables", this->config.generalInputTables, StringParsingOption::SQL);
+		this->option(
+				"input.tables",
+				this->config.generalInputTables,
+				StringParsingOption::SQL
+		);
 		this->option("logging", this->config.generalLogging);
-		this->option("result.table", this->config.generalResultTable, StringParsingOption::SQL);
+		this->option(
+				"result.table",
+				this->config.generalResultTable,
+				StringParsingOption::SQL
+		);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
 		this->option("sleep.when.finished", this->config.generalSleepWhenFinished);
 		this->option("timeout.target.lock", this->config.generalTimeoutTargetLock);
@@ -140,11 +152,14 @@ namespace crawlservpp::Module::Analyzer {
 		if(this->config.generalCorpusSlicing < 1 || this->config.generalCorpusSlicing > 99) {
 			this->config.generalCorpusSlicing = 30;
 
-			this->warning("Invalid corpus chunk size reset to 30% of the maximum packet size allowed by the MySQL server.");
+			this->warning(
+					"Invalid corpus chunk size reset to 30%"
+					" of the maximum packet size allowed by the MySQL server."
+			);
 		}
 
 		// check properties of input fields
-		const size_t completeInputs = std::min({ // number of complete inputs (= minimum size of all arrays)
+		const size_t completeInputs = std::min({ // number of complete inputs (= min. size of all arrays)
 				this->config.generalInputFields.size(),
 				this->config.generalInputSources.size(),
 				this->config.generalInputTables.size()

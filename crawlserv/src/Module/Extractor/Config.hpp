@@ -286,7 +286,11 @@ namespace crawlservpp::Module::Extractor {
 		this->option("error.retry", this->config.extractingErrorRetry);
 		this->option("field.datetime.formats", this->config.extractingFieldDateTimeFormats);
 		this->option("field.datetime.locales", this->config.extractingFieldDateTimeLocales);
-		this->option("field.delimiters", this->config.extractingFieldDelimiters, CharParsingOption::FromString);
+		this->option(
+				"field.delimiters",
+				this->config.extractingFieldDelimiters,
+				CharParsingOption::FromString
+		);
 		this->option("field.ignore.empty", this->config.extractingFieldIgnoreEmpty);
 		this->option("field.json", this->config.extractingFieldJSON);
 		this->option("field.names", this->config.extractingFieldNames);
@@ -325,7 +329,7 @@ namespace crawlservpp::Module::Extractor {
 		bool incompleteVariables = false;
 
 		const size_t completeVariables = std::min({
-				/* number of complete variables (= minimum size of name and source arrays) */
+				/* number of complete variables (= min. size of name and source arrays) */
 				this->config.variablesName.size(),
 				this->config.variablesSource.size()
 		});
@@ -416,7 +420,7 @@ namespace crawlservpp::Module::Extractor {
 		bool incompleteTokens = false;
 
 		const size_t completeTokens = std::min({
-				/* number of complete tokens (= minimum size of arrays) */
+				/* number of complete tokens (= min. size of arrays) */
 				this->config.variablesTokens.size(),
 				this->config.variablesTokensSource.size(),
 				this->config.variablesTokensQuery.size()

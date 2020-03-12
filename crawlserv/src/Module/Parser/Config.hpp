@@ -143,7 +143,11 @@ namespace crawlservpp::Module::Parser {
 		this->option("newest.only", this->config.generalNewestOnly);
 		this->option("parse.custom", this->config.generalParseCustom);
 		this->option("reparse", this->config.generalReParse);
-		this->option("result.table", this->config.generalResultTable, StringParsingOption::SQL);
+		this->option(
+				"result.table",
+				this->config.generalResultTable,
+				StringParsingOption::SQL
+		);
 		this->option("skip", this->config.generalSkip);
 		this->option("sleep.idle", this->config.generalSleepIdle);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
@@ -158,10 +162,18 @@ namespace crawlservpp::Module::Parser {
 		this->option("datetime.warning.empty", this->config.parsingDateTimeWarningEmpty);
 		this->option("field.datetime.formats", this->config.parsingFieldDateTimeFormats);
 		this->option("field.datetime.locales", this->config.parsingFieldDateTimeLocales);
-		this->option("field.delimiters", this->config.parsingFieldDelimiters, CharParsingOption::FromString);
+		this->option(
+				"field.delimiters",
+				this->config.parsingFieldDelimiters,
+				CharParsingOption::FromString
+		);
 		this->option("field.ignore.empty", this->config.parsingFieldIgnoreEmpty);
 		this->option("field.json", this->config.parsingFieldJSON);
-		this->option("field.names", this->config.parsingFieldNames, StringParsingOption::SQL);
+		this->option(
+				"field.names",
+				this->config.parsingFieldNames,
+				StringParsingOption::SQL
+		);
 		this->option("field.queries", this->config.parsingFieldQueries);
 		this->option("field.sources", this->config.parsingFieldSources);
 		this->option("field.tidy.texts", this->config.parsingFieldTidyTexts);
@@ -181,7 +193,7 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Parser::Config::checkOptions(): No result table specified.");
 		
 		// check properties of date/time queries
-		const size_t completeDateTimes = std::min( // number of complete date/time queries (= minimum size of all arrays)
+		const size_t completeDateTimes = std::min( // number of complete date/time queries (= min. size of all arrays)
 				this->config.parsingDateTimeQueries.size(),
 				this->config.parsingDateTimeSources.size()
 		);
@@ -239,7 +251,7 @@ namespace crawlservpp::Module::Parser {
 			this->warning("Unused date/time properties removed from configuration.");
 
 		// check properties of parsing fields
-		const size_t completeFields = std::min({ // number of complete fields (= minimum size of all arrays)
+		const size_t completeFields = std::min({ // number of complete fields (= min. size of all arrays)
 				this->config.parsingFieldNames.size(),
 				this->config.parsingFieldQueries.size(),
 				this->config.parsingFieldSources.size()
@@ -337,7 +349,7 @@ namespace crawlservpp::Module::Parser {
 			this->warning("Unused field properties removed from configuration.");
 
 		// check properties of ID queries
-		const size_t completeIds = std::min( // number of complete ID queries (= minimum size of all arrays)
+		const size_t completeIds = std::min( // number of complete ID queries (= min. size of all arrays)
 				this->config.parsingIdQueries.size(),
 				this->config.parsingIdSources.size()
 		);
