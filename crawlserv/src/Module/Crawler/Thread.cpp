@@ -1665,14 +1665,23 @@ namespace crawlservpp::Module::Crawler {
 
 			// check for empty content
 			if(content.empty()) {
-				// log if necessary
-				this->log(
-						Config::crawlerLoggingDefault,
-						"WARNING: Skipped empty content from " + url.second
-				);
+				if(this->config.crawlerRetryEmpty) {
+					// reset connection and retry
+					this->crawlingReset("Received empty content", url.second);
 
-				// skip URL
-				this->crawlingSkip(url, !(this->config.crawlerArchives));
+					this->crawlingRetry(url, false);
+				}
+				else {
+					// log if necessary
+					this->log(
+							Config::crawlerLoggingDefault,
+							"WARNING: Skipped empty content from "
+							+ url.second
+					);
+
+					// skip URL
+					this->crawlingSkip(url, !(this->config.crawlerArchives));
+				}
 
 				return false;
 			}

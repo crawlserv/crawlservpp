@@ -307,6 +307,12 @@
 			"simple": true,
 			"position": 6
 		},
+		"retry.empty": {
+			"type": "bool",
+			"default": true,
+			"description": "Empty responses will be handled like connection errors.",
+			"simple": false
+		},
 		"retry.http": {
 			"type": "array",
 			"item-type": "number",

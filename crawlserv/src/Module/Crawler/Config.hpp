@@ -99,6 +99,7 @@ namespace crawlservpp::Module::Crawler {
 			bool crawlerRepairComments;
 			long crawlerReTries;
 			bool crawlerRetryArchive;
+			bool crawlerRetryEmpty;
 			std::vector<unsigned int> crawlerRetryHttp;
 			size_t crawlerSleepError;
 			size_t crawlerSleepHttp;
@@ -185,6 +186,7 @@ namespace crawlservpp::Module::Crawler {
 										crawlerRepairComments(true),
 										crawlerReTries(720),
 										crawlerRetryArchive(true),
+										crawlerRetryEmpty(true),
 										crawlerSleepError(10000),
 										crawlerSleepHttp(0),
 										crawlerSleepIdle(5000),
@@ -258,12 +260,18 @@ namespace crawlservpp::Module::Crawler {
 		this->option("repair.comments", this->config.crawlerRepairComments);
 		this->option("retries", this->config.crawlerReTries);
 		this->option("retry.archive", this->config.crawlerRetryArchive);
+		this->option("retry.empty", this->config.crawlerRetryEmpty);
 		this->option("retry.http", this->config.crawlerRetryHttp);
 		this->option("sleep.error", this->config.crawlerSleepError);
 		this->option("sleep.http", this->config.crawlerSleepHttp);
 		this->option("sleep.idle", this->config.crawlerSleepIdle);
 		this->option("sleep.mysql", this->config.crawlerSleepMySql);
-		this->option("start", this->config.crawlerStart, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
+		this->option(
+				"start",
+				this->config.crawlerStart,
+				this->crossDomain ?
+						StringParsingOption::URL : StringParsingOption::SubURL
+		);
 		this->option("start.ignore", this->config.crawlerStartIgnore);
 		this->option("tidy.errors", this->config.crawlerTidyErrors);
 		this->option("tidy.warnings", this->config.crawlerTidyWarnings);
@@ -294,7 +302,12 @@ namespace crawlservpp::Module::Crawler {
 		this->option("tokens.source", this->config.customTokensSource);
 		this->option("tokens.use.post", this->config.customTokensUsePost);
 		this->option("token.headers", this->config.customTokenHeaders);	// NOTE: to be used for ALL tokens
-		this->option("urls", this->config.customUrls, this->crossDomain ? StringParsingOption::URL : StringParsingOption::SubURL);
+		this->option(
+				"urls",
+				this->config.customUrls,
+				this->crossDomain ?
+						StringParsingOption::URL : StringParsingOption::SubURL
+		);
 		this->option("use.post", this->config.customUsePost);
 
 		// dynamic redirect
@@ -320,12 +333,14 @@ namespace crawlservpp::Module::Crawler {
 	inline void Config::checkOptions() {
 		// check for link extraction query
 		if(this->config.crawlerQueriesLinks.empty())
-			throw Exception("Crawler::Config::checkOptions(): No link extraction query specified");
+			throw Exception(
+					"Crawler::Config::checkOptions(): No link extraction query specified"
+			);
 
 		// check properties of archives
 		bool incompleteArchives = false;
 
-		const size_t completeArchives = std::min({ // number of complete archives (= minimum size of all arrays)
+		const size_t completeArchives = std::min({ // number of complete archives (= min. size of all arrays)
 				this->config.crawlerArchivesNames.size(),
 				this->config.crawlerArchivesUrlsMemento.size(),
 				this->config.crawlerArchivesUrlsTimemap.size()
@@ -365,7 +380,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of counters
 		bool incompleteCounters = false;
 
-		const size_t completeCounters = std::min({ // number of complete counters (= minimum size of arrays)
+		const size_t completeCounters = std::min({ // number of complete counters (= min. size of arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
 				this->config.customCountersEnd.size()
@@ -427,7 +442,8 @@ namespace crawlservpp::Module::Crawler {
 		if(incompleteCounters)
 			this->warning("Unused counter properties removed from configuration.");
 
-		// check validity of counters (infinite counters are invalid, therefore the need to check for counter termination)
+		// check validity of counters
+		//	(infinite counters are invalid, therefore the need to check for counter termination)
 		for(size_t n = 1; n <= this->config.customCounters.size(); ++n) {
 			const size_t i = n - 1;
 
@@ -465,7 +481,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of tokens
 		bool incompleteTokens = false;
 
-		const size_t completeTokens = std::min({ // number of complete tokens (= minimum size of arrays)
+		const size_t completeTokens = std::min({ // number of complete tokens (= min. size of arrays)
 				this->config.customTokens.size(),
 				this->config.customTokensSource.size(),
 				this->config.customTokensQuery.size()
@@ -529,7 +545,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of variables for dynamic redirect
 		bool incompleteVars = false;
 
-		const size_t completeVars = std::min({ // number of complete variables (= minimum size of all arrays)
+		const size_t completeVars = std::min({ // number of complete variables (= min. size of all arrays)
 			this->config.redirectVarNames.size(),
 			this->config.redirectVarQueries.size(),
 			this->config.redirectVarSources.size()
