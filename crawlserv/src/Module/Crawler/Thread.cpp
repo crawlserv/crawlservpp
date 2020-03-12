@@ -1665,6 +1665,12 @@ namespace crawlservpp::Module::Crawler {
 
 			// check for empty content
 			if(content.empty()) {
+				// log if necessary
+				this->log(
+						Config::crawlerLoggingDefault,
+						"WARNING: Skipped empty content from " + url.second
+				);
+
 				// skip URL
 				this->crawlingSkip(url, !(this->config.crawlerArchives));
 
