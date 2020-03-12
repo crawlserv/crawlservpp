@@ -213,7 +213,7 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
         $data = "{\n";
         $data .= " \"website\": {\n";
         $data .= "  \"name\": ".json_encode($w_name, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).",\n";
-        $data .= "  \"domain\": ".json_encode($domain, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).",\n";
+        $data .= "  \"domain\": ".json_encode($domain, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n";
         $data .= " },\n";
         $data .= " \"page\": {\n";
         $data .= "  \"url\": ".json_encode($url, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).",\n";
