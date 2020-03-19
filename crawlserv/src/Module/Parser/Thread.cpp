@@ -958,7 +958,7 @@ namespace crawlservpp::Module::Parser {
 						parsedData.dateTime.clear();
 					}
 				}
-				catch(const DateTimeException & e) {
+				catch(const DateTimeException& e) {
 					this->log(
 							Config::generalLoggingExtended,
 							e.whatStr()
