@@ -186,7 +186,7 @@ function refreshData() {
 	}
 	
 	if($("#threads").length > 0) {
-		$("#threads").load("php/_threads.php", function(response, status, xhr) {
+		$("#threads").load("php/include/threads.php", function(response, status, xhr) {
 			if(status == "error") {
 				$("#threads").html("<div class='no-server-status'>Failed to load threads.</div>");
 				
