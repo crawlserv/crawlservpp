@@ -5,7 +5,7 @@
  * 
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,211 +32,145 @@
 $db_init = true;
 $cc_init = true;
 
-require "_helpers.php";
+require "include/helpers.php";
+require "include/content.php";
+
 require "config.php";
-
-// function to wrap long code lines
-function codeWrapper($str, $limit, $indent_limit) {
-    $out = "";
-    
-    foreach(preg_split("/((\r?\n)|(\r\n?))/", $str) as $line) {
-        while(strlen($line) > $limit) {
-            // get indent
-            $indent = strspn($line, " \t");
-            
-            if($indent !== false) {
-                if($indent < strlen($line)) {
-                    if($indent > $indent_limit)
-                        $indent = $indent_limit;
-                    
-                    $begin = substr($line, 0, $indent);
-                }
-                else
-                    break;
-            }
-            else
-                $begin = "";
-            
-            // find last space, tab or tag in line inside $limit
-            $allowed = substr($line, 0, $limit);
-            
-            $space = strrpos($allowed, " ", $indent + 1);
-            
-            if($space === false)
-                $space = 0;
-            
-            $tab = strrpos($allowed, "\t", $indent + 1);
-            
-            if($tab === false)
-                $tab = 0;
-            
-            $tag = strrpos($allowed, "<", $indent + 1);
-            
-            if($tag === false)
-                $tag = 0;
-            else
-                $tag--;
-            
-            $cut = max($space, $tab, $tag);
-            
-            if($cut > 0) {
-                $out .= substr($line, 0, $cut + 1)."\n";
-                
-                $line = $begin.substr($line, $cut + 1);
-            }
-            else {
-                // find last hyphen, comma or semicolon in line inside $limit
-                $allowed = substr($line, 0, $limit);
-                
-                $hyphen = strrpos($allowed, "-", $indent + 1);
-                
-                if($space === false)
-                    $space = 0;
-                
-                $comma = strrpos($allowed, ",", $indent + 1);
-                
-                if($tab === false)
-                    $tab = 0;
-                
-                $semicolon = strrpos($allowed, ";", $indent + 1);
-                
-                if($tag === false)
-                    $tag = 0;
-                else
-                    $tag--;
-                
-                $cut = max($hyphen, $comma, $semicolon);
-                
-                if($cut > 0) {
-                    $out .= substr($line, 0, $cut + 1)."\n";
-                    
-                    $line = $begin.substr($line, $cut + 1);
-                }
-                else {
-                    // find first space, tab or tag outside $limit
-                    $l = strlen($line);
-                    
-                    $space = strpos($line, " ", $limit);
-                    
-                    if($space === false)
-                        $space = $l;
-                    
-                    $tab = strpos($line, "\t", $limit);
-                    
-                    if($tab === false)
-                        $tab = $l;
-                    
-                    $tag = strpos($line, "<", $limit);
-                    
-                    if($tag === false)
-                        $tag = $l;
-                    else
-                        $tag--;
-                    
-                    $cut = min($space, $tab, $tag);
-                    
-                    if($cut < $l) {
-                        $out .= substr($line, 0, $cut + 1)."\n";
-                        
-                        $line = $begin.substr($line, $cut + 1);
-                    }
-                    else {
-                        // try to break at hyphen or comma
-                        $hyphen = strpos($line, "-", $limit);
-                        
-                        if($hyphen === false)
-                            $hyphen = $l;
-                        
-                        $comma = strpos($line, ",", $limit);
-                        
-                        if($comma === false)
-                            $comma = $l;
-                        
-                        $cut = min($hyphen, $comma);
-                        
-                        if($cut < $l) {
-                            $out .= substr($line, 0, $cut + 1)."\n";
-                            
-                            $line = $begin.substr($line, $cut + 1);
-                        }
-                        else {
-                            $out .= $line."\n";
-                            
-                            $line = "";
-                        }
-                    }
-                }
-            }
-        }
-        
-        $out .= $line."\n";
-    }
-    
-    return $out."\n";
-}
-
-// function to check for JSON code
-function isJSON($str) {
-    if($str[0] == '{' || $str[0] == "[") {
-        json_decode($str);
-        
-        return json_last_error() == JSON_ERROR_NONE;
-    }
-    
-    return false;
-}
 
 $is404 = false;
 
-if(isset($_POST["website"]))
+// get tab
+if(isset($_POST["tab"]))
+    $tab = $_POST["tab"];
+else
+    $tab = "parsed";
+
+// get website
+if(isset($_POST["website"])) {
     $website = $_POST["website"];
-
-if(isset($_POST["urllist"]))
-    $urllist = $_POST["urllist"];
-
-if(isset($_POST["url"]) && isset($website) && $website && isset($urllist) && $urllist) {
+    
     // get namespace of website and whether it is cross-domain
     $result = $dbConnection->query(
-            "SELECT namespace, domain".
-            " FROM crawlserv_websites".
-            " WHERE id=$website".
-            " LIMIT 1"
-    );
+        "SELECT namespace, domain".
+        " FROM crawlserv_websites".
+        " WHERE id = $website".
+        " LIMIT 1"
+        );
     
     if(!$result)
         die("ERROR: Could not get namespace of website.");
-    
+        
     $row = $result->fetch_assoc();
     
     if(!$row)
         die("ERROR: Could not get namespace of website.");
-    
+        
     $namespace = $row["namespace"];
     $crossDomain = is_null($row["domain"]);
     
     $result->close();
+}
+
+// get URL list
+if(isset($_POST["urllist"])) {
+    $urllist = $_POST["urllist"];
     
     // get namespace of URL list
     $result = $dbConnection->query(
-            "SELECT namespace".
-            " FROM crawlserv_urllists".
-            " WHERE website=$website".
-            " AND id=$urllist".
-            " LIMIT 1"
+        "SELECT namespace".
+        " FROM crawlserv_urllists".
+        " WHERE website = $website".
+        " AND id = $urllist".
+        " LIMIT 1"
     );
     
     if(!$result)
         die("ERROR: Could not get namespace of URL list.");
-    
+        
     $row = $result->fetch_assoc();
     
     if(!$row)
         die("ERROR: Could not get namespace of URL list.");
-    
+        
     $urllistNamespace = $row["namespace"];
     
     $result->close();
-    
+}
+
+$url = "";
+$urltext = "";
+
+// get specific URL by parsed ID
+if(
+    $tab == "parsed"
+    && isset($_POST["version"])
+    && $_POST["version"]
+    && isset($_POST["parsed_id"])
+    && $_POST["parsed_id"]
+    && isset($website)
+    && $website
+    && isset($urllist)
+    && $urllist
+    ) {
+        // get name of parsing table by version (= ID of parsing table)
+        $result = $dbConnection->query(
+            "SELECT name
+             FROM `crawlserv_parsedtables`
+             WHERE website = $website
+             AND urllist = $urllist
+             AND id = ".$_POST["version"]."
+             LIMIT 1"
+        );
+        
+        if(!$result)
+            die("ERROR: Could not get name of parsing table.");
+            
+        $row = $result->fetch_assoc();
+            
+        if(!$row)
+            die("ERROR: Could not get name of parsing table.");
+                
+        $utable = "crawlserv_".$namespace."_".$urllistNamespace;
+        $ctable = $utable."_crawled";
+        $ptable = $utable."_parsed_".$row["name"];
+        
+        $result->close();
+        
+        // search for URL
+        $result = $dbConnection->query(
+                "SELECT a.id, a.url
+                 FROM `$utable` a
+                 JOIN `$ctable` b
+                 ON a.id = b.url
+                 JOIN `$ptable` c
+                 ON b.id = c.content
+                 WHERE c.parsed_id LIKE '".$_POST["parsed_id"]."%'
+                 LIMIT 1"
+        );
+                
+        if(!$result)
+            die("Could not search for URL by parsed ID");
+                    
+        $row = $result->fetch_assoc();
+        
+        if($row) {
+            // found matching parsed ID -> set URL accordingly
+            $url = $row["id"];
+            $urltext = $row["url"];
+        }
+    }
+
+// get specific URL by ID
+if(
+    ($tab == "crawled" || $tab == "parsed" || $tab == "extracted")
+    && !$url
+    && (isset($_POST["url"]))
+    && $_POST["url"]
+    && isset($website)
+    && $website
+    && isset($urllist)
+    && $urllist
+) {    
     if(isset($_POST["last"])) {
         // search for last URL with content, starting from $url
         $result = $dbConnection->query(
@@ -250,7 +184,7 @@ if(isset($_POST["url"]) && isset($website) && $website && isset($urllist) && $ur
         );
         
         if(!$result)
-            die("ERROR: Could not search for URL.");
+            die("ERROR: Could not search for URL (getting last URL with content failed).");
         
         $row = $result->fetch_assoc();
         
@@ -286,63 +220,42 @@ if(isset($_POST["url"]) && isset($website) && $website && isset($urllist) && $ur
     }
     else {
         // search for next URL with content, starting from $url-1
-        $result = $dbConnection->query("SELECT a.id AS id, a.url AS url FROM `crawlserv_".$namespace."_".$urllistNamespace
-            ."` AS a, `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b WHERE a.id = b.url AND a.id >= ".$_POST["url"]
-            ." ORDER BY a.id LIMIT 1");
-        if(!$result) die("ERROR: Could not search for URL.");
+        $result = $dbConnection->query(
+                "SELECT a.id AS id, a.url AS url
+                 FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a,
+                 `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b
+                 WHERE a.id = b.url
+                 AND a.id >= ".$_POST["url"]."
+                 ORDER BY a.id
+                 LIMIT 1"
+        );
+        
+        if(!$result)
+            die("ERROR: Could not search for URL (getting next URL with content failed).");
+        
         $row = $result->fetch_assoc();
+        
         if($row) {
             $url = $row["id"];
             $urltext = $row["url"];
         }
-        else $url = 0;
+        else
+            $url = 0;
+        
         $result->close();
     }
 }
 
-if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($website) && $website && isset($urllist) && $urllist) {
-    // get namespace of website and whether it is cross-domain
-    $result = $dbConnection->query(
-            "SELECT namespace, domain ".
-            " FROM crawlserv_websites".
-            " WHERE id=$website".
-            " LIMIT 1"
-    );
-    
-    if(!$result)
-        die("ERROR: Could not get namespace of website.");
-    
-    $row = $result->fetch_assoc();
-    
-    if(!$row)
-        die("ERROR: Could not get namespace of website.");
-    
-    $namespace = $row["namespace"];
-    $crossDomain = is_null($row["domain"]);
-    
-    $result->close();
-    
-    // get namespace of URL list
-    $result = $dbConnection->query(
-            "SELECT namespace".
-            " FROM crawlserv_urllists".
-            " WHERE website=$website".
-            " AND id=$urllist".
-            " LIMIT 1"
-    );
-    
-    if(!$result)
-        die("ERROR: Could not get namespace of URL list.");
-    
-    $row = $result->fetch_assoc();
-    
-    if(!$row)
-        die("ERROR: Could not get namespace of URL list.");
-    
-    $urllistNamespace = $row["namespace"];
-    
-    $result->close();
-    
+// get specific URL by text
+if(
+        ($tab == "crawled" || $tab == "parsed" || $tab == "extracted")
+        && !$url
+        && isset($_POST["urltext"])
+        && isset($website)
+        && $website
+        && isset($urllist)
+        && $urllist
+) {    
     // search for matching URL with content
     $trimmedUrl = trim($_POST["urltext"]);
     
@@ -398,11 +311,6 @@ if((!isset($_POST["url"]) || !$url) && isset($_POST["urltext"]) && isset($websit
     $result->close();
 }
 
-if(isset($_POST["tab"]))
-    $tab = $_POST["tab"];
-else
-    $tab = "parsed";
-
 ?>
 
 <h2>Content<?php
@@ -435,6 +343,13 @@ if($tab == "analyzed")
 else
     echo "<a href=\"#\" class=\"action-link post-redirect-tab\" data-m=\"$m\" data-tab=\"analyzed\">analyzed</a>\n";
 
+echo " &middot; ";
+
+if($tab == "corpora")
+    echo "<b>corpora</b>";
+else
+    echo "<a href=\"#\" class=\"action-link post-redirect-tab\" data-m=\"$m\" data-tab=\"corpora\">corpora</a>\n";
+
 echo "</span>\n";
 
 ?></h2>
@@ -457,12 +372,16 @@ if($website)
 <?php
 
 if($website && $urllist) {
-    if(!$is404 && (!isset($url) || !$url)) {
+    if(
+            ($tab == "crawled" || $tab == "parsed" || $tab == "extracted")
+            && !$is404
+            && !$url
+    ) {
         // get namespace of website and whether it is cross-domain
         $result = $dbConnection->query(
                 "SELECT namespace, domain".
                 " FROM crawlserv_websites".
-                " WHERE id=$website".
+                " WHERE id = $website".
                 " LIMIT 1"
         );
         
@@ -483,8 +402,8 @@ if($website && $urllist) {
         $result = $dbConnection->query(
                 "SELECT namespace".
                 " FROM crawlserv_urllists".
-                " WHERE website=$website".
-                " AND id=$urllist".
+                " WHERE website = $website".
+                " AND id = $urllist".
                 " LIMIT 1"
         );
         
@@ -511,7 +430,7 @@ if($website && $urllist) {
         );
         
         if(!$result)
-            die("ERROR: Could not search for URL.");
+            die("ERROR: Could not search for URL (getting first URL with content failed).");
         
         $row = $result->fetch_assoc();
         
@@ -523,673 +442,77 @@ if($website && $urllist) {
             $url = 0;
             $is404 = true;
         }
-        
+    
         $result->close();
     }
     
-    echo "<button id=\"content-last\" data-m=\"$m\" data-tab=\"$tab\">&lt;</button>";
-    
-    echo "<input type=\"text\" id=\"content-url\" data-m=\"$m\" data-tab=\"$tab\" value=\"$url\" title=\"$url\" />\n";
-    
-    echo "<span id=\"content-slash\">/</span>";
-    
-    if($crossDomain)
-        $displayedUrl = htmlspecialchars($urltext);
-    else
-        $displayedUrl = htmlspecialchars(substr($urltext, 1));
-    
-    echo "<input type=\"text\" id=\"content-url-text\" data-m=\"$m\" data-tab=\"$tab\" value=\""
-        .$displayedUrl
-        ."\" title=\""
-        .$displayedUrl
-        ."\" />";
-    
-    echo "<button id=\"content-next\" class=\"fs-insert-after\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
+    if($tab == "crawled" || $tab == "parsed" || $tab == "extracted") {
+        echo "<button id=\"content-last\" data-m=\"$m\" data-tab=\"$tab\">&lt;</button>";
+        
+        echo "<input type=\"text\" id=\"content-url\" data-m=\"$m\" data-tab=\"$tab\" value=\"$url\" title=\"$url\" />\n";
+        
+        echo "<span id=\"content-slash\">/</span>";
+        
+        if($crossDomain)
+            $displayedUrl = htmlspecialchars($urltext);
+        else
+            $displayedUrl = htmlspecialchars(substr($urltext, 1));
+        
+        echo "<input type=\"text\" id=\"content-url-text\" data-m=\"$m\" data-tab=\"$tab\" value=\""
+            .$displayedUrl
+            ."\" title=\""
+            .$displayedUrl
+            ."\" />";
+        
+        echo "<button id=\"content-next\" class=\"fs-insert-after\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
+    }
     
     if($is404)
         echo "<br><br><i>URL not found. Maybe it was not successfully crawled (yet).</i><br><br>\n";
-    else {
-       // show content dependent on tab
-        switch($tab) {
-            case "parsed":
-                // parsed data
-                $ctable = "crawlserv_".$namespace."_".$urllistNamespace."_crawled";
-                
-                // get parsing table
-                $result = $dbConnection->query(
-                        "SELECT id, name, updated".
-                        " FROM crawlserv_parsedtables".
-                        " WHERE website = $website".
-                        " AND urllist = ".$urllist.
-                        " ORDER BY id DESC"
-                );
-                
-                if(!$result)
-                    die("ERROR: Could not get parsing tables.");
-                
-                if($result->num_rows) {
-                    $tables = array();
-                    
-                    while($row = $result->fetch_assoc())
-                        $tables[] = array(
-                                "id" => $row["id"],
-                                "name" => $row["name"],
-                                "updated" => $row["updated"]
-                        );
-
-                    $result->close();
-                    
-                    if(isset($_POST["version"])) {
-                        // select specified parsing table
-                        foreach($tables as $table) {
-                            if($table["id"] == $_POST["version"]) {
-                                $parsingtable = $table;
-                                
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        // select newest parsing table with parsed data in it
-                        foreach($tables as $table) {
-                            $result = $dbConnection->query(
-                                    "SELECT EXISTS(".
-                                            "SELECT 1 FROM `$ctable` AS a,".
-                                            " `crawlserv_".$namespace."_".$urllistNamespace."_parsed_".$table["name"]."`".
-                                            " AS b".
-                                            " WHERE a.id = b.content".
-                                            " AND a.url=".$url.
-                                    ")"
-                            );
-                            
-                            if(!$result)
-                                die("ERROR: Could not read parsing table.");
-                            
-                            $row = $result->fetch_row();
-                            
-                            if(!$row)
-                                die("ERROR: Could not read parsing table.");
-                            
-                            $result->close();
-                            
-                            if($row[0]) {
-                                $parsingtable = $table;
-                                
-                                break;
-                            }
-                        }
-                        
-                        if(!isset($parsingtable))
-                            $parsingtable = $tables[0];
-                    }
-                    
-                    if(!isset($parsingtable))
-                        die("ERROR: Could not get parsing table.");
-                        
-                    // get column names
-                    $ptable = "crawlserv_".$namespace."_".$urllistNamespace."_parsed_".$parsingtable["name"];
-                    
-                    $result = $dbConnection->query(
-                            "SELECT COLUMN_NAME AS name".
-                            " FROM INFORMATION_SCHEMA.COLUMNS".
-                            " WHERE TABLE_SCHEMA LIKE 'crawled'".
-                            " AND TABLE_NAME LIKE '$ptable'".
-                            " AND COLUMN_NAME LIKE 'parsed_%'".
-                            " ORDER BY REPLACE(REPLACE(name, '__', ''), 'parsed_id', '')"
-                    );
-                    
-                    if(!$result) 
-                        die("ERROR: Could not get columns from parsing table.");
-                    
-                    $columns = array();
-                    
-                    while($row = $result->fetch_assoc())
-                        $columns[] = $row["name"];
-
-                    $result->close();
-                    
-                    if(count($columns)) {
-                        $query = "SELECT ";
-                        
-                        foreach($columns as $column)
-                            $query .= "b.`".$column."`, ";
-                        
-                        $query .= "b.content";
-                        
-                        $query .=   " FROM `$ctable` AS a,".
-                                    " `$ptable` AS b".
-                                    " WHERE a.id = b.content".
-                                    " AND a.url = $url".
-                                    " ORDER BY b.id DESC".
-                                    " LIMIT 1";
-                        
-                        $result = $dbConnection->query($query);
-                        
-                        if(!$result)
-                            die("Could not get data from parsing table.");
-                        
-                        $row = $result->fetch_assoc();
-                        
-                        $result->close();
-                        
-                        if($row) {
-                            $data = true;
-                            
-                            echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
-                            
-                            echo "<div id=\"content-table\" class=\"fs-div\">\n";
-                            
-                            echo "<table class=\"fs-content\">\n";
-                            echo "<thead>\n";
-                            echo "<tr>\n";
-                            
-                            echo "<th>Field</th>\n";
-                            echo "<th>Parsed value</th>\n";
-                            
-                            echo "</tr>\n";
-                            echo "</thead>\n";
-                            
-                            echo "<tbody>\n";
-                            
-                            // show parsed values
-                            foreach($columns as $column) {
-                                if(strlen($column) > 8 && substr($column, 0, 8) == "parsed__")
-                                    $cname = substr($column, 8);
-                                else
-                                    $cname = substr($column, 7);
-                                
-                                echo "<tr>\n";
-                                echo "<td>".htmlspecialchars($cname)."</td>\n";
-                                
-                                echo "<td>\n";
-                                
-                                if(!strlen(trim($row[$column])))
-                                    echo "<i>[empty]</i>";
-                                else if(isJSON($row[$column])) {
-                                    echo "<i>JSON</i><pre><code class=\"language-json\">\n";
-                                    
-                                    echo htmlspecialchars($row[$column])."\n\n";
-                                    
-                                    echo "</code></pre>\n";
-                                }
-                                else
-                                    echo htmlspecialchars($row[$column])."\n";
-                                
-                                echo "</td>\n";
-                                echo "</tr>\n";
-                            }
-                            
-                            // show content ID of and link to the source for the parsed data 
-                            echo "<tr>\n";
-                            echo "<td>[source]</td>\n";
-                            echo "<td>\n";
-                            
-                            echo "<a href=\"#\" id=\"content-goto\" class=\"action-link\" data-m=\"$m\" data-version=\""
-                                    .$row["content"]
-                                    ."\">";
-                            echo "#".$row["content"];
-                            echo "</a>\n";
-                            
-                            echo "</td>\n";
-                            echo "</tr>\n";
-                            
-                            echo "</tbody>\n";
-                            echo "</table>\n";
-                            
-                            echo "</div>\n";
-                        }
-                        else {
-                            $data = false;
-                            
-                            echo "<br><br><i>No parsing data available for this specific URL.</i><br><br>\n";
-                        }
-                        
-                        echo "<div id=\"content-status\">\n";
-                        
-                        echo "<select id=\"content-version\" class=\"wide\" data-m=\"$m\" data-tab=\"$tab\">\n";
-                        
-                        $count = 0;
-                        $num = sizeof($tables);
-                        
-                        foreach($tables as $table) {
-                            $count++;
-                            
-                            echo "<option value=\"".$table["id"]."\"";
-                            
-                            if($table["id"] == $parsingtable["id"])
-                                echo " selected";
-                            
-                            echo ">Table ".number_format($count)." of ".number_format($num).": '".$table["name"]."'";
-                            
-                            if($table["updated"])
-                                echo " &ndash; last updated on ".$table["updated"];
-                            
-                            echo "</option>\n";
-                        }
-                        
-                        echo "</select>\n";
-                        
-                        if($data) {
-                            echo "<span id=\"content-info\">\n";
-                            
-                            echo "<a href=\"#\" id=\"content-download\" target=\"_blank\""
-                                    ."data-type=\"parsed\" data-website-namespace=\""
-    
-                                    .htmlspecialchars($namespace)
-                                    
-                                    ."\" data-namespace=\""
-        
-                                    .htmlspecialchars($urllistNamespace)
-                                    
-                                    ."\" data-version=\""
-        
-                                    .$parsingtable["id"]
-                                    
-                                    ."\" data-filename=\""
-            
-                                    .htmlspecialchars(
-                                            $namespace."_"
-                                            .$urllistNamespace
-                                            ."_"
-                                            .$url
-                                    )
-                                    
-                                    ."_parsed.json\">[Download as JSON]</a>\n";
-                            
-                            echo "</span>\n";
-                        }
-                        
-                        echo "</div>\n";
-                    }
-                    else
-                        echo "<br><br><i>No parsing data available for this website.</i><br><br>\n";
-                }
-                else {
-                    $result->close();
-                    
-                    echo "<br><br><i>No parsing data available for this website.</i><br><br>\n";
-                }
-                
-                break;
-                
-            case "extracted":
-                // extracted data
-                $ctable = "crawlserv_".$namespace."_".$urllistNamespace."_extracted";
-                
-                // get extracting table
-                $result = $dbConnection->query(
-                        "SELECT id, name, updated".
-                        " FROM crawlserv_extractedtables".
-                        " WHERE website = $website".
-                        " AND urllist = ".$urllist.
-                        " ORDER BY id DESC"
-                );
-                
-                if(!$result)
-                    die("ERROR: Could not get extracting tables.");
-                    
-                    if($result->num_rows) {
-                        $tables = array();
-                        
-                        while($row = $result->fetch_assoc())
-                            $tables[] = array(
-                                "id" => $row["id"],
-                                "name" => $row["name"],
-                                "updated" => $row["updated"]
-                            );
-                            
-                        $result->close();
-                        
-                        if(isset($_POST["version"])) {
-                            // select specified extracting table
-                            foreach($tables as $table) {
-                                if($table["id"] == $_POST["version"]) {
-                                    $extractingtable = $table;
-                                    
-                                    break;
-                                }
-                            }
-                        }
-                        else {
-                            // select newest extracting table with extracted data in it
-                            foreach($tables as $table) {
-                                $result = $dbConnection->query(
-                                        "SELECT EXISTS(".
-                                        "SELECT 1 FROM `$ctable` AS a,".
-                                        " `crawlserv_".$namespace."_".$urllistNamespace."_extracted_".$table["name"]."`".
-                                        " AS b".
-                                        " WHERE a.id = b.content".
-                                        " AND a.url=".$url.
-                                        ")"
-                                );
-                                
-                                if(!$result)
-                                    die("ERROR: Could not read extracting table.");
-                                    
-                                $row = $result->fetch_row();
-                                
-                                if(!$row)
-                                    die("ERROR: Could not read extracting table.");
-                                    
-                                $result->close();
-                                
-                                if($row[0]) {
-                                    $extractingtable = $table;
-                                    
-                                    break;
-                                }
-                            }
-                            
-                            if(!isset($extractingtable))
-                                $extractingtable = $tables[0];
-                        }
-                        
-                        if(!isset($extractingtable))
-                            die("ERROR: Could not get extracting table.");
-                            
-                        // get column names
-                        $etable = "crawlserv_".$namespace."_".$urllistNamespace."_extracted_".$extractingtable["name"];
-                        
-                        $result = $dbConnection->query(
-                                "SELECT COLUMN_NAME AS name".
-                                " FROM INFORMATION_SCHEMA.COLUMNS".
-                                " WHERE TABLE_SCHEMA = 'crawled'".
-                                " AND TABLE_NAME = N'$etable'"
-                        );
-                        
-                        if(!$result)
-                            die("ERROR: Could not get columns from extracting table.");
-                            
-                        $columns = array();
-                        
-                        while($row = $result->fetch_assoc())
-                            if(strlen($row["name"]) > 7 && substr($row["name"], 0, 7) == "extracted_")
-                                $columns[] = $row["name"];
-                                
-                        $result->close();
-                        
-                        if(count($columns)) {
-                            $query = "SELECT ";
-                            
-                            foreach($columns as $column)
-                                $query .= "b.`".$column."`, ";
-                                
-                                $query = substr($query, 0, -2);
-                                
-                                $query .=   " FROM `$ctable` AS a,".
-                                    " `$etable` AS b".
-                                    " WHERE a.id = b.content".
-                                    " AND a.url = $url".
-                                    " ORDER BY b.id DESC".
-                                    " LIMIT 1";
-                                
-                                $result = $dbConnection->query($query);
-                                
-                                if(!$result)
-                                    die("Could not get data from extracting table.");
-                                    
-                                    $row = $result->fetch_assoc();
-                                    
-                                    $result->close();
-                                    
-                                    if($row) {
-                                        $data = true;
-                                        
-                                        echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
-                                        
-                                        echo "<div id=\"content-table\" class=\"fs-div\">\n";
-                                        
-                                        echo "<table class=\"fs-content\">\n";
-                                        echo "<thead>\n";
-                                        echo "<tr>\n";
-                                        
-                                        echo "<th>Field</th>\n";
-                                        echo "<th>Extracted value</th>\n";
-                                        
-                                        echo "</tr>\n";
-                                        echo "</thead>\n";
-                                        
-                                        echo "<tbody>\n";
-                                        
-                                        foreach($columns as $column) {
-                                            if(strlen($column) > 8 && substr($column, 0, 8) == "extracted__")
-                                                $cname = substr($column, 8);
-                                                else
-                                                    $cname = substr($column, 7);
-                                                    
-                                                    echo "<tr>\n";
-                                                    echo "<td>".htmlspecialchars($cname)."</td>\n";
-                                                    
-                                                    echo "<td>\n";
-                                                    
-                                                    if(!strlen(trim($row[$column])))
-                                                        echo "<i>[empty]</i>";
-                                                        else if(isJSON($row[$column])) {
-                                                            echo "<i>JSON</i><pre><code class=\"language-json\">\n";
-                                                            
-                                                            echo htmlspecialchars($row[$column])."\n\n";
-                                                            
-                                                            echo "</code></pre>\n";
-                                                        }
-                                                        else
-                                                            echo htmlspecialchars($row[$column])."\n";
-                                                            
-                                                            echo "</td>\n";
-                                                            echo "</tr>\n";
-                                        }
-                                        
-                                        echo "</tbody>\n";
-                                        echo "</table>\n";
-                                        
-                                        echo "</div>\n";
-                                    }
-                                    else {
-                                        $data = false;
-                                        
-                                        echo "<br><br><i>No extracting data available for this specific URL.</i><br><br>\n";
-                                    }
-                                    
-                                    echo "<div id=\"content-status\">\n";
-                                    
-                                    echo "<select id=\"content-version\" class=\"wide\" data-m=\"$m\" data-tab=\"$tab\">\n";
-                                    
-                                    $count = 0;
-                                    $num = sizeof($tables);
-                                    
-                                    foreach($tables as $table) {
-                                        $count++;
-                                        
-                                        echo "<option value=\"".$table["id"]."\"";
-                                        
-                                        if($table["id"] == $extractingtable["id"])
-                                            echo " selected";
-                                            
-                                            echo ">Table ".number_format($count)." of ".number_format($num).": '".$table["name"]."'";
-                                            
-                                            if($table["updated"])
-                                                echo " &ndash; last updated on ".$table["updated"];
-                                                
-                                                echo "</option>\n";
-                                    }
-                                    
-                                    echo "</select>\n";
-                                    
-                                    if($data) {
-                                        echo "<span id=\"content-info\">\n";
-                                        
-                                        echo "<a href=\"#\" id=\"content-download\" target=\"_blank\""
-                                             ."data-type=\"extracted\" data-website-namespace=\""
-                            
-                                             .htmlspecialchars($namespace)
-                                             
-                                             ."\" data-namespace=\""
-                        
-                                             .htmlspecialchars($urllistNamespace)
-                                             
-                                             ."\" data-version=\""
-                    
-                                             .$extractingtable["id"]
-                                             
-                                             ."\" data-filename=\""
-                            
-                                             .htmlspecialchars(
-                                                    $namespace."_"
-                                                    .$urllistNamespace
-                                                    ."_"
-                                                    .$url
-                                             )
-                                             
-                                             ."_extracted.json\">[Download as JSON]</a>\n";
-                                
-                                echo "</span>\n";
-                                    }
-                                    
-                                    echo "</div>\n";
-                        }
-                        else
-                            echo "<br><br><i>No extracting data available for this website.</i><br><br>\n";
-                    }
-                    else {
-                        $result->close();
-                        
-                        echo "<br><br><i>No extracting data available for this website.</i><br><br>\n";
-                    }
-                    
-                    break;
-                
-            case "analyzed":
-                // analyzed data
-                // TODO
-                
-                echo "<br><br><i>This feature is not implemented yet.<br><br></i>\n";
-                
-                break;
-                
-            default:
-                // crawled data
-                echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
-                
-                echo "<div id=\"content-text\" class=\"fs-div\">\n";
-                
-                echo "<pre class=\"fs-content\"><code id=\"content-code\" class=\"language-html fs-content\">\n";
-                
-                if(isset($_POST["version"])) {
-                    // select specified version
-                    $version = $_POST["version"];
-                    
-                    $result = $dbConnection->query(
-                            "SELECT b.content".
-                            " FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a,".
-                            " `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b ".
-                            " WHERE a.id = b.url".
-                            " AND a.id = $url".
-                            " AND b.id = $version".
-                            " LIMIT 1"
-                    );
-                    
-                    if(!$result)
-                        die("ERROR: Could not get content of URL.");
-                    
-                    $row = $result->fetch_assoc();
-                    
-                    if(!$row)
-                        die("ERROR: Could not get content of URL.");
-                    
-                    $result->close();
-                }
-                else {
-                    // select newest version
-                    $result = $dbConnection->query(
-                            "SELECT b.id AS id, b.content AS content".
-                            " FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a,".
-                            " `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b".
-                            " WHERE a.id = b.url".
-                            " AND a.id = $url".
-                            " ORDER BY b.crawltime DESC".
-                            " LIMIT 1"
-                    );
-                    
-                    if(!$result)
-                        die("ERROR: Could not get content of URL.");
-                    
-                    $row = $result->fetch_assoc();
-                    
-                    if(!$row)
-                        die("ERROR: Could not get content of URL.");
-                    
-                    $version = $row["id"];
-                    
-                    $result->close();
-                }
-                
-                echo htmlspecialchars(codeWrapper($row["content"], 220, 120));
-                
-                $info = number_format(strlen($row["content"]))
-                        ." bytes <a href=\"#\" id=\"content-download\" target=\"_blank\""
-                        ." data-type=\"content\" data-website-namespace=\""
-                    
-                        .htmlspecialchars($namespace)
-                        
-                        ."\" data-namespace=\""
-                            
-                        .htmlspecialchars($urllistNamespace)
-                        
-                        ."\" data-version=\"$version\" data-filename=\""
-                        
-                        .htmlspecialchars($namespace."_".$urllistNamespace."_".$url)
-                
-                        .".htm\">[Download]</a>";
-                
-                echo "</code></pre></div>\n";
-                
-                echo "<div id=\"content-status\">\n";
-                
-                echo "<select id=\"content-version\" class=\"short\" data-m=\"$m\" data-tab=\"$tab\">\n";
-                
-                $result = $dbConnection->query(
-                        "SELECT b.id AS id, b.crawltime AS crawltime, b.archived AS archived".
-                        " FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a,".
-                        " `crawlserv_".$namespace."_".$urllistNamespace."_crawled` AS b".
-                        " WHERE a.id = b.url".
-                        " AND a.id = $url".
-                        " ORDER BY b.crawltime DESC"
-                );
-                
-                if(!$result)
-                    die("ERROR: Could not get content versions.");
-                
-                $num = $result->num_rows;
-                
-                $count = 0;
-                
-                while($row = $result->fetch_assoc()) {
-                    $count++;
-                    
-                    echo "<option value=\"".$row["id"]."\"";
-                    
-                    if($row["id"] == $version)
-                        echo " selected";
-                    
-                    echo ">Version "
-                        .number_format($count)
-                        ." of "
-                        .number_format($num)
-                        ." &ndash; crawled on "
-                        .$row["crawltime"];
-                    
-                    if($row["archived"])
-                        echo " (archived)";
-                    
-                    echo "</option>\n";
-                }
-                
-                echo "</select>\n";
-                
-                echo "<span id=\"content-info\">$info</span></div>\n";
-        }
-    }
+    else
+       // show content view dependent on tab
+       require "view/$tab.php";
 }
 
 ?>
 
 </div>
+
+<script>
+
+<?php 
+
+if(
+        isset($corpus_where)
+        && isset($source)
+        && $source == "parsed"
+) {
+    // get all the dates from the corpus for the datepicker
+    echo "var corpusDates = [\n";
+    
+    $result = $dbConnection->query(
+            "SELECT tmp.v
+             FROM `crawlserv_corpora` t,
+              JSON_TABLE(
+                    t.datemap,
+                    '$[*]'
+                    COLUMNS (
+                            v DATE PATH '$.v'
+                    )
+              ) tmp
+              WHERE $corpus_where
+              ORDER BY tmp.v"
+    );
+    
+    if(!$result)
+        die("ERROR: Could not get dates from corpus");
+    
+    while($row = $result->fetch_assoc())
+        echo "\"".$row["v"]."\", ";
+    
+    echo "];\n";
+}
+
+?>
+
+</script>

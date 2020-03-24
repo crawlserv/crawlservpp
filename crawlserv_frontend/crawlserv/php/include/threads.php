@@ -21,7 +21,7 @@
     
    ***
    
-   _threads.php
+   threads.php
     
    Use the database to show all of the module-specific threads
     on the crawlserv++ command-and-control server.
@@ -32,7 +32,7 @@
 
 $db_init = true;
 
-require "../config.php";
+require "../../config.php";
 
 // function to format the remainig time
 function formatTime($seconds) {

@@ -23,7 +23,7 @@
  *
  * ---
  *
- * _version.php
+ * version.php
  *
  * Version of the PHP/JavaScript frontend for crawlserv++.
  *

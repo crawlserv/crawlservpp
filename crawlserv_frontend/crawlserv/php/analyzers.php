@@ -32,7 +32,8 @@
 $db_init = true;
 $cc_init = true;
 
-require "_helpers.php";
+require "include/helpers.php";
+
 require "config.php";
 
 if(isset($_POST["website"]))

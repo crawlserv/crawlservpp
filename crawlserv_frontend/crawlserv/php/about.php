@@ -31,8 +31,9 @@
 
 $db_init = true;
 
+require "include/version.php";
+
 require "config.php";
-require "_version.php";
 
 // get version information from the database
 $versions = array();

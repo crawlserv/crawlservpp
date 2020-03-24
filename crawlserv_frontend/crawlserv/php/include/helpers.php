@@ -5,7 +5,7 @@
  * 
  * ---
  * 
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  * 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@
  *  
  * ---
  * 
- * _helpers.php
+ * helpers.php
  * 
  * PHP helper functions for the PHP/JavaScript frontend for crawlserv++.
  * 
@@ -512,4 +512,36 @@ function time_elapsed_string($datetime) {
     return $string ? implode(', ', $string) . ' ago' : 'just now';
 }
 
-?>
+// format bytes in larger units if necessary
+function format_bytes($bytes, $precision = 2) {
+    $units = array('B', 'KB', 'MB', 'GB', 'TB');
+    
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+    $bytes /= (1 << (10 * $pow));
+    
+    return round($bytes, $precision) . ' ' . $units[$pow]; 
+}
+
+// convert formatted setting of (possibly) larger units to simple bytes (by hakre @ https://stackoverflow.com/a/10210038)
+function setting_to_bytes($setting)
+{
+    static $short = array(
+        'k' => 0x400,
+        'm' => 0x100000,
+        'g' => 0x40000000
+    );
+    
+    $setting = (string) $setting;
+    
+    if(!($len = strlen($setting)))
+        return NULL;
+    
+    $last = strtolower($setting[$len - 1]);
+    $numeric = (int) $setting;
+    
+    $numeric *= isset($short[$last]) ? $short[$last] : 1;
+    
+    return $numeric;
+}
