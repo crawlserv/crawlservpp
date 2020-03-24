@@ -344,7 +344,7 @@ While `Asio`, `date.h`, `jsoncons`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CP
 
 ## Frontend
 
-**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the mySQL database and a HTTP connection for exchanging JSON with the command-and-control server. You may also want to use the provided JSON files in [`crawlserv_frontend/crawlserv/json`](crawlserv_frontend/crawlserv/json) as keeping them up-to-date will inform you about module-specific configuration changes and the implementation of new algorithms.
+**NB!** The current frontend is a quick-and-dirty solution to test the full functionality of the server. Feel free to implement your own nice frontend solution in your favorite programming language – all you need is a read-only connection to the MySQL database and a HTTP connection for exchanging JSON with the command-and-control server. You may also want to use the provided JSON files in [`crawlserv_frontend/crawlserv/json`](crawlserv_frontend/crawlserv/json) as keeping them up-to-date will inform you about module-specific configuration changes and the implementation of new algorithms.
 
 This frontend is a simple HTML/PHP and JavaScript application that has read-only access to the database on its own and can (under certain conditions) interact with the command-and-control server using the above listed commands when the user wants to perform actions that could change the content of the database.
 
@@ -370,9 +370,9 @@ The server needs a configuration file as argument, the test configuration can be
 
 The frontend uses the [`config.php`](crawlserv_frontend/crawlserv/config.php) to gain read-only access to the database. For security reasons, the database account used by the frontend should only have `SELECT` privilege! See this file for details about the test configuration (including the database schema and the user name and password for read-only access to the test database). Replace those values with those for your own database.
 
-The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (using ``localhost``). Therefore, the (randomly created) password in [`config.php`](crawlserv_frontend/crawlserv/config.php) is irrelevant for usage outside the original test environment and needs to be replaced! In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the web server running the frontend uses port 80 for interaction with the user (i.e. his\*her web browser). The mySQL database server uses (default) port 3306.
+The testing environment consists of one PC that runs all three components of the application which can only be accessed locally (using ``localhost``). Therefore, the (randomly created) password in [`config.php`](crawlserv_frontend/crawlserv/config.php) is irrelevant for usage outside the original test environment and needs to be replaced! In this (test) case, the command-and-control server uses port 8080 for interaction with the frontend while the web server running the frontend uses port 80 for interaction with the user (i.e. his\*her web browser). The MySQL database server uses (default) port 3306.
 
-Please note, that the mySQL server used by crawlserv++ might need some adjustments. First of all, the default character set should be set to standard UTF-8 (`utf8mb4`). Second of all, when processing large data, the `max_allowed_packet` should be adjusted, and maybe even set to the maximum value of 1 GiB. See this example `mysql.cnf`:
+Please note, that the MySQL server used by crawlserv++ might need some adjustments. First of all, the default character set should be set to standard UTF-8 (`utf8mb4`). Second of all, when processing large data, the `max_allowed_packet` should be adjusted, and maybe even set to the maximum value of 1 GiB. See this example `mysql.cnf`:
 
 ```
 [mysqld]
@@ -392,6 +392,7 @@ The frontend uses the following third-party JavaScript code (to be found in [`cr
 * [jQuery](https://jquery.com/)
 * [jQuery Form](http://jquery.malsup.com/form/)
 * [jQuery Redirect](https://github.com/mgalante/jquery.redirect/)
+* [jQuery UI](https://jqueryui.com/)
 * [Prism](https://prismjs.com/)
 * [Tippy.js](https://atomiks.github.io/tippyjs/)
 
@@ -434,6 +435,6 @@ See the source code of the `addUrlList(...)` function in [`Main::Database`](craw
 
 At the moment, this software has been developed for and tested on **Linux only**.
 
-Developed with Eclipse 2018-09 (4.9.0), Eclipse CDT 9.5.4, Eclipse PDT 6.1.0 and Eclipse Web Tools Platform 3.11.0. Compiled and linked with GNU Make 4.1, cmake/ccmake 3.10.2, gcc 7.3.0. Tested with Apache/2.4.29 and MySQL 8.0.15 for Linux on Ubuntu 18.04.1 (64-bit).
+Developed with Eclipse 2018-09 (4.9.0), Eclipse CDT 9.5.4, Eclipse PDT 6.1.0 and Eclipse Web Tools Platform 3.11.0. Compiled and linked with GNU Make 4.1, cmake/ccmake 3.10.2, gcc 7.5.0. Tested with Apache/2.4.29 and MySQL 8.0.19 on Ubuntu 18.04.4 LTS [bionic] (64-bit).
 
-The frontend is optimized for current versions of Mozilla Firefox (e.g. v66.0), but should also run on Chromium (e.g. v73.0).
+The frontend is optimized for current versions of Mozilla Firefox (e.g. v74.0), but should also run on Chromium (e.g. v80.0).
