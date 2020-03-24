@@ -3,7 +3,7 @@
  * 
  * ---
  * 
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
  * 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@ jQuery(function($) {
  */
 	
 // DOCUMENT READY
-	$(document).ready(function() {
+	$(document).ready(function() {		
 		// check website inputs
 		$("#website-domain").prop("disabled", $("#website-crossdomain").prop("checked"));
 		$("#website-dir").prop("disabled", !$("#website-externaldir").prop("checked"));
@@ -185,6 +185,12 @@ jQuery(function($) {
 			$("#query-datetime-locale").show();
 		}
 		
+	    // enable tippy for corpus control characters
+	    tippy(
+	    		"span.content-corpus-control",
+	    		{ delay : 0, duration: 0, arrow : true, placement: "left-start", size : "small" }
+	    );
+		
 		// check import/export inputs
 		disableImportExport();
 		
@@ -201,6 +207,40 @@ jQuery(function($) {
 		
 		// prepare form for file upload
 		$("#file-form").ajaxForm();
+		
+		// activate jQuery datepicker and enable only the dates in the current corpus
+		if(typeof corpusDates != "undefined" && corpusDates.length > 0) {
+			$("#corpus-date").datepicker({
+				changeMonth: true,
+				changeYear: true,
+				constrainInput: true,
+				dateFormat: 'yy-mm-dd',
+				minDate: corpusDates[0],
+				maxDate: corpusDates[corpusDates.length - 1],
+				beforeShowDay: function(date) {
+						var sdate = $.datepicker.formatDate("yy-mm-dd", date);
+						
+						if($.inArray(sdate, corpusDates) != -1)
+							return [true];
+						
+						return [false];
+				},
+				onSelect: function(dateText) {
+					var website = parseInt($("#website-select").val(), 10);
+					var urllist = parseInt($("#urllist-select").val(), 10);
+					var corpus = parseInt($("#corpus-select").val(), 10);
+					
+					reload({
+						"m" : $(this).data("m"),
+						"tab" : $(this).data("tab"),
+						"website" : website,
+						"urllist" : urllist,
+						"corpus": corpus,
+						"corpus_date": dateText
+					});
+				}
+			});
+		}
 		
 		// set timer
 		refreshData();
@@ -273,18 +313,15 @@ jQuery(function($) {
 	});
 	
 // KEYDOWN EVENT: trigger event on CTRL+ENTER (text fields)
-	$(document).on("keydown", "input.trigger[type='text']", function(event) {
-		if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey)
-			if(hasData($(this), "trigger"))
-				$("#" + $(this).data("trigger")).trigger("click");
-	});
-	
-// KEYDOWN EVENT: trigger event on CTRL+ENTER (text areas)
-	$(document).on("keydown", "textarea.trigger", function(event) {
-		if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey)
-			if(hasData($(this), "trigger"))
-				$("#" + $(this).data("trigger")).trigger("click");
-	});
+	$(document).on(
+			"keydown",
+			"input.trigger[type='text'], input.trigger[type='number'], input.trigger[type='date'], textarea.trigger",
+			function(event) {
+				if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey)
+					if(hasData($(this), "trigger"))
+						$("#" + $(this).data("trigger")).trigger("click");
+			}
+	);
 	
 // CHANGE EVENT: check date
 	$("input[type='date']").on("change", function() {
@@ -296,7 +333,7 @@ jQuery(function($) {
 		return false;
 	});
 
-/* 
+/*
  * EVENTS FOR SERVER
  */
 
@@ -419,8 +456,8 @@ jQuery(function($) {
 	});
 
 /*
-/* EVENTS FOR WEBSITES
-*/
+ * EVENTS FOR WEBSITES
+ */
 
 // CHANGE EVENT: website selected
 	$("#website-select").on("change", function() {
@@ -700,7 +737,14 @@ jQuery(function($) {
 					"filename": ulfilename
 				},
 				function() {
-					window.open("download/");
+					if(!window.open("download/")) {
+						console.error(
+								"Could not open a new window, it has probably been blocked by a popup blocker."
+						);
+						alert(
+								"Could not open a new window, it has probably been blocked by a popup blocker."		
+						);
+					}
 				}
 		);
 		
@@ -1014,25 +1058,33 @@ jQuery(function($) {
 		
 		if(!$("#xpath-element").val().length) {
 			alert("Please enter a tag name into the first input field.");
+			
 			$("#xpath-element").focus();
+			
 			return false;
 		}
 		
 		if(!$("#xpath-property").val().length) {
 			alert("Please enter an attribute name into the second input field.");
+			
 			$("#xpath-property").focus();
+			
 			return false;
 		}
 		
 		if(!$("#xpath-value").val().length) {
 			alert("Please enter an attribute value into the third input field.");
+			
 			$("#xpath-value").focus();
+			
 			return false;
 		}
 		
 		if(property && !$("#xpath-result-property").val().length) {
 			alert("Please enter an attribute name into the fourth input field.");
+			
 			$("#xpath-result-property").focus();
+			
 			return false;
 		}
 		
@@ -1262,28 +1314,38 @@ jQuery(function($) {
 						// open result in new tab
 						newTab = window.open();
 						
-						newTab.document.open();
+						if(newTab) {
+							newTab.document.open();
 						
-						newTab.document.writeln("<!DOCTYPE html>");
-						newTab.document.writeln("<html lang=\"en\">");
-						newTab.document.writeln(" <head>");
-						newTab.document.writeln("  <meta charset=\"utf-8\">");
-						newTab.document.writeln("  <link rel=\"stylesheet\" type=\"text/css\" href=\"css/queryresult.css\">");
-						newTab.document.writeln("  <title>crawlserv++ frontend: Query Test Result</title>");
-						newTab.document.writeln(" </head>");
-						newTab.document.writeln(" <body>");
-						newTab.document.writeln("  <h1>crawlserv++ Query Test Result</h1>");
-						newTab.document.writeln("  <pre id=\"result-target\"></pre>");
-						newTab.document.writeln(" </body>");
-						newTab.document.writeln("</html>");
-						
-						newTab.document.close();
-						
-						newTab.document.getElementById("result-target").appendChild(
-								newTab.document.createTextNode(resultText)
-						);
-						
-						newTab.focus();
+							newTab.document.writeln("<!DOCTYPE html>");
+							newTab.document.writeln("<html lang=\"en\">");
+							newTab.document.writeln(" <head>");
+							newTab.document.writeln("  <meta charset=\"utf-8\">");
+							newTab.document.writeln("  <link rel=\"stylesheet\" type=\"text/css\" href=\"css/queryresult.css\">");
+							newTab.document.writeln("  <title>crawlserv++ frontend: Query Test Result</title>");
+							newTab.document.writeln(" </head>");
+							newTab.document.writeln(" <body>");
+							newTab.document.writeln("  <h1>crawlserv++ Query Test Result</h1>");
+							newTab.document.writeln("  <pre id=\"result-target\"></pre>");
+							newTab.document.writeln(" </body>");
+							newTab.document.writeln("</html>");
+							
+							newTab.document.close();
+							
+							newTab.document.getElementById("result-target").appendChild(
+									newTab.document.createTextNode(resultText)
+							);
+							
+							newTab.focus();
+						}
+						else {
+							console.error(
+									"Could not open a new window, it has probably been blocked by a popup blocker."
+							);
+							alert(
+									"Could not open a new window, it has probably been blocked by a popup blocker."
+							);
+						}
 					}
 				}
 			}).fail(function() {
@@ -1739,7 +1801,10 @@ jQuery(function($) {
 		
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
-		var url = parseInt($("#content-url").val(), 10);
+		var url = 0;
+		
+		if($("#content-url").length)
+			url = parseInt($("#content-url").val(), 10);
 		
 		reload({
 			"m" : $(this).data("m"),
@@ -1969,7 +2034,7 @@ jQuery(function($) {
 	});
 	
 // CLICK EVENT: download content
-	$("#content-download").on("click", function() {
+	$("#content-download").on("click", function() {		
 		var contentwebsiteid = parseInt($("#website-select").val(), 10);
 		var contentwebsitename = $("#website-select option:selected").text();
 		var contenturlid = parseInt($("#content-url").val(), 10);
@@ -1993,10 +2058,96 @@ jQuery(function($) {
 		};
 		
 		$.post("download/", args, function() {
-			window.open("download/");
+			if(!window.open("download/")) {
+				console.error(
+						"Could not open a new window, it has probably been blocked by a popup blocker."
+				);
+				alert(
+						"Could not open a new window, it has probably been blocked by a popup blocker."
+				);
+			}
 		});
 		
 		return false;
+	});
+	
+// CLICK EVENT: search for parsed ID
+	$("#content-search-parsed").on("click", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var version = parseInt($("#content-version").val(), 10);
+		var parsedId = $("#content-parsed-id").val();
+		var url = parseInt($("#content-url").val(), 10);
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"version": version,
+			"parsed_id": parsedId,
+			"url": url /* as fallback */
+		});
+	});
+	
+// CHANGE EVENT: reset formatting of updated corpus position input field
+	$("#corpus-position.updated, #corpus-length.updated").on("keyup keypress change", function() {
+		$(this).removeClass("updated");
+	});
+	
+// CLICK EVENT: go to corpus position
+	$("#content-go-position").on("click", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var corpus = parseInt($("#corpus-select").val(), 10);
+		var corpusPos = parseInt($("#corpus-position").val(), 10);
+		var corpusLen = parseInt($("#corpus-length").val(), 10);
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"corpus": corpus,
+			"corpus_pos": corpusPos,
+			"corpus_len": corpusLen
+		});
+		
+		return false;
+	});
+	
+// CLICK EVENT: go to article number
+	$("#content-go-article-num").on("click", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var corpus = parseInt($("#corpus-select").val(), 10);
+		var article = parseInt($("#corpus-article-num").val(), 10);
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"corpus": corpus,
+			"corpus_article_num": article
+		});
+	});
+	
+// CLICK EVENT: go to article ID
+	$("#content-go-article-id").on("click", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var corpus = parseInt($("#corpus-select").val(), 10);
+		var article = parseInt($("#corpus-article-id").val(), 10);
+		
+		reload({
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"corpus": corpus,
+			"corpus_article_id": article
+		});
 	});
 	
 /*
@@ -2095,9 +2246,8 @@ jQuery(function($) {
 		
 		// check connection to server
 		$("#hidden-div").load(cc_host, function(response, status, xhr) {
-			if(status == "error") {
+			if(status == "error")
 				alert("No connection to the server.");
-			}
 			else {
 				// get type of action
 				var action = $(t).data("action");
@@ -2173,7 +2323,8 @@ jQuery(function($) {
 						// submit form for file upload
 						$("#file-form").ajaxSubmit({
 							success: function(response) {
-								// file upload successful: add filename to arguments
+								// file upload successful: add filename to
+								//  arguments
 								args["filename"] = response;
 								
 								// run command
