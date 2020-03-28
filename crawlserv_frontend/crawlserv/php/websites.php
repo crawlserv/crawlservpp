@@ -79,7 +79,7 @@ if($website)
 <input type="text" class="entry-input" id="website-name" value="<?php
 
 if($website)
-    echo htmlspecialchars($websiteName);
+    echo html($websiteName);
 
 ?>" />
 
@@ -92,7 +92,7 @@ if($website)
 <input type="text" class="entry-input" id="website-namespace" value="<?php
 
 if($website)
-    echo htmlspecialchars($namespace);
+    echo html($namespace);
 
 ?>" />
 
@@ -105,7 +105,7 @@ if($website)
 <input id="website-domain" type="text" class="entry-input" value="<?php
 
 if($website)
-    echo htmlspecialchars($domain);
+    echo html($domain);
 
 ?>" />
 
@@ -146,7 +146,7 @@ if($website && strlen($dir))
 
 <input type="text" class="entry-input" id="website-dir" value="<?php
 
-echo ($website && strlen($dir)) ? htmlspecialchars($dir) : "[default]";
+echo ($website && strlen($dir)) ? html($dir) : "[default]";
 
 ?>" />
 
@@ -336,7 +336,7 @@ if($website) {
 
     echo " value=\"";
     
-    echo htmlspecialchars($urllistName);
+    echo html($urllistName);
     
     echo "\" /></div>\n";
     
@@ -354,7 +354,7 @@ if($website) {
     
     echo " value=\"";
     
-    echo htmlspecialchars($urllistNamespace);
+    echo html($urllistNamespace);
     
     echo "\" /></div>\n";
     
@@ -373,11 +373,11 @@ if($website) {
         echo " <a id=\"urllist-download\" href=\"#\" class=\"entry-value\" target=\"_blank\""
             ." data-website-namespace=\"";
         
-        echo htmlspecialchars($namespace);
+            echo html($namespace);
         
         echo "\" data-namespace=\"";
         
-        echo htmlspecialchars($urllistNamespace);
+        echo html($urllistNamespace);
         
         echo "\">[Download]</a>\n";
         
@@ -527,7 +527,7 @@ if($website) {
             if(isset($query) && $id == $query)
                 echo " selected";
            
-            echo ">".htmlspecialchars($name)."</option>\n";
+            echo ">".html($name)."</option>\n";
         }
         
         echo "</select>\n";

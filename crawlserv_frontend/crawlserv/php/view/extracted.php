@@ -172,7 +172,7 @@ if($result->num_rows) {
                     $cname = substr($column, 7);
                     
                 echo "<tr>\n";
-                echo "<td>".htmlspecialchars($cname)."</td>\n";
+                echo "<td>".html($cname)."</td>\n";
                 
                 echo "<td>\n";
                 
@@ -181,12 +181,12 @@ if($result->num_rows) {
                 else if(isJSON($row[$column])) {
                     echo "<i>JSON</i><pre><code class=\"language-json\">\n";
                     
-                    echo htmlspecialchars($row[$column])."\n\n";
+                    echo html($row[$column])."\n\n";
                     
                     echo "</code></pre>\n";
                 }
                 else
-                    echo htmlspecialchars($row[$column])."\n";
+                    echo html($row[$column])."\n";
                     
                 echo "</td>\n";
                 echo "</tr>\n";
@@ -233,13 +233,13 @@ if($result->num_rows) {
             
             echo "<a href=\"#\" id=\"content-download\" target=\"_blank\""
                 ."data-type=\"extracted\" data-website-namespace=\""
-                .htmlspecialchars($namespace)
+                .html($namespace)
                 ."\" data-namespace=\""
-                .htmlspecialchars($urllistNamespace)
+                .html($urllistNamespace)
                 ."\" data-version=\""
                 .$extractingtable["id"]
                 ."\" data-filename=\""
-                .htmlspecialchars(
+                .html(
                         $namespace."_"
                         .$urllistNamespace
                         ."_"

@@ -164,7 +164,7 @@ if($result->num_rows > 0)
     while($row = $result->fetch_assoc()) {
         $entry = "[".$row["time"]."] ".$row["module"].": ".$row["entry"];
         
-        echo "<option>".htmlspecialchars($entry)."</option>\n";
+        echo "<option>".html($entry)."</option>\n";
         
         $no++;
     }

@@ -84,16 +84,16 @@ else {
     $result->close();
 }
 
-echo htmlspecialchars(codeWrapper($row["content"], 220, 120));
+echo html(codeWrapper($row["content"], 220, 120));
 
 $info = number_format(strlen($row["content"]))
         ." bytes <a href=\"#\" id=\"content-download\" target=\"_blank\""
         ." data-type=\"content\" data-website-namespace=\""
-        .htmlspecialchars($namespace)
+        .html($namespace)
         ."\" data-namespace=\""
-        .htmlspecialchars($urllistNamespace)
+        .html($urllistNamespace)
         ."\" data-version=\"$version\" data-filename=\""
-        .htmlspecialchars($namespace."_".$urllistNamespace."_".$url)
+        .html($namespace."_".$urllistNamespace."_".$url)
         .".htm\">[Download]</a>";
         
 echo "</code></pre></div>\n";

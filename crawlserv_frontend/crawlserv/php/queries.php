@@ -128,7 +128,7 @@ while($row = $result->fetch_assoc()) {
         $queryName = $name;
     }
     
-    echo ">".htmlspecialchars($name)."</option>\n";
+    echo ">".html($name)."</option>\n";
 }
 
 $result->close();
@@ -224,7 +224,7 @@ if($query)
 <div class="entry-row">
 <div class="entry-label">Name:</div><div class="entry-input">
 
-<input id="query-name" type="text" class="entry-input" value="<?php if($query) echo htmlspecialchars($queryName); ?>" />
+<input id="query-name" type="text" class="entry-input" value="<?php if($query) echo html($queryName); ?>" />
 
 </div>
 </div>
@@ -326,7 +326,7 @@ if($query && $queryTextOnly)
 <textarea id="query-text" class="entry-input" spellcheck="false" autocomplete="off"><?php
 
 if($query)
-    echo htmlspecialchars($queryText, ENT_QUOTES);
+    echo html($queryText);
 
 ?>
 

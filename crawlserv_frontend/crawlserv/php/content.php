@@ -454,9 +454,9 @@ if($website && $urllist) {
         echo "<span id=\"content-slash\">/</span>";
         
         if($crossDomain)
-            $displayedUrl = htmlspecialchars($urltext);
+            $displayedUrl = html($urltext);
         else
-            $displayedUrl = htmlspecialchars(substr($urltext, 1));
+            $displayedUrl = html(substr($urltext, 1));
         
         echo "<input type=\"text\" id=\"content-url-text\" data-m=\"$m\" data-tab=\"$tab\" value=\""
             .$displayedUrl

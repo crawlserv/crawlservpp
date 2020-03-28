@@ -29,6 +29,11 @@
  * 
  */
 
+// convert HTML entities (convert both single and double quotes and use UTF-8)
+function html($str) {
+    return htmlspecialchars($str, ENT_QUOTES, "UTF-8");
+}
+
 // render row with website selection
 function rowWebsiteSelect(
     $adddelete = false,
@@ -143,7 +148,7 @@ function rowWebsiteSelect(
             $dir = $row["dir"];
         }
             
-        $html .= ">".htmlspecialchars($name)."</option>\n";
+        $html .= ">".html($name)."</option>\n";
     }
     
     $result->close();
@@ -246,7 +251,7 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
                 $html .= " selected";
             }
             
-            $html .= ">".htmlspecialchars($ulName)."</option>\n";
+            $html .= ">".html($ulName)."</option>\n";
         }
         
         $result->close();
