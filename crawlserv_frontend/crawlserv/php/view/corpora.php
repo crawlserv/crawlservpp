@@ -383,9 +383,9 @@ if($success) {
                           id,
                           chunk_size,
                           chunk_length,
-                          `articlemap`->>'$[0].v' AS first,
-                          `articlemap`->>'$[last].v' AS last,
-                          JSON_LENGTH(`articlemap`) AS articles
+                          articlemap->>'$[0].v' AS first,
+                          articlemap->>'$[last].v' AS last,
+                          JSON_LENGTH(articlemap) AS articles
                          FROM `crawlserv_corpora`
                          WHERE $corpus_where
                          ORDER BY id;"
@@ -724,7 +724,7 @@ if($success) {
                       chunk_size
                     FROM `crawlserv_corpora`
                     WHERE $corpus_where
-                    AND previous = $chunk_previous
+                     AND previous = $chunk_previous
                     LIMIT 1"
             );
             
@@ -905,13 +905,24 @@ if($success) {
         $l = $corpus_before_l + $corpus_len + 512;
         
         $result = $dbConnection->query(
-                "SELECT SUBSTR(corpus, $p + 1, $l) AS excerpt,
-                  LENGTH(SUBSTR(corpus, $p + 1, $corpus_before_l)) AS before_size,
+                "SELECT
+                  SUBSTR(
+                        corpus,
+                        $p + 1,
+                        $l
+                  ) AS excerpt,
+                  LENGTH(
+                        SUBSTR(
+                                corpus,
+                                $p + 1,
+                                $corpus_before_l
+                        )
+                  ) AS before_size,
                   chunk_size
-                  FROM `crawlserv_corpora`
-                  WHERE $corpus_where
+                 FROM `crawlserv_corpora`
+                 WHERE $corpus_where
                   AND id = $chunk_id
-                  LIMIT 1"
+                 LIMIT 1"
         );
         
         if(!$result)
@@ -930,7 +941,6 @@ if($success) {
         
         // get relevant articles and dates if necessary
         $before_pos = 0;
-        $before_len = 0;
         $byte_end = 0;
         $byte_after = 0;
         
@@ -950,8 +960,11 @@ if($success) {
             
             // get relevant articles
             $result = $dbConnection->query(
-                    "SELECT tmp.p, tmp.l, tmp.v
-                      FROM `crawlserv_corpora` t,
+                    "SELECT
+                      tmp.p AS p,
+                      tmp.l AS l,
+                      tmp.v AS v
+                     FROM `crawlserv_corpora` t,
                       JSON_TABLE(
                             t.articlemap,
                             '$[*]' COLUMNS(
@@ -960,7 +973,7 @@ if($success) {
                                     v TEXT PATH '$.v'
                             )
                       ) AS tmp
-                      WHERE t.id = $chunk_id
+                     WHERE t.id = $chunk_id
                       AND (
                             $before_pos_relative BETWEEN tmp.p AND tmp.p + tmp.l
                             OR $byte_end BETWEEN tmp.p AND tmp.p + tmp.l
@@ -1033,10 +1046,16 @@ if($success) {
                 }
             }
             
+            $result->close();
+            
             // get relevant dates
             $result = $dbConnection->query(
-                    "SELECT tmp.p, tmp.l, tmp.v
-                      FROM `crawlserv_corpora` t,
+                    "SELECT
+                      tmp.p AS p,
+                      tmp.l AS l,
+                      tmp.v AS v
+                     FROM
+                      `crawlserv_corpora` t,
                       JSON_TABLE(
                             t.datemap,
                             '$[*]' COLUMNS(
@@ -1046,11 +1065,11 @@ if($success) {
                             )
                       ) AS tmp
                       WHERE t.id = $chunk_id
-                      AND (
+                       AND (
                             $before_pos_relative BETWEEN tmp.p AND tmp.p + tmp.l
                             OR $byte_end BETWEEN tmp.p AND tmp.p + tmp.l
                             OR tmp.p BETWEEN $before_pos_relative AND $byte_end_relative
-                      )"
+                       )"
             );
             
             if(!$result)
@@ -1117,21 +1136,26 @@ if($success) {
                         );
                 }
             }
+            
+            $result->close();
         }
         
         /*
          * GET THE END OF THE PREVIOUS CHUNK IF NECESSARY
          */
+        
         if($chunk_n && $corpus_before_l < 512) {
             $result = $dbConnection->query(
-                    "SELECT SUBSTR(
+                    "SELECT
+                      SUBSTR(
                             corpus,
                             CHAR_LENGTH(corpus) - "
                             .(511 - $corpus_before_l) /* + 1 because MySQL strings start at #1 */ ."
-                     ) AS `before`
-                      FROM `crawlserv_corpora`
-                      WHERE id = $chunk_previous
-                      LIMIT 1"
+                      ) AS before,
+                      chunk_size
+                     FROM `crawlserv_corpora`
+                     WHERE id = $chunk_previous
+                     LIMIT 1"
             );
                         
             if(!$result)
@@ -1143,17 +1167,22 @@ if($success) {
                 die("ERROR: Could not get end of previous chunk");
                 
             $before = $row["before"];
+            $before_bytes = strlen($before);
+            $before_pos -= $before_bytes;
+            $chunk_previous_size = $row["chunk_size"];
             
             $result->close();
             
             // get additional articles and dates if necessary
             if($source == "parsed") {
-                $before_len = strlen($before);
-                $before_pos_relative -= $before_len;
+                $before_pos_relative = $chunk_previous_size - $before_bytes;
                 
                 // get additional articles
                 $result = $dbConnection->query(
-                        "SELECT tmp.p, tmp.l, tmp.v
+                        "SELECT
+                          tmp.p AS p,
+                          tmp.l AS l,
+                          tmp.v AS v
                          FROM `crawlserv_corpora` t,
                           JSON_TABLE(
                                 t.articlemap,
@@ -1163,21 +1192,21 @@ if($success) {
                                         v TEXT PATH '$.v'
                                 )
                           ) AS tmp
-                         WHERE t.id = $chunk_id
+                         WHERE t.id = $chunk_previous
                           AND tmp.p + tmp.l >= $before_pos_relative"
                 );
                                 
                 if(!$result)
                     die("ERROR: Could not get additional articles from previous chunk");
-                    
-                echo "<br><br>\n";
+                
+                $added = false;
                 
                 while($row = $result->fetch_assoc()) {
                     if($row["p"] >= $before_pos_relative)
                         array_push(
                                 $markers_before,
                                 [
-                                    $byte_offset + $row["p"],
+                                    $byte_offset - $chunk_previous_size + $row["p"],
                                     "art_beg",
                                     $row["v"]
                                 ]
@@ -1186,16 +1215,73 @@ if($success) {
                     array_push(
                             $markers_before,
                             [
-                                $byte_offset + $row["p"],
+                                $byte_offset - $chunk_previous_size + $row["p"] + $row["l"],
                                 "art_end",
                                 $row["v"]
                             ]
                         );
+                    
+                    $added = true;
+                }
+                
+                $result->close();
+                
+                // merge last added article if it is identical with the first article
+                if($added) {
+                    $last = count($markers_before) - 1;
+                
+                    if($last >= 0) {
+                        if(
+                                count($markers) > 0
+                                && $markers[0][0] == $markers_before[$last][0]
+                                && $markers[0][1] == "art_beg"
+                                && $markers_before[$last][1] == "art_end"
+                                && $markers[0][2] == $markers_before[$last][2]
+                        ) {
+                            array_splice($markers, 0, 1);
+                            array_splice($markers_before, $last, 1);
+                        }
+                        else if(
+                                count($markers) > 1
+                                && $markers[1][0] == $markers_before[$last][0]
+                                && $markers[1][1] == "art_beg"
+                                && $markers_before[$last][1] == "art_end"
+                                && $markers[1][2] == $markers_before[$last][2]
+                        ) {
+                            array_splice($markers, 1, 1);
+                            array_splice($markers_before, $last, 1);
+                        }
+                        else if(
+                                $last > 0
+                                && $markers_before[0][0] == $markers_before[$last][0]
+                                && $markers_before[0][1] == "art_beg"
+                                && $markers_before[$last][1] == "art_end"
+                                && $markers_before[0][2] == $markers_before[$last][2]
+                        ) {
+                            // remove last element first, otherwise its index will be invalid
+                            array_splice($markers_before, $last, 1);
+                            array_splice($markers_before, 0, 1);
+                        }
+                        else if(
+                                $last > 1
+                                && $markers_before[1][0] == $markers_before[$last][0]
+                                && $markers_before[1][1] == "art_beg"
+                                && $markers_before[$last][1] == "art_end"
+                                && $markers_before[1][2] == $markers_before[$last][2]
+                        ) {
+                            // remove last element first, otherwise its index will be invalid
+                            array_splice($markers_before, $last, 1);
+                            array_splice($markers_before, 1, 1);
+                        }
+                    }
                 }
                 
                 // get additional dates
                 $result = $dbConnection->query(
-                        "SELECT tmp.p, tmp.l, tmp.v
+                        "SELECT
+                          tmp.p AS p,
+                          tmp.l AS l,
+                          tmp.v AS v
                          FROM `crawlserv_corpora` t,
                           JSON_TABLE(
                                 t.datemap,
@@ -1205,21 +1291,21 @@ if($success) {
                                         v TEXT PATH '$.v'
                                 )
                           ) AS tmp
-                         WHERE t.id = $chunk_id
+                         WHERE t.id = $chunk_previous
                           AND tmp.p + tmp.l >= $before_pos_relative"
                 );
                 
                 if(!$result)
                     die("ERROR: Could not get additional dates from previous chunk");
-                    
-                echo "<br><br>\n";
+                
+                $added = false;
                 
                 while($row = $result->fetch_assoc()) {
                     if($row["p"] >= $before_pos_relative)
                         array_push(
                                 $markers_before,
                                 [
-                                    $byte_offset + $row["p"],
+                                    $byte_offset - $chunk_previous_size + $row["p"],
                                     "dat_beg",
                                     $row["v"]
                                 ]
@@ -1228,11 +1314,65 @@ if($success) {
                     array_push(
                             $markers_before,
                             [
-                                    $byte_offset + $row["p"],
+                                    $byte_offset - $chunk_previous_size + $row["p"] + $row["l"],
                                     "dat_end",
                                     $row["v"]
                             ]
                     );
+                    
+                    $added = true;
+                }
+                
+                $result->close();
+                
+                // merge last added date if it is identical with the first date
+                if($added) {
+                    $last = count($markers_before) - 1;
+                    
+                    if($last >= 0) {
+                        if(
+                                count($markers) > 0
+                                && $markers[0][0] == $markers_before[$last][0]
+                                && $markers[0][1] == "dat_beg"
+                                && $markers_before[$last][1] == "dat_end"
+                                && $markers[0][2] == $markers_before[$last][2]
+                        ) {
+                            array_splice($markers, 0, 1);
+                            array_splice($markers_before, $last, 1);
+                        }
+                        else if(
+                                count($markers) > 1
+                                && $markers[1][0] == $markers_before[$last][0]
+                                && $markers[1][1] == "dat_beg"
+                                && $markers_before[$last][1] == "dat_end"
+                                && $markers[1][2] == $markers_before[$last][2]
+                        ) {
+                            array_splice($markers, 1, 1);
+                            array_splice($markers_before, $last, 1);
+                        }
+                        else if(
+                                $last > 0
+                                && $markers_before[0][0] == $markers_before[$last][0]
+                                && $markers_before[0][1] == "dat_beg"
+                                && $markers_before[$last][1] == "dat_end"
+                                && $markers_before[0][2] == $markers_before[$last][2]
+                        ) {
+                            // remove last element first, otherwise its index will be invalid
+                            array_splice($markers_before, $last, 1);
+                            array_splice($markers_before, 0, 1);
+                        }
+                        else if(
+                                $last > 1
+                                && $markers_before[1][0] == $markers_before[$last][0]
+                                && $markers_before[1][1] == "dat_beg"
+                                && $markers_before[$last][1] == "dat_end"
+                                && $markers_before[1][2] == $markers_before[$last][2]
+                        ) {
+                            // remove last element first, otherwise its index will be invalid
+                            array_splice($markers_before, $last, 1);
+                            array_splice($markers_before, 1, 1);
+                        }
+                    }
                 }
             }
         }
@@ -1258,14 +1398,25 @@ if($success) {
                 
                 $result = $dbConnection->query(
                         "SELECT
-                          SUBSTR(corpus, 1, $rest + 512) AS moreText,
-                          IF($rest > 0, LENGTH(SUBSTR(corpus, 1, $rest)), 0) AS byteAfter,
+                          SUBSTR(
+                                corpus,
+                                1,
+                                $rest + 512
+                          ) AS moreText,
+                          IF(
+                                $rest > 0,
+                                LENGTH(
+                                        SUBSTR(
+                                                corpus,
+                                                1,
+                                                $rest
+                                        )
+                                ),
+                                0
+                          ) AS byteAfter,
                           id,
                           chunk_size,
-                          chunk_length,
-                          articlemap->'$[0].p' AS first_p,
-                          articlemap->'$[0].l' AS first_l,
-                          articlemap->'$[0].v' AS first_v
+                          chunk_length
                          FROM `crawlserv_corpora`
                          WHERE previous = $chunk_previous
                          LIMIT 1"
@@ -1397,6 +1548,8 @@ if($success) {
                         $first = false;
                     }
                     
+                    $result->close();
+                    
                     // get additional dates
                     $result = $dbConnection->query(
                             "SELECT
@@ -1502,6 +1655,8 @@ if($success) {
                         
                         $first = false;
                     }
+                    
+                    $result->close();
                 }
             
                 if($rest > $chunk_length)
@@ -1577,7 +1732,12 @@ if($success) {
         $text1 = mb_substr($corpus_excerpt, $corpus_before_l, $corpus_len, "UTF-8");
         $text2 = mb_substr($moreText, 0, mb_strlen($moreText, "UTF-8") - $cutBack, "UTF-8");
         
-        print_with_markers($byte_pos, $text1.$text2, $markers, $char_pos);
+        print_with_markers(
+                $byte_pos,
+                $text1.$text2,
+                $markers,
+                $char_pos
+        );
         
         $text_bytes = strlen($text1) + strlen($text2);
         
