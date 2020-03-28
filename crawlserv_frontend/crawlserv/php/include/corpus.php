@@ -27,7 +27,7 @@
  *
  * Corpus helper functions for the PHP/JavaScript frontend for crawlserv++.
  * 
- * @requires helpers.php !!!
+ * @requires helpers.php and UTF-8 support for mb_strlen() !!!
  *
  */
 
@@ -267,11 +267,11 @@ function print_with_markers($string_offset, $str, $markers, &$char_pos) {
         die(
                 "ERROR: marker @ #"
                 .$markers[0][0]
-                ."["
+                ." ['"
                 .$markers[0][1]
-                .":"
+                ."': '"
                 .$markers[0][2]
-                ."] before offset @ #$string_offset"
+                ."'] before offset @ #$string_offset"
         );
     
     // render HTML with markers
