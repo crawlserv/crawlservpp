@@ -302,7 +302,7 @@ if($result->num_rows) {
             echo " value=\"".html($parsed_id)."\"";
             
         echo ">\n";
-        echo "<input id=\"content-parsed-id\" type=\"text\" />\n";
+        echo "<input id=\"content-parsed-id\" class=\"trigger\" type=\"text\" data-trigger=\"content-search-parsed\" />\n";
         echo    "<a
                 href=\"#\"
                 id=\"content-search-parsed\"
