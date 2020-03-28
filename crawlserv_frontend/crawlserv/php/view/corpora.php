@@ -223,9 +223,9 @@ if($success) {
         $markers = [];
         $markers_after = [];
         
-        $use_pos = isset($_POST["corpus_pos"]) && is_numeric($_POST["corpus_pos"]);
+        $use_pos = isset($_POST["corpus_pos"]) && is_numeric($_POST["corpus_pos"]) && $_POST["corpus_pos"] >= 0;
         $pos_set = false;
-        $use_len = isset($_POST["corpus_len"]) && is_numeric($_POST["corpus_len"]);
+        $use_len = isset($_POST["corpus_len"]) && is_numeric($_POST["corpus_len"]) && $_POST["corpus_len"] >= 0;
         $len_set = false;
         
         if($source == "parsed") {
@@ -1151,7 +1151,7 @@ if($success) {
                             corpus,
                             CHAR_LENGTH(corpus) - "
                             .(511 - $corpus_before_l) /* + 1 because MySQL strings start at #1 */ ."
-                      ) AS before,
+                      ) AS `before`,
                       chunk_size
                      FROM `crawlserv_corpora`
                      WHERE id = $chunk_previous
@@ -1402,7 +1402,7 @@ if($success) {
                                 corpus,
                                 1,
                                 $rest + 512
-                          ) AS moreText,
+                          ) AS more_text,
                           IF(
                                 $rest > 0,
                                 LENGTH(
@@ -1413,7 +1413,7 @@ if($success) {
                                         )
                                 ),
                                 0
-                          ) AS byteAfter,
+                          ) AS byte_after,
                           id,
                           chunk_size,
                           chunk_length
@@ -1430,10 +1430,10 @@ if($success) {
                 if(!$row)
                     die("ERROR: Could not get information about chunk #".($chunk_n + 1). " of corpus");
                 
-                $byte_after = $byte_add + $row["byteAfter"];
-                $byte_end_relative = strlen($row["moreText"]);
+                $byte_after = $byte_add + $row["byte_after"];
+                $byte_end_relative = strlen($row["more_text"]);
                 
-                $moreText .= $row["moreText"];
+                $more_text .= $row["more_text"];
                 
                 $chunk_id = $row["id"];
                 $chunk_size = $row["chunk_size"];
@@ -1730,7 +1730,7 @@ if($success) {
         echo "<span id=\"content-corpus-text\">";
                 
         $text1 = mb_substr($corpus_excerpt, $corpus_before_l, $corpus_len, "UTF-8");
-        $text2 = mb_substr($moreText, 0, mb_strlen($moreText, "UTF-8") - $cutBack, "UTF-8");
+        $text2 = mb_substr($more_text, 0, mb_strlen($moreText, "UTF-8") - $cutBack, "UTF-8");
         
         print_with_markers(
                 $byte_pos,
