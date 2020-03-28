@@ -1385,7 +1385,7 @@ if($success) {
             
         // get more text belonging to the selection (and up to 512 characters beyond)
         //  from the next chunk(s) if necessary
-        $moreText = "";
+        $more_text = "";
         $cutBack = 512;
         $byte_add = 0;
         
@@ -1730,7 +1730,7 @@ if($success) {
         echo "<span id=\"content-corpus-text\">";
                 
         $text1 = mb_substr($corpus_excerpt, $corpus_before_l, $corpus_len, "UTF-8");
-        $text2 = mb_substr($more_text, 0, mb_strlen($moreText, "UTF-8") - $cutBack, "UTF-8");
+        $text2 = mb_substr($more_text, 0, mb_strlen($more_text, "UTF-8") - $cutBack, "UTF-8");
         
         print_with_markers(
                 $byte_pos,
@@ -1773,7 +1773,7 @@ if($success) {
         print_with_markers(
                 $byte_pos + $text_bytes,
                 mb_substr($corpus_excerpt, $corpus_before_l + $corpus_len, NULL, "UTF-8")
-                .mb_substr($moreText, mb_strlen($moreText, "UTF-8") - $cutBack, $cutBack, "UTF-8"),
+                .mb_substr($more_text, mb_strlen($more_text, "UTF-8") - $cutBack, $cutBack, "UTF-8"),
                 $markers_after,
                 $char_pos
         );
