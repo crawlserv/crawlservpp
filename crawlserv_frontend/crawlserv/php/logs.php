@@ -33,6 +33,7 @@ $db_init = true;
 $cc_init = true;
 
 require "config.php";
+require "include/helpers.php";
 
 function filterlink($filter) {
     return "<a href=\"#\" class=\"action-link post-redirect-filter\""
