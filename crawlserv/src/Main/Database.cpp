@@ -3180,6 +3180,9 @@ namespace crawlservpp::Main {
 		const IdString websiteNamespace(this->getWebsiteNamespaceFromUrlList(listId));
 		const std::string listNamespace(this->getUrlListNamespace(listId));
 
+		// get maximum length of SQL query
+		const auto maxLength = this->getMaxAllowedPacketSize();
+
 		// check connection
 		this->checkConnection();
 
@@ -3193,24 +3196,34 @@ namespace crawlservpp::Main {
 						" WHERE"
 				);
 
-				// add a maximum of 1,000 URLs to the SQL query
-				for(auto n = 0; n < 1000; ++n) {
+				// add maximum possible number of URLs to the SQL query
+				while(true) {
+					// check whether there are more IDs to process
 					if(urlIds.empty())
 						break;
 
+					// convert ID to string
+					std::string idString(std::to_string(urlIds.front()));
+
+					// check whether maximum length of SQL query will be exceeded
+					if(sqlQuery.length() + 4 + idString.length() >= maxLength)
+						break;
+
+					// add ID to SQL query
 					sqlQuery += " id=";
-					sqlQuery += std::to_string(urlIds.front());
+					sqlQuery += idString;
 					sqlQuery += " OR";
 
+					// remove ID from queue
 					urlIds.pop();
 				}
 
-				// remove last " OR"
+				// remove last " OR" from SQL query
 				sqlQuery.pop_back();
 				sqlQuery.pop_back();
 				sqlQuery.pop_back();
 
-				// execute query and get number of deleted URLs
+				// execute SQL query and get number of deleted URLs
 				const auto removed = this->executeUpdate(sqlQuery);
 
 				if(removed > 0)
