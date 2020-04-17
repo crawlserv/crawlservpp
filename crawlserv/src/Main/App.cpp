@@ -142,7 +142,7 @@ namespace crawlservpp::Main {
 		if(this->server) {
 			try {
 				while(this->server->tick() && this->running) {
-					if(interruptionSignal)
+					if(App::interruptionSignal.load())
 						this->shutdown();
 				}
 
@@ -161,14 +161,16 @@ namespace crawlservpp::Main {
 
 	// static signal handler (forward the signal to the class)
 	void App::signal(int signalNumber) {
-		App::interruptionSignal = signalNumber;
+		App::interruptionSignal.store(signalNumber);
 	}
 
 	// in-class signal handler
 	void App::shutdown() {
 		std::cout << "\n[SHUTDOWN] ";
 
-		switch(App::interruptionSignal) {
+		const auto signal = App::interruptionSignal.load();
+
+		switch(signal) {
 		case SIGINT:
 			std::cout << "Interruption request signal (SIGINT)";
 
@@ -180,7 +182,7 @@ namespace crawlservpp::Main {
 			break;
 
 		default:
-			std::cout << "Unknown signal (#" << interruptionSignal << ")";
+			std::cout << "Unknown signal (#" << signal << ")";
 		}
 
 		std::cout << " received." << std::flush;
