@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 #include <tidy.h>
 
 #include <queue>	// std::queue
-#include <string>	// std::string
+#include <string>	// std::string, std::to_string
 
 namespace crawlservpp::Wrapper {
 
@@ -70,31 +70,58 @@ namespace crawlservpp::Wrapper {
 		// set boolean option, throws TidyDoc::Exception
 		void setOption(TidyOptionId option, bool value) {
 			if(!tidyOptSetBool(this->doc, option, value ? yes : no))
-				throw Exception("Could not set tidy option");
+				throw Exception(
+						"Could not set tidy option #"
+						+ std::to_string(option)
+						+ " to boolean "
+						+ (value ? "yes" : "no")
+				);
 		}
 
 		// set int option, throws TidyDoc::Exception
 		void setOption(TidyOptionId option, int value) {
 			if(!tidyOptSetInt(this->doc, option, value))
-				throw Exception("Could not set tidy option");
+				throw Exception(
+						"Could not set tidy option #"
+						+ std::to_string(option)
+						+ " to integer "
+						+ std::to_string(value)
+				);
 		}
 
 		// set unsigned int option, throws TidyDoc::Exception
 		void setOption(TidyOptionId option, unsigned int value) {
 			if(!tidyOptSetInt(this->doc, option, value))
-				throw Exception("Could not set tidy option");
+				throw Exception(
+						"Could not set tidy option #"
+						+ std::to_string(option)
+						+ " to unsigned integer "
+						+ std::to_string(value)
+				);
 		}
 
 		// set string option, throws TidyDoc::Exception
 		void setOption(TidyOptionId option, const std::string& value) {
 			if(!tidyOptSetValue(this->doc, option, value.c_str()))
-				throw Exception("Could not set tidy option");
+				throw Exception(
+						"Could not set tidy option #"
+						+ std::to_string(option)
+						+ " to string \""
+						+ value
+						+ "\""
+				);
 		}
 
 		// set string option, throws TidyDoc::Exception
 		void setOption(TidyOptionId option, const char * value) {
 			if(!tidyOptSetValue(this->doc, option, value))
-				throw Exception("Could not set tidy option");
+				throw Exception(
+						"Could not set tidy option #"
+						+ std::to_string(option)
+						+ " to C string \""
+						+ value
+						+ "\""
+				);
 		}
 
 		// parse string, throws TidyDoc::Exception
