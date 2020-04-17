@@ -292,7 +292,7 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		static unsigned long long getRequestCounter() { return Database::requestCounter; }
+		static unsigned long long getRequestCounter() { return Database::requestCounter.load(); }
 #else
 		static unsigned long long getRequestCounter() { return 0; }
 #endif
