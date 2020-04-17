@@ -532,7 +532,7 @@ namespace crawlservpp::Module {
 		// check for "time travel" to another ID
 		auto newId = this->overwriteLast.load();
 
-		if(this->overwriteLast.compare_exchange_strong(newId, 0)) {
+		if(newId && this->overwriteLast.compare_exchange_strong(newId, 0)) {
 			// save the old values for the time calculation
 			const auto oldId = this->last;
 			const auto oldTime = static_cast<double>(this->getRunTime());
