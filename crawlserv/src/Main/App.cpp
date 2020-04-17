@@ -74,24 +74,24 @@ namespace crawlservpp::Main {
 			this->loadConfig(argv[1], serverSettings, dbSettings, networkSettings);
 
 			// get password
-			if(this->getPassword(dbSettings) && this->running) {
+			if(this->getPassword(dbSettings) && this->running.load()) {
 				// create server and run!
 				this->server = std::make_unique<Server>(serverSettings, dbSettings, networkSettings);
 
 				std::cout << "Server is up and running." << std::flush;
 			}
 			else
-				this->running = false;
+				this->running.store(false);
 		}
 		catch(const std::exception& e) {
 			std::cout << "[ERROR] " << e.what() << std::endl;
 
-			this->running = false;
+			this->running.store(false);
 		}
 		catch(...) {
 			std::cout << "[ERROR] Unknown exception in App::App()" << std::endl;
 
-			this->running = false;
+			this->running.store(false);
 		}
 	}
 
@@ -141,7 +141,7 @@ namespace crawlservpp::Main {
 
 		if(this->server) {
 			try {
-				while(this->server->tick() && this->running) {
+				while(this->server->tick() && this->running.load()) {
 					if(App::interruptionSignal.load())
 						this->shutdown();
 				}
@@ -187,7 +187,7 @@ namespace crawlservpp::Main {
 
 		std::cout << " received." << std::flush;
 
-		this->running = false;
+		this->running.store(false);
 	}
 
 	// helper function: get database password from user, return false on cancel
@@ -246,7 +246,7 @@ namespace crawlservpp::Main {
 			}
 
 		}
-		while(inputLoop && this->running);
+		while(inputLoop && this->running.load());
 
 		std::cout << std::endl;
 
