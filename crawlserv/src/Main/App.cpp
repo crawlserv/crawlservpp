@@ -74,12 +74,13 @@ namespace crawlservpp::Main {
 			this->loadConfig(argv[1], serverSettings, dbSettings, networkSettings);
 
 			// get password
-			if(this->getPassword(dbSettings) && this->running.load()) {
-				// create server and run!
-				this->server = std::make_unique<Server>(serverSettings, dbSettings, networkSettings);
+			if(this->getPassword(dbSettings))
+				if(this->running.load()) {
+					// create server and run!
+					this->server = std::make_unique<Server>(serverSettings, dbSettings, networkSettings);
 
-				std::cout << "Server is up and running." << std::flush;
-			}
+					std::cout << "Server is up and running." << std::flush;
+				}
 			else
 				this->running.store(false);
 		}
