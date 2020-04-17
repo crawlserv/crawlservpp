@@ -33,17 +33,10 @@
 
 #include "../Main/Exception.hpp"
 
-#include <experimental/filesystem>
-
-#include <string>	// std::string
-#include <vector>	// std::vector
-
-// for convenience
-namespace std {
-
-	namespace filesystem = experimental::filesystem;
-
-}
+#include <cstddef>		// std::size_t
+#include <filesystem>	// std::filesystem
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Helper::FileSystem {
 
@@ -63,7 +56,7 @@ namespace crawlservpp::Helper::FileSystem {
 	void createDirectory(const std::string& pathToDir);
 	void createDirectoryIfNotExists(const std::string& pathToDir);
 	void clearDirectory(const std::string& pathToDir);
-	size_t getFreeSpace(const std::string& path);
+	std::size_t getFreeSpace(const std::string& path);
 
 	/*
 	 * CLASS FOR FILE SYSTEM EXCEPTIONS
@@ -171,10 +164,10 @@ namespace crawlservpp::Helper::FileSystem {
 		// make paths absolute
 		try {
 			const std::filesystem::path absPathToDir(
-					std::filesystem::system_complete(pathToDir)
+					std::filesystem::canonical(pathToDir)
 			);
 			std::filesystem::path absPathToCheck(
-					std::filesystem::system_complete(pathToCheck)
+					std::filesystem::canonical(pathToCheck)
 			);
 
 			// remove filename if necessary
@@ -247,7 +240,7 @@ namespace crawlservpp::Helper::FileSystem {
 	}
 
 	// get the free disk space for a directory (in bytes), throws FileSystem::Exception
-	inline size_t getFreeSpace(const std::string& path) {
+	inline std::size_t getFreeSpace(const std::string& path) {
 		try {
 			return std::filesystem::space(path).available;
 		}
