@@ -280,7 +280,7 @@ namespace crawlservpp::Helper::Json {
 
 		std::string result;
 
-		for(size_t n = 0; n < json.length(); ++n) {
+		for(std::string::size_type n = 0; n < json.length(); ++n) {
 			// ignore control characters
 			if(::iscntrl(json[n]))
 				continue;
