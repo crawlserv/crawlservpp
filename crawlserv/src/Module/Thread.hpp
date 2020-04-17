@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@
 #include <atomic>				// std::atomic
 #include <chrono>				// std::chrono
 #include <cmath>				// std::lround
+#include <cstddef>				// std::size_t
 #include <condition_variable>	// std::condition_variable
 #include <exception>			// std::exception
 #include <iostream>				// std::cout, std::flush
@@ -59,6 +60,7 @@
 #include <queue>				// std::queue
 #include <string>				// std::string
 #include <thread>				// std::this_thread, std::thread
+#include <utility>				// std::swap
 
 namespace crawlservpp::Module {
 
@@ -89,10 +91,10 @@ namespace crawlservpp::Module {
 		virtual ~Thread();
 
 		// getters
-		size_t getId() const;
-		size_t getWebsite() const;
-		size_t getUrlList() const;
-		size_t getConfig() const;
+		std::size_t getId() const;
+		std::size_t getWebsite() const;
+		std::size_t getUrlList() const;
+		std::size_t getConfig() const;
 		bool isShutdown() const;
 		bool isRunning() const;
 		bool isFinished() const;
@@ -107,7 +109,7 @@ namespace crawlservpp::Module {
 		void end();
 
 		// time travel
-		void warpTo(size_t target);
+		void warpTo(std::size_t target);
 
 		// class for Thread exceptions
 		MAIN_EXCEPTION_CLASS();
@@ -127,7 +129,7 @@ namespace crawlservpp::Module {
 
 		// thread helper functions
 		bool isInterrupted() const;
-		void sleep(size_t ms) const;
+		void sleep(unsigned long ms) const;
 
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
@@ -138,8 +140,8 @@ namespace crawlservpp::Module {
 		void allowPausing();
 		void disallowPausing();
 
-		size_t getLast() const;
-		void setLast(size_t last);
+		std::size_t getLast() const;
+		void setLast(std::size_t last);
 		void incrementLast();
 		std::string getStatusMessage() const;
 		long getWarpedOverAndReset();
@@ -161,11 +163,12 @@ namespace crawlservpp::Module {
 		std::atomic<bool> shutdown;				// shutdown in progress
 		std::atomic<bool> finished;				// shutdown is finished
 
-		const std::string module;				// the module of the thread (used for logging)
-		std::atomic<size_t> id;					// the ID of the thread in the database
-		const ThreadOptions options;			// options for the thread
-		size_t last;							// last ID for the thread
-		std::atomic<size_t> overwriteLast;		// ID to overwrite last ID with ("time travel")
+		std::size_t id;							// the ID of the thread in the database
+		std::string module;						// the module of the thread (used for logging)
+		ThreadOptions options;					// options for the thread
+
+		std::size_t last;						// last ID for the thread
+		std::atomic<std::size_t> overwriteLast;	// ID to overwrite last ID with ("time travel")
 		long warpedOver;						// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
 		std::condition_variable pauseCondition;	// condition variable to wait for unpause
@@ -179,9 +182,9 @@ namespace crawlservpp::Module {
 		// timing statistics (in seconds)
 		std::chrono::steady_clock::time_point startTimePoint;
 		std::chrono::steady_clock::time_point pauseTimePoint;
-		std::chrono::duration<size_t> runTime;
-		std::chrono::duration<size_t> pauseTime;
-		size_t getRunTime() const;
+		std::chrono::duration<std::size_t> runTime;
+		std::chrono::duration<std::size_t> pauseTime;
+		std::size_t getRunTime() const;
 		void updateRunTime();
 		void updatePauseTime();
 

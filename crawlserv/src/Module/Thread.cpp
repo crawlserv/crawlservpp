@@ -33,7 +33,7 @@
 
 namespace crawlservpp::Module {
 
-	// constructor A: run previously interrupted thread
+	// constructor A: run a previously interrupted thread
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
@@ -48,6 +48,7 @@ namespace crawlservpp::Module {
 			  terminated(false),
 			  shutdown(false),
 			  finished(false),
+			  id(threadStatus.id),
 			  module(threadOptions.module),
 			  options(threadOptions),
 			  last(threadStatus.last),
@@ -55,8 +56,8 @@ namespace crawlservpp::Module {
 			  warpedOver(0),
 			  startTimePoint(std::chrono::steady_clock::time_point::min()),
 			  pauseTimePoint(std::chrono::steady_clock::time_point::min()),
-			  runTime(std::chrono::duration<size_t>::zero()),
-			  pauseTime(std::chrono::duration<size_t>::zero()) {
+			  runTime(std::chrono::duration<std::size_t>::zero()),
+			  pauseTime(std::chrono::duration<std::size_t>::zero()) {
 		// remove paused or interrupted thread status from status message
 		if(
 				threadStatus.status.length() >= 12
@@ -68,9 +69,6 @@ namespace crawlservpp::Module {
 				&& threadStatus.status.substr(0, 7) == "PAUSED "
 		)
 			this->status = threadStatus.status.substr(7);
-
-		// set ID
-		this->id = threadStatus.id;
 
 		// get namespace of website, URL list and configuration
 		this->websiteNamespace = this->databaseClass.getWebsiteNamespace(this->getWebsite());
@@ -97,12 +95,12 @@ namespace crawlservpp::Module {
 			);
 	}
 
-	// constructor B: start new thread (using constructor A to initialize values)
+	// constructor B: start a new thread (using constructor A to initialize values)
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions
 	) : Thread(dbBase, threadOptions, ThreadStatus()) {
-		// add thread to database and save ID
+		// add the thread to the database and save its (new) ID
 		this->id = this->databaseClass.addThread(threadOptions);
 
 		this->database.setThreadId(this->id);
@@ -111,67 +109,66 @@ namespace crawlservpp::Module {
 	// destructor stub
 	Thread::~Thread() {}
 
-	// get ID of the thread (thread-safe)
-	size_t Thread::getId() const {
+	// get the ID of the thread (thread-safe)
+	std::size_t Thread::getId() const {
 		return this->id;
 	}
 
-	// get ID of the website (thread-safe)
-	size_t Thread::getWebsite() const {
+	// get the ID of the website (thread-safe)
+	std::size_t Thread::getWebsite() const {
 		return this->options.website;
 	}
 
-	// get ID of URL list (thread-safe)
-	size_t Thread::getUrlList() const {
+	// get the ID of the URL list (thread-safe)
+	std::size_t Thread::getUrlList() const {
 		return this->options.urlList;
 	}
 
-	// get ID of the configuration (thread-safe)
-	size_t Thread::getConfig() const {
+	// get the ID of the configuration (thread-safe)
+	std::size_t Thread::getConfig() const {
 		return this->options.config;
 	}
 
-	// get whether thread was terminated due to an exception
+	// get whether a shutdown is in progress (or has finished, see Thread::isFinished()) (thread-safe)
 	bool Thread::isShutdown() const {
 		return this->shutdown.load();
 	}
 
-	// get whether thread is still supposed to run
+	// get whether the thread is still supposed to run (thread-safe)
 	bool Thread::isRunning() const {
 		return this->running.load();
 	}
 
-	// get whether shutdown was finished
+	// get whether the shutdown of the thread was finished (thread-safe)
 	bool Thread::isFinished() const {
 		return this->finished.load();
 	}
 
-	// get whether thread has been paused
+	// get whether the thread has been paused (thread-safe)
 	bool Thread::isPaused() const {
 		return this->paused.load();
 	}
 
 	// start the thread (may not be used by the thread itself!)
 	void Thread::start() {
+		if(this->thread.joinable())
+			throw Exception("Thread::start(): A thread has already been started");
+
 		// run thread
 		this->thread = std::thread(&Thread::main, this);
 	}
 
-	// pause the thread, return whether thread is pausable (may not be used by the thread itself!)
+	// pause the thread, return whether the thread is pausable (may not be used by the thread itself!)
 	bool Thread::pause() {
-		// ignore if thread is paused
-		if(this->paused.load())
-			return true;
-
 		// check whether thread is pausable
 		if(!(this->pausable.load()))
 			return false;
 
-		// set internal pause state
-		this->paused.store(true);
+		// change internal pause state if necessary
+		bool changeIfValueIs = false;
 
-		// set pause state in database
-		{
+		if(this->paused.compare_exchange_strong(changeIfValueIs, true)) {
+			// set pause state in the database if the internal state has changed
 			std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
 			this->databaseClass.setThreadStatus(this->id, true, this->status);
@@ -182,43 +179,43 @@ namespace crawlservpp::Module {
 
 	// unpause the thread (may not be used by the thread itself!)
 	void Thread::unpause() {
-		// ignore if thread is not paused
-		if(!(this->paused.load()))
-			return;
+		// change internal pause state if necessary
+		bool changeIfValueIs = true;
 
-		// set pause state in database
-		{
+		if(this->paused.compare_exchange_strong(changeIfValueIs, false)) {
+			// locks for condition variable and database status
+			std::lock_guard<std::mutex> unpause(this->pauseLock);
 			std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
+			// set pause state in the databas
 			this->databaseClass.setThreadStatus(this->id, false, this->status);
+
+			// update condition variable
+			this->pauseCondition.notify_one();
 		}
-
-		// set internal pause state
-		std::lock_guard<std::mutex> unpause(this->pauseLock);
-
-		this->paused.store(false);
-
-		// update condition variable
-		this->pauseCondition.notify_one();
 	}
 
 	// shutdown the thread (may not be used by the thread itself!)
 	//  NOTE: Module::Thread::end() must be called afterwards to wait for the thread!
 	void Thread::stop() {
-		// stop running
+		// stop running if necessary
 		if(this->running.load()) {
-			this->running.store(false);
+			// first set shutdown option...
 			this->shutdown.store(true);
 
-			// check whether thread has to be unpaused
-			if(this->paused.load()) {
-				// set internal pause state
-				std::lock_guard<std::mutex> unpause(this->pauseLock);
+			// ...then stop thread if it has not been stopped in the meantime
+			bool changeIfValueIs = true;
 
-				this->paused.store(false);
+			if(this->running.compare_exchange_strong(changeIfValueIs, false)) {
+				// unpause thread first if necessary
+				changeIfValueIs = true;
 
-				// update condition variable
-				this->pauseCondition.notify_one();
+				if(this->paused.compare_exchange_strong(changeIfValueIs, false)) {
+					// notify other thread via condition variable
+					std::lock_guard<std::mutex> unpause(this->pauseLock);
+
+					this->pauseCondition.notify_one();
+				}
 			}
 		}
 
@@ -233,15 +230,18 @@ namespace crawlservpp::Module {
 		if(this->running.load()) {
 			// interrupt thread
 			this->interrupted.store(true);
-			this->running.store(false);
 			this->shutdown.store(true);
 
-			// check whether thread has to be unpaused
-			if(this->paused.load()) {
-				// set internal pause state
-				std::lock_guard<std::mutex> unpause(this->pauseLock);
+			bool changeIfRunningIs = true;
+			bool changeIfPausedIs = true;
 
-				this->paused.store(false);
+			// stop AND unpause thread if (still) necessary
+			if(
+					this->running.compare_exchange_strong(changeIfRunningIs, false)
+					&& this->paused.compare_exchange_strong(changeIfPausedIs, false)
+			) {
+				// notify other thread via condition variable
+				std::lock_guard<std::mutex> unpause(this->pauseLock);
 
 				// update condition variable
 				this->pauseCondition.notify_one();
@@ -263,20 +263,20 @@ namespace crawlservpp::Module {
 		}
 	}
 
-	// jump to specified target ID ("time travel"), throws Thread::Exception
-	void Thread::warpTo(size_t target) {
+	// jump to specified target ID ("time travel"), throws Thread::Exception (thread-safe)
+	void Thread::warpTo(std::size_t target) {
 		// check argument
 		if(!target)
-			throw Exception("Target ID cannot be zero");
+			throw Exception("Thread::warpTo(): Target ID cannot be zero");
 
 		// set target ID to overwrite
-		this->overwriteLast = target - 1;
+		this->overwriteLast.store(target - 1);
 	}
 
-	// sleep for the specified number of milliseconds (unless the thread is stopped)
-	void Thread::sleep(size_t ms) const {
+	// sleep for the specified number of milliseconds (unless the thread is stopped; thread-safe)
+	void Thread::sleep(unsigned long ms) const {
 		while(ms > MODULE_THREAD_SLEEP_ON_SLEEP_MS) {
-			if(!(this->isRunning()))
+			if(!(this->running.load()))
 				return;
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(MODULE_THREAD_SLEEP_ON_SLEEP_MS));
@@ -284,33 +284,29 @@ namespace crawlservpp::Module {
 			ms -= MODULE_THREAD_SLEEP_ON_SLEEP_MS;
 		}
 
-		if(ms && this->isRunning())
+		if(ms && this->running.load())
 			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 	}
 
-	// return whether thread has been interrupted by shutdown
+	// return whether thread has been interrupted by shutdown (thread-safe)
 	bool Thread::isInterrupted() const {
 		return this->interrupted.load();
 	}
 
-	// force the thread to pause (to be used by the thread only)
+	// force the thread to pause (to be used by the thread only!)
 	void Thread::pauseByThread() {
-		// ignore if thread is paused
-		if(this->paused.load())
-			return;
+		// set the internal pause state if the thread is not paused already
+		bool changeIfValueIs = false;
 
-		// set internal pause state
-		this->paused.store(true);
-
-		// set pause state in database
-		{
+		if(this->paused.compare_exchange_strong(changeIfValueIs, true)) {
+			// set the pause state in the database
 			std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
 			this->database.setThreadStatus(this->id, true, this->status);
 		}
 	}
 
-	// set the status messsage of the thread (to be used by the thread only)
+	// set the status messsage of the thread (to be used by the thread only!)
 	void Thread::setStatusMessage(const std::string& statusMessage) {
 		// set internal status
 		{
@@ -319,25 +315,28 @@ namespace crawlservpp::Module {
 			this->status = statusMessage;
 		}
 
-		// set status in database (when interrupted, the thread has been unpaused and the pause state needs to be ignored)
+		// set status in database
+		//  (when interrupted, the thread has been unpaused and the pause state needs to be ignored)
 		if(this->interrupted.load())
 			this->database.setThreadStatus(this->id, statusMessage);
 		else
 			this->database.setThreadStatus(this->id, this->paused.load(), statusMessage);
 	}
 
-	// set the progress of the thread (to be used by the thread only)
+	// set the progress of the thread (to be used by the thread only!)
 	void Thread::setProgress(float progress) {
 		// set progress in database
 		this->database.setThreadProgress(this->id, progress, this->getRunTime());
 	}
 
-	// add thread-specific log entry to the database if logging level is high enough (to be used by the thread only)
+	// add a thread-specific log entry to the database if the current logging level is high enough
+	//  (to be used by the thread only!)
 	void Thread::log(unsigned short level, const std::string& logEntry) {
 		this->database.log(level, logEntry);
 	}
 
-	// add multiple thread-specific log entries to the database if logging level is high enough (to be used by the thread only)
+	// add multiple thread-specific log entries to the database if the current logging level is high enough
+	//  (to be used by the thread only!)
 	void Thread::log(unsigned short level, std::queue<std::string>& logEntries) {
 		this->database.log(level, logEntries);
 	}
@@ -347,57 +346,60 @@ namespace crawlservpp::Module {
 		return this->database.isLogLevel(level);
 	}
 
-	// allow the thread to be paused (enabled by default)
+	// allow the thread to be paused (enabled by default; thread-safe)
 	void Thread::allowPausing() {
 		this->pausable.store(true);
 	}
 
-	// do not allow the thread to be paused
+	// do not allow the thread to be paused (thread-safe)
 	void Thread::disallowPausing() {
 		this->pausable.store(false);
 	}
 
-	// get value of last ID (to be used by the thread only)
-	size_t Thread::getLast() const {
+	// get the value of the last ID used by the thread (to be used by the thread only!)
+	std::size_t Thread::getLast() const {
 		return this->last;
 	}
 
-	// set last ID (to be used by the thread only)
-	void Thread::setLast(size_t last) {
-		// set last ID internally
-		this->last = last;
+	// set the last ID used by the thread (to be used by the thread only!)
+	void Thread::setLast(std::size_t last) {
+		if(this->last != last) {
+			// set the last ID internally
+			this->last = last;
 
-		// set last ID in database
-		this->database.setThreadLast(this->id, last);
+			// set the last ID in the database
+			this->database.setThreadLast(this->id, last);
+		}
 	}
 
-	// increment last ID (to be used by the thread only)
+	// increment the last ID used by the thread (to be used by the thread only!)
 	void Thread::incrementLast() {
-		// increment last ID internally
+		// increment the last ID internally
 		++(this->last);
 
-		// increment last ID in database
+		// increment the last ID in the database
 		this->database.setThreadLast(this->id, this->last);
 	}
 
-	// get a copy of the current status message
+	// get a copy of the current status message (thread-safe)
 	std::string Thread::getStatusMessage() const {
 		std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
 		return this->status;
 	}
 
-	// return and reset number of IDs that have been jumped over (might be negative, to be used by the thread only)
+	// return and reset the number of IDs that have been jumped over
+	//  (might be negative; to be used by the thread only!)
 	long Thread::getWarpedOverAndReset() {
-		const long result = this->warpedOver;
+		long result = 0;
 
-		this->warpedOver = 0;
+		std::swap(this->warpedOver, result);
 
 		return result;
 	}
 
-	// get current run time in seconds
-	size_t Thread::getRunTime() const {
+	// get the current run time of the thread in seconds
+	std::size_t Thread::getRunTime() const {
 		if(this->startTimePoint > std::chrono::steady_clock::time_point::min())
 			return	(
 							this->runTime +
@@ -409,67 +411,67 @@ namespace crawlservpp::Module {
 			return this->runTime.count();
 	}
 
-	// update run time of thread (and save it to database)
+	// update the run time of the thread (and save it to the database)
 	void Thread::updateRunTime() {
 		if(this->startTimePoint > std::chrono::steady_clock::time_point::min()) {
-			// add run time
+			// add the run time
 			this->runTime +=
 					std::chrono::duration_cast<std::chrono::seconds>(
 							std::chrono::steady_clock::now() - this->startTimePoint
 					);
 
-			// reset start time point
+			// reset the start time point
 			this->startTimePoint = std::chrono::steady_clock::time_point::min();
 
-			// save new run time to database
+			// save the new run time to the database
 			this->database.setThreadRunTime(this->id, this->runTime.count());
 		}
 	}
 
-	// update pause time of thread and save it to database
+	// update the pause time of the thread and save it to database
 	void Thread::updatePauseTime() {
-		// check whether pause time was running
+		// check whether the pause time was measured
 		if(this->pauseTimePoint > std::chrono::steady_clock::time_point::min()) {
-			// add pause time
+			// add the pause time
 			this->pauseTime += std::chrono::duration_cast<std::chrono::seconds>(
 					std::chrono::steady_clock::now() - this->pauseTimePoint
 			);
 
-			// reset pause time point
+			// reset the pause time point
 			this->pauseTimePoint = std::chrono::steady_clock::time_point::min();
 
-			// save new pause time in database
+			// save the new pause time in the database
 			this->database.setThreadPauseTime(this->id, this->pauseTime.count());
 		}
 	}
 
-	// initialize thread
+	// initialize the thread
 	void Thread::init() {
-		// get previous run and pause times (in seconds)
+		// get the previous run and pause times of the thread (in seconds)
 		this->runTime = std::chrono::seconds(this->database.getThreadRunTime(this->id));
 		this->pauseTime = std::chrono::seconds(this->database.getThreadPauseTime(this->id));
 
-		// save old thread status
+		// save the old thread status
 		const std::string oldStatus(this->getStatusMessage());
 
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
 		try {
 #endif
-			// initialize thread
+			// initialize the thread
 			this->onInit();
 
-			// set status message (useful when the thread is paused on startup)
+			// set the status message of the thread (useful when it is paused on startup)
 			if(!oldStatus.empty())
 				this->setStatusMessage(oldStatus);
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
 		}
-		// handle exceptions by trying to log and set status
+		// handle exceptions by trying to log and to set the status of the thread
 		catch(const std::exception& e) {
 			// log error
 			try {
 				this->log(1, "failed - " + std::string(e.what()) + ".");
 
-				// try to set status
+				// try to set the status of the thread
 				this->setStatusMessage("ERROR " + std::string(e.what()));
 			}
 			catch(const std::exception& e2) {
@@ -477,12 +479,12 @@ namespace crawlservpp::Module {
 				std::cout << "\n" << " [Could not write to log: " << e2.what() << "]" << std::flush;
 			}
 
-			// interrupt thread
+			// interrupt the thread
 			this->interrupted.store(true);
 		}
 #endif
 
-		// save new start time point
+		// save the new start time point
 		this->startTimePoint = std::chrono::steady_clock::now();
 	}
 
@@ -494,7 +496,7 @@ namespace crawlservpp::Module {
 			this->onTick();
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
 		}
-		// handle connection exception by sleeping
+		// handle connection exceptions by sleeping
 		catch(const ConnectionException& e) {
 			std::cout	<< '\n'
 						<< e.what()
@@ -504,42 +506,43 @@ namespace crawlservpp::Module {
 
 			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
 		}
-		// handle other exceptions by trying to log, set status and pause thread
+		// handle other exceptions by trying to log, set the status of and pause the thread
 		catch(const std::exception& e) {
 			// log error
 			this->log(1, "failed - " + std::string(e.what()) + ".");
 
-			// set status
+			// set the status of the thread
 			this->setStatusMessage("ERROR " + std::string(e.what()));
 
-			// pause thread
+			// pause the thread
 			this->pauseByThread();
 		}
 		catch(...) {
-			// log error
+			// log the error
 			this->log(1, "failed - Unknown exception.");
 
-			// set status
+			// set the status of the thread
 			this->setStatusMessage("ERROR Unknown exception");
 
-			// pause thread
+			// pause the thread
 			this->pauseByThread();
 		}
 #endif
 
 		// check for "time travel" to another ID
-		if(this->overwriteLast) {
-			// save old values for time calculation
-			const size_t oldId = this->last;
-			const double oldTime = static_cast<double>(this->getRunTime());
+		auto newId = this->overwriteLast.load();
 
-			// change status
-			this->setLast(this->overwriteLast);
+		if(this->overwriteLast.compare_exchange_strong(newId, 0)) {
+			// save the old values for the time calculation
+			const auto oldId = this->last;
+			const auto oldTime = static_cast<double>(this->getRunTime());
 
-			this->overwriteLast = 0;
+			// change the last ID of the thread
+			this->setLast(newId);
+
 			this->warpedOver = this->last - oldId;
 
-			// calculate new starting time
+			// calculate the new starting time
 			if(oldId > 0 && oldTime > 0) {
 				this->runTime += std::chrono::seconds(
 						std::lround(
@@ -550,32 +553,32 @@ namespace crawlservpp::Module {
 		}
 	}
 
-	// wait for pause to be released
+	// wait for a pause to be released
 	void Thread::wait() {
 		try {
-			// update run time and set pause time point
+			// update the run time of the thread and set the pause time point
 			this->updateRunTime();
 
 			this->pauseTimePoint = std::chrono::steady_clock::now();
 
-			// notify thread for pausing
+			// notify the thread for pausing
 			this->onPause();
 
-			// wait for unpausing
+			// wait for the thread to get unpaused
 			std::unique_lock<std::mutex> pause(this->pauseLock);
 
 			this->pauseCondition.wait(pause, std::bind(&Thread::isUnpaused, this));
 
-			// notify thread for unpausing
+			// notify the thread
 			if(this->running.load())
 				this->onUnpause();
 
-			// update pause time and save new start time point
+			// update the pause time of the thread and save the new start time point
 			this->updatePauseTime();
 
 			this->startTimePoint = std::chrono::steady_clock::now();
 		}
-		// handle connection exception by sleeping
+		// handle connection exceptions by sleeping
 		catch(const ConnectionException& e) {
 			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
 		}
@@ -583,7 +586,7 @@ namespace crawlservpp::Module {
 
 	// clear thread
 	void Thread::clear() {
-		// try to update run time
+		// try to update the run time of the thread
 		try {
 			this->updateRunTime();
 		}
@@ -595,7 +598,7 @@ namespace crawlservpp::Module {
 			this->clearException("updateRuntime");
 		}
 
-		// try to notify thread for clearing
+		// try to notify the thread for clearing
 		try {
 			this->onClear();
 		}
@@ -623,12 +626,12 @@ namespace crawlservpp::Module {
 		this->finished.store(true);
 	}
 
-	// function for checking whether to unpause the thread (multi-threading safe)
+	// function for checking whether to unpause the thread (thread-safe)
 	bool Thread::isUnpaused() const {
 		return !(this->paused.load());
 	}
 
-	// helper function: thread finished, set status message if interrupted and log timing statistics
+	// helper function: thread has been finished, set its status message if interrupted or log the timing
 	void Thread::onEnd() {
 		if(this->interrupted.load())
 			this->setStatusMessage("INTERRUPTED " + this->status);
@@ -660,7 +663,7 @@ namespace crawlservpp::Module {
 					+ std::string(e.what())
 			);
 		}
-		// if that fails too, write the original exception to the console
+		// if that fails too, write the original exception to stdout
 		catch(...) {
 			std::cout	<< "\nWARNING: Exception in Thread::"
 						<< inFunction
@@ -672,7 +675,7 @@ namespace crawlservpp::Module {
 
 	// helper function for handling unknown exceptions when clearing the thread
 	void Thread::clearException(const std::string& inFunction) {
-		// try to log the unknown exception
+		// try to log an unknown exceptions
 		try {
 			this->database.log(
 					1,
@@ -681,7 +684,7 @@ namespace crawlservpp::Module {
 					+ "()"
 			);
 		}
-		// if that fails too, write the original exception to the console
+		// if that fails too, write the original exception to stdout
 		catch(...) {
 			std::cout	<< "\nWARNING: Unknown exception in Thread::"
 						<< inFunction
@@ -692,7 +695,7 @@ namespace crawlservpp::Module {
 
 	// main function of the thread
 	void Thread::main() {
-		// connect to database and prepare logging
+		// connect to the database and prepare for logging
 		this->database.connect();
 		this->database.prepare();
 
@@ -700,43 +703,44 @@ namespace crawlservpp::Module {
 		try
 	#endif
 		{
-			// init thread
+			// initialize the thread
 			this->init();
 
-			// run thread
+			// run the thread
 			while(this->running.load() && !(this->interrupted.load())) {
-				// check pause state
+				// check the pause state of the thread
 				if(this->paused.load()) {
-					// thread paused: wait for pause to be released
+					// the thread is paused: wait for the pause to be released
 					this->wait();
 				}
 				else {
-					// thread not paused: run tick
+					// the thread is not paused: run a tick
 					this->tick();
 				}
 			}
 
-			// clear thread
+			// clear the thread
 			this->clear();
 		}
 
 	#ifndef MODULE_THREAD_DEBUG_NOCATCH
-		// handle non-caught exceptions by thread
+		// handle non-caught exceptions by the thread
 		catch(const std::exception& e) {
 			try {
-				// log error
+				// log an error
 				this->log(1, "failed - " + std::string(e.what()) + ".");
 
-				// update run or pause time
+				// update the run or the pause time
 				this->updateRunTime();
 				this->updatePauseTime();
 			}
 			catch(const std::exception& e2) {
-				// log exceptions -> send to stdout
+				// if that fails too, write all the exceptions to stdout
 				std::cout << "\n> Thread terminated - " << e.what() << "." << std::flush;
 				std::cout << "\n> Thread could not write to log - " << e2.what() << "." << std::flush;
 			}
 
+			// the thread has been terminated by an exception
 			this->terminated.store(true);
 		}
 	#endif
