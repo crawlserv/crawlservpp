@@ -31,6 +31,7 @@
 #ifndef DATA_DATA_HPP_
 #define DATA_DATA_HPP_
 
+#include <cstddef>	// std::size_t
 #include <string>	// std::string
 #include <tuple>	// std::tuple
 #include <utility>	// std::pair
@@ -58,7 +59,7 @@ namespace crawlservpp::Data {
 			int _i;
 			unsigned int _ui;
 			long _l;
-			size_t _ul;
+			std::size_t _ul;
 			double _d;
 		};
 
@@ -82,7 +83,7 @@ namespace crawlservpp::Data {
 		Value(int value) { this->_isnull = false; this->_overflow = _if_too_large::_error; this->_i = value; } // int
 		Value(unsigned int value) { this->_isnull = false; this->_overflow = _if_too_large::_error; this->_ui = value; } // unsigned int
 		Value(long value) { this->_isnull = false; this->_overflow = _if_too_large::_error; this->_l = value; } // long
-		Value(size_t value) { this->_isnull = false; this->_overflow = _if_too_large::_error; this->_ul = value; } // size_t
+		Value(std::size_t value) { this->_isnull = false; this->_overflow = _if_too_large::_error; this->_ul = value; } // std::size_t
 		Value(double value) { this->_isnull = false; this->_overflow = _if_too_large::_error; this->_d = value; } // double
 		Value(const std::string& value) { this->_isnull = false; this->_overflow = _if_too_large::_error; this->_s = value; } // string
 		void clear() { Value(); }
