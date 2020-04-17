@@ -45,7 +45,6 @@ namespace crawlservpp::Module {
 			  running(true),
 			  paused(threadStatus.paused),
 			  interrupted(false),
-			  resumed(true),
 			  terminated(false),
 			  shutdown(false),
 			  finished(false),
@@ -134,22 +133,22 @@ namespace crawlservpp::Module {
 
 	// get whether thread was terminated due to an exception
 	bool Thread::isShutdown() const {
-		return this->shutdown;
+		return this->shutdown.load();
 	}
 
 	// get whether thread is still supposed to run
 	bool Thread::isRunning() const {
-		return this->running;
+		return this->running.load();
 	}
 
 	// get whether shutdown was finished
 	bool Thread::isFinished() const {
-		return this->finished;
+		return this->finished.load();
 	}
 
 	// get whether thread has been paused
 	bool Thread::isPaused() const {
-		return this->paused;
+		return this->paused.load();
 	}
 
 	// start the thread (may not be used by the thread itself!)
@@ -161,15 +160,15 @@ namespace crawlservpp::Module {
 	// pause the thread, return whether thread is pausable (may not be used by the thread itself!)
 	bool Thread::pause() {
 		// ignore if thread is paused
-		if(this->paused)
+		if(this->paused.load())
 			return true;
 
 		// check whether thread is pausable
-		if(!(this->pausable))
+		if(!(this->pausable.load()))
 			return false;
 
 		// set internal pause state
-		this->paused = true;
+		this->paused.store(true);
 
 		// set pause state in database
 		{
@@ -184,7 +183,7 @@ namespace crawlservpp::Module {
 	// unpause the thread (may not be used by the thread itself!)
 	void Thread::unpause() {
 		// ignore if thread is not paused
-		if(!(this->paused))
+		if(!(this->paused.load()))
 			return;
 
 		// set pause state in database
@@ -197,7 +196,7 @@ namespace crawlservpp::Module {
 		// set internal pause state
 		std::lock_guard<std::mutex> unpause(this->pauseLock);
 
-		this->paused = false;
+		this->paused.store(false);
 
 		// update condition variable
 		this->pauseCondition.notify_one();
@@ -207,16 +206,16 @@ namespace crawlservpp::Module {
 	//  NOTE: Module::Thread::end() must be called afterwards to wait for the thread!
 	void Thread::stop() {
 		// stop running
-		if(this->running) {
-			this->running = false;
-			this->shutdown = true;
+		if(this->running.load()) {
+			this->running.store(false);
+			this->shutdown.store(true);
 
 			// check whether thread has to be unpaused
-			if(this->paused) {
+			if(this->paused.load()) {
 				// set internal pause state
 				std::lock_guard<std::mutex> unpause(this->pauseLock);
 
-				this->paused = false;
+				this->paused.store(false);
 
 				// update condition variable
 				this->pauseCondition.notify_one();
@@ -224,25 +223,25 @@ namespace crawlservpp::Module {
 		}
 
 		// reset interrupted status to allow thread deletion from database on manual stop
-		this->interrupted = false;
+		this->interrupted.store(false);
 	}
 
 	// interrupt the thread due to an exception (may not be used by the thread itself!)
 	//  NOTE: Module::Thread::end() must be called afterwards to wait for the thread!
 	void Thread::interrupt() {
 		// check whether thread exists and is running
-		if(this->running) {
+		if(this->running.load()) {
 			// interrupt thread
-			this->interrupted = true;
-			this->running = false;
-			this->shutdown = true;
+			this->interrupted.store(true);
+			this->running.store(false);
+			this->shutdown.store(true);
 
 			// check whether thread has to be unpaused
-			if(this->paused) {
+			if(this->paused.load()) {
 				// set internal pause state
 				std::lock_guard<std::mutex> unpause(this->pauseLock);
 
-				this->paused = false;
+				this->paused.store(false);
 
 				// update condition variable
 				this->pauseCondition.notify_one();
@@ -253,13 +252,13 @@ namespace crawlservpp::Module {
 	// wait for the thread until shutdown is completed (may not be used by the thread itself!)
 	//  NOTE: Module::Thread::stop() or ::interrupt() must be called beforehand!
 	void Thread::end() {
-		if(this->shutdown) {
+		if(this->shutdown.load()) {
 			// if thread exists and has been interrupted, wait for thread and join
 			if(this->thread.joinable())
 				this->thread.join();
 
 			// remove thread from database if it has not been interrupted due to an exception
-			if(!(this->interrupted))
+			if(!(this->interrupted.load()))
 					this->databaseClass.deleteThread(this->id);
 		}
 	}
@@ -272,11 +271,6 @@ namespace crawlservpp::Module {
 
 		// set target ID to overwrite
 		this->overwriteLast = target - 1;
-	}
-
-	// return whether thread has been resumed after an interruption by shutdown
-	bool Thread::isResumed() const {
-		return this->resumed;
 	}
 
 	// sleep for the specified number of milliseconds (unless the thread is stopped)
@@ -296,17 +290,17 @@ namespace crawlservpp::Module {
 
 	// return whether thread has been interrupted by shutdown
 	bool Thread::isInterrupted() const {
-		return this->interrupted;
+		return this->interrupted.load();
 	}
 
 	// force the thread to pause (to be used by the thread only)
 	void Thread::pauseByThread() {
 		// ignore if thread is paused
-		if(this->paused)
+		if(this->paused.load())
 			return;
 
 		// set internal pause state
-		this->paused = true;
+		this->paused.store(true);
 
 		// set pause state in database
 		{
@@ -326,10 +320,10 @@ namespace crawlservpp::Module {
 		}
 
 		// set status in database (when interrupted, the thread has been unpaused and the pause state needs to be ignored)
-		if(this->interrupted)
+		if(this->interrupted.load())
 			this->database.setThreadStatus(this->id, statusMessage);
 		else
-			this->database.setThreadStatus(this->id, this->paused, statusMessage);
+			this->database.setThreadStatus(this->id, this->paused.load(), statusMessage);
 	}
 
 	// set the progress of the thread (to be used by the thread only)
@@ -355,12 +349,12 @@ namespace crawlservpp::Module {
 
 	// allow the thread to be paused (enabled by default)
 	void Thread::allowPausing() {
-		this->pausable = true;
+		this->pausable.store(true);
 	}
 
 	// do not allow the thread to be paused
 	void Thread::disallowPausing() {
-		this->pausable = false;
+		this->pausable.store(false);
 	}
 
 	// get value of last ID (to be used by the thread only)
@@ -484,7 +478,7 @@ namespace crawlservpp::Module {
 			}
 
 			// interrupt thread
-			this->interrupted = true;
+			this->interrupted.store(true);
 		}
 #endif
 
@@ -573,7 +567,7 @@ namespace crawlservpp::Module {
 			this->pauseCondition.wait(pause, std::bind(&Thread::isUnpaused, this));
 
 			// notify thread for unpausing
-			if(this->running)
+			if(this->running.load())
 				this->onUnpause();
 
 			// update pause time and save new start time point
@@ -626,17 +620,17 @@ namespace crawlservpp::Module {
 		}
 
 		// shutdown is finished
-		this->finished = true;
+		this->finished.store(true);
 	}
 
 	// function for checking whether to unpause the thread (multi-threading safe)
 	bool Thread::isUnpaused() const {
-		return !(this->paused);
+		return !(this->paused.load());
 	}
 
 	// helper function: thread finished, set status message if interrupted and log timing statistics
 	void Thread::onEnd() {
-		if(this->interrupted)
+		if(this->interrupted.load())
 			this->setStatusMessage("INTERRUPTED " + this->status);
 		else {
 			// log timing statistic
@@ -710,9 +704,9 @@ namespace crawlservpp::Module {
 			this->init();
 
 			// run thread
-			while(this->running && !(this->interrupted)) {
+			while(this->running.load() && !(this->interrupted.load())) {
 				// check pause state
-				if(this->paused) {
+				if(this->paused.load()) {
 					// thread paused: wait for pause to be released
 					this->wait();
 				}
@@ -743,7 +737,7 @@ namespace crawlservpp::Module {
 				std::cout << "\n> Thread could not write to log - " << e2.what() << "." << std::flush;
 			}
 
-			this->terminated = true;
+			this->terminated.store(true);
 		}
 	#endif
 	}

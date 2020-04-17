@@ -127,7 +127,6 @@ namespace crawlservpp::Module {
 
 		// thread helper functions
 		bool isInterrupted() const;
-		bool isResumed() const;
 		void sleep(size_t ms) const;
 
 		void pauseByThread();
@@ -152,31 +151,30 @@ namespace crawlservpp::Module {
 		virtual void onClear() = 0;
 
 	private:
-		Main::Database& databaseClass;				// access to the database for the class
+		Main::Database& databaseClass;			// access to the database for the class
 
-		std::atomic<bool> pausable;					// thread is pausable
- 		std::atomic<bool> running;					// thread is running (or paused)
-		std::atomic<bool> paused;					// thread is paused
-		std::atomic<bool> interrupted;				// thread has been interrupted by shutdown
-		std::atomic<bool> resumed;					// thread has been resumed after interruption by shutdown
-		std::atomic<bool> terminated;				// thread has been terminated due to an exception
-		std::atomic<bool> shutdown;					// shutdown in progress
-		std::atomic<bool> finished;					// shutdown is finished
+		std::atomic<bool> pausable;				// thread is pausable
+ 		std::atomic<bool> running;				// thread is running (or paused)
+		std::atomic<bool> paused;				// thread is paused
+		std::atomic<bool> interrupted;			// thread has been interrupted by shutdown
+		std::atomic<bool> terminated;			// thread has been terminated due to an exception
+		std::atomic<bool> shutdown;				// shutdown in progress
+		std::atomic<bool> finished;				// shutdown is finished
 
-		const std::string module;					// the module of the thread (used for logging)
-		std::atomic<size_t> id;				// the ID of the thread in the database
-		const ThreadOptions options;				// options for the thread
+		const std::string module;				// the module of the thread (used for logging)
+		std::atomic<size_t> id;					// the ID of the thread in the database
+		const ThreadOptions options;			// options for the thread
 		size_t last;							// last ID for the thread
-		std::atomic<size_t> overwriteLast;	// ID to overwrite last ID with ("time travel")
-		long warpedOver;							// no. of IDs that have been skipped (might be negative, ONLY for threads!)
+		std::atomic<size_t> overwriteLast;		// ID to overwrite last ID with ("time travel")
+		long warpedOver;						// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
-		std::condition_variable pauseCondition; 	// condition variable to wait for unpause
-		mutable std::mutex pauseLock;
+		std::condition_variable pauseCondition;	// condition variable to wait for unpause
+		mutable std::mutex pauseLock;			// lock for accessing the condition variable
 
-		std::string status; 						// status message of the thread (without pause state)
-		mutable std::mutex statusLock;
+		std::string status; 					// status message of the thread (without pause state)
+		mutable std::mutex statusLock;			// lock for accessing the status message
 
-		std::thread thread;							// pointer to the thread
+		std::thread thread;						// pointer to the thread
 
 		// timing statistics (in seconds)
 		std::chrono::steady_clock::time_point startTimePoint;
