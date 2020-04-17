@@ -44,6 +44,7 @@
 #include <cctype>		// ::ispunct, ::isspace, ::tolower
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// ::setlocale
+#include <cstddef>		// std::size_t
 #include <ctime>		// struct ::tm, ::strftime, ::strptime
 #include <locale>		// std::locale
 #include <sstream>		// std::istringstream
@@ -119,7 +120,7 @@ namespace crawlservpp::Helper::DateTime {
 
 			if(customFormat.length() > 5) {
 				try {
-					offset = boost::lexical_cast<size_t>(customFormat.substr(4));
+					offset = boost::lexical_cast<std::size_t>(customFormat.substr(4));
 				}
 				catch(const boost::bad_lexical_cast& e) {
 					throw Exception(
@@ -161,7 +162,7 @@ namespace crawlservpp::Helper::DateTime {
 		}
 		else {
 			// ordinal hack: remove ordinal endings (st, nd, rd, th)
-			size_t pos = 0;
+			std::size_t pos = 0;
 
 			while(pos + 2 <= dateTime.length()) {
 				pos = std::min(
@@ -224,7 +225,7 @@ namespace crawlservpp::Helper::DateTime {
 
 				char out[20] = { 0 };
 
-				size_t len = ::strftime(out, 20, "%F %T", &cTime);
+				auto len = ::strftime(out, 20, "%F %T", &cTime);
 
 				if(len)
 					dateTime = std::string(out, len);
@@ -269,7 +270,7 @@ namespace crawlservpp::Helper::DateTime {
 		// end of locale hack
 
 		// ordinal hack: remove ordinal endings (st, nd, rd, th) after numbers
-		size_t pos = 0;
+		std::size_t pos = 0;
 
 		while(pos + 2 <= dateTime.length()) {
 			pos = std::min(
@@ -348,7 +349,7 @@ namespace crawlservpp::Helper::DateTime {
 
 			char out[20] = { 0 };
 
-			size_t len = ::strftime(out, 20, "%F %T", &cTime);
+			auto len = ::strftime(out, 20, "%F %T", &cTime);
 
 			if(len)
 				dateTime = std::string(out, len);
@@ -430,7 +431,7 @@ namespace crawlservpp::Helper::DateTime {
 	// convert microseconds to string
 	inline std::string microsecondsToString(unsigned long long microseconds) {
 		unsigned long long rest = microseconds;
-		size_t days = rest / 86400000000;
+		std::size_t days = rest / 86400000000;
 		std::string result;
 
 		rest -= days * 86400000000;
@@ -482,7 +483,7 @@ namespace crawlservpp::Helper::DateTime {
 		unsigned long long rest = milliseconds;
 		std::string result;
 
-		const size_t days = rest / 86400000;
+		const std::size_t days = rest / 86400000;
 
 		rest -= days * 86400000;
 
@@ -526,7 +527,7 @@ namespace crawlservpp::Helper::DateTime {
 		unsigned long long rest = seconds;
 		std::string result;
 
-		const size_t days = rest / 86400;
+		const std::size_t days = rest / 86400;
 
 		rest -= days * 86400;
 
