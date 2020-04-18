@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,6 +31,7 @@
 #ifndef STRUCT_SERVERCOMMANDRESPONSE_HPP_
 #define STRUCT_SERVERCOMMANDRESPONSE_HPP_
 
+#include <cstdint>	// std::uint64_t
 #include <string>	// std::string
 
 namespace crawlservpp::Struct {
@@ -45,7 +46,7 @@ namespace crawlservpp::Struct {
 				: fail(false), confirm(false), text(response), id(0) {}
 
 		// constructor initializing a successful response with text and ID
-		ServerCommandResponse(const std::string& response, size_t newId)
+		ServerCommandResponse(const std::string& response, std::uint64_t newId)
 				: fail(false), confirm(false), text(response), id(newId) {}
 
 		// constructor initializing a possibly failed or possibly to be confirmed response with text
@@ -55,7 +56,7 @@ namespace crawlservpp::Struct {
 		bool fail;			// command failed
 		bool confirm;		// command needs to be confirmed
 		std::string text;	// text of response
-		size_t id;	// [can be used by the server to return an ID]
+		std::uint64_t id;	// [can be used by the server to return an ID]
 
 		// helper to initialize a failed response with text
 		static ServerCommandResponse failed(const std::string& text) {
