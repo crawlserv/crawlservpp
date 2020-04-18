@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -119,9 +119,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(Config::generalLoggingVerbose, "gets text corpus...");
 
-		for(size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
+		for(std::size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string dateFrom, dateTo;
-			size_t corpusSources = 0;
+			std::size_t corpusSources = 0;
 
 			if(this->config.filterDateEnable) {
 				dateFrom = this->config.filterDateFrom;
@@ -214,7 +214,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			data.columns_types_values.emplace_back(
 					"analyzed__" + this->markovTextSourcesField,
-					DataType::_ulong,
+					Data::getTypeOfSizeT(),
 					DataValue(this->sources)
 			);
 
@@ -290,7 +290,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::string w1, key;
 
-		size_t wc = 0, pos = 0, next = 0;
+		std::size_t wc = 0, pos = 0, next = 0;
 
 		next = this->source.find_first_not_of( 32, 0 );
 
@@ -364,7 +364,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			throw Exception("Dictionary is empty");
 
 		std::string key, first, second, result;
-		size_t next = 0;
+		std::size_t next = 0;
 		std::map<std::string, std::vector<std::string> >::iterator it = dictionary.begin();
 
 		result.reserve(this->markovTextLength * 10); // guess average word length

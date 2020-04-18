@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -125,9 +125,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(Config::generalLoggingVerbose, "gets text corpus...");
 
-		for(size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
+		for(std::size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
 			std::string dateFrom, dateTo;
-			size_t corpusSources = 0;
+			std::size_t corpusSources = 0;
 
 			if(this->config.filterDateEnable) {
 				dateFrom = this->config.filterDateFrom;
@@ -233,7 +233,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		data.columns_types_values.emplace_back(
 				"analyzed__" + this->markovTweetSourcesField,
-				DataType::_ulong,
+				Data::getTypeOfSizeT(),
 				DataValue(this->sources)
 		);
 
