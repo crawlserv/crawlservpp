@@ -37,20 +37,19 @@
 
 #include "../_extern/date/include/date/date.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include <algorithm>	// std::min
-#include <cmath>		// std::round
+#include <cmath>		// std::lround
 #include <cctype>		// ::ispunct, ::isspace, ::tolower
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// ::setlocale
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint16_t, std::uint64_t
-#include <ctime>		// struct ::tm, ::strftime, ::strptime
+#include <ctime>		// ::tm, ::strftime, ::strptime, std::time_t
+#include <exception>	// std::exception
 #include <locale>		// std::locale
 #include <sstream>		// std::istringstream
 #include <stdexcept>	// std::runtime_error
-#include <string>		// std::string, std::to_string
+#include <string>		// std::stol, fstd::string, std::to_string
 
 namespace crawlservpp::Helper::DateTime {
 
@@ -121,9 +120,9 @@ namespace crawlservpp::Helper::DateTime {
 
 			if(customFormat.length() > 5) {
 				try {
-					offset = boost::lexical_cast<std::size_t>(customFormat.substr(4));
+					offset = std::stol(customFormat.substr(4));
 				}
-				catch(const boost::bad_lexical_cast& e) {
+				catch(const std::exception& e) {
 					throw Exception(
 							"DateTime::convertCustomDateTimeToSQLTimeStamp(): Invalid date/time format - "
 							+ customFormat
@@ -133,19 +132,19 @@ namespace crawlservpp::Helper::DateTime {
 			}
 
 			// get UNIX time
-			time_t unixTime = 0;
+			std::time_t unixTime = 0;
 
 			try {
 				if(dateTime.find('.') != std::string::npos) {
 					// handle values with comma as floats (and round them)
-					float f = boost::lexical_cast<float>(dateTime);
+					float f = std::stof(dateTime);
 
-					unixTime = static_cast<time_t>(std::round(f));
+					unixTime = static_cast<std::time_t>(std::lround(f));
 				}
 				else
-					unixTime = boost::lexical_cast<time_t>(dateTime);
+					unixTime = static_cast<std::time_t>(std::stol(dateTime));
 			}
-			catch(const boost::bad_lexical_cast& e) {
+			catch(const std::exception& e) {
 				throw Exception(
 						"Could not convert \'"
 						+ dateTime
