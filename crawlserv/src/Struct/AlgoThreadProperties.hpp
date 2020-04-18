@@ -35,7 +35,7 @@
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/ThreadStatus.hpp"
 
-#include <cstddef>	// std::size_t
+#include <cstdint>	// std::uint32_t
 
 namespace crawlservpp::Struct {
 
@@ -45,14 +45,14 @@ namespace crawlservpp::Struct {
 
 	public:
 		bool recreate;
-		std::size_t algoId;
+		std::uint32_t algoId;
 		Main::Database& dbBase;
 		const ThreadOptions& options;
 		const ThreadStatus& status;
 
 		// properties for newly created thread
 		AlgoThreadProperties(
-				std::size_t setAlgoId,
+				std::uint32_t setAlgoId,
 				Main::Database& setDatabase,
 				const ThreadOptions& setOptions
 		)
@@ -65,7 +65,7 @@ namespace crawlservpp::Struct {
 
 		// properties for previously interrupted thread
 		AlgoThreadProperties(
-				std::size_t setAlgoId,
+				std::uint32_t setAlgoId,
 				Main::Database& setDatabase,
 				const ThreadOptions& setOptions,
 				const ThreadStatus& setStatus
