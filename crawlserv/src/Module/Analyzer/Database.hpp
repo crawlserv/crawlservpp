@@ -133,7 +133,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
-		std::uint64_t timeoutTargetLock;
+		std::uint32_t timeoutTargetLock;
 		std::uint8_t corpusSlicing;
 
 		// table prefix, target table ID and its name
