@@ -960,7 +960,7 @@ namespace crawlservpp::Network {
 			const std::string& url,
 			bool usePost,
 			std::string& contentTo,
-			const std::vector<std::uint32_t>& errors
+			const std::vector<std::uint16_t>& errors
 	) {
 		std::string escapedUrl;
 		char errorBuffer[CURL_ERROR_SIZE];
@@ -1100,10 +1100,10 @@ namespace crawlservpp::Network {
 
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
-		else if(responseCodeL < 0 || responseCodeL > std::numeric_limits<std::uint32_t>::max())
+		else if(responseCodeL < 0 || responseCodeL > std::numeric_limits<std::uint16_t>::max())
 			throw Curl::Exception("Invalid HTTP response code");
 
-		this->responseCode = static_cast<std::uint32_t>(responseCodeL);
+		this->responseCode = static_cast<std::uint16_t>(responseCodeL);
 
 		// check response code
 		if(
@@ -1165,7 +1165,7 @@ namespace crawlservpp::Network {
 	}
 
 	// get last response code
-	std::uint32_t Curl::getResponseCode() const {
+	std::uint16_t Curl::getResponseCode() const {
 		return this->responseCode;
 	}
 
@@ -1236,7 +1236,7 @@ namespace crawlservpp::Network {
 
 	// get public IP address from NETWORK_CURL_RAW_IP_FROM
 	std::string Curl::getPublicIp() {
-		const std::vector<std::uint32_t> errors{429, 502, 503, 504, 521, 522, 524};
+		const std::vector<std::uint16_t> errors{429, 502, 503, 504, 521, 522, 524};
 		std::string ip;
 
 		try {

@@ -51,7 +51,7 @@
 #include <cctype>		// ::isspace, ::tolower
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint32_t, std::uint64_t
+#include <cstdint>		// std::uint16_t, std::uint64_t
 #include <exception>	// std::exception
 #include <limits>		// std::numeric_limits
 #include <queue>		// std::queue
@@ -94,9 +94,9 @@ namespace crawlservpp::Network {
 				const std::string& url,
 				bool usePost,
 				std::string& contentTo,
-				const std::vector<std::uint32_t>& errors
+				const std::vector<std::uint16_t>& errors
 		);
-		std::uint32_t getResponseCode() const;
+		std::uint16_t getResponseCode() const;
 		std::string getContentType() const;
 		CURLcode getCurlCode() const;
 		std::string getPublicIp();
@@ -123,7 +123,7 @@ namespace crawlservpp::Network {
 		CURLcode curlCode;
 		std::string content;
 		std::string contentType;
-		std::uint32_t responseCode;
+		std::uint16_t responseCode;
 		bool limitedSettings;
 		bool post;
 		std::string tmpCookies;
