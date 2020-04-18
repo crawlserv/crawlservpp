@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -121,13 +121,13 @@ namespace crawlservpp::Main {
 	 */
 
 	// set the number of seconds to wait before (first and last) re-try on connection loss to MySQL server
-	void Database::setSleepOnError(size_t seconds) {
+	void Database::setSleepOnError(std::uint64_t seconds) {
 		this->sleepOnError = seconds;
 	}
 
 	// set the maximum amount of milliseconds for a query before it cancels execution (or 0 for none)
 	//  NOTE: database connection needs to be established
-	void Database::setTimeOut(size_t milliseconds) {
+	void Database::setTimeOut(std::uint64_t milliseconds) {
 		this->checkConnection();
 
 		try {
@@ -164,12 +164,12 @@ namespace crawlservpp::Main {
 	}
 
 	// get the maximum allowed packet size
-	size_t Database::getMaxAllowedPacketSize() const {
+	std::uint64_t Database::getMaxAllowedPacketSize() const {
 		return this->maxAllowedPacketSize;
 	}
 
 	// get MySQL connection ID
-	size_t Database::getConnectionId() const {
+	std::uint64_t Database::getConnectionId() const {
 		return this->connectionId;
 	}
 
@@ -389,7 +389,7 @@ namespace crawlservpp::Main {
 	// prepare basic SQL statements (getting last ID, logging and thread status)
 	void Database::prepare() {
 		// reserve memory for SQL statements
-		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::size_t));
 
 		try {
 			// prepare basic SQL statements
@@ -448,7 +448,7 @@ namespace crawlservpp::Main {
 		if(!locales.empty()) {
 			std::string sqlQuery("INSERT INTO `crawlserv_locales`(name) VALUES");
 
-			for(size_t n = 0; n < locales.size(); ++n)
+			for(std::size_t n = 0; n < locales.size(); ++n)
 				sqlQuery += " (?),";
 
 			sqlQuery.pop_back();
@@ -464,7 +464,7 @@ namespace crawlservpp::Main {
 				));
 
 				// execute SQL statement
-				size_t counter = 1;
+				std::size_t counter = 1;
 
 				for(const auto& locale : locales) {
 					sqlStatement->setString(counter, locale);
@@ -504,7 +504,7 @@ namespace crawlservpp::Main {
 		if(!versions.empty()) {
 			std::string sqlQuery("INSERT INTO `crawlserv_versions`(name, version) VALUES");
 
-			for(size_t n = 0; n < versions.size(); ++n)
+			for(std::size_t n = 0; n < versions.size(); ++n)
 				sqlQuery += " (?, ?),";
 
 			sqlQuery.pop_back();
@@ -520,7 +520,7 @@ namespace crawlservpp::Main {
 				));
 
 				// execute SQL statement
-				size_t counter = 1;
+				std::size_t counter = 1;
 
 				for(const auto& version : versions) {
 					sqlStatement->setString(counter, version.first);
@@ -595,8 +595,8 @@ namespace crawlservpp::Main {
 
 	// get the number of log entries for a specific module from the database
 	//	(or for all modules if logModule is an empty string), throws Database::Exception
-	size_t Database::getNumberOfLogEntries(const std::string& logModule) {
-		size_t result = 0;
+	std::uint64_t Database::getNumberOfLogEntries(const std::string& logModule) {
+		std::uint64_t result = 0;
 
 		// check connection
 		this->checkConnection();
@@ -706,8 +706,8 @@ namespace crawlservpp::Main {
 	}
 
 	// add a thread to the database and return its new ID, throws Database::Exception
-	size_t Database::addThread(const ThreadOptions& threadOptions) {
-		size_t result = 0;
+	std::uint64_t Database::addThread(const ThreadOptions& threadOptions) {
+		std::uint64_t result = 0;
 
 		// check arguments
 		if(threadOptions.module.empty())
@@ -748,8 +748,8 @@ namespace crawlservpp::Main {
 	}
 
 	// get run time of thread (in seconds) from the database by its ID, throws Database::Exception
-	size_t Database::getThreadRunTime(size_t threadId) {
-		size_t result = 0;
+	std::uint64_t Database::getThreadRunTime(std::uint64_t threadId) {
+		std::uint64_t result = 0;
 
 		// check argument
 		if(!threadId)
@@ -779,8 +779,8 @@ namespace crawlservpp::Main {
 	}
 
 	// get pause time of thread (in seconds) from the database by its ID, throws Database::Exception
-	size_t Database::getThreadPauseTime(size_t threadId) {
-		size_t result = 0;
+	std::uint64_t Database::getThreadPauseTime(std::uint64_t threadId) {
+		std::uint64_t result = 0;
 
 		// check argument
 		if(!threadId)
@@ -816,7 +816,7 @@ namespace crawlservpp::Main {
 
 	// update thread status in the database (and add the pause state to the status message if necessary),
 	//  throws Database::Exception
-	void Database::setThreadStatus(size_t threadId, bool threadPaused, const std::string& threadStatusMessage) {
+	void Database::setThreadStatus(std::uint64_t threadId, bool threadPaused, const std::string& threadStatusMessage) {
 		// check argument
 		if(!threadId)
 			throw Database::Exception("Main::Database::setThreadStatus(): No thread ID specified");
@@ -856,7 +856,7 @@ namespace crawlservpp::Main {
 
 	// update thread status in the database (without using or changing the pause state),
 	//  throws Database::Exception
-	void Database::setThreadStatus(size_t threadId, const std::string& threadStatusMessage) {
+	void Database::setThreadStatus(std::uint64_t threadId, const std::string& threadStatusMessage) {
 		// check argument
 		if(!threadId)
 			throw Database::Exception("Main::Database::setThreadStatus(): No thread ID specified");
@@ -882,7 +882,7 @@ namespace crawlservpp::Main {
 	}
 
 	// set run time of thread (in seconds) in the database, throws Database::Exception
-	void Database::setThreadRunTime(size_t threadId, size_t threadRunTime) {
+	void Database::setThreadRunTime(std::uint64_t threadId, std::uint64_t threadRunTime) {
 		// check argument
 		if(!threadId)
 			throw Database::Exception("Main::Database::setThreadRunTime(): No thread ID specified");
@@ -911,7 +911,7 @@ namespace crawlservpp::Main {
 	}
 
 	// set pause time of thread (in seconds) in the database, throws Database::Exception
-	void Database::setThreadPauseTime(size_t threadId, size_t threadPauseTime) {
+	void Database::setThreadPauseTime(std::uint64_t threadId, std::uint64_t threadPauseTime) {
 		// check argument
 		if(!threadId)
 			throw Database::Exception("Main::Database::setThreadPauseTime(): No thread ID specified");
@@ -940,7 +940,7 @@ namespace crawlservpp::Main {
 	}
 
 	// remove thread from the database by its ID, throws Database::Exception
-	void Database::deleteThread(size_t threadId) {
+	void Database::deleteThread(std::uint64_t threadId) {
 		// check argument
 		if(!threadId)
 			throw Database::Exception("Main::Database::deleteThread(): No thread ID specified");
@@ -975,8 +975,8 @@ namespace crawlservpp::Main {
 	 */
 
 	// add a website to the database and return its new ID, throws Database::Exception
-	size_t Database::addWebsite(const WebsiteProperties& websiteProperties) {
-		size_t result = 0;
+	std::uint64_t Database::addWebsite(const WebsiteProperties& websiteProperties) {
+		std::uint64_t result = 0;
 		std::string timeStamp;
 
 		// check arguments
@@ -1041,7 +1041,7 @@ namespace crawlservpp::Main {
 	}
 
 	// get website domain from the database by its ID, throws Database::Exception
-	std::string Database::getWebsiteDomain(size_t websiteId) {
+	std::string Database::getWebsiteDomain(std::uint64_t websiteId) {
 		std::string result;
 
 		// check argument
@@ -1077,7 +1077,7 @@ namespace crawlservpp::Main {
 	}
 
 	// get namespace of website from the database by its ID, throws Database::Exception
-	std::string Database::getWebsiteNamespace(size_t websiteId) {
+	std::string Database::getWebsiteNamespace(std::uint64_t websiteId) {
 		std::string result;
 
 		// check argument
@@ -1113,8 +1113,8 @@ namespace crawlservpp::Main {
 	}
 
 	// get ID and namespace of website from the database by URL list ID, throws Database::Exception
-	Database::IdString Database::getWebsiteNamespaceFromUrlList(size_t listId) {
-		size_t websiteId = 0;
+	Database::IdString Database::getWebsiteNamespaceFromUrlList(std::uint64_t listId) {
+		std::uint64_t websiteId = 0;
 
 		// check argument
 		if(!listId)
@@ -1149,8 +1149,8 @@ namespace crawlservpp::Main {
 	}
 
 	// get ID and namespace of website from the database by configuration ID, throws Database::Exception
-	Database::IdString Database::getWebsiteNamespaceFromConfig(size_t configId) {
-		size_t websiteId = 0;
+	Database::IdString Database::getWebsiteNamespaceFromConfig(std::uint64_t configId) {
+		std::uint64_t websiteId = 0;
 
 		// check argument
 		if(!configId)
@@ -1186,8 +1186,8 @@ namespace crawlservpp::Main {
 
 	// get ID and namespace of website from the database by target table ID of specified type,
 	//  throws Database::Exception
-	Database::IdString Database::getWebsiteNamespaceFromTargetTable(const std::string& type, size_t tableId) {
-		size_t websiteId = 0;
+	Database::IdString Database::getWebsiteNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId) {
+		std::uint64_t websiteId = 0;
 
 		// check arguments
 		if(type.empty())
@@ -1270,7 +1270,7 @@ namespace crawlservpp::Main {
 			throw Database::Exception("Main::Database::duplicateWebsiteNamespace(): No namespace specified");
 
 		std::string nameString, numberString;
-		const size_t end = websiteNamespace.find_last_not_of("0123456789");
+		const auto end = websiteNamespace.find_last_not_of("0123456789");
 
 		// separate number at the end of string from the rest of the string
 		if(end == std::string::npos)
@@ -1285,7 +1285,7 @@ namespace crawlservpp::Main {
 			numberString = websiteNamespace.substr(end + 1);
 		}
 
-		size_t n = 1;
+		std::size_t n = 1;
 		std::string result;
 
 		if(!numberString.empty()) {
@@ -1296,7 +1296,7 @@ namespace crawlservpp::Main {
 				throw Exception(
 						"Main::Database::duplicateWebsiteNamespace(): Could not convert \'"
 						+ numberString
-						+ "\' to numeric value"
+						+ "\' to unsigned numeric value"
 				);
 			}
 		}
@@ -1316,7 +1316,7 @@ namespace crawlservpp::Main {
 	}
 
 	// get data directory of website or empty string if default directory is used, throws Database::Exception
-	std::string Database::getWebsiteDataDirectory(size_t websiteId) {
+	std::string Database::getWebsiteDataDirectory(std::uint64_t websiteId) {
 		std::string result;
 
 		// check argument
@@ -1352,8 +1352,11 @@ namespace crawlservpp::Main {
 	}
 
 	// get number of URLs that will be modified by updating the website, throws Database::Exception
-	size_t Database::getChangedUrlsByWebsiteUpdate(size_t websiteId, const WebsiteProperties& websiteProperties) {
-		size_t result = 0;
+	std::uint64_t Database::getChangedUrlsByWebsiteUpdate(
+			std::uint64_t websiteId,
+			const WebsiteProperties& websiteProperties
+	) {
+		std::uint64_t result = 0;
 
 		// check arguments
 		if(!websiteId)
@@ -1435,8 +1438,11 @@ namespace crawlservpp::Main {
 	}
 
 	// get number of URLs that will be lost by updating the website, throws Database::Exception
-	size_t Database::getLostUrlsByWebsiteUpdate(size_t websiteId, const WebsiteProperties& websiteProperties) {
-		size_t result = 0;
+	std::uint64_t Database::getLostUrlsByWebsiteUpdate(
+			std::uint64_t websiteId,
+			const WebsiteProperties& websiteProperties
+	) {
+		std::uint64_t result = 0;
 
 		// check arguments
 		if(!websiteId)
@@ -1494,7 +1500,7 @@ namespace crawlservpp::Main {
 	}
 
 	// update website (and all associated tables) in the database, throws Database::Exception
-	void Database::updateWebsite(size_t websiteId, const WebsiteProperties& websiteProperties) {
+	void Database::updateWebsite(std::uint64_t websiteId, const WebsiteProperties& websiteProperties) {
 		// check arguments
 		if(!websiteId)
 			throw Database::Exception("Main::Database::updateWebsite(): No website ID specified");
@@ -1722,7 +1728,7 @@ namespace crawlservpp::Main {
 	}
 
 	// delete website (and all associated data) from the database by its ID, throws Database::Exception
-	void Database::deleteWebsite(size_t websiteId) {
+	void Database::deleteWebsite(std::uint64_t websiteId) {
 		// check argument
 		if(!websiteId)
 			throw Database::Exception("Main::Database::deleteWebsite(): No website ID specified");
@@ -1766,8 +1772,8 @@ namespace crawlservpp::Main {
 
 	// duplicate website in the database by its ID (no processed data will be duplicated),
 	//  throws Database::Exception
-	size_t Database::duplicateWebsite(size_t websiteId, const Queries& queries) {
-		size_t result = 0;
+	std::uint64_t Database::duplicateWebsite(std::uint64_t websiteId, const Queries& queries) {
+		std::uint64_t newId = 0;
 
 		// check argument
 		if(!websiteId)
@@ -1811,7 +1817,14 @@ namespace crawlservpp::Main {
 				const std::string newName(websiteName + " (copy)");
 
 				// add website
-				result = this->addWebsite(WebsiteProperties(websiteDomain, newNamespace, newName, websiteDir));
+				newId = this->addWebsite(
+						WebsiteProperties(
+								websiteDomain,
+								newNamespace,
+								newName,
+								websiteDir
+						)
+				);
 
 				// prepare SQL statement for geting URL list info
 				sqlStatement.reset(
@@ -1833,7 +1846,13 @@ namespace crawlservpp::Main {
 					const std::string urlListName(sqlResultSet->getString("namespace"));
 
 					if(urlListName != "default")
-						this->addUrlList(result, UrlListProperties(sqlResultSet->getString("namespace"), urlListName));
+						this->addUrlList(
+								newId,
+								UrlListProperties(
+										sqlResultSet->getString("namespace"),
+										urlListName
+								)
+						);
 				}
 
 				// prepare SQL statement for getting queries
@@ -1841,7 +1860,8 @@ namespace crawlservpp::Main {
 
 				sqlStatement.reset(
 						this->connection->prepareStatement(
-							"SELECT id, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly"
+							"SELECT id, name, query, type, resultbool, resultsingle,"
+									" resultmulti, resultsubsets, textonly"
 							" FROM `crawlserv_queries`"
 							" WHERE website = ?"
 						)
@@ -1854,11 +1874,11 @@ namespace crawlservpp::Main {
 
 				// get results
 				while(sqlResultSet && sqlResultSet->next()) {
-					// add query
-					const size_t oldId = sqlResultSet->getUInt64("id");
+					// copy query
+					const std::uint64_t oldQueryId = sqlResultSet->getUInt64("id");
 
-					const size_t newId = this->addQuery(
-							result,
+					const std::uint64_t newQueryId = this->addQuery(
+							newId,
 							QueryProperties(
 									sqlResultSet->getString("name"),
 									sqlResultSet->getString("query"),
@@ -1871,7 +1891,7 @@ namespace crawlservpp::Main {
 							)
 					);
 
-					ids.emplace_back(oldId, newId);
+					ids.emplace_back(oldQueryId, newQueryId);
 				}
 
 				// prepare SQL statement for getting configurations
@@ -1992,7 +2012,7 @@ namespace crawlservpp::Main {
 													+ "\'"
 											);
 
-										const size_t queryId = arrayElement.GetUint64();
+										const std::uint64_t queryId = arrayElement.GetUint64();
 
 										const auto idsIt = std::find_if(
 												ids.begin(),
@@ -2019,7 +2039,7 @@ namespace crawlservpp::Main {
 												+ "\'"
 										);
 
-									const size_t queryId = configEntry["value"].GetUint64();
+									const std::uint64_t queryId = configEntry["value"].GetUint64();
 
 									const auto idsIt = std::find_if(
 											ids.begin(),
@@ -2043,7 +2063,7 @@ namespace crawlservpp::Main {
 
 					// add configuration
 					this->addConfiguration(
-							result,
+							newId,
 							ConfigProperties(
 									module,
 									sqlResultSet->getString("name"),
@@ -2055,11 +2075,11 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::duplicateWebsite", e); }
 
-		return result;
+		return newId;
 	}
 
 	// move website (and all associated data) to another data directory
-	void Database::moveWebsite(size_t websiteId, const WebsiteProperties& websiteProperties) {
+	void Database::moveWebsite(std::uint64_t websiteId, const WebsiteProperties& websiteProperties) {
 #ifdef MAIN_DATABASE_LOG_MOVING
 		Timer::Simple timer;
 
@@ -2236,7 +2256,7 @@ namespace crawlservpp::Main {
 #endif
 
 				// get number of rows to copy
-				size_t count = 0;
+				std::uint64_t count = 0;
 
 				SqlResultSetPtr result1(
 						Database::sqlExecuteQuery(
@@ -2288,9 +2308,9 @@ namespace crawlservpp::Main {
 					// copy in 100 (or 101) steps for logging the progress
 					std::cout << "     " << std::flush;
 
-					size_t step = count / 100;
+					const auto step = count / 100;
 
-					for(size_t n = 0; n <= 100; ++n) {
+					for(auto n = 0; n <= 100; ++n) {
 						Database::sqlExecute(
 								sqlStatement,
 								"INSERT INTO `"
@@ -2443,8 +2463,8 @@ namespace crawlservpp::Main {
 	 */
 
 	// add a URL list to the database and return its new ID, throws Database::Exception
-	size_t Database::addUrlList(size_t websiteId, const UrlListProperties& listProperties) {
-		size_t result = 0;
+	std::uint64_t Database::addUrlList(std::uint64_t websiteId, const UrlListProperties& listProperties) {
+		std::uint64_t newId = 0;
 
 		// check arguments
 		if(!websiteId)
@@ -2484,7 +2504,7 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement);
 
 			// get ID of newly added URL list
-			result = this->getLastInsertedId();
+			newId = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addUrlList", e); }
 
@@ -2615,11 +2635,11 @@ namespace crawlservpp::Main {
 
 		columns.clear();
 
-		return result;
+		return newId;
 	}
 
 	// get URL lists for ID-specified website from the database, throws Database::Exception
-	std::queue<Database::IdString> Database::getUrlLists(size_t websiteId) {
+	std::queue<Database::IdString> Database::getUrlLists(std::uint64_t websiteId) {
 		std::queue<IdString> result;
 
 		// check arguments
@@ -2657,8 +2677,8 @@ namespace crawlservpp::Main {
 
 	// insert URLs that do not already exist into the specified URL list and return the number of added URLs,
 	//  throws Database::Exception
-	size_t Database::mergeUrls(size_t listId, std::queue<std::string>& urls) {
-		size_t urlsAdded = 0;
+	std::size_t Database::mergeUrls(std::uint64_t listId, std::queue<std::string>& urls) {
+		std::size_t urlsAdded = 0;
 
 		// check arguments
 		if(!listId)
@@ -2698,7 +2718,7 @@ namespace crawlservpp::Main {
 			);
 
 			// generate placeholders
-			for(size_t n = 0; n < (urls.size() > 1000 ? 1000 : urls.size()); ++n)
+			for(std::size_t n = 0; n < (urls.size() > 1000 ? 1000 : urls.size()); ++n)
 				sqlQueryStr += "(" // begin of VALUES arguments
 								" ("
 									"SELECT id FROM"
@@ -2729,9 +2749,9 @@ namespace crawlservpp::Main {
 				);
 
 				// execute SQL query
-				const size_t max = urls.size() > 1000 ? 1000 : urls.size();
+				const std::size_t max = urls.size() > 1000 ? 1000 : urls.size();
 
-				for(size_t n = 0; n < max; ++n) {
+				for(std::size_t n = 0; n < max; ++n) {
 					sqlStatement->setString((n * 4) + 1, urls.front());
 					sqlStatement->setString((n * 4) + 2, urls.front());
 					sqlStatement->setString((n * 4) + 3, urls.front());
@@ -2740,7 +2760,10 @@ namespace crawlservpp::Main {
 					urls.pop();
 				}
 
-				urlsAdded += Database::sqlExecuteUpdate(sqlStatement);
+				auto added = Database::sqlExecuteUpdate(sqlStatement);
+
+				if(added > 0)
+					urlsAdded += added;
 			}
 			catch(const sql::SQLException &e) { this->sqlException("Main::Database::mergeUrls", e); }
 		}
@@ -2749,7 +2772,7 @@ namespace crawlservpp::Main {
 	}
 
 	// get all URLs from the specified URL list, throws Database::Exception
-	std::queue<std::string> Database::getUrls(size_t listId) {
+	std::queue<std::string> Database::getUrls(std::uint64_t listId) {
 		std::queue<std::string> result;
 
 		// check argument
@@ -2791,7 +2814,7 @@ namespace crawlservpp::Main {
 	}
 
 	// get all URLs with their IDs from the specified URL list, throws Database::Exception
-	std::queue<Database::IdString> Database::getUrlsWithIds(size_t listId) {
+	std::queue<Database::IdString> Database::getUrlsWithIds(std::uint64_t listId) {
 		std::queue<IdString> result;
 
 		// check argument
@@ -2833,7 +2856,7 @@ namespace crawlservpp::Main {
 	}
 
 	// get namespace of URL list by its ID, throws Database::Exception
-	std::string Database::getUrlListNamespace(size_t listId) {
+	std::string Database::getUrlListNamespace(std::uint64_t listId) {
 		std::string result;
 
 		// check argument
@@ -2870,8 +2893,11 @@ namespace crawlservpp::Main {
 
 	// get ID and namespace of URL list from the database using a target table type and ID,
 	//  throws Database::Exception
-	Database::IdString Database::getUrlListNamespaceFromTargetTable(const std::string& type, size_t tableId) {
-		size_t urlListId = 0;
+	Database::IdString Database::getUrlListNamespaceFromTargetTable(
+			const std::string& type,
+			std::uint64_t tableId
+	) {
+		std::uint64_t urlListId = 0;
 
 		// check arguments
 		if(type.empty())
@@ -2910,7 +2936,7 @@ namespace crawlservpp::Main {
 
 	// check whether a URL list namespace for an ID-specified website exists in the database,
 	//  throws Database::Exception
-	bool Database::isUrlListNamespace(size_t websiteId, const std::string& nameSpace) {
+	bool Database::isUrlListNamespace(std::uint64_t websiteId, const std::string& nameSpace) {
 		bool result = false;
 
 		// check arguments
@@ -2954,7 +2980,7 @@ namespace crawlservpp::Main {
 	}
 
 	// update URL list (and all associated tables) in the database, throws Database::Exception
-	void Database::updateUrlList(size_t listId, const UrlListProperties& listProperties) {
+	void Database::updateUrlList(std::uint64_t listId, const UrlListProperties& listProperties) {
 		// check arguments
 		if(!listId)
 			throw Database::Exception("Main::Database::updateUrlList(): No website ID specified");
@@ -3098,7 +3124,7 @@ namespace crawlservpp::Main {
 	}
 
 	// delete URL list (and all associated data) from the database by its ID, throws Database::Exception
-	void Database::deleteUrlList(size_t listId) {
+	void Database::deleteUrlList(std::uint64_t listId) {
 		// check argument
 		if(!listId)
 			throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
@@ -3168,7 +3194,7 @@ namespace crawlservpp::Main {
 	}
 
 	// delete URLs with the specified IDs from the URL list specified by its ID, return the number of deleted URLs
-	size_t Database::deleteUrls(size_t listId, std::queue<size_t>& urlIds) {
+	std::size_t Database::deleteUrls(std::uint64_t listId, std::queue<std::uint64_t>& urlIds) {
 		// check arguments
 		if(!listId)
 			throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
@@ -3186,7 +3212,7 @@ namespace crawlservpp::Main {
 		// check connection
 		this->checkConnection();
 
-		size_t result = 0;
+		std::size_t result = 0;
 
 		try {
 			while(!urlIds.empty()) {
@@ -3237,7 +3263,7 @@ namespace crawlservpp::Main {
 
 
 	// reset parsing status of ID-specified URL list, throws Database::Exception
-	void Database::resetParsingStatus(size_t listId) {
+	void Database::resetParsingStatus(std::uint64_t listId) {
 		// check argument
 		if(!listId)
 			throw Database::Exception("Main::Database::resetParsingStatus(): No URL list ID specified");
@@ -3260,7 +3286,7 @@ namespace crawlservpp::Main {
 	}
 
 	// reset extracting status of ID-specified URL list, throws Database::Exception
-	void Database::resetExtractingStatus(size_t listId) {
+	void Database::resetExtractingStatus(std::uint64_t listId) {
 		// check argument
 		if(!listId)
 			throw Database::Exception("Main::Database::resetExtractingStatus(): No URL list ID specified");
@@ -3283,7 +3309,7 @@ namespace crawlservpp::Main {
 	}
 
 	// reset analyzing status of ID-specified URL list, throws Database::Exception
-	void Database::resetAnalyzingStatus(size_t listId) {
+	void Database::resetAnalyzingStatus(std::uint64_t listId) {
 		// check argument
 		if(!listId)
 			throw Database::Exception("Main::Database::resetAnalyzingStatus(): No URL list ID specified");
@@ -3311,8 +3337,8 @@ namespace crawlservpp::Main {
 
 	// add a query to the database and return its new ID (add global query when websiteId is zero),
 	//  throws Database::Exception
-	size_t Database::addQuery(size_t websiteId, const QueryProperties& queryProperties) {
-		size_t result = 0;
+	std::uint64_t Database::addQuery(std::uint64_t websiteId, const QueryProperties& queryProperties) {
+		std::uint64_t newId = 0;
 
 		// check arguments
 		if(queryProperties.name.empty())
@@ -3364,15 +3390,15 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement);
 
 			// get ID
-			result = this->getLastInsertedId();
+			newId = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addQuery", e); }
 
-		return result;
+		return newId;
 	}
 
 	// get the properties of a query from the database by its ID, throws Database::Exception
-	void Database::getQueryProperties(size_t queryId, QueryProperties& queryPropertiesTo) {
+	void Database::getQueryProperties(std::uint64_t queryId, QueryProperties& queryPropertiesTo) {
 		// check argument
 		if(!queryId)
 			throw Database::Exception("Main::Database::getQueryProperties(): No query ID specified");
@@ -3414,7 +3440,7 @@ namespace crawlservpp::Main {
 	}
 
 	// edit query in the database, throws Database::Exception
-	void Database::updateQuery(size_t queryId, const QueryProperties& queryProperties) {
+	void Database::updateQuery(std::uint64_t queryId, const QueryProperties& queryProperties) {
 		// check arguments
 		if(!queryId)
 			throw Database::Exception("Main::Database::updateQuery(): No query ID specified");
@@ -3467,7 +3493,7 @@ namespace crawlservpp::Main {
 	}
 
 	// move query to another website by their IDs, throws Database::Exception
-	void Database::moveQuery(size_t queryId, size_t toWebsiteId) {
+	void Database::moveQuery(std::uint64_t queryId, std::uint64_t toWebsiteId) {
 		// check argument
 		if(!queryId)
 			throw Database::Exception("Main::Database::moveQuery(): No query ID specified");
@@ -3493,7 +3519,7 @@ namespace crawlservpp::Main {
 	}
 
 	// delete query from the database by its ID, throws Database::Exception
-	void Database::deleteQuery(size_t queryId) {
+	void Database::deleteQuery(std::uint64_t queryId) {
 		// check argument
 		if(!queryId)
 			throw Database::Exception("Main::Database::deleteQuery(): No query ID specified");
@@ -3524,8 +3550,8 @@ namespace crawlservpp::Main {
 	}
 
 	// duplicate query in the database by its ID, throws Database::Exception
-	size_t Database::duplicateQuery(size_t queryId) {
-		size_t result = 0;
+	std::uint64_t Database::duplicateQuery(std::uint64_t queryId) {
+		std::uint64_t newId = 0;
 
 		// check argument
 		if(!queryId)
@@ -3562,7 +3588,7 @@ namespace crawlservpp::Main {
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
 				// add query
-				result = this->addQuery(
+				newId = this->addQuery(
 						sqlResultSet->getUInt64("website"),
 						QueryProperties(
 								sqlResultSet->getString("name") + " (copy)",
@@ -3579,7 +3605,7 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::duplicateQuery", e); }
 
-		return result;
+		return newId;
 	}
 
 	/*
@@ -3588,8 +3614,11 @@ namespace crawlservpp::Main {
 
 	// add a configuration to the database and return its new ID (add global configuration when websiteId is 0),
 	//  throws Database::Exception
-	size_t Database::addConfiguration(size_t websiteId, const ConfigProperties& configProperties) {
-		size_t result = 0;
+	std::uint64_t Database::addConfiguration(
+			std::uint64_t websiteId,
+			const ConfigProperties& configProperties
+	) {
+		std::uint64_t newId = 0;
 
 		// check arguments
 		if(configProperties.module.empty())
@@ -3622,15 +3651,15 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(sqlStatement);
 
 			// get ID
-			result = this->getLastInsertedId();
+			newId = this->getLastInsertedId();
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addConfiguration", e); }
 
-		return result;
+		return newId;
 	}
 
 	// get a configuration from the database by its ID, throws Database::Exception
-	const std::string Database::getConfiguration(size_t configId) {
+	const std::string Database::getConfiguration(std::uint64_t configId) {
 		std::string result;
 
 		// check argument
@@ -3666,7 +3695,7 @@ namespace crawlservpp::Main {
 	}
 
 	// update configuration in the database (NOTE: module will not be updated!), throws Database::Exception
-	void Database::updateConfiguration(size_t configId, const ConfigProperties& configProperties) {
+	void Database::updateConfiguration(std::uint64_t configId, const ConfigProperties& configProperties) {
 		// check arguments
 		if(!configId)
 			throw Database::Exception("Main::Database::updateConfiguration(): No configuration ID specified");
@@ -3703,7 +3732,7 @@ namespace crawlservpp::Main {
 	}
 
 	// delete configuration from the database by its ID, throws Database::Exception
-	void Database::deleteConfiguration(size_t configId) {
+	void Database::deleteConfiguration(std::uint64_t configId) {
 		// check argument
 		if(!configId)
 			throw Database::Exception("Main::Database::deleteConfiguration(): No configuration ID specified");
@@ -3734,8 +3763,8 @@ namespace crawlservpp::Main {
 	}
 
 	// duplicate configuration in the database by its ID, throws Database::Exception
-	size_t Database::duplicateConfiguration(size_t configId) {
-		size_t result = 0;
+	std::uint64_t Database::duplicateConfiguration(std::uint64_t configId) {
+		std::uint64_t newId = 0;
 
 		// check argument
 		if(!configId)
@@ -3763,7 +3792,7 @@ namespace crawlservpp::Main {
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
 				// add configuration
-				result = this->addConfiguration(sqlResultSet->getUInt64("website"),
+				newId = this->addConfiguration(sqlResultSet->getUInt64("website"),
 						ConfigProperties(
 								sqlResultSet->getString("module"),
 								sqlResultSet->getString("name") + " (copy)",
@@ -3773,7 +3802,7 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::duplicateConfiguration", e); }
 
-		return result;
+		return newId;
 	}
 
 	/*
@@ -3782,8 +3811,8 @@ namespace crawlservpp::Main {
 
 	// add a target table of the specified type to the database if such a table does not exist already, return table ID,
 	//  throws Database::Exception
-	size_t Database::addTargetTable(const TargetTableProperties& properties) {
-		size_t result = 0;
+	std::uint64_t Database::addTargetTable(const TargetTableProperties& properties) {
+		std::uint64_t newId = 0;
 
 		// check arguments
 		if(properties.type.empty())
@@ -3872,7 +3901,7 @@ namespace crawlservpp::Main {
 
 			if(sqlResultSet && sqlResultSet->next())
 				// entry exists: return ID
-				result = sqlResultSet->getUInt64("id");
+				newId = sqlResultSet->getUInt64("id");
 			else {
 				// entry does not exist already: prepare SQL statement for adding table
 				sqlStatement.reset(
@@ -3890,17 +3919,20 @@ namespace crawlservpp::Main {
 				Database::sqlExecute(sqlStatement);
 
 				// return ID of newly inserted table
-				result = this->getLastInsertedId();
+				newId = this->getLastInsertedId();
 			}
 		}
 		catch(const sql::SQLException &e) { this->sqlException("Main::Database::addTargetTable", e); }
 
-		return result;
+		return newId;
 	}
 
 	// get target tables of the specified type for an ID-specified URL list from the database,
 	//  throws Database::Exception
-	std::queue<Database::IdString> Database::getTargetTables(const std::string& type, size_t listId) {
+	std::queue<Database::IdString> Database::getTargetTables(
+			const std::string& type,
+			std::uint64_t listId
+	) {
 		std::queue<IdString> result;
 
 		// check arguments
@@ -3940,13 +3972,13 @@ namespace crawlservpp::Main {
 
 	// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name,
 	//  throws Database::Exception
-	size_t Database::getTargetTableId(
+	std::uint64_t Database::getTargetTableId(
 			const std::string& type,
-			size_t websiteId,
-			size_t listId,
+			std::uint64_t websiteId,
+			std::uint64_t listId,
 			const std::string& tableName
 	) {
-		size_t result = 0;
+		std::uint64_t result = 0;
 
 		// check arguments
 		if(type.empty())
@@ -3995,7 +4027,7 @@ namespace crawlservpp::Main {
 
 	// get the name of a target table of the specified type from the database by its ID,
 	//  throws Database::Exception
-	std::string Database::getTargetTableName(const std::string& type, size_t tableId) {
+	std::string Database::getTargetTableName(const std::string& type, std::uint64_t tableId) {
 		std::string result;
 
 		// check arguments
@@ -4034,7 +4066,7 @@ namespace crawlservpp::Main {
 	}
 
 	// delete target table of the specified type from the database by its ID, throws Database::Exception
-	void Database::deleteTargetTable(const std::string& type, size_t tableId) {
+	void Database::deleteTargetTable(const std::string& type, std::uint64_t tableId) {
 		// check arguments
 		if(type.empty())
 			throw Database::Exception("Main::Database::deleteTargetTable(): No table type specified");
@@ -4146,7 +4178,7 @@ namespace crawlservpp::Main {
 	}
 
 	// check whether a website ID is valid, throws Database::Exception
-	bool Database::isWebsite(size_t websiteId) {
+	bool Database::isWebsite(std::uint64_t websiteId) {
 		bool result = false;
 
 		// check argument
@@ -4185,7 +4217,7 @@ namespace crawlservpp::Main {
 	}
 
 	// check whether a URL list ID is valid, throws Database::Exception
-	bool Database::isUrlList(size_t urlListId) {
+	bool Database::isUrlList(std::uint64_t urlListId) {
 		bool result = false;
 
 		// check argument
@@ -4224,7 +4256,7 @@ namespace crawlservpp::Main {
 	}
 
 	// check whether a URL list ID is valid for the ID-specified website, throws Database::Exception
-	bool Database::isUrlList(size_t websiteId, size_t urlListId) {
+	bool Database::isUrlList(std::uint64_t websiteId, std::uint64_t urlListId) {
 		bool result = false;
 
 		// check arguments
@@ -4268,7 +4300,7 @@ namespace crawlservpp::Main {
 	}
 
 	// check whether a query ID is valid, throws Database::Exception
-	bool Database::isQuery(size_t queryId) {
+	bool Database::isQuery(std::uint64_t queryId) {
 		bool result = false;
 
 		// check argument
@@ -4308,7 +4340,7 @@ namespace crawlservpp::Main {
 
 	// check whether a query ID is valid for the ID-specified website (including global queries),
 	//  throws Database::Exception
-	bool Database::isQuery(size_t websiteId, size_t queryId) {
+	bool Database::isQuery(std::uint64_t websiteId, std::uint64_t queryId) {
 		bool result = false;
 
 		// check arguments
@@ -4352,7 +4384,7 @@ namespace crawlservpp::Main {
 	}
 
 	// check whether a configuration ID is valid, throws Database::Exception
-	bool Database::isConfiguration(size_t configId) {
+	bool Database::isConfiguration(std::uint64_t configId) {
 		bool result = false;
 
 		// check argument
@@ -4392,7 +4424,7 @@ namespace crawlservpp::Main {
 
 	// check whether a configuration ID is valid for the ID-specified website (look for global configurations if websiteId is 0),
 	//  throws Database::Exception
-	bool Database::isConfiguration(size_t websiteId, size_t configId) {
+	bool Database::isConfiguration(std::uint64_t websiteId, std::uint64_t configId) {
 		bool result = false;
 
 		// check arguments
@@ -4753,13 +4785,13 @@ namespace crawlservpp::Main {
 
 						break;
 
-					case Data::Type::_int:
-						data.value = Data::Value(static_cast<int>(sqlResultSet->getInt(data.column)));
+					case Data::Type::_int32:
+						data.value = Data::Value(sqlResultSet->getInt(data.column));
 
 						break;
 
-					case Data::Type::_long:
-						data.value = Data::Value(static_cast<long>(sqlResultSet->getInt64(data.column)));
+					case Data::Type::_int64:
+						data.value = Data::Value(sqlResultSet->getInt64(data.column));
 
 						break;
 
@@ -4768,13 +4800,13 @@ namespace crawlservpp::Main {
 
 						break;
 
-					case Data::Type::_uint:
-						data.value = Data::Value(static_cast<unsigned int>(sqlResultSet->getUInt(data.column)));
+					case Data::Type::_uint32:
+						data.value = Data::Value(sqlResultSet->getUInt(data.column));
 
 						break;
 
-					case Data::Type::_ulong:
-						data.value = Data::Value(static_cast<size_t>(sqlResultSet->getUInt64(data.column)));
+					case Data::Type::_uint64:
+						data.value = Data::Value(sqlResultSet->getUInt64(data.column));
 
 						break;
 
@@ -4844,21 +4876,21 @@ namespace crawlservpp::Main {
 
 					break;
 
-				case Data::Type::_int:
+				case Data::Type::_int32:
 					for(const auto& column : data.columns)
 						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(column)));
+							data.values.emplace_back(sqlResultSet->getInt(column));
 
 					break;
 
-				case Data::Type::_long:
+				case Data::Type::_int64:
 					for(const auto& column : data.columns)
 						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(column)));
+							data.values.emplace_back(sqlResultSet->getInt64(column));
 
 					break;
 
@@ -4871,21 +4903,21 @@ namespace crawlservpp::Main {
 
 					break;
 
-				case Data::Type::_uint:
+				case Data::Type::_uint32:
 					for(const auto& column : data.columns)
 						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(column)));
+							data.values.emplace_back(sqlResultSet->getUInt(column));
 
 					break;
 
-				case Data::Type::_ulong:
+				case Data::Type::_uint64:
 					for(const auto& column : data.columns)
 						if(sqlResultSet->isNull(column))
 							data.values.emplace_back();
 						else
-							data.values.emplace_back(static_cast<size_t>(sqlResultSet->getUInt64(column)));
+							data.values.emplace_back(sqlResultSet->getUInt64(column));
 
 					break;
 
@@ -4947,13 +4979,13 @@ namespace crawlservpp::Main {
 
 							break;
 
-						case Data::Type::_int:
-							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(column_type.first)));
+						case Data::Type::_int32:
+							data.values.emplace_back(sqlResultSet->getInt(column_type.first));
 
 							break;
 
-						case Data::Type::_long:
-							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(column_type.first)));
+						case Data::Type::_int64:
+							data.values.emplace_back(sqlResultSet->getInt64(column_type.first));
 
 							break;
 
@@ -4962,13 +4994,13 @@ namespace crawlservpp::Main {
 
 							break;
 
-						case Data::Type::_uint:
-							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(column_type.first)));
+						case Data::Type::_uint32:
+							data.values.emplace_back(sqlResultSet->getUInt(column_type.first));
 
 							break;
 
-						case Data::Type::_ulong:
-							data.values.emplace_back(static_cast<size_t>(sqlResultSet->getUInt64(column_type.first)));
+						case Data::Type::_uint64:
+							data.values.emplace_back(sqlResultSet->getUInt64(column_type.first));
 
 							break;
 
@@ -5034,13 +5066,13 @@ namespace crawlservpp::Main {
 
 							break;
 
-						case Data::Type::_int:
-							data.values.emplace_back(static_cast<int>(sqlResultSet->getInt(data.column)));
+						case Data::Type::_int32:
+							data.values.emplace_back(sqlResultSet->getInt(data.column));
 
 							break;
 
-						case Data::Type::_long:
-							data.values.emplace_back(static_cast<long>(sqlResultSet->getInt64(data.column)));
+						case Data::Type::_int64:
+							data.values.emplace_back(sqlResultSet->getInt64(data.column));
 
 							break;
 
@@ -5049,13 +5081,13 @@ namespace crawlservpp::Main {
 
 							break;
 
-						case Data::Type::_uint:
-							data.values.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(data.column)));
+						case Data::Type::_uint32:
+							data.values.emplace_back(sqlResultSet->getUInt(data.column));
 
 							break;
 
-						case Data::Type::_ulong:
-							data.values.emplace_back(static_cast<size_t>(sqlResultSet->getUInt64(data.column)));
+						case Data::Type::_uint64:
+							data.values.emplace_back(sqlResultSet->getUInt64(data.column));
 
 							break;
 
@@ -5140,13 +5172,13 @@ namespace crawlservpp::Main {
 
 								break;
 
-							case Data::Type::_int:
-								column.emplace_back(static_cast<int>(sqlResultSet->getInt(*i)));
+							case Data::Type::_int32:
+								column.emplace_back(sqlResultSet->getInt(*i));
 
 								break;
 
-							case Data::Type::_long:
-								column.emplace_back(static_cast<long>(sqlResultSet->getInt64(*i)));
+							case Data::Type::_int64:
+								column.emplace_back(sqlResultSet->getInt64(*i));
 
 								break;
 
@@ -5155,13 +5187,13 @@ namespace crawlservpp::Main {
 
 								break;
 
-							case Data::Type::_uint:
-								column.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(*i)));
+							case Data::Type::_uint32:
+								column.emplace_back(sqlResultSet->getUInt(*i));
 
 								break;
 
-							case Data::Type::_ulong:
-								column.emplace_back(static_cast<size_t>(sqlResultSet->getUInt64(*i)));
+							case Data::Type::_uint64:
+								column.emplace_back(sqlResultSet->getUInt64(*i));
 
 								break;
 
@@ -5244,13 +5276,13 @@ namespace crawlservpp::Main {
 
 								break;
 
-							case Data::Type::_int:
-								column.emplace_back(static_cast<int>(sqlResultSet->getInt(i->first)));
+							case Data::Type::_int32:
+								column.emplace_back(sqlResultSet->getInt(i->first));
 
 								break;
 
-							case Data::Type::_long:
-								column.emplace_back(static_cast<long>(sqlResultSet->getInt64(i->first)));
+							case Data::Type::_int64:
+								column.emplace_back(sqlResultSet->getInt64(i->first));
 
 								break;
 
@@ -5259,13 +5291,13 @@ namespace crawlservpp::Main {
 
 								break;
 
-							case Data::Type::_uint:
-								column.emplace_back(static_cast<unsigned int>(sqlResultSet->getUInt(i->first)));
+							case Data::Type::_uint32:
+								column.emplace_back(sqlResultSet->getUInt(i->first));
 
 								break;
 
-							case Data::Type::_ulong:
-								column.emplace_back(static_cast<size_t>(sqlResultSet->getUInt64(i->first)));
+							case Data::Type::_uint64:
+								column.emplace_back(sqlResultSet->getUInt64(i->first));
 
 								break;
 
@@ -5318,13 +5350,13 @@ namespace crawlservpp::Main {
 
 					break;
 
-				case Data::Type::_int:
-					sqlStatement->setInt(1, data.value._i);
+				case Data::Type::_int32:
+					sqlStatement->setInt(1, data.value._i32);
 
 					break;
 
-				case Data::Type::_long:
-					sqlStatement->setInt64(1, data.value._l);
+				case Data::Type::_int64:
+					sqlStatement->setInt64(1, data.value._i64);
 
 					break;
 
@@ -5376,13 +5408,13 @@ namespace crawlservpp::Main {
 
 					break;
 
-				case Data::Type::_uint:
-					sqlStatement->setUInt(1, data.value._ui);
+				case Data::Type::_uint32:
+					sqlStatement->setUInt(1, data.value._ui32);
 
 					break;
 
-				case Data::Type::_ulong:
-					sqlStatement->setUInt64(1, data.value._ul);
+				case Data::Type::_uint64:
+					sqlStatement->setUInt64(1, data.value._ui64);
 
 					break;
 
@@ -5424,7 +5456,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += ") VALUES(";
 
-			for(size_t n = 0; n < data.columns_values.size() - 1; ++n)
+			for(std::size_t n = 0; n < data.columns_values.size() - 1; ++n)
 				sqlQuery += "?, ";
 
 			sqlQuery += "?)";
@@ -5460,24 +5492,24 @@ namespace crawlservpp::Main {
 
 				break;
 
-			case Data::Type::_int:
+			case Data::Type::_int32:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt(counter, column_value.second._i);
+						sqlStatement->setInt(counter, column_value.second._i32);
 
 					++counter;
 				}
 
 				break;
 
-			case Data::Type::_long:
+			case Data::Type::_int64:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt64(counter, column_value.second._l);
+						sqlStatement->setInt64(counter, column_value.second._i64);
 
 					++counter;
 				}
@@ -5536,24 +5568,24 @@ namespace crawlservpp::Main {
 
 				break;
 
-			case Data::Type::_uint:
+			case Data::Type::_uint32:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt(counter, column_value.second._ui);
+						sqlStatement->setUInt(counter, column_value.second._ui32);
 
 					++counter;
 				}
 
 				break;
 
-			case Data::Type::_ulong:
+			case Data::Type::_uint64:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt64(counter, column_value.second._ul);
+						sqlStatement->setUInt64(counter, column_value.second._ui64);
 
 					++counter;
 				}
@@ -5594,7 +5626,7 @@ namespace crawlservpp::Main {
 
 			sqlQuery += ") VALUES(";
 
-			for(size_t n = 0; n < data.columns_types_values.size() - 1; ++n)
+			for(std::size_t n = 0; n < data.columns_types_values.size() - 1; ++n)
 				sqlQuery += "?, ";
 
 			sqlQuery += "?)";
@@ -5620,12 +5652,12 @@ namespace crawlservpp::Main {
 
 						break;
 
-					case Data::Type::_int:
-						sqlStatement->setInt(counter, std::get<2>(column_type_value)._i);
+					case Data::Type::_int32:
+						sqlStatement->setInt(counter, std::get<2>(column_type_value)._i32);
 
 						break;
-					case Data::Type::_long:
-						sqlStatement->setInt64(counter, std::get<2>(column_type_value)._l);
+					case Data::Type::_int64:
+						sqlStatement->setInt64(counter, std::get<2>(column_type_value)._i64);
 
 						break;
 
@@ -5683,13 +5715,13 @@ namespace crawlservpp::Main {
 
 						break;
 
-					case Data::Type::_uint:
-						sqlStatement->setUInt(counter, std::get<2>(column_type_value)._ui);
+					case Data::Type::_uint32:
+						sqlStatement->setUInt(counter, std::get<2>(column_type_value)._ui32);
 
 						break;
 
-					case Data::Type::_ulong:
-						sqlStatement->setUInt64(counter, std::get<2>(column_type_value)._ul);
+					case Data::Type::_uint64:
+						sqlStatement->setUInt64(counter, std::get<2>(column_type_value)._ui64);
 
 						break;
 
@@ -5746,13 +5778,13 @@ namespace crawlservpp::Main {
 
 					break;
 
-				case Data::Type::_int:
-					sqlStatement->setInt(1, data.value._i);
+				case Data::Type::_int32:
+					sqlStatement->setInt(1, data.value._i32);
 
 					break;
 
-				case Data::Type::_long:
-					sqlStatement->setInt64(1, data.value._l);
+				case Data::Type::_int64:
+					sqlStatement->setInt64(1, data.value._i64);
 
 					break;
 
@@ -5803,13 +5835,13 @@ namespace crawlservpp::Main {
 
 					break;
 
-				case Data::Type::_uint:
-					sqlStatement->setUInt(1, data.value._ui);
+				case Data::Type::_uint32:
+					sqlStatement->setUInt(1, data.value._ui32);
 
 					break;
 
-				case Data::Type::_ulong:
-					sqlStatement->setUInt64(1, data.value._ul);
+				case Data::Type::_uint64:
+					sqlStatement->setUInt64(1, data.value._ui64);
 
 					break;
 
@@ -5880,24 +5912,24 @@ namespace crawlservpp::Main {
 
 				break;
 
-			case Data::Type::_int:
+			case Data::Type::_int32:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt(counter, column_value.second._i);
+						sqlStatement->setInt(counter, column_value.second._i32);
 
 					++counter;
 				}
 
 				break;
 
-			case Data::Type::_long:
+			case Data::Type::_int64:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setInt64(counter, column_value.second._l);
+						sqlStatement->setInt64(counter, column_value.second._i64);
 
 					++counter;
 				}
@@ -5958,24 +5990,24 @@ namespace crawlservpp::Main {
 
 				break;
 
-			case Data::Type::_uint:
+			case Data::Type::_uint32:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt(counter, column_value.second._ui);
+						sqlStatement->setUInt(counter, column_value.second._ui32);
 
 					++counter;
 				}
 
 				break;
 
-			case Data::Type::_ulong:
+			case Data::Type::_uint64:
 				for(const auto& column_value : data.columns_values) {
 					if(column_value.second._isnull)
 						sqlStatement->setNull(counter, 0);
 					else
-						sqlStatement->setUInt64(counter, column_value.second._ul);
+						sqlStatement->setUInt64(counter, column_value.second._ui64);
 
 					++counter;
 				}
@@ -6035,13 +6067,13 @@ namespace crawlservpp::Main {
 
 						break;
 
-					case Data::Type::_int:
-						sqlStatement->setInt(counter, std::get<2>(column_type_value)._i);
+					case Data::Type::_int32:
+						sqlStatement->setInt(counter, std::get<2>(column_type_value)._i32);
 
 						break;
 
-					case Data::Type::_long:
-						sqlStatement->setInt64(counter, std::get<2>(column_type_value)._l);
+					case Data::Type::_int64:
+						sqlStatement->setInt64(counter, std::get<2>(column_type_value)._i64);
 
 						break;
 
@@ -6099,13 +6131,13 @@ namespace crawlservpp::Main {
 
 						break;
 
-					case Data::Type::_uint:
-						sqlStatement->setUInt(counter, std::get<2>(column_type_value)._ui);
+					case Data::Type::_uint32:
+						sqlStatement->setUInt(counter, std::get<2>(column_type_value)._ui32);
 
 						break;
 
-					case Data::Type::_ulong:
-						sqlStatement->setUInt64(counter, std::get<2>(column_type_value)._ul);
+					case Data::Type::_uint64:
+						sqlStatement->setUInt64(counter, std::get<2>(column_type_value)._ui64);
 
 						break;
 
@@ -6130,12 +6162,12 @@ namespace crawlservpp::Main {
 	 */
 
 	// reserve memory for a specific number of SQL statements to additionally prepare
-	void Database::reserveForPreparedStatements(unsigned short numberOfAdditionalPreparedStatements) {
+	void Database::reserveForPreparedStatements(std::size_t numberOfAdditionalPreparedStatements) {
 		this->preparedStatements.reserve(this->preparedStatements.size() + numberOfAdditionalPreparedStatements);
 	}
 
-	// prepare additional SQL statement, return ID of newly prepared SQL statement
-	unsigned short Database::addPreparedStatement(const std::string& sqlQuery) {
+	// prepare additional SQL statement, return the ID of the newly prepared SQL statement
+	std::size_t Database::addPreparedStatement(const std::string& sqlQuery) {
 		// check connection
 		this->checkConnection();
 
@@ -6150,7 +6182,7 @@ namespace crawlservpp::Main {
 
 	// get reference to prepared SQL statement by its ID
 	//  WARNING: Do not run Database::checkConnection() while using this reference!
-	sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
+	sql::PreparedStatement& Database::getPreparedStatement(std::size_t id) {
 		try {
 			return this->preparedStatements.at(id - 1).get();
 		}
@@ -6166,8 +6198,8 @@ namespace crawlservpp::Main {
 	 */
 
 	// get the last inserted ID from the database, throws Database::Exception
-	size_t Database::getLastInsertedId() {
-		size_t result = 0;
+	std::uint64_t Database::getLastInsertedId() {
+		std::uint64_t result = 0;
 
 		// check connection
 		this->checkConnection();
@@ -6596,7 +6628,7 @@ namespace crawlservpp::Main {
 	 */
 
 	// get whether the specified URL list is case-sensitive, throws Database::Exception
-	bool Database::isUrlListCaseSensitive(size_t listId) {
+	bool Database::isUrlListCaseSensitive(std::uint64_t listId) {
 		bool result = true;
 
 		// check argument
@@ -6636,7 +6668,7 @@ namespace crawlservpp::Main {
 	}
 
 	// set whether the specified URL list is case-sensitive, throws Database::Exception
-	void Database::setUrlListCaseSensitive(size_t listId, bool isCaseSensitive) {
+	void Database::setUrlListCaseSensitive(std::size_t listId, bool isCaseSensitive) {
 		// check argument
 		if(!listId)
 			throw Database::Exception("Main::Database::setUrlListCaseSensitive(): No URL list specified");
