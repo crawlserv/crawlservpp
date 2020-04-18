@@ -34,7 +34,6 @@
 #include "../Main/Exception.hpp"
 #include "../Wrapper/TidyDoc.hpp"
 
-#include <cstdint>	// std::uint32_t
 #include <queue>	// std::queue
 #include <string>	// std::string
 
@@ -54,7 +53,7 @@ namespace crawlservpp::Parsing {
 		void tidyAndConvert(
 				std::string& inOut,
 				bool warnings,
-				std::uint32_t numOfErrors,
+				ulong numOfErrors,
 				std::queue<std::string>& warningsTo
 		);
 

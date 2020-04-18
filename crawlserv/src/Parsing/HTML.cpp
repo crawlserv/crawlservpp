@@ -34,7 +34,12 @@ namespace crawlservpp::Parsing {
 
 	// tidy HTML and convert it to XML, throws HTML::Exception
 	//  NOTE: Does not change input if output of tidying was empty
-	void HTML::tidyAndConvert(std::string& inOut, bool warnings, std::uint32_t numOfErrors, std::queue<std::string>& warningsTo) {
+	void HTML::tidyAndConvert(
+			std::string& inOut,
+			bool warnings,
+			ulong numOfErrors,
+			std::queue<std::string>& warningsTo
+	) {
 		// set options
 		try {
 			this->doc.setOption(TidyXmlOut, true);
