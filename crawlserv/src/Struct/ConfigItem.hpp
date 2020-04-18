@@ -60,4 +60,4 @@ namespace crawlservpp::Struct {
 
 } /* crawlservpp::Struct */
 
-#endif /* SRC_STRUCT_CONFIGITEM_HPP_ */
+#endif /* STRUCT_CONFIGITEM_HPP_ */

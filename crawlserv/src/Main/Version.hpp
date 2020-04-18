@@ -52,4 +52,4 @@ namespace crawlservpp::Main::Version {
 
 } /* crawlservpp::Main::Version */
 
-#endif /* SRC_MAIN_VERSION_HPP_ */
+#endif /* MAIN_VERSION_HPP_ */
