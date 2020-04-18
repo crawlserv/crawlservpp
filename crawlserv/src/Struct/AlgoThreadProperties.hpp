@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/ThreadStatus.hpp"
 
+#include <cstddef>	// std::size_t
+
 namespace crawlservpp::Struct {
 
 	struct AlgoThreadProperties {
@@ -43,14 +45,14 @@ namespace crawlservpp::Struct {
 
 	public:
 		bool recreate;
-		size_t algoId;
+		std::size_t algoId;
 		Main::Database& dbBase;
 		const ThreadOptions& options;
 		const ThreadStatus& status;
 
 		// properties for newly created thread
 		AlgoThreadProperties(
-				size_t setAlgoId,
+				std::size_t setAlgoId,
 				Main::Database& setDatabase,
 				const ThreadOptions& setOptions
 		)
@@ -63,7 +65,7 @@ namespace crawlservpp::Struct {
 
 		// properties for previously interrupted thread
 		AlgoThreadProperties(
-				size_t setAlgoId,
+				std::size_t setAlgoId,
 				Main::Database& setDatabase,
 				const ThreadOptions& setOptions,
 				const ThreadStatus& setStatus
