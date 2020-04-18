@@ -39,7 +39,7 @@ namespace crawlservpp::Main {
 
 		if(fileStream.is_open()) {
 			while(std::getline(fileStream, line)) {
-				const size_t nameEnd = line.find('=');
+				const auto nameEnd = line.find('=');
 
 				if(nameEnd < line.length()) {
 					std::string nameInLine(line, 0, nameEnd);
