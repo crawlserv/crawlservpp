@@ -28,8 +28,8 @@
  *      Author: ans
  */
 
-#ifndef SRC_STRUCT_ALGOTHREADPROPERTIES_HPP_
-#define SRC_STRUCT_ALGOTHREADPROPERTIES_HPP_
+#ifndef STRUCT_ALGOTHREADPROPERTIES_HPP_
+#define STRUCT_ALGOTHREADPROPERTIES_HPP_
 
 #include "../Main/Database.hpp"
 #include "../Struct/ThreadOptions.hpp"
@@ -79,4 +79,4 @@ namespace crawlservpp::Struct {
 
 } /* crawlservpp::Struct */
 
-#endif /* SRC_STRUCT_ALGOTHREADPROPERTIES_HPP_ */
+#endif /* STRUCT_ALGOTHREADPROPERTIES_HPP_ */
