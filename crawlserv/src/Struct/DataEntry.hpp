@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,19 +31,20 @@
 #ifndef STRUCT_DATAENTRY_HPP_
 #define STRUCT_DATAENTRY_HPP_
 
+#include <cstdint>	// std::uint64_t
 #include <string>	// std::string
 #include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
 
 	struct DataEntry {
-		size_t contentId;
+		std::uint64_t contentId;
 		std::string dataId;
 		std::string dateTime;
 		std::vector<std::string> fields;
 
 		// constructor
-		DataEntry(size_t setContentId) : contentId(setContentId) {}
+		DataEntry(std::uint64_t setContentId) : contentId(setContentId) {}
 	};
 
 } /* crawlservpp::Struct */
