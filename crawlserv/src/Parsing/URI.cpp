@@ -305,7 +305,7 @@ namespace crawlservpp::Parsing {
 			);
 
 		// normalize URI
-		const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(
+		const auto dirtyParts = uriNormalizeSyntaxMaskRequiredA(
 				this->uri.get()
 		);
 
@@ -466,7 +466,7 @@ namespace crawlservpp::Parsing {
 				continue;
 
 			// normalize absolute URL
-			const unsigned int dirtyParts = uriNormalizeSyntaxMaskRequiredA(
+			const auto dirtyParts = uriNormalizeSyntaxMaskRequiredA(
 					absoluteDest.get()
 			);
 
