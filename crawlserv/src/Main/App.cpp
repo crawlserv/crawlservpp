@@ -309,7 +309,7 @@ namespace crawlservpp::Main {
 		dbSettings.host = configFile.getValue("db_host");
 
 		try {
-			dbSettings.port = boost::lexical_cast<unsigned short>(configFile.getValue("db_port"));
+			dbSettings.port = boost::lexical_cast<std::uint16_t>(configFile.getValue("db_port"));
 		}
 		catch(const boost::bad_lexical_cast& e) {
 			throw Exception(
@@ -396,7 +396,7 @@ namespace crawlservpp::Main {
 
 		if(!networkSettings.torControlServer.empty()) {
 			try {
-				networkSettings.torControlPort = boost::lexical_cast<unsigned short>(
+				networkSettings.torControlPort = boost::lexical_cast<std::uint16_t>(
 						configFile.getValue("network_tor_control_port")
 				);
 			}

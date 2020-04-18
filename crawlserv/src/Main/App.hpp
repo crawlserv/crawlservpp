@@ -50,6 +50,7 @@
 
 #include <atomic>		// std::atomic
 #include <csignal>		// sigaction, sigemptyset [Linux] / signal [Windows], SIGINT, SIGTERM
+#include <cstdint>		// std::uint16_t
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::endl, std::flush
 #include <memory>		// std::make_unique, std::unique_ptr
