@@ -33,8 +33,9 @@
 
 #include "../Main/Exception.hpp"
 
+#include "Portability/filesystem.h"
+
 #include <cstddef>		// std::size_t
-#include <filesystem>	// std::filesystem
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -71,9 +72,9 @@ namespace crawlservpp::Helper::FileSystem {
 	// check whether the specified path exists, throws FileSystem::Exception
 	inline bool exists(const std::string& path) {
 		try {
-			return std::filesystem::exists(path);
+			return stdfs::exists(path);
 		}
-		catch(const std::filesystem::filesystem_error& e) {
+		catch(const stdfs::filesystem_error& e) {
 			throw Exception(
 					"Could not check existence of path \'"
 					+ path + "\': "
@@ -84,12 +85,12 @@ namespace crawlservpp::Helper::FileSystem {
 
 	// check whether the specified path points to a valid directory, throws FileSystem::Exception
 	inline bool isValidDirectory(const std::string& path) {
-		const std::filesystem::path dir(path);
+		const stdfs::path dir(path);
 
 		try {
-			return std::filesystem::exists(dir) && std::filesystem::is_directory(dir);
+			return stdfs::exists(dir) && stdfs::is_directory(dir);
 		}
-		catch(const std::filesystem::filesystem_error& e) {
+		catch(const stdfs::filesystem_error& e) {
 			throw Exception(
 					"Could not check existence of directory \'"
 					+ path
@@ -100,12 +101,12 @@ namespace crawlservpp::Helper::FileSystem {
 
 	// check whether the specified path points to a valid file, throws FileSystem::Exception
 	inline bool isValidFile(const std::string& path) {
-		const std::filesystem::path file(path);
+		const stdfs::path file(path);
 
 		try {
-			return std::filesystem::exists(file) && std::filesystem::is_regular_file(file);
+			return stdfs::exists(file) && stdfs::is_regular_file(file);
 		}
-		catch(const std::filesystem::filesystem_error& e) {
+		catch(const stdfs::filesystem_error& e) {
 			throw Exception(
 					"Could not check validity of file \'"
 					+ path
@@ -117,7 +118,7 @@ namespace crawlservpp::Helper::FileSystem {
 
 	// get the preferred separator for file paths
 	inline char getPathSeparator() {
-		return std::filesystem::path::preferred_separator;
+		return stdfs::path::preferred_separator;
 	}
 
 	// list files with specific extension in a directory and its subdirectories, throws FileSystem::Exception
@@ -128,22 +129,22 @@ namespace crawlservpp::Helper::FileSystem {
 		std::vector<std::string> result;
 
 		// open path
-		const std::filesystem::path path(pathToDir);
+		const stdfs::path path(pathToDir);
 
-		if(!std::filesystem::exists(path))
+		if(!stdfs::exists(path))
 			throw Exception("\'" + pathToDir + "\' does not exist");
 
-		if(!std::filesystem::is_directory(path))
+		if(!stdfs::is_directory(path))
 			throw Exception("\'" + pathToDir + "\' is not a directory");
 
 		// iterate through items
 		try {
-			for(auto& it: std::filesystem::recursive_directory_iterator(path)) {
+			for(auto& it: stdfs::recursive_directory_iterator(path)) {
 				if(it.path().extension().string() == fileExtension)
 					result.emplace_back(it.path().string());
 			}
 		}
-		catch(const std::filesystem::filesystem_error& e) {
+		catch(const stdfs::filesystem_error& e) {
 			throw Exception(
 					"Could not iterate through files in \'"
 					+ pathToDir
@@ -163,11 +164,11 @@ namespace crawlservpp::Helper::FileSystem {
 
 		// make paths absolute
 		try {
-			const std::filesystem::path absPathToDir(
-					std::filesystem::canonical(pathToDir)
+			const stdfs::path absPathToDir(
+					stdfs::canonical(pathToDir)
 			);
-			std::filesystem::path absPathToCheck(
-					std::filesystem::canonical(pathToCheck)
+			stdfs::path absPathToCheck(
+					stdfs::canonical(pathToCheck)
 			);
 
 			// remove filename if necessary
@@ -185,7 +186,7 @@ namespace crawlservpp::Helper::FileSystem {
 			// compare as many components as there are in pathToDir
 			return std::equal(pathToDir.begin(), pathToDir.end(), pathToCheck.begin());
 		}
-		catch(const std::filesystem::filesystem_error& e) {
+		catch(const stdfs::filesystem_error& e) {
 			throw Exception(
 					"Could not make paths absolute: \'"
 					+ pathToDir
@@ -200,9 +201,9 @@ namespace crawlservpp::Helper::FileSystem {
 	// create directory, throws FileSystem::Exception
 	inline void createDirectory(const std::string& pathToDir) {
 		try {
-			std::filesystem::create_directory(pathToDir);
+			stdfs::create_directory(pathToDir);
 		}
-		catch(const std::filesystem::filesystem_error& e) {
+		catch(const stdfs::filesystem_error& e) {
 			throw Exception(
 					"Could not create directory \'"
 					+ pathToDir
@@ -223,13 +224,13 @@ namespace crawlservpp::Helper::FileSystem {
 		if(!FileSystem::isValidDirectory(pathToDir))
 			throw Exception("\'" + pathToDir + "\' is not a valid directory");
 
-		const std::filesystem::path dir(pathToDir);
+		const stdfs::path dir(pathToDir);
 
-		for(std::filesystem::directory_iterator it(pathToDir), endIt; it != endIt; ++it)
+		for(stdfs::directory_iterator it(pathToDir), endIt; it != endIt; ++it)
 			try {
-				std::filesystem::remove_all(it->path());
+				stdfs::remove_all(it->path());
 			}
-			catch(const std::filesystem::filesystem_error& e) {
+			catch(const stdfs::filesystem_error& e) {
 				throw Exception(
 						"Could not remove \'"
 						+ std::string(it->path())
@@ -242,9 +243,9 @@ namespace crawlservpp::Helper::FileSystem {
 	// get the free disk space for a directory (in bytes), throws FileSystem::Exception
 	inline std::size_t getFreeSpace(const std::string& path) {
 		try {
-			return std::filesystem::space(path).available;
+			return stdfs::space(path).available;
 		}
-		catch(const std::filesystem::filesystem_error& e) {
+		catch(const stdfs::filesystem_error& e) {
 			throw Exception(
 					"Could not get the free space at \'"
 					+ path
