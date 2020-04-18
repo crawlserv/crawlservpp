@@ -2,6 +2,8 @@
  *
  * ---
  *
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
@@ -91,7 +93,7 @@ namespace crawlservpp::Helper::Utf8 {
 			return true;
 
 		// check for valid one-byte character
-		size_t pos = stringToCheck.size() - 1;
+		auto pos = stringToCheck.size() - 1;
 
 		if(utf8::is_valid(stringToCheck.substr(pos, 1)))
 			return true;
