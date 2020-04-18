@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 
 #include "../Module/Config.hpp"
 
+#include <cstdint>	// std::int64_t, std::uint16_t, std::uint64_t
 #include <string>	// std::string
 #include <vector>	// std::vector
 
@@ -51,7 +52,7 @@ namespace crawlservpp::Network {
 		virtual ~Config();
 
 		// configuration
-		unsigned short connectionsMax;
+		std::uint16_t connectionsMax;
 		bool contentLengthIgnore;
 		bool cookies;
 		std::string cookiesLoad;
@@ -59,7 +60,7 @@ namespace crawlservpp::Network {
 		std::string cookiesSave;
 		bool cookiesSession;
 		std::string cookiesSet; // (crawler only)
-		long dnsCacheTimeOut;
+		std::int64_t dnsCacheTimeOut;
 		std::string dnsDoH;
 		std::string dnsInterface;
 		std::vector<std::string> dnsResolves;
@@ -72,16 +73,16 @@ namespace crawlservpp::Network {
 		bool encodingTransfer;
 		std::vector<std::string> headers;
 		std::vector<std::string> http200Aliases;
-		unsigned short httpVersion;
-		const static unsigned short httpVersionAny = 0;
-		const static unsigned short httpVersionV1 = 1;
-		const static unsigned short httpVersionV11 = 2;
-		const static unsigned short httpVersionV2 = 3;
-		const static unsigned short httpVersionV2only = 4;
-		const static unsigned short httpVersionV2tls = 5;
+		std::uint16_t httpVersion;
+		const static std::uint16_t httpVersionAny = 0;
+		const static std::uint16_t httpVersionV1 = 1;
+		const static std::uint16_t httpVersionV11 = 2;
+		const static std::uint16_t httpVersionV2 = 3;
+		const static std::uint16_t httpVersionV2only = 4;
+		const static std::uint16_t httpVersionV2tls = 5;
 		std::string localInterface;
-		unsigned short localPort;
-		unsigned short localPortRange;
+		std::uint16_t localPort;
+		std::uint16_t localPortRange;
 		std::string proxy;
 		std::string proxyAuth;
 		std::vector<std::string> proxyHeaders;
@@ -90,18 +91,18 @@ namespace crawlservpp::Network {
 		std::string proxyTlsSrpUser;
 		bool proxyTunnelling;
 		bool redirect;
-		size_t redirectMax;
+		std::uint64_t redirectMax;
 		bool redirectPost301;
 		bool redirectPost302;
 		bool redirectPost303;
 		std::string referer;
 		bool refererAutomatic;
 		bool resetTor;
-		size_t resetTorAfter;
-		size_t speedDownLimit;
-		size_t speedLowLimit;
-		size_t speedLowTime;
-		size_t speedUpLimit;
+		std::uint64_t resetTorAfter;
+		std::uint64_t speedDownLimit;
+		std::uint64_t speedLowLimit;
+		std::uint64_t speedLowTime;
+		std::uint64_t speedUpLimit;
 		bool sslVerifyHost;
 		bool sslVerifyPeer;
 		bool sslVerifyProxyHost;
@@ -109,12 +110,12 @@ namespace crawlservpp::Network {
 		bool sslVerifyStatus;
 		bool tcpFastOpen;
 		bool tcpKeepAlive;
-		size_t tcpKeepAliveIdle;
-		size_t tcpKeepAliveInterval;
+		std::uint64_t tcpKeepAliveIdle;
+		std::uint64_t tcpKeepAliveInterval;
 		bool tcpNagle;
-		size_t timeOut;
-		unsigned short timeOutHappyEyeballs;
-		size_t timeOutRequest;
+		std::uint64_t timeOut;
+		std::uint16_t timeOutHappyEyeballs;
+		std::uint64_t timeOutRequest;
 		std::string tlsSrpUser;
 		std::string tlsSrpPassword;
 		std::string userAgent;
