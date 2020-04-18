@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2018-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// set time-out for target table lock
-	void Database::setTimeoutTargetLock(size_t timeOut) {
+	void Database::setTimeoutTargetLock(std::uint64_t timeOut) {
 		this->timeoutTargetLock = timeOut;
 	}
 
@@ -137,7 +137,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	// prepare SQL statements for analyzer, throws Main::Database::Exception
 	void Database::prepare() {
-		const unsigned short verbose = this->getLoggingVerbose();
+		const auto verbose = this->getLoggingVerbose();
 
 		// create table prefix
 		this->tablePrefix = "crawlserv_";
@@ -332,7 +332,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// prepare SQL statements for algorithm, throws Main::Database::Exception
-	void Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo) {
+	void Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<uint16_t>& idsTo) {
 		// check connection to database
 		this->checkConnection();
 
@@ -350,7 +350,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// get prepared SQL statement for algorithm (wraps protected parent member function to the public)
-	sql::PreparedStatement& Database::getPreparedAlgoStatement(unsigned short sqlStatementId) {
+	sql::PreparedStatement& Database::getPreparedAlgoStatement(uint16_t sqlStatementId) {
 		return this->getPreparedStatement(sqlStatementId);
 	}
 
@@ -361,7 +361,7 @@ namespace crawlservpp::Module::Analyzer {
 			const std::string& filterDateFrom,
 			const std::string& filterDateTo,
 			Data::Corpus& corpusTo,
-			size_t& sourcesTo
+			std::size_t& sourcesTo
 	) {
 		// check arguments
 		if(corpusProperties.sourceTable.empty()) {
@@ -420,7 +420,7 @@ namespace crawlservpp::Module::Analyzer {
 
 				try {
 					// execute SQL query for getting a chunk of the corpus
-					size_t previous = 0;
+					std::uint64_t previous = 0;
 
 					sqlStatementFirst.setUInt(1, corpusProperties.sourceType);
 					sqlStatementFirst.setString(2, corpusProperties.sourceTable);
@@ -522,7 +522,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// public helper function: get the full name of a source table, throws Database::Exception
-	std::string Database::getSourceTableName(unsigned short type, const std::string& name) {
+	std::string Database::getSourceTableName(std::uint16_t type, const std::string& name) {
 		switch(type) {
 		case Config::generalInputSourcesParsing:
 			return this->tablePrefix + "parsed_" + name;
@@ -541,7 +541,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// public helper function: get the full name of a source column, throws Database::Exception
-	std::string Database::getSourceColumnName(unsigned short type, const std::string& name) {
+	std::string Database::getSourceColumnName(std::uint16_t type, const std::string& name) {
 		switch(type) {
 		case Config::generalInputSourcesParsing:
 			if(name == "id")
@@ -571,7 +571,7 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string>& columns
 	) {
 		// remove invalid sources
-		for(size_t n = 1; n <= tables.size(); ++n) {
+		for(std::size_t n = 1; n <= tables.size(); ++n) {
 			if(!this->checkSource(types.at(n - 1), tables.at(n - 1), columns.at(n - 1))) {
 				--n;
 
@@ -588,7 +588,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	// public helper function: check input table and column
 	bool Database::checkSource(
-			unsigned short type,
+			std::uint16_t type,
 			const std::string& table,
 			const std::string& column
 	) {
@@ -645,7 +645,7 @@ namespace crawlservpp::Module::Analyzer {
 		// get prepared SQL statement
 		sql::PreparedStatement& corpusStatement(this->getPreparedStatement(this->ps.isCorpusChanged));
 
-		unsigned short sourceStatement = 0;
+		std::uint16_t sourceStatement = 0;
 
 		switch(corpusProperties.sourceType) {
 		case Config::generalInputSourcesParsing:
@@ -706,7 +706,7 @@ namespace crawlservpp::Module::Analyzer {
 	void Database::createCorpus(
 			const CorpusProperties& corpusProperties,
 			Data::Corpus& corpusTo,
-			size_t& sourcesTo
+			std::size_t& sourcesTo
 	) {
 		// initialize values
 		corpusTo.clear();
@@ -827,7 +827,7 @@ namespace crawlservpp::Module::Analyzer {
 					dateTimes.reserve(data.values.at(2).size());
 			}
 
-			for(size_t n = 0; n < data.values.at(0).size(); ++n) {
+			for(std::size_t n = 0; n < data.values.at(0).size(); ++n) {
 				auto& text = data.values.at(0).at(n);
 
 				if(!text._isnull && !text._s.empty()) {
@@ -870,7 +870,7 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<Struct::TextMap> articleMaps, dateMaps;
 
 			corpusTo.copyChunks(
-					static_cast<size_t>(
+					static_cast<std::size_t>(
 							this->getMaxAllowedPacketSize()
 							* (static_cast<float>(this->corpusSlicing) / 100)
 					),
@@ -880,9 +880,9 @@ namespace crawlservpp::Module::Analyzer {
 			);
 
 			// add corpus chunks to the database
-			size_t last = 0;
+			std::uint64_t last = 0;
 
-			for(size_t n = 0; n < chunks.size(); ++n) {
+			for(std::size_t n = 0; n < chunks.size(); ++n) {
 				addStatement.setUInt(1, corpusProperties.sourceType);
 				addStatement.setString(2, corpusProperties.sourceTable);
 				addStatement.setString(3, corpusProperties.sourceField);
