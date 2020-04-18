@@ -41,7 +41,6 @@
 #include "../Struct/TextMap.hpp"
 
 #include <algorithm>	// std::find_if
-#include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t
 #include <iterator>		// std::distance
 #include <string>		// std::string, std::to_string
@@ -64,17 +63,17 @@ namespace crawlservpp::Data {
 		const Struct::TextMap& getArticleMap() const;
 		Struct::TextMap& getDateMap();
 		const Struct::TextMap& getDateMap() const;
-		std::string get(std::size_t index) const;
+		std::string get(std::string::size_type index) const;
 		std::string get(const std::string& id) const;
 		std::string getDate(const std::string& date) const;
-		std::size_t size() const;
+		std::string::size_type size() const;
 		bool empty() const;
 
 		// copyers
 		void copy(std::string& to) const;
 		void copy(std::string& to, Struct::TextMap& articleMapTo, Struct::TextMap& dateMapTo) const;
 		void copyChunks(
-				std::size_t chunkSize,
+				std::string::size_type chunkSize,
 				std::vector<std::string>& to,
 				std::vector<Struct::TextMap>& articleMapsTo,
 				std::vector<Struct::TextMap>& dateMapsTo
@@ -100,7 +99,7 @@ namespace crawlservpp::Data {
 
 		// functionality
 		bool filterByDate(const std::string& from, const std::string& to);
-		std::string substr(std::size_t from, std::size_t len);
+		std::string substr(std::string::size_type from, std::string::size_type len);
 		void clear();
 
 		// class for corpus exceptions
@@ -114,16 +113,16 @@ namespace crawlservpp::Data {
 
 	private:
 		// private helper function
-		std::size_t getValidLengthOfSlice(
-				std::size_t pos,
-				std::size_t maxLength,
-				std::size_t maxChunkSize
+		std::string::size_type getValidLengthOfSlice(
+				std::string::size_type pos,
+				std::string::size_type maxLength,
+				std::string::size_type maxChunkSize
 		) const;
 
 		// private static helper function
 		static void checkMap(
 				const Struct::TextMap& map,
-				std::size_t corpusSize
+				std::string::size_type corpusSize
 		);
 	};
 
@@ -166,7 +165,7 @@ namespace crawlservpp::Data {
 	}
 
 	// get the article with the specified index, throws Corpus::Exception
-	inline std::string Corpus::get(std::size_t index) const {
+	inline std::string Corpus::get(std::string::size_type index) const {
 		if(this->articleMap.empty())
 			throw Exception(
 					"Corpus::at(): requested article #"
@@ -242,7 +241,7 @@ namespace crawlservpp::Data {
 	}
 
 	// get size of corpus
-	inline std::size_t Corpus::size() const {
+	inline std::string::size_type Corpus::size() const {
 		return this->corpus.size();
 	}
 
@@ -266,7 +265,7 @@ namespace crawlservpp::Data {
 	// copy corpus, article map and date map in chunks of specified size and return whether slicing was successful,
 	//	throws Corpus::Exception
 	inline void Corpus::copyChunks(
-			std::size_t chunkSize,
+			std::string::size_type chunkSize,
 			std::vector<std::string>& to,
 			std::vector<Struct::TextMap>& articleMapsTo,
 			std::vector<Struct::TextMap>& dateMapsTo
@@ -305,7 +304,7 @@ namespace crawlservpp::Data {
 
 		if(this->articleMap.empty()) {
 			// no article part: simply add parts of the corpus
-			std::size_t pos = 0;
+			std::string::size_type pos = 0;
 
 			while(pos < this->corpus.size()) {
 				to.emplace_back(this->corpus, pos, this->getValidLengthOfSlice(pos, chunkSize, chunkSize));
@@ -316,7 +315,7 @@ namespace crawlservpp::Data {
 			noSpace = true;
 		}
 		else {
-			std::size_t corpusPos = 0, articlePos = 0;
+			std::string::size_type corpusPos = 0, articlePos = 0;
 			auto articleIt = this->articleMap.begin(), dateIt = this->dateMap.begin();
 
 			while(corpusPos < this->corpus.size()) { /* loop for chunks */
@@ -529,7 +528,7 @@ namespace crawlservpp::Data {
 
 		Struct::TextMapEntry dateMapEntry;
 
-		for(std::size_t n = 0; n < texts.size(); ++n) {
+		for(std::string::size_type n = 0; n < texts.size(); ++n) {
 			auto pos = this->corpus.size();
 
 			auto& text = texts.at(n);
@@ -630,7 +629,7 @@ namespace crawlservpp::Data {
 		this->clear();
 
 		// reserve memory
-		std::size_t size = 0;
+		std::vector<std::string>::size_type size = 0;
 
 		for(const auto& chunk : chunks)
 			size += chunk.size();
@@ -638,7 +637,7 @@ namespace crawlservpp::Data {
 		this->corpus.reserve(size);
 
 		// add chunks
-		for(std::size_t n = 0; n < chunks.size(); ++n) {
+		for(std::vector<std::string>::size_type n = 0; n < chunks.size(); ++n) {
 			// save current position in new corpus
 			const auto pos = this->corpus.size();
 
@@ -855,7 +854,7 @@ namespace crawlservpp::Data {
 	}
 
 	// get a substring from the corpus
-	inline std::string Corpus::substr(std::size_t from, std::size_t len) {
+	inline std::string Corpus::substr(std::string::size_type from, std::string::size_type len) {
 		return this->corpus.substr(from, len);
 	}
 
@@ -868,10 +867,10 @@ namespace crawlservpp::Data {
 
 	// get a valid end of the current slice (without cutting off UTF-8 characters), throws Corpus::Exception
 	//	NOTE: the result is between (maxLength - 3) and maxLength and at least zero
-	inline std::size_t Corpus::getValidLengthOfSlice(
-			std::size_t pos,
-			std::size_t maxLength,
-			std::size_t maxChunkSize
+	inline std::string::size_type Corpus::getValidLengthOfSlice(
+			std::string::size_type pos,
+			std::string::size_type maxLength,
+			std::string::size_type maxChunkSize
 	) const {
 		// check arguments
 		if(maxLength > maxChunkSize)
@@ -900,8 +899,8 @@ namespace crawlservpp::Data {
 
 			// check last four of the remaining characters (if available)
 			const std::uint8_t maxBack = cut + 4;
-			const std::size_t checkFrom = maxLength > maxBack ? pos + maxLength - maxBack : pos;
-			const std::size_t checkLength = maxLength > maxBack ? 4 : maxLength - cut;
+			const std::string::size_type checkFrom = maxLength > maxBack ? pos + maxLength - maxBack : pos;
+			const std::string::size_type checkLength = maxLength > maxBack ? 4 : maxLength - cut;
 
 			if(Helper::Utf8::isLastCharValidUtf8(this->corpus.substr(checkFrom, checkLength)))
 				return maxLength - cut;
@@ -921,13 +920,13 @@ namespace crawlservpp::Data {
 	}
 
 	// check text map for inconsistencies, throws Corpus::Exception
-	inline void Corpus::checkMap(const Struct::TextMap& map, std::size_t corpusSize) {
+	inline void Corpus::checkMap(const Struct::TextMap& map, std::string::size_type corpusSize) {
 		// check the argument
 		if(map.empty())
 			return;
 
 		// check the start positions of all entries in the map
-		std::size_t last = 0;
+		std::string::size_type last = 0;
 
 		for(const auto& entry : map) {
 			if(entry.pos != last)
