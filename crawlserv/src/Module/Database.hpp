@@ -42,8 +42,9 @@
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ModuleOptions.hpp"
 
-#include <climits>	// USHRT_MAX
+#include <cstdint>	// std::uint8_t, std::uint16_t, std::uint64_t
 #include <fstream>	// std::ofstream
+#include <limits>	// std::numeric_limits
 #include <memory>	// std::unique_ptr
 #include <queue>	// std::queue
 #include <string>	// std::string, std::to_string
@@ -74,21 +75,21 @@ namespace crawlservpp::Module {
 
 		// setters
 		void setOptions(const ModuleOptions& moduleOptions);
-		void setThreadId(size_t id);
-		void setLogging(unsigned short level, unsigned short min, unsigned short verbose);
+		void setThreadId(std::uint64_t id);
+		void setLogging(std::uint8_t level, std::uint8_t min, std::uint8_t verbose);
 
 		// command function
 		void prepare();
 
 		// logging functions
-		void log(unsigned short level, const std::string& logEntry);
-		void log(unsigned short level, std::queue<std::string>& logEntries);
-		bool isLogLevel(unsigned short level) const;
+		void log(std::uint8_t level, const std::string& logEntry);
+		void log(std::uint8_t level, std::queue<std::string>& logEntries);
+		bool isLogLevel(uint8_t level) const;
 
 		// thread functions
-		void setThreadStatusMessage(size_t threadId, bool threadPaused, const std::string& threadStatusMessage);
-		void setThreadProgress(size_t threadId, float threadProgress, size_t threadRunTime);
-		void setThreadLast(size_t threadId, size_t threadLast);
+		void setThreadStatusMessage(std::uint64_t threadId, bool threadPaused, const std::string& threadStatusMessage);
+		void setThreadProgress(std::uint64_t threadId, float threadProgress, std::uint64_t threadRunTime);
+		void setThreadLast(std::uint64_t threadId, std::uint64_t threadLast);
 
 		// class for Module::Database exceptions
 		MAIN_EXCEPTION_CLASS();
@@ -99,9 +100,9 @@ namespace crawlservpp::Module {
 		std::string threadIdString;
 		std::string websiteIdString;
 		std::string urlListIdString;
-		unsigned short loggingLevel;
-		unsigned short loggingMin;
-		unsigned short loggingVerbose;
+		std::uint8_t loggingLevel;
+		std::uint8_t loggingMin;
+		std::uint8_t loggingVerbose;
 		std::ofstream loggingFile;
 		bool debugLogging;
 		std::string debugDir;
@@ -111,9 +112,9 @@ namespace crawlservpp::Module {
 
 		// IDs of prepared SQL statements
 		struct _ps {
-			unsigned short setThreadStatusMessage;
-			unsigned short setThreadProgress;
-			unsigned short setThreadLast;
+			std::uint16_t setThreadStatusMessage;
+			std::uint16_t setThreadProgress;
+			std::uint16_t setThreadLast;
 		} ps;
 	};
 

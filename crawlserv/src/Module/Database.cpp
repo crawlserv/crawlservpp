@@ -38,9 +38,9 @@ namespace crawlservpp::Module {
 	// constructor
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 							: Main::Database(dbSettings, dbModule),
-							  loggingLevel(USHRT_MAX),
+							  loggingLevel(std::numeric_limits<std::uint8_t>::max()),
 							  loggingMin(1),
-							  loggingVerbose(USHRT_MAX),
+							  loggingVerbose(std::numeric_limits<std::uint8_t>::max()),
 							  debugLogging(dbSettings.debugLogging),
 							  debugDir(dbSettings.debugDir),
 							  ps(_ps()) {
@@ -71,7 +71,7 @@ namespace crawlservpp::Module {
 	}
 
 	// set ID of thread and convert it to string
-	void Database::setThreadId(size_t threadId) {
+	void Database::setThreadId(std::uint64_t threadId) {
 		if(!threadId)
 			throw Exception("No thread ID specified");
 
@@ -80,7 +80,7 @@ namespace crawlservpp::Module {
 	}
 
 	// set current, minimal and verbose logging levels
-	void Database::setLogging(unsigned short level, unsigned short min, unsigned short verbose) {
+	void Database::setLogging(std::uint8_t level, std::uint8_t min, std::uint8_t verbose) {
 		this->loggingLevel = level;
 		this->loggingMin = min;
 		this->loggingVerbose = verbose;
@@ -110,7 +110,7 @@ namespace crawlservpp::Module {
 		this->checkConnection();
 
 		// reserve memory
-		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::uint16_t));
 
 		// prepare general SQL statements for thread
 		if(!(this->ps.setThreadStatusMessage))
@@ -142,7 +142,7 @@ namespace crawlservpp::Module {
 
 	// write thread-specific log entry to the database
 	//  NOTE: log entry will not be written if the logging level is lower than the specified level for the entry
-	void Database::log(unsigned short level, const std::string& logEntry) {
+	void Database::log(std::uint8_t level, const std::string& logEntry) {
 		if(level <= this->loggingLevel)
 			// write log entry to database
 			this->Main::Database::log("[#" + this->threadIdString + "] " + logEntry);
@@ -175,7 +175,7 @@ namespace crawlservpp::Module {
 
 	// write multiple thread-specific log entries to the database
 	//  NOTE: log entries will not be written if the logging level is lower than the specified level for the entries
-	void Database::log(unsigned short level, std::queue<std::string>& logEntries) {
+	void Database::log(std::uint8_t level, std::queue<std::string>& logEntries) {
 		if(level <= this->loggingLevel) {
 			while(!logEntries.empty()) {
 				// write log entry to database
@@ -205,12 +205,12 @@ namespace crawlservpp::Module {
 	}
 
 	// check whether a certain log level is active
-	bool Database::isLogLevel(unsigned short level) const {
+	bool Database::isLogLevel(std::uint8_t level) const {
 		return level <= this->loggingLevel;
 	}
 
 	// set the status message of a thread (and add the pause state), throws Database::Exception
-	void Database::setThreadStatusMessage(size_t threadId, bool threadPaused, const std::string& threadStatusMessage) {
+	void Database::setThreadStatusMessage(std::uint64_t threadId, bool threadPaused, const std::string& threadStatusMessage) {
 		// check connection
 		this->checkConnection();
 
@@ -246,7 +246,7 @@ namespace crawlservpp::Module {
 
 	// set the progress of a thread to between 0 for 0% and 1 for 100% in database (and update runtime),
 	//  throws Database::Exception
-	void Database::setThreadProgress(size_t threadId, float threadProgress, size_t threadRunTime) {
+	void Database::setThreadProgress(std::uint64_t threadId, float threadProgress, std::uint64_t threadRunTime) {
 		// check connection
 		this->checkConnection();
 
@@ -269,7 +269,7 @@ namespace crawlservpp::Module {
 	}
 
 	// set last ID of thread in database, throws Database::Exception
-	void Database::setThreadLast(size_t threadId, size_t threadLast) {
+	void Database::setThreadLast(std::uint64_t threadId, std::uint64_t threadLast) {
 		// check connection
 		this->checkConnection();
 
