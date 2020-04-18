@@ -145,7 +145,7 @@ namespace crawlservpp::Module::Extractor {
 				std::find(
 						this->config.variablesSource.begin(),
 						this->config.variablesSource.end(),
-						static_cast<unsigned char>(Config::variablesSourcesContent)
+						Config::variablesSourcesContent
 				) != this->config.variablesSource.end()
 		);
 
@@ -549,7 +549,7 @@ namespace crawlservpp::Module::Extractor {
 				std::count_if(
 						this->config.variablesSource.begin(),
 						this->config.variablesSource.end(),
-						[](const unsigned char source) -> bool {
+						[](const auto source) -> bool {
 							return	source == Config::variablesSourcesContent
 									|| source == Config::variablesSourcesUrl;
 						}
