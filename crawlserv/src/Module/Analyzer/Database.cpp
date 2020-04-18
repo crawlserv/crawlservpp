@@ -59,11 +59,6 @@ namespace crawlservpp::Module::Analyzer {
 			this->targetFieldTypes.emplace_back();
 	}
 
-	// set time-out for target table lock
-	void Database::setTimeoutTargetLock(std::uint64_t timeOut) {
-		this->timeoutTargetLock = timeOut;
-	}
-
 	// set size of corpus chunks in percentage of the maximum package size allowed by the MySQL server
 	void Database::setCorpusSlicing(std::uint8_t percentageOfMaxAllowedPackageSize) {
 		this->corpusSlicing = percentageOfMaxAllowedPackageSize;

@@ -78,7 +78,6 @@ namespace crawlservpp::Module::Analyzer {
 			std::string generalResultTable;
 			std::uint64_t generalSleepMySql;
 			std::uint64_t generalSleepWhenFinished;
-			std::uint64_t generalTimeoutTargetLock;
 
 			// filter by date entries
 			bool filterDateEnable;
@@ -106,8 +105,6 @@ namespace crawlservpp::Module::Analyzer {
 										generalLogging(Config::generalLoggingDefault),
 										generalSleepMySql(20),
 										generalSleepWhenFinished(5000),
-										generalTimeoutTargetLock(30),
-
 										filterDateEnable(false) {}
 
 	// parse analyzing-specific configuration option
@@ -135,7 +132,6 @@ namespace crawlservpp::Module::Analyzer {
 		);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
 		this->option("sleep.when.finished", this->config.generalSleepWhenFinished);
-		this->option("timeout.target.lock", this->config.generalTimeoutTargetLock);
 
 		// filter by date options
 		this->category("filter-date");
