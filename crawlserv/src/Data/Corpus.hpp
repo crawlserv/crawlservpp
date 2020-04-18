@@ -42,6 +42,7 @@
 
 #include <algorithm>	// std::find_if
 #include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint8_t
 #include <iterator>		// std::distance
 #include <string>		// std::string, std::to_string
 #include <vector>		// std::vector
@@ -891,14 +892,14 @@ namespace crawlservpp::Data {
 			return 0;
 
 		// cut a maximum of three bytes
-		unsigned char cut = 0;
+		std::uint8_t cut = 0;
 
 		for(; cut < 4; ++cut) {
 			if(cut > maxLength)
 				break;
 
 			// check last four of the remaining characters (if available)
-			const unsigned char maxBack = cut + 4;
+			const std::uint8_t maxBack = cut + 4;
 			const std::size_t checkFrom = maxLength > maxBack ? pos + maxLength - maxBack : pos;
 			const std::size_t checkLength = maxLength > maxBack ? 4 : maxLength - cut;
 
