@@ -1273,7 +1273,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			std::size_t pos = 0;
+			std::string::size_type pos = 0;
 
 			while(true) {
 				pos = result.find("%20", pos);
@@ -1307,7 +1307,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			std::size_t pos = 0;
+			std::string::size_type pos = 0;
 
 			while(true) {
 				pos = result.find("+", pos);
@@ -1327,7 +1327,7 @@ namespace crawlservpp::Network {
 
 	// escape an URL but leave reserved characters (; / ? : @ = & #) intact
 	std::string Curl::escapeUrl(const std::string& urlToEncode) {
-		std::size_t pos = 0;
+		std::string::size_type pos = 0;
 		std::string result;
 
 		while(pos < urlToEncode.length()) {
@@ -1364,7 +1364,7 @@ namespace crawlservpp::Network {
 	}
 
 	// static cURL writer function
-	int Curl::writer(char * data, std::size_t size, std::size_t nmemb, void * thisPtr) {
+	int Curl::writer(char * data, std::string::size_type size, std::string::size_type nmemb, void * thisPtr) {
 		if(!thisPtr)
 			return 0;
 
@@ -1372,7 +1372,7 @@ namespace crawlservpp::Network {
 	}
 
 	// in-class cURL writer function
-	int Curl::writerInClass(char * data, std::size_t size, std::size_t nmemb) {
+	int Curl::writerInClass(char * data, std::string::size_type size, std::string::size_type nmemb) {
 		this->content.append(data, size * nmemb);
 
 		return size * nmemb;

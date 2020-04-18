@@ -50,7 +50,6 @@
 #include <algorithm>	// std::find, std::remove_if, std::transform
 #include <cctype>		// ::isspace, ::tolower
 #include <chrono>		// std::chrono
-#include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
 #include <limits>		// std::numeric_limits
