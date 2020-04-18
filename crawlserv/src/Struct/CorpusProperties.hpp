@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,19 +31,20 @@
 #ifndef STRUCT_CORPUSPROPERTIES_HPP_
 #define STRUCT_CORPUSPROPERTIES_HPP_
 
+#include <cstdint>	// std::uint16_t
 #include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
 	struct CorpusProperties {
-		unsigned short sourceType;
+		std::uint16_t sourceType;
 		std::string sourceTable;
 		std::string sourceField;
 
 		// constructors
 		CorpusProperties() : sourceType(0) {}
 		CorpusProperties(
-				unsigned short setSourceType,
+				std::uint16_t setSourceType,
 				const std::string& setSourceTable,
 				const std::string& setSourceField
 		) : sourceType(setSourceType),
