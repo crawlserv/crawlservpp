@@ -608,7 +608,7 @@ namespace crawlservpp::Module::Extractor {
 		// get URL lock end time from database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, lockTimeout);
+			sqlStatement.setUInt(1, lockTimeout);
 
 			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
 
@@ -907,7 +907,7 @@ namespace crawlservpp::Module::Extractor {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::uint16_t counter = 0;
+					std::size_t counter = 0;
 
 					// set standard values
 					if(this->overwrite) {
@@ -952,7 +952,7 @@ namespace crawlservpp::Module::Extractor {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::uint16_t counter = 0;
+					std::size_t counter = 0;
 
 					// set standard values
 					if(this->overwrite) {
@@ -997,7 +997,7 @@ namespace crawlservpp::Module::Extractor {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::uint16_t counter = 0;
+					std::size_t counter = 0;
 
 					// set standard values
 					if(this->overwrite) {
@@ -1041,7 +1041,7 @@ namespace crawlservpp::Module::Extractor {
 				// check entry
 				this->checkEntrySize(entries.front());
 
-				std::uint16_t counter = 0;
+				std::size_t counter = 0;
 
 				// set standard values
 				if(this->overwrite) {
@@ -1237,7 +1237,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// generate a SQL query for locking a specific number of URLs, throws Database::Exception
-	std::string Database::queryLockUrls(std::uint32_t numberOfUrls) {
+	std::string Database::queryLockUrls(std::size_t numberOfUrls) {
 		// check arguments
 		if(!numberOfUrls)
 			throw Exception("Database::queryLockUrls(): No number of URLs specified");
@@ -1249,7 +1249,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 
 		// create VALUES clauses
-		for(std::uint32_t n = 1; n <= numberOfUrls; ++n) {
+		for(std::size_t n = 1; n <= numberOfUrls; ++n) {
 			sqlQueryString +=	" ("
 									" ("
 										"SELECT id FROM `" + this->extractingTable + "`"
@@ -1276,7 +1276,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// generate SQL query for updating or adding a specific number of extracted entries, throws Database::Exception
-	std::string Database::queryUpdateOrAddEntries(std::uint32_t numberOfEntries) {
+	std::string Database::queryUpdateOrAddEntries(std::size_t numberOfEntries) {
 		// check arguments
 		if(!numberOfEntries)
 			throw Exception("Database::queryUpdateOrAddEntries(): No number of entries specified");
@@ -1306,7 +1306,7 @@ namespace crawlservpp::Module::Extractor {
 								" VALUES ";
 
 		// create placeholder list (including existence check)
-		for(std::uint32_t n = 1; n <= numberOfEntries; ++n) {
+		for(std::size_t n = 1; n <= numberOfEntries; ++n) {
 			sqlQueryStr +=		"( ";
 
 			if(this->overwrite)
@@ -1354,7 +1354,7 @@ namespace crawlservpp::Module::Extractor {
 
 	// generate SQL query for setting a specific number of URLs to finished if they haven't been locked since extracting,
 	//  throws Database::Exception
-	std::string Database::querySetUrlsFinishedIfLockOk(std::uint32_t numberOfUrls) {
+	std::string Database::querySetUrlsFinishedIfLockOk(std::size_t numberOfUrls) {
 		// check arguments
 		if(!numberOfUrls)
 			throw Exception("Database::querySetUrlsFinishedIfLockOk(): No number of URLs specified");
@@ -1367,7 +1367,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 
 		// create WHERE clause
-		for(std::uint32_t n = 0; n < numberOfUrls; ++n) {
+		for(std::size_t n = 0; n < numberOfUrls; ++n) {
 			if(n > 0)
 				sqlQueryString += " OR ";
 
@@ -1388,7 +1388,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// generate SQL query for unlocking multiple URls if they haven't been locked since fetching
-	std::string Database::queryUnlockUrlsIfOk(std::uint32_t numberOfUrls) {
+	std::string Database::queryUnlockUrlsIfOk(std::size_t numberOfUrls) {
 		std::string sqlQueryString(
 							"UPDATE `" + this->extractingTable + "`"
 							" SET locktime = NULL"
@@ -1397,7 +1397,7 @@ namespace crawlservpp::Module::Extractor {
 							" ("
 		);
 
-		for(std::uint32_t n = 1; n <= numberOfUrls; ++n) {
+		for(std::size_t n = 1; n <= numberOfUrls; ++n) {
 			sqlQueryString += " url = ?";
 
 			if(n < numberOfUrls)
