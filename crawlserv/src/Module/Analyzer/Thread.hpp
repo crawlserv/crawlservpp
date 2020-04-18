@@ -41,7 +41,6 @@
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 
-#include <cstddef>		// std::size_t
 #include <functional>	// std::bind
 #include <queue>		// std::queue
 #include <stdexcept>	// std::logic_error
@@ -67,7 +66,7 @@ namespace crawlservpp::Module::Analyzer {
 	protected:
 		// text maps are used to describe certain parts of a text
 		//  defined by their positions and lengths with certain strings (words, dates etc.)
-		using TextMapEntry = std::tuple<std::string, std::size_t, std::size_t>;
+		using TextMapEntry = std::tuple<std::string, std::string::size_type, std::string::size_type>;
 
 		// analyzing configuration and database functionality for thread
 		Database database;
