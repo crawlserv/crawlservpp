@@ -987,7 +987,7 @@ namespace crawlservpp::Module::Crawler {
 	std::string Database::lockUrlIfOk(
 			std::uint64_t urlId,
 			const std::string& lockTime,
-			std::uint64_t lockTimeout
+			std::uint32_t lockTimeout
 	) {
 		// check argument
 		if(!urlId)
@@ -1009,7 +1009,7 @@ namespace crawlservpp::Module::Crawler {
 				// execute SQL query
 				sqlStatement.setUInt64(1, urlId);
 				sqlStatement.setUInt64(2, urlId);
-				sqlStatement.setUInt64(3, lockTimeout);
+				sqlStatement.setUInt(3, lockTimeout);
 
 				if(Database::sqlExecuteUpdate(sqlStatement) < 1)
 					return std::string(); // locking failed when no entries have been updated
@@ -1023,7 +1023,7 @@ namespace crawlservpp::Module::Crawler {
 			// lock URL in database
 			try {
 				// execute SQL query
-				sqlStatement.setUInt64(1, lockTimeout);
+				sqlStatement.setUInt(1, lockTimeout);
 				sqlStatement.setString(2, lockTime);
 				sqlStatement.setUInt64(3, urlId);
 				sqlStatement.setString(4, lockTime);
@@ -1258,7 +1258,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// generate a SQL query for adding a specific number of URLs, throws Database::Exception
-	std::string Database::queryAddUrlsIfNotExist(std::uint32_t numberOfUrls, const std::string& hashQuery) {
+	std::string Database::queryAddUrlsIfNotExist(std::size_t numberOfUrls, const std::string& hashQuery) {
 		// check argument
 		if(!numberOfUrls)
 			throw Exception("Crawler::Database::queryUpdateOrAddUrls(): No number of URLs specified");
