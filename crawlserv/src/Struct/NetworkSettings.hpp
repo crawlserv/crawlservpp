@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #ifndef STRUCT_NETWORKSETTINGS_HPP_
 #define STRUCT_NETWORKSETTINGS_HPP_
 
+#include <cstdint>	// std::uint16_t
 #include <string>	// std::string
 
 namespace crawlservpp::Struct {
@@ -40,7 +41,7 @@ namespace crawlservpp::Struct {
 		std::string defaultProxy;		// default proxy (including port)
 
 		std::string torControlServer;	// TOR control server
-		unsigned short torControlPort;	// TOR control port
+		std::uint16_t torControlPort;	// TOR control port
 		std::string torControlPassword;	// TOR control password
 
 		// constructor: create empty settings
