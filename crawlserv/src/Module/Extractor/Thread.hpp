@@ -180,7 +180,7 @@ namespace crawlservpp::Module::Extractor {
 		bool idle;					// waiting for new URLs to be crawled
 		std::uint64_t lastUrl;		// last extracted URL
 		std::string lockTime;		// last locking time for currently extracted URL
-		std::size_t retryCounter;	// number of retries so far
+		std::uint64_t retryCounter;	// number of retries so far
 
 		// properties used for progress calculation
 		std::uint64_t idFirst;		// ID of the first URL fetched
