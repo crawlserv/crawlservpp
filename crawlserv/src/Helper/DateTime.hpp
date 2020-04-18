@@ -43,7 +43,7 @@
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// ::setlocale
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint16_t, std::uint64_t
+#include <cstdint>		// std::int64_t, std::uint16_t, std::uint64_t
 #include <ctime>		// ::tm, ::strftime, ::strptime, std::time_t
 #include <exception>	// std::exception
 #include <locale>		// std::locale
@@ -116,7 +116,7 @@ namespace crawlservpp::Helper::DateTime {
 					)
 		) {
 			// get (optional) offset from UNIX time
-			long offset = 0;
+			std::int64_t offset = 0;
 
 			if(customFormat.length() > 5) {
 				try {
