@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ namespace crawlservpp::Helper::Strings {
 	bool checkDomainName(const std::string& name);
 	bool checkSQLName(const std::string& name);
 
-	std::string randomGenerate(size_t length);
+	std::string randomGenerate(std::string::size_type length);
 
 	// Unicode white spaces
 	const std::string utfWhitespaces[] = {
@@ -167,8 +167,8 @@ namespace crawlservpp::Helper::Strings {
 			const std::string& to,
 			bool onlyOnce
 	) {
-		size_t startPos = 0;
-		size_t jump = 0;
+		std::string::size_type startPos = 0;
+		std::string::size_type jump = 0;
 
 		if(from.empty())
 			return;
@@ -229,8 +229,8 @@ namespace crawlservpp::Helper::Strings {
 			char delimiter,
 			bool ignoreEmpty
 	) {
-		size_t size = 0;
 		std::string result;
+		std::string::size_type size = 0;
 
 		// calculate and reserve needed memory
 		for(const auto& string : strings)
@@ -257,10 +257,9 @@ namespace crawlservpp::Helper::Strings {
 			const std::string& delimiter,
 			bool ignoreEmpty
 	) {
-		std::string result;
-
 		// calculate and reserve needed memory
-		size_t size = 0;
+		std::string result;
+		std::string::size_type size = 0;
 
 		for(const auto& string : strings)
 			if(!ignoreEmpty || !string.empty())
@@ -334,10 +333,10 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const size_t oldSize = appendTo.size();
+		const auto oldSize = appendTo.size();
 
 		// calculate and reserve needed memory
-		size_t size = oldSize;
+		auto size = oldSize;
 
 		for(const auto& string : strings)
 			if(!ignoreEmpty || !string.empty())
@@ -362,10 +361,10 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const size_t oldSize = appendTo.size();
+		const auto oldSize = appendTo.size();
 
 		// calculate and reserve needed memory
-		size_t size = oldSize;
+		auto size = oldSize;
 
 		for(const auto& string : strings)
 			if(!ignoreEmpty || !string.empty())
@@ -390,7 +389,7 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const size_t oldSize = appendTo.size();
+		const auto oldSize = appendTo.size();
 
 		// append string
 		while(!strings.empty()) {
@@ -412,7 +411,7 @@ namespace crawlservpp::Helper::Strings {
 			std::string& appendTo
 	) {
 		// save old size of the string
-		const size_t oldSize = appendTo.size();
+		const auto oldSize = appendTo.size();
 
 		// append string
 		while(!strings.empty()) {
@@ -583,7 +582,7 @@ namespace crawlservpp::Helper::Strings {
 
 	// encode percentage sign if not followed by two-digit hexadecimal number
 	inline void encodePercentage(std::string& stringToEncode) {
-		size_t pos = 0;
+		std::string::size_type pos = 0;
 
 		do {
 			pos = stringToEncode.find('%', pos);
@@ -607,7 +606,7 @@ namespace crawlservpp::Helper::Strings {
 	// remove new lines and unnecessary spaces (including Unicode white spaces)
 	inline void utfTidy(std::string& stringToTidy) {
 		// replace Unicode white spaces with spaces
-		for(size_t n = 0; n < sizeof(utfWhitespaces) / sizeof(std::string); ++n)
+		for(std::string::size_type n = 0; n < sizeof(utfWhitespaces) / sizeof(std::string); ++n)
 			replaceAll(stringToTidy, utfWhitespaces[n], " ", true);
 
 		// replace special ASCII characters with spaces
@@ -645,15 +644,21 @@ namespace crawlservpp::Helper::Strings {
 	}
 
 	// generate a random alphanumerical string of a specific length
-	inline std::string generateRandom(size_t length) {
+	inline std::string generateRandom(std::string::size_type length) {
 		static const std::string charSet(
 				"01234567890"
 				"abcdefghijklmnopqrstuvwxyz"
 				"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		);
 
-		thread_local static std::default_random_engine rengine(std::random_device{}());
-		thread_local static std::uniform_int_distribution<std::string::size_type> distribution(0, charSet.length() - 1);
+		thread_local static std::default_random_engine rengine(
+				std::random_device{}()
+		);
+
+		thread_local static std::uniform_int_distribution<std::string::size_type> distribution(
+				0,
+				charSet.length() - 1
+		);
 
 		std::string result;
 
