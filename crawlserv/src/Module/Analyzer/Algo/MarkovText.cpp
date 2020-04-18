@@ -284,8 +284,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// create dictionary (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator)
 	void MarkovText::createDictionary() {
 		// *** added: get dimension from configuration + counter
-		const unsigned int kl = this->markovTextDimension;
-		unsigned int counter = 0;
+		const auto kl = this->markovTextDimension;
+		std::uint32_t counter = 0;
 		// ***
 
 		std::string w1, key;

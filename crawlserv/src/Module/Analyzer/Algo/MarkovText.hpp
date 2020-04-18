@@ -50,7 +50,7 @@
 
 #include <algorithm>	// std::find
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint8_t, std::uint64_t
+#include <cstdint>		// std::uint8_t, std::uint32_t, std::uint64_t
 #include <iterator>		// std::advance
 #include <map>			// std::map
 #include <memory>		// std::make_unique, std::unique_ptr
