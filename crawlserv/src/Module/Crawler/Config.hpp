@@ -76,7 +76,7 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> crawlerArchivesNames;
 			std::vector<std::string> crawlerArchivesUrlsMemento;
 			std::vector<std::string> crawlerArchivesUrlsTimemap;
-			std::uint64_t crawlerLock;
+			std::uint32_t crawlerLock;
 			std::uint8_t crawlerLogging;
 			std::vector<std::string> crawlerParamsAdd;
 			std::vector<std::string> crawlerParamsBlackList;
