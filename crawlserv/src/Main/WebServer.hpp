@@ -20,7 +20,7 @@
  *
  * ---
  *
- * WebServer.h
+ * WebServer.hpp
  *
  * Embedded web server using mongoose.
  *
