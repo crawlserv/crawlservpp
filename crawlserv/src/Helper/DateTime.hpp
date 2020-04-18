@@ -45,6 +45,7 @@
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// ::setlocale
 #include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint16_t, std::uint64_t
 #include <ctime>		// struct ::tm, ::strftime, ::strptime
 #include <locale>		// std::locale
 #include <sstream>		// std::istringstream
@@ -431,24 +432,25 @@ namespace crawlservpp::Helper::DateTime {
 	// convert microseconds to string
 	inline std::string microsecondsToString(unsigned long long microseconds) {
 		unsigned long long rest = microseconds;
-		std::size_t days = rest / 86400000000;
 		std::string result;
+
+		const std::uint64_t days = rest / 86400000000;
 
 		rest -= days * 86400000000;
 
-		unsigned short hours = rest / 3600000000;
+		const std::uint16_t hours = rest / 3600000000;
 
 		rest -= hours * 3600000000;
 
-		unsigned short minutes = rest / 60000000;
+		const std::uint16_t minutes = rest / 60000000;
 
 		rest -= minutes * 60000000;
 
-		unsigned short seconds = rest / 1000000;
+		const std::uint16_t seconds = rest / 1000000;
 
 		rest -= seconds * 1000000;
 
-		unsigned short milliseconds = rest / 1000;
+		const std::uint16_t milliseconds = rest / 1000;
 
 		rest -= milliseconds * 1000;
 
@@ -483,19 +485,19 @@ namespace crawlservpp::Helper::DateTime {
 		unsigned long long rest = milliseconds;
 		std::string result;
 
-		const std::size_t days = rest / 86400000;
+		const std::uint64_t days = rest / 86400000;
 
 		rest -= days * 86400000;
 
-		const unsigned short hours = rest / 3600000;
+		const std::uint16_t hours = rest / 3600000;
 
 		rest -= hours * 3600000;
 
-		const unsigned short minutes = rest / 60000;
+		const std::uint16_t minutes = rest / 60000;
 
 		rest -= minutes * 60000;
 
-		const unsigned short seconds = rest / 1000;
+		const std::uint16_t seconds = rest / 1000;
 
 		rest -= seconds * 1000;
 
@@ -527,15 +529,15 @@ namespace crawlservpp::Helper::DateTime {
 		unsigned long long rest = seconds;
 		std::string result;
 
-		const std::size_t days = rest / 86400;
+		const std::uint64_t days = rest / 86400;
 
 		rest -= days * 86400;
 
-		const unsigned short hours = rest / 3600;
+		const std::uint16_t hours = rest / 3600;
 
 		rest -= hours * 3600;
 
-		const unsigned short minutes = rest / 60;
+		const std::uint16_t minutes = rest / 60;
 
 		rest -= minutes * 60;
 
