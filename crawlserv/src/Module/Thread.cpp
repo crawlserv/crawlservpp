@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -56,8 +56,8 @@ namespace crawlservpp::Module {
 			  warpedOver(0),
 			  startTimePoint(std::chrono::steady_clock::time_point::min()),
 			  pauseTimePoint(std::chrono::steady_clock::time_point::min()),
-			  runTime(std::chrono::duration<std::size_t>::zero()),
-			  pauseTime(std::chrono::duration<std::size_t>::zero()) {
+			  runTime(std::chrono::duration<std::uint64_t>::zero()),
+			  pauseTime(std::chrono::duration<std::uint64_t>::zero()) {
 		// remove paused or interrupted thread status from status message
 		if(
 				threadStatus.status.length() >= 12
@@ -110,22 +110,22 @@ namespace crawlservpp::Module {
 	Thread::~Thread() {}
 
 	// get the ID of the thread (thread-safe)
-	std::size_t Thread::getId() const {
+	std::uint64_t Thread::getId() const {
 		return this->id;
 	}
 
 	// get the ID of the website (thread-safe)
-	std::size_t Thread::getWebsite() const {
+	std::uint64_t Thread::getWebsite() const {
 		return this->options.website;
 	}
 
 	// get the ID of the URL list (thread-safe)
-	std::size_t Thread::getUrlList() const {
+	std::uint64_t Thread::getUrlList() const {
 		return this->options.urlList;
 	}
 
 	// get the ID of the configuration (thread-safe)
-	std::size_t Thread::getConfig() const {
+	std::uint64_t Thread::getConfig() const {
 		return this->options.config;
 	}
 
@@ -264,7 +264,7 @@ namespace crawlservpp::Module {
 	}
 
 	// jump to specified target ID ("time travel"), throws Thread::Exception (thread-safe)
-	void Thread::warpTo(std::size_t target) {
+	void Thread::warpTo(std::uint64_t target) {
 		// check argument
 		if(!target)
 			throw Exception("Thread::warpTo(): Target ID cannot be zero");
@@ -357,12 +357,12 @@ namespace crawlservpp::Module {
 	}
 
 	// get the value of the last ID used by the thread (to be used by the thread only!)
-	std::size_t Thread::getLast() const {
+	std::uint64_t Thread::getLast() const {
 		return this->last;
 	}
 
 	// set the last ID used by the thread (to be used by the thread only!)
-	void Thread::setLast(std::size_t last) {
+	void Thread::setLast(std::uint64_t last) {
 		if(this->last != last) {
 			// set the last ID internally
 			this->last = last;
@@ -399,7 +399,7 @@ namespace crawlservpp::Module {
 	}
 
 	// get the current run time of the thread in seconds
-	std::size_t Thread::getRunTime() const {
+	std::uint64_t Thread::getRunTime() const {
 		if(this->startTimePoint > std::chrono::steady_clock::time_point::min())
 			return	(
 							this->runTime +

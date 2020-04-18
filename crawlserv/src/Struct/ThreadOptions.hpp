@@ -31,7 +31,7 @@
 #ifndef STRUCT_THREADOPTIONS_HPP_
 #define STRUCT_THREADOPTIONS_HPP_
 
-#include <cstddef>	// std::size_t
+#include <cstdint>	// std::uint64_t
 #include <string>	// std::string
 
 namespace crawlservpp::Struct {
@@ -39,9 +39,9 @@ namespace crawlservpp::Struct {
 	struct ThreadOptions {
 		std::string module;		// the module of the thread
 
-		std::size_t website;	// the ID of the website used by the thread
-		std::size_t urlList;	// the ID of the URL list used by the thread
-		std::size_t config; 	// the ID of the configuration used by the thread
+		std::uint64_t website;	// the ID of the website used by the thread
+		std::uint64_t urlList;	// the ID of the URL list used by the thread
+		std::uint64_t config; 	// the ID of the configuration used by the thread
 
 		// constructors
 		ThreadOptions() // create empty thread options
@@ -51,9 +51,9 @@ namespace crawlservpp::Struct {
 
 		ThreadOptions( // initialize thread options with values
 				const std::string& setModule,
-				std::size_t setWebsite,
-				std::size_t setUrlList,
-				std::size_t setConfig)
+				std::uint64_t setWebsite,
+				std::uint64_t setUrlList,
+				std::uint64_t setConfig)
 				: module(setModule),
 				  website(setWebsite),
 				  urlList(setUrlList),
