@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -175,7 +175,7 @@ namespace crawlservpp::Module::Parser {
 
 			this->log(Config::generalLoggingVerbose, "checks parsing table...");
 
-			const unsigned int deleted = this->database.checkParsingTable();
+			const auto deleted = this->database.checkParsingTable();
 
 			// log deleted URL locks if necessary
 			if(this->isLogLevel(Config::generalLoggingDefault)) {
@@ -213,10 +213,10 @@ namespace crawlservpp::Module::Parser {
 	// parser tick, throws Thread::Exception
 	void Thread::onTick() {
 		bool skip = false;
-		size_t parsed = 0;
+		std::size_t parsed = 0;
 
 		// check for jump in last ID ("time travel")
-		long warpedOver = this->getWarpedOverAndReset();
+		const auto warpedOver = this->getWarpedOverAndReset();
 
 		if(warpedOver != 0) {
 			// save cached results
@@ -394,7 +394,7 @@ namespace crawlservpp::Module::Parser {
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
 
-			const long double tps =
+			const auto tps =
 					static_cast<long double>(this->tickCounter) /
 					std::chrono::duration_cast<std::chrono::seconds>(
 							std::chrono::steady_clock::now() - this->startTime
@@ -539,7 +539,7 @@ namespace crawlservpp::Module::Parser {
 		this->idFromUrlOnly = std::find(
 				this->config.parsingIdSources.begin(),
 				this->config.parsingIdSources.end(),
-				static_cast<unsigned char>(Config::parsingSourceContent)
+				Config::parsingSourceContent
 		) == this->config.parsingIdSources.end();
 	}
 
@@ -595,7 +595,7 @@ namespace crawlservpp::Module::Parser {
 		this->idFirst = this->urls.front().first;
 		this->idDist = this->urls.back().first - this->idFirst;
 
-		const size_t posFirst = this->database.getUrlPosition(this->idFirst);
+		const auto posFirst = this->database.getUrlPosition(this->idFirst);
 
 		this->posFirstF = static_cast<float>(posFirst);
 		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
@@ -654,7 +654,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// parse URL and content(s) of next URL, return number of successfully parsed contents
-	size_t Thread::parsingNext() {
+	std::size_t Thread::parsingNext() {
 		std::queue<std::string> queryWarnings;
 		std::string parsedId;
 
@@ -694,8 +694,8 @@ namespace crawlservpp::Module::Parser {
 
 		if(this->config.generalNewestOnly) {
 			// parse newest content of URL
-			size_t numberOfContents = 0;
-			size_t index = 0;
+			std::uint64_t numberOfContents = 0;
+			std::uint64_t index = 0;
 			bool changedStatus = false;
 
 			while(this->isRunning()) {
@@ -748,7 +748,7 @@ namespace crawlservpp::Module::Parser {
 		}
 		else {
 			// parse all contents of URL
-			size_t counter = 0;
+			std::size_t counter = 0;
 
 			std::queue<IdString> contents(
 					this->database.getAllContents(
@@ -866,7 +866,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// check whether content with the parsed ID already exists and the current one differs from the one in the database
-		const size_t contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
+		const auto contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
 		bool duplicateInCache = false;
 
 		if(!contentId) {
