@@ -464,7 +464,7 @@ namespace crawlservpp::Main {
 				));
 
 				// execute SQL statement
-				decltype(locales)::size_type counter = 1;
+				std::size_t counter = 1;
 
 				for(const auto& locale : locales) {
 					sqlStatement->setString(counter, locale);
@@ -520,7 +520,7 @@ namespace crawlservpp::Main {
 				));
 
 				// execute SQL statement
-				decltype(versions)::size_type counter = 1;
+				std::size_t counter = 1;
 
 				for(const auto& version : versions) {
 					sqlStatement->setString(counter, version.first);
@@ -1285,7 +1285,7 @@ namespace crawlservpp::Main {
 			numberString = websiteNamespace.substr(end + 1);
 		}
 
-		std::size_t n = 1;
+		unsigned long n = 1;
 		std::string result;
 
 		if(!numberString.empty()) {
@@ -3194,7 +3194,10 @@ namespace crawlservpp::Main {
 	}
 
 	// delete URLs with the specified IDs from the URL list specified by its ID, return the number of deleted URLs
-	std::size_t Database::deleteUrls(std::uint64_t listId, std::queue<std::uint64_t>& urlIds) {
+	std::size_t Database::deleteUrls(
+			std::uint64_t listId,
+			std::queue<std::uint64_t>& urlIds
+	) {
 		// check arguments
 		if(!listId)
 			throw Database::Exception("Main::Database::deleteUrlList(): No URL list ID specified");
@@ -5465,7 +5468,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			decltype(data.columns_values)::size_type counter = 1;
+			std::size_t counter = 1;
 
 			switch(data.type) {
 			case Data::Type::_bool:
@@ -5635,7 +5638,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			decltype(data.columns_types_values)::size_type counter = 1;
+			std::size_t counter = 1;
 
 			for(const auto& column_type_value : data.columns_types_values) {
 				if(std::get<2>(column_type_value)._isnull)
@@ -5885,7 +5888,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			decltype(data.columns_values)::size_type counter = 1;
+			std::size_t counter = 1;
 
 			switch(data.type) {
 			case Data::Type::_bool:
@@ -6050,7 +6053,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			decltype(data.columns_types_values)::size_type counter = 1;
+			std::size_t counter = 1;
 
 			for(const auto& column_type_value : data.columns_types_values) {
 				if(std::get<2>(column_type_value)._isnull)
