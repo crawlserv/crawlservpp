@@ -39,62 +39,29 @@
 
 namespace crawlservpp::Wrapper {
 
+	/*
+	 * DECLARATION
+	 */
+
 	class URI {
 	public:
-		// constructor stub
-		URI() noexcept {}
+		// constructors and destructor
+		URI() noexcept;
+		URI(URI&& other) noexcept;
+		~URI();
 
-		// move constructor
-		URI(URI&& other) noexcept : ptr(std::move(other.ptr)) {}
+		// getters
+		UriUriA * get() noexcept;
+		const UriUriA * get() const noexcept;
 
-		// destructor: free and reset URI structure if necessary
-		~URI() {
-			this->reset();
-		}
+		// create and reset
+		void create();
+		void reset();
 
-		// get pointer to URI structure
-		UriUriA * get() noexcept {
-			return this->ptr.get();
-		}
-
-		// get const pointer to URI structure
-		const UriUriA * get() const noexcept {
-			return this->ptr.get();
-		}
-
-		// create URI structure, free old structure if necessary
-		void create() {
-			this->reset();
-
-			this->ptr = std::make_unique<UriUriA>();
-		}
-
-		// free and reset URI structure if necessary
-		void reset() {
-			if(this->ptr) {
-				uriFreeUriMembersA(this->ptr.get());
-
-				this->ptr.reset();
-			}
-		}
-
-		// bool operator
-		explicit operator bool() const noexcept {
-			return this->ptr.operator bool();
-		}
-
-		// not operator
-		bool operator!() const noexcept {
-			return !(this->ptr);
-		}
-
-		// move assignment operator
-		URI& operator=(URI&& other) noexcept {
-			if(&other != this)
-				this->ptr = std::move(other.ptr);
-
-			return *this;
-		}
+		// operators
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
+		URI& operator=(URI&& other) noexcept;
 
 		// not copyable
 		URI(URI&) = delete;
@@ -103,6 +70,65 @@ namespace crawlservpp::Wrapper {
 	private:
 		std::unique_ptr<UriUriA> ptr;
 	};
+
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor stub
+	inline URI::URI() noexcept {}
+
+	// move constructor
+	inline URI::URI(URI&& other) noexcept : ptr(std::move(other.ptr)) {}
+
+	// destructor: free and reset URI structure if necessary
+	inline URI::~URI() {
+		this->reset();
+	}
+
+	// get pointer to URI structure
+	inline UriUriA * URI::get() noexcept {
+		return this->ptr.get();
+	}
+
+	// get const pointer to URI structure
+	inline const UriUriA * URI::get() const noexcept {
+		return this->ptr.get();
+	}
+
+	// create URI structure, free old structure if necessary
+	inline void URI::create() {
+		this->reset();
+
+		this->ptr = std::make_unique<UriUriA>();
+	}
+
+	// free and reset URI structure if necessary
+	inline void URI::reset() {
+		if(this->ptr) {
+			uriFreeUriMembersA(this->ptr.get());
+
+			this->ptr.reset();
+		}
+	}
+
+	// bool operator
+	inline URI::operator bool() const noexcept {
+		return this->ptr.operator bool();
+	}
+
+	// not operator
+	inline bool URI::operator!() const noexcept {
+		return !(this->ptr);
+	}
+
+	// move assignment operator
+	inline URI& URI::operator=(URI&& other) noexcept {
+		if(&other != this)
+			this->ptr = std::move(other.ptr);
+
+		return *this;
+	}
 
 } /* crawlservpp::Wrapper */
 

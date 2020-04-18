@@ -43,210 +43,31 @@
 
 namespace crawlservpp::Wrapper {
 
+	/*
+	 * DECLARATION
+	 */
+
 	class TidyDoc {
 	public:
-		// constructor: create document, throws TidyDoc::Exception
-		TidyDoc() : doc(tidyCreate()) {
-			// set error buffer
-			if(tidySetErrorBuffer(this->doc, this->errors.get()) != 0)
-				throw Exception("Could not set error buffer");
-		}
+		// constructor and destructor
+		TidyDoc();
+		~TidyDoc();
 
-		// destructor: release document
-		~TidyDoc() {
-			tidyRelease(this->doc);
-		}
+		// getters
+		::TidyDoc& get();
+		const ::TidyDoc& get() const;
 
-		// get reference to document
-		::TidyDoc& get() {
-			return this->doc;
-		}
+		// setters
+		void setOption(TidyOptionId option, bool value);
+		void setOption(TidyOptionId option, int value);
+		void setOption(TidyOptionId option, ulong value);
+		void setOption(TidyOptionId option, const std::string& value);
+		void setOption(TidyOptionId option, const char * value);
 
-		// get const reference to document
-		const ::TidyDoc& get() const {
-			return this->doc;
-		}
-
-		// set boolean option, throws TidyDoc::Exception
-		void setOption(TidyOptionId option, bool value) {
-			if(!tidyOptSetBool(this->doc, option, value ? yes : no))
-				throw Exception(
-						"Could not set tidy option #"
-						+ std::to_string(option)
-						+ " to boolean "
-						+ (value ? "yes" : "no")
-				);
-		}
-
-		// set int option, throws TidyDoc::Exception
-		void setOption(TidyOptionId option, int value) {
-			if(!tidyOptSetInt(this->doc, option, value))
-				throw Exception(
-						"Could not set tidy option #"
-						+ std::to_string(option)
-						+ " to integer "
-						+ std::to_string(value)
-				);
-		}
-
-		// set unsigned int option, throws TidyDoc::Exception
-		void setOption(TidyOptionId option, unsigned int value) {
-			if(!tidyOptSetInt(this->doc, option, value))
-				throw Exception(
-						"Could not set tidy option #"
-						+ std::to_string(option)
-						+ " to unsigned integer "
-						+ std::to_string(value)
-				);
-		}
-
-		// set string option, throws TidyDoc::Exception
-		void setOption(TidyOptionId option, const std::string& value) {
-			if(!tidyOptSetValue(this->doc, option, value.c_str()))
-				throw Exception(
-						"Could not set tidy option #"
-						+ std::to_string(option)
-						+ " to string \""
-						+ value
-						+ "\""
-				);
-		}
-
-		// set string option, throws TidyDoc::Exception
-		void setOption(TidyOptionId option, const char * value) {
-			if(!tidyOptSetValue(this->doc, option, value))
-				throw Exception(
-						"Could not set tidy option #"
-						+ std::to_string(option)
-						+ " to C string \""
-						+ value
-						+ "\""
-				);
-		}
-
-		// parse string, throws TidyDoc::Exception
-		void parseString(const std::string& in, std::queue<std::string>& warningsTo) {
-			switch(tidyParseString(this->doc, in.c_str())) { // TODO: MEMORY LEAK !!!
-			case 0:
-				// everything went fine
-				break;
-
-			case 1:
-			case 2:
-				// warnings or errors occured
-				if(this->errors) {
-					std::queue<std::string> warnings(
-							Helper::Strings::splitToQueue(
-									this->errors.getString(),
-									'\n',
-									true
-							)
-					);
-
-					while(!warnings.empty()) {
-						warningsTo.emplace(warnings.front());
-
-						warnings.pop();
-					}
-
-					this->errors.clear();
-				}
-
-				break;
-
-			default:
-				// errors occured
-				if(this->errors)
-					throw Exception("Could not parse HTML: " + errors.getString());
-
-				throw Exception("Could not parse HTML");
-			}
-		}
-
-		// clean and repair parsed content, throws TidyDoc::Exception
-		void cleanAndRepair(std::queue<std::string>& warningsTo) {
-			switch(tidyCleanAndRepair(this->doc)) {
-			case 0:
-				// everything went fine
-				break;
-
-			case 1:
-			case 2:
-				// warnings or errors occured
-				if(this->errors) {
-					std::queue<std::string> warnings(
-							Helper::Strings::splitToQueue(
-									this->errors.getString(),
-									'\n',
-									true
-							)
-					);
-
-					while(!warnings.empty()) {
-						warningsTo.emplace(warnings.front());
-
-						warnings.pop();
-					}
-
-					this->errors.clear();
-				}
-
-				break;
-
-			default:
-				// fatal errors occured
-				if(this->errors)
-					throw Exception("Could not clean and repair HTML: " + errors.getString());
-
-				throw Exception("Could not clean and repair HTML");
-			}
-		}
-
-		// get output string, throws TidyDoc::Exception
-		std::string getOutput(std::queue<std::string>& warningsTo) {
-			TidyBuffer buffer;
-
-			switch(tidySaveBuffer(this->doc, buffer.get())) {
-			case 0:
-				// everything went fine
-				break;
-
-			case 1:
-			case 2:
-				// warnings or errors occured
-				if(this->errors) {
-					std::queue<std::string> warnings(
-							Helper::Strings::splitToQueue(
-									this->errors.getString(),
-									'\n',
-									true
-							)
-					);
-
-					while(!warnings.empty()) {
-						warningsTo.emplace(warnings.front());
-
-						warnings.pop();
-					}
-
-					this->errors.clear();
-				}
-
-				break;
-
-			default:
-				// fatal errors occured
-				if(this->errors)
-					throw Exception("Could not write to buffer: " + errors.getString());
-
-				throw Exception("Could not write to buffer");
-			}
-
-			if(buffer)
-				return buffer.getString();
-
-			return "";
-		}
+		// parsing, cleaning, and getting output
+		void parseString(const std::string& in, std::queue<std::string>& warningsTo);
+		void cleanAndRepair(std::queue<std::string>& warningsTo);
+		std::string getOutput(std::queue<std::string>& warningsTo);
 
 		// class for TidyDoc exceptions
 		MAIN_EXCEPTION_CLASS();
@@ -263,6 +84,213 @@ namespace crawlservpp::Wrapper {
 		TidyBuffer errors;
 	};
 
-	} /* crawlservpp::Wrapper */
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor: create document, throws TidyDoc::Exception
+	inline TidyDoc::TidyDoc() : doc(tidyCreate()) {
+		// set error buffer
+		if(tidySetErrorBuffer(this->doc, this->errors.get()) != 0)
+			throw Exception("Could not set error buffer");
+	}
+
+	// destructor: release document
+	inline TidyDoc::~TidyDoc() {
+		tidyRelease(this->doc);
+	}
+
+	// get reference to document
+	inline ::TidyDoc& TidyDoc::get() {
+		return this->doc;
+	}
+
+	// get const reference to document
+	inline const ::TidyDoc& TidyDoc::get() const {
+		return this->doc;
+	}
+
+	// set boolean option, throws TidyDoc::Exception
+	inline void TidyDoc::setOption(TidyOptionId option, bool value) {
+		if(!tidyOptSetBool(this->doc, option, value ? yes : no))
+			throw Exception(
+					"Could not set tidy option #"
+					+ std::to_string(option)
+					+ " to boolean "
+					+ (value ? "yes" : "no")
+			);
+	}
+
+	// set int option, throws TidyDoc::Exception
+	inline void TidyDoc::setOption(TidyOptionId option, int value) {
+		if(!tidyOptSetInt(this->doc, option, value))
+			throw Exception(
+					"Could not set tidy option #"
+					+ std::to_string(option)
+					+ " to integer "
+					+ std::to_string(value)
+			);
+	}
+
+	// set unsigned long option, throws TidyDoc::Exception
+	inline void TidyDoc::setOption(TidyOptionId option, ulong value) {
+		if(!tidyOptSetInt(this->doc, option, value))
+			throw Exception(
+					"Could not set tidy option #"
+					+ std::to_string(option)
+					+ " to unsigned integer "
+					+ std::to_string(value)
+			);
+	}
+
+	// set string option, throws TidyDoc::Exception
+	inline void TidyDoc::setOption(TidyOptionId option, const std::string& value) {
+		if(!tidyOptSetValue(this->doc, option, value.c_str()))
+			throw Exception(
+					"Could not set tidy option #"
+					+ std::to_string(option)
+					+ " to string \""
+					+ value
+					+ "\""
+			);
+	}
+
+	// set string option, throws TidyDoc::Exception
+	inline void TidyDoc::setOption(TidyOptionId option, const char * value) {
+		if(!tidyOptSetValue(this->doc, option, value))
+			throw Exception(
+					"Could not set tidy option #"
+					+ std::to_string(option)
+					+ " to C string \""
+					+ value
+					+ "\""
+			);
+	}
+
+	// parse string, throws TidyDoc::Exception
+	inline void TidyDoc::parseString(const std::string& in, std::queue<std::string>& warningsTo) {
+		switch(tidyParseString(this->doc, in.c_str())) { // TODO: MEMORY LEAK !!!
+		case 0:
+			// everything went fine
+			break;
+
+		case 1:
+		case 2:
+			// warnings or errors occured
+			if(this->errors) {
+				std::queue<std::string> warnings(
+						Helper::Strings::splitToQueue(
+								this->errors.getString(),
+								'\n',
+								true
+						)
+				);
+
+				while(!warnings.empty()) {
+					warningsTo.emplace(warnings.front());
+
+					warnings.pop();
+				}
+
+				this->errors.clear();
+			}
+
+			break;
+
+		default:
+			// errors occured
+			if(this->errors)
+				throw Exception("Could not parse HTML: " + errors.getString());
+
+			throw Exception("Could not parse HTML");
+		}
+	}
+
+	// clean and repair parsed content, throws TidyDoc::Exception
+	inline void TidyDoc::cleanAndRepair(std::queue<std::string>& warningsTo) {
+		switch(tidyCleanAndRepair(this->doc)) {
+		case 0:
+			// everything went fine
+			break;
+
+		case 1:
+		case 2:
+			// warnings or errors occured
+			if(this->errors) {
+				std::queue<std::string> warnings(
+						Helper::Strings::splitToQueue(
+								this->errors.getString(),
+								'\n',
+								true
+						)
+				);
+
+				while(!warnings.empty()) {
+					warningsTo.emplace(warnings.front());
+
+					warnings.pop();
+				}
+
+				this->errors.clear();
+			}
+
+			break;
+
+		default:
+			// fatal errors occured
+			if(this->errors)
+				throw Exception("Could not clean and repair HTML: " + errors.getString());
+
+			throw Exception("Could not clean and repair HTML");
+		}
+	}
+
+	// get output string, throws TidyDoc::Exception
+	inline std::string TidyDoc::getOutput(std::queue<std::string>& warningsTo) {
+		TidyBuffer buffer;
+
+		switch(tidySaveBuffer(this->doc, buffer.get())) {
+		case 0:
+			// everything went fine
+			break;
+
+		case 1:
+		case 2:
+			// warnings or errors occured
+			if(this->errors) {
+				std::queue<std::string> warnings(
+						Helper::Strings::splitToQueue(
+								this->errors.getString(),
+								'\n',
+								true
+						)
+				);
+
+				while(!warnings.empty()) {
+					warningsTo.emplace(warnings.front());
+
+					warnings.pop();
+				}
+
+				this->errors.clear();
+			}
+
+			break;
+
+		default:
+			// fatal errors occured
+			if(this->errors)
+				throw Exception("Could not write to buffer: " + errors.getString());
+
+			throw Exception("Could not write to buffer");
+		}
+
+		if(buffer)
+			return buffer.getString();
+
+		return "";
+	}
+
+} /* crawlservpp::Wrapper */
 
 #endif /* WRAPPER_TIDYDOC_HPP_ */

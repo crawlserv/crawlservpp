@@ -376,7 +376,7 @@ namespace crawlservpp::Wrapper {
 	}
 
 	// get minimal logging level (where logging is still not deactivated)
-	inline unsigned char Database::getLoggingMin() const {
+	inline std::uint8_t Database::getLoggingMin() const {
 		return this->database.loggingMin;
 	}
 

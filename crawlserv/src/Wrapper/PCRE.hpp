@@ -36,76 +36,103 @@
 
 namespace crawlservpp::Wrapper {
 
+	/*
+	 * DECLARATION
+	 */
+
 	class PCRE {
 	public:
-		// constructor: set pointer to nullptr
-		PCRE() noexcept : ptr(nullptr) {}
+		// constructors and destructor
+		PCRE() noexcept;
+		PCRE(PCRE&& other) noexcept;
+		~PCRE() noexcept;
 
-		// move constructor
-		PCRE(PCRE&& other) noexcept : ptr(other.ptr) {
-			other.ptr = nullptr;
-		}
+		// getters
+		pcre2_code * get() noexcept;
+		const pcre2_code * get() const noexcept;
 
-		// destructor: free Perl-Compatible Regular Expression if necessary
-		~PCRE() noexcept {
-			this->reset();
-		}
+		// resetters
+		void reset();
+		void reset(pcre2_code * other);
 
-		// get pointer to Perl-Compatible Regular Expression
-		pcre2_code * get() noexcept {
-			return this->ptr;
-		}
-
-		// get const pointer to Perl-Compatible Regular Expression
-		const pcre2_code * get() const noexcept {
-			return this->ptr;
-		}
-
-		// reset Perl-Compatible Regular Expression
-		void reset() {
-			if(this->ptr) {
-				pcre2_code_free(this->ptr);
-
-				this->ptr = nullptr;
-			}
-		}
-
-		// replace Perl-Compatible Regular Expression
-		void reset(pcre2_code * other) {
-			this->reset();
-
-			this->ptr = other;
-		}
-
-		// bool operator
-		explicit operator bool() const noexcept {
-			return this->ptr != nullptr;
-		}
-
-		// not operator
-		bool operator!() const noexcept {
-			return this->ptr == nullptr;
-		}
+		// operators
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
 
 		// move operator
-		PCRE& operator=(PCRE&& other) noexcept {
-			if(&other != this) {
-				this->ptr = other.ptr;
-
-				other.ptr = nullptr;
-			}
-
-			return *this;
-		}
+		PCRE& operator=(PCRE&& other) noexcept;
 
 		// not copyable
 		PCRE(PCRE&) = delete;
 		PCRE& operator=(PCRE&) = delete;
 
-
 	private:
 		pcre2_code * ptr;
 	};
+
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor: set pointer to nullptr
+	inline PCRE::PCRE() noexcept : ptr(nullptr) {}
+
+	// move constructor
+	inline PCRE::PCRE(PCRE&& other) noexcept : ptr(other.ptr) {
+		other.ptr = nullptr;
+	}
+
+	// destructor: free Perl-Compatible Regular Expression if necessary
+	inline PCRE::~PCRE() noexcept {
+		this->reset();
+	}
+
+	// get pointer to Perl-Compatible Regular Expression
+	inline pcre2_code * PCRE::get() noexcept {
+		return this->ptr;
+	}
+
+	// get const pointer to Perl-Compatible Regular Expression
+	inline const pcre2_code * PCRE::get() const noexcept {
+		return this->ptr;
+	}
+
+	// reset Perl-Compatible Regular Expression
+	inline void PCRE::reset() {
+		if(this->ptr) {
+			pcre2_code_free(this->ptr);
+
+			this->ptr = nullptr;
+		}
+	}
+
+	// replace Perl-Compatible Regular Expression
+	inline void PCRE::reset(pcre2_code * other) {
+		this->reset();
+
+		this->ptr = other;
+	}
+
+	// boolean operator
+	inline PCRE::operator bool() const noexcept {
+		return this->ptr != nullptr;
+	}
+
+	// inverse boolean (i.e. not) operator
+	inline bool PCRE::operator!() const noexcept {
+		return this->ptr == nullptr;
+	}
+
+	// move operator
+	inline PCRE& PCRE::operator=(PCRE&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+
+			other.ptr = nullptr;
+		}
+
+		return *this;
+	}
 
 } /* crawlservpp::Wrapper */
 

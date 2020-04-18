@@ -37,49 +37,27 @@
 
 namespace crawlservpp::Wrapper {
 
+	/*
+	 * DECLARATION
+	 */
+
 	class TidyBuffer {
 	public:
-		// constructor: fill buffer with zeros
-		TidyBuffer() noexcept : buffer(::TidyBuffer()) {}
+		// constructor and destructor
+		TidyBuffer() noexcept;
+		~TidyBuffer();
 
-		// destructor: free buffer if necessary
-		~TidyBuffer() {
-			this->clear();
-		}
+		// getters
+		::TidyBuffer * get();
+		const ::TidyBuffer * get() const;
+		std::string getString() const;
 
-		// get pointer to buffer
-		::TidyBuffer * get() {
-			return &(this->buffer);
-		}
+		// clearer
+		void clear();
 
-		// get const pointer to buffer
-		const ::TidyBuffer * get() const {
-			return &(this->buffer);
-		}
-
-		// create string from buffer
-		std::string getString() const {
-			return std::string(
-					reinterpret_cast<const char *>(this->buffer.bp),
-					this->buffer.size
-			);
-		}
-
-		// free buffer
-		void clear() {
-			if(this->buffer.bp)
-				tidyBufFree(&(this->buffer));
-		}
-
-		// bool operator
-		explicit operator bool() const noexcept {
-			return this->buffer.bp != nullptr;
-		}
-
-		// not operator
-		bool operator!() const noexcept {
-			return this->buffer.bp == nullptr;
-		}
+		// operators
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
 
 		// not moveable, not copyable
 		TidyBuffer(TidyBuffer&) = delete;
@@ -91,6 +69,52 @@ namespace crawlservpp::Wrapper {
 		::TidyBuffer buffer;
 	};
 
-	} /* crawlservpp::Wrapper */
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor: fill buffer with zeros
+	inline TidyBuffer::TidyBuffer() noexcept : buffer(::TidyBuffer()) {}
+
+	// destructor: free buffer if necessary
+	inline TidyBuffer::~TidyBuffer() {
+		this->clear();
+	}
+
+	// get pointer to buffer
+	inline ::TidyBuffer * TidyBuffer::get() {
+		return &(this->buffer);
+	}
+
+	// get const pointer to buffer
+	inline const ::TidyBuffer * TidyBuffer::get() const {
+		return &(this->buffer);
+	}
+
+	// create string from buffer
+	inline std::string TidyBuffer::getString() const {
+		return std::string(
+				reinterpret_cast<const char *>(this->buffer.bp),
+				this->buffer.size
+		);
+	}
+
+	// free buffer
+	inline void TidyBuffer::clear() {
+		if(this->buffer.bp)
+			tidyBufFree(&(this->buffer));
+	}
+
+	// bool operator
+	inline TidyBuffer::operator bool() const noexcept {
+		return this->buffer.bp != nullptr;
+	}
+
+	// not operator
+	inline bool TidyBuffer::operator!() const noexcept {
+		return this->buffer.bp == nullptr;
+	}
+
+} /* crawlservpp::Wrapper */
 
 #endif /* WRAPPER_TIDYBUFFER_HPP_ */

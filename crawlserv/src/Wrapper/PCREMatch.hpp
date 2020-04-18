@@ -36,51 +36,25 @@
 
 namespace crawlservpp::Wrapper {
 
+	/*
+	 * DECLARATION
+	 */
+
 	class PCREMatch {
 	public:
-		// constructor: set pointer to nullptr
-		PCREMatch(pcre2_match_data * setPtr) noexcept : ptr(setPtr) {}
+		// constructors and destructor
+		PCREMatch(pcre2_match_data * setPtr) noexcept;
+		PCREMatch(PCREMatch&& other) noexcept;
+		~PCREMatch();
 
-		// move constructor
-		PCREMatch(PCREMatch&& other) noexcept : ptr(other.ptr) {
-			other.ptr = nullptr;
-		}
+		// getters
+		pcre2_match_data * get() noexcept;
+		const pcre2_match_data * get() const noexcept;
 
-		// destructor: free Perl-Compatible Regular Expression match if necessary
-		~PCREMatch() {
-			if(this->ptr)
-				pcre2_match_data_free(this->ptr);
-		}
-
-		// get pointer to Perl-Compatible Regular Expression match
-		pcre2_match_data * get() noexcept {
-			return this->ptr;
-		}
-
-		// get const pointer to Perl-Compatible Regular Expression match
-		const pcre2_match_data * get() const noexcept {
-			return this->ptr;
-		}
-
-		// bool operator
-		explicit operator bool() const noexcept {
-			return this->ptr != nullptr;
-		}
-
-		// not operator
-		bool operator!() const noexcept {
-			return this->ptr == nullptr;
-		}
-
-		// move operator
-		PCREMatch& operator=(PCREMatch&& other) noexcept {
-			if(&other != this) {
-				this->ptr = other.ptr;
-				other.ptr = nullptr;
-			}
-
-			return *this;
-		}
+		// operators
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
+		PCREMatch& operator=(PCREMatch&& other) noexcept;
 
 		// not copyable
 		PCREMatch(PCREMatch&) = delete;
@@ -89,6 +63,54 @@ namespace crawlservpp::Wrapper {
 	private:
 		pcre2_match_data * ptr;
 	};
+
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor: set pointer to nullptr
+	inline PCREMatch::PCREMatch(pcre2_match_data * setPtr) noexcept : ptr(setPtr) {}
+
+	// move constructor
+	inline PCREMatch::PCREMatch(PCREMatch&& other) noexcept : ptr(other.ptr) {
+		other.ptr = nullptr;
+	}
+
+	// destructor: free Perl-Compatible Regular Expression match if necessary
+	inline PCREMatch::~PCREMatch() {
+		if(this->ptr)
+			pcre2_match_data_free(this->ptr);
+	}
+
+	// get pointer to Perl-Compatible Regular Expression match
+	inline pcre2_match_data * PCREMatch::get() noexcept {
+		return this->ptr;
+	}
+
+	// get const pointer to Perl-Compatible Regular Expression match
+	inline const pcre2_match_data * PCREMatch::get() const noexcept {
+		return this->ptr;
+	}
+
+	// boolean operator
+	inline PCREMatch::operator bool() const noexcept {
+		return this->ptr != nullptr;
+	}
+
+	// inverse boolean (i.e. not) operator
+	inline bool PCREMatch::operator!() const noexcept {
+		return this->ptr == nullptr;
+	}
+
+	// move operator
+	inline PCREMatch& PCREMatch::operator=(PCREMatch&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = nullptr;
+		}
+
+		return *this;
+	}
 
 } /* crawlservpp::Wrapper */
 

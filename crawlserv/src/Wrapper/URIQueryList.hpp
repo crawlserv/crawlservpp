@@ -36,55 +36,26 @@
 
 namespace crawlservpp::Wrapper {
 
+	/*
+	 * DECLARATION
+	 */
+
 	class URIQueryList {
 	public:
-		// constructor: set pointer to nullptr
-		URIQueryList() noexcept : ptr(nullptr) {}
+		/// constructors and destructor
+		URIQueryList() noexcept;
+		URIQueryList(URIQueryList&& other) noexcept;
+		~URIQueryList();
 
-		// move constructor
-		URIQueryList(URIQueryList&& other) noexcept : ptr(other.ptr) {
-			other.ptr = nullptr;
-		}
+		// getters
+		UriQueryListA * get() noexcept;
+		const UriQueryListA * get() const noexcept;
+		UriQueryListA ** getPtr() noexcept;
 
-		// destructor: free query list if necessary
-		~URIQueryList() {
-			if(this->ptr) uriFreeQueryListA(this->ptr);
-		}
-
-		// get pointer to URI query list
-		UriQueryListA * get() noexcept {
-			return this->ptr;
-		}
-
-		// get const pointer to URI query list
-		const UriQueryListA * get() const noexcept {
-			return this->ptr;
-		}
-
-		// get pointer to pointer to URI query list
-		UriQueryListA ** getPtr() noexcept {
-			return &(this->ptr);
-		}
-
-		// bool operator
-		explicit operator bool() const noexcept {
-			return this->ptr != nullptr;
-		}
-
-		// not operator
-		bool operator!() const noexcept {
-			return this->ptr == nullptr;
-		}
-
-		// move operator
-		URIQueryList& operator=(URIQueryList&& other) noexcept {
-			if(&other != this) {
-				this->ptr = other.ptr;
-				other.ptr = nullptr;
-			}
-
-			return *this;
-		}
+		// operators
+		explicit operator bool() const noexcept;
+		bool operator!() const noexcept;
+		URIQueryList& operator=(URIQueryList&& other) noexcept;
 
 		// not copyable
 		URIQueryList(URIQueryList&) = delete;
@@ -93,6 +64,58 @@ namespace crawlservpp::Wrapper {
 	private:
 		UriQueryListA * ptr;
 	};
+
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	// constructor: set pointer to nullptr
+	inline URIQueryList::URIQueryList() noexcept : ptr(nullptr) {}
+
+	// move constructor
+	inline URIQueryList::URIQueryList(URIQueryList&& other) noexcept : ptr(other.ptr) {
+		other.ptr = nullptr;
+	}
+
+	// destructor: free query list if necessary
+	inline URIQueryList::~URIQueryList() {
+		if(this->ptr) uriFreeQueryListA(this->ptr);
+	}
+
+	// get pointer to URI query list
+	inline UriQueryListA * URIQueryList::get() noexcept {
+		return this->ptr;
+	}
+
+	// get const pointer to URI query list
+	inline const UriQueryListA * URIQueryList::get() const noexcept {
+		return this->ptr;
+	}
+
+	// get pointer to pointer to URI query list
+	inline UriQueryListA ** URIQueryList::getPtr() noexcept {
+		return &(this->ptr);
+	}
+
+	// bool operator
+	inline URIQueryList::operator bool() const noexcept {
+		return this->ptr != nullptr;
+	}
+
+	// not operator
+	inline bool URIQueryList::operator!() const noexcept {
+		return this->ptr == nullptr;
+	}
+
+	// move operator
+	inline URIQueryList& URIQueryList::operator=(URIQueryList&& other) noexcept {
+		if(&other != this) {
+			this->ptr = other.ptr;
+			other.ptr = nullptr;
+		}
+
+		return *this;
+	}
 
 } /* crawlservpp::Wrapper */
 
