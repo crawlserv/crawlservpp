@@ -1392,7 +1392,6 @@ namespace crawlservpp::Module::Parser {
 
 	// generate SQL query for unlocking multiple URls if they haven't been locked since fetching
 	std::string Database::queryUnlockUrlsIfOk(std::size_t numberOfUrls) {
-
 		std::string sqlQueryString(
 							"UPDATE `" + this->parsingTable + "`"
 							" SET locktime = NULL"
