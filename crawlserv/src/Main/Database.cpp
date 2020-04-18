@@ -389,7 +389,7 @@ namespace crawlservpp::Main {
 	// prepare basic SQL statements (getting last ID, logging and thread status)
 	void Database::prepare() {
 		// reserve memory for SQL statements
-		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::size_t));
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::uint16_t));
 
 		try {
 			// prepare basic SQL statements

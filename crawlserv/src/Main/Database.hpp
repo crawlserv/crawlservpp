@@ -89,7 +89,7 @@
 #include <chrono>		// std::chrono
 #include <cmath>		// std::round
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint64_t
+#include <cstdint>		// std::uint16_t, std::uint64_t
 #include <fstream>		// std::ifstream
 #include <functional>	// std::function
 #include <iostream>		// std::cout, std::endl, std::flush
@@ -603,10 +603,10 @@ namespace crawlservpp::Main {
 
 		// IDs of prepared SQL statements
 		struct _ps {
-			std::size_t log;
-			std::size_t lastId;
-			std::size_t setThreadStatus;
-			std::size_t setThreadStatusMessage;
+			std::uint16_t log;
+			std::uint16_t lastId;
+			std::uint16_t setThreadStatus;
+			std::uint16_t setThreadStatusMessage;
 		} ps;
 	};
 
