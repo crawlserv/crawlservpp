@@ -52,7 +52,7 @@ namespace crawlservpp::Module::Extractor {
 		using ConfigItem = Struct::ConfigItem;
 
 	public:
-		Config() : crossDomain(false) {}
+		Config() {}
 		virtual ~Config() {}
 
 		// configuration constants
@@ -171,8 +171,6 @@ namespace crawlservpp::Module::Extractor {
 		void checkOptions() override;
 
 	private:
-		bool crossDomain;
-
 		static void removeProtocolsFromUrl(std::string& inOut);
 	};
 
