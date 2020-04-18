@@ -178,6 +178,9 @@ namespace crawlservpp::Query {
 					// stringify result
 					resultTo.emplace_back(Helper::Json::stringify(*match));
 
+				if(counter == std::numeric_limits<std::size_t>::max())
+					throw JsonPointer::Exception("Too many results from \'" + pointerString + "\'");
+
 				++counter;
 			}
 		}

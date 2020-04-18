@@ -42,6 +42,7 @@
 #include "../_extern/rapidjson/include/rapidjson/pointer.h"
 
 #include <cstddef>	// std::size_t
+#include <limits>	// std::numeric_limits
 #include <string>	// std::string, std::to_string
 #include <vector>	// std::vector
 
