@@ -3369,7 +3369,10 @@ namespace crawlservpp::Module::Crawler {
 			// increment and check retry counter
 			++(this->retryCounter);
 
-			if(this->retryCounter > this->config.crawlerReTries) {
+			if(
+					this->config.crawlerReTries >= 0
+					&& this->retryCounter > static_cast<std::size_t>(this->config.crawlerReTries)
+			) {
 				// do not retry, but skip
 				this->crawlingSkip(url, true);
 
