@@ -85,6 +85,7 @@
 #include <mysql_connection.h>
 
 #include <algorithm>	// std::find, std::find_if, std::remove, std::sort, std::transform, std::unique
+#include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <cmath>		// std::round
 #include <cstddef>		// std::size_t
