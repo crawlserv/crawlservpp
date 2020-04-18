@@ -1771,7 +1771,7 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed("Parsed analyzing configuration is not an array.");
 
 		// get algorithm from configuration
-		const unsigned int algo = Server::getAlgoFromConfig(configJson);
+		const auto algo = Server::getAlgoFromConfig(configJson);
 
 		if(!algo)
 			return ServerCommandResponse::failed("Analyzing configuration does not include an algorithm.");
@@ -5365,8 +5365,8 @@ namespace crawlservpp::Main {
 	}
 
 	// private static helper function: get algorithm ID from configuration JSON, throws Main::Exception
-	unsigned int Server::getAlgoFromConfig(const rapidjson::Document& json) {
-		unsigned int result = 0;
+	std::uint32_t Server::getAlgoFromConfig(const rapidjson::Document& json) {
+		std::uint32_t result = 0;
 
 		if(!json.IsArray())
 			throw Exception("Server::getAlgoFromConfig(): Configuration is no array");

@@ -124,7 +124,7 @@
 #include <algorithm>	// std::count, std::count_if, std::find_if
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint64_t
+#include <cstdint>		// std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
 #include <functional>	// std::bind, std::placeholders
 #include <iostream>		// std::cout, std::flush
@@ -341,7 +341,7 @@ namespace crawlservpp::Main {
 		);
 
 		// private static helper functions
-		static unsigned int getAlgoFromConfig(const rapidjson::Document& json);
+		static std::uint32_t getAlgoFromConfig(const rapidjson::Document& json);
 		static std::string generateReply(const ServerCommandResponse& response, const std::string& msgBody);
 		static std::string dateTimeTest(const std::string& input, const std::string& format, const std::string& locale);
 	};
