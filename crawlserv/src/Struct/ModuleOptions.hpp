@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,24 +31,25 @@
 #ifndef STRUCT_MODULEOPTIONS_HPP_
 #define STRUCT_MODULEOPTIONS_HPP_
 
+#include <cstdint>	// std::uint64_t
 #include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
 	struct ModuleOptions {
-		size_t threadId;
-		size_t websiteId;
+		std::uint64_t threadId;
+		std::uint64_t websiteId;
 		std::string websiteNamespace;
-		size_t urlListId;
+		std::uint64_t urlListId;
 		std::string urlListNamespace;
 
 		ModuleOptions() : threadId(0), websiteId(0), urlListId(0) {}
 
 		ModuleOptions(
-				size_t setThreadId,
-				size_t setWebsiteId,
+				std::uint64_t setThreadId,
+				std::uint64_t setWebsiteId,
 				const std::string& setWebsiteNamespace,
-				size_t setUrlListId,
+				std::uint64_t setUrlListId,
 				const std::string& setUrlListNamespace
 		) : threadId(setThreadId),
 			websiteId(setWebsiteId),
