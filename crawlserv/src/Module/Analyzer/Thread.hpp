@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 
+#include <cstddef>		// std::size_t
 #include <functional>	// std::bind
 #include <queue>		// std::queue
 #include <stdexcept>	// std::logic_error
@@ -66,7 +67,7 @@ namespace crawlservpp::Module::Analyzer {
 	protected:
 		// text maps are used to describe certain parts of a text
 		//  defined by their positions and lengths with certain strings (words, dates etc.)
-		using TextMapEntry = std::tuple<std::string, size_t, size_t>;
+		using TextMapEntry = std::tuple<std::string, std::size_t, std::size_t>;
 
 		// analyzing configuration and database functionality for thread
 		Database database;
