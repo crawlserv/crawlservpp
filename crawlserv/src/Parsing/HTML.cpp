@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ namespace crawlservpp::Parsing {
 
 	// tidy HTML and convert it to XML, throws HTML::Exception
 	//  NOTE: Does not change input if output of tidying was empty
-	void HTML::tidyAndConvert(std::string& inOut, bool warnings, unsigned int numOfErrors, std::queue<std::string>& warningsTo) {
+	void HTML::tidyAndConvert(std::string& inOut, bool warnings, std::uint32_t numOfErrors, std::queue<std::string>& warningsTo) {
 		// set options
 		try {
 			this->doc.setOption(TidyXmlOut, true);

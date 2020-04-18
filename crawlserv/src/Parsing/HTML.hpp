@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "../Main/Exception.hpp"
 #include "../Wrapper/TidyDoc.hpp"
 
+#include <cstdint>	// std::uint32_t
 #include <queue>	// std::queue
 #include <string>	// std::string
 
@@ -53,7 +54,7 @@ namespace crawlservpp::Parsing {
 		void tidyAndConvert(
 				std::string& inOut,
 				bool warnings,
-				unsigned int numOfErrors,
+				std::uint32_t numOfErrors,
 				std::queue<std::string>& warningsTo
 		);
 
