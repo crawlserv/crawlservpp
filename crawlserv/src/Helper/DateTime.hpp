@@ -42,7 +42,6 @@
 #include <cctype>		// ::ispunct, ::isspace, ::tolower
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// ::setlocale
-#include <cstddef>		// std::size_t
 #include <cstdint>		// std::int64_t, std::uint16_t, std::uint64_t
 #include <ctime>		// ::tm, ::strftime, ::strptime, std::time_t
 #include <exception>	// std::exception
@@ -162,7 +161,7 @@ namespace crawlservpp::Helper::DateTime {
 		}
 		else {
 			// ordinal hack: remove ordinal endings (st, nd, rd, th)
-			std::size_t pos = 0;
+			std::string::size_type pos = 0;
 
 			while(pos + 2 <= dateTime.length()) {
 				pos = std::min(
@@ -270,7 +269,7 @@ namespace crawlservpp::Helper::DateTime {
 		// end of locale hack
 
 		// ordinal hack: remove ordinal endings (st, nd, rd, th) after numbers
-		std::size_t pos = 0;
+		std::string::size_type pos = 0;
 
 		while(pos + 2 <= dateTime.length()) {
 			pos = std::min(
