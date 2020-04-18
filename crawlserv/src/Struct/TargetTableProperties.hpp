@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 
 #include "TableColumn.hpp"
 
+#include <cstdint>	// std::uint64_t
 #include <string>	// std::string
 #include <vector>	// std::vector
 
@@ -43,8 +44,8 @@ namespace crawlservpp::Struct {
 
 	struct TargetTableProperties {
 		std::string type;
-		size_t website;
-		size_t urlList;
+		std::uint64_t website;
+		std::uint64_t urlList;
 		std::string name;
 		std::string fullName;
 		std::vector<TableColumn> columns;
@@ -55,8 +56,8 @@ namespace crawlservpp::Struct {
 
 		TargetTableProperties(
 				const std::string& setType,
-				size_t setWebsite,
-				size_t setUrlList,
+				std::uint64_t setWebsite,
+				std::uint64_t setUrlList,
 				const std::string& setName,
 				const std::string& setFullName,
 				bool setCompressed
@@ -69,8 +70,8 @@ namespace crawlservpp::Struct {
 
 		TargetTableProperties(
 				const std::string& setType,
-				size_t setWebsite,
-				size_t setUrlList,
+				std::uint64_t setWebsite,
+				std::uint64_t setUrlList,
 				const std::string& setName,
 				const std::string& setFullName,
 				const std::vector<TableColumn>& setColumns,
