@@ -502,10 +502,12 @@ namespace crawlservpp::Main {
 	}
 
 	// get up-time of server in seconds
-	std::size_t Server::getUpTime() const {
-		return std::chrono::duration_cast<std::chrono::seconds>(
-				std::chrono::steady_clock::now() - this->uptimeStart
-		).count();
+	long long Server::getUpTime() const {
+		return static_cast<long long>(
+				std::chrono::duration_cast<std::chrono::seconds>(
+						std::chrono::steady_clock::now() - this->uptimeStart
+				).count()
+		);
 	}
 
 	// get number of active module threads

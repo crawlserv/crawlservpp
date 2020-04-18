@@ -188,9 +188,9 @@ namespace crawlservpp::Main {
 
 		// getters
 		const std::string& getStatus() const;
-		size_t getUpTime() const;
-		size_t getActiveThreads() const;
-		size_t getActiveWorkers() const;
+		long long getUpTime() const;
+		std::size_t getActiveThreads() const;
+		std::size_t getActiveWorkers() const;
 
 		// command function
 		bool tick();
@@ -321,11 +321,11 @@ namespace crawlservpp::Main {
 
 		ServerCommandResponse cmdDownload();
 
-		void cmdImport(ConnectionPtr connection, size_t threadIndex, const std::string& message);
-		void cmdMerge(ConnectionPtr connection, size_t threadIndex, const std::string& message);
-		void cmdExport(ConnectionPtr connection, size_t threadIndex, const std::string& message);
+		void cmdImport(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
+		void cmdMerge(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
+		void cmdExport(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
-		void cmdTestQuery(ConnectionPtr connection, size_t threadIndex, const std::string& message);
+		void cmdTestQuery(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
 		// private helper functions
 		static bool workerBegin(
@@ -334,7 +334,7 @@ namespace crawlservpp::Main {
 				ServerCommandResponse& response
 		);
 		void workerEnd(
-				size_t threadIndex,
+				std::size_t threadIndex,
 				ConnectionPtr connection,
 				const std::string& message,
 				const ServerCommandResponse& response
