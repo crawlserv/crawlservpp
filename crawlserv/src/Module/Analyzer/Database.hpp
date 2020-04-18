@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -56,6 +56,8 @@
 
 #include <algorithm>	// std::find_if
 #include <chrono>		// std::chrono
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint16_t, std::uint64_t
 #include <functional>	// std::function
 #include <locale>		// std::locale
 #include <queue>		// std::queue
@@ -88,7 +90,7 @@ namespace crawlservpp::Module::Analyzer {
 		// setters
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
-		void setTimeoutTargetLock(size_t timeOut);
+		void setTimeoutTargetLock(std::uint64_t timeOut);
 		void setCorpusSlicing(unsigned char percentageOfMaxAllowedPackageSize);
 		void setIsRunningCallback(IsRunningCallback isRunningCallback);
 
@@ -97,8 +99,8 @@ namespace crawlservpp::Module::Analyzer {
 		void prepare();
 
 		// prepare and get custom SQL statements for algorithm
-		void prepareAlgo(const std::vector<std::string>& statements, std::vector<unsigned short>& idsTo);
-		sql::PreparedStatement& getPreparedAlgoStatement(unsigned short sqlStatementId);
+		void prepareAlgo(const std::vector<std::string>& statements, std::vector<std::uint16_t>& idsTo);
+		sql::PreparedStatement& getPreparedAlgoStatement(std::uint16_t sqlStatementId);
 
 		// corpus functions
 		void getCorpus(
@@ -106,19 +108,19 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string& filterDateFrom,
 				const std::string& filterDateTo,
 				Data::Corpus& corpusTo,
-				size_t& sourcesTo
+				std::size_t& sourcesTo
 		);
 
 		// public helper functions
-		std::string getSourceTableName(unsigned short type, const std::string& name);
-		std::string getSourceColumnName(unsigned short type, const std::string& name);
+		std::string getSourceTableName(std::uint16_t type, const std::string& name);
+		std::string getSourceColumnName(std::uint16_t type, const std::string& name);
 		void checkSources(
 				std::vector<unsigned char>& types,
 				std::vector<std::string>& tables,
 				std::vector<std::string>& columns
 		);
 		bool checkSource(
-				unsigned short type,
+				std::uint16_t type,
 				const std::string& table,
 				const std::string& column
 		);
@@ -131,12 +133,12 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
-		size_t timeoutTargetLock;
+		std::uint64_t timeoutTargetLock;
 		unsigned char corpusSlicing;
 
 		// table prefix, target table ID and its name
 		std::string tablePrefix;
-		size_t targetTableId;
+		std::uint64_t targetTableId;
 		std::string targetTableFull;
 
 		// corpus helper function
@@ -144,24 +146,24 @@ namespace crawlservpp::Module::Analyzer {
 		void createCorpus(
 				const CorpusProperties& corpusProperties,
 				Data::Corpus& corpusTo,
-				size_t& sourcesTo
+				std::size_t& sourcesTo
 		);
 
 	private:
 		// IDs of prepared SQL statements
 		struct _ps {
-			unsigned short getCorpusFirst;
-			unsigned short getCorpusNext;
-			unsigned short isCorpusChanged;
-			unsigned short isCorpusChangedParsing;
-			unsigned short isCorpusChangedExtracting;
-			unsigned short isCorpusChangedAnalyzing;
-			unsigned short deleteCorpus;
-			unsigned short addChunk;
-			unsigned short measureChunk;
-			unsigned short measureCorpus;
+			std::uint16_t getCorpusFirst;
+			std::uint16_t getCorpusNext;
+			std::uint16_t isCorpusChanged;
+			std::uint16_t isCorpusChangedParsing;
+			std::uint16_t isCorpusChangedExtracting;
+			std::uint16_t isCorpusChangedAnalyzing;
+			std::uint16_t deleteCorpus;
+			std::uint16_t addChunk;
+			std::uint16_t measureChunk;
+			std::uint16_t measureCorpus;
 
-			std::vector<unsigned short> algo;
+			std::vector<std::uint16_t> algo;
 		} ps;
 
 		// function for checking whether the parent thread is still running
