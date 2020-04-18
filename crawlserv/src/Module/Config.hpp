@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@
 #include <algorithm>	// std::adjacent_find, std::sort
 #endif
 
+#include <cstdint>		// std::int16_t, std::int32_t, std::int64_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <limits>		// std::numeric_limits
 #include <queue>		// std::queue
 #include <stdexcept>	// std::logic_error
@@ -103,20 +104,20 @@ protected:
 		void option(const std::string& name, std::vector<bool>& target);
 		void option(const std::string& name, char& target, CharParsingOption opt);
 		void option(const std::string& name, std::vector<char>& target, CharParsingOption opt);
-		void option(const std::string& name, short& target);
-		void option(const std::string& name, std::vector<short>& target);
-		void option(const std::string& name, int& target);
-		void option(const std::string& name, std::vector<int>& target);
-		void option(const std::string& name, long& target);
-		void option(const std::string& name, std::vector<long>& target);
+		void option(const std::string& name, std::int16_t& target);
+		void option(const std::string& name, std::vector<std::int16_t>& target);
+		void option(const std::string& name, std::int32_t& target);
+		void option(const std::string& name, std::vector<std::int32_t>& target);
+		void option(const std::string& name, std::int64_t& target);
+		void option(const std::string& name, std::vector<std::int64_t>& target);
 		void option(const std::string& name, unsigned char& target);
 		void option(const std::string& name, std::vector<unsigned char>& target);
-		void option(const std::string& name, unsigned short& target);
-		void option(const std::string& name, std::vector<unsigned short>& target);
-		void option(const std::string& name, unsigned int& target);
-		void option(const std::string& name, std::vector<unsigned int>& target);
-		void option(const std::string& name, size_t& target);
-		void option(const std::string& name, std::vector<size_t>& target);
+		void option(const std::string& name, std::uint16_t& target);
+		void option(const std::string& name, std::vector<std::uint16_t>& target);
+		void option(const std::string& name, std::uint32_t& target);
+		void option(const std::string& name, std::vector<std::uint32_t>& target);
+		void option(const std::string& name, std::uint64_t& target);
+		void option(const std::string& name, std::vector<std::uint64_t>& target);
 		void option(const std::string& name, std::string &target, StringParsingOption opt = Default);
 		void option(const std::string& name, std::vector<std::string>& target, StringParsingOption opt = Default);
 
@@ -608,8 +609,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (short), throws Config::Exception
-	inline void Config::option(const std::string& name, short& target) {
+	// check for a configuration option (16-bit integer), throws Config::Exception
+	inline void Config::option(const std::string& name, std::int16_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -630,7 +631,7 @@ protected:
 		if(this->currentItem.value->IsInt()) {
 			int value = this->currentItem.value->GetInt();
 
-			if(value > std::numeric_limits<short>::max())
+			if(value > std::numeric_limits<std::int16_t>::max())
 				this->logPtr->emplace(
 						"\'" + this->currentItem.str() + "\'"
 						" ignored because the number is too large."
@@ -643,15 +644,15 @@ protected:
 		else if(this->logPtr)
 			this->logPtr->emplace(
 					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not int)."
+					" ignored because of wrong type (not integer)."
 			);
 
 		// current item is parsed
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of shorts), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<short>& target) {
+	// check for a configuration option (array of 16-bit integers), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<std::int16_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -680,7 +681,7 @@ protected:
 				if(item.IsInt()) {
 					const int value = item.GetInt();
 
-					if(value > std::numeric_limits<short>::max())
+					if(value > std::numeric_limits<std::int16_t>::max())
 						this->logPtr->emplace(
 							"Value in \'" + this->currentItem.str() + "\'"
 							" ignored because the number is too large."
@@ -694,7 +695,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not int)."
+								" ignored because of wrong type (not integer)."
 						);
 				}
 			}
@@ -709,8 +710,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (int), throws Config::Exception
-	inline void Config::option(const std::string& name, int& target) {
+	// check for a configuration option (32-bit integer), throws Config::Exception
+	inline void Config::option(const std::string& name, std::int32_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -735,15 +736,15 @@ protected:
 		else if(this->logPtr)
 			this->logPtr->emplace(
 					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not int)."
+					" ignored because of wrong type (not integer)."
 			);
 
 		// current item is parsed
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of ints), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<int>& target) {
+	// check for a configuration option (array of 32-bit integers), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<std::int32_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -777,7 +778,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not int)."
+								" ignored because of wrong type (not integer)."
 						);
 				}
 			}
@@ -792,8 +793,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (long), throws Config::Exception
-	inline void Config::option(const std::string& name, long& target) {
+	// check for a configuration option (64-bit integer), throws Config::Exception
+	inline void Config::option(const std::string& name, std::int64_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -818,15 +819,15 @@ protected:
 		else if(this->logPtr)
 			this->logPtr->emplace(
 					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not long)."
+					" ignored because of wrong type (not 64-bit integer)."
 			);
 
 		// current item is parsed
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of longs), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<long>& target) {
+	// check for a configuration option (array of 64-bit integers), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<std::int64_t>& target) {
 		// check parsing state
 		if(!(this->setCategory))
 			throw Exception("Module::Config::option(): No category has been set");
@@ -855,7 +856,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not long)."
+								" ignored because of wrong type (not 64-bit integer)."
 						);
 				}
 			}
@@ -905,7 +906,7 @@ protected:
 		else if(this->logPtr)
 			this->logPtr->emplace(
 					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned int)."
+					" ignored because of wrong type (not unsigned integer)."
 			);
 
 		// current item is parsed
@@ -956,7 +957,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned int)."
+								" ignored because of wrong type (not unsigned integer)."
 						);
 				}
 			}
@@ -971,8 +972,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned short), throws Config::Exception
-	inline void Config::option(const std::string& name, unsigned short& target) {
+	// check for a configuration option (unsigned 16-bit integer), throws Config::Exception
+	inline void Config::option(const std::string& name, std::uint16_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -993,7 +994,7 @@ protected:
 		if(this->currentItem.value->IsUint()) {
 			const unsigned int value = this->currentItem.value->GetUint();
 
-			if(value > std::numeric_limits<unsigned short>::max())
+			if(value > std::numeric_limits<std::uint16_t>::max())
 				this->logPtr->emplace(
 						"\'" + this->currentItem.str() + "\'"
 						" ignored because the number is too large."
@@ -1006,15 +1007,15 @@ protected:
 		else if(this->logPtr)
 			this->logPtr->emplace(
 					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned int)."
+					" ignored because of wrong type (not unsigned integer)."
 			);
 
 		// current item is parsed
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned shorts), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<unsigned short>& target) {
+	// check for a configuration option (array of unsigned 16-bit intefers), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<std::uint16_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -1043,7 +1044,7 @@ protected:
 				if(item.IsUint()) {
 					const unsigned int value = item.GetUint();
 
-					if(value > std::numeric_limits<unsigned short>::max())
+					if(value > std::numeric_limits<std::uint16_t>::max())
 						this->logPtr->emplace(
 							"Value in \'" + this->currentItem.str() + "\'"
 							" ignored because the number is too large."
@@ -1057,7 +1058,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned int)."
+								" ignored because of wrong type (not unsigned integer)."
 						);
 				}
 			}
@@ -1072,8 +1073,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned int), throws Config::Exception
-	inline void Config::option(const std::string& name, unsigned int& target) {
+	// check for a configuration option (unsigned 32-bit integer), throws Config::Exception
+	inline void Config::option(const std::string& name, std::uint32_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -1105,8 +1106,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned ints), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<unsigned int>& target) {
+	// check for a configuration option (array of unsigned 32-bit integers), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<std::uint32_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -1140,7 +1141,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned int)."
+								" ignored because of wrong type (not unsigned integer)."
 						);
 				}
 			}
@@ -1155,8 +1156,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (size_t), throws Config::Exception
-	inline void Config::option(const std::string& name, size_t& target) {
+	// check for a configuration option (unsigned 64-bit integer), throws Config::Exception
+	inline void Config::option(const std::string& name, std::uint64_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -1181,15 +1182,15 @@ protected:
 		else if(this->logPtr)
 			this->logPtr->emplace(
 					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned int)."
+					" ignored because of wrong type (not unsigned 64-bit integer)."
 			);
 
 		// current item is parsed
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of size_ts), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<size_t>& target) {
+	// check for a configuration option (array of 64-bit integers), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<std::uint64_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -1223,7 +1224,7 @@ protected:
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
 								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not size_t)."
+								" ignored because of wrong type (not unsigned 64-bit integer)."
 						);
 				}
 			}
