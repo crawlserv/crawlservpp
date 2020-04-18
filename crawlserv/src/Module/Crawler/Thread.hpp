@@ -196,7 +196,7 @@ namespace crawlservpp::Module::Crawler {
 		bool startCrawled;				// start page has been successfully crawled
 		bool manualOff;					// manual mode has been turned off (after first URL is crawled)
 		std::string crawledContent;		// crawled content
-		std::size_t retryCounter;		// number of retries so far
+		std::uint64_t retryCounter;		// number of retries so far
 		bool archiveRetry;				// only archive needs to be retried
 
 		// timing
