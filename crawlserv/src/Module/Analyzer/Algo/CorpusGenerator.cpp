@@ -78,12 +78,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(Config::generalLoggingVerbose, "requests text corpus...");
 
-		size_t corpora = 0;
-		size_t bytes = 0;
-		size_t sources = 0;
+		std::size_t corpora = 0;
+		std::size_t bytes = 0;
+		std::size_t sources = 0;
 
-		for(size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
-			size_t corpusSources = 0;
+		for(std::size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
+			std::size_t corpusSources = 0;
 
 			Data::Corpus corpus(this->config.generalCorpusChecks);
 
@@ -151,7 +151,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void CorpusGenerator::onAlgoTick() {
 		this->setStatusMessage(this->status);
 
-		this->sleep(std::numeric_limits<size_t>::max());
+		// sleep forever
+		this->sleep(std::numeric_limits<std::size_t>::max());
 	}
 
 	// pause algorithm run
