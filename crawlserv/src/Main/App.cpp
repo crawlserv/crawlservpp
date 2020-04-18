@@ -2,6 +2,8 @@
  *
  * ---
  *
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
@@ -103,8 +105,8 @@ namespace crawlservpp::Main {
 			// server up-time message
 			std::cout << "\nUp-time: " << Helper::DateTime::secondsToString(server->getUpTime()) << ".";
 
-			const size_t threads = this->server->getActiveThreads();
-			const size_t workers = this->server->getActiveWorkers();
+			const auto threads = this->server->getActiveThreads();
+			const auto workers = this->server->getActiveWorkers();
 
 			if(threads || workers) {
 				std::cout << "\n> Waiting for threads (";
@@ -209,7 +211,7 @@ namespace crawlservpp::Main {
 
 			case '\n':
 				// ENTER: end input loop
-				for(size_t n = 0; n < dbSettings.password.size(); n++)
+				for(std::string::size_type n = 0; n < dbSettings.password.size(); n++)
 					std::cout << '\b';
 
 				std::cout << "[DONE]" << std::string(dbSettings.password.size() - 6, ' ') << std::flush;
