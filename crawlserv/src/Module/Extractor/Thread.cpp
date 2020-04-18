@@ -286,7 +286,7 @@ namespace crawlservpp::Module::Extractor {
 			this->torControl.tick();
 
 		// check for jump in last ID ("time travel")
-		long warpedOver = this->getWarpedOverAndReset();
+		const auto warpedOver = this->getWarpedOverAndReset();
 
 		if(warpedOver != 0) {
 			// save cached results
@@ -474,7 +474,7 @@ namespace crawlservpp::Module::Extractor {
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
 
-			const long double tps =
+			const auto tps =
 					static_cast<long double>(this->tickCounter) /
 					std::chrono::duration_cast<std::chrono::seconds>(
 							std::chrono::steady_clock::now()
@@ -913,7 +913,7 @@ namespace crawlservpp::Module::Extractor {
 		bool pageFirst = true;
 		bool noPageString = this->config.pagingFirstString.empty();
 		bool queryTargetSet = false;
-		unsigned long pageCounter = 0;
+		std::size_t pageCounter = 0;
 		unsigned long pageTotal = 0;
 
 		// add first page
