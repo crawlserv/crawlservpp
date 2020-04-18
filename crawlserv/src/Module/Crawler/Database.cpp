@@ -71,7 +71,7 @@ namespace crawlservpp::Module::Crawler {
 
 	// prepare SQL statements for crawler, throws Main::Database::Exception
 	void Database::prepare() {
-		const unsigned short verbose = this->getLoggingVerbose();
+		const auto verbose = this->getLoggingVerbose();
 
 		// create table names
 		this->urlListTable = "crawlserv_" + this->getOptions().websiteNamespace + "_" + this->getOptions().urlListNamespace;
@@ -102,7 +102,7 @@ namespace crawlservpp::Module::Crawler {
 		this->checkConnection();
 
 		// reserve memory
-		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(unsigned short));
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::uint16_t));
 
 		if(!(this->ps.getUrlId)) {
 			this->log(verbose, "prepares getUrlId()...");
@@ -1101,7 +1101,7 @@ namespace crawlservpp::Module::Crawler {
 	// save content to database, throws Database::Exception
 	void Database::saveContent(
 			std::uint64_t urlId,
-			unsigned int response,
+			std::uint32_t response,
 			const std::string& type,
 			const std::string& content
 	) {
@@ -1163,7 +1163,7 @@ namespace crawlservpp::Module::Crawler {
 	void Database::saveArchivedContent(
 			std::uint64_t urlId,
 			const std::string& timeStamp,
-			unsigned int response,
+			std::uint32_t response,
 			const std::string& type,
 			const std::string& content
 	) {
@@ -1258,7 +1258,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// generate a SQL query for adding a specific number of URLs, throws Database::Exception
-	std::string Database::queryAddUrlsIfNotExist(unsigned int numberOfUrls, const std::string& hashQuery) {
+	std::string Database::queryAddUrlsIfNotExist(std::uint32_t numberOfUrls, const std::string& hashQuery) {
 		// check argument
 		if(!numberOfUrls)
 			throw Exception("Crawler::Database::queryUpdateOrAddUrls(): No number of URLs specified");
@@ -1269,7 +1269,7 @@ namespace crawlservpp::Module::Crawler {
 		);
 
 		// generate placeholders
-		for(unsigned int n = 0; n < numberOfUrls; ++n)
+		for(std::uint32_t n = 0; n < numberOfUrls; ++n)
 			sqlQueryString +=	"(" // begin of VALUES arguments
 									" ("
 										"SELECT id"
