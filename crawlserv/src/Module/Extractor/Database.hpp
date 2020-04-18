@@ -46,7 +46,8 @@
 
 #include <algorithm>	// std::count_if, std::find_if
 #include <chrono>		// std::chrono
-#include <cstddef>		// std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <memory>		// std::unique_ptr
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
@@ -162,10 +163,10 @@ namespace crawlservpp::Module::Extractor {
 
 		// internal helper function
 		bool checkEntrySize(DataEntry& entry);
-		std::string queryLockUrls(std::uint32_t numberOfUrls);
-		std::string queryUpdateOrAddEntries(std::uint32_t numberOfEntries);
-		std::string querySetUrlsFinishedIfLockOk(std::uint32_t numberOfUrls);
-		std::string queryUnlockUrlsIfOk(std::uint32_t numberOfUrls);
+		std::string queryLockUrls(std::size_t numberOfUrls);
+		std::string queryUpdateOrAddEntries(std::size_t numberOfEntries);
+		std::string querySetUrlsFinishedIfLockOk(std::size_t numberOfUrls);
+		std::string queryUnlockUrlsIfOk(std::size_t numberOfUrls);
 	};
 
 } /* crawlservpp::Module::Extractor */
