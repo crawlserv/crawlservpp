@@ -1518,6 +1518,8 @@ namespace crawlservpp::Module::Extractor {
 		std::string content;
 		std::string result;
 		bool success = false;
+		bool retryAlways = this->config.generalReTries < 0;
+		std::uint64_t retryCounter = 0;
 
 		while(this->isRunning()) {
 			try {
@@ -1592,6 +1594,20 @@ namespace crawlservpp::Module::Extractor {
 
 				break;
 			}
+
+			if(retryAlways)
+				continue;
+
+			if(retryCounter == static_cast<std::uint64_t>(this->config.generalReTries)) {
+				this->log(
+						Config::generalLoggingDefault,
+						"Retried " + std::to_string(retryCounter) + " times, skipping " + sourceUrl
+				);
+
+				break;
+			}
+
+			++retryCounter;
 		}
 
 		if(success) {
@@ -1638,6 +1654,9 @@ namespace crawlservpp::Module::Extractor {
 			const std::vector<std::string>& headers,
 			std::string& resultTo
 	) {
+		bool retryAlways = this->config.generalReTries < 0;
+		std::uint64_t retryCounter = 0;
+
 		while(this->isRunning()) {
 			try {
 				// set local network configuration
@@ -1707,6 +1726,20 @@ namespace crawlservpp::Module::Extractor {
 
 				break;
 			}
+
+			if(retryAlways)
+				continue;
+
+			if(retryCounter == static_cast<std::uint64_t>(this->config.generalReTries)) {
+				this->log(
+						Config::generalLoggingDefault,
+						"Retried " + std::to_string(retryCounter) + " times, skipping " + url
+				);
+
+				break;
+			}
+
+			++retryCounter;
 		}
 	}
 
