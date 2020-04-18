@@ -20,7 +20,7 @@
  *
  * ---
  *
- * Exception.h
+ * Exception.hpp
  *
  * Class for custom exceptions.
  *
