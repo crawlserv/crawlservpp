@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 #include "../Config.hpp"
 
 #include <algorithm>	// std::min
+#include <cstdint>		// std::std::uint64_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -75,9 +76,9 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string> generalInputTables;
 			unsigned char generalLogging;
 			std::string generalResultTable;
-			size_t generalSleepMySql;
-			size_t generalSleepWhenFinished;
-			size_t generalTimeoutTargetLock;
+			std::uint64_t generalSleepMySql;
+			std::uint64_t generalSleepWhenFinished;
+			std::uint64_t generalTimeoutTargetLock;
 
 			// filter by date entries
 			bool filterDateEnable;
@@ -159,7 +160,7 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// check properties of input fields
-		const size_t completeInputs = std::min({ // number of complete inputs (= min. size of all arrays)
+		const auto completeInputs = std::min({ // number of complete inputs (= min. size of all arrays)
 				this->config.generalInputFields.size(),
 				this->config.generalInputSources.size(),
 				this->config.generalInputTables.size()
