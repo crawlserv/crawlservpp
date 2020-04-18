@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -152,7 +152,7 @@ namespace crawlservpp::Module::Extractor {
 		// set sources
 		std::queue<StringString> sources;
 
-		for(size_t n = 0; n < this->config.variablesName.size(); ++n)
+		for(std::size_t n = 0; n < this->config.variablesName.size(); ++n)
 			if(this->config.variablesSource.at(n) == Config::variablesSourcesParsed) {
 				if(
 						this->config.variablesParsedColumn.at(n) == "id"
@@ -242,7 +242,7 @@ namespace crawlservpp::Module::Extractor {
 
 			this->log(Config::generalLoggingVerbose, "checks extracting table...");
 
-			const unsigned int deleted = this->database.checkExtractingTable();
+			const auto deleted = this->database.checkExtractingTable();
 
 			// log deletion warning if necessary
 			if(this->isLogLevel(Config::generalLoggingDefault)) {
@@ -549,7 +549,7 @@ namespace crawlservpp::Module::Extractor {
 				std::count_if(
 						this->config.variablesSource.begin(),
 						this->config.variablesSource.end(),
-						[](const unsigned char source) {
+						[](const unsigned char source) -> bool {
 							return	source == Config::variablesSourcesContent
 									|| source == Config::variablesSourcesUrl;
 						}
@@ -865,9 +865,10 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// extract data from next URL, return number of extracted datasets
-	size_t Thread::extractingNext() {
+	std::size_t Thread::extractingNext() {
 		std::queue<std::string> queryWarnings;
-		size_t expected = 0, extracted = 0;
+		unsigned long expected = 0;
+		std::size_t extracted = 0;
 		bool expecting = false;
 
 		// get datasets
@@ -908,12 +909,12 @@ namespace crawlservpp::Module::Extractor {
 		this->log(Config::generalLoggingVerbose, "loops over pages...");
 
 		std::queue<std::string> pageNames;
-		long pageNum = this->config.pagingFirst;
+		std::int64_t pageNum = this->config.pagingFirst;
 		bool pageFirst = true;
 		bool noPageString = this->config.pagingFirstString.empty();
 		bool queryTargetSet = false;
-		size_t pageCounter = 0;
-		size_t pageTotal = 0;
+		unsigned long pageCounter = 0;
+		unsigned long pageTotal = 0;
 
 		// add first page
 		if(noPageString)
@@ -928,11 +929,11 @@ namespace crawlservpp::Module::Extractor {
 			if(this->config.pagingAliasAdd) {
 				try {
 					pageAlias = std::to_string(
-							boost::lexical_cast<long>(pageNames.front())
+							std::stol(pageNames.front())
 							+ this->config.pagingAliasAdd
 					);
 				}
-				catch(const boost::bad_lexical_cast& e) {
+				catch(const std::exception& e) {
 					this->log(
 							Config::generalLoggingDefault,
 							"WARNING: Could not create numeric alias \'"
@@ -1072,9 +1073,9 @@ namespace crawlservpp::Module::Extractor {
 
 					// try to convert number of pages to numeric value
 					try {
-						pageTotal = boost::lexical_cast<size_t>(pageTotalString);
+						pageTotal = std::stoul(pageTotalString);
 					}
-					catch(const boost::bad_lexical_cast& e) {
+					catch(const std::exception& e) {
 						this->log(
 								Config::generalLoggingDefault,
 								"WARNING: Could convert non-numeric query result \'"
@@ -1244,8 +1245,8 @@ namespace crawlservpp::Module::Extractor {
 
 	// get values of variables
 	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) {
-		size_t parsedSource = 0;
-		size_t queryCounter = 0;
+		std::size_t parsedSource = 0;
+		std::size_t queryCounter = 0;
 
 		// loop over variables (and their aliases)
 		for(auto i = this->config.variablesName.begin(); i != this->config.variablesName.end(); ++i) {
@@ -1305,11 +1306,11 @@ namespace crawlservpp::Module::Extractor {
 
 					try {
 						aliasValue = std::to_string(
-								boost::lexical_cast<long>(value)
+								std::stol(value)
 								+ aliasAdd
 						);
 					}
-					catch(const boost::bad_lexical_cast& e) {
+					catch(const std::exception& e) {
 						this->log(
 								Config::generalLoggingDefault,
 								"WARNING: Could not create numeric alias \'"
@@ -1769,7 +1770,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// extract data by parsing page content, return number of extracted datasets
-	size_t Thread::extractingPage(size_t contentId, const std::string& url) {
+	std::size_t Thread::extractingPage(std::uint64_t contentId, const std::string& url) {
 		std::queue<std::string> queryWarnings;
 
 		// check for errors if necessary
@@ -1804,7 +1805,7 @@ namespace crawlservpp::Module::Extractor {
 			return 0;
 
 		// save old number of results
-		size_t before = this->results.size();
+		const auto before = this->results.size();
 
 		// go through all datasets
 		while(this->nextSubSet()) {
@@ -2204,7 +2205,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// check the HTTP response code for an error and decide whether to continue or skip
-	bool Thread::extractingCheckResponseCode(const std::string& url, long responseCode) {
+	bool Thread::extractingCheckResponseCode(const std::string& url, std::uint32_t responseCode) {
 		if(responseCode >= 400 && responseCode < 600) {
 			this->log(
 					Config::generalLoggingDefault,

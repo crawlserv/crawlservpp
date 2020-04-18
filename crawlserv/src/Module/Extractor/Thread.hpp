@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,11 +55,12 @@
 #include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <boost/lexical_cast.hpp>
-
 #include <algorithm>	// std::count_if, std::find, std::find_if
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint32_t, std::uint64_t
+#include <exception>	// std::exception
 #include <functional>	// std::bind
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
@@ -67,7 +68,7 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error, std::runtime_error
-#include <string>		// std::string, std::to_string
+#include <string>		// std::stol, std::stoul, std::string, std::to_string
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
@@ -94,7 +95,7 @@ namespace crawlservpp::Module::Extractor {
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
-		using IdString = std::pair<size_t, std::string>;
+		using IdString = std::pair<std::uint64_t, std::string>;
 		using StringString = std::pair<std::string, std::string>;
 
 	public:
@@ -176,16 +177,17 @@ namespace crawlservpp::Module::Extractor {
 		std::chrono::steady_clock::time_point idleTime;
 
 		// state
-		bool idle;				// waiting for new URLs to be crawled
-		size_t lastUrl;			// last extracted URL
-		std::string lockTime;	// last locking time for currently extracted URL
+		bool idle;					// waiting for new URLs to be crawled
+		std::uint64_t lastUrl;		// last extracted URL
+		std::string lockTime;		// last locking time for currently extracted URL
+		std::size_t retryCounter;	// number of retries so far
 
 		// properties used for progress calculation
-		size_t idFirst;			// ID of the first URL fetched
-		size_t idDist;			// distance between the IDs of first and last URL fetched
-		float posFirstF;		// position of the first URL fetched as float
-		size_t posDist;			// distance between the positions of first and last URL fetched
-		size_t total;			// number of total URLs in URL list
+		std::uint64_t idFirst;		// ID of the first URL fetched
+		std::uint64_t idDist;		// distance between the IDs of first and last URL fetched
+		float posFirstF;			// position of the first URL fetched as float
+		std::uint64_t posDist;		// distance between the positions of first and last URL fetched
+		std::uint64_t total;		// number of total URLs in URL list
 
 		// initializing function
 		void initTargetTable();
@@ -195,7 +197,7 @@ namespace crawlservpp::Module::Extractor {
 		void extractingUrlSelection();
 		void extractingFetchUrls();
 		void extractingCheckUrls();
-		size_t extractingNext();
+		std::size_t extractingNext();
 		void extractingGetVariableValues(std::vector<StringString>& variables);
 		void extractingGetTokenValues(std::vector<StringString>& variables);
 		void extractingGetPageTokenValues(
@@ -220,9 +222,9 @@ namespace crawlservpp::Module::Extractor {
 		void extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo);
 		void extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo);
 		bool extractingPageIsRetry(std::queue<std::string>& queryWarningsTo);
-		size_t extractingPage(size_t contentId, const std::string& url);
+		std::size_t extractingPage(std::uint64_t contentId, const std::string& url);
 		bool extractingCheckCurlCode(CURLcode curlCode, const std::string& url);
-		bool extractingCheckResponseCode(const std::string& url, long responseCode);
+		bool extractingCheckResponseCode(const std::string& url, std::uint32_t responseCode);
 		void extractingUrlFinished();
 		void extractingSaveResults(bool warped);
 		void extractingReset(const std::string& error, const std::string& url);
