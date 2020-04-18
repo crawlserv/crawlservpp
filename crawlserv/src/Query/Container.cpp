@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ namespace crawlservpp::Query {
 	}
 
 	// set how tidy-html reports errors and warnings
-	void Container::setTidyErrorsAndWarnings(unsigned int errors, bool warnings) {
+	void Container::setTidyErrorsAndWarnings(std::uint32_t errors, bool warnings) {
 		this->parsedXML.setOptions(warnings, errors);
 		this->subSetParsedXML.setOptions(warnings, errors);
 	}
@@ -84,7 +84,7 @@ namespace crawlservpp::Query {
 	}
 
 	// get number of subsets
-	size_t Container::getNumberOfSubSets() const {
+	std::size_t Container::getNumberOfSubSets() const {
 		return this->subSetNumber;
 	}
 
@@ -2614,7 +2614,7 @@ namespace crawlservpp::Query {
 	}
 
 	// reserve memory for a specific number of subsets
-	void Container::reserveForSubSets(const QueryStruct& query, size_t n) {
+	void Container::reserveForSubSets(const QueryStruct& query, std::size_t n) {
 		this->stringifiedSubSets.reserve(n);
 
 		switch(query.type) {

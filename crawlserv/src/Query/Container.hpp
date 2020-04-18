@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -46,6 +46,8 @@
 #include "../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
+#include <cstddef>	// std::size_t
+#include <cstdint>	// std::uint8_t, std::uint32_t
 #include <iterator>	// std::make_move_iterator
 #include <string>	// std::string
 #include <queue>	// std::queue
@@ -84,11 +86,11 @@ namespace crawlservpp::Query {
 		void setRepairCData(bool isRepairCData);
 		void setRepairComments(bool isRepairComments);
 		void setMinimizeMemory(bool isMinimizeMemory);
-		void setTidyErrorsAndWarnings(unsigned int errors, bool warnings);
+		void setTidyErrorsAndWarnings(std::uint32_t errors, bool warnings);
 		void setQueryTarget(const std::string& content, const std::string& source);
 
 		// protected getter
-		size_t getNumberOfSubSets() const;
+		std::size_t getNumberOfSubSets() const;
 
 		// general query functions
 		virtual void initQueries() = 0; // children have to initialize their queries on their own (makes the class abstract)
@@ -160,7 +162,7 @@ namespace crawlservpp::Query {
 		// helper functions
 		bool getTarget(std::string& targetTo);
 		bool getXml(std::string& resultTo, std::queue<std::string>& warningsTo);
-		void reserveForSubSets(const QueryStruct& query, size_t n);
+		void reserveForSubSets(const QueryStruct& query, std::size_t n);
 
 		// only moveable (using default), not copyable
 		Container(const Container&) = delete;
@@ -195,9 +197,9 @@ namespace crawlservpp::Query {
 		std::string jsonParsingError;				// error while parsing content as JSON
 
 		// subset properties and parsing
-		unsigned char subSetType;					// type of subsets
-		size_t subSetNumber;					// number of subsets
-		size_t subSetCurrent;				// current subset (index + 1)
+		std::uint8_t subSetType;					// type of subsets
+		std::size_t subSetNumber;					// number of subsets
+		std::size_t subSetCurrent;					// current subset (index + 1)
 		bool subSetXmlParsed;						// current subset has been parsed as HTML/XML
 		bool subSetJsonParsedRapid;					// current subset has been parsed as JSON using RapidJSON
 		bool subSetJsonParsedCons;					// current subset has been parsed as JSON using jsoncons
