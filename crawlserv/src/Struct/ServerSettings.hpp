@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,11 +36,11 @@
 namespace crawlservpp::Struct {
 
 	struct ServerSettings {
-		std::string port; // server port
+		std::string port; 			// server port
 		std::string allowedClients; // list of allowed IP addresses
-		std::string corsOrigins; // allowed origins for CORS requests
-		bool logsDeletable; // are logs deletable by frontend?
-		bool dataDeletable; // is data deletable by frontend?
+		std::string corsOrigins; 	// allowed origins for CORS requests
+		bool logsDeletable; 		// are logs deletable by frontend?
+		bool dataDeletable; 		// is data deletable by frontend?
 
 		// constructors
 		ServerSettings() : corsOrigins("*"), logsDeletable(false), dataDeletable(false) {}
