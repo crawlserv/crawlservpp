@@ -464,7 +464,7 @@ namespace crawlservpp::Main {
 				));
 
 				// execute SQL statement
-				std::size_t counter = 1;
+				decltype(locales)::size_type counter = 1;
 
 				for(const auto& locale : locales) {
 					sqlStatement->setString(counter, locale);
@@ -520,7 +520,7 @@ namespace crawlservpp::Main {
 				));
 
 				// execute SQL statement
-				std::size_t counter = 1;
+				decltype(versions)::size_type counter = 1;
 
 				for(const auto& version : versions) {
 					sqlStatement->setString(counter, version.first);
@@ -5465,7 +5465,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			unsigned int counter = 1;
+			decltype(data.columns_values)::size_type counter = 1;
 
 			switch(data.type) {
 			case Data::Type::_bool:
@@ -5635,7 +5635,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			unsigned int counter = 1;
+			decltype(data.columns_types_values)::size_type counter = 1;
 
 			for(const auto& column_type_value : data.columns_types_values) {
 				if(std::get<2>(column_type_value)._isnull)
@@ -5885,7 +5885,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			unsigned int counter = 1;
+			decltype(data.columns_values)::size_type counter = 1;
 
 			switch(data.type) {
 			case Data::Type::_bool:
@@ -6050,7 +6050,7 @@ namespace crawlservpp::Main {
 			SqlPreparedStatementPtr sqlStatement(this->connection->prepareStatement(sqlQuery));
 
 			// set values
-			unsigned int counter = 1;
+			decltype(data.columns_types_values)::size_type counter = 1;
 
 			for(const auto& column_type_value : data.columns_types_values) {
 				if(std::get<2>(column_type_value)._isnull)
