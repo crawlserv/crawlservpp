@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,6 +53,8 @@
 
 #include "../../../_extern/rawr/rawr.h"
 
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint64_t
 #include <functional>	// std::bind, std::placeholders
 #include <string>		// std::string
 #include <vector>		// std::vector
@@ -102,15 +104,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	private:
 		rawr generator;
-		size_t sources;
+		std::size_t sources;
 
 		// algorithm options
 		unsigned char markovTweetDimension;
 		std::string markovTweetLanguage;
-		size_t markovTweetLength;
-		size_t markovTweetMax;
+		std::uint64_t markovTweetLength;
+		std::uint64_t markovTweetMax;
 		std::string markovTweetResultField;
-		size_t markovTweetSleep;
+		std::uint64_t markovTweetSleep;
 		std::string markovTweetSourcesField;
 		bool markovTweetSpellcheck;
 		bool markovTweetTiming;

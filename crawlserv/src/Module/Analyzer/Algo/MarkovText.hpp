@@ -49,6 +49,8 @@
 #include "../../../Timer/Simple.hpp"
 
 #include <algorithm>	// std::find
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint64_t
 #include <iterator>		// std::advance
 #include <map>			// std::map
 #include <memory>		// std::make_unique, std::unique_ptr
@@ -94,14 +96,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		std::string source;
 		std::map<std::string, std::vector<std::string>> dictionary;
-		size_t sources;
+		std::size_t sources;
 
 		// algorithm options
 		unsigned char markovTextDimension;
-		size_t markovTextLength;
-		size_t markovTextMax;
+		std::uint64_t markovTextLength;
+		std::uint64_t markovTextMax;
 		std::string markovTextResultField;
-		size_t markovTextSleep;
+		std::uint64_t markovTextSleep;
 		std::string markovTextSourcesField;
 		bool markovTextTiming;
 
