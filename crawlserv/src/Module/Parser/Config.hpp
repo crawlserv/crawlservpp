@@ -54,13 +54,13 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Config() {};
 
 		// configuration constants
-		static const std::uint8_t generalLoggingSilent = 0;
-		static const std::uint8_t generalLoggingDefault = 1;
-		static const std::uint8_t generalLoggingExtended = 2;
-		static const std::uint8_t generalLoggingVerbose = 3;
+		static constexpr std::uint8_t generalLoggingSilent = 0;
+		static constexpr std::uint8_t generalLoggingDefault = 1;
+		static constexpr std::uint8_t generalLoggingExtended = 2;
+		static constexpr std::uint8_t generalLoggingVerbose = 3;
 
-		static const std::uint8_t parsingSourceUrl = 0;
-		static const std::uint8_t parsingSourceContent = 1;
+		static constexpr std::uint8_t parsingSourceUrl = 0;
+		static constexpr std::uint8_t parsingSourceContent = 1;
 
 		// configuration entries
 		struct Entries {

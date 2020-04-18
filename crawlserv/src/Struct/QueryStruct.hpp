@@ -37,13 +37,13 @@
 namespace crawlservpp::Struct {
 
 	struct QueryStruct {
-		static const std::uint8_t typeNone = 0;
-		static const std::uint8_t typeRegEx = 1;
-		static const std::uint8_t typeXPath = 2;
-		static const std::uint8_t typeJsonPointer = 3;
-		static const std::uint8_t typeJsonPath = 4;
-		static const std::uint8_t typeXPathJsonPointer = 5;
-		static const std::uint8_t typeXPathJsonPath = 6;
+		static constexpr std::uint8_t typeNone = 0;
+		static constexpr std::uint8_t typeRegEx = 1;
+		static constexpr std::uint8_t typeXPath = 2;
+		static constexpr std::uint8_t typeJsonPointer = 3;
+		static constexpr std::uint8_t typeJsonPath = 4;
+		static constexpr std::uint8_t typeXPathJsonPointer = 5;
+		static constexpr std::uint8_t typeXPathJsonPath = 6;
 
 		std::uint8_t type;
 		std::size_t index;

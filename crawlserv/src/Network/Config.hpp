@@ -74,12 +74,12 @@ namespace crawlservpp::Network {
 		std::vector<std::string> headers;
 		std::vector<std::string> http200Aliases;
 		std::uint16_t httpVersion;
-		const static std::uint16_t httpVersionAny = 0;
-		const static std::uint16_t httpVersionV1 = 1;
-		const static std::uint16_t httpVersionV11 = 2;
-		const static std::uint16_t httpVersionV2 = 3;
-		const static std::uint16_t httpVersionV2only = 4;
-		const static std::uint16_t httpVersionV2tls = 5;
+		static constexpr std::uint16_t httpVersionAny = 0;
+		static constexpr std::uint16_t httpVersionV1 = 1;
+		static constexpr std::uint16_t httpVersionV11 = 2;
+		static constexpr std::uint16_t httpVersionV2 = 3;
+		static constexpr std::uint16_t httpVersionV2only = 4;
+		static constexpr std::uint16_t httpVersionV2tls = 5;
 		std::string localInterface;
 		std::uint16_t localPort;
 		std::uint16_t localPortRange;

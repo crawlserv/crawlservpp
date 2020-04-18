@@ -211,7 +211,7 @@ namespace crawlservpp::Main {
 
 			// set max_allowed_packet size to maximum of 1 GiB
 			//  NOTE: needs to be set independently, setting it in the connection options leads to "invalid read of size 8"
-			const int maxAllowedPacket = 1073741824;
+			constexpr int maxAllowedPacket = 1073741824;
 
 			this->connection->setClientOption(
 					"OPT_MAX_ALLOWED_PACKET",

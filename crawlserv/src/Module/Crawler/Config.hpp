@@ -58,13 +58,13 @@ namespace crawlservpp::Module::Crawler {
 		void setCrossDomain(bool isCrossDomain);
 
 		// configuration constants
-		static const std::uint8_t crawlerLoggingSilent = 0;
-		static const std::uint8_t crawlerLoggingDefault = 1;
-		static const std::uint8_t crawlerLoggingExtended = 2;
-		static const std::uint8_t crawlerLoggingVerbose = 3;
+		static constexpr std::uint8_t crawlerLoggingSilent = 0;
+		static constexpr std::uint8_t crawlerLoggingDefault = 1;
+		static constexpr std::uint8_t crawlerLoggingExtended = 2;
+		static constexpr std::uint8_t crawlerLoggingVerbose = 3;
 
-		static const std::uint8_t redirectSourceUrl = 0;
-		static const std::uint8_t redirectSourceContent = 1;
+		static constexpr std::uint8_t redirectSourceUrl = 0;
+		static constexpr std::uint8_t redirectSourceContent = 1;
 
 		// configuration entries
 		struct Entries {
