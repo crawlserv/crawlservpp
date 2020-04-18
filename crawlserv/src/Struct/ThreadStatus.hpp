@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,23 +34,24 @@
 #ifndef STRUCT_THREADSTATUS_HPP_
 #define STRUCT_THREADSTATUS_HPP_
 
-#include <string>	// std::stirng
+#include <cstdint>	// std::uint64_t
+#include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
 	struct ThreadStatus {
-		size_t id;	// ID
+		std::uint64_t id;	// ID
 		std::string status;	// status message
 		bool paused;		// pause state
-		size_t last;	// progress i.e. last ID
+		std::uint64_t last;	// progress i.e. last ID
 
 		// constructors
 		ThreadStatus() : id(0), paused(false), last(0) {}
 		ThreadStatus(
-				size_t setId,
+				std::uint64_t setId,
 				const std::string& setStatus,
 				bool setPaused,
-				size_t setLast
+				std::uint64_t setLast
 		) : id(setId), status(setStatus), paused(setPaused), last(setLast) {}
 	};
 
