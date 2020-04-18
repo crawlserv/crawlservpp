@@ -94,7 +94,7 @@ namespace crawlservpp::Module::Crawler {
 		// URL locking functions
 		std::string getUrlLockTime(std::uint64_t urlId);
 		bool isUrlCrawled(std::uint64_t urlId);
-		std::string lockUrlIfOk(std::uint64_t urlId, const std::string& lockTime, std::uint64_t lockTimeout);
+		std::string lockUrlIfOk(std::uint64_t urlId, const std::string& lockTime, std::uint32_t lockTimeout);
 		void unLockUrlIfOk(std::uint64_t urlId, const std::string& lockTime);
 		void setUrlFinishedIfOk(std::uint64_t urlId, const std::string& lockTime);
 
@@ -160,7 +160,7 @@ namespace crawlservpp::Module::Crawler {
 		} ps;
 
 		// helper functions
-		std::string queryAddUrlsIfNotExist(std::uint32_t numberOfUrls, const std::string& hashQuery);
+		std::string queryAddUrlsIfNotExist(std::size_t numberOfUrls, const std::string& hashQuery);
 		std::queue<std::string> getUrls();
 		std::uint32_t removeDuplicates(const std::string& url);
 	};
