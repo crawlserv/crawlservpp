@@ -1099,7 +1099,7 @@ protected:
 		else if(this->logPtr)
 			this->logPtr->emplace(
 					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned int)."
+					" ignored because of wrong type (not unsigned intefer)."
 			);
 
 		// current item is parsed
