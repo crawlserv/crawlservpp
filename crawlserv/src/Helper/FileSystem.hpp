@@ -35,7 +35,7 @@
 
 #include "Portability/filesystem.h"
 
-#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uintmax_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -57,7 +57,7 @@ namespace crawlservpp::Helper::FileSystem {
 	void createDirectory(const std::string& pathToDir);
 	void createDirectoryIfNotExists(const std::string& pathToDir);
 	void clearDirectory(const std::string& pathToDir);
-	std::size_t getFreeSpace(const std::string& path);
+	std::uintmax_t getFreeSpace(const std::string& path);
 
 	/*
 	 * CLASS FOR FILE SYSTEM EXCEPTIONS
@@ -241,7 +241,7 @@ namespace crawlservpp::Helper::FileSystem {
 	}
 
 	// get the free disk space for a directory (in bytes), throws FileSystem::Exception
-	inline std::size_t getFreeSpace(const std::string& path) {
+	inline std::uintmax_t getFreeSpace(const std::string& path) {
 		try {
 			return stdfs::space(path).available;
 		}
