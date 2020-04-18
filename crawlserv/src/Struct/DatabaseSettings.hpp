@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,13 +31,14 @@
 #ifndef STRUCT_DATABASESETTINGS_HPP_
 #define STRUCT_DATABASESETTINGS_HPP_
 
+#include <cstdint>	// std::uint16_t
 #include <string>	// std::string
 
 namespace crawlservpp::Struct {
 
 	struct DatabaseSettings {
 		std::string host;		// host name of database server
-		unsigned short port;	// port of database server
+		std::uint16_t port;		// port of database server
 		std::string user;		// user name for database
 		std::string password;	// user password for database
 		std::string name;		// name/schema of database
