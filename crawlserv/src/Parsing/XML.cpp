@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -49,7 +49,7 @@ namespace crawlservpp::Parsing {
 	}
 
 	// set options for logging
-	void XML::setOptions(bool showWarnings, unsigned int numOfErrors) {
+	void XML::setOptions(bool showWarnings, std::uint32_t numOfErrors) {
 		this->warnings = showWarnings;
 		this->errors = numOfErrors;
 	}
@@ -62,7 +62,7 @@ namespace crawlservpp::Parsing {
 			std::queue<std::string>& warningsTo
 	) {
 		// remove whitespaces
-		size_t begin = 0;
+		std::string::size_type begin = 0;
 
 		while(content.size() > begin && isspace(content.at(begin)))
 			++begin;
@@ -119,7 +119,7 @@ namespace crawlservpp::Parsing {
 
 				errString += "[!!!]";
 
-				if(xml.size() > static_cast<size_t>(result.offset + 50))
+				if(xml.size() > static_cast<std::string::size_type>(result.offset + 50))
 					errString += "\'[...]" + xml.substr(result.offset, 50) + "[...]";
 				else
 					errString += "\'[...]" + xml.substr(result.offset);
@@ -198,7 +198,7 @@ namespace crawlservpp::Parsing {
 
 	// internal static helper function: replace invalid conditional comments (e.g. created by MS Excel)
 	void XML::replaceInvalidConditionalComments(std::string& content) {
-		size_t pos = 0;
+		std::string::size_type pos = 0;
 
 		while(pos < content.length()) {
 			// find next invalid conditional comment
@@ -218,7 +218,7 @@ namespace crawlservpp::Parsing {
 			content.insert(end + 11, "--"); // (consider that "--" has been added)
 
 			// replace "--" inside new comment with "=="
-			size_t subPos = pos + 8; // (consider that "--" has been added)
+			std::string::size_type subPos = pos + 8; // (consider that "--" has been added)
 
 			while(subPos < end) {
 				subPos = content.find("--", subPos);
@@ -253,7 +253,7 @@ namespace crawlservpp::Parsing {
 
 	// internal static helper function: replace invalid comments (<? ... ?>)
 	void XML::replaceInvalidComments(std::string& content) {
-		size_t pos = 0;
+		std::string::size_type pos = 0;
 
 		while(pos < content.length()) {
 			// find next invalid conditional comment
@@ -273,7 +273,7 @@ namespace crawlservpp::Parsing {
 			content.insert(end + 5, "--"); // (consider that "!--" has been added)
 
 			// replace "--" inside new comment with "=="
-			size_t subPos = pos + 6; // (consider that "!--" has been added)
+			std::string::size_type subPos = pos + 6; // (consider that "!--" has been added)
 
 			while(subPos < end) {
 				subPos = content.find("--", subPos);
