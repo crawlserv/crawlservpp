@@ -274,7 +274,7 @@ namespace crawlservpp::Module {
 	}
 
 	// sleep for the specified number of milliseconds (unless the thread is stopped; thread-safe)
-	void Thread::sleep(unsigned long ms) const {
+	void Thread::sleep(std::uint64_t ms) const {
 		while(ms > MODULE_THREAD_SLEEP_ON_SLEEP_MS) {
 			if(!(this->running.load()))
 				return;
@@ -390,8 +390,8 @@ namespace crawlservpp::Module {
 
 	// return and reset the number of IDs that have been jumped over
 	//  (might be negative; to be used by the thread only!)
-	long Thread::getWarpedOverAndReset() {
-		long result = 0;
+	std::int64_t Thread::getWarpedOverAndReset() {
+		std::int64_t result = 0;
 
 		std::swap(this->warpedOver, result);
 

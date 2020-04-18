@@ -52,7 +52,7 @@
 #include <atomic>				// std::atomic
 #include <chrono>				// std::chrono
 #include <cmath>				// std::lround
-#include <cstdint>				// std::uint64_t
+#include <cstdint>				// std::int64_t, std::uint64_t
 #include <condition_variable>	// std::condition_variable
 #include <exception>			// std::exception
 #include <iostream>				// std::cout, std::flush
@@ -129,7 +129,7 @@ namespace crawlservpp::Module {
 
 		// thread helper functions
 		bool isInterrupted() const;
-		void sleep(unsigned long ms) const;
+		void sleep(std::uint64_t ms) const;
 
 		void pauseByThread();
 		void setStatusMessage(const std::string& statusMessage);
@@ -144,7 +144,7 @@ namespace crawlservpp::Module {
 		void setLast(std::uint64_t last);
 		void incrementLast();
 		std::string getStatusMessage() const;
-		long getWarpedOverAndReset();
+		std::int64_t getWarpedOverAndReset();
 
 		virtual void onInit() = 0;
 		virtual void onTick() = 0;
@@ -169,7 +169,7 @@ namespace crawlservpp::Module {
 
 		std::uint64_t last;							// last ID for the thread
 		std::atomic<std::uint64_t> overwriteLast;	// ID to overwrite last ID with ("time travel")
-		long warpedOver;							// no. of IDs that have been skipped (might be negative, ONLY for threads!)
+		std::int64_t warpedOver;					// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
 		std::condition_variable pauseCondition;		// condition variable to wait for unpause
 		mutable std::mutex pauseLock;				// lock for accessing the condition variable
