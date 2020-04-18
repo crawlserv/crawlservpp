@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@
 
 #include <pcre2.h>
 
+#include <cstdint>	// std::int32_t, std::uint32_t
 #include <string>	// std::string, std::to_string
 #include <vector>	// std::vector
 

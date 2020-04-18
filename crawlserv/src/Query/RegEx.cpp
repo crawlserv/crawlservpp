@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ namespace crawlservpp::Query {
 
 	// constructor, throws RegEx::Exception
 	RegEx::RegEx(const std::string& expression, bool single, bool multi) {
-		int errorNumber = 0;
+		std::int32_t errorNumber = 0;
 		PCRE2_SIZE errorOffset = 0;
 		std::string queryString(expression);
 
@@ -125,7 +125,7 @@ namespace crawlservpp::Query {
 				)
 		);
 
-		int result = pcre2_match(
+		auto result = pcre2_match(
 				this->expressionSingle.get(),
 				(PCRE2_SPTR) text.c_str(),
 				text.length(),
@@ -231,7 +231,7 @@ namespace crawlservpp::Query {
 				)
 		);
 
-		int result = pcre2_match(
+		auto result = pcre2_match(
 				this->expressionMulti.get(),
 				(PCRE2_SPTR) text.c_str(),
 				text.length(),
@@ -267,14 +267,14 @@ namespace crawlservpp::Query {
 		resultTo.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 
 		// get RegEx options
-		uint32_t pcreOptions = 0;
-		uint32_t pcreNewLineOption = 0;
+		std::uint32_t pcreOptions = 0;
+		std::uint32_t pcreNewLineOption = 0;
 
 		pcre2_pattern_info(this->expressionMulti.get(), PCRE2_INFO_ALLOPTIONS, &pcreOptions);
 		pcre2_pattern_info(this->expressionMulti.get(), PCRE2_INFO_NEWLINE, &pcreNewLineOption);
 
-		const int pcreUTF8 = (pcreOptions & PCRE2_UTF) != 0;
-		const int pcreNewLine =
+		const std::int32_t pcreUTF8 = (pcreOptions & PCRE2_UTF) != 0;
+		const std::int32_t pcreNewLine =
 				pcreNewLineOption == PCRE2_NEWLINE_ANY
 				|| pcreNewLineOption == PCRE2_NEWLINE_CRLF
 				|| pcreNewLineOption == PCRE2_NEWLINE_ANYCRLF;
