@@ -6671,7 +6671,7 @@ namespace crawlservpp::Main {
 	}
 
 	// set whether the specified URL list is case-sensitive, throws Database::Exception
-	void Database::setUrlListCaseSensitive(std::size_t listId, bool isCaseSensitive) {
+	void Database::setUrlListCaseSensitive(std::uint64_t listId, bool isCaseSensitive) {
 		// check argument
 		if(!listId)
 			throw Database::Exception("Main::Database::setUrlListCaseSensitive(): No URL list specified");
