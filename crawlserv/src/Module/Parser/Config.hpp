@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@
 #include "../../Module/Config.hpp"
 
 #include <algorithm>	// std::min, std::replace_if
+#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -53,13 +54,13 @@ namespace crawlservpp::Module::Parser {
 		virtual ~Config() {};
 
 		// configuration constants
-		static const unsigned char generalLoggingSilent = 0;
-		static const unsigned char generalLoggingDefault = 1;
-		static const unsigned char generalLoggingExtended = 2;
-		static const unsigned char generalLoggingVerbose = 3;
+		static const std::uint8_t generalLoggingSilent = 0;
+		static const std::uint8_t generalLoggingDefault = 1;
+		static const std::uint8_t generalLoggingExtended = 2;
+		static const std::uint8_t generalLoggingVerbose = 3;
 
-		static const unsigned char parsingSourceUrl = 0;
-		static const unsigned char parsingSourceContent = 1;
+		static const std::uint8_t parsingSourceUrl = 0;
+		static const std::uint8_t parsingSourceContent = 1;
 
 		// configuration entries
 		struct Entries {
@@ -67,25 +68,25 @@ namespace crawlservpp::Module::Parser {
 			Entries();
 
 			// general entries
-			size_t generalCacheSize;
-			size_t generalDbTimeOut;
-			unsigned int generalLock;
-			unsigned char generalLogging;
+			std::uint64_t generalCacheSize;
+			std::uint64_t generalDbTimeOut;
+			std::uint32_t generalLock;
+			std::uint8_t generalLogging;
 			bool generalNewestOnly;
 			bool generalParseCustom;
 			bool generalReParse;
 			std::string generalResultTable;
-			std::vector<size_t> generalSkip;
-			size_t generalSleepIdle;
-			size_t generalSleepMySql;
+			std::vector<std::uint64_t> generalSkip;
+			std::uint64_t generalSleepIdle;
+			std::uint64_t generalSleepMySql;
 			bool generalTiming;
 
 			// parsing entries
-			std::vector<size_t> parsingContentIgnoreQueries;
+			std::vector<std::uint64_t> parsingContentIgnoreQueries;
 			std::vector<std::string> parsingDateTimeFormats;
 			std::vector<std::string> parsingDateTimeLocales;
-			std::vector<size_t> parsingDateTimeQueries;
-			std::vector<unsigned short> parsingDateTimeSources;
+			std::vector<std::uint64_t> parsingDateTimeQueries;
+			std::vector<std::uint16_t> parsingDateTimeSources;
 			bool parsingDateTimeWarningEmpty;
 			std::vector<std::string> parsingFieldDateTimeFormats;
 			std::vector<std::string> parsingFieldDateTimeLocales;
@@ -93,15 +94,15 @@ namespace crawlservpp::Module::Parser {
 			std::vector<bool> parsingFieldIgnoreEmpty;
 			std::vector<bool> parsingFieldJSON;
 			std::vector<std::string> parsingFieldNames;
-			std::vector<size_t> parsingFieldQueries;
-			std::vector<unsigned char> parsingFieldSources;
+			std::vector<std::uint64_t> parsingFieldQueries;
+			std::vector<std::uint8_t> parsingFieldSources;
 			std::vector<bool> parsingFieldTidyTexts;
 			std::vector<bool> parsingFieldWarningsEmpty;
 			std::vector<std::string> parsingIdIgnore;
-			std::vector<size_t> parsingIdQueries;
-			std::vector<unsigned char> parsingIdSources;
+			std::vector<std::uint64_t> parsingIdQueries;
+			std::vector<std::uint8_t> parsingIdSources;
 			bool parsingRepairCData;
-			unsigned int parsingTidyErrors;
+			std::uint16_t parsingTidyErrors;
 			bool parsingTidyWarnings;
 		} config;
 
@@ -193,7 +194,7 @@ namespace crawlservpp::Module::Parser {
 			throw Exception("Parser::Config::checkOptions(): No result table specified.");
 		
 		// check properties of date/time queries
-		const size_t completeDateTimes = std::min( // number of complete date/time queries (= min. size of all arrays)
+		const auto completeDateTimes = std::min( // number of complete date/time queries (= min. size of all arrays)
 				this->config.parsingDateTimeQueries.size(),
 				this->config.parsingDateTimeSources.size()
 		);
@@ -251,7 +252,7 @@ namespace crawlservpp::Module::Parser {
 			this->warning("Unused date/time properties removed from configuration.");
 
 		// check properties of parsing fields
-		const size_t completeFields = std::min({ // number of complete fields (= min. size of all arrays)
+		const auto completeFields = std::min({ // number of complete fields (= min. size of all arrays)
 				this->config.parsingFieldNames.size(),
 				this->config.parsingFieldQueries.size(),
 				this->config.parsingFieldSources.size()
@@ -349,7 +350,7 @@ namespace crawlservpp::Module::Parser {
 			this->warning("Unused field properties removed from configuration.");
 
 		// check properties of ID queries
-		const size_t completeIds = std::min( // number of complete ID queries (= min. size of all arrays)
+		const auto completeIds = std::min( // number of complete ID queries (= min. size of all arrays)
 				this->config.parsingIdQueries.size(),
 				this->config.parsingIdSources.size()
 		);
