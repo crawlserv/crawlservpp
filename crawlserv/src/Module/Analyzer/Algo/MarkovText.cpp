@@ -290,7 +290,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::string w1, key;
 
-		std::size_t wc = 0, pos = 0, next = 0;
+		std::uint64_t wc = 0, pos = 0, next = 0;
 
 		next = this->source.find_first_not_of( 32, 0 );
 
