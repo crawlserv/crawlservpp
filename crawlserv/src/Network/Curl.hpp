@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -50,7 +50,10 @@
 #include <algorithm>	// std::find, std::remove_if, std::transform
 #include <cctype>		// ::isspace, ::tolower
 #include <chrono>		// std::chrono
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
+#include <limits>		// std::numeric_limits
 #include <queue>		// std::queue
 #include <string>		// std::string, std::to_string
 #include <thread>		// std::this_thread
@@ -91,9 +94,9 @@ namespace crawlservpp::Network {
 				const std::string& url,
 				bool usePost,
 				std::string& contentTo,
-				const std::vector<unsigned int>& errors
+				const std::vector<std::uint32_t>& errors
 		);
-		unsigned int getResponseCode() const;
+		std::uint32_t getResponseCode() const;
 		std::string getContentType() const;
 		CURLcode getCurlCode() const;
 		std::string getPublicIp();
@@ -120,7 +123,7 @@ namespace crawlservpp::Network {
 		CURLcode curlCode;
 		std::string content;
 		std::string contentType;
-		unsigned int responseCode;
+		std::uint32_t responseCode;
 		bool limitedSettings;
 		bool post;
 		std::string tmpCookies;

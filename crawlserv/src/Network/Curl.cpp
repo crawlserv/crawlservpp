@@ -960,7 +960,7 @@ namespace crawlservpp::Network {
 			const std::string& url,
 			bool usePost,
 			std::string& contentTo,
-			const std::vector<unsigned int>& errors
+			const std::vector<std::uint32_t>& errors
 	) {
 		std::string escapedUrl;
 		char errorBuffer[CURL_ERROR_SIZE];
@@ -1100,10 +1100,10 @@ namespace crawlservpp::Network {
 
 		if(this->curlCode != CURLE_OK)
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
-		else if(responseCodeL < 0 || responseCodeL > UINT_MAX)
+		else if(responseCodeL < 0 || responseCodeL > std::numeric_limits<std::uint32_t>::max())
 			throw Curl::Exception("Invalid HTTP response code");
 
-		this->responseCode = static_cast<unsigned int>(responseCodeL);
+		this->responseCode = static_cast<std::uint32_t>(responseCodeL);
 
 		// check response code
 		if(
@@ -1165,7 +1165,7 @@ namespace crawlservpp::Network {
 	}
 
 	// get last response code
-	unsigned int Curl::getResponseCode() const {
+	std::uint32_t Curl::getResponseCode() const {
 		return this->responseCode;
 	}
 
@@ -1175,7 +1175,7 @@ namespace crawlservpp::Network {
 	}
 
 	// reset connection, throws Curl::Exception
-	void Curl::resetConnection(size_t sleep) {
+	void Curl::resetConnection(std::uint64_t sleep) {
 		// cleanup lists
 		this->dnsResolves.reset();
 		this->headers.reset();
@@ -1236,7 +1236,7 @@ namespace crawlservpp::Network {
 
 	// get public IP address from NETWORK_CURL_RAW_IP_FROM
 	std::string Curl::getPublicIp() {
-		const std::vector<unsigned int> errors{429, 502, 503, 504, 521, 522, 524};
+		const std::vector<std::uint32_t> errors{429, 502, 503, 504, 521, 522, 524};
 		std::string ip;
 
 		try {
@@ -1273,7 +1273,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			size_t pos = 0;
+			std::size_t pos = 0;
 
 			while(true) {
 				pos = result.find("%20", pos);
@@ -1307,7 +1307,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			size_t pos = 0;
+			std::size_t pos = 0;
 
 			while(true) {
 				pos = result.find("+", pos);
@@ -1327,11 +1327,11 @@ namespace crawlservpp::Network {
 
 	// escape an URL but leave reserved characters (; / ? : @ = & #) intact
 	std::string Curl::escapeUrl(const std::string& urlToEncode) {
-		size_t pos = 0;
+		std::size_t pos = 0;
 		std::string result;
 
 		while(pos < urlToEncode.length()) {
-			size_t end = urlToEncode.find_first_of(";/?:@=&#", pos);
+			auto end = urlToEncode.find_first_of(";/?:@=&#", pos);
 
 			if(end == std::string::npos)
 				end = urlToEncode.length();
@@ -1364,7 +1364,7 @@ namespace crawlservpp::Network {
 	}
 
 	// static cURL writer function
-	int Curl::writer(char * data, size_t size, size_t nmemb, void * thisPtr) {
+	int Curl::writer(char * data, std::size_t size, std::size_t nmemb, void * thisPtr) {
 		if(!thisPtr)
 			return 0;
 
@@ -1372,7 +1372,7 @@ namespace crawlservpp::Network {
 	}
 
 	// in-class cURL writer function
-	int Curl::writerInClass(char * data, size_t size, size_t nmemb) {
+	int Curl::writerInClass(char * data, std::size_t size, std::size_t nmemb) {
 		this->content.append(data, size * nmemb);
 
 		return size * nmemb;
