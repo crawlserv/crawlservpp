@@ -102,7 +102,7 @@ namespace crawlservpp::Module::Crawler {
 			long crawlerReTries;
 			bool crawlerRetryArchive;
 			bool crawlerRetryEmpty;
-			std::vector<std::uint16_t> crawlerRetryHttp;
+			std::vector<std::uint32_t> crawlerRetryHttp;
 			std::uint64_t crawlerSleepError;
 			std::uint64_t crawlerSleepHttp;
 			std::uint64_t crawlerSleepIdle;
