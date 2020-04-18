@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 
 #include <pugixml.hpp>
 
+#include <cstdint>	// std::uint32_t
 #include <memory>	// std::make_unique, std::unique_ptr
 #include <queue>	// std::queue
 #include <sstream>	// std::istringstream, std::ostringstream
@@ -63,7 +64,7 @@ namespace crawlservpp::Parsing {
 		void getContent(std::string& resultTo) const;
 
 		// setter
-		void setOptions(bool showWarnings, unsigned int numOfErrors);
+		void setOptions(bool showWarnings, std::uint32_t numOfErrors);
 
 		// parsing function
 		void parse(
@@ -96,7 +97,7 @@ namespace crawlservpp::Parsing {
 	private:
 		// options
 		bool warnings;
-		unsigned int errors;
+		std::uint32_t errors;
 
 		// internal static helper functions
 		static void cDataRepair(std::string& content);
