@@ -54,7 +54,7 @@
 #include "../../../_extern/rawr/rawr.h"
 
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint64_t
+#include <cstdint>		// std::uint8_t, std::uint64_t
 #include <functional>	// std::bind, std::placeholders
 #include <string>		// std::string
 #include <vector>		// std::vector
@@ -107,7 +107,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t sources;
 
 		// algorithm options
-		unsigned char markovTweetDimension;
+		std::uint8_t markovTweetDimension;
 		std::string markovTweetLanguage;
 		std::uint64_t markovTweetLength;
 		std::uint64_t markovTweetMax;

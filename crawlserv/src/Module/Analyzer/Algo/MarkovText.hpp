@@ -50,7 +50,7 @@
 
 #include <algorithm>	// std::find
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint64_t
+#include <cstdint>		// std::uint8_t, std::uint64_t
 #include <iterator>		// std::advance
 #include <map>			// std::map
 #include <memory>		// std::make_unique, std::unique_ptr
@@ -99,7 +99,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t sources;
 
 		// algorithm options
-		unsigned char markovTextDimension;
+		std::uint8_t markovTextDimension;
 		std::uint64_t markovTextLength;
 		std::uint64_t markovTextMax;
 		std::string markovTextResultField;
