@@ -45,7 +45,7 @@
 #include <algorithm>	// std::adjacent_find, std::sort
 #endif
 
-#include <cstdint>		// std::int16_t, std::int32_t, std::int64_t, std::uint16_t, std::uint32_t, std::uint64_t
+#include <cstdint>		// std::int16_t, std::int32_t, std::int64_t, std::uint<8|16|32|64>_t
 #include <limits>		// std::numeric_limits
 #include <queue>		// std::queue
 #include <stdexcept>	// std::logic_error
@@ -110,8 +110,8 @@ protected:
 		void option(const std::string& name, std::vector<std::int32_t>& target);
 		void option(const std::string& name, std::int64_t& target);
 		void option(const std::string& name, std::vector<std::int64_t>& target);
-		void option(const std::string& name, unsigned char& target);
-		void option(const std::string& name, std::vector<unsigned char>& target);
+		void option(const std::string& name, std::uint8_t& target);
+		void option(const std::string& name, std::vector<std::uint8_t>& target);
 		void option(const std::string& name, std::uint16_t& target);
 		void option(const std::string& name, std::vector<std::uint16_t>& target);
 		void option(const std::string& name, std::uint32_t& target);
@@ -471,7 +471,7 @@ protected:
 		case FromNumber:
 			// get from number
 			if(this->currentItem.value->IsInt()) {
-				const int value = this->currentItem.value->GetInt();
+				const auto value = this->currentItem.value->GetInt();
 
 				if(value > std::numeric_limits<char>::max())
 					this->logPtr->emplace(
@@ -548,7 +548,7 @@ protected:
 				case FromNumber:
 					// get from number
 					if(item.IsInt()) {
-						const int value = item.GetInt();
+						const auto value = item.GetInt();
 
 						if(value > std::numeric_limits<char>::max())
 							this->logPtr->emplace(
@@ -629,7 +629,7 @@ protected:
 
 		// check value type
 		if(this->currentItem.value->IsInt()) {
-			int value = this->currentItem.value->GetInt();
+			const auto value = this->currentItem.value->GetInt();
 
 			if(value > std::numeric_limits<std::int16_t>::max())
 				this->logPtr->emplace(
@@ -679,7 +679,7 @@ protected:
 			// check and copy array items
 			for(const auto& item : this->currentItem.value->GetArray()) {
 				if(item.IsInt()) {
-					const int value = item.GetInt();
+					const auto value = item.GetInt();
 
 					if(value > std::numeric_limits<std::int16_t>::max())
 						this->logPtr->emplace(
@@ -871,8 +871,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (unsigned char), throws Config::Exception
-	inline void Config::option(const std::string& name, unsigned char& target) {
+	// check for a configuration option (8-bit integer), throws Config::Exception
+	inline void Config::option(const std::string& name, std::uint8_t& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -891,9 +891,9 @@ protected:
 
 		// check value type
 		if(this->currentItem.value->IsUint()) {
-			unsigned int value = this->currentItem.value->GetUint();
+			const auto value = this->currentItem.value->GetUint();
 
-			if(value > std::numeric_limits<unsigned char>::max())
+			if(value > std::numeric_limits<std::uint8_t>::max())
 				this->logPtr->emplace(
 						"\'" + this->currentItem.str() + "\'"
 						" ignored because the number is too large."
@@ -913,8 +913,8 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of unsigned chars), throws Config::Exception
-	inline void Config::option(const std::string& name, std::vector<unsigned char>& target) {
+	// check for a configuration option (array of 8-bit integers), throws Config::Exception
+	inline void Config::option(const std::string& name, std::vector<std::uint8_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
 			this->list.emplace_back(this->categoryString + "." + name);
@@ -941,9 +941,9 @@ protected:
 			// check and copy array items
 			for(const auto& item : this->currentItem.value->GetArray()) {
 				if(item.IsUint()) {
-					const unsigned int value = item.GetUint();
+					const auto value = item.GetUint();
 
-					if(value > std::numeric_limits<unsigned char>::max())
+					if(value > std::numeric_limits<std::uint8_t>::max())
 						this->logPtr->emplace(
 							"Value in \'" + this->currentItem.str() + "\'"
 							" ignored because the number is too large."
@@ -992,7 +992,7 @@ protected:
 
 		// check value type
 		if(this->currentItem.value->IsUint()) {
-			const unsigned int value = this->currentItem.value->GetUint();
+			const auto value = this->currentItem.value->GetUint();
 
 			if(value > std::numeric_limits<std::uint16_t>::max())
 				this->logPtr->emplace(
@@ -1042,7 +1042,7 @@ protected:
 			// check and copy array items
 			for(const auto& item : this->currentItem.value->GetArray()) {
 				if(item.IsUint()) {
-					const unsigned int value = item.GetUint();
+					const auto value = item.GetUint();
 
 					if(value > std::numeric_limits<std::uint16_t>::max())
 						this->logPtr->emplace(
@@ -1189,7 +1189,7 @@ protected:
 		this->finished = true;
 	}
 
-	// check for a configuration option (array of 64-bit integers), throws Config::Exception
+	// check for a configuration option (array of unsigned 64-bit integers), throws Config::Exception
 	inline void Config::option(const std::string& name, std::vector<std::uint64_t>& target) {
 #ifdef MODULE_CONFIG_DEBUG
 		if(this->debug)
