@@ -99,7 +99,7 @@ namespace crawlservpp::Module::Crawler {
 			bool crawlerReCrawlStart;
 			bool crawlerRepairCData;
 			bool crawlerRepairComments;
-			long crawlerReTries;
+			std::int64_t crawlerReTries;
 			bool crawlerRetryArchive;
 			bool crawlerRetryEmpty;
 			std::vector<std::uint32_t> crawlerRetryHttp;
