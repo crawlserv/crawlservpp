@@ -43,12 +43,11 @@
 
 #include "../_extern/mongoose/mongoose.h"
 
-#include <cstring>
-#include <fstream>
-#include <functional>
-#include <memory>
-#include <string>
-#include <vector>
+#include <cstdlib>		// std::malloc
+#include <cstring>		// std::memcpy
+#include <fstream>		// std::ios_base, std::ofstream
+#include <functional>	// std::function
+#include <string>		// std::string
 
 namespace crawlservpp::Main {
 
