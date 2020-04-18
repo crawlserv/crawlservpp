@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 #include "../../Network/Config.hpp"
 
 #include <algorithm>	// std::min std::replace_if
+#include <cstdint>		// std::int64_t, std::uint8_t, std::uint32_t, std::uint64_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -55,18 +56,18 @@ namespace crawlservpp::Module::Extractor {
 		virtual ~Config() {}
 
 		// configuration constants
-		static const unsigned char generalLoggingSilent = 0;
-		static const unsigned char generalLoggingDefault = 1;
-		static const unsigned char generalLoggingExtended = 2;
-		static const unsigned char generalLoggingVerbose = 3;
+		static const std::uint8_t generalLoggingSilent = 0;
+		static const std::uint8_t generalLoggingDefault = 1;
+		static const std::uint8_t generalLoggingExtended = 2;
+		static const std::uint8_t generalLoggingVerbose = 3;
 
-		static const unsigned char variablesSourcesParsed = 0;
-		static const unsigned char variablesSourcesContent = 1;
-		static const unsigned char variablesSourcesUrl = 2;
+		static const std::uint8_t variablesSourcesParsed = 0;
+		static const std::uint8_t variablesSourcesContent = 1;
+		static const std::uint8_t variablesSourcesUrl = 2;
 
-		static const unsigned char expectedSourceExtracting = 0;
-		static const unsigned char expectedSourceParsed = 1;
-		static const unsigned char expectedSourceContent = 2;
+		static const std::uint8_t expectedSourceExtracting = 0;
+		static const std::uint8_t expectedSourceParsed = 1;
+		static const std::uint8_t expectedSourceContent = 2;
 
 		// configuration entries
 		struct Entries {
@@ -74,49 +75,49 @@ namespace crawlservpp::Module::Extractor {
 			Entries();
 
 			// general entries
-			size_t generalCacheSize;
+			std::uint64_t generalCacheSize;
 			bool generalExtractCustom;
-			unsigned int generalLock;
-			unsigned char generalLogging;
+			std::uint32_t generalLock;
+			std::uint8_t generalLogging;
 			bool generalMinimizeMemory;
 			bool generalReExtract;
 			std::string generalResultTable;
-			long generalReTries;
-			std::vector<unsigned int> generalRetryHttp;
-			size_t generalSleepError;
-			size_t generalSleepHttp;
-			size_t generalSleepIdle;
-			size_t generalSleepMySql;
-			unsigned int generalTidyErrors;
+			std::int64_t generalReTries;
+			std::vector<std::uint32_t> generalRetryHttp;
+			std::uint64_t generalSleepError;
+			std::uint64_t generalSleepHttp;
+			std::uint64_t generalSleepIdle;
+			std::uint64_t generalSleepMySql;
+			std::uint32_t generalTidyErrors;
 			bool generalTidyWarnings;
 			bool generalTiming;
 
 			// variables entries
 			std::vector<std::string> variablesAlias;
-			std::vector<long> variablesAliasAdd;
+			std::vector<std::int64_t> variablesAliasAdd;
 			std::vector<std::string> variablesDateTimeFormat;
 			std::vector<std::string> variablesDateTimeLocale;
 			std::vector<std::string> variablesName;
 			std::vector<std::string> variablesParsedColumn;
 			std::vector<std::string> variablesParsedTable;
-			std::vector<size_t> variablesQuery;
-			std::vector<unsigned char> variablesSource;
+			std::vector<std::uint64_t> variablesQuery;
+			std::vector<std::uint8_t> variablesSource;
 			std::vector<std::string> variablesTokens;
 			std::vector<std::string> variablesTokensCookies;
-			std::vector<size_t> variablesTokensQuery;
+			std::vector<std::uint64_t> variablesTokensQuery;
 			std::vector<std::string> variablesTokensSource;
 			std::vector<std::string> variablesTokenHeaders;
 			std::vector<bool> variablesTokensUsePost;
 
 			// paging entries
 			std::string pagingAlias;
-			long pagingAliasAdd;
-			long pagingFirst;
+			std::int64_t pagingAliasAdd;
+			std::int64_t pagingFirst;
 			std::string pagingFirstString;
-			size_t pagingIsNextFrom;
-			size_t pagingNextFrom;
-			size_t pagingNumberFrom;
-			long pagingStep;
+			std::uint64_t pagingIsNextFrom;
+			std::uint64_t pagingNextFrom;
+			std::uint64_t pagingNumberFrom;
+			std::int64_t pagingStep;
 			std::string pagingVariable;
 
 			// source entries
@@ -127,26 +128,26 @@ namespace crawlservpp::Module::Extractor {
 			bool sourceUsePost;
 
 			// extracting entries
-			std::vector<size_t> extractingDataSetQueries;
+			std::vector<std::uint64_t> extractingDataSetQueries;
 			std::vector<std::string> extractingDateTimeFormats;
 			std::vector<std::string> extractingDateTimeLocales;
-			std::vector<size_t> extractingDateTimeQueries;
-			std::vector<size_t> extractingErrorFail;
-			std::vector<size_t> extractingErrorRetry;
+			std::vector<std::uint64_t> extractingDateTimeQueries;
+			std::vector<std::uint64_t> extractingErrorFail;
+			std::vector<std::uint64_t> extractingErrorRetry;
 			std::vector<std::string> extractingFieldDateTimeFormats;
 			std::vector<std::string> extractingFieldDateTimeLocales;
 			std::vector<char> extractingFieldDelimiters;
 			std::vector<bool> extractingFieldIgnoreEmpty;
 			std::vector<bool> extractingFieldJSON;
 			std::vector<std::string> extractingFieldNames;
-			std::vector<size_t> extractingFieldQueries;
+			std::vector<std::uint64_t> extractingFieldQueries;
 			std::vector<bool> extractingFieldTidyTexts;
 			std::vector<bool> extractingFieldWarningsEmpty;
 			std::vector<std::string> extractingIdIgnore;
-			std::vector<size_t> extractingIdQueries;
+			std::vector<std::uint64_t> extractingIdQueries;
 			bool extractingOverwrite;
-			std::vector<size_t> extractingRecursive;
-			size_t extractingRecursiveMaxDepth;
+			std::vector<std::uint64_t> extractingRecursive;
+			std::uint64_t extractingRecursiveMaxDepth;
 			bool extractingRemoveDuplicates;
 			bool extractingRepairCData;
 			bool extractingRepairComments;
@@ -156,8 +157,8 @@ namespace crawlservpp::Module::Extractor {
 			bool expectedErrorIfSmaller;
 			std::string expectedParsedColumn;
 			std::string expectedParsedTable;
-			size_t expectedQuery;
-			unsigned char expectedSource;
+			std::uint64_t expectedQuery;
+			std::uint8_t expectedSource;
 
 		} config;
 
@@ -328,7 +329,7 @@ namespace crawlservpp::Module::Extractor {
 		// check properties of variables
 		bool incompleteVariables = false;
 
-		const size_t completeVariables = std::min({
+		const auto completeVariables = std::min({
 				/* number of complete variables (= min. size of name and source arrays) */
 				this->config.variablesName.size(),
 				this->config.variablesSource.size()
@@ -419,7 +420,7 @@ namespace crawlservpp::Module::Extractor {
 		// check properties of tokens
 		bool incompleteTokens = false;
 
-		const size_t completeTokens = std::min({
+		const auto completeTokens = std::min({
 				/* number of complete tokens (= min. size of arrays) */
 				this->config.variablesTokens.size(),
 				this->config.variablesTokensSource.size(),
@@ -505,7 +506,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 
 		// check properties of fields
-		const size_t completeFields = std::min(
+		const auto completeFields = std::min(
 				this->config.extractingFieldNames.size(),
 				this->config.extractingFieldQueries.size()
 		);
