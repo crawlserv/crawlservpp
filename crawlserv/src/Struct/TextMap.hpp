@@ -38,20 +38,23 @@ namespace crawlservpp::Struct {
 
 	// structure for a part of the text map
 	struct TextMapEntry {
-		size_t pos;			// position of the annotated part inside the corpus
-		size_t length;		// length of the annoted part inside the corpus
-		std::string value;	// value of the annotation (e.g. article ID or date)
+		std::string::size_type pos;		// position of the annotated part inside the corpus
+		std::string::size_type length;	// length of the annoted part inside the corpus
+		std::string value;				// value of the annotation (e.g. article ID or date)
 
 		// constructor setting default values
 		TextMapEntry() : pos(0), length(0) {}
 
 		// constructor setting partial custom values (i. e. an empty annotation)
-		TextMapEntry(size_t setPos, size_t setLength) : pos(setPos), length(setLength) {}
+		TextMapEntry(
+				std::string::size_type setPos,
+				std::string::size_type setLength
+		) : pos(setPos), length(setLength) {}
 
 		// constructor setting custom values
 		TextMapEntry(
-				size_t setPos,
-				size_t setLength,
+				std::string::size_type setPos,
+				std::string::size_type setLength,
 				const std::string& setValue
 		) : pos(setPos), length(setLength), value(setValue) {}
 
