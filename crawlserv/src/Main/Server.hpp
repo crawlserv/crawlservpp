@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *
  * ---
  *
- * Server.h
+ * Server.hpp
  *
  * The command-and-control server. Uses the mongoose and RapidJSON libraries to implement a HTTP server for receiving JSON-formatted
  *  commands and sending JSON-formatted replies from/to the crawlserv_frontend.
@@ -123,6 +123,8 @@
 
 #include <algorithm>	// std::count, std::count_if, std::find_if
 #include <chrono>		// std::chrono
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint64_t
 #include <exception>	// std::exception
 #include <functional>	// std::bind, std::placeholders
 #include <iostream>		// std::cout, std::flush
