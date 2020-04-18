@@ -40,6 +40,7 @@
 #include "../../../Struct/ThreadStatus.hpp"
 
 #include <cstddef>	// std::size_t
+#include <cstdint>	// std::uint64_t
 #include <limits>	// std::numeric_limits
 #include <locale>	// std::locale
 #include <sstream>	// std::ostringstream

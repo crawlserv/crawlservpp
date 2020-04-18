@@ -152,7 +152,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage(this->status);
 
 		// sleep forever
-		this->sleep(std::numeric_limits<std::size_t>::max());
+		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 	// pause algorithm run
