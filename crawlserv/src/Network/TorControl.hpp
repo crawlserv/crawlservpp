@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@
 
 #include "asio.hpp"
 
+#include <cstdint>	// std::uint16_t, std::uint64_t
 #include <iostream>	// std::cerr, std::endl
 #include <string>	// std::string, std::to_string
 
@@ -48,13 +49,13 @@ namespace crawlservpp::Network {
 		// constructor and destructor
 		TorControl(
 				const std::string& controlServer,
-				unsigned short controlPort,
+				std::uint16_t controlPort,
 				const std::string& controlPassword
 		);
 		~TorControl();
 
 		// setter
-		void setNewIdentityTimer(size_t newIdentityAfterSeconds);
+		void setNewIdentityTimer(std::uint64_t newIdentityAfterSeconds);
 
 		// request new identity
 		void newIdentity();
@@ -80,9 +81,9 @@ namespace crawlservpp::Network {
 		// settings
 		const bool active;
 		const std::string server;
-		const unsigned short port;
+		const std::uint16_t port;
 		const std::string password;
-		size_t newIdentityAfter;
+		std::uint64_t newIdentityAfter;
 
 		// asio context and socket
 		asio::io_context context;

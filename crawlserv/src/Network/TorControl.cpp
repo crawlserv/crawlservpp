@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@ namespace crawlservpp::Network {
 	// constructor: set values, create context and socket
 	TorControl::TorControl(
 			const std::string& controlServer,
-			unsigned short controlPort,
+			std::uint16_t controlPort,
 			const std::string& controlPassword
 	)		:	active(!controlServer.empty()),
 				server(controlServer),
@@ -58,7 +58,7 @@ namespace crawlservpp::Network {
 	}
 
 	// set time in seconds after which to request a new identity (or 0 for disabled)
-	void TorControl::setNewIdentityTimer(size_t newIdentityAfterSeconds) {
+	void TorControl::setNewIdentityTimer(std::uint64_t newIdentityAfterSeconds) {
 		this->newIdentityAfter = newIdentityAfterSeconds;
 
 		// reset timer
@@ -98,7 +98,7 @@ namespace crawlservpp::Network {
 
 			// check response code
 			if(response[0] != '2' || response[1] != '5' || response[2] != '0')
-				throw Exception("Authentication failed");
+				throw Exception("Authentification failed");
 
 			// send command to request a new identity
 			const std::string command("SIGNAL NEWNYM\r\n");
