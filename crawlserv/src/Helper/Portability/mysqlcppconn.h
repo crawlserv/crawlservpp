@@ -29,8 +29,8 @@
  *      Author: ans
  */
 
-#ifndef SRC_HELPER_PORTABILITY_MYSQLCPPCONN_H_
-#define SRC_HELPER_PORTABILITY_MYSQLCPPCONN_H_
+#ifndef HELPER_PORTABILITY_MYSQLCPPCONN_H_
+#define HELPER_PORTABILITY_MYSQLCPPCONN_H_
 
 #if __cplusplus >= 201703L
 	// necessary includes for header
@@ -57,4 +57,4 @@
 #endif
 
 
-#endif /* SRC_HELPER_PORTABILITY_MYSQLCPPCONN_H_ */
+#endif /* HELPER_PORTABILITY_MYSQLCPPCONN_H_ */
