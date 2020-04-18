@@ -65,7 +65,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// set size of corpus chunks in percentage of the maximum package size allowed by the MySQL server
-	void Database::setCorpusSlicing(unsigned char percentageOfMaxAllowedPackageSize) {
+	void Database::setCorpusSlicing(std::uint8_t percentageOfMaxAllowedPackageSize) {
 		this->corpusSlicing = percentageOfMaxAllowedPackageSize;
 	}
 
@@ -566,7 +566,7 @@ namespace crawlservpp::Module::Analyzer {
 
 	// public helper function: check input tables and columns, throws Database::Exception
 	void Database::checkSources(
-			std::vector<unsigned char>& types,
+			std::vector<std::uint8_t>& types,
 			std::vector<std::string>& tables,
 			std::vector<std::string>& columns
 	) {

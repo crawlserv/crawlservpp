@@ -57,7 +57,7 @@
 #include <algorithm>	// std::find_if
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint16_t, std::uint64_t
+#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint64_t
 #include <functional>	// std::function
 #include <locale>		// std::locale
 #include <queue>		// std::queue
@@ -91,7 +91,7 @@ namespace crawlservpp::Module::Analyzer {
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
 		void setTimeoutTargetLock(std::uint64_t timeOut);
-		void setCorpusSlicing(unsigned char percentageOfMaxAllowedPackageSize);
+		void setCorpusSlicing(std::uint8_t percentageOfMaxAllowedPackageSize);
 		void setIsRunningCallback(IsRunningCallback isRunningCallback);
 
 		// prepare target table and SQL statements for analyzer
@@ -115,7 +115,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::string getSourceTableName(std::uint16_t type, const std::string& name);
 		std::string getSourceColumnName(std::uint16_t type, const std::string& name);
 		void checkSources(
-				std::vector<unsigned char>& types,
+				std::vector<std::uint8_t>& types,
 				std::vector<std::string>& tables,
 				std::vector<std::string>& columns
 		);
@@ -134,7 +134,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::vector<std::string> targetFieldNames;
 		std::vector<std::string> targetFieldTypes;
 		std::uint64_t timeoutTargetLock;
-		unsigned char corpusSlicing;
+		std::uint8_t corpusSlicing;
 
 		// table prefix, target table ID and its name
 		std::string tablePrefix;
