@@ -37,7 +37,7 @@
 #include "../Config.hpp"
 
 #include <algorithm>	// std::min
-#include <cstdint>		// std::std::uint64_t
+#include <cstdint>		// std::uint8_t, std::std::uint64_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -53,15 +53,15 @@ namespace crawlservpp::Module::Analyzer {
 		virtual ~Config() {};
 
 		// configuration constants
-		static const unsigned char generalInputSourcesParsing = 0;
-		static const unsigned char generalInputSourcesExtracting = 1;
-		static const unsigned char generalInputSourcesAnalyzing = 2;
-		static const unsigned char generalInputSourcesCrawling = 3;
+		static const std::uint8_t generalInputSourcesParsing = 0;
+		static const std::uint8_t generalInputSourcesExtracting = 1;
+		static const std::uint8_t generalInputSourcesAnalyzing = 2;
+		static const std::uint8_t generalInputSourcesCrawling = 3;
 
-		static const unsigned char generalLoggingSilent = 0;
-		static const unsigned char generalLoggingDefault = 1;
-		static const unsigned char generalLoggingExtended = 2;
-		static const unsigned char generalLoggingVerbose = 3;
+		static const std::uint8_t generalLoggingSilent = 0;
+		static const std::uint8_t generalLoggingDefault = 1;
+		static const std::uint8_t generalLoggingExtended = 2;
+		static const std::uint8_t generalLoggingVerbose = 3;
 
 		// configuration entries
 		struct Entries {
@@ -70,11 +70,11 @@ namespace crawlservpp::Module::Analyzer {
 
 			// general entries
 			bool generalCorpusChecks;
-			unsigned char generalCorpusSlicing;
+			std::uint8_t generalCorpusSlicing;
 			std::vector<std::string> generalInputFields;
-			std::vector<unsigned char> generalInputSources;
+			std::vector<std::uint8_t> generalInputSources;
 			std::vector<std::string> generalInputTables;
-			unsigned char generalLogging;
+			std::uint8_t generalLogging;
 			std::string generalResultTable;
 			std::uint64_t generalSleepMySql;
 			std::uint64_t generalSleepWhenFinished;
