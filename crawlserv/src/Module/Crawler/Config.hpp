@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,6 +38,8 @@
 #include "../../Network/Config.hpp"
 
 #include <algorithm>	// std::min
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::int64_t, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -56,13 +58,13 @@ namespace crawlservpp::Module::Crawler {
 		void setCrossDomain(bool isCrossDomain);
 
 		// configuration constants
-		static const unsigned char crawlerLoggingSilent = 0;
-		static const unsigned char crawlerLoggingDefault = 1;
-		static const unsigned char crawlerLoggingExtended = 2;
-		static const unsigned char crawlerLoggingVerbose = 3;
+		static const std::uint8_t crawlerLoggingSilent = 0;
+		static const std::uint8_t crawlerLoggingDefault = 1;
+		static const std::uint8_t crawlerLoggingExtended = 2;
+		static const std::uint8_t crawlerLoggingVerbose = 3;
 
-		static const unsigned char redirectSourceUrl = 0;
-		static const unsigned char redirectSourceContent = 1;
+		static const std::uint8_t redirectSourceUrl = 0;
+		static const std::uint8_t redirectSourceContent = 1;
 
 		// configuration entries
 		struct Entries {
@@ -74,24 +76,24 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> crawlerArchivesNames;
 			std::vector<std::string> crawlerArchivesUrlsMemento;
 			std::vector<std::string> crawlerArchivesUrlsTimemap;
-			unsigned int crawlerLock;
-			unsigned char crawlerLogging;
+			std::uint64_t crawlerLock;
+			std::uint8_t crawlerLogging;
 			std::vector<std::string> crawlerParamsAdd;
 			std::vector<std::string> crawlerParamsBlackList;
 			std::vector<std::string> crawlerParamsWhiteList;
-			std::vector<size_t> crawlerQueriesBlackListContent;
-			std::vector<size_t> crawlerQueriesBlackListTypes;
-			std::vector<size_t> crawlerQueriesBlackListUrls;
-			std::vector<size_t> crawlerQueriesLinks;
-			std::vector<size_t> crawlerQueriesLinksBlackListContent;
-			std::vector<size_t> crawlerQueriesLinksBlackListTypes;
-			std::vector<size_t> crawlerQueriesLinksBlackListUrls;
-			std::vector<size_t> crawlerQueriesLinksWhiteListContent;
-			std::vector<size_t> crawlerQueriesLinksWhiteListTypes;
-			std::vector<size_t> crawlerQueriesLinksWhiteListUrls;
-			std::vector<size_t> crawlerQueriesWhiteListContent;
-			std::vector<size_t> crawlerQueriesWhiteListTypes;
-			std::vector<size_t> crawlerQueriesWhiteListUrls;
+			std::vector<std::uint64_t> crawlerQueriesBlackListContent;
+			std::vector<std::uint64_t> crawlerQueriesBlackListTypes;
+			std::vector<std::uint64_t> crawlerQueriesBlackListUrls;
+			std::vector<std::uint64_t> crawlerQueriesLinks;
+			std::vector<std::uint64_t> crawlerQueriesLinksBlackListContent;
+			std::vector<std::uint64_t> crawlerQueriesLinksBlackListTypes;
+			std::vector<std::uint64_t> crawlerQueriesLinksBlackListUrls;
+			std::vector<std::uint64_t> crawlerQueriesLinksWhiteListContent;
+			std::vector<std::uint64_t> crawlerQueriesLinksWhiteListTypes;
+			std::vector<std::uint64_t> crawlerQueriesLinksWhiteListUrls;
+			std::vector<std::uint64_t> crawlerQueriesWhiteListContent;
+			std::vector<std::uint64_t> crawlerQueriesWhiteListTypes;
+			std::vector<std::uint64_t> crawlerQueriesWhiteListUrls;
 			bool crawlerReCrawl;
 			std::vector<std::string> crawlerReCrawlAlways;
 			bool crawlerReCrawlStart;
@@ -100,20 +102,20 @@ namespace crawlservpp::Module::Crawler {
 			long crawlerReTries;
 			bool crawlerRetryArchive;
 			bool crawlerRetryEmpty;
-			std::vector<unsigned int> crawlerRetryHttp;
-			size_t crawlerSleepError;
-			size_t crawlerSleepHttp;
-			size_t crawlerSleepIdle;
-			size_t crawlerSleepMySql;
+			std::vector<std::uint16_t> crawlerRetryHttp;
+			std::uint64_t crawlerSleepError;
+			std::uint64_t crawlerSleepHttp;
+			std::uint64_t crawlerSleepIdle;
+			std::uint64_t crawlerSleepMySql;
 			std::string crawlerStart;
 			bool crawlerStartIgnore;
-			unsigned int crawlerTidyErrors;
+			std::uint32_t crawlerTidyErrors;
 			bool crawlerTidyWarnings;
 			bool crawlerTiming;
 			bool crawlerUrlCaseSensitive;
-			size_t crawlerUrlChunks;
+			std::uint64_t crawlerUrlChunks;
 			bool crawlerUrlDebug;
-			unsigned short crawlerUrlMaxLength;
+			std::uint16_t crawlerUrlMaxLength;
 			bool crawlerUrlStartupCheck;
 			bool crawlerWarningsFile;
 			bool crawlerXml;
@@ -121,17 +123,17 @@ namespace crawlservpp::Module::Crawler {
 			// custom entries
 			std::vector<std::string> customCounters;
 			std::vector<std::string> customCountersAlias;
-			std::vector<size_t> customCountersAliasAdd;
-			std::vector<long> customCountersEnd;
+			std::vector<std::uint64_t> customCountersAliasAdd;
+			std::vector<std::int64_t> customCountersEnd;
 			bool customCountersGlobal;
-			std::vector<long> customCountersStart;
-			std::vector<long> customCountersStep;
+			std::vector<std::int64_t> customCountersStart;
+			std::vector<std::int64_t> customCountersStep;
 			bool customReCrawl;
 			bool customRobots;
 			std::vector<std::string> customTokens;
 			std::vector<std::string> customTokensCookies;
-			std::vector<unsigned int> customTokensKeep;
-			std::vector<size_t> customTokensQuery;
+			std::vector<std::uint32_t> customTokensKeep;
+			std::vector<std::uint64_t> customTokensQuery;
 			std::vector<std::string> customTokensSource;
 			std::vector<std::string> customTokenHeaders;
 			std::vector<bool> customTokensUsePost;
@@ -141,16 +143,16 @@ namespace crawlservpp::Module::Crawler {
 			// dynamic redirect
 			std::string redirectCookies;
 			std::vector<std::string> redirectHeaders;
-			size_t redirectQueryUrl;
-			size_t redirectQueryContent;
+			std::uint64_t redirectQueryUrl;
+			std::uint64_t redirectQueryContent;
 			std::string redirectTo;
 			bool redirectUsePost;
 			std::vector<std::string> redirectVarNames;
-			std::vector<size_t> redirectVarQueries;
-			std::vector<unsigned char> redirectVarSources;
+			std::vector<std::uint64_t> redirectVarQueries;
+			std::vector<std::uint8_t> redirectVarSources;
 
 			// expected number of results
-			size_t expectedQuery;
+			std::uint64_t expectedQuery;
 			bool expectedErrorIfLarger;
 			bool expectedErrorIfSmaller;
 		} config;
@@ -340,7 +342,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of archives
 		bool incompleteArchives = false;
 
-		const size_t completeArchives = std::min({ // number of complete archives (= min. size of all arrays)
+		const auto completeArchives = std::min({ // number of complete archives (= min. size of all arrays)
 				this->config.crawlerArchivesNames.size(),
 				this->config.crawlerArchivesUrlsMemento.size(),
 				this->config.crawlerArchivesUrlsTimemap.size()
@@ -380,7 +382,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of counters
 		bool incompleteCounters = false;
 
-		const size_t completeCounters = std::min({ // number of complete counters (= min. size of arrays)
+		const auto completeCounters = std::min({ // number of complete counters (= min. size of arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
 				this->config.customCountersEnd.size()
@@ -444,8 +446,8 @@ namespace crawlservpp::Module::Crawler {
 
 		// check validity of counters
 		//	(infinite counters are invalid, therefore the need to check for counter termination)
-		for(size_t n = 1; n <= this->config.customCounters.size(); ++n) {
-			const size_t i = n - 1;
+		for(std::size_t n = 1; n <= this->config.customCounters.size(); ++n) {
+			const auto i = n - 1;
 
 			if(
 					(
@@ -481,7 +483,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of tokens
 		bool incompleteTokens = false;
 
-		const size_t completeTokens = std::min({ // number of complete tokens (= min. size of arrays)
+		const auto completeTokens = std::min({ // number of complete tokens (= min. size of arrays)
 				this->config.customTokens.size(),
 				this->config.customTokensSource.size(),
 				this->config.customTokensQuery.size()
@@ -545,7 +547,7 @@ namespace crawlservpp::Module::Crawler {
 		// check properties of variables for dynamic redirect
 		bool incompleteVars = false;
 
-		const size_t completeVars = std::min({ // number of complete variables (= min. size of all arrays)
+		const auto completeVars = std::min({ // number of complete variables (= min. size of all arrays)
 			this->config.redirectVarNames.size(),
 			this->config.redirectVarQueries.size(),
 			this->config.redirectVarSources.size()
