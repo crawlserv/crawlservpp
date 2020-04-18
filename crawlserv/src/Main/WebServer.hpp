@@ -43,6 +43,7 @@
 
 #include "../_extern/mongoose/mongoose.h"
 
+#include <cstdint>		// std::uint16_t
 #include <cstdlib>		// std::malloc
 #include <cstring>		// std::memcpy
 #include <fstream>		// std::ios_base, std::ofstream
@@ -79,7 +80,7 @@ namespace crawlservpp::Main {
 		void poll(int timeOut);
 		void send(
 				ConnectionPtr connection,
-				unsigned short code,
+				uint16_t code,
 				const std::string& type,
 				const std::string& content
 		);

@@ -88,7 +88,7 @@ namespace crawlservpp::Main {
 	// send HTTP reply, throws WebServer::Exception
 	void WebServer::send(
 			ConnectionPtr connection,
-			unsigned short code,
+			std::uint16_t code,
 			const std::string& type,
 			const std::string& content
 	) {
