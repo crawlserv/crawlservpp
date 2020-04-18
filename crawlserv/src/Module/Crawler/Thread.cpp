@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -274,10 +274,10 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<std::string> customHeaders;
 		std::string timerString;
 
-		size_t checkedUrls = 0;
-		size_t newUrls = 0;
-		size_t checkedUrlsArchive = 0;
-		size_t newUrlsArchive = 0;
+		std::size_t checkedUrls = 0;
+		std::size_t newUrls = 0;
+		std::size_t checkedUrlsArchive = 0;
+		std::size_t newUrlsArchive = 0;
 
 		bool usePost = false;
 
@@ -285,7 +285,7 @@ namespace crawlservpp::Module::Crawler {
 		this->torControl.tick();
 
 		// check for jump in last ID ("time travel")
-		const long warpedOver = this->getWarpedOverAndReset();
+		const auto warpedOver = this->getWarpedOverAndReset();
 
 		if(warpedOver) {
 			// unlock last URL if necessary
@@ -451,7 +451,7 @@ namespace crawlservpp::Module::Crawler {
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
 
-			const long double tps =
+			const auto tps =
 					static_cast<long double>(this->tickCounter)
 					/ std::chrono::duration_cast<std::chrono::seconds>(
 							std::chrono::steady_clock::now()
@@ -513,7 +513,7 @@ namespace crawlservpp::Module::Crawler {
 				// run each counter over every URL
 				newUrls = this->config.customUrls;
 
-				for(size_t n = 0; n < this->config.customCounters.size(); ++n)
+				for(std::size_t n = 0; n < this->config.customCounters.size(); ++n)
 					this->initDoGlobalCounting(
 							newUrls,
 							this->config.customCounters.at(n),
@@ -527,7 +527,7 @@ namespace crawlservpp::Module::Crawler {
 			else {
 				// run each counter over one URL
 				for(
-						size_t n = 0;
+						std::size_t n = 0;
 						n < std::min(
 								this->config.customCounters.size(),
 								this->config.customUrls.size()
@@ -621,7 +621,7 @@ namespace crawlservpp::Module::Crawler {
 		// get IDs of custom URLs
 		this->setStatusMessage("Getting IDs of custom URLs...");
 
-		size_t counter = 0;
+		std::size_t counter = 0;
 
 		for(auto& customPage : this->customPages) {
 			// check whether thread is still supposed to run
@@ -777,7 +777,7 @@ namespace crawlservpp::Module::Crawler {
 						std::find_if(
 								this->customPages.begin(),
 								this->customPages.end(),
-								[&sitemap](const auto& val) {
+								[&sitemap](const auto& val) -> bool {
 									return val.second == sitemap;
 								}
 						) == this->customPages.end()
@@ -795,10 +795,10 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string>& urlList,
 			const std::string& variable,
 			const std::string& alias,
-			long start,
-			long end,
-			long step,
-			long aliasAdd
+			std::int64_t start,
+			std::int64_t end,
+			std::int64_t step,
+			std::int64_t aliasAdd
 	) {
 		std::vector<std::string> newUrlList;
 
@@ -806,7 +806,7 @@ namespace crawlservpp::Module::Crawler {
 
 		for(const auto& url : urlList) {
 			if(url.find(variable) != std::string::npos) {
-				long counter = start;
+				auto counter = start;
 
 				while(
 						this->isRunning()
@@ -852,15 +852,15 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& url,
 			const std::string& variable,
 			const std::string& alias,
-			long start,
-			long end,
-			long step,
-			long aliasAdd
+			std::int64_t start,
+			std::int64_t end,
+			std::int64_t step,
+			std::int64_t aliasAdd
 	) {
 		std::vector<std::string> newUrlList;
 
 		if(url.find(variable) != std::string::npos) {
-			long counter = start;
+			auto counter = start;
 
 			while(
 					this->isRunning()
@@ -1380,12 +1380,12 @@ namespace crawlservpp::Module::Crawler {
 		for(auto i = this->config.customTokens.begin(); i != this->config.customTokens.end(); ++i) {
 			// check URL for token variable
 			if(result.second.find(*i) != std::string::npos) {
-				const auto index = i - this->config.customTokens.begin();
 				std::string value;
 
 				// check token cache
-				const unsigned int cachedSeconds = this->config.customTokensKeep.at(index);
-				const TimeString& cachedToken = this->customTokens.at(index);
+				const auto index = i - this->config.customTokens.begin();
+				const auto cachedSeconds = this->config.customTokensKeep.at(index);
+				const auto& cachedToken = this->customTokens.at(index);
 
 				if(
 						cachedSeconds
@@ -1576,8 +1576,8 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& customCookies,
 			const std::vector<std::string>& customHeaders,
 			bool usePost,
-			size_t& checkedUrlsTo,
-			size_t& newUrlsTo,
+			std::size_t& checkedUrlsTo,
+			std::size_t& newUrlsTo,
 			std::string& timerStrTo
 	) {
 		Timer::StartStop sleepTimer;
@@ -1605,7 +1605,7 @@ namespace crawlservpp::Module::Crawler {
 		// check HTTP sleeping time
 		if(this->config.crawlerSleepHttp) {
 			// calculate elapsed time since last HTTP request and sleep if necessary
-			const size_t httpElapsed =
+			const std::uint64_t httpElapsed =
 					std::chrono::duration_cast<std::chrono::milliseconds>(
 							std::chrono::steady_clock::now() - this->httpTime
 					).count();
@@ -1726,7 +1726,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check HTTP response code
-		const unsigned int responseCode = this->networking.getResponseCode();
+		const auto responseCode = this->networking.getResponseCode();
 
 		if(!(this->crawlingCheckResponseCode(url.second, responseCode))) {
 			// skip because of response code
@@ -2257,7 +2257,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// check the HTTP response code for an error and decide whether to continue or skip
-	bool Thread::crawlingCheckResponseCode(const std::string& url, long responseCode) {
+	bool Thread::crawlingCheckResponseCode(const std::string& url, std::uint32_t responseCode) {
 		if(responseCode >= 400 && responseCode < 600) {
 			this->log(
 					Config::crawlerLoggingDefault,
@@ -2493,7 +2493,7 @@ namespace crawlservpp::Module::Crawler {
 	// save content to database, throws Thread::Exception
 	void Thread::crawlingSaveContent(
 			const IdString& url,
-			unsigned int response,
+			std::uint32_t response,
 			const std::string& type,
 			const std::string& content
 	) {
@@ -2529,7 +2529,7 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& type
 	) {
 		bool expecting = false;
-		size_t expected = 0;
+		unsigned long expected = 0;
 		std::vector<std::string> urls;
 		std::queue<std::string> queryWarnings;
 
@@ -2656,7 +2656,7 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::crawlingParseAndAddUrls(
 			const std::string& url,
 			std::vector<std::string>& urls,
-			size_t& newUrlsTo,
+			std::size_t& newUrlsTo,
 			bool archived
 	) {
 		// check argument
@@ -2679,15 +2679,15 @@ namespace crawlservpp::Module::Crawler {
 		// parse URLs
 		newUrlsTo = 0;
 
-		for(size_t n = 1; n <= urls.size(); ++n) {
+		for(std::size_t n = 1; n <= urls.size(); ++n) {
 			// reference to linked URL (for convenience)
 			auto& linked = urls.at(n - 1);
 
 			// parse archive URLs (only absolute links behind archive links!)
 			if(archived) {
-				const size_t pos1 = linked.find("https://", 1);
-				const size_t pos2 = linked.find("http://", 1);
-				size_t pos = 0;
+				const auto pos1 = linked.find("https://", 1);
+				const auto pos2 = linked.find("http://", 1);
+				std::size_t pos = 0;
 
 				if(pos1 != std::string::npos && pos2 != std::string::npos) {
 					if(pos1 < pos2)
@@ -2786,7 +2786,7 @@ namespace crawlservpp::Module::Crawler {
 		const auto oldSize = urls.size();
 
 		urls.erase(std::remove_if(urls.begin(), urls.end(),
-				[&maxLength = this->config.crawlerUrlMaxLength](const auto& url) {
+				[&maxLength = this->config.crawlerUrlMaxLength](const auto& url) -> bool {
 					return url.length() > maxLength;
 				}
 		), urls.end());
@@ -2821,8 +2821,8 @@ namespace crawlservpp::Module::Crawler {
 		const std::string statusMessage(this->getStatusMessage());
 
 		// add URLs that do not exist already in chunks of config-defined size
-		size_t pos = 0;
-		size_t chunkSize = 0;
+		std::size_t pos = 0;
+		std::size_t chunkSize = 0;
 
 		// check for infinite chunk size
 		if(this->config.crawlerUrlChunks)
@@ -2864,8 +2864,8 @@ namespace crawlservpp::Module::Crawler {
 	// crawl archives, throws Thread::Exception
 	bool Thread::crawlingArchive(
 			IdString& url,
-			size_t& checkedUrlsTo,
-			size_t& newUrlsTo,
+			std::size_t& checkedUrlsTo,
+			std::size_t& newUrlsTo,
 			bool unlockUrl
 	) {
 		// check arguments
@@ -2883,7 +2883,7 @@ namespace crawlservpp::Module::Crawler {
 			this->log(Config::crawlerLoggingExtended, "gets archives of " + url.second + "...");
 
 			// loop over different archives
-			for(size_t n = 0; n < this->config.crawlerArchivesNames.size(); ++n) {
+			for(std::size_t n = 0; n < this->config.crawlerArchivesNames.size(); ++n) {
 				// skip empty archive and timemap URLs
 				if((this->config.crawlerArchivesUrlsMemento.at(n).empty())
 						|| (this->config.crawlerArchivesUrlsTimemap.at(n).empty()))
@@ -2947,8 +2947,8 @@ namespace crawlservpp::Module::Crawler {
 							const std::string statusMessage(this->getStatusMessage());
 
 							// go through all mementos
-							size_t counter = 0;
-							const size_t total = mementos.size();
+							std::size_t counter = 0;
+							const auto total = mementos.size();
 
 							while(!mementos.empty() && this->isRunning()) {
 								std::string timeStamp(mementos.front().timeStamp);
@@ -3023,7 +3023,7 @@ namespace crawlservpp::Module::Crawler {
 														timeStamp
 												);
 
-												size_t subUrlPos = mementos.front().url.find(timeStamp);
+												auto subUrlPos = mementos.front().url.find(timeStamp);
 
 												if(subUrlPos != std::string::npos) {
 													subUrlPos += timeStamp.length();
@@ -3294,7 +3294,7 @@ namespace crawlservpp::Module::Crawler {
 			// automatic mode: update thread status
 			this->setLast(url.first);
 
-			const size_t total = this->database.getNumberOfUrls();
+			const auto total = this->database.getNumberOfUrls();
 
 			if(total)
 				this->setProgress(
@@ -3369,7 +3369,7 @@ namespace crawlservpp::Module::Crawler {
 			// increment and check retry counter
 			++(this->retryCounter);
 
-			if(this->retryCounter > (size_t) this->config.crawlerReTries) {
+			if(this->retryCounter > this->config.crawlerReTries) {
 				// do not retry, but skip
 				this->crawlingSkip(url, true);
 
@@ -3463,8 +3463,8 @@ namespace crawlservpp::Module::Crawler {
 		Memento newMemento;				// object for new memento
 		bool mementoStarted = false;	// memento has been started
 		std::string nextPage;			// link to next page
-		size_t pos = 0;			// position of memento
-		size_t end = 0;			// end of memento
+		std::size_t pos = 0;			// position of memento
+		std::size_t end = 0;			// end of memento
 		bool newField = true;			// not in the middle of a field
 
 		while(pos < mementoContent.length()) {
@@ -3559,7 +3559,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 				else {
 					const std::string fieldName(mementoContent.substr(pos, end - pos));
-					const size_t oldPos = pos;
+					const auto oldPos = pos;
 
 					pos = mementoContent.find_first_of("\"\'", pos + 1);
 

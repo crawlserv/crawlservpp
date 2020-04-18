@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2019 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,18 +54,21 @@
 
 #include <curl/curl.h>
 
-#include <algorithm>	// std::count, std::find
+#include <algorithm>	// std::count, std::find_if, std::min, std::remove_if, std::transform
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::int64_t, std::uint32_t, std::uint64_t
 #include <queue>		// std::queue
 #include <functional>	// std::bind
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
 #include <locale>		// std::locale
 #include <memory>		// std::make_unique, std::unique_ptr
-#include <sstream>		// std::ostringstream
+#include <queue>		// std::queue
+#include <sstream>		// std::istringstream, std::ostringstream
 #include <stdexcept>	// std::logic_error
-#include <string>		// std::stoul, std::string, std::to_string
+#include <string>		// std::getline, std::stoul, std::string, std::to_string
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
@@ -91,7 +94,7 @@ namespace crawlservpp::Module::Crawler {
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
-		using IdString = std::pair<size_t, std::string>;
+		using IdString = std::pair<std::uint64_t, std::string>;
 		using TimeString = std::pair<std::chrono::steady_clock::time_point, std::string>;
 
 	public:
@@ -189,11 +192,11 @@ namespace crawlservpp::Module::Crawler {
 		IdString nextUrl;				// next URL (currently crawled URL in automatic mode)
 		std::string lockTime;			// last locking time for currently crawled URL
 		IdString manualUrl;				// custom URL to be retried
-		size_t manualCounter;	// number of crawled custom URLs
+		std::size_t manualCounter;		// number of crawled custom URLs
 		bool startCrawled;				// start page has been successfully crawled
 		bool manualOff;					// manual mode has been turned off (after first URL is crawled)
 		std::string crawledContent;		// crawled content
-		size_t retryCounter;		// number of retries
+		std::size_t retryCounter;		// number of retries
 		bool archiveRetry;				// only archive needs to be retried
 
 		// timing
@@ -211,19 +214,19 @@ namespace crawlservpp::Module::Crawler {
 				std::vector<std::string>& urlList,
 				const std::string& variable,
 				const std::string& alias,
-				long start,
-				long end,
-				long step,
-				long aliasAdd
+				std::int64_t start,
+				std::int64_t end,
+				std::int64_t step,
+				std::int64_t aliasAdd
 		);
 		std::vector<std::string> initDoLocalCounting(
 				const std::string& url,
 				const std::string& variable,
 				const std::string& alias,
-				long start,
-				long end,
-				long step,
-				long aliasAdd
+				std::int64_t start,
+				std::int64_t end,
+				std::int64_t step,
+				std::int64_t aliasAdd
 		);
 		void initTokenCache();
 		void initQueries() override;
@@ -237,8 +240,8 @@ namespace crawlservpp::Module::Crawler {
 				const std::string& customCookies,
 				const std::vector<std::string>& customHeaders,
 				bool usePost,
-				size_t& checkedUrlsTo,
-				size_t& newUrlsTo,
+				std::size_t& checkedUrlsTo,
+				std::size_t& newUrlsTo,
 				std::string& timerStrTo
 		);
 		void crawlingDynamicRedirectUrl(
@@ -256,7 +259,7 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingCheckUrl(const std::string& url, const std::string& from);
 		bool crawlingCheckUrlForLinkExtraction(const std::string& url);
 		bool crawlingCheckCurlCode(CURLcode curlCode, const std::string& url);
-		bool crawlingCheckResponseCode(const std::string& url, long responseCode);
+		bool crawlingCheckResponseCode(const std::string& url, std::uint32_t responseCode);
 		bool crawlingCheckContentType(const std::string& url, const std::string& contentType);
 		bool crawlingCheckContentTypeForLinkExtraction(
 				const std::string& url,
@@ -266,7 +269,7 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingCheckContentForLinkExtraction(const std::string& url);
 		void crawlingSaveContent(
 				const IdString& url,
-				unsigned int response,
+				std::uint32_t response,
 				const std::string& type,
 				const std::string& content
 		);
@@ -277,13 +280,13 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingParseAndAddUrls(
 				const std::string& url,
 				std::vector<std::string>& urls,
-				size_t& newUrlsTo,
+				std::size_t& newUrlsTo,
 				bool archived
 		);
 		bool crawlingArchive(
 				IdString& url,
-				size_t& checkedUrlsTo,
-				size_t& newUrlsTo,
+				std::size_t& checkedUrlsTo,
+				std::size_t& newUrlsTo,
 				bool unlockUrl
 		);
 		void crawlingSuccess(const IdString& url);
