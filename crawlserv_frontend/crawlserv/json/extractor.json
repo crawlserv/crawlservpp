@@ -61,7 +61,7 @@
 			"type": "string",
 			"default": "",
 			"label": "Result table:",
-			"description": "Table name to save extracted data to.",
+			"description": "Name of table to save extracted data to.",
 			"simple": true,
 			"position": 1
 		},
@@ -623,6 +623,153 @@
 			"default": true,
 			"description": "Try to repair broken HTML/XML comments.",
 			"simple": false
+		}
+	},
+	"linked": {
+		"label": "Linked Data",
+		"open": false,
+		
+		"dataset.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"subsets"
+			],
+			"default": [],
+			"label": "Dataset queries:",
+			"description": "Queries to extract linked datasets. The first query that returns a non-empty result will be used.",
+			"simple": true,
+			"position": 3
+		},
+		"field.datetime.formats": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Date/time format of the field with the same array index (default: empty, i.e. no date/time conversion, see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
+			"simple": false
+		},
+		"field.datetime.locales": {
+			"type": "array",
+			"item-type": "locale",
+			"default": [],
+			"description": "Locale used when converting the field with the same array index to a date/time (ignored if no date/time format has been specified for the field).",
+			"simple": false
+		},
+		"field.delimiters": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Delimiter between multiple results for the field with the same array index if not saved as JSON. Only the first character, \\n (default), \\t or \\\\ will be used.",
+			"simple": false
+		},
+		"field.ignore.empty": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"description": "Ignore empty values when parsing multiple results for the field with the same array index (default).",
+			"simple": false
+		},
+		"field.json": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Field results as JSON:",
+			"description": "Save the value of the field with the same array index as a JSON array.",
+			"simple": true,
+			"position": 12
+		},
+		"field.names": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"label": "Field names:",
+			"description": "The names of the custom fields to extract.",
+			"simple": true,
+			"position": 8
+		},
+		"field.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single",
+				"multi"
+			],
+			"default": [],
+			"label": "Field queries:",
+			"description": "The query used to extract the custom field with the same array index from the dataset.",
+			"simple": true,
+			"position": 9
+		},
+		"field.tidy.texts": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Field results as tidied text:",
+			"description": "Remove line breaks and unnecessary spaces when extracting the field with the same array index.",
+			"simple": true,
+			"position": 10
+		},
+		"field.warnings.empty": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"description": "Log warning when the field with the same array index is empty (and logging is enabled).",
+			"simple": false
+		},
+		"id.ignore": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Extracted IDs to be ignored.",
+			"simple": false
+		},
+		"id.queries": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"single"
+			],
+			"default": [],
+			"label": "ID queries:",
+			"description": "Queries to extract the ID from the dataset. The first query that returns a non-empty result will be used. Datasets with duplicate or empty IDs will not be extracted.",
+			"simple": true,
+			"position": 4
+		},
+		"link": {
+			"type": "string",
+			"default": "",
+			"label": "Linked field:",
+			"description": "Name of the extracted field that links an extracted dataset to the ID of a linked dataset.",
+			"simple": true,
+			"position": 1
+		},
+		"overwrite": {
+			"type": "bool",
+			"default": true,
+			"label": "Overwrite existing data",
+			"description": "If a dataset with the same ID already exists, it will be overwritten.",
+			"simple": true,
+			"position": 11
+		},
+		"repair.cdata": {
+			"type": "bool",
+			"default": true,
+			"description": "Try to repair CData when parsing HTML/XML.",
+			"simple": false
+		},
+		"repair.comments": {
+			"type": "bool",
+			"default": true,
+			"description": "Try to repair broken HTML/XML comments.",
+			"simple": false
+		},
+		"target.table": {
+			"type": "string",
+			"default": "",
+			"label": "Target table:",
+			"description": "Name of the table to save linked data to.",
+			"simple": true,
+			"position": 2
 		}
 	},
 	"expected": {
