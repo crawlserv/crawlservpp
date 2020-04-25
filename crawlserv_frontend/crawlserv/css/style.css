@@ -626,9 +626,9 @@ div.opt-label {
 	width:213px;
 }
 div.opt-check-label {
+	width:215px;
 	font-size:16px;
 	display:inline-block;
-	width:220px;
 }
 div.opt-value {
 	display:inline-block;
@@ -642,7 +642,7 @@ div.opt-array-item {
 }
 div.opt-empty {
 	display:inline-block;
-	width:292px;
+	width:268px;
 	color:#b3b3b3;
 	font-size:10px;
 }
@@ -652,7 +652,7 @@ input[type="text"].opt {
 	box-sizing:border-box;
 }
 input[type="text"].opt-array {
-	width:254px;
+	width:248px;
 	box-sizing:border-box;
 }
 input[type="number"].opt {
@@ -661,7 +661,7 @@ input[type="number"].opt {
 	box-sizing:border-box;
 }
 input[type="number"].opt-array {
-	width:254px;
+	width:248px;
 	box-sizing:border-box;
 }
 input[type="date"].opt {
@@ -671,7 +671,7 @@ input[type="date"].opt {
 	height:2.2em;
 }
 input[type="date"].opt-array {
-	width:254px;
+	width:248px;
 	box-sizing:border-box;
 	height:2.2em;
 }
@@ -686,20 +686,22 @@ select.opt {
 	box-sizing:border-box;
 }
 select.opt-array {
-	width:254px;
+	width:248px;
 	font-size:14px;
 	box-sizing:border-box;
 }
 input[type="button"].opt-array-btn {
 	margin:1px;
-	padding:0;
+	padding:0px;
 	width:25px;
 	height:25px;
 	line-height:0px;
-	vertical-align:middle;
 	font-size:12px;
+	text-align:center;
 }
 span.opt-array-count {
+	float:left;
+	width:25px;
 	font-size:10px;
 }
 
