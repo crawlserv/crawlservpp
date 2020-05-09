@@ -32,7 +32,7 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
-	volatile sig_atomic_t App::interruptionSignal = 0;
+	volatile std::sig_atomic_t App::interruptionSignal = 0;
 
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 	App::App(int argc, char * argv[]) noexcept : running(true), showVersionsOnly(false) {
