@@ -49,7 +49,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <atomic>		// std::atomic
-#include <csignal>		// sigaction, sigemptyset [Linux] / signal [Windows], SIGINT, SIGTERM
+#include <csignal>		// sig_atomic_t, sigaction, sigemptyset/signal, SIGINT, SIGTERM
 #include <cstdint>		// std::uint16_t
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::endl, std::flush
@@ -71,7 +71,7 @@ namespace crawlservpp::Main {
 		int run() noexcept;
 
 		// signal handling
-		static std::atomic<int> interruptionSignal;
+		static volatile sig_atomic_t interruptionSignal;
 		static void signal(int signalNumber);
 		void shutdown();
 

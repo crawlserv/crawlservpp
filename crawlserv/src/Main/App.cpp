@@ -32,7 +32,7 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
-	std::atomic<int> App::interruptionSignal(0);
+	volatile sig_atomic_t App::interruptionSignal = 0;
 
 	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
 	App::App(int argc, char * argv[]) noexcept : running(true), showVersionsOnly(false) {
@@ -146,7 +146,7 @@ namespace crawlservpp::Main {
 		if(this->server) {
 			try {
 				while(this->server->tick() && this->running.load()) {
-					if(App::interruptionSignal.load())
+					if(App::interruptionSignal)
 						this->shutdown();
 				}
 
@@ -165,14 +165,14 @@ namespace crawlservpp::Main {
 
 	// static signal handler (forward the signal to the class)
 	void App::signal(int signalNumber) {
-		App::interruptionSignal.store(signalNumber);
+		App::interruptionSignal = signalNumber;
 	}
 
 	// in-class signal handler
 	void App::shutdown() {
 		std::cout << "\n[SHUTDOWN] ";
 
-		const auto signal = App::interruptionSignal.load();
+		const auto signal = App::interruptionSignal;
 
 		switch(signal) {
 		case SIGINT:
