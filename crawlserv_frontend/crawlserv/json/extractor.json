@@ -662,7 +662,7 @@
 			"description": "Delimiter between multiple results for the field with the same array index if not saved as JSON. Only the first character, \\n (default), \\t or \\\\ will be used.",
 			"simple": false
 		},
-		"fields": {
+		"field.names": {
 			"type": "array",
 			"item-type": "string",
 			"default": [],
