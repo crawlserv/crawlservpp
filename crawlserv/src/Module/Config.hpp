@@ -45,6 +45,7 @@
 #include <algorithm>	// std::adjacent_find, std::sort
 #endif
 
+#include <cctype>		// ::isascii
 #include <cstdint>		// std::int16_t, std::int32_t, std::int64_t, std::uint<8|16|32|64>_t
 #include <limits>		// std::numeric_limits
 #include <queue>		// std::queue
@@ -391,8 +392,9 @@ protected:
 			target = false;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not bool)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not bool)."
 			);
 
 		// current item is parsed
@@ -433,16 +435,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not bool)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not bool)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -475,8 +479,9 @@ protected:
 
 				if(value > std::numeric_limits<char>::max())
 					this->logPtr->emplace(
-							"\'" + this->currentItem.str() + "\'"
-							" ignored because the number is too large."
+							"\'"
+							+ this->currentItem.str()
+							+ "\' ignored because the number is too large."
 					);
 				else
 					target = value;
@@ -485,8 +490,9 @@ protected:
 				target = 0;
 			else if(this->logPtr)
 				this->logPtr->emplace(
-						"\'" + this->currentItem.str() + "\'"
-						" ignored because of wrong type (not int)."
+						"\'"
+						+ this->currentItem.str()
+						+ "\' ignored because of wrong type (not int)."
 				);
 
 			break;
@@ -502,8 +508,9 @@ protected:
 				);
 			else
 				this->logPtr->emplace(
-						"\'" + this->currentItem.str() + "\'"
-						" ignored because of wrong type (not string)."
+						"\'"
+						+ this->currentItem.str()
+						+ "\' ignored because of wrong type (not string)."
 				);
 
 			break;
@@ -552,8 +559,9 @@ protected:
 
 						if(value > std::numeric_limits<char>::max())
 							this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because the number is too large."
+								"Value in \'"
+									+ this->currentItem.str()
+									+ "\' ignored because the number is too large."
 							);
 						else
 							target.push_back(value);
@@ -563,8 +571,9 @@ protected:
 
 						if(!item.IsNull() && this->logPtr)
 							this->logPtr->emplace(
-									"Value in \'" + this->currentItem.str() + "\'"
-									" ignored because of wrong type (not int)."
+									"Value in \'"
+									+ this->currentItem.str()
+									+ "\' ignored because of wrong type (not int)."
 							);
 					}
 
@@ -572,7 +581,7 @@ protected:
 
 				case FromString:
 					// get from string
-					if(item.IsString())
+					if(item.IsString()) {
 						target.push_back(
 								Helper::Strings::getFirstOrEscapeChar(
 										std::string(
@@ -581,6 +590,19 @@ protected:
 										)
 								)
 						);
+
+						// check for valid ASCII
+						if(!::isascii(target.back()))
+							this->logPtr->emplace(
+									"First character of string in \'"
+									+ this->currentItem.str()
+									+ "\' is no ASCII character: "
+									+ std::string(
+											item.GetString(),
+											item.GetStringLength()
+									)
+							);
+					}
 					else {
 						target.push_back(0);
 
@@ -601,8 +623,9 @@ protected:
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -633,8 +656,9 @@ protected:
 
 			if(value > std::numeric_limits<std::int16_t>::max())
 				this->logPtr->emplace(
-						"\'" + this->currentItem.str() + "\'"
-						" ignored because the number is too large."
+						"\'"
+						+ this->currentItem.str()
+						+ "\' ignored because the number is too large."
 				);
 			else
 				target = value;
@@ -643,8 +667,9 @@ protected:
 			target = 0;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not integer)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not integer)."
 			);
 
 		// current item is parsed
@@ -683,8 +708,9 @@ protected:
 
 					if(value > std::numeric_limits<std::int16_t>::max())
 						this->logPtr->emplace(
-							"Value in \'" + this->currentItem.str() + "\'"
-							" ignored because the number is too large."
+							"Value in \'"
+							+ this->currentItem.str()
+							+ "\' ignored because the number is too large."
 						);
 					else
 						target.push_back(value);
@@ -694,16 +720,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not integer)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not integer)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -735,8 +763,9 @@ protected:
 			target = 0;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not integer)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not integer)."
 			);
 
 		// current item is parsed
@@ -777,16 +806,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not integer)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not integer)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -818,8 +849,9 @@ protected:
 			target = 0;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not 64-bit integer)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not 64-bit integer)."
 			);
 
 		// current item is parsed
@@ -855,16 +887,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not 64-bit integer)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not 64-bit integer)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -895,8 +929,9 @@ protected:
 
 			if(value > std::numeric_limits<std::uint8_t>::max())
 				this->logPtr->emplace(
-						"\'" + this->currentItem.str() + "\'"
-						" ignored because the number is too large."
+						"\'"
+						+ this->currentItem.str()
+						+ "\' ignored because the number is too large."
 				);
 			else
 				target = value;
@@ -905,8 +940,9 @@ protected:
 			target = 0;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned integer)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not unsigned integer)."
 			);
 
 		// current item is parsed
@@ -945,8 +981,9 @@ protected:
 
 					if(value > std::numeric_limits<std::uint8_t>::max())
 						this->logPtr->emplace(
-							"Value in \'" + this->currentItem.str() + "\'"
-							" ignored because the number is too large."
+							"Value in \'"
+							+ this->currentItem.str()
+							+ "\' ignored because the number is too large."
 						);
 					else
 						target.push_back(value);
@@ -956,16 +993,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned integer)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not unsigned integer)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -996,8 +1035,9 @@ protected:
 
 			if(value > std::numeric_limits<std::uint16_t>::max())
 				this->logPtr->emplace(
-						"\'" + this->currentItem.str() + "\'"
-						" ignored because the number is too large."
+						"\'"
+						+ this->currentItem.str()
+						+ "\' ignored because the number is too large."
 				);
 			else
 				target = value;
@@ -1006,8 +1046,9 @@ protected:
 			target = 0;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned integer)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not unsigned integer)."
 			);
 
 		// current item is parsed
@@ -1046,8 +1087,9 @@ protected:
 
 					if(value > std::numeric_limits<std::uint16_t>::max())
 						this->logPtr->emplace(
-							"Value in \'" + this->currentItem.str() + "\'"
-							" ignored because the number is too large."
+							"Value in \'"
+							+ this->currentItem.str()
+							+ "\' ignored because the number is too large."
 						);
 					else
 						target.push_back(value);
@@ -1057,16 +1099,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned integer)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not unsigned integer)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -1098,8 +1142,9 @@ protected:
 			target = 0;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned intefer)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not unsigned integer)."
 			);
 
 		// current item is parsed
@@ -1140,16 +1185,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned integer)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not unsigned integer)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -1181,8 +1228,9 @@ protected:
 			target = 0;
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not unsigned 64-bit integer)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not unsigned 64-bit integer)."
 			);
 
 		// current item is parsed
@@ -1223,16 +1271,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not unsigned 64-bit integer)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not unsigned 64-bit integer)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is finished
@@ -1277,8 +1327,11 @@ protected:
 					target.swap(str);
 				else if(this->logPtr)
 					this->logPtr->emplace(
-							"\'" + str + "\' in \'" + this->currentItem.str() + "\'"
-							" ignored because it contains invalid characters."
+							"\'"
+							+ str
+							+ "\' in \'"
+							+ this->currentItem.str()
+							+ "\' ignored because it contains invalid characters."
 					);
 
 				break;
@@ -1307,8 +1360,9 @@ protected:
 			target.clear();
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not string)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not string)."
 			);
 
 		// current item is parsed
@@ -1358,8 +1412,11 @@ protected:
 							target.emplace_back(str);
 						else if(this->logPtr)
 							this->logPtr->emplace(
-									"\'" + str + "\' in \'" + this->currentItem.str() + "\'"
-									" ignored because it contains invalid characters."
+									"\'"
+									+ str
+									+ "\' in \'"
+									+ this->currentItem.str()
+									+ "\' ignored because it contains invalid characters."
 							);
 
 						break;
@@ -1389,16 +1446,18 @@ protected:
 
 					if(!item.IsNull() && this->logPtr)
 						this->logPtr->emplace(
-								"Value in \'" + this->currentItem.str() + "\'"
-								" ignored because of wrong type (not string)."
+								"Value in \'"
+								+ this->currentItem.str()
+								+ "\' ignored because of wrong type (not string)."
 						);
 				}
 			}
 		}
 		else if(this->logPtr)
 			this->logPtr->emplace(
-					"\'" + this->currentItem.str() + "\'"
-					" ignored because of wrong type (not array)."
+					"\'"
+					+ this->currentItem.str()
+					+ "\' ignored because of wrong type (not array)."
 			);
 
 		// current item is parsed
