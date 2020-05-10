@@ -152,6 +152,25 @@ namespace crawlservpp::Module::Extractor {
 			bool extractingRepairCData;
 			bool extractingRepairComments;
 
+			// linked data entries
+			std::vector<std::uint64_t> linkedDataSetQueries;
+			std::vector<std::string> linkedDateTimeFormats;
+			std::vector<std::string> linkedDateTimeLocales;
+			std::vector<char> linkedDelimiters;
+			std::vector<std::string> linkedFieldNames;
+			std::vector<std::uint64_t> linkedFieldQueries;
+			std::vector<std::string> linkedIdIgnore;
+			std::vector<std::uint64_t> linkedIdQueries;
+			std::vector<bool> linkedIgnoreEmpty;
+			std::vector<bool> linkedJSON;
+			std::string linkedLink;
+			bool linkedOverwrite;
+			bool linkedRepairCData;
+			bool linkedRepairComments;
+			std::string linkedTargetTable;
+			std::vector<bool> linkedTidyTexts;
+			std::vector<bool> linkedWarningsEmpty;
+
 			// expected [number of results] entries
 			bool expectedErrorIfLarger;
 			bool expectedErrorIfSmaller;
@@ -206,6 +225,9 @@ namespace crawlservpp::Module::Extractor {
 										extractingRemoveDuplicates(true),
 										extractingRepairCData(true),
 										extractingRepairComments(true),
+										linkedOverwrite(true),
+										linkedRepairCData(true),
+										linkedRepairComments(true),
 										expectedErrorIfLarger(false),
 										expectedErrorIfSmaller(false),
 										expectedQuery(0),
@@ -304,6 +326,26 @@ namespace crawlservpp::Module::Extractor {
 		this->option("remove.duplicates", this->config.extractingRemoveDuplicates);
 		this->option("repair.cdata", this->config.extractingRepairCData);
 		this->option("repair.comments", this->config.extractingRepairComments);
+
+		// linked data
+		this->category("linked");
+		this->option("dataset.queries", this->config.linkedDataSetQueries);
+		this->option("datetime.formats", this->config.linkedDateTimeFormats);
+		this->option("datetime.locales", this->config.linkedDateTimeLocales);
+		this->option("delimiters", this->config.linkedDelimiters, CharParsingOption::FromString);
+		this->option("field.names", this->config.linkedFieldNames);
+		this->option("field.queries", this->config.linkedFieldQueries);
+		this->option("id.ignore", this->config.linkedIdIgnore);
+		this->option("id.queries", this->config.linkedIdQueries);
+		this->option("ignore.empty", this->config.linkedIgnoreEmpty);
+		this->option("json", this->config.linkedJSON);
+		this->option("link", this->config.linkedLink);
+		this->option("overwrite", this->config.linkedOverwrite);
+		this->option("repair.cdata", this->config.linkedRepairCData);
+		this->option("repair.comments", this->config.linkedRepairComments);
+		this->option("target.table", this->config.linkedTargetTable);
+		this->option("tidy.texts", this->config.linkedTidyTexts);
+		this->option("warnings.empty", this->config.linkedWarningsEmpty);
 
 		// expected [number of results]
 		this->category("expected");
@@ -589,7 +631,95 @@ namespace crawlservpp::Module::Extractor {
 
 		// warn about unused properties
 		if(incompleteFields)
-			this->warning("Unused field properties removed from configuration.");
+			this->warning("Unused field properties for extraction removed from configuration.");
+
+		// check properties of linked fields
+		const auto completeLinkedFields = std::min(
+				this->config.linkedFieldNames.size(),
+				this->config.linkedFieldQueries.size()
+		);
+
+		incompleteFields = false;
+
+		// remove field names or queries that are not used
+		if(this->config.linkedFieldNames.size() > completeLinkedFields) {
+			incompleteFields = true;
+
+			this->config.linkedFieldNames.resize(completeLinkedFields);
+		}
+		else if(this->config.linkedFieldQueries.size() > completeLinkedFields) {
+			incompleteFields = true;
+
+			this->config.linkedFieldQueries.resize(completeLinkedFields);
+		}
+
+		// warn about incomplete fields
+		if(incompleteFields) {
+			this->warning(
+					"\'linked.field.names\' and \'.field.queries\'"
+					" should have the same number of elements."
+			);
+
+			this->warning("Incomplete field(s) removed from configuration.");
+
+			incompleteFields = false;
+		}
+
+		// remove date/time formats that are not used, add empty format where none is specified
+		if(this->config.linkedDateTimeFormats.size() > completeLinkedFields)
+			incompleteFields = true;
+
+		this->config.linkedDateTimeFormats.resize(completeFields);
+
+		// remove date/time locales that are not used, add empty locale where none is specified
+		if(this->config.linkedDateTimeLocales.size() > completeLinkedFields)
+			incompleteFields = true;
+
+		this->config.linkedDateTimeLocales.resize(completeLinkedFields);
+
+		// remove field delimiters that are not used, add empty delimiter (\0) where none is specified
+		if(this->config.linkedDelimiters.size() > completeLinkedFields)
+			incompleteFields = true;
+
+		this->config.linkedDelimiters.resize(completeLinkedFields, '\0');
+
+		// replace all empty field delimiters with '\n'
+		std::replace_if(
+				this->config.linkedDelimiters.begin(),
+				this->config.linkedDelimiters.end(),
+				[](char c) {
+					return c == '\0';
+				},
+				'\n'
+		);
+
+		// remove 'ignore empty values' properties that are not used, set to 'true' where none is specified
+		if(this->config.linkedIgnoreEmpty.size() > completeLinkedFields)
+			incompleteFields = true;
+
+		this->config.linkedIgnoreEmpty.resize(completeLinkedFields, true);
+
+		// remove 'save field as JSON' properties that are not used, set to 'false' where none is specified
+		if(this->config.linkedJSON.size() > completeLinkedFields)
+			incompleteFields = true;
+
+		this->config.linkedJSON.resize(completeLinkedFields, false);
+
+		// remove 'tidy text' properties that are not used, set to 'false' where none is specified
+		if(this->config.linkedTidyTexts.size() > completeLinkedFields)
+			incompleteFields = true;
+
+		this->config.linkedTidyTexts.resize(completeLinkedFields, false);
+
+		// remove 'warning if empty' properties that are not used, set to 'false' where none is specified
+		if(this->config.linkedWarningsEmpty.size() > completeLinkedFields)
+			incompleteFields = true;
+
+		this->config.linkedWarningsEmpty.resize(completeLinkedFields, false);
+
+		// warn about unused properties
+		if(incompleteFields)
+			this->warning("Unused field properties for linked data removed from configuration.");
 	}
 
 	// remove obvious protocol(s) from beginning of URL
