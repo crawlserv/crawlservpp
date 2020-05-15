@@ -286,7 +286,8 @@ if($website) {
         // get last update of any parsing table
         $result = $dbConnection->query(
                 "SELECT updated".
-                " FROM crawlserv_parsedtables".
+                " FROM `crawlserv_parsedtables`".
+                " USE INDEX(urllist)".
                 " WHERE website=$website".
                 " AND urllist=$urllist".
                 " ORDER BY updated DESC".
@@ -303,7 +304,8 @@ if($website) {
         // get last update of any extracting table
         $result = $dbConnection->query(
                 "SELECT updated".
-                " FROM crawlserv_extractedtables".
+                " FROM `crawlserv_extractedtables`".
+                " USE INDEX(urllist)".
                 " WHERE website=$website".
                 " AND urllist=$urllist".
                 " ORDER BY updated DESC".

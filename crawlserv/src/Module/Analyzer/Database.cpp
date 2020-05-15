@@ -157,6 +157,7 @@ namespace crawlservpp::Module::Analyzer {
 				this->ps.getCorpusFirst = this->addPreparedStatement(
 						"SELECT id, corpus, articlemap, datemap, sources, chunks"
 						" FROM `crawlserv_corpora`"
+						" USE INDEX(urllist)"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
@@ -187,6 +188,7 @@ namespace crawlservpp::Module::Analyzer {
 						" ("
 							" SELECT *"
 							" FROM `crawlserv_corpora`"
+							" USE INDEX(urllist)"
 							" WHERE website = "	+ this->getWebsiteIdString() + ""
 							" AND urllist = " + this->getUrlListIdString() +
 							" AND source_type = ?"
@@ -203,7 +205,8 @@ namespace crawlservpp::Module::Analyzer {
 
 				this->ps.isCorpusChangedParsing = this->addPreparedStatement(
 						"SELECT updated"
-						" FROM crawlserv_parsedtables"
+						" FROM `crawlserv_parsedtables`"
+						" USE INDEX(urllist)"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -216,6 +219,7 @@ namespace crawlservpp::Module::Analyzer {
 				this->ps.isCorpusChangedExtracting = this->addPreparedStatement(
 						"SELECT updated"
 						" FROM `crawlserv_extractedtables`"
+						" USE INDEX(urllist)"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -228,6 +232,7 @@ namespace crawlservpp::Module::Analyzer {
 				this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement(
 						"SELECT updated"
 						" FROM `crawlserv_analyzedtables`"
+						" USE INDEX(urllist)"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND name = ?"
@@ -303,8 +308,8 @@ namespace crawlservpp::Module::Analyzer {
 						"UPDATE `crawlserv_corpora` AS dest,"
 						" ("
 							"SELECT SUM(chunk_size) AS size, SUM(chunk_length) AS length"
-							" FROM"
-							" `crawlserv_corpora`"
+							" FROM `crawlserv_corpora`"
+							" USE INDEX(urllist)"
 							" WHERE website = " + this->getWebsiteIdString() +
 							" AND urllist = " + this->getUrlListIdString() +
 							" AND source_type = ?"

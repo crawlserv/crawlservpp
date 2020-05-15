@@ -3888,6 +3888,7 @@ namespace crawlservpp::Main {
 					this->connection->prepareStatement(
 							"SELECT id"
 							" FROM `crawlserv_" + properties.type + "tables`"
+							" USE INDEX(urllist)"
 							" WHERE website = ?"
 							" AND urllist = ?"
 							" AND name = ?"
@@ -4005,6 +4006,7 @@ namespace crawlservpp::Main {
 					this->connection->prepareStatement(
 							"SELECT id"
 							" FROM `crawlserv_" + type + "tables`"
+							" USE INDEX(urllist)"
 							" WHERE website = ?"
 							" AND urllist = ?"
 							" AND name = ?"
