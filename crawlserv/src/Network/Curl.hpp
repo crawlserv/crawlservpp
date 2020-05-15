@@ -52,6 +52,7 @@
 #include <chrono>		// std::chrono
 #include <cstdint>		// std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
+#include <functional>	// std::function
 #include <limits>		// std::numeric_limits
 #include <queue>		// std::queue
 #include <string>		// std::string, std::to_string
@@ -66,6 +67,8 @@ namespace crawlservpp::Network {
 		using NetworkOptions = Struct::NetworkSettings;
 
 		using CurlList = Wrapper::CurlList;
+
+		using IsRunningCallback = std::function<bool()>;
 
 	public:
 		// constructor and destructor
@@ -101,7 +104,7 @@ namespace crawlservpp::Network {
 		std::string getPublicIp();
 
 		// resetter
-		void resetConnection(size_t sleep);
+		void resetConnection(std::uint64_t sleepForMilliseconds, IsRunningCallback isRunningCallback);
 
 		// URL escaping
 		std::string escape(const std::string& stringToEscape, bool usePlusForSpace);

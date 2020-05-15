@@ -1175,7 +1175,7 @@ namespace crawlservpp::Network {
 	}
 
 	// reset connection, throws Curl::Exception
-	void Curl::resetConnection(std::uint64_t sleep) {
+	void Curl::resetConnection(std::uint64_t sleepForMilliseconds, IsRunningCallback isRunningCallback) {
 		// cleanup lists
 		this->dnsResolves.reset();
 		this->headers.reset();
@@ -1187,7 +1187,11 @@ namespace crawlservpp::Network {
 		this->curl.reset();
 
 		// sleep
-		std::this_thread::sleep_for(std::chrono::milliseconds(sleep));
+		const auto sleepTill = std::chrono::steady_clock::now()
+				+ std::chrono::milliseconds(sleepForMilliseconds);
+
+		while(isRunningCallback() && std::chrono::steady_clock::now() < sleepTill)
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 		// re-initialize cURL
 		this->curl.init();

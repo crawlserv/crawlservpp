@@ -3400,7 +3400,10 @@ namespace crawlservpp::Module::Crawler {
 
 			this->crawlingResetTor();
 
-			this->networking.resetConnection(this->config.crawlerSleepError);
+			this->networking.resetConnection(
+					this->config.crawlerSleepError,
+					std::bind(&Thread::isRunning, this)
+			);
 
 			this->log(
 					Config::crawlerLoggingDefault,
@@ -3432,7 +3435,8 @@ namespace crawlservpp::Module::Crawler {
 			this->crawlingResetTor();
 
 			this->networkingArchives->resetConnection(
-					this->config.crawlerSleepError
+					this->config.crawlerSleepError,
+					std::bind(&Thread::isRunning, this)
 			);
 
 			this->log(

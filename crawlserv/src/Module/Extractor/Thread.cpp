@@ -2354,7 +2354,10 @@ namespace crawlservpp::Module::Extractor {
 
 			this->extractingResetTor();
 
-			this->networking.resetConnection(this->config.generalSleepError);
+			this->networking.resetConnection(
+					this->config.generalSleepError,
+					std::bind(&Thread::isRunning, this)
+			);
 
 			this->log(
 					Config::generalLoggingDefault,
