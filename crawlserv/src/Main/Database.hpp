@@ -73,6 +73,7 @@
 #include "../Struct/WebsiteProperties.hpp"
 #include "../Timer/Simple.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
+#include "../Wrapper/DatabaseTryLock.hpp"
 #include "../Wrapper/PreparedSqlStatement.hpp"
 
 #include "../_extern/rapidjson/include/rapidjson/document.h"
@@ -149,6 +150,7 @@ namespace crawlservpp::Main {
 		// allow wrapper and locking classes access to protected functions
 		friend class Wrapper::Database;
 		template<class DB> friend class Wrapper::DatabaseLock;
+		template<class DB> friend class Wrapper::DatabaseTryLock;
 
 		// constructor and destructor
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
@@ -328,6 +330,7 @@ namespace crawlservpp::Main {
 		std::uint64_t getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
+		bool tryDatabaseLock(const std::string& name);
 		void removeDatabaseLock(const std::string& name);
 		void createTable(const TableProperties& properties);
 		void dropTable(const std::string& name);

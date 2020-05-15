@@ -6264,16 +6264,39 @@ namespace crawlservpp::Main {
 								name
 						) == Database::locks.end()
 				) {
-					// lock does not exist: add lock and return true
+					// lock does not exist: add lock and exit loop
 					Database::locks.emplace_back(name);
 
 					break;
 				}
 			}
 
-			// sleep before re-attempting to add database lock
+			// sleep before re-attempting to add lock
 			std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_DATABASE_SLEEP_ON_LOCK_MS));
 		}
+	}
+
+	// try to add a lock with a specific name to the database, return false if lock already exists
+	bool Database::tryDatabaseLock(const std::string& name) {
+		// lock access to locks
+		std::lock_guard<std::mutex> accessLock(Database::lockAccess);
+
+		// check whether lock with specified name already exists
+		if(
+				std::find(
+						Database::locks.begin(),
+						Database::locks.end(),
+						name
+				) == Database::locks.end()
+		) {
+			// lock does not exist: add lock
+			Database::locks.emplace_back(name);
+
+			return true;
+		}
+
+		// lock exists
+		return false;
 	}
 
 	// remove lock with specific name from database

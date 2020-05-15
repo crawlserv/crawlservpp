@@ -42,6 +42,7 @@
 #include "../Struct/TableProperties.hpp"
 #include "../Struct/TargetTableProperties.hpp"
 #include "../Wrapper/DatabaseLock.hpp"
+#include "../Wrapper/DatabaseTryLock.hpp"
 
 #include <cppconn/prepared_statement.h>
 #include <mysql_connection.h>
@@ -73,6 +74,7 @@ namespace crawlservpp::Wrapper {
 	public:
 		// allow locking class access to protected functions
 		template<class DB> friend class Wrapper::DatabaseLock;
+		template<class DB> friend class Wrapper::DatabaseTryLock;
 
 		// constructor and destructor
 		Database(Module::Database& dbRef);
@@ -166,6 +168,7 @@ namespace crawlservpp::Wrapper {
 		// wrappers for database helper functions
 		std::uint64_t getLastInsertedId();
 		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
+		bool tryDatabaseLock(const std::string& name);
 		void removeDatabaseLock(const std::string& name);
 		void createTable(const TableProperties& properties);
 		void addColumn(const std::string& tableName, const TableColumn& column);
@@ -421,6 +424,11 @@ namespace crawlservpp::Wrapper {
 	// add a lock with a specific name to the database, wait if lock already exists
 	inline void Database::addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback) {
 		this->database.addDatabaseLock(name, isRunningCallback);
+	}
+
+	// try to add a lock with a specific name to the database, return false if lock already exists
+	inline bool Database::tryDatabaseLock(const std::string& name) {
+		return this->database.tryDatabaseLock(name);
 	}
 
 	// remove lock with specific name from database
