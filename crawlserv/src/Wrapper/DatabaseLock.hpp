@@ -56,11 +56,11 @@ namespace crawlservpp::Wrapper {
 				this->ref.removeDatabaseLock(this->name);
 		}
 
-		// not moveable, not copyable
+		// default moveable, not copyable
 		DatabaseLock(DatabaseLock&) = delete;
-		DatabaseLock(DatabaseLock&&) = delete;
+		DatabaseLock(DatabaseLock&&) = default;
 		DatabaseLock& operator=(DatabaseLock&) = delete;
-		DatabaseLock& operator=(DatabaseLock&&) = delete;
+		DatabaseLock& operator=(DatabaseLock&&) = default;
 
 	private:
 		// internal reference to a database connection
