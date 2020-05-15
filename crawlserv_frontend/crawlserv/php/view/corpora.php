@@ -190,8 +190,8 @@ if($success) {
         $corpus_where = "website = $website
                             AND urllist = $urllist
                             AND source_type = ".$row['source_type']."
-                            AND source_table = '".$row['source_table']."'
-                            AND source_field = '".$row['source_field']."'";
+                            AND source_table LIKE '".$row['source_table']."'
+                            AND source_field LIKE '".$row['source_field']."'";
         $corpus_total = $row["length"];
         $corpus_size = $row["size"];
         $corpus_chunks = $row["chunks"];
@@ -271,6 +271,7 @@ if($success) {
                                         '$[*].v'
                                 ) AS path
                                 FROM `crawlserv_corpora`
+                                USE INDEX(urllist)
                                 WHERE $corpus_where
                         ) AS tmp"
                 );
@@ -340,6 +341,7 @@ if($success) {
                                         '$[*].v'
                                 ) AS path
                                 FROM `crawlserv_corpora`
+                                USE INDEX(urllist)
                                 WHERE $corpus_where
                         ) AS tmp"
                 );
@@ -387,6 +389,7 @@ if($success) {
                           articlemap->>'$[last].v' AS last,
                           JSON_LENGTH(articlemap) AS articles
                          FROM `crawlserv_corpora`
+                         USE INDEX(urllist)
                          WHERE $corpus_where
                          ORDER BY id;"
                 );
@@ -452,6 +455,7 @@ if($success) {
                           `articlemap`->>'$[last].v' AS last,
                           JSON_LENGTH(`articlemap`) AS articles
                           FROM `crawlserv_corpora`
+                          USE INDEX(urllist)
                           WHERE $corpus_where
                           ORDER BY id;"
                 );
@@ -545,6 +549,7 @@ if($success) {
                     "SELECT `articlemap`->'$[$N]' AS json,
                     JSON_LENGTH(`articlemap`) AS n
                     FROM `crawlserv_corpora`
+                    USE INDEX(urllist)
                     WHERE $corpus_where
                     $chunk_sql
                     LIMIT 1"
@@ -723,6 +728,7 @@ if($success) {
                       chunk_length,
                       chunk_size
                     FROM `crawlserv_corpora`
+                    USE INDEX(urllist)
                     WHERE $corpus_where
                      AND previous = $chunk_previous
                     LIMIT 1"
@@ -920,6 +926,7 @@ if($success) {
                   ) AS before_size,
                   chunk_size
                  FROM `crawlserv_corpora`
+                 USE INDEX(urllist)
                  WHERE $corpus_where
                   AND id = $chunk_id
                  LIMIT 1"
