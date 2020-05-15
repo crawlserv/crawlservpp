@@ -154,34 +154,37 @@ namespace crawlservpp::Module::Crawler {
 
 		this->database.prepare();
 
-		{ // lock URL list
-			this->setStatusMessage("Waiting for URL list...");
-
-			this->log(Config::crawlerLoggingVerbose, "waits for URL list...");
-
-			DatabaseLock urlListLock(
+		{ // try to lock URL list for checking
+			DatabaseTryLock urlListLock(
 					this->database,
-					"urlList." + this->websiteNamespace + "_" + this->urlListNamespace,
-					std::bind(&Thread::isRunning, this)
+					"urlListCheck." + this->websiteNamespace + "_" + this->urlListNamespace
 			);
 
-			if(!(this->isRunning()))
-				return;
+			if(urlListLock.isActive()) {
+				// cancel if not running anymore
+				if(!(this->isRunning()))
+					return;
 
-			// check URL list
-			this->setStatusMessage("Checking URL list...");
+				// check URL list
+				this->setStatusMessage("Checking URL list...");
 
-			this->log(Config::crawlerLoggingVerbose, "checks URL list...");
+				this->log(Config::crawlerLoggingVerbose, "checks URL list...");
 
-			// check hashs of URLs
-			this->database.urlHashCheck();
-
-			// optional startup checks
-			if(this->config.crawlerUrlStartupCheck) {
-				this->database.urlDuplicationCheck();
-				this->database.urlEmptyCheck();
+				// check hashs of URLs
 				this->database.urlHashCheck();
+
+				// optional startup checks
+				if(this->config.crawlerUrlStartupCheck) {
+					this->database.urlDuplicationCheck();
+					this->database.urlEmptyCheck();
+					this->database.urlHashCheck();
+				}
 			}
+			else
+				this->log(
+						Config::crawlerLoggingDefault,
+						"skipped checking the URL list (already in progress)"
+				);
 		}
 
 		// get domain
@@ -227,12 +230,20 @@ namespace crawlservpp::Module::Crawler {
 
 		this->initCustomUrls();
 
+		// cancel if not running anymore
+		if(!(this->isRunning()))
+			return;
+
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
 
 		this->log(Config::crawlerLoggingVerbose, "initializes custom queries...");
 
 		this->initQueries();
+
+		// cancel if not running anymore
+		if(!(this->isRunning()))
+			return;
 
 		// initialize networking for archives if necessary
 		if(this->config.crawlerArchives && !(this->networkingArchives)) {
@@ -569,89 +580,104 @@ namespace crawlservpp::Module::Crawler {
 				this->customPages.emplace_back(0, url);
 		}
 
-		if(!(this->config.crawlerStart.empty())) {
-			// set URL of start page
-			this->startPage.second = this->config.crawlerStart;
+		this->setStatusMessage("Waiting for URL list...");
 
-			// add start page to database (if it does not exists already)
-			this->database.addUrlIfNotExists(this->startPage.second, true);
+		{
+			DatabaseLock urlListLock(
+					this->database,
+					"urlList." + this->websiteNamespace + "_" + this->urlListNamespace,
+					std::bind(&Thread::isRunning, this)
+			);
+
+			if(!(this->isRunning()))
+				return;
+
+			this->setStatusMessage("Checking start page...");
+
+			if(!(this->config.crawlerStart.empty())) {
+				// set URL of start page
+				this->startPage.second = this->config.crawlerStart;
+
+				// add start page to database (if it does not exists already)
+				this->database.addUrlIfNotExists(this->startPage.second, true);
+
+				// check for duplicates if URL debugging is active
+				if(this->config.crawlerUrlDebug)
+					this->database.urlDuplicationCheck();
+
+				// get the ID of the start page URL
+				this->startPage.first = this->database.getUrlId(this->startPage.second);
+			}
+
+			// check whether to extract URLs from 'robots.txt'
+			if(this->config.customRobots)
+				// add sitemap(s) from 'robots.txt' as custom URLs
+				this->initRobotsTxt();
+
+			// check custom URLs and prepare to add the ones that do not exist yet
+			this->setStatusMessage("Checking custom URLs...");
+
+			std::queue<std::string> urlsToAdd;
+
+			for(auto& customPage : this->customPages) {
+				try {
+					// check URI
+					this->parser->setCurrentUrl(customPage.second);
+
+					// prepare to add URL if necessary
+					urlsToAdd.push(customPage.second);
+				}
+				catch(const URIException& e) {
+					this->log(Config::crawlerLoggingDefault, "URI Parser error: " + e.whatStr());
+					this->log(Config::crawlerLoggingDefault, " skipped invalid custom URL " + customPage.second);
+				}
+
+			}
+
+			// add custom URLs that do not exist yet
+			this->setStatusMessage("Adding custom URLs...");
+
+			this->database.addUrlsIfNotExist(urlsToAdd, true);
 
 			// check for duplicates if URL debugging is active
 			if(this->config.crawlerUrlDebug)
 				this->database.urlDuplicationCheck();
 
-			// get the ID of the start page URL
-			this->startPage.first = this->database.getUrlId(this->startPage.second);
-		}
+			// get IDs of custom URLs
+			this->setStatusMessage("Getting IDs of custom URLs...");
 
-		// check whether to extract URLs from 'robots.txt'
-		if(this->config.customRobots)
-			// add sitemap(s) from 'robots.txt' as custom URLs
-			this->initRobotsTxt();
+			std::size_t counter = 0;
 
-		// check custom URLs and prepare to add the ones that do not exist yet
-		this->setStatusMessage("Checking custom URLs...");
+			for(auto& customPage : this->customPages) {
+				// check whether thread is still supposed to run
+				if(!(this->isRunning()))
+					break;
 
-		std::queue<std::string> urlsToAdd;
+				try {
+					// check URI
+					this->parser->setCurrentUrl(customPage.second);
 
-		for(auto& customPage : this->customPages) {
-			try {
-				// check URI
-				this->parser->setCurrentUrl(customPage.second);
+					// get the ID of the custom URL
+					customPage.first = this->database.getUrlId(customPage.second);
 
-				// prepare to add URL if necessary
-				urlsToAdd.push(customPage.second);
-			}
-			catch(const URIException& e) {
-				this->log(Config::crawlerLoggingDefault, "URI Parser error: " + e.whatStr());
-				this->log(Config::crawlerLoggingDefault, " skipped invalid custom URL " + customPage.second);
-			}
+					// check ID of the custom URL
+					if(!customPage.first)
+						throw Exception("Thread::initCustomUrls(): Could not find ID of \'" + customPage.second + "\'");
+				}
+				catch(const URIException& e) {}
 
-		}
+				// update counter and status (if necessary)
+				++counter;
 
-		// add custom URLs that do not exist yet
-		this->setStatusMessage("Adding custom URLs...");
+				if(counter % 100 == 0) {
+					std::ostringstream statusStrStr;
 
-		this->database.addUrlsIfNotExist(urlsToAdd, true);
+					statusStrStr.imbue(std::locale(""));
 
-		// check for duplicates if URL debugging is active
-		if(this->config.crawlerUrlDebug)
-			this->database.urlDuplicationCheck();
+					statusStrStr << "Getting IDs of custom URLs [" << counter << "/" << this->customPages.size() << "]...";
 
-		// get IDs of custom URLs
-		this->setStatusMessage("Getting IDs of custom URLs...");
-
-		std::size_t counter = 0;
-
-		for(auto& customPage : this->customPages) {
-			// check whether thread is still supposed to run
-			if(!(this->isRunning()))
-				break;
-
-			try {
-				// check URI
-				this->parser->setCurrentUrl(customPage.second);
-
-				// get the ID of the custom URL
-				customPage.first = this->database.getUrlId(customPage.second);
-
-				// check ID of the custom URL
-				if(!customPage.first)
-					throw Exception("Thread::initCustomUrls(): Could not find ID of \'" + customPage.second + "\'");
-			}
-			catch(const URIException& e) {}
-
-			// update counter and status (if necessary)
-			++counter;
-
-			if(counter % 100 == 0) {
-				std::ostringstream statusStrStr;
-
-				statusStrStr.imbue(std::locale(""));
-
-				statusStrStr << "Getting IDs of custom URLs [" << counter << "/" << this->customPages.size() << "]...";
-
-				this->setStatusMessage(statusStrStr.str());
+					this->setStatusMessage(statusStrStr.str());
+				}
 			}
 		}
 

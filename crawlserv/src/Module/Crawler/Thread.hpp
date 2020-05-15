@@ -51,6 +51,7 @@
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/DatabaseLock.hpp"
+#include "../../Wrapper/DatabaseTryLock.hpp"
 
 #include <curl/curl.h>
 
@@ -93,6 +94,7 @@ namespace crawlservpp::Module::Crawler {
 		using ThreadStatus = Struct::ThreadStatus;
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
+		using DatabaseTryLock = Wrapper::DatabaseTryLock<Database>;
 
 		using IdString = std::pair<std::uint64_t, std::string>;
 		using TimeString = std::pair<std::chrono::steady_clock::time_point, std::string>;
