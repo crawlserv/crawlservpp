@@ -424,7 +424,7 @@
 		"verbose": {
 			"type": "bool",
 			"default": false,
-			"description": "Show all connection information on server.",
+			"description": "Show all connection information on the server (will be written to stdout).",
 			"simple": false
 		}
 	}
