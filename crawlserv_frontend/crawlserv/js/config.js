@@ -661,19 +661,28 @@ class Config {
 	}
 	
 	// show label
-	label(name, ttip = "", check = false) {
+	label(name, ttip = "", check = false, array = false) {
 		var result = "";
 		
-		if(check)
-			result += "<div class=\"opt-check-label";
-		else
+		if(check) {
+			if(array) {
+				result += "<div class=\"opt-check-array-label";
+			}
+			else {
+				result += "<div class=\"opt-check-label";
+			}
+		}
+		else {
 			result += "<div class=\"opt-label";
+		}
 		
-		if(name == ".")
+		if(name == ".") {
 			result += " opt-dot"
+		}
 		
-		if(ttip.length)
+		if(ttip.length) {
 			result += " opt-tippy\" data-tippy-content=\"" + ttip
+		}
 		
 		result += "\">" + name + "</div>\n";
 		
@@ -984,7 +993,7 @@ class Config {
 		
 		if(type == "bool") {
 			result += this.check(cat, id, value, true);
-			result += this.label("", "", true);
+			result += this.label("", "", true, true);
 		}
 		else if(type == "string") {
 			if(isdef)

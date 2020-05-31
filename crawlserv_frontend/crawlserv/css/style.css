@@ -96,7 +96,7 @@ h2 {
 	overflow:auto;
 	background-color:#f2f1f0;
 	border-color:#C0C0C0;
-	border-weight: 1px;
+	border-width: 1px;
 	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -626,6 +626,11 @@ div.opt-label {
 	width:213px;
 }
 div.opt-check-label {
+	width:309px;
+	font-size:16px;
+	display:inline-block;
+}
+div.opt-check-array-label {
 	width:215px;
 	font-size:16px;
 	display:inline-block;
