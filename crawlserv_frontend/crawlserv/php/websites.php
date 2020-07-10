@@ -36,14 +36,17 @@ require "include/helpers.php";
 
 require "config.php";
 
-if(isset($_POST["website"]))
+if(isset($_POST["website"])) {
     $website = $_POST["website"];
+}
 
-if(isset($_POST["urllist"]))
+if(isset($_POST["urllist"])) {
     $urllist = $_POST["urllist"];
+}
 
-if(isset($_POST["query"]))
+if(isset($_POST["query"])) {
     $query = $_POST["query"];
+}
 
 ?>
 
@@ -62,8 +65,9 @@ echo rowWebsiteSelect(true);
 
 <?php
 
-if($website)
+if($website) {
     echo "<a id=\"website-duplicate\" href=\"#\" class=\"action-link\">Duplicate configuration</a>";
+}
 
 ?>
 
@@ -78,8 +82,9 @@ if($website)
 
 <input type="text" class="entry-input" id="website-name" value="<?php
 
-if($website)
+if($website) {
     echo html($websiteName);
+}
 
 ?>" />
 
@@ -91,8 +96,9 @@ if($website)
 
 <input type="text" class="entry-input" id="website-namespace" value="<?php
 
-if($website)
+if($website) {
     echo html($namespace);
+}
 
 ?>" />
 
@@ -104,8 +110,9 @@ if($website)
 
 <input id="website-domain" type="text" class="entry-input" value="<?php
 
-if($website)
+if($website) {
     echo html($domain);
+}
 
 ?>" />
 
@@ -118,8 +125,9 @@ if($website)
 
 <input id="website-crossdomain" type="checkbox" <?php
 
-if($website && !strlen($domain))
+if($website && strlen($domain) == 0) {
     echo "checked";
+}
 
 ?> /> cross-domain website
 
@@ -132,8 +140,9 @@ if($website && !strlen($domain))
 
 <input id="website-externaldir" type="checkbox" <?php
 
-if($website && strlen($dir))
+if($website && strlen($dir) > 0) {
     echo "checked";
+}
 
 ?> /> use external directory
 
@@ -146,7 +155,7 @@ if($website && strlen($dir))
 
 <input type="text" class="entry-input" id="website-dir" value="<?php
 
-echo ($website && strlen($dir)) ? html($dir) : "[default]";
+echo ($website && strlen($dir) > 0) ? html($dir) : "[default]";
 
 ?>" />
 
@@ -158,10 +167,12 @@ echo ($website && strlen($dir)) ? html($dir) : "[default]";
 
 <?php
 
-if($website)
+if($website) {
     echo "<a id=\"website-update\" href=\"#\" class=\"action-link\">Change website</a>";
-else
+}
+else {
     echo "<a id=\"website-add\" href=\"#\" class=\"action-link\">Add website</a>";
+}
 
 ?>
 
@@ -185,7 +196,7 @@ if($website) {
                 " FROM `crawlserv_".$namespace."_".$urllistNamespace."`"
         );
         
-        if(!$result)
+        if(!$result) {
             die(
                     "ERROR: Could not get size of URL list from `crawlserv_"
                     .$namespace
@@ -193,11 +204,13 @@ if($website) {
                     .$urllistNamespace
                     ."`"
             );
+        }
             
         $row = $result->fetch_row();
         
-        if($row)
+        if($row != NULL) {
             $urllistSize = $row[0];
+        }
             
         $result->close();
         
@@ -208,7 +221,7 @@ if($website) {
                 " WHERE success = TRUE"
         );
         
-        if(!$result)
+        if(!$result) {
             die(
                     "ERROR: Could not get number of crawled URLs from `crawlserv_"
                     .$namespace
@@ -216,11 +229,13 @@ if($website) {
                     .$urllistNamespace
                     ."_crawling`"
             );
+        }
             
         $row = $result->fetch_row();
             
-        if($row)
+        if($row != NULL) {
             $urllistCrawled = $row[0];
+        }
                 
         $result->close();
                 
@@ -242,8 +257,9 @@ if($website) {
                     
         $row = $result->fetch_row();
                 
-        if($row)
+        if($row != NULL) {
             $urllistParsed = $row[0];
+        }
                     
         $result->close();
                     
@@ -254,7 +270,7 @@ if($website) {
                 " WHERE success = TRUE"
         );
                         
-        if(!$result)
+        if(!$result) {
             die(
                     "ERROR: Could not get number of extracted URLs from `crawlserv_"
                     .$namespace
@@ -262,10 +278,11 @@ if($website) {
                     .$urllistNamespace
                     ."_extracting`"
             );
+        }
                             
         $row = $result->fetch_row();
                                     
-        if($row)
+        if($row != NULL)
             $urllistExtracted = $row[0];
                                         
         $result->close();
@@ -279,8 +296,9 @@ if($website) {
         if($result) {
             $row = $result->fetch_assoc();
             
-            if($row)
+            if($row != NULL) {
                 $urllistUpdate = $row["updated"];
+            }
         }
                                         
         // get last update of any parsing table
@@ -297,8 +315,9 @@ if($website) {
         if($result) {
             $row = $result->fetch_assoc();
             
-            if($row)
+            if($row != NULL) {
                 $parsedUpdate = $row["updated"];
+            }
         }
                                         
         // get last update of any extracting table
@@ -315,8 +334,9 @@ if($website) {
         if($result) {
             $row = $result->fetch_assoc();
             
-            if($row)
+            if($row != NULL) {
                 $extractedUpdate = $row["updated"];
+            }
         }
     }
     else {
@@ -331,10 +351,12 @@ if($website) {
     
     echo "<input type=\"text\" class=\"entry-input trigger\" id=\"urllist-name\"";
     
-    if($urllist)
+    if($urllist) {
         echo " data-trigger=\"urllist-update\"";
-    else
+    }
+    else {
         echo " data-trigger=\"urllist-add\"";
+    }
 
     echo " value=\"";
     
@@ -349,10 +371,12 @@ if($website) {
     
     echo "<input type=\"text\" class=\"entry-input trigger\" id=\"urllist-namespace\"";
     
-    if($urllist)
+    if($urllist) {
         echo " data-trigger=\"urllist-update\"";
-    else
+    }
+    else {
         echo " data-trigger=\"urllist-add\"";
+    }
     
     echo " value=\"";
     
@@ -367,15 +391,19 @@ if($website) {
         echo "<div class=\"entry-label\">Size:</div>\n";
         echo "<div class=\"entry-value\">\n";
         
-        if($urllistSize == 1)
-            echo "1 entry";
-        else
+        if($urllistSize == 1) {
+            echo "one entry";
+        }
+        else {
             echo number_format($urllistSize)." entries";
+        }
         
-        echo " <a id=\"urllist-download\" href=\"#\" class=\"entry-value\" target=\"_blank\""
-            ." data-website-namespace=\"";
+        echo " <a id=\"urllist-download\"";
+        echo " href=\"#\" class=\"entry-value\"";
+        echo " target=\"_blank\"";
+        echo " data-website-namespace=\"";
         
-            echo html($namespace);
+        echo html($namespace);
         
         echo "\" data-namespace=\"";
         
@@ -391,19 +419,21 @@ if($website) {
             echo "<div class=\"entry-label\">Crawled:</div>\n";
             echo "<div class=\"entry-value\">\n";
             
-            if($urllistCrawled == 1)
-                echo "1 entry";
-            else
+            if($urllistCrawled == 1) {
+                echo "one entry";
+            }
+            else {
                 echo number_format($urllistCrawled)." entries";
+            }
             
-            echo " ("
+            echo " (";
             
-                .number_format(
-                        (float) $urllistCrawled / $urllistSize * 100,
-                        1
-                )
+            echo number_format(
+                    (float) $urllistCrawled / $urllistSize * 100,
+                    1
+            );
                 
-                ."%";
+            echo "%";
             
             if(isset($urllistUpdate) && $urllistUpdate) {
                 echo ", ";
@@ -422,19 +452,21 @@ if($website) {
             echo "<div class=\"entry-label\">Parsed:</div>\n";
             echo "<div class=\"entry-value\">\n";
             
-            if($urllistParsed == 1)
-                echo "1 entry";
-            else
+            if($urllistParsed == 1) {
+                echo "one entry";
+            }
+            else {
                 echo number_format($urllistParsed)." entries";
+            }
             
-            echo " ("
+            echo " (";
             
-                .number_format(
+            echo number_format(
                     (float) $urllistParsed / $urllistSize * 100,
                     1
-                )
+            );
             
-                ."%";
+            echo "%";
             
             if(isset($parsedUpdate) && $parsedUpdate) {
                 echo ", ";
@@ -453,19 +485,21 @@ if($website) {
             echo "<div class=\"entry-label\">Extracted:</div>\n";
             echo "<div class=\"entry-value\">\n";
             
-            if($urllistExtracted == 1)
-                echo "1 entry";
-            else
+            if($urllistExtracted == 1) {
+                echo "one entry";
+            }
+            else {
                 echo number_format($urllistExtracted)." entries";
+            }
             
-            echo " ("
+            echo " (";
             
-                .number_format(
-                        (float) $urllistExtracted / $urllistParsed * 100,
-                        1
-                )
+            echo number_format(
+                    (float) $urllistExtracted / $urllistParsed * 100,
+                    1
+            );
             
-                ."%";
+            echo "%";
             
             if(isset($extractedUpdate) && $extractedUpdate) {
                 echo ", ";
@@ -488,8 +522,9 @@ if($website) {
         
         echo "Change URL list</a>\n";
     }
-    else
+    else {
         echo "<a id=\"urllist-add\" href=\"#\" class=\"action-link\">Add URL list</a>\n";
+    }
     
     echo "</div>\n";
     echo "</div>\n";
@@ -517,8 +552,9 @@ if($website) {
                 " ORDER BY name"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not get IDs and names of queries.");
+        }
         
         while($row = $result->fetch_assoc()) {
             $id = $row["id"];
@@ -526,8 +562,9 @@ if($website) {
             
             echo "<option value=\"".$id."\"";
             
-            if(isset($query) && $id == $query)
+            if(isset($query) && $id == $query) {
                 echo " selected";
+            }
            
             echo ">".html($name)."</option>\n";
         }
@@ -546,9 +583,10 @@ if($website) {
         echo "</div>\n";
         echo "</div>\n";
     }
-    else if(isset($query))
+    else if(isset($query)) {
         // temporarily save selected query
         echo "<input id=\"urls-delete-query\" type=\"hidden\" value=\"$query\" />\n";
+    }
 }
 
 ?>
