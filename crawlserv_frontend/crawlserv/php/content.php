@@ -40,10 +40,12 @@ require "config.php";
 $is404 = false;
 
 // get tab
-if(isset($_POST["tab"]))
+if(isset($_POST["tab"])) {
     $tab = $_POST["tab"];
-else
+}
+else {
     $tab = "parsed";
+}
 
 // get website
 if(isset($_POST["website"])) {
@@ -51,19 +53,21 @@ if(isset($_POST["website"])) {
     
     // get namespace of website and whether it is cross-domain
     $result = $dbConnection->query(
-        "SELECT namespace, domain".
-        " FROM crawlserv_websites".
-        " WHERE id = $website".
-        " LIMIT 1"
-        );
+            "SELECT namespace, domain".
+            " FROM crawlserv_websites".
+            " WHERE id = $website".
+            " LIMIT 1"
+    );
     
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not get namespace of website.");
+    }
         
     $row = $result->fetch_assoc();
     
-    if(!$row)
+    if($row == NULL) {
         die("ERROR: Could not get namespace of website.");
+    }
         
     $namespace = $row["namespace"];
     $crossDomain = is_null($row["domain"]);
@@ -84,13 +88,15 @@ if(isset($_POST["urllist"])) {
         " LIMIT 1"
     );
     
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not get namespace of URL list.");
+    }
         
     $row = $result->fetch_assoc();
     
-    if(!$row)
+    if($row == NULL) {
         die("ERROR: Could not get namespace of URL list.");
+    }
         
     $urllistNamespace = $row["namespace"];
     
@@ -102,33 +108,35 @@ $urltext = "";
 
 // get specific URL by parsed ID
 if(
-    $tab == "parsed"
-    && isset($_POST["version"])
-    && $_POST["version"]
-    && isset($_POST["parsed_id"])
-    && $_POST["parsed_id"]
-    && isset($website)
-    && $website
-    && isset($urllist)
-    && $urllist
-    ) {
+        $tab == "parsed"
+        && isset($_POST["version"])
+        && $_POST["version"]
+        && isset($_POST["parsed_id"])
+        && $_POST["parsed_id"]
+        && isset($website)
+        && $website
+        && isset($urllist)
+        && $urllist
+) {
         // get name of parsing table by version (= ID of parsing table)
         $result = $dbConnection->query(
-            "SELECT name
-             FROM `crawlserv_parsedtables`
-             WHERE website = $website
-             AND urllist = $urllist
-             AND id = ".$_POST["version"]."
-             LIMIT 1"
+                "SELECT name
+                 FROM `crawlserv_parsedtables`
+                 WHERE website = $website
+                 AND urllist = $urllist
+                 AND id = ".$_POST["version"]."
+                 LIMIT 1"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not get name of parsing table.");
+        }
             
         $row = $result->fetch_assoc();
             
-        if(!$row)
+        if($row == NULL) {
             die("ERROR: Could not get name of parsing table.");
+        }
                 
         $utable = "crawlserv_".$namespace."_".$urllistNamespace;
         $ctable = $utable."_crawled";
@@ -148,12 +156,13 @@ if(
                  LIMIT 1"
         );
                 
-        if(!$result)
+        if(!$result) {
             die("Could not search for URL by parsed ID");
+        }
                     
         $row = $result->fetch_assoc();
         
-        if($row) {
+        if($row != NULL) {
             // found matching parsed ID -> set URL accordingly
             $url = $row["id"];
             $urltext = $row["url"];
@@ -162,14 +171,14 @@ if(
 
 // get specific URL by ID
 if(
-    ($tab == "crawled" || $tab == "parsed" || $tab == "extracted")
-    && !$url
-    && (isset($_POST["url"]))
-    && $_POST["url"]
-    && isset($website)
-    && $website
-    && isset($urllist)
-    && $urllist
+        ($tab == "crawled" || $tab == "parsed" || $tab == "extracted")
+        && !$url
+        && (isset($_POST["url"]))
+        && $_POST["url"]
+        && isset($website)
+        && $website
+        && isset($urllist)
+        && $urllist
 ) {    
     if(isset($_POST["last"])) {
         // search for last URL with content, starting from $url
@@ -183,12 +192,13 @@ if(
                 " LIMIT 1"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not search for URL (getting last URL with content failed).");
+        }
         
         $row = $result->fetch_assoc();
         
-        if($row) {
+        if($row != NULL) {
             $url = $row["id"];
             $urltext = $row["url"];
         }
@@ -203,17 +213,19 @@ if(
                     " LIMIT 1"
             );
             
-            if(!$result)
+            if(!$result) {
                 die("ERROR: Could not search for last URL.");
+            }
             
             $row = $result->fetch_assoc();
             
-            if($row) {
+            if($row != NULL) {
                 $url = $row["id"];
                 $urltext = $row["url"];
             }
-            else
+            else {
                 $url = 0;
+            }
         }
         
         $result->close();
@@ -230,17 +242,19 @@ if(
                  LIMIT 1"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not search for URL (getting next URL with content failed).");
+        }
         
         $row = $result->fetch_assoc();
         
-        if($row) {
+        if($row != NULL) {
             $url = $row["id"];
             $urltext = $row["url"];
         }
-        else
+        else {
             $url = 0;
+        }
         
         $result->close();
     }
@@ -259,8 +273,9 @@ if(
     // search for matching URL with content
     $trimmedUrl = trim($_POST["urltext"]);
     
-    if(!$crossDomain AND strlen($trimmedUrl) > 0 AND substr($trimmedUrl, 0, 1) == "/")
+    if(!$crossDomain AND strlen($trimmedUrl) > 0 AND substr($trimmedUrl, 0, 1) == "/") {
         $trimmedUrl = substr($trimmedUrl, 1);
+    }
     
     $sql = "SELECT a.id AS id, a.url AS url".
             " FROM `crawlserv_".$namespace."_".$urllistNamespace."` AS a,".
@@ -272,29 +287,33 @@ if(
     
     $stmt = $dbConnection->prepare($sql);
     
-    if(!$stmt)
+    if(!$stmt) {
         die("ERROR: Could not prepare SQL statement to search for URL");
+    }
     
     $argument = "";
     
-    if(!$crossDomain)
+    if(!$crossDomain) {
         $argument = "/";
+    }
     
     $argument .= $trimmedUrl."%";
     
     $stmt->bind_param("s", $argument);
     
-    if(!$stmt->execute())
+    if(!$stmt->execute()) {
         die("ERROR: Could not search for URL (execution failed.");
+    }
     
     $result = $stmt->get_result();
     
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not search for URL (getting result failed.");
+    }
     
     $row = $result->fetch_assoc();
     
-    if($row) {
+    if($row != NULL) {
         $url = $row["id"];
         $urltext = $row["url"];
     }
@@ -302,10 +321,12 @@ if(
         $is404 = true;
         $url = 0;
         
-        if($crossDomain)
+        if($crossDomain) {
             $urltext = $trimmedUrl;
-        else
+        }
+        else {
             $urltext = "/".$trimmedUrl;
+        }
     }
     
     $result->close();
@@ -317,38 +338,48 @@ if(
 
 echo "<span id=\"opt-mode\">\n";
 
-if($tab == "crawled")
+if($tab == "crawled") {
     echo "<b>crawled</b>";
-else
+}
+else {
     echo "<a href=\"#\" class=\"action-link post-redirect-tab\" data-m=\"$m\" data-tab=\"crawled\">crawled</a>\n";
+}
 
 echo " &middot; ";
 
-if($tab == "parsed")
+if($tab == "parsed") {
     echo "<b>parsed</b>";
-else
+}
+else {
     echo "<a href=\"#\" class=\"action-link post-redirect-tab\" data-m=\"$m\" data-tab=\"parsed\">parsed</a>\n";
+}
 
 echo " &middot; ";
 
-if($tab == "extracted")
+if($tab == "extracted") {
     echo "<b>extracted</b>";
-else
+}
+else {
     echo "<a href=\"#\" class=\"action-link post-redirect-tab\" data-m=\"$m\" data-tab=\"extracted\">extracted</a>\n";
+}
 
 echo " &middot; ";
 
-if($tab == "analyzed")
+if($tab == "analyzed") {
     echo "<b>analyzed</b>";
-else
+}
+else {
     echo "<a href=\"#\" class=\"action-link post-redirect-tab\" data-m=\"$m\" data-tab=\"analyzed\">analyzed</a>\n";
+}
 
 echo " &middot; ";
 
-if($tab == "corpora")
+if($tab == "corpora") {
     echo "<b>corpora</b>";
-else
+}
+else {
     echo "<a href=\"#\" class=\"action-link post-redirect-tab\" data-m=\"$m\" data-tab=\"corpora\">corpora</a>\n";
+}
 
 echo "</span>\n";
 
@@ -360,8 +391,9 @@ echo "</span>\n";
 
 echo rowWebsiteSelect();
 
-if($website)
+if($website) {
     echo rowUrlListSelect();
+}
 
 ?>
 
@@ -385,13 +417,15 @@ if($website && $urllist) {
                 " LIMIT 1"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not get namespace of website.");
+        }
         
         $row = $result->fetch_assoc();
         
-        if(!$row)
+        if($row == NULL){
             die("ERROR: Could not get namespace of website.");
+        }
         
         $namespace = $row["namespace"];
         $crossDomain = is_null($row["domain"]);
@@ -407,13 +441,15 @@ if($website && $urllist) {
                 " LIMIT 1"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not get namespace of URL list.");
+        }
         
         $row = $result->fetch_assoc();
         
-        if(!$row)
+        if($row == NULL) {
             die("ERROR: Could not get namespace of URL list.");
+        }
         
         $urllistNamespace = $row["namespace"];
         
@@ -429,12 +465,13 @@ if($website && $urllist) {
                 " LIMIT 1"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not search for URL (getting first URL with content failed).");
+        }
         
         $row = $result->fetch_assoc();
         
-        if($row) {
+        if($row != NULL) {
             $url = $row["id"];
             $urltext = $row["url"];
         }
@@ -453,10 +490,12 @@ if($website && $urllist) {
         
         echo "<span id=\"content-slash\">/</span>";
         
-        if($crossDomain)
+        if($crossDomain) {
             $displayedUrl = html($urltext);
-        else
+        }
+        else {
             $displayedUrl = html(substr($urltext, 1));
+        }
         
         echo "<input type=\"text\" id=\"content-url-text\" data-m=\"$m\" data-tab=\"$tab\" value=\""
             .$displayedUrl
@@ -467,11 +506,13 @@ if($website && $urllist) {
         echo "<button id=\"content-next\" class=\"fs-insert-after\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
     }
     
-    if($is404)
+    if($is404) {
         echo "<br><br><i>URL not found. Maybe it was not successfully crawled (yet).</i><br><br>\n";
-    else
+    }
+    else {
        // show content view dependent on tab
        require "view/$tab.php";
+    }
 }
 
 ?>
@@ -504,11 +545,13 @@ if(
               ORDER BY tmp.v"
     );
     
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not get dates from corpus");
+    }
     
-    while($row = $result->fetch_assoc())
+    while($row = $result->fetch_assoc()) {
         echo "\"".$row["v"]."\", ";
+    }
     
     echo "];\n";
 }
