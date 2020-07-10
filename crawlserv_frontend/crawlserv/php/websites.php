@@ -214,7 +214,7 @@ if($website) {
             
         $result->close();
         
-        // get number of crawled URLs
+        // get number of successfully crawled URLs
         $result = $dbConnection->query(
                 "SELECT COUNT(DISTINCT url)".
                 " FROM `crawlserv_".$namespace."_".$urllistNamespace."_crawling`".
@@ -237,6 +237,30 @@ if($website) {
             $urllistCrawled = $row[0];
         }
                 
+        $result->close();
+        
+        // get number of URLs with content
+        $result = $dbConnection->query(
+                "SELECT COUNT(DISTINCT url)".
+                " FROM `crawlserv_".$namespace."_".$urllistNamespace."_crawled`"
+        );
+            
+        if(!$result) {
+            die(
+                    "ERROR: Could not get number of URLs with content from `crawlserv_"
+                    .$namespace
+                    ."_"
+                    .$urllistNamespace
+                    ."_crawled`"
+            );
+        }
+        
+        $row = $result->fetch_row();
+        
+        if($row != NULL) {
+            $urllistContent = $row[0];
+        }
+        
         $result->close();
                 
         // get number of parsed URLs
@@ -442,6 +466,29 @@ if($website) {
             }
             
             echo ")";
+            
+            echo "</div>\n";
+            echo "</div>\n";
+            
+            echo "<div class=\"entry-row\">\n";
+            echo "<div class=\"entry-label\">Contents:</div>\n";
+            echo "<div class=\"entry-value\">\n";
+            
+            if($urllistContent == 1) {
+                echo "one entry";
+            }
+            else {
+                echo number_format($urllistContent)." entries";
+            }
+            
+            echo " (";
+            
+            echo number_format(
+                    (float) $urllistContent / $urllistSize * 100,
+                    1
+            );
+            
+            echo "%)";
             
             echo "</div>\n";
             echo "</div>\n";
