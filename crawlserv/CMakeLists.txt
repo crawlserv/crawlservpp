@@ -252,19 +252,11 @@ add_executable(${PROJECT_NAME}
 		src/Module/Database.cpp
 		src/Module/Thread.cpp
 		src/Network/Curl.cpp
-		src/Network/TorControl.cpp
-		src/Parsing/HTML.cpp
-		src/Parsing/URI.cpp
-		src/Parsing/XML.cpp
 		src/Query/Container.cpp
 		src/Query/JsonPath.cpp
 		src/Query/JsonPointer.cpp
 		src/Query/RegEx.cpp
 		src/Query/XPath.cpp
-		src/Timer/Simple.cpp
-		src/Timer/SimpleHR.cpp
-		src/Timer/StartStop.cpp
-		src/Timer/StartStopHR.cpp
 		src/Wrapper/Curl.cpp
 		src/_extern/mongoose/mongoose.c
 
@@ -338,6 +330,34 @@ else()
 		target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 	endif()
 endif()
+
+# setup clang-tidy
+#find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "Path to clang-tidy executable" )
+#
+#if(CLANG_TIDY_EXE)
+#	message("clang-tidy found: ${CLANG_TIDY_EXE}")
+#	
+#	string(
+#			CONCAT CLANG_TIDY_TESTS "*,"
+#			"-clang-diagnostic-c++17-extensions,"
+#			"-cppcoreguidelines-pro-type-union-access,"
+#			"-fuchsia-default-arguments-calls,"
+#			"-google-runtime-references,"
+#			"-llvm-header-guard,"
+#			"-modernize-pass-by-value,"
+#			"-modernize-use-trailing-return-type,"
+#	)
+#	
+#	set(
+#			DO_CLANG_TIDY
+#			"${CLANG_TIDY_EXE}"
+#			"-checks=${CLANG_TIDY_TESTS}, -header-filter=.*\.hpp$"
+#	)
+#	
+#	set_target_properties(${PROJECT_NAME} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}" )
+#else()
+#	message(WARNING "clang-tidy not found.")
+#endif()
 
 message("Run \"make\" from build directory to build.")
 
