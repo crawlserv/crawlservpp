@@ -185,6 +185,12 @@
 			"description": "Range of local ports to try for out-going traffic.",
 			"simple": false
 		},
+		"no.reuse": {
+			"type": "bool",
+			"default": false,
+			"description": "Do not re-use connections. Might seriously impact performance.",
+			"simple": false
+		},
 		"proxy": {
 			"type": "string",
 			"default": "",
@@ -282,9 +288,17 @@
 		"reset.tor.after": {
 			"type": "number",
 			"default": 0,
+			"min": 0,
 			"description": "Use the TOR control server to request a new identity after the given time (in seconds).",
 			"simple": false
 		},
+		"reset.tor.only.after": {
+			"type": "number",
+			"default": 60,
+			"min": 0,
+			"description": "Minimum number of seconds passed before requesting a new identity from the TOR control server.",
+			"simple": false
+		}, 
 		"speed.downlimit": {
 			"type": "number",
 			"default": 0,
