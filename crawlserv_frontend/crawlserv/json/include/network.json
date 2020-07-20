@@ -51,7 +51,7 @@
 		"cookies.session": {
 			"type": "bool",
 			"default": true,
-			"description": "Use loaded session cookies.",
+			"description": "Ignore old session cookies.",
 			"simple": false
 		},
 		"cookies.set": {
@@ -64,13 +64,13 @@
 			"type": "number",
 			"default": 60,
 			"min": -1,
-			"description": "Life-time (in s) for DNS cache entries (-1=forever).",
+			"description": "Life-time (in s) of DNS cache entries (-1=forever).",
 			"simple": false
 		},
 		"dns.doh": {
 			"type": "string",
 			"default": "",
-			"description": "URL of custom DNS over HTTP server.",
+			"description": "URL of custom DNS-over-HTTPS (DoH) server.",
 			"simple": false
 		},
 		"dns.interface": {
@@ -127,6 +127,12 @@
 			"type": "bool",
 			"default": false,
 			"description": "Send transfer encoding header.",
+			"simple": false
+		},
+		"encoding.zstd": {
+			"type": "bool",
+			"default": false,
+			"description": "Accept Zstandard-compressed content.",
 			"simple": false
 		},
 		"headers": {
@@ -195,7 +201,7 @@
 			"type": "string",
 			"default": "",
 			"label": "Proxy server:",
-			"description": "Proxy server used for crawling.",
+			"description": "Proxy server used.",
 			"simple": true,
 			"position": 2
 		},
@@ -239,7 +245,7 @@
 		"redirect": {
 			"type": "bool",
 			"default": true,
-			"description": "Follow Location headers for automatic redirect.",
+			"description": "Follow Location headers for automatic redirects.",
 			"simple": false
 		},
 		"redirect.max": {
@@ -252,19 +258,19 @@
 		"redirect.post301": {
 			"type": "bool",
 			"default": false,
-			"description": "Do not convert POST 301-redirects to GET requests.",
+			"description": "Do not convert POST to GET requests when following 301 redirects.",
 			"simple": false
 		},
 		"redirect.post302": {
 			"type": "bool",
 			"default": false,
-			"description": "Do not convert POST 302-redirects to GET requests.",
+			"description": "Do not convert POST to GET requests when following 302 redirects.",
 			"simple": false
 		},
 		"redirect.post303": {
 			"type": "bool",
 			"default": false,
-			"description": "Do not convert POST 303-redirects to GET requests.",
+			"description": "Do not convert POST to GET requests when following 303 redirects.",
 			"simple": false
 		},
 		"referer": {
@@ -276,13 +282,13 @@
 		"referer.automatic": {
 			"type": "bool",
 			"default": false,
-			"description": "Send Referer header when automatically redirected.",
+			"description": "Send updated Referer header when automatically redirected.",
 			"simple": false
 		},
 		"reset.tor": {
 			"type": "bool",
 			"default": true,
-			"description": "Use the TOR control server to request a new identity on connection reset.",
+			"description": "Use the TOR control server to request a new identity on connection resets.",
 			"simple": false
 		},
 		"reset.tor.after": {
@@ -392,9 +398,9 @@
 		"timeout": {
 			"type": "number",
 			"default": 300,
-			"min": 1,
+			"min": 0,
 			"label": "Time-out on connect (s):",
-			"description": "Connecting time-out (in s).",
+			"description": "Connecting time-out (in s, 0=infinite).",
 			"simple": true,
 			"position": 3
 		},
@@ -403,7 +409,7 @@
 			"default": 0,
 			"min": 0,
 			"max": 65535,
-			"description": "Time-out for IPv6 only using the Happy eyeballs algorithm (0=default).",
+			"description": "Time-out for IPv6 only using the Happy eyeballs algorithm (in ms, 0=default).",
 			"simple": false
 		},
 		"timeout.request": {
