@@ -747,13 +747,13 @@ span.idle {
 	box-sizing:border-box;
 }
 #content-url {
-	width:50px;
+	width:60px;
 }
 #content-slash {
 	font-size:12px;
 }
 #content-url-text {
-	width:440px;
+	width:427px;
 }
 #content-text {
 	display:inline-block;
