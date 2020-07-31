@@ -130,7 +130,7 @@ namespace crawlservpp::Main {
 	constexpr auto descUsing{"using"sv};
 
 	//! The usage string for the command line.
-	constexpr auto descUsage{"USAGE: crawlserv <config_file> or crawlserv -v"sv};
+	constexpr auto descUsage{"USAGE: crawlserv <config_file> or crawlserv -v"};
 
 	///@}
 
