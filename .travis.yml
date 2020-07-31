@@ -3,11 +3,9 @@ language: cpp
 matrix: 
  include:
 
-- name: "GCC8"
+ - name: "GCC8"
    os: linux
    dist: xenial
-   env:
-     - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
    before_install:
      - eval "${MATRIX_EVAL}"
      - echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
@@ -28,8 +26,6 @@ matrix:
  - name: "GCC7"
    os: linux
    dist: xenial
-   env:
-     - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
    before_install:
      - eval "${MATRIX_EVAL}"
      - echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
@@ -50,8 +46,6 @@ matrix:
  - name: "clang7"
    os: linux
    dist: xenial
-   env: 
-     - MATRIX_EVAL="CC=clang && CXX=clang++"
    before_install:
      - eval "${MATRIX_EVAL}"
      - echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
@@ -72,8 +66,6 @@ matrix:
  - name: "clang6"
    os: linux
    dist: xenial
-   env: 
-     - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
    before_install:
      - eval "${MATRIX_EVAL}"
      - echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
@@ -95,8 +87,6 @@ matrix:
  - name: "clang5"
    os: linux
    dist: xenial
-   env: 
-     - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
    before_install:
      - eval "${MATRIX_EVAL}"
      - echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
