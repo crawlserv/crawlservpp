@@ -209,7 +209,7 @@ For more information on the server commands, see the [documentation](https://cod
 
 ### Threads
 
-As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the [`Module::Thread`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Thread.html) template class:
+As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the abstract [`Module::Thread`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Thread.html) class:
 
 * **crawler**: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://www.mementoweb.org/guide/quick-intro/)).
 * **parser**: Parsing of data from URLs and downloaded content using user-defined RegEx, XPath and JSONPointer queries.
