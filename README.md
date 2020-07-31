@@ -37,21 +37,25 @@ The following additional components are required to build crawlserv++ on your sy
 
 * [`cmake`](https://cmake.org/), version 3.8.2 or higher
 * [`GNU Make`](https://www.gnu.org/software/make/) or a compatible Makefile parser
-* [`gcc`](https://gcc.gnu.org/), version 6 or higher, or [`clang`](https://clang.llvm.org/), version 5 or higher – or any other modern C++ 17 compiler
+* [`gcc`](https://gcc.gnu.org/), version 7 or higher, or [`clang`](https://clang.llvm.org/), version 5 or higher – or any other modern C++ 17 compiler
 * a multi-threading library supported by `cmake` like `pthreads` (e.g. `libpthread-stubs0-dev` on Ubuntu)
 * a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
 * the [`Boost.Iostreams`](https://www.boost.org/doc/libs/1_70_0/libs/iostreams/doc/index.html) library (`libboost-iostreams-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
 * the [`curl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
 * the [`tidy-html5`](http://www.html-tidy.org/) library, version 5 or higher (`libtidy-dev`*)
-* the [`uriparser`](https://uriparser.github.io/) library (`liburiparser-dev`)
+* the [`uriparser`](https://uriparser.github.io/) library, version 0.9.0 or higher (`liburiparser-dev`)
 * the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
 * the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * the [`zlib`](https://www.zlib.net/) library (preinstalled on many Linux systems)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
-*&ast; Older Linux distributions may only have `libtidy-dev` v0.9 available. Install the current version [manually](https://github.com/htacg/tidy-html5/releases) or find a pre-compiled version like the ones from Ondřej Surý's [PHP repository for Ubuntu](https://launchpad.net/~ondrej/+archive/ubuntu/php).*
+*&ast; Older Linux distributions may only have `libtidy-dev` v0.9 and `liburiparser-dev` 0.8.4 available. Install the current [versions](https://github.com/htacg/tidy-html5/releases) [manually](https://github.com/uriparser/uriparser), or add a newer repository, e.g. on Ubuntu via:*
+
+```
+echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
+```
 
 After installing these components and cloning or downloading the source code, use the terminal to go to the `crawlserv` directory inside the downloaded files (where [`CMakeLists.txt`](crawlserv/CMakeLists.txt) is located) and run the following commands:
 
@@ -86,7 +90,7 @@ Even without access to the frontend you can shut down the server from the termin
 * `#define RAPIDJSON_HAS_STDSTRING`
 * `#define ZLIB_CONST`
 * `#define JSONCONS_NO_DEPRECATED` (optional, but recommended)
-* `#define NDEBUG` (optional, but recommended if you are not debugging the source code)
+* `#define NDEBUG` (optional, but recommended, if you are not debugging the source code)
 
 If you use `gcc`, add the following arguments to set all of these definitions:
 
