@@ -233,7 +233,6 @@ message("jsoncons include directory set to: \"${jsoncons_INCLUDE}\".")
 add_executable(${PROJECT_NAME}
 		src/main.cpp
 		src/Main/App.cpp
-		src/Main/ConfigFile.cpp
 		src/Main/Database.cpp
 		src/Main/Server.cpp
 		src/Main/WebServer.cpp
@@ -251,12 +250,6 @@ add_executable(${PROJECT_NAME}
 		src/Module/Parser/Thread.cpp
 		src/Module/Database.cpp
 		src/Module/Thread.cpp
-		src/Network/Curl.cpp
-		src/Query/Container.cpp
-		src/Query/JsonPath.cpp
-		src/Query/JsonPointer.cpp
-		src/Query/RegEx.cpp
-		src/Query/XPath.cpp
 		src/Wrapper/Curl.cpp
 		src/_extern/mongoose/mongoose.c
 
@@ -293,11 +286,16 @@ target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
 # NOTE: The following might be removed in the near future.
 target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 
-# set library options
+# set required library options
 target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_HTTP_STREAMING_MULTIPART)
 target_compile_definitions(${PROJECT_NAME} PRIVATE PCRE2_CODE_UNIT_WIDTH=8)
 target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_HAS_STDSTRING)
+target_compile_definitions(${PROJECT_NAME} PRIVATE ZLIB_CONST)
+
+# set optional library option
 target_compile_definitions(${PROJECT_NAME} PRIVATE JSONCONS_NO_DEPRECATED)
+
+# set temporary library option (see https://github.com/HowardHinnant/date/issues/435) 
 target_compile_definitions(${PROJECT_NAME} PRIVATE HAS_UNCAUGHT_EXCEPTIONS)
 
 # set compiler options
@@ -339,19 +337,30 @@ endif()
 #	
 #	string(
 #			CONCAT CLANG_TIDY_TESTS "*,"
+#			"-clang-analyzer-core.NullDereference,"
+#			"-clang-analyzer-optin.cplusplus.UninitializedObject,"
 #			"-clang-diagnostic-c++17-extensions,"
+#			"-cppcoreguidelines-non-private-member-variables-in-classes,"
+#			"-cppcoreguidelines-pro-type-reinterpret-cast,"
 #			"-cppcoreguidelines-pro-type-union-access,"
 #			"-fuchsia-default-arguments-calls,"
+#			"-fuchsia-multiple-inheritance,"
 #			"-google-runtime-references,"
 #			"-llvm-header-guard,"
+#			"-misc-non-private-member-variables-in-classes,"
 #			"-modernize-pass-by-value,"
 #			"-modernize-use-trailing-return-type,"
 #	)
 #	
 #	set(
+#			CLANG_TIDY_HEADER_FILTER [=[[A-Z][a-zA-Z]+\.hpp$]=]
+#	)
+#	
+#	set(
 #			DO_CLANG_TIDY
 #			"${CLANG_TIDY_EXE}"
-#			"-checks=${CLANG_TIDY_TESTS}, -header-filter=.*\.hpp$"
+#			"-header-filter=${CLANG_TIDY_HEADER_FILTER}"
+#			"-checks=${CLANG_TIDY_TESTS}"
 #	)
 #	
 #	set_target_properties(${PROJECT_NAME} PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}" )

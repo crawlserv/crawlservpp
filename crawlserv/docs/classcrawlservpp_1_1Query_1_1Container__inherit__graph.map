@@ -1,0 +1,6 @@
+<map id="crawlservpp::Query::Container" name="crawlservpp::Query::Container">
+<area shape="rect" id="node1" title="Query container." alt="" coords="5,71,153,112"/>
+<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Crawler_1_1Thread.html" title="Crawler thread." alt="" coords="201,5,359,47"/>
+<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Extractor_1_1Thread.html" title="Extractor thread." alt="" coords="201,71,359,112"/>
+<area shape="rect" id="node4" href="$classcrawlservpp_1_1Module_1_1Parser_1_1Thread.html" title="Parser thread." alt="" coords="201,136,359,177"/>
+</map>

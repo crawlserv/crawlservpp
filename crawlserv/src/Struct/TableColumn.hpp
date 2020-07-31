@@ -35,13 +35,58 @@
 
 namespace crawlservpp::Struct {
 
+	//! Structure for table columns containing its name, type, reference, and indexing.
 	struct TableColumn {
-		std::string name;				// name of the column
-		std::string type;				// type of the column
-		std::string referenceTable;		// name of the referenced table
-		std::string referenceColumn;	// name of the referenced column
-		bool indexed;					// column is indexed
+		///@name Properties
+		///@{
 
+		//! Name of the table column.
+		std::string name;
+
+		//! Type of the table column as SQL string.
+		std::string type;
+
+		//! Name of the table referenced by the table column.
+		/*!
+		 * This string remains empty, if no
+		 *  other table column is referenced.
+		 */
+		std::string referenceTable;
+
+		//! Name of the column referenced by the table column (or empty if none).
+		/*!
+		 * This string remains empty, if no
+		 *  other table column is referenced.
+		 */
+		std::string referenceColumn;
+
+		//! Indicates whether the table column is indexed.
+		bool indexed;
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Constructor setting all properties of the table column.
+		/*!
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the new table column.
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the new table column as
+		 *   SQL string.
+		 * \param setReferenceTable Constant
+		 *   reference to a string containing
+		 *   the name of the table referenced
+		 *   by the new table column.
+		 * \param setReferenceColumn Constant
+		 *   reference to a string containing
+		 *   the name of the column referenced
+		 *   by the new table column.
+		 * \param setIndexed Set whether the
+		 *   new table column is indexed.
+		 */
 		TableColumn(
 				const std::string& setName,
 				const std::string& setType,
@@ -54,6 +99,24 @@ namespace crawlservpp::Struct {
 		  referenceColumn(setReferenceColumn),
 		  indexed(setIndexed) {}
 
+		//! Constructor setting properties of an unindexed table column.
+		/*!
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the new table column.
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the new table column as
+		 *   SQL string.
+		 * \param setReferenceTable Constant
+		 *   reference to a string containing
+		 *   the name of the table referenced
+		 *   by the new table column.
+		 * \param setReferenceColumn Constant
+		 *   reference to a string containing
+		 *   the name of the column referenced
+		 *   by the new table column.
+		 */
 		TableColumn(
 				const std::string& setName,
 				const std::string& setType,
@@ -61,23 +124,55 @@ namespace crawlservpp::Struct {
 				const std::string& setReferenceColumn
 		) : TableColumn(setName, setType, setReferenceTable, setReferenceColumn, false) {}
 
+		//! Constructor setting properties of an unreferenced table column.
+		/*!
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the new table column.
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the new table column as
+		 *   SQL string.
+		 * \param setIndexed Set whether the
+		 *   new table column is indexed.
+		 */
 		TableColumn(
 				const std::string& setName,
 				const std::string& setType,
 				bool setIndexed
 		) : TableColumn(setName, setType, "", "", setIndexed) {}
 
+		//! Constructor setting properties of an unreferenced and unindexed table column.
+		/*!
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the new table column.
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the new table column as
+		 *   SQL string.
+		 */
 		TableColumn(
 				const std::string& setName,
 				const std::string& setType
 		) : TableColumn(setName, setType, "", "", false) {}
 
+		//! Constructor copying another table column and setting a new name for the copy.
+		/*!
+		 * \param other Constnt reference to
+		 *  the table column to be copied from.
+		 * \param newName Constant reference
+		 *   to a string containing the name
+		 *   of the new table column.
+		 */
 		TableColumn(
-				const std::string& newName,
-				const TableColumn& c
-		) : TableColumn(newName, c.type, c.referenceTable, c.referenceColumn, c.indexed) {}
+				const TableColumn& other,
+				const std::string& newName
+		) : TableColumn(newName, other.type, other.referenceTable, other.referenceColumn, other.indexed) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_TABLECOLUMN_HPP_ */

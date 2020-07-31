@@ -6,7 +6,7 @@
 		"corpus.checks": {
 			"type": "bool",
 			"default": true,
-			"description": "Check the consistency of corpora."
+			"description": "Check the consistency of text corpora."
 		},
 		"corpus.slicing": {
 			"type": "number",
@@ -21,7 +21,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Input fields:",
-			"description": "Fields to be used from input tables.",
+			"description": "Columns to be used from the input tables.",
 			"simple": true,
 			"position": 3
 		},
@@ -63,14 +63,6 @@
 			"simple": true,
 			"position": 5
 		},
-		"result.table": {
-			"type": "string",
-			"default": "",
-			"label": "Result table:",
-			"description": "Table name to save analyzed data to.",
-			"simple": true,
-			"position": 4
-		},
 		"sleep.mysql": {
 			"type": "number",
 			"default": 10,
@@ -84,6 +76,14 @@
 			"min": 100,
 			"description": "Time (in ms) to wait each tick when finished.",
 			"simple": false
+		},
+		"target.table": {
+			"type": "string",
+			"default": "",
+			"label": "Target table:",
+			"description": "Table name to save analyzed data to.",
+			"simple": true,
+			"position": 4
 		}
 	}
 }

@@ -22,7 +22,7 @@
  *
  * Gzip.hpp
  *
- * Namespace with functions for gzip compression.
+ * Namespace for functions for gzip compression.
  *
  *  Created on: May 2, 2019
  *      Author: ans
@@ -31,34 +31,63 @@
 #ifndef DATA_GZIP_HPP_
 #define DATA_GZIP_HPP_
 
-#include <boost/iostreams/filtering_streambuf.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
 
-#include <sstream>	// std::stringstream
-#include <string>	// std::string
+#include <sstream>		// std::stringstream
+#include <string>		// std::string
 
+//! Namespace for compressing and decompressing gzip.
 namespace crawlservpp::Data::Compression::Gzip {
 
 	/*
 	 * DECLARATION
 	 */
 
+	///@name Compression and Decompression
+	///@{
+
 	std::string compress(const std::string& content);
 	std::string decompress(const std::string& compressedContent);
+
+	///@}
+	///@name Constant
+	///@{
+
+	//! The compression level used when compressing with gzip.
+	constexpr auto compressionLevel{9};
+
+	///@}
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// compress content
+	//! Compresses content using gzip.
+	/*!
+	 * \note The string will be compressed via copying
+	 *   it into a string stream, therefore a string
+	 *   view is not feasible.
+	 *
+	 * \param content A const reference to the content
+	 *   to be compressed.
+	 *
+	 * \returns The gzip-compressed content as copied
+	 *   string or an empty string if the given content
+	 *   is empty.
+	 */
 	inline std::string compress(const std::string& content) {
+		if(content.empty()) {
+			return "";
+		}
+
 		std::stringstream compressed;
 		std::stringstream origin(content);
 
 		boost::iostreams::filtering_streambuf<boost::iostreams::input> out;
 
-		out.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(9)));
+		out.push(boost::iostreams::gzip_compressor(boost::iostreams::gzip_params(compressionLevel)));
 		out.push(origin);
 
 		boost::iostreams::copy(out, compressed);
@@ -67,8 +96,23 @@ namespace crawlservpp::Data::Compression::Gzip {
 		return compressed.str();
 	}
 
-	// decompress content
+	//! Decompresses gzip-compressed content.
+	/*!
+	 * \note The string will be decompressed via copying
+	 *   it into a string stream, therefore a string view
+	 *   is not feasible.
+	 *
+	 * \param compressedContent A const reference to the
+	 *   gzip-compressed content to be decompressed.
+	 *
+	 * \returns The decompressed content as copied string
+	 *   or an empty string if the given content is empty.
+	 */
 	inline std::string decompress(const std::string& compressedContent) {
+		if(compressedContent.empty()) {
+			return "";
+		}
+
 		std::stringstream compressed(compressedContent);
 		std::stringstream decompressed;
 
@@ -83,6 +127,6 @@ namespace crawlservpp::Data::Compression::Gzip {
 		return decompressed.str();
 	}
 
-} /* crawlservpp::Data::Compression::Gzip */
+} /* namespace crawlservpp::Data::Compression::Gzip */
 
 #endif /* DATA_GZIP_HPP_ */

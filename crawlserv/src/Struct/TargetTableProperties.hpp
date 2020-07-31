@@ -22,9 +22,7 @@
  *
  * TargetTableProperties.hpp
  *
- * Target table properties (type, website, URL list, table name and full name, columns, data directory, compression).
- *
- * NOTE: type will be ignored on update!
+ * Target table properties (type, website, URL list, table name and full name, columns and compression).
  *
  *  Created on: Mar 4, 2019
  *      Author: ans
@@ -36,24 +34,70 @@
 
 #include "TableColumn.hpp"
 
-#include <cstdint>	// std::uint64_t
-#include <string>	// std::string
-#include <vector>	// std::vector
+#include <cstdint>		// std::uint64_t
+#include <string>		// std::string
+#include <vector>		// std::vector
 
 namespace crawlservpp::Struct {
 
+	//! Target table properties containing its type, website, URL list, table names, columns, and compression.
 	struct TargetTableProperties {
+		///@name Properties
+		///@{
+
+		//! The type of the data stored in the table.
+		/*!
+		 * Will be ignored when updating a target table.
+		 */
 		std::string type;
-		std::uint64_t website;
-		std::uint64_t urlList;
+
+		//! The ID of the website used for retrieving data to be stored in the table.
+		std::uint64_t website{0};
+
+		//! The ID of the URL list used for retrieving data to be stored in the table.
+		std::uint64_t urlList{0};
+
+		//! View of a string containing the name of the table.
 		std::string name;
+
+		//! The full name of the table.
 		std::string fullName;
+
+		//! Vector containing the columns of the table.
 		std::vector<TableColumn> columns;
-		bool compressed;
 
-		// constructors
-		TargetTableProperties() : website(0), urlList(0), compressed(false) {}
+		//! Indicates whether compression is active for this table.
+		bool compressed{false};
 
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		TargetTableProperties() = default;
+
+		//! Constructor setting properties, but not the columns of the target table.
+		/*!
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the data to be stored in the
+		 *   table.
+		 * \param setWebsite The ID of the
+		 *   website used for retrieving data
+		 *   to be stored in the table.
+		 * \param setUrlList The ID of the
+		 *   URL list used for retrieving data
+		 *   to be stored in the table.
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the table.
+		 * \param setFullName Constant
+		 *   reference to a string containing
+		 *   the full name of the table.
+		 * \param setCompressed Set whether
+		 *   compression should be used for
+		 *   storing the table in the database.
+		 */
 		TargetTableProperties(
 				const std::string& setType,
 				std::uint64_t setWebsite,
@@ -68,6 +112,31 @@ namespace crawlservpp::Struct {
 			fullName(setFullName),
 			compressed(setCompressed) {}
 
+		//! Constructor setting properties and columns of the target table.
+		/*!
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the data to be stored in the
+		 *   table.
+		 * \param setWebsite The ID of the
+		 *   website used for retrieving data
+		 *   to be stored in the table.
+		 * \param setUrlList The ID of the
+		 *   URL list used for retrieving data
+		 *   to be stored in the table.
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the table.
+		 * \param setFullName Constant
+		 *   reference to a string containing
+		 *   the full name of the table.
+		 * \param setColumns Constant reference
+		 *   to a vector containing the columns
+		 *   of the table.
+		 * \param setCompressed Set whether
+		 *   compression should be used for
+		 *   storing the table in the database.
+		 */
 		TargetTableProperties(
 				const std::string& setType,
 				std::uint64_t setWebsite,
@@ -83,9 +152,11 @@ namespace crawlservpp::Struct {
 			fullName(setFullName),
 			columns(setColumns),
 			compressed(setCompressed) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_TARGETTABLEPROPERTIES_HPP_ */
 

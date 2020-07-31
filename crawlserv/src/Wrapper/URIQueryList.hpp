@@ -40,83 +40,166 @@ namespace crawlservpp::Wrapper {
 	 * DECLARATION
 	 */
 
+	//! RAII wrapper for the %URI query list used by uriparser.
+	/*!
+	 * Accepts an externally created %URI query list and automatically
+	 *  frees it on destruction, avoiding memory leaks.
+	 *
+	 * At the moment, this class is used exclusively by
+	 *  Parsing::URI::getSubUrl().
+	 *
+	 * For more information about the uriparser API, see its
+	 *  <a href="https://github.com/uriparser/uriparser">GitHub repository</a>.
+	 *
+	 * \note This class does not have ownership of the underlying pointer.
+	 */
 	class URIQueryList {
 	public:
-		/// constructors and destructor
-		URIQueryList() noexcept;
-		URIQueryList(URIQueryList&& other) noexcept;
-		~URIQueryList();
+		///@name Construction and Destruction
+		///@{
 
-		// getters
-		UriQueryListA * get() noexcept;
-		const UriQueryListA * get() const noexcept;
-		UriQueryListA ** getPtr() noexcept;
+		//! Default constructor.
+		URIQueryList() = default;
 
-		// operators
-		explicit operator bool() const noexcept;
-		bool operator!() const noexcept;
-		URIQueryList& operator=(URIQueryList&& other) noexcept;
+		virtual ~URIQueryList();
 
-		// not copyable
+		///@}
+		///@name Getters
+		///@{
+
+		[[nodiscard]] UriQueryListA * get() noexcept;
+		[[nodiscard]] const UriQueryListA * getc() const noexcept;
+		[[nodiscard]] UriQueryListA ** getPtr() noexcept;
+		[[nodiscard]] bool valid() const noexcept;
+
+		///@}
+		///@name Cleanup
+		///@{
+
+		void clear() noexcept;
+
+		///@}
+		/**@name Copy and Move
+		 * The class is not copyable, only moveable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
 		URIQueryList(URIQueryList&) = delete;
+
+		//! Deleted copy assignment operator.
 		URIQueryList& operator=(URIQueryList&) = delete;
 
+		URIQueryList(URIQueryList&& other) noexcept;
+		URIQueryList& operator=(URIQueryList&& other) noexcept;
+
+		///@}
+
 	private:
-		UriQueryListA * ptr;
+		// underlying pointer, not owned by this class
+		UriQueryListA * ptr{nullptr};
 	};
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// constructor: set pointer to nullptr
-	inline URIQueryList::URIQueryList() noexcept : ptr(nullptr) {}
-
-	// move constructor
-	inline URIQueryList::URIQueryList(URIQueryList&& other) noexcept : ptr(other.ptr) {
-		other.ptr = nullptr;
-	}
-
-	// destructor: free query list if necessary
+	//! Destructor clearing the underlying query list if necessary.
 	inline URIQueryList::~URIQueryList() {
-		if(this->ptr) uriFreeQueryListA(this->ptr);
+		this->clear();
 	}
 
-	// get pointer to URI query list
+	//! Gets a pointer to the underlying query list.
+	/*!
+	 * \returns A pointer to the underlying query list
+	 *   or @c nullptr if no query list has been assigned or
+	 *   the query list has already been freed.
+	 */
 	inline UriQueryListA * URIQueryList::get() noexcept {
 		return this->ptr;
 	}
 
-	// get const pointer to URI query list
-	inline const UriQueryListA * URIQueryList::get() const noexcept {
+	//! Gets a const pointer to the underlying query list.
+	/*!
+	 * \returns A const pointer to the underlying query list
+	 *   or @c nullptr if no query list has been assigned or
+	 *   the query list has already been freed.
+	 */
+	inline const UriQueryListA * URIQueryList::getc() const noexcept {
 		return this->ptr;
 	}
 
-	// get pointer to pointer to URI query list
+	//! Gets a pointer to the pointer containing the address of the underlying query list.
+	/*!
+	 * \returns A pointer to the pointer containing the address
+	 *   of the underlying query list or a pointer to a pointer
+	 *   containing @c nullptr if no query list has been assigned
+	 *   or the query list has already been freed.
+	 */
 	inline UriQueryListA ** URIQueryList::getPtr() noexcept {
 		return &(this->ptr);
 	}
 
-	// bool operator
-	inline URIQueryList::operator bool() const noexcept {
+	//! Checks whether the underlying query list is valid.
+	/*!
+	 * \returns true, if the query list is valid. False otherwise.
+	 */
+	inline bool URIQueryList::valid() const noexcept {
 		return this->ptr != nullptr;
 	}
 
-	// not operator
-	inline bool URIQueryList::operator!() const noexcept {
-		return this->ptr == nullptr;
+	//! Clears the underlying query list if necessary.
+	inline void URIQueryList::clear() noexcept {
+		if(this->ptr != nullptr) {
+			uriFreeQueryListA(this->ptr);
+
+			this->ptr = nullptr;
+		}
 	}
 
-	// move operator
+	//! Move constructor.
+	/*!
+	 * Moves the query list from the specified location
+	 *  into this instance of the class.
+	 *
+	 * \note The other query list will be invalidated by this move.
+	 *
+	 * \param other The query list to move from.
+	 *
+	 * \sa valid
+	 */
+	inline URIQueryList::URIQueryList(URIQueryList&& other) noexcept : ptr(other.ptr) {
+		other.ptr = nullptr;
+	}
+
+	//! Move assignment operator.
+	/*!
+	 * Moves the query list from the specified location
+	 *  into this instance of the class.
+	 *
+	 * \note The other query list will be invalidated by this move.
+	 *
+	 * \note Nothing will be done if used on itself.
+	 *
+	 * \param other The query list to move from.
+	 *
+	 * \returns A reference to the instance containing
+	 *   the query list after moving (i.e. *this).
+	 *
+	 * \sa valid
+	 */
 	inline URIQueryList& URIQueryList::operator=(URIQueryList&& other) noexcept {
 		if(&other != this) {
+			this->clear();
+
 			this->ptr = other.ptr;
+
 			other.ptr = nullptr;
 		}
 
 		return *this;
 	}
 
-} /* crawlservpp::Wrapper */
+} /* namespace crawlservpp::Wrapper */
 
 #endif /* WRAPPER_URIQUERYLIST_HPP_ */

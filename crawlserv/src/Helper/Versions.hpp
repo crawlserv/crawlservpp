@@ -22,7 +22,7 @@
  *
  * Versions.hpp
  *
- * Get the versions of the different libraries used by crawlserv.
+ * Namespace for functions getting the versions of the different libraries used by the application.
  *
  *  Created on: Oct 18, 2018
  *      Author: ans
@@ -39,46 +39,88 @@
 
 #include <aspell.h>
 #include <boost/version.hpp>
-#include <curl/curl.h>
 #include <cppconn/driver.h>
-#include <tidy.h>
+#include <curl/curl.h>
 #include <pcre2.h>
 #include <pugixml.hpp>
+#include <tidy.h>
 #include <uriparser/UriBase.h>
 #include <zlib.h>
 
-#include <string>	// std::string, std::to_string
-#include <utility>	// std::pair
-#include <vector>	// std::vector
+#include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
+//! Namespace for functions getting the versions of the different libraries used by the application.
 namespace crawlservpp::Helper::Versions {
 
-	// for convenience
-	using StringString = std::pair<std::string, std::string>;
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! Divisor to retrieve the major version of the Boost library.
+	constexpr auto boostMajor{100000};
+
+	//! Divisor to retrieve the minor version of the Boost library.
+	constexpr auto boostMinor{1000};
+
+	//! Divisor to retrieve the patch level of the Boost library.
+	constexpr auto boostPatch{100};
+
+	//! Divisor to retrieve the major version of the pugixml library.
+	constexpr auto pugixmlMajor{100};
+
+	//! Divisor to retrieve the minor version of the pugixml library.
+	constexpr auto pugixmlMinor{10};
+
+	//! The version of the @c UTF8-CPP library.
+	/*!
+	 * \warning Hard-coded version information
+	 *   might not be accurate!
+	 */
+	constexpr std::string_view utf8CppVersion{"2.1"};
+
+	///@}
 
 	/*
-	 * DEFINITION
+	 * DECLARATION
 	 */
+
+	//! A pair of strings.
+	using StringString = std::pair<std::string, std::string>;
+
+	///@name Getters
+	///@{
 
 	std::vector<StringString> getLibraryVersions();
 	std::string getLibraryVersionsStr(const std::string& indent);
+
+	///@}
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// Get the versions of the libraries as vector of [name, version] string pairs
+	//! Gets the versions of the used libraries.
+	/*!
+	 * \returns The versions of the libraries
+	 *   as @c [name, @c version] pairs.
+	 */
 	inline std::vector<StringString> getLibraryVersions() {
 		std::vector<StringString> result;
 
 		// Boost
 		result.emplace_back(
 				"Boost",
-				std::to_string(BOOST_VERSION / 100000)
+				std::to_string(BOOST_VERSION / boostMajor)
 				+ '.'
-				+ std::to_string(BOOST_VERSION / 100 % 1000)
+				+ std::to_string(BOOST_VERSION / boostPatch % boostMinor)
 				+ '.'
-				+ std::to_string(BOOST_VERSION % 100)
+				+ std::to_string(BOOST_VERSION % boostPatch)
 		);
 
 		// cURL
@@ -104,9 +146,9 @@ namespace crawlservpp::Helper::Versions {
 		result.emplace_back("mongoose", MG_VERSION);
 
 		// MySQL Connector/C++
-		sql::Driver * driver = get_driver_instance();
+		sql::Driver * driver{get_driver_instance()};
 
-		if(driver)
+		if(driver != nullptr) {
 			result.emplace_back(
 					driver->getName(),
 					std::to_string(driver->getMajorVersion())
@@ -115,6 +157,7 @@ namespace crawlservpp::Helper::Versions {
 					+ '.'
 					+ std::to_string(driver->getPatchVersion())
 			);
+		}
 
 		// PCRE2
 		result.emplace_back(
@@ -127,11 +170,11 @@ namespace crawlservpp::Helper::Versions {
 		// pugixml
 		result.emplace_back(
 				"pugixml",
-				std::to_string(PUGIXML_VERSION / 100)
+				std::to_string(PUGIXML_VERSION / pugixmlMajor)
 				+ '.'
-				+ std::to_string(PUGIXML_VERSION % 100 / 10)
+				+ std::to_string(PUGIXML_VERSION % pugixmlMajor / pugixmlMinor)
 				+ '.'
-				+ std::to_string(PUGIXML_VERSION % 10)
+				+ std::to_string(PUGIXML_VERSION % pugixmlMinor)
 		);
 
 		// RapidJSON
@@ -155,7 +198,7 @@ namespace crawlservpp::Helper::Versions {
 		);
 
 		// UTF8-CPP (WARNING: hard-coded version information not necessarily accurate)
-		result.emplace_back("UTF8-CPP", "2.1");
+		result.emplace_back("UTF8-CPP", utf8CppVersion);
 
 		// zlib
 		result.emplace_back("zlib", ZLIB_VERSION);
@@ -163,7 +206,15 @@ namespace crawlservpp::Helper::Versions {
 		return result;
 	}
 
-	// get the versions of the libraries as one indented string
+	//! Gets the versions of the used libraries as one indented string.
+	/*!
+	 * \param indent Constant reference to a
+	 *   string containing the indent to be
+	 *   added in front of each line.
+	 * \returns A copy of a string containing
+	 *   the versions of the libraries with
+	 *   one (indented) line for each library.
+	 */
 	inline std::string getLibraryVersionsStr(const std::string& indent) {
 		// get versions
 		const std::vector<StringString> versions(getLibraryVersions());
@@ -183,12 +234,13 @@ namespace crawlservpp::Helper::Versions {
 			result += "\n";
 		}
 
-		if(!versions.empty())
+		if(!versions.empty()) {
 			result.pop_back();
+		}
 
 		return result;
 	}
 
-} /* crawlservpp::Helper::Versions */
+} /* namespace crawlservpp::Helper::Versions */
 
 #endif /* HELPER_VERSIONS_HPP_ */

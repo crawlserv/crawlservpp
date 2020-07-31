@@ -22,7 +22,7 @@
  *
  * Database.hpp
  *
- * Interface to be inherited by the thread modules.
+ * Interface to be inherited by the module threads.
  * Allows them access to the database by providing basic Database functionality as well as the option to add prepared SQL statements.
  *
  *  Created on: Oct 22, 2018
@@ -60,6 +60,13 @@ namespace crawlservpp::Wrapper {
 	 * DECLARATION
 	 */
 
+	//! %Wrapper class providing the database functionality of Module::Database to its child classes.
+	/*!
+	 * \sa Module::Analyzer::Database,
+	 * 	 Module::Crawler::Database,
+	 * 	 Module::Extractor::Database,
+	 * 	 Module::Parser::Database
+	 */
 	class Database {
 		// for convenience
 		using ModuleOptions = Struct::ModuleOptions;
@@ -72,55 +79,87 @@ namespace crawlservpp::Wrapper {
 		using IsRunningCallback = std::function<bool()>;
 
 	public:
-		// allow locking class access to protected functions
+		//! Allows scoped locking of the database.
 		template<class DB> friend class Wrapper::DatabaseLock;
+
+		//! Allows optional scoped locking of the database.
 		template<class DB> friend class Wrapper::DatabaseTryLock;
 
-		// constructor and destructor
-		Database(Module::Database& dbRef);
-		~Database();
+		///@name Construction and Destruction
+		///@{
 
-		// wrapper for setters
-		void setLogging(unsigned short level, unsigned short min, unsigned short verbose);
+		explicit Database(Module::Database& dbThread);
+
+		//! Default destructor.
+		virtual ~Database() = default;
+
+		///@}
+		///@name Setters
+		///@{
+
+		void setLogging(std::uint8_t level, std::uint8_t min, std::uint8_t verbose);
 		void setSleepOnError(std::uint64_t seconds);
 		void setTimeOut(std::uint64_t milliseconds);
 
-		// wrapper for logging function
-		void log(unsigned short level, const std::string& logEntry);
-		void log(unsigned short level, std::queue<std::string>& logEntries);
+		///@}
+		///@name Logging
+		///@{
 
-		// wrapper for website function
-		std::string getWebsiteDomain(std::uint64_t websiteId);
+		void log(std::uint8_t level, const std::string& logEntry);
+		void log(std::uint8_t level, std::queue<std::string>& logEntries);
 
-		// wrapper for query function
+		///@}
+		///@name Websites
+		///@{
+
+		[[nodiscard]] std::string getWebsiteDomain(std::uint64_t websiteId);
+
+		///@}
+		///@name Queries
+		///@{
+
 		void getQueryProperties(std::uint64_t queryId, QueryProperties& queryPropertiesTo);
 
-		// wrapper for configuration function
-		std::string getConfiguration(std::uint64_t configId);
+		///@}
+		///@name Configurations
+		///@{
 
-		// wrappers for database functions
-		void beginNoLock();
-		void endNoLock();
+		[[nodiscard]] std::string getConfiguration(std::uint64_t configId);
 
-		// wrappers for target table functions
+		///@}
+		///@name Target Tables
+		///@{
+
 		std::uint64_t addTargetTable(const TargetTableProperties& properties);
-		std::queue<IdString> getTargetTables(const std::string& type, std::uint64_t listId);
-		std::uint64_t getTargetTableId(
+		[[nodiscard]] std::queue<IdString> getTargetTables(const std::string& type, std::uint64_t listId);
+		[[nodiscard]] std::uint64_t getTargetTableId(
 				const std::string& type,
-				std::uint64_t websiteId,
 				std::uint64_t listId,
 				const std::string& tableName
 		);
-		std::string getTargetTableName(const std::string& type, std::uint64_t tableId);
+		[[nodiscard]] std::string getTargetTableName(const std::string& type, std::uint64_t tableId);
 		void deleteTargetTable(const std::string& type, std::uint64_t tableId);
 
-		// wrappers for general table functions
-		bool isTableEmpty(const std::string& tableName);
-		bool isTableExists(const std::string& tableName);
-		bool isColumnExists(const std::string& tableName, const std::string& columnName);
-		std::string getColumnType(const std::string& tableName, const std::string& columnName);
+		///@}
+		///@name Locking
+		///@{
 
-		// wrappers for custom data functions for algorithms
+		void beginNoLock();
+		void endNoLock();
+
+		///@}
+		///@name Tables
+		///@{
+
+		[[nodiscard]] bool isTableEmpty(const std::string& tableName);
+		[[nodiscard]] bool isTableExists(const std::string& tableName);
+		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
+		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
+
+		///@}
+		///@name Custom Data
+		///@{
+
 		void getCustomData(Data::GetValue& data);
 		void getCustomData(Data::GetFields& data);
 		void getCustomData(Data::GetFieldsMixed& data);
@@ -134,353 +173,442 @@ namespace crawlservpp::Wrapper {
 		void updateCustomData(const Data::UpdateFields& data);
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
-		// wrapper for static function
-		static unsigned long long getRequestCounter();
+		///@}
+		///@name Request Counter
+		///@{
 
-		// not moveable, not copyable
+		[[nodiscard]] static std::uint64_t getRequestCounter();
+
+		///@}
+		/**@name Copy and Move
+		 * The class is neither copyable, nor moveable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
 		Database(Database&) = delete;
-		Database(Database&&) = delete;
+
+		//! Deleted copy assignment operator.
 		Database& operator=(Database&) = delete;
+
+		//! Deleted move constructor.
+		Database(Database&&) = delete;
+
+		//! Deleted move assignment operator.
 		Database& operator=(Database&&) = delete;
 
+		///@}
+
 	protected:
-		// reference to the database connection by the thread
+		///@name Database Connection
+		///@{
+
+		//! Reference to the database connection for the thread.
 		Module::Database& database;
 
-		// protected getters for general module options
-		const ModuleOptions& getOptions() const;
-		const std::string& getWebsiteIdString() const;
-		const std::string& getUrlListIdString() const;
-		std::uint8_t getLoggingMin() const;
-		std::uint8_t getLoggingVerbose() const;
+		///@}
+		///@name Getters
+		///@{
 
-		// wrapper for validation function (changed from public to protected)
+		[[nodiscard]] const ModuleOptions& getOptions() const;
+		[[nodiscard]] const std::string& getWebsiteIdString() const;
+		[[nodiscard]] const std::string& getUrlListIdString() const;
+		[[nodiscard]] std::uint8_t getLoggingMin() const;
+		[[nodiscard]] std::uint8_t getLoggingVerbose() const;
+		[[nodiscard]] std::uint64_t getMaxAllowedPacketSize() const;
+
+		///@}
+		///@name Validation
+		///@{
+
 		void checkConnection();
 
-		// wrapper for protected getter
-		std::uint64_t getMaxAllowedPacketSize() const;
+		///@}
+		///@name Helper Functions for Prepared SQL Statements
+		///@{
 
 		// wrappers for managing prepared SQL statements
-		void reserveForPreparedStatements(std::size_t numberOfAdditionalPreparedStatements);
-		std::size_t addPreparedStatement(const std::string& sqlQuery);
-		sql::PreparedStatement& getPreparedStatement(unsigned short id);
+		void reserveForPreparedStatements(std::size_t n);
+		[[nodiscard]] std::size_t addPreparedStatement(const std::string& sqlQuery);
+		[[nodiscard]] sql::PreparedStatement& getPreparedStatement(std::uint8_t id);
 
-		// wrappers for database helper functions
-		std::uint64_t getLastInsertedId();
-		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
-		bool tryDatabaseLock(const std::string& name);
-		void removeDatabaseLock(const std::string& name);
+		///@}
+		///@name Database Helper Functions
+		///@{
+
+		[[nodiscard]] std::uint64_t getLastInsertedId();
+		static void addDatabaseLock(const std::string& name, const IsRunningCallback& isRunningCallback);
+		static bool tryDatabaseLock(const std::string& name);
+		static void removeDatabaseLock(const std::string& name);
 		void createTable(const TableProperties& properties);
+		void dropTable(const std::string& tableName);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
-		void deleteTable(const std::string& tableName);
 
-		// wrapper for URL list helper function
+		///@}
+		///@name URL List Helper Functions
+		///@{
+
 		void setUrlListCaseSensitive(std::uint64_t listId, bool isCaseSensitive);
 
-		// wrapper for exception helper function
-		void sqlException(const std::string& function, const sql::SQLException& e);
+		///@}
+		///@name Exception Helper Functions
+		///@{
 
-		// wrapper for static helper functions
+		static void sqlException(const std::string& function, const sql::SQLException& e);
+
+		///@}
+		///@name Helper Functions for Executing SQL Queries
+		///@{
+
 		static bool sqlExecute(sql::PreparedStatement& sqlPreparedStatement);
 		static sql::ResultSet * sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement);
 		static int sqlExecuteUpdate(sql::PreparedStatement& sqlPreparedStatement);
+
+		///@}
 	};
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// constructor: initialize database
-	inline Database::Database(Module::Database& dbRef) : database(dbRef) {}
+	//! Constructor setting the database connection.
+	/*!
+	 * \param dbThread Reference to the database
+	 *   connection used by the thread.
+	 */
+	inline Database::Database(Module::Database& dbThread) : database(dbThread) {}
 
-	// destructor stub
-	inline Database::~Database() {}
-
-	// set current, minimal and verbose logging levels
-	inline void Database::setLogging(unsigned short level, unsigned short min, unsigned short verbose) {
+	//! \copydoc Module::Database::setLogging
+	inline void Database::setLogging(std::uint8_t level, std::uint8_t min, std::uint8_t verbose) {
 		this->database.setLogging(level, min, verbose);
 	}
 
-	// set the number of seconds to wait before (first and last) re-try on connection loss to MySQL server
+	//! \copydoc Main::Database::setSleepOnError
 	inline void Database::setSleepOnError(std::uint64_t seconds) {
 		this->database.setSleepOnError(seconds);
 	}
 
-	// set the maximum amount of milliseconds for a query before it cancels execution (or 0 for none)
-	//  NOTE: database connection needs to be established
+	//! \copydoc Main::Database::setTimeOut
 	inline void Database::setTimeOut(std::uint64_t milliseconds) {
 		this->database.setTimeOut(milliseconds);
 	}
 
-	// write thread-specific log entry to the database
-	inline void Database::log(unsigned short level, const std::string& logEntry) {
+	//! \copydoc Module::Database::log(std::uint8_t, const std::string&)
+	inline void Database::log(std::uint8_t level, const std::string& logEntry) {
 		this->database.log(level, logEntry);
 	}
 
-	// write multiple thread-specific log entries to the databse
-	inline void Database::log(unsigned short level, std::queue<std::string>& logEntries) {
+	//! \copydoc Module::Database::log(std::uint8_t, std::queue<std::string>&)
+	inline void Database::log(std::uint8_t level, std::queue<std::string>& logEntries) {
 		this->database.log(level, logEntries);
 	}
 
-	// get website domain from the database by its ID
+	//! \copydoc Main::Database::getWebsiteDomain
 	inline std::string Database::getWebsiteDomain(std::uint64_t websiteId) {
 		return this->database.getWebsiteDomain(websiteId);
 	}
 
-	// get the properties of a query from the database by its ID
+	//! \copydoc Main::Database::getQueryProperties
 	inline void Database::getQueryProperties(std::uint64_t queryId, QueryProperties& queryPropertiesTo) {
 		this->database.getQueryProperties(queryId, queryPropertiesTo);
 	}
 
-	// get a configuration from the database by its ID
+	//! \copydoc Main::Database::getConfiguration
 	inline std::string Database::getConfiguration(std::uint64_t configId) {
 		return this->database.getConfiguration(configId);
 	}
 
-	// disable locking
-	inline void Database::beginNoLock() {
-		this->database.beginNoLock();
-	}
-
-	// re-enable locking by ending (non-existing) transaction
-	inline void Database::endNoLock() {
-		this->database.endNoLock();
-	}
-
-	// add a target table of the specified type to the database if such a table does not exist already, return table ID
+	//! \copydoc Main::Database::addTargetTable
 	inline std::uint64_t Database::addTargetTable(const TargetTableProperties& properties) {
 		return this->database.addTargetTable(properties);
 	}
 
-	// get target tables of the specified type for an ID-specified URL list from the database
+	//! \copydoc Main::Database::getTargetTables
 	inline std::queue<Database::IdString> Database::getTargetTables(const std::string& type, std::uint64_t listId) {
 		return this->database.getTargetTables(type, listId);
 	}
 
-	// get the ID of a target table of the specified type from the database by its website ID, URL list ID and table name
+	//! \copydoc Main::Database::getTargetTableId
 	inline std::uint64_t Database::getTargetTableId(
 			const std::string& type,
-			std::uint64_t websiteId,
 			std::uint64_t listId,
 			const std::string& tableName
 	) {
-		return this->database.getTargetTableId(type, websiteId, listId, tableName);
+		return this->database.getTargetTableId(type, listId, tableName);
 	}
 
-	// get the name of a target table of the specified type from the database by its ID
+	//! \copydoc Main::Database::getTargetTableName
 	inline std::string Database::getTargetTableName(const std::string& type, std::uint64_t tableId) {
 		return this->database.getTargetTableName(type, tableId);
 	}
 
-	// delete target table of the specified type from the database by its ID
+	//! \copydoc Main::Database::deleteTargetTable
 	inline void Database::deleteTargetTable(const std::string& type, std::uint64_t tableId) {
 		this->database.deleteTargetTable(type, tableId);
 	}
 
-	// check whether a name-specified table in the database is empty
+	//! \copydoc Main::Database::beginNoLock
+	inline void Database::beginNoLock() {
+		this->database.beginNoLock();
+	}
+
+	//! \copydoc Main::Database::endNoLock
+	inline void Database::endNoLock() {
+		this->database.endNoLock();
+	}
+
+	//! \copydoc Main::Database::isTableEmpty
 	inline bool Database::isTableEmpty(const std::string& tableName) {
 		return this->database.isTableEmpty(tableName);
 	}
 
-	// check whether a specific table exists in the database
+	//! \copydoc Main::Database::isTableExists
 	inline bool Database::isTableExists(const std::string& tableName) {
 		return this->database.isTableExists(tableName);
 	}
 
-	// check whether a specific column of a specific table exists in the database
+	//! \copydoc Main::Database::isColumnExists
 	inline bool Database::isColumnExists(const std::string& tableName, const std::string& columnName) {
 		return this->database.isColumnExists(tableName, columnName);
 	}
 
-	// get the type of a specific column of a specific table in the database
+	//! \copydoc Main::Database::getColumnType
 	inline std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
 		return this->database.getColumnType(tableName, columnName);
 	}
 
-	// get one custom value from one field of a row in the database
+	//! \copydoc Main::Database::getCustomData(Data::GetValue&)
 	inline void Database::getCustomData(Data::GetValue& data) {
 		this->database.getCustomData(data);
 	}
 
-	// get custom values from multiple fields of a row in the database
+	//! \copydoc Main::Database::getCustomData(Data::GetFields&)
 	inline void Database::getCustomData(Data::GetFields& data) {
 		this->database.getCustomData(data);
 	}
 
-	// get custom values from multiple fields of a row with different types in the database
+	//! \copydoc Main::Database::getCustomData(Data::GetFieldsMixed&)
 	inline void Database::getCustomData(Data::GetFieldsMixed& data) {
 		this->database.getCustomData(data);
 	}
 
-	// get custom values from one column in the database
+	//! \copydoc Main::Database::getCustomData(Data::GetColumn&)
 	inline void Database::getCustomData(Data::GetColumn& data) {
 		this->database.getCustomData(data);
 	}
 
-	// get custom values from multiple columns of the same type in the database
+	//! \copydoc Main::Database::getCustomData(Data::GetColumns&)
 	inline void Database::getCustomData(Data::GetColumns& data) {
 		this->database.getCustomData(data);
 	}
 
-	// get custom values from multiple columns of different types in the database
+	//! \copydoc Main::Database::getCustomData(Data::GetColumnsMixed&)
 	inline void Database::getCustomData(Data::GetColumnsMixed& data) {
 		this->database.getCustomData(data);
 	}
 
-	// insert one custom value into a row in the database
+	//! \copydoc Main::Database::insertCustomData(const Data::InsertValue&)
 	inline void Database::insertCustomData(const Data::InsertValue& data) {
 		this->database.insertCustomData(data);
 	}
 
-	// insert custom values into multiple fields of the same type into a row in the database
+	//! \copydoc Main::Database::insertCustomData(const Data::InsertFields&)
 	inline void Database::insertCustomData(const Data::InsertFields& data) {
 		this->database.insertCustomData(data);
 	}
 
-	// insert custom values into multiple fields of different types into a row in the database
+	//! \copydoc Main::Database::insertCustomData(const Data::InsertFieldsMixed&)
 	inline void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 		this->database.insertCustomData(data);
 	}
 
-	// update one custom value in one field of a row in the database
+	//! \copydoc Main::Database::updateCustomData(const Data::UpdateValue&)
 	inline void Database::updateCustomData(const Data::UpdateValue& data) {
 		this->database.updateCustomData(data);
 	}
 
-	// update custom values in multiple fields of a row with the same type in the database
+	//! \copydoc Main::Database::updateCustomData(const Data::UpdateFields&)
 	inline void Database::updateCustomData(const Data::UpdateFields& data) {
 		this->database.updateCustomData(data);
 	}
 
-	// update custom values in multiple fields of a row with different types in the database
+	//! \copydoc Main::Database::updateCustomData(const Data::UpdateFieldsMixed&)
 	inline void Database::updateCustomData(const Data::UpdateFieldsMixed& data) {
 		this->database.updateCustomData(data);
 	}
 
-	// get database request counter or return zero if program was compiled without
-	inline unsigned long long Database::getRequestCounter() {
+	//! \copydoc Main::Database::getRequestCounter
+	inline std::uint64_t Database::getRequestCounter() {
 		return Main::Database::getRequestCounter();
 	}
 
-	// get general module options
+	//! Gets the options of the module.
+	/*!
+	 * \returns A reference to the structure
+	 *   containing the options for the module.
+	 *
+	 * \sa Struct::ModuleOptions
+	 */
 	inline const Struct::ModuleOptions& Database::getOptions() const {
 		return this->database.options;
 	}
 
-	// get website ID as string
+	//! Gets the ID of the website used by the thread as string.
+	/*!
+	 * \returns A reference to the string
+	 *   containing the ID of the website
+	 *   used by the thread.
+	 */
 	inline const std::string& Database::getWebsiteIdString() const {
 		return this->database.websiteIdString;
 	}
 
-	// get ID of URL list as string
+	//! Gets the ID of the URL list used by the thread as string.
+	/*!
+	 * \returns A reference to the string
+	 *   containing the ID of the URL list
+	 *   used by the thread.
+	 */
 	inline const std::string& Database::getUrlListIdString() const {
 		return this->database.urlListIdString;
 	}
 
-	// get minimal logging level (where logging is still not deactivated)
+	//! Gets the minimal logging level.
+	/*!
+	 * \returns The minimum logging level,
+	 *   in which logging is still not
+	 *   deactivated.
+	 */
 	inline std::uint8_t Database::getLoggingMin() const {
 		return this->database.loggingMin;
 	}
 
-	// get verbose logging level
+	//! Gets the level for verbose logging.
+	/*!
+	 * \returns The logging level, in which
+	 *   verbose logging is activated.
+	 */
 	inline std::uint8_t Database::getLoggingVerbose() const {
 		return this->database.loggingVerbose;
 	}
 
-	// check whether the connection to the database is still valid and try to re-connect if necesssary,
-	//  throws Database::Exception
-	//  WARNING: Afterwards, old references to prepared SQL statements may be invalid!
-	inline void Database::checkConnection() {
-		this->database.checkConnection();
-	}
-
-	// get the maximum allowed packet size
+	//! \copydoc Main::Database::getMaxAllowedPacketSize
 	inline std::uint64_t Database::getMaxAllowedPacketSize() const {
 		return this->database.getMaxAllowedPacketSize();
 	}
 
-	// reserve memory for prepared SQL statements
-	inline void Database::reserveForPreparedStatements(std::size_t numberOfAdditionalPreparedStatements) {
-		this->database.reserveForPreparedStatements(numberOfAdditionalPreparedStatements);
+	//! \copydoc Main::Database::checkConnection
+	inline void Database::checkConnection() {
+		this->database.checkConnection();
 	}
 
-	// add prepared SQL statement and return the ID of the newly added prepared statement
+	//! \copydoc Main::Database::reserveForPreparedStatements
+	inline void Database::reserveForPreparedStatements(std::size_t n) {
+		this->database.reserveForPreparedStatements(n);
+	}
+
+	//! \copydoc Main::Database::addPreparedStatement
 	inline std::size_t Database::addPreparedStatement(const std::string& sqlQuery) {
 		return this->database.addPreparedStatement(sqlQuery);
 	}
 
-	// get reference to prepared SQL statement by its ID
-	//  WARNING: Do not run checkConnection() while using this reference!
-	inline sql::PreparedStatement& Database::getPreparedStatement(unsigned short id) {
+	//! \copydoc Main::Database::getPreparedStatement
+	inline sql::PreparedStatement& Database::getPreparedStatement(std::uint8_t id) {
 		return this->database.getPreparedStatement(id);
 	}
 
-	// get the last inserted ID from the database
+	//! \copydoc Main::Database::getLastInsertedId
 	inline std::uint64_t Database::getLastInsertedId() {
 		return this->database.getLastInsertedId();
 	}
 
-	// add a lock with a specific name to the database, wait if lock already exists
-	inline void Database::addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback) {
-		this->database.addDatabaseLock(name, isRunningCallback);
+	//! \copydoc Main::Database::addDatabaseLock
+	inline void Database::addDatabaseLock(const std::string& name, const IsRunningCallback& isRunningCallback) {
+		Main::Database::addDatabaseLock(name, isRunningCallback);
 	}
 
-	// try to add a lock with a specific name to the database, return false if lock already exists
+	//! \copydoc Main::Database::tryDatabaseLock
 	inline bool Database::tryDatabaseLock(const std::string& name) {
-		return this->database.tryDatabaseLock(name);
+		return Main::Database::tryDatabaseLock(name);
 	}
 
-	// remove lock with specific name from database
+	//! \copydoc Main::Database::removeDatabaseLock
 	inline void Database::removeDatabaseLock(const std::string& name) {
-		this->database.removeDatabaseLock(name);
+		Main::Database::removeDatabaseLock(name);
 	}
 
-	// add a table to the database (the primary key 'id' will be created automatically)
+	//! \copydoc Main::Database::createTable
 	inline void Database::createTable(const TableProperties& properties) {
 		this->database.createTable(properties);
 	}
 
-	// add a column to a table in the database
+	//! \copydoc Main::Database::dropTable
+	inline void Database::dropTable(const std::string& tableName) {
+		this->database.dropTable(tableName);
+	}
+
+	//! \copydoc Main::Database::addColumn
 	inline void Database::addColumn(const std::string& tableName, const TableColumn& column) {
 		this->database.addColumn(tableName, column);
 	}
 
-	// compress a table in the database
+	//! \copydoc Main::Database::compressTable
 	inline void Database::compressTable(const std::string& tableName) {
 		this->database.compressTable(tableName);
 	}
 
-	// delete a table from the database if it exists
-	inline void Database::deleteTable(const std::string& tableName) {
-		this->database.deleteTable(tableName);
-	}
-
-	// set whether the specified URL list is case-sensitive
+	//! \copydoc Main::Database::setUrlListCaseSensitive
 	inline void Database::setUrlListCaseSensitive(std::uint64_t listId, bool isCaseSensitive) {
 		this->database.setUrlListCaseSensitive(listId, isCaseSensitive);
 	}
 
-	// catch SQL exception and re-throw it as specific Database::[X]Exception or generic Database::Exception
+	//! \copydoc Main::Database::sqlException
 	inline void Database::sqlException(const std::string& function, const sql::SQLException& e) {
-		this->database.sqlException(function, e);
+		Main::Database::sqlException(function, e);
 	}
 
-	// execute prepared SQL statement by reference
+	//! Executes a prepared SQL statement.
+	/*!
+	 * \param sqlPreparedStatement Reference
+	 *   to the prepared SQL statement to be
+	 *   executed.
+	 *
+	 * \returns True, if the prepared SQL
+	 *   statement returned a result set.
+	 *   False, if the statement returned
+	 *   nothing or an update count.
+	 */
 	inline bool Database::sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
 		return Main::Database::sqlExecute(sqlPreparedStatement);
 	}
 
-	// execute prepared SQL statement by reference and fetch result
+	//! Executes a prepared SQL statement and returns the resulting set.
+	/*!
+	 * \param sqlPreparedStatement Reference
+	 *   to the prepared SQL statement to be
+	 *   executed.
+	 *
+	 * \returns A pointer to the result set retrieved
+	 *   by executing the prepared SQL statement.
+	 */
 	inline sql::ResultSet * Database::sqlExecuteQuery(sql::PreparedStatement& sqlPreparedStatement) {
 		return Main::Database::sqlExecuteQuery(sqlPreparedStatement);
 	}
 
-	// execute prepared SQL statement by reference and fetch updated rows
+	//! Executes a prepared SQL statement and returns the number of affected rows.
+	/*!
+	 * \param sqlPreparedStatement Reference
+	 *   to the prepared SQL statement to be
+	 *   executed.
+	 *
+	 * \returns The number of rows affected by the
+	 *   prepared SQL statement
+	 */
 	inline int Database::sqlExecuteUpdate(sql::PreparedStatement& sqlPreparedStatement) {
 		return Main::Database::sqlExecuteUpdate(sqlPreparedStatement);
 	}
 
-} /* crawlservpp::Wrapper */
+} /* namespace crawlservpp::Wrapper */
 
 #endif /* WRAPPER_DATABASE_HPP_ */

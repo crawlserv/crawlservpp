@@ -1,0 +1,5 @@
+<map id="crawlservpp::Module::Thread" name="crawlservpp::Module::Thread">
+<area shape="rect" id="node1" title="Abstract class providing module&#45;independent thread functionality." alt="" coords="5,200,163,241"/>
+<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Database.html" title="Class handling database access for threads." alt="" coords="5,96,163,137"/>
+<area shape="rect" id="node3" href="$classcrawlservpp_1_1Main_1_1Database.html" title="Class handling database access for the command&#45;and&#45;control and its threads." alt="" coords="9,5,159,47"/>
+</map>

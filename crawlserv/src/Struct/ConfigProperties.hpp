@@ -22,9 +22,7 @@
  *
  * ConfigProperties.hpp
  *
- * Basic configuration properties (module, name and configuration).
- *
- * NOTE: module will be ignored on update!
+ * Configuration properties (module, name and configuration).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
@@ -38,25 +36,46 @@
 
 namespace crawlservpp::Struct {
 
+	//! Configuration properties containing its module, name, and JSON string.
 	struct ConfigProperties {
+		///@name Properties
+		///@{
+
+		//! The name of the module using the configuration.
 		std::string module;
+
+		//! The name of the configuration.
 		std::string name;
+
+		//! The configuration string containing JSON.
 		std::string config;
 
-		// constructors
-		ConfigProperties() {}
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		ConfigProperties() = default;
+
+		//! Constructor setting module, name and configuration string.
+		/*!
+		 * \param setModule Constant reference to a string
+		 *   containing the name of the module.
+		 * \param setName Constant reference to a string
+		 *   containing the name of the configuration.
+		 * \param setConfig Constant reference to a string
+		 *   containing the configuration as JSON code.
+		 */
 		ConfigProperties(
 				const std::string& setModule,
 				const std::string& setName,
 				const std::string& setConfig
 		) : module(setModule), name(setName), config(setConfig) {}
-		ConfigProperties(
-				const std::string& setName,
-				const std::string& setConfig
-		) : ConfigProperties("", setName, setConfig) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_CONFIGPROPERTIES_HPP_ */
 

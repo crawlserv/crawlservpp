@@ -46,7 +46,7 @@
 		"minimize.memory": {
 			"type": "bool",
 			"default": false,
-			"description": "Free a small amount of unused memory more often at the expense of performance.",
+			"description": "Free small amounts of unused memory more often, at the expense of performance.",
 			"simple": false
 		},
 		"reextract": {
@@ -56,14 +56,6 @@
 			"description": "Re-extract data from already processed URLs.",
 			"simple": true,
 			"position": 3
-		},
-		"result.table": {
-			"type": "string",
-			"default": "",
-			"label": "Result table:",
-			"description": "Name of table to save extracted data to.",
-			"simple": true,
-			"position": 1
 		},
 		"retries": {
 			"type": "number",
@@ -110,6 +102,14 @@
 			"min": 1,
 			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
 			"simple": false
+		},
+		"target.table": {
+			"type": "string",
+			"default": "",
+			"label": "Target table:",
+			"description": "Name of table to save extracted data to.",
+			"simple": true,
+			"position": 1
 		},
 		"tidy.errors": {
 			"type": "number",
@@ -158,7 +158,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "Date and time format to be used for the variable with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
+			"description": "Date/time format to be used for the variable with the same array index (see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": true,
 			"position": 6
 		},
@@ -167,7 +167,7 @@
 			"item-type": "locale",
 			"default": [],
 			"label": "Date/time locales:",
-			"description": "Date and time locale to be used for the variable with the same array index.",
+			"description": "Date/time locale to be used for the variable with the same array index.",
 			"simple": true,
 			"position": 7
 		},
@@ -185,7 +185,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Parsed column:",
-			"description": "Parsed 'id', 'datetime' or field for the variable with the same array index (if parsed data is the source).",
+			"description": "Parsed column for the variable with the same array index (if parsed data is the source).",
 			"simple": true,
 			"position": 5
 		},
@@ -207,7 +207,7 @@
 			],
 			"default": [],
 			"label": "Variable queries:",
-			"description": "Query on content or URL for the variable with the same array index.",
+			"description": "Query on the content or URL for the variable with the same array index.",
 			"simple": true,
 			"position": 3
 		},
@@ -239,7 +239,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Token cookies:",
-			"description": "Custom cookies header for the token with the same array index.",
+			"description": "Custom HTTP Cookie header for the token variable with the same array index.",
 			"simple": true,
 			"position": 13
 		},
@@ -261,7 +261,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Token sources:",
-			"description": "Source URL for the token with the same array index (absolute link without protocol).",
+			"description": "Source URL for the token variable with the same array index (absolute link without protocol).",
 			"simple": true,
 			"position": 12
 		},
@@ -270,7 +270,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Use POST for tokens:",
-			"description": "Use HTTP POST instead of GET for the token with the same array index.",
+			"description": "Use HTTP POST instead of GET for the token variable with the same array index.",
 			"simple": true,
 			"position": 14
 		},
@@ -279,7 +279,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Token headers:",
-			"description": "Custom headers to be used for ALL tokens.",
+			"description": "Custom HTTP headers to be used for ALL token variables.",
 			"simple": true,
 			"position": 12
 		}
@@ -346,7 +346,7 @@
 			],
 			"default": 0,
 			"label": "Get number of pages:",
-			"description": "Query on first page to determine the total number of pages (will overwrite 'is.next.from').",
+			"description": "Query to determine the total number of pages from the content of the first page (will overwrite 'is.next.from').",
 			"simple": true,
 			"position": 8
 		},
@@ -354,7 +354,7 @@
 			"type": "number",
 			"default": 1,
 			"label": "Paging step:",
-			"description": "Number to add to page variable for getting the next page (if page number is used).",
+			"description": "Number to add to page variable for retrieving the next page (if page number is used).",
 			"simple": true,
 			"position": 4
 		},
@@ -362,7 +362,7 @@
 			"type": "string",
 			"default": "$p",
 			"label": "Paging variable:",
-			"description": "Paging variable to be used in 'source.url', 'source.cookies' and 'source.headers'. Will be overwritten with either page number or page name.",
+			"description": "Name of the paging variable to be used in 'source.url', 'source.cookies' and 'source.headers'. Will be overwritten with either page number or page name.",
 			"simple": true,
 			"position": 1
 		}
@@ -375,7 +375,7 @@
 			"type": "string",
 			"default": "",
 			"label": "Cookies:",
-			"description": "Cookie header for getting data.",
+			"description": "Custom HTTP Cookie header used when retrieving data.",
 			"simple": true,
 			"position": 3
 		},
@@ -384,7 +384,7 @@
 			"default": [],
 			"item-type": "string",
 			"label": "HTTP headers:",
-			"description": "Custom HTTP headers for getting data.",
+			"description": "Custom HTTP headers used when retrieving data.",
 			"simple": true,
 			"position": 4
 		},
@@ -392,7 +392,7 @@
 			"type": "string",
 			"default": "",
 			"label": "URL:",
-			"description": "URL to get data from (absolute link without protocol).",
+			"description": "URL to retrieve data from (absolute link without protocol).",
 			"simple": true,
 			"position": 1
 		},
@@ -400,7 +400,7 @@
 			"type": "string",
 			"default": "",
 			"label": "URL (first page):",
-			"description": "URL of the first page to get data from (absolute link without protocol, will be ignored if empty).",
+			"description": "URL of the first page to retrieve data from (absolute link without protocol, will be ignored if empty).",
 			"simple": true,
 			"position": 2
 		},
@@ -434,7 +434,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "Format of date and time to be extracted by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
+			"description": "Format of date/time to be extracted by the date/time query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": true,
 			"position": 4
 		},
@@ -443,7 +443,7 @@
 			"item-type": "locale",
 			"default": [],
 			"label": "Date/time locales:",
-			"description": "Locale used by the query with the same array index for extracting date and time.",
+			"description": "Locale to be used by the date/time query with the same array index for extracting date and time.",
 			"simple": true,
 			"position": 5
 		},
@@ -459,18 +459,6 @@
 			"simple": true,
 			"position": 3
 		},
-		"error.retry": {
-			"type": "array",
-			"item-type": "query",
-			"query-result": [
-				"bool"
-			],
-			"default": [],
-			"label": "Retry on:",
-			"description": "Queries to detect errors in the data. The extractor will retry if any of these return 'true'.",
-			"simple": true,
-			"position": 13
-		},
 		"error.fail": {
 			"type": "array",
 			"item-type": "query",
@@ -479,9 +467,21 @@
 			],
 			"default": [],
 			"label": "Error on:",
-			"description": "Queries to detect errors in the data. The extractor will fail if any of these return 'true'.",
+			"description": "Queries to detect fatal errors in the data. The extractor will fail if any of these return 'true'.",
 			"simple": true,
 			"position": 14
+		},
+		"error.retry": {
+			"type": "array",
+			"item-type": "query",
+			"query-result": [
+				"bool"
+			],
+			"default": [],
+			"label": "Retry on:",
+			"description": "Queries to detect temporary errors in the data. The extractor will retry if any of these return 'true'.",
+			"simple": true,
+			"position": 13
 		},
 		"field.datetime.formats": {
 			"type": "array",
@@ -659,7 +659,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Delimiter between multiple results for the field with the same array index if not saved as JSON. Only the first character, \\n (default), \\t or \\\\ will be used.",
+			"description": "Delimiter between multiple results for the linked field with the same array index if not saved as JSON. Only the first character, \\n (default), \\t or \\\\ will be used.",
 			"simple": false
 		},
 		"field.names": {
@@ -667,7 +667,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Field names:",
-			"description": "The names of the custom fields to extract.",
+			"description": "Names of the linked fields to extract.",
 			"simple": true,
 			"position": 8
 		},
@@ -680,7 +680,7 @@
 			],
 			"default": [],
 			"label": "Field queries:",
-			"description": "The query used to extract the custom field with the same array index from the dataset.",
+			"description": "Query used to extract the custom field with the same array index from the dataset.",
 			"simple": true,
 			"position": 9
 		},
@@ -688,7 +688,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Extracted IDs to be ignored.",
+			"description": "IDs of linked data to be ignored.",
 			"simple": false
 		},
 		"id.queries": {
@@ -735,18 +735,6 @@
 			"simple": true,
 			"position": 11
 		},
-		"repair.cdata": {
-			"type": "bool",
-			"default": true,
-			"description": "Try to repair CData when parsing HTML/XML.",
-			"simple": false
-		},
-		"repair.comments": {
-			"type": "bool",
-			"default": true,
-			"description": "Try to repair broken HTML/XML comments.",
-			"simple": false
-		},
 		"target.table": {
 			"type": "string",
 			"default": "",
@@ -785,14 +773,14 @@
 		"error.if.smaller": {
 			"type": "bool",
 			"default": false,
-			"description": "Cause fatal error when number of expected datasets is exceeded.",
+			"description": "Cause fatal error when number of expected datasets is subceeded.",
 			"simple": false
 		},
 		"parsed.column": {
 			"type": "string",
 			"default": "",
 			"label": "Parsed column:",
-			"description": "Parsed 'id', 'datetime' or field containing the expected number of datasets (if parsed data is the source).",
+			"description": "Parsed column containing the expected number of datasets (if parsed data is the source).",
 			"simple": true,
 			"position": 4
 		},
@@ -800,7 +788,7 @@
 			"type": "string",
 			"default": "",
 			"label": "Parsing table:",
-			"description": "Name of the result table containing the expected number of datasets (if parsed data is the source).",
+			"description": "Name of the table containing the expected number of datasets (if parsed data is the source).",
 			"simple": true,
 			"position": 3
 		},
@@ -811,7 +799,7 @@
 			],
 			"default": 0,
 			"label": "Query for no. of results:",
-			"description": "Query to be performed on content to get the expected number of datasets.",
+			"description": "Query to be performed on content to retrieve the expected number of datasets.",
 			"simple": true,
 			"position": 2
 		},
@@ -824,7 +812,7 @@
 			],
 			"default": 0,
 			"label": "Source:",
-			"description": "Source of the expected number of datasets.",
+			"description": "Source of the query to retrieve the expected number of datasets.",
 			"simple": true,
 			"position": 1
 		}

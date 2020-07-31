@@ -16,7 +16,7 @@
 			"type": "number",
 			"default": 5000,
 			"min": 0,
-			"decription": "Timeout on mySQL query execution (in milliseconds).",
+			"decription": "Timeout on MySQL query execution (in ms).",
 			"simple": false
 		},
 		"lock": {
@@ -62,14 +62,6 @@
 			"simple": true,
 			"position": 2
 		},
-		"result.table": {
-			"type": "string",
-			"default": "",
-			"label": "Result table:",
-			"description": "Table name to save parsed fields to.",
-			"simple": true,
-			"position": 1
-		},
 		"skip": {
 			"type": "array",
 			"item-type": "query",
@@ -96,8 +88,16 @@
 			"type": "number",
 			"default": 10,
 			"min": 1,
-			"description": "Time (in s) to wait before last try to re-connect to mySQL server.",
+			"description": "Time (in s) to wait before last try to re-connect to MySQL server.",
 			"simple": false
+		},
+		"target.table": {
+			"type": "string",
+			"default": "",
+			"label": "Target table:",
+			"description": "Table name to save parsed fields to.",
+			"simple": true,
+			"position": 1
 		},
 		"timing": {
 			"type": "bool",
@@ -127,7 +127,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Date/time formats:",
-			"description": "Format of the date/time to be parsed by the query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
+			"description": "Format of the date/time to be parsed by the date/time query with the same array index (default: '%F %T', see 'to_stream formatting' in Howard E. Hinnant's C++ date.h library documentation for details). Use 'UNIX' to parse Unix timestamps.",
 			"simple": true,
 			"position": 5
 		},
@@ -136,7 +136,7 @@
 			"item-type": "locale",
 			"default": [],
 			"label": "Date/time locales:",
-			"description": "Locale used by the query of the same array index for parsing the date/time.",
+			"description": "Locale to be used by the date/time query with the same array index.",
 			"simple": true,
 			"position": 6
 		},
@@ -185,7 +185,7 @@
 			"item-type": "locale",
 			"default": [],
 			"label": "Field date/time locales:",
-			"description": "Locale used when converting the field with the same array index to a date/time (ignored if no date/time format has been specified for the field).",
+			"description": "Locale to be used when converting the field with the same array index to a date/time (ignored if no date/time format has been specified for the field).",
 			"simple": true,
 			"position": 13
 		},
@@ -293,7 +293,7 @@
 				"content"
 			],
 			"label": "ID sources:",
-			"description": "Where to parse the ID from when using the query with the same array index.",
+			"description": "Where to parse the ID from when using the ID query with the same array index.",
 			"simple": true,
 			"position": 1
 		},
@@ -313,7 +313,7 @@
 			"type": "number",
 			"min": 0,
 			"default": 0,
-			"description": "Number  of tidyhtml errors to log (if logging is enabled).",
+			"description": "Number of tidyhtml errors to log (if logging is enabled).",
 			"simple": false
 		},
 		"tidy.warnings": {

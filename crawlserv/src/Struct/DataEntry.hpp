@@ -37,16 +37,42 @@
 
 namespace crawlservpp::Struct {
 
+	//! A data entry containing either parsed or extracted data.
+	/*!
+	 * Contains content and data ID, parsed date/time and
+	 *  the fields that have been either parsed or extracted.
+	 */
 	struct DataEntry {
+		///@name Properties
+		///@{
+
+		//! The ID of the content from which the data has been either parsed or extracted.
 		std::uint64_t contentId;
+
+		//! The ID of the data that has been either parsed or extracted.
 		std::string dataId;
+
+		//! The date/time of the data that has been either parsed or extracted.
 		std::string dateTime;
+
+		//! A vector containing the data fields that have been either parsed or extracted.
 		std::vector<std::string> fields;
 
-		// constructor
-		DataEntry(std::uint64_t setContentId) : contentId(setContentId) {}
+		///@}
+		///@name Construction
+		///@{
+
+		// Constructor setting the content ID.
+		/*!
+		 * \param setContentId The ID of the content
+		 *   from which the data has been either
+		 *   parsed or extracted.
+		 */
+		explicit DataEntry(std::uint64_t setContentId) : contentId(setContentId) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_DATAENTRY_HPP_ */

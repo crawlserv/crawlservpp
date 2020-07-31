@@ -22,7 +22,7 @@
  *
  * CorpusProperties.hpp
  *
- * Basic corpus properties (source type, table and field).
+ * Corpus properties (source type, table and field).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
@@ -36,22 +36,60 @@
 
 namespace crawlservpp::Struct {
 
+	//! Corpus properties containing the type, table, and column name of its source.
 	struct CorpusProperties {
-		std::uint16_t sourceType;
-		std::string sourceTable;
-		std::string sourceField;
+		///@name Properties
+		///@{
 
-		// constructors
-		CorpusProperties() : sourceType(0) {}
+		//! The type of the source from which the corpus is created (see below).
+		/*!
+		 * \sa Module::Analyzer::generalInputSourcesParsing,
+		 *   Module::Analyzer::generalInputSourcesExtracting,
+		 *   Module::Analyzer::generalInputSourcesAnalyzing,
+		 *   Module::Analyzer::generalInputSourcesCrawling
+		 */
+		std::uint16_t sourceType{0};
+
+		//! The name of the table from which the corpus is created.
+		std::string sourceTable;
+
+		//! The name of the table column from which the corpus is created.
+		std::string sourceColumn;
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		CorpusProperties() = default;
+
+		//! Constructor setting type, table and column name of the corpus source.
+		/*!
+		 * \param setSourceType The type of the source
+		 *   from which the corpus is created (see below).
+		 * \param setSourceTable Constant reference to a
+		 *   string containing the name of the table from
+		 *   which the corpus is created.
+		 * \param setSourceColumn Constant reference to a
+		 *   string containing the name of the table column
+		 *   from which the corpus is created.
+		 *
+		 * \sa Module::Analyzer::generalInputSourcesParsing,
+		 *   Module::Analyzer::generalInputSourcesExtracting,
+		 *   Module::Analyzer::generalInputSourcesAnalyzing,
+		 *   Module::Analyzer::generalInputSourcesCrawling
+		 */
 		CorpusProperties(
 				std::uint16_t setSourceType,
 				const std::string& setSourceTable,
-				const std::string& setSourceField
+				const std::string& setSourceColumn
 		) : sourceType(setSourceType),
 			sourceTable(setSourceTable),
-			sourceField(setSourceField) {}
+			sourceColumn(setSourceColumn) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_CORPUSPROPERTIES_HPP_ */

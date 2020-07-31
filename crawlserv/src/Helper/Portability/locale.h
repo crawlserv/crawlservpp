@@ -44,29 +44,47 @@
 #endif
 
 namespace crawlservpp::Helper::Portability {
-#ifdef _WIN32
-#define BUFFER_SIZE 1024
-	BOOL CALLBACK addLocale(LPWSTR pStr, DWORD dwFlags, LPARAM lparam) {
-		WCHAR wcBuffer[BUFFER_SIZE];
-		int iResult;
 
-		if(GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, BUFFER_SIZE)) {
-			GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, BUFFER_SIZE);
+#ifdef _WIN32
+	//! The size of the buffer to receive the description of a locale from Windows.
+	constexpr auto localeBufferSize = 1024;
+
+	//! Callback for adding a locale in Windows.
+	/*!
+	 * \param pStr Pointer to string containing
+	 *   the system name of the locale.
+	 * \param dwFlags Flags to be ignored.
+	 * \param lparam Pointer to custom data,
+	 *   i.e. the vector containing all locales.
+	 *
+	 * \returns True.
+	 */
+	BOOL CALLBACK addLocale(LPWSTR pStr, DWORD dwFlags, LPARAM lparam) {
+		WCHAR wcBuffer[localeBufferSize];
+		int iResult = 0;
+
+		if(GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, localeBufferSize)) {
+			GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, localeBufferSize);
 
 			std::wstring wstr(wcBuffer);
 
-			((std::vector<std::string> *) lparam)->emplace_back(wstr.begin(), wstr.end());
+			reinterpret_cast<std::vector<std::string> *>(lparam)->emplace_back(wstr.cbegin(), wstr.cend());
 		}
 
-		return (TRUE);
+		return TRUE;
 	}
 #endif
 
+	//! Enumerates all available locale on the system.
+	/*!
+	 * \returns A vector of strings containing all available locale
+	 *   on the current system.
+	 */
 	inline std::vector<std::string> enumLocales() {
 		std::vector<std::string> result;
 
 #ifdef _WIN32
-		EnumSystemLocalesEx(addLocale, LOCALE_ALL, (LPARAM) &result, NULL);
+		EnumSystemLocalesEx(addLocale, LOCALE_ALL, reinterpret_cast<LPARAM>(&result), NULL);
 #else
 		const std::string locales = Helper::System::exec("locale -a");
 #endif
@@ -74,7 +92,7 @@ namespace crawlservpp::Helper::Portability {
 		return Helper::Strings::split(locales, "\n");
 	}
 
-} /* crawlservpp::Helper::Portability */
+} /* namespace crawlservpp::Helper::Portability */
 
 
 #endif /* HELPER_PORTABILITY_LOCALE_H_ */

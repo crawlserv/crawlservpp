@@ -22,7 +22,8 @@
  *
  * Database.hpp
  *
- * This class provides database functionality for an analyzer thread by implementing the Wrapper::Database interface.
+ * This class provides database functionality for analyzer threads
+ *  by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -35,9 +36,9 @@
 
 #include "../../Data/Corpus.hpp"
 #include "../../Data/Data.hpp"
+#include "../../Helper/Json.hpp"
 #include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Main/Exception.hpp"
-#include "../../Helper/Json.hpp"
 #include "../../Struct/CorpusProperties.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
@@ -68,7 +69,83 @@
 
 namespace crawlservpp::Module::Analyzer {
 
-	class Database : public Wrapper::Database {
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! The default percentage of the maximum package size allowed by the MySQL server to be used for the maximum size of the corpus.
+	constexpr auto defaultCorpusSlicing{30};
+
+	//! The factor used for corpus slicing percentage points (1/100).
+	constexpr auto corpusSlicingFactor{1.F / 100};
+
+	//! The maximum number of columns used when creating a text corpus.
+	constexpr auto maxNumCorpusColumns{3};
+
+	//! The number of prepared SQL statements to reserve memory for.
+	constexpr auto numPreparedStatements{10};
+
+	///@}
+	///@name Constants for SQL Queries
+	///@{
+
+	//! First argument in a SQL query.
+	constexpr auto sqlArg1{1};
+
+	//! Second argument in a SQL query.
+	constexpr auto sqlArg2{2};
+
+	//! Third argument in a SQL query.
+	constexpr auto sqlArg3{3};
+
+	//! Fourth argument in a SQL query.
+	constexpr auto sqlArg4{4};
+
+	//! Fifth argument in a SQL query.
+	constexpr auto sqlArg5{5};
+
+	//! Sixth argument in a SQL query.
+	constexpr auto sqlArg6{6};
+
+	//! Seventh argument in a SQL query.
+	constexpr auto sqlArg7{7};
+
+	//! Eighth argument in a SQL query.
+	constexpr auto sqlArg8{8};
+
+	//! Ninth argument in a SQL query.
+	constexpr auto sqlArg9{9};
+
+	///@}
+	///@name Constants for Table Columns
+	///@{
+
+	//! First column in a table.
+	constexpr auto column1{0};
+
+	//! Second column in a table.
+	constexpr auto column2{1};
+
+	//! Third column in a table.
+	constexpr auto column3{2};
+
+	//! One table column.
+	constexpr auto numColumns1{1};
+
+	//! Two table columns.
+	constexpr auto numColumns2{2};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! Class providing database functionality for analyzer threads by implementing Wrapper::Database.
+	class Database final : public Wrapper::Database {
 		// for convenience
 		using JsonException = Helper::Json::Exception;
 
@@ -84,25 +161,38 @@ namespace crawlservpp::Module::Analyzer {
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
-		Database(Module::Database& dbRef);
-		virtual ~Database();
+		///@name Construction
+		///@{
 
-		// setters
+		explicit Database(Module::Database& dbThread);
+
+		///@}
+		///@name Analyzer-specific Setters
+		///@{
+
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
-		void setTimeoutTargetLock(std::uint64_t timeOut);
 		void setCorpusSlicing(std::uint8_t percentageOfMaxAllowedPackageSize);
-		void setIsRunningCallback(IsRunningCallback isRunningCallback);
+		void setIsRunningCallback(const IsRunningCallback& isRunningCallback);
 
-		// prepare target table and SQL statements for analyzer
+		///@}
+		///@name Target Table Initialization
+		///@{
+
 		void initTargetTable(bool compressed);
+
+		///@}
+		///@name Prepared SQL Statements
+		///@{
+
 		void prepare();
-
-		// prepare and get custom SQL statements for algorithm
 		void prepareAlgo(const std::vector<std::string>& statements, std::vector<std::uint16_t>& idsTo);
-		sql::PreparedStatement& getPreparedAlgoStatement(std::uint16_t sqlStatementId);
+		[[nodiscard]] sql::PreparedStatement& getPreparedAlgoStatement(std::uint16_t sqlStatementId);
 
-		// corpus functions
+		///@}
+		///@name Text Corpus
+		///@{
+
 		void getCorpus(
 				const CorpusProperties& corpusProperties,
 				const std::string& filterDateFrom,
@@ -111,9 +201,12 @@ namespace crawlservpp::Module::Analyzer {
 				std::size_t& sourcesTo
 		);
 
-		// public helper functions
-		std::string getSourceTableName(std::uint16_t type, const std::string& name);
-		std::string getSourceColumnName(std::uint16_t type, const std::string& name);
+		///@}
+		///@name Analyzer-specific Helpers
+		///@{
+
+		[[nodiscard]] std::string getSourceTableName(std::uint16_t type, const std::string& name) const;
+		[[nodiscard]] static std::string getSourceColumnName(std::uint16_t type, const std::string& name);
 		void checkSources(
 				std::vector<std::uint8_t>& types,
 				std::vector<std::string>& tables,
@@ -125,29 +218,52 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string& column
 		);
 
-		// class for Analyzer::Database exceptions
+		///@}
+
+		//! Class for analyzer-specific database exceptions.
 		MAIN_EXCEPTION_CLASS();
 
 	protected:
-		// options
-		std::string targetTableName;
-		std::vector<std::string> targetFieldNames;
-		std::vector<std::string> targetFieldTypes;
-		std::uint32_t timeoutTargetLock;
-		std::uint8_t corpusSlicing;
+		///@name Analyzer Properties
+		///@{
 
-		// table prefix, target table ID and its name
+		//! The prefix used for tables in the MySQL database.
 		std::string tablePrefix;
-		std::uint64_t targetTableId;
+
+		//! The name of the target table to be written to.
+		std::string targetTableName;
+
+		//! The ID of the target table to be written to.
+		std::uint64_t targetTableId{0};
+
+		//! The full name of the target table to be written to, including prefixes.
 		std::string targetTableFull;
 
-		// corpus helper function
-		bool isCorpusChanged(const CorpusProperties& corpusProperties);
+		//! The names of the target fields, i.e. the columns in the target table, to be written to.
+		std::vector<std::string> targetFieldNames;
+
+		//! The types of the target fields, i.e. the columns in the target table, to be written to.
+		std::vector<std::string> targetFieldTypes;
+
+		//! The maximum size of the text corpus chunks, in percentage of the maximum package size allowed by the MySQL server.
+		/*!
+		 *  Must be between 1 and 99, i.e. between
+		 *  one and ninety-nine percent.
+		 */
+		std::uint8_t corpusSlicing{defaultCorpusSlicing};
+
+		///@}
+		///@name Text Corpus Helpers
+		///@{
+
+		[[nodiscard]] bool isCorpusChanged(const CorpusProperties& corpusProperties);
 		void createCorpus(
 				const CorpusProperties& corpusProperties,
 				Data::Corpus& corpusTo,
 				std::size_t& sourcesTo
 		);
+
+		///@}
 
 	private:
 		// IDs of prepared SQL statements
@@ -164,12 +280,12 @@ namespace crawlservpp::Module::Analyzer {
 			std::uint16_t measureCorpus;
 
 			std::vector<std::uint16_t> algo;
-		} ps;
+		} ps{};
 
 		// function for checking whether the parent thread is still running
 		IsRunningCallback isRunning;
 	};
 
-} /* crawlservpp::Module::Analyzer */
+} /* namespace crawlservpp::Module::Analyzer */
 
 #endif /* MODULE_ANALYZER_DATABASE_HPP_ */

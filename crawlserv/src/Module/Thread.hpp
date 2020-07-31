@@ -22,8 +22,9 @@
  *
  * Thread.hpp
  *
- * Interface for a thread which implements all module-independent thread functionality like connecting to the database,
- *  managing the thread status (including pausing the thread), run the thread ticks and catching exceptions thrown by the thread.
+ * Interface for a thread which implements all module-independent thread functionality
+ *  like connecting to the database, managing the thread status (including pausing the thread),
+ *  running the thread ticks and catching exceptions thrown by the thread.
  *
  *  Created on: Oct 10, 2018
  *      Author: ans
@@ -35,15 +36,11 @@
 // do not catch thread exceptions: use only for debugging!
 //#define MODULE_THREAD_DEBUG_NOCATCH
 
-// hard-coded constants
-#define MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC 10
-#define MODULE_THREAD_SLEEP_ON_SLEEP_MS 800
-
 #include "Database.hpp"
 
+#include "../Helper/DateTime.hpp"
 #include "../Main/Database.hpp"
 #include "../Main/Exception.hpp"
-#include "../Helper/DateTime.hpp"
 #include "../Struct/ModuleOptions.hpp"
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/ThreadStatus.hpp"
@@ -52,18 +49,47 @@
 #include <atomic>				// std::atomic
 #include <chrono>				// std::chrono
 #include <cmath>				// std::lround
-#include <cstdint>				// std::int64_t, std::uint64_t
 #include <condition_variable>	// std::condition_variable
+#include <cstdint>				// std::uint8_t, std::int64_t, std::uint64_t
 #include <exception>			// std::exception
 #include <iostream>				// std::cout, std::flush
 #include <mutex>				// std::lock_guard, std::mutex, std::unique_lock
 #include <queue>				// std::queue
 #include <string>				// std::string
+#include <string_view>			// std::string_view, std::string_view_literals
 #include <thread>				// std::this_thread, std::thread
 #include <utility>				// std::swap
 
 namespace crawlservpp::Module {
 
+	/*
+	 * CONSTANTS
+	 */
+
+	using std::string_view_literals::operator""sv;
+
+	///@name Constants
+	///@{
+
+	//! Number of seconds to sleep on connection errors.
+	constexpr auto sleepOnConnectionErrorS{10};
+
+	//! Number of milliseconds to sleep before checking whether the thread is still running.
+	constexpr auto sleepMs{800};
+
+	//! Status message prefix for interrupted threads.
+	constexpr auto statusPrefixInterrupted{"INTERRUPTED "sv};
+
+	//! Status message prefix for paused threads.
+	constexpr auto statusPrefixPaused{"PAUSED "sv};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! Abstract class providing module-independent thread functionality.
 	class Thread {
 		// for convenience
 		using ConnectionException = Main::Database::ConnectionException;
@@ -75,7 +101,9 @@ namespace crawlservpp::Module {
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
 	public:
-		// constructors
+		///@name Construction and Destruction
+		///@{
+
 		Thread(
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions,
@@ -87,10 +115,13 @@ namespace crawlservpp::Module {
 				const ThreadOptions& threadOptions
 		);
 
-		// destructor
-		virtual ~Thread();
+		//! Default destructor.
+		virtual ~Thread() = default;
 
-		// getters
+		///@}
+		///@name Getters
+		///@{
+
 		std::uint64_t getId() const;
 		std::uint64_t getWebsite() const;
 		std::uint64_t getUrlList() const;
@@ -100,7 +131,10 @@ namespace crawlservpp::Module {
 		bool isFinished() const;
 		bool isPaused() const;
 
-		// control functions
+		///@}
+		///@name Thread Control
+		///@{
+
 		void start();
 		bool pause();
 		void unpause();
@@ -108,49 +142,134 @@ namespace crawlservpp::Module {
 		void interrupt();
 		void end();
 
-		// time travel
+		///@}
+		///@name Time Travel
+		///@{
+
 		void warpTo(std::uint64_t target);
 
-		// class for Thread exceptions
+		///@}
+
+		//! Class for generic thread exceptions.
 		MAIN_EXCEPTION_CLASS();
 
-		// not moveable, not copyable
+		/**@name Copy and Move
+		 * The class is neither copyable, nor movable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
 		Thread(Thread&) = delete;
-		Thread(Thread&&) = delete;
+
+		//! Deleted copy assignment operator.
 		Thread& operator=(Thread&) = delete;
+
+		//! Deleted move constructor.
+		Thread(Thread&&) = delete;
+
+		//! Deleted move assignment operator.
 		Thread& operator=(Thread&&) = delete;
 
+		///@}
+
 	protected:
-		Database database; 							// access to the database for the thread
+		///@name Database Connection
+		///@{
 
-		std::string websiteNamespace; 				// namespace of website (used by thread)
-		std::string urlListNamespace; 				// namespace of URL list (used by thread)
-		std::string configuration; 					// configuration
+		//! %Database connection for the thread.
+		Database database;
 
-		// thread helper functions
+		///@}
+		///@name Configuration
+		///@{
+
+		//! Namespace of the website used by the thread.
+		std::string websiteNamespace;
+
+		//! Namespace of the URL list used by the thread.
+		std::string urlListNamespace;
+
+		//! JSON string of the configuration used by the thread.
+		/*!
+		 * \sa Main::Database::getConfiguration
+		 */
+		std::string configuration;
+
+		///@}
+		///@name Protected Getters
+		///@{
+
 		bool isInterrupted() const;
-		void sleep(std::uint64_t ms) const;
-
-		void pauseByThread();
-		void setStatusMessage(const std::string& statusMessage);
-		void setProgress(float progress);
-		void log(unsigned short level, const std::string& logEntry);
-		void log(unsigned short level, std::queue<std::string>& logEntries);
-		bool isLogLevel(unsigned short level) const;
-		void allowPausing();
-		void disallowPausing();
-
-		std::uint64_t getLast() const;
-		void setLast(std::uint64_t last);
-		void incrementLast();
 		std::string getStatusMessage() const;
+		std::uint64_t getLast() const;
 		std::int64_t getWarpedOverAndReset();
 
+		///@}
+		///@name Protected Setters
+		///@{
+
+		void setStatusMessage(const std::string& statusMessage);
+		void setProgress(float progress);
+		void setLast(std::uint64_t lastId);
+		void incrementLast();
+
+		///@}
+		///@name Protected Thread Control
+		///@{
+
+		void sleep(std::uint64_t ms) const;
+		void allowPausing();
+		void disallowPausing();
+		void pauseByThread();
+
+		///@}
+		///@name Logging
+		///@{
+
+		bool isLogLevel(std::uint8_t level) const;
+		void log(std::uint8_t level, const std::string& logEntry);
+		void log(std::uint8_t level, std::queue<std::string>& logEntries);
+
+		///@}
+		///@name Events
+		///@{
+
+		//! Initializes the module.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific module.
+		 */
 		virtual void onInit() = 0;
+
+		//! Performs a module tick.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific module.
+		 */
 		virtual void onTick() = 0;
+
+		//! Pauses the module.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific module.
+		 */
 		virtual void onPause() = 0;
+
+		//! Unpauses the module.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific module.
+		 */
 		virtual void onUnpause() = 0;
+
+		//! Clears the module.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific module.
+		 */
 		virtual void onClear() = 0;
+
+		///@}
 
 	private:
 		Main::Database& databaseClass;				// access to the database for the class
@@ -184,6 +303,8 @@ namespace crawlservpp::Module {
 		std::chrono::steady_clock::time_point pauseTimePoint;
 		std::chrono::duration<std::uint64_t> runTime;
 		std::chrono::duration<std::uint64_t> pauseTime;
+
+		// internal timing functions
 		std::uint64_t getRunTime() const;
 		void updateRunTime();
 		void updatePauseTime();
@@ -197,7 +318,7 @@ namespace crawlservpp::Module {
 		// pause checker
 		bool isUnpaused() const;
 
-		// private helper functions
+		// internal helper functions
 		void onEnd();
 		void clearException(const std::exception& e, const std::string& inFunction);
 		void clearException(const std::string& inFunction);
@@ -206,6 +327,6 @@ namespace crawlservpp::Module {
 		void main();
 	};
 
-} /* crawlservpp::Module */
+} /* namespace crawlservpp::Module */
 
 #endif /* MODULE_THREAD_HPP_ */

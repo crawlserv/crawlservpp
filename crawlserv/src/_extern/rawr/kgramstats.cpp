@@ -25,6 +25,9 @@ void rawr::addCorpus(std::string corpus)
 // We consider maxK to be fairly constant
 bool rawr::compile(unsigned short maxK)
 {
+	// added: initialize random number generator
+	srand(unsigned(time(nullptr)));
+
   _maxK = maxK;
 
   std::vector<std::vector<token_id>> tokens;

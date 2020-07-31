@@ -22,7 +22,7 @@
  *
  * Database.hpp
  *
- * A class to handle database access for crawlserv and its threads.
+ * Class handling database access for the command-and-control server and its threads.
  * Thread-specific functionality is not implemented in this (parent) class.
  *
  * NOT THREAD-SAFE!
@@ -36,15 +36,7 @@
 #ifndef MAIN_DATABASE_HPP_
 #define MAIN_DATABASE_HPP_
 
-// hard-coded options
-#define MAIN_DATABASE_SQL_DIRECTORY "sql"			// (sub-)directory for SQL files
-
-#define MAIN_DATABASE_LOCK_TIMEOUT_SEC 300			// time-out on table lock
-#define MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC 600	// force re-connect if the connection has been idle for that long
-#define MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS 250		// sleep before re-trying after MySQL deadlock
-#define MAIN_DATABASE_SLEEP_ON_LOCK_MS 250			// sleep before re-attempting to add database lock
-
-// optional debugging option
+// optional debugging options
 //#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER		// enable database request counter for debugging purposes
 //#define MAIN_DATABASE_DEBUG_DEADLOCKS				// enable documentation of deadlocks by writing hashes ('#') to stdout
 #define MAIN_DATABASE_LOG_MOVING					// log the moving of websites from one data directory to another to stdout
@@ -61,11 +53,11 @@
 #include "../Helper/Utf8.hpp"
 #include "../Helper/Versions.hpp"
 #include "../Struct/ConfigProperties.hpp"
-#include "../Struct/TableProperties.hpp"
-#include "../Struct/TargetTableProperties.hpp"
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/QueryProperties.hpp"
 #include "../Struct/TableColumn.hpp"
+#include "../Struct/TableProperties.hpp"
+#include "../Struct/TargetTableProperties.hpp"
 #include "../Struct/ThreadDatabaseEntry.hpp"
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/ThreadStatus.hpp"
@@ -88,7 +80,6 @@
 #include <algorithm>	// std::find, std::find_if, std::remove, std::sort, std::transform, std::unique
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
-#include <cmath>		// std::round
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint16_t, std::uint64_t
 #include <fstream>		// std::ifstream
@@ -101,6 +92,7 @@
 #include <sstream>		// std::istringstream, std::ostringstream
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::getline, std::stoul, std::string, std::to_string
+#include <string_view>	// std::string_view, std::string_view_literals
 #include <thread>		// std::this_thread
 #include <tuple>		// std::get(std::tuple)
 #include <utility>		// std::pair
@@ -111,15 +103,271 @@
 #include <atomic>		// std::atomic
 #endif
 
+// forward-declaration for being friends
 namespace crawlservpp::Wrapper {
 
 	class Database;
 
-}
+} /* namespace crawlservpp::Wrapper */
 
 namespace crawlservpp::Main {
 
+	/*
+	 * CONSTANTS
+	 */
+
+	using std::string_view_literals::operator""sv;
+
+	///@name Constants
+	///@{
+
+	//! (Sub-)Directory for @c .sql files.
+	constexpr auto sqlDir{"sql"sv};
+
+	//! File extension for @c .sql files.
+	constexpr auto sqlExtension{".sql"sv};
+
+	//! Time-out on table lock in seconds.
+	constexpr auto lockTimeOutSec{300};
+
+	//! Idle time in milliseconds after which a re-connect to the database will be enforced.
+	constexpr auto reconnectAfterIdleMs{600000};
+
+	//! Sleep time in milliseconds before re-attempting to add a database lock.
+	constexpr auto sleepOnLockMs{250};
+
+	//! Recommended major MySQL version.
+	constexpr auto recommendedMySqlMajorVer{8};
+
+	//! Maximum size of database content in bytes (= 1 GiB).
+	constexpr auto maxContentSize{1073741824};
+
+	//! Maximum size of database content as string.
+	constexpr auto maxContentSizeString{"1 GiB"sv};
+
+	//! "www." prefix to be ignored when checking for a domain.
+	constexpr auto wwwPrefix{"www."sv};
+
+	//! The minimum number of tables per URL list.
+	constexpr auto numUrlListTables{6};
+
+	//! The MySQL keyword for a constraint, including the trailing space.
+	constexpr auto sqlConstraint{"CONSTRAINT "sv};
+
+	//! The factor for converting seconds to milliseconds and vice versa.
+	constexpr auto secToMs{1000};
+
+	//! Time (in ms) to sleep on SQL deadlock.
+	constexpr auto sleepOnDeadLockMs{250};
+
+	///@}
+	///@name Constants for MySQL Queries
+	///@{
+
+	//! Ten at once.
+	constexpr auto nAtOnce10{10};
+
+	//! One hundred at once.
+	constexpr auto nAtOnce100{100};
+
+	//! One thousand at once.
+	constexpr auto nAtOnce1000{1000};
+
+	//! First argument.
+	constexpr auto sqlArg1{1};
+
+	//! Second argument.
+	constexpr auto sqlArg2{2};
+
+	//! Third argument.
+	constexpr auto sqlArg3{3};
+
+	//! Fourth argument.
+	constexpr auto sqlArg4{4};
+
+	//! Fifth argument.
+	constexpr auto sqlArg5{5};
+
+	//! Sixth argument.
+	constexpr auto sqlArg6{6};
+
+	//! Seventh argument.
+	constexpr auto sqlArg7{7};
+
+	//! Eighth argument.
+	constexpr auto sqlArg8{8};
+
+	//! Ninth argument.
+	constexpr auto sqlArg9{9};
+
+	///@}
+	///@name Constants for MySQL Connection Errors
+	///@{
+
+	//! Sort aborted.
+	constexpr auto sqlSortAborted{1027};
+
+	//! Too many connections.
+	constexpr auto sqlTooManyConnections{1040};
+
+	//! Cannot get host name.
+	constexpr auto sqlCannotGetHostName{1042};
+
+	//! Bad handshake.
+	constexpr auto sqlBadHandShake{1043};
+
+	//! Server shutdown.
+	constexpr auto sqlServerShutDown{1053};
+
+	//! Normal shutdown.
+	constexpr auto sqlNormalShutdown{1077};
+
+	//! Got signal.
+	constexpr auto sqlGotSignal{1078};
+
+	//! Shutdown complete.
+	constexpr auto sqlShutDownComplete{1079};
+
+	//! Forcing close of thread.
+	constexpr auto sqlForcingCloseOfThread{1080};
+
+	//! Cannot create IP socket.
+	constexpr auto sqlCannotCreateIPSocket{1081};
+
+	//! Aborted connection.
+	constexpr auto sqlAbortedConnection{1152};
+
+	//! Read error from connection pipe.
+	constexpr auto sqlReadErrorFromConnectionPipe{1154};
+
+	//! Packets out of order.
+	constexpr auto sqlPacketsOutOfOrder{1156};
+
+	//! Could not uncompress packets.
+	constexpr auto sqlCouldNotUncompressPackets{1157};
+
+	//! Error reading packets
+	constexpr auto sqlErrorReadingPackets{1158};
+
+	//! Timeout reading packets.
+	constexpr auto sqlTimeOutReadingPackets{1159};
+
+	//! Error writing packets.
+	constexpr auto sqlErrorWritingPackets{1160};
+
+	//! Timeout writing packets.
+	constexpr auto sqlTimeOutWritingPackets{1161};
+
+	//! New aborted connection-
+	constexpr auto sqlNewAbortedConnection{1184};
+
+	//! Network error reading from master.
+	constexpr auto sqlNetErrorReadingFromMaster{1189};
+
+	//! Network error writing to master.
+	constexpr auto sqlNetErrorWritingToMaster{1190};
+
+	//! More than the maximum number of user connections.
+	constexpr auto sqlMoreThanMaxUserConnections{1203};
+
+	//! Lock wait timeout exceeded.
+	constexpr auto sqlLockWaitTimeOutExceeded{1205};
+
+	//! Number of locks exceeds lock table size.
+	constexpr auto sqlNumOfLocksExceedsLockTableSize{1206};
+
+	//! Deadlock.
+	constexpr auto sqlDeadLock{1213};
+
+	//! Server error connecting to master.
+	constexpr auto sqlServerErrorConnectingToMaster{1218};
+
+	//! Query execution interrupted.
+	constexpr auto sqlQueryExecutionInterrupted{1317};
+
+	//! Unable to connect to foreign data source.
+	constexpr auto sqlUnableToConnectToForeignDataSource{1429};
+
+	//! Cannot connect to server through socket.
+	constexpr auto sqlCannotConnectToServerThroughSocket{2002};
+
+	//! Cannot connect to server.
+	constexpr auto sqlCannotConnectToServer{2003};
+
+	//! Unknown server host.
+	constexpr auto sqlUnknownServerHost{2005};
+
+	//! Server has gone away.
+	constexpr auto sqlServerHasGoneAway{2006};
+
+	//! TCP error.
+	constexpr auto sqlTCPError{2011};
+
+	//! Error in server handshake.
+	constexpr auto sqlErrorInServerHandshake{2012};
+
+	//! Lost connection during query.
+	constexpr auto sqlLostConnectionDuringQuery{2013};
+
+	//! Client error connecting to slave.
+	constexpr auto sqlClientErrorConnectingToSlave{2024};
+
+	//! Client error connecting to master.
+	constexpr auto sqlClientErrorConnectingToMaster{2025};
+
+	//! SSL connection error.
+	constexpr auto sqlSSLConnectionError{2026};
+
+	//! Malformed packet.
+	constexpr auto sqlMalformedPacket{2027};
+
+	//! Invalid connection handle.
+	constexpr auto sqlInvalidConnectionHandle{2048};
+
+	///@}
+	///@name Constants for Other MySQL Errors
+	///@{
+
+	//! Storage engine error.
+	constexpr auto sqlStorageEngineError{1030};
+
+	//! Insufficient privileges.
+	constexpr auto sqlInsufficientPrivileges{1045};
+
+	//! Wrong arguments.
+	constexpr auto sqlWrongArguments{1210};
+
+	//! Incorrect path.
+	constexpr auto sqlIncorrectPath{1525};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! Class handling database access for the command-and-control and its threads.
+	/*!
+	 * Thread-specific functionality is not implemented
+	 *  in this (parent) class.
+	 *
+	 * \warning This class is not thread-safe!
+	 *   Use only one instance per thread.
+	 * \warning Use instances of the child class Module::Database
+	 *  for module-specific functionality instead.
+	 *
+	 * \sa Module::Database, Wrapper::Database
+	 */
 	class Database {
+		//! Allows access to module threads.
+		friend class Wrapper::Database;
+
+		//! Allows access for scoped locking.
+		template<class DB> friend class Wrapper::DatabaseLock;
+
+		//! Allows access for scoped optional locking.
+		template<class DB> friend class Wrapper::DatabaseTryLock;
+
 		// for convenience
 		using JsonException = Helper::Json::Exception;
 
@@ -147,43 +395,55 @@ namespace crawlservpp::Main {
 		using Queries = std::vector<std::pair<std::string, std::vector<StringString>>>;
 
 	public:
-		// allow wrapper and locking classes access to protected functions
-		friend class Wrapper::Database;
-		template<class DB> friend class Wrapper::DatabaseLock;
-		template<class DB> friend class Wrapper::DatabaseTryLock;
+		///@name Construction and Destruction
+		///@{
 
-		// constructor and destructor
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
 		virtual ~Database();
 
-		// setters
+		///@}
+		///@name Setters
+		///@{
+
 		void setSleepOnError(std::uint64_t seconds);
 		void setTimeOut(std::uint64_t milliseconds);
 
-		// getters
-		const DatabaseSettings& getSettings() const;
-		const std::string& getMysqlVersion() const;
-		const std::string& getDataDir() const;
-		std::uint64_t getMaxAllowedPacketSize() const;
-		std::uint64_t getConnectionId() const;
+		///@}
+		///@name Getters
+		///@{
 
-		// initializing functions
+		[[nodiscard]] const DatabaseSettings& getSettings() const;
+		[[nodiscard]] const std::string& getMysqlVersion() const;
+		[[nodiscard]] const std::string& getDataDir() const;
+		[[nodiscard]] std::uint64_t getMaxAllowedPacketSize() const;
+		[[nodiscard]] std::uint64_t getConnectionId() const;
+
+		///@}
+		///@name Initialization and Update
+		///@{
+
 		void connect();
 		void initializeSql();
 		void prepare();
 		void update();
 
-		// logging functions
+		///@}
+		///@name Logging
+		///@{
+
 		void log(const std::string& logEntry);
 		void log(const std::string& logModule, const std::string& logEntry);
-		std::uint64_t getNumberOfLogEntries(const std::string& logModule);
+		[[nodiscard]] std::uint64_t getNumberOfLogEntries(const std::string& logModule);
 		void clearLogs(const std::string& logModule);
 
-		// thread functions
-		std::vector<ThreadDatabaseEntry> getThreads();
+		///@}
+		///@name Threads
+		///@{
+
+		[[nodiscard]] std::vector<ThreadDatabaseEntry> getThreads();
 		std::uint64_t addThread(const ThreadOptions& threadOptions);
-		std::uint64_t getThreadRunTime(std::uint64_t threadId);
-		std::uint64_t getThreadPauseTime(std::uint64_t threadId);
+		[[nodiscard]] std::uint64_t getThreadRunTime(std::uint64_t threadId);
+		[[nodiscard]] std::uint64_t getThreadPauseTime(std::uint64_t threadId);
 		void setThreadStatus(
 				std::uint64_t threadId,
 				bool threadPaused,
@@ -194,32 +454,38 @@ namespace crawlservpp::Main {
 		void setThreadPauseTime(std::uint64_t threadId, std::uint64_t threadPauseTime);
 		void deleteThread(std::uint64_t threadId);
 
-		// website functions
+		///@}
+		///@name Websites
+		///@{
+
 		std::uint64_t addWebsite(const WebsiteProperties& websiteProperties);
-		std::string getWebsiteDomain(std::uint64_t id);
-		std::string getWebsiteNamespace(std::uint64_t websiteId);
-		IdString getWebsiteNamespaceFromUrlList(std::uint64_t listId);
-		IdString getWebsiteNamespaceFromConfig(std::uint64_t configId);
-		IdString getWebsiteNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId);
-		bool isWebsiteNamespace(const std::string& nameSpace);
-		std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
-		std::string getWebsiteDataDirectory(std::uint64_t websiteId);
-		std::uint64_t getChangedUrlsByWebsiteUpdate(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
-		std::uint64_t getLostUrlsByWebsiteUpdate(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
+		[[nodiscard]] std::string getWebsiteDomain(std::uint64_t id);
+		[[nodiscard]] std::string getWebsiteNamespace(std::uint64_t websiteId);
+		[[nodiscard]] IdString getWebsiteNamespaceFromUrlList(std::uint64_t listId);
+		[[nodiscard]] IdString getWebsiteNamespaceFromConfig(std::uint64_t configId);
+		[[nodiscard]] IdString getWebsiteNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId);
+		[[nodiscard]] bool isWebsiteNamespace(const std::string& nameSpace);
+		[[nodiscard]] std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
+		[[nodiscard]] std::string getWebsiteDataDirectory(std::uint64_t websiteId);
+		[[nodiscard]] std::uint64_t getChangedUrlsByWebsiteUpdate(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
+		[[nodiscard]] std::uint64_t getLostUrlsByWebsiteUpdate(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
 		void updateWebsite(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
 		void deleteWebsite(std::uint64_t websiteId);
 		std::uint64_t duplicateWebsite(std::uint64_t websiteId, const Queries& queries);
 		void moveWebsite(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
 
-		// URL list functions
+		///@}
+		///@name URL Lists
+		///@{
+
 		std::uint64_t addUrlList(std::uint64_t websiteId, const UrlListProperties& listProperties);
-		std::queue<IdString> getUrlLists(std::uint64_t websiteId);
+		[[nodiscard]] std::queue<IdString> getUrlLists(std::uint64_t websiteId);
 		std::size_t mergeUrls(std::uint64_t listId, std::queue<std::string>& urls);
-		std::queue<std::string> getUrls(std::uint64_t listId);
-		std::queue<IdString> getUrlsWithIds(std::uint64_t listId);
-		std::string getUrlListNamespace(std::uint64_t listId);
-		IdString getUrlListNamespaceFromTargetTable(const std::string& type, std::uint64_t listId);
-		bool isUrlListNamespace(std::uint64_t websiteId, const std::string& nameSpace);
+		[[nodiscard]] std::queue<std::string> getUrls(std::uint64_t listId);
+		[[nodiscard]] std::queue<IdString> getUrlsWithIds(std::uint64_t listId);
+		[[nodiscard]] std::string getUrlListNamespace(std::uint64_t listId);
+		[[nodiscard]] IdString getUrlListNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId);
+		[[nodiscard]] bool isUrlListNamespace(std::uint64_t websiteId, const std::string& nameSpace);
 		void updateUrlList(std::uint64_t listId, const UrlListProperties& listProperties);
 		void deleteUrlList(std::uint64_t listId);
 		std::size_t deleteUrls(std::uint64_t listId, std::queue<uint64_t>& urlIds);
@@ -227,7 +493,10 @@ namespace crawlservpp::Main {
 		void resetExtractingStatus(std::uint64_t listId);
 		void resetAnalyzingStatus(std::uint64_t listId);
 
-		// query functions
+		///@}
+		///@name Queries
+		///@{
+
 		std::uint64_t addQuery(std::uint64_t websiteId, const QueryProperties& queryProperties);
 		void getQueryProperties(std::uint64_t queryId, QueryProperties& queryPropertiesTo);
 		void updateQuery(std::uint64_t queryId, const QueryProperties& queryProperties);
@@ -235,54 +504,71 @@ namespace crawlservpp::Main {
 		void deleteQuery(std::uint64_t queryId);
 		std::uint64_t duplicateQuery(std::uint64_t queryId);
 
-		// configuration functions
+		///@}
+		///@name Configurations
+		///@{
+
 		std::uint64_t addConfiguration(
 				std::uint64_t websiteId,
 				const ConfigProperties& configProperties
 		);
-		const std::string getConfiguration(std::uint64_t configId);
+		[[nodiscard]] std::string getConfiguration(std::uint64_t configId);
 		void updateConfiguration(std::uint64_t configId, const ConfigProperties& configProperties);
 		void deleteConfiguration(std::uint64_t configId);
 		std::uint64_t duplicateConfiguration(std::uint64_t configId);
 
-		// target table functions
+		///@}
+		///@name Target Tables
+		///@{
+
 		std::uint64_t addTargetTable(const TargetTableProperties& properties);
-		std::queue<IdString> getTargetTables(const std::string& type, std::uint64_t listId);
-		std::uint64_t getTargetTableId(
+		[[nodiscard]] std::queue<IdString> getTargetTables(const std::string& type, std::uint64_t listId);
+		[[nodiscard]] std::uint64_t getTargetTableId(
 				const std::string& type,
-				std::uint64_t websiteId,
 				std::uint64_t listId,
 				const std::string& tableName
 		);
-		std::string getTargetTableName(const std::string& type, std::uint64_t tableId);
+		[[nodiscard]] std::string getTargetTableName(const std::string& type, std::uint64_t tableId);
 		void deleteTargetTable(const std::string& type, std::uint64_t tableId);
 
-		// validation functions
-		void checkConnection();
-		bool isWebsite(std::uint64_t websiteId);
-		bool isUrlList(std::uint64_t urlListId);
-		bool isUrlList(std::uint64_t websiteId, std::uint64_t urlListId);
-		bool isQuery(std::uint64_t queryId);
-		bool isQuery(std::uint64_t websiteId, std::uint64_t queryId);
-		bool isConfiguration(std::uint64_t configId);
-		bool isConfiguration(std::uint64_t websiteId, std::uint64_t configId);
+		///@}
+		///@name Validation
+		///@{
 
-		// database functions
+		void checkConnection();
+		[[nodiscard]] bool isWebsite(std::uint64_t websiteId);
+		[[nodiscard]] bool isUrlList(std::uint64_t urlListId);
+		[[nodiscard]] bool isUrlList(std::uint64_t websiteId, std::uint64_t urlListId);
+		[[nodiscard]] bool isQuery(std::uint64_t queryId);
+		[[nodiscard]] bool isQuery(std::uint64_t websiteId, std::uint64_t queryId);
+		[[nodiscard]] bool isConfiguration(std::uint64_t configId);
+		[[nodiscard]] bool isConfiguration(std::uint64_t websiteId, std::uint64_t configId);
+		[[nodiscard]] bool checkDataDir(const std::string& dir);
+
+		///@}
+		///@name Locking
+		///@{
+
 		void beginNoLock();
 		void endNoLock();
-		bool checkDataDir(const std::string& dir);
 
-		// general table functions
-		bool isTableEmpty(const std::string& tableName);
-		bool isTableExists(const std::string& tableName);
-		bool isColumnExists(const std::string& tableName, const std::string& columnName);
-		std::string getColumnType(const std::string& tableName, const std::string& columnName);
-		void lockTables(std::queue<TableNameWriteAccess>& locks);
+		///@}
+		///@name Tables
+		///@{
+
+		[[nodiscard]] bool isTableEmpty(const std::string& tableName);
+		[[nodiscard]] bool isTableExists(const std::string& tableName);
+		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
+		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
+		void lockTables(std::queue<TableNameWriteAccess>& tableLocks);
 		void unlockTables();
 		void startTransaction(const std::string& isolationLevel);
 		void endTransaction(bool success);
 
-		// custom data functions for algorithms
+		///@}
+		///@name Custom Data
+		///@{
+
 		void getCustomData(Data::GetValue& data);
 		void getCustomData(Data::GetFields& data);
 		void getCustomData(Data::GetFieldsMixed& data);
@@ -296,61 +582,232 @@ namespace crawlservpp::Main {
 		void updateCustomData(const Data::UpdateFields& data);
 		void updateCustomData(const Data::UpdateFieldsMixed& data);
 
+		///@}
+		///@name Request Counter
+		///@{
+
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		static unsigned long long getRequestCounter() { return Database::requestCounter.load(); }
+		static std::uint64_t getRequestCounter() {
+			return Database::requestCounter.load();
+		}
 #else
-		static unsigned long long getRequestCounter() { return 0; }
+		//! Gets the number of SQL requests performed since the start of the application.
+		/*!
+		 * \note By default, the request counter
+		 *   should be deactivated and the
+		 *   function always return zero.
+		 *
+		 * \returns The number of SQL requests
+		 *   performed since the start of the
+		 *   application or zero, if the
+		 *   request counter had not been
+		 *   activated on compilation.
+		 */
+		static std::uint64_t getRequestCounter() {
+			return 0;
+		}
 #endif
 
-		// classes for general and specific database exceptions
+		///@}
+
+		//! %Wrapper class for in-scope transactions.
+		class Transaction {
+		public:
+			///@name Construction and Destruction
+			///@{
+
+			//! Constructor starting the transaction using the specified isolation level.
+			/*!
+			 * \param db Reference to the database
+			 *   connection to be used.
+			 * \param isolationLevel Constant reference
+			 *   to a string containing the isolation
+			 *   level to be used.
+			 */
+			Transaction(
+					Main::Database& db,
+					const std::string& isolationLevel
+			) : ref(db), active(false), successful(false) {
+				this->ref.startTransaction(isolationLevel);
+
+				this->active = true;
+			}
+
+			//! Constructor starting the transaction using the default isolation level.
+			/*!
+			 * \param db Reference to the database
+			 *   connection to be used.
+			 */
+			explicit Transaction(
+					Main::Database& db
+			) : ref(db), active(false), successful(false) {
+				this->ref.startTransaction("");
+
+				this->active = true;
+			}
+
+			//! Destructor committing the transaction on success.
+			virtual ~Transaction() {
+				if(this->active) {
+					try {
+						this->ref.endTransaction(this->successful);
+					}
+					catch(...) {} // ignore exceptions
+
+					this->active = false;
+				}
+			}
+
+			///@}
+			///@name Setter
+			///@{
+
+			//! Sets the state of the transaction to successful.
+			/*!
+			 * The transaction will be committed
+			 *  on destruction.
+			 */
+			void success() {
+				this->successful = true;
+			}
+
+			///@}
+			/**@name Copy and Move
+			 * The class is neither copyable, nor moveable.
+			 */
+			///@{
+
+			//! Deleted copy constructor.
+			Transaction(Transaction&) = delete;
+
+			//! Deleted copy assignment operator.
+			Transaction& operator=(Transaction&) = delete;
+
+			//! Deleted move constructor.
+			Transaction(Transaction&&) = delete;
+
+			//! Deleted move assignment operator.
+			Transaction& operator=(Transaction&&) = delete;
+
+			///@}
+
+		private:
+			Main::Database& ref;	// reference to database
+			bool active;			// transaction is active
+			bool successful;		// transaction was successful
+		};
+
+		//! Class for generic database exceptions.
 		MAIN_EXCEPTION_CLASS();
+
+		//! Class for database connection exceptions.
 		MAIN_EXCEPTION_SUBCLASS(ConnectionException);
+
+		//! Class for incorrect path exceptions.
 		MAIN_EXCEPTION_SUBCLASS(IncorrectPathException);
+
+		//! Class for storage engine exceptions.
 		MAIN_EXCEPTION_SUBCLASS(StorageEngineException);
+
+		//! Class for insufficient privileges exceptions.
 		MAIN_EXCEPTION_SUBCLASS(PrivilegesException);
+
+		//! Class for wrong arguments exceptions.
 		MAIN_EXCEPTION_SUBCLASS(WrongArgumentsException);
 
-		// not moveable, not copyable
+		/**@name Copy and Move
+		 * The class is neither copyable, nor movable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
 		Database(Database&) = delete;
-		Database(Database&&) = delete;
+
+		//! Deleted copy assignment operator.
 		Database& operator=(Database&) = delete;
+
+		//! Deleted move constructor.
+		Database(Database&&) = delete;
+
+		//! Deleted move assignment operator.
 		Database& operator=(Database&&) = delete;
 
+		///@}
+
 	protected:
-		// shared connection information
+		///@name Shared Connection Information
+		///@{
+
+		//! %Database connection.
 		std::unique_ptr<sql::Connection> connection;
+
+		//! Pointer to the MySQL database driver.
 		static sql::Driver * driver;
 
-		// helper functions for prepared SQL statements
-		void reserveForPreparedStatements(std::size_t numberOfAdditionalPreparedStatements);
-		std::size_t addPreparedStatement(const std::string& sqlQuery);
-		sql::PreparedStatement& getPreparedStatement(std::size_t id);
+		///@}
+		///@name Helper Functions for Prepared SQL Statements
+		///@{
 
-		// database helper functions
-		std::uint64_t getLastInsertedId();
+		void reserveForPreparedStatements(std::size_t n);
+		std::size_t addPreparedStatement(const std::string& sqlQuery);
+		[[nodiscard]] sql::PreparedStatement& getPreparedStatement(std::size_t id);
+
+		///@}
+		///@name Database Helper Functions
+		///@{
+
+		[[nodiscard]] std::uint64_t getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
-		void addDatabaseLock(const std::string& name, IsRunningCallback isRunningCallback);
-		bool tryDatabaseLock(const std::string& name);
-		void removeDatabaseLock(const std::string& name);
+		static void addDatabaseLock(const std::string& name, const IsRunningCallback& isRunningCallback);
+		static bool tryDatabaseLock(const std::string& name);
+		static void removeDatabaseLock(const std::string& name);
+		void checkDirectory(const std::string& dir);
+
+		///@}
+		///@name Table Helper Functions
+		///@{
+
 		void createTable(const TableProperties& properties);
 		void dropTable(const std::string& name);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
-		void deleteTable(const std::string& tableName);
-		void checkDirectory(const std::string& dir);
-		std::queue<std::string> cloneTable(const std::string& tableName, const std::string& dataDir);
+		std::queue<std::string> cloneTable(const std::string& tableName, const std::string& destDir);
 
-		// URL list helper functions
-		bool isUrlListCaseSensitive(std::uint64_t listId);
+		///@}
+		///@name URL List Helper Functions
+		///@{
+
+		[[nodiscard]] bool isUrlListCaseSensitive(std::uint64_t listId);
 		void setUrlListCaseSensitive(std::uint64_t listId, bool isCaseSensitive);
 
-		// exception helper function
-		void sqlException(const std::string& function, const sql::SQLException& e);
+		///@}
+		///@name Exception Helper Function
+		///@{
 
-		// wrapper template for executing SQL query
+		static void sqlException(const std::string& function, const sql::SQLException& e);
+
+		///@}
+		///@name Helper Functions for Executing SQL Queries
+		///@{
+
+		//! Template function for executing a SQL query.
+		/*!
+		 * \param statement Reference to the SQL statement.
+		 *   Can be either a prepared statement or a @c
+		 *   sql::Statement.
+		 * \param args Optional arguments to the underlying
+		 *   function executing the query. When a @c
+		 *   sql::Statement is used, this should be a null-
+		 *   terminated string containing the text of the
+		 *   SQL query.
+		 *
+		 * \returns True, if the query returned a result set.
+		 *   False, if the query returned nothing or an
+		 *   update count.
+		 */
 		template<class T, class... Args>
 		static bool sqlExecute(T& statement, Args... args) {
-			bool result = false;
+			bool result{false};
 
 			while(true) { // retry on deadlock
 				try {
@@ -363,37 +820,52 @@ namespace crawlservpp::Main {
 					break;
 				}
 				catch(const sql::SQLException &e) {
-					if(e.getErrorCode() != 1213)
+					if(e.getErrorCode() != sqlDeadLock) {
 						throw; // no deadlock: re-throw exception
+					}
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
-				unsigned long long counter = Database::getRequestCounter();
+				const auto counter{Database::getRequestCounter()};
 
 				std::cout << "#";
 
-				if(counter)
+				if(counter > 0) {
 					std::cout << counter;
+				}
 
 				std::cout << std::flush;
 #endif
 
-#ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-				std::this_thread::sleep_for(
-						std::chrono::milliseconds(
-								MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-						)
-				);
-#endif
+				if(sleepOnDeadLockMs > 0) {
+					std::this_thread::sleep_for(
+							std::chrono::milliseconds(
+									sleepOnDeadLockMs
+							)
+					);
+				}
 			}
 
 			return result;
 		}
 
-		// wrapper template for executing SQL query and returning the result
+		//! Template function for executing a SQL query and returning the resulting set.
+		/*!
+		 * \param statement Reference to the SQL statement.
+		 *   Can be either a prepared statement or a @c
+		 *   sql::Statement.
+		 * \param args Optional arguments to the underlying
+		 *   function executing the query. When a @c
+		 *   sql::Statement is used, this should be a null-
+		 *   terminated string containing the text of the
+		 *   SQL query.
+		 *
+		 * \returns A pointer to the result set retrieved
+		 *   by executing the SQL query.
+		 */
 		template<class T, class... Args>
 		static sql::ResultSet * sqlExecuteQuery(T& statement, Args... args) {
-			sql::ResultSet * resultPtr = nullptr;
+			sql::ResultSet * resultPtr{nullptr};
 
 			while(true) { // retry on deadlock
 				try {
@@ -406,37 +878,52 @@ namespace crawlservpp::Main {
 					break;
 				}
 				catch(const sql::SQLException &e) {
-					if(e.getErrorCode() != 1213)
+					if(e.getErrorCode() != sqlDeadLock) {
 						throw; // no deadlock: re-throw exception
+					}
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
-				unsigned long long counter = Database::getRequestCounter();
+				const auto counter{Database::getRequestCounter()};
 
 				std::cout << "#";
 
-				if(counter)
+				if(counter > 0) {
 					std::cout << counter;
+				}
 
 				std::cout << std::flush;
 #endif
 
-#ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-				std::this_thread::sleep_for(
-						std::chrono::milliseconds(
-								MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-						)
-				);
-#endif
+				if(sleepOnDeadLockMs > 0) {
+					std::this_thread::sleep_for(
+							std::chrono::milliseconds(
+									sleepOnDeadLockMs
+							)
+					);
+				}
 			}
 
 			return resultPtr;
 		}
 
-		// wrapper template for executing SQL query and returning the number of affected rows
+		//! Template function for executing a SQL query and returning the number of affected rows.
+		/*!
+		 * \param statement Reference to the SQL statement.
+		 *   Can be either a prepared statement or a
+		 *   @c sql::Statement.
+		 * \param args Optional arguments to the underlying
+		 *   function executing the query. When a @c
+		 *   sql::Statement is used, this should be a null-
+		 *   terminated string containing the text of the
+		 *   query.
+		 *
+		 * \returns The number of rows affected by the
+		 *   SQL query.
+		 */
 		template<class T, class... Args>
 		static int sqlExecuteUpdate(T& statement, Args... args) {
-			int result = 0;
+			int result{0};
 
 			while(true) { // retry on deadlock
 				try {
@@ -449,12 +936,13 @@ namespace crawlservpp::Main {
 					break;
 				}
 				catch(const sql::SQLException &e) {
-					if(e.getErrorCode() != 1213)
+					if(e.getErrorCode() != sqlDeadLock) {
 						throw; // no deadlock: re-throw exception
+					}
 				}
 
 #ifdef MAIN_DATABASE_DEBUG_DEADLOCKS
-				unsigned long long counter = Database::getRequestCounter();
+				const auto counter{Database::getRequestCounter()};
 
 				std::cout << "#";
 
@@ -464,113 +952,74 @@ namespace crawlservpp::Main {
 				std::cout << std::flush;
 #endif
 
-#ifdef MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-				std::this_thread::sleep_for(
-						std::chrono::milliseconds(
-								MAIN_DATABASE_SLEEP_ON_DEADLOCK_MS
-						)
-				);
-#endif
+				if(sleepOnDeadLockMs > 0) {
+					std::this_thread::sleep_for(
+							std::chrono::milliseconds(
+									sleepOnDeadLockMs
+							)
+					);
+				}
 			}
 
 			return result;
 		}
 
-		// wrapper template for executing SQL query by unique pointer
+		//! Template function for executing a SQL query by unique pointer.
+		/*!
+		 * \param statement Reference to the unique pointer.
+		 *   to the SQL statement.
+		 * \param args Optional arguments to the underlying
+		 *   function executing the query. When a @c
+		 *   sql::Statement is used, this should be a null-
+		 *   terminated string containing the text of the
+		 *   SQL query.
+		 *
+		 * \returns True, if the query returned a result set.
+		 *   False, if the query returned nothing or an
+		 *   update count.
+		 */
 		template<class T, class... Args>
 		static bool sqlExecute(std::unique_ptr<T>& statement, Args... args) {
 			return sqlExecute(*statement, args...);
 		}
 
-		// wrapper template for executing SQL query by unique pointer and returning the result
+		//! Template function for executing a SQL query by unique pointer and returning the resulting set.
+		/*!
+		 * \param statement Reference to the unique pointer.
+		 *   to the SQL statement.
+		 * \param args Optional arguments to the underlying
+		 *   function executing the query. When a @c
+		 *   sql::Statement is used, this should be a null-
+		 *   terminated string containing the text of the
+		 *   SQL query.
+		 *
+		 * \returns A pointer to the result set retrieved
+		 *   by executing the SQL query.
+		 */
 		template<class T, class... Args>
 		static sql::ResultSet * sqlExecuteQuery(std::unique_ptr<T>& statement, Args... args) {
 			return sqlExecuteQuery(*statement, args...);
 		}
 
-		// wrapper template for executing SQL query by unique pointer and returning the number of affected rows
+		//! Template function for executing a SQL query by unique pointer and returning the number of affected rows.
+		/*!
+		 * \param statement Reference to the unique pointer.
+		 *   to the SQL statement.
+		 * \param args Optional arguments to the underlying
+		 *   function executing the query. When a @c
+		 *   sql::Statement is used, this should be a null-
+		 *   terminated string containing the text of the
+		 *   SQL query.
+		 *
+		 * \returns The number of rows affected by the
+		 *   SQL query.
+		 */
 		template<class T, class... Args>
 		static int sqlExecuteUpdate(std::unique_ptr<T>& statement, Args... args) {
 			return sqlExecuteUpdate(*statement, args...);
 		}
 
-		// wrapper class for in-scope table locks
-		class TableLock {
-		public:
-			// constructor: lock the table(s)
-			TableLock(Main::Database& db, std::queue<TableNameWriteAccess>& locks) : ref(db), active(false) {
-				this->ref.lockTables(locks);
-
-				this->active = true;
-			}
-
-			// destructor: unlock the table(s) if lock is active
-			virtual ~TableLock() {
-				if(this->active) {
-					this->ref.unlockTables();
-
-					this->active = false;
-				}
-			}
-
-			// not moveable, not copyable
-			TableLock(TableLock&) = delete;
-			TableLock(TableLock&&) = delete;
-			TableLock& operator=(TableLock&) = delete;
-			TableLock& operator=(TableLock&&) = delete;
-
-		private:
-			Main::Database& ref;	// reference to database
-			bool active;			// lock is active
-		};
-
-		// wrapper class for in-scope transactions
-		class Transaction {
-		public:
-			// constructor #1: lock the table(s) using specified isolation level
-			Transaction(
-					Main::Database& db,
-					const std::string& isolationLevel
-			) : ref(db), active(false), successful(false) {
-				this->ref.startTransaction(isolationLevel);
-
-				this->active = true;
-			}
-
-			// constructor #2: lock the table(s) using the default isolation level
-			Transaction(
-					Main::Database& db
-			) : ref(db), active(false), successful(false) {
-				this->ref.startTransaction("");
-
-				this->active = true;
-			}
-
-			// transaction was successful
-			void success() {
-				this->successful = true;
-			}
-
-			// destructor: unlock the table(s) if lock is active
-			virtual ~Transaction() {
-				if(this->active) {
-					this->ref.endTransaction(this->successful);
-
-					this->active = false;
-				}
-			}
-
-			// not moveable, not copyable
-			Transaction(Transaction&) = delete;
-			Transaction(Transaction&&) = delete;
-			Transaction& operator=(Transaction&) = delete;
-			Transaction& operator=(Transaction&&) = delete;
-
-		private:
-			Main::Database& ref;	// reference to database
-			bool active;			// transaction is active
-			bool successful;		// transaction was successful
-		};
+		///@}
 
 	private:
 		// private connection information
@@ -582,13 +1031,11 @@ namespace crawlservpp::Main {
 		std::string dataDir;				// main data directory
 		std::vector<std::string> dirs;		// all known data directories
 		std::string module;					// module for which the database connection was established
+		Timer::Simple reconnectTimer;		// timer for reconnecting to the database
 
 		// optional private variables
-#ifdef MAIN_DATABASE_RECONNECT_AFTER_IDLE_SEC
-		Timer::Simple reconnectTimer;		// timer for reconnecting to the database
-#endif
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER
-		static std::atomic<unsigned long long> requestCounter; // MySQL request counter
+		static std::atomic<std::uint64_t> requestCounter; // MySQL request counter
 #endif
 
 		// locking state
@@ -602,7 +1049,7 @@ namespace crawlservpp::Main {
 		void run(const std::string& sqlFile);
 		void execute(const std::string& sqlQuery);
 		int executeUpdate(const std::string& sqlQuery);
-		std::string sqlEscapeString(const std::string& in);
+		[[nodiscard]] std::string sqlEscapeString(const std::string& in);
 
 		// IDs of prepared SQL statements
 		struct _ps {
@@ -613,6 +1060,6 @@ namespace crawlservpp::Main {
 		} ps;
 	};
 
-} /* crawlservpp::Main */
+} /* namespace crawlservpp::Main */
 
 #endif /* MAIN_DATABASE_HPP_ */

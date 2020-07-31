@@ -22,7 +22,7 @@
  *
  * ServerSettings.hpp
  *
- * Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
+ * Server settings (port, allowed clients, origins and actions).
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
@@ -35,17 +35,31 @@
 
 namespace crawlservpp::Struct {
 
+	//! Server settings containing its port, as well as allowed clients, origins, and actions.
+	/*!
+	 * These settings are read from the
+	 *  configuration file.
+	 */
 	struct ServerSettings {
-		std::string port; 			// server port
-		std::string allowedClients; // list of allowed IP addresses
-		std::string corsOrigins; 	// allowed origins for CORS requests
-		bool logsDeletable; 		// are logs deletable by frontend?
-		bool dataDeletable; 		// is data deletable by frontend?
+		///@name Properties
+		///@{
 
-		// constructors
-		ServerSettings() : corsOrigins("*"), logsDeletable(false), dataDeletable(false) {}
+		//! The port of the server as string.
+		std::string port;
+
+		//! A list of allowed IP addresses, separated by commas.
+		std::string allowedClients;
+
+		//! A list of allowed origins for CORS requests, separated by commas.
+		std::string corsOrigins{"*"};
+
+		//! Indicates whether the deletion of logs is allowed using the frontend, i.e. server commands.
+		bool logsDeletable{false};
+
+		//! Indicates whether the deletion of data is allowed using the frontend, i.e. server commands.
+		bool dataDeletable{false};
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_SERVERSETTINGS_HPP_ */

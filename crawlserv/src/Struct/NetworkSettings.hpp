@@ -22,7 +22,7 @@
  *
  * NetworkSettings.hpp
  *
- * Network settings transferred from the server to threads using neworking, i.e. crawler and extractor
+ * Network settings transferred from the server to threads using networking, i.e. crawler and extractor
  *  (default proxy, TOR control server, port and password).
  *
  *  Created on: Oct 13, 2018
@@ -37,17 +37,32 @@
 
 namespace crawlservpp::Struct {
 
+	//! %Network settings containing the default proxy as well as host, port, and password of the TOR control server.
+	/*!
+	 * These settings are read from the
+	 *  configuration file.
+	 *
+	 * They will be transferred from the
+	 *  server to threads that use networking,
+	 *  i.e. crawler and extractor threads.
+	 */
 	struct NetworkSettings {
-		std::string defaultProxy;		// default proxy (including port)
+		///@name Properties
+		///@{
 
-		std::string torControlServer;	// TOR control server
-		std::uint16_t torControlPort;	// TOR control port
-		std::string torControlPassword;	// TOR control password
+		//! The host name and the port of the default proxy to be used.
+		std::string defaultProxy;
 
-		// constructor: create empty settings
-		NetworkSettings() : torControlPort(0) {}
+		//! The host name of the TOR control server.
+		std::string torControlServer;
+
+		//! The port used by the TOR control server.
+		std::uint16_t torControlPort{0};
+
+		//! The password used by the TOR control server.
+		std::string torControlPassword;
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_NETWORKSETTINGS_HPP_ */

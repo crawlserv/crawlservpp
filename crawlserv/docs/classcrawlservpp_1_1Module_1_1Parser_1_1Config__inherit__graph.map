@@ -1,0 +1,5 @@
+<map id="crawlservpp::Module::Parser::Config" name="crawlservpp::Module::Parser::Config">
+<area shape="rect" id="node1" title="Configuration for parsers." alt="" coords="5,95,163,136"/>
+<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Parser_1_1Thread.html" title="Parser thread." alt="" coords="5,184,163,225"/>
+<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Config.html" title="Abstract class as base for module&#45;specific configurations." alt="" coords="5,5,163,47"/>
+</map>

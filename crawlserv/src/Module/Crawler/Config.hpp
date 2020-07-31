@@ -24,9 +24,6 @@
  *
  * Crawling configuration.
  *
- * WARNING:	Changing the configuration requires updating 'json/crawler.json' in crawlserv_frontend!
- * 			See there for details on the specific configuration entries.
- *
  *  Created on: Oct 25, 2018
  *      Author: ans
  */
@@ -43,193 +40,493 @@
 #include <string>		// std::string
 #include <vector>		// std::vector
 
+//! Namespace for crawler classes.
 namespace crawlservpp::Module::Crawler {
+
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! Logging is disabled.
+	constexpr std::uint8_t crawlerLoggingSilent{0};
+
+	//! Default logging is enabled.
+	constexpr std::uint8_t crawlerLoggingDefault{1};
+
+	//! Extended logging is enabled.
+	constexpr std::uint8_t crawlerLoggingExtended{2};
+
+	//! Verbose logging is enabled.
+	constexpr std::uint8_t crawlerLoggingVerbose{3};
+
+	//! Performing a query on the URL of a crawled web page to determine whether to redirect.
+	constexpr std::uint8_t redirectSourceUrl{0};
+
+	//! Performing a query on the content of a crawled web page to determine whether to redirect.
+	constexpr std::uint8_t redirectSourceContent{1};
+
+	//! Default time to lock URLs that are being processed, in seconds.
+	constexpr std::uint32_t defaultCrawlerLockS{300};
+
+	//! Default number of re-tries on connection errors.
+	constexpr int64_t defaultReTries{720};
+
+	//! HTTP errors that will be handled like connection errors by default.
+	constexpr std::array defaultRetryHttp{429, 502, 503, 504, 521, 522, 524};
+
+	//! Default sleeping time on connection errors, in milliseconds.
+	constexpr std::uint64_t defaultSleepErrorMs{10000};
+
+	//! Default time that will be waited between HTTP requests, in milliseconds.
+	constexpr std::uint64_t defaultSleepHttpMs{0};
+
+	//! Default time that will be waited before checking for new URLs when all URLs have been crawled, in milliseconds.
+	constexpr std::uint64_t defaultSleepIdleMs{5000};
+
+	//! Default time to wait before the first try to re-connect to the MySQL server, in seconds.
+	constexpr std::uint64_t defaultSleepMySqlS{20};
+
+	//! Default number of crawled URLs to be processed at once without possible interruption.
+	constexpr std::uint64_t defaultUrlChunks{5000};
+
+	//! Default maximum length of URLs to add.
+	constexpr std::uint16_t defaultUrlMaxLength{2000};
+
+	///@}
 
 	/*
 	 * DECLARATION
 	 */
 
+	//! Configuration for crawlers.
 	class Config : protected Network::Config {
 	public:
-		Config() : crossDomain(false) {}
-		virtual ~Config() {}
 
-		// setter
+		///@name Setter
+		///@{
+
 		void setCrossDomain(bool isCrossDomain);
 
-		// configuration constants
-		static constexpr std::uint8_t crawlerLoggingSilent = 0;
-		static constexpr std::uint8_t crawlerLoggingDefault = 1;
-		static constexpr std::uint8_t crawlerLoggingExtended = 2;
-		static constexpr std::uint8_t crawlerLoggingVerbose = 3;
+		///@}
 
-		static constexpr std::uint8_t redirectSourceUrl = 0;
-		static constexpr std::uint8_t redirectSourceContent = 1;
+		///@name Configuration
+		///@{
 
-		// configuration entries
+		//! Configuration entries for crawler threads.
+		/*!
+		 * \warning Changing the configuration requires
+		 *   updating @c json/crawler.json in @c
+		 *   crawlserv_frontend!
+		 */
 		struct Entries {
-			// constructor with default values
-			Entries();
+			///@name Crawler Configuration
+			///@{
 
-			// crawler entries
-			bool crawlerArchives;
-			std::vector<std::string> crawlerArchivesNames;
-			std::vector<std::string> crawlerArchivesUrlsMemento;
-			std::vector<std::string> crawlerArchivesUrlsTimemap;
-			std::uint32_t crawlerLock;
-			std::uint8_t crawlerLogging;
+			//! Specifies whether to crawl archived pages.
+			bool crawlerArchives{false};
+
+			//! Names of archives to crawl.
+			std::vector<std::string> crawlerArchivesNames{"archives.org"};
+
+			//! Memento %URI templates for archives to crawl.
+			/*!
+			 * To be followed by @c YYYYMMDDHHMMSS/URI
+			 *  (date and %URI) of the memento to crawl.
+			 */
+			std::vector<std::string> crawlerArchivesUrlsMemento{"http://web.archive.org/web/"};
+
+			//! Timemap %URI template for archives to crawl.
+			/*!
+			 * To be followed by the %URI of the page to
+			 *  crawl.
+			 */
+			std::vector<std::string> crawlerArchivesUrlsTimemap{"http://web.archive.org/web/timemap/link/"};
+
+			//! Time for which to lock URLs that are currently being processed, in seconds.
+			std::uint32_t crawlerLock{defaultCrawlerLockS};
+
+			//! Level of logging acivitiy.
+			/*!
+			 * \sa crawlerLoggingSilent, crawlerLoggingDefault
+			 *   crawlerLoggingExtended, crawlerLoggingVerbose
+			 */
+			std::uint8_t crawlerLogging{crawlerLoggingDefault};
+
+			//! URL parameters that will be added shortly before retrieving the content.
+			/*!
+			 * \note These parameters will not be saved in
+			 *   the URL list, i.e. in the database.
+			 */
 			std::vector<std::string> crawlerParamsAdd;
+
+			//! Parameters in URLs that will be ignored.
+			/*!
+			 * \note This option will be ignored, if
+			 *   Entries::crawlerParamsWhiteList is used.
+			 */
 			std::vector<std::string> crawlerParamsBlackList;
+
+			//! Parameters in URLs that will not be ignored.
+			/*!
+			 * \note If this option is used,
+			 *   Entries::crawlerParamsAdd will be ignored.
+			 */
 			std::vector<std::string> crawlerParamsWhiteList;
+
+			//! Content matching one of these queries will not be crawled.
+			/*!
+			 * \note This option will be ignored, if
+			 *   Entries::crawlerQueriesLinksWhiteListContent
+			 *   is used.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesBlackListContent;
+
+			//! Content types matching one of these queries will not be crawled.
+			/*!
+			 * \note This option will be ignored, if
+			 *   Entries::crawlerQueriesLinksWhiteListTypes
+			 *   is used.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesBlackListTypes;
+
+			//! URLs matching one of these queries will not be crawled.
+			/*!
+			 * \note This option will be ignored, if
+			 *   Entries::crawlerQueriesLinksWhiteListUrls
+			 *   is used.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesBlackListUrls;
+
+			//! Queries on content to find URLs.
 			std::vector<std::uint64_t> crawlerQueriesLinks;
+
+			//! Content matching one of these queries will not be used for link extraction.
+			/*!
+			 * \note This option will be ignored, if
+			 *   Entries::crawlerQueriesLinksWhiteListContent
+			 *   is used.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesLinksBlackListContent;
+
+			//! Content types matching one of these queries will not be used for link extraction.
+			/*!
+			 * \note This option will be ignored, if
+			 *   Entries::crawlerQueriesLinksWhiteListTypes
+			 *   is used.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesLinksBlackListTypes;
+
+			//! URLs matching one of these queries will not be used for link extraction.
+			/*!
+			 * \note This option will be ignored, if
+			 *   Entries::crawlerQueriesLinksWhiteListUrls
+			 *   is used.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesLinksBlackListUrls;
+
+			//! If not empty, only content matching one of these queries will be used for link extraction.
+			/*!
+			 * \note If this option is used,
+			 *   Entries::crawlerQueriesLinksBlackListContent
+			 *   will be ignored.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesLinksWhiteListContent;
+
+			//! If not empty, only content types matching one of these queries will be used for link extraction.
+			/*!
+			 * \note If this option is used,
+			 *   Entries::crawlerQueriesLinksBlackListTypes
+			 *   will be ignored.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesLinksWhiteListTypes;
+
+			//! If not empty, only URLs matching one of these queries will be used for link extraction.
+			/*!
+			 * \note If this option is used,
+			 *   Entries::crawlerQueriesLinksBlackListUrls
+			 *   will be ignored.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesLinksWhiteListUrls;
+
+			//! If not empty, only content matching one of these queries will be crawled.
+			/*!
+			 * \note If this option is used,
+			 *   Entries::crawlerQueriesBlackListContent
+			 *   will be ignored.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesWhiteListContent;
+
+			//! If not empty, only content types matching one of these queries will be crawled.
+			/*!
+			 * \note If this option is used,
+			 *   Entries::crawlerQueriesBlackListTypes
+			 *   will be ignored.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesWhiteListTypes;
+
+			//! If not empty, only URLs matching one of these queries will be crawled.
+			/*!
+			 * \note If this option is used,
+			 *   Entries::crawlerQueriesBlackListUrls
+			 *   will be ignored.
+			 */
 			std::vector<std::uint64_t> crawlerQueriesWhiteListUrls;
-			bool crawlerReCrawl;
+
+			//! Specifies whether to re-crawl already crawled URLs.
+			bool crawlerReCrawl{false};
+
+			//! List of URLs that will always be re-crawled.
 			std::vector<std::string> crawlerReCrawlAlways;
-			bool crawlerReCrawlStart;
-			bool crawlerRepairCData;
-			bool crawlerRepairComments;
-			std::int64_t crawlerReTries;
-			bool crawlerRetryArchive;
-			bool crawlerRetryEmpty;
-			std::vector<std::uint32_t> crawlerRetryHttp;
-			std::uint64_t crawlerSleepError;
-			std::uint64_t crawlerSleepHttp;
-			std::uint64_t crawlerSleepIdle;
-			std::uint64_t crawlerSleepMySql;
-			std::string crawlerStart;
-			bool crawlerStartIgnore;
-			std::uint32_t crawlerTidyErrors;
-			bool crawlerTidyWarnings;
-			bool crawlerTiming;
-			bool crawlerUrlCaseSensitive;
-			std::uint64_t crawlerUrlChunks;
-			bool crawlerUrlDebug;
-			std::uint16_t crawlerUrlMaxLength;
-			bool crawlerUrlStartupCheck;
-			bool crawlerWarningsFile;
-			bool crawlerXml;
 
-			// custom entries
+			//! Specifies whether to re-crawl the start page every time to keep the URL list up-to-date.
+			bool crawlerReCrawlStart{true};
+
+			//! Specifies whether to (try to) repair CData when parsing HTML/XML.
+			bool crawlerRepairCData{true};
+
+			//! Specifies whether to (try to) repair broken HTML/XML comments.
+			bool crawlerRepairComments{true};
+
+			//! Number of re-tries on connection errors (-1=infinite).
+			std::int64_t crawlerReTries{defaultReTries};
+
+			//! Specifies whether to re-try when retrieving the archived pages fails.
+			bool crawlerRetryArchive{true};
+
+			//! Specifies whether empty responses will be handled like connection errors.
+			bool crawlerRetryEmpty{true};
+
+			//! HTTP errors that will be handled like connection errors.
+			std::vector<std::uint32_t> crawlerRetryHttp{defaultRetryHttp.cbegin(), defaultRetryHttp.cend()};
+
+			//! Sleeping time on connection errors, in milliseconds.
+			std::uint64_t crawlerSleepError{defaultSleepErrorMs};
+
+			//! Time that will be waited between HTTP requests, in milliseconds
+			std::uint64_t crawlerSleepHttp{defaultSleepHttpMs};
+
+			//! Time that will be waited before checking for new URLs when all URLs have been crawled, in milliseconds.
+			std::uint64_t crawlerSleepIdle{defaultSleepIdleMs};
+
+			//! Time to wait before trying to re-connect to the MySQL server, in seconds.
+			/*!
+			 * \note After that time, the current
+			 *   database operation will be lost.
+			 */
+			std::uint64_t crawlerSleepMySql{defaultSleepMySqlS};
+
+			//! Starting point for crawling (should start with / except for cross-domain websites).
+			std::string crawlerStart{"/"};
+
+			//! Specifies whether to not crawl the start page.
+			bool crawlerStartIgnore{false};
+
+			//! Number  of @c tidyhtml errors to log (if logging is enabled).
+			std::uint32_t crawlerTidyErrors{0};
+
+			//! Specifies whether to log @c tidyhtml warnings (if logging is enabled).
+			bool crawlerTidyWarnings{false};
+
+			//! Specifies whether to calculate timing statistics for the crawler.
+			bool crawlerTiming{false};
+
+			//! Specifies whether URLs are case-sensitive.
+			/*!
+			 * \warning Changes invalidate the hashs of existing URLs!
+			 */
+			bool crawlerUrlCaseSensitive{true};
+
+			//! Number of crawled URLs to be processed at once without possible interruption.
+			std::uint64_t crawlerUrlChunks{defaultUrlChunks};
+
+			//! Specifies whether to perform additional check for duplicates after URL insertion.
+			/*!
+			 * For debugging purposes only.
+			 */
+			bool crawlerUrlDebug{false};
+
+			//! Maximum length of URLs to add.
+			std::uint16_t crawlerUrlMaxLength{defaultUrlMaxLength};
+
+			//! Specifies whether to check the URL list before starting to crawl.
+			bool crawlerUrlStartupCheck{true};
+
+			//! Specifies whether to warn when files are found (as opposed to folders).
+			bool crawlerWarningsFile{false};
+
+			//! Specifies whether to always save crawled content as cleaned XML.
+			bool crawlerXml{false};
+
+			///@}
+			///@name Custom URLs
+			///@{
+
+			//! List of counter variables to be replaced in custom URLs.
 			std::vector<std::string> customCounters;
-			std::vector<std::string> customCountersAlias;
-			std::vector<std::uint64_t> customCountersAliasAdd;
-			std::vector<std::int64_t> customCountersEnd;
-			bool customCountersGlobal;
-			std::vector<std::int64_t> customCountersStart;
-			std::vector<std::int64_t> customCountersStep;
-			bool customReCrawl;
-			bool customRobots;
-			std::vector<std::string> customTokens;
-			std::vector<std::string> customTokensCookies;
-			std::vector<std::uint32_t> customTokensKeep;
-			std::vector<std::uint64_t> customTokensQuery;
-			std::vector<std::string> customTokensSource;
-			std::vector<std::string> customTokenHeaders;
-			std::vector<bool> customTokensUsePost;
-			std::vector<std::string> customUrls;
-			bool customUsePost;
 
-			// dynamic redirect
+			//! Alias for the counter variable with the same array index.
+			std::vector<std::string> customCountersAlias;
+
+			//! Value to add to the counter alias with the same array index.
+			std::vector<std::uint64_t> customCountersAliasAdd;
+
+			//! End value for the counter with the same array index.
+			std::vector<std::int64_t> customCountersEnd;
+
+			//! Specifies whether to use every counter for all custom URLs.
+			/*!
+			 * Otherwise a counters will only be used for URLs with the same array index.
+			 */
+			bool customCountersGlobal{true};
+
+			//! Start value for the counter with the same array index.
+			std::vector<std::int64_t> customCountersStart;
+
+			//! Step value for the counter with the same array index.
+			std::vector<std::int64_t> customCountersStep;
+
+			//! Specifies whether to always re-crawl custom URLs.
+			bool customReCrawl{true};
+
+			//! Specifies whether to add the sitemaps specified in @c robots.txt as custom URLs.
+			bool customRobots{false};
+
+			//! Custom HTTP headers to be used for ALL tokens.
+			std::vector<std::string> customTokenHeaders;
+
+			//! List of token variables to be replaced in custom URLs.
+			std::vector<std::string> customTokens;
+
+			//! Custom HTTP @c Cookie header for the token with the same array index.
+			std::vector<std::string> customTokensCookies;
+
+			//! Time until token with the same array index gets invalid, in seconds.
+			std::vector<std::uint32_t> customTokensKeep;
+
+			//! Query to extract the token with the same array index.
+			std::vector<std::uint64_t> customTokensQuery;
+
+			//! Source URL for the token with the same array index (absolute link without protocol).
+			std::vector<std::string> customTokensSource;
+
+			//! Use HTTP POST instead of GET for the token with the same array index.
+			std::vector<bool> customTokensUsePost;
+
+			//! Custom URLs for crawling (should all start with @c / except for cross-domain websites).
+			std::vector<std::string> customUrls;
+
+			//! Specifies whether to use HTTP POST instead of HTTP GET to retrieve custom URLs.
+			/*!
+			 * Has no effect after dynamic redirects.
+			 *
+			 * \sa redirectUsePost
+			 */
+			bool customUsePost{false};
+
+			///@}
+
+			///@name Expected Number of Results
+			///@{
+
+			//! Specifies whether to throw an exception when number of expected URLs is exceeded.
+			bool expectedErrorIfLarger{false};
+
+			//! Specifies whether to throw an exception when number of expected URLs is subceeded.
+			bool expectedErrorIfSmaller{false};
+
+			//! Query to be performed on content to retrieve the expected number of URLs.
+			std::uint64_t expectedQuery{0};
+
+			///@}
+			///@name Dynamic Redirect
+			///@{
+
+			//! Custom HTTP @c Cookie header on dynamic redirect.
 			std::string redirectCookies;
+
+			//! Custom HTTP headers on dynamic redirect.
 			std::vector<std::string> redirectHeaders;
-			std::uint64_t redirectQueryUrl;
-			std::uint64_t redirectQueryContent;
+
+			//! Query on content that specifies whether to redirect to different URL.
+			std::uint64_t redirectQueryContent{0};
+
+			//! Query on URL that specifies whether to redirect to different URL.
+			std::uint64_t redirectQueryUrl{0};
+
+			//! Sub-URL (for cross-domain websites: URL without protocol) to redirect to.
 			std::string redirectTo;
-			bool redirectUsePost;
+
+			//! Specifies whether to use HTTP POST instead of HTTP GET to retrieve a URL after redirect.
+			bool redirectUsePost{false};
+
+			//! Variable names to be replaced on redirect.
+			/*!
+			 * Names will be replaced in the values
+			 * of Config::Entries::redirectTo,
+			 * Config::Entries::redirectCookies,
+			 * and Config::Entries::redirectHeaders.
+			 */
 			std::vector<std::string> redirectVarNames;
+
+			//! Query on variable source to retrieve the value of the variable with the same index.
 			std::vector<std::uint64_t> redirectVarQueries;
+
+			//! Source type of the variable with the same index.
+			/*!
+			 * \sa redirectSourceUrl,
+			 *   redirectContentUrl
+			 */
 			std::vector<std::uint8_t> redirectVarSources;
 
-			// expected number of results
-			std::uint64_t expectedQuery;
-			bool expectedErrorIfLarger;
-			bool expectedErrorIfSmaller;
-		} config;
+			///@}
+		}
 
-		// class for Crawler::Config exceptions
+		//! Configuration of the crawler.
+		config;
+
+		///@}
+
+		//! Class for crawler configuration exceptions.
 		MAIN_EXCEPTION_CLASS();
 
 	protected:
-		// parsing of crawling-specific configuration
+		///@name Crawler-Specific Configuration Parsing
+		///@{
+
 		void parseOption() override;
 		void checkOptions() override;
 
+		///@}
+
 	private:
-		bool crossDomain;
+		bool crossDomain{false};
 	};
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// set whether website is cross-domain
+	/*
+	 * SETTER
+	 */
+
+	//! Sets whether the corresponding website is cross-domain.
+	/*!
+	 * \param isCrossDomain Set whether the website
+	 *   crawled by this crawler is cross-domain.
+	 */
 	inline void Config::setCrossDomain(bool isCrossDomain) {
 		this->crossDomain = isCrossDomain;
 	}
 
-	// configuration constructor: set default values
-	inline Config::Entries::Entries() : crawlerArchives(false),
-										crawlerLock(300),
-										crawlerLogging(Config::crawlerLoggingDefault),
-										crawlerReCrawl(false),
-										crawlerReCrawlStart(true),
-										crawlerRepairCData(true),
-										crawlerRepairComments(true),
-										crawlerReTries(720),
-										crawlerRetryArchive(true),
-										crawlerRetryEmpty(true),
-										crawlerSleepError(10000),
-										crawlerSleepHttp(0),
-										crawlerSleepIdle(5000),
-										crawlerSleepMySql(20),
-										crawlerStart("/"),
-										crawlerStartIgnore(false),
-										crawlerTidyErrors(0),
-										crawlerTidyWarnings(false),
-										crawlerTiming(false),
-										crawlerUrlCaseSensitive(true),
-										crawlerUrlChunks(5000),
-										crawlerUrlDebug(false),
-										crawlerUrlMaxLength(2000),
-										crawlerUrlStartupCheck(true),
-										crawlerWarningsFile(false),
-										crawlerXml(false),
-										customCountersGlobal(true),
-										customReCrawl(true),
-										customRobots(false),
-										customTokensKeep(0),
-										customUsePost(false),
-										redirectQueryUrl(0),
-										redirectQueryContent(0),
-										redirectUsePost(false),
-										expectedQuery(0),
-										expectedErrorIfLarger(false),
-										expectedErrorIfSmaller(false) {
-		this->crawlerArchivesNames.emplace_back("archives.org");
-		this->crawlerArchivesUrlsMemento.emplace_back("http://web.archive.org/web/");
-		this->crawlerArchivesUrlsTimemap.emplace_back("http://web.archive.org/web/timemap/link/");
+	/*
+	 * CRAWLER-SPECIFIC CONFIGURATION PARSING
+	 */
 
-		this->crawlerRetryHttp.push_back(429);
-		this->crawlerRetryHttp.push_back(502);
-		this->crawlerRetryHttp.push_back(503);
-		this->crawlerRetryHttp.push_back(504);
-		this->crawlerRetryHttp.push_back(521);
-		this->crawlerRetryHttp.push_back(522);
-		this->crawlerRetryHttp.push_back(524);
-	}
-
-	// parse crawling-specific configuration option
+	//! Parses an crawler-specific configuration option.
 	inline void Config::parseOption() {
 		// crawler options
 		this->category("crawler");
@@ -286,7 +583,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("xml", this->config.crawlerXml);
 		this->option("warnings.file", this->config.crawlerWarningsFile);
 
-		// custom URL options
+		// custom URLs options
 		this->category("custom");
 		this->option("counters", this->config.customCounters);
 		this->option("counters.alias", this->config.customCountersAlias);
@@ -312,7 +609,7 @@ namespace crawlservpp::Module::Crawler {
 		);
 		this->option("use.post", this->config.customUsePost);
 
-		// dynamic redirect
+		// dynamic redirect options
 		this->category("redirect");
 		this->option("cookies", this->config.redirectCookies);
 		this->option("headers", this->config.redirectHeaders);
@@ -324,29 +621,48 @@ namespace crawlservpp::Module::Crawler {
 		this->option("var.queries", this->config.redirectVarQueries);
 		this->option("var.sources", this->config.redirectVarSources);
 
-		// expected number of results
+		// expected number of results options
 		this->category("expected");
 		this->option("query", this->config.expectedQuery);
 		this->option("error.if.larger", this->config.expectedErrorIfLarger);
 		this->option("error.if.smaller", this->config.expectedErrorIfSmaller);
 	}
 
-	// check parsing-specific configuration, throws Config::Exception
+	//! Checks the crawler-specific configuration options.
+	/*!
+	 * \throws Module::Crawler::Config::Exception
+	 *   if no link extraction query has been
+	 *   specified.
+	 */
 	inline void Config::checkOptions() {
 		// check for link extraction query
-		if(this->config.crawlerQueriesLinks.empty())
+		if(this->config.crawlerQueriesLinks.empty()) {
 			throw Exception(
-					"Crawler::Config::checkOptions(): No link extraction query specified"
+					"Crawler::Config::checkOptions():"
+					" No link extraction query has been specified"
 			);
+		}
+
+		// check number of URLs to crawl at once
+		if(this->config.crawlerUrlChunks == 0) {
+			this->config.crawlerUrlChunks = defaultUrlChunks;
+
+			this->warning(
+					"Invalid value for \'ur.chunks\' ignored (was zero),"
+					"default value used"
+			);
+		}
 
 		// check properties of archives
-		bool incompleteArchives = false;
+		bool incompleteArchives{false};
 
-		const auto completeArchives = std::min({ // number of complete archives (= min. size of all arrays)
+		const auto completeArchives{
+			std::min({ // number of complete archives (= min. size of all arrays)
 				this->config.crawlerArchivesNames.size(),
 				this->config.crawlerArchivesUrlsMemento.size(),
 				this->config.crawlerArchivesUrlsTimemap.size()
-		});
+			})
+		};
 
 		// remove names that are not used
 		if(this->config.crawlerArchivesNames.size() > completeArchives) {
@@ -380,13 +696,15 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check properties of counters
-		bool incompleteCounters = false;
+		bool incompleteCounters{false};
 
-		const auto completeCounters = std::min({ // number of complete counters (= min. size of arrays)
+		const auto completeCounters{
+			std::min({ // number of complete counters (= min. size of arrays)
 				this->config.customCounters.size(),
 				this->config.customCountersStart.size(),
 				this->config.customCountersEnd.size()
-		});
+			})
+		};
 
 		// remove counter variable names that are not used
 		if(this->config.customCounters.size() > completeCounters) {
@@ -423,52 +741,58 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// remove step values that are not used, add one as step value where none is specified
-		if(this->config.customCountersStep.size() > completeCounters)
+		if(this->config.customCountersStep.size() > completeCounters) {
 			incompleteCounters = true;
+		}
 
 		this->config.customCountersStep.resize(completeCounters, 1);
 
 		// remove aliases that are not used, add empty aliases where none exist
-		if(this->config.customCountersAlias.size() > completeCounters)
+		if(this->config.customCountersAlias.size() > completeCounters) {
 			incompleteCounters = true;
+		}
 
 		this->config.customCountersAlias.resize(completeCounters);
 
 		// remove alias summands that are not used, add zero as summand where none is specified
-		if(this->config.customCountersAliasAdd.size() > completeCounters)
+		if(this->config.customCountersAliasAdd.size() > completeCounters) {
 			incompleteCounters = true;
+		}
 
 		this->config.customCountersAliasAdd.resize(completeCounters, 0);
 
 		// warn about unused properties
-		if(incompleteCounters)
+		if(incompleteCounters) {
 			this->warning("Unused counter properties removed from configuration.");
+		}
 
 		// check validity of counters
 		//	(infinite counters are invalid, therefore the need to check for counter termination)
-		for(std::size_t n = 1; n <= this->config.customCounters.size(); ++n) {
-			const auto i = n - 1;
+		for(std::size_t n{1}; n <= this->config.customCounters.size(); ++n) {
+			const auto index{n - 1};
 
 			if(
 					(
-							this->config.customCountersStep.at(i) <= 0
-							&& this->config.customCountersStart.at(i) < this->config.customCountersEnd.at(i)
+							this->config.customCountersStep.at(index) <= 0
+							&& this->config.customCountersStart.at(index)
+							< this->config.customCountersEnd.at(index)
 					)
 					||
 					(
-							this->config.customCountersStep.at(i) >= 0
-							&& this->config.customCountersStart.at(i) > this->config.customCountersEnd.at(i)
+							this->config.customCountersStep.at(index) >= 0
+							&& this->config.customCountersStart.at(index)
+							> this->config.customCountersEnd.at(index)
 					)
 			) {
-				const std::string counterName(this->config.customCounters.at(i));
+				const std::string counterName(this->config.customCounters.at(index));
 
 				// delete the invalid counter
-				this->config.customCounters.erase(this->config.customCounters.begin() + i);
-				this->config.customCountersStart.erase(this->config.customCountersStart.begin() + i);
-				this->config.customCountersEnd.erase(this->config.customCountersEnd.begin() + i);
-				this->config.customCountersStep.erase(this->config.customCountersStep.begin() + i);
-				this->config.customCountersAlias.erase(this->config.customCountersAlias.begin() + i);
-				this->config.customCountersAliasAdd.erase(this->config.customCountersAliasAdd.begin() + i);
+				this->config.customCounters.erase(this->config.customCounters.begin() + index);
+				this->config.customCountersStart.erase(this->config.customCountersStart.begin() + index);
+				this->config.customCountersEnd.erase(this->config.customCountersEnd.begin() + index);
+				this->config.customCountersStep.erase(this->config.customCountersStep.begin() + index);
+				this->config.customCountersAlias.erase(this->config.customCountersAlias.begin() + index);
+				this->config.customCountersAliasAdd.erase(this->config.customCountersAliasAdd.begin() + index);
 
 				--n;
 
@@ -481,13 +805,15 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// check properties of tokens
-		bool incompleteTokens = false;
+		bool incompleteTokens{false};
 
-		const auto completeTokens = std::min({ // number of complete tokens (= min. size of arrays)
+		const auto completeTokens{
+			std::min({ // number of complete tokens (= min. size of arrays)
 				this->config.customTokens.size(),
 				this->config.customTokensSource.size(),
 				this->config.customTokensQuery.size()
-		});
+			})
+		};
 
 		// remove token variable names that are not used
 		if(this->config.customTokens.size() > completeTokens) {
@@ -523,35 +849,41 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// remove cookie headers that are not used, set to empty string where none is specified
-		if(this->config.customTokensCookies.size() > completeTokens)
+		if(this->config.customTokensCookies.size() > completeTokens) {
 			incompleteTokens = true;
+		}
 
 		this->config.customTokensCookies.resize(completeTokens);
 
 		// remove token expiration times that are not used, set to '0' where none is specified
-		if(this->config.customTokensKeep.size() > completeTokens)
+		if(this->config.customTokensKeep.size() > completeTokens) {
 			incompleteTokens = true;
+		}
 
 		this->config.customTokensKeep.resize(completeTokens, 0);
 
 		// remove token POST options that are not used, set to 'false' where none is specified
-		if(this->config.customTokensUsePost.size() > completeTokens)
+		if(this->config.customTokensUsePost.size() > completeTokens) {
 			incompleteTokens = true;
+		}
 
 		this->config.customTokensUsePost.resize(completeTokens, false);
 
 		// warn about unused property
-		if(incompleteTokens)
+		if(incompleteTokens) {
 			this->warning("Unused token properties removed from configuration.");
+		}
 
 		// check properties of variables for dynamic redirect
-		bool incompleteVars = false;
+		bool incompleteVars{false};
 
-		const auto completeVars = std::min({ // number of complete variables (= min. size of all arrays)
-			this->config.redirectVarNames.size(),
-			this->config.redirectVarQueries.size(),
-			this->config.redirectVarSources.size()
-		});
+		const auto completeVars{
+			std::min({ // number of complete variables (= min. size of all arrays)
+				this->config.redirectVarNames.size(),
+				this->config.redirectVarQueries.size(),
+				this->config.redirectVarSources.size()
+			})
+		};
 
 		// remove redirect variable names that are not used
 		if(this->config.redirectVarNames.size() > completeVars) {
@@ -585,6 +917,6 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-} /* crawlservpp::Module::Crawler */
+} /* namespace crawlservpp::Module::Crawler */
 
 #endif /* MODULE_CRAWLER_CONFIG_HPP_ */

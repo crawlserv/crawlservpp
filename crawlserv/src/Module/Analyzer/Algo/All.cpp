@@ -24,7 +24,8 @@
  *
  * Registration of implemented algorithms. EDIT THIS FILE TO ADD ALGORITHMS.
  *
- * NOTE: Algorithms need also to be included in 'json/algos.json' in 'crawlserv_frontend' in order to be usable by the frontend.
+ * NOTE: Algorithms need also to be included in 'json/algos.json'
+ *  in 'crawlserv_frontend' in order to be usable by the frontend.
  *
  *  Created on: Mar 12, 2019
  *      Author: ans
@@ -44,7 +45,27 @@
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
-	// register algorithms
+	//! Creates an algorithm thread.
+	/*!
+	 * Use the \code{.c}
+	 *  REGISTER_ALGORITHM(ID, CLASS) \endcode
+	 *  macro to register an algorithm class.
+	 *
+	 * The macro will check the algorithm ID
+	 *  inside the given properties and return
+	 *  the pointer to a new algorithm thread if
+	 *  it matches the algorithm that has been
+	 *  registered using the macro.
+	 *
+	 * \param thread Constant reference to the
+	 *   properties of the algorithm thread
+	 *   to create.
+	 *
+	 * \returns The pointer to a new algorithm
+	 *   thread or @c nullptr if the algorithm ID
+	 *   specified in the given structure has not
+	 *   been registered.
+	 */
 	AlgoThreadPtr initAlgo(const AlgoThreadProperties& thread) {
 
 		/*
@@ -52,12 +73,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 
 		// <ADD REGISTRATION OF ALGORITHM HERE>
-		REGISTER_ALGORITHM(40, CorpusGenerator);
-		REGISTER_ALGORITHM(43, MarkovText);
-		REGISTER_ALGORITHM(44, MarkovTweet);
+		REGISTER_ALGORITHM(40, CorpusGenerator);	// NOLINT(cppcoreguidelines-macro-usage)
+		REGISTER_ALGORITHM(43, MarkovText);			// NOLINT(cppcoreguidelines-macro-usage)
+		REGISTER_ALGORITHM(44, MarkovTweet);		// NOLINT(cppcoreguidelines-macro-usage)
 		// </ADD REGISTRATION OF ALGORITHM HERE>
 
 		return nullptr;
 	}
 
-} /* crawlservpp::Module::Analyzer::Algo */
+} /* namespace crawlservpp::Module::Analyzer::Algo */

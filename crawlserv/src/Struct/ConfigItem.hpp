@@ -22,7 +22,7 @@
  *
  * ConfigItem.hpp
  *
- * Configuration item (category, name, value).
+ * Configuration item (category, name and JSON value).
  *
  *  Created on: Mar 9, 2019
  *      Author: ans
@@ -37,27 +37,64 @@
 
 namespace crawlservpp::Struct {
 
-	/*
-	 * DECLARATION
-	 */
-
+	//! Configuration item containing its category, name, and JSON value.
 	struct ConfigItem {
-		std::string category;
-		std::string name;
-		const rapidjson::Value * value;
+		///@name Properties
+		///@{
 
-		std::string str();
+		//! Category of the configuration item.
+		std::string category;
+
+		//! Name of the configuration item.
+		std::string name;
+
+		//! JSON value of the configuration item, or @c nullptr if not initialized.
+		const rapidjson::Value * value{nullptr};
+
+		///@}
+		///@name Getter
+		///@{
+
+		//! Combines category and name into one string.
+		/*!
+		 * \returns New std::string containing both category and name,
+		 *   separated by a dot, i.e. @c category.name.
+		 */
+		[[nodiscard]] std::string str() const {
+			return std::string(category + "." + name);
+		}
+
+		///@}
+		///@name Construction and Destruction
+		///@{
+
+		//! Default constructor.
+		ConfigItem() = default;
+
+		//! Default destructor.
+		virtual ~ConfigItem() = default;
+
+		///@}
+		/**@name Copy and Move
+		 * The class is not copyable, only (default) moveable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
+		ConfigItem(ConfigItem&) = delete;
+
+		//! Deleted copy assignment operator.
+		ConfigItem& operator=(ConfigItem&) = delete;
+
+		//! Default move constructor.
+		ConfigItem(ConfigItem&&) = default;
+
+		//! Default move assignment operator.
+		ConfigItem& operator=(ConfigItem&&) = default;
+
+		///@}
 	};
 
-	/*
-	 * IMPLEMENTATION
-	 */
-
-	// stringify category and name
-	inline std::string ConfigItem::str() {
-		return std::string(category + "." + name);
-	}
-
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_CONFIGITEM_HPP_ */

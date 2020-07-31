@@ -22,7 +22,8 @@
  *
  * Thread.cpp
  *
- * Abstract implementation of the Thread interface for analyzer threads to be inherited by the algorithm classes.
+ * Abstract implementation of the Thread interface
+ *  for analyzer threads to be inherited by the algorithm classes.
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
@@ -32,7 +33,14 @@
 
 namespace crawlservpp::Module::Analyzer {
 
-	// constructor A: run previously interrupted analyzer
+	/*
+	 * CONSTRUCTION
+	 */
+
+	//! Constructor initializing a previously interrupted analyzer thread.
+	/*!
+	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&, const ThreadStatus&)
+	 */
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
@@ -44,7 +52,10 @@ namespace crawlservpp::Module::Analyzer {
 				),
 				database(this->Module::Thread::database) {}
 
-	// constructor B: start a new analyzer
+	//! Constructor initializing a new analyzer thread.
+	/*!
+	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&)
+	 */
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions
@@ -54,21 +65,34 @@ namespace crawlservpp::Module::Analyzer {
 				),
 				database(this->Module::Thread::database) {}
 
-	// destructor stub
-	Thread::~Thread() {}
+	/*
+	 * IMPLEMENTED THREAD FUNCTIONS (protected)
+	 */
 
-	// initialize parser
+	//! Initializes the analyzer, and the algorithm
+	/*!
+	 * \sa onAlgoInit
+	 */
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
 		// load configuration
 		this->setStatusMessage("Loading configuration...");
 
-		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
+		this->loadConfig(
+				this->database.getConfiguration(
+						this->getConfig()
+				),
+				configWarnings
+		);
 
 		// show warnings if necessary
 		while(!configWarnings.empty()) {
-			this->log(Config::generalLoggingDefault, "WARNING: " + configWarnings.front());
+			this->log(
+					generalLoggingDefault,
+					"WARNING: "
+					+ configWarnings.front()
+			);
 
 			configWarnings.pop();
 		}
@@ -78,61 +102,81 @@ namespace crawlservpp::Module::Analyzer {
 
 		this->database.setLogging(
 				this->config.generalLogging,
-				Config::generalLoggingDefault,
-				Config::generalLoggingVerbose
+				generalLoggingDefault,
+				generalLoggingVerbose
 		);
 
-		this->log(Config::generalLoggingVerbose, "sets database configuration...");
+		this->log(generalLoggingVerbose, "sets database configuration...");
 
-		this->database.setTargetTable(this->config.generalResultTable);
+		this->database.setTargetTable(this->config.generalTargetTable);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 		this->database.setCorpusSlicing(this->config.generalCorpusSlicing);
-		this->database.setIsRunningCallback(  // @suppress("Invalid arguments")
-				std::bind(&Thread::isRunning, this)
-		);
+		this->database.setIsRunningCallback([this]() {
+					return this->isRunning();
+		});
 
 		// prepare SQL statements for analyzer
 		this->setStatusMessage("Preparing SQL statements...");
 
-		this->log(Config::generalLoggingVerbose, "prepares SQL statements...");
+		this->log(generalLoggingVerbose, "prepares SQL statements...");
 
 		this->database.prepare();
 
 		// initialize algorithm
 		this->setStatusMessage("Initializing algorithm...");
 
-		this->log(Config::generalLoggingVerbose, "initializes algorithm...");
+		this->log(generalLoggingVerbose, "initializes algorithm...");
 
 		this->onAlgoInit();
 
 		this->setStatusMessage("Starting algorithm...");
 	}
 
-	// analyzer tick
+	//! Performs an algorithm tick.
+	/*!
+	 * \sa onAlgoTick
+	 */
 	void Thread::onTick() {
 		// algorithm tick
 		this->onAlgoTick();
 	}
 
-	// analyzer paused
+	//! Pauses the analyzer.
+	/*!
+	 * \sa onAlgoPause
+	 */
 	void Thread::onPause() {
 		// pause algorithm
 		this->onAlgoPause();
 	}
 
-	// analyzer unpaused
+	//! Unpauses the analyzer.
+	/*!
+	 * \sa onAlgoUnpause
+	 */
 	void Thread::onUnpause() {
 		// unpause algorithm
 		this->onAlgoUnpause();
 	}
 
-	// clear analyzer
+	//! Clears the algorithm.
+	/*!
+	 * \sa onAlgoClear()
+	 */
 	void Thread::onClear() {
 		// clear algorithm
 		this->onAlgoClear();
 	}
 
-	// algorithm is finished
+	/*
+	 * THREAD CONTROL FOR ALGORITHMS (protected)
+	 */
+
+	//! Sets the status of the analyzer to finished, and sleeps.
+	/*!
+	 * Call this function when the algorithm has
+	 *  finished.
+	 */
 	void Thread::finished() {
 		// set status
 		this->setStatusMessage("IDLE Finished.");
@@ -141,26 +185,47 @@ namespace crawlservpp::Module::Analyzer {
 		this->sleep(this->config.generalSleepWhenFinished);
 	}
 
-	// shadow pause function not to be used by thread
+	//! Pauses the thread.
+	/*!
+	 * Shadows Module::Thread::pause(), which should
+	 *  not be used by the thread.
+	 *
+	 * \sa pauseByThread
+	 */
 	void Thread::pause() {
 		this->pauseByThread();
 	}
 
-	// hide functions not to be used by thread
+	/*
+	 *  shadowing functions not to be used by thread (private)
+	 */
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::start() {
-		throw std::logic_error("Thread::start() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::start() not to be used by thread itself"
+		);
 	}
 
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::unpause() {
-		throw std::logic_error("Thread::unpause() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::unpause() not to be used by thread itself"
+		);
 	}
 
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::stop() {
-		throw std::logic_error("Thread::stop() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::stop() not to be used by thread itself"
+		);
 	}
 
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::interrupt() {
-		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::interrupt() not to be used by thread itself"
+		);
 	}
 
-} /* crawlservpp::Module::Analyzer */
+} /* namespace crawlservpp::Module::Analyzer */

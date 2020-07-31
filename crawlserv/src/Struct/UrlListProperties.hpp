@@ -22,7 +22,7 @@
  *
  * URLListProperties.hpp
  *
- * Basic URL list properties (namespace and name).
+ * URL list properties (namespace and name).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
@@ -35,18 +35,41 @@
 
 namespace crawlservpp::Struct {
 
+	//! Properties of a URL list containing its namespace and name.
 	struct UrlListProperties {
+		///@name Properties
+		///@{
+
+		//! The namespace of the URL list.
 		std::string nameSpace;
+
+		//! The name of the URL list.
 		std::string name;
 
-		// constructors
-		UrlListProperties() {}
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		UrlListProperties() = default;
+
+		//! Constructor setting the properties of the URL list.
+		/*!
+		 * \param setNameSpace Constant reference
+		 *   to a string containing the namespace
+		 *   of the URL list.
+		 * \param setName Constant reference to a
+		 *   string containing the name of the URL
+		 *   list.
+		 */
 		UrlListProperties(
 				const std::string& setNameSpace,
 				const std::string& setName
 		) : nameSpace(setNameSpace), name(setName) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_URLLISTPROPERTIES_HPP_ */

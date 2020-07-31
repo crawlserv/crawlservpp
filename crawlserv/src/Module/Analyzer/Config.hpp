@@ -24,9 +24,6 @@
  *
  * Analyzing configuration.
  *
- * WARNING:	Changing the configuration requires updating 'json/analyzer.json' in crawlserv_frontend!
- * 			See there for details on the specific configuration entries.
- *
  *  Created on: Oct 25, 2018
  *      Author: ans
  */
@@ -41,73 +38,197 @@
 #include <string>		// std::string
 #include <vector>		// std::vector
 
+//! Namespace for analyzer classes.
 namespace crawlservpp::Module::Analyzer {
+
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! An analyzer uses a parsing table as data source.
+	constexpr std::uint8_t generalInputSourcesParsing{0};
+
+	//! An analyzer uses an extracting table as data source.
+	constexpr std::uint8_t generalInputSourcesExtracting{1};
+
+	//! An analyzer uses an analyzing table as data source.
+	constexpr std::uint8_t generalInputSourcesAnalyzing{2};
+
+	//! An analyzer uses a crawling table as data source.
+	constexpr std::uint8_t generalInputSourcesCrawling{3};
+
+	//! Logging is disabled.
+	constexpr std::uint8_t generalLoggingSilent{0};
+
+	//! Default logging is enabled.
+	constexpr std::uint8_t generalLoggingDefault{1};
+
+	//! Extended logging is enabled.
+	constexpr std::uint8_t generalLoggingExtended{2};
+
+	//! Verbose logging is enabled.
+	constexpr std::uint8_t generalLoggingVerbose{3};
+
+	//! Default time (in s) to wait before last try to re-connect to mySQL server.
+	constexpr std::uint64_t defaultSleepMySqlS{20};
+
+	//! Default time (in ms) to wait each tick when finished.
+	constexpr std::uint64_t defaultSleepWhenFinishedMs{5000};
+
+	//! Minimum percentage of the maximum length for corpus slices.
+	constexpr auto minPercentageCorpusSlices{1};
+
+	//! Maximum percentage of the maximum length for corpus slices.
+	constexpr auto maxPercentageCorpusSlices{99};
+
+	//! Default percentage of the maximum length for corpus slices.
+	constexpr auto defaultPercentageCorpusSlices{30};
+
+	///@}
 
 	/*
 	 * DECLARATION
 	 */
 
+	//! Abstract configuration for analyzers, to be implemented by algorithm classes.
 	class Config : protected Module::Config {
 	public:
-		Config() {};
-		virtual ~Config() {};
+		/*
+		 * needs virtual (i.e. overridden) default destructor, because of virtual member functions
+		 * 		-> needs deleted copy and move contructors/operators
+		 * 		-> needs default constructor
+		 */
 
-		// configuration constants
-		static constexpr std::uint8_t generalInputSourcesParsing = 0;
-		static constexpr std::uint8_t generalInputSourcesExtracting = 1;
-		static constexpr std::uint8_t generalInputSourcesAnalyzing = 2;
-		static constexpr std::uint8_t generalInputSourcesCrawling = 3;
+		///@name Construction and Destruction
+		///@{
 
-		static constexpr std::uint8_t generalLoggingSilent = 0;
-		static constexpr std::uint8_t generalLoggingDefault = 1;
-		static constexpr std::uint8_t generalLoggingExtended = 2;
-		static constexpr std::uint8_t generalLoggingVerbose = 3;
+		//! Default constructor.
+		Config() = default;
 
-		// configuration entries
+		//! Default destructor.
+		~Config() override = default;
+
+		///@}
+		///@name Configuration
+		///@{
+
+		//! Configuration entries for analyzer threads.
+		/*!
+		 * \warning Changing the configuration requires
+		 *   updating @c json/analyzer.json in @c
+		 *   crawlserv_frontend!
+		 */
 		struct Entries {
-			// constructor with default values
-			Entries();
+			///@name %Analyzer Configuration
+			///@{
 
-			// general entries
-			bool generalCorpusChecks;
-			std::uint8_t generalCorpusSlicing;
+			//! Check the consistency of text corpora.
+			bool generalCorpusChecks{true};
+
+			//! Corpus chunk size in percent of the maximum allowed package size by the MySQL server.
+			std::uint8_t generalCorpusSlicing{defaultPercentageCorpusSlices};
+
+			//! Columns to be used from the input tables.
 			std::vector<std::string> generalInputFields;
-			std::vector<std::uint8_t> generalInputSources;
-			std::vector<std::string> generalInputTables;
-			std::uint8_t generalLogging;
-			std::string generalResultTable;
-			std::uint64_t generalSleepMySql;
-			std::uint64_t generalSleepWhenFinished;
 
-			// filter by date entries
-			bool filterDateEnable;
+			//! Types of tables to be used as input.
+			std::vector<std::uint8_t> generalInputSources;
+
+			//! Names of tables to be used as input.
+			std::vector<std::string> generalInputTables;
+
+			//! Level of logging activity.
+			std::uint8_t generalLogging{generalLoggingDefault};
+
+			//! Table name to save analyzed data to.
+			std::string generalTargetTable;
+
+			//! Time (in s) to wait before last try to re-connect to mySQL server.
+			std::uint64_t generalSleepMySql{defaultSleepMySqlS};
+
+			//! Time (in ms) to wait each tick when finished.
+			std::uint64_t generalSleepWhenFinished{defaultSleepWhenFinishedMs};
+
+			///@}
+			///@name Filter by Date
+			///@{
+
+			//! Enable filtering source data by date (only applies to parsed data).
+			bool filterDateEnable{false};
+
+			//! The date from which to filter the parsed data.
 			std::string filterDateFrom;
+
+			//! The date until which to filter the parsed data.
 			std::string filterDateTo;
-		} config;
+
+			///@}
+		}
+
+		//! Configuration of the analyzer.
+		config;
+
+		///@}
+
+		/**@name Copy and Move
+		 * The class is neither copyable, nor movable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
+		Config(Config&) = delete;
+
+		//! Deleted copy assignment operator.
+		Config& operator=(Config&) = delete;
+
+		//! Deleted move constructor.
+		Config(Config&&) = delete;
+
+		//! Deleted move assignment operator.
+		Config& operator=(Config&&) = delete;
+
+		///@}
 
 	protected:
-		// analyzing-specific configuration parsing
+		///@name Analyzer-Specific Configuration Parsing
+		///@{
+
 		void parseOption() override;
 		void checkOptions() override;
 
-		// parsing of algo-specific configuration
+		///@}
+		///@name Algorithm-Specific Configuration Parsing
+		///@{
+
+		//! Parses an algorithm-specific configuration entry.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
 		virtual void parseAlgoOption() = 0;
+
+		//! Checks the algorithm-specific configuration.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
 		virtual void checkAlgoOptions() = 0;
+
+		///@}
 	};
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// constructor: set default values
-	inline Config::Entries::Entries() :	generalCorpusChecks(true),
-										generalCorpusSlicing(30),
-										generalLogging(Config::generalLoggingDefault),
-										generalSleepMySql(20),
-										generalSleepWhenFinished(5000),
-										filterDateEnable(false) {}
+	/*
+	 * ANALYZER-SPECIFIC CONFIGURATION PARSING
+	 */
 
-	// parse analyzing-specific configuration option
+	//! Parses an analyzer-specific configuration option.
 	inline void Config::parseOption() {
 		// general options
 		this->category("general");
@@ -125,13 +246,13 @@ namespace crawlservpp::Module::Analyzer {
 				StringParsingOption::SQL
 		);
 		this->option("logging", this->config.generalLogging);
-		this->option(
-				"result.table",
-				this->config.generalResultTable,
-				StringParsingOption::SQL
-		);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
 		this->option("sleep.when.finished", this->config.generalSleepWhenFinished);
+		this->option(
+				"target.table",
+				this->config.generalTargetTable,
+				StringParsingOption::SQL
+		);
 
 		// filter by date options
 		this->category("filter-date");
@@ -143,26 +264,32 @@ namespace crawlservpp::Module::Analyzer {
 		this->parseAlgoOption();
 	}
 
-	// check analyzing-specific configuration
+	//! Checks the analyzer-specific configuration options.
 	inline void Config::checkOptions() {
 		// check corpus chunk size (in percent of the maximum packet size allowed by the MySQL server)
-		if(this->config.generalCorpusSlicing < 1 || this->config.generalCorpusSlicing > 99) {
-			this->config.generalCorpusSlicing = 30;
+		if(
+				this->config.generalCorpusSlicing < minPercentageCorpusSlices
+				|| this->config.generalCorpusSlicing > maxPercentageCorpusSlices
+		) {
+			this->config.generalCorpusSlicing = defaultPercentageCorpusSlices;
 
 			this->warning(
-					"Invalid corpus chunk size reset to 30%"
-					" of the maximum packet size allowed by the MySQL server."
+					"Invalid corpus chunk size reset to "
+					+ std::to_string(defaultPercentageCorpusSlices)
+					+ "% of the maximum packet size allowed by the MySQL server."
 			);
 		}
 
 		// check properties of input fields
-		const auto completeInputs = std::min({ // number of complete inputs (= min. size of all arrays)
+		const auto completeInputs{
+			std::min({ // number of complete inputs (= min. size of all arrays)
 				this->config.generalInputFields.size(),
 				this->config.generalInputSources.size(),
 				this->config.generalInputTables.size()
-		});
+			})
+		};
 
-		bool incompleteInputs = false;
+		bool incompleteInputs{false};
 
 		// remove field names that are not used
 		if(this->config.generalInputFields.size() > completeInputs) {
@@ -200,6 +327,6 @@ namespace crawlservpp::Module::Analyzer {
 		this->checkAlgoOptions();
 	}
 
-} /* crawlservpp::Module::Analyzer */
+} /* namespace crawlservpp::Module::Analyzer */
 
 #endif /* MODULE_ANALYZER_CONFIG_HPP_ */

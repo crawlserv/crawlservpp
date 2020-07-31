@@ -33,7 +33,21 @@
 
 namespace crawlservpp::Module {
 
-	// constructor A: run a previously interrupted thread
+	/*
+	 * CONSTRUCTION
+	 */
+
+	//! Constructor initializing a previously interrupted thread.
+	/*!
+	 * \param dbBase Reference to the main
+	 *   database connection.
+	 * \param threadOptions Constant reference
+	 *   to a structure containing the options
+	 *   for the thread.
+	 * \param threadStatus Constant reference
+	 *   to a structure containing the last
+	 *   known status of the thread.
+	 */
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
@@ -60,20 +74,34 @@ namespace crawlservpp::Module {
 			  pauseTime(std::chrono::duration<std::uint64_t>::zero()) {
 		// remove paused or interrupted thread status from status message
 		if(
-				threadStatus.status.length() >= 12
-				&& threadStatus.status.substr(0, 12) == "INTERRUPTED "
-		)
-			this->status = threadStatus.status.substr(12);
+				threadStatus.status.length() >= statusPrefixInterrupted.length()
+				&& threadStatus.status.substr(
+						0,
+						statusPrefixInterrupted.length()
+				) == statusPrefixInterrupted
+		) {
+			this->status = threadStatus.status.substr(statusPrefixInterrupted.length());
+		}
 		else if(
-				threadStatus.status.length() >= 7
-				&& threadStatus.status.substr(0, 7) == "PAUSED "
-		)
-			this->status = threadStatus.status.substr(7);
+				threadStatus.status.length() >= statusPrefixPaused.length()
+				&& threadStatus.status.substr(
+						0,
+						statusPrefixPaused.length()
+				) == statusPrefixPaused
+		) {
+			this->status = threadStatus.status.substr(statusPrefixPaused.length());
+		}
 
 		// get namespace of website, URL list and configuration
-		this->websiteNamespace = this->databaseClass.getWebsiteNamespace(this->getWebsite());
-		this->urlListNamespace = this->databaseClass.getUrlListNamespace(this->getUrlList());
-		this->configuration = this->databaseClass.getConfiguration(this->getConfig());
+		this->websiteNamespace = this->databaseClass.getWebsiteNamespace(
+				this->getWebsite()
+		);
+		this->urlListNamespace = this->databaseClass.getUrlListNamespace(
+				this->getUrlList()
+		);
+		this->configuration = this->databaseClass.getConfiguration(
+				this->getConfig()
+		);
 
 		// set general database options
 		this->database.setOptions(
@@ -87,15 +115,23 @@ namespace crawlservpp::Module {
 		);
 
 		// update thread status in database (remove "INTERRUPTED ", add "PAUSED " before status if necessary)
-		if(threadStatus.id)
+		if(threadStatus.id > 0) {
 			this->databaseClass.setThreadStatus(
 					threadStatus.id,
 					threadStatus.paused,
 					this->status
 			);
+		}
 	}
 
-	// constructor B: start a new thread (using constructor A to initialize values)
+	//! Constructor initializing a new thread.
+	/*!
+	 * \param dbBase Reference to the main
+	 *   database connection.
+	 * \param threadOptions Constant reference
+	 *   to a structure containing the options
+	 *   for the thread.
+	 */
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions
@@ -106,66 +142,149 @@ namespace crawlservpp::Module {
 		this->database.setThreadId(this->id);
 	}
 
-	// destructor stub
-	Thread::~Thread() {}
+	/*
+	 * GETTERS
+	 */
 
-	// get the ID of the thread (thread-safe)
+	//! Gets the ID of the thread.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns The unique ID identifying the
+	 *   thread in the database.
+	 */
 	std::uint64_t Thread::getId() const {
 		return this->id;
 	}
 
-	// get the ID of the website (thread-safe)
+	//! Gets the ID of the website used by the thread.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns The unique ID identifying the
+	 *   used website in the database.
+	 */
 	std::uint64_t Thread::getWebsite() const {
 		return this->options.website;
 	}
 
-	// get the ID of the URL list (thread-safe)
+	//! Gets the ID of the URL list used by the thread.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns The unique ID identifying the
+	 *   used URL list in the database.
+	 */
 	std::uint64_t Thread::getUrlList() const {
 		return this->options.urlList;
 	}
 
-	// get the ID of the configuration (thread-safe)
+	//! Gets the ID of the configuration used by the thread.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns The unique ID identifying the
+	 *   used configuration in the database.
+	 */
 	std::uint64_t Thread::getConfig() const {
 		return this->options.config;
 	}
 
-	// get whether a shutdown is in progress (or has finished, see Thread::isFinished()) (thread-safe)
+	//! Checks whether the thread is shutting down or has shut down.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns True, if the thread is shutting
+	 *   down or has been shut down. False, if
+	 *   the thread is continuing to run.
+	 *
+	 * \sa Thread::isFinished
+	 */
 	bool Thread::isShutdown() const {
 		return this->shutdown.load();
 	}
 
-	// get whether the thread is still supposed to run (thread-safe)
+	//! Checks whether the thread is still supposed to run.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns True, if the thread is has not
+	 *   been cancelled, even when it is paused.
+	 *   False, if the thread is not supposed to
+	 *   run any longer.
+	 */
 	bool Thread::isRunning() const {
 		return this->running.load();
 	}
 
-	// get whether the shutdown of the thread was finished (thread-safe)
+	//! Checks whether the shutdown of the thread has been finished.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns True, if the thread has been
+	 *   completely shut down. False otherwise.
+	 */
 	bool Thread::isFinished() const {
 		return this->finished.load();
 	}
 
-	// get whether the thread has been paused (thread-safe)
+	//! Checks whether the thread has been paused.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns True, if the thread has been
+	 *   paused. False otherwise.
+	 */
 	bool Thread::isPaused() const {
 		return this->paused.load();
 	}
 
-	// start the thread (may not be used by the thread itself!)
+	/*
+	 * THREAD CONTROL
+	 */
+
+	//! Starts running the thread.
+	/*!
+	 * \warning May not be used by the thread itself!
+	 */
 	void Thread::start() {
-		if(this->thread.joinable())
-			throw Exception("Thread::start(): A thread has already been started");
+		if(this->thread.joinable()) {
+			throw Exception(
+					"Thread::start():"
+					" A thread has already been started"
+			);
+		}
 
 		// run thread
 		this->thread = std::thread(&Thread::main, this);
 	}
 
-	// pause the thread, return whether the thread is pausable (may not be used by the thread itself!)
+	//! Pauses the thread.
+	/*!
+	 * \warning May not be used by the thread itself!
+	 *
+	 * \returns True, if the thread has successfully
+	 *   been paused. False, if the thread is not
+	 *   pausable at the moment.
+	 *
+	 * \sa allowPausing, disallowPausing
+	 */
 	bool Thread::pause() {
 		// check whether thread is pausable
-		if(!(this->pausable.load()))
+		if(!(this->pausable.load())) {
 			return false;
+		}
 
 		// change internal pause state if necessary
-		bool changeIfValueIs = false;
+		bool changeIfValueIs{false};
 
 		if(this->paused.compare_exchange_strong(changeIfValueIs, true)) {
 			// set pause state in the database if the internal state has changed
@@ -177,13 +296,16 @@ namespace crawlservpp::Module {
 		return true;
 	}
 
-	// unpause the thread (may not be used by the thread itself!)
+	//! Unpauses the thread.
+	/*!
+	 * \warning May not be used by the thread itself!
+	 */
 	void Thread::unpause() {
 		// change internal pause state if necessary
-		bool changeIfValueIs = true;
+		bool changeIfValueIs{true};
 
 		if(this->paused.compare_exchange_strong(changeIfValueIs, false)) {
-			// locks for condition variable and database status
+			// lock condition variable and database status
 			std::lock_guard<std::mutex> unpause(this->pauseLock);
 			std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
@@ -195,8 +317,13 @@ namespace crawlservpp::Module {
 		}
 	}
 
-	// shutdown the thread (may not be used by the thread itself!)
-	//  NOTE: Module::Thread::end() must be called afterwards to wait for the thread!
+	//! Shuts down the thread.
+	/*!
+	 * \note end() needs to be called afterwards to
+	 *   wait for the thread.
+	 *
+	 * \warning May not be used by the thread itself!
+	 */
 	void Thread::stop() {
 		// stop running if necessary
 		if(this->running.load()) {
@@ -204,7 +331,7 @@ namespace crawlservpp::Module {
 			this->shutdown.store(true);
 
 			// ...then stop thread if it has not been stopped in the meantime
-			bool changeIfValueIs = true;
+			bool changeIfValueIs{true};
 
 			if(this->running.compare_exchange_strong(changeIfValueIs, false)) {
 				// unpause thread first if necessary
@@ -223,8 +350,13 @@ namespace crawlservpp::Module {
 		this->interrupted.store(false);
 	}
 
-	// interrupt the thread due to an exception (may not be used by the thread itself!)
-	//  NOTE: Module::Thread::end() must be called afterwards to wait for the thread!
+	//! Interrupts the thread due to an exception.
+	/*!
+	 * \note end() needs to be called afterwards to
+	 *   wait for the thread.
+	 *
+	 * \warning May not be used by the thread itself!
+	 */
 	void Thread::interrupt() {
 		// check whether thread exists and is running
 		if(this->running.load()) {
@@ -232,8 +364,8 @@ namespace crawlservpp::Module {
 			this->interrupted.store(true);
 			this->shutdown.store(true);
 
-			bool changeIfRunningIs = true;
-			bool changeIfPausedIs = true;
+			bool changeIfRunningIs{true};
+			bool changeIfPausedIs{true};
 
 			// stop AND unpause thread if (still) necessary
 			if(
@@ -249,64 +381,143 @@ namespace crawlservpp::Module {
 		}
 	}
 
-	// wait for the thread until shutdown is completed (may not be used by the thread itself!)
-	//  NOTE: Module::Thread::stop() or ::interrupt() must be called beforehand!
+	//! Waits for the thread until shutdown is completed.
+	/*!
+	 * \note Either stop() or interrupt() must have
+	 *   been called before calling this function.
+	 *
+	 * \warning May not be used by the thread itself!
+	 */
 	void Thread::end() {
 		if(this->shutdown.load()) {
 			// if thread exists and has been interrupted, wait for thread and join
-			if(this->thread.joinable())
+			if(this->thread.joinable()) {
 				this->thread.join();
+			}
 
 			// remove thread from database if it has not been interrupted due to an exception
-			if(!(this->interrupted.load()))
-					this->databaseClass.deleteThread(this->id);
+			if(!(this->interrupted.load())) {
+				this->databaseClass.deleteThread(this->id);
+			}
 		}
 	}
 
-	// jump to specified target ID ("time travel"), throws Thread::Exception (thread-safe)
+	/*
+	 * TIME TRAVEL
+	 */
+
+	//! Jumps to the specified target ID ("time travel").
+	/*!
+	 * Skips the normal process of determining the next
+	 *  ID once the current ID has been processed.
+	 *
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \param target The target ID that should be
+	 *   processed next.
+	 *
+	 * \throws Module::Thread::Exception if no target
+	 *   is specified, i.e. the target ID is zero.
+	 *
+	 * \sa getWarpedOverAndReset
+	 */
 	void Thread::warpTo(std::uint64_t target) {
 		// check argument
-		if(!target)
-			throw Exception("Thread::warpTo(): Target ID cannot be zero");
+		if(target == 0) {
+			throw Exception(
+					"Thread::warpTo():"
+					" No target has been specified"
+			);
+		}
 
 		// set target ID to overwrite
 		this->overwriteLast.store(target - 1);
 	}
 
-	// sleep for the specified number of milliseconds (unless the thread is stopped; thread-safe)
-	void Thread::sleep(std::uint64_t ms) const {
-		while(ms > MODULE_THREAD_SLEEP_ON_SLEEP_MS) {
-			if(!(this->running.load()))
-				return;
+	/*
+	 * PROTECTED GETTERS
+	 */
 
-			std::this_thread::sleep_for(std::chrono::milliseconds(MODULE_THREAD_SLEEP_ON_SLEEP_MS));
-
-			ms -= MODULE_THREAD_SLEEP_ON_SLEEP_MS;
-		}
-
-		if(ms && this->running.load())
-			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
-	}
-
-	// return whether thread has been interrupted by shutdown (thread-safe)
+	//! Checks whether the thread has been interrupted.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns True if the thread has been
+	 *   interrupted. False otherwise.
+	 */
 	bool Thread::isInterrupted() const {
 		return this->interrupted.load();
 	}
 
-	// force the thread to pause (to be used by the thread only!)
-	void Thread::pauseByThread() {
-		// set the internal pause state if the thread is not paused already
-		bool changeIfValueIs = false;
+	//! Gets the current status message.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns A copy of the current status
+	 *   message.
+	 */
+	std::string Thread::getStatusMessage() const {
+		std::lock_guard<std::mutex> statusLocked(this->statusLock);
 
-		if(this->paused.compare_exchange_strong(changeIfValueIs, true)) {
-			// set the pause state in the database
-			std::lock_guard<std::mutex> statusLocked(this->statusLock);
-
-			this->database.setThreadStatus(this->id, true, this->status);
-		}
+		return this->status;
 	}
 
-	// set the status messsage of the thread (to be used by the thread only!)
+	//! Gets the valud of the last ID processed by the thread.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *  not by the main thread!
+	 *
+	 * \returns The ID last processed by the thread,
+	 *   or zero if no ID has been processed yet.
+	 */
+	std::uint64_t Thread::getLast() const {
+		return this->last;
+	}
+
+	//! Gets the number of IDs that have been jumped over, and resets them.
+	/*!
+	 * Resets the number of IDs jumped over to zero.
+	 *
+	 * \warning May only be used by the thread itself,
+	 *  not by the main thread!
+	 *
+	 * \returns The number of IDs that have been jumped
+	 *   over due to a call to warpTo(), or zero if no
+	 *   IDs have been jumped over, at least not since
+	 *   the last call to getWarpedOverAndReset(). The
+	 *   result might be negative, if warpTo() resulted
+	 *   in a jump to a previous ID.
+	 */
+	std::int64_t Thread::getWarpedOverAndReset() {
+		std::int64_t result{0};
+
+		std::swap(this->warpedOver, result);
+
+		return result;
+	}
+
+	/*
+	 * PROTECTED SETTERS
+	 */
+
+	//! Sets the status message of the thread.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \note String views cannot be used, because
+	 *   they are not supported by the API for the
+	 *   MySQL database.
+	 *
+	 * \param statusMessage Constant reference to a
+	 *   string containing the new status message to
+	 *   be set.
+	 *
+	 * \sa Main::Database::setThreadStatus
+	 */
 	void Thread::setStatusMessage(const std::string& statusMessage) {
 		// set internal status
 		{
@@ -317,62 +528,68 @@ namespace crawlservpp::Module {
 
 		// set status in database
 		//  (when interrupted, the thread has been unpaused and the pause state needs to be ignored)
-		if(this->interrupted.load())
-			this->database.setThreadStatus(this->id, statusMessage);
-		else
-			this->database.setThreadStatus(this->id, this->paused.load(), statusMessage);
-	}
-
-	// set the progress of the thread (to be used by the thread only!)
-	void Thread::setProgress(float progress) {
-		// set progress in database
-		this->database.setThreadProgress(this->id, progress, this->getRunTime());
-	}
-
-	// add a thread-specific log entry to the database if the current logging level is high enough
-	//  (to be used by the thread only!)
-	void Thread::log(unsigned short level, const std::string& logEntry) {
-		this->database.log(level, logEntry);
-	}
-
-	// add multiple thread-specific log entries to the database if the current logging level is high enough
-	//  (to be used by the thread only!)
-	void Thread::log(unsigned short level, std::queue<std::string>& logEntries) {
-		this->database.log(level, logEntries);
-	}
-
-	// check whether a certain log level is active
-	bool Thread::isLogLevel(unsigned short level) const {
-		return this->database.isLogLevel(level);
-	}
-
-	// allow the thread to be paused (enabled by default; thread-safe)
-	void Thread::allowPausing() {
-		this->pausable.store(true);
-	}
-
-	// do not allow the thread to be paused (thread-safe)
-	void Thread::disallowPausing() {
-		this->pausable.store(false);
-	}
-
-	// get the value of the last ID used by the thread (to be used by the thread only!)
-	std::uint64_t Thread::getLast() const {
-		return this->last;
-	}
-
-	// set the last ID used by the thread (to be used by the thread only!)
-	void Thread::setLast(std::uint64_t last) {
-		if(this->last != last) {
-			// set the last ID internally
-			this->last = last;
-
-			// set the last ID in the database
-			this->database.setThreadLast(this->id, last);
+		if(this->interrupted.load()) {
+			this->database.setThreadStatus(
+					this->id,
+					statusMessage
+			);
+		}
+		else {
+			this->database.setThreadStatus(
+					this->id,
+					this->paused.load(),
+					statusMessage
+			);
 		}
 	}
 
-	// increment the last ID used by the thread (to be used by the thread only!)
+	//! Sets the progress of the thread.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \param progress The new progress of the thread,
+	 *   between @c 0.f (0%) and @c 1.f (100%).
+	 *
+	 * \sa Main::Database::setThreadProgress
+	 */
+	void Thread::setProgress(float progress) {
+		// set progress in database
+		this->database.setThreadProgress(
+				this->id, progress,
+				this->getRunTime()
+		);
+	}
+
+	//! Sets the last ID processed by the thread.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \param lastId The last ID processed by the
+	 *   thread.
+	 *
+	 * \sa incrementLast,
+	 *     Main::Database::setThreadLast
+	 */
+	void Thread::setLast(std::uint64_t lastId) {
+		if(this->last != lastId) {
+			// set the last ID internally
+			this->last = lastId;
+
+			// set the last ID in the database
+			this->database.setThreadLast(this->id, lastId);
+		}
+	}
+
+	//! Increments the last ID processed by the thread.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \sa setLast,
+	 *     Main::Database::setThreadLast
+	 */
 	void Thread::incrementLast() {
 		// increment the last ID internally
 		++(this->last);
@@ -381,34 +598,194 @@ namespace crawlservpp::Module {
 		this->database.setThreadLast(this->id, this->last);
 	}
 
-	// get a copy of the current status message (thread-safe)
-	std::string Thread::getStatusMessage() const {
-		std::lock_guard<std::mutex> statusLocked(this->statusLock);
+	/*
+	 * PROTECTED THREAD CONTROL
+	 */
 
-		return this->status;
+	//! Lets the thread sleep for the specified number of milliseconds.
+	/*!
+	 * The sleep will be interrupted if the thread is
+	 *  stopped.
+	 *
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \param ms The number of milliseconds for the
+	 *   thread to sleep, if it is not stopped.
+	 */
+	void Thread::sleep(std::uint64_t ms) const {
+		while(ms > sleepMs) {
+			if(!(this->running.load())) {
+				return;
+			}
+
+			std::this_thread::sleep_for(std::chrono::milliseconds(sleepMs));
+
+			ms -= sleepMs;
+		}
+
+		if(ms > 0 && this->running.load()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+		}
 	}
 
-	// return and reset the number of IDs that have been jumped over
-	//  (might be negative; to be used by the thread only!)
-	std::int64_t Thread::getWarpedOverAndReset() {
-		std::int64_t result = 0;
-
-		std::swap(this->warpedOver, result);
-
-		return result;
+	//! Allows the thread to be paused.
+	/*!
+	 * Threads are pausable by default. Use this
+	 *  function if pausing has been disallowed
+	 *  via disallowPausing().
+	 *
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 */
+	void Thread::allowPausing() {
+		this->pausable.store(true);
 	}
+
+	//! Disallows the thread to be paused.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 */
+	void Thread::disallowPausing() {
+		this->pausable.store(false);
+	}
+
+	//! Forces the thread to pause.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 */
+	void Thread::pauseByThread() {
+		// set the internal pause state if the thread is not paused already
+		bool changeIfValueIs{false};
+
+		if(this->paused.compare_exchange_strong(changeIfValueIs, true)) {
+			// set the pause state in the database
+			std::lock_guard<std::mutex> statusLocked(this->statusLock);
+
+			this->database.setThreadStatus(this->id, true, this->status);
+		}
+	}
+
+	/*
+	 * LOGGING
+	 */
+
+	//! Checks whether a certain logging level is enabled.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \param level The logging level to be checked
+	 *   for.
+	 *
+	 * \returns True, if the current logging level is
+	 *   at least as high as the given level. False,
+	 *   if the current logging level is lower than
+	 *   the given one.
+	 */
+	bool Thread::isLogLevel(std::uint8_t level) const {
+		return this->database.isLogLevel(level);
+	}
+
+	//! Adds a thread-specific log entry to the database, if the current logging level is high enough.
+	/*!
+	 * Removes invalid UTF-8 characters if
+	 *  necessary.
+	 *
+	 * If debug logging is active, the entry
+	 *  will be written to the logging file
+	 *  as well.
+	 *
+	 * The log entry will not be written to the
+	 *   database, if the current logging level
+	 *   is lower than the specified logging
+	 *   level. The logging level does not
+	 *   affect the writing of logging entries
+	 *   being to the logging file when debug
+	 *   logging is active.
+	 *
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \note String views cannot be used, because
+	 *   they are not supported by the API for the
+	 *   MySQL database.
+	 *
+	 * \param level The logging level for the
+	 *   entry. The entry will only be written
+	 *   to the database, if the current logging
+	 *   level is at least the logging level for
+	 *   the entry.
+	 * \param logEntry Constant reference to a
+	 *   string containing the log entry.
+	 *
+	 * \sa Module::Database::log(std::uint8_t, const std::string&)
+	 */
+	void Thread::log(std::uint8_t level, const std::string& logEntry) {
+		this->database.log(level, logEntry);
+	}
+
+	//! Adds multiple thread-specific log entries to the database, if the current logging level is high enough.
+	/*!
+	 * Removes invalid UTF-8 characters if
+	 *  necessary.
+	 *
+	 * If debug logging is active, the entries
+	 *  will be written to the logging file
+	 *  as well.
+	 *
+	 * The log entries will not be written to
+	 *   the database, if the current logging
+	 *   level is lower than the specified
+	 *   logging level. The logging level does
+	 *   not affect the writing of logging
+	 *   entries being to the logging file when
+	 *   debug logging is active.
+	 *
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \note String views cannot be used, because
+	 *   they are not supported by the API for the
+	 *   MySQL database.
+	 *
+	 * \param level The logging level for the
+	 *   entries. The entries will only be
+	 *   written to the database, if the current
+	 *   logging level is at least the logging
+	 *   level for the entry.
+	 * \param logEntries Reference to a queue of
+	 *   strings containing the log entries to
+	 *   be written. It will be emptied
+	 *   regardless whether the log entries
+	 *   will be written to the database.
+	 *
+	 * \sa Module::Database::log(std::uint8_t, std::queue<std::string>&)
+	 */
+	void Thread::log(std::uint8_t level, std::queue<std::string>& logEntries) {
+		this->database.log(level, logEntries);
+	}
+
+	/*
+	 * INTERNAL TIMING FUNCTIONS (private)
+	 */
 
 	// get the current run time of the thread in seconds
 	std::uint64_t Thread::getRunTime() const {
-		if(this->startTimePoint > std::chrono::steady_clock::time_point::min())
+		if(this->startTimePoint > std::chrono::steady_clock::time_point::min()) {
 			return	(
 							this->runTime +
 							std::chrono::duration_cast<std::chrono::seconds>(
 									std::chrono::steady_clock::now() - this->startTimePoint
 							)
 					).count();
-		else
-			return this->runTime.count();
+		}
+
+		return this->runTime.count();
 	}
 
 	// update the run time of the thread (and save it to the database)
@@ -445,6 +822,10 @@ namespace crawlservpp::Module {
 		}
 	}
 
+	/*
+	 * INTERNAL THREAD FUNCTIONS (private)
+	 */
+
 	// initialize the thread
 	void Thread::init() {
 		// get the previous run and pause times of the thread (in seconds)
@@ -461,8 +842,9 @@ namespace crawlservpp::Module {
 			this->onInit();
 
 			// set the status message of the thread (useful when it is paused on startup)
-			if(!oldStatus.empty())
+			if(!oldStatus.empty()) {
 				this->setStatusMessage(oldStatus);
+			}
 #ifndef MODULE_THREAD_DEBUG_NOCATCH
 		}
 		// handle exceptions by trying to log and to set the status of the thread
@@ -501,10 +883,10 @@ namespace crawlservpp::Module {
 			std::cout	<< '\n'
 						<< e.what()
 						<< " - sleeps for "
-						<< MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC << "s"
+						<< sleepOnConnectionErrorS << "s"
 						<< std::flush;
 
-			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
+			std::this_thread::sleep_for(std::chrono::seconds(sleepOnConnectionErrorS));
 		}
 		// handle other exceptions by trying to log, set the status of and pause the thread
 		catch(const std::exception& e) {
@@ -530,12 +912,12 @@ namespace crawlservpp::Module {
 #endif
 
 		// check for "time travel" to another ID
-		auto newId = this->overwriteLast.load();
+		auto newId{this->overwriteLast.load()};
 
-		if(newId && this->overwriteLast.compare_exchange_strong(newId, 0)) {
+		if(newId > 0 && this->overwriteLast.compare_exchange_strong(newId, 0)) {
 			// save the old values for the time calculation
-			const auto oldId = this->last;
-			const auto oldTime = static_cast<double>(this->getRunTime());
+			const auto oldId{this->last};
+			const auto oldTime{static_cast<double>(this->getRunTime())};
 
 			// change the last ID of the thread
 			this->setLast(newId);
@@ -567,11 +949,17 @@ namespace crawlservpp::Module {
 			// wait for the thread to get unpaused
 			std::unique_lock<std::mutex> pause(this->pauseLock);
 
-			this->pauseCondition.wait(pause, std::bind(&Thread::isUnpaused, this));
+			this->pauseCondition.wait(
+					pause,
+					[this]() {
+						return this->isUnpaused();
+					}
+			);
 
 			// notify the thread
-			if(this->running.load())
+			if(this->running.load()) {
 				this->onUnpause();
+			}
 
 			// update the pause time of the thread and save the new start time point
 			this->updatePauseTime();
@@ -580,7 +968,7 @@ namespace crawlservpp::Module {
 		}
 		// handle connection exceptions by sleeping
 		catch(const ConnectionException& e) {
-			std::this_thread::sleep_for(std::chrono::seconds(MODULE_THREAD_SLEEP_ON_CONNECTION_ERROR_SEC));
+			std::this_thread::sleep_for(std::chrono::seconds(sleepOnConnectionErrorS));
 		}
 	}
 
@@ -626,24 +1014,35 @@ namespace crawlservpp::Module {
 		this->finished.store(true);
 	}
 
+	/*
+	 * PAUSE CHECKER (private)
+	 */
+
 	// function for checking whether to unpause the thread (thread-safe)
 	bool Thread::isUnpaused() const {
 		return !(this->paused.load());
 	}
 
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
 	// helper function: thread has been finished, set its status message if interrupted or log the timing
 	void Thread::onEnd() {
-		if(this->interrupted.load())
+		if(this->interrupted.load()) {
 			this->setStatusMessage("INTERRUPTED " + this->status);
+		}
 		else {
 			// log timing statistic
-			std::string logStr =
-					"stopped after "
-					+ Helper::DateTime::secondsToString(this->runTime.count())
-					+ " running";
+			std::string logStr{
+				"stopped after "
+				+ Helper::DateTime::secondsToString(this->runTime.count())
+				+ " running"
+			};
 
-			if(this->pauseTime.count())
+			if(this->pauseTime.count() > 0) {
 				logStr += " and " + Helper::DateTime::secondsToString(this->pauseTime.count()) + " pausing";
+			}
 
 			logStr += ".";
 
@@ -692,6 +1091,10 @@ namespace crawlservpp::Module {
 						<< std::flush;
 		}
 	}
+
+	/*
+	 * MAIN FUNCTION (private)
+	 */
 
 	// main function of the thread
 	void Thread::main() {
@@ -746,4 +1149,4 @@ namespace crawlservpp::Module {
 	#endif
 	}
 
-} /* crawlservpp::Module */
+} /* namespace crawlservpp::Module */

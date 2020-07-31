@@ -1,0 +1,5 @@
+<map id="crawlservpp::Module::Analyzer::Config" name="crawlservpp::Module::Analyzer::Config">
+<area shape="rect" id="node1" title="Abstract configuration for analyzers, to be implemented by algorithm classes." alt="" coords="96,124,253,165"/>
+<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Config.html" title="Abstract class as base for module&#45;specific configurations." alt="" coords="5,13,163,54"/>
+<area shape="rect" id="node3" href="$structcrawlservpp_1_1Module_1_1Analyzer_1_1Config_1_1Entries.html" title="Configuration entries for analyzer threads." alt="" coords="187,5,344,61"/>
+</map>

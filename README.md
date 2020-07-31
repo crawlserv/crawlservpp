@@ -84,12 +84,13 @@ Even without access to the frontend you can shut down the server from the termin
 * `#define MG_ENABLE_HTTP_STREAMING_MULTIPART`
 * `#define PCRE2_CODE_UNIT_WIDTH 8`
 * `#define RAPIDJSON_HAS_STDSTRING`
+* `#define ZLIB_CONST`
 * `#define JSONCONS_NO_DEPRECATED` (optional, but recommended)
 * `#define NDEBUG` (optional, but recommended if you are not debugging the source code)
 
 If you use `gcc`, add the following arguments to set all of these definitions:
 
-`-DMG_ENABLE_HTTP_STREAMING_MULTIPART -DPCRE2_CODE_UNIT_WIDTH=8 -DRAPIDJSON_HAS_STDSTRING -DJSONCONS_NO_DEPRECATED -DNDEBUG`
+`-DMG_ENABLE_HTTP_STREAMING_MULTIPART -DPCRE2_CODE_UNIT_WIDTH=8 -DRAPIDJSON_HAS_STDSTRING -DZLIB_CONST -DJSONCONS_NO_DEPRECATED -DNDEBUG`
 
 ## Command-and-Control Server
 
@@ -130,19 +131,19 @@ The source code of the server consists of the following classes (as of April 201
 * **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
 * **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for parsers.
 * **[`Network::Config`](crawlserv/src/Network/Config.hpp)**: Network configuration. This class is both used by the crawler and the extractor. See [network.json](crawlserv_frontend/crawlserv/json/include/network.json) for configuration entries.
-* **[`Network::Curl`](crawlserv/src/Network/Curl.cpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
-* **[`Parsing::HTML`](crawlserv/src/Parsing/HTML.cpp)**: Clean HTML documents and parse them into XML using the [HTML Tidy API](http://www.html-tidy.org/).
+* **[`Network::Curl`](crawlserv/src/Network/Curl.hpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
+* **[`Parsing::HTML`](crawlserv/src/Parsing/HTML.hpp)**: Clean HTML documents and parse them into XML using the [HTML Tidy API](http://www.html-tidy.org/).
 * **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction using [uriparser](https://github.com/uriparser/uriparser).
-* **[`Parsing::XML`](crawlserv/src/Parsing/XML.cpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
+* **[`Parsing::XML`](crawlserv/src/Parsing/XML.hpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
 * **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for management and type-independent usage of queries.
 * **[`Query::JsonPath`](crawlserv/src/Query/JsonPath.cpp)**: Using the [jsoncons library](https://github.com/danielaparker/jsoncons/) to implement a JSONPath with boolean, single and/or multiple results.
 * **[`Query::JsonPointer`](crawlserv/src/Query/JsonPointer.cpp)**: Using the [RapidJSON library](https://github.com/Tencent/rapidjson) to implement a JSONPointer with boolean, single and/or multiple results.
 * **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
 * **[`Query::XPath`](crawlserv/src/Query/XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
-* **[`Timer::Simple`](crawlserv/src/Timer/Simple.cpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
-* **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.cpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
-* **[`Timer::StartStop`](crawlserv/src/Timer/StartStop.cpp)**: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
-* **[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.cpp)**: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
+* **[`Timer::Simple`](crawlserv/src/Timer/Simple.hpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
+* **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.hpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
+* **[`Timer::StartStop`](crawlserv/src/Timer/StartStop.hpp)**: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
+* **[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.hpp)**: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
 * **[`Wrapper::Curl`](crawlserv/src/Wrapper/Curl.hpp)**: [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) wrapper for pointer to cURL instance, also handles global instance if necessary.
 * **[`Wrapper::CurlList`](crawlserv/src/Wrapper/CurlList.hpp)**: RAII wrapper for pointer to URI query list.
 * **[`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp)**: Abstract class for the database access of threads (wraps the [`Module::Database`](crawlserv/src/Module/Database.cpp) class).

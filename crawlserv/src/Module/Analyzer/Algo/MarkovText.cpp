@@ -22,15 +22,6 @@
  *
  * MarkovText.cpp
  *
- *   Markov Chain Text Generator algorithm implemented as child of the abstract Analyzer thread class.
- *
- *   This is a semi-serious proof-of-concept class for the crawlserv++ Analyzer module.
- *
- *   It uses the markov chain algorithm to generate random texts from a large text corpus previously parsed.
- *
- *   The implementation of the algorithm itself is taken from Rosetta Code at https://rosettacode.org/wiki/Markov_chain_text_generator
- *
- *
  *  Created on: Jan 13, 2019
  *      Author: ans
  */
@@ -39,7 +30,14 @@
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
-	// constructor A: run previously interrupted algorithm run
+	/*
+	 * CONSTRUCTION
+	 */
+
+	//! Continues a previously interrupted algorithm run.
+	/*!
+	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&, const ThreadStatus&)
+	 */
 	MarkovText::MarkovText(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
@@ -48,42 +46,36 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				dbBase,
 				threadOptions,
 				threadStatus
-			),
-			sources(0),
-			markovTextDimension(3),
-			markovTextLength(400),
-			markovTextMax(0),
-			markovTextResultField("text"),
-			markovTextSleep(0),
-			markovTextSourcesField("sources"),
-			markovTextTiming(true) {
+			) {
 		this->disallowPausing(); // disallow pausing while initializing
 	}
 
-	// constructor B: start a new algorithm run
-	MarkovText::MarkovText(	Main::Database& dbBase,
+	//! Starts a new algorithm run.
+	/*!
+	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&)
+	 */
+	MarkovText::MarkovText(Main::Database& dbBase,
 							const ThreadOptions& threadOptions)
-								:	Module::Analyzer::Thread(dbBase, threadOptions),
-									sources(0),
-									markovTextDimension(3),
-									markovTextLength(400),
-									markovTextMax(0),
-									markovTextResultField("text"),
-									markovTextSleep(0),
-									markovTextSourcesField("sources"),
-									markovTextTiming(true) {
+								:	Module::Analyzer::Thread(dbBase, threadOptions) {
 		this->disallowPausing(); // disallow pausing while initializing
 	}
 
-	// destructor stub
-	MarkovText::~MarkovText() {}
+	/*
+	 * IMPLEMENTED ALGORITHM FUNCTIONS
+	 */
 
-	// initialize algorithm run
+	//! Initializes the algorithm and processes its input.
+	/*!
+	 * \note In the case of this algorithm,
+	 *   most of the work will be done during
+	 *   initialization which therefore may take
+	 *   a while.
+	 */
 	void MarkovText::onAlgoInit() {
 		// check your sources
 		this->setStatusMessage("Checking sources...");
 
-		this->log(Config::generalLoggingVerbose, "checks sources...");
+		this->log(generalLoggingVerbose, "checks sources...");
 
 		this->database.checkSources(
 				this->config.generalInputSources,
@@ -91,11 +83,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->config.generalInputFields
 		);
 
-		// initialize random number generator
-		srand(unsigned(time(nullptr)));
-
 		// set target fields
-		std::vector<std::string> fields, types;
+		std::vector<std::string> fields;
+		std::vector<std::string> types;
 
 		fields.reserve(2);
 		types.reserve(2);
@@ -108,20 +98,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->database.setTargetFields(fields, types);
 
 		// initialize target table
-		this->setStatusMessage("Creating result table...");
+		this->setStatusMessage("Creating target table...");
 
-		this->log(Config::generalLoggingVerbose, "creates result table...");
+		this->log(generalLoggingVerbose, "creates target table...");
 
 		this->database.initTargetTable(true);
 
 		// get text corpus
 		this->setStatusMessage("Getting text corpus...");
 
-		this->log(Config::generalLoggingVerbose, "gets text corpus...");
+		this->log(generalLoggingVerbose, "gets text corpus...");
 
-		for(std::size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
-			std::string dateFrom, dateTo;
-			std::size_t corpusSources = 0;
+		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
+			std::string dateFrom;
+			std::string dateTo;
+			std::size_t corpusSources{0};
 
 			if(this->config.filterDateEnable) {
 				dateFrom = this->config.filterDateFrom;
@@ -143,42 +134,53 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 
 			this->sources += corpusSources;
-			this->source += corpus.getCorpus();
+			this->source += corpus.getcCorpus();
 
 			this->source.push_back(' ');
 		}
 
-		if(!(this->source.empty()))
+		if(!(this->source.empty())) {
 			this->source.pop_back();
+		}
 
 		// create dictionary
 		this->setStatusMessage("Creating dictionary...");
 
-		this->log(Config::generalLoggingVerbose, "creates dictionary...");
+		this->log(generalLoggingVerbose, "creates dictionary...");
 
 		std::unique_ptr<Timer::Simple> timer;
 
-		if(this->markovTextTiming)
+		if(this->markovTextTiming) {
 			timer = std::make_unique<Timer::Simple>();
+		}
 
 		this->createDictionary();
 
 		if(this->isRunning()) {
-			if(timer)
-				this->log(Config::generalLoggingDefault, "created dictionary in " + timer->tickStr() + ".");
+			if(timer) {
+				this->log(
+						generalLoggingDefault,
+						"created dictionary in "
+						+ timer->tickStr()
+						+ "."
+				);
+			}
 
 			// re-allow pausing the thread
 			this->allowPausing();
 		}
 
 		// algorithm is ready
-		this->log(Config::generalLoggingExtended, "is ready.");
+		this->log(generalLoggingExtended, "is ready.");
 	}
 
-	// algorithm tick
+	//! Generates the requested texts.
 	void MarkovText::onAlgoTick() {
 		// check number of texts (internally saved as "last") if necessary
-		if(this->markovTextMax && this->getLast() >= this->markovTextMax) {
+		if(
+				this->markovTextMax > 0
+				&& this->getLast() >= this->markovTextMax
+		) {
 			this->finished();
 
 			return;
@@ -189,65 +191,77 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::unique_ptr<Timer::Simple> timer;
 
-		if(this->markovTextTiming)
+		if(this->markovTextTiming) {
 			timer = std::make_unique<Timer::Simple>();
+		}
 
 		const std::string text(this->createText());
 
-		if(timer)
-			this->log(Config::generalLoggingDefault, "created text in " + timer->tickStr() + ".");
+		if(timer) {
+			this->log(
+					generalLoggingDefault,
+					"created text in "
+					+ timer->tickStr()
+					+ "."
+			);
+		}
 
-		// insert text into result table in the database
+		// insert text into target table
 		if(!text.empty()) {
 			Data::InsertFieldsMixed data;
 
 			data.columns_types_values.reserve(2);
 
 			data.table = "crawlserv_" + this->websiteNamespace + "_"
-					+ this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
+					+ this->urlListNamespace + "_analyzed_" + this->config.generalTargetTable;
 
 			data.columns_types_values.emplace_back(
 					"analyzed__" + this->markovTextResultField,
-					DataType::_string,
-					DataValue(text)
+					Data::Type::_string,
+					Data::Value(text)
 			);
 
 			data.columns_types_values.emplace_back(
 					"analyzed__" + this->markovTextSourcesField,
 					Data::getTypeOfSizeT(),
-					DataValue(this->sources)
+					Data::Value(this->sources)
 			);
 
 			this->database.insertCustomData(data);
 
 			// increase text count and progress (internally saved as "last") if necessary
-			if(this->markovTextMax) {
+			if(this->markovTextMax > 0) {
 				this->incrementLast();
 
 				this->setProgress(static_cast<float>(this->getLast()) / this->markovTextMax);
 			}
 		}
-		else if(this->isRunning())
+		else if(this->isRunning()) {
 			this->log(1, "WARNING: Created text was empty.");
+		}
 
 		// sleep if necessary
-		if(this->markovTextSleep) {
+		if(this->markovTextSleep > 0) {
 			this->setStatusMessage("Sleeping...");
 
 			this->sleep(this->markovTextSleep);
 		}
 	}
 
-	// pause algorithm run
+	//! Does nothing.
 	void MarkovText::onAlgoPause() {}
 
-	// unpause algorithm run
+	//! Does nothing.
 	void MarkovText::onAlgoUnpause() {}
 
-	// clear algorithm run
+	//! Does nothing.
 	void MarkovText::onAlgoClear() {}
 
-	// parse configuration option
+	/*
+	 * IMPLEMENTED CONFIGURATION FUNCTIONS
+	 */
+
+	//! Parses a configuration option for the algorithm.
 	void MarkovText::parseAlgoOption() {
 		// algorithm options
 		this->category("markov-text");
@@ -260,20 +274,43 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->option("timing", this->markovTextTiming);
 	}
 
-	// check configuration, throws Thread::Exception
+	//! Checks the configuration options for the algorithm.
+	/*!
+	 * \throws Module::Analyzer::Thread::Exception
+	 *   if no input sources or no target table
+	 *   are provided, if the given dimension
+	 *   parameter is zero, or the length of the
+	 *   texts to generate is zero.
+	 */
 	void MarkovText::checkAlgoOptions() {
 		// algorithm options
-		if(this->config.generalInputFields.empty())
-			throw Exception("Algo::MarkovText::checkOptions(): No input sources provided");
+		if(this->config.generalInputFields.empty()) {
+			throw Exception(
+					"Algo::MarkovText::checkOptions():"
+					" No input sources have been provided"
+			);
+		}
 
-		if(this->config.generalResultTable.empty())
-			throw Exception("Algo::MarkovText::checkOptions(): No result table specified");
+		if(this->config.generalTargetTable.empty()) {
+			throw Exception(
+					"Algo::MarkovText::checkOptions():"
+					" No target table has been specified"
+			);
+		}
 
-		if(!(this->markovTextDimension))
-			throw Exception("Algo::MarkovText::checkOptions(): Markov chain dimension is zero");
+		if(this->markovTextDimension == 0) {
+			throw Exception(
+					"Algo::MarkovText::checkOptions():"
+					" Markov chain dimension is zero"
+			);
+		}
 
-		if(!(this->markovTextLength))
-			throw Exception("Algo::MarkovText::checkOptions(): Result text length is zero");
+		if(this->markovTextLength == 0) {
+			throw Exception(
+					"Algo::MarkovText::checkOptions():"
+					" Result text length is zero"
+			);
+		}
 
 		/*
 		 * WARNING: The existence of sources cannot be checked here, because
@@ -281,32 +318,41 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
+	/*
+	 * ALGORITHM FUNCTIONS (private)
+	 */
+
 	// create dictionary (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator)
 	void MarkovText::createDictionary() {
 		// *** added: get dimension from configuration + counter
-		const auto kl = this->markovTextDimension;
-		std::uint32_t counter = 0;
+		const auto kl{this->markovTextDimension};
+		std::uint32_t counter{0};
 		// ***
 
-		std::string w1, key;
+		std::string w1;
+		std::string key;
 
-		std::uint64_t wc = 0, pos = 0, next = 0;
+		std::uint64_t wc{0};
+		std::uint64_t pos{0};
+		std::uint64_t next{0};
 
-		next = this->source.find_first_not_of( 32, 0 );
+		next = this->source.find_first_not_of(markovTextAsciiSpace, 0);
 
-		if(next == std::string::npos)
+		if(next == std::string::npos) {
 			return;
+		}
 
 		while(wc < kl) {
-			pos = this->source.find_first_of( ' ', next );
-			w1 = this->source.substr( next, pos - next );
+			pos = this->source.find_first_of(' ', next);
+			w1 = this->source.substr(next, pos - next);
 
 			key += w1 + " ";
 
-			next = this->source.find_first_not_of( 32, pos + 1 );
+			next = this->source.find_first_not_of(markovTextAsciiSpace, pos + 1);
 
-			if(next == std::string::npos)
+			if(next == std::string::npos) {
 				return;
+			}
 
 			++wc;
 		}
@@ -314,42 +360,52 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		key = key.substr(0, key.size() - 1);
 
 		while( true ) {
-			next = this->source.find_first_not_of(32, pos + 1);
+			next = this->source.find_first_not_of(markovTextAsciiSpace, pos + 1);
 
-			if(next == std::string::npos)
+			if(next == std::string::npos) {
 				return;
+			}
 
-			pos = this->source.find_first_of( 32, next );
+			pos = this->source.find_first_of(markovTextAsciiSpace, next);
 
 			// *** added: safer no more spaces check
-			if(pos == std::string::npos)
+			if(pos == std::string::npos) {
 				pos = this->source.length();
+			}
 			// ***
 
 			w1 = this->source.substr(next, pos - next);
 
-			if(w1.empty())
+			if(w1.empty()) {
 				break;
+			}
 
 			if(
 					std::find(
-							dictionary[key].begin(),
-							dictionary[key].end(),
+							dictionary[key].cbegin(),
+							dictionary[key].cend(),
 							w1
-					) == dictionary[key].end()
-			)
+					) == dictionary[key].cend()
+			) {
 				dictionary[key].emplace_back(w1);
+			}
 
-			key = key.substr(key.find_first_of(32) + 1) + " " + w1;
+			key = key.substr(key.find_first_of(markovTextAsciiSpace) + 1);
+			key += " ";
+			key += w1;
 
 			// *** added: counter + check whether thread is still running + set progress
 			++counter;
 
-			if(counter > 1000000) {
-				if(!(this->isRunning()))
+			if(counter > markovTextRefreshProgressEvery) {
+				if(!(this->isRunning())) {
 					return;
+				}
 
-				this->setProgress(static_cast<float>(next) / this->source.length());
+				this->setProgress(
+						static_cast<float>(next)
+						/ this->source.length()
+				);
 
 				counter = 0;
 			}
@@ -360,50 +416,61 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// create text (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator),
 	//  throws Thread::Exception
 	std::string MarkovText::createText() {
-		if(!dictionary.size())
+		if(dictionary.empty()) {
 			throw Exception("Dictionary is empty");
+		}
 
-		std::string key, first, second, result;
-		std::size_t next = 0;
-		std::map<std::string, std::vector<std::string> >::iterator it = dictionary.begin();
+		std::string key;
+		std::string first;
+		std::string second;
+		std::string result;
+		std::size_t next{0};
+		auto it{dictionary.cbegin()};
 
-		result.reserve(this->markovTextLength * 10); // guess average word length
+		result.reserve(this->markovTextLength * markovTextGuessedWordLength); // guess average word length
 
-		int w = this->markovTextLength - this->markovTextDimension;
+		int w{static_cast<int>(this->markovTextLength - this->markovTextDimension)};
 
-		std::advance(it, rand() % dictionary.size());
+		std::advance(it, this->randGenerator() % dictionary.size());
 
 		key = it->first;
 
 		result += key;
 
 		while(true) {
-			std::vector<std::string> d = dictionary[key];
+			std::vector<std::string> d{dictionary[key]};
 
-			if(d.empty())
+			if(d.empty()) {
 				break;
+			}
 
-			second = d[rand() % d.size()];
+			second = d[this->randGenerator() % d.size()];
 
-			if(second.empty())
+			if(second.empty()) {
 				break;
+			}
 
 			result.push_back(' ');
 
 			result += second;
 
-			if(--w < 0)
+			if(--w < 0) {
 				break;
+			}
 
-			next = key.find_first_of(32, 0);
+			next = key.find_first_of(markovTextAsciiSpace, 0);
 			first = key.substr(next + 1);
-			key = first + " " + second;
 
-			if(!(this->isRunning()))
+			key = first;
+			key += " ";
+			key += second;
+
+			if(!(this->isRunning())) {
 				return "";
+			}
 		}
 
 		return result;
 	}
 
-} /* crawlservpp::Module::Analyzer::Algo */
+} /* namespace crawlservpp::Module::Analyzer::Algo */

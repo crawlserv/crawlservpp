@@ -1,0 +1,6 @@
+<map id="crawlservpp::Module::Crawler::Config" name="crawlservpp::Module::Crawler::Config">
+<area shape="rect" id="node1" title="Configuration for crawlers." alt="" coords="9,184,166,225"/>
+<area shape="rect" id="node4" href="$classcrawlservpp_1_1Module_1_1Crawler_1_1Thread.html" title="Crawler thread." alt="" coords="9,273,166,315"/>
+<area shape="rect" id="node2" href="$classcrawlservpp_1_1Network_1_1Config.html" title="Abstract class containing the network&#45;specific configuration for threads." alt="" coords="5,95,169,136"/>
+<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Config.html" title="Abstract class as base for module&#45;specific configurations." alt="" coords="9,5,166,47"/>
+</map>

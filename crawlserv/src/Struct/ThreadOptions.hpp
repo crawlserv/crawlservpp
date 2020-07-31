@@ -22,7 +22,7 @@
  *
  * ThreadOptions.hpp
  *
- * Basic thread options (IDs of website, URL list and configuration).
+ * Thread options (name of module, IDs of website, URL list and configuration).
  *
  *  Created on: Oct 13, 2018
  *      Author: ans
@@ -36,20 +36,43 @@
 
 namespace crawlservpp::Struct {
 
+	//! Thread options containing the name of the module run, as well as the IDs of the website, URL list, and configuration used.
 	struct ThreadOptions {
-		std::string module;		// the module of the thread
+		///@name Properties
+		///@{
 
-		std::uint64_t website;	// the ID of the website used by the thread
-		std::uint64_t urlList;	// the ID of the URL list used by the thread
-		std::uint64_t config; 	// the ID of the configuration used by the thread
+		//! The name of the module run by the thread.
+		std::string module;
 
-		// constructors
-		ThreadOptions() // create empty thread options
-				: website(0),
-				  urlList(0),
-				  config(0) {}
+		//! The ID of the website used by the thread
+		std::uint64_t website{0};
 
-		ThreadOptions( // initialize thread options with values
+		//! The ID of the URL list used by the thread.
+		std::uint64_t urlList{0};
+
+		//! The ID of the configuration used by the thread.
+		std::uint64_t config{0};
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		ThreadOptions() = default;
+
+		//! Constructor setting the options of the thread.
+		/*!
+		 * \param setModule Constant reference
+		 *   to a string containing the name
+		 *   of the module run by the thread.
+		 * \param setWebsite ID of the website
+		 *   used by the thread.
+		 * \param setUrlList ID of the URl list
+		 *   used by the thread.
+		 * \param setConfig ID of the
+		 *   configuration used by the thread.
+		 */
+		ThreadOptions(
 				const std::string& setModule,
 				std::uint64_t setWebsite,
 				std::uint64_t setUrlList,
@@ -58,8 +81,10 @@ namespace crawlservpp::Struct {
 				  website(setWebsite),
 				  urlList(setUrlList),
 				  config(setConfig) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_THREADOPTIONS_HPP_ */

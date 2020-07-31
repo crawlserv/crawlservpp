@@ -22,7 +22,7 @@
  *
  * Utf8.hpp
  *
- * Namespace with global UTF-8 helper functions.
+ * Namespace for global UTF-8 helper functions.
  *
  *  Created on: Dec 10, 2018
  *      Author: ans
@@ -35,50 +35,132 @@
 
 #include "../_extern/utf8/source/utf8.h"
 
-#include <string>	// std::string
+#include <string>		// std::string
+#include <string_view>	// std::string_view
 
+//! Namespace for global UTF-8 encoding functions.
 namespace crawlservpp::Helper::Utf8 {
+
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! Factor for guessing the maximum amount of memory used for UTF-8 compared to ISO-8859-1.
+	constexpr auto utf8MemoryFactor{2};
+
+	//! Bit mask to extract the first bit of a multibyte character.
+	constexpr auto bitmaskTopBit{0x80};
+
+	//! Bit mask to extract the top two bits of a multibyte character.
+	constexpr auto bitmaskTopTwoBits{0xc0};
+
+	//! Shift six bits
+	constexpr auto shiftSixBits{6};
+
+	//! Bit mask to check the last six bits for 0b000001.
+	constexpr auto bitmaskLastSixBits0b000001{0x3F};
+
+	//! One byte.
+	constexpr auto oneByte{1};
+
+	//! Two bytes.
+	constexpr auto twoBytes{2};
+
+	//! Three bytes.
+	constexpr auto threeBytes{3};
+
+	//! Four bytes.
+	constexpr auto fourBytes{4};
+
+	///@}
 
 	/*
 	 * DECLARATION
 	 */
 
-	std::string iso88591ToUtf8(const std::string& strIn);
-	bool isValidUtf8(const std::string& stringToCheck, std::string& errTo);
-	bool isLastCharValidUtf8(const std::string& stringToCheck);
-	bool repairUtf8(const std::string& strIn, std::string& strOut);
+	///@name Conversion
+	///@{
+
+	std::string iso88591ToUtf8(std::string_view strIn);
+
+	///@}
+	///@name Validation
+	///@{
+
+	bool isValidUtf8(std::string_view stringToCheck, std::string& errTo);
+	bool isLastCharValidUtf8(std::string_view stringToCheck);
+
+	///@}
+	///@name Repair
+	///@{
+
+	bool repairUtf8(std::string_view strIn, std::string& strOut);
+
+	///@}
 
 	/*
-	 * CLASS FOR UTF-8 EXCEPTIONS
+	 * EXCEPTION CLASS
 	 */
 
+	//! Class for UTF-8 exceptions.
+	/*!
+	 * Will be thrown when
+	 * - invalid UTF-8 characters could not be
+	 *    replaced.
+	 */
 	MAIN_EXCEPTION_CLASS();
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// convert ISO-8859-1 to UTF-8
-	inline std::string iso88591ToUtf8(const std::string& strIn) {
+	//! Converts a string from ISO-8859-1 to UTF-8.
+	/*!
+	 * \param strIn View of the string to be
+	 *   converted
+	 *
+	 * \returns A copy of the converted string.
+	 */
+	inline std::string iso88591ToUtf8(std::string_view strIn) {
 		std::string strOut;
 
-		strOut.reserve(strIn.size() * 2);
+		// guess maximum memory requirement
+		strOut.reserve(strIn.size() * utf8MemoryFactor);
 
 		for(const uint8_t c : strIn) {
-			if(c < 0x80)
+			if(c < bitmaskTopBit) {
 				strOut.push_back(c);
+			}
 			else {
-				strOut.push_back(0xc0 | c >> 6);
-				strOut.push_back(0x80 | (c & 0x3f));
+				strOut.push_back(bitmaskTopTwoBits | c >> shiftSixBits);
+				strOut.push_back(bitmaskTopBit | (c & bitmaskLastSixBits0b000001));
 			}
 		}
+
 		return strOut;
 	}
 
-	// check for valid UTF-8 string
-	inline bool isValidUtf8(const std::string& stringToCheck, std::string& errTo) {
+	//! Checks whether a string contains valid UTF-8.
+	/*!
+	 * Uses the @c UTF8-CPP library for UTF-8
+	 *  validation. See its
+	 *  <a href="https://github.com/nemtrif/utfcpp">
+	 *  GitHub repository</a> for more information.
+	 *
+	 * \param stringToCheck View of the string
+	 *   to check for valid UTF-8.
+	 * \param errTo Reference to a string to
+	 *   which a UTF-8 error will be written.
+	 *
+	 * \returns True if the given string
+	 *   contains valid UTF-8. False otherwise.
+	 */
+	inline bool isValidUtf8(std::string_view stringToCheck, std::string& errTo) {
 		try {
-			return utf8::is_valid(stringToCheck.begin(), stringToCheck.end());
+			return utf8::is_valid(stringToCheck.cbegin(), stringToCheck.cend());
 		}
 		catch(const utf8::exception& e) {
 			errTo = e.what();
@@ -87,52 +169,97 @@ namespace crawlservpp::Helper::Utf8 {
 		}
 	}
 
-	// check ending of string for valid UTF-8 character, also return true if string is empty
+	//! Checks the last character (i.e. up to four bytes at the end) of the given string for valid UTF-8.
+	/*!
+	 * Uses the @c UTF8-CPP library for UTF-8
+	 *  validation. See its
+	 *  <a href="https://github.com/nemtrif/utfcpp">
+	 *  GitHub repository</a> for more information.
+	 *
+	 * \param stringToCheck Constant reference
+	 *   to the string whose last character
+	 *   will be checked for valid UTF-8.
+	 *
+	 * \returns True if the last character of
+	 *   the given string is valid UTF-8 or
+	 *   the given string is empty. False
+	 *   otherwise.
+	 */
 	inline bool isLastCharValidUtf8(const std::string& stringToCheck) {
-		if(stringToCheck.empty())
+		if(stringToCheck.empty()) {
 			return true;
+		}
 
 		// check for valid one-byte character
-		auto pos = stringToCheck.size() - 1;
+		auto pos{stringToCheck.size() - 1};
 
-		if(utf8::is_valid(stringToCheck.substr(pos, 1)))
+		if(utf8::is_valid(stringToCheck.substr(pos, oneByte))) {
 			return true;
+		}
 
-		if(stringToCheck.size() < 2)
+		if(stringToCheck.size() < twoBytes) {
 			return false;
+		}
 
 		--pos;
 
 		// check for valid two-byte character
-		if(utf8::is_valid(stringToCheck.substr(pos, 2)))
+		if(utf8::is_valid(stringToCheck.substr(pos, twoBytes))) {
 			return true;
+		}
 
-		if(stringToCheck.size() < 3)
+		if(stringToCheck.size() < threeBytes) {
 			return false;
+		}
 
 		--pos;
 
 		// check for valid three-byte character
-		if(utf8::is_valid(stringToCheck.substr(pos, 3)))
+		if(utf8::is_valid(stringToCheck.substr(pos, threeBytes))) {
 			return true;
+		}
 
-		if(stringToCheck.size() < 4)
+		if(stringToCheck.size() < fourBytes) {
 			return false;
+		}
 
 		--pos;
 
 		// check for valid four-byte character
-		if(utf8::is_valid(stringToCheck.substr(pos, 4)))
+		if(utf8::is_valid(stringToCheck.substr(pos, fourBytes))) {
 			return true;
+		}
 
 		return false;
 	}
 
-	// replace invalid UTF-8 characters, return whether invalid characters occured, throws Utf8::Exception
-	inline bool repairUtf8(const std::string& strIn, std::string& strOut) {
+	//! Replaces invalid UTF-8 characters in the given string and returns whether invalid characters occured.
+	/*!
+	 * Uses the @c UTF8-CPP library for UTF-8
+	 *  validation and replacement. See its
+	 *  <a href="https://github.com/nemtrif/utfcpp">
+	 *  GitHub repository</a> for more information.
+	 *
+	 * \param strIn View of the string in
+	 *   which invalid UTF-8 characters
+	 *   will be replaced.
+	 * \param strOut Reference to a string
+	 *   that will be replaced with the
+	 *   resulting string.
+	 *
+	 * \returns True, if the given string
+	 *   contains invalid UTF-8 characters
+	 *   that have been replaced in the
+	 *   resulting string.
+	 *
+	 * \throws Utf8::Exception if invalid
+	 *   characters could not be replaced.
+	 */
+	inline bool repairUtf8(std::string_view strIn, std::string& strOut) {
 		try {
-			if(utf8::is_valid(strIn.begin(), strIn.end()))
+			if(utf8::is_valid(strIn.cbegin(), strIn.cend())) {
 				return false;
+			}
 
 			utf8::replace_invalid(strIn.begin(), strIn.end(), back_inserter(strOut));
 
@@ -143,6 +270,6 @@ namespace crawlservpp::Helper::Utf8 {
 		}
 	}
 
-} /* crawlservpp::Helper::Utf8 */
+} /* namespace crawlservpp::Helper::Utf8 */
 
 #endif /* HELPER_UTF8_HPP_ */

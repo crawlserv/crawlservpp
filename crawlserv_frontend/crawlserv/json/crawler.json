@@ -9,7 +9,7 @@
 			"type": "bool",
 			"default": false,
 			"label": "Crawl archives",
-			"description": "Include archived pages from archive.org.",
+			"description": "Crawl archived pages.",
 			"simple": true,
 			"position": 6
 		},
@@ -24,33 +24,21 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [ "http://web.archive.org/web/" ],
-			"description": "Memento URI templates for archives to crawl. To be followed by YYYYMMDDHHMMSS/URI (date and URI) of memento to crawl.",
+			"description": "Memento URI template for archives to crawl. To be followed by YYYYMMDDHHMMSS/URI (date and URI) of the memento to crawl.",
 			"simple": false
 		},
 		"archives.urls.timemap": {
 			"type": "array",
 			"item-type": "string",
 			"default": [ "http://web.archive.org/web/timemap/link/" ],
-			"description": "Timemap URI templates for archives to crawl. To be followed by URI of page to crawl.",
-			"simple": false
-		},
-		"html.canonical.check": {
-			"type": "bool",
-			"default": false,
-			"description": "Simple HTML consistency check comparing canonical link with URL (for debugging only).",
-			"simple": false
-		},
-		"html.consistency.check": {
-			"type": "bool",
-			"default": false,
-			"description": "Simple HTML consistency check looking for two HTML tags (for debugging only).",
+			"description": "Timemap URI template for archives to crawl. To be followed by the URI of the page to crawl.",
 			"simple": false
 		},
 		"lock": {
 			"type": "number",
 			"default": 300,
 			"min": 1,
-			"description": "URL locking time (in s).",
+			"description": "Time for which to lock URLs that are currently being processed (in s).",
 			"simple": false
 		},
 		"logging": {
@@ -72,7 +60,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "URL parameters to add:",
-			"description": "URL parameters that will be added shortly before getting the content (but not saved in the URL list).",
+			"description": "URL parameters that will be added shortly before retrieving the content (but not saved in the URL list).",
 			"simple": true,
 			"position": 12
 		},
@@ -80,7 +68,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Parameters in URL that will be ignored.",
+			"description": "Parameters in URLs that will be ignored.",
 			"simple": false
 		},
 		"params.whitelist": {
@@ -303,7 +291,7 @@
 			"type": "bool",
 			"default": true,
 			"label": "Re-try archives",
-			"description": "Re-try when getting the archived pages fails.",
+			"description": "Re-try when retrieving the archived pages fails.",
 			"simple": true,
 			"position": 6
 		},
@@ -347,7 +335,7 @@
 			"type": "number",
 			"default": 10,
 			"min": 1,
-			"description": "Time (in s) to wait before the first try to re-connect to the MySQL server. After that the current operation will be lost.",
+			"description": "Time (in s) to wait before the first try to re-connect to the MySQL server. After that time, the current database operation will be lost.",
 			"simple": false
 		},
 		"start": {
@@ -362,7 +350,7 @@
 			"type": "bool",
 			"default": false,
 			"label": "Ignore start page",
-			"description": "Do not crawl start page.",
+			"description": "Do not crawl the start page.",
 			"simple": true,
 			"position": 3
 		},
@@ -394,6 +382,7 @@
 		"url.chunks": {
 			"type": "number",
 			"default": 5000,
+			"min": 1,
 			"description": "Number of crawled URLs to be processed at once without possible interruption.",
 			"simple": false
 		},
@@ -422,7 +411,7 @@
 		"warnings.file": {
 			"type": "bool",
 			"default": false,
-			"description": "Warn when files are found (instead of folders).",
+			"description": "Warn when files are found (as opposed to folders).",
 			"simple": false
 		},
 		"xml": {
@@ -514,6 +503,13 @@
 			"simple": true,
 			"position": 2
 		},
+		"token.headers": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Custom HTTP headers to be used for ALL tokens.",
+			"simple": false
+		},
 		"tokens": {
 			"type": "array",
 			"item-type": "string",
@@ -528,7 +524,7 @@
 			"item-type": "string",
 			"default": [],
 			"label": "Token cookies:",
-			"description": "Custom cookies header for the token with the same array index.",
+			"description": "Custom HTTP Cookie header for the token with the same array index.",
 			"simple": true,
 			"position": 13
 		},
@@ -539,7 +535,7 @@
 			"min": 0,
 			"max": 4000000,
 			"label": "Keep token for (s)",
-			"description": "Time in seconds until token with the same array index gets invalid.",
+			"description": "Time (in s) until token with the same array index gets invalid.",
 			"simple": true,
 			"position": 17
 		},
@@ -574,13 +570,6 @@
 			"simple": true,
 			"position": 15
 		},
-		"token.headers": {
-			"type": "array",
-			"item-type": "string",
-			"default": [],
-			"description": "Custom headers to be used for ALL tokens.",
-			"simple": false
-		},
 		"urls": {
 			"type": "array",
 			"item-type": "string",
@@ -594,7 +583,7 @@
 			"type": "bool",
 			"default": false,
 			"label": "Use POST for custom URLs",
-			"description": "Use HTTP POST instead of HTTP GET to retrieve custom URLs (except after dynamic redirect).",
+			"description": "Use HTTP POST instead of HTTP GET to retrieve custom URLs (except after dynamic redirects).",
 			"simple": true,
 			"position": 3
 		}
@@ -612,7 +601,7 @@
 		"error.if.smaller": {
 			"type": "bool",
 			"default": false,
-			"description": "Cause fatal error when number of expected URLs is exceeded.",
+			"description": "Cause fatal error when number of expected URLs is subceeded.",
 			"simple": false
 		},
 		"query": {
@@ -622,7 +611,7 @@
 			],
 			"default": 0,
 			"label": "Query for number of URLs:",
-			"description": "Query to be performed on content to get the expected number of URLs.",
+			"description": "Query to be performed on content to retrieve the expected number of URLs.",
 			"simple": true,
 			"position": 1
 		}
@@ -635,7 +624,7 @@
 			"type": "string",
 			"default": "",
 			"label": "Cookies:",
-			"description": "Set-Cookie header on dynamic redirect.",
+			"description": "Custom HTTP Cookie header on dynamic redirect.",
 			"simple": true,
 			"position": 7
 		},
@@ -643,7 +632,7 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Custom headers on dynamic redirect.",
+			"description": "Custom HTTP headers on dynamic redirect.",
 			"simple": false
 		},
 		"query.content" : {
@@ -651,9 +640,9 @@
 			"query-results": [
 				"bool"
 			],
-			"default": [],
+			"default": 0,
 			"label": "Query on content:",
-			"description": "Queries on content that specify whether to redirect to different URL.",
+			"description": "Query on content that specifies whether to redirect to different URL.",
 			"simple": true,
 			"position": 2
 		},
@@ -665,9 +654,9 @@
 			"query-types": [
 				"regex"
 			],
-			"default": [],
+			"default": 0,
 			"label": "Query on URL:",
-			"description": "Queries on URL that specify whether to redirect to different URL.",
+			"description": "Query on URL that specifies whether to redirect to different URL.",
 			"simple": true,
 			"position": 1
 		},
@@ -682,7 +671,7 @@
 		"use.post": {
 			"type": "bool",
 			"default": false,
-			"description": "Use HTTP POST instead of HTTP GET to retrieve URL."
+			"description": "Use HTTP POST instead of HTTP GET to retrieve URL after redirect."
 		},
 		"var.names": {
 			"type": "array",
@@ -701,7 +690,7 @@
 			],
 			"default": [],
 			"label": "Variable queries:",
-			"description": "Query on variable source to get the value of the variable with the same index.",
+			"description": "Query on variable source to retrieve the value of the variable with the same index.",
 			"simple": true,
 			"position": 5			
 		},

@@ -40,14 +40,16 @@
 	#include <conio.h>
 #endif /* __unix */
 
+//! Namespace for global portability functions.
 namespace crawlservpp::Helper::Portability {
 
-	static struct termios oldT, newT;
+	static struct termios oldT;
+	static struct termios newT;
 
-	/*
-	 * IMPLEMENTATION
+	//! Gets a character from the user via the terminal.
+	/*!
+	 * \returns The character read from the user input.
 	 */
-
 	inline char getch() {
 
 #ifdef __unix
@@ -73,6 +75,6 @@ namespace crawlservpp::Helper::Portability {
 
 	}
 
-} /* crawlservpp::Helper::Portability */
+} /* namespace crawlservpp::Helper::Portability */
 
 #endif /* HELPER_PORTABILITY_GETCH_HPP_ */

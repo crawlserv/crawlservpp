@@ -36,40 +36,90 @@
 
 namespace crawlservpp::Struct {
 
+	//! Response from the command-and-control server.
 	struct ServerCommandResponse {
-		// constructor initializing a successful empty response
-		ServerCommandResponse()
-				: fail(false), confirm(false), id(0) {}
+		///@name Properties
+		///@{
 
-		// constructor initializing a successful response with text
-		ServerCommandResponse(const std::string& response)
-				: fail(false), confirm(false), text(response), id(0) {}
+		//! Indicates whether the server command failed.
+		bool fail{false};
 
-		// constructor initializing a successful response with text and ID
+		//! Indicates whether the server command needs to be confirmed.
+		bool confirm{false};
+
+		//! The text of the response by the server
+		std::string text;
+
+		//! Optional ID returned by the server.
+		std::uint64_t id{0};
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		ServerCommandResponse() = default;
+
+		//! Constructor initializing a successful response with text.
+		/*!
+		 * \param response Constant reference to
+		 *   a string containing the text of the
+		 *   server response.
+		 */
+		explicit ServerCommandResponse(const std::string& response)
+				: text(response) {}
+
+		//! Constructor initializing a successful response with text and ID.
+		/*!
+		 * \param response Constant reference to
+		 *   a string containing the text of the
+		 *   response by the server.
+		 * \param newId The ID to be sent alongside
+		 *   the response by the server.
+		 */
 		ServerCommandResponse(const std::string& response, std::uint64_t newId)
-				: fail(false), confirm(false), text(response), id(newId) {}
+				: text(response), id(newId) {}
 
-		// constructor initializing a possibly failed or possibly to be confirmed response with text
+		//! Constructor initializing a possibly failed or possibly to be confirmed response with text.
+		/*!
+		 * \param failed Set whether the server
+		 *   command failed.
+		 * \param toBeConfirmed Set whether the
+		 *   server command needs to be confirmed.
+		 * \param response Constant reference to
+		 *   a string containing the text of the
+		 *   response by the server.
+		 */
 		ServerCommandResponse(bool failed, bool toBeConfirmed, const std::string& response)
-				: fail(failed), confirm(toBeConfirmed), text(response), id(0) {}
+				: fail(failed), confirm(toBeConfirmed), text(response) {}
 
-		bool fail;			// command failed
-		bool confirm;		// command needs to be confirmed
-		std::string text;	// text of response
-		std::uint64_t id;	// [can be used by the server to return an ID]
+		///@}
+		///@name Helpers
+		///@{
 
-		// helper to initialize a failed response with text
-		static ServerCommandResponse failed(const std::string& text) {
-			return ServerCommandResponse(true, false, text);
+		//! Helper to initialize a "failed" response with text.
+		/*!
+		 * \param response Constant reference to
+		 *   a string containing the text of the
+		 *   response by the server.
+		 */
+		static ServerCommandResponse failed(const std::string& response) {
+			return ServerCommandResponse(true, false, response);
 		}
 
-		// helper to initialize a to be confirmed response with text
-		static ServerCommandResponse toBeConfirmed(const std::string& text) {
-			return ServerCommandResponse(false, true, text);
+		//! Helper to initialize a "to be confirmed" response with text.
+		/*!
+		 * \param response Constant reference to
+		 *   a string containing the text of the
+		 *   response by the server.
+		 */
+		static ServerCommandResponse toBeConfirmed(const std::string& response) {
+			return ServerCommandResponse(false, true, response);
 		}
+
+		///@}
 	};
 
-
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_SERVERCOMMANDRESPONSE_HPP_ */

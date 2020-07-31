@@ -22,10 +22,14 @@
  *
  * Server.hpp
  *
- * The command-and-control server. Uses the mongoose and RapidJSON libraries to implement a HTTP server for receiving JSON-formatted
- *  commands and sending JSON-formatted replies from/to the crawlserv_frontend.
+ * The command-and-control server.
  *
- *  Also handles all threads for the different modules as well as worker threads for query testing.
+ * Uses the mongoose and RapidJSON libraries to implement a HTTP server
+ *  for receiving JSON-formatted commands and sending JSON-formatted
+ *  replies from/to the crawlserv_frontend.
+ *
+ *  Also handles all threads for the different modules as well as
+ *   specific worker threads for specific server tasks.
  *
  *  Created on: Oct 7, 2018
  *      Author: ans
@@ -33,16 +37,6 @@
 
 #ifndef MAIN_SERVER_HPP_
 #define MAIN_SERVER_HPP_
-
-/*
- * CONSTANTS
- */
-
-// hard-coded constants
-#define MAIN_SERVER_DIR_CACHE "cache"			// directory for file cache
-#define MAIN_SERVER_DIR_COOKIES "cookies"		// directory for cookies
-#define MAIN_SERVER_DIR_DEBUG "debug"			// directory for debugging threads
-#define MAIN_SERVER_SLEEP_ON_SQL_ERROR_SEC 5	// server-side sleep on MySQL error
 
 /*
  * DEBUGGING
@@ -61,14 +55,19 @@
  */
 
 // macro for server commands
-#define MAIN_SERVER_CMD(X, Y)	if(name == X) { \
+
+//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define MAIN_SERVER_CMD(X, Y)	if(name == (X)) { \
 										response = Y(); \
 										return true; \
 									}
 
 
 // macros for exception handling of worker threads
+
+//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MAIN_SERVER_WORKER_BEGIN	try {
+//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define MAIN_SERVER_WORKER_END(X)	} \
 									catch(const std::exception& e) { \
 										(X) = ServerCommandResponse::failed( \
@@ -77,31 +76,30 @@
 									}
 
 /*
- * INCLUDES AND DECLARATIONS
+ * INCLUDES
  */
 
 #include "Database.hpp"
 #include "Exception.hpp"
 #include "WebServer.hpp"
 
-#include "../Data/File.hpp"
 #include "../Data/Compression/Gzip.hpp"
 #include "../Data/Compression/Zlib.hpp"
+#include "../Data/File.hpp"
 #include "../Data/ImportExport/Text.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
 #include "../Helper/Strings.hpp"
-#include "../Module/Thread.hpp"
 #include "../Module/Analyzer/Algo/All.hpp"
 #include "../Module/Crawler/Thread.hpp"
 #include "../Module/Extractor/Thread.hpp"
 #include "../Module/Parser/Thread.hpp"
+#include "../Module/Thread.hpp"
 #include "../Query/JsonPath.hpp"
 #include "../Query/JsonPointer.hpp"
 #include "../Query/RegEx.hpp"
 #include "../Query/XPath.hpp"
-#include "../Timer/SimpleHR.hpp"
 #include "../Struct/AlgoThreadProperties.hpp"
 #include "../Struct/ConfigProperties.hpp"
 #include "../Struct/NetworkSettings.hpp"
@@ -112,6 +110,7 @@
 #include "../Struct/ThreadOptions.hpp"
 #include "../Struct/UrlListProperties.hpp"
 #include "../Struct/WebsiteProperties.hpp"
+#include "../Timer/SimpleHR.hpp"
 #include "../Wrapper/Database.hpp"
 
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"
@@ -126,20 +125,97 @@
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
-#include <functional>	// std::bind, std::placeholders
 #include <iostream>		// std::cout, std::flush
 #include <locale>		// std::locale
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <mutex>		// std::lock_guard, std::mutex
+#include <optional>		// std::nullopt
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view
 #include <thread>		// std::thread
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Main {
 
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! The name of the (sub-)directory for the file cache.
+	constexpr std::string_view cacheDir{"cache"};
+
+	//! The name of the (sub-)directory for cookies.
+	constexpr std::string_view cookieDir{"cookies"};
+
+	//! The name of the (sub-)directory for debugging.
+	constexpr std::string_view debugDir{"debug"};
+
+	//! The number of seconds for the server to sleep when a MySQL error occured.
+	constexpr auto sleepOnSqlErrorS{5};
+
+	//! The timeout in milliseconds for the polling of the web server.
+	constexpr auto webServerPollTimeOutMs{1000};
+
+	//! The HTTP status code for GET replies indicating the status of the server.
+	constexpr auto statusHttpCode{200};
+
+	//! The HTTP content type for GET replies indicating the status of the server.
+	constexpr auto statusHttpContentType{"text/plain"};
+
+	//! The HTTP status code for POST replies.
+	constexpr auto replyHttpCode{200};
+
+	//! The HTTP content type for POST replies.
+	constexpr auto replyHttpContentType{"application/json"};
+
+	//! The HTTP status code for OPTIONS replies.
+	constexpr auto optionsHttpCode{200};
+
+	//! The minimum length of namespaces.
+	constexpr auto minNameSpaceLength{3};
+
+	//! The minimum length of namespaces, as string.
+	constexpr std::string_view minNameSpaceLengthString{"three"};
+
+	//! The beginning of URLs using the HTTP protocol.
+	constexpr std::string_view httpString{"http://"};
+
+	//! The beginning of URLs using the HTTPS protocol.
+	constexpr std::string_view httpsString{"https://"};
+
+	//! The number of XML warnings by default.
+	constexpr auto xmlWarningsDefault{25};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! The command-and-control server.
+	/*!
+	 * Uses the Main::WebServer and the @c rapidJSON
+	 *  library to implement a HTTP server for
+	 *  receiving JSON-formatted commands and
+	 *  sending JSON-formatted replies from/to the
+	 *  @c crawlserv_frontend(s).
+	 *
+	 * Also handles the threads for the different modules
+	 *  as well as worker threads for specific server
+	 *  tasks.
+	 *
+	 * For more information about the @c rapidJSON library,
+	 *  see its <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
+	 *
+	 * \sa Main::WebServer
+	 */
 	class Server final {
 		// for convenience
 		using DatabaseException = Database::Exception;
@@ -176,30 +252,50 @@ namespace crawlservpp::Main {
 		using Queries = std::vector<std::pair<std::string, std::vector<StringString>>>;
 
 	public:
-		// constructor
+		///@name Construction and Destruction
+		///@{
+
 		Server(
 				const ServerSettings& serverSettings,
 				const DatabaseSettings& databaseSettings,
 				const NetworkSettings& networkSettings
 		);
-
-		// destructor
 		virtual ~Server();
 
-		// getters
+		///@}
+		///@name Getters
+		///@{
+
 		const std::string& getStatus() const;
-		long long getUpTime() const;
+		std::int64_t getUpTime() const;
 		std::size_t getActiveThreads() const;
 		std::size_t getActiveWorkers() const;
 
-		// command function
+		///@}
+		///@name Server Ticks
+		///@{
+
 		bool tick();
 
-		// not moveable, not copyable
+		///@}
+		/**@name Copy and Move
+		 * The class is neither copyable, nor movable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
 		Server(Server&) = delete;
-		Server(Server&&) = delete;
+
+		//! Deleted copy assignment operator.
 		Server& operator=(Server&) = delete;
+
+		//! Deleted move constructor.
+		Server(Server&&) = delete;
+
+		//! Deleted move assignment operator.
 		Server& operator=(Server&&) = delete;
+
+		///@}
 
 	private:
 		// settings
@@ -230,12 +326,9 @@ namespace crawlservpp::Main {
 		rapidjson::Document cmdJson;
 		std::string cmdIp;
 
-		// access to hard-coded constants
-		const std::string dirCache;
-		const std::string dirCookies;
-
-		/*  NOTE:	The web server needs to be declared after/destroyed before the database and any data,
-					because it is doing one last poll on destruction!
+		/*
+		 * NOTE: The web server needs to be declared after/destroyed before the database and any data,
+		 * 		  because it is doing one last poll on destruction!
 		*/
 
 		// web server
@@ -251,7 +344,7 @@ namespace crawlservpp::Main {
 		bool cmd(const std::string& name, ServerCommandResponse& response);
 
 		// set server status
-		void setStatus(const std::string& statusString);
+		void setStatus(const std::string& statusMsg);
 
 		// event handlers
 		void onAccept(ConnectionPtr connection);
@@ -328,6 +421,46 @@ namespace crawlservpp::Main {
 		void cmdTestQuery(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
 		// private helper functions
+		bool getArgument(
+				const std::string& name,
+				std::string& out,
+				bool optional,
+				bool notEmpty,
+				std::string& outError
+		);
+		bool getArgument(
+				const std::string& name,
+				std::uint64_t& out,
+				std::string& outError
+		);
+		bool getArgument(
+				const std::string& name,
+				bool& out,
+				bool optional,
+				std::string& outError
+		);
+		static bool getArgument(
+				const rapidjson::Document& json,
+				const std::string& name,
+				std::string& out,
+				bool optional,
+				bool notEmpty,
+				std::string& outError
+		);
+		static bool getArgument(
+				const rapidjson::Document& json,
+				const std::string& name,
+				std::uint64_t& out,
+				std::string& outError
+		);
+		static bool getArgument(
+				const rapidjson::Document& json,
+				const std::string& name,
+				bool& out,
+				bool optional,
+				std::string& outError
+		);
+		static void correctDomain(std::string& inOut);
 		static bool workerBegin(
 				const std::string& message,
 				rapidjson::Document& json,
@@ -339,13 +472,18 @@ namespace crawlservpp::Main {
 				const std::string& message,
 				const ServerCommandResponse& response
 		);
-
-		// private static helper functions
 		static std::uint32_t getAlgoFromConfig(const rapidjson::Document& json);
-		static std::string generateReply(const ServerCommandResponse& response, const std::string& msgBody);
-		static std::string dateTimeTest(const std::string& input, const std::string& format, const std::string& locale);
+		static std::string generateReply(
+				const ServerCommandResponse& response,
+				const std::string& msgBody
+		);
+		static std::string dateTimeTest(
+				const std::string& input,
+				const std::string& format,
+				const std::string& locale
+		);
 	};
 
-} /* crawlservpp::Main */
+} /* namespace crawlservpp::Main */
 
 #endif /* MAIN_SERVER_HPP_ */

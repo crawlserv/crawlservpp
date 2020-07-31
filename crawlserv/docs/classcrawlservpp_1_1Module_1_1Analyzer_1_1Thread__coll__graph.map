@@ -1,0 +1,11 @@
+<map id="crawlservpp::Module::Analyzer::Thread" name="crawlservpp::Module::Analyzer::Thread">
+<area shape="rect" id="node1" title="Abstract class providing thread functionality to algorithm (child) classes." alt="" coords="1115,64,1272,105"/>
+<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Thread.html" title="Abstract class providing module&#45;independent thread functionality." alt="" coords="663,5,820,47"/>
+<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Database.html" title="Class handling database access for threads." alt="" coords="204,35,361,76"/>
+<area shape="rect" id="node9" href="$classcrawlservpp_1_1Wrapper_1_1Database.html" title="Wrapper class providing the database functionality of Module::Database to its child classes." alt="" coords="475,64,639,105"/>
+<area shape="rect" id="node4" href="$classcrawlservpp_1_1Main_1_1Database.html" title="Class handling database access for the command&#45;and&#45;control and its threads." alt="" coords="5,35,155,76"/>
+<area shape="rect" id="node5" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Config.html" title="Abstract configuration for analyzers, to be implemented by algorithm classes." alt="" coords="844,129,1001,171"/>
+<area shape="rect" id="node6" href="$classcrawlservpp_1_1Module_1_1Config.html" title="Abstract class as base for module&#45;specific configurations." alt="" coords="478,129,635,171"/>
+<area shape="rect" id="node7" href="$structcrawlservpp_1_1Module_1_1Analyzer_1_1Config_1_1Entries.html" title="Configuration entries for analyzer threads." alt="" coords="478,195,635,251"/>
+<area shape="rect" id="node8" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Database.html" title="Class providing database functionality for analyzer threads by implementing Wrapper::Database." alt="" coords="844,64,1001,105"/>
+</map>

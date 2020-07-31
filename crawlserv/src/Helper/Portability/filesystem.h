@@ -25,6 +25,11 @@
 #   if defined(__cpp_lib_filesystem)
 #       define INCLUDE_STD_FILESYSTEM_EXPERIMENTAL 0
 
+// added by Ans: Check for clang-tidy
+#	elif defined(__clang_analyzer__)
+#       define INCLUDE_STD_FILESYSTEM_EXPERIMENTAL 1
+// End of added by Ans
+
 // Check for feature test macro for <experimental/filesystem>
 #   elif defined(__cpp_lib_experimental_filesystem)
 #       define INCLUDE_STD_FILESYSTEM_EXPERIMENTAL 1

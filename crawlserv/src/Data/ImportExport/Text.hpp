@@ -22,7 +22,7 @@
  *
  * Text.hpp
  *
- * Namespace with functions to import/export data from/to text file.
+ * Namespace for functions to import/export data from/to text file.
  *
  *  Created on: May 4, 2019
  *      Author: ans
@@ -33,70 +33,102 @@
 
 #include "../../Helper/Strings.hpp"
 
+#include <optional>	// std::optional
 #include <queue>	// std::queue
 #include <string>	// std::string
 
+//! Namespace for importing and exporting raw text.
 namespace crawlservpp::Data::ImportExport::Text {
 
 	/*
 	 * DECLARATION
 	 */
 
+	///@name Import and Export
+	///@{
+
 	std::queue<std::string> importList(
 			const std::string& content,
 			bool skipFirstLine,
-			bool removeEmpty
+			bool ignoreEmpty
 	);
 
 	std::string exportList(
 			std::queue<std::string>& list,
-			bool writeHeader,
-			const std::string& header
+			const std::optional<std::string>& header,
+			bool ignoreEmpty
 	);
+
+	///@}
 
 	/*
 	 * IMPLEMENTATION
 	 */
 
-	// import list from text file content, ignoring empty lines
+	//! Imports a list from raw text content, with each line representing a list entry.
+	/*!
+	 * \param content A constant reference to the content to be
+	 *   parsed as a list, each line representing a list entry.
+	 * \param skipFirstLine If true, the first line in the content
+	 *   will be ignored, e.g. when it contains a header for the list.
+	 * \param ignoreEmpty If true, empty lines will be ignored.
+	 *
+	 * \returns A queue containing the list entries extracted from
+	 *   the given content.
+	 */
 	inline std::queue<std::string> importList(
 			const std::string& content,
 			bool skipFirstLine,
-			bool removeEmpty
+			bool ignoreEmpty
 	) {
 		// split content into entries
-		std::queue<std::string> result(Helper::Strings::splitToQueue(content, '\n', removeEmpty));
+		std::queue<std::string> result(Helper::Strings::splitToQueue(content, '\n', ignoreEmpty));
 
 		// delete header if necessary
-		if(skipFirstLine && result.size())
+		if(skipFirstLine && !result.empty()) {
 			result.pop();
+		}
 
 		// return list
 		return result;
 	}
 
-	// export list to text file content, ignoring empty entries
+	//! Exports a list to raw text content, with each line representing a list entry.
+	/*!
+	 * \param list Reference to a queue containing the list entries.
+	 *   It will be emptied in the process, even if entries will be
+	 *   ignored, because they are empty.
+	 * \param header Constant reference to an optional string
+	 *   containing a header for the list. If given, it will be
+	 *   added to the beginning of the resulting content, in a
+	 *   separate line.
+	 * \param ignoreEmpty If true, empty list entries will not be
+	 *   written to the resulting raw text content, although they
+	 *   will still be removed from the given queue.
+	 *
+	 * \returns A new string containing the resulting content.
+	 */
 	inline std::string exportList(
 			std::queue<std::string>& list,
-			bool writeHeader,
-			const std::string& header
+			const std::optional<std::string>& header,
+			bool ignoreEmpty
 	) {
 		std::string result;
 
 		// write header to string if necessary
-		if(writeHeader) {
-			result.reserve(header.size() + 1);
+		if(header.has_value()) {
+			result.reserve(header.value().size() + 1);
 
-			result = header + "\n";
+			result = header.value() + "\n";
 		}
 
 		// write list entries to string
-		Helper::Strings::join(list, '\n', true, result);
+		Helper::Strings::join(list, '\n', ignoreEmpty, result);
 
 		// return string
 		return result;
 	}
 
-} /* crawlservpp::Data::ImportExport::Text */
+} /* namespace crawlservpp::Data::ImportExport::Text */
 
 #endif /* DATA_IMPORTEXPORT_TEXT_H_ */

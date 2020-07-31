@@ -60,8 +60,6 @@
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::int64_t, std::uint32_t, std::uint64_t
-#include <queue>		// std::queue
-#include <functional>	// std::bind
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
 #include <locale>		// std::locale
@@ -70,13 +68,78 @@
 #include <sstream>		// std::istringstream, std::ostringstream
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::getline, std::stoul, std::string, std::to_string
+#include <string_view>	// std::string_view, std::string_view_literals
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Crawler {
 
+	/*
+	 * CONSTANTS
+	 */
+
+	using std::string_view_literals::operator""sv;
+
+	///@name Constants
+	///@{
+
+	//! The minimum length of a robots.txt line containing a useful sitemap.
+	constexpr auto robotsMinLineLength{9};
+
+	//! The first letters of a robots.txt line containing a sitemap.
+	constexpr auto robotsFirstLetters{7};
+
+	//! The beginning of a robots.txt line containing a sitemap.
+	constexpr auto robotsSitemapBegin{"sitemap:"sv};
+
+	//! The relative URL of robots.txt.
+	constexpr auto robotsRelativeUrl{"/robots.txt"sv};
+
+	//! The number of custom URLs after which the thread status will be updated.
+	constexpr auto updateCustomUrlCountEvery{100};
+
+	//! Minimum HTTP error code.
+	constexpr auto httpResponseCodeMin{400};
+
+	//! Maximum HTTP error code.
+	constexpr auto httpResponseCodeMax{599};
+
+	//! HTTP response code to be ignored when checking for errors.
+	constexpr auto httpResponseCodeIgnore{200};
+
+	//! The "www." in the beginning of a domain.
+	constexpr auto wwwString{"www."sv};
+
+	//! The beginning of a URL containing the HTTPS protocol.
+	constexpr auto httpsString{"https://"sv};
+
+	//! The beginning of a HTTPS URL to be ignored.
+	constexpr auto httpsIgnoreString{"https://www."sv};
+
+	//! The beginning of a URL containing the HTTP protocol.
+	constexpr auto httpString{"http://"sv};
+
+	//! The beginning of a HTTP URL to be ignored.
+	constexpr auto httpIgnoreString{"http://www."sv};
+
+	//! The content type of a memento.
+	constexpr auto archiveMementoContentType{"application/link-format"sv};
+
+	//! The reference string in a memento referencing another memento.
+	constexpr auto archiveRefString{"found capture at "sv};
+
+	//! The length of a memento time stamp.
+	constexpr auto archiveRefTimeStampLength{14};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! %Crawler thread.
 	class Thread: public Module::Thread, private Query::Container, private Config {
-		// for convenienc
+		// for convenience
 		using DateTimeException = Helper::DateTime::Exception;
 		using Utf8Exception = Helper::Utf8::Exception;
 
@@ -100,51 +163,64 @@ namespace crawlservpp::Module::Crawler {
 		using TimeString = std::pair<std::chrono::steady_clock::time_point, std::string>;
 
 	public:
-		// constructors
+		///@name Construction
+		///@{
+
 		Thread(
 				Main::Database& dbBase,
-				const std::string& cookieDirectory,
+				std::string_view cookieDirectory,
 				const ThreadOptions& threadOptions,
-				const NetworkSettings& serverNetworkSettings,
+				const NetworkSettings& networkSettings,
 				const ThreadStatus& threadStatus
 		);
 
 		Thread(
 				Main::Database& dbBase,
-				const std::string& cookieDirectory,
+				std::string_view cookieDirectory,
 				const ThreadOptions& threadOptions,
-				const NetworkSettings& serverNetworkSettings
+				const NetworkSettings& networkSettings
 		);
 
-		// destructor
-		virtual ~Thread();
+		///@}
 
-		// class for Crawler exceptions
+		//! Class for crawler exceptions.
 		MAIN_EXCEPTION_CLASS();
 
 	protected:
-		// database and networking for thread
+		///@name Database Connection
+		///@{
+
+		//! %Database connection for the crawler thread.
 		Database database;
+
+		///@}
+		///@name Networking
+		///@{
+
+		//! %Network settings for the crawler thread.
 		const NetworkSettings networkOptions;
+
+		//! Networking for the crawler thread.
 		Network::Curl networking;
+
+		//! TOR control for the crawler thread.
 		Network::TorControl torControl;
 
-		// table names for locking
-		std::string urlListTable;
-		std::string crawlingTable;
+		///@}
+		///@name Implemented Thread Functions
+		///@{
 
-		// implemented thread functions
 		void onInit() override;
 		void onTick() override;
 		void onPause() override;
 		void onUnpause() override;
 		void onClear() override;
 
-		// shadow pause function not to be used by thread
-		void pause();
+		///@}
 
 	private:
-		// hide other functions not to be used by thread
+		// shadow functions not to be used by the thread
+		void pause();
 		void start();
 		void unpause();
 		void stop();
@@ -157,12 +233,16 @@ namespace crawlservpp::Module::Crawler {
 		};
 
 		// constant for cookie directory
-		const std::string cookieDir;
+		const std::string_view cookieDir;
+
+		// table names for locking them
+		std::string urlListTable;
+		std::string crawlingTable;
 
 		// domain, URI parser and separate networking for archives
 		std::string domain;
-		bool noSubDomain;
-		std::unique_ptr<Parsing::URI> parser;
+		bool noSubDomain{false};
+		std::unique_ptr<Parsing::URI> uriParser;
 		std::unique_ptr<Network::Curl> networkingArchives;
 
 		// queries
@@ -194,20 +274,23 @@ namespace crawlservpp::Module::Crawler {
 		IdString nextUrl;				// next URL (currently crawled URL in automatic mode)
 		std::string lockTime;			// last locking time for currently crawled URL
 		IdString manualUrl;				// custom URL to be retried
-		std::size_t manualCounter;		// number of crawled custom URLs
-		bool startCrawled;				// start page has been successfully crawled
-		bool manualOff;					// manual mode has been turned off (after first URL is crawled)
+		std::size_t manualCounter{0};	// number of crawled custom URLs
+		bool startCrawled{false};		// start page has been successfully crawled
+		bool manualOff{false};			// manual mode has been turned off (after first URL is crawled)
 		std::string crawledContent;		// crawled content
-		std::uint64_t retryCounter;		// number of retries so far
-		bool archiveRetry;				// only archive needs to be retried
+		std::uint64_t retryCounter{0};	// number of retries so far
+		bool archiveRetry{false};		// only archive needs to be retried
+		std::vector<std::string> mCache;// cache of processed mementos (to be skipped on retry)
 
 		// timing
-		unsigned long long tickCounter;
-		std::chrono::steady_clock::time_point startTime;
-		std::chrono::steady_clock::time_point pauseTime;
-		std::chrono::steady_clock::time_point idleTime;
-		std::chrono::steady_clock::time_point httpTime;	// time of last HTTP request
-														// (only used when HTTP sleep is enabled)
+		std::uint64_t tickCounter{0};
+		std::chrono::steady_clock::time_point startTime{std::chrono::steady_clock::time_point::min()};
+		std::chrono::steady_clock::time_point pauseTime{std::chrono::steady_clock::time_point::min()};
+		std::chrono::steady_clock::time_point idleTime{std::chrono::steady_clock::time_point::min()};
+		/*
+		 * time of last HTTP request – only used when HTTP sleep is enabled
+		 */
+		std::chrono::steady_clock::time_point httpTime{std::chrono::steady_clock::time_point::min()};
 
 		// initializing functions
 		void initCustomUrls();
@@ -232,6 +315,19 @@ namespace crawlservpp::Module::Crawler {
 		);
 		void initTokenCache();
 		void initQueries() override;
+
+		// query functions
+		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
+		void addQueries(
+				const std::vector<std::uint64_t>& queryIds,
+				std::vector<QueryStruct>& propertiesTo
+		);
+		void addQueriesTo(
+				std::string_view type,
+				const std::vector<std::string>& names,
+				const std::vector<std::uint64_t>& queryIds,
+				std::vector<QueryStruct>& propertiesTo
+		);
 
 		// crawling functions
 		bool crawlingUrlSelection(IdString& urlTo, bool& usePostTo);
@@ -289,20 +385,22 @@ namespace crawlservpp::Module::Crawler {
 				IdString& url,
 				std::size_t& checkedUrlsTo,
 				std::size_t& newUrlsTo,
-				bool unlockUrl
+				bool crawlingFailed
 		);
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
-		void crawlingReset(const std::string& error, const std::string& url);
+		void crawlingReset(std::string_view error, std::string_view url);
 		void crawlingResetArchive(
-				const std::string& error,
-				const std::string& url,
-				const std::string& archive
+				std::string_view error,
+				std::string_view url,
+				std::string_view archive
 		);
 		void crawlingResetTor();
+		void crawlingUnsetCustom(bool unsetCookies, bool unsetHeaders);
+		void crawlingClearMementoCache();
 
-		// static helper function for memento crawling
+		// static internal helper function for memento crawling
 		static std::string parseMementos(
 				std::string mementoContent,
 				std::queue<std::string>& warningsTo,
@@ -310,6 +408,6 @@ namespace crawlservpp::Module::Crawler {
 		);
 	};
 
-} /* crawlservpp::Module::Crawler */
+} /* namespace crawlservpp::Module::Crawler */
 
 #endif /* MODULE_CRAWLER_THREAD_HPP_ */

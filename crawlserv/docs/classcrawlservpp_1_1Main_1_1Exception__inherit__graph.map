@@ -1,0 +1,44 @@
+<map id="crawlservpp::Main::Exception" name="crawlservpp::Main::Exception">
+<area shape="rect" id="node1" title="Base class for all exceptions thrown by the application." alt="" coords="192,1145,341,1187"/>
+<area shape="rect" id="node3" href="$classcrawlservpp_1_1Data_1_1Compression_1_1Zlib_1_1Exception.html" title="Class for zlib exceptions." alt="" coords="389,5,601,47"/>
+<area shape="rect" id="node4" href="$classcrawlservpp_1_1Data_1_1Corpus_1_1Exception.html" title="Class for corpus exceptions." alt="" coords="421,71,569,112"/>
+<area shape="rect" id="node5" href="$classcrawlservpp_1_1Data_1_1File_1_1Exception.html" title="Class for file exceptions." alt="" coords="421,136,569,177"/>
+<area shape="rect" id="node6" href="$classcrawlservpp_1_1Helper_1_1DateTime_1_1Exception.html" title="Class for date/time exceptions." alt="" coords="413,201,578,243"/>
+<area shape="rect" id="node8" href="$classcrawlservpp_1_1Helper_1_1FileSystem_1_1Exception.html" title="Class for file system exceptions." alt="" coords="409,267,582,308"/>
+<area shape="rect" id="node9" href="$classcrawlservpp_1_1Helper_1_1Json_1_1Exception.html" title="Class for JSON exceptions." alt="" coords="419,332,571,373"/>
+<area shape="rect" id="node10" href="$classcrawlservpp_1_1Helper_1_1Utf8_1_1Exception.html" title="Class for UTF&#45;8 exceptions." alt="" coords="419,397,571,439"/>
+<area shape="rect" id="node11" href="$classcrawlservpp_1_1Main_1_1Database_1_1Exception.html" title="Class for generic database exceptions." alt="" coords="417,463,573,504"/>
+<area shape="rect" id="node17" href="$classcrawlservpp_1_1Main_1_1WebServer_1_1Exception.html" title="Class for web server exceptions." alt="" coords="413,528,578,569"/>
+<area shape="rect" id="node18" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Database_1_1Exception.html" title="Class for analyzer&#45;specific database exceptions." alt="" coords="417,594,574,650"/>
+<area shape="rect" id="node19" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Thread_1_1Exception.html" title="Class for analyzer exceptions to be used by algorithms." alt="" coords="417,674,574,730"/>
+<area shape="rect" id="node20" href="$classcrawlservpp_1_1Module_1_1Config_1_1Exception.html" title="Class for configuration exceptions." alt="" coords="417,755,574,796"/>
+<area shape="rect" id="node21" href="$classcrawlservpp_1_1Module_1_1Crawler_1_1Config_1_1Exception.html" title="Class for crawler configuration exceptions." alt="" coords="394,820,597,861"/>
+<area shape="rect" id="node22" href="$classcrawlservpp_1_1Module_1_1Crawler_1_1Database_1_1Exception.html" title="Class for crawler&#45;specific database exceptions." alt="" coords="417,886,574,942"/>
+<area shape="rect" id="node23" href="$classcrawlservpp_1_1Module_1_1Crawler_1_1Thread_1_1Exception.html" title="Class for crawler exceptions." alt="" coords="393,967,598,1008"/>
+<area shape="rect" id="node24" href="$classcrawlservpp_1_1Module_1_1Database_1_1Exception.html" title="Class for Module::Database exceptions." alt="" coords="413,1032,577,1073"/>
+<area shape="rect" id="node25" href="$classcrawlservpp_1_1Module_1_1Extractor_1_1Config_1_1Exception.html" title="Class for extractor configuration exceptions." alt="" coords="417,1098,574,1154"/>
+<area shape="rect" id="node26" href="$classcrawlservpp_1_1Module_1_1Extractor_1_1Database_1_1Exception.html" title="Class for parser database exceptions." alt="" coords="416,1178,575,1234"/>
+<area shape="rect" id="node27" href="$classcrawlservpp_1_1Module_1_1Extractor_1_1Thread_1_1Exception.html" title="Class for extractor exceptions." alt="" coords="417,1258,574,1314"/>
+<area shape="rect" id="node28" href="$classcrawlservpp_1_1Module_1_1Parser_1_1Config_1_1Exception.html" title="Class for parser configuration exceptions." alt="" coords="399,1339,592,1380"/>
+<area shape="rect" id="node29" href="$classcrawlservpp_1_1Module_1_1Parser_1_1Database_1_1Exception.html" title="Class for parser database exceptions." alt="" coords="417,1405,574,1461"/>
+<area shape="rect" id="node30" href="$classcrawlservpp_1_1Module_1_1Parser_1_1Thread_1_1Exception.html" title="Class for parser exceptions." alt="" coords="397,1485,593,1527"/>
+<area shape="rect" id="node31" href="$classcrawlservpp_1_1Module_1_1Thread_1_1Exception.html" title="Class for generic thread exceptions." alt="" coords="417,1551,574,1592"/>
+<area shape="rect" id="node32" href="$classcrawlservpp_1_1Network_1_1Curl_1_1Exception.html" title="Class for libcurl exceptions." alt="" coords="413,1616,577,1657"/>
+<area shape="rect" id="node33" href="$classcrawlservpp_1_1Network_1_1TorControl_1_1Exception.html" title="Class for TOR control exceptions." alt="" coords="411,1681,579,1723"/>
+<area shape="rect" id="node34" href="$classcrawlservpp_1_1Parsing_1_1HTML_1_1Exception.html" title="Class for HTML exceptions." alt="" coords="417,1747,574,1788"/>
+<area shape="rect" id="node35" href="$classcrawlservpp_1_1Parsing_1_1URI_1_1Exception.html" title="Class for URI exceptions." alt="" coords="417,1812,574,1853"/>
+<area shape="rect" id="node36" href="$classcrawlservpp_1_1Parsing_1_1XML_1_1Exception.html" title="Class for XML exceptions." alt="" coords="417,1877,574,1919"/>
+<area shape="rect" id="node37" href="$classcrawlservpp_1_1Query_1_1Container_1_1Exception.html" title="Class for query container exceptions." alt="" coords="413,1943,578,1984"/>
+<area shape="rect" id="node38" href="$classcrawlservpp_1_1Query_1_1JsonPath_1_1Exception.html" title="Class for JSONPath exceptions." alt="" coords="416,2008,575,2049"/>
+<area shape="rect" id="node39" href="$classcrawlservpp_1_1Query_1_1JsonPointer_1_1Exception.html" title="Class for JSONPointer exceptions." alt="" coords="408,2073,583,2115"/>
+<area shape="rect" id="node40" href="$classcrawlservpp_1_1Query_1_1RegEx_1_1Exception.html" title="Class for JSONPath exceptions." alt="" coords="421,2139,569,2180"/>
+<area shape="rect" id="node41" href="$classcrawlservpp_1_1Query_1_1XPath_1_1Exception.html" title="Class for XPath exceptions." alt="" coords="421,2204,569,2245"/>
+<area shape="rect" id="node42" href="$classcrawlservpp_1_1Wrapper_1_1TidyDoc_1_1Exception.html" title="Class for tidy&#45;html5 document exceptions." alt="" coords="413,2269,577,2311"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,1153,144,1179"/>
+<area shape="rect" id="node7" href="$classcrawlservpp_1_1Helper_1_1DateTime_1_1LocaleException.html" title="Class for date/time locale exception." alt="" coords="681,201,887,243"/>
+<area shape="rect" id="node12" href="$classcrawlservpp_1_1Main_1_1Database_1_1ConnectionException.html" title="Class for database connection exceptions." alt="" coords="669,332,899,373"/>
+<area shape="rect" id="node13" href="$classcrawlservpp_1_1Main_1_1Database_1_1IncorrectPathException.html" title="Class for incorrect path exceptions." alt="" coords="663,397,905,439"/>
+<area shape="rect" id="node14" href="$classcrawlservpp_1_1Main_1_1Database_1_1PrivilegesException.html" title="Class for insufficient privileges exceptions." alt="" coords="674,463,894,504"/>
+<area shape="rect" id="node15" href="$classcrawlservpp_1_1Main_1_1Database_1_1StorageEngineException.html" title="Class for storage engine exceptions." alt="" coords="659,528,909,569"/>
+<area shape="rect" id="node16" href="$classcrawlservpp_1_1Main_1_1Database_1_1WrongArgumentsException.html" title="Class for wrong arguments exceptions." alt="" coords="649,593,919,635"/>
+</map>

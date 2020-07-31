@@ -33,7 +33,14 @@
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
-	// constructor A: run previously interrupted algorithm run
+	/*
+	 * CONSTRUCTION
+	 */
+
+	//! Continues a previously interrupted algorithm run.
+	/*!
+	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&, const ThreadStatus&)
+	 */
 	CorpusGenerator::CorpusGenerator(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
@@ -46,7 +53,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->disallowPausing(); // disallow pausing while initializing
 	}
 
-	// constructor B: start a new algorithm run
+	//! Starts a new algorithm run.
+	/*!
+	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&)
+	 */
 	CorpusGenerator::CorpusGenerator(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions
@@ -54,18 +64,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->disallowPausing(); // disallow pausing while initializing
 	}
 
-	// destructor stub
-	CorpusGenerator::~CorpusGenerator() {}
+	/*
+	 * IMPLEMENTED ALGORITHM FUNCTIONS
+	 */
 
-	// initialize algorithm run
+	//! Generates the corpus.
 	void CorpusGenerator::onAlgoInit() {
 		// reset progress
-		this->setProgress(0.f);
+		this->setProgress(0.F);
 
 		// check your sources
 		this->setStatusMessage("Checking sources...");
 
-		this->log(Config::generalLoggingVerbose, "checks sources...");
+		this->log(generalLoggingVerbose, "checks sources...");
 
 		this->database.checkSources(
 				this->config.generalInputSources,
@@ -76,14 +87,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->setStatusMessage("Requesting text corpus...");
 
-		this->log(Config::generalLoggingVerbose, "requests text corpus...");
+		this->log(generalLoggingVerbose, "requests text corpus...");
 
-		std::size_t corpora = 0;
-		std::size_t bytes = 0;
-		std::size_t sources = 0;
+		std::size_t corpora{0};
+		std::size_t bytes{0};
+		std::size_t sources{0};
 
-		for(std::size_t n = 0; n < this->config.generalInputSources.size(); ++n) {
-			std::size_t corpusSources = 0;
+		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
+			std::size_t corpusSources{0};
 
 			Data::Corpus corpus(this->config.generalCorpusChecks);
 
@@ -109,9 +120,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// algorithm has finished
-		this->log(Config::generalLoggingExtended, "has finished.");
+		this->log(generalLoggingExtended, "has finished.");
 
-		this->setProgress(1.f);
+		this->setProgress(1.F);
 
 		/*
 		 * NOTE: The status will be saved in-class and not set here, because
@@ -122,52 +133,69 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		statusStrStr.imbue(std::locale(""));
 
-		if(corpora) {
+		if(corpora > 0) {
 			statusStrStr << "IDLE ";
 
-			if(corpora == 1)
+			if(corpora == 1) {
 				statusStrStr << "Corpus of ";
-			else
+			}
+			else {
 				statusStrStr << corpora << " corpora of ";
+			}
 
-			if(bytes == 1)
+			if(bytes == 1) {
 				statusStrStr << "one byte";
-			else
+			}
+			else {
 				statusStrStr << bytes << " bytes";
+			}
 
-			if(sources == 1)
+			if(sources == 1) {
 				statusStrStr << " from one source";
-			else if(sources > 1)
+			}
+			else if(sources > 1) {
 				statusStrStr << " from " << sources << " sources";
+			}
 
 			this->status = statusStrStr.str();
 		}
-		else
+		else {
 			this->status = "IDLE No corpus created.";
+		}
 
 	}
 
-	// algorithm tick
+	//! Sleeps until the thread is terminated.
+	/*!
+	 * The corpus has already been genererated on
+	 *  initialization.
+	 *
+	 * \sa onAlgoInit
+	 */
 	void CorpusGenerator::onAlgoTick() {
 		this->setStatusMessage(this->status);
 
-		// sleep forever
+		// sleep forever (i.e. until the thread is terminated)
 		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
-	// pause algorithm run
+	//! Does nothing.
 	void CorpusGenerator::onAlgoPause() {}
 
-	// unpause algorithm run
+	//! Does nothing.
 	void CorpusGenerator::onAlgoUnpause() {}
 
-	// clear algorithm run
+	//! Does nothing.
 	void CorpusGenerator::onAlgoClear() {}
 
-	// parse configuration option
+	/*
+	 * IMPLEMENTED CONFIGURATION FUNCTIONS
+	 */
+
+	//! Does nothing.
 	void CorpusGenerator::parseAlgoOption() {}
 
-	// check configuration, throws Thread::Exception
+	//! Does nothing.
 	void CorpusGenerator::checkAlgoOptions() {
 		/*
 		 * WARNING: The existence of sources cannot be checked here, because
@@ -175,4 +203,4 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-} /* crawlservpp::Module::Analyzer::Algo */
+} /* namespace crawlservpp::Module::Analyzer::Algo */

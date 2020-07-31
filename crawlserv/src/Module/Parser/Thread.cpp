@@ -32,7 +32,21 @@
 
 namespace crawlservpp::Module::Parser {
 
-	// constructor A: run previously interrupted parser
+	/*
+	 * CONSTRUCTION
+	 */
+
+	//! Constructor initializing a previously interrupted parser thread.
+	/*!
+	 * \param dbBase Reference to the main
+	 *   database connection.
+	 * \param threadOptions Constant reference
+	 *   to a structure containing the options
+	 *   for the thread.
+	 * \param threadStatus Constant reference
+	 *   to a structure containing the last
+	 *   known status of the thread.
+	 */
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
@@ -42,21 +56,16 @@ namespace crawlservpp::Module::Parser {
 						threadOptions,
 						threadStatus
 				),
-				database(this->Module::Thread::database),
-				tickCounter(0),
-				startTime(std::chrono::steady_clock::time_point::min()),
-				pauseTime(std::chrono::steady_clock::time_point::min()),
-				idleTime(std::chrono::steady_clock::time_point::min()),
-				idle(false),
-				idFromUrlOnly(false),
-				lastUrl(0),
-				idFirst(0),
-				idDist(0),
-				posFirstF(0.),
-				posDist(0),
-				total(0) {}
+				database(this->Module::Thread::database) {}
 
-	// constructor B: start a new parser
+	//! Constructor initializing a new parser thread.
+	/*!
+	 * \param dbBase Reference to the main
+	 *   database connection.
+	 * \param threadOptions Constant reference
+	 *   to a structure containing the options
+	 *   for the thread.
+	 */
 	Thread::Thread(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions
@@ -64,24 +73,13 @@ namespace crawlservpp::Module::Parser {
 						dbBase,
 						threadOptions
 				),
-				database(this->Module::Thread::database),
-				tickCounter(0),
-				startTime(std::chrono::steady_clock::time_point::min()),
-				pauseTime(std::chrono::steady_clock::time_point::min()),
-				idleTime(std::chrono::steady_clock::time_point::min()),
-				idle(false),
-				idFromUrlOnly(false),
-				lastUrl(0),
-				idFirst(0),
-				idDist(0),
-				posFirstF(0.),
-				posDist(0),
-				total(0) {}
+				database(this->Module::Thread::database) {}
 
-	// destructor stub
-	Thread::~Thread() {}
+	/*
+	 * IMPLEMENTED THREAD FUNCTIONS
+	 */
 
-	// initialize parser
+	//! Initializes the parser.
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 		std::vector<std::string> fields;
@@ -89,29 +87,42 @@ namespace crawlservpp::Module::Parser {
 		// load configuration
 		this->setStatusMessage("Loading configuration...");
 
-		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
+		this->loadConfig(
+				this->database.getConfiguration(
+						this->getConfig()
+				),
+				configWarnings
+		);
 
 		// show warnings if necessary
 		while(!configWarnings.empty()) {
-			this->log(Config::generalLoggingDefault, "WARNING: " + configWarnings.front());
+			this->log(
+					generalLoggingDefault,
+					"WARNING: "
+					+ configWarnings.front()
+			);
 
 			configWarnings.pop();
 		}
 
 		// set query container options
 		this->setRepairCData(this->config.parsingRepairCData);
-		this->setTidyErrorsAndWarnings(this->config.parsingTidyErrors, this->config.parsingTidyWarnings);
+		this->setRepairComments(this->config.parsingRepairComments);
+		this->setTidyErrorsAndWarnings(
+				this->config.parsingTidyWarnings,
+				this->config.parsingTidyErrors
+		);
 
 		// set database options
 		this->setStatusMessage("Setting database options...");
 
 		this->database.setLogging(
 				this->config.generalLogging,
-				Config::generalLoggingDefault,
-				Config::generalLoggingVerbose
+				generalLoggingDefault,
+				generalLoggingVerbose
 		);
 
-		this->log(Config::generalLoggingVerbose, "sets database options...");
+		this->log(generalLoggingVerbose, "sets database options...");
 
 		this->database.setCacheSize(this->config.generalCacheSize);
 		this->database.setReparse(this->config.generalReParse);
@@ -120,16 +131,17 @@ namespace crawlservpp::Module::Parser {
 		this->database.setTargetFields(this->config.parsingFieldNames);
 		this->database.setSleepOnError(this->config.generalSleepMySql);
 
-		if(this->config.generalDbTimeOut)
+		if(this->config.generalDbTimeOut > 0) {
 			this->database.setTimeOut(this->config.generalDbTimeOut);
+		}
 
 		// create table names for locking
-		const std::string urlListTable(
-				"crawlserv_"
-				+ this->websiteNamespace
-				+ "_"
-				+ this->urlListNamespace
-		);
+		const std::string urlListTable{
+			"crawlserv_"
+			+ this->websiteNamespace
+			+ "_"
+			+ this->urlListNamespace
+		};
 
 		this->parsingTable = urlListTable + "_parsing";
 		this->targetTable = urlListTable + "_parsed_" + this->config.generalResultTable;
@@ -137,21 +149,24 @@ namespace crawlservpp::Module::Parser {
 		// initialize target table
 		this->setStatusMessage("Initializing target table...");
 
-		this->log(Config::generalLoggingVerbose, "initializes target table...");
+		this->log(generalLoggingVerbose, "initializes target table...");
 
 		this->database.initTargetTable();
 
 		// prepare SQL statements for parser
 		this->setStatusMessage("Preparing SQL statements...");
 
-		this->log(Config::generalLoggingVerbose, "prepares SQL statements...");
+		this->log(generalLoggingVerbose, "prepares SQL statements...");
 
 		this->database.prepare();
 
 		// initialize queries
 		this->setStatusMessage("Initializing custom queries...");
 
-		this->log(Config::generalLoggingVerbose, "initializes custom queries...");
+		this->log(
+				generalLoggingVerbose,
+				"initializes custom queries..."
+		);
 
 		this->initQueries();
 
@@ -159,32 +174,44 @@ namespace crawlservpp::Module::Parser {
 			// wait for parsing table lock
 			this->setStatusMessage("Waiting for parsing table...");
 
-			this->log(Config::generalLoggingVerbose, "waits for parsing table...");
+			this->log(
+					generalLoggingVerbose,
+					"waits for parsing table..."
+			);
 
 			DatabaseLock(
 					this->database,
 					"parsingTable." + this->parsingTable,
-					std::bind(&Thread::isRunning, this)
+					[this]() {
+						return this->isRunning();
+					}
 			);
 
-			if(!(this->isRunning()))
+			if(!(this->isRunning())) {
 				return;
+			}
 
 			// check parsing table
 			this->setStatusMessage("Checking parsing table...");
 
-			this->log(Config::generalLoggingVerbose, "checks parsing table...");
+			this->log(
+					generalLoggingVerbose,
+					"checks parsing table..."
+			);
 
-			const auto deleted = this->database.checkParsingTable();
+			const auto deleted{this->database.checkParsingTable()};
 
 			// log deleted URL locks if necessary
-			if(this->isLogLevel(Config::generalLoggingDefault)) {
+			if(this->isLogLevel(generalLoggingDefault)) {
 				switch(deleted) {
 				case 0:
 					break;
 
 				case 1:
-					this->log(Config::generalLoggingDefault, "WARNING: Deleted a duplicate URL lock.");
+					this->log(
+							generalLoggingDefault,
+							"WARNING: Deleted a duplicate URL lock."
+					);
 
 					break;
 
@@ -193,9 +220,11 @@ namespace crawlservpp::Module::Parser {
 
 					logStrStr.imbue(std::locale(""));
 
-					logStrStr << "WARNING: Deleted " << deleted << " duplicate URL locks!";
+					logStrStr << "WARNING: Deleted "
+								<< deleted
+								<< " duplicate URL locks!";
 
-					this->log(Config::generalLoggingDefault, logStrStr.str());
+					this->log(generalLoggingDefault, logStrStr.str());
 				}
 			}
 		}
@@ -207,39 +236,53 @@ namespace crawlservpp::Module::Parser {
 		this->tickCounter = 0;
 
 		// parser is ready
-		this->log(Config::generalLoggingExtended, "is ready.");
+		this->log(generalLoggingExtended, "is ready.");
 	}
 
-	// parser tick, throws Thread::Exception
+	//! Performs a parser tick.
+	/*!
+	 * If successful, this will parse data from
+	 *  one URL. If not, the URL will either be
+	 *  skipped, or retried in the next tick.
+	 *
+	 * \throws Module::Parser::Thread::Exception
+	 *   if the size of the URL list could not be
+	 *   retrieved from the database.
+	 */
 	void Thread::onTick() {
-		bool skip = false;
-		std::size_t parsed = 0;
+		bool skip{false};
+		std::size_t parsed{0};
 
 		// check for jump in last ID ("time travel")
-		const auto warpedOver = this->getWarpedOverAndReset();
+		const auto jumpOffset{this->getWarpedOverAndReset()};
 
-		if(warpedOver != 0) {
+		if(jumpOffset != 0) {
 			// save cached results
 			this->parsingSaveResults(true);
 
 			// unlock and discard old URLs
-			this->database.unLockUrlsIfOk(this->urls, this->cacheLockTime);
+			this->database.unLockUrlsIfOk(
+					this->urls,
+					this->cacheLockTime
+			);
 
 			// overwrite last URL ID
 			this->lastUrl = this->getLast();
 
 			// adjust tick counter
-			this->tickCounter += warpedOver;
+			this->tickCounter += jumpOffset;
 		}
 
 		// URL selection if no URLs are left to parse
-		if(this->urls.empty())
+		if(this->urls.empty()) {
 			this->parsingUrlSelection();
+		}
 
 		if(this->urls.empty()) {
 			// no URLs left in database: set timer if just finished, sleep
-			if(this->idleTime == std::chrono::steady_clock::time_point::min())
+			if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
 				this->idleTime = std::chrono::steady_clock::now();
+			}
 
 			this->sleep(this->config.generalSleepIdle);
 
@@ -262,11 +305,17 @@ namespace crawlservpp::Module::Parser {
 		++(this->tickCounter);
 
 		// check whether all URLs in the cache have been skipped
-		if(this->urls.empty())
+		if(this->urls.empty()) {
 			return;
+		}
 
 		// write log entry if necessary
-		this->log(Config::generalLoggingExtended, "parses " + this->urls.front().second + "...");
+		this->log(
+				generalLoggingExtended,
+				"parses "
+				+ this->urls.front().second
+				+ "..."
+		);
 
 		// try to renew URL lock
 		this->lockTime = this->database.renewUrlLockIfOk(
@@ -279,28 +328,40 @@ namespace crawlservpp::Module::Parser {
 
 		if(skip) {
 			// skip locked URL
-			this->log(Config::generalLoggingExtended, "skips (locked) " + this->urls.front().second);
+			this->log(generalLoggingExtended, "skips (locked) " + this->urls.front().second);
 		}
 		else {
 			// set status
 			this->setStatusMessage(this->urls.front().second);
 
 			// approximate progress
-			if(!(this->total))
-				throw Exception("Parser::Thread::onTick(): Could not get URL list size");
+			if(this->total == 0) {
+				throw Exception(
+						"Parser::Thread::onTick():"
+						" Could not retrieve the size of the URL list"
+				);
+			}
 
-			if(this->idDist) {
-				const float cacheProgress =
-						static_cast<float>(this->urls.front().first - this->idFirst) / this->idDist;
-					// cache progress = (current ID - first ID) / (last ID - first ID)
+			if(this->idDist > 0) {
+				// cache progress = (current ID - first ID) / (last ID - first ID)
+				const float cacheProgress{
+					static_cast<float>(
+							this->urls.front().first
+							- this->idFirst)
+					/ this->idDist
+				};
 
-				const float approxPosition = this->posFirstF + cacheProgress * this->posDist;
-					// approximate position = first position + cache progress * (last position - first position)
+				// approximate position = first position + cache progress
+				//							* (last position - first position)
+				const float approxPosition{
+					this->posFirstF + cacheProgress * this->posDist
+				};
 
 				this->setProgress(approxPosition / this->total);
 			}
-			else if(this->total)
+			else if(this->total > 0) {
 				this->setProgress(this->posFirstF / this->total);
+			}
 
 			// start timer
 			Timer::Simple timer;
@@ -310,40 +371,49 @@ namespace crawlservpp::Module::Parser {
 			parsed = this->parsingNext();
 
 			// stop timer
-			if(this->config.generalTiming)
+			if(this->config.generalTiming) {
 				timerStr = timer.tickStr();
+			}
 
 			// save expiration time of URL lock if parsing was successful or unlock URL if parsing failed
-			if(parsed)
+			if(parsed > 0) {
 				this->finished.emplace(this->urls.front().first, this->lockTime);
-			else
+			}
+			else {
 				// unlock URL if necesssary
 				this->database.unLockUrlIfOk(this->urls.front().first, this->lockTime);
+			}
 
 			// reset lock time
 			this->lockTime = "";
 
 			// write to log if necessary
-			const auto logLevel = this->config.generalTiming
-					? Config::generalLoggingDefault
-					: Config::generalLoggingExtended;
+			const auto logLevel{
+				this->config.generalTiming ?
+						generalLoggingDefault
+						: generalLoggingExtended
+			};
 
 			if(this->isLogLevel(logLevel)) {
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
 
-				if(parsed > 1)
+				if(parsed > 1) {
 					logStrStr << "parsed " << parsed << " versions of ";
-				else if(parsed == 1)
+				}
+				else if(parsed == 1) {
 					logStrStr << "parsed ";
-				else
+				}
+				else {
 					logStrStr << "skipped ";
+				}
 
 				logStrStr << this->urls.front().second;
 
-				if(this->config.generalTiming)
+				if(this->config.generalTiming) {
 					logStrStr << " in " << timerStr;
+				}
 
 				this->log(logLevel, logStrStr.str());
 			}
@@ -353,7 +423,11 @@ namespace crawlservpp::Module::Parser {
 		this->parsingUrlFinished();
 	}
 
-	// parser paused
+	//! Pauses the parser.
+	/*!
+	 * Stores the current time for keeping track
+	 *  of the time, the parser is paused.
+	 */
 	void Thread::onPause() {
 		// save pause start time
 		this->pauseTime = std::chrono::steady_clock::now();
@@ -362,21 +436,26 @@ namespace crawlservpp::Module::Parser {
 		this->parsingSaveResults(false);
 	}
 
-	// parser unpaused
+	//! Unpauses the parser.
+	/*!
+	 * Calculates the time, the parser was paused.
+	 */
 	void Thread::onUnpause() {
 		// add pause time to start or idle time to ignore pause
-		if(this->idleTime > std::chrono::steady_clock::time_point::min())
+		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
 			this->idleTime += std::chrono::steady_clock::now() - this->pauseTime;
-		else
+		}
+		else {
 			this->startTime += std::chrono::steady_clock::now() - this->pauseTime;
+		}
 
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 	}
 
-	// clear parser
+	//! Clears the parser.
 	void Thread::onClear() {
 		// check counter and process timers if necessary
-		if(this->tickCounter) {
+		if(this->tickCounter > 0) {
 			// write ticks per second to log
 			std::ostringstream tpsStrStr;
 
@@ -394,24 +473,31 @@ namespace crawlservpp::Module::Parser {
 				this->idleTime = std::chrono::steady_clock::time_point::min();
 			}
 
-			const auto tps =
-					static_cast<long double>(this->tickCounter) /
-					std::chrono::duration_cast<std::chrono::seconds>(
-							std::chrono::steady_clock::now() - this->startTime
-					).count();
+			const auto tps{
+				static_cast<long double>(this->tickCounter) /
+				std::chrono::duration_cast<std::chrono::seconds>(
+						std::chrono::steady_clock::now()
+						- this->startTime
+				).count()
+			};
 
 			tpsStrStr.imbue(std::locale(""));
 
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
-			this->log(Config::generalLoggingDefault, "average speed: " + tpsStrStr.str() + " ticks per second.");
+			this->log(
+					generalLoggingDefault,
+					"average speed: "
+					+ tpsStrStr.str()
+					+ " ticks per second."
+			);
 		}
 
 		// save results if necessary
 		this->parsingSaveResults(false);
 
 		// save status message
-		const std::string oldStatus(this->getStatusMessage());
+		const auto oldStatus{this->getStatusMessage()};
 
 		// set status message
 		this->setStatusMessage("Finishing up...");
@@ -431,117 +517,182 @@ namespace crawlservpp::Module::Parser {
 		this->setStatusMessage(oldStatus);
 	}
 
-	// shadow pause function not to be used by thread
+	/*
+	 *  shadowing functions not to be used by thread (private)
+	 */
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::pause() {
 		this->pauseByThread();
 	}
 
-	// hide functions not to be used by thread
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::start() {
-		throw std::logic_error("Thread::start() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::start() not to be used by thread itself"
+		);
 	}
 
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::unpause() {
-		throw std::logic_error("Thread::unpause() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::unpause() not to be used by thread itself"
+		);
 	}
 
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::stop() {
-		throw std::logic_error("Thread::stop() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::stop() not to be used by thread itself"
+		);
 	}
 
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
 	void Thread::interrupt() {
-		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
+		throw std::logic_error(
+				"Thread::interrupt() not to be used by thread itself"
+		);
 	}
+
+	/*
+	 * INITIALIZING FUNCTION (private)
+	 */
 
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
-		// reserve memory for queries
-		this->queriesSkip.reserve(this->config.generalSkip.size());
-		this->queriesContentIgnore.reserve(this->config.parsingContentIgnoreQueries.size());
-		this->queriesId.reserve(this->config.parsingIdQueries.size());
-		this->queriesDateTime.reserve(this->config.parsingDateTimeQueries.size());
-		this->queriesFields.reserve(this->config.parsingFieldQueries.size());
-
 		try {
-			// create queries and get query properties
-			for(const auto& query : this->config.generalSkip) {
-				if(query) {
-					QueryProperties properties;
+			this->addQueries(
+					this->config.generalSkip,
+					this->queriesSkip
+			);
+			this->addQueries(
+					this->config.parsingContentIgnoreQueries,
+					this->queriesContentIgnore
+			);
 
-					this->database.getQueryProperties(query, properties);
+			/*
+			 * NOTE: The following queries need to be added even if they are of type 'none'
+			 * 		  as their index needs to correspond to other options.
+			 */
+			this->addQueriesTo(
+					this->config.parsingIdQueries,
+					this->queriesId
+			);
+			this->addQueriesTo(
+					this->config.parsingDateTimeQueries,
+					this->queriesDateTime
+			);
 
-					this->queriesSkip.emplace_back(this->addQuery(properties));
-				}
-			}
-
-			for(const auto& query : this->config.parsingContentIgnoreQueries) {
-				if(query) {
-					QueryProperties properties;
-
-					this->database.getQueryProperties(query, properties);
-
-					this->queriesContentIgnore.emplace_back(this->addQuery(properties));
-				}
-			}
-
-			// NOTE: The following queries need to be added even if they are of type 'none'
-			//			as their index needs to correspond to other options
-			for(const auto& query : this->config.parsingIdQueries) {
-				QueryProperties properties;
-
-				if(query)
-					this->database.getQueryProperties(query, properties);
-
-				this->queriesId.emplace_back(this->addQuery(properties));
-			}
-
-			for(const auto& query : this->config.parsingDateTimeQueries) {
-				QueryProperties properties;
-
-				if(query)
-					this->database.getQueryProperties(query, properties);
-
-				this->queriesDateTime.emplace_back(this->addQuery(properties));
-			}
-
-			for(
-					auto i = this->config.parsingFieldQueries.begin();
-					i != this->config.parsingFieldQueries.end();
-					++i
-			) {
-				QueryProperties properties;
-
-				if(*i)
-					this->database.getQueryProperties(*i, properties);
-				else {
-					const auto& name =
-							this->config.parsingFieldNames.at(
-									i - this->config.parsingFieldQueries.begin()
-							);
-
-					if(!(name.empty()))
-						this->log(
-								Config::generalLoggingDefault,
-								"WARNING: Ignores field \'"
-								+ name
-								+ "\' because of missing query."
-						);
-				}
-
-				this->queriesFields.emplace_back(this->addQuery(properties));
-			}
+			this->addQueriesTo(
+					"field",
+					this->config.parsingFieldNames,
+					this->config.parsingFieldQueries,
+					this->queriesFields
+			);
 		}
 		catch(const QueryException& e) {
-			throw Exception("Parser::Thread::initQueries(): " + e.whatStr());
+			throw Exception(
+					"Parser::Thread::initQueries(): "
+					+ std::string(e.view())
+			);
 		}
 
 		// check whether the ID is exclusively parsed from the URL
 		this->idFromUrlOnly = std::find(
-				this->config.parsingIdSources.begin(),
-				this->config.parsingIdSources.end(),
-				Config::parsingSourceContent
-		) == this->config.parsingIdSources.end();
+				this->config.parsingIdSources.cbegin(),
+				this->config.parsingIdSources.cend(),
+				parsingSourceContent
+		) == this->config.parsingIdSources.cend();
 	}
+
+	/*
+	 * QUERY FUNCTIONS (private)
+	 */
+
+	// add multiple queries at once, ignoring empty ones
+	inline void Thread::addQueries(
+			const std::vector<std::uint64_t>& queryIds,
+			std::vector<QueryStruct>& propertiesTo
+	) {
+		// reserve memory first
+		propertiesTo.reserve(queryIds.size());
+
+		for(const auto& queryId : queryIds) {
+			if(queryId > 0) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(queryId, properties);
+
+				propertiesTo.emplace_back(this->addQuery(properties));
+			}
+		}
+	}
+
+	// add multiple queries at once, even empty ones, so that their index corresponds to other options
+	inline void Thread::addQueriesTo(
+			const std::vector<std::uint64_t>& queryIds,
+			std::vector<QueryStruct>& propertiesTo
+	) {
+		// reserve memory first
+		propertiesTo.reserve(queryIds.size());
+
+		for(const auto& queryId : queryIds) {
+			QueryProperties properties;
+
+			if(queryId > 0) {
+				this->database.getQueryProperties(queryId, properties);
+			}
+
+			propertiesTo.emplace_back(this->addQuery(properties));
+		}
+	}
+
+	// add multiple queries at once, even empty ones, so that their index corresponds to other options
+	inline void Thread::addQueriesTo(
+			std::string_view type,
+			const std::vector<std::string>& names,
+			const std::vector<std::uint64_t>& queryIds,
+			std::vector<QueryStruct>& propertiesTo
+	) {
+		// reserve memory first
+		propertiesTo.reserve(queryIds.size());
+
+		for(auto it{queryIds.cbegin()}; it != queryIds.cend(); ++it) {
+			QueryProperties properties;
+
+			if(*it > 0) {
+				this->database.getQueryProperties(*it, properties);
+			}
+			else {
+				const auto& name{
+					names.at(it - queryIds.cbegin())
+				};
+
+				if(!name.empty()) {
+					std::string logString{
+						"WARNING: Ignores "
+					};
+
+					logString += type;
+					logString += " '";
+					logString += name;
+					logString += "' , because of missing query.";
+
+					this->log(
+							generalLoggingDefault,
+							logString
+					);
+				}
+			}
+
+			// add even empty queries
+			propertiesTo.emplace_back(this->addQuery(properties));
+		}
+	}
+
+	/*
+	 * PARSING FUNCTIONS (private)
+	 */
 
 	// URL selection
 	void Thread::parsingUrlSelection() {
@@ -553,14 +704,19 @@ namespace crawlservpp::Module::Parser {
 		this->setStatusMessage("Fetching URLs...");
 
 		// fill cache with next URLs
-		this->log(Config::generalLoggingExtended, "fetches URLs...");
+		this->log(generalLoggingExtended, "fetches URLs...");
 
 		// get next URL(s)
 		this->parsingFetchUrls();
 
 		// write to log if necessary
-		if(this->config.generalTiming)
-			this->log(Config::generalLoggingDefault, "fetched URLs in " + timer.tickStr());
+		if(this->config.generalTiming) {
+			this->log(
+					generalLoggingDefault,
+					"fetched URLs in "
+					+ timer.tickStr()
+			);
+		}
 
 		// update status
 		this->setStatusMessage("Checking URLs...");
@@ -569,33 +725,41 @@ namespace crawlservpp::Module::Parser {
 		if(this->urls.empty()) {
 			// no more URLs to parse
 			if(!(this->idle)) {
-				this->log(Config::generalLoggingExtended, "finished.");
+				this->log(
+						generalLoggingExtended,
+						"finished."
+				);
 
 				this->setStatusMessage("IDLE Waiting for new URLs to parse.");
-				this->setProgress(1.f);
+				this->setProgress(1.F);
 			}
 
 			return;
 		}
-		else // reset idling status
-			this->idle = false;
+
+		// reset idling status
+		this->idle = false;
 	}
 
 	// fetch next URLs from database
 	void Thread::parsingFetchUrls() {
 		// fetch URLs from database to cache
-		this->cacheLockTime =
-				this->database.fetchUrls(this->getLast(), this->urls, this->config.generalLock);
+		this->cacheLockTime = this->database.fetchUrls(
+				this->getLast(),
+				this->urls,
+				this->config.generalLock
+		);
 
 		// check whether URLs have been fetched
-		if(this->urls.empty())
+		if(this->urls.empty()) {
 			return;
+		}
 
 		// save properties of fetched URLs and URL list for progress calculation
 		this->idFirst = this->urls.front().first;
 		this->idDist = this->urls.back().first - this->idFirst;
 
-		const auto posFirst = this->database.getUrlPosition(this->idFirst);
+		const auto posFirst{this->database.getUrlPosition(this->idFirst)};
 
 		this->posFirstF = static_cast<float>(posFirst);
 		this->posDist = this->database.getUrlPosition(this->urls.back().first) - posFirst;
@@ -608,8 +772,12 @@ namespace crawlservpp::Module::Parser {
 		// loop over next URLs in cache
 		while(!(this->urls.empty()) && this->isRunning()) {
 			// check whether URL needs to be skipped because of invalid ID
-			if(!(this->urls.front().first)) {
-				this->log(Config::generalLoggingDefault, "skips (INVALID ID) " + this->urls.front().second);
+			if(this->urls.front().first == 0) {
+				this->log(
+						generalLoggingDefault,
+						"skips (INVALID ID) "
+						+ this->urls.front().second
+				);
 
 				// unlock URL if necessary
 				this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
@@ -621,20 +789,34 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			// check whether URL needs to be skipped because of query
-			bool skip = false;
+			bool skip{false};
 
 			if(!(this->config.generalSkip.empty())) {
 				// loop over skip queries
-				for(const auto& query : this->queriesSkip)
-					if(this->getBoolFromRegEx(query, urls.front().second, skip, queryWarnings) && skip)
+				for(const auto& query : this->queriesSkip) {
+					if(
+							this->getBoolFromRegEx(
+									query,
+									urls.front().second,
+									skip,
+									queryWarnings
+							)
+							&& skip
+					) {
 						break;
+					}
+				}
 
 				// log warnings if necessary
-				this->log(Config::generalLoggingDefault, queryWarnings);
+				this->log(generalLoggingDefault, queryWarnings);
 
 				if(skip) {
 					// skip URL because of query
-					this->log(Config::generalLoggingExtended, "skips (query) " + this->urls.front().second);
+					this->log(
+							generalLoggingExtended,
+							"skips (query) "
+							+ this->urls.front().second
+					);
 
 					// unlock URL if necessary
 					this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
@@ -646,11 +828,12 @@ namespace crawlservpp::Module::Parser {
 				}
 			}
 
-			break; // found URL to process
+			// found URL to process
+			break;
 		} // end of loop over URLs in cache
 
 		// log warnings if necessary
-		this->log(Config::generalLoggingDefault, queryWarnings);
+		this->log(generalLoggingDefault, queryWarnings);
 	}
 
 	// parse URL and content(s) of next URL, return number of successfully parsed contents
@@ -669,34 +852,38 @@ namespace crawlservpp::Module::Parser {
 								parsedId,
 								queryWarnings
 						) && !parsedId.empty()
-				)
+				) {
 					// ID has been found
 					break;
+				}
 			}
 
 			// write warnings to log if necessary
-			this->log(Config::generalLoggingDefault, queryWarnings);
+			this->log(generalLoggingDefault, queryWarnings);
 
 			// check ID
-			if(parsedId.empty())
+			if(parsedId.empty()) {
 				return 0;
+			}
 
 			if(
 					!(this->config.parsingIdIgnore.empty())
 					&& std::find(
-							this->config.parsingIdIgnore.begin(),
-							this->config.parsingIdIgnore.end(),
+							this->config.parsingIdIgnore.cbegin(),
+							this->config.parsingIdIgnore.cend(),
 							parsedId
-					) != this->config.parsingIdIgnore.end()
-			)
+					) != this->config.parsingIdIgnore.cend()
+			) {
+				// ignore ID
 				return 0;
+			}
 		}
 
 		if(this->config.generalNewestOnly) {
 			// parse newest content of URL
-			std::uint64_t numberOfContents = 0;
-			std::uint64_t index = 0;
-			bool changedStatus = false;
+			std::size_t numberOfContents{0};
+			std::size_t index{0};
+			bool changedStatus{false};
 
 			while(this->isRunning()) {
 				IdString latestContent;
@@ -709,19 +896,21 @@ namespace crawlservpp::Module::Parser {
 						)
 				) {
 					if(this->parsingContent(latestContent, parsedId)) {
-						if(changedStatus)
+						if(changedStatus) {
 							this->setStatusMessage(this->urls.front().second);
+						}
 
 						return 1;
 					}
 
 					++index;
 
-					if(index % 100 == 0) {
-						if(!numberOfContents)
+					if(index % updateArchiveCounterEvery == 0) {
+						if(numberOfContents == 0) {
 							numberOfContents = this->database.getNumberOfContents(
 									this->urls.front().first
 							);
+						}
 
 						std::ostringstream statusStrStr;
 
@@ -739,26 +928,27 @@ namespace crawlservpp::Module::Parser {
 						changedStatus = true;
 					}
 				}
-				else
+				else {
 					break;
+				}
 			}
 
-			if(changedStatus)
+			if(changedStatus) {
 				this->setStatusMessage(this->urls.front().second);
+			}
 		}
 		else {
 			// parse all contents of URL
-			std::size_t counter = 0;
+			std::size_t counter{0};
 
-			std::queue<IdString> contents(
-					this->database.getAllContents(
-							this->urls.front().first
-					)
-			);
+			auto contents{
+				this->database.getAllContents(this->urls.front().first)
+			};
 
 			while(!contents.empty()) {
-				if(this->parsingContent(contents.front(), parsedId))
+				if(this->parsingContent(contents.front(), parsedId)) {
 					++counter;
+				}
 
 				contents.pop();
 			}
@@ -770,7 +960,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// parse ID-specific content, return whether parsing was successfull (i.e. an ID could be parsed)
-	bool Thread::parsingContent(const IdString& content, const std::string& parsedId) {
+	bool Thread::parsingContent(const IdString& content, std::string_view parsedId) {
 		DataEntry parsedData(content.first);
 		std::queue<std::string> queryWarnings;
 
@@ -779,13 +969,15 @@ namespace crawlservpp::Module::Parser {
 
 		// parse ID (if still necessary)
 		if(!(this->idFromUrlOnly)) {
-			for(auto i = this->queriesId.begin(); i != this->queriesId.end(); ++i) {
+			for(auto it{this->queriesId.cbegin()}; it != this->queriesId.cend(); ++it) {
 				// check query source
-				switch(this->config.parsingIdSources.at(i - this->queriesId.begin())) {
-				case Config::parsingSourceUrl:
+				const auto index{it - this->queriesId.cbegin()};
+
+				switch(this->config.parsingIdSources.at(index)) {
+				case parsingSourceUrl:
 					// parse ID by running RegEx query on URL
 					this->getSingleFromRegEx(
-							*i,
+							*it,
 							this->urls.front().second,
 							parsedData.dataId,
 							queryWarnings
@@ -793,9 +985,9 @@ namespace crawlservpp::Module::Parser {
 
 					break;
 
-				case Config::parsingSourceContent:
+				case parsingSourceContent:
 					// parse ID by running query on content
-					this->getSingleFromQuery(*i, parsedData.dataId, queryWarnings);
+					this->getSingleFromQuery(*it, parsedData.dataId, queryWarnings);
 
 					break;
 
@@ -803,15 +995,18 @@ namespace crawlservpp::Module::Parser {
 					queryWarnings.emplace("WARNING: Invalid source for ID.");
 				}
 
-				if(!parsedData.dataId.empty())
-					break; // ID successfully parsed
+				if(!parsedData.dataId.empty()) {
+					// ID successfully parsed
+					break;
+				}
 			}
 
 			// log warnings if necessary
-			this->log(Config::generalLoggingDefault, queryWarnings);
+			this->log(generalLoggingDefault, queryWarnings);
 		}
-		else
+		else {
 			parsedData.dataId = parsedId;
+		}
 
 		// check whether no ID has been parsed
 		if(parsedData.dataId.empty()) {
@@ -824,13 +1019,13 @@ namespace crawlservpp::Module::Parser {
 		// check whether parsed ID is ought to be ignored
 		if(
 				std::find(
-						this->config.parsingIdIgnore.begin(),
-						this->config.parsingIdIgnore.end(),
+						this->config.parsingIdIgnore.cbegin(),
+						this->config.parsingIdIgnore.cend(),
 						parsedData.dataId
-				) != this->config.parsingIdIgnore.end()
+				) != this->config.parsingIdIgnore.cend()
 		) {
 			this->log(
-					Config::generalLoggingExtended,
+					generalLoggingExtended,
 					"ignored parsed ID \'"
 					+ parsedData.dataId
 					+ "\' ["
@@ -846,13 +1041,13 @@ namespace crawlservpp::Module::Parser {
 
 		// check whether content is ought to be ignored
 		for(const auto& query : this->queriesContentIgnore) {
-			bool ignore = false;
+			bool ignore{false};
 
 			this->getBoolFromQuery(query, ignore, queryWarnings);
 
 			if(ignore) {
 				this->log(
-						Config::generalLoggingExtended,
+						generalLoggingExtended,
 						"ignored because of query on content ["
 						+ this->urls.front().second
 						+ "]."
@@ -866,12 +1061,14 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// check whether content with the parsed ID already exists and the current one differs from the one in the database
-		const auto contentId = this->database.getContentIdFromParsedId(parsedData.dataId);
-		bool duplicateInCache = false;
+		const auto contentId{
+			this->database.getContentIdFromParsedId(parsedData.dataId)
+		};
+		bool duplicateInCache{false};
 
-		if(!contentId) {
-			// check cached results
-			auto cachedResults(this->results);
+		if(contentId == 0) {
+			// copy the queue and checking the cached results
+			auto cachedResults{this->results};
 
 			while(!cachedResults.empty()) {
 				if(cachedResults.front().dataId == parsedData.dataId) {
@@ -884,9 +1081,9 @@ namespace crawlservpp::Module::Parser {
 			}
 		}
 
-		if((contentId && contentId != content.first) || duplicateInCache) {
+		if((contentId > 0 && contentId != content.first) || duplicateInCache) {
 			this->log(
-					Config::generalLoggingDefault,
+					generalLoggingDefault,
 					"skipped content with already existing ID \'"
 					+ parsedData.dataId
 					+ "\' ["
@@ -901,34 +1098,56 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// parse date/time
-		for(auto i = this->queriesDateTime.begin(); i != this->queriesDateTime.end(); ++i) {
-			const auto index = i - this->queriesDateTime.begin();
+		for(
+				auto it{this->queriesDateTime.cbegin()};
+				it != this->queriesDateTime.cend();
+				++it
+		) {
+			const auto index{it - this->queriesDateTime.cbegin()};
 
 			// check query source
 			switch(this->config.parsingDateTimeSources.at(index)) {
-			case Config::parsingSourceUrl:
+			case parsingSourceUrl:
 				// parse date/time by running RegEx query on URL
-				this->getSingleFromRegEx(*i, this->urls.front().second, parsedData.dateTime, queryWarnings);
+				this->getSingleFromRegEx(
+						*it,
+						this->urls.front().second,
+						parsedData.dateTime,
+						queryWarnings
+				);
 
 				break;
 
-			case Config::parsingSourceContent:
+			case parsingSourceContent:
 				// parse date/time by running query on content
-				this->getSingleFromQuery(*i, parsedData.dateTime, queryWarnings);
+				this->getSingleFromQuery(
+						*it,
+						parsedData.dateTime,
+						queryWarnings
+				);
 
 				break;
+
+			default:
+				this->log(
+						generalLoggingDefault,
+						"WARNING: Invalid source for date/time ignored."
+				);
+
+				continue;
 			}
 
 			// log warnings if necessary
-			this->log(Config::generalLoggingDefault, queryWarnings);
+			this->log(generalLoggingDefault, queryWarnings);
 
 			if(!parsedData.dateTime.empty()) {
 				// found date/time: try to convert it to SQL time stamp
-				std::string format(this->config.parsingDateTimeFormats.at(index));
+				auto format{this->config.parsingDateTimeFormats.at(index)};
 
 				// use "%F %T" as default date/time format
-				if(format.empty())
+				if(format.empty()) {
 					format = "%F %T";
+				}
 
 				try {
 					Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
@@ -938,7 +1157,12 @@ namespace crawlservpp::Module::Parser {
 					);
 				}
 				catch(const LocaleException& e) {
-					this->log(Config::generalLoggingDefault, "WARNING: " + e.whatStr() + " - locale ignored.");
+					std::string logString{"WARNING: "};
+
+					logString += e.view();
+					logString += " - locale ignored.";
+
+					this->log(generalLoggingDefault, logString);
 
 					try {
 						Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
@@ -946,32 +1170,32 @@ namespace crawlservpp::Module::Parser {
 								format
 						);
 					}
-					catch(const DateTimeException& e) {
-						this->log(
-								Config::generalLoggingExtended,
-								e.whatStr()
-								+ " - query skipped ["
-								+ this->urls.front().second
-								+ "]."
-						);
+					catch(const DateTimeException& e2) {
+						logString = e2.view();
+
+						logString += " - query skipped [";
+						logString += this->urls.front().second;
+						logString += "]";
+
+						this->log(generalLoggingExtended, logString);
 
 						parsedData.dateTime.clear();
 					}
 				}
 				catch(const DateTimeException& e) {
-					this->log(
-							Config::generalLoggingExtended,
-							e.whatStr()
-							+ " - query skipped ["
-							+ this->urls.front().second
-							+ "]."
-					);
+					std::string logString{e.view()};
+
+					logString += " - query skipped [";
+					logString += this->urls.front().second;
+					logString += "]";
 
 					parsedData.dateTime.clear();
 				}
 
-				if(!parsedData.dateTime.empty())
-					break; // date/time successfully parsed and converted
+				if(!parsedData.dateTime.empty()) {
+					// date/time successfully parsed and converted
+					break;
+				}
 			}
 		}
 
@@ -980,39 +1204,64 @@ namespace crawlservpp::Module::Parser {
 				this->config.parsingDateTimeWarningEmpty
 				&& parsedData.dateTime.empty()
 				&& !(this->queriesDateTime.empty())
-
-		)
-			this->log(Config::generalLoggingDefault, "WARNING: date/time is empty for " + this->urls.front().second);
+		) {
+			this->log(
+					generalLoggingDefault,
+					"WARNING: date/time is empty for "
+					+ this->urls.front().second
+			);
+		}
 
 		// parse custom fields
 		parsedData.fields.reserve(this->queriesFields.size());
 
-		for(auto i = this->queriesFields.begin(); i != this->queriesFields.end(); ++i) {
-			const auto index = i - this->queriesFields.begin();
-			const auto dateTimeFormat(this->config.parsingFieldDateTimeFormats.at(index));
+		for(
+				auto it{this->queriesFields.cbegin()};
+				it != this->queriesFields.cend();
+				++it
+		) {
+			const auto index{it - this->queriesFields.cbegin()};
+			const auto dateTimeFormat{this->config.parsingFieldDateTimeFormats.at(index)};
 
 			// determinate whether to get all or just the first match (as string or boolean value) from the query result
-			if(i->resultMulti) {
+			if(it->resultMulti) {
 				// parse multiple elements
 				std::vector<std::string> parsedFieldValues;
 
 				// check query source
 				switch(this->config.parsingFieldSources.at(index)) {
-				case Config::parsingSourceUrl:
+				case parsingSourceUrl:
 					// parse field values by using RegEx query on URL
-					this->getMultiFromRegEx(*i, this->urls.front().second, parsedFieldValues, queryWarnings);
+					this->getMultiFromRegEx(
+							*it,
+							this->urls.front().second,
+							parsedFieldValues,
+							queryWarnings
+					);
 
 					break;
 
-				case Config::parsingSourceContent:
+				case parsingSourceContent:
 					// parse field values by using query on content
-					this->getMultiFromQuery(*i, parsedFieldValues, queryWarnings);
+					this->getMultiFromQuery(
+							*it,
+							parsedFieldValues,
+							queryWarnings
+					);
 
 					break;
+
+				default:
+					this->log(
+							generalLoggingDefault,
+							"WARNING: Invalid source type for field ignored."
+					);
+
+					continue;
 				}
 
 				// log warnings if necessary
-				this->log(Config::generalLoggingDefault, queryWarnings);
+				this->log(generalLoggingDefault, queryWarnings);
 
 				// if necessary, try to convert the parsed values to date/times
 				if(!dateTimeFormat.empty()) {
@@ -1026,15 +1275,10 @@ namespace crawlservpp::Module::Parser {
 						}
 						catch(const LocaleException& e) {
 							try {
-								this->log(
-										Config::generalLoggingDefault,
-										"WARNING: "
-										+ e.whatStr()
-										+ " for field \'"
-										+ this->config.parsingFieldNames.at(index)
-										+ "\' ["
-										+ this->urls.front().second
-										+ "]."
+								this->parsingFieldWarning(
+										e.view(),
+										this->config.parsingFieldNames.at(index),
+										this->urls.front().second
 								);
 
 								Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
@@ -1042,31 +1286,21 @@ namespace crawlservpp::Module::Parser {
 										dateTimeFormat
 								);
 							}
-							catch(const DateTimeException& e) {
-								this->log(
-										Config::generalLoggingDefault,
-										"WARNING: "
-										+ e.whatStr()
-										+ " for field \'"
-										+ this->config.parsingFieldNames.at(index)
-										+ "\' ["
-										+ this->urls.front().second
-										+ "]."
+							catch(const DateTimeException& e2) {
+								this->parsingFieldWarning(
+										e2.view(),
+										this->config.parsingFieldNames.at(index),
+										this->urls.front().second
 								);
 
 								value.clear();
 							}
 						}
 						catch(const DateTimeException& e) {
-							this->log(
-									Config::generalLoggingDefault,
-									"WARNING: "
-									+ e.whatStr()
-									+ " for field \'"
-									+ this->config.parsingFieldNames.at(index)
-									+ "\' ["
-									+ this->urls.front().second
-									+ "]."
+							this->parsingFieldWarning(
+									e.view(),
+									this->config.parsingFieldNames.at(index),
+									this->urls.front().second
 							);
 
 							value.clear();
@@ -1078,70 +1312,95 @@ namespace crawlservpp::Module::Parser {
 				if(this->config.parsingFieldWarningsEmpty.at(index)) {
 					if(
 							std::find_if(
-									parsedFieldValues.begin(),
-									parsedFieldValues.end(),
+									parsedFieldValues.cbegin(),
+									parsedFieldValues.cend(),
 									[](auto const& value) {
 										return !value.empty();
 									}
-							) == parsedFieldValues.end()
-					)
+							) == parsedFieldValues.cend()
+					) {
 						this->log(
-								Config::generalLoggingDefault,
+								generalLoggingDefault,
 								"WARNING: \'"
 								+ this->config.parsingFieldNames.at(index) + "\'"
 								" is empty for "
 								+ this->urls.front().second
 						);
+					}
 				}
 
 				// determine how to save result: JSON array or concatenate using delimiting character
 				if(this->config.parsingFieldJSON.at(index)) {
 					// if necessary, tidy texts
-					if(dateTimeFormat.empty() && this->config.parsingFieldTidyTexts.at(index))
-						for(auto& value : parsedFieldValues)
+					if(
+							dateTimeFormat.empty()
+							&& this->config.parsingFieldTidyTexts.at(index)
+					) {
+						for(auto& value : parsedFieldValues) {
 							Helper::Strings::utfTidy(value);
+						}
+					}
 
 					// stringify and add parsed elements as JSON array
-					parsedData.fields.emplace_back(Helper::Json::stringify(parsedFieldValues));
+					parsedData.fields.emplace_back(
+							Helper::Json::stringify(parsedFieldValues)
+					);
 				}
 				else {
 					// concatenate elements
-					std::string result(
-							Helper::Strings::join(
-									parsedFieldValues,
-									this->config.parsingFieldDelimiters.at(index),
-									this->config.parsingFieldIgnoreEmpty.at(index)
-							)
-						);
+					auto result{
+						Helper::Strings::join(
+								parsedFieldValues,
+								this->config.parsingFieldDelimiters.at(index),
+								this->config.parsingFieldIgnoreEmpty.at(index)
+						)
+					};
 
 					// if necessary, tidy text
-					if(dateTimeFormat.empty() && this->config.parsingFieldTidyTexts.at(index))
+					if(
+							dateTimeFormat.empty()
+							&& this->config.parsingFieldTidyTexts.at(index)
+					) {
 						Helper::Strings::utfTidy(result);
+					}
 
 					parsedData.fields.emplace_back(result);
 				}
 			}
-			else if(i->resultSingle) {
+			else if(it->resultSingle) {
 				// parse first element only (as string)
 				std::string parsedFieldValue;
 
 				// check query source
 				switch(this->config.parsingFieldSources.at(index)) {
-				case Config::parsingSourceUrl:
+				case parsingSourceUrl:
 					// parse single field value by using RegEx query on URL
-					this->getSingleFromRegEx(*i, this->urls.front().second, parsedFieldValue, queryWarnings);
+					this->getSingleFromRegEx(
+							*it,
+							this->urls.front().second,
+							parsedFieldValue,
+							queryWarnings
+					);
 
 					break;
 
-				case Config::parsingSourceContent:
+				case parsingSourceContent:
 					// parse single field value by using query on content
-					this->getSingleFromQuery(*i, parsedFieldValue, queryWarnings);
+					this->getSingleFromQuery(*it, parsedFieldValue, queryWarnings);
 
 					break;
+
+				default:
+					this->log(
+							generalLoggingDefault,
+							"WARNING: Invalid source type for field ignored."
+					);
+
+					continue;
 				}
 
 				// log warnings if necessary
-				this->log(Config::generalLoggingDefault, queryWarnings);
+				this->log(generalLoggingDefault, queryWarnings);
 
 				// if necessary, try to convert the parsed value to date/time
 				if(!dateTimeFormat.empty()) {
@@ -1154,15 +1413,10 @@ namespace crawlservpp::Module::Parser {
 					}
 					catch(const LocaleException& e) {
 						try {
-							this->log(
-									Config::generalLoggingDefault,
-									"WARNING: "
-									+ e.whatStr()
-									+ " for field \'"
-									+ this->config.parsingFieldNames.at(index)
-									+ "\' ["
-									+ this->urls.front().second
-									+ "]."
+							this->parsingFieldWarning(
+									e.view(),
+									this->config.parsingFieldNames.at(index),
+									this->urls.front().second
 							);
 
 							Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
@@ -1170,31 +1424,21 @@ namespace crawlservpp::Module::Parser {
 									dateTimeFormat
 							);
 						}
-						catch(const DateTimeException& e) {
-							this->log(
-									Config::generalLoggingDefault,
-									"WARNING: "
-									+ e.whatStr()
-									+ " for field \'"
-									+ this->config.parsingFieldNames.at(index)
-									+ "\' ["
-									+ this->urls.front().second
-									+ "]."
+						catch(const DateTimeException& e2) {
+							this->parsingFieldWarning(
+									e2.view(),
+									this->config.parsingFieldNames.at(index),
+									this->urls.front().second
 							);
 
 							parsedFieldValue.clear();
 						}
 					}
 					catch(const DateTimeException& e) {
-						this->log(
-								Config::generalLoggingDefault,
-								"WARNING: "
-								+ e.whatStr()
-								+ " for field \'"
-								+ this->config.parsingFieldNames.at(index)
-								+ "\' ["
-								+ this->urls.front().second
-								+ "]."
+						this->parsingFieldWarning(
+								e.view(),
+								this->config.parsingFieldNames.at(index),
+								this->urls.front().second
 						);
 
 						parsedFieldValue.clear();
@@ -1205,82 +1449,108 @@ namespace crawlservpp::Module::Parser {
 				if(
 						this->config.parsingFieldWarningsEmpty.at(index)
 						&& parsedFieldValue.empty()
-				)
-					this->log(
-							Config::generalLoggingDefault,
-							"WARNING: \'"
-							+ this->config.parsingFieldNames.at(index) + "\'"
-							" is empty for "
-							+ this->urls.front().second
-					);
+				) {
+					std::string logString{"WARNING: '"};
+
+					logString += this->config.parsingFieldNames.at(index);
+					logString += "' is empty for ";
+					logString += this->urls.front().second;
+
+					this->log(generalLoggingDefault, logString);
+				}
 
 				// if necessary, tidy text
-				if(dateTimeFormat.empty() && this->config.parsingFieldTidyTexts.at(index))
+				if(
+						dateTimeFormat.empty()
+						&& this->config.parsingFieldTidyTexts.at(index)
+				) {
 					Helper::Strings::utfTidy(parsedFieldValue);
+				}
 
 				// determine how to save result: JSON array or string as is
-				if(this->config.parsingFieldJSON.at(index))
+				if(this->config.parsingFieldJSON.at(index)) {
 					// stringify and add parsed element as JSON array with one element
-					parsedData.fields.emplace_back(Helper::Json::stringify(parsedFieldValue));
-
-				else
+					parsedData.fields.emplace_back(
+							Helper::Json::stringify(parsedFieldValue)
+					);
+				}
+				else {
 					// save as is
 					parsedData.fields.emplace_back(parsedFieldValue);
+				}
 			}
-			else if(i->resultBool) {
+			else if(it->resultBool) {
 				// only save whether a match for the query exists
-				bool booleanResult = false;
+				bool booleanResult{false};
 
 				// check query source
 				switch(this->config.parsingFieldSources.at(index)) {
-				case Config::parsingSourceUrl:
+				case parsingSourceUrl:
 					// parse boolean field value by using RegEx query on URL
-					this->getBoolFromRegEx(*i, this->urls.front().second, booleanResult, queryWarnings);
+					this->getBoolFromRegEx(
+							*it,
+							this->urls.front().second,
+							booleanResult,
+							queryWarnings
+					);
 
 					break;
 
-				case Config::parsingSourceContent:
+				case parsingSourceContent:
 					// parse boolean field value by using query on content
-					this->getBoolFromQuery(*i, booleanResult, queryWarnings);
+					this->getBoolFromQuery(*it, booleanResult, queryWarnings);
 
 					break;
+
+				default:
+					this->log(
+							generalLoggingDefault,
+							"WARNING: Invalid source type for field ignored."
+					);
+
+					continue;
 				}
 
 				// log warnings if necessary
-				this->log(Config::generalLoggingDefault, queryWarnings);
+				this->log(generalLoggingDefault, queryWarnings);
 
 				// date/time conversion is not possible for boolean values
-				if(!dateTimeFormat.empty())
-					this->log(
-							Config::generalLoggingDefault,
-							"WARNING: Cannot convert boolean value for field \'"
-							+ this->config.parsingFieldNames.at(index)
-							+ "\' to date/time\' ["
-							+ this->urls.front().second
-							+ "]."
-					);
+				if(!dateTimeFormat.empty()) {
+					std::string logString{
+						"WARNING: Cannot convert boolean value for field '"
+					};
+
+					logString += this->config.parsingFieldNames.at(index);
+					logString += "\' to date/time\' [";
+					logString += this->urls.front().second;
+					logString += "]";
+
+					this->log(generalLoggingDefault, logString);
+				}
 
 				// determine how to save result: JSON array or boolean value as string
-				if(this->config.parsingFieldJSON.at(index))
+				if(this->config.parsingFieldJSON.at(index)) {
 					// stringify and add parsed element as JSON array with one boolean value as string
 					parsedData.fields.emplace_back(
 							Helper::Json::stringify(
 									booleanResult ? std::string("true") : std::string("false")
 							)
 					);
-
-				else
+				}
+				else {
 					// save boolean value as string
 					parsedData.fields.emplace_back(booleanResult ? "true" : "false");
+				}
 			}
 			else {
-				if(i->type != QueryStruct::typeNone)
+				if(it->type != QueryStruct::typeNone) {
 					this->log(
-							Config::generalLoggingDefault,
-							"WARNING: Ignored query for \'"
+							generalLoggingDefault,
+							"WARNING: Ignored query for '"
 							+ this->config.parsingFieldNames.at(index)
-							+ "\' without specified result type."
+							+ "' without specified result type."
 					);
+				}
 
 				parsedData.fields.emplace_back();
 			}
@@ -1321,8 +1591,9 @@ namespace crawlservpp::Module::Parser {
 		// check whether there are no results
 		if(this->results.empty()) {
 			// set last URL
-			if(!warped && this->lastUrl)
+			if(!warped && this->lastUrl > 0) {
 				this->setLast(this->lastUrl);
+			}
 
 			// no results: done!
 			return;
@@ -1332,7 +1603,7 @@ namespace crawlservpp::Module::Parser {
 		Timer::Simple timer;
 
 		// save status message
-		const std::string status(this->getStatusMessage());
+		const auto status{this->getStatusMessage()};
 
 		this->setStatusMessage("Waiting for target table...");
 
@@ -1340,13 +1611,15 @@ namespace crawlservpp::Module::Parser {
 			DatabaseLock(
 					this->database,
 					"targetTable." + this->targetTable,
-					std::bind(&Thread::isRunning, this)
+					[this]() {
+						return this->isRunning();
+					}
 			);
 
 			// save results
 			this->setStatusMessage("Saving results...");
 
-			this->log(Config::generalLoggingExtended, "saves results...");
+			this->log(generalLoggingExtended, "saves results...");
 
 			// update or add entries in/to database
 			this->database.updateOrAddEntries(this->results);
@@ -1356,8 +1629,9 @@ namespace crawlservpp::Module::Parser {
 		} // target table unlocked
 
 		// set last URL
-		if(!warped)
+		if(!warped) {
 			this->setLast(this->lastUrl);
+		}
 
 		// set those URLs to finished whose URL lock is okay (still locked or re-lockable)
 		this->database.setUrlsFinishedIfLockOk(this->finished);
@@ -1365,8 +1639,31 @@ namespace crawlservpp::Module::Parser {
 		// update status
 		this->setStatusMessage("Results saved. [" + status + "]");
 
-		if(this->config.generalTiming)
-			this->log(Config::generalLoggingDefault, "saved results in " + timer.tickStr());
+		if(this->config.generalTiming) {
+			this->log(
+					generalLoggingDefault,
+					"saved results in "
+					+ timer.tickStr()
+			);
+		}
 	}
 
-} /* crawlservpp::Module::Parser */
+	// log error when parsing specific field as warning
+	inline void Thread::parsingFieldWarning(
+			std::string_view error,
+			std::string_view fieldName,
+			std::string_view url
+	) {
+		std::string logString{"WARNING: "};
+
+		logString += error;
+		logString += " for field '";
+		logString += fieldName;
+		logString += "' [";
+		logString += url;
+		logString += "]";
+
+		this->log(generalLoggingDefault, logString);
+	}
+
+} /* namespace crawlservpp::Module::Parser */

@@ -22,7 +22,7 @@
  *
  * App.cpp
  *
- * The main application class that processes command line arguments, shows the initial header and component versions, loads the
+ * The main application class that processes command line arguments, shows the initial header, loads the
  *  configuration from the argument-specified configuration file and creates as well as starts the server.
  *
  *  Created on: Oct 26, 2018
@@ -32,10 +32,23 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
-	volatile std::sig_atomic_t App::interruptionSignal = 0;
+	volatile std::sig_atomic_t App::interruptionSignal{0};
 
-	// constructor: show header, check arguments, load configuration file, get database password, initialize and run the server
-	App::App(int argc, char * argv[]) noexcept : running(true), showVersionsOnly(false) {
+	//! Constructor.
+	/*!
+	 * Writes the application header to @c stdout,
+	 *  checks the program arguments, loads the
+	 *  configuration from the configuration file,
+	 *  gets the database password from the user
+	 *  (i.e. stdin), initializes and finally runs
+	 *  the command-and-control server.
+	 *
+	 * \param args Constant reference to a vector
+	 *   contining the program arguments passed
+	 *   to the application, e.g. via the command
+	 *   line.
+	 */
+	App::App(const std::vector<std::string>& args) noexcept {
 		try {
 			ServerSettings serverSettings;
 			DatabaseSettings dbSettings;
@@ -47,6 +60,7 @@ namespace crawlservpp::Main {
 			signal(SIGINT, App::signal);
 			signal(SIGTERM, App::signal);
 #else
+			// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init)
 			struct sigaction sigIntHandler;
 
 			sigIntHandler.sa_handler = App::signal;
@@ -60,20 +74,22 @@ namespace crawlservpp::Main {
 #endif
 
 			// check number of arguments
-			this->checkArgumentNumber(argc);
+			App::checkArgumentNumber(args.size());
 
 			// check argument
-			if(std::string(argv[1]) == "-v")
+			if(args.at(1) == "-v") {
 				this->showVersionsOnly = true;
+			}
 
 			// show header
-			this->outputHeader(this->showVersionsOnly);
+			App::outputHeader(this->showVersionsOnly);
 
-			if(this->showVersionsOnly)
+			if(this->showVersionsOnly) {
 				return;
+			}
 
 			// load configuration file
-			this->loadConfig(argv[1], serverSettings, dbSettings, networkSettings);
+			App::loadConfig(args.at(1), serverSettings, dbSettings, networkSettings);
 
 			// get password
 			if(this->getPassword(dbSettings)) {
@@ -84,8 +100,9 @@ namespace crawlservpp::Main {
 					std::cout << "Server is up and running." << std::flush;
 				}
 			}
-			else
+			else {
 				this->running.store(false);
+			}
 		}
 		catch(const std::exception& e) {
 			std::cout << "[ERROR] " << e.what() << std::endl;
@@ -99,33 +116,36 @@ namespace crawlservpp::Main {
 		}
 	}
 
-	// destructor: clean-up server
+	//! Destructor waiting for active threads before cleaning up the application.
 	App::~App() {
 		if(this->server) {
 			// server up-time message
 			std::cout << "\nUp-time: " << Helper::DateTime::secondsToString(server->getUpTime()) << ".";
 
-			const auto threads = this->server->getActiveThreads();
-			const auto workers = this->server->getActiveWorkers();
+			const auto threads{this->server->getActiveThreads()};
+			const auto workers{this->server->getActiveWorkers()};
 
-			if(threads || workers) {
+			if(threads > 0 || workers > 0) {
 				std::cout << "\n> Waiting for threads (";
 
-				if(threads) {
+				if(threads > 0) {
 					std::cout << threads << " module thread";
 
-					if(threads > 1)
+					if(threads > 1) {
 						std::cout << "s";
+					}
 				}
 
-				if(threads && workers)
+				if(threads > 0 && workers > 0) {
 					std::cout << ", ";
+				}
 
-				if(workers) {
+				if(workers > 0) {
 					std::cout << workers << " worker thread";
 
-					if(workers > 1)
+					if(workers > 1) {
 						std::cout << "s";
+					}
 				}
 
 				std::cout << " active)..." << std::flush;
@@ -138,16 +158,18 @@ namespace crawlservpp::Main {
 		std::cout << "\nBye bye." << std::endl;
 	}
 
-	// run app
+	//! Runs the application.
 	int App::run() noexcept {
-		if(this->showVersionsOnly)
+		if(this->showVersionsOnly) {
 			return EXIT_SUCCESS;
+		}
 
 		if(this->server) {
 			try {
 				while(this->server->tick() && this->running.load()) {
-					if(App::interruptionSignal)
+					if(App::interruptionSignal != 0) {
 						this->shutdown();
+					}
 				}
 
 				return EXIT_SUCCESS;
@@ -163,16 +185,16 @@ namespace crawlservpp::Main {
 		return EXIT_FAILURE;
 	}
 
-	// static signal handler (forward the signal to the class)
-	void App::signal(int signalNumber) {
+	//! Static signal handler forwarding a signal to the class.
+	void App::signal(const int signalNumber) {
 		App::interruptionSignal = signalNumber;
 	}
 
-	// in-class signal handler
+	//! In-class signal handler shutting down the application.
 	void App::shutdown() {
 		std::cout << "\n[SHUTDOWN] ";
 
-		const auto signal = App::interruptionSignal;
+		const auto signal{App::interruptionSignal};
 
 		switch(signal) {
 		case SIGINT:
@@ -197,11 +219,18 @@ namespace crawlservpp::Main {
 	// helper function: get database password from user, return false on cancel
 	bool App::getPassword(DatabaseSettings& dbSettings) {
 		// prompt password for database
-		std::cout << "Enter password for " << dbSettings.user << "@" << dbSettings.host << ":" << dbSettings.port << ": ";
 
-		char input = 0;
-		bool inputLoop = true;
-		bool inputCancel = false;
+		std::cout	<< pwPrompt1
+					<< dbSettings.user
+					<< pwPrompt2
+					<< dbSettings.host
+					<< pwPrompt3
+					<< dbSettings.port
+					<< pwPrompt4;
+
+		char input{0};
+		bool inputLoop{true};
+		bool inputCancel{false};
 
 		do {
 			switch(input = Helper::Portability::getch()) {
@@ -211,17 +240,21 @@ namespace crawlservpp::Main {
 
 			case '\n':
 				// ENTER: end input loop
-				for(std::string::size_type n = 0; n < dbSettings.password.size(); n++)
-					std::cout << '\b';
+				std::cout << std::string(dbSettings.password.length(), '\b');
+				std::cout << doneMsg;
 
-				std::cout << "[DONE]" << std::string(dbSettings.password.size() - 6, ' ') << std::flush;
+				if(dbSettings.password.length() > doneMsg.length()) {
+					std::cout << std::string(dbSettings.password.length() - doneMsg.length(), ' ');
+				}
+
+				std::cout << std::flush;
 
 				inputLoop = false;
 
 				break;
 
 			case '\b':
-			case 127:
+			case inputBackspace:
 				// BACKSPACE/DELETE: delete last character from password (if it exists)
 				if(!dbSettings.password.empty()) {
 					dbSettings.password.pop_back();
@@ -231,9 +264,9 @@ namespace crawlservpp::Main {
 
 				break;
 
-			case -1:
-			case 3:
-			case 27:
+			case inputEof:
+			case inputEtx:
+			case inputEsc:
 				// CTRL+C, ESCAPE -> cancel and end input loop
 				std::cout << "[CANCELLED]";
 
@@ -254,45 +287,31 @@ namespace crawlservpp::Main {
 
 		std::cout << std::endl;
 
-		if(inputCancel)
-			return false;
-
-		return true;
+		return !inputCancel;
 	}
 
 	// static helper function: show version (and library versions if necessary)
-	void App::outputHeader(bool showLibraryVersions) {
+	void App::outputHeader(const bool showLibraryVersions) {
 		std::cout
-				<<	"crawlserv++ Command-and-Control Server\n"
-					"Version "
-				<<	Version::getString()
-				<<	"\n\n"
-					"Copyright (C) "
-				<<	(__DATE__ + 7)
-				<<	" Anselm Schmidt (ans[ät]ohai.su)\n\n"
-					"This program is free software: you can redistribute it and/or modify\n"
-					"it under the terms of the GNU General Public License as published by\n"
-					"the Free Software Foundation, either version 3 of the License, or\n"
-					"(at your option) any later version.\n\n"
-					"This program is distributed in the hope that it will be useful,\n"
-			    	"but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-			    	"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the\n"
-			    	"GNU General Public License for more details.\n\n"
-					"You should have received a copy of the GNU General Public License\n"
-			    	"along with this program. If not, see <https://www.gnu.org/licenses/>.\n";
+				<< descName << "\n"
+				<< descVer << Version::getString() << "\n\n"
+				<< descCopyrightHead << year << descCopyrightTail << "\n\n"
+				<< descLicense << "\n";
 
-		if(showLibraryVersions)
+		if(showLibraryVersions) {
 			std::cout
-					<< "\nusing:"
+					<< "\n" << descUsing
 					<< Helper::Versions::getLibraryVersionsStr("\t");
+		}
 
 		std::cout << std::endl;
 	}
 
 	// static helper function: check number of command line arguments, throws Main::Exception
-	void App::checkArgumentNumber(int argc) {
-		if(argc != 2)
-			throw Exception("USAGE: crawlserv <config_file> or crawlserv -v");
+	inline void App::checkArgumentNumber(const int args) {
+		if(args != 2) {
+			throw Exception(descUsage);
+		}
 	}
 
 	// static helper function: load database and server settings from configuration file, throws Main::Exception
@@ -335,8 +354,9 @@ namespace crawlservpp::Main {
 				);
 			}
 		}
-		else
+		else {
 			dbSettings.debugLogging = false;
+		}
 
 		// set server settings
 		if(!configFile.getValue("server_client_compress").empty()) {
@@ -356,12 +376,17 @@ namespace crawlservpp::Main {
 		serverSettings.port = configFile.getValue("server_port");
 		serverSettings.allowedClients = configFile.getValue("server_allow");
 
-		if(!configFile.getValue("server_cors_origins").empty())
+		if(!configFile.getValue("server_cors_origins").empty()) {
 			serverSettings.corsOrigins = configFile.getValue("server_cors_origins");
+		}
 
 		if(!configFile.getValue("server_logs_deletable").empty()) {
 			try {
-				serverSettings.logsDeletable = boost::lexical_cast<bool>(configFile.getValue("server_logs_deletable"));
+				serverSettings.logsDeletable = boost::lexical_cast<bool>(
+						configFile.getValue(
+								"server_logs_deletable"
+						)
+				);
 			}
 			catch(const boost::bad_lexical_cast& e) {
 				throw Exception(
@@ -372,12 +397,17 @@ namespace crawlservpp::Main {
 				);
 			}
 		}
-		else
+		else {
 			serverSettings.logsDeletable = false;
+		}
 
 		if(!configFile.getValue("server_data_deletable").empty()) {
 			try {
-				serverSettings.dataDeletable = boost::lexical_cast<bool>(configFile.getValue("server_data_deletable"));
+				serverSettings.dataDeletable = boost::lexical_cast<bool>(
+						configFile.getValue(
+								"server_data_deletable"
+						)
+				);
 			}
 			catch(const boost::bad_lexical_cast& e) {
 				throw Exception(
@@ -388,8 +418,9 @@ namespace crawlservpp::Main {
 				);
 			}
 		}
-		else
+		else {
 			serverSettings.dataDeletable = false;
+		}
 
 		networkSettings.defaultProxy = configFile.getValue("network_default_proxy");
 		networkSettings.torControlServer = configFile.getValue("network_tor_control_server");
@@ -397,7 +428,9 @@ namespace crawlservpp::Main {
 		if(!networkSettings.torControlServer.empty()) {
 			try {
 				networkSettings.torControlPort = boost::lexical_cast<std::uint16_t>(
-						configFile.getValue("network_tor_control_port")
+						configFile.getValue(
+								"network_tor_control_port"
+						)
 				);
 			}
 			catch(const boost::bad_lexical_cast& e) {
@@ -412,4 +445,4 @@ namespace crawlservpp::Main {
 		}
 	}
 
-} /* crawlservpp::App */
+} /* namespace crawlservpp::Main */

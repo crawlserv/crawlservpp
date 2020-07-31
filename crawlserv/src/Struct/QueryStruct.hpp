@@ -36,58 +36,119 @@
 
 namespace crawlservpp::Struct {
 
+	//! Structure to identify a query including its type and result type(s).
 	struct QueryStruct {
-		static constexpr std::uint8_t typeNone = 0;
-		static constexpr std::uint8_t typeRegEx = 1;
-		static constexpr std::uint8_t typeXPath = 2;
-		static constexpr std::uint8_t typeJsonPointer = 3;
-		static constexpr std::uint8_t typeJsonPath = 4;
-		static constexpr std::uint8_t typeXPathJsonPointer = 5;
-		static constexpr std::uint8_t typeXPathJsonPath = 6;
+		/*
+		 * CONSTANTS
+		 */
 
-		std::uint8_t type;
-		std::size_t index;
-		bool resultBool;
-		bool resultSingle;
-		bool resultMulti;
-		bool resultSubSets;
+		///@name Constants
+		///@{
 
-		// constructor A: initialize values
+		//! Unspecified query type.
+		static constexpr std::uint8_t typeNone{0};
+
+		//! %Query type identifying a RegEx query.
+		static constexpr std::uint8_t typeRegEx{1};
+
+		//! %Query type identifying a XPath query.
+		static constexpr std::uint8_t typeXPath{2};
+
+		//! %Query type identifying a JSONPointer query.
+		static constexpr std::uint8_t typeJsonPointer{3};
+
+		//! %Query type identifying a JSONPath query.
+		static constexpr std::uint8_t typeJsonPath{4};
+
+		//! %Query type identifying a combined XPath and JSONPointer query.
+		static constexpr std::uint8_t typeXPathJsonPointer{5};
+
+		//! %Query type identifying a combined XPath and JSONPath query.
+		static constexpr std::uint8_t typeXPathJsonPath{6};
+
+		///@}
+		///@name Properties
+		///@{
+
+		//! The type of the query (see above).
+		std::uint8_t type{QueryStruct::typeNone};
+
+		//! The index of the query inside its container.
+		std::size_t index{0};
+
+		//! Indicates whether the query generates a boolean result.
+		bool resultBool{false};
+
+		//! Indicates whether the query generates a single result.
+		bool resultSingle{false};
+
+		//! Indicates whether the query generates multiple results.
+		bool resultMulti{false};
+
+		//! Indicates whether the query generates subsets as results.
+		/*!
+		 * Subsets can directly be used to
+		 *  run queries on them again.
+		 */
+		bool resultSubSets{false};
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		QueryStruct() = default;
+
+		//! Constructor explicitly setting the properties.
+		/*!
+		 * \param setType The type of the
+		 *   query (see above).
+		 * \param setIndex The index of the
+		 *   query.
+		 * \param setResultBool Set whether
+		 *   the query generates a boolean
+		 *   result.
+		 * \param setResultSingle Set whether
+		 *   the query generates a single
+		 *   result.
+		 * \param setResultMulti Set whether
+		 *   the query generates multiple
+		 *   results.
+		 * \param setResultSubSets Set
+		 *   whether the query generates
+		 *   subsets as results.
+		 */
 		QueryStruct(
-				std::uint8_t type,
-				std::size_t index,
-				bool resultBool,
-				bool resultSingle,
-				bool resultMulti,
-				bool resultSubSets
-		) : 		type(type),
-					index(index),
-					resultBool(resultBool),
-					resultSingle(resultSingle),
-					resultMulti(resultMulti),
-					resultSubSets(resultSubSets) {}
+				std::uint8_t setType,
+				std::size_t setIndex,
+				bool setResultBool,
+				bool setResultSingle,
+				bool setResultMulti,
+				bool setResultSubSets
+		) : 		type(setType),
+					index(setIndex),
+					resultBool(setResultBool),
+					resultSingle(setResultSingle),
+					resultMulti(setResultMulti),
+					resultSubSets(setResultSubSets) {}
 
-		// constructor B: set default values via constructor A
-		QueryStruct() : QueryStruct(
-				QueryStruct::typeNone,
-				0,
-				false,
-				false,
-				false,
-				false
-		) {}
+		///@}
+		///@name Getter
+		///@{
 
-		// boolean operator
-		explicit operator bool() const noexcept {
+		//! Gets whether the query is valid, i.e. whether a query ID has been identified.
+		/*!
+		 * \returns True, if the query is valid
+		 *   and a query ID has been identified.
+		 *   False otherwise.
+		 */
+		[[nodiscard]] bool valid() const noexcept {
 			return this->index != 0;
 		}
 
-		// inverse boolean operator
-		bool operator!() const noexcept {
-			return this->index == 0;
-		}
+		///@}
 	};
 
-} /* crawlservpp::Query */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_QUERYSTRUCT_HPP_ */

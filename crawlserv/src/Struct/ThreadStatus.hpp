@@ -22,10 +22,7 @@
  *
  * ThreadStatus.hpp
  *
- * Thread status (thread ID, status message, pause state and progress i.e. last ID)
- *
- *  NOTE:	The thread ID is part of the status, because it will not be assigned
- *  		 until after the thread has been added to the database.
+ * Thread status (thread ID, status message, pause state and progress, i.e. last ID processed)
  *
  *  Created on: Apr 30, 2019
  *      Author: ans
@@ -39,22 +36,62 @@
 
 namespace crawlservpp::Struct {
 
+	//! Thread status containing its ID, status message, pause state, and progress (i.e. the last ID processed by the thread).
+	/*!
+	 * \note The thread ID is part of the status,
+	 *   because it will not be assigned until
+	 *   after the threas has been added to
+	 *   the database.
+	 *
+	 * \note It will effectively be assigned
+	 *   by the database when the thread is
+	 *   added to its table of threads.
+	 */
 	struct ThreadStatus {
-		std::uint64_t id;	// ID
-		std::string status;	// status message
-		bool paused;		// pause state
-		std::uint64_t last;	// progress i.e. last ID
+		///@name Properties
+		///@{
 
-		// constructors
-		ThreadStatus() : id(0), paused(false), last(0) {}
+		//! The ID of the thread.
+		std::uint64_t id{0};
+
+		//! The status message of the thread.
+		std::string status;
+
+		//! Indicates whether the thread is paused at the moment.
+		bool paused{false};
+
+		//! The progress of, i.e. the last ID processed by the thread.
+		std::uint64_t last{0};
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		ThreadStatus() = default;
+
+		//! Constructor setting the status of the thread.
+		/*!
+		 * \param setId The ID of the thread.
+		 * \param setStatus Constant reference
+		 *   to a string containing the status
+		 *   message of the thread.
+		 * \param setPaused Set whether the
+		 *   thread is currently paused.
+		 * \param setLast The progress of,
+		 *   i.e. the last processed ID by
+		 *   the thread.
+		 */
 		ThreadStatus(
 				std::uint64_t setId,
 				const std::string& setStatus,
 				bool setPaused,
 				std::uint64_t setLast
 		) : id(setId), status(setStatus), paused(setPaused), last(setLast) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_THREADSTATUS_HPP_ */

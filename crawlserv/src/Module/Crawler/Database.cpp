@@ -22,7 +22,8 @@
  *
  * Database.cpp
  *
- * This class provides database functionality for a crawler thread by implementing the Wrapper::Database interface.
+ * This class provides database functionality for a crawler thread
+ *  by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -32,26 +33,47 @@
 
 namespace crawlservpp::Module::Crawler {
 
-	// constructor: initialize values
+	/*
+	 * CONSTRUCTION
+	 */
+
+	//! Constructor setting the database connection for the thread.
+	/*!
+	 * \param dbThread Reference to the database
+	 * 	 connection used by the crawler thread.
+	 */
 	Database::Database(Module::Database& dbThread)
-						: Wrapper::Database(dbThread),
-						  crawlingTableAlias("a"),
-						  urlListTableAlias("b"),
-						  recrawl(false),
-						  urlCaseSensitive(true),
-						  urlDebug(false),
-						  urlStartupCheck(true),
-						  ps(_ps()) {}
+						: Wrapper::Database(dbThread) {}
 
-	// destructor stub
-	Database::~Database() {}
+	/*
+	 * SETTERS
+	 */
 
-	// enable or disable recrawling
+	//! Sets whether all URLs will be recrawled.
+	/*!
+	 * \note Needs to be set before preparing
+	 *   the SQL statements for the crawler.
+	 *
+	 * \param isRecrawl Set to true, to force
+	 *   the re-crawling of all URLs.
+	 */
 	void Database::setRecrawl(bool isRecrawl) {
 		this->recrawl = isRecrawl;
 	}
 
-	// enable or disable case-sensitive URLs for current URL list
+	//! Sets whether the current URL list is case-sensitive.
+	/*!
+	 * \note Needs to be set before preparing
+	 *   the SQL statements for the crawler.
+	 *
+	 * \param isUrlCaseSensitive Specifies
+	 *   whether the URLs in the current
+	 *   URL list are case-sensitive.
+	 *
+	 * \warning Changing this property of
+	 *   the URL list will invalidate all
+	 *   hashs previously created!
+	 */
 	void Database::setUrlCaseSensitive(bool isUrlCaseSensitive) {
 		this->urlCaseSensitive = isUrlCaseSensitive;
 
@@ -59,42 +81,78 @@ namespace crawlservpp::Module::Crawler {
 		this->setUrlListCaseSensitive(this->getOptions().urlListId, this->urlCaseSensitive);
 	}
 
-	// enable or disable URL debugging
+	//! Sets whether to enable URL debugging.
+	/*!
+	 * \note Needs to be set before preparing
+	 *   the SQL statements for the crawler.
+	 *
+	 * \param isUrlDebug Specifies whether
+	 *   URL debugging is enabled.
+	 */
 	void Database::setUrlDebug(bool isUrlDebug) {
 		this->urlDebug = isUrlDebug;
 	}
 
+	//! Sets whether to check URLs on startup.
+	/*!
+	 * \note Needs to be set before preparing
+	 *   the SQL statements for the crawler.
+	 *
+	 * \param isUrlStartupCheck Specifies
+	 *   whether to perform a check of the URL
+	 *   list on startup.
+	 */
 	// enable or disable URL check on startup
 	void Database::setUrlStartupCheck(bool isUrlStartupCheck) {
 		this->urlStartupCheck = isUrlStartupCheck;
 	}
 
-	// prepare SQL statements for crawler, throws Main::Database::Exception
+	/*
+	 * PREPARED SQL STATEMENTS
+	 */
+
+	//! Prepares the SQL statements for the crawler.
+	/*!
+	 * \note The target table needs to be
+	 *   prepared first.
+	 *
+	 * \throws Main::Database::Exception if
+	 *   a MySQL error occurs during the
+	 *   preparation of the SQL statements.
+	 */
 	void Database::prepare() {
-		const auto verbose = this->getLoggingVerbose();
+		const auto verbose{this->getLoggingVerbose()};
 
 		// create table names
-		this->urlListTable = "crawlserv_" + this->getOptions().websiteNamespace + "_" + this->getOptions().urlListNamespace;
-		this->crawlingTable = this->urlListTable + "_crawling";
+		this->urlListTable = "crawlserv_"
+				+ this->getOptions().websiteNamespace
+				+ "_"
+				+ this->getOptions().urlListNamespace;
+		this->crawlingTable = this->urlListTable
+				+ "_crawling";
 
-		const std::string crawledTable(this->urlListTable + "_crawled");
+		const auto crawledTable{this->urlListTable + "_crawled"};
 
 		// create SQL strings for URL hashing
-		std::string hashQuery("CRC32( ");
+		std::string hashQuery{"CRC32( "};
 
-		if(this->urlCaseSensitive)
+		if(this->urlCaseSensitive) {
 			hashQuery += "?";
-		else
+		}
+		else {
 			hashQuery += "LOWER( ? )";
+		}
 
 		hashQuery += " )";
 
-		std::string urlHash("CRC32( ");
+		std::string urlHash{"CRC32( "};
 
-		if(this->urlCaseSensitive)
+		if(this->urlCaseSensitive) {
 			urlHash += "url";
-		else
+		}
+		else {
 			urlHash += "LOWER( url )";
+		}
 
 		urlHash.push_back(')');
 
@@ -104,7 +162,7 @@ namespace crawlservpp::Module::Crawler {
 		// reserve memory
 		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::uint16_t));
 
-		if(!(this->ps.getUrlId)) {
+		if(this->ps.getUrlId == 0) {
 			this->log(verbose, "prepares getUrlId()...");
 
 			this->ps.getUrlId = this->addPreparedStatement(
@@ -121,87 +179,142 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.getNextUrl)) {
+		if(this->ps.getNextUrl == 0) {
 			this->log(verbose, "prepares getNextUrl()...");
 
-			std::string sqlQueryString(
-					"SELECT `" + this->urlListTableAlias + "1`.id"
-					" AS id,"
-					" `" + this->urlListTableAlias + "1`.url"
-					" AS url"
-					" FROM `" + this->urlListTable + "`"
-					" AS `" + this->urlListTableAlias + "1`"
-					" LEFT OUTER JOIN `" + this->crawlingTable + "`"
-					" AS `" + this->crawlingTableAlias + "1`"
-					" ON `" + this->urlListTableAlias + "1`.id"
-					" = `" + this->crawlingTableAlias + "1`.url"
-					" WHERE `" + this->urlListTableAlias + "1`.id > ?"
-					" AND manual = FALSE"
-			);
+			std::string sqlQueryString{
+								"SELECT `"
+			};
 
-			if(!(this->recrawl))
+			sqlQueryString += 		urlListTableAlias;
+			sqlQueryString += 		"1`.id"
+								" AS id,"
+								" `";
+			sqlQueryString +=		urlListTableAlias;
+			sqlQueryString +=		"1`.url"
+								" AS url"
+								" FROM `";
+			sqlQueryString += 		this->urlListTable;
+			sqlQueryString += 		"`"
+								" AS `";
+			sqlQueryString += 		urlListTableAlias;
+			sqlQueryString += 		"1`"
+								" LEFT OUTER JOIN `";
+			sqlQueryString += 		this->crawlingTable;
+			sqlQueryString += 		"`"
+								" AS `";
+			sqlQueryString += 		crawlingTableAlias;
+			sqlQueryString += 		"1`"
+								" ON `";
+			sqlQueryString += 		urlListTableAlias;
+			sqlQueryString += 		"1`.id"
+								" = `";
+			sqlQueryString += 		crawlingTableAlias;
+			sqlQueryString += 		"1`.url"
+								" WHERE `";
+			sqlQueryString += 		urlListTableAlias;
+			sqlQueryString += 		"1`.id > ?"
+								" AND manual = FALSE";
+
+			if(!(this->recrawl)) {
 				sqlQueryString +=
 								" AND"
 								" ("
-									" `" + this->crawlingTableAlias + "1`.success IS NULL"
-									" OR `" + this->crawlingTableAlias + "1`.success = FALSE"
+									" `";
+				sqlQueryString +=	crawlingTableAlias;
+				sqlQueryString +=	"1`.success IS NULL"
+								" OR `";
+				sqlQueryString +=	crawlingTableAlias;
+				sqlQueryString +=	"1`.success = FALSE"
 								")";
+			}
 
 			sqlQueryString +=	" AND"
 								" ("
-									" `" + this->crawlingTableAlias + "1`.locktime IS NULL"
-									" OR `" + this->crawlingTableAlias + "1`.locktime < NOW()"
+									" `";
+			sqlQueryString +=			crawlingTableAlias;
+			sqlQueryString +=			"1`.locktime IS NULL"
+									" OR `";
+			sqlQueryString +=			crawlingTableAlias;
+			sqlQueryString +=			"1`.locktime < NOW()"
 								" )"
-								" ORDER BY `" + this->urlListTableAlias + "1`.id"
+								" ORDER BY `";
+			sqlQueryString +=			urlListTableAlias;
+			sqlQueryString +=			"1`.id"
 								" LIMIT 1";
 
 			this->ps.getNextUrl = this->addPreparedStatement(sqlQueryString);
 		}
 
-		if(!(this->ps.addUrlIfNotExists)) {
+		if(this->ps.addUrlIfNotExists == 0) {
 			this->log(verbose, "prepares addUrlIfNotExists()...");
 
-			this->ps.addUrlIfNotExists = this->addPreparedStatement(
-					"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, manual, hash)"
-						"VALUES ("
-							" ("
-								"SELECT id"
-								" FROM"
-								" ("
-									"SELECT id, url"
-									" FROM `" + this->urlListTable + "`"
-									" AS `" + this->urlListTableAlias + "1`"
-									" WHERE hash = " + hashQuery +
-								" ) AS tmp2"
-								" WHERE url = ?"
-								" LIMIT 1"
-							" ),"
-							"?, "
-							"?, " +
-							hashQuery +
-						")"
+			std::string sqlQueryString{
+								"INSERT IGNORE INTO `"
+			};
+
+			sqlQueryString += 		this->urlListTable;
+			sqlQueryString += 		"`(id, url, manual, hash)"
+								"VALUES ("
+									" ("
+										"SELECT id"
+										" FROM"
+										" ("
+											"SELECT id, url"
+											" FROM `";
+			sqlQueryString +=					this->urlListTable;
+			sqlQueryString +=					"`"
+											" AS `";
+			sqlQueryString +=					urlListTableAlias;
+			sqlQueryString +=					"1`"
+											" WHERE hash = ";
+			sqlQueryString +=					hashQuery;
+			sqlQueryString +=				" ) AS tmp2"
+										" WHERE url = ?"
+										" LIMIT 1"
+									" ),"
+									"?, "
+									"?, ";
+			sqlQueryString +=		hashQuery;
+			sqlQueryString +=	")";
+
+			this->ps.addUrlIfNotExists = this->addPreparedStatement(sqlQueryString);
+		}
+
+		if(this->ps.add10UrlsIfNotExist == 0) {
+			this->log(verbose, "prepares addUrlsIfNotExist() [1/3]...");
+
+			this->ps.add10UrlsIfNotExist = this->addPreparedStatement(
+					this->queryAddUrlsIfNotExist(
+							nAtOnce10,
+							hashQuery
+					)
 			);
 		}
 
-		if(!(this->ps.add10UrlsIfNotExist)) {
-			this->log(verbose, "prepares addUrlsIfNotExist() [1/3]...");
-
-			this->ps.add10UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(10, hashQuery));
-		}
-
-		if(!(this->ps.add100UrlsIfNotExist)) {
+		if(this->ps.add100UrlsIfNotExist == 0) {
 			this->log(verbose, "prepares addUrlsIfNotExist() [2/3]...");
 
-			this->ps.add100UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(100, hashQuery));
+			this->ps.add100UrlsIfNotExist = this->addPreparedStatement(
+					this->queryAddUrlsIfNotExist(
+							nAtOnce100,
+							hashQuery
+					)
+			);
 		}
 
-		if(!(this->ps.add1000UrlsIfNotExist)) {
+		if(this->ps.add1000UrlsIfNotExist == 0) {
 			this->log(verbose, "prepares addUrlsIfNotExist() [3/3]...");
 
-			this->ps.add1000UrlsIfNotExist = this->addPreparedStatement(this->queryAddUrlsIfNotExist(1000, hashQuery));
+			this->ps.add1000UrlsIfNotExist = this->addPreparedStatement(
+					this->queryAddUrlsIfNotExist(
+							nAtOnce1000,
+							hashQuery
+					)
+			);
 		}
 
-		if(!(this->ps.getUrlPosition)) {
+		if(this->ps.getUrlPosition == 0) {
 			this->log(verbose, "prepares getUrlPosition()...");
 
 			this->ps.getUrlPosition = this->addPreparedStatement(
@@ -212,7 +325,7 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.getNumberOfUrls)) {
+		if(this->ps.getNumberOfUrls == 0) {
 			this->log(verbose, "prepares getNumberOfUrls()...");
 
 			this->ps.getNumberOfUrls = this->addPreparedStatement(
@@ -222,7 +335,7 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.getUrlLockTime)) {
+		if(this->ps.getUrlLockTime == 0) {
 			this->log(verbose, "prepares getUrlLock()...");
 
 			this->ps.getUrlLockTime = this->addPreparedStatement(
@@ -233,7 +346,7 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.isUrlCrawled)) {
+		if(this->ps.isUrlCrawled == 0) {
 			this->log(verbose, "prepares isUrlCrawled()...");
 
 			this->ps.isUrlCrawled = this->addPreparedStatement(
@@ -244,7 +357,7 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.renewUrlLockIfOk)) {
+		if(this->ps.renewUrlLockIfOk == 0) {
 			this->log(verbose, "prepares lockUrlIfOk() [1/2]...");
 
 			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
@@ -265,36 +378,45 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.addUrlLockIfOk)) {
+		if(this->ps.addUrlLockIfOk == 0) {
 			this->log(verbose, "prepares lockUrlIfOk() [2/2]...");
 
-			this->ps.addUrlLockIfOk = this->addPreparedStatement(
-					"INSERT INTO `" + this->crawlingTable + "`(id, url, locktime)"
-					" VALUES"
-					" ("
-						" ("
-							"SELECT id"
-							" FROM `" + this->crawlingTable + "`"
-							" AS " + this->crawlingTableAlias + "1"
-							" WHERE url = ?"
-							" LIMIT 1"
-						" ),"
-						" ?,"
-						" NOW() + INTERVAL ? SECOND"
-					" )"
-					" ON DUPLICATE KEY UPDATE locktime = "
-						"IF("
-							" ("
-								" locktime IS NULL"
-								" OR locktime < NOW()"
-							" ),"
-							" VALUES(locktime),"
-							" locktime"
-						")"
-			);
+			std::string sqlQueryString{
+								"INSERT INTO `"
+			};
+
+			sqlQueryString +=		this->crawlingTable;
+			sqlQueryString +=		"`(id, url, locktime)"
+								" VALUES"
+								" ("
+									" ("
+										"SELECT id"
+										" FROM `";
+			sqlQueryString +=				this->crawlingTable;
+			sqlQueryString +=				"`"
+										" AS ";
+			sqlQueryString +=				crawlingTableAlias;
+			sqlQueryString +=				"1"
+										" WHERE url = ?"
+										" LIMIT 1"
+									" ),"
+									" ?,"
+									" NOW() + INTERVAL ? SECOND"
+								" )"
+								" ON DUPLICATE KEY UPDATE locktime = "
+									"IF("
+										" ("
+											" locktime IS NULL"
+											" OR locktime < NOW()"
+										" ),"
+										" VALUES(locktime),"
+										" locktime"
+									")";
+
+			this->ps.addUrlLockIfOk = this->addPreparedStatement(sqlQueryString);
 		}
 
-		if(!(this->ps.unLockUrlIfOk)) {
+		if(this->ps.unLockUrlIfOk == 0) {
 			this->log(verbose, "prepares unLockUrlIfOk()...");
 
 			this->ps.unLockUrlIfOk = this->addPreparedStatement(
@@ -311,7 +433,7 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.setUrlFinishedIfOk)) {
+		if(this->ps.setUrlFinishedIfOk == 0) {
 			this->log(verbose, "prepares setUrlFinishedIfOk()...");
 
 			this->ps.setUrlFinishedIfOk = this->addPreparedStatement(
@@ -328,25 +450,27 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.saveContent)) {
+		if(this->ps.saveContent == 0) {
 			this->log(verbose, "prepares saveContent()...");
 
 			this->ps.saveContent = this->addPreparedStatement(
-					"INSERT INTO `" + crawledTable + "`(url, response, type, content)"
+					"INSERT INTO `" + crawledTable
+					+ "`(url, response, type, content)"
 					" VALUES (?, ?, ?, ?)"
 			);
 		}
 
-		if(!(this->ps.saveArchivedContent)) {
+		if(this->ps.saveArchivedContent == 0) {
 			this->log(verbose, "prepares saveArchivedContent()...");
 
 			this->ps.saveArchivedContent = this->addPreparedStatement(
-					"INSERT INTO `" + crawledTable + "`(url, crawltime, archived, response, type, content)"
+					"INSERT INTO `" + crawledTable
+					+ "`(url, crawltime, archived, response, type, content)"
 					" VALUES (?, ?, TRUE, ?, ?, ?)"
 			);
 		}
 
-		if(!(this->ps.isArchivedContentExists)) {
+		if(this->ps.isArchivedContentExists == 0) {
 			this->log(verbose, "prepares isArchivedContentExists()...");
 
 			this->ps.isArchivedContentExists = this->addPreparedStatement(
@@ -361,15 +485,17 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.urlDuplicationCheck) && (this->urlStartupCheck || this->urlDebug)) {
+		if(this->ps.urlDuplicationCheck == 0 && (this->urlStartupCheck || this->urlDebug)) {
 			this->log(verbose, "prepares urlDuplicationCheck()...");
 
 			std::string groupBy;
 
-			if(this->urlCaseSensitive)
+			if(this->urlCaseSensitive) {
 				groupBy = "url";
-			else
+			}
+			else {
 				groupBy = "LOWER(url)";
+			}
 
 			this->ps.urlDuplicationCheck = this->addPreparedStatement(
 					"SELECT "
@@ -390,7 +516,7 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.urlHashCheck)) {
+		if(this->ps.urlHashCheck == 0) {
 			this->log(verbose, "prepares urlHashCheck() [1/2]...");
 
 			this->ps.urlHashCheck = this->addPreparedStatement(
@@ -404,8 +530,8 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.urlHashCorrect)) {
-			this->log(verbose, "prepares urlHashCheck() [1/2]...");
+		if(this->ps.urlHashCorrect == 0) {
+			this->log(verbose, "prepares urlHashCheck() [2/2]...");
 
 			this->ps.urlHashCorrect = this->addPreparedStatement(
 					"UPDATE `" + this->urlListTable + "`"
@@ -413,8 +539,8 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.urlEmptyCheck) && this->urlStartupCheck) {
-			this->log(verbose, "prepares urlHashCheck()...");
+		if(this->ps.urlEmptyCheck == 0 && this->urlStartupCheck) {
+			this->log(verbose, "prepares urlEmptyCheck()...");
 
 			this->ps.urlEmptyCheck = this->addPreparedStatement(
 					"SELECT id"
@@ -424,7 +550,7 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.getUrls) && this->urlStartupCheck) {
+		if(this->ps.getUrls == 0 && this->urlStartupCheck) {
 			this->log(verbose, "prepares getUrls()...");
 
 			this->ps.getUrls = this->addPreparedStatement(
@@ -433,15 +559,17 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(!(this->ps.removeDuplicates) && (this->urlStartupCheck || this->urlDebug)) {
+		if(this->ps.removeDuplicates == 0 && (this->urlStartupCheck || this->urlDebug)) {
 			this->log(verbose, "prepares removeDuplicates()...");
 
 			std::string urlComparison;
 
-			if(this->urlCaseSensitive)
+			if(this->urlCaseSensitive) {
 				urlComparison = "url LIKE ?";
-			else
+			}
+			else {
 				urlComparison = "LOWER(url) LIKE LOWER(?)";
+			}
 
 			this->ps.removeDuplicates = this->addPreparedStatement(
 					" DELETE"
@@ -459,60 +587,111 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// get the ID of an URL (uses hash check for first checking the probable existence of the URL),
-	//  throws Database::Exception
+	/*
+	 * URLS
+	 */
+
+	//! Gets the ID of a URL from the database.
+	/*!
+	 * Uses a hash check for first checking the
+	 *  probable existence of the URL.
+	 *
+	 * \param url Constant reference to a string
+	 *   containing the URL to be checked.
+	 *
+	 * \returns The ID of the given URL, or zero
+	 *   if the URL does not exist in the current
+	 *   URL list.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, or the
+	 *   prepared SQL statement for retrieving the
+	 *   ID of a URL is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while retrieving the ID of
+	 *   the URL from the database.
+	 */
 	std::uint64_t Database::getUrlId(const std::string& url) {
 		// check argument
-		if(url.empty())
-			throw Exception("Crawler::Database::getUrlId(): No URL specified");
+		if(url.empty()) {
+			throw Exception(
+					"Crawler::Database::getUrlId():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getUrlId))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlId(...)");
+		if(this->ps.getUrlId == 0) {
+			throw Exception(
+					"Crawler::Database::getUrlId():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlId));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.getUrlId)};
 
 		// get ID of URL from database
 		try {
 			// execute SQL query for getting URL
-			sqlStatement.setString(1, url);
-			sqlStatement.setString(2, url);
+			sqlStatement.setString(sqlArg1, url);
+			sqlStatement.setString(sqlArg2, url);
 
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next())  {
 				return sqlResultSet->getUInt64("id");
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlId", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::getUrlId", e);
+		}
 
 		return 0;
 	}
 
-	// get the next URL to crawl from database, return ID and URL or empty IdString if all URLs have been parsed,
-	//  throws Database::Exception
+	//! Gets the ID of the next URL to crawl from the database.
+	/*!
+	 * \param currentUrlId The ID of the URL that
+	 *   has been crawled last.
+	 *
+	 * \returns A pair of the ID and a string
+	 *   containing the next URL to crawl,
+	 *   or an empty pair if there are no
+	 *   more URLs to crawl.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statement for
+	 *   retrieving the next URL to crawl is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while retrieving the next URL
+	 *   to crawl from the database.
+	 */
 	Database::IdString Database::getNextUrl(std::uint64_t currentUrlId) {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getNextUrl))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::getNextUrl(...)");
+		if(this->ps.getNextUrl == 0) {
+			throw Exception(
+					"Crawler::Database::getNextUrl():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getNextUrl));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.getNextUrl)};
 
 		// get next URL from database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, currentUrlId);
+			sqlStatement.setUInt64(sqlArg1, currentUrlId);
 
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
@@ -522,179 +701,254 @@ namespace crawlservpp::Module::Crawler {
 				);
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getNextUrl", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::getNextUrl", e);
+		}
 
 		return IdString();
 	}
 
-	// add URL to database if it does not exist already, return whether it was added,
-	//  throws Database::Exception
+	//! Adds a URL to the database, if it doesnt exist already.
+	/*!
+	 * \param urlString Constant reference to a
+	 *   string containing the URL to be added
+	 *   to the current URL list in the database.
+	 * \param manual Specifies whether the URL
+	 *   is a custom URL, i.e. has been manually
+	 *   added.
+	 *
+	 * \returns True if the URL has been added.
+	 *   False, if the URL had already existed.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, or the
+	 *   prepared SQL statement for adding a URL to
+	 *   the database is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while adding the URL to
+	 *   the database.
+	 */
 	bool Database::addUrlIfNotExists(const std::string& urlString, bool manual) {
 		// check argument
-		if(urlString.empty())
-			throw Exception("Crawler::Database::addUrlIfNotExists(): No URL specified");
+		if(urlString.empty()) {
+			throw Exception(
+					"Crawler::Database::addUrlIfNotExists():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.addUrlIfNotExists))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::addUrlIfNotExists(...)");
+		if(this->ps.addUrlIfNotExists == 0) {
+			throw Exception(
+					"Crawler::Database::addUrlIfNotExists():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.addUrlIfNotExists));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.addUrlIfNotExists)};
 
 		// add URL to database and get resulting ID
 		try {
 			// execute SQL query
-			sqlStatement.setString(1, urlString);
-			sqlStatement.setString(2, urlString);
-			sqlStatement.setString(3, urlString);
-			sqlStatement.setBoolean(4, manual);
-			sqlStatement.setString(5, urlString);
+			sqlStatement.setString(sqlArg1, urlString);
+			sqlStatement.setString(sqlArg2, urlString);
+			sqlStatement.setString(sqlArg3, urlString);
+			sqlStatement.setBoolean(sqlArg4, manual);
+			sqlStatement.setString(sqlArg5, urlString);
 
 			return Database::sqlExecuteUpdate(sqlStatement) > 0;
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlIfNotExists", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::addUrlIfNotExists", e);
+		}
 
-		return false; // not needed
+		return false; // not really needed
 	}
 
-	// add URLs that do not exist already to the database, return the number of added URLs,
-	//  throws Database::Exception
+	//! Adds URLs to the database, if they do not exist already.
+	/*!
+	 * Adds the given URLs in batches of 1,000,
+	 *  100 and 10 to the database, if
+	 *  possible, to considerably speed up the
+	 *  process.
+	 *
+	 * \param urls Reference to a queue
+	 *   containing the URLs to be added to the
+	 *   current URL list in the database. The
+	 *   queue will be cleared after a
+	 *   succesfull call to the function, even
+	 *   if some or all of the given URL have
+	 *   not been added, because they already
+	 *   existed in the database.
+	 * \param manual Specifies whether the URLs
+	 *   are custom URL, i.e. have been manually
+	 *   added.
+	 *
+	 * \returns The number of given URLs that
+	 *   did not yet exist and have been added
+	 *   to the database.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if one of the prepared SQL statements for
+	 *   adding URLs to the database is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while adding the URLs to
+	 *   the database.
+	 */
 	std::size_t Database::addUrlsIfNotExist(std::queue<std::string>& urls, bool manual) {
-		std::size_t result = 0;
+		std::size_t result{0};
 
 		// check argument
-		if(urls.empty())
+		if(urls.empty()) {
 			return 0;
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statements
 		if(
-				!(this->ps.addUrlIfNotExists)
-				|| !(this->ps.add10UrlsIfNotExist)
-				|| !(this->ps.add100UrlsIfNotExist)
-				|| !(this->ps.add1000UrlsIfNotExist)
-		)
-			throw Exception("Missing prepared SQL statement for Crawler::Database::addUrlsIfNotExist(...)");
+				this->ps.addUrlIfNotExists == 0
+				|| this->ps.add10UrlsIfNotExist == 0
+				|| this->ps.add100UrlsIfNotExist == 0
+				|| this->ps.add1000UrlsIfNotExist == 0
+		) {
+			throw Exception(
+					"Crawler::Database::addUrlsIfNotExist():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statements
-		sql::PreparedStatement& sqlStatement1 = this->getPreparedStatement(this->ps.addUrlIfNotExists);
-		sql::PreparedStatement& sqlStatement10 = this->getPreparedStatement(this->ps.add10UrlsIfNotExist);
-		sql::PreparedStatement& sqlStatement100 = this->getPreparedStatement(this->ps.add100UrlsIfNotExist);
-		sql::PreparedStatement& sqlStatement1000 = this->getPreparedStatement(this->ps.add1000UrlsIfNotExist);
+		auto& sqlStatement1{this->getPreparedStatement(this->ps.addUrlIfNotExists)};
+		auto& sqlStatement10{this->getPreparedStatement(this->ps.add10UrlsIfNotExist)};
+		auto& sqlStatement100{this->getPreparedStatement(this->ps.add100UrlsIfNotExist)};
+		auto& sqlStatement1000{this->getPreparedStatement(this->ps.add1000UrlsIfNotExist)};
+
+		// number of arguments for adding URLs
+		constexpr auto numArgsAdd{5};
 
 		try {
 			// add 1.000 URLs at once
-			while(urls.size() >= 1000) {
-				for(std::uint16_t n = 0; n < 1000; ++n) {
-					sqlStatement1000.setString((n * 5) + 1, urls.front());
-					sqlStatement1000.setString((n * 5) + 2, urls.front());
-					sqlStatement1000.setString((n * 5) + 3, urls.front());
-					sqlStatement1000.setBoolean((n * 5) + 4, manual);
-					sqlStatement1000.setString((n * 5) + 5, urls.front());
+			while(urls.size() >= nAtOnce1000) {
+				for(std::uint16_t n{0}; n < nAtOnce1000; ++n) {
+					sqlStatement1000.setString(n * numArgsAdd + sqlArg1, urls.front());
+					sqlStatement1000.setString(n * numArgsAdd + sqlArg2, urls.front());
+					sqlStatement1000.setString(n * numArgsAdd + sqlArg3, urls.front());
+					sqlStatement1000.setBoolean(n * numArgsAdd + sqlArg4, manual);
+					sqlStatement1000.setString(n * numArgsAdd + sqlArg5, urls.front());
 
 					urls.pop();
 				}
 
-				int added = Database::sqlExecuteUpdate(sqlStatement1000);
+				const auto added{Database::sqlExecuteUpdate(sqlStatement1000)};
 
-				if(added > 0)
+				if(added > 0) {
 					result += added;
+				}
 			}
 
 			// add 100 URLs at once
-			while(urls.size() >= 100) {
-				for(std::uint8_t n = 0; n < 100; ++n) {
-					sqlStatement100.setString((n * 5) + 1, urls.front());
-					sqlStatement100.setString((n * 5) + 2, urls.front());
-					sqlStatement100.setString((n * 5) + 3, urls.front());
-					sqlStatement100.setBoolean((n * 5) + 4, manual);
-					sqlStatement100.setString((n * 5) + 5, urls.front());
+			while(urls.size() >= nAtOnce100) {
+				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+					sqlStatement100.setString(n * numArgsAdd + sqlArg1, urls.front());
+					sqlStatement100.setString(n * numArgsAdd + sqlArg2, urls.front());
+					sqlStatement100.setString(n * numArgsAdd + sqlArg3, urls.front());
+					sqlStatement100.setBoolean(n * numArgsAdd + sqlArg4, manual);
+					sqlStatement100.setString(n * numArgsAdd + sqlArg5, urls.front());
 
 					urls.pop();
 				}
 
-				int added = Database::sqlExecuteUpdate(sqlStatement100);
+				const auto added{Database::sqlExecuteUpdate(sqlStatement100)};
 
-				if(added > 0)
+				if(added > 0) {
 					result += added;
+				}
 			}
 
 			// add 10 URLs at once
-			while(urls.size() >= 10) {
-				for(std::uint8_t n = 0; n < 10; ++n) {
-					sqlStatement10.setString((n * 5) + 1, urls.front());
-					sqlStatement10.setString((n * 5) + 2, urls.front());
-					sqlStatement10.setString((n * 5) + 3, urls.front());
-					sqlStatement10.setBoolean((n * 5) + 4, manual);
-					sqlStatement10.setString((n * 5) + 5, urls.front());
+			while(urls.size() >= nAtOnce10) {
+				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+					sqlStatement10.setString(n * numArgsAdd + sqlArg1, urls.front());
+					sqlStatement10.setString(n * numArgsAdd + sqlArg2, urls.front());
+					sqlStatement10.setString(n * numArgsAdd + sqlArg3, urls.front());
+					sqlStatement10.setBoolean(n * numArgsAdd + sqlArg4, manual);
+					sqlStatement10.setString(n * numArgsAdd + sqlArg5, urls.front());
 
 					urls.pop();
 				}
 
-				int added = Database::sqlExecuteUpdate(sqlStatement10);
+				const auto added{Database::sqlExecuteUpdate(sqlStatement10)};
 
-				if(added > 0)
+				if(added > 0) {
 					result += added;
+				}
 			}
 
 			// add remaining URLs
-			while(urls.size()) {
-				sqlStatement1.setString(1, urls.front());
-				sqlStatement1.setString(2, urls.front());
-				sqlStatement1.setString(3, urls.front());
-				sqlStatement1.setBoolean(4, manual);
-				sqlStatement1.setString(5, urls.front());
+			while(!urls.empty()) {
+				sqlStatement1.setString(sqlArg1, urls.front());
+				sqlStatement1.setString(sqlArg2, urls.front());
+				sqlStatement1.setString(sqlArg3, urls.front());
+				sqlStatement1.setBoolean(sqlArg4, manual);
+				sqlStatement1.setString(sqlArg5, urls.front());
 
 				urls.pop();
 
-				if(Database::sqlExecuteUpdate(sqlStatement1) > 0)
+				if(Database::sqlExecuteUpdate(sqlStatement1) > 0) {
 					++result;
+				}
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlsIfNotExist", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::addUrlsIfNotExist", e);
+		}
 
 		return result;
 	}
 
-	// add URL to database and return ID of newly added URL
-	std::uint64_t Database::addUrlGetId(const std::string& urlString, bool manual) {
-		std::uint64_t newId = 0;
-
-		// add URL to database
-		this->addUrlIfNotExists(urlString, manual);
-
-		// get resulting ID
-		try {
-			// get result
-			newId = this->getLastInsertedId();
-		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::addUrlGetId", e); }
-
-		return newId;
-	}
-
-	// get the position of the URL in the URL list, throws Database::Exception
+	//! Gets the position of a URL in the current URL list.
+	/*!
+	 * \param urlId ID of the URL whose position
+	 *   in the current URL list will be retrieved
+	 *   from the database.
+	 *
+	 * \returns The position of the given URL in
+	 *   the current URL list.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statement for
+	 *   retrieving the position of a URL is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while retrieving the position
+	 *   of the URL from the database.
+	 */
 	std::uint64_t Database::getUrlPosition(std::uint64_t urlId) {
-		std::uint64_t result = 0;
+		std::uint64_t result{0};
 
 		// check argument
-		if(!urlId)
+		if(urlId == 0) {
 			return 0;
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getUrlPosition))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlPosition()");
+		if(this->ps.getUrlPosition == 0) {
+			throw Exception(
+					"Crawler::Database::getUrlPosition():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlPosition));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.getUrlPosition)};
 
 		// get URL position of URL from database
 		try {
@@ -702,35 +956,53 @@ namespace crawlservpp::Module::Crawler {
 			this->beginNoLock();
 
 			// execute SQL query
-			sqlStatement.setUInt64(1, urlId);
+			sqlStatement.setUInt64(sqlArg1, urlId);
 
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// re-enable locking
 			this->endNoLock();
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next())
+			if(sqlResultSet && sqlResultSet->next()) {
 				result = sqlResultSet->getUInt64("result");
+			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlPosition", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::getUrlPosition", e);
+		}
 
 		return result;
 	}
 
-	// get the number of URLs in the URL list, throws Database::Exception
+	//! Gets the number of URL in the current URL list.
+	/*!
+	 * \returns The total number of URLs in the
+	 *   current URL list.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statement for
+	 *   retrieving the number of URLs is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while retrieving the number
+	 *   of URLs from the database.
+	 */
 	std::uint64_t Database::getNumberOfUrls() {
-		std::uint64_t result = 0;
+		std::uint64_t result{0};
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getNumberOfUrls))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::getNumberOfUrls()");
+		if(this->ps.getNumberOfUrls == 0) {
+			throw Exception(
+					"Crawler::Database::getNumberOfUrls():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getNumberOfUrls));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.getNumberOfUrls)};
 
 		// get number of URLs from database
 		try {
@@ -738,47 +1010,71 @@ namespace crawlservpp::Module::Crawler {
 			this->beginNoLock();
 
 			// execute SQL query
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// re-enable locking
 			this->endNoLock();
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next())
+			if(sqlResultSet && sqlResultSet->next()) {
 				result = sqlResultSet->getUInt64("result");
+			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getNumberOfUrls", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::getNumberOfUrls", e);
+		}
 
 		return result;
 	}
 
-	// check the URL list for duplicates, throw Exception if duplicates are found and removed, throws Database::Exception
+	/*
+	 * URL CHECKING
+	 */
+
+	//! Checks the current URL list for duplicates.
+	/*!
+	 * Always throws an exception, unless no
+	 *  duplicates are found.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statements for
+	 *   checking the current URL list for
+	 *   duplicates is missing, or if duplicates
+	 *   have been found and removed.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while checking the URL list
+	 *   for duplicates.
+	 */
 	void Database::urlDuplicationCheck() {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.urlDuplicationCheck))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::urlDuplicationCheck()");
+		if(this->ps.urlDuplicationCheck == 0) {
+			throw Exception(
+					"Crawler::Database::urlDuplicationCheck():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.urlDuplicationCheck));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.urlDuplicationCheck)};
 
 		// get number of URLs from database
 		try {
 			// execute SQL query
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result and remove possible duplicates
 			if(sqlResultSet) {
 				if(sqlResultSet->next()) {
 					std::queue<std::string> duplicates;
 
-					do
+					do {
 						duplicates.push(sqlResultSet->getString("url"));
-					while(sqlResultSet->next());
+					} while(sqlResultSet->next());
 
-					std::size_t numDuplicates = 0;
+					std::size_t numDuplicates{0};
 
 					while(!duplicates.empty()) {
 						numDuplicates += this->removeDuplicates(duplicates.front());
@@ -788,7 +1084,8 @@ namespace crawlservpp::Module::Crawler {
 
 					// throw exception after duplicates have been removed
 					throw Exception(
-							"Crawler::Database::urlDuplicationCheck(): removed "
+							"Crawler::Database::urlDuplicationCheck():"
+							" removed "
 							+ std::to_string(numDuplicates)
 							+ " duplicate URL(s) from `"
 							+ this->urlListTable + "`"
@@ -796,48 +1093,60 @@ namespace crawlservpp::Module::Crawler {
 				}
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlDuplicationCheck", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::urlDuplicationCheck", e);
+		}
 	}
 
-	// check the hash values in the URL list, correct hash mismatches, throws Database::Exception
+	//! Checks the hash values in the current URL list.
+	/*!
+	 * Always throws an exception, unless all hash
+	 *  values are correct.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statements for
+	 *   checking the hash values in the current URL
+	 *   list is missing, or if invalid has values
+	 *   have been found and corrected.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while checking the hash values
+	 *   in the URL list.
+	 */
 	void Database::urlHashCheck() {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statements
-		if(!(this->ps.urlHashCheck))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
-
-		if(!(this->ps.urlHashCorrect))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::urlHashCheck()");
+		if(this->ps.urlHashCheck == 0 || this->ps.urlHashCorrect == 0) {
+			throw Exception(
+					"Crawler::Database::urlHashCheck():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& checkStatement = this->getPreparedStatement(this->ps.urlHashCheck);
+		auto& checkStatement{this->getPreparedStatement(this->ps.urlHashCheck)};
 
 		// get number of URLs from database
 		try {
 			// execute SQL query
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(checkStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(checkStatement)};
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next() && sqlResultSet->getBoolean("result")) {
 				// correct hash values
-				sql::PreparedStatement& correctStatement = this->getPreparedStatement(this->ps.urlHashCorrect);
-
-				int updated = Database::sqlExecuteUpdate(correctStatement);
+				auto& correctStatement{this->getPreparedStatement(this->ps.urlHashCorrect)};
+				auto updated{Database::sqlExecuteUpdate(correctStatement)};
 
 				if(updated > 0) {
 					std::ostringstream logStrStr;
 
 					logStrStr << "corrected hash ";
 
-					switch(updated) {
-					case 1:
+					if(updated == 1) {
 						logStrStr << "value for one URL.";
-
-						break;
-
-					default:
+					}
+					else {
 						logStrStr.imbue(std::locale(""));
 
 						logStrStr << "values for " << updated << " URLs.";
@@ -848,257 +1157,483 @@ namespace crawlservpp::Module::Crawler {
 			}
 
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::urlHashCheck", e);
+		}
 	}
 
-	// check for empty URLs in the URL list, throws Exception if an empty URL exists,
-	//  throws Database::Exception
+	//! Checks for empty URLs in the current URL list.
+	/*!
+	 * Always throws an exception, unless no empty
+	 *  URLs are found.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statements for
+	 *   checking the current URL list for empty URLs
+	 *   is missing, or if empty URLs have been found.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while checking for empty URLs
+	 *   in the current URL list.
+	 */
 	void Database::urlEmptyCheck() {
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.urlEmptyCheck))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::urlEmptyCheck()");
+		if(this->ps.urlEmptyCheck == 0) {
+			throw Exception(
+					"Crawler::Database::urlEmptyCheck():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.urlEmptyCheck));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.urlEmptyCheck)};
 
 		// get number of URLs from database
 		try {
 			// execute SQL query
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
 				throw Exception(
 						"Crawler::Database::urlEmptyCheck():"
-						" Empty URL in `"
+						" Empty URL(s) in `"
 						+ this->urlListTable
 						+ "`"
 				);
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::urlHashCheck", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::urlEmptyCheck", e);
+		}
 	}
 
-	// check for URLs containing invalid UTF-8 characters in the URL list, throws Exception if invalid URL exists,
-	//  throws Database::Exception
+	//! Checks for URLs containing invalid UTF-8 characters in the current URL list.
+	/*!
+	 * Always throws an exception, unless all URLs
+	 *  in the current URL list contain only valid
+	 *  UTF-8-encoded characters.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statement for
+	 *   retrieving all URLs from the current URL
+	 *   list is missing, if a URL in the current
+	 *   URL list contains invalid UTF-8 characters,
+	 *   or if a UTF-8 error while checking the URLs
+	 *   in the current URL list.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while retrieving all URLs
+	 *   from the current URL list.
+	 *
+	 * \sa getUrls
+	 */
 	void Database::urlUtf8Check() {
 		// get all URLs from URL list
-		std::queue<std::string> urls(this->getUrls());
+		auto urls{this->getUrls()};
 
 		// check URLs for invalid UTF-8
 		while(!urls.empty()) {
 			std::string err;
 
 			if(!Helper::Utf8::isValidUtf8(urls.front(), err)) {
-				if(err.empty())
+				if(err.empty()) {
 					throw Exception(
-							"Crawler::Database::urlUtf8Check(): URL containing invalid UTF-8 in `"
+							"Crawler::Database::urlUtf8Check():"
+							" URL(s) containing invalid UTF-8 in `"
 							+ this->urlListTable
 							+ "` ["
 							+ urls.front()
 							+ "]"
 					);
-				else
-					throw Exception(
-							"Crawler::Database::urlUtf8Check(): "
-							+ err
-							+ " in `"
-							+ this->urlListTable
-							+ "` ["
-							+ urls.front()
-							+ "]"
-					);
+				}
+
+				throw Exception(
+						"Crawler::Database::urlUtf8Check(): "
+						+ err
+						+ " in `"
+						+ this->urlListTable
+						+ "` ["
+						+ urls.front()
+						+ "]"
+				);
 			}
 
 			urls.pop();
 		}
 	}
 
-	// get the URL lock end time of a specific URL from database, throws Database::Exception
+	/*
+	 * URL LOCKING
+	 */
+
+	//! Gets the time, until which a URL has been locked.
+	/*!
+	 * \param urlId The ID of the URL whose lock time
+	 *   will be retrieved.
+	 *
+	 * \returns The time, until which the URL has been
+	 *   locked, in the format @c YYYY-MM-DD HH:MM:SS.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if the prepared SQL statement for retrieving
+	 *   the lock time is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while retrieving the lock time
+	 *   of the URL.
+	 */
 	std::string Database::getUrlLockTime(std::uint64_t urlId) {
 		// check argument
-		if(!urlId)
+		if(urlId == 0) {
 			return std::string();
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getUrlLockTime))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrlLockTime(...)");
+		if(this->ps.getUrlLockTime == 0) {
+			throw Exception(
+					"Crawler::Database::getUrlLockTime():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrlLockTime));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.getUrlLockTime)};
 
 		// get URL lock end time from database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, urlId);
+			sqlStatement.setUInt64(sqlArg1, urlId);
 
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next())
+			if(sqlResultSet && sqlResultSet->next()) {
 				return sqlResultSet->getString("locktime");
+			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrlLockTime", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::getUrlLockTime", e);
+		}
 
 		return std::string();
 	}
 
-	// get the URL lock ID for a specific URL from the database, return whether the URL has been crawled),
-	//  throws Database::Exception
+	//! Gets whether a URL has been crawled.
+	/*!
+	 * \param urlId The ID of the URL for which to
+	 *   check whether it has been crawled.
+	 *
+	 * \returns True, if the URL has been crawled.
+	 *   False, if the URL does not exist, or has
+	 *   not yet been crawled.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, i.e. the
+	 *   given URL ID is zero, or if the prepared
+	 *   SQL statement for checking whether a URL
+	 *   has been crawled is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while checking whether the URL
+	 *   has been crawled.
+	 */
 	bool Database::isUrlCrawled(std::uint64_t urlId) {
 		// check arguments
-		if(!urlId)
-			throw Exception("Crawler::Database::isUrlCrawled(): No URL ID specified");
+		if(urlId == 0) {
+			throw Exception(
+					"Crawler::Database::isUrlCrawled():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.isUrlCrawled))
-			throw Exception("Missing prepared SQL statement for Module::Crawler::Database::isUrlCrawled(...)");
+		if(this->ps.isUrlCrawled == 0) {
+			throw Exception(
+					"Module::Crawler::Database::isUrlCrawled():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.isUrlCrawled));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.isUrlCrawled)};
 
 		// get lock ID from database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, urlId);
+			sqlStatement.setUInt64(sqlArg1, urlId);
 
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next())
+			if(sqlResultSet && sqlResultSet->next()) {
 				return sqlResultSet->getBoolean("success");
+			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isUrlCrawled", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::isUrlCrawled", e);
+		}
 
 		return false;
 	}
 
-	// lock a URL in the database if it is lockable (or is still locked) or return an empty string if locking was unsuccessful,
-	//  throws Database::Exception
+	//! Locks a URL if it is lockable or still locked by the current thread.
+	/*!
+	 * \param urlId The ID of the URL to lock.
+	 * \param lockTime Constant reference to a
+	 *   string containing the time at which the
+	 *   current lock by the thread for this URL
+	 *   will end (or has ended). Constant
+	 *   reference to an empty string, if the URL
+	 *   has not yet been locked by the current
+	 *   thread.
+	 * \param lockTimeout The time for which to
+	 *   lock the URL for the current thread, in
+	 *   seconds.
+	 *
+	 * \returns A copy of a string containing the
+	 *   time until which the URL has been locked
+	 *   for the current thread, in the format @c
+	 *   YYYY-MM-DD HH:MM:SS. A copy of an empty
+	 *   string, if the URL could not be locked,
+	 *   or its lock could not be renewed for the
+	 *   current thread, e.g. because it has
+	 *   already been locked by another thread
+	 *   since the current URL lock expired.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, i.e. the
+	 *   given URL ID is zero, or if one of the
+	 *   prepared SQL statements for locking a URL,
+	 *   or for renewing a URL lock is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while locking the URL, or
+	 *   renewing its URL lock.
+	 *
+	 * \sa getLockTime
+	 */
 	std::string Database::lockUrlIfOk(
 			std::uint64_t urlId,
 			const std::string& lockTime,
 			std::uint32_t lockTimeout
 	) {
 		// check argument
-		if(!urlId)
-			throw Exception("Crawler::Database::lockUrlIfOk(): No URL ID specified");
+		if(urlId == 0) {
+			throw Exception(
+					"Crawler::Database::lockUrlIfOk():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statements
-		if(!(this->ps.addUrlLockIfOk) || !(this->ps.renewUrlLockIfOk))
-			throw Exception("Missing prepared SQL statement for Module::Crawler::Database::lockUrlIfOk(...)");
+		if(this->ps.addUrlLockIfOk == 0 || this->ps.renewUrlLockIfOk == 0) {
+			throw Exception(
+					"Module::Crawler::Database::lockUrlIfOk():"
+					"Missing prepared SQL statement"
+			);
+		}
 
 		if(lockTime.empty()) {
 			// get prepared SQL statement for locking the URL
-			sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.addUrlLockIfOk));
+			auto& sqlStatement{this->getPreparedStatement(this->ps.addUrlLockIfOk)};
 
 			// add URL lock to database
 			try {
 				// execute SQL query
-				sqlStatement.setUInt64(1, urlId);
-				sqlStatement.setUInt64(2, urlId);
-				sqlStatement.setUInt(3, lockTimeout);
+				sqlStatement.setUInt64(sqlArg1, urlId);
+				sqlStatement.setUInt64(sqlArg2, urlId);
+				sqlStatement.setUInt(sqlArg3, lockTimeout);
 
-				if(Database::sqlExecuteUpdate(sqlStatement) < 1)
+				if(Database::sqlExecuteUpdate(sqlStatement) < 1) {
 					return std::string(); // locking failed when no entries have been updated
+				}
 			}
-			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk", e); }
+			catch(const sql::SQLException &e) {
+				Database::sqlException("Crawler::Database::lockUrlIfOk", e);
+			}
 		}
 		else {
 			// get prepared SQL statement for renewing the URL lock
-			sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.renewUrlLockIfOk));
+			auto& sqlStatement{this->getPreparedStatement(this->ps.renewUrlLockIfOk)};
 
 			// lock URL in database
 			try {
 				// execute SQL query
-				sqlStatement.setUInt(1, lockTimeout);
-				sqlStatement.setString(2, lockTime);
-				sqlStatement.setUInt64(3, urlId);
-				sqlStatement.setString(4, lockTime);
+				sqlStatement.setUInt(sqlArg1, lockTimeout);
+				sqlStatement.setString(sqlArg2, lockTime);
+				sqlStatement.setUInt64(sqlArg3, urlId);
+				sqlStatement.setString(sqlArg4, lockTime);
 
-				if(Database::sqlExecuteUpdate(sqlStatement) < 1)
+				if(Database::sqlExecuteUpdate(sqlStatement) < 1) {
 					return std::string(); // locking failed when no entries have been updated
+				}
 			}
-			catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::lockUrlIfOk", e); }
+			catch(const sql::SQLException &e) {
+				Database::sqlException("Crawler::Database::lockUrlIfOk", e);
+			}
 		}
 
 		// get new expiration time of URL lock
 		return this->getUrlLockTime(urlId);
 	}
 
-	// unlock a URL in the database, throws Database::Exception
+	//! Unlocks a URL in the database.
+	/*!
+	 * \param urlId The ID of the URL to unlock.
+	 * \param lockTime Constant reference to a
+	 *   string containing the time at which the
+	 *   current lock by the thread for this URL
+	 *   will end (or has ended).
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, i.e. the given
+	 *   URL ID is zero, if no lock time has been
+	 *   specified, or if the prepared SQL statement
+	 *   for unlocking a URL is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while unlocking the URL.
+	 */
 	void Database::unLockUrlIfOk(std::uint64_t urlId, const std::string& lockTime) {
 		// check argument
-		if(!urlId)
-			throw Exception("Crawler::Database::unLockUrlIfOk(): No URL lock ID specified");
+		if(urlId == 0) {
+			throw Exception(
+					"Crawler::Database::unLockUrlIfOk():"
+					" No URL has been specified"
+			);
+		}
 
-		if(lockTime.empty())
-			throw Exception("Crawler::Database::unLockUrlIfOk(): URL lock is missing");
+		if(lockTime.empty()) {
+			throw Exception(
+					"Crawler::Database::unLockUrlIfOk():"
+					" URL lock is missing"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.unLockUrlIfOk))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::unLockUrlIfOk(...)");
+		if(this->ps.unLockUrlIfOk == 0) {
+			throw Exception(
+					"Crawler::Database::unLockUrlIfOk():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.unLockUrlIfOk));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.unLockUrlIfOk)};
 
 		// unlock URL in database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, urlId);
-			sqlStatement.setString(2, lockTime);
+			sqlStatement.setUInt64(sqlArg1, urlId);
+			sqlStatement.setString(sqlArg2, lockTime);
 
 			Database::sqlExecute(sqlStatement);
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::unLockUrlIfOk", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::unLockUrlIfOk", e);
+		}
 	}
 
-	// set URL as crawled in the database, throws Database::Exception
+	//! Sets the URL to crawled in the database, if it is still locked by the thread.
+	/*!
+	 * \param urlId The ID of the URL to set to
+	 *   crawled.
+	 * \param lockTime Constant reference to a
+	 *   string containing the time at which the
+	 *   current lock by the thread for this URL
+	 *   will end (or has ended).
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, i.e. the given
+	 *   URL ID is zero, if no lock time has been
+	 *   specified, i.e. it references an empty
+	 *   string, or if the prepared SQL statement for
+	 *   setting a URL to crawled is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while setting the URL to
+	 *   crawled.
+	 */
 	void Database::setUrlFinishedIfOk(std::uint64_t urlId, const std::string& lockTime) {
 		// check argument
-		if(!urlId)
-			throw Exception("Crawler::Database::setUrlFinishedIfOk(): No crawling ID specified");
+		if(urlId == 0) {
+			throw Exception(
+					"Crawler::Database::setUrlFinishedIfOk():"
+					" No URL has been specified"
+			);
+		}
 
-		if(lockTime.empty())
-			throw Exception("Crawler::Database::setUrlFinishedIfOk(): URL lock is missing");
+		if(lockTime.empty()) {
+			throw Exception(
+					"Crawler::Database::setUrlFinishedIfOk():"
+					" URL lock is missing"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.setUrlFinishedIfOk))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::setUrlFinishedIfOk(...)");
+		if(this->ps.setUrlFinishedIfOk == 0) {
+			throw Exception(
+					"Crawler::Database::setUrlFinishedIfOk():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.setUrlFinishedIfOk));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.setUrlFinishedIfOk)};
 
 		// set URL as crawled
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, urlId);
-			sqlStatement.setString(2, lockTime);
+			sqlStatement.setUInt64(sqlArg1, urlId);
+			sqlStatement.setString(sqlArg2, lockTime);
 
 			Database::sqlExecute(sqlStatement);
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::setUrlFinishedIfOk", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::setUrlFinishedIfOk", e);
+		}
 	}
 
-	// save content to database, throws Database::Exception
+	/*
+	 * CRAWLING
+	 */
+
+	//! Saves crawled content to the database.
+	/*!
+	 * \param urlId The ID of the URL that has
+	 *   been crawled.
+	 * \param response The HTTP status code that
+	 *   has been received together with the
+	 *   content, e.g. 200 for @c OK.
+	 * \param type Constant reference to a string
+	 *   containing the description of the content
+	 *   type that has been received together with
+	 *   the content, e.g. @c text/html.
+	 * \param content Constant reference to a
+	 *   string containing the crawled content to
+	 *   be saved to the database.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, i.e. the given
+	 *   URL ID is zero, or if the prepared SQL
+	 *   statement for saving crawled content to the
+	 *   database is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while saving the crawled
+	 *   content to the database.
+	 */
 	void Database::saveContent(
 			std::uint64_t urlId,
 			std::uint32_t response,
@@ -1106,33 +1641,42 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& content
 	) {
 		// check argument
-		if(!urlId)
-			throw Exception("Crawler::Database::saveContent(): No URL ID specified");
+		if(urlId == 0) {
+			throw Exception(
+					"Crawler::Database::saveContent():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.saveContent))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::saveContent(...)");
+		if(this->ps.saveContent == 0) {
+			throw Exception(
+					"Crawler::Database::saveContent():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.saveContent));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.saveContent)};
 
 		// save content to database
 		try {
 			// execute SQL query if possible
 			if(content.size() <= this->getMaxAllowedPacketSize()) {
-				sqlStatement.setUInt64(1, urlId);
-				sqlStatement.setUInt(2, response);
-				sqlStatement.setString(3, type);
-				sqlStatement.setString(4, content);
+				sqlStatement.setUInt64(sqlArg1, urlId);
+				sqlStatement.setUInt(sqlArg2, response);
+				sqlStatement.setString(sqlArg3, type);
+				sqlStatement.setString(sqlArg4, content);
 
 				Database::sqlExecute(sqlStatement);
 			}
 			else {
 				// show warning about content size
-				bool adjustServerSettings = false;
+				bool adjustServerSettings{false};
+
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
@@ -1141,8 +1685,9 @@ namespace crawlservpp::Module::Crawler {
 							<< content.size()
 							<< " bytes) exceeds the ";
 
-				if(content.size() > 1073741824)
-					logStrStr << "MySQL maximum of 1 GiB.";
+				if(content.size() > maxContentSize) {
+					logStrStr << "MySQL maximum of " << maxContentSizeString << ".";
+				}
 				else {
 					logStrStr	<< "current MySQL server maximum of "
 								<< this->getMaxAllowedPacketSize() << " bytes.";
@@ -1152,14 +1697,46 @@ namespace crawlservpp::Module::Crawler {
 
 				this->log(this->getLoggingMin(), logStrStr.str());
 
-				if(adjustServerSettings)
-					this->log(this->getLoggingMin(), "Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				if(adjustServerSettings) {
+					this->log(
+							this->getLoggingMin(),
+							"Adjust the server's 'max_allowed_packet' setting accordingly."
+					);
+				}
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveContent", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::saveContent", e);
+		}
 	}
 
-	// save archived content to database, throws Database::Exception
+	//! Saves archived content to the database.
+	/*!
+	 * \param urlId The ID of the URL whose
+	 *   archived version has been crawled.
+	 * \param timeStamp The time stamp of the
+	 *   archived content, i.e. when it has been
+	 *   archived by the crawled archive.
+	 * \param response The HTTP status code that
+	 *   has been received together with the
+	 *   content, e.g. 200 for @c OK.
+	 * \param type Constant reference to a string
+	 *   containing the description of the content
+	 *   type that has been received together with
+	 *   the content, e.g. @c text/html.
+	 * \param content Constant reference to a
+	 *   string containing the crawled content to
+	 *   be saved to the database.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, i.e. the given
+	 *   URL ID is zero, or if the prepared SQL
+	 *   statement for saving archived content to the
+	 *   database is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while saving the archived
+	 *   content to the database.
+	 */
 	void Database::saveArchivedContent(
 			std::uint64_t urlId,
 			const std::string& timeStamp,
@@ -1168,34 +1745,42 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& content
 	) {
 		// check arguments
-		if(!urlId)
-			throw Exception("Crawler::Database::saveArchivedContent(): No URL ID specified");
+		if(urlId == 0) {
+			throw Exception(
+					"Crawler::Database::saveArchivedContent():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.saveArchivedContent))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::saveArchivedContent(...)");
+		if(this->ps.saveArchivedContent == 0) {
+			throw Exception(
+					"Crawler::Database::saveArchivedContent():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.saveArchivedContent));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.saveArchivedContent)};
 
 		try {
 			// save archived content to database if possible
 			if(content.size() <= this->getMaxAllowedPacketSize()) {
 				// execute SQL query
-				sqlStatement.setUInt64(1, urlId);
-				sqlStatement.setString(2, timeStamp);
-				sqlStatement.setUInt(3, response);
-				sqlStatement.setString(4, type);
-				sqlStatement.setString(5, content);
+				sqlStatement.setUInt64(sqlArg1, urlId);
+				sqlStatement.setString(sqlArg2, timeStamp);
+				sqlStatement.setUInt(sqlArg3, response);
+				sqlStatement.setString(sqlArg4, type);
+				sqlStatement.setString(sqlArg5, content);
 
 				Database::sqlExecute(sqlStatement);
 			}
 			else {
 				// show warning about content size
-				bool adjustServerSettings = false;
+				bool adjustServerSettings{false};
 				std::ostringstream logStrStr;
 
 				logStrStr.imbue(std::locale(""));
@@ -1204,8 +1789,9 @@ namespace crawlservpp::Module::Crawler {
 							<< content.size()
 							<< " bytes) exceeds the ";
 
-				if(content.size() > 1073741824)
-					logStrStr << "MySQL maximum of 1 GiB.";
+				if(content.size() > maxContentSize) {
+					logStrStr << "MySQL maximum of " << maxContentSizeString << ".";
+				}
 				else {
 					logStrStr	<< "current MySQL server maximum of "
 								<< this->getMaxAllowedPacketSize() << " bytes.";
@@ -1215,78 +1801,137 @@ namespace crawlservpp::Module::Crawler {
 
 				this->log(this->getLoggingMin(), logStrStr.str());
 
-				if(adjustServerSettings)
-					this->log(this->getLoggingMin(), "Adjust the server's \'max_allowed_packet\' setting accordingly.");
+				if(adjustServerSettings) {
+					this->log(
+							this->getLoggingMin(),
+							"Adjust the server's 'max_allowed_packet' setting accordingly."
+					);
+				}
 			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::saveArchivedContent", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::saveArchivedContent", e);
+		}
 	}
+
+	//! Checks whether archived content for a URL with a specific timestamp already exists in the database.
+	/*!
+	 * \param urlId The ID of the URL whose
+	 *   archived version has been crawled.
+	 * \param timeStamp The time stamp of the
+	 *   archived content, i.e. when it has been
+	 *   archived by the crawled archive.
+	 *
+	 * \returns True, if archived content for the
+	 *   specified URL with the given timestamp
+	 *   already exists in the database. False, if
+	 *   no such content has yet been saved to the
+	 *   database.
+	 *
+	 * \throws Module::Crawler::Database::Exception
+	 *   if no URL has been specified, i.e. the given
+	 *   URL ID is zero, or if the prepared SQL
+	 *   statement for checking for archived content
+	 *   in the database is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while checking for archived
+	 *   content in the database.
+	 */
 
 	// chck whether archived content with specific timestamp exists, throws Database::Exception
 	bool Database::isArchivedContentExists(std::uint64_t urlId, const std::string& timeStamp) {
-		bool result = false;
+		bool result{false};
 
 		// check argument
-		if(!urlId)
-			throw Exception("Crawler::Database::isArchivedContentExists(): No URL ID specified");
+		if(urlId == 0) {
+			throw Exception(
+					"Crawler::Database::isArchivedContentExists():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.isArchivedContentExists))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::isArchivedContentExists(...)");
+		if(this->ps.isArchivedContentExists == 0) {
+			throw Exception(
+					"Crawler::Database::isArchivedContentExists():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.isArchivedContentExists));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.isArchivedContentExists)};
 
 		// get next URL from database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, urlId);
-			sqlStatement.setString(2, timeStamp);
+			sqlStatement.setUInt64(sqlArg1, urlId);
+			sqlStatement.setString(sqlArg2, timeStamp);
 
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result
-			if(sqlResultSet && sqlResultSet->next())
+			if(sqlResultSet && sqlResultSet->next()) {
 				result = sqlResultSet->getBoolean("result");
+			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::isArchivedContentExists", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::isArchivedContentExists", e);
+		}
 
 		return result;
 	}
 
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
 	// generate a SQL query for adding a specific number of URLs, throws Database::Exception
 	std::string Database::queryAddUrlsIfNotExist(std::size_t numberOfUrls, const std::string& hashQuery) {
 		// check argument
-		if(!numberOfUrls)
-			throw Exception("Crawler::Database::queryUpdateOrAddUrls(): No number of URLs specified");
+		if(numberOfUrls == 0) {
+			throw Exception(
+					"Crawler::Database::queryUpdateOrAddUrls():"
+					" No number of URLs has been specified"
+			);
+		}
 
 		// generate INSERT INTO ... VALUES clause
-		std::string sqlQueryString(
-				"INSERT IGNORE INTO `" + this->urlListTable + "`(id, url, manual, hash) VALUES "
-		);
+		std::string sqlQueryString{
+			"INSERT IGNORE INTO `"
+		};
 
-		// generate placeholders
-		for(std::uint32_t n = 0; n < numberOfUrls; ++n)
+		sqlQueryString += this->urlListTable;
+		sqlQueryString += "`(id, url, manual, hash) VALUES ";
+
+		// generate placeholders for VALUES arguments
+		for(std::uint32_t n{0}; n < numberOfUrls; ++n) {
 			sqlQueryString +=	"(" // begin of VALUES arguments
 									" ("
 										"SELECT id"
 										" FROM"
 										" ("
 											"SELECT id, url"
-											" FROM `" + this->urlListTable + "`"
-											" AS `" + this->urlListTableAlias + std::to_string(n + 1) + "`"
-											" WHERE hash = " + hashQuery +
-										" ) AS tmp2"
+											" FROM `";
+			sqlQueryString += this->urlListTable;
+			sqlQueryString += 				"`"
+											" AS `";
+			sqlQueryString += urlListTableAlias;
+			sqlQueryString += std::to_string(n + 1);
+			sqlQueryString +=				"`"
+											" WHERE hash = ";
+			sqlQueryString += hashQuery;
+			sqlQueryString +=			" ) AS tmp2"
 										" WHERE url = ?"
 										" LIMIT 1"
 									" ),"
 									"?, "
-									"?, " +
-									hashQuery +
-									"), "; // end of VALUES arguments
+									"?, ";
+			sqlQueryString += hashQuery;
+			sqlQueryString += 		"), ";
+		}
 
 		// remove last comma and space
 		sqlQueryString.pop_back();
@@ -1304,23 +1949,31 @@ namespace crawlservpp::Module::Crawler {
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.getUrls))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::getUrls()");
+		if(this->ps.getUrls == 0) {
+			throw Exception(
+					"Crawler::Database::getUrls():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.getUrls));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.getUrls)};
 
 		// get URLs from database
 		try {
 			// execute SQL query
-			SqlResultSetPtr sqlResultSet(Database::sqlExecuteQuery(sqlStatement));
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			// get result
-			if(sqlResultSet)
-				while(sqlResultSet->next())
+			if(sqlResultSet) {
+				while(sqlResultSet->next()) {
 					result.emplace(sqlResultSet->getString("url"));
+				}
+			}
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::getUrls", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::getUrls", e);
+		}
 
 		return result;
 	}
@@ -1328,40 +1981,51 @@ namespace crawlservpp::Module::Crawler {
 	// remove duplicates of the specified URL from the URL list (NOT its first occurence)
 	//	return the number of deleted duplicates, throws Database::Exception
 	std::uint32_t Database::removeDuplicates(const std::string& url) {
-		int result = 0;
+		int result{0};
 
 		// get ID of first occurence
-		const auto first = this->getUrlId(url);
+		const auto first{this->getUrlId(url)};
 
 		// check argument
-		if(url.empty())
-			throw Exception("Crawler::Database::removeDuplicates(): No URL specified");
+		if(url.empty()) {
+			throw Exception(
+					"Crawler::Database::removeDuplicates():"
+					" No URL has been specified"
+			);
+		}
 
 		// check connection
 		this->checkConnection();
 
 		// check prepared SQL statement
-		if(!(this->ps.removeDuplicates))
-			throw Exception("Missing prepared SQL statement for Crawler::Database::removeDuplicates()");
+		if(this->ps.removeDuplicates == 0) {
+			throw Exception(
+					"Crawler::Database::removeDuplicates():"
+					" Missing prepared SQL statement"
+			);
+		}
 
 		// get prepared SQL statement
-		sql::PreparedStatement& sqlStatement(this->getPreparedStatement(this->ps.removeDuplicates));
+		auto& sqlStatement{this->getPreparedStatement(this->ps.removeDuplicates)};
 
 		// remove URLs from database
 		try {
 			// execute SQL query
-			sqlStatement.setUInt64(1, first);
-			sqlStatement.setString(2, url);
-			sqlStatement.setString(3, url);
+			sqlStatement.setUInt64(sqlArg1, first);
+			sqlStatement.setString(sqlArg2, url);
+			sqlStatement.setString(sqlArg3, url);
 
 			result = Database::sqlExecuteUpdate(sqlStatement);
 		}
-		catch(const sql::SQLException &e) { this->sqlException("Crawler::Database::removeDuplicates", e); }
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Crawler::Database::removeDuplicates", e);
+		}
 
-		if(result > 0)
+		if(result > 0) {
 			return static_cast<std::uint32_t>(result);
+		}
 
 		return 0;
 	}
 
-} /* crawlservpp::Module::Crawler */
+} /* namespace crawlservpp::Module::Crawler */

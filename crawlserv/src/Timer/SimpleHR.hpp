@@ -38,19 +38,89 @@
 
 namespace crawlservpp::Timer {
 
+	/*
+	 * DECLARATION
+	 */
+
+	//! A simple timer with high resolution.
+	/*!
+	 * Starting from its creation, this timer counts the number
+	 *  of microseconds until tick() or tickStr() is called.
+	 *
+	 * The timer is restarted after each tick.
+	 */
 	class SimpleHR {
 	public:
-		// constructor
+		///@name Construction
+		///@{
+
 		SimpleHR();
 
-		// control functions
-		unsigned long long tick();
+		///@}
+		///@name Tick control
+		///@{
+
+		std::uint64_t tick();
 		std::string tickStr();
 
+		///@}
+
 	protected:
+		///@name Internal state
+		///@{
+
+		//! (Time) point of creation or last tick.
 		std::chrono::high_resolution_clock::time_point timePoint;
+
+		///@}
 	};
 
-} /* crawlservpp::Timer */
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	//! Constructor starting the timer.
+	inline SimpleHR::SimpleHR() : timePoint(std::chrono::high_resolution_clock::now()) {}
+
+	//! %Timer tick returning the number of microseconds passed.
+	/*!
+	 * Restarts the timer.
+	 *
+	 * \returns the time since creation or last tick in microseconds.
+	 */
+	inline std::uint64_t SimpleHR::tick() {
+		const auto result{
+			std::chrono::duration_cast<std::chrono::microseconds>(
+					std::chrono::high_resolution_clock::now() - this->timePoint
+			).count()
+		};
+
+		this->timePoint = std::chrono::high_resolution_clock::now();
+
+		return result;
+	}
+
+	//! %Timer tick returning the number of microseconds passed as string.
+	/*!
+	 * Restarts the timer.
+	 *
+	 * \returns the time since creation or last tick as formatted string.
+	 *   The resolution of the result remains in microseconds.
+	 *
+	 * \sa Helper::DateTime::microsecondsToString
+	 */
+	inline std::string SimpleHR::tickStr() {
+		const auto result{
+			std::chrono::duration_cast<std::chrono::microseconds>(
+					std::chrono::high_resolution_clock::now() - this->timePoint
+			).count()
+		};
+
+		this->timePoint = std::chrono::high_resolution_clock::now();
+
+		return Helper::DateTime::microsecondsToString(result);
+	}
+
+} /* namespace crawlservpp::Timer */
 
 #endif /* TIMER_SIMPLEHR_HPP_ */

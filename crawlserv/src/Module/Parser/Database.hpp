@@ -22,7 +22,8 @@
  *
  * Database.hpp
  *
- * This class provides database functionality for a parser thread by implementing the Wrapper::Database interface.
+ * This class provides database functionality for a parser thread
+ *  by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -53,12 +54,75 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view, std::string_view_literals
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Parser {
 
-	class Database : public Wrapper::Database {
+	/*
+	 * CONSTANTS
+	 */
+
+	using std::string_view_literals::operator""sv;
+
+	///@name Constants
+	///@{
+
+	//! The default size of the URL cache.
+	constexpr auto defaultUrlCacheSize{2500};
+
+	//! Maximum size of database content (= 1 GiB).
+	constexpr auto maxContentSize{1073741824};
+
+	//! Maximum size of database content as string.
+	constexpr auto maxContentSizeString{"1 GiB"sv};
+
+	///@}
+	///@name Constants for MySQL Queries
+	///@{
+
+	//! Process ten values at once.
+	constexpr auto nAtOnce10{10};
+
+	//! Process one hundred values at once.
+	constexpr auto nAtOnce100{100};
+
+	//! Process one thousand values at once.
+	constexpr auto nAtOnce1000{1000};
+
+	//! First argument in a SQL query.
+	constexpr auto sqlArg1{1};
+
+	//! Second argument in a SQL query.
+	constexpr auto sqlArg2{2};
+
+	//! Third argument in a SQL query.
+	constexpr auto sqlArg3{3};
+
+	//! Fourth argument in a SQL query.
+	constexpr auto sqlArg4{4};
+
+	//! Fifth argument in a SQL query.
+	constexpr auto sqlArg5{5};
+
+	//! Sixth argument in a SQL query.
+	constexpr auto sqlArg6{6};
+
+	//! Alias, used in SQL queries, for the parsing table.
+	constexpr auto parsingTableAlias{"a"sv};
+
+	//! Alias, used in SQL queries, for the target table.
+	constexpr auto targetTableAlias{"b"sv};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! Class providing database functionality for parser threads by implementing Wrapper::Database.
+	class Database final : public Wrapper::Database {
 		// for convenience
 		using TargetTableProperties = Struct::TargetTableProperties;
 		using DataEntry = Struct::DataEntry;
@@ -68,8 +132,14 @@ namespace crawlservpp::Module::Parser {
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
-		Database(Module::Database& dbRef);
-		virtual ~Database();
+		///@name Construction
+		///@{
+
+		explicit Database(Module::Database& dbThread);
+
+		///@}
+		///@name Parser-specific Setters
+		///@{
 
 		// setters
 		void setCacheSize(std::uint64_t setCacheSize);
@@ -78,55 +148,77 @@ namespace crawlservpp::Module::Parser {
 		void setTargetTable(const std::string& table);
 		void setTargetFields(const std::vector<std::string>& fields);
 
-		// prepare target table and SQL statements for parser
+		///@}
+		///@name Target Table Initialization
+		///@{
+
 		void initTargetTable();
+
+		///@}
+		///@name Prepared SQL Statements
+		///@{
+
 		void prepare();
 
-		// URL functions
-		std::string fetchUrls(std::uint64_t lastId, std::queue<IdString>& cache, std::uint32_t lockTimeout);
-		std::uint64_t getUrlPosition(std::uint64_t urlId);
-		std::uint64_t getNumberOfUrls();
+		///@}
+		///@name URLs
+		///@{
 
-		// URL locking functions
-		std::string getLockTime(std::uint32_t lockTimeout);
-		std::string getUrlLockTime(std::uint64_t urlId);
-		std::string renewUrlLockIfOk(std::uint64_t urlId, const std::string& lockTime, std::uint32_t lockTimeout);
+		[[nodiscard]] std::string fetchUrls(
+				std::uint64_t lastId,
+				std::queue<IdString>& cache,
+				std::uint32_t lockTimeout
+		);
+		[[nodiscard]] std::uint64_t getUrlPosition(std::uint64_t urlId);
+		[[nodiscard]] std::uint64_t getNumberOfUrls();
+
+		///@}
+		///@name URL Locking
+		///@{
+
+		[[nodiscard]] std::string getLockTime(std::uint32_t lockTimeout);
+		[[nodiscard]] std::string getUrlLockTime(std::uint64_t urlId);
+		[[nodiscard]] std::string renewUrlLockIfOk(
+				std::uint64_t urlId,
+				const std::string& lockTime,
+				std::uint32_t lockTimeout
+		);
 		bool unLockUrlIfOk(std::uint64_t urlId, const std::string& lockTime);
 		void unLockUrlsIfOk(std::queue<IdString>& urls, std::string& lockTime);
 
+		///@}
+		///@name Parsing
+		///@{
+
 		// parsing functions
 		std::uint32_t checkParsingTable();
-		std::uint64_t getNumberOfContents(std::uint64_t urlId);
+		[[nodiscard]] std::uint64_t getNumberOfContents(std::uint64_t urlId);
 		bool getLatestContent(std::uint64_t urlId, std::uint64_t index, IdString& contentTo);
-		std::queue<IdString> getAllContents(std::uint64_t urlId);
-		std::uint64_t getContentIdFromParsedId(const std::string& parsedId);
+		[[nodiscard]] std::queue<IdString> getAllContents(std::uint64_t urlId);
+		[[nodiscard]] std::uint64_t getContentIdFromParsedId(const std::string& parsedId);
 		void updateOrAddEntries(std::queue<DataEntry>& entries);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
 
-		// constant strings for table aliases (public)
-		const std::string parsingTableAlias;
-		const std::string targetTableAlias;
+		///@}
 
-		// class for Parser::Database exceptions
+		//! Class for parser database exceptions.
 		MAIN_EXCEPTION_CLASS();
 
-	protected:
+	private:
 		// options
-		std::uint64_t cacheSize;
-		bool reparse;
-		bool parseCustom;
+		std::uint64_t cacheSize{defaultUrlCacheSize};
+		bool reParse{false};
+		bool parseCustom{true};
 		std::string targetTableName;
 		std::vector<std::string> targetFieldNames;
 
 		// table names and target table ID
 		std::string urlListTable;
 		std::string parsingTable;
-		std::string analyzingTable;
-		std::uint64_t targetTableId;
+		std::uint64_t targetTableId{0};
 		std::string targetTableFull;
 
-	private:
 		// IDs of prepared SQL statements
 		struct _ps {
 			std::uint16_t fetchUrls;
@@ -154,16 +246,16 @@ namespace crawlservpp::Module::Parser {
 			std::uint16_t set100UrlsFinishedIfLockOk;
 			std::uint16_t set1000UrlsFinishedIfLockOk;
 			std::uint16_t updateTargetTable;
-		} ps;
+		} ps{};
 
 		// internal helper function
 		bool checkEntrySize(DataEntry& entry);
-		std::string queryLockUrls(std::size_t numberOfUrls);
-		std::string queryUpdateOrAddEntries(std::size_t numberOfEntries);
-		std::string querySetUrlsFinishedIfLockOk(std::size_t numberOfUrls);
-		std::string queryUnlockUrlsIfOk(std::size_t numberOfUrls);
+		[[nodiscard]] std::string queryLockUrls(std::size_t numberOfUrls);
+		[[nodiscard]] std::string queryUpdateOrAddEntries(std::size_t numberOfEntries);
+		[[nodiscard]] std::string querySetUrlsFinishedIfLockOk(std::size_t numberOfUrls);
+		[[nodiscard]] std::string queryUnlockUrlsIfOk(std::size_t numberOfUrls);
 	};
 
-} /* crawlservpp::Module::Crawler */
+} /* namespace crawlservpp::Module::Parser */
 
 #endif /* MODULE_PARSER_DATABASE_HPP_ */

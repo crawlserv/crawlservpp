@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2018-2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,17 +20,11 @@
  *
  * ---
  *
- * crawlserv++ command-and-control server
- *
- * See https://github.com/crawlserv/crawlservpp/ for the latest version of the application.
- *
- * * See 'Main/Version.hpp' for version information.
- *
- * ---
- *
  * main.cpp
  *
- * Entry point of the application. One line only! Use the Main::App class for basic application functionality instead (OOP).
+ * Entry point of the application.
+ *
+ * Use the Main::App class for basic application functionality instead (OOP).
  *
  *  Created on: Sep 29, 2018
  *      Author: ans
@@ -38,4 +32,14 @@
 
 #include "Main/App.hpp"
 
-int main(int argc, char * argv[]) { return crawlservpp::Main::App(argc, argv).run(); }
+#include "main.hpp"
+
+//! Entry point of the application.
+/*!
+ * Runs crawlservpp::Main::App::run().
+ *
+ * \returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
+ */
+int main(int argc, char * argv[]) {
+	return crawlservpp::Main::App(crawlservpp::vectorize(argc, argv)).run();
+}

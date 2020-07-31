@@ -22,7 +22,7 @@
  *
  * ThreadDatabaseEntry.hpp
  *
- * Thread status as saved in the database (id, module, status message, pause status, options, id of last processed URL).
+ * Information about a thread as stored in the database (thread options and thread status).
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
@@ -36,18 +36,39 @@
 
 namespace crawlservpp::Struct {
 
+	//! Information about a thread as stored in the database, containing both the options for and the status of the thread.
 	struct ThreadDatabaseEntry {
-		ThreadOptions options;	// options for the thread
-		ThreadStatus status;	// status of the thread
+		///@name Properties
+		///@{
 
-		// constructors
-		ThreadDatabaseEntry() {}
+		//! Options for the thread.
+		ThreadOptions options;
+
+		//! Status of the thread.
+		ThreadStatus status;
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		ThreadDatabaseEntry() = default;
+
+		//! Constructor setting the options for and the status of the thread.
+		/*!
+		 * \param setOptions Constant reference
+		 *   to the options for the thread.
+		 * \param setStatus Constant reference
+		 *   to the status of the thread.
+		 */
 		ThreadDatabaseEntry(
 				const ThreadOptions& setOptions,
 				const ThreadStatus& setStatus
 		) : options(setOptions), status(setStatus) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_THREADDATABASEENTRY_HPP_ */

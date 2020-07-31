@@ -22,7 +22,8 @@
  *
  * Database.hpp
  *
- * This class provides database functionality for a crawler thread by implementing the Wrapper::Database interface.
+ * This class provides database functionality for a crawler thread
+ *  by implementing the Wrapper::Database interface.
  *
  *  Created on: Oct 22, 2018
  *      Author: ans
@@ -43,62 +44,135 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <chrono>	// std::chrono
-#include <cstddef>	// std::size_t
-#include <cstdint>	// std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
-#include <locale>	// std::locale
-#include <memory>	// std::unique_ptr
-#include <queue>	// std::queue
-#include <sstream>	// std::ostringstream
-#include <string>	// std::string, std::to_string
-#include <utility>	// std::pair
+#include <chrono>		// std::chrono
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
+#include <locale>		// std::locale
+#include <memory>		// std::unique_ptr
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view, std::string_view_literals
+#include <utility>		// std::pair
 
 namespace crawlservpp::Module::Crawler {
 
-	class Database : public Wrapper::Database {
+	/*
+	 * CONSTANTS
+	 */
+
+	using std::string_view_literals::operator""sv;
+
+	///@name Constants
+	///@{
+
+	//! Maximum size of database content (= 1 GiB).
+	constexpr auto maxContentSize{1073741824};
+
+	//! Maximum size of database content as string.
+	constexpr auto maxContentSizeString{"1 GiB"sv};
+
+	///@}
+	///@name Constants for MySQL Queries
+	///@{
+
+	//! Process ten values at once.
+	constexpr auto nAtOnce10{10};
+
+	//! Process one hundred values at once.
+	constexpr auto nAtOnce100{100};
+
+	//! Process one thousand values at once.
+	constexpr auto nAtOnce1000{1000};
+
+	//! First argument in a SQL query.
+	constexpr auto sqlArg1{1};
+
+	//! Second argument in a SQL query.
+	constexpr auto sqlArg2{2};
+
+	//! Third argument in a SQL query.
+	constexpr auto sqlArg3{3};
+
+	//! Fourth argument in a SQL query.
+	constexpr auto sqlArg4{4};
+
+	//! Fifth argument in a SQL query.
+	constexpr auto sqlArg5{5};
+
+	//! Alias, used in SQL queries, for the crawling table.
+	constexpr auto crawlingTableAlias{"a"sv};
+
+	//! Alias, used in SQL queries, for the URL list table.
+	constexpr auto urlListTableAlias{"b"sv};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! Class providing database functionality for crawler threads by implementing Wrapper::Database.
+	class Database final : public Wrapper::Database {
 		// for convenience
 		using IdString = std::pair<std::uint64_t, std::string>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
-		// constructor
-		Database(Module::Database& dbRef);
+		///@name Construction
+		///@{
 
-		// destructor
-		virtual ~Database();
+		explicit Database(Module::Database& dbThread);
 
-		// setters
+		///@}
+		///@name Crawler-specific Setters
+		///@{
+
 		void setRecrawl(bool isRecrawl);
 		void setUrlCaseSensitive(bool isUrlCaseSensitive);
 		void setUrlDebug(bool isUrlDebug);
 		void setUrlStartupCheck(bool isUrlStartupCheck);
 
-		// prepare SQL statements for crawler
+		///@}
+		///@name Prepared SQL Statements
+		///@{
+
 		void prepare();
 
-		// URL functions
-		std::uint64_t getUrlId(const std::string& url);
-		IdString getNextUrl(std::uint64_t currentUrlId);
+		///@}
+		///@name URLs
+		///@{
+
+		[[nodiscard]] std::uint64_t getUrlId(const std::string& url);
+		[[nodiscard]] IdString getNextUrl(std::uint64_t currentUrlId);
 		bool addUrlIfNotExists(const std::string& urlString, bool manual);
 		std::size_t addUrlsIfNotExist(std::queue<std::string>& urls, bool manual);
-		std::uint64_t addUrlGetId(const std::string& urlString, bool manual);
-		std::uint64_t getUrlPosition(std::uint64_t urlId);
-		std::uint64_t getNumberOfUrls();
+		[[nodiscard]] std::uint64_t getUrlPosition(std::uint64_t urlId);
+		[[nodiscard]] std::uint64_t getNumberOfUrls();
 
-		// URL checking functions
+		///@}
+		///@name URL Checking
+		///@{
+
 		void urlDuplicationCheck();
 		void urlHashCheck();
 		void urlEmptyCheck();
 		void urlUtf8Check();
 
-		// URL locking functions
-		std::string getUrlLockTime(std::uint64_t urlId);
-		bool isUrlCrawled(std::uint64_t urlId);
-		std::string lockUrlIfOk(std::uint64_t urlId, const std::string& lockTime, std::uint32_t lockTimeout);
+		///@}
+		///@name URL Locking
+		///@{
+
+		[[nodiscard]] std::string getUrlLockTime(std::uint64_t urlId);
+		[[nodiscard]] bool isUrlCrawled(std::uint64_t urlId);
+		[[nodiscard]] std::string lockUrlIfOk(std::uint64_t urlId, const std::string& lockTime, std::uint32_t lockTimeout);
 		void unLockUrlIfOk(std::uint64_t urlId, const std::string& lockTime);
 		void setUrlFinishedIfOk(std::uint64_t urlId, const std::string& lockTime);
 
-		// crawling functions
+		///@}
+		///@name Crawling
+		///@{
+
 		void saveContent(
 				std::uint64_t urlId,
 				std::uint32_t response,
@@ -111,27 +185,24 @@ namespace crawlservpp::Module::Crawler {
 				std::uint32_t response,
 				const std::string& type,
 				const std::string& content);
-		bool isArchivedContentExists(std::uint64_t urlId, const std::string& timeStamp);
+		[[nodiscard]] bool isArchivedContentExists(std::uint64_t urlId, const std::string& timeStamp);
 
-		// constant strings for table aliases (public)
-		const std::string crawlingTableAlias;
-		const std::string urlListTableAlias;
+		///@}
 
-		// class for Crawler::Database exceptions
+		//! Class for crawler-specific database exceptions.
 		MAIN_EXCEPTION_CLASS();
 
-	protected:
+	private:
 		// options
-		bool recrawl;
-		bool urlCaseSensitive;
-		bool urlDebug;
-		bool urlStartupCheck;
+		bool recrawl{false};
+		bool urlCaseSensitive{true};
+		bool urlDebug{false};
+		bool urlStartupCheck{true};
 
 		// table names
 		std::string urlListTable;
 		std::string crawlingTable;
 
-	private:
 		// IDs of prepared SQL statements
 		struct _ps {
 			std::uint16_t getUrlId;
@@ -157,14 +228,14 @@ namespace crawlservpp::Module::Crawler {
 			std::uint16_t urlEmptyCheck;
 			std::uint16_t getUrls;
 			std::uint16_t removeDuplicates;
-		} ps;
+		} ps{};
 
-		// helper functions
+		// internal helper functions
 		std::string queryAddUrlsIfNotExist(std::size_t numberOfUrls, const std::string& hashQuery);
-		std::queue<std::string> getUrls();
+		[[nodiscard]] std::queue<std::string> getUrls();
 		std::uint32_t removeDuplicates(const std::string& url);
 	};
 
-	} /* crawlservpp::Module::Crawler */
+} /* namespace crawlservpp::Module::Crawler */
 
 #endif /* MODULE_CRAWLER_DATABASE_HPP_ */

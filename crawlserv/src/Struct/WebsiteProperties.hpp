@@ -22,7 +22,7 @@
  *
  * WebsiteProperties.hpp
  *
- * Basic website properties (domain, namespace and name).
+ * Website properties (domain, namespace, name and data directory).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
@@ -35,22 +35,67 @@
 
 namespace crawlservpp::Struct {
 
+	//! Website properties containing its domain, namespace, name, and data directory.
 	struct WebsiteProperties {
+		///@name Properties
+		///@{
+
+		//! The domain of the website.
+		/*!
+		 * If the domain is empty, the
+		 *  website is cross-domain.
+		 */
 		std::string domain;
+
+		//! The namespace of the website.
 		std::string nameSpace;
+
+		//! The name of the website.
 		std::string name;
+
+		//! The data directory to be used by the website.
+		/*!
+		 * If the directory is empty,
+		 *  the default data directory
+		 *  will be used.
+		 */
 		std::string dir;
 
-		// constructors
-		WebsiteProperties() {}
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		WebsiteProperties() = default;
+
+		//! Constructor setting website properties.
+		/*!
+		 * \param setDomain Constant reference
+		 *   to a string containing the domain
+		 *   of the website. If the string is
+		 *   empty, the website is cross-domain.
+		 * \param setNameSpace Constant reference
+		 *   to a string containing the namespace
+		 *   of the website.
+		 * \param setName Constant reference to
+		 *   a string containing the name of the
+		 *   website.
+		 * \param setDir Constant reference to a
+		 *   string containing the data directory
+		 *   to be used by the website. If the
+		 *   string is empty, the default data
+		 *   directory will be used.
+		 */
 		WebsiteProperties(
 				const std::string& setDomain,
 				const std::string& setNameSpace,
 				const std::string& setName,
 				const std::string& setDir)
 				: domain(setDomain), nameSpace(setNameSpace), name(setName), dir(setDir) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_WEBSITEPROPERTIES_HPP_ */

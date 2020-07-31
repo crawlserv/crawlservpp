@@ -24,9 +24,6 @@
  *
  * Parsing configuration.
  *
- * WARNING:	Changing the configuration requires updating 'json/parser.json' in crawlserv_frontend!
- * 			See there for details on the specific configuration entries.
- *
  *  Created on: Oct 25, 2018
  *      Author: ans
  */
@@ -42,71 +39,284 @@
 #include <string>		// std::string
 #include <vector>		// std::vector
 
+//! Namespace for parser classes.
 namespace crawlservpp::Module::Parser {
+
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! Logging is disabled.
+	constexpr std::uint8_t crawlerLoggingVerbose{0};
+
+	//! Default logging is enabled.
+	constexpr std::uint8_t generalLoggingDefault{1};
+
+	//! Extended logging is enabled.
+	constexpr std::uint8_t generalLoggingExtended{2};
+
+	//! Verbose logging is enabled.
+	constexpr std::uint8_t generalLoggingVerbose{3};
+
+	//! Parse data from the URL of a crawled web page.
+	constexpr std::uint8_t parsingSourceUrl{0};
+
+	//! Parse data from the content of a crawled web page.
+	constexpr std::uint8_t parsingSourceContent{1};
+
+	//! Default cache size.
+	constexpr std::uint64_t defaultCacheSize{2500};
+
+	//! Default URL locking time, in seconds.
+	constexpr std::uint32_t defaultLock{300};
+
+	//! Default time to wait before checking for new URLs when all URLs have been parsed, in milliseconds.
+	constexpr std::uint64_t defaultSleepIdle{5000};
+
+	//! Default time to wait before last try to re-connect to MySQL server, in seconds.
+	constexpr std::uint64_t defaultSleepMySql{20};
+
+	///@}
 
 	/*
 	 * DECLARATION
 	 */
 
+	//! Configuration for parsers.
 	class Config : protected Module::Config {
 	public:
-		Config() {};
-		virtual ~Config() {};
+		///@name Configuration
+		///@{
 
-		// configuration constants
-		static constexpr std::uint8_t generalLoggingSilent = 0;
-		static constexpr std::uint8_t generalLoggingDefault = 1;
-		static constexpr std::uint8_t generalLoggingExtended = 2;
-		static constexpr std::uint8_t generalLoggingVerbose = 3;
-
-		static constexpr std::uint8_t parsingSourceUrl = 0;
-		static constexpr std::uint8_t parsingSourceContent = 1;
-
-		// configuration entries
+		//! Configuration entries for parser threads.
+		/*!
+		 * \warning Changing the configuration requires
+		 *   updating @c json/parser.json in @c
+		 *   crawlserv_frontend!
+		 */
 		struct Entries {
-			// constructor with default values
-			Entries();
+			///@name Parser Configuration
+			///@{
 
-			// general entries
-			std::uint64_t generalCacheSize;
-			std::uint64_t generalDbTimeOut;
-			std::uint32_t generalLock;
-			std::uint8_t generalLogging;
-			bool generalNewestOnly;
-			bool generalParseCustom;
-			bool generalReParse;
+			//! Number of URLs fetched and parsed before saving results.
+			/*!
+			 * Set to zero to cache all URLs at once.
+			 */
+			std::uint64_t generalCacheSize{defaultCacheSize};
+
+			//! Timeout on MySQL query execution, in milliseconds.
+			std::uint64_t generalDbTimeOut{0};
+
+			//! URL locking time, in seconds.
+			std::uint32_t generalLock{defaultLock};
+
+			//! Level of logging activity.
+			std::uint8_t generalLogging{generalLoggingDefault};
+
+			//! Specifies whether to parse only the newest content for each URL.
+			bool generalNewestOnly{true};
+
+			//! Specifies whether to include custom URLs when parsing.
+			bool generalParseCustom{false};
+
+			//! Specifies whether to re-parse already parsed URLs.
+			bool generalReParse{false};
+
+			//! Table name to save parsed data to.
 			std::string generalResultTable;
+
+			//! Queries on URLs that will not be parsed.
 			std::vector<std::uint64_t> generalSkip;
-			std::uint64_t generalSleepIdle;
-			std::uint64_t generalSleepMySql;
-			bool generalTiming;
 
-			// parsing entries
+			//! Time to wait before checking for new URLs when all URLs have been parsed, in milliseconds.
+			std::uint64_t generalSleepIdle{defaultSleepIdle};
+
+			//! Time to wait before last try to re-connect to MySQL server, in seconds.
+			std::uint64_t generalSleepMySql{defaultSleepMySql};
+
+			//! Specifies whether to calculate timing statistics.
+			bool generalTiming{false};
+
+			///@}
+			///@name Parsing
+			///@{
+
+			//! Content matching one of these queries will be excluded from parsing.
 			std::vector<std::uint64_t> parsingContentIgnoreQueries;
-			std::vector<std::string> parsingDateTimeFormats;
-			std::vector<std::string> parsingDateTimeLocales;
-			std::vector<std::uint64_t> parsingDateTimeQueries;
-			std::vector<std::uint16_t> parsingDateTimeSources;
-			bool parsingDateTimeWarningEmpty;
-			std::vector<std::string> parsingFieldDateTimeFormats;
-			std::vector<std::string> parsingFieldDateTimeLocales;
-			std::vector<char> parsingFieldDelimiters;
-			std::vector<bool> parsingFieldIgnoreEmpty;
-			std::vector<bool> parsingFieldJSON;
-			std::vector<std::string> parsingFieldNames;
-			std::vector<std::uint64_t> parsingFieldQueries;
-			std::vector<std::uint8_t> parsingFieldSources;
-			std::vector<bool> parsingFieldTidyTexts;
-			std::vector<bool> parsingFieldWarningsEmpty;
-			std::vector<std::string> parsingIdIgnore;
-			std::vector<std::uint64_t> parsingIdQueries;
-			std::vector<std::uint8_t> parsingIdSources;
-			bool parsingRepairCData;
-			std::uint16_t parsingTidyErrors;
-			bool parsingTidyWarnings;
-		} config;
 
-		// class for Parser::Config exceptions
+			//! Format of the date/time to be parsed by the date/time query with the same array index.
+			/*!
+			 * If not specified, the format
+			 *  @c %%F @c %%T, i.e.
+			 *  @c YYYY-MM-DD HH:MM:SS will be used.
+			 *
+			 * See Howard E. Hinnant's
+			 *  <a href="https://howardhinnant.github.io/date/date.html#from_stream_formatting">
+			 *  C++ @c date.h library
+			 *  documentation</a> for details.
+			 *
+			 * Set a string to @c UNIX to parse Unix timestamps,
+			 *  i.e. seconds since the Unix epoch, instead.
+			 *
+			 *  \sa parsingDateTimeSources,
+			 *    parsingDateTimeQueries,
+			 *    parsingDateTimeLocale,
+			 *    Helper::DateTime::convertCustomDateTimeToSQLTimeStamp
+			 */
+			std::vector<std::string> parsingDateTimeFormats;
+
+			//! Locale to be used by the date/time query with the same array index.
+			/*!
+			 * \sa parsingDateTimeSources,
+			 *    parsingDateTimeQueries,
+			 *    parsingDateTimeLocale,
+			 *    Helper::DateTime::convertCustomDateTimeToSQLTimeStamp
+			 */
+			std::vector<std::string> parsingDateTimeLocales;
+
+			//! Queries used for parsing the date/time.
+			/*!
+			 * The first query that returns a non-empty result will be used.
+			 *
+			 * \sa parsingDateTimeSources
+			 */
+			std::vector<std::uint64_t> parsingDateTimeQueries;
+
+			//! Where to parse the date/time from – the URL itself, or the crawled content belonging to the URL.
+			/*!
+			 * \sa parsingSourceUrl,
+			 *   parsingSourceContent,
+			 *   parsingDateTimeQueries
+			 */
+			std::vector<std::uint16_t> parsingDateTimeSources;
+
+			//! Specifies whether to write a warning to the log if no date/time could be parsed although a query is specified.
+			/*!
+			 * \note Logging needs to be enabled in order
+			 *   for this option to have any effect.
+			 */
+			bool parsingDateTimeWarningEmpty{true};
+
+			//! Date/time format of the field with the same array index.
+			/*!
+			 * If not specified, no date/time
+			 *  conversion will be performed.
+			 *
+			 * See Howard E. Hinnant's
+			 *  <a href="https://howardhinnant.github.io/date/date.html#from_stream_formatting">
+			 *  C++ @c date.h library
+			 *  documentation</a> for details.
+			 *
+			 * Set a string to @c UNIX to parse Unix timestamps,
+			 *  i.e. seconds since the Unix epoch, instead.
+			 *
+			 *  \sa parsingFieldQueries,
+			 *    parsingFieldDateTimeLocales,
+			 *    Helper::DateTime::convertCustomDateTimeToSQLTimeStamp
+			 */
+			std::vector<std::string> parsingFieldDateTimeFormats;
+
+			//! Locale to be used by the query with the same array index.
+			/*!
+			 * \sa parsingFieldQueries,
+			 *    parsingFieldDateTimeFormats,
+			 *    Helper::DateTime::convertCustomDateTimeToSQLTimeStamp
+			 */
+			std::vector<std::string> parsingFieldDateTimeLocales;
+
+			//! Delimiter between multiple results for the field with the same array index, if not saved as JSON.
+			/*!
+			 *  Only the first character of the string, @c \\n
+			 *  (default), @c \\t, or @c \\\\ will be used.
+			 */
+			std::vector<char> parsingFieldDelimiters;
+
+			//! Specifies whether to ignore empty values when parsing multiple results for the field with the same array index.
+			/*!
+			 * Enabled by default.
+			 */
+			std::vector<bool> parsingFieldIgnoreEmpty;
+
+			//! Specifies whether to save the value of the field with the same array index as a JSON array.
+			std::vector<bool> parsingFieldJSON;
+
+			//! Name of the field with the same array index.
+			std::vector<std::string> parsingFieldNames;
+
+			//! Query for the field with the same array index.
+			std::vector<std::uint64_t> parsingFieldQueries;
+
+			//! Source of the field with the same array index – the URL itself, or the crawled content belonging to the URL.
+			/*!
+			 * \sa parsingSourceUrl,
+			 *   parsingSourceContent,
+			 *   parsingFieldQueries
+			 */
+			std::vector<std::uint8_t> parsingFieldSources;
+
+			//! Specifies whether to remove line breaks and unnecessary spaces when parsing the field with the same array index.
+			std::vector<bool> parsingFieldTidyTexts;
+
+			//! Specifies whether to write a warning to the log if the field with the same array index is empty.
+			/*!
+			 * \note Logging needs to be enabled in order
+			 *   for this option to have any effect.
+			 */
+			std::vector<bool> parsingFieldWarningsEmpty;
+
+			//! Parsed IDs to be ignored.
+			std::vector<std::string> parsingIdIgnore;
+
+			//! Queries to parse the ID.
+			/*!
+			 * The first query that returns a non-empty
+			 *  result will be used. Datasets with duplicate
+			 *  or empty IDs will not be parsed.
+			 *
+			 * \sa parsingIdSources
+			 */
+			std::vector<std::uint64_t> parsingIdQueries;
+
+			//! Where to parse the ID from when using the ID query with the same array index –  – the URL itself, or the crawled content belonging to the URL.
+			/*!
+			 * \sa parsingSourceUrl,
+			 *   parsingSourceContent,
+			 *   parsingIdQueries
+			 */
+			std::vector<std::uint8_t> parsingIdSources;
+
+			//! Specifies whether to (try to) repair CData when parsing HTML/XML.
+			bool parsingRepairCData{true};
+
+			//! Specifies whether to (try to) repair broken HTML/XML comments.
+			bool parsingRepairComments{true};
+
+			//! Number of @c tidyhtml errors to write to the log.
+			/*!
+			 * \note Logging needs to be enabled in order
+			 *   for this option to have any effect.
+			 */
+			std::uint16_t parsingTidyErrors{0};
+
+			//! Specifies whether to write @c tidyhtml warnings to the log.
+			/*!
+			 * \note Logging needs to be enabled in order
+			 *   for this option to have any effect.
+			 */
+			bool parsingTidyWarnings{false};
+
+			///@}
+		}
+
+		//! Configuration of the parser.
+		config;
+
+		///@}
+
+		//! Class for parser configuration exceptions.
 		MAIN_EXCEPTION_CLASS();
 
 	protected:
@@ -119,23 +329,7 @@ namespace crawlservpp::Module::Parser {
 	 * IMPLEMENTATION
 	 */
 
-	// constructor: set default values
-	inline Config::Entries::Entries() :	generalCacheSize(2500),
-										generalDbTimeOut(0),
-										generalLock(300),
-										generalLogging(Config::generalLoggingDefault),
-										generalNewestOnly(true),
-										generalParseCustom(false),
-										generalReParse(false),
-										generalSleepIdle(5000),
-										generalSleepMySql(20),
-										generalTiming(false),
-										parsingDateTimeWarningEmpty(true),
-										parsingRepairCData(true),
-										parsingTidyErrors(0),
-										parsingTidyWarnings(false) {}
-
-	// parse parsing-specific configuration option
+	//! Parses an parser-specific configuration option.
 	inline void Config::parseOption() {
 		this->category("general");
 		this->option("cache.size", this->config.generalCacheSize);
@@ -144,14 +338,14 @@ namespace crawlservpp::Module::Parser {
 		this->option("newest.only", this->config.generalNewestOnly);
 		this->option("parse.custom", this->config.generalParseCustom);
 		this->option("reparse", this->config.generalReParse);
-		this->option(
-				"result.table",
-				this->config.generalResultTable,
-				StringParsingOption::SQL
-		);
 		this->option("skip", this->config.generalSkip);
 		this->option("sleep.idle", this->config.generalSleepIdle);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
+		this->option(
+				"target.table",
+				this->config.generalResultTable,
+				StringParsingOption::SQL
+		);
 		this->option("timing", this->config.generalTiming);
 
 		this->category("parser");
@@ -183,23 +377,34 @@ namespace crawlservpp::Module::Parser {
 		this->option("id.queries", this->config.parsingIdQueries);
 		this->option("id.sources", this->config.parsingIdSources);
 		this->option("repair.cdata", this->config.parsingRepairCData);
+		this->option("repair.comments", this->config.parsingRepairComments);
 		this->option("tidy.errors", this->config.parsingTidyErrors);
 		this->option("tidy.warnings", this->config.parsingTidyWarnings);
 	}
 
-	// check parsing-specific configuration, throws Config::Exception
+	//! Checks the parser-specific configuration options.
+	/*!
+	 * \throws Module::Extractor::Config::Exception
+	 *   if no target table has been specified.
+	 */
 	inline void Config::checkOptions() {
-		// check for result table
-		if(this->config.generalResultTable.empty())
-			throw Exception("Parser::Config::checkOptions(): No result table specified.");
+		// check for target table
+		if(this->config.generalResultTable.empty()) {
+			throw Exception(
+					"Parser::Config::checkOptions():"
+					" No target table has been specified."
+			);
+		}
 		
 		// check properties of date/time queries
-		const auto completeDateTimes = std::min( // number of complete date/time queries (= min. size of all arrays)
-				this->config.parsingDateTimeQueries.size(),
-				this->config.parsingDateTimeSources.size()
-		);
+		const auto completeDateTimes{
+			std::min( // number of complete date/time queries (= min. size of all arrays)
+					this->config.parsingDateTimeQueries.size(),
+					this->config.parsingDateTimeSources.size()
+			)
+		};
 
-		bool incompleteDateTimes = false;
+		bool incompleteDateTimes{false};
 
 		// remove date/time queries or sources that are not used
 		if(this->config.parsingDateTimeQueries.size() > completeDateTimes) {
@@ -220,14 +425,17 @@ namespace crawlservpp::Module::Parser {
 					" should have the same number of elements."
 			);
 
-			this->warning("Incomplete date/time queries removed from configuration.");
+			this->warning(
+					"Incomplete date/time queries removed from configuration."
+			);
 
 			incompleteDateTimes = false;
 		}
 
 		// remove date/time formats that are not used, add empty format where none is specified
-		if(this->config.parsingDateTimeFormats.size() > completeDateTimes)
+		if(this->config.parsingDateTimeFormats.size() > completeDateTimes) {
 			incompleteDateTimes = true;
+		}
 
 		this->config.parsingDateTimeFormats.resize(completeDateTimes);
 
@@ -242,23 +450,27 @@ namespace crawlservpp::Module::Parser {
 		);
 
 		// remove date/time locales that are not used, add empty locale where none is specified
-		if(this->config.parsingDateTimeLocales.size() > completeDateTimes)
+		if(this->config.parsingDateTimeLocales.size() > completeDateTimes) {
 			incompleteDateTimes = true;
+		}
 
 		this->config.parsingDateTimeLocales.resize(completeDateTimes);
 
 		// warn about unused properties
-		if(incompleteDateTimes)
+		if(incompleteDateTimes) {
 			this->warning("Unused date/time properties removed from configuration.");
+		}
 
 		// check properties of parsing fields
-		const auto completeFields = std::min({ // number of complete fields (= min. size of all arrays)
-				this->config.parsingFieldNames.size(),
-				this->config.parsingFieldQueries.size(),
-				this->config.parsingFieldSources.size()
-		});
+		const auto completeFields{
+			std::min({ // number of complete fields (= min. size of all arrays)
+					this->config.parsingFieldNames.size(),
+					this->config.parsingFieldQueries.size(),
+					this->config.parsingFieldSources.size()
+			})
+		};
 
-		bool incompleteFields = false;
+		bool incompleteFields{false};
 
 		// remove names of incomplete parsing fields
 		if(this->config.parsingFieldNames.size() > completeFields) {
@@ -294,20 +506,23 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// remove date/time formats that are not used, add empty format where none is specified
-		if(this->config.parsingFieldDateTimeFormats.size() > completeFields)
+		if(this->config.parsingFieldDateTimeFormats.size() > completeFields) {
 			incompleteFields = true;
+		}
 
 		this->config.parsingFieldDateTimeFormats.resize(completeFields);
 
 		// remove date/time locales that are not used, add empty locale where none is specified
-		if(this->config.parsingFieldDateTimeLocales.size() > completeFields)
+		if(this->config.parsingFieldDateTimeLocales.size() > completeFields) {
 			incompleteFields = true;
+		}
 
 		this->config.parsingFieldDateTimeLocales.resize(completeFields);
 
 		// remove field delimiters that are not used, add empty delimiter (\0) where none is specified
-		if(this->config.parsingFieldDelimiters.size() > completeFields)
+		if(this->config.parsingFieldDelimiters.size() > completeFields) {
 			incompleteFields = true;
+		}
 
 		this->config.parsingFieldDelimiters.resize(completeFields, '\0');
 
@@ -322,40 +537,47 @@ namespace crawlservpp::Module::Parser {
 		);
 
 		// remove 'ignore empty values' properties that are not used, set to 'true' where none is specified
-		if(this->config.parsingFieldIgnoreEmpty.size() > completeFields)
+		if(this->config.parsingFieldIgnoreEmpty.size() > completeFields) {
 			incompleteFields = true;
+		}
 
 		this->config.parsingFieldIgnoreEmpty.resize(completeFields, true);
 
 		// remove 'save field as JSON' properties that are not used, set to 'false' where none is specified
-		if(this->config.parsingFieldJSON.size() > completeFields)
+		if(this->config.parsingFieldJSON.size() > completeFields) {
 			incompleteFields = true;
+		}
 
 		this->config.parsingFieldJSON.resize(completeFields, false);
 
 		// remove 'tidy text' properties that are not used, set to 'false' where none is specified
-		if(this->config.parsingFieldTidyTexts.size() > completeFields)
+		if(this->config.parsingFieldTidyTexts.size() > completeFields) {
 			incompleteFields = true;
+		}
 
 		this->config.parsingFieldTidyTexts.resize(completeFields, false);
 
 		// remove 'warning if empty' properties that are not used, set to 'false' where none is specified
-		if(this->config.parsingFieldWarningsEmpty.size() > completeFields)
+		if(this->config.parsingFieldWarningsEmpty.size() > completeFields) {
 			incompleteFields = true;
+		}
 
 		this->config.parsingFieldWarningsEmpty.resize(completeFields, false);
 
 		// warn about unused properties
-		if(incompleteFields)
+		if(incompleteFields) {
 			this->warning("Unused field properties removed from configuration.");
+		}
 
 		// check properties of ID queries
-		const auto completeIds = std::min( // number of complete ID queries (= min. size of all arrays)
-				this->config.parsingIdQueries.size(),
-				this->config.parsingIdSources.size()
-		);
+		const auto completeIds{
+			std::min( // number of complete ID queries (= min. size of all arrays)
+					this->config.parsingIdQueries.size(),
+					this->config.parsingIdSources.size()
+			)
+		};
 
-		bool incompleteIds = false;
+		bool incompleteIds{false};
 
 		// remove ID queries or sources that are not used
 		if(this->config.parsingIdQueries.size() > completeIds) {
@@ -380,7 +602,6 @@ namespace crawlservpp::Module::Parser {
 		}
 	}
 
-
-} /* crawlservpp::Module::Parser */
+} /* namespace crawlservpp::Module::Parser */
 
 #endif /* MODULE_PARSER_CONFIG_HPP_ */

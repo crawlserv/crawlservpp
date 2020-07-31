@@ -1,0 +1,11 @@
+<map id="crawlservpp::Module::Thread" name="crawlservpp::Module::Thread">
+<area shape="rect" id="node1" title="Abstract class providing module&#45;independent thread functionality." alt="" coords="5,201,163,243"/>
+<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Thread.html" title="Abstract class providing thread functionality to algorithm (child) classes." alt="" coords="211,103,368,144"/>
+<area shape="rect" id="node7" href="$classcrawlservpp_1_1Module_1_1Crawler_1_1Thread.html" title="Crawler thread." alt="" coords="211,168,368,209"/>
+<area shape="rect" id="node8" href="$classcrawlservpp_1_1Module_1_1Extractor_1_1Thread.html" title="Extractor thread." alt="" coords="211,233,368,275"/>
+<area shape="rect" id="node9" href="$classcrawlservpp_1_1Module_1_1Parser_1_1Thread.html" title="Parser thread." alt="" coords="211,299,368,340"/>
+<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Algo_1_1CorpusGenerator.html" title="Algorithm building a text corpus from the input data." alt="" coords="416,5,659,47"/>
+<area shape="rect" id="node4" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Algo_1_1Empty.html" title="Empty algorithm template." alt="" coords="450,71,625,112"/>
+<area shape="rect" id="node5" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Algo_1_1MarkovText.html" title="Algorithm generating random texts from a text corpus." alt="" coords="434,136,641,177"/>
+<area shape="rect" id="node6" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Algo_1_1MarkovTweet.html" title="Algorithm generate random tweet texts from a text corpus." alt="" coords="428,201,647,243"/>
+</map>

@@ -22,7 +22,8 @@
  *
  * Thread.hpp
  *
- * Abstract implementation of the Thread interface for analyzer threads to be inherited by the algorithm class.
+ * Abstract implementation of the Thread interface
+ *  for analyzer threads to be inherited by the algorithm class.
  *
  *  Created on: Oct 11, 2018
  *      Author: ans
@@ -49,62 +50,101 @@
 
 namespace crawlservpp::Module::Analyzer {
 
-	class Thread: public Module::Thread, protected Config {
+	//! Abstract class providing thread functionality to algorithm (child) classes.
+	class Thread : public Module::Thread, protected Config {
 		// for convenience
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
 	public:
+		///@name Construction
+		///@{
+
 		Thread(
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
 		Thread(Main::Database& dbBase, const ThreadOptions& threadOptions);
-		virtual ~Thread();
+
+		///@}
 
 	protected:
-		// text maps are used to describe certain parts of a text
-		//  defined by their positions and lengths with certain strings (words, dates etc.)
-		using TextMapEntry = std::tuple<std::string, std::string::size_type, std::string::size_type>;
+		///@name Database Connection
+		///@{
 
-		// analyzing configuration and database functionality for thread
+		//! %Database connection for the analyzer thread.
 		Database database;
 
-		// target table
-		std::string targetTable;
+		///@}
+		///@name Implemented Thread Functions
+		///@{
 
-		// implemented thread functions
 		void onInit() override;
 		void onTick() override;
 		void onPause() override;
 		void onUnpause() override;
 		void onClear() override;
 
-		// functions to be implemented by algorithm class
+		///@}
+		///@name Algorithm Events
+		///@{
+
+		//! Initializes the algorithm.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
 		virtual void onAlgoInit() = 0;
+
+		//! Performs an algorithm tick.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
 		virtual void onAlgoTick() = 0;
+
+		//! Pauses the algorithm.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
 		virtual void onAlgoPause() = 0;
+
+		//! Unpauses the algorithm.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
 		virtual void onAlgoUnpause() = 0;
+
+		//! Clears the algorithm.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
 		virtual void onAlgoClear() = 0;
 
-		// algorithm is finished
-		void finished();
+		///@}
+		///@name Thread Control for Algorithms
+		///@{
 
-		// shadow pause function not to be used by thread
+		void finished();
 		void pause();
 
-		// class for Analyzer exceptions (to be used by algorithms)
+		///@}
+
+		//! Class for analyzer exceptions to be used by algorithms.
 		MAIN_EXCEPTION_CLASS();
 
 	private:
-		// hide other functions not to be used by thread
+		// hide other functions not to be used by the thread
 		void start();
 		void unpause();
 		void stop();
 		void interrupt();
 	};
 
-} /* crawlservpp::Module::Analyzer */
+} /* namespace crawlservpp::Module::Analyzer */
 
 #endif /* MODULE_ANALYZER_THREAD_HPP_ */

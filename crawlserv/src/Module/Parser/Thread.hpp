@@ -52,7 +52,6 @@
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint64_t
-#include <functional>	// std::bind
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
 #include <locale>		// std::locale
@@ -60,12 +59,30 @@
 #include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error, std::runtime_error
 #include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Parser {
 
-	class Thread: public Module::Thread, private Query::Container, private Config {
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! The number of archived URLs after which the thread status will be updated.
+	constexpr auto updateArchiveCounterEvery{100};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! %Parser thread.
+	class Thread final : public Module::Thread, private Query::Container, private Config {
 		// for convenience
 		using DateTimeException = Helper::DateTime::Exception;
 		using LocaleException = Helper::DateTime::LocaleException;
@@ -84,51 +101,74 @@ namespace crawlservpp::Module::Parser {
 		using IdString = std::pair<std::uint64_t, std::string>;
 
 	public:
-		// constructors
+		///@name Construction
+		///@{
+
 		Thread(
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
 
-		Thread(Main::Database& dbBase, const ThreadOptions& threadOptions);
+		Thread(
+				Main::Database& dbBase,
+				const ThreadOptions& threadOptions
+		);
 
-		// destructor
-		virtual ~Thread();
+		///@}
 
-		// sub-class for Parser exceptions
+		//! Class for parser exceptions.
 		MAIN_EXCEPTION_CLASS();
 
 	protected:
-		// database for the thread
+		///@name Database Connection
+		///@{
+
+		//! %Database connection for the parser thread.
 		Database database;
 
-		// table names for locking
-		std::string parsingTable;
-		std::string targetTable;
+		///@}
+		///@name Caching
+		///@{
 
-		// cache
+		//! Queue of URLs in the cache to still be processed, and their IDs.
 		std::queue<IdString> urls;
+
+		//! The time until which the URLs in the cache are locked, as string.
+		/*!
+		 * In the format @c YYYY-MM-DD HH:MM:SS.
+		 */
 		std::string cacheLockTime;
+
+		//! Parsed data that has not yet been written to the database.
 		std::queue<DataEntry> results;
+
+		//! Queue of URLs in the cache that have been finished.
 		std::queue<IdString> finished;
 
-		// implemented thread functions
+		///@}
+		///@name Implemented Thread Functions
+		///@{
+
 		void onInit() override;
 		void onTick() override;
 		void onPause() override;
 		void onUnpause() override;
 		void onClear() override;
 
-		// shadow pause function not to be used by thread
-		void pause();
+		///@}
 
 	private:
-		// hide other functions not to be used by thread
+		// shadow functions not to be used by the thread
+		void pause();
 		void start();
 		void unpause();
 		void stop();
 		void interrupt();
+
+		// table names for locking them
+		std::string parsingTable;
+		std::string targetTable;
 
 		// queries
 		std::vector<QueryStruct> queriesSkip;
@@ -138,44 +178,58 @@ namespace crawlservpp::Module::Parser {
 		std::vector<QueryStruct> queriesFields;
 
 		// timing
-		unsigned long long tickCounter;
-		std::chrono::steady_clock::time_point startTime;
-		std::chrono::steady_clock::time_point pauseTime;
-		std::chrono::steady_clock::time_point idleTime;
+		std::uint64_t tickCounter{0};
+		std::chrono::steady_clock::time_point startTime{std::chrono::steady_clock::time_point::min()};
+		std::chrono::steady_clock::time_point pauseTime{std::chrono::steady_clock::time_point::min()};
+		std::chrono::steady_clock::time_point idleTime{std::chrono::steady_clock::time_point::min()};
 
 		// parsing state
-		bool idle;					// waiting for new URLs to be crawled
-		bool idFromUrlOnly;			// ID is exclusively parsed from URL
-		std::uint64_t lastUrl;		// last URL
+		bool idle{false};			// waiting for new URLs to be crawled
+		bool idFromUrlOnly{false};	// ID is exclusively parsed from URL
+		std::uint64_t lastUrl{0};	// last URL
 		std::string lockTime;		// last locking time for currently parsed URL
 
 		// properties used for progress calculation
-		std::uint64_t idFirst;		// ID of the first URL fetched
-		std::uint64_t idDist;		// distance between the IDs of first and last URL fetched
-		float posFirstF;			// position of the first URL fetched as float
-		std::uint64_t posDist;		// distance between the positions of first and last URL fetched
-		std::uint64_t total;		// number of total URLs in URL list
+		std::uint64_t idFirst{0};	// ID of the first URL fetched
+		std::uint64_t idDist{0};	// distance between the IDs of first and last URL fetched
+		float posFirstF{0.F};		// position of the first URL fetched as float
+		std::uint64_t posDist{0};	// distance between the positions of first and last URL fetched
+		std::uint64_t total{0};		// number of total URLs in URL list
 
 		// initializing function
-		void initTargetTable();
 		void initQueries() override;
+
+		// query functions
+		void addQueries(
+				const std::vector<std::uint64_t>& queryIds,
+				std::vector<QueryStruct>& propertiesTo
+		);
+		void addQueriesTo(
+				const std::vector<std::uint64_t>& queryIds,
+				std::vector<QueryStruct>& propertiesTo
+		);
+		void addQueriesTo(
+				std::string_view type,
+				const std::vector<std::string>& names,
+				const std::vector<std::uint64_t>& queryIds,
+				std::vector<QueryStruct>& propertiesTo
+		);
 
 		// parsing functions
 		void parsingUrlSelection();
 		void parsingFetchUrls();
 		void parsingCheckUrls();
 		std::size_t parsingNext();
-		bool parsingContent(const IdString& content, const std::string& parsedId);
+		bool parsingContent(const IdString& content, std::string_view parsedId);
 		void parsingUrlFinished();
 		void parsingSaveResults(bool warped);
-
-		// private helper functions
-		bool parseXml(const std::string& content);
-		bool parseJsonRapid(const std::string& content);
-		bool parseJsonCons(const std::string& content);
-		void resetParsingState();
+		void parsingFieldWarning(
+				std::string_view error,
+				std::string_view name,
+				std::string_view url
+		);
 	};
 
-} /* crawlservpp::Module::Parser */
+} /* namespace crawlservpp::Module::Parser */
 
 #endif /* MODULE_PARSER_THREAD_HPP_ */

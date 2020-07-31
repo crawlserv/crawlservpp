@@ -22,7 +22,7 @@
  *
  * Version.hpp
  *
- * Version information.
+ * General version information for crawlserv++.
  *
  *  Created on: May 20, 2019
  *      Author: ans
@@ -31,25 +31,68 @@
 #ifndef MAIN_VERSION_HPP_
 #define MAIN_VERSION_HPP_
 
-#define CRAWLSERV_VERSION_MAJOR 0
-#define CRAWLSERV_VERSION_MINOR 0
-#define CRAWLSERV_VERSION_RELEASE 0
-#define CRAWLSERV_VERSION_SUFFIX "alpha"
+#include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view_literals
 
-#include <string>	// std::string, std::to_string
-
+//! Namespace for version information.
 namespace crawlservpp::Main::Version {
 
+	/*
+	 * CONSTANTS
+	 */
+
+	using std::string_view_literals::operator""sv;
+
+	///@name Constants
+	///@{
+
+	//! Major version of the application.
+	constexpr auto crawlservVersionMajor{0};
+
+	//! Minor version of the application
+	constexpr auto crawlservVersionMinor{0};
+
+	//! Current release (i.e. patch) version of the application.
+	constexpr auto crawlservVersionRelease{1};
+
+	//! Version suffix of the application.
+	constexpr auto crawlservVersionSuffix{"alpha"sv};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	///@name Version Information
+	///@{
+
+	[[nodiscard]] std::string getString();
+
+	///@}
+
+	/*
+	 * IMPLEMENTATION
+	 */
+
+	//! Gets the current version of crawlserv++.
+	/*!
+	 * \returns The copy of a string containing the current version
+	 *   of crawlserv++.
+	 */
 	inline std::string getString() {
-		return
-				std::to_string(CRAWLSERV_VERSION_MAJOR)
-				+ "."
-				+ std::to_string(CRAWLSERV_VERSION_MINOR)
-				+ "."
-				+ std::to_string(CRAWLSERV_VERSION_RELEASE)
-				+ CRAWLSERV_VERSION_SUFFIX;
+		std::string result;
+
+		result += std::to_string(crawlservVersionMajor);
+		result += ".";
+		result += std::to_string(crawlservVersionMinor);
+		result += ".";
+		result += std::to_string(crawlservVersionRelease);
+		result += crawlservVersionSuffix;
+
+		return result;
 	}
 
-} /* crawlservpp::Main::Version */
+} /* namespace crawlservpp::Main::Version */
 
 #endif /* MAIN_VERSION_HPP_ */

@@ -22,7 +22,7 @@
  *
  * QueryProperties.hpp
  *
- * Basic query properties (name, text, type and result type).
+ * Query properties (name, text, type and result type(s)).
  *
  *  Created on: Feb 2, 2019
  *      Author: ans
@@ -35,22 +35,73 @@
 
 namespace crawlservpp::Struct {
 
+	//! %Query properties containing its name, text, type, and result type(s).
 	struct QueryProperties {
-		std::string name;
-		std::string text;
-		std::string type;
-		bool resultBool;
-		bool resultSingle;
-		bool resultMulti;
-		bool resultSubSets;
-		bool textOnly;
+		///@name Properties
+		///@{
 
-		// constructors
-		QueryProperties() :	resultBool(false),
-							resultSingle(false),
-							resultMulti(false),
-							resultSubSets(false),
-							textOnly(false) {}
+		//! The name of the query.
+		std::string name;
+
+		//! The query.
+		std::string text;
+
+		//! The type of the query.
+		std::string type;
+
+		//! Indicates whether the query generates a boolean result.
+		bool resultBool{false};
+
+		//! Indicates whether the query generates a single result.
+		bool resultSingle{false};
+
+		//! Indicates whether the query generates multiple results.
+		bool resultMulti{false};
+
+		//! Indicates whether the query generates subsets as results.
+		/*!
+		 * Subsets can directly be used to
+		 *  run queries on them again.
+		 */
+		bool resultSubSets{false};
+
+		//! Indicates whether the query should be considered text-only.
+		bool textOnly{false};
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		QueryProperties() = default;
+
+		//! Constructor setting properties, including the name of the query.
+		/*!
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the query.
+		 * \param setText Constant reference
+		 *   to a string containing the text
+		 *   of the query.
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the query.
+		 * \param setResultBool Set whether
+		 *   the query generates a boolean
+		 *   result.
+		 * \param setResultSingle Set whether
+		 *   the query generates a single
+		 *   result.
+		 * \param setResultMulti Set whether
+		 *   the query generates multiple
+		 *   results.
+		 * \param setResultSubSets Set
+		 *   whether the query generates
+		 *   subsets as results.
+		 * \param setTextOnly Set whether
+		 *   the query should be considered
+		 *   text-only.
+		 */
 		QueryProperties(
 				const std::string& setName,
 				const std::string& setText,
@@ -69,6 +120,33 @@ namespace crawlservpp::Struct {
 			resultSubSets(setResultSubSets),
 			textOnly(setTextOnly) {}
 
+		//! Constructor setting properties, but not the name of the query.
+		/*!
+		 * \note The name of the query will be
+		 *   set to an empty string.
+		 *
+		 * \param setText Constant reference
+		 *   to a string containing the text
+		 *   of the query.
+		 * \param setType Constant reference
+		 *   to a string containing the type
+		 *   of the query.
+		 * \param setResultBool Set whether
+		 *   the query generates a boolean
+		 *   result.
+		 * \param setResultSingle Set whether
+		 *   the query generates a single
+		 *   result.
+		 * \param setResultMulti Set whether
+		 *   the query generates multiple
+		 *   results.
+		 * \param setResultSubSets Set whether
+		 *   the query generates subsets as
+		 *   results.
+		 * \param setTextOnly Set whether the
+		 *   query should be considered text-
+		 *   only.
+		 */
 		QueryProperties(
 				const std::string& setText,
 				const std::string& setType,
@@ -87,8 +165,10 @@ namespace crawlservpp::Struct {
 				setResultSubSets,
 				setTextOnly
 			) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_QUERYPROPERTIES_HPP_ */

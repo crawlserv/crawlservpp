@@ -35,6 +35,7 @@
 #include "../Thread.hpp"
 
 #include "../../../Data/Corpus.hpp"
+#include "../../../Main/Database.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
@@ -48,6 +49,7 @@
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
+	//! Algorithm building a text corpus from the input data.
 	class CorpusGenerator : public Module::Analyzer::Thread {
 		// for convenience
 		using DataType = Data::Type;
@@ -60,6 +62,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using ThreadStatus = Struct::ThreadStatus;
 
 	public:
+		///@name Construction
+		///@{
+
 		CorpusGenerator(
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions,
@@ -69,23 +74,30 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions
 		);
-		virtual ~CorpusGenerator();
 
-		// implemented algorithm functions
+		///@}
+		///@name Implemented Algorithm Functions
+		///@{
+
 		void onAlgoInit() override;
 		void onAlgoTick() override;
 		void onAlgoPause() override;
 		void onAlgoUnpause() override;
 		void onAlgoClear() override;
 
-		// overwritten configuration functions
+		///@}
+		///@name Implemented Configuration Functions
+		///@{
+
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+
+		///@}
 
 	private:
 		std::string status;
 	};
 
-} /* crawlservpp::Module::Analyzer::Algo */
+} /* namespace crawlservpp::Module::Analyzer::Algo */
 
 #endif /* MODULE_ANALYZER_ALGO_CORPUSGENERATOR_HPP_ */

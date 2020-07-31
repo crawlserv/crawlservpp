@@ -39,6 +39,7 @@
 
 #include <memory>	// std::make_unique, std::unique_ptr
 
+//! Namespace for algorithm classes.
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	// for convenience
@@ -46,22 +47,27 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	using AlgoThreadPtr = std::unique_ptr<Module::Analyzer::Thread>;
 
-	// registration function
+	///@name Registration
+	///@{
+
 	AlgoThreadPtr initAlgo(const AlgoThreadProperties& thread);
 
-} /* crawlservpp::Module::Analyzer */
+	///@}
+
+} /* namespace crawlservpp::Module::Analyzer::Algo */
 
 // macro for algorithm thread creation
+//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define REGISTER_ALGORITHM(ID, CLASS) \
 	if(thread.algoId == (ID)) { \
-		if(thread.recreate) \
+		if(thread.status.id > 0) {\
 			return std::make_unique<CLASS>(\
 					thread.dbBase, \
 					thread.options, \
 					thread.status \
 			); \
-		else \
-			return std::make_unique<CLASS>(thread.dbBase, thread.options); \
+		}\
+		return std::make_unique<CLASS>(thread.dbBase, thread.options); \
 	}
 
 #endif /* MODULE_ANALYZER_ALGO_ALL_HPP_ */

@@ -22,7 +22,7 @@
  *
  * ModuleOptions.hpp
  *
- * Basic module options (thread ID, website ID and namespace, URL list ID and namespace).
+ * Module options (thread ID, website ID and namespace, URL list ID and namespace).
  *
  *  Created on: May 8, 2019
  *      Author: ans
@@ -36,15 +36,47 @@
 
 namespace crawlservpp::Struct {
 
+	//! %Module options containing the thread ID, as well as ID and namespace of website and URL list used by the thread.
 	struct ModuleOptions {
-		std::uint64_t threadId;
-		std::uint64_t websiteId;
+		///@name Properties
+		///@{
+
+		//! The ID of the thread.
+		std::uint64_t threadId{0};
+
+		//! The ID of the website used by the thread.
+		std::uint64_t websiteId{0};
+
+		//! The namespace of the website used by the thread.
 		std::string websiteNamespace;
-		std::uint64_t urlListId;
+
+		//! The ID of the URL list used by the thread.
+		std::uint64_t urlListId{0};
+
+		//! The namespace of the URL list used by the thread.
 		std::string urlListNamespace;
 
-		ModuleOptions() : threadId(0), websiteId(0), urlListId(0) {}
+		///@}
+		///@name Construction
+		///@{
 
+		//! Default constructor.
+		ModuleOptions() = default;
+
+		//! Constructor setting the basic module options for the thread.
+		/*!
+		 * \param setThreadId The ID of the thread.
+		 * \param setWebsiteId The ID of the website
+		 *   used by the thread.
+		 * \param setWebsiteNamespace Constant reference
+		 *   to a string containing the namespace of the
+		 *   website used by the thread.
+		 * \param setUrlListId The ID of the URL list
+		 *   used by the thread.
+		 * \param setUrlListNamespace Constant reference
+		 *   to a string containing the namespace of the
+		 *   URL list used by the thread.
+		 */
 		ModuleOptions(
 				std::uint64_t setThreadId,
 				std::uint64_t setWebsiteId,
@@ -56,8 +88,10 @@ namespace crawlservpp::Struct {
 			websiteNamespace(setWebsiteNamespace),
 			urlListId(setUrlListId),
 			urlListNamespace(setUrlListNamespace) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_MODULEOPTIONS_HPP_ */

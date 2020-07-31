@@ -57,7 +57,7 @@
 		"cookies.set": {
 			"type": "string",
 			"default": "",
-			"description": "Custom cookie header independent from internal cookie engine (will be overwritten if cookie is set on dynamic redirect).",
+			"description": "Custom HTTP Cookie header independent from internal cookie engine (will be overwritten if cookie is set on dynamic redirect).",
 			"simple": false
 		},
 		"dns.cachetimeout": {
@@ -146,21 +146,22 @@
 			"type": "array",
 			"item-type": "string",
 			"default": [],
-			"description": "Aliases that will be treated like HTTP/1.0 200 OK.",
+			"description": "Aliases that will be treated like HTTP 200 OK.",
 			"simple": false
 		},
 		"http.version": {
 			"type": "enum",
 			"enum-values": [
 				"any",
-				"HTTP 1.0 only",
-				"HTTP 1.1 only",
-				"Attempt HTTP 2 with fallback to 1.1",
-				"Use non-TLS HTTP 2 even when HTTPS not available",
-				"Attempt HTTP2 over TLS, fallback to 1.1"
+				"HTTP/1 only",
+				"HTTP/1.1 only",
+				"Attempt HTTP/2, fall back to HTTP/1.1",
+				"Use non-TLS HTTP/2 even when HTTPS not available",
+				"Attempt HTTP/2 over TLS, fall back to HTTP/1.1",
+				"Use HTTP/3 only"
 			],
 			"default": 5,
-			"description": "Use HTTP 1.0 only.",
+			"description": "The HTTP version(s) that will be used.",
 			"simple": false
 		},
 		"insecure": {
@@ -295,14 +296,14 @@
 			"type": "number",
 			"default": 0,
 			"min": 0,
-			"description": "Use the TOR control server to request a new identity after the given time (in seconds).",
+			"description": "Use the TOR control server to request a new identity after the given time (in s).",
 			"simple": false
 		},
 		"reset.tor.only.after": {
 			"type": "number",
 			"default": 60,
 			"min": 0,
-			"description": "Minimum number of seconds passed before requesting a new identity from the TOR control server.",
+			"description": "Default number of seconds that need to have been passed before requesting a new TOR identity.",
 			"simple": false
 		}, 
 		"speed.downlimit": {

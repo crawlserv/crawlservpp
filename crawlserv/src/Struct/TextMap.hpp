@@ -22,7 +22,7 @@
  *
  * TextMap.hpp
  *
- * A text map used to annotate parts of a corpus (e.g. to store the dates or articles contained in these parts).
+ * Text map (entries) used to annotate parts of a corpus (e.g. to store the dates or articles contained in these parts).
  *
  *  Created on: Mar 4, 2020
  *      Author: ans
@@ -36,40 +36,91 @@
 
 namespace crawlservpp::Struct {
 
-	// structure for a part of the text map
+	//! Text map entry.
+	/*!
+	 * A text map entry annotates one part
+	 *  of a text, defined by its position
+	 *   and length, with a string value.
+	 */
 	struct TextMapEntry {
-		std::string::size_type pos;		// position of the annotated part inside the corpus
-		std::string::size_type length;	// length of the annoted part inside the corpus
-		std::string value;				// value of the annotation (e.g. article ID or date)
+		///@name Properties
+		///@{
 
-		// constructor setting default values
-		TextMapEntry() : pos(0), length(0) {}
+		//! The position of the annotated part inside the text.
+		/*!
+		 * Zero indicates the very beginning
+		 *  of the text.
+		 */
+		std::size_t pos{0};
 
-		// constructor setting partial custom values (i. e. an empty annotation)
+		//! The length of the annotated part inside the text.
+		std::size_t length{0};
+
+		//! Value of the annotation.
+		/*!
+		 * For example, an article ID or a date
+		 *  for an entry of the article or date
+		 *  map belonging to a text corpus.
+		 */
+		std::string value;
+
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		TextMapEntry() = default;
+
+		//! Constructor creating an empty annotation.
+		/*!
+		 * \param setPos The position of the
+		 *   annotated part of the text,
+		 *   starting with zero at the
+		 *   beginning of the text.
+		 * \param setLength The length of the
+		 *   annotated part of the text.
+		 */
 		TextMapEntry(
-				std::string::size_type setPos,
-				std::string::size_type setLength
+				std::size_t setPos,
+				std::size_t setLength
 		) : pos(setPos), length(setLength) {}
 
-		// constructor setting custom values
+		//! Constructor creating a non-empty annotation.
+		/*!
+		 * \param setPos The position of the
+		 *   annotated part of the text,
+		 *   starting with zero at the
+		 *   beginning of the text.
+		 * \param setLength The length of the
+		 *   annotated part of the text.
+		 * \param setValue Const reference
+		 *   to a string containing the
+		 *   value of the annotation.
+		 */
 		TextMapEntry(
-				std::string::size_type setPos,
-				std::string::size_type setLength,
+				std::size_t setPos,
+				std::size_t setLength,
 				const std::string& setValue
 		) : pos(setPos), length(setLength), value(setValue) {}
 
-		// reset values and free memory
+		///@}
+		///@name Cleanup
+		///@{
+
+		//! Resets its properties to their default values and frees the memory used by the entry.
 		void free() {
 			this->pos = 0;
 			this->length = 0;
 
 			std::string().swap(this->value);
 		}
+
+		///@}
 	};
 
-	// for convenience
+	//! A text map is defined as a vector of text map entries.
 	using TextMap = std::vector<TextMapEntry>;
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_TEXTMAP_HPP_ */

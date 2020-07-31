@@ -22,7 +22,7 @@
  *
  * Curl.cpp
  *
- * RAII wrapper for pointer to cURL instance, also handles global instance if necessary.
+ * RAII wrapper for pointer to libcurl instance, also handles global instance if necessary.
  * 	Does NOT have ownership of the pointer.
  * 	The first instance has to be destructed last.
  *
@@ -32,9 +32,10 @@
 
 #include "Curl.hpp"
 
+//! Namespace for RAII wrappers and Wrapper::Database.
 namespace crawlservpp::Wrapper {
 
-	// set cURL to not initialized
-	bool Curl::globalInit = false;
+	// set the libcurl API to not initialized
+	bool Curl::globalInit{false};
 
-} /* crawlservpp::Wrapper */
+} /* namespace crawlservpp::Wrapper */

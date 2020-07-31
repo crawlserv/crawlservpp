@@ -22,7 +22,7 @@
  *
  * TableProperties.hpp
  *
- * Table properties (name, columns, data directory, compression).
+ * Table properties (name, columns, data directory and compression).
  *
  *  Created on: Mar 4, 2019
  *      Author: ans
@@ -38,16 +38,53 @@
 #include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
-
+	//! Table properties containing its name, columns, data directory, and compression.
 	struct TableProperties {
+		///@name Properties
+		///@{
+
+		//! The name of the table.
 		std::string name;
+
+		//! Vector containing the columns of the table.
 		std::vector<TableColumn> columns;
+
+		//! The data directory of the table.
+		/*!
+		 * Contains an empty string if
+		 *  the default data directory
+		 *  is used.
+		 */
 		std::string dataDirectory;
-		bool compressed;
 
-		// constructors
-		TableProperties() : compressed(false) {}
+		//! Indicates whether compression is active for this table.
+		bool compressed{false};
 
+		///@}
+		///@name Construction
+		///@{
+
+		//! Default constructor.
+		TableProperties() = default;
+
+		//! Constructor setting table properties.
+		/*!
+		 * \param setName Constant reference
+		 *   to a string containing the name
+		 *   of the table.
+		 * \param setColumns Constant reference
+		 *   to a vector containing the columns
+		 *   of the table.
+		 * \param setDataDirectory Constant
+		 *   reference to a string containing
+		 *   the data directory of the table.
+		 *   Set to an empty string if the
+		 *   default data directory should be
+		 *   used.
+		 * \param setCompressed Set whether
+		 *   compression should be used for
+		 *   storing the table in the database.
+		 */
 		TableProperties(
 				const std::string& setName,
 				const std::vector<TableColumn>& setColumns,
@@ -57,9 +94,11 @@ namespace crawlservpp::Struct {
 			columns(setColumns),
 			dataDirectory(setDataDirectory),
 			compressed(setCompressed) {}
+
+		///@}
 	};
 
-} /* crawlservpp::Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_TABLEPROPERTIES_HPP_ */
 

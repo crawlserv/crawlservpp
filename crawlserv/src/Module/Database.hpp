@@ -42,22 +42,52 @@
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ModuleOptions.hpp"
 
-#include <cstdint>	// std::uint8_t, std::uint16_t, std::uint64_t
-#include <fstream>	// std::ofstream
-#include <limits>	// std::numeric_limits
-#include <memory>	// std::unique_ptr
-#include <queue>	// std::queue
-#include <string>	// std::string, std::to_string
+#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint64_t
+#include <fstream>		// std::flush, std::ofstream
+#include <limits>		// std::numeric_limits
+#include <memory>		// std::unique_ptr
+#include <queue>		// std::queue
+#include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view
 
 namespace crawlservpp::Wrapper {
 
 	class Database;
 
-} /* crawlservpp::Wrapper */
+} /* namespace crawlservpp::Wrapper */
 
 namespace crawlservpp::Module {
 
+	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! First argument in a SQL query.
+	constexpr auto sqlArg1{1};
+
+	//! Second argument in a SQL query.
+	constexpr auto sqlArg2{2};
+
+	//! Third argument in a SQL query.
+	constexpr auto sqlArg3{3};
+
+	///@}
+
+	/*
+	 * DECLARATION
+	 */
+
+	//! Class handling database access for threads.
+	/*!
+	 * Only implements module-independent functionality.
+	 * For module-specific functionality, use the child
+	 * classes of Wrapper::Database instead.
+	 */
 	class Database : public Main::Database {
+		//! Allows access to module threads.
 		friend class Wrapper::Database;
 
 		// for convenience
@@ -67,32 +97,65 @@ namespace crawlservpp::Module {
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
-		// constructor
+		///@name Construction and Destruction
+		///@{
+
 		Database(const DatabaseSettings& dbSettings, const std::string& dbModule);
+		~Database() override;
 
-		// destructor
-		virtual ~Database();
+		///@}
+		///@name Setters (Module)
+		///@{
 
-		// setters
 		void setOptions(const ModuleOptions& moduleOptions);
 		void setThreadId(std::uint64_t id);
 		void setLogging(std::uint8_t level, std::uint8_t min, std::uint8_t verbose);
 
-		// command function
+		///@}
+		///@name Preparation (Module)
+		///@{
+
 		void prepare();
 
-		// logging functions
+		///@}
+		///@name Logging (Module)
+		///@{
+
 		void log(std::uint8_t level, const std::string& logEntry);
 		void log(std::uint8_t level, std::queue<std::string>& logEntries);
 		bool isLogLevel(uint8_t level) const;
 
-		// thread functions
+		///@}
+		///@name Threads (Module)
+		///@{
+
 		void setThreadStatusMessage(std::uint64_t threadId, bool threadPaused, const std::string& threadStatusMessage);
 		void setThreadProgress(std::uint64_t threadId, float threadProgress, std::uint64_t threadRunTime);
 		void setThreadLast(std::uint64_t threadId, std::uint64_t threadLast);
 
-		// class for Module::Database exceptions
+		///@}
+
+		//! Class for Module::Database exceptions.
 		MAIN_EXCEPTION_CLASS();
+
+		/**@name Copy and Move
+		 * The class is neither copyable, nor movable.
+		 */
+		///@{
+
+		//! Deleted copy constructor.
+		Database(Database&) = delete;
+
+		//! Deleted copy assignment operator.
+		Database& operator=(Database&) = delete;
+
+		//! Deleted move constructor.
+		Database(Database&&) = delete;
+
+		//! Deleted move assignment operator.
+		Database& operator=(Database&&) = delete;
+
+		///@}
 
 	private:
 		// general thread options
@@ -105,7 +168,7 @@ namespace crawlservpp::Module {
 		std::uint8_t loggingVerbose;
 		std::ofstream loggingFile;
 		bool debugLogging;
-		std::string debugDir;
+		const std::string_view debugDir;
 
 		// private helper function
 		void initDebugLogging();
@@ -118,6 +181,6 @@ namespace crawlservpp::Module {
 		} ps;
 	};
 
-} /* crawlservpp::Module */
+} /* namespace crawlservpp::Module */
 
 #endif /* MODULE_DATABASE_HPP_ */

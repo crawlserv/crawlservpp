@@ -22,7 +22,7 @@
  *
  * System.hpp
  *
- * Namespace with global system helper function.
+ * Namespace for global system helper function.
  *
  *  Created on: Apr 17, 2019
  *      Author: ans
@@ -37,20 +37,40 @@
 #include <memory>	// std::unique_ptr
 #include <string>	// std::string
 
+//! Namespace for global system helper functions.
 namespace crawlservpp::Helper::System {
 
-	// execute a system command and return the stdout of the program, throws Main::Exception
+	//! Executes a system command and returns the stdout of the program.
+	/*!
+	 * At the moment, this function is used exclusively by
+	 *  Helper::Portability::enumLocales().
+	 *
+	 * \warning Not compliant with
+	 *   <a href="https://www.securecoding.cert.org/confluence/pages/viewpage.action?pageId=2130132">
+	 *   ENV33-C. Do not call system()</a>!
+	 *
+	 * \returns A string containing the output the program has written to stdout.
+	 *
+	 * \throws Main::Exception if the execution of the command failed.
+	 */
 	inline std::string exec(const char* cmd) {
-	    std::array<char, 128> buffer;
+		constexpr auto bufferLength{128};
+
+	    std::array<char, bufferLength> buffer{};
 	    std::string result;
+
+	    // NOLINTNEXTLINE(cert-env33-c)
 	    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
 
-	    if(!pipe)
+	    if(!pipe) {
 	        throw Main::Exception("popen() failed");
+	    }
 
-	    while(::fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+	    while(::fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
 	        result += buffer.data();
+	    }
 
 	    return result;
 	}
-}
+
+} /* namespace crawlservpp::Helper::System */
