@@ -106,7 +106,7 @@ In the configuration file, access can (and should) be restricted to specific IPs
 
 ### Server Commands
 
-The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of May 2019):
+The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of August 2020):
 
 * **`addconfig`** (arguments: `website`, `module`, `name`, `config`): Add a configuration to the database.
 * **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`): Add a RegEx, XPath or JSONPointer query to the database.
@@ -218,7 +218,7 @@ As can be seen from the commands, the server also manages threads for performing
 
 Configurations for these modules are saved as JSON arrays in the shared `configs` table.
 
-Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of March 2020):
+Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of August 2020):
  
 * **CorpusGenerator**: Uses the built-in functionality for building text corpora from its input data and quits.
 * **MarkovText**: Markov Chain Text Generator.
