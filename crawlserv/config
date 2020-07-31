@@ -1,0 +1,15 @@
+db_host=localhost
+db_port=3306
+db_user=crawler
+db_name=crawled
+db_debug_logging=1
+server_port=8080
+server_allow=127.0.0.1,::1
+server_cors_origins=http://localhost
+server_logs_deletable=1
+server_data_deletable=1
+server_client_compress=0
+network_default_proxy=socks5://localhost:9050
+network_tor_control_server=localhost
+network_tor_control_port=9051
+network_tor_control_password=[PASSWORD]
