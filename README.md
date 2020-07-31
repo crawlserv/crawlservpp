@@ -51,7 +51,7 @@ The following additional components are required to build crawlserv++ on your sy
 * the [`zlib`](https://www.zlib.net/) library (preinstalled on many Linux systems)
 * currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
-*&ast; Older Linux distributions may only have `libtidy-dev` v0.9 and `liburiparser-dev` 0.8.4 available. Install the current [versions](https://github.com/htacg/tidy-html5/releases) [manually](https://github.com/uriparser/uriparser), or add a newer repository, e.g. on Ubuntu via:*
+*&ast; Older Linux distributions may only have `libtidy-dev` v0.9 and `liburiparser-dev` v0.8.4 available. Install the current [versions](https://github.com/htacg/tidy-html5/releases) [manually](https://github.com/uriparser/uriparser), or add a newer repository, e.g. on Ubuntu via:*
 
 ```
 echo "deb http://cz.archive.ubuntu.com/ubuntu eoan main universe" | sudo tee -a  /etc/apt/sources.list
@@ -163,7 +163,7 @@ The commands and their replies are using the JSON format (implemented using the 
 
 #### File cache
 
-Apart from these commands, the server automatically handles HTTP file uploads sent as `multipart/form-data`. The part containing the content of the file needs to be named `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined by `MAIN_WEBSERVER_FILE_LENGTH` in [`crawlserv/src/Main/WebServer.hpp`](crawlserv/src/Main/WebServer.hpp)) as file names.
+Apart from these commands, the server automatically handles HTTP file uploads sent as `multipart/form-data`. The part containing the content of the file needs to be named `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined by `Main::randFileNameLength` in [`crawlserv/src/Main/WebServer.hpp`](https://codedocs.xyz/crawlserv/crawlservpp/WebServer_8hpp_source.html)) as file names.
 
 The cache is also used to store files generated on data export. Files in the cache can be downloaded using the `download` server command. Note that these files are **temporary** as the file cache will be cleared and all uploaded and/or generated files deleted as soon as the server is restarted. Permanent data will be written to the database instead.
 
@@ -205,11 +205,11 @@ Response from the server: Success (otherwise `"failed":true` would be included i
 }
 ```
 
-For more information on the server commands, see the [source code](crawlserv/src/Main/Server.cpp) of the `Main::Server` class.
+For more information on the server commands, see the [documentation](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Main_1_1Server.html) of the `Main::Server` class.
 
 ### Threads
 
-As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) template class:
+As can be seen from the commands, the server also manages threads for performing specific tasks. In theory, an indefinite number of parallel threads can be run, limited only by the hardware provided for the server. There are four different modules (i.e. types of threads) that are implemented by inheritance from the [`Module::Thread`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Thread.html) template class:
 
 * **crawler**: Crawling of websites (using custom URLs and following links to the same \[sub-\]domain, downloading plain content to the database and optionally checking archives using the [Memento API](http://www.mementoweb.org/guide/quick-intro/)).
 * **parser**: Parsing of data from URLs and downloaded content using user-defined RegEx, XPath and JSONPointer queries.
@@ -224,7 +224,7 @@ Analyzers are implemented by their own set of subclasses &mdash; algorithm class
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
 
-The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](crawlserv/src/Main/Database.cpp) class. Additionally, thread connections to the database (instances of [`Module::Database`](crawlserv/src/Module/Database.cpp) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the Classes, Namespaces and Structures section above as well as the corresponsing source code for details.
+The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Main_1_1Database.html) class. Additionally, thread connections to the database (instances of [`Module::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Database.html) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Wrapper_1_1Database.html) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the [source code documentation](https://codedocs.xyz/crawlserv/crawlservpp/) of the command-and-control server for further details.
 
 The parser, extractor and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing and analyzing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected as well as some blocking because of simultaneous database access. At the same time, a slow database connection or server can have significant impact on performance in any case.
 
@@ -338,7 +338,7 @@ For each website and each URL list a namespace of at least four allowed characte
 * **`<namespace of website>_<namespace of URL list>_parsed_<name of target table>`**: Parsing results.
 * **`<namespace of website>_<namespace of URL list>_parsing`**: Parsing status.
 
-See the source code of the `addUrlList(...)` function in [`Main::Database`](crawlserv/src/Main/Database.cpp) for details about the structure of the non-result tables. Most of the columns of the result tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `initTargetTable(...)` functions in [`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp), [`Module::Extractor::Database`](crawlserv/src/Extractor/Database.cpp) and [`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp) accordingly.
+See the source code of the `addUrlList(...)` function in [`Main::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Main_1_1Database.html) for details about the structure of the non-result tables. Most of the columns of the result tables are specified by the respective parsing, extracting and analyzing configurations. See the code of the `initTargetTable(...)` functions in [`Module::Parser::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Parser_1_1Database.html), [`Module::Extractor::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Extractor_1_1Database.html) and [`Module::Analyzer::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Analyzer_1_1Database.html) accordingly.
 
 ## Platform
 
