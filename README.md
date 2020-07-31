@@ -94,108 +94,11 @@ If you use `gcc`, add the following arguments to set all of these definitions:
 
 ## Command-and-Control Server
 
+[![Documentation](https://codedocs.xyz/crawlserv/crawlservpp.svg)](https://codedocs.xyz/crawlserv/crawlservpp/)
+
 The command-and-control server contains an embedded web server (implemented using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the frontend by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) of JSON code.
 
 In the configuration file, access can (and should) be restricted to specific IPs only.
-
-### Classes, Namespaces and Structures
-
-**NB!** All non-external classes are part of the namespace `crawlservpp`.
-
-The source code of the server consists of the following classes (as of April 2019):
-
-* **[`Data::Corpus`](crawlserv/src/Data/Corpus.hpp)**: Class representing a text corpus with optional article and date maps that can be sliced into smaller chunks to fit into the database.
-* **[`Main::App`](crawlserv/src/Main/App.cpp)**: Main application class that processes command line arguments, writes console output, loads the configuration file, asks for the database password, creates and starts the server.
-* **[`Main::ConfigFile`](crawlserv/src/Main/ConfigFile.cpp)**: A simple one line one entry configuration file where each line consists of a `key=value` pair.
-* **[`Main::Database`](crawlserv/src/Main/Database.cpp)**: Database access for the server and its threads (parent class with server-specific and basic functionality only).
-* **[`Main::Exception`](crawlserv/src/Main/Exception.hpp)**: Class for custom exceptions.
-* **[`Main::Server`](crawlserv/src/Main/Server.cpp)**: Command-and-control server managing threads and performing server commands.
-* **[`Main::Version`](crawlserv/src/Main/Version.hpp)**: Version information.
-* **[`Main::WebServer`](crawlserv/src/Main/WebServer.cpp)**: Implementation of an embedded HTTP server for interaction with the frontend using the [mongoose library](https://github.com/cesanta/mongoose).
-* **[`Module::Config`](crawlserv/src/Module/Config.hpp)**: Abstract class as base for module-specific configuration classes.
-* **[`Module::Database`](crawlserv/src/Module/Database.cpp)**: Database functionality for threads (child of the [`Main::Database`](crawlserv/src/Main/Database.cpp) class).
-* **[`Module::Thread`](crawlserv/src/Module/Thread.cpp)**: Abstract class for a single thread implementing module-independent functionality (database connection, thread status, thread ticks, exception handling).
-* **[`Module::Analyzer::Algo::CorpusGenerator`](crawlserv/src/Module/Analyzer/Algo/CorpusGenerator.cpp)**: Uses the built-in functionality for building text corpora.
-* **[`Module::Analyzer::Algo::MarkovText`](crawlserv/src/Module/Analyzer/Algo/MarkovText.cpp)**: Markov chain text generator [borrowed from Rosetta Code](https://rosettacode.org/wiki/Markov_chain_text_generator).
-* **[`Module::Analyzer::Algo::MarkovTweet`](crawlserv/src/Module/Analyzer/Algo/MarkovTweet.cpp)**: Markov chain tweet generator [borrowed from Kelly Rauchenberger](https://github.com/hatkirby/rawr-ebooks).
-* **[`Module::Analyzer::Config`](crawlserv/src/Module/Analyzer/Config.hpp)**: Analyzing configuration. See [analyzer.json](crawlserv_frontend/crawlserv/json/analyzer.json) for configuration entries.
-* **[`Module::Analyzer::Database`](crawlserv/src/Module/Analyzer/Database.cpp)**: Database access for analyzers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
-* **[`Module::Analyzer::Thread`](crawlserv/src/Module/Analyzer/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for analyzers. Abstract class to be inherited by algorithm classes.
-* **[`Module::Crawler::Config`](crawlserv/src/Module/Crawler/Config.hpp)**: Crawling configuration. See [crawler.json](crawlserv_frontend/crawlserv/json/crawler.json) for configuration entries.
-* **[`Module::Crawler::Database`](crawlserv/src/Module/Crawler/Database.cpp)**: Database access for crawlers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
-* **[`Module::Crawler::Thread`](crawlserv/src/Module/Crawler/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for crawlers.
-* **[`Module::Extractor::Config`](crawlserv/src/Module/Extractor/Config.hpp)**: Extracting configuration. See [extractor.json](crawlserv_frontend/crawlserv/json/extractor.json) for configuration entries.
-* **[`Module::Extractor::Database`](crawlserv/src/Module/Extractor/Database.cpp)**: Database access for extractors (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
-* **[`Module::Extractor::Thread`](crawlserv/src/Module/Extractor/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for extractors.
-* **[`Module::Parser::Config`](crawlserv/src/Module/Parser/Config.hpp)**: Parsing configuration. See [parser.json](crawlserv_frontend/crawlserv/json/parser.json) for configuration entries.
-* **[`Module::Parser::Database`](crawlserv/src/Module/Parser/Database.cpp)**: Database access for parsers (implements the [`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp) class).
-* **[`Module::Parser::Thread`](crawlserv/src/Module/Parser/Thread.cpp)**: Implementation of the [`Module::Thread`](crawlserv/src/Module/Thread.cpp) class for parsers.
-* **[`Network::Config`](crawlserv/src/Network/Config.hpp)**: Network configuration. This class is both used by the crawler and the extractor. See [network.json](crawlserv_frontend/crawlserv/json/include/network.json) for configuration entries.
-* **[`Network::Curl`](crawlserv/src/Network/Curl.hpp)**: Provide networking functionality using the [libcurl library](https://curl.haxx.se/libcurl/). This class is used by both the crawler and the extractor.
-* **[`Parsing::HTML`](crawlserv/src/Parsing/HTML.hpp)**: Clean HTML documents and parse them into XML using the [HTML Tidy API](http://www.html-tidy.org/).
-* **[`Parsing::URI`](crawlserv/src/Parsing/URI.cpp)**: URL parsing, domain checking and sub-URL extraction using [uriparser](https://github.com/uriparser/uriparser).
-* **[`Parsing::XML`](crawlserv/src/Parsing/XML.hpp)**: Parse XML documents using the [pugixml parser library](https://github.com/zeux/pugixml).
-* **[`Query::Container`](crawlserv/src/Query/Container.cpp)**: Abstract class for management and type-independent usage of queries.
-* **[`Query::JsonPath`](crawlserv/src/Query/JsonPath.cpp)**: Using the [jsoncons library](https://github.com/danielaparker/jsoncons/) to implement a JSONPath with boolean, single and/or multiple results.
-* **[`Query::JsonPointer`](crawlserv/src/Query/JsonPointer.cpp)**: Using the [RapidJSON library](https://github.com/Tencent/rapidjson) to implement a JSONPointer with boolean, single and/or multiple results.
-* **[`Query::RegEx`](crawlserv/src/Query/RegEx.cpp)**: Using the [PCRE2 library](https://www.pcre.org/) to implement a Perl-Compatible Regular Expressions query with boolean, single and/or multiple results.
-* **[`Query::XPath`](crawlserv/src/Query/XPath.cpp)**: Using the [pugixml parser library](https://github.com/zeux/pugixml) to implement a XPath query with boolean, single and/or multiple results.
-* **[`Timer::Simple`](crawlserv/src/Timer/Simple.hpp)**: Simple timer for getting the time since creation and later ticks in milliseconds.
-* **[`Timer::SimpleHR`](crawlserv/src/Timer/SimpleHR.hpp)**: Simple high resolution timer for getting the time since creation and later ticks in microseconds.
-* **[`Timer::StartStop`](crawlserv/src/Timer/StartStop.hpp)**: Start/stop watch timer for getting the elapsed time in milliseconds including pausing functionality.
-* **[`Timer::StartStopHR`](crawlserv/src/Timer/StartStopHR.hpp)**: High resolution start/stop watch timer for getting the elapsed time in microseconds including pausing functionality.
-* **[`Wrapper::Curl`](crawlserv/src/Wrapper/Curl.hpp)**: [RAII](https://en.wikipedia.org/wiki/Resource_acquisition_is_initialization) wrapper for pointer to cURL instance, also handles global instance if necessary.
-* **[`Wrapper::CurlList`](crawlserv/src/Wrapper/CurlList.hpp)**: RAII wrapper for pointer to URI query list.
-* **[`Wrapper::Database`](crawlserv/src/Wrapper/Database.hpp)**: Abstract class for the database access of threads (wraps the [`Module::Database`](crawlserv/src/Module/Database.cpp) class).
-* **[`Wrapper::DatabaseLock`](crawlserv/src/Wrapper/DatabaseLock.hpp)**: Template class for safe in-scope database locks.
-* **[`Wrapper::DatabaseTryLock`](crawlserv/src/Wrapper/DatabaseTryLock.hpp)**: Template class for safe in-scope database try locks.
-* **[`Wrapper::PCRE`](crawlserv/src/Wrapper/PCRE.hpp)**: Wrapper for pointer to Perl-Compatible Regular Expression.
-* **[`Wrapper::PCREMatch`](crawlserv/src/Wrapper/PCREMatch.hpp)**: RAII wrapper for pointer to Perl-Compatible Regular Expression match.
-* **[`Wrapper::PreparedSqlStatement`](crawlserv/src/Wrapper/PreparedSqlStatement.hpp)**: RAII wrapper for prepared SQL statement pointer.
-* **[`Wrapper::TidyBuffer`](crawlserv/src/Wrapper/TidyBuffer.hpp)**: RAII wrapper for `tidyhtml` buffers.
-* **[`Wrapper::TidyDoc`](crawlserv/src/Wrapper/TidyDoc.hpp)**: RAII wrapper for `tidyhtml` documents.
-* **[`Wrapper::URI`](crawlserv/src/Wrapper/URI.hpp)**: Wrapper for pointer to URI structure.
-* **[`Wrapper::URIQueryList`](crawlserv/src/Wrapper/URIQueryList.hpp)**: RAII wrapper for pointer to URI query list.
-
-The following additional namespaces are used (to be found in [`crawlserv/src/Helper`](crawlserv/src/Helper)):
-
-* **[`Helper::DateTime`](crawlserv/src/Helper/DateTime.hpp)**: Global helper functions for date/time and time to string conversion using [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html).
-* **[`Helper::File`](crawlserv/src/Helper/File.hpp)**: Global helper function for file access.
-* **[`Helper::FileSystem`](crawlserv/src/Helper/FileSystem.hpp)**: Global helper functions for file system operations using `std::experimental::filesystem`.
-* **[`Helper::Json`](crawlserv/src/Helper/Json.hpp)**: Global helper functions for converting and parsing to JSON using the [RapidJSON](https://github.com/Tencent/rapidjson) and [jsoncons](https://github.com/danielaparker/jsoncons/) libraries.
-* **[`Helper::Portability`](crawlserv/src/Helper/Portability/)**: Additional headers for portability.
-* **[`Helper::Strings`](crawlserv/src/Helper/Strings.hpp)**: Global helper functions for string processing and manipulation.
-* **[`Helper::System`](crawlserv/src/Helper/System.hpp)**: Global system helper function.
-* **[`Helper::Utf8`](crawlserv/src/Helper/Utf8.hpp)**: Global helper functions for UTF-8 conversion using the [UTF8-CPP library](http://utfcpp.sourceforge.net/).
-* **[`Helper::Versions`](crawlserv/src/Helper/Versions.hpp)**: Get the versions of the different libraries used by the server.
-
-The following custom structures are globally used (to be found in [`crawlserv/src/Struct`](crawlserv/src/Struct)):
-
-* **[`Struct::AlgoThreadProperties`](crawlserv/src/Struct/AlgoThreadProperties.hpp)**: Properties of an algorithm thread.
-* **[`Struct::ConfigItem`](crawlserv/src/Struct/ConfigItem.hpp)**: Configuration item (category, name, value).
-* **[`Struct::ConfigProperties`](crawlserv/src/Struct/ConfigProperties.hpp)**: Basic configuration properties (module, name, configuration).
-* **[`Struct::CorpusProperties`](crawlserv/src/Struct/CorpusProperties.hpp)**: Basic corpus properties (source type, table and field).
-* **[`Struct::DatabaseSettings`](crawlserv/src/Struct/DatabaseSettings.hpp)**: Basic database settings (host, port, user, password, schema, compression).
-* **[`Struct::ParsingEntry`](crawlserv/src/Struct/ParsingEntry.hpp)**: Parsed data (content ID, parsed ID, parsed date/time, parsed fields).
-* **[`Struct::QueryProperties`](crawlserv/src/Struct/QueryProperties.hpp)**: Basic query properties (name, text, type, result type).
-* **[`Struct::QueryStruct`](crawlserv/src/Struct/QueryStruct.hpp)**: Structure to identify a query and its result type(s).
-* **[`Struct::ServerCommandResponse`](crawlserv/src/Struct/ServerCommandResponse.hpp)**: Response from the command-and-control server.
-* **[`Struct::ServerSettings`](crawlserv/src/Struct/ServerSettings.hpp)**: Basic server settings (port, allowed clients, deletion of logs allowed, deletion of data allowed).
-* **[`Struct::TableColumn`](crawlserv/src/Struct/TableColumn.hpp)**: Structure for table columns (name, type, reference, indexed).
-* **[`Struct::TableProperties`](crawlserv/src/Struct/TableProperties.hpp)**: Table properties (name, columns, data directory, compression).
-* **[`Struct::TargetTableProperties`](crawlserv/src/Struct/TargetTableProperties.hpp)**: Target table properties (type, website, URL list, name and full name, columns, data directory, compression).
-* **[`Struct::TextMap`](crawlserv/src/Struct/TextMap.hpp)**: Text map used to annotate parts of a text corpus.
-* **[`Struct::ThreadDatabaseEntry`](crawlserv/src/Struct/ThreadDatabaseEntry.hpp)**: Thread status as saved in the database (ID, module, status message, pause status, options, ID of last processed URL).
-* **[`Struct::ThreadOptions`](crawlserv/src/Struct/ThreadOptions.hpp)**: Basic thread options (thread module, IDs of website, URL list and configuration).
-* **[`Struct::ThreadStatus`](crawlserv/src/Struct/ThreadStatus.hpp)**: Thread status (thread ID, status message, pause state and progress).
-* **[`Struct::UrlListProperties`](crawlserv/src/Struct/UrlListProperties.hpp)**: Basic URL list properties (namespace, name).
-* **[`Struct::WebsiteProperties`](crawlserv/src/Struct/WebsiteProperties.hpp)**: Basic website properties (domain, namespace, name).
-
-Algorithms are registered in [`crawlserv/src/Module/Analyzer/Algo/All.cpp`](crawlserv/src/Module/Analyzer/Algo/All.cpp).
-
-Additional structures for writing and getting custom data to and from the database are defined in [`crawlserv/src/Data/Data.hpp`](crawlserv/src/Data/Data.hpp).
-
-The [`main.cpp`](crawlserv/src/main.cpp) source file as entry point of the application only consists of one line of code that invokes the constructor (with the command line arguments as function arguments) and the `run()` function of the [`Main::App`](crawlserv/src/Main/App.cpp) class. The latter also returns the return value for the `main` function (either `EXIT_SUCCESS` or `EXIT_FAILURE` as defined by the ISO C99 Standard, e.g. in `stdlib.h` of the GNU C Library).
 
 ### Server Commands
 
