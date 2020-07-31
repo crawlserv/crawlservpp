@@ -1,6 +1,0 @@
-<map id="crawlservpp::Module::Crawler::Database" name="crawlservpp::Module::Crawler::Database">
-<area shape="rect" id="node1" title="Class providing database functionality for crawler threads by implementing Wrapper::Database." alt="" coords="9,291,166,332"/>
-<area shape="rect" id="node2" href="$classcrawlservpp_1_1Wrapper_1_1Database.html" title="Wrapper class providing the database functionality of Module::Database to its child classes." alt="" coords="5,200,169,241"/>
-<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Database.html" title="Class handling database access for threads." alt="" coords="9,96,166,137"/>
-<area shape="rect" id="node4" href="$classcrawlservpp_1_1Main_1_1Database.html" title="Class handling database access for the command&#45;and&#45;control and its threads." alt="" coords="13,5,162,47"/>
-</map>

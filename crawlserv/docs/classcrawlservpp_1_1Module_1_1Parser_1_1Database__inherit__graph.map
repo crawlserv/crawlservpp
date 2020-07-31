@@ -1,4 +1,0 @@
-<map id="crawlservpp::Module::Parser::Database" name="crawlservpp::Module::Parser::Database">
-<area shape="rect" id="node1" title="Class providing database functionality for parser threads by implementing Wrapper::Database." alt="" coords="9,95,166,136"/>
-<area shape="rect" id="node2" href="$classcrawlservpp_1_1Wrapper_1_1Database.html" title="Wrapper class providing the database functionality of Module::Database to its child classes." alt="" coords="5,5,169,47"/>
-</map>

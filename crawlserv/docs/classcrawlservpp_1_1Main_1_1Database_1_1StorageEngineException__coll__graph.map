@@ -1,6 +1,0 @@
-<map id="crawlservpp::Main::Database::StorageEngineException" name="crawlservpp::Main::Database::StorageEngineException">
-<area shape="rect" id="node1" title="Class for storage engine exceptions." alt="" coords="5,259,256,300"/>
-<area shape="rect" id="node2" href="$classcrawlservpp_1_1Main_1_1Database_1_1Exception.html" title="Class for generic database exceptions." alt="" coords="53,169,209,211"/>
-<area shape="rect" id="node3" href="$classcrawlservpp_1_1Main_1_1Exception.html" title="Base class for all exceptions thrown by the application." alt="" coords="56,80,205,121"/>
-<area shape="rect" id="node4" title=" " alt="" coords="61,5,200,32"/>
-</map>

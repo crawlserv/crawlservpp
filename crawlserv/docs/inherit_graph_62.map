@@ -1,7 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classcrawlservpp_1_1Wrapper_1_1Database.html" title="Wrapper class providing the database functionality of Module::Database to its child classes." alt="" coords="5,104,169,145"/>
-<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Database.html" title="Class providing database functionality for analyzer threads by implementing Wrapper::Database." alt="" coords="218,5,375,47"/>
-<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Crawler_1_1Database.html" title="Class providing database functionality for crawler threads by implementing Wrapper::Database." alt="" coords="218,71,375,112"/>
-<area shape="rect" id="node4" href="$classcrawlservpp_1_1Module_1_1Extractor_1_1Database.html" title="Class providing database functionality for extractor threads by implementing Wrapper::Database." alt="" coords="217,136,376,177"/>
-<area shape="rect" id="node5" href="$classcrawlservpp_1_1Module_1_1Parser_1_1Database.html" title="Class providing database functionality for parser threads by implementing Wrapper::Database." alt="" coords="218,201,375,243"/>
-</map>

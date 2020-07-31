@@ -1,7 +1,0 @@
-<map id="crawlservpp::Module::Analyzer::Algo::CorpusGenerator" name="crawlservpp::Module::Analyzer::Algo::CorpusGenerator">
-<area shape="rect" id="node1" title="Algorithm building a text corpus from the input data." alt="" coords="53,273,296,315"/>
-<area shape="rect" id="node2" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Thread.html" title="Abstract class providing thread functionality to algorithm (child) classes." alt="" coords="96,184,253,225"/>
-<area shape="rect" id="node3" href="$classcrawlservpp_1_1Module_1_1Thread.html" title="Abstract class providing module&#45;independent thread functionality." alt="" coords="5,95,163,136"/>
-<area shape="rect" id="node4" href="$classcrawlservpp_1_1Module_1_1Analyzer_1_1Config.html" title="Abstract configuration for analyzers, to be implemented by algorithm classes." alt="" coords="187,95,344,136"/>
-<area shape="rect" id="node5" href="$classcrawlservpp_1_1Module_1_1Config.html" title="Abstract class as base for module&#45;specific configurations." alt="" coords="187,5,344,47"/>
-</map>

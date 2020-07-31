@@ -1,5 +1,0 @@
-<map id="crawlservpp::Struct::ThreadDatabaseEntry" name="crawlservpp::Struct::ThreadDatabaseEntry">
-<area shape="rect" id="node1" title="Information about a thread as stored in the database, containing both the options for and the status ..." alt="" coords="79,109,249,151"/>
-<area shape="rect" id="node2" href="$structcrawlservpp_1_1Struct_1_1ThreadStatus.html" title="Thread status containing its ID, status message, pause state, and progress (i.e. the last ID processe..." alt="" coords="5,5,152,47"/>
-<area shape="rect" id="node3" href="$structcrawlservpp_1_1Struct_1_1ThreadOptions.html" title="Thread options containing the name of the module run, as well as the IDs of the website,..." alt="" coords="176,5,323,47"/>
-</map>

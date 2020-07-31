@@ -1,6 +1,0 @@
-<map id="crawlservpp::Main::Database::IncorrectPathException" name="crawlservpp::Main::Database::IncorrectPathException">
-<area shape="rect" id="node1" title="Class for incorrect path exceptions." alt="" coords="5,259,248,300"/>
-<area shape="rect" id="node2" href="$classcrawlservpp_1_1Main_1_1Database_1_1Exception.html" title="Class for generic database exceptions." alt="" coords="49,169,205,211"/>
-<area shape="rect" id="node3" href="$classcrawlservpp_1_1Main_1_1Exception.html" title="Base class for all exceptions thrown by the application." alt="" coords="52,80,201,121"/>
-<area shape="rect" id="node4" title=" " alt="" coords="57,5,196,32"/>
-</map>
