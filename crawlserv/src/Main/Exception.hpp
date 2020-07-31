@@ -93,6 +93,7 @@ namespace crawlservpp::Main {
 		///@{
 
 		explicit Exception(const std::string& description);
+		explicit Exception(std::string_view description);
 
 		//! Default destructor.
 		~Exception() override = default;
@@ -145,10 +146,29 @@ namespace crawlservpp::Main {
 	 * \note Use #MAIN_EXCEPTION_SUBCLASS(NAME) for adding
 	 * 			 children to those classes for specific types of exceptions.
 	 *
-	 * \param description A const reference to a string describing the exception.
+	 * \param description A const reference to the string describing the exception.
 	 */
 	inline Exception::Exception(const std::string& description)
 			: std::runtime_error(description), stringView(std::runtime_error::what()) {}
+
+	//! Constructor for creating a new exception.
+	/*!
+	 * The string will be handled by the std::runtime_error parent class.
+	 *
+	 * An extra view into the string will be stored inside the class.
+	 *
+	 * \note An appropriate child class should be used when throwing an exception.
+	 *
+	 * \note Use #MAIN_EXCEPTION_CLASS() for adding
+	 * 			 child classes of Main::Exception to another class.
+	 *
+	 * \note Use #MAIN_EXCEPTION_SUBCLASS(NAME) for adding
+	 * 			 children to those classes for specific types of exceptions.
+	 *
+	 * \param description View of the string describing the exception.
+	 */
+	inline Exception::Exception(std::string_view description)
+			: std::runtime_error(std::string(description)), stringView(std::runtime_error::what()) {}
 
 	//! Gets the description of the exception as a view to the underlying string.
 	/*!
