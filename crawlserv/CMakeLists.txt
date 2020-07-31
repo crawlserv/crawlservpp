@@ -11,7 +11,7 @@ message("Source: \"${CMAKE_CURRENT_SOURCE_DIR}/\"")
 # find Multi-threading library
 find_package(Threads REQUIRED)
 
-if(${Threads_FOUND})
+if(${Threads_FOUND} AND NOT CMAKE_THREAD_LIBS_INIT STREQUAL "")
 	message("Multi-threading library found: \"${CMAKE_THREAD_LIBS_INIT}\"")
 else()
 	message(WARNING "Multi-threading library not found.")
@@ -20,7 +20,7 @@ endif()
 # find Boost.System and Boost.Iostreams
 find_package(Boost REQUIRED COMPONENTS system iostreams QUIET)
 
-if(${Boost_FOUND})
+if(${Boost_FOUND} AND Boost_LIBRARIES)
 	message("Boost v${Boost_VERSION} libraries found: \"${Boost_LIBRARIES}\"")
 else()
 	# find manually
@@ -50,7 +50,7 @@ endif()
 # find cURL
 find_package(curl QUIET)
 
-if(${curl_FOUND})
+if(${curl_FOUND} AND curl_LIBRARIES)
 	message("cURL ${curl_VERSION} library found: \"${curl_LIBRARIES}\"")
 else()
 	# find manually
@@ -68,7 +68,7 @@ endif()
 # find tidy-html5
 find_package(tidy QUIET)
 
-if(${tidy_FOUND})
+if(${tidy_FOUND} AND tidy_INCLUDE AND tidy_LIBRARIES)
 	message("tidy-html5 include directory found: \"${tidy_INCLUDE}\"")
 	message("tidy-html5 library found: \"${tidy_LIBRARIES}\"")
 else()
@@ -95,7 +95,7 @@ endif()
 # find uriparser
 find_package(uriparser QUIET)
 
-if(${uriparser_FOUND})
+if(${uriparser_FOUND} AND uriparser_LIBRARIES)
 	message("uriparser library found: ${uriparser_LIBRARIES}")
 else()
 	# find manually
@@ -113,7 +113,7 @@ endif()
 # find pugixml
 find_package(pugixml QUIET)
 
-if(${pugixml_FOUND})
+if(${pugixml_FOUND} AND pugixml_LIBRARIES)
 	message("pugixml library found: \"${pugixml_LIBRARIES}\"")
 else()
 	# find manually
@@ -131,7 +131,7 @@ endif()
 # find PCRE
 find_package(PCRE2 QUIET)
 
-if(${PCRE2_FOUND})
+if(${PCRE2_FOUND} AND PCRE2_LIBRARIES)
 	message("PCRE2 library found: \"${PCRE2_LIBRARIES}\"")
 else()
 	# find manually
@@ -149,7 +149,7 @@ endif()
 # find MySQL C++ Connector
 find_package(mysqlcppconn QUIET)
 
-if(${mysqlcppconn_FOUND})
+if(${mysqlcppconn_FOUND} AND mysqlcppconn_INCLUDE AND mysqlcppconn_LIBRARIES)
 	message("MySQL Connector/C++ include directory found: \"${mysqlcppconn_INCLUDE}/\"")
 	message("MySQL Connector/C++ library found: \"${mysqlcppconn_LIBRARIES}\"")
 else()
@@ -176,7 +176,7 @@ endif()
 # find zlib
 find_package(ZLIB QUIET)
 
-if(${ZLIB_FOUND})
+if(${ZLIB_FOUND} AND ZLIB_INCLUDE_DIRS AND ZLIB_LIBRARIES)
 	message("zlib v${ZLIB_VERSION_STRING} include directory found: \"${ZLIB_INCLUDE_DIRS}\"")
 	message("zlib v${ZLIB_VERSION_STRING} library found: \"${ZLIB_LIBRARIES}\"")
 else()
@@ -204,7 +204,7 @@ endif()
 # 	NOTE: Might be removed in the near future.
 find_package(ASPELL QUIET)
 
-if(${ASPELL_FOUND})
+if(${ASPELL_FOUND} AND ASPELL_LIBRARIES)
 	message("GNU Aspell library found: \"${ASPELL_LIBRARIES}\"")
 else()
 	# find manually
