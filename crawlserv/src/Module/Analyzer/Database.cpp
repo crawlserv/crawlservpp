@@ -1218,7 +1218,10 @@ namespace crawlservpp::Module::Analyzer {
 				data.columns.emplace_back("parsed_id");
 				data.columns.emplace_back("parsed_datetime");
 
-				data.order = "parsed_datetime";
+				data.order.reserve(2);
+
+				data.order.emplace_back("parsed_datetime");
+				data.order.emplace_back("parsed_id");
 			}
 
 			data.type = DataType::_string;

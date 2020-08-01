@@ -8132,9 +8132,20 @@ namespace crawlservpp::Main {
 			}
 
 			if(!data.order.empty()) {
-				sqlQuery += " ORDER BY (";
-				sqlQuery += data.order;
-				sqlQuery += ")";
+				std::string orderString;
+
+				for(const auto& orderColumn : data.order) {
+					if(!orderColumn.empty()) {
+						orderString += "(";
+						orderString += orderColumn;
+						orderString += "), ";
+					}
+				}
+
+				if(!orderString.empty()) {
+					sqlQuery += " ORDER BY ";
+					sqlQuery += orderString.substr(0, orderString.length() - 2);
+				}
 			}
 
 			// execute SQL statement
@@ -8274,9 +8285,20 @@ namespace crawlservpp::Main {
 			}
 
 			if(!data.order.empty()) {
-				sqlQuery += " ORDER BY (";
-				sqlQuery += data.order;
-				sqlQuery += ")";
+				std::string orderString;
+
+				for(const auto& orderColumn : data.order) {
+					if(!orderColumn.empty()) {
+						orderString += "(";
+						orderString += orderColumn;
+						orderString += "), ";
+					}
+				}
+
+				if(!orderString.empty()) {
+					sqlQuery += " ORDER BY ";
+					sqlQuery += orderString.substr(0, orderString.length() - 2);
+				}
 			}
 
 			// execute SQL statement
@@ -8414,9 +8436,20 @@ namespace crawlservpp::Main {
 			}
 
 			if(!data.order.empty()) {
-				sqlQuery += " ORDER BY (";
-				sqlQuery += data.order;
-				sqlQuery += ")";
+				std::string orderString;
+
+				for(const auto& orderColumn : data.order) {
+					if(!orderColumn.empty()) {
+						orderString += "(";
+						orderString += orderColumn;
+						orderString += "), ";
+					}
+				}
+
+				if(!orderString.empty()) {
+					sqlQuery += " ORDER BY ";
+					sqlQuery += orderString.substr(0, orderString.length() - 2);
+				}
 			}
 
 			// execute SQL statement

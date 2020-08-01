@@ -266,7 +266,12 @@ namespace crawlservpp::Data {
 		std::string condition;
 
 		//! Optional order to be applied to the SQL query retrieving the values of the column.
-		std::string order;
+		/*!
+		 * The values will be ordered by the given
+		 *  columns, in the same order as they are
+		 *  present in the vector.
+		 */
+		std::vector<std::string> order;
 
 		//! Vector containing the retrieved values.
 		std::vector<Value> values;
@@ -287,7 +292,12 @@ namespace crawlservpp::Data {
 		std::string condition;
 
 		//! Optional order to be applied to the SQL query retrieving the values of the columns.
-		std::string order;
+		/*!
+		 * The values will be ordered by the given
+		 *  columns, in the same order as they are
+		 *  present in the vector.
+		 */
+		std::vector<std::string> order;
 
 		//! Vector containing the retrieved columns as vectors of the retrieved values.
 		std::vector<std::vector<Value>> values;
@@ -305,7 +315,12 @@ namespace crawlservpp::Data {
 		std::string condition;
 
 		//! Optional order to be applied to the SQL query retrieving the values of the columns.
-		std::string order;
+		/*!
+		 * The values will be ordered by the given
+		 *  columns, in the same order as they are
+		 *  present in the vector.
+		 */
+		std::vector<std::string> order;
 
 		//! Vector containing the retrieved columns as vectors of the retrieved values.
 		std::vector<std::vector<Value>> values;
