@@ -104,6 +104,16 @@ The command-and-control server contains an embedded web server (implemented usin
 
 In the configuration file, access can (and should) be restricted to specific IPs only.
 
+### Source Code Documentation
+
+To build the [source code documentation](https://codedocs.xyz/crawlserv/crawlservpp/) you will need [`doxygen`](https://www.doxygen.nl) installed. Use the following command inside the root directory of the repository:
+
+```
+doxygen Doxyfile
+```
+
+The documentation will be written to `crawlserv/docs`.
+
 ### Server Commands
 
 The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of August 2020):
@@ -161,13 +171,13 @@ The server performs commands and sends back their results. Some commands need to
 
 The commands and their replies are using the JSON format (implemented using the [RapidJSON library](https://github.com/Tencent/rapidjson)).
 
-#### File cache
+### File Cache
 
 Apart from these commands, the server automatically handles HTTP file uploads sent as `multipart/form-data`. The part containing the content of the file needs to be named `fileToUpload` (case-sensitive). Uploaded files will be saved to the file cache of the server, using random strings of a specific length (defined by `Main::randFileNameLength` in [`crawlserv/src/Main/WebServer.hpp`](https://codedocs.xyz/crawlserv/crawlservpp/WebServer_8hpp_source.html)) as file names.
 
 The cache is also used to store files generated on data export. Files in the cache can be downloaded using the `download` server command. Note that these files are **temporary** as the file cache will be cleared and all uploaded and/or generated files deleted as soon as the server is restarted. Permanent data will be written to the database instead.
 
-#### Example exchange
+### Example Exchange
 
 Command from frontend to server: Delete the URL list with the ID #1.
 
@@ -344,6 +354,6 @@ See the source code of the `addUrlList(...)` function in [`Main::Database`](http
 
 At the moment, this software has been developed for and tested on **Linux only**.
 
-Developed with Eclipse 2018-09 (4.9.0), Eclipse CDT 9.5.4, Eclipse PDT 6.1.0 and Eclipse Web Tools Platform 3.11.0. Compiled and linked with GNU Make 4.1, cmake/ccmake 3.10.2, gcc 7.5.0. Tested with Apache/2.4.29 and MySQL 8.0.19 on Ubuntu 18.04.4 LTS [bionic] (64-bit).
+Developed with Eclipse 2020-03 (4.15.0), Eclipse CDT 9.11.0, Eclipse PDT 7.1.0 and Eclipse Web Tools Platform 0.6.100. Compiled and linked with GNU Make 4.2.1, cmake/ccmake 3.16.3, gcc 9.3.0. Tested with Apache/2.4.41 and MySQL 8.0.21 on Ubuntu 20.04.1 LTS [focal] (64-bit).
 
-The frontend is optimized for current versions of Mozilla Firefox (e.g. v74.0), but should also run on Chromium (e.g. v80.0).
+The frontend is optimized for current versions of Mozilla Firefox (e.g. v79.0), but should also run on Chromium (e.g. v84.0), and other modern browsers.
