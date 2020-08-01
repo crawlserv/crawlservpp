@@ -39,6 +39,17 @@ function isJSON($str) {
     return false;
 }
 
+// <DEBUG>
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+
+error_reporting(E_ALL);
+
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+// </DEBUG>
+
 // initialize database
 $db_init = true;
 
@@ -396,6 +407,7 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
         
         $columns = array();
         $linked = true;
+        $haslink = false;
         
         while($row = $result->fetch_assoc()) {
             if(strlen($row["name"]) > 10 && substr($row["name"], 0, 10) == "extracted_") {
@@ -404,12 +416,81 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
             else if($row["name"] == "content") {
                 $linked = false;
             }
+            else if($row["name"] == "link") {
+                $haslink = true;
+            }
         }
         
         $result->close();
         
         if($linked) {
             die("Download error: No URL-specific data found – cannot download linked data on its own.");
+        }
+        
+        // get reference to linked data
+        if($haslink) {
+            $rtable = "";
+            
+            $result = $dbConnection->query("SHOW CREATE TABLE `$etable`");
+            
+            if(!$result) {
+                die("Download error: Could not get references of extracting table from database.");
+            }
+            
+            $row = $result->fetch_array();
+            
+            $result->close();
+            
+            if(!$row) {
+                die("Download error: Could not get references of extracting table from database (empty response).");
+            }
+            
+            $tableInfo = $row[1];
+            
+            $len = strlen($tableInfo);
+            $pos = 0;
+            
+            while($pos < $len) {
+                $pos = strpos($tableInfo, "FOREIGN KEY (`", $pos);
+                
+                if($pos === FALSE) {
+                    break;
+                }
+                
+                $pos += 14;
+                
+                $end = strpos($tableInfo, "`)", $pos);
+                
+                if($end === FALSE) {
+                    die("Download error: Unexpected end of table information when getting constraints.");
+                }
+                
+                if(substr($tableInfo, $pos, $end - $pos) != "link") {
+                    continue;
+                }
+                
+                $pos = $end + 2;
+                
+                break;
+            }
+            
+            if($pos !== FALSE && $pos < $len) {
+                if(substr($tableInfo, $pos, 13) != " REFERENCES `") {
+                    die("Download error: Could not identify referenced table when getting constraints.");
+                }
+                
+                $pos += 13;
+                
+                $end = strpos($tableInfo, "`", $pos);
+                
+                if($end === FALSE) {
+                    die("Download error: Unexpected end of table information when getting referenced table.");
+                }
+                
+                $rtable = substr($tableInfo, $pos, $end - $pos);
+                
+                $haslink = strlen($rtable) > 0;
+            }
         }
         
         // get extracted data
@@ -423,7 +504,13 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
             $query .= "b.`".$column."`, ";
         }
         
-        $query = substr($query, 0, -2);
+        if($haslink) {
+            $query .= "b.link";
+        }
+        else {
+            // remove last comma
+            $query = substr($query, 0, -2);
+        }
         
         $query .= " FROM `$ctable` AS a, `$etable` AS b".
             " WHERE a.id = b.content".
@@ -458,13 +545,13 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
                         $data .= json_encode(
                             substr($column, 11),
                             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-                            ).": ";
+                        ).": ";
                     }
                     else {
                         $data .= json_encode(
                             substr($column, 10),
                             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-                            ).": ";
+                        ).": ";
                     }
                     
                     if(!strlen(trim($row[$column]))) {
@@ -481,8 +568,73 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
                     }
                 }
                 
-                // remove last comma
-                $data = substr($data, 0, -1);
+                if($haslink) {
+                    $data .= "\n    \"linked-data\": {";
+                    
+                    $result2 = $dbConnection->query("SELECT * FROM `$rtable` WHERE id=".$row["link"]);
+                    
+                    if(!$result2) {
+                        die("Download error: Could not get linked data from database.");
+                    }
+                    
+                    $row2 = $result2->fetch_assoc();
+                    
+                    if($row2) {
+                        $founddata = false;
+                        
+                        foreach($row2 as $key => $value) {
+                            if(
+                                strlen($key) > 10
+                                && substr($key, 0, 10) == "extracted_"
+                            ) {
+                                $data .= "\n     ";
+                                
+                                if(
+                                    strlen($key) > 11
+                                    && $key[10] == "_"
+                                ) {
+                                    $cname = substr($key, 11);
+                                }
+                                else {
+                                    $cname = substr($key, 10);
+                                }
+                                
+                                $data .= json_encode(
+                                    $cname,
+                                    JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                                ).": ";
+                                
+                                if(!strlen(trim($value))) {
+                                    $data.= "{},";
+                                }
+                                else if(isJSON($value)) {
+                                    $data .= $value.",";
+                                }
+                                else {
+                                    $data .= json_encode(
+                                        $value,
+                                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                                        ).",";
+                                }
+                                
+                                $founddata = true;
+                            }
+                        }
+                        
+                        if($founddata) {
+                            // remove last comma
+                            $data = substr($data, 0, -1);
+                            
+                            $data .= "\n    ";
+                        }
+                    }
+                    
+                    $data .= "}";
+                }
+                else {
+                    // remove last comma
+                    $data = substr($data, 0, -1);
+                }
                 
                 $data .= "\n   },";
             }
