@@ -718,6 +718,38 @@ namespace crawlservpp::Module::Extractor {
 			);
 		}
 
+		if(this->ps.updateOrAddLinked == 0) {
+			this->log(verbose, "prepares updateOrAddLinked() [1/4]...");
+
+			this->ps.updateOrAddLinked = this->addPreparedStatement(
+					this->queryUpdateOrAddLinked(1)
+			);
+		}
+
+		if(this->ps.updateOrAdd10Linked == 0) {
+			this->log(verbose, "prepares updateOrAddLinked() [2/4]...");
+
+			this->ps.updateOrAdd10Linked = this->addPreparedStatement(
+					this->queryUpdateOrAddLinked(nAtOnce10)
+			);
+		}
+
+		if(this->ps.updateOrAdd100Linked == 0) {
+			this->log(verbose, "prepares updateOrAddLinked() [3/4]...");
+
+			this->ps.updateOrAdd100Linked = this->addPreparedStatement(
+					this->queryUpdateOrAddLinked(nAtOnce100)
+			);
+		}
+
+		if(this->ps.updateOrAdd1000Linked == 0) {
+			this->log(verbose, "prepares updateOrAddLinked() [4/4]...");
+
+			this->ps.updateOrAdd1000Linked = this->addPreparedStatement(
+					this->queryUpdateOrAddLinked(nAtOnce1000)
+			);
+		}
+
 		if(this->ps.updateTargetTable == 0) {
 			this->log(verbose, "prepares updateTargetTable()...");
 
@@ -1574,7 +1606,7 @@ namespace crawlservpp::Module::Extractor {
 	 *   missing.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while adding or updating
-	 *   extracted data in the database.
+	 *   the extracted data in the database.
 	 */
 	void Database::updateOrAddEntries(std::queue<DataEntry>& entries) {
 		// check argument
@@ -1594,7 +1626,7 @@ namespace crawlservpp::Module::Extractor {
 		) {
 			throw Exception(
 					"Extractor:Database::updateOrAddEntries():"
-					" Missing prepared SQL statement"
+					" Missing prepared SQL statement(s)"
 			);
 		}
 
@@ -1603,6 +1635,15 @@ namespace crawlservpp::Module::Extractor {
 		auto& sqlStatement10{this->getPreparedStatement(this->ps.updateOrAdd10Entries)};
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.updateOrAdd100Entries)};
 		auto& sqlStatement1000{this->getPreparedStatement(this->ps.updateOrAdd1000Entries)};
+
+		// number of arguments when adding an entry (without custom fields)
+		constexpr auto numArgsAdd{4};
+
+		// number of additional arguments when data is linked
+		constexpr auto numArgsLinked{2};
+
+		// number of additional arguments when overwriting existing entries
+		constexpr auto numArgsOverwrite{3};
 
 		// count fields
 		auto fields{
@@ -1613,14 +1654,8 @@ namespace crawlservpp::Module::Extractor {
 						return !fieldName.empty();
 					}
 			) + minTargetColumns
-			+ (this->linked ? 2 : 0)
+			+ (this->linked ? numArgsLinked : 0)
 		};
-
-		// number of arguments when updating or adding an entry
-		constexpr auto numArgsUpdateAdd{4};
-
-		// number of additional arguments when overwriting existing entries
-		constexpr auto numArgsOverwrite{3};
 
 		if(this->overwrite) {
 			fields += numArgsOverwrite;
@@ -1656,7 +1691,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// set custom values
-					counter += numArgsUpdateAdd;
+					counter += numArgsAdd;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -1674,7 +1709,6 @@ namespace crawlservpp::Module::Extractor {
 
 					// set linked data
 					if(this->linked) {
-						// find linked data
 						std::string linkedData;
 
 						if(this->linkedField == "id") {
@@ -1730,7 +1764,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// set custom values
-					counter += numArgsUpdateAdd;
+					counter += numArgsAdd;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -1748,8 +1782,21 @@ namespace crawlservpp::Module::Extractor {
 
 					// set linked data
 					if(this->linked) {
-						sqlStatement100.setString(n * fields + counter + sqlArg1, entries.front().dataId);
-						sqlStatement100.setString(n * fields + counter + sqlArg2, entries.front().dataId);
+						// set linked data
+						std::string linkedData;
+
+						if(this->linkedField == "id") {
+							linkedData = entries.front().dataId;
+						}
+						else if(this->linkedField == "datetime") {
+							linkedData = entries.front().dateTime;
+						}
+						else {
+							linkedData = entries.front().fields.at(this->linkedIndex);
+						}
+
+						sqlStatement100.setString(n * fields + counter + sqlArg1, linkedData);
+						sqlStatement100.setString(n * fields + counter + sqlArg2, linkedData);
 
 						//counter += 2;
 					}
@@ -1791,7 +1838,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// set custom values
-					counter += numArgsUpdateAdd;
+					counter += numArgsAdd;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -1809,8 +1856,21 @@ namespace crawlservpp::Module::Extractor {
 
 					// set linked data
 					if(this->linked) {
-						sqlStatement10.setString(n * fields + counter + sqlArg1, entries.front().dataId);
-						sqlStatement10.setString(n * fields + counter + sqlArg2, entries.front().dataId);
+						// set linked data
+						std::string linkedData;
+
+						if(this->linkedField == "id") {
+							linkedData = entries.front().dataId;
+						}
+						else if(this->linkedField == "datetime") {
+							linkedData = entries.front().dateTime;
+						}
+						else {
+							linkedData = entries.front().fields.at(this->linkedIndex);
+						}
+
+						sqlStatement10.setString(n * fields + counter + sqlArg1, linkedData);
+						sqlStatement10.setString(n * fields + counter + sqlArg2, linkedData);
 
 						//counter += 2;
 					}
@@ -1851,7 +1911,7 @@ namespace crawlservpp::Module::Extractor {
 				}
 
 				// set custom values
-				counter += numArgsUpdateAdd;
+				counter += numArgsAdd;
 
 				for(
 						auto it{entries.front().fields.cbegin()};
@@ -1868,8 +1928,21 @@ namespace crawlservpp::Module::Extractor {
 
 				// set linked data
 				if(this->linked) {
-					sqlStatement1.setString(counter + sqlArg1, entries.front().dataId);
-					sqlStatement1.setString(counter + sqlArg2, entries.front().dataId);
+					// set linked data
+					std::string linkedData;
+
+					if(this->linkedField == "id") {
+						linkedData = entries.front().dataId;
+					}
+					else if(this->linkedField == "datetime") {
+						linkedData = entries.front().dateTime;
+					}
+					else {
+						linkedData = entries.front().fields.at(this->linkedIndex);
+					}
+
+					sqlStatement1.setString(fields + counter + sqlArg1, linkedData);
+					sqlStatement1.setString(fields + counter + sqlArg2, linkedData);
 
 					//counter += 2;
 				}
@@ -1888,11 +1961,253 @@ namespace crawlservpp::Module::Extractor {
 
 	//! Adds linked data to the database, or updates data that already exists.
 	/*!
-	 * \todo not implemented yet
+	 * Only updates data, if the extractor is set
+	 *  to overwrite existing linked data via
+	 *  setOverwriteLinked().
+	 *
+	 * \param entries Reference to a queue
+	 *   containing the data to add. If empty,
+	 *   nothing will be done. The queue will be
+	 *   emptied as the data will be processed,
+	 *   even when some or all of the data has not
+	 *   been added or updated, because it already
+	 *   exists and the extractor has been set not
+	 *   to overwrite data via setOverwriteLinked().
+	 *
+	 * \throws Module::Extractor::Database::Exception
+	 *   if any of the prepared SQL statements for
+	 *   adding and updating linked data is
+	 *   missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while adding or updating
+	 *   the linked data in the database.
 	 */
-	void Database::updateOrAddLinked(std::queue<DataEntry>& /*entries*/) {
-		//TODO(ans)
-		this->log(this->getLoggingVerbose(), "[stub] Module::Extractor::Database::updateOrAddLinked");
+	void Database::updateOrAddLinked(std::queue<DataEntry>& entries) {
+		// check argument
+		if(entries.empty()) {
+			return;
+		}
+
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statements
+		if(
+				this->ps.updateOrAddLinked == 0
+				|| this->ps.updateOrAdd10Linked == 0
+				|| this->ps.updateOrAdd100Linked == 0
+				|| this->ps.updateOrAdd1000Linked == 0
+		) {
+			throw Exception(
+					"Extractor:Database::updateOrAddLinked():"
+					" Missing prepared SQL statement(s)"
+			);
+		}
+
+		// get prepared SQL statements
+		auto& sqlStatement1{this->getPreparedStatement(this->ps.updateOrAddLinked)};
+		auto& sqlStatement10{this->getPreparedStatement(this->ps.updateOrAdd10Linked)};
+		auto& sqlStatement100{this->getPreparedStatement(this->ps.updateOrAdd100Linked)};
+		auto& sqlStatement1000{this->getPreparedStatement(this->ps.updateOrAdd1000Linked)};
+
+		// number of arguments when adding an entry (without custom fields)
+		constexpr auto numArgsAdd{2};
+
+		// number of additional arguments when overwriting existing entries
+		constexpr auto numArgsOverwrite{2};
+
+		// count fields
+		auto fields{
+			std::count_if(
+					this->linkedFieldNames.cbegin(),
+					this->linkedFieldNames.cend(),
+					[](const auto& fieldName) {
+						return !fieldName.empty();
+					}
+			) + minLinkedColumns
+		};
+
+		if(this->overwriteLinked) {
+			fields += numArgsOverwrite;
+		}
+
+		try {
+			// add 1,000 entries at once
+			while(entries.size() >= nAtOnce1000) {
+				for(std::uint16_t n{0}; n < nAtOnce1000; ++n) {
+					// check entry
+					this->checkEntrySize(entries.front());
+
+					std::size_t counter{0};
+
+					// set standard values
+					if(this->overwriteLinked) {
+						sqlStatement1000.setString(n * fields + sqlArg1, entries.front().dataId);
+						sqlStatement1000.setString(n * fields + sqlArg2, entries.front().dataId);
+
+						counter += numArgsOverwrite;
+					}
+
+					sqlStatement1000.setString(n * fields + counter + sqlArg1, entries.front().dataId);
+					sqlStatement1000.setString(n * fields + counter + sqlArg2, entries.front().dataId);
+
+					// set custom values
+					counter += numArgsAdd;
+
+					for(
+							auto it{entries.front().fields.cbegin()};
+							it != entries.front().fields.cend();
+							++it
+					) {
+						const auto index{it - entries.front().fields.cbegin()};
+
+						if(!(this->linkedFieldNames.at(index).empty())) {
+							sqlStatement1000.setString(n * fields + counter + sqlArg1, *it);
+
+							++counter;
+						}
+					}
+
+					// remove entry
+					entries.pop();
+				}
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatement1000);
+			}
+
+			// add 100 entries at once
+			while(entries.size() >= nAtOnce100) {
+				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+					// check entry
+					this->checkEntrySize(entries.front());
+
+					std::size_t counter{0};
+
+					// set standard values
+					if(this->overwriteLinked) {
+						sqlStatement100.setString(n * fields + sqlArg1, entries.front().dataId);
+						sqlStatement100.setString(n * fields + sqlArg2, entries.front().dataId);
+
+						counter += numArgsOverwrite;
+					}
+
+					sqlStatement100.setString(n * fields + counter + sqlArg1, entries.front().dataId);
+					sqlStatement100.setString(n * fields + counter + sqlArg2, entries.front().dataId);
+
+					// set custom values
+					counter += numArgsAdd;
+
+					for(
+							auto it{entries.front().fields.cbegin()};
+							it != entries.front().fields.cend();
+							++it
+					) {
+						const auto index{it - entries.front().fields.cbegin()};
+
+						if(!(this->linkedFieldNames.at(index).empty())) {
+							sqlStatement100.setString(n * fields + counter + sqlArg1, *it);
+
+							++counter;
+						}
+					}
+
+					// remove entry
+					entries.pop();
+				}
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatement100);
+			}
+
+			// add 10 entries at once
+			while(entries.size() >= nAtOnce10) {
+				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+					// check entry
+					this->checkEntrySize(entries.front());
+
+					std::size_t counter{0};
+
+					// set standard values
+					if(this->overwriteLinked) {
+						sqlStatement10.setString(n * fields + sqlArg1, entries.front().dataId);
+						sqlStatement10.setString(n * fields + sqlArg2, entries.front().dataId);
+
+						counter += numArgsOverwrite;
+					}
+
+					sqlStatement10.setString(n * fields + counter + sqlArg1, entries.front().dataId);
+					sqlStatement10.setString(n * fields + counter + sqlArg2, entries.front().dataId);
+
+					// set custom values
+					counter += numArgsAdd;
+
+					for(
+							auto it{entries.front().fields.cbegin()};
+							it != entries.front().fields.cend();
+							++it
+					) {
+						const auto index{it - entries.front().fields.cbegin()};
+
+						if(!(this->linkedFieldNames.at(index).empty())) {
+							sqlStatement10.setString(n * fields + counter + sqlArg1, *it);
+
+							++counter;
+						}
+					}
+
+					// remove entry
+					entries.pop();
+				}
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatement10);
+			}
+
+			// add remaining entries
+			while(!entries.empty()) {
+				// check entry
+				this->checkEntrySize(entries.front());
+
+				std::size_t counter{0};
+
+				// set standard values
+				if(this->overwriteLinked) {
+					sqlStatement1.setString(sqlArg1, entries.front().dataId);
+					sqlStatement1.setString(sqlArg2, entries.front().dataId);
+
+					counter += numArgsOverwrite;
+				}
+
+				sqlStatement1.setString(counter + sqlArg1, entries.front().dataId);
+				sqlStatement1.setString(counter + sqlArg2, entries.front().dataId);
+
+				// set custom values
+				counter += numArgsAdd;
+
+				for(
+						auto it{entries.front().fields.cbegin()};
+						it != entries.front().fields.cend();
+						++it
+				) {
+					const auto index{it - entries.front().fields.cbegin()};
+					if(!(this->linkedFieldNames.at(index).empty())) {
+						sqlStatement1.setString(counter + sqlArg1, *it);
+
+						++counter;
+					}
+				}
+
+				// remove entry
+				entries.pop();
+
+				// execute SQL query
+				Database::sqlExecute(sqlStatement1);
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Extractor:Database::updateOrAddLinked", e);
+		}
 	}
 
 	//! Sets URLs to finished in the database, except those locked by another thread.
@@ -2320,12 +2635,12 @@ namespace crawlservpp::Module::Extractor {
 		sqlQueryString +=			"`"
 								" (";
 
-		if(this->overwrite) {
+		if(this->overwriteLinked) {
 			sqlQueryString +=		" id,";
 		}
 
 		sqlQueryString += 			" extracted_id,"
-									" hash,";
+									" hash";
 
 		std::size_t counter{0};
 
@@ -2344,7 +2659,7 @@ namespace crawlservpp::Module::Extractor {
 		for(std::size_t n{1}; n <= numberOfEntries; ++n) {
 			sqlQueryString +=	"( ";
 
-			if(this->overwrite) {
+			if(this->overwriteLinked) {
 				sqlQueryString +=	"("
 										"SELECT id"
 										" FROM "
@@ -2364,7 +2679,7 @@ namespace crawlservpp::Module::Extractor {
 			}
 
 
-			sqlQueryString +=			"?, ?, CRC32( ? ), ?";
+			sqlQueryString +=			" ?, CRC32( ? )";
 
 			for(std::size_t c{0}; c < counter; ++c) {
 				sqlQueryString +=	 		", ?";
@@ -2379,8 +2694,8 @@ namespace crawlservpp::Module::Extractor {
 
 		// create ON DUPLICATE KEY UPDATE clause
 		if(this->overwriteLinked) {
-			sqlQueryString +=		" ON DUPLICATE KEY UPDATE"
-								" hash = VALUES(hash),";
+			sqlQueryString +=	" ON DUPLICATE KEY UPDATE"
+								" hash = VALUES(hash)";
 
 			for(const auto& linkedFieldName : this->linkedFieldNames) {
 				if(!linkedFieldName.empty()) {

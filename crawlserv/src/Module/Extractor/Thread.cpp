@@ -3065,6 +3065,14 @@ namespace crawlservpp::Module::Extractor {
 
 	// save results to database
 	void Thread::extractingSaveResults(bool warped) {
+		// save linked data first
+		/*
+		 * NOTE: because the other data will be linked
+		 *  to this data when it is added, this data
+		 *  has to already exist
+		 */
+		this->extractingSaveLinked();
+
 		// check whether there are no results
 		if(this->results.empty()) {
 			// set last URL
@@ -3104,9 +3112,6 @@ namespace crawlservpp::Module::Extractor {
 			// update target table
 			this->database.updateTargetTable();
 		} // target table unlocked
-
-		// save linked data
-		this->extractingSaveLinked();
 
 		// set last URL
 		if(!warped) {
