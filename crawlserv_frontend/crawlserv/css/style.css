@@ -786,6 +786,12 @@ span.content-smalltext {
 	overflow-x:scroll;
 	overflow:-moz-scrollbars-vertical;
 }
+#content-field {
+	width:20%;
+}
+#content-sub-field {
+	width:30%;
+}
 #content-version {
 	height:25px;
 	margin-right:4px;

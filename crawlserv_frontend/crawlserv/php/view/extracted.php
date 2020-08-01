@@ -28,9 +28,6 @@
  *
  */
 
-//TODO: show multiple datasets (currently, only the first one is shown)
-//TODO: retrieve linked data (see line 335)
-
 $ctable = "crawlserv_".$namespace."_".$urllistNamespace."_crawled";
 
 // get extracting table
@@ -355,7 +352,7 @@ if($result->num_rows) {
                     echo "<thead>\n";
                     echo "<tr>\n";
                     
-                    echo "<th>Field</th>\n";
+                    echo "<th id=\"content-field\">Field</th>\n";
                     echo "<th>Extracted value</th>\n";
                     
                     echo "</tr>\n";
@@ -403,9 +400,85 @@ if($result->num_rows) {
                         echo "<td>\n";
                         
                         if($row["link"] !== NULL) {
-                            echo "<b>id:</b> ".html($row["link"])." [`$rtable`]\n";
                             
-                            //TODO: get linked data here
+                            echo "<p><i>#";
+                            echo $row["link"];
+                            echo " from table '";
+                            
+                            // get name from crawlserv_$namespace_$urllistNamespace_extracted_TABLE
+                            echo html(substr($rtable, 22 + strlen($namespace) + strlen($urllistNamespace))); 
+                            
+                            echo "'</i></p>\n";
+                            
+                            $result = $dbConnection->query(
+                                "SELECT * FROM `$rtable` WHERE id=".$row["link"]." LIMIT 1"
+                            );
+                            
+                            if($result) {
+                                $row = $result->fetch_assoc();
+                                
+                                if($row) {
+                                    echo "<table class=\"fs-content\">\n";
+                                    echo "<thead>\n";
+                                    echo "<tr>\n";
+                                    
+                                    echo "<th id=\"content-sub-field\">Field</th>\n";
+                                    echo "<th>Value</th>\n";
+                                    
+                                    echo "</tr>\n";
+                                    echo "</thead>\n";
+                                    
+                                    echo "<tbody>\n";
+                                    
+                                    foreach($row as $key => $value) {
+                                        if(
+                                            strlen($key) > 10
+                                            && substr($key, 0, 10) == "extracted_"
+                                        ) {
+                                            if(
+                                                strlen($key) > 11
+                                                && $key[10] == "_"
+                                            ) {
+                                                $cname = substr($key, 11);
+                                            }
+                                            else {
+                                                $cname = substr($key, 10);
+                                            }
+                                            
+                                            echo "<tr>\n";
+                                            echo "<td>".html($cname)."</td>\n";
+                                            
+                                            echo "<td>\n";
+                                            
+                                            if(!strlen(trim($value))) {
+                                                echo "<i>[empty]</i>\n";
+                                            }
+                                            else if(isJSON($value)) {
+                                                echo "<i>JSON</i><pre><code class=\"language-json\">\n";
+                                                
+                                                echo html($value)."\n\n";
+                                                
+                                                echo "</code></pre>\n";
+                                            }
+                                            else {
+                                                echo html($value)."\n";
+                                            }
+                                            
+                                            echo "</td>\n";
+                                            echo "</tr>\n";
+                                        }
+                                    }
+                                    
+                                    echo "</tbody>\n";
+                                    echo "</table>\n";
+                                }
+                                else {
+                                    echo "<b>[N/A]</b>\n";
+                                }
+                            }
+                            else {
+                                echo "<b>[N/A]</b>\n";
+                            }
                         }
                         else {
                             echo "<i>[none]</i>\n";
