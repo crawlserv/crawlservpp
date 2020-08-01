@@ -1498,10 +1498,7 @@ jQuery(function($) {
 
 // CLICK EVENT: change mode
 	$("a.post-redirect-mode").on("click", function() {
-		$("#website-select").prop("disabled", true);
-		$("#config-select").prop("disabled", true);
-		$("#algo-select").prop("disabled", true);
-		$("#algo-cat-select").prop("disabled", true);
+		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
@@ -1771,7 +1768,13 @@ jQuery(function($) {
 		var last = $(this).data("last");
 		
 		if(module != "analyzer") {
-			var target = parseInt(prompt("! WARNING ! Time travel can have unintended consequences.\n\nEnter ID to jump to:", last), 10);
+			var target = parseInt(
+					prompt(
+							"! WARNING ! Time travel can have unintended consequences.\n\nEnter ID to jump to:",
+							last
+					),
+					10
+			);
 			
 			if(target)
 				runCmd(
@@ -1791,13 +1794,7 @@ jQuery(function($) {
 	
 // CLICK EVENT: change tab
 	$("a.post-redirect-tab").on("click", function() {
-		$("#website-select").prop("disabled", true);
-		$("#urllist-select").prop("disabled", true);
-		$("#content-last").prop("disabled", true);
-		$("#content-url").prop("disabled", true);
-		$("#content-url-text").prop("disabled", true);
-		$("#content-next").prop("disabled", true);
-		$("#content-version").prop("disabled", true);
+		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
@@ -1819,13 +1816,7 @@ jQuery(function($) {
 	
 // CLICK EVENT: go to specific content
 	$("#content-goto").on("click", function() {
-		$("#website-select").prop("disabled", true);
-		$("#urllist-select").prop("disabled", true);
-		$("#content-last").prop("disabled", true);
-		$("#content-url").prop("disabled", true);
-		$("#content-url-text").prop("disabled", true);
-		$("#content-next").prop("disabled", true);
-		$("#content-version").prop("disabled", true);
+		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
@@ -1843,7 +1834,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: last URL
+// CLICK EVENT: previous URL
 	$("#content-last").on("click", function() {
 		disableInputs();
 		
@@ -1851,14 +1842,23 @@ jQuery(function($) {
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var url = parseInt($("#content-url").val(), 10);
 		
-		reload({
+		var args = {
 			"m" : $(this).data("m"),
 			"tab" : $(this).data("tab"),
 			"website" : website,
 			"urllist" : urllist,
 			"url": url,
 			"last": true
-		});
+		}
+		
+		if(
+				$(this).data("tab") != "crawled" 
+				&& $("#content-version").length > 0
+		) {
+			args.version = parseInt($("#content-version").val(), 10);
+		}
+		
+		reload(args);
 		
 		return false;
 	});
@@ -1868,16 +1868,25 @@ jQuery(function($) {
 		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
-		var urllist = parseInt($("#urllist-select").val(), 10);
+		var urllist =  parseInt($("#urllist-select").val(), 10);
 		var url = parseInt($("#content-url").val(), 10);
-		
-		reload({
+	
+		var args = {
 			"m" : $(this).data("m"),
 			"tab" : $(this).data("tab"),
 			"website" : website,
 			"urllist" : urllist,
 			"url": url + 1
-		});
+		};
+		
+		if(
+				$(this).data("tab") != "crawled" 
+				&& $("#content-version").length > 0
+		) {
+			args.version = parseInt($("#content-version").val(), 10);
+		}
+		
+		reload(args);
 		
 		return false;
 	});
@@ -1902,22 +1911,32 @@ jQuery(function($) {
 // KEYPRESS EVENT: input URL ID (ENTER)
 	$("#content-url").on("keypress", function(e) {
 		if(e.which == 13) {
-			if(!$(this).val().length)
+			if($(this).val().length == 0) {
 				return true;
+			}
 			
 			disableInputs();
-	
+			
 			var website = parseInt($("#website-select").val(), 10);
 			var urllist = parseInt($("#urllist-select").val(), 10);
 			var url = parseInt($(this).val(), 10);
 			
-			reload({
+			var args = {
 				"m" : $(this).data("m"),
 				"tab" : $(this).data("tab"),
 				"website" : website,
 				"urllist" : urllist,
 				"url": url
-			});
+			};
+			
+			if(
+					$(this).data("tab") != "crawled" 
+					&& $("#content-version").length > 0
+			) {
+				args.version = parseInt($("#content-version").val(), 10);
+			}
+			
+			reload(args);
 			
 			return false;
 		}
@@ -1935,17 +1954,27 @@ jQuery(function($) {
 			
 			var website = parseInt($("#website-select").val(), 10);
 			var urllist = parseInt($("#urllist-select").val(), 10);
-			var urltext = $(this).val();
 			
-			reload({
+			var args = {
 				"m" : $(this).data("m"),
 				"tab" : $(this).data("tab"),
 				"website" : website,
 				"urllist" : urllist,
-				"urltext": urltext
-			});
+				"urltext": $(this).val()
+			};
+			
+			if(
+					$(this).data("tab") != "crawled" 
+					&& $("#content-version").length > 0
+			) {
+				args.version = parseInt($("#content-version").val(), 10);
+			}
+			
+			reload(args);
+			
 			return false;
 		}
+		
 		return true;
 	});
 	

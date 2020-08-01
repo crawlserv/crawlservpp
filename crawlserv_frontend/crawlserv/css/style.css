@@ -729,16 +729,15 @@ span.idle {
 }
 
 /* CONTENT BROWSER */
-#content-last, #content-next {
+#content-last, #content-next, button.content-dataset-to {
 	margin:1px 1px 0 1px;
 	padding:0;
 	width:25px;
 	height:25px;
 	line-height:0px;
-	vertical-align:middle;
 	font-size:12px;
 }
-#content-url, #content-url-text {
+#content-url, #content-url-text, #content-dataset {
 	margin:1px;
 	padding:0;
 	height:25px;
@@ -746,10 +745,10 @@ span.idle {
 	line-height:0px;
 	box-sizing:border-box;
 }
-#content-url {
+#content-url, #content-dataset {
 	width:60px;
 }
-#content-slash {
+span.content-smalltext {
 	font-size:12px;
 }
 #content-url-text {

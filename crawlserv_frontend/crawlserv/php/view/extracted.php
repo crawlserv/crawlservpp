@@ -29,7 +29,7 @@
  */
 
 //TODO: show multiple datasets (currently, only the first one is shown)
-//TODO: add support for linked data
+//TODO: retrieve linked data (see line 335)
 
 $ctable = "crawlserv_".$namespace."_".$urllistNamespace."_crawled";
 
@@ -137,7 +137,7 @@ if($result->num_rows) {
         }
     }
     
-    if(isset($extractingtable)) {        
+    if(isset($extractingtable)) {
         // get column names
         $etable = "crawlserv_"
                         .$namespace
@@ -158,6 +158,8 @@ if($result->num_rows) {
         }
             
         $columns = array();
+        $linked = false;
+        $content = false;
         
         while($row = $result->fetch_assoc()) {        
             if(
@@ -166,137 +168,306 @@ if($result->num_rows) {
             ) {
                 $columns[] = $row["name"];
             }
+            else if($row["name"] == "link") {
+                $linked = true;
+            }
+            else if($row["name"] == "content") {
+                $content = true;
+            }
         }
                 
         $result->close();
         
-        if(count($columns)) {
-            $query = "SELECT ";
-            
-            foreach($columns as $column) {
-                $query .= "b.`".$column."`, ";
-            }
+        if(!$content) {
+            echo "<br><br><i>This table does not contain URL-specific data.</i><br><br>\n";
+        }
+        else if(count($columns)) {
+            if($linked) {
+                // get reference for linked data
+                $rtable = "";
                 
-            $query = substr($query, 0, -2);
+                $result = $dbConnection->query("SHOW CREATE TABLE $etable");
+                
+                if(!$result) {
+                    die("ERROR: Could not get constraints from extracting table.");
+                }
+                
+                $row = $result->fetch_row();
+                
+                $result->close();
+                
+                if(!$row || count($row) < 2) {
+                    die("ERROR: Could not get constraints from extracting table.");
+                }
+                
+                $tableInfo = $row[1];
+                
+                $len = strlen($tableInfo);
+                $pos = 0;
+                
+                while($pos < $len) {
+                    $pos = strpos($tableInfo, "FOREIGN KEY (`", $pos);
+                    
+                    if($pos === FALSE) {
+                        break;
+                    }
+                    
+                    $pos += 14;
+                    
+                    $end = strpos($tableInfo, "`)", $pos);
+                    
+                    if($end === FALSE) {
+                        die("ERROR: Unexpected end of table information when getting constraints from extracting table.");
+                    }
+                    
+                    if(substr($tableInfo, $pos, $end - $pos) != "link") {
+                        continue;
+                    }
+                    
+                    $pos = $end + 2;
+                    
+                    break;
+                }
+                
+                if($pos !== FALSE && $pos < $len) {
+                    if(substr($tableInfo, $pos, 13) != " REFERENCES `") {
+                        die("ERROR: Could not identify referenced table when getting constraints from extracting table.");
+                    }
+                    
+                    $pos += 13;
+                    
+                    $end = strpos($tableInfo, "`", $pos);
+                    
+                    if($end === FALSE) {
+                        die("ERROR: Unexpected end of table information when getting referenced table from extracting table.");
+                    }
+                    
+                    $rtable = substr($tableInfo, $pos, $end - $pos);
+                    
+                    $linked = strlen($rtable) > 0;
+                }
+            }
             
-            $query .=   " FROM `$ctable` AS a,".
+            // get number of datasets
+            $query = "SELECT COUNT(*)".
+                " FROM `$ctable` AS a,".
                 " `$etable` AS b".
                 " WHERE a.id = b.content".
-                " AND a.url = $url".
-                " ORDER BY b.id DESC".
-                " LIMIT 1";
+                " AND a.url = $url";
             
             $result = $dbConnection->query($query);
             
             if(!$result) {
-                die("ERROR: Could not get data from extracting table.");
+                die("ERROR: Could not get number of datasets from extracting table.");
             }
-                
-            $row = $result->fetch_assoc();
+            
+            $row = $result->fetch_row();
             
             $result->close();
             
-            if($row) {
-                $data = true;
-                
-                echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
-                
-                echo "<div id=\"content-table\" class=\"fs-div\">\n";
-                
-                echo "<table class=\"fs-content\">\n";
-                echo "<thead>\n";
-                echo "<tr>\n";
-                
-                echo "<th>Field</th>\n";
-                echo "<th>Extracted value</th>\n";
-                
-                echo "</tr>\n";
-                echo "</thead>\n";
-                
-                echo "<tbody>\n";
-                
-                foreach($columns as $column) {
-                    if(
-                            strlen($column) > 11
-                            && substr($column, 0, 11) == "extracted__"
-                    ) {
-                        $cname = substr($column, 11);
-                    }
-                    else {
-                        $cname = substr($column, 10);
-                    }
-                        
-                    echo "<tr>\n";
-                    echo "<td>".html($cname)."</td>\n";
+            if(!$row) {
+                die("ERROR: Could not get number of datasets from extracting table (empty result).");
+            }
+            
+            $numdata = $row[0];
+            
+            if($numdata > 0) {
+                // get offset
+                if(isset($_POST["offset"])) {
+                    $offset = $_POST["offset"];
                     
-                    echo "<td>\n";
+                    if($offset < 0) {
+                        $offset = $numdata + $offset;
+                    }
                     
-                    if(!strlen(trim($row[$column]))) {
-                        echo "<i>[empty]</i>";
+                    while($offset >= $numdata) {
+                        $offset -= $numdata;
                     }
-                    else if(isJSON($row[$column])) {
-                        echo "<i>JSON</i><pre><code class=\"language-json\">\n";
-                        
-                        echo html($row[$column])."\n\n";
-                        
-                        echo "</code></pre>\n";
-                    }
-                    else {
-                        echo html($row[$column])."\n";
-                    }
-                        
-                    echo "</td>\n";
-                    echo "</tr>\n";
+                }
+                else {
+                    $offset = 0;
                 }
                 
-                echo "</tbody>\n";
-                echo "</table>\n";
+                // show dataset navigation
+                $currentdata = $offset + 1;
                 
-                echo "</div>\n";
+                echo "<button class=\"content-dataset-to\" data-m=\"$m\" data-tab=\"$tab\" data-to=\"0\">|&lt;";
+                echo "</button>";
+                echo "<button class=\"content-dataset-to\" data-m=\"$m\" data-tab=\"$tab\" data-to=\"".($offset - 1)."\">&lt;";
+                echo "</button>";
+                
+                echo "<span class=\"content-smalltext\"> Dataset </span>";
+                
+                echo "<input type=\"text\" id=\"content-dataset\" data-m=\"$m\" data-tab=\"$tab\"";
+                echo " data-max=\"$numdata\" value=\"$currentdata\" />\n";
+                
+                echo "<span class=\"content-smalltext\"> of ".number_format($numdata)." </span>";
+                
+                echo "<button class=\"content-dataset-to\" data-m=\"$m\" data-tab=\"$tab\" data-to=\"".($offset + 1)."\">&gt;";
+                echo "</button>";
+                echo "<button class=\"content-dataset-to\" data-m=\"$m\" data-tab=\"$tab\" data-to=\"".($numdata - 1)."\">&gt;";
+                echo "</button>";
+                
+                // get dataset
+                $query = "SELECT ";
+                
+                foreach($columns as $column) {
+                    $query .= "b.`".$column."`, ";
+                }
+                    
+                $query = substr($query, 0, -2);
+                
+                if($linked) {
+                    $query .= ", link";
+                }
+                
+                $query .=   " FROM `$ctable` AS a,".
+                    " `$etable` AS b".
+                    " WHERE a.id = b.content".
+                    " AND a.url = $url".
+                    " ORDER BY b.id DESC".
+                    " LIMIT 1";
+                
+                if($offset > 0) {
+                    $query .= " OFFSET $offset";
+                }
+                
+                $result = $dbConnection->query($query);
+                
+                if(!$result) {
+                    die("ERROR: Could not get current dataset from extracting table.");
+                }
+                    
+                $row = $result->fetch_assoc();
+                
+                $result->close();
+                
+                if($row) {
+                    $data = true;
+                    
+                    echo "<button id=\"content-fullscreen\" title=\"Show Fullscreen\">&#9727;</button>\n";
+                    
+                    echo "<div id=\"content-table\" class=\"fs-div\">\n";
+                    
+                    echo "<table class=\"fs-content\">\n";
+                    echo "<thead>\n";
+                    echo "<tr>\n";
+                    
+                    echo "<th>Field</th>\n";
+                    echo "<th>Extracted value</th>\n";
+                    
+                    echo "</tr>\n";
+                    echo "</thead>\n";
+                    
+                    echo "<tbody>\n";
+                    
+                    foreach($columns as $column) {
+                        if(
+                                strlen($column) > 11
+                                && substr($column, 0, 11) == "extracted__"
+                        ) {
+                            $cname = substr($column, 11);
+                        }
+                        else {
+                            $cname = substr($column, 10);
+                        }
+                            
+                        echo "<tr>\n";
+                        echo "<td>".html($cname)."</td>\n";
+                        
+                        echo "<td>\n";
+                        
+                        if(!strlen(trim($row[$column]))) {
+                            echo "<i>[empty]</i>\n";
+                        }
+                        else if(isJSON($row[$column])) {
+                            echo "<i>JSON</i><pre><code class=\"language-json\">\n";
+                            
+                            echo html($row[$column])."\n\n";
+                            
+                            echo "</code></pre>\n";
+                        }
+                        else {
+                            echo html($row[$column])."\n";
+                        }
+                            
+                        echo "</td>\n";
+                        echo "</tr>\n";
+                    }
+                    
+                    if($linked) {                    
+                        echo "<tr>\n";
+                        echo "<td><i>linked data</i></td>\n";
+                        echo "<td>\n";
+                        
+                        if($row["link"] !== NULL) {
+                            echo "<b>id:</b> ".html($row["link"])." [`$rtable`]\n";
+                            
+                            //TODO: get linked data here
+                        }
+                        else {
+                            echo "<i>[none]</i>\n";
+                        }
+                        
+                        echo "</td>\n";
+                    }
+                    
+                    echo "</tbody>\n";
+                    echo "</table>\n";
+                    
+                    echo "</div>\n";
+                }
+                else {
+                    echo "<br><br><i>This dataset does not exist.</i><br><br>\n";
+                }
             }
             else {
                 $data = false;
                 
-                echo "<br><br><i>No extracted data available for this specific URL.</i><br><br>\n";
+                echo "<br><br><i>No data available for this specific URL.</i><br><br>\n";
+            }
+        }
+        else {
+            echo "<br><br><i>No extracted data available for this specific URL.</i><br><br>\n";
+        }
+        
+        echo "<div id=\"content-status\">\n";
+        
+        echo "<select id=\"content-version\" class=\"wide\" data-m=\"$m\" data-tab=\"$tab\">\n";
+        
+        $count = 0;
+        $num = sizeof($tables);
+        
+        foreach($tables as $table) {
+            $count++;
+            
+            echo "<option value=\"".$table["id"]."\"";
+            
+            if($table["id"] == $extractingtable["id"]) {
+                echo " selected";
             }
             
-            echo "<div id=\"content-status\">\n";
+            echo ">Table ";
+            echo number_format($count);
+            echo " of ";
+            echo number_format($num);
+            echo ": '";
+            echo $table["name"];
+            echo "'";
             
-            echo "<select id=\"content-version\" class=\"wide\" data-m=\"$m\" data-tab=\"$tab\">\n";
-            
-            $count = 0;
-            $num = sizeof($tables);
-            
-            foreach($tables as $table) {
-                $count++;
-                
-                echo "<option value=\"".$table["id"]."\"";
-                
-                if($table["id"] == $extractingtable["id"]) {
-                    echo " selected";
-                }
-                    
-                echo ">Table ";
-                echo number_format($count);
-                echo " of ";
-                echo number_format($num);
-                echo ": '";
-                echo $table["name"];
-                echo "'";
-                
-                if($table["updated"]) {
-                    echo " &ndash; last updated on ".$table["updated"];
-                }
-                    
-                echo "</option>\n";
+            if($table["updated"]) {
+                echo " &ndash; last updated on ".$table["updated"];
             }
             
-            echo "</select>\n";
+            echo "</option>\n";
+        }
+        
+        echo "</select>\n";
+        
+        if(isset($data) && $data) {
+            echo "<span id=\"content-info\">\n";
             
-            if($data) {
-                echo "<span id=\"content-info\">\n";
-                
-                echo "<a href=\"#\" id=\"content-download\" target=\"_blank\""
+            echo "<a href=\"#\" id=\"content-download\" target=\"_blank\""
                     ."data-type=\"extracted\" data-website-namespace=\""
                     .html($namespace)
                     ."\" data-namespace=\""
@@ -312,14 +483,10 @@ if($result->num_rows) {
                     )
                     ."_extracted.json\">[Download as JSON]</a>\n";
                                     
-                echo "</span>\n";
-            }
-            
-            echo "</div>\n";
+            echo "</span>\n";
         }
-        else {
-            echo "<br><br><i>No extracted data available.</i><br><br>\n";
-        }
+        
+        echo "</div>\n";
     }
     else {
         echo "<br><br><i>No extracted data available.</i><br><br>\n";
