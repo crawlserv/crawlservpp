@@ -502,7 +502,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-	// DOUBLECLICK/MIDDLEMOUSEBUTTONCLICK EVENT: copy log entry
+	// DOUBLE/MIDDLE CLICK EVENT: copy log entry
 	$("select.content-list > option").on("dblclick auxclick", function(event) {
 		if(event.type == "auxclick" && event.which != 2) {
 			// only middle mouse button
