@@ -1247,9 +1247,9 @@ namespace crawlservpp::Module::Analyzer {
 				}
 			}
 
-			// NOLINTNEXTLINE(modernize-loop-convert)
-			for(std::size_t n{0}; n < data.values.at(column1).size(); ++n) {
-				auto& text{data.values.at(column1).at(n)};
+			for(auto it{data.values.at(column1).begin()}; it != data.values.at(column1).end(); ++it) {
+				const auto index{it - data.values.at(column1).begin()};
+				auto& text{data.values.at(column1).at(index)};
 
 				if(!text._isnull && !text._s.empty()) {
 					// add text as source
@@ -1260,7 +1260,7 @@ namespace crawlservpp::Module::Analyzer {
 
 					if(data.values.size() > numColumns1) {
 						// move article ID to vector
-						auto& articleId{data.values.at(column2).at(n)};
+						auto& articleId{data.values.at(column2).at(index)};
 
 						if(!articleId._isnull && !articleId._s.empty()) {
 							articleIds.emplace_back(std::move(articleId._s));
@@ -1271,7 +1271,7 @@ namespace crawlservpp::Module::Analyzer {
 
 						if(data.values.size() > numColumns2) {
 							// move date/time to vector
-							auto& dateTime{data.values.at(column3).at(n)};
+							auto& dateTime{data.values.at(column3).at(index)};
 
 							if(!dateTime._isnull && !dateTime._s.empty()) {
 								dateTimes.emplace_back(std::move(dateTime._s));
