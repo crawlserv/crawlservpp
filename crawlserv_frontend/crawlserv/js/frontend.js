@@ -50,11 +50,11 @@ var fullscreen = false;
 
 jQuery(function($) {
 
-/*
- * GLOBAL EVENTS
- */
-	
-// DOCUMENT READY
+	/*
+	 * GLOBAL EVENTS
+	 */
+		
+	// DOCUMENT READY
 	$(document).ready(function() {		
 		// check website inputs
 		$("#website-domain").prop("disabled", $("#website-crossdomain").prop("checked"));
@@ -68,23 +68,28 @@ jQuery(function($) {
 		$("#algo-select").data("current", $("#algo-select").val());
 		
 		// show redirection time if available
-		if(redirected)
+		if(redirected) {
 			$("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
+		}
 		
 		// check query type
 		if($("#query-type-select").length) {
 			if($("#query-type-select").val() == "regex") {
-				if(!helperXPath)
+				if(!helperXPath) {
 					helperXPath = $("#xpath-helper").detach();
+				}
 				
-				if(!helperJSONPointer)
+				if(!helperJSONPointer) {
 					helperJSONPointer = $("#jsonpointer-helper").detach();
+				}
 				
-				if(!helperJSONPath)
+				if(!helperJSONPath) {
 					helperJSONPath = $("#jsonpath-helper").detach();
+				}
 				
-				if(!helperCombined)
+				if(!helperCombined) {
 					helperCombined = $("#combined-helper").detach();
+				}
 				
 				$("#query-text-only").prop("checked", true);
 				$("#query-text-only").prop("disabled", true);
@@ -95,30 +100,38 @@ jQuery(function($) {
 				$("#query-xml-warnings-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "xpath") {
-				if(!helperRegEx)
+				if(!helperRegEx) {
 					helperRegEx = $("#regex-helper").detach();
+				}
 				
-				if(!helperJSONPointer)
+				if(!helperJSONPointer) {
 					helperJSONPointer = $("#jsonpointer-helper").detach();
+				}
 				
-				if(!helperJSONPath)
+				if(!helperJSONPath) {
 					helperJSONPath = $("#jsonpath-helper").detach();
+				}
 				
-				if(!helperCombined)
+				if(!helperCombined) {
 					helperCombined = $("#combined-helper").detach();
+				}
 			}
 			else if($("#query-type-select").val() == "jsonpointer") {
-				if(!helperRegEx)
+				if(!helperRegEx) {
 					helperRegEx = $("#regex-helper").detach();
+				}
 				
-				if(!helperXPath)
+				if(!helperXPath) {
 					helperXPath = $("#xpath-helper").detach();
+				}
 				
-				if(!helperJSONPath)
+				if(!helperJSONPath) {
 					helperJSONPath = $("#jsonpath-helper").detach();
+				}
 				
-				if(!helperCombined)
+				if(!helperCombined) {
 					helperCombined = $("#combined-helper").detach();
+				}
 				
 				$("#query-text-only").prop("checked", false);
 				
@@ -127,17 +140,21 @@ jQuery(function($) {
 				$("#query-xml-warnings-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "jsonpath") {
-				if(!helperRegEx)
+				if(!helperRegEx) {
 					helperRegEx = $("#regex-helper").detach();
+				}
 				
-				if(!helperXPath)
+				if(!helperXPath) {
 					helperXPath = $("#xpath-helper").detach();
+				}
 				
-				if(!helperJSONPointer)
+				if(!helperJSONPointer) {
 					helperJSONPointer = $("#jsonpointer-helper").detach();
+				}
 				
-				if(!helperCombined)
+				if(!helperCombined) {
 					helperCombined = $("#combined-helper").detach();
+				}
 				
 				$("#query-text-only").prop("checked", false);
 				
@@ -146,26 +163,32 @@ jQuery(function($) {
 				$("#query-xml-warnings-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "xpathjsonpointer") {
-				if(!helperRegEx)
+				if(!helperRegEx) {
 					helperRegEx = $("#regex-helper").detach();
+				}
 				
-				if(!helperJSONPointer)
+				if(!helperJSONPointer) {
 					helperJSONPointer = $("#jsonpointer-helper").detach();
+				}
 				
-				if(!helperJSONPath)
+				if(!helperJSONPath) {
 					helperJSONPath = $("#jsonpath-helper").detach();
+				}
 				
 				$("#query-text-only").prop("checked", false);
 			}
 			else if($("#query-type-select").val() == "xpathjsonpath") {
-				if(!helperRegEx)
+				if(!helperRegEx) {
 					helperRegEx = $("#regex-helper").detach();
+				}
 				
-				if(!helperJSONPointer)
+				if(!helperJSONPointer) {
 					helperJSONPointer = $("#jsonpointer-helper").detach();
+				}
 				
-				if(!helperJSONPath)
+				if(!helperJSONPath) {
 					helperJSONPath = $("#jsonpath-helper").detach();
+				}
 				
 				$("#query-text-only").prop("checked", false);
 			}
@@ -174,9 +197,13 @@ jQuery(function($) {
 		// check query date test
 		if($("#query-datetime").length && $("#query-datetime").is(":checked")) {
 			// add locales to selection if necessary
-			if($("#query-datetime-locale option").length == 1)
-				for(const locale of db_locales)
-					$("#query-datetime-locale").append("\n<option value=\"" + locale + "\">" + locale + "</option>");
+			if($("#query-datetime-locale option").length == 1) {
+				for(const locale of db_locales) {
+					$("#query-datetime-locale").append(
+							"\n<option value=\"" + locale + "\">" + locale + "</option>"
+					);
+				}
+			}
 			
 			// show date-related options
 			$("#query-datetime-format-label").show();
@@ -195,15 +222,18 @@ jQuery(function($) {
 		disableImportExport();
 		
 		if($("#urllist-target").val() != 0) {
-			if(!optionUrlListName)
+			if(!optionUrlListName) {
 				optionUrlListName = $("#urllist-name-div").detach();
+			}
 			
-			if(!optionUrlListNamespace)
+			if(!optionUrlListNamespace) {
 				optionUrlListNamespace = $("#urllist-namespace-div").detach();
+			}
 		}
 		
-		if($("#compression-select").length)
+		if($("#compression-select").length) {
 			$("#website-select").data("compression", $("#compression-select").val());
+		}
 		
 		// prepare form for file upload
 		$("#file-form").ajaxForm();
@@ -220,8 +250,9 @@ jQuery(function($) {
 				beforeShowDay: function(date) {
 						var sdate = $.datepicker.formatDate("yy-mm-dd", date);
 						
-						if($.inArray(sdate, corpusDates) != -1)
+						if($.inArray(sdate, corpusDates) != -1) {
 							return [true];
+						}
 						
 						return [false];
 				},
@@ -249,7 +280,7 @@ jQuery(function($) {
 		$.support.cors = true;
 	});
 	
-// DOCUMENT UNLOAD
+	// DOCUMENT UNLOAD
 	$(window).on("beforeunload", function() {
 		// set status
 		crawlserv_frontend_unloading = true;
@@ -258,7 +289,7 @@ jQuery(function($) {
 		localStorage["_crawlserv_leavetime"] = +new Date();
 	});
 	
-// DOCUMENT KEYUP EVENT: exit fullscreen on ESC
+	// DOCUMENT KEYUP EVENT: exit fullscreen on ESC
 	$(document).on("keyup", function(e) {
 		if(
 				e.keyCode === 27
@@ -273,22 +304,24 @@ jQuery(function($) {
 		return true;
 	});
 	
-// CLICK EVENT: navigation
+	// CLICK EVENT: navigation
 	$(document).on("click", "a.post-redirect", function() {
-		if(typeof $(this).data("mode") !== "undefined")
+		if(typeof $(this).data("mode") !== "undefined") {
 			reload({
 				"m" : $(this).data("m"),
 				"mode" : $(this).data("mode")
 			});
-		else
+		}
+		else {
 			reload({
 				"m" : $(this).data("m")
 			});
+		}
 		
 		return false;
 	});
 
-// CLICK EVENT: navigation with filter
+	// CLICK EVENT: navigation with filter
 	$(document).on("click", "a.post-redirect-filter", function() {
 		reload({
 			"m" : $(this).data("m"),
@@ -298,7 +331,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: run command without arguments
+	// CLICK EVENT: run command without arguments
 	$(document).on("click", "a.cmd", function() {
   		runCmd(
   				$(this).data("cmd"),
@@ -312,32 +345,35 @@ jQuery(function($) {
 		return false;
 	});
 	
-// KEYDOWN EVENT: trigger event on CTRL+ENTER (text fields)
+	// KEYDOWN EVENT: trigger event on CTRL+ENTER (text fields)
 	$(document).on(
 			"keydown",
 			"input.trigger[type='text'], input.trigger[type='number'], input.trigger[type='date'], textarea.trigger",
 			function(event) {
-				if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey)
-					if(hasData($(this), "trigger"))
+				if((event.keyCode == 10 || event.keyCode == 13) && event.ctrlKey) {
+					if(hasData($(this), "trigger")) {
 						$("#" + $(this).data("trigger")).trigger("click");
+					}
+				}
 			}
 	);
 	
-// CHANGE EVENT: check date
+	// CHANGE EVENT: check date
 	$("input[type='date']").on("change", function() {
-		if(isValidDate($(this).val()))
+		if(isValidDate($(this).val())) {
 			return true;
+		}
 		
 		alert("Please enter an empty or a valid date in the format \'YYYY-MM-DD\'.");
 		
 		return false;
 	});
 
-/*
- * EVENTS FOR SERVER
- */
-
-// CLICK EVENT: add allowed IP
+	/*
+	 * EVENTS FOR SERVER
+	 */
+	
+	// CLICK EVENT: add allowed IP
 	$("#cmd-allow").on("click", function() {
 	    runCmd(
 	    		"allow",
@@ -351,13 +387,14 @@ jQuery(function($) {
 		return false;
 	});
 
-// CLICK EVENT: add argument to custom command
+	// CLICK EVENT: add argument to custom command
 	$("#cmd-custom-addarg").on("click", function() {
   		var argId = 0;
   		var argTotal = $("#cmd-args .cmd-custom-arg").length;
   		
-  		if(argTotal)
+  		if(argTotal > 0) {
   			argId = parseInt($("#cmd-args .cmd-custom-arg").last().data("n"), 10) + 1;
+  		}
   		
   		$("#cmd-args").append(
   				"<div class=\"cmd-custom-arg entry-row\" data-n=\"" + argId + "\">" +
@@ -375,7 +412,7 @@ jQuery(function($) {
   		return false;
   	});
 
-// CLICK EVENT: remove argument from custom command
+	// CLICK EVENT: remove argument from custom command
 	$(document).on("click", "a.cmd-custom-remarg", function() {		
   		var n = parseInt($(this).data("n"), 10);
   		var toRemove = null;
@@ -393,28 +430,33 @@ jQuery(function($) {
   			}
   		});
   		
-  		if(toRemove)
+  		if(toRemove) {
   			toRemove.remove();
+  		}
   		
   		return false;
   	});
 
-// CLICK EVENT: run custom command with custom arguments
+	// CLICK EVENT: run custom command with custom arguments
 	$("#cmd-custom").on("click", function() {
   		var args = {};
   		$("#cmd-args .cmd-custom-arg").each(function(i, obj) {
   			var argname = $(this).find(".cmd-custom-arg-name").val();
   			var argvalue = $(this).find(".cmd-custom-arg-value").val();
   			
-  			if(!isNaN(argvalue))
+  			if(!isNaN(argvalue)) {
   				argvalue = +argvalue;
-  			else if(argvalue == "true")
+  			}
+  			else if(argvalue == "true") {
   				argvalue = true;
-  			else if(argvalue == "false")
+  			}
+  			else if(argvalue == "false") {
   				argvalue = false;
+  			}
   			
-  			if(argname && argname.length)
+  			if(argname && argname.length) {
   				args[argname] = argvalue;
+  			}
   		});
   		
 		runCmd(document.getElementById("cmd-custom-form-cmd").value, args, false, null);
@@ -422,11 +464,11 @@ jQuery(function($) {
 		return false;
 	});
 
-/*
- * EVENTS FOR LOGS
- */
-
-// CLICK EVENT: navigate log entries
+	/*
+	 * EVENTS FOR LOGS
+	 */
+	
+	// CLICK EVENT: navigate log entries
 	$("a.logs-nav").on("click", function() {
 		reload({
 			"m" : "logs",
@@ -438,7 +480,7 @@ jQuery(function($) {
 		return false;
 	});
 
-// CLICK EVENT: clear log entries
+	// CLICK EVENT: clear log entries
 	$("a.logs-clear").on("click", function() {
 		runCmd(
 				"clearlogs",
@@ -455,11 +497,11 @@ jQuery(function($) {
 		return false;
 	});
 
-/*
- * EVENTS FOR WEBSITES
- */
-
-// CHANGE EVENT: website selected
+	/*
+	 * EVENTS FOR WEBSITES
+	 */
+	
+	// CHANGE EVENT: website selected
 	$("#website-select").on("change", function() {
 		$(this).blur();
 		
@@ -471,54 +513,68 @@ jQuery(function($) {
 				"website" : id
 		};
 		
-		if($("#query-test-text").length)
+		if($("#query-test-text").length) {
 			args["test"] = $("#query-test-text").val();
+		}
 		
-		if(!$("#query-new-tab").is(":checked"))
+		if(!$("#query-new-tab").is(":checked")) {
 			args["test-nonewtab"] = true;
+		}
 		
-		if(typeof $(this).data("tab") !== "undefined")
+		if(typeof $(this).data("tab") !== "undefined") {
 			args["tab"] = $(this).data("tab");
+		}
 		
-		if(typeof $(this).data("mode") !== "undefined")
+		if(typeof $(this).data("mode") !== "undefined") {
 			args["mode"] = $(this).data("mode");
+		}
 		
-		if(typeof $(this).data("module") !== "undefined")
+		if(typeof $(this).data("module") !== "undefined") {
 			args["module"] = $(this).data("module");
+		}
 		
-		if(typeof $(this).data("action") !== "undefined")
+		if(typeof $(this).data("action") !== "undefined") {
 			args["action"] = $(this).data("action");
+		}
 		
-		if(typeof $(this).data("datatype") !== "undefined")
+		if(typeof $(this).data("datatype") !== "undefined") {
 			args["datatype"] = $(this).data("datatype");
+		}
 		
-		if(typeof $(this).data("filetype") !== "undefined")
+		if(typeof $(this).data("filetype") !== "undefined") {
 			args["filetype"] = $(this).data("filetype");
+		}
 		
-		if(typeof $(this).data("compression") !== "undefined")
+		if(typeof $(this).data("compression") !== "undefined") {
 			args["compression"] = $(this).data("compression");
+		}
 		
-		if(typeof $(this).data("scrolldown") !== "undefined")
+		if(typeof $(this).data("scrolldown") !== "undefined") {
 			args["scrolldown"] = true;
+		}
 		
 		if(typeof config !== "undefined") {
 			if(config.isConfChanged()) {
-				if(confirm("Do you want to discard the changes to your current configuration?"))
+				if(confirm("Do you want to discard the changes to your current configuration?")) {
 					reload(args);
-				else
+				}
+				else {
 					reenableInputs();
+				}
 			}
-			else
+			else {
 				reload(args);
+			}
 		}
 		else {
 			// reload in "Threads" menu also
 			reload(args);
 		}
+		
 		return false;
 	});
 	
-// CHANGE EVENT: URL list selected
+	// CHANGE EVENT: URL list selected
 	$("#urllist-select").on("change", function() {
 		$(this).blur();
 		
@@ -534,11 +590,13 @@ jQuery(function($) {
 					"urllist" : id
 			};
 			
-			if(typeof $(this).data("tab") !== "undefined")
+			if(typeof $(this).data("tab") !== "undefined") {
 				args["tab"] = $(this).data("tab");
+			}
 			
-			if($("#urls-delete-query").length)
+			if($("#urls-delete-query").length) {
 				args["query"] = parseInt($("#urls-delete-query").val(), 10);
+			}
 			
 			reload(args);
 			
@@ -548,12 +606,12 @@ jQuery(function($) {
 		return true;
 	});
 	
-// CHANGE EVENT: cross-domain website toggled
+	// CHANGE EVENT: cross-domain website toggled
 	$("#website-crossdomain").on("change", function() {
 		$("#website-domain").prop("disabled", $(this).prop("checked"));
 	});
 	
-// CHANGE EVENT: external directory toggled
+	// CHANGE EVENT: external directory toggled
 	$("#website-externaldir").on("change", function() {
 		if($(this).prop("checked")) {
 			$("#website-dir").prop("disabled", false); 
@@ -565,7 +623,7 @@ jQuery(function($) {
 		}
 	});
 
-// CLICK EVENT: add website
+	// CLICK EVENT: add website
 	$("#website-add").on("click", function() {
 		runCmd(
 				"addwebsite",
@@ -587,7 +645,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: duplicate website
+	// CLICK EVENT: duplicate website
 	$("#website-duplicate").on("click", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		
@@ -608,7 +666,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: update website
+	// CLICK EVENT: update website
 	$("#website-update").on("click", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		
@@ -632,7 +690,7 @@ jQuery(function($) {
 		return false;
 	});
 
-// CLICK EVENT: delete website
+	// CLICK EVENT: delete website
 	$("#website-delete").on("click", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		
@@ -651,7 +709,7 @@ jQuery(function($) {
 		return false;
 	});
 
-// CLICK EVENT: add URL list
+	// CLICK EVENT: add URL list
 	$("#urllist-add").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		
@@ -674,7 +732,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: update URL list
+	// CLICK EVENT: update URL list
 	$("#urllist-update").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
@@ -699,7 +757,7 @@ jQuery(function($) {
 		return false;
 	});
 
-// CLICK EVENT: delete URL list
+	// CLICK EVENT: delete URL list
 	$("#urllist-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#urllist-select").val(), 10);
@@ -722,7 +780,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: download URL list
+	// CLICK EVENT: download URL list
 	$("#urllist-download").on("click", function() {
 		var ulwebsite = $(this).data("website-namespace");
 		var ulnamespace = $(this).data("namespace");
@@ -741,6 +799,7 @@ jQuery(function($) {
 						console.error(
 								"Could not open a new window, it has probably been blocked by a popup blocker."
 						);
+						
 						alert(
 								"Could not open a new window, it has probably been blocked by a popup blocker."		
 						);
@@ -751,13 +810,13 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: reset parsing status
+	// CLICK EVENT: reset parsing status
 	$("#urllist-reset-parsing").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var query = parseInt($("#urls-delete-query").val(), 10);
 		
-		if(urllist)
+		if(urllist > 0) {
 			runCmd(
 					"resetparsingstatus",
 					{
@@ -771,17 +830,18 @@ jQuery(function($) {
 						"query" : query
 					}
 			);
+		}
 		
 		return false;
 	});
 	
-// CLICK EVENT: reset extracting status
+	// CLICK EVENT: reset extracting status
 	$("#urllist-reset-extracting").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var query = parseInt($("#urls-delete-query").val(), 10);
 		
-		if(urllist)
+		if(urllist > 0) {
 			runCmd(
 					"resetextractingstatus",
 					{
@@ -795,17 +855,18 @@ jQuery(function($) {
 						"query" : query
 					}
 			);
+		}
 		
 		return false;
 	});
 	
-// CLICK EVENT: reset analyzing status
+	// CLICK EVENT: reset analyzing status
 	$("#urllist-reset-analyzing").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var query = parseInt($("#urls-delete-query").val(), 10);
 		
-		if(urllist)
+		if(urllist > 0) {
 			runCmd(
 					"resetanalyzingstatus", 
 					{
@@ -819,17 +880,18 @@ jQuery(function($) {
 						"query" : query
 					}
 			);
+		}
 		
 		return false;
 	});
 	
-// CLICK EVENT: delete URLs from URL list
+	// CLICK EVENT: delete URLs from URL list
 	$("#urls-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var query = parseInt($("#urls-delete-query").val(), 10);
 		
-		if(urllist)
+		if(urllist > 0) {
 			runCmd(
 					"deleteurls", 
 					{
@@ -844,17 +906,19 @@ jQuery(function($) {
 						"query" : query
 					}
 			);
+		}
 		
 		return false;
 	});
 	
-/*
- * EVENTS for QUERIES
- */
-	
-// CHANGE EVENT: query selected
+	/*
+	 * EVENTS for QUERIES
+	 */
+		
+	// CHANGE EVENT: query selected
 	$("#query-select").on("change", function() {
 		$(this).blur();
+		
 		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
@@ -873,7 +937,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CHANGE EVENT: query type selected
+	// CHANGE EVENT: query type selected
 	$("#query-type-select").on("change", function() {
 		if($(this).val() == "regex") {
 			$("#query-text-only").prop("checked", true);
@@ -886,20 +950,25 @@ jQuery(function($) {
 			
 			if(helperRegEx) {
 				helperRegEx.insertAfter("#query-properties");
+				
 				helperRegEx = null;
 			}
 			
-			if(!helperXPath)
+			if(!helperXPath) {
 				helperXPath = $("#xpath-helper").detach();
+			}
 			
-			if(!helperJSONPointer)
+			if(!helperJSONPointer) {
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			}
 			
-			if(!helperJSONPath)
+			if(!helperJSONPath) {
 				helperJSONPath = $("#jsonpath-helper").detach();
+			}
 			
-			if(!helperCombined)
+			if(!helperCombined) {
 				helperCombined = $("#combined-helper").detach();
+			}
 		}
 		else if($(this).val() == "xpath") {
 			$("#query-text-only").prop("disabled", false);
@@ -911,20 +980,25 @@ jQuery(function($) {
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
+				
 				helperXPath = null;
 			}
 			
-			if(!helperRegEx)
+			if(!helperRegEx) {
 				helperRegEx = $("#regex-helper").detach();
+			}
 			
-			if(!helperJSONPointer)
+			if(!helperJSONPointer) {
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			}
 			
-			if(!helperJSONPath)
+			if(!helperJSONPath) {
 				helperJSONPath = $("#jsonpath-helper").detach();
+			}
 			
-			if(!helperCombined)
+			if(!helperCombined) {
 				helperCombined = $("#combined-helper").detach();
+			}
 		}
 		else if($(this).val() == "jsonpointer") {
 			$("#query-text-only").prop("checked", false);
@@ -937,20 +1011,25 @@ jQuery(function($) {
 			
 			if(helperJSONPointer) {
 				helperJSONPointer.insertAfter("#query-properties");
+				
 				helperJSONPointer = null;
 			}
 			
-			if(!helperRegEx)
+			if(!helperRegEx) {
 				helperRegEx = $("#regex-helper").detach();
+			}
 			
-			if(!helperXPath)
+			if(!helperXPath) {
 				helperXPath = $("#xpath-helper").detach();
+			}
 			
-			if(!helperJSONPath)
+			if(!helperJSONPath) {
 				helperJSONPath = $("#jsonpath-helper").detach();
+			}
 			
-			if(!helperCombined)
+			if(!helperCombined) {
 				helperCombined = $("#combined-helper").detach();
+			}
 		}
 		else if($(this).val() == "jsonpath") {
 			$("#query-text-only").prop("checked", false);
@@ -963,20 +1042,25 @@ jQuery(function($) {
 			
 			if(helperJSONPath) {
 				helperJSONPath.insertAfter("#query-properties");
+				
 				helperJSONPath = null;
 			}
 			
-			if(!helperRegEx)
+			if(!helperRegEx) {
 				helperRegEx = $("#regex-helper").detach();
+			}
 			
-			if(!helperXPath)
+			if(!helperXPath) {
 				helperXPath = $("#xpath-helper").detach();
+			}
 			
-			if(!helperJSONPointer)
+			if(!helperJSONPointer) {
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			}
 			
-			if(!helperCombined)
+			if(!helperCombined) {
 				helperCombined = $("#combined-helper").detach();
+			}
 		}
 		else if($(this).val() == "xpathjsonpointer") {
 			$("#query-text-only").prop("checked", false);
@@ -988,22 +1072,27 @@ jQuery(function($) {
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
+				
 				helperXPath = null;
 			}
 			
 			if(helperCombined) {
 				helperCombined.insertAfter("#xpath-helper");
+				
 				helperCombined = null;
 			}
 			
-			if(!helperRegEx)
+			if(!helperRegEx) {
 				helperRegEx = $("#regex-helper").detach();
+			}
 			
-			if(!helperJSONPointer)
+			if(!helperJSONPointer) {
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			}
 			
-			if(!helperJSONPath)
+			if(!helperJSONPath) {
 				helperJSONPath = $("#jsonpath-helper").detach();
+			}
 		}
 		else if($(this).val() == "xpathjsonpath") {
 			$("#query-text-only").prop("checked", false);
@@ -1015,28 +1104,33 @@ jQuery(function($) {
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
+				
 				helperXPath = null;
 			}
 			
 			if(helperCombined) {
 				helperCombined.insertAfter("#xpath-helper");
+				
 				helperCombined = null;
 			}
 			
-			if(!helperRegEx)
+			if(!helperRegEx) {
 				helperRegEx = $("#regex-helper").detach();
+			}
 			
-			if(!helperJSONPointer)
+			if(!helperJSONPointer) {
 				helperJSONPointer = $("#jsonpointer-helper").detach();
+			}
 			
-			if(!helperJSONPath)
+			if(!helperJSONPath) {
 				helperJSONPath = $("#jsonpath-helper").detach();
+			}
 		}
 		
 		return true;
 	});
 	
-// CHANGE EVENT: XPath helper result type selected
+	// CHANGE EVENT: XPath helper result type selected
 	$("input[name='xpath-result']").on("change", function() {
 		if($(this).val() == "property") {
 			$("#xpath-result-property").prop("disabled", false);
@@ -1051,7 +1145,7 @@ jQuery(function($) {
 		return true;
 	});
 	
-// CLICK EVENT: let XPath helper generate a query
+	// CLICK EVENT: let XPath helper generate a query
 	$("#xpath-generate").on("click", function() {
 		var query = "";
 		var property = $("input:radio[name='xpath-result']:checked").val() == "property";
@@ -1092,8 +1186,9 @@ jQuery(function($) {
 				$("#query-text").val().length
 				&& $("#query-text").val().charAt(0) != '\n'
 				&& !confirm("Do you want to override the existing query?")
-		)
+		) {
 			return false;
+		}
 		
 		query = "//"
 				+ $("#xpath-element").val()
@@ -1102,15 +1197,17 @@ jQuery(function($) {
 				+ "), ' '), ' "
 				+ $("#xpath-value").val() + " ')]";
 		
-		if(property)
+		if(property) {
 			query += "/@" + $("#xpath-result-property").val();
+		}
 		
 		var lines = $("#query-text").val().split('\n');
 		
 		if(lines.length > 1) {
 			lines.forEach(function(currentValue, index) {
-				if(index > 0)
-					query += "\n" + currentValue; 
+				if(index > 0) {
+					query += "\n" + currentValue;
+				}
 			});
 		}
 		
@@ -1119,7 +1216,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: add query
+	// CLICK EVENT: add query
 	$("#query-add").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		
@@ -1150,12 +1247,12 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: duplicate query
+	// CLICK EVENT: duplicate query
 	$("#query-duplicate").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
 		
-		if(id)
+		if(id > 0) {
 			runCmd(
 					"duplicatequery",
 					{
@@ -1171,21 +1268,24 @@ jQuery(function($) {
 					"id",
 					"query"
 			);
+		}
 		
 		return false;
 	});
 	
-// CLICK EVENT: show options to move query to another website
+	// CLICK EVENT: show options to move query to another website
 	$("#query-move-toggle").on("click", function() {
 		$("#query-move-div").toggle();
 		
-		if($("#query-move-div").is(":hidden"))
+		if($("#query-move-div").is(":hidden")) {
 			$("#query-move-toggle").html("Move query &dArr;");
-		else
+		}
+		else {
 			$("#query-move-toggle").html("Move query &uArr;");
+		}
 	});
 
-// CLICK EVENT: move query to another website
+	// CLICK EVENT: move query to another website
 	$("#query-move").on("click", function() {
 		var id = parseInt($("#query-select").val(), 10);
 		var to = parseInt($("#move-to").val(), 10);
@@ -1207,7 +1307,7 @@ jQuery(function($) {
 		);
 	});
 	
-// CLICK EVENT: update query
+	// CLICK EVENT: update query
 	$("#query-update").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
@@ -1238,7 +1338,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: delete query
+	// CLICK EVENT: delete query
 	$("#query-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#query-select").val(), 10);
@@ -1262,7 +1362,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: test query (or hide test result)
+	// CLICK EVENT: test query (or hide test result)
 	$("#query-test").on("click", function() {
 		if($("#query-test-text").is(":visible")) {
 			$("#query-test-label").text("Test result:");
@@ -1274,8 +1374,12 @@ jQuery(function($) {
 			var queryText = $("#query-text").val();
 			
 			// remove whitespaces in the end of the query text
-			while(queryText.length > 0 && "\f\n\r\t\v\u00A0\u2028\u2029".indexOf(queryText[queryText.length - 1]) > -1)
+			while(
+					queryText.length > 0 
+					&& "\f\n\r\t\v\u00A0\u2028\u2029".indexOf(queryText[queryText.length - 1]) > -1
+			) {
 				queryText = queryText.slice(0, -1);
+			}
 			
 			var timerStart = +new Date();
 			var args = {
@@ -1303,10 +1407,12 @@ jQuery(function($) {
 					var timerEnd = +new Date();
 					var resultText = "crawlserv++ responded (" + msToStr(timerEnd - timerStart) + ")\n";
 					
-					if(data["fail"])
+					if(data["fail"]) {
 						resultText += "ERROR: " + data["text"] + "\nDEBUG:\n" + data["debug"];
-					else
+					}
+					else {
 						resultText += data["text"];
+					}
 						
 					$("#query-test-result").val(resultText);
 					
@@ -1342,6 +1448,7 @@ jQuery(function($) {
 							console.error(
 									"Could not open a new window, it has probably been blocked by a popup blocker."
 							);
+							
 							alert(
 									"Could not open a new window, it has probably been blocked by a popup blocker."
 							);
@@ -1362,13 +1469,17 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CHANGE EVENT: "test date/time" toggled
+	// CHANGE EVENT: "test date/time" toggled
 	$("#query-datetime").on("change", function() {
 		if($(this).is(":checked")) {
 			// add locales to selection if necessary
-			if($("#query-datetime-locale option").length == 1)
-				for(const locale of db_locales)
-					$("#query-datetime-locale").append("\n<option value=\"" + locale + "\">" + locale + "</option>");
+			if($("#query-datetime-locale option").length == 1) {
+				for(const locale of db_locales) {
+					$("#query-datetime-locale").append(
+							"\n<option value=\"" + locale + "\">" + locale + "</option>"
+					);
+				}
+			}
 			
 			// show date-related options
 			$("#query-datetime-format-label").show();
@@ -1385,11 +1496,11 @@ jQuery(function($) {
 		}
 	});
 
-/*
- * EVENTS for CONFIGURATIONS (for CRAWLERS, PARSERS, EXTRACTORS and ANALYZERS)
- */
-
-// CHANGE EVENT: configuration selected
+	/*
+	 * EVENTS for CONFIGURATIONS (for CRAWLERS, PARSERS, EXTRACTORS and ANALYZERS)
+	 */
+	
+	// CHANGE EVENT: configuration selected
 	$("#config-select").on("change", function() {
 		$(this).blur();
 		
@@ -1400,23 +1511,26 @@ jQuery(function($) {
 			var id = parseInt($(this).val(), 10);
 			
 			if(config.isConfChanged()) {
-				if(confirm("Do you want to discard the changes to your current configuration?"))
+				if(confirm("Do you want to discard the changes to your current configuration?")) {
 					reload({
 						"m" : $(this).data("m"),
 						"website" : website,
 						"config" : id,
 						"mode" : $(this).data("mode")
 					});
-				else
+				}
+				else {
 					reenableInputs();
+				}
 			}
-			else
+			else {
 				reload({
 					"m" : $(this).data("m"),
 					"website" : website,
 					"config" : id,
 					"mode" : $(this).data("mode")
 				});
+			}
 			
 			return false;
 		}
@@ -1424,9 +1538,10 @@ jQuery(function($) {
 		return true;
 	});
 
-// CHANGE EVENT: algorithm category selected (for ANALYZERS only)
+	// CHANGE EVENT: algorithm category selected (for ANALYZERS only)
 	$("#algo-cat-select").on("change", function() {
-		$(this).blur()
+		$(this).blur();
+		
 		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
@@ -1443,10 +1558,11 @@ jQuery(function($) {
 					"algo_cat" : id
 				});
 			}
-			else
+			else {
 				reenableInputs();
+			}
 		}
-		else
+		else {
 			reload({
 				"m" :
 				"analyzers",
@@ -1456,14 +1572,16 @@ jQuery(function($) {
 				"algo_cat": id,
 				"algo_changed": id != algo.id
 			});
+		}
 		
 		return false;
 	});
 	
-// CHANGE EVENT: algorithm selected (for ANALYZERS only)
+	// CHANGE EVENT: algorithm selected (for ANALYZERS only)
 	$("#algo-select").on("change", function() {
-		$(this).blur()
-		disableInputs()
+		$(this).blur();
+		
+		disableInputs();
 		
 		var website = parseInt($("#website-select").val(), 10);
 		var config_id = parseInt($("#config-select").val(), 10);
@@ -1482,21 +1600,24 @@ jQuery(function($) {
 					"algo_changed": id != algo.id
 				});
 			}
-			else
+			else {
 				reenableInputs();
+			}
 		}
-		else reload({
-			"m" : "analyzers",
-			"website" : website,
-			"config" : config_id,
-			"mode" : $(this).data("mode"),
-			"algo_id": id
-		});
+		else {
+			reload({
+				"m" : "analyzers",
+				"website" : website,
+				"config" : config_id,
+				"mode" : $(this).data("mode"),
+				"algo_id": id
+			});
+		}
 		
 		return false;
 	});
 
-// CLICK EVENT: change mode
+	// CLICK EVENT: change mode
 	$("a.post-redirect-mode").on("click", function() {
 		disableInputs();
 		
@@ -1519,7 +1640,7 @@ jQuery(function($) {
 		return false;
 	});
 
-// CLICK EVENT: show segment body
+	// CLICK EVENT: show segment body
 	$(document).on("click", "div.segment-head-closed", function() {
 		var block = $("div.segment-body-closed[data-block=\""
 				+ $(this).data("block") + "\"]");
@@ -1539,19 +1660,21 @@ jQuery(function($) {
 		return true;
 	});
 
-// CLICK EVENT: hide segment body
+	// CLICK EVENT: hide segment body
 	$(document).on("click", "div.segment-head-open", function() {
 		var block = $("div.segment-body-open[data-block=\""
 				+ $(this).data("block") + "\"]");
+		
 		block.toggleClass("segment-body-open segment-body-closed");
 		
 		$("span.segment-arrow[data-block=\"" + $(this).data("block") + "\"]").html("&rArr;");
+		
 		$(this).toggleClass("segment-head-open segment-head-closed");
 		
 		return true;
 	});
 
-// CLICK EVENT: add configuration
+	// CLICK EVENT: add configuration
 	$("a.config-add").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var name = $("#config-name").val();
@@ -1574,10 +1697,11 @@ jQuery(function($) {
 				"id",
 				"config"
 		);
+		
 		return false;
 	})
 	
-// CLICK EVENT: duplicate configuration
+	// CLICK EVENT: duplicate configuration
 	$("#config-duplicate").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
@@ -1602,7 +1726,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: update configuration
+	// CLICK EVENT: update configuration
 	$("a.config-update").on("click", function() {
 		var id = parseInt($("#config-select").val(), 10);
 		var website = parseInt($("#website-select").val(), 10);
@@ -1626,15 +1750,16 @@ jQuery(function($) {
 					"config" : id
 				}
 		);
+		
 		return false;
 	})
 	
-// CLICK EVENT: delete configuration
+	// CLICK EVENT: delete configuration
 	$("#config-delete").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var id = parseInt($("#config-select").val(), 10);
 		
-		if(id) {
+		if(id > 0) {
 			runCmd(
 					"deleteconfig",
 					{
@@ -1649,35 +1774,36 @@ jQuery(function($) {
 					}
 			);
 		}
+		
 		return false;
 	});
 	
-// CLICK EVENT: add item to array
+	// CLICK EVENT: add item to array
 	$(document).on("click", "input.opt-array-add", function() {
 		config.onAddElement($(this).data("cat"), $(this).data("id"));
 		
 		return true;
 	});
 	
-// CLICK EVENT: remove item from array
+	// CLICK EVENT: remove item from array
 	$(document).on("click", "input.opt-array-del", function() {
 		config.onDelElement($(this).data("cat"), $(this).data("id"), $(this).data("item"));
 		
 		return true;
 	});
 	
-// CLICK EVENT: remove placeholder on click
+	// CLICK EVENT: remove placeholder on click
 	$(document).on("click", "input.opt", function() {
 		$(this).removeAttr("placeholder");
 		
 		return true;
 	});
 
-/*
- * EVENTS for THREADS
- */
-	
-// CHANGE EVENT: module selected
+	/*
+	 * EVENTS for THREADS
+	 */
+		
+	// CHANGE EVENT: module selected
 	$("#module-select").on("change", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		
@@ -1693,7 +1819,7 @@ jQuery(function($) {
 		return false;
 	});
 
-// CLICK EVENT: pause thread
+	// CLICK EVENT: pause thread
 	$(document).on("click", "a.thread-pause", function() {
 		var id = parseInt($(this).data("id"), 10);
 		var module = $(this).data("module");
@@ -1709,7 +1835,7 @@ jQuery(function($) {
 		return false;
 	})
 	
-// CLICK EVENT: unpause thread
+	// CLICK EVENT: unpause thread
 	$(document).on("click", "a.thread-unpause", function() {
 		var id = parseInt($(this).data("id"), 10);
 		var module = $(this).data("module"); 
@@ -1725,7 +1851,7 @@ jQuery(function($) {
 		return false;
 	})
 	
-// CLICK EVENT: stop thread
+	// CLICK EVENT: stop thread
 	$(document).on("click", "a.thread-stop", function() {
 		var id = parseInt($(this).data("id"), 10);
 		var module = $(this).data("module");
@@ -1741,7 +1867,7 @@ jQuery(function($) {
 		return false;
 	})
 
-// CLICK EVENT: start thread
+	// CLICK EVENT: start thread
 	$("#thread-start").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var module = $("#module-select").val();
@@ -1761,7 +1887,7 @@ jQuery(function($) {
 		return false;
 	})
 	
-// CLICK EVENT: time travel (jump to an ID)
+	// CLICK EVENT: time travel (jump to an ID)
 	$(document).on("click", "span.remaining", function() {
 		var id = $(this).data("id");
 		var module = $(this).data("module");
@@ -1776,7 +1902,7 @@ jQuery(function($) {
 					10
 			);
 			
-			if(target)
+			if(target > 0) {
 				runCmd(
 						"warp",
 						{
@@ -1785,14 +1911,15 @@ jQuery(function($) {
 						},
 						false
 				);
+			}
 		}
 	})
 	
-/*
- * EVENTS for CONTENT
- */
-	
-// CLICK EVENT: change tab
+	/*
+	 * EVENTS for CONTENT
+	 */
+		
+	// CLICK EVENT: change tab
 	$("a.post-redirect-tab").on("click", function() {
 		disableInputs();
 		
@@ -1800,8 +1927,9 @@ jQuery(function($) {
 		var urllist = parseInt($("#urllist-select").val(), 10);
 		var url = 0;
 		
-		if($("#content-url").length)
+		if($("#content-url").length) {
 			url = parseInt($("#content-url").val(), 10);
+		}
 		
 		reload({
 			"m" : $(this).data("m"),
@@ -1814,7 +1942,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: go to specific content
+	// CLICK EVENT: go to specific content
 	$("#content-goto").on("click", function() {
 		disableInputs();
 		
@@ -1834,7 +1962,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: previous URL
+	// CLICK EVENT: previous URL
 	$("#content-last").on("click", function() {
 		disableInputs();
 		
@@ -1863,7 +1991,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: next URL
+	// CLICK EVENT: next URL
 	$("#content-next").on("click", function() {
 		disableInputs();
 		
@@ -1891,7 +2019,7 @@ jQuery(function($) {
 		return false;
 	});
 
-// CHANGE EVENT: input URL ID (numbers only)
+	// CHANGE EVENT: input URL ID (numbers only)
 	$("#content-url").on("input keydown keyup mousedown mouseup select contextmenu drop", function() {
 		var input = $(this).val();
 		
@@ -1908,7 +2036,7 @@ jQuery(function($) {
 		return true;
 	});
 	
-// KEYPRESS EVENT: input URL ID (ENTER)
+	// KEYPRESS EVENT: input URL ID (ENTER)
 	$("#content-url").on("keypress", function(e) {
 		if(e.which == 13) {
 			if($(this).val().length == 0) {
@@ -1944,11 +2072,12 @@ jQuery(function($) {
 		return true;
 	});
 	
-// KEYPRESS EVENT: input URL text (ENTER)
+	// KEYPRESS EVENT: input URL text (ENTER)
 	$("#content-url-text").on("keypress", function(e) {
 		if(e.which == 13) {
-			if(!$(this).val().length)
+			if(!$(this).val().length) {
 				return true;
+			}
 			
 			disableInputs();
 			
@@ -1978,7 +2107,7 @@ jQuery(function($) {
 		return true;
 	});
 	
-// CLICK EVENT: fullscreen
+	// CLICK EVENT: fullscreen
 	$("#content-fullscreen").on("click", function() {
 		if(fullscreen) {
 			fullscreen = false;
@@ -2020,6 +2149,7 @@ jQuery(function($) {
 			this.oldBtnPos = $(this).css("right");
 			
 			var temp = $(".fs-div").detach();
+			
 			temp.appendTo("body");
 			
 			temp.css({
@@ -2041,7 +2171,7 @@ jQuery(function($) {
 		}
 	});
 	
-// CHANGE EVENT: select content version
+	// CHANGE EVENT: select content version
 	$("#content-version").on("change", function() {
 		disableInputs();
 		
@@ -2062,7 +2192,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: download content
+	// CLICK EVENT: download content
 	$("#content-download").on("click", function() {		
 		var contentwebsiteid = parseInt($("#website-select").val(), 10);
 		var contentwebsitename = $("#website-select option:selected").text();
@@ -2100,7 +2230,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: search for parsed ID
+	// CLICK EVENT: search for parsed ID
 	$("#content-search-parsed").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
@@ -2119,12 +2249,12 @@ jQuery(function($) {
 		});
 	});
 	
-// CHANGE EVENT: reset formatting of updated corpus position input field
+	// CHANGE EVENT: reset formatting of updated corpus position input field
 	$("#corpus-position.updated, #corpus-length.updated").on("keyup keypress change", function() {
 		$(this).removeClass("updated");
 	});
 	
-// CLICK EVENT: go to corpus position
+	// CLICK EVENT: go to corpus position
 	$("#content-go-position").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
@@ -2145,7 +2275,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CLICK EVENT: go to article number
+	// CLICK EVENT: go to article number
 	$("#content-go-article-num").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
@@ -2162,7 +2292,7 @@ jQuery(function($) {
 		});
 	});
 	
-// CLICK EVENT: go to article ID
+	// CLICK EVENT: go to article ID
 	$("#content-go-article-id").on("click", function() {
 		var website = parseInt($("#website-select").val(), 10);
 		var urllist = parseInt($("#urllist-select").val(), 10);
@@ -2179,11 +2309,11 @@ jQuery(function($) {
 		});
 	});
 	
-/*
- * EVENTS for IMPORT/EXPORT [DATA]
- */
-	
-// CHANGE EVENT: action selected
+	/*
+	 * EVENTS for IMPORT/EXPORT [DATA]
+	 */
+		
+	// CHANGE EVENT: action selected
 	$("input[name='action']").on("change", function() {
 		var dataType = $("#data-type-select").val();
 		var fileType = $("#file-type-select").val();
@@ -2200,7 +2330,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CHANGE EVENT: data type selected
+	// CHANGE EVENT: data type selected
 	$("#data-type-select").on("change", function() {
 		var action = $("input[name='action']").val();
 		var fileType = $("#file-type-select").val();
@@ -2217,7 +2347,7 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CHANGE EVENT: file type selected
+	// CHANGE EVENT: file type selected
 	$("#data-type-select").on("change", function() {
 		var action = $("input[name='action']").val();
 		var dataType = $("#data-type-select").val();
@@ -2234,49 +2364,54 @@ jQuery(function($) {
 		return false;
 	});
 	
-// CHANGE EVENT: compression selected
+	// CHANGE EVENT: compression selected
 	$("#compression-select").on("change", function() {
 		$("#website-select").data("compression", $(this).val());
 	});
 	
-// CHANGE EVENT: target URL list selected
+	// CHANGE EVENT: target URL list selected
 	$("#urllist-target").on("change", function() {		
 		if($(this).val() == 0) {
 			// show inputs for name and namespace if not shown yet
 			if(optionUrlListName) {
 				optionUrlListName.insertAfter("#urllist-target-div");
+				
 				optionUrlListName = null;
 			}
 			
 			if(optionUrlListNamespace) {
 				optionUrlListNamespace.insertAfter("#urllist-name-div");
+				
 				optionUrlListNamespace = null;
 			}
 		}
 		else {
 			// hide inputs for name and namespace if not hidden yet
-			if(!optionUrlListName)
+			if(!optionUrlListName) {
 				optionUrlListName = $("#urllist-name-div").detach();
+			}
 			
-			if(!optionUrlListNamespace)
+			if(!optionUrlListNamespace) {
 				optionUrlListNamespace = $("#urllist-namespace-div").detach();
+			}
 		}
 	});
 
-// CHANGE EVENT: write first-line header toggled
+	// CHANGE EVENT: write first-line header toggled
 	$("#write-firstline-header").on("change", function() {
 		$("#firstline-header").prop("disabled", !$(this).prop("checked"));
 	});
 	
-// CLICK EVENT: perform selected data action (import, export or merge)
+	// CLICK EVENT: perform selected data action (import, export or merge)
 	$("#perform-action").on("click", function() {
 		// save pointer to button
 		let t = this;
 		
 		// check connection to server
 		$("#hidden-div").load(cc_host, function(response, status, xhr) {
-			if(status == "error")
+			if(status == "error") {
 				alert("No connection to the server.");
+			}
 			else {
 				// get type of action
 				var action = $(t).data("action");
@@ -2296,13 +2431,16 @@ jQuery(function($) {
 						// (file ending for download)
 						props["ending"] = "";
 						
-						if(args["filetype"] == "text")
+						if(args["filetype"] == "text") {
 							props["ending"] += ".txt";
+						}
 						
-						if(args["compression"] == "gzip")
+						if(args["compression"] == "gzip") {
 							props["ending"] += ".gz";
-						else if(args["compression"] == "zlib")
+						}
+						else if(args["compression"] == "zlib") {
 							props["ending"] += ".zlib";
+						}
 					}
 				}
 				
@@ -2317,12 +2455,14 @@ jQuery(function($) {
 					props["urllist-namespace"] = $("#urllist-source").find(":selected").data("namespace");
 				}
 				
-				if($("#urllist-target").length)
+				if($("#urllist-target").length) {
 					args["urllist-target"] = parseInt($("#urllist-target").val(), 10);
+				}
 				
 				// (URL list name and namespace)
-				if($("#urllist-name").length)
+				if($("#urllist-name").length) {
 					args["urllist-name"] = $("#urllist-name").val();
+				}
 				
 				if($("#urllist-namespace").length) {
 					args["urllist-namespace"] = $("#urllist-namespace").val();
@@ -2330,14 +2470,17 @@ jQuery(function($) {
 				}
 				
 				// (header options for text files)
-				if($("#is-firstline-header").length)
+				if($("#is-firstline-header").length) {
 					args["is-firstline-header"] = $("#is-firstline-header").prop("checked");
+				}
 				
-				if($("#write-firstline-header").length)
+				if($("#write-firstline-header").length) {
 					args["write-firstline-header"] = $("#write-firstline-header").prop("checked");
+				}
 				
-				if($("#firstline-header").length)
+				if($("#firstline-header").length) {
 					args["firstline-header"] = $("#firstline-header").val();
+				}
 				
 				if(action == "import") {
 					// check whether file has been selected
@@ -2382,8 +2525,9 @@ jQuery(function($) {
 						// disable inputs while waiting for response
 						disableInputs();
 					}
-					else
+					else {
 						alert("Please select a file to upload.");
+					}
 				}
 				else if(action == "export") {
 					// preserve caption of button
@@ -2405,14 +2549,15 @@ jQuery(function($) {
 							contentType: "application/json; charset=utf-8",
 							dataType: "json",
 							success: function(response, status, xhr) {
-								if(response["fail"])
+								if(response["fail"]) {
 									alert(
 											"crawlserv++ responded with error:\n\n"
 											+ responseObj["text"]
 											+ "\n\ndebug: "
 											+ responseObj["debug"]
 									);
-								else
+								}
+								else {
 									// download resulting file
 									var downloadAs =
 										props["website-namespace"]
@@ -2428,6 +2573,7 @@ jQuery(function($) {
 											},
 											false
 									);
+								}
 							},
 							failure: function(response) {
 								alert("Error performing the export: " + response);
@@ -2462,18 +2608,20 @@ jQuery(function($) {
 						disableImportExport();
 					});
 				}
-				else if(action.length)
+				else if(action.length) {
 					alert("Unknown action: \"" + action + "\".");
-				else
+				}
+				else {
 					alert("No action specified.");
+				}
 			}
 		});
 		
 		return true;
 	});
 	
-/*
- * 
- */
+	/*
+	 * 
+	 */
 	
 });
