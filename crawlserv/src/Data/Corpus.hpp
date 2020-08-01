@@ -506,7 +506,7 @@ namespace crawlservpp::Data {
 	 *   containing texts to create the corpus from.
 	 * \param articleIds A reference to the vector
 	 *   containing the article IDs for the given texts.
-	 * \param dateTimes A refereence to the vector
+	 * \param dateTimes A reference to the vector
 	 *   containing the date/times for the given texts.
 	 * \param deleteInputData If true, the given texts,
 	 *   article IDs and date/times will be cleared,
