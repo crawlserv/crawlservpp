@@ -501,6 +501,25 @@ jQuery(function($) {
 		
 		return false;
 	});
+	
+	// DOUBLECLICK/MIDDLEMOUSEBUTTONCLICK EVENT: copy log entry
+	$("select.content-list > option").on("dblclick auxclick", function(event) {
+		if(event.type == "auxclick" && event.which != 2) {
+			// only middle mouse button
+			return true;
+		}
+		
+		let value = $(this).val();
+		
+		navigator.clipboard.writeText(value).then(
+				function() {
+					alert("This log entry has been written to the clipboard:\n\n" + value);
+				},
+				function() {
+					console.log("Could not write to clipboard.");
+				}
+		);
+	});
 
 	/*
 	 * EVENTS FOR WEBSITES
