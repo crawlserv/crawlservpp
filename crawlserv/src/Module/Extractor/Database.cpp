@@ -1941,8 +1941,8 @@ namespace crawlservpp::Module::Extractor {
 						linkedData = entries.front().fields.at(this->linkedIndex);
 					}
 
-					sqlStatement1.setString(fields + counter + sqlArg1, linkedData);
-					sqlStatement1.setString(fields + counter + sqlArg2, linkedData);
+					sqlStatement1.setString(counter + sqlArg1, linkedData);
+					sqlStatement1.setString(counter + sqlArg2, linkedData);
 
 					//counter += 2;
 				}
