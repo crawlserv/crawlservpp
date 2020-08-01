@@ -1157,9 +1157,8 @@ namespace crawlservpp::Module::Parser {
 					);
 				}
 				catch(const LocaleException& e) {
-					std::string logString{"WARNING: "};
+					std::string logString{e.view()};
 
-					logString += e.view();
 					logString += " - locale ignored.";
 
 					this->log(generalLoggingDefault, logString);
