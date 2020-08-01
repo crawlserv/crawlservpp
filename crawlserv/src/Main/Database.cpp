@@ -10604,11 +10604,11 @@ namespace crawlservpp::Main {
 		// check for error code
 		if(error > 0) {
 			// SQL error with error code
-			errorStr += "SQL Error #";
+			errorStr += " SQL Error #";
 			errorStr += std::to_string(error);
 			errorStr += " (State ";
 			errorStr += e.getSQLState();
-			errorStr += "): ";
+			errorStr += ") ";
 		}
 		else {
 			errorStr += ": ";
