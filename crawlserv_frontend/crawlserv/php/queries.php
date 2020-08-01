@@ -36,13 +36,16 @@ require "include/helpers.php";
 
 require "config.php";
 
-if(isset($_POST["website"]))
+if(isset($_POST["website"])) {
     $website = $_POST["website"];
-else
+}
+else  {
     $website = 0;
+}
 
-if(isset($_POST["query"]))
+if(isset($_POST["query"]))  {
     $query = $_POST["query"];
+}
 ?>
 
 <h2>Queries</h2>
@@ -69,43 +72,56 @@ $result = $dbConnection->query(
 
 if($result) {
     while($row = $result->fetch_assoc()) {
-        if(strtolower($row["name"]) == "pcre2")
+        if(strtolower($row["name"]) == "pcre2") {
             $pcre_version = $row["version"];
-        else if(strtolower($row["name"]) == "tidy-html5")
+        }
+        else if(strtolower($row["name"]) == "tidy-html5") {
             $tidy_version = $row["version"];
-        else if(strtolower($row["name"]) == "pugixml")
+        }
+        else if(strtolower($row["name"]) == "pugixml") {
             $pugixml_version = $row["version"];
-        else if(strtolower($row["name"]) == "rapidjson")
+        }
+        else if(strtolower($row["name"]) == "rapidjson") {
             $rapidjson_version = $row["version"];
-        else if(strtolower($row["name"]) == "jsoncons")
+        }
+        else if(strtolower($row["name"]) == "jsoncons") {
             $jsoncons_version = $row["version"];
+        }
     }
     
     $result->close();
 }
 
-if(!isset($pcre_version))
+if(!isset($pcre_version)) {
     $pcre_version = "[NOT FOUND]";
+}
 
-if(!isset($tidy_version))
+if(!isset($tidy_version)) {
     $tidy_version = "[NOT FOUND]";
+}
 
-if(!isset($pugixml_version))
+if(!isset($pugixml_version)) {
     $pugixml_version = "[NOT FOUND]";
+}
 
-if(!isset($rapidjson_version))
+if(!isset($rapidjson_version)) {
     $rapidjson_version = "[NOT FOUND]";
+}
 
-if(!isset($jsoncons_version))
+if(!isset($jsoncons_version)) {
     $jsoncons_version = "[NOT FOUND]";
+}
 
-if(!$website)
+if(!$website) {
     $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website IS NULL ORDER BY name");
-else
+}
+else {
     $result = $dbConnection->query("SELECT id,name FROM crawlserv_queries WHERE website=$website ORDER BY name");
+}
 
-if(!$result)
+if(!$result) {
     die("ERROR: Could not get IDs and names of queries.");
+}
 
 $first = true;
 
@@ -114,8 +130,9 @@ while($row = $result->fetch_assoc()) {
     $name = $row["name"];
     
     if($first) {
-        if(!isset($query))
+        if(!isset($query)) {
             $query = $id;
+        }
         
         $first = false;
     }
@@ -141,8 +158,9 @@ if(isset($query)) {
             " WHERE id=$query LIMIT 1"
         );
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not get query properties from database.");
+        }
         
         $row = $result->fetch_assoc();
         
@@ -157,8 +175,9 @@ if(isset($query)) {
         $result->close();
     }
 }
-else
+else {
     $query = 0;
+}
 
 ?>
 
@@ -176,8 +195,9 @@ else
 
 <?php
 
-if($query)
+if($query) {
     echo "<a id=\"query-duplicate\" href=\"#\" class=\"action-link\">Duplicate query</a>\n";
+}
 
 ?>
 
@@ -187,8 +207,9 @@ if($query)
 
 <?php
 
-if($query)
+if($query) {
     echo "<a id=\"query-move-toggle\" href=\"#\" class=\"action-link\">Move query &dArr;</a>\n";
+}
 
 ?>
 
@@ -210,8 +231,9 @@ echo rowWebsiteSelect(false, true, false, "move-to", "Move to", [ $website ]);
 
 <?php
 
-if($query)
+if($query) {
     echo "<a id=\"query-move\" href=\"#\" class=\"action-link\">Move to website</a>\n";
+}
 
 ?>
 
@@ -236,43 +258,49 @@ if($query)
 
 <option value="regex"<?php
 
-if($query && $queryType == "regex")
+if($query && $queryType == "regex") {
     echo " selected";
+}
 
 ?>>RegEx (PCRE2 v<?php echo $pcre_version; ?>)</option>
 
 <option value="xpath"<?php
 
-if($query && $queryType == "xpath")
+if($query && $queryType == "xpath") {
     echo " selected";
+}
 
 ?>>XPath (tidy v<?php echo $tidy_version; ?>, pugixml v<?php echo $pugixml_version; ?>)</option>
 
 <option value="jsonpointer"<?php
 
-if($query && $queryType == "jsonpointer")
+if($query && $queryType == "jsonpointer") {
     echo " selected";
+}
 
 ?>>JSONPointer (RapidJSON v<?php echo $rapidjson_version; ?>)</option>
  
 <option value="jsonpath"<?php
 
-if($query && $queryType == "jsonpath")
+if($query && $queryType == "jsonpath") {
     echo " selected";
+}
 
 ?>>JSONPath (jsoncons v<?php echo $jsoncons_version; ?>)</option>
 
 <option value="xpathjsonpointer"<?php
 
-if($query && $queryType == "xpathjsonpointer")
+if($query && $queryType == "xpathjsonpointer") {
     echo " selected";
+}
 
 ?>>XPath + JSONPointer [combined]</option>
 
 <option value="xpathjsonpath"<?php
 
-if($query && $queryType == "xpathjsonpath")
+if($query && $queryType == "xpathjsonpath") {
     echo " selected";
+}
 
 ?>>XPath + JSONPath [combined]</option>
 
@@ -286,34 +314,41 @@ if($query && $queryType == "xpathjsonpath")
 
 <input id="query-result-bool" type="checkbox" class="entry-check-first"<?php
 
-if(!$query || ($query && $queryResultBool))
+if(!$query || ($query && $queryResultBool)) {
     echo " checked";
+}
 
 ?> /> bool
 
 <input id="query-result-single" type="checkbox" class="entry-check-next"<?php
 
-if(!$query || ($query && $queryResultSingle))
+if(!$query || ($query && $queryResultSingle)) {
     echo " checked";
+}
 
 ?> /> single
 
 <input id="query-result-multi" type="checkbox" class="entry-check-next"<?php
 
-if($query && $queryResultMulti)
+if($query && $queryResultMulti) {
     echo " checked";
+}
+
 ?> /> multi
 
 <input id="query-result-subsets" type="checkbox" class="entry-check-next"<?php
 
-if($query && $queryResultSubSets)
+if($query && $queryResultSubSets) {
     echo " checked";
+}
+
 ?> /> subsets
 
 <input id="query-text-only" type="checkbox" class="entry-check-next"<?php
 
-if($query && $queryTextOnly)
+if($query && $queryTextOnly) {
     echo " checked";
+}
 
 ?> /> <span id="query-text-only-label">textonly</span>
 
@@ -325,12 +360,11 @@ if($query && $queryTextOnly)
 
 <textarea id="query-text" class="entry-input" spellcheck="false" autocomplete="off"><?php
 
-if($query)
+if($query) {
     echo html($queryText);
+}
 
-?>
-
-</textarea>
+?></textarea>
 
 </div>
 </div>
@@ -340,10 +374,12 @@ if($query)
 
 <?php
 
-if($query)
+if($query) {
     echo "<a id=\"query-update\" href=\"#\" class=\"action-link\">Change query</a>";
-else
+}
+else {
     echo "<a id=\"query-add\" href=\"#\" class=\"action-link\">Add query</a>";
+}
 
 ?>
 
@@ -436,8 +472,9 @@ for help with your query.</p>
 
 <textarea id="query-test-text" class="entry-input trigger" spellcheck="false" autocomplete="off" data-trigger="query-test"><?php
 
-if(isset($_POST["test"]))
+if(isset($_POST["test"])) {
     echo htmlspecialchars($_POST["test"], ENT_QUOTES);
+}
 
 ?>
 
@@ -452,11 +489,13 @@ if(isset($_POST["test"]))
 
 <div class="action-link">
 
-<input type="checkbox" id="query-xml-warnings" /> <span id="query-xml-warnings-label">Show HTML/XML warnings</span> &ensp;
+<input type="checkbox" id="query-xml-warnings" />
+ <span id="query-xml-warnings-label">Show HTML/XML warnings</span> &ensp;
 <input type="checkbox" id="query-new-tab" <?php 
 
-if(!isset($_POST["test-nonewtab"]))
+if(!isset($_POST["test-nonewtab"])) {
     echo "checked";
+}
 
 ?> /> Open new tab &ensp;
 
