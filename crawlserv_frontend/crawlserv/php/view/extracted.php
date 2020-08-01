@@ -434,7 +434,7 @@ if($result->num_rows) {
                                         if(
                                             strlen($key) > 10
                                             && substr($key, 0, 10) == "extracted_"
-                                            ) {
+                                        ) {
                                                 if(
                                                     strlen($key) > 11
                                                     && $key[10] == "_"
