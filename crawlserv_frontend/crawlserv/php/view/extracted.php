@@ -305,8 +305,10 @@ if($result->num_rows) {
                 
                 echo "<button class=\"content-dataset-to\" data-m=\"$m\" data-tab=\"$tab\" data-to=\"".($offset + 1)."\">&gt;";
                 echo "</button>";
-                echo "<button class=\"content-dataset-to\" data-m=\"$m\" data-tab=\"$tab\" data-to=\"".($numdata - 1)."\">&gt;";
+                echo "<button class=\"content-dataset-to\" data-m=\"$m\" data-tab=\"$tab\" data-to=\"".($numdata - 1)."\">&gt;|";
                 echo "</button>";
+
+                echo "<span class=\"fs-insert-after\"></span>";
                 
                 // get dataset
                 $query = "SELECT ";

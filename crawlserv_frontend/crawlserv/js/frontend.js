@@ -72,6 +72,11 @@ jQuery(function($) {
 			$("#redirect-time").text(msToStr(+new Date() - localStorage["_crawlserv_leavetime"]));
 		}
 		
+		// prepare fullscreen if necessary
+		if(!$(".fs-insert-after") && $("#content-next").length) {
+			$("#content-next").addClass("fs-insert-after");
+		}
+		
 		// check query type
 		if($("#query-type-select").length) {
 			if($("#query-type-select").val() == "regex") {
@@ -2018,9 +2023,33 @@ jQuery(function($) {
 		
 		return false;
 	});
+	
+	// CLICK EVENT: go to dataset
+	$("button.content-dataset-to").on("click", function() {
+		disableInputs();
+		
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = parseInt($("#urllist-select").val(), 10);
+		var url = parseInt($("#content-url").val(), 10);
+		var version = parseInt($("#content-version").val(), 10);
+		
+		var args = {
+			"m" : $(this).data("m"),
+			"tab" : $(this).data("tab"),
+			"website" : website,
+			"urllist" : urllist,
+			"url": url,
+			"version": version,
+			"offset": $(this).data("to")
+		};
+		
+		reload(args);
+		
+		return false;
+	});
 
-	// CHANGE EVENT: input URL ID (numbers only)
-	$("#content-url").on("input keydown keyup mousedown mouseup select contextmenu drop", function() {
+	// CHANGE EVENT: input URL or dataset ID (numbers only)
+	$("#content-url, #content-dataset").on("input keydown keyup mousedown mouseup select contextmenu drop", function() {
 		var input = $(this).val();
 		
 		if(!input.length || isNormalInteger(input)) {
@@ -2063,6 +2092,51 @@ jQuery(function($) {
 			) {
 				args.version = parseInt($("#content-version").val(), 10);
 			}
+			
+			reload(args);
+			
+			return false;
+		}
+		
+		return true;
+	});
+	
+	// KEYPRESS EVENT: input dataset ID (ENTER)
+	$("#content-dataset").on("keypress", function(e) {
+		if(e.which == 13) {
+			if($(this).val().length == 0) {
+				return true;
+			}
+			
+			var value = parseInt($(this).val(), 10);
+			
+			if(value <= 0) {
+				$(this).val(1);
+				
+				value = 1;
+			}
+			else if(value >= $(this).data("max")) {
+				$(this).val($(this).data("max"));
+				
+				value = $(this).data("max");
+			}
+			
+			disableInputs();
+			
+			var website = parseInt($("#website-select").val(), 10);
+			var urllist = parseInt($("#urllist-select").val(), 10);
+			var url = parseInt($("#content-url").val(), 10);
+			var version = parseInt($("#content-version").val(), 10);
+			
+			var args = {
+				"m" : $(this).data("m"),
+				"tab" : $(this).data("tab"),
+				"website" : website,
+				"urllist" : urllist,
+				"url": url,
+				"version": version,
+				"offset": value - 1
+			};
 			
 			reload(args);
 			

@@ -503,7 +503,7 @@ if($website && $urllist) {
             .$displayedUrl
             ."\" />";
         
-        echo "<button id=\"content-next\" class=\"fs-insert-after\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
+        echo "<button id=\"content-next\" data-m=\"$m\" data-tab=\"$tab\">&gt;</button>\n";
     }
     
     if($is404) {
