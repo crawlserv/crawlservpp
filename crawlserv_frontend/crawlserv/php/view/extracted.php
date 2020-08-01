@@ -352,7 +352,7 @@ if($result->num_rows) {
                     echo "<thead>\n";
                     echo "<tr>\n";
                     
-                    echo "<th id=\"content-field\">Field</th>\n";
+                    echo "<th class=\"content-field\">Field</th>\n";
                     echo "<th>Extracted value</th>\n";
                     
                     echo "</tr>\n";
@@ -394,21 +394,21 @@ if($result->num_rows) {
                         echo "</tr>\n";
                     }
                     
-                    if($linked) {                    
-                        echo "<tr>\n";
-                        echo "<td><i>linked data</i></td>\n";
-                        echo "<td>\n";
-                        
+                    echo "</tbody>\n";
+                    echo "</table>\n";
+                    
+                    // show linked data if it exists
+                    
+                    if($linked) {
                         if($row["link"] !== NULL) {
-                            
-                            echo "<p><i>#";
+                            echo "<p><br>Linked to dataset #";
                             echo $row["link"];
                             echo " from table '";
                             
-                            // get name from crawlserv_$namespace_$urllistNamespace_extracted_TABLE
-                            echo html(substr($rtable, 22 + strlen($namespace) + strlen($urllistNamespace))); 
+                            // get table name from crawlserv_$namespace_$urllistNamespace_extracted_TABLE
+                            echo html(substr($rtable, 22 + strlen($namespace) + strlen($urllistNamespace)));
                             
-                            echo "'</i></p>\n";
+                            echo "':</p>\n";
                             
                             $result = $dbConnection->query(
                                 "SELECT * FROM `$rtable` WHERE id=".$row["link"]." LIMIT 1"
@@ -422,7 +422,7 @@ if($result->num_rows) {
                                     echo "<thead>\n";
                                     echo "<tr>\n";
                                     
-                                    echo "<th id=\"content-sub-field\">Field</th>\n";
+                                    echo "<th class=\"content-field\">Field</th>\n";
                                     echo "<th>Value</th>\n";
                                     
                                     echo "</tr>\n";
@@ -434,63 +434,55 @@ if($result->num_rows) {
                                         if(
                                             strlen($key) > 10
                                             && substr($key, 0, 10) == "extracted_"
-                                        ) {
-                                            if(
-                                                strlen($key) > 11
-                                                && $key[10] == "_"
                                             ) {
-                                                $cname = substr($key, 11);
+                                                if(
+                                                    strlen($key) > 11
+                                                    && $key[10] == "_"
+                                                    ) {
+                                                        $cname = substr($key, 11);
+                                                    }
+                                                    else {
+                                                        $cname = substr($key, 10);
+                                                    }
+                                                    
+                                                    echo "<tr>\n";
+                                                    echo "<td>".html($cname)."</td>\n";
+                                                    
+                                                    echo "<td>\n";
+                                                    
+                                                    if(!strlen(trim($value))) {
+                                                        echo "<i>[empty]</i>\n";
+                                                    }
+                                                    else if(isJSON($value)) {
+                                                        echo "<i>JSON</i><pre><code class=\"language-json\">\n";
+                                                        
+                                                        echo html($value)."\n\n";
+                                                        
+                                                        echo "</code></pre>\n";
+                                                    }
+                                                    else {
+                                                        echo html($value)."\n";
+                                                    }
+                                                    
+                                                    echo "</td>\n";
+                                                    echo "</tr>\n";
                                             }
-                                            else {
-                                                $cname = substr($key, 10);
-                                            }
-                                            
-                                            echo "<tr>\n";
-                                            echo "<td>".html($cname)."</td>\n";
-                                            
-                                            echo "<td>\n";
-                                            
-                                            if(!strlen(trim($value))) {
-                                                echo "<i>[empty]</i>\n";
-                                            }
-                                            else if(isJSON($value)) {
-                                                echo "<i>JSON</i><pre><code class=\"language-json\">\n";
-                                                
-                                                echo html($value)."\n\n";
-                                                
-                                                echo "</code></pre>\n";
-                                            }
-                                            else {
-                                                echo html($value)."\n";
-                                            }
-                                            
-                                            echo "</td>\n";
-                                            echo "</tr>\n";
-                                        }
                                     }
                                     
                                     echo "</tbody>\n";
                                     echo "</table>\n";
                                 }
                                 else {
-                                    echo "<b>[N/A]</b>\n";
+                                    echo "<p><b>[N/A]</b></p>\n";
                                 }
                             }
                             else {
-                                echo "<b>[N/A]</b>\n";
+                                echo "<p><b>[N/A]</b></p>\n";
                             }
                         }
-                        else {
-                            echo "<i>[none]</i>\n";
-                        }
-                        
-                        echo "</td>\n";
                     }
                     
-                    echo "</tbody>\n";
-                    echo "</table>\n";
-                    
-                    echo "</div>\n";
+                    echo "</div>\n"; // id="content-table"
                 }
                 else {
                     echo "<br><br><i>This dataset does not exist.</i><br><br>\n";
