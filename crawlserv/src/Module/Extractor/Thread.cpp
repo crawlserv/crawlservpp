@@ -1622,6 +1622,58 @@ namespace crawlservpp::Module::Extractor {
 				);
 			}
 
+			const auto& dateTimeFormat{this->config.variablesDateTimeFormat.at(index)};
+
+			if(!dateTimeFormat.empty()) {
+				// perform date/time conversion for variable
+				try {
+					Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+							value,
+							dateTimeFormat,
+							this->config.variablesDateTimeLocale.at(index)
+					);
+				}
+				catch(const LocaleException& e) {
+					std::string logString{e.view()};
+
+					logString += " - locale for date/time variable '";
+					logString += *it;
+					logString += "' ignored.";
+
+					this->log(generalLoggingDefault, logString);
+
+					try {
+						Helper::DateTime::convertCustomDateTimeToSQLTimeStamp(
+								value,
+								dateTimeFormat
+						);
+					}
+					catch(const DateTimeException& e2) {
+						logString = e2.view();
+
+						logString += " - empty date/time variable '";
+						logString += *it;
+						logString += "'.";
+
+						this->log(generalLoggingDefault, logString);
+
+						value.clear();
+					}
+				}
+				catch(const DateTimeException& e) {
+					std::string logString{e.view()};
+
+					logString += " - empty date/time variable '";
+					logString += *it;
+					logString += "'.";
+
+					this->log(generalLoggingDefault, logString);
+
+					value.clear();
+				}
+			}
+
+			// add variable
 			variables.emplace_back(*it, value);
 
 			// get value for alias
