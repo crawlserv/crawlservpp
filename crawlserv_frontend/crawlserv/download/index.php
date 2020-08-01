@@ -32,8 +32,10 @@
 function isJSON($str) {
     if($str[0] == '{' || $str[0] == "[") {
         json_decode($str);
+        
         return json_last_error() == JSON_ERROR_NONE;
     }
+    
     return false;
 }
 
@@ -58,8 +60,13 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
     
     if($type == "urllist") {
         // get website and URL list namespaces
-        if(!isset($_POST["website"]) || !isset($_POST["namespace"]))
-            die("Download error.");
+        if(!isset($_POST["website"])) {
+            die("Download error: No website specified.");
+        }
+        
+        if(!isset($_POST["namespace"])) {
+            die("Download error: No namespace specified.");
+        }
         
         $website = $_POST["website"];
         $namespace = $_POST["namespace"];
@@ -70,18 +77,29 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
                 " FROM `crawlserv_".$website."_".$namespace."`"
         );
         
-        if(!$result)
-            die("Download error.");
+        if(!$result) {
+            die("Download error: Could not retrieve URL.");
+        }
         
-        while($row = $result->fetch_assoc())
+        while($row = $result->fetch_assoc()) {
             $data .= $row["url"]."\n";
+        }
         
         $result->close();
     }
     else if($type == "content") {
         // get website and URL list namespaces + content version to download
-        if(!isset($_POST["website"]) || !isset($_POST["namespace"]) || !isset($_POST["version"]))
-            die("Download error.");
+        if(!isset($_POST["website"])) {
+            die("Download error: No website specified.");
+        }
+        
+        if(!isset($_POST["namespace"])) {
+            die("Download error: No namespace specified.");
+        }
+        
+        if(!isset($_POST["version"])) {
+            die("Download error: No version specified.");
+        }
         
         $website = $_POST["website"];
         $namespace = $_POST["namespace"];
@@ -94,13 +112,15 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
             " LIMIT 1"
         );
         
-        if(!$result)
-            die("Download error.");
+        if(!$result) {
+            die("Download error: Could not get content from database.");
+        }
         
         $row = $result->fetch_assoc();
         
-        if(!$row)
-            die("Download error.");
+        if(!$row) {
+            die("Download error: Could not get content from database (empty response).");
+        }
         
         $data = $row["content"];
         
@@ -108,16 +128,33 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
     }
     else if($type == "parsed") {
         // get website and URL list namespaces, parsing table to download from, sub-URL and website name
-        if(
-            !isset($_POST["website"])
-            || !isset($_POST["namespace"])
-            || !isset($_POST["version"])
-            || !isset($_POST["w_id"])
-            || !isset($_POST["w_name"])
-            || !isset($_POST["u_id"])
-            || !isset($_POST["url"])
-        )
-            die("Download error.");
+        if(!isset($_POST["website"])) {
+            die("Download error: No website specified.");
+        }
+        
+        if(!isset($_POST["namespace"])) {
+            die("Download error: No namespace specified.");
+        }
+        
+        if(!isset($_POST["version"])) {
+            die("Download error: No version specified.");
+        }
+        
+        if(!isset($_POST["w_id"])) {
+            die("Download error: No website ID specified.");
+        }
+        
+        if(!isset($_POST["w_name"])) {
+            die("Download error: No website name specified.");
+        }
+        
+        if(!isset($_POST["u_id"])) {
+            die("Download error: No URL ID specified.");
+        }
+        
+        if(!isset($_POST["url"])) {
+            die("Download error: No URL specified.");
+        }            
         
         $website = $_POST["website"];
         $namespace = $_POST["namespace"];
@@ -135,30 +172,34 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
                 " LIMIT 1"
         );
         
-        if(!$result)
-            die("Download error.");
+        if(!$result) {
+            die("Download error: Could not get domain of website from database.");
+        }
         
         $row = $result->fetch_assoc();
         
         $result->close();
         
-        if(!$row)
-            die("Download error.");
+        if(!$row) {
+            die("Download error: Could not get domain of website from database (empty response).");
+        }
         
         $domain = $row["domain"];
         
         // get parsing table
         $result = $dbConnection->query("SELECT name FROM crawlserv_parsedtables WHERE id=$version LIMIT 1");
         
-        if(!$result)
-            die("Download error.");
+        if(!$result) {
+            die("Download error: Could not get parsing table from database.");
+        }
         
         $row = $result->fetch_assoc();
         
         $result->close();
         
-        if(!$row)
-            die("Download error.");
+        if(!$row) {
+            die("Download error: Could not get parsing table from database (empty response.");
+        }
         
         // create table names
         $ctable = "crawlserv_".$website."_".$namespace."_crawled";
@@ -172,38 +213,44 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
                 " AND TABLE_NAME = N'$ptable'"
         );
         
-        if(!$result)
-            die("Download error.");
+        if(!$result) {
+            die("Download error: Could not get columns of parsing table from database.");
+        }
         
         $columns = array();
         
-        while($row = $result->fetch_assoc())
-            if(strlen($row["name"]) > 7 && substr($row["name"], 0, 7) == "parsed_")
+        while($row = $result->fetch_assoc()) {
+            if(strlen($row["name"]) > 7 && substr($row["name"], 0, 7) == "parsed_") {
                 $columns[] = $row["name"];
+            }
+        }
             
         $result->close();
         
         // get parsed data
-        if(!count($columns))
-            die("Download error.");
+        if(count($columns) == 0) {
+            die("Download error: No data columns in parsing table.");
+        }
         
         $query = "SELECT ";
         
-        foreach($columns as $column)
+        foreach($columns as $column) {
             $query .= "b.`".$column."`, ";
+        }
 
         $query = substr($query, 0, -2);
         
         $query .= " FROM `$ctable` AS a, `$ptable` AS b".
                   " WHERE a.id = b.content".
-                  " AND a.url = '$u_id'".
+                  " AND a.url = $u_id".
                   " ORDER BY b.id DESC".
                   " LIMIT 1";
         
         $result = $dbConnection->query($query);
         
-        if(!$result)
+        if(!$result) {
             die("Download error: ".$query);
+        }
         
         $row = $result->fetch_assoc();
         
@@ -224,28 +271,34 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
             foreach($columns as $column) {
                 $data .= "\n   ";
                 
-                if(strlen($column) > 8 && substr($column, 0, 8) == "parsed__")
+                if(strlen($column) > 8 && substr($column, 0, 8) == "parsed__") {
                     $data .= json_encode(
                             substr($column, 8),
                             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
                     ).": ";
-                else
+                }
+                else {
                     $data .= json_encode(
                             substr($column, 7),
                             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
                     ).": ";
+                }
                 
-                if(!strlen(trim($row[$column])))
+                if(!strlen(trim($row[$column]))) {
                     $data.= "{},";
-                else if(isJSON($row[$column]))
+                }
+                else if(isJSON($row[$column])) {
                     $data .= $row[$column].",";
-                else
+                }
+                else {
                     $data .= json_encode(
                             $row[$column],
                             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
                     ).",";
+                }
             }
             
+            // remove last comma
             $data = substr($data, 0, -1);
         }
         
@@ -254,8 +307,198 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
         $data .= " }\n";
         $data .= "}\n";
     }
-    else
-        die("Download error.");
+    else if($type == "extracted") {
+        // get website and URL list namespaces, extracting table to download from, sub-URL and website name
+        if(!isset($_POST["website"])) {
+            die("Download error: No website specified.");
+        }
+        
+        if(!isset($_POST["namespace"])) {
+            die("Download error: No namespace specified.");
+        }
+        
+        if(!isset($_POST["version"])) {
+            die("Download error: No version specified.");
+        }
+        
+        if(!isset($_POST["w_id"])) {
+            die("Download error: No website ID specified.");
+        }
+        
+        if(!isset($_POST["w_name"])) {
+            die("Download error: No website name specified.");
+        }
+        
+        if(!isset($_POST["u_id"])) {
+            die("Download error: No URL ID specified.");
+        }
+        
+        if(!isset($_POST["url"])) {
+            die("Download error: No URL specified.");
+        }
+        
+        $website = $_POST["website"];
+        $namespace = $_POST["namespace"];
+        $version = $_POST["version"];
+        $w_id = $_POST["w_id"];
+        $w_name = $_POST["w_name"];
+        $u_id = $_POST["u_id"];
+        $url = $_POST["url"];
+        
+        // get website domain
+        $result = $dbConnection->query(
+            "SELECT domain".
+            " FROM crawlserv_websites".
+            " WHERE id=$w_id".
+            " LIMIT 1"
+            );
+        
+        if(!$result) {
+            die("Download error: Could not get domain of website from database.");
+        }
+        
+        $row = $result->fetch_assoc();
+        
+        $result->close();
+        
+        if(!$row) {
+            die("Download error: Could not get domain of website from database (empty response).");
+        }
+        
+        $domain = $row["domain"];
+        
+        // get extracting table
+        $result = $dbConnection->query("SELECT name FROM crawlserv_extractedtables WHERE id=$version LIMIT 1");
+        
+        if(!$result) {
+            die("Download error: Could not get extracting table from database.");
+        }
+        
+        $row = $result->fetch_assoc();
+        
+        $result->close();
+        
+        // create table names
+        $ctable = "crawlserv_".$website."_".$namespace."_crawled";
+        $etable = "crawlserv_".$website."_".$namespace."_extracted_".$row["name"];
+        
+        // get column names
+        $result = $dbConnection->query(
+            "SELECT COLUMN_NAME AS name".
+            " FROM INFORMATION_SCHEMA.COLUMNS".
+            " WHERE TABLE_SCHEMA = 'crawled'".
+            " AND TABLE_NAME = N'$etable'"
+            );
+        
+        if(!$result) {
+            die("Download error: Could not get columns of extracting table from database.");
+        }
+        
+        $columns = array();
+        $linked = true;
+        
+        while($row = $result->fetch_assoc()) {
+            if(strlen($row["name"]) > 10 && substr($row["name"], 0, 10) == "extracted_") {
+                $columns[] = $row["name"];
+            }
+            else if($row["name"] == "content") {
+                $linked = false;
+            }
+        }
+        
+        $result->close();
+        
+        if($linked) {
+            die("Download error: No URL-specific data found – cannot download linked data on its own.");
+        }
+        
+        // get extracted data
+        if(count($columns) == 0) {
+            die("Download error: No data columns in extracting table.");
+        }
+        
+        $query = "SELECT ";
+        
+        foreach($columns as $column) {
+            $query .= "b.`".$column."`, ";
+        }
+        
+        $query = substr($query, 0, -2);
+        
+        $query .= " FROM `$ctable` AS a, `$etable` AS b".
+            " WHERE a.id = b.content".
+            " AND a.url = $u_id".
+            " ORDER BY b.id";
+        
+        $result = $dbConnection->query($query);
+        
+        if(!$result) {
+            die("Download error: ".$query);
+        }
+        
+        // start JSON file
+        $data = "{\n";
+        $data .= " \"website\": {\n";
+        $data .= "  \"name\": ".json_encode($w_name, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).",\n";
+        $data .= "  \"domain\": ".json_encode($domain, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)."\n";
+        $data .= " },\n";
+        $data .= " \"page\": {\n";
+        $data .= "  \"url\": ".json_encode($url, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE).",\n";
+        $data .= "  \"extracted-data\": [";
+        
+        // go through all rows
+        if($result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+                $data .= "\n   {";
+                
+                foreach($columns as $column) {
+                    $data .= "\n    ";
+                    
+                    if(strlen($column) > 11 && substr($column, 0, 11) == "extracted__") {
+                        $data .= json_encode(
+                            substr($column, 11),
+                            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                            ).": ";
+                    }
+                    else {
+                        $data .= json_encode(
+                            substr($column, 10),
+                            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                            ).": ";
+                    }
+                    
+                    if(!strlen(trim($row[$column]))) {
+                        $data.= "{},";
+                    }
+                    else if(isJSON($row[$column])) {
+                        $data .= $row[$column].",";
+                    }
+                    else {
+                        $data .= json_encode(
+                            $row[$column],
+                            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+                            ).",";
+                    }
+                }
+                
+                // remove last comma
+                $data = substr($data, 0, -1);
+                
+                $data .= "\n   },";
+            }
+            
+            // remove last comma
+            $data = substr($data, 0, -1);
+        }
+        
+        // conclude JSON file
+        $data .= "\n  ]\n";
+        $data .= " }\n";
+        $data .= "}\n";
+    }
+    else {
+        die("Download error: '$type' is an invalid data source.");
+    }
     
     $_SESSION["crawlserv_data"] = $data;
     $_SESSION["crawlserv_filename"] = $_POST["filename"];
@@ -274,7 +517,8 @@ if(isset($_SESSION["crawlserv_data"]) && isset($_SESSION["crawlserv_filename"]))
     unset($_SESSION["crawlserv_data"]);
     unset($_SESSION["crawlserv_filename"]);
 }
-else
+else {
     die("Download error.");
+}
 
 ?>
