@@ -254,8 +254,6 @@ namespace crawlservpp::Module::Extractor {
 			 * Set a string to @c UNIX to parse Unix timestamps,
 			 *  i.e. seconds since the Unix epoch, instead.
 			 *
-			 *  \todo Not implemented yet.
-			 *
 			 *  \sa variablesName,
 			 *    variablesDateTimeLocale,
 			 *    Helper::DateTime::convertCustomDateTimeToSQLTimeStamp
@@ -266,8 +264,6 @@ namespace crawlservpp::Module::Extractor {
 			/*!
 			 * Will be ignored, if no corresponding
 			 *  date/time format is given.
-			 *
-			 * \todo Not implemented yet.
 			 *
 			 * \sa variablesName,
 			 *   variablesDateTimeFormat,
@@ -753,8 +749,6 @@ namespace crawlservpp::Module::Extractor {
 			 * The first query that returns a non-empty
 			 *  result will be used.
 			 *
-			 *  \todo Not implemented yet.
-			 *
 			 * \sa linkedFieldNames
 			 */
 			std::vector<std::uint64_t> linkedDatasetQueries;
@@ -850,15 +844,11 @@ namespace crawlservpp::Module::Extractor {
 			 *  specifies whether to tidy up the
 			 *  resulting text before being stored
 			 *  to the respective field.
-			 *
-			 *  \todo Not implemented yet.
 			 */
 			std::vector<std::string> linkedFieldNames;
 
 			//! Query used to extract the custom field with the same array index from the dataset.
 			/*!
-			 * \todo Not implemented yet.
-			 *
 			 * \sa linkedFieldNames
 			 */
 			std::vector<std::uint64_t> linkedFieldQueries;
@@ -895,22 +885,14 @@ namespace crawlservpp::Module::Extractor {
 
 			//! Name of the extracted field that links an extracted dataset to the ID of a linked dataset.
 			/*!
-			 * \todo Not implemented yet.
-			 *
 			 * \sa linkedFieldNames
 			 */
 			std::string linkedLink;
 
 			//! Specifies whether, if a linked dataset with the same ID already exists, it will be overwritten.
-			/*!
-			 * \todo Not implemented yet.
-			 */
 			bool linkedOverwrite{true};
 
 			//! Name of the table to save linked data to.
-			/*!
-			 * \todo Not implemented yet.
-			 */
 			std::string linkedTargetTable;
 
 			//! Specifies whether to remove line breaks and unnecessary spaces when extracting the linked field with the same array index.
