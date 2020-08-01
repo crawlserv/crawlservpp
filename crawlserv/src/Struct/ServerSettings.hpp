@@ -58,6 +58,8 @@ namespace crawlservpp::Struct {
 
 		//! Indicates whether the deletion of data is allowed using the frontend, i.e. server commands.
 		bool dataDeletable{false};
+
+		///@}
 	};
 
 } /* namespace crawlservpp::Struct */
