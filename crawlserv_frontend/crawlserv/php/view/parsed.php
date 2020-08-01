@@ -171,7 +171,7 @@ if($result->num_rows) {
             echo "<thead>\n";
             echo "<tr>\n";
             
-            echo "<th id=\"content-field\">Field</th>\n";
+            echo "<th class=\"content-field\">Field</th>\n";
             echo "<th>Parsed value</th>\n";
             
             echo "</tr>\n";
