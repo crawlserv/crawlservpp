@@ -1171,9 +1171,8 @@ namespace crawlservpp::Module::Parser {
 						);
 					}
 					catch(const DateTimeException& e2) {
-						logString = "WARNING: ";
+						logString = e2.view();
 
-						logString += e2.view();
 						logString += " - date/time query skipped [";
 						logString += this->urls.front().second;
 						logString += "]";
@@ -1186,9 +1185,11 @@ namespace crawlservpp::Module::Parser {
 				catch(const DateTimeException& e) {
 					std::string logString{e.view()};
 
-					logString += " - query skipped [";
+					logString += " - date/time query skipped [";
 					logString += this->urls.front().second;
 					logString += "]";
+
+					this->log(generalLoggingExtended, logString);
 
 					parsedData.dateTime.clear();
 				}
