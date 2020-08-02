@@ -40,6 +40,8 @@
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Wrapper/Database.hpp"
 
+#include "Config.hpp"
+
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
@@ -70,9 +72,6 @@ namespace crawlservpp::Module::Parser {
 	///@name Constants
 	///@{
 
-	//! The default size of the URL cache.
-	constexpr auto defaultUrlCacheSize{2500};
-
 	//! Maximum size of database content (= 1 GiB).
 	constexpr auto maxContentSize{1073741824};
 
@@ -88,9 +87,6 @@ namespace crawlservpp::Module::Parser {
 
 	//! Process one hundred values at once.
 	constexpr auto nAtOnce100{100};
-
-	//! Process one thousand values at once.
-	constexpr auto nAtOnce1000{1000};
 
 	//! First argument in a SQL query.
 	constexpr auto sqlArg1{1};
@@ -145,6 +141,7 @@ namespace crawlservpp::Module::Parser {
 
 		// setters
 		void setCacheSize(std::uint64_t setCacheSize);
+		void setMaxBatchSize(std::uint16_t setMaxBatchSize);
 		void setReparse(bool isReparse);
 		void setParseCustom(bool isParseCustom);
 		void setTargetTable(const std::string& table);
@@ -209,7 +206,8 @@ namespace crawlservpp::Module::Parser {
 
 	private:
 		// options
-		std::uint64_t cacheSize{defaultUrlCacheSize};
+		std::uint64_t cacheSize{defaultCacheSize};
+		std::uint16_t maxBatchSize{defaultMaxBatchSize};
 		bool reParse{false};
 		bool parseCustom{true};
 		std::string targetTableName;
@@ -227,7 +225,7 @@ namespace crawlservpp::Module::Parser {
 			std::uint16_t lockUrl;
 			std::uint16_t lock10Urls;
 			std::uint16_t lock100Urls;
-			std::uint16_t lock1000Urls;
+			std::uint16_t lockMaxUrls;
 			std::uint16_t getUrlPosition;
 			std::uint16_t getNumberOfUrls;
 			std::uint16_t getLockTime;
@@ -242,11 +240,11 @@ namespace crawlservpp::Module::Parser {
 			std::uint16_t updateOrAddEntry;
 			std::uint16_t updateOrAdd10Entries;
 			std::uint16_t updateOrAdd100Entries;
-			std::uint16_t updateOrAdd1000Entries;
+			std::uint16_t updateOrAddMaxEntries;
 			std::uint16_t setUrlFinishedIfLockOk;
 			std::uint16_t set10UrlsFinishedIfLockOk;
 			std::uint16_t set100UrlsFinishedIfLockOk;
-			std::uint16_t set1000UrlsFinishedIfLockOk;
+			std::uint16_t setMaxUrlsFinishedIfLockOk;
 			std::uint16_t updateTargetTable;
 		} ps{};
 

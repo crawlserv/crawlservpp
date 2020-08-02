@@ -156,6 +156,7 @@ namespace crawlservpp::Module::Crawler {
 
 		this->log(crawlerLoggingVerbose, "sets database options...");
 
+		this->database.setMaxBatchSize(this->config.crawlerMaxBatchSize);
 		this->database.setRecrawl(this->config.crawlerReCrawl);
 		this->database.setUrlCaseSensitive(this->config.crawlerUrlCaseSensitive);
 		this->database.setUrlDebug(this->config.crawlerUrlDebug);

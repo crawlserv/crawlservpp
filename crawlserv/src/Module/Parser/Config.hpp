@@ -71,13 +71,16 @@ namespace crawlservpp::Module::Parser {
 	constexpr std::uint64_t defaultCacheSize{2500};
 
 	//! Default URL locking time, in seconds.
-	constexpr std::uint32_t defaultLock{300};
+	constexpr std::uint32_t defaultLockS{300};
+
+	//! Default maximum number of URLs to be processed in one MySQL query.
+	constexpr std::uint16_t defaultMaxBatchSize{500};
 
 	//! Default time to wait before checking for new URLs when all URLs have been parsed, in milliseconds.
-	constexpr std::uint64_t defaultSleepIdle{5000};
+	constexpr std::uint64_t defaultSleepIdleMs{5000};
 
 	//! Default time to wait before last try to re-connect to MySQL server, in seconds.
-	constexpr std::uint64_t defaultSleepMySql{20};
+	constexpr std::uint64_t defaultSleepMySqlS{20};
 
 	///@}
 
@@ -111,10 +114,13 @@ namespace crawlservpp::Module::Parser {
 			std::uint64_t generalDbTimeOut{0};
 
 			//! URL locking time, in seconds.
-			std::uint32_t generalLock{defaultLock};
+			std::uint32_t generalLock{defaultLockS};
 
 			//! Level of logging activity.
 			std::uint8_t generalLogging{generalLoggingDefault};
+
+			//! Maximum number of URLs processed in one MySQL query.
+			std::uint16_t generalMaxBatchSize{defaultMaxBatchSize};
 
 			//! Specifies whether to parse only the newest content for each URL.
 			bool generalNewestOnly{true};
@@ -132,10 +138,10 @@ namespace crawlservpp::Module::Parser {
 			std::vector<std::uint64_t> generalSkip;
 
 			//! Time to wait before checking for new URLs when all URLs have been parsed, in milliseconds.
-			std::uint64_t generalSleepIdle{defaultSleepIdle};
+			std::uint64_t generalSleepIdle{defaultSleepIdleMs};
 
 			//! Time to wait before last try to re-connect to MySQL server, in seconds.
-			std::uint64_t generalSleepMySql{defaultSleepMySql};
+			std::uint64_t generalSleepMySql{defaultSleepMySqlS};
 
 			//! Specifies whether to calculate timing statistics.
 			bool generalTiming{false};
@@ -335,6 +341,7 @@ namespace crawlservpp::Module::Parser {
 		this->option("cache.size", this->config.generalCacheSize);
 		this->option("db.timeout", this->config.generalDbTimeOut);
 		this->option("logging", this->config.generalLogging);
+		this->option("max.batch.size", this->config.generalMaxBatchSize);
 		this->option("newest.only", this->config.generalNewestOnly);
 		this->option("parse.custom", this->config.generalParseCustom);
 		this->option("reparse", this->config.generalReParse);

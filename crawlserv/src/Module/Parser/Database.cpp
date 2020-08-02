@@ -63,6 +63,16 @@ namespace crawlservpp::Module::Parser {
 		this->cacheSize = setCacheSize;
 	}
 
+	//! Sets the maximum number of URLs to be processed at once.
+	/*!
+	 * \param setMaxBatchSize The maximum
+	 *   number of URLs that will be processed
+	 *   in one MySQL query.
+	 */
+	void Database::setMaxBatchSize(std::uint16_t setMaxBatchSize) {
+		this->maxBatchSize = setMaxBatchSize;
+	}
+
 	//! Sets whether to re-parse data from already processed URLs.
 	/*!
 	 * \note Needs to be set before preparing
@@ -332,10 +342,10 @@ namespace crawlservpp::Module::Parser {
 			this->ps.lock100Urls = this->addPreparedStatement(this->queryLockUrls(nAtOnce100));
 		}
 
-		if(this->ps.lock1000Urls == 0) {
+		if(this->ps.lockMaxUrls == 0) {
 			this->log(verbose, "prepares lockUrls() [4/4]...");
 
-			this->ps.lock1000Urls = this->addPreparedStatement(this->queryLockUrls(nAtOnce1000));
+			this->ps.lockMaxUrls = this->addPreparedStatement(this->queryLockUrls(this->maxBatchSize));
 		}
 
 		if(this->ps.getUrlPosition == 0) {
@@ -502,10 +512,10 @@ namespace crawlservpp::Module::Parser {
 			this->ps.set100UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(nAtOnce100));
 		}
 
-		if(this->ps.set1000UrlsFinishedIfLockOk == 0) {
+		if(this->ps.setMaxUrlsFinishedIfLockOk == 0) {
 			this->log(verbose, "prepares setUrlFinished() [4/4]...");
 
-			this->ps.set1000UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(nAtOnce1000));
+			this->ps.setMaxUrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(this->maxBatchSize));
 		}
 
 		if(this->ps.updateOrAddEntry == 0) {
@@ -526,10 +536,10 @@ namespace crawlservpp::Module::Parser {
 			this->ps.updateOrAdd100Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(nAtOnce100));
 		}
 
-		if(this->ps.updateOrAdd1000Entries == 0) {
+		if(this->ps.updateOrAddMaxEntries == 0) {
 			this->log(verbose, "prepares updateOrAddEntries() [4/4]...");
 
-			this->ps.updateOrAdd1000Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(nAtOnce1000));
+			this->ps.updateOrAddMaxEntries = this->addPreparedStatement(this->queryUpdateOrAddEntries(this->maxBatchSize));
 		}
 
 		if(this->ps.updateTargetTable == 0) {
@@ -584,7 +594,7 @@ namespace crawlservpp::Module::Parser {
 				|| this->ps.lockUrl == 0
 				|| this->ps.lock10Urls == 0
 				|| this->ps.lock100Urls == 0
-				|| this->ps.lock1000Urls == 0
+				|| this->ps.lockMaxUrls == 0
 		) {
 			throw Exception(
 					"Parser::Database::fetchUrls():"
@@ -597,7 +607,7 @@ namespace crawlservpp::Module::Parser {
 		auto& sqlStatementLock1{this->getPreparedStatement(this->ps.lockUrl)};
 		auto& sqlStatementLock10{this->getPreparedStatement(this->ps.lock10Urls)};
 		auto& sqlStatementLock100{this->getPreparedStatement(this->ps.lock100Urls)};
-		auto& sqlStatementLock1000{this->getPreparedStatement(this->ps.lock1000Urls)};
+		auto& sqlStatementLockMax{this->getPreparedStatement(this->ps.lockMaxUrls)};
 
 		// get lock expiration time
 		auto lockTime{this->getLockTime(lockTimeout)};
@@ -625,20 +635,20 @@ namespace crawlservpp::Module::Parser {
 			Database::sqlException("Parser::Database::fetchUrls", e);
 		}
 
-		// set 1,000 locks at once
+		// set maximum number of locks at once
 		constexpr auto numArgsLock{3};
 
-		while(lockingQueue.size() >= nAtOnce1000) {
-			for(std::uint16_t n{0}; n < nAtOnce1000; ++n) {
-				sqlStatementLock1000.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
-				sqlStatementLock1000.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
-				sqlStatementLock1000.setString(n * numArgsLock + sqlArg3, lockTime);
+		while(lockingQueue.size() >= this->maxBatchSize) {
+			for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+				sqlStatementLockMax.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
+				sqlStatementLockMax.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
+				sqlStatementLockMax.setString(n * numArgsLock + sqlArg3, lockTime);
 
 				lockingQueue.pop();
 			}
 
 			// execute SQL query
-			Database::sqlExecute(sqlStatementLock1000);
+			Database::sqlExecute(sqlStatementLockMax);
 		}
 
 		// set 100 locks at once
@@ -1465,7 +1475,7 @@ namespace crawlservpp::Module::Parser {
 				this->ps.updateOrAddEntry == 0
 				|| this->ps.updateOrAdd10Entries == 0
 				|| this->ps.updateOrAdd100Entries == 0
-				|| this->ps.updateOrAdd1000Entries == 0
+				|| this->ps.updateOrAddMaxEntries == 0
 		) {
 			throw Exception(
 					"Parser::Database::updateOrAddEntries():"
@@ -1477,7 +1487,7 @@ namespace crawlservpp::Module::Parser {
 		auto& sqlStatement1{this->getPreparedStatement(this->ps.updateOrAddEntry)};
 		auto& sqlStatement10{this->getPreparedStatement(this->ps.updateOrAdd10Entries)};
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.updateOrAdd100Entries)};
-		auto& sqlStatement1000{this->getPreparedStatement(this->ps.updateOrAdd1000Entries)};
+		auto& sqlStatementMax{this->getPreparedStatement(this->ps.updateOrAddMaxEntries)};
 
 		// count fields
 		constexpr auto minFields{5};
@@ -1496,23 +1506,23 @@ namespace crawlservpp::Module::Parser {
 			const auto total{entries.size()};
 			std::size_t done{0};
 
-			// add 1,000 entries at once
-			while(entries.size() >= nAtOnce1000) {
-				for(std::uint16_t n{0}; n < nAtOnce1000; ++n) {
+			// add maximum number of entries at once
+			while(entries.size() >= this->maxBatchSize) {
+				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
 					// set standard values
-					sqlStatement1000.setUInt64(n * fields + sqlArg1, entries.front().contentId);
-					sqlStatement1000.setUInt64(n * fields + sqlArg2, entries.front().contentId);
-					sqlStatement1000.setString(n * fields + sqlArg3, entries.front().dataId);
-					sqlStatement1000.setString(n * fields + sqlArg4, entries.front().dataId);
+					sqlStatementMax.setUInt64(n * fields + sqlArg1, entries.front().contentId);
+					sqlStatementMax.setUInt64(n * fields + sqlArg2, entries.front().contentId);
+					sqlStatementMax.setString(n * fields + sqlArg3, entries.front().dataId);
+					sqlStatementMax.setString(n * fields + sqlArg4, entries.front().dataId);
 
 					if(entries.front().dateTime.empty()) {
-						sqlStatement1000.setNull(n * fields + sqlArg5, 0);
+						sqlStatementMax.setNull(n * fields + sqlArg5, 0);
 					}
 					else {
-						sqlStatement1000.setString(n * fields + sqlArg5, entries.front().dateTime);
+						sqlStatementMax.setString(n * fields + sqlArg5, entries.front().dateTime);
 					}
 
 					// set custom values
@@ -1526,7 +1536,7 @@ namespace crawlservpp::Module::Parser {
 						const auto index{it - entries.front().fields.cbegin()};
 
 						if(!(this->targetFieldNames.at(index).empty())) {
-							sqlStatement1000.setString(n * fields + counter, *it);
+							sqlStatementMax.setString(n * fields + counter, *it);
 
 							++counter;
 						}
@@ -1537,10 +1547,10 @@ namespace crawlservpp::Module::Parser {
 				}
 
 				// execute SQL query
-				Database::sqlExecute(sqlStatement1000);
+				Database::sqlExecute(sqlStatementMax);
 
 				// update status
-				done += nAtOnce1000;
+				done += this->maxBatchSize;
 
 				statusSetter.update(done, total);
 			}
@@ -1718,7 +1728,7 @@ namespace crawlservpp::Module::Parser {
 				this->ps.setUrlFinishedIfLockOk == 0
 				|| this->ps.set10UrlsFinishedIfLockOk == 0
 				|| this->ps.set100UrlsFinishedIfLockOk == 0
-				|| this->ps.set1000UrlsFinishedIfLockOk == 0
+				|| this->ps.setMaxUrlsFinishedIfLockOk == 0
 		) {
 			throw Exception(
 					"Parser::Database::setUrlsFinishedIfLockOk():"
@@ -1730,22 +1740,22 @@ namespace crawlservpp::Module::Parser {
 		auto& sqlStatement1{this->getPreparedStatement(this->ps.setUrlFinishedIfLockOk)};
 		auto& sqlStatement10{this->getPreparedStatement(this->ps.set10UrlsFinishedIfLockOk)};
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.set100UrlsFinishedIfLockOk)};
-		auto& sqlStatement1000{this->getPreparedStatement(this->ps.set1000UrlsFinishedIfLockOk)};
+		auto& sqlStatementMax{this->getPreparedStatement(this->ps.setMaxUrlsFinishedIfLockOk)};
 
 		// set URLs to finished in database
 		constexpr auto numFields{2};
 
 		try {
-			// set 1,000 URLs at once
-			while(finished.size() > nAtOnce1000) {
-				for(std::uint16_t n{0}; n < nAtOnce1000; ++n) {
-					sqlStatement1000.setUInt64(n * numFields + sqlArg1, finished.front().first);
-					sqlStatement1000.setString(n * numFields + sqlArg2, finished.front().second);
+			// set maximum number of URLs at once
+			while(finished.size() > this->maxBatchSize) {
+				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+					sqlStatementMax.setUInt64(n * numFields + sqlArg1, finished.front().first);
+					sqlStatementMax.setString(n * numFields + sqlArg2, finished.front().second);
 
 					finished.pop();
 				}
 
-				Database::sqlExecute(sqlStatement1000);
+				Database::sqlExecute(sqlStatementMax);
 			}
 
 			// set 100 URLs at once

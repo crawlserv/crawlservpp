@@ -71,8 +71,11 @@ namespace crawlservpp::Module::Crawler {
 	//! Default time to lock URLs that are being processed, in seconds.
 	constexpr std::uint32_t defaultCrawlerLockS{300};
 
+	//! Default number of URLs to be processed in one MySQL query.
+	constexpr std::uint16_t defaultMaxBatchSize{500};
+
 	//! Default number of re-tries on connection errors.
-	constexpr int64_t defaultReTries{720};
+	constexpr std::int64_t defaultReTries{720};
 
 	//! HTTP errors that will be handled like connection errors by default.
 	constexpr std::array defaultRetryHttp{429, 502, 503, 504, 521, 522, 524};
@@ -154,6 +157,9 @@ namespace crawlservpp::Module::Crawler {
 			 *   crawlerLoggingExtended, crawlerLoggingVerbose
 			 */
 			std::uint8_t crawlerLogging{crawlerLoggingDefault};
+
+			//! Maximum number of URLs processed in one MySQL query.
+			std::uint16_t crawlerMaxBatchSize{defaultMaxBatchSize};
 
 			//! URL parameters that will be added shortly before retrieving the content.
 			/*!
@@ -536,6 +542,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("archives.urls.timemap", this->config.crawlerArchivesUrlsTimemap);
 		this->option("lock", this->config.crawlerLock);
 		this->option("logging", this->config.crawlerLogging);
+		this->option("max.batch.size", this->config.crawlerMaxBatchSize);
 		this->option("params.add", this->config.crawlerParamsAdd);
 		this->option("params.blacklist", this->config.crawlerParamsBlackList);
 		this->option("params.whitelist", this->config.crawlerParamsWhiteList);

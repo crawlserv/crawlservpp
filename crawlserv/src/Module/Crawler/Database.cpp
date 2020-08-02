@@ -49,6 +49,16 @@ namespace crawlservpp::Module::Crawler {
 	 * SETTERS
 	 */
 
+	//! Sets the maximum number of URLs to be processed at once.
+	/*!
+	 * \param setMaxBatchSize The maximum
+	 *   number of URLs that will be processed
+	 *   in one MySQL query.
+	 */
+	void Database::setMaxBatchSize(std::uint16_t setMaxBatchSize) {
+		this->maxBatchSize = setMaxBatchSize;
+	}
+
 	//! Sets whether all URLs will be recrawled.
 	/*!
 	 * \note Needs to be set before preparing
@@ -303,12 +313,12 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		if(this->ps.add1000UrlsIfNotExist == 0) {
+		if(this->ps.addMaxUrlsIfNotExist == 0) {
 			this->log(verbose, "prepares addUrlsIfNotExist() [3/3]...");
 
-			this->ps.add1000UrlsIfNotExist = this->addPreparedStatement(
+			this->ps.addMaxUrlsIfNotExist = this->addPreparedStatement(
 					this->queryAddUrlsIfNotExist(
-							nAtOnce1000,
+							this->maxBatchSize,
 							hashQuery
 					)
 			);
@@ -771,10 +781,10 @@ namespace crawlservpp::Module::Crawler {
 
 	//! Adds URLs to the database, if they do not exist already.
 	/*!
-	 * Adds the given URLs in batches of 1,000,
-	 *  100 and 10 to the database, if
-	 *  possible, to considerably speed up the
-	 *  process.
+	 * Adds the given URLs in batches of the
+	 *  maximum batch size, 100 and 10 to the
+	 *  database, if possible, to considerably
+	 *  speed up the process.
 	 *
 	 * \param urls Reference to a queue
 	 *   containing the URLs to be added to the
@@ -815,7 +825,7 @@ namespace crawlservpp::Module::Crawler {
 				this->ps.addUrlIfNotExists == 0
 				|| this->ps.add10UrlsIfNotExist == 0
 				|| this->ps.add100UrlsIfNotExist == 0
-				|| this->ps.add1000UrlsIfNotExist == 0
+				|| this->ps.addMaxUrlsIfNotExist == 0
 		) {
 			throw Exception(
 					"Crawler::Database::addUrlsIfNotExist():"
@@ -827,25 +837,25 @@ namespace crawlservpp::Module::Crawler {
 		auto& sqlStatement1{this->getPreparedStatement(this->ps.addUrlIfNotExists)};
 		auto& sqlStatement10{this->getPreparedStatement(this->ps.add10UrlsIfNotExist)};
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.add100UrlsIfNotExist)};
-		auto& sqlStatement1000{this->getPreparedStatement(this->ps.add1000UrlsIfNotExist)};
+		auto& sqlStatementMax{this->getPreparedStatement(this->ps.addMaxUrlsIfNotExist)};
 
 		// number of arguments for adding URLs
 		constexpr auto numArgsAdd{5};
 
 		try {
-			// add 1.000 URLs at once
-			while(urls.size() >= nAtOnce1000) {
-				for(std::uint16_t n{0}; n < nAtOnce1000; ++n) {
-					sqlStatement1000.setString(n * numArgsAdd + sqlArg1, urls.front());
-					sqlStatement1000.setString(n * numArgsAdd + sqlArg2, urls.front());
-					sqlStatement1000.setString(n * numArgsAdd + sqlArg3, urls.front());
-					sqlStatement1000.setBoolean(n * numArgsAdd + sqlArg4, manual);
-					sqlStatement1000.setString(n * numArgsAdd + sqlArg5, urls.front());
+			// add maximum number of URLs at once
+			while(urls.size() >= this->maxBatchSize) {
+				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+					sqlStatementMax.setString(n * numArgsAdd + sqlArg1, urls.front());
+					sqlStatementMax.setString(n * numArgsAdd + sqlArg2, urls.front());
+					sqlStatementMax.setString(n * numArgsAdd + sqlArg3, urls.front());
+					sqlStatementMax.setBoolean(n * numArgsAdd + sqlArg4, manual);
+					sqlStatementMax.setString(n * numArgsAdd + sqlArg5, urls.front());
 
 					urls.pop();
 				}
 
-				const auto added{Database::sqlExecuteUpdate(sqlStatement1000)};
+				const auto added{Database::sqlExecuteUpdate(sqlStatementMax)};
 
 				if(added > 0) {
 					result += added;

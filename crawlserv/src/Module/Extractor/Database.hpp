@@ -40,6 +40,8 @@
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Wrapper/Database.hpp"
 
+#include "Config.hpp"
+
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
@@ -69,13 +71,10 @@ namespace crawlservpp::Module::Extractor {
 	///@name Constants
 	///@{
 
-	//! The default size of the URL cache.
-	constexpr auto defaultUrlCacheSize{2500};
-
-	//! The minimum number of columns in the target table.
+	//! Minimum number of columns in the target table.
 	constexpr auto minTargetColumns{4};
 
-	//! The minimum number of columns in the linked target table.
+	//! Minimum number of columns in the linked target table.
 	constexpr auto minLinkedColumns{2};
 
 	//! Maximum size of database content (= 1 GiB).
@@ -93,9 +92,6 @@ namespace crawlservpp::Module::Extractor {
 
 	//! Process one hundred values at once.
 	constexpr auto nAtOnce100{100};
-
-	//! Process one thousand values at once.
-	constexpr auto nAtOnce1000{1000};
 
 	//! First argument in a SQL query.
 	constexpr auto sqlArg1{1};
@@ -150,6 +146,7 @@ namespace crawlservpp::Module::Extractor {
 		///@{
 
 		void setCacheSize(std::uint64_t setCacheSize);
+		void setMaxBatchSize(std::uint16_t setMaxBatchSize);
 		void setReExtract(bool isReExtract);
 		void setExtractCustom(bool isExtractCustom);
 		void setRawContentIsSource(bool isRawContentIsSource);
@@ -209,7 +206,8 @@ namespace crawlservpp::Module::Extractor {
 
 	private:
 		// options
-		std::uint64_t cacheSize{defaultUrlCacheSize};
+		std::uint64_t cacheSize{defaultCacheSize};
+		std::uint16_t maxBatchSize{defaultMaxBatchSize};
 		bool reExtract{false};
 		bool extractCustom{false};
 		std::string targetTableName;
@@ -240,7 +238,7 @@ namespace crawlservpp::Module::Extractor {
 			std::uint16_t lockUrl;
 			std::uint16_t lock10Urls;
 			std::uint16_t lock100Urls;
-			std::uint16_t lock1000Urls;
+			std::uint16_t lockMaxUrls;
 			std::uint16_t getUrlPosition;
 			std::uint16_t getNumberOfUrls;
 			std::uint16_t getLockTime;
@@ -255,12 +253,12 @@ namespace crawlservpp::Module::Extractor {
 			std::uint16_t updateOrAdd10Linked;
 			std::uint16_t updateOrAdd100Entries;
 			std::uint16_t updateOrAdd100Linked;
-			std::uint16_t updateOrAdd1000Entries;
-			std::uint16_t updateOrAdd1000Linked;
+			std::uint16_t updateOrAddMaxEntries;
+			std::uint16_t updateOrAddMaxLinked;
 			std::uint16_t setUrlFinishedIfLockOk;
 			std::uint16_t set10UrlsFinishedIfLockOk;
 			std::uint16_t set100UrlsFinishedIfLockOk;
-			std::uint16_t set1000UrlsFinishedIfLockOk;
+			std::uint16_t setMaxUrlsFinishedIfLockOk;
 			std::uint16_t updateTargetTable;
 		} ps{};
 

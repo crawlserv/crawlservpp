@@ -165,6 +165,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 
 		this->database.setCacheSize(this->config.generalCacheSize);
+		this->database.setMaxBatchSize(this->config.generalMaxBatchSize);
 		this->database.setReExtract(this->config.generalReExtract);
 		this->database.setExtractCustom(this->config.generalExtractCustom);
 		this->database.setTargetTable(this->config.generalTargetTable);

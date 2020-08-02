@@ -40,6 +40,14 @@
 			"simple": true,
 			"position": 6
 		},
+		"max.batch.size": {
+			"type": "number",
+			"default": 500,
+			"min": 1,
+			"max": 65535,
+			"description": "Maximum number of results to be processed in one MySQL query.",
+			"simple": false
+		},
 		"newest.only": {
 			"type": "bool",
 			"default": true,

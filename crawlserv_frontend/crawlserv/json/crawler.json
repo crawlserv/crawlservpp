@@ -55,6 +55,14 @@
 			"simple": true,
 			"position": 13
 		},
+		"max.batch.size": {
+			"type": "number",
+			"default": 500,
+			"min": 1,
+			"max": 65535,
+			"description": "Maximum number of URLs to be processed in one MySQL query.",
+			"simple": false
+		},
 		"params.add": {
 			"type": "array",
 			"item-type": "string",

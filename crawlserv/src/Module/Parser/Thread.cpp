@@ -125,6 +125,7 @@ namespace crawlservpp::Module::Parser {
 		this->log(generalLoggingVerbose, "sets database options...");
 
 		this->database.setCacheSize(this->config.generalCacheSize);
+		this->database.setMaxBatchSize(this->config.generalMaxBatchSize);
 		this->database.setReparse(this->config.generalReParse);
 		this->database.setParseCustom(this->config.generalParseCustom);
 		this->database.setTargetTable(this->config.generalResultTable);

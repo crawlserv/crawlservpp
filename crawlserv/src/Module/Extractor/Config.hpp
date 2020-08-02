@@ -94,6 +94,9 @@ namespace crawlservpp::Module::Extractor {
 	//! Default locking time, in seconds.
 	constexpr std::uint32_t defaultLockS{300};
 
+	//! Default number of URLs and results to be processed in one MySQL query.
+	constexpr std::uint16_t defaultMaxBatchSize{500};
+
 	//! Default re-tries on connection error.
 	constexpr std::int64_t defaultReTries{720};
 
@@ -163,6 +166,9 @@ namespace crawlservpp::Module::Extractor {
 
 			//! Level of logging activity.
 			std::uint8_t generalLogging{generalLoggingDefault};
+
+			//! Maximum number of URLs and results processed in one MySQL query.
+			std::uint16_t generalMaxBatchSize{defaultMaxBatchSize};
 
 			//! Specifies whether to free small amounts of unused memory more often, at the expense of performance.
 			bool generalMinimizeMemory{false};
@@ -1002,6 +1008,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("extract.custom", this->config.generalExtractCustom);
 		this->option("lock", this->config.generalLock);
 		this->option("logging", this->config.generalLogging);
+		this->option("max.batch.size", this->config.generalMaxBatchSize);
 		this->option("minimize.memory", this->config.generalMinimizeMemory);
 		this->option("reextract", this->config.generalReExtract);
 		this->option("retries", this->config.generalReTries);
@@ -1101,7 +1108,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("tidy.texts", this->config.linkedTidyTexts);
 		this->option("warnings.empty", this->config.linkedWarningsEmpty);
 
-		// expected [number of results]
+		// expected number of results
 		this->category("expected");
 		this->option("error.if.larger", this->config.expectedErrorIfLarger);
 		this->option("error.if.smaller", this->config.expectedErrorIfSmaller);

@@ -38,6 +38,8 @@
 #include "../../Wrapper/Database.hpp"
 #include "../../Wrapper/Database.hpp"
 
+#include "Config.hpp"
+
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/resultset.h>
@@ -82,9 +84,6 @@ namespace crawlservpp::Module::Crawler {
 	//! Process one hundred values at once.
 	constexpr auto nAtOnce100{100};
 
-	//! Process one thousand values at once.
-	constexpr auto nAtOnce1000{1000};
-
 	//! First argument in a SQL query.
 	constexpr auto sqlArg1{1};
 
@@ -128,6 +127,7 @@ namespace crawlservpp::Module::Crawler {
 		///@name Crawler-specific Setters
 		///@{
 
+		void setMaxBatchSize(std::uint16_t setMaxBatchSize);
 		void setRecrawl(bool isRecrawl);
 		void setUrlCaseSensitive(bool isUrlCaseSensitive);
 		void setUrlDebug(bool isUrlDebug);
@@ -198,6 +198,7 @@ namespace crawlservpp::Module::Crawler {
 		bool urlCaseSensitive{true};
 		bool urlDebug{false};
 		bool urlStartupCheck{true};
+		std::uint16_t maxBatchSize{defaultMaxBatchSize};
 
 		// table names
 		std::string urlListTable;
@@ -210,7 +211,7 @@ namespace crawlservpp::Module::Crawler {
 			std::uint16_t addUrlIfNotExists;
 			std::uint16_t add10UrlsIfNotExist;
 			std::uint16_t add100UrlsIfNotExist;
-			std::uint16_t add1000UrlsIfNotExist;
+			std::uint16_t addMaxUrlsIfNotExist;
 			std::uint16_t getUrlPosition;
 			std::uint16_t getNumberOfUrls;
 			std::uint16_t getUrlLockTime;
