@@ -40,6 +40,7 @@
 #include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Main/Exception.hpp"
 #include "../../Struct/CorpusProperties.hpp"
+#include "../../Struct/StatusSetter.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Struct/TextMap.hpp"
@@ -87,6 +88,29 @@ namespace crawlservpp::Module::Analyzer {
 
 	//! The number of prepared SQL statements to reserve memory for.
 	constexpr auto numPreparedStatements{10};
+
+	//! The progress with creating a corpus after the old corpus has been deleted.
+	constexpr auto progressDeletedCorpus{0.05F};
+
+	//! The progress with creating a corpus after the source texts have been received.
+	constexpr auto progressReceivedSources{0.35F};
+
+	//! The progress with creating a corpus after the data has been moved.
+	constexpr auto progressMovedData{0.4F};
+
+	//! The progress with creating a corpus after the server created the corpus.
+	constexpr auto progressCreatedCorpus{0.6F};
+
+	//! The progress with creating a corpus after the corpus has been sliced.
+	constexpr auto progressSlicedCorpus{0.65F};
+
+	//! The remaining progress, attributed to adding the corpus to the database.
+	constexpr auto progressAddingCorpus{
+		1.F - progressSlicedCorpus
+	};
+
+	//! The progress with getting an existing corpus after its contents have been received from the database.
+	constexpr auto progressReceivedCorpus{0.8F};
 
 	///@}
 	///@name Constants for SQL Queries
@@ -153,6 +177,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		using CustomTableProperties = Struct::TargetTableProperties;
 		using CorpusProperties = Struct::CorpusProperties;
+		using StatusSetter = Struct::StatusSetter;
 		using TableColumn = Struct::TableColumn;
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
@@ -198,7 +223,8 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string& filterDateFrom,
 				const std::string& filterDateTo,
 				Data::Corpus& corpusTo,
-				std::size_t& sourcesTo
+				std::size_t& sourcesTo,
+				StatusSetter& statusSetter
 		);
 
 		///@}
@@ -260,7 +286,8 @@ namespace crawlservpp::Module::Analyzer {
 		void createCorpus(
 				const CorpusProperties& corpusProperties,
 				Data::Corpus& corpusTo,
-				std::size_t& sourcesTo
+				std::size_t& sourcesTo,
+				StatusSetter& statusSetter
 		);
 
 		///@}

@@ -37,6 +37,7 @@
 #include "../../../Data/Corpus.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
+#include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
@@ -58,6 +59,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using Exception = Module::Analyzer::Thread::Exception;
 
 		using CorpusProperties = Struct::CorpusProperties;
+		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 

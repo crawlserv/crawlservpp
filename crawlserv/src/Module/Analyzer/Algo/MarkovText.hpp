@@ -35,7 +35,7 @@
 #include "../../../Data/Data.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
-#include "../../../Struct/TextMap.hpp"
+#include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 #include "../../../Timer/Simple.hpp"
@@ -44,9 +44,11 @@
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t, std::uint32_t, std::uint64_t
 #include <iterator>		// std::advance
+#include <locale>		// std::locale
 #include <map>			// std::map
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <random>		// std::minstd_rand
+#include <sstream>		// std::ostringstream
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -104,6 +106,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using Exception = Module::Analyzer::Thread::Exception;
 
 		using CorpusProperties = Struct::CorpusProperties;
+		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 

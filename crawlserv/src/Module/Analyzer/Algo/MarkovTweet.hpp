@@ -31,20 +31,23 @@
 
 #include "../Thread.hpp"
 
+#include "../../../Data/Corpus.hpp"
 #include "../../../Data/Data.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
-#include "../../../Struct/TextMap.hpp"
+#include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 #include "../../../Timer/Simple.hpp"
 
 #include "../../../_extern/rawr/rawr.h"
 
-#include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint64_t
-#include <string>		// std::string
-#include <vector>		// std::vector
+#include <cstddef>	// std::size_t
+#include <cstdint>	// std::uint8_t, std::uint16_t, std::uint64_t
+#include <locale>	// std::locale
+#include <sstream>	// std::ostringstream
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 
 namespace crawlservpp::Module::Analyzer::Algo {
@@ -100,6 +103,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using Exception = Module::Analyzer::Thread::Exception;
 
 		using CorpusProperties = Struct::CorpusProperties;
+		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 

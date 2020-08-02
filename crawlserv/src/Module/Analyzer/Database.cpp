@@ -519,6 +519,8 @@ namespace crawlservpp::Module::Analyzer {
 	 * \param sourcesTo Reference to which the
 	 *   number of sources used when creating the
 	 *   text corpus should be written.
+	 * \param statusSetter Data needed to keep
+	 *   the status of the thread updated.
 	 *
 	 * \throws Module::Analyzer::Exception if a
 	 *   prepared SQL statement is missing, or
@@ -532,7 +534,8 @@ namespace crawlservpp::Module::Analyzer {
 			const std::string& filterDateFrom,
 			const std::string& filterDateTo,
 			Data::Corpus& corpusTo,
-			std::size_t& sourcesTo
+			std::size_t& sourcesTo,
+			StatusSetter& statusSetter
 	) {
 		// check arguments
 		if(corpusProperties.sourceTable.empty()) {
@@ -578,7 +581,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			// check whether text corpus needs to be created
 			if(this->isCorpusChanged(corpusProperties)) {
-				this->createCorpus(corpusProperties, corpusTo, sourcesTo);
+				this->createCorpus(corpusProperties, corpusTo, sourcesTo, statusSetter);
 			}
 			else {
 				// start timer
@@ -610,6 +613,8 @@ namespace crawlservpp::Module::Analyzer {
 
 				try {
 					// execute SQL query for getting a chunk of the corpus
+					std::uint64_t count{0};
+					std::uint64_t total{0};
 					std::uint64_t previous{0};
 
 					sqlStatementFirst.setUInt(sqlArg1, corpusProperties.sourceType);
@@ -633,7 +638,9 @@ namespace crawlservpp::Module::Analyzer {
 								// first chunk: save sources and reserve memory
 								sourcesTo = sqlResultSet->getUInt64("sources");
 
-								chunks.reserve(sqlResultSet->getUInt64("chunks"));
+								total = sqlResultSet->getUInt64("chunks");
+
+								chunks.reserve(total);
 							}
 
 							// get text of chunk
@@ -676,6 +683,15 @@ namespace crawlservpp::Module::Analyzer {
 							}
 
 							previous = sqlResultSet->getUInt64("id");
+
+							++count;
+
+							if(total > 0) {
+								statusSetter.update(
+										static_cast<float>(count)
+										/ total
+										* progressReceivedCorpus);
+							}
 						}
 						else {
 							break;
@@ -1074,6 +1090,8 @@ namespace crawlservpp::Module::Analyzer {
 	 * \param sourcesTo Reference to which the
 	 *   number of sources used for the newly
 	 *   generated text corpus will be written.
+	 * \param statusSetter Data needed to keep
+	 *   the status of the thread updated.
 	 *
 	 * \throws Module::Analyzer::Exception if any
 	 *   of the prepared SQL statements for
@@ -1088,7 +1106,8 @@ namespace crawlservpp::Module::Analyzer {
 	void Database::createCorpus(
 			const CorpusProperties& corpusProperties,
 			Data::Corpus& corpusTo,
-			std::size_t& sourcesTo
+			std::size_t& sourcesTo,
+			StatusSetter& statusSetter
 	) {
 		// initialize values
 		corpusTo.clear();
@@ -1203,6 +1222,8 @@ namespace crawlservpp::Module::Analyzer {
 
 			Database::sqlExecute(deleteStatement);
 
+			statusSetter.update(progressDeletedCorpus);
+
 			// get texts and possibly parsed date/times and IDs from database
 			Data::GetColumns data;
 
@@ -1234,6 +1255,8 @@ namespace crawlservpp::Module::Analyzer {
 						" Could not get requested data from database"
 				);
 			}
+
+			statusSetter.update(progressReceivedSources);
 
 			// move received column data to vector(s) of strings
 			std::vector<std::string> texts;
@@ -1287,6 +1310,8 @@ namespace crawlservpp::Module::Analyzer {
 				}
 			}
 
+			statusSetter.update(progressMovedData);
+
 			// create corpus (and delete the input data)
 			if(data.values.size() > numColumns1) {
 				corpusTo.create(texts, articleIds, dateTimes, true);
@@ -1294,6 +1319,8 @@ namespace crawlservpp::Module::Analyzer {
 			else {
 				corpusTo.create(texts, true);
 			}
+
+			statusSetter.update(progressCreatedCorpus);
 
 			// slice corpus into chunks for the database
 			std::vector<std::string> chunks;
@@ -1312,6 +1339,8 @@ namespace crawlservpp::Module::Analyzer {
 					articleMaps,
 					dateMaps
 			);
+
+			statusSetter.update(progressSlicedCorpus);
 
 			// add corpus chunks to the database
 			std::uint64_t last{0};
@@ -1365,6 +1394,15 @@ namespace crawlservpp::Module::Analyzer {
 				measureChunkStatement.setUInt64(sqlArg1, last);
 
 				Database::sqlExecute(measureChunkStatement);
+
+				statusSetter.update(
+						progressSlicedCorpus
+						+ progressAddingCorpus
+						* (
+								static_cast<float>(n + 1)
+								/ chunks.size()
+						)
+				);
 			}
 		}
 		catch(const sql::SQLException &e) {

@@ -105,8 +105,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->database.initTargetTable(true);
 
 		// get text corpus
-		this->setStatusMessage("Getting text corpus...");
-
 		this->log(generalLoggingVerbose, "gets text corpus...");
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
@@ -121,6 +119,36 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			Data::Corpus corpus(this->config.generalCorpusChecks);
 
+			std::string statusStr;
+
+			if(this->config.generalInputSources.size() > 1) {
+				std::ostringstream statusStrStr;
+
+				statusStrStr.imbue(std::locale(""));
+
+				statusStrStr << "Getting text corpus ";
+				statusStrStr << n + 1;
+				statusStrStr << "/";
+				statusStrStr << this->config.generalInputSources.size();
+				statusStrStr << "...";
+
+				statusStr = statusStrStr.str();
+			}
+			else {
+				statusStr = "Getting text corpus...";
+			}
+
+			StatusSetter statusSetter(
+					statusStr,
+					1.F,
+					[this](const auto& status) {
+						this->setStatusMessage(status);
+					},
+					[this](const auto progress) {
+						this->setProgress(progress);
+					}
+			);
+
 			this->database.getCorpus(
 					CorpusProperties(
 							this->config.generalInputSources.at(n),
@@ -130,7 +158,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					dateFrom,
 					dateTo,
 					corpus,
-					corpusSources
+					corpusSources,
+					statusSetter
 			);
 
 			this->sources += corpusSources;

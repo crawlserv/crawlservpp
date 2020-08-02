@@ -47,6 +47,9 @@ namespace crawlservpp::Struct {
 	//! The precision (number of fractal digits) when showing the progress in percent.
 	constexpr auto decimalsProgress{2};
 
+	//! The factor for converting a fractal into a percentage.
+	constexpr auto percentageFactor{100};
+
 	///@}
 
 	//! Data needed to keep the status updated.
@@ -149,7 +152,7 @@ namespace crawlservpp::Struct {
 
 			statusStrStr << this->currentStatus;
 			statusStrStr << " [";
-			statusStrStr << std::fixed << percentage;
+			statusStrStr << std::fixed << percentage * percentageFactor;
 			statusStrStr << "%]";
 
 			this->callbackSetStatus(statusStrStr.str());
