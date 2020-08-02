@@ -1198,16 +1198,6 @@ namespace crawlservpp::Module::Extractor {
 
 		this->config.variablesDateTimeFormat.resize(completeVariables);
 
-		// replace empty date/time formats with "%F %T"
-		std::replace_if(
-				this->config.variablesDateTimeFormat.begin(),
-				this->config.variablesDateTimeFormat.end(),
-				[](const auto& str) {
-					return str.empty();
-				},
-				"%F %T"
-		);
-
 		// remove variable date/time locales that are not used, add empty locale where none is specified
 		if(this->config.variablesDateTimeLocale.size() > completeVariables) {
 			incompleteVariables = true;
