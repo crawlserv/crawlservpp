@@ -5035,6 +5035,10 @@ namespace crawlservpp::Main {
 
 	//! Deletes URLs from a URL list in the database and returns the number of deleted URLs.
 	/*!
+	 * Each MySQL query performed by this
+	 *  function will delete a maximum of
+	 *  100 URLs at once.
+	 *
 	 * \param listId The ID of the URL list
 	 *   that will be deleted from the
 	 *   database.
@@ -5084,14 +5088,8 @@ namespace crawlservpp::Main {
 			this->getUrlListNamespace(listId)
 		};
 
-		// get maximum length of SQL query
-		const auto maxLength{this->getMaxAllowedPacketSize()};
-
 		// check connection
 		this->checkConnection();
-
-		// the number of additional letters in the MySQL query per URL (used for " id=")
-		constexpr auto numAddLettersPerUrl{4};
 
 		std::size_t result{0};
 
@@ -5107,29 +5105,16 @@ namespace crawlservpp::Main {
 					" WHERE"
 				};
 
-				// add maximum possible number of URLs to the SQL query
-				while(true) {
+				// add a maximum of 100 URLs to the SQL query
+				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
 					// check whether there are more IDs to process
 					if(urlIds.empty()) {
 						break;
 					}
 
-					// convert ID to string
-					const auto idString{std::to_string(urlIds.front())};
-
-					// check whether maximum length of SQL query will be exceeded
-					if(
-							sqlQuery.length()
-							+ idString.length()
-							+ numAddLettersPerUrl
-							>= maxLength
-					) {
-						break;
-					}
-
-					// add ID to SQL query
+					// add URL ID to SQL query
 					sqlQuery += " id=";
-					sqlQuery += idString;
+					sqlQuery += std::to_string(urlIds.front());
 					sqlQuery += " OR";
 
 					// remove ID from queue
@@ -5144,7 +5129,7 @@ namespace crawlservpp::Main {
 				// execute SQL query and get number of deleted URLs
 				const auto removed{this->executeUpdate(sqlQuery)};
 
-				if(removed > 0) {
+				if(removed > 0) { // ignore negative values
 					result += removed;
 				}
 			}
