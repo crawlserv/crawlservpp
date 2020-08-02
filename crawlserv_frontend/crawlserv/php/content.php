@@ -488,7 +488,11 @@ if($website && $urllist) {
         
         echo "<input type=\"text\" id=\"content-url\" data-m=\"$m\" data-tab=\"$tab\" value=\"$url\" title=\"$url\" />\n";
         
-        echo "<span class=\"content-smalltext\">/</span>";
+        if(!$crossDomain) {
+            echo "<span class=\"content-smalltext\">/</span>";
+        }
+        
+        echo "";
         
         if($crossDomain) {
             $displayedUrl = html($urltext);
