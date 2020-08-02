@@ -22,7 +22,7 @@
  *
  * CorpusGenerator.hpp
  *
- *   This algorithm just uses the built-in functionality for building text corpora from its input data and quits.
+ * This algorithm just uses the built-in functionality for building text corpora from its input data and quits.
  *
  *
  *  Created on: Mar 5, 2020
