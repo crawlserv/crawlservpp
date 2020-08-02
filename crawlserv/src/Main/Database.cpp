@@ -4184,7 +4184,7 @@ namespace crawlservpp::Main {
 
 		hashQuery += " )";
 
-		// generate query for each 1,000 (or less) URLs
+		// generate query for maximum batch size (or less) URLs
 		while(!urls.empty()) {
 			// generate INSERT INTO ... VALUES clause
 			std::string sqlQueryStr{
@@ -4194,7 +4194,7 @@ namespace crawlservpp::Main {
 			};
 
 			// generate placeholders
-			const auto max{urls.size() > nAtOnce1000 ? nAtOnce1000 : urls.size()};
+			const auto max{urls.size() > nAtOnce500 ? nAtOnce500 : urls.size()};
 
 			for(std::size_t n{0}; n < max; ++n) {
 				sqlQueryStr += "(" // begin of VALUES arguments
@@ -4236,7 +4236,7 @@ namespace crawlservpp::Main {
 				};
 
 				// execute SQL query
-				const std::size_t max{urls.size() > nAtOnce1000 ? nAtOnce1000 : urls.size()};
+				const std::size_t max{urls.size() > nAtOnce500 ? nAtOnce500 : urls.size()};
 
 				for(std::size_t n{0}; n < max; ++n) {
 					sqlStatement->setString(n * numArgsAdd + sqlArg1, urls.front());

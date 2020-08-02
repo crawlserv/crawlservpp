@@ -170,8 +170,8 @@ namespace crawlservpp::Main {
 	//! One hundred at once.
 	constexpr auto nAtOnce100{100};
 
-	//! One thousand at once.
-	constexpr auto nAtOnce1000{1000};
+	//! Five hundred at once.
+	constexpr auto nAtOnce500{500};
 
 	//! First argument.
 	constexpr auto sqlArg1{1};
