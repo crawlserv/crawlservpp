@@ -201,6 +201,7 @@ namespace crawlservpp::Module {
 
 		bool isInterrupted() const;
 		std::string getStatusMessage() const;
+		float getProgress() const;
 		std::uint64_t getLast() const;
 		std::int64_t getWarpedOverAndReset();
 
@@ -209,7 +210,7 @@ namespace crawlservpp::Module {
 		///@{
 
 		void setStatusMessage(const std::string& statusMessage);
-		void setProgress(float progress);
+		void setProgress(float newProgress);
 		void setLast(std::uint64_t lastId);
 		void incrementLast();
 
@@ -295,6 +296,9 @@ namespace crawlservpp::Module {
 
 		std::string status; 						// status message of the thread (without pause state)
 		mutable std::mutex statusLock;				// lock for accessing the status message
+
+		float progress;								// current progress of the thread, in percent
+		mutable std::mutex progressLock;			// lock for accessing the current progress
 
 		std::thread thread;							// pointer to the thread
 

@@ -465,7 +465,22 @@ namespace crawlservpp::Module {
 		return this->status;
 	}
 
-	//! Gets the valud of the last ID processed by the thread.
+	//! Gets the current progress, in percent.
+	/*!
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 *
+	 * \returns The current progress of the
+	 *   thread, in percent – between @c 0.F
+	 *   (none) and @c 1.F (done).
+	 */
+	float Thread::getProgress() const {
+		std::lock_guard<std::mutex> progressLocked(this->progressLock);
+
+		return this->progress;
+	}
+
+	//! Gets the value of the last ID processed by the thread.
 	/*!
 	 * \warning May only be used by the thread itself,
 	 *  not by the main thread!
@@ -548,15 +563,24 @@ namespace crawlservpp::Module {
 	 * \warning May only be used by the thread itself,
 	 *   not by the main thread!
 	 *
-	 * \param progress The new progress of the thread,
-	 *   between @c 0.f (0%) and @c 1.f (100%).
+	 * \param newProgress The new progress of the
+	 *   thread, between @c 0.f (none), and @c 1.f
+	 *   (done).
 	 *
 	 * \sa Main::Database::setThreadProgress
 	 */
-	void Thread::setProgress(float progress) {
+	void Thread::setProgress(float newProgress) {
+		// set internal progress
+		{
+			std::lock_guard<std::mutex> progressLocked(this->progressLock);
+
+			this->progress = newProgress;
+		}
+
 		// set progress in database
 		this->database.setThreadProgress(
-				this->id, progress,
+				this->id,
+				progress,
 				this->getRunTime()
 		);
 	}
