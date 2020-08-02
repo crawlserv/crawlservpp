@@ -37,6 +37,7 @@
 #include <locale>		// std::locale
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string
+#include <utility>		// std::move
 
 namespace crawlservpp::Struct {
 
@@ -108,8 +109,8 @@ namespace crawlservpp::Struct {
 				std::function<void(float)> callbackToSetProgress
 		) : 	currentStatus(setCurrentStatus),
 				progressAfter(setProgressAfter),
-				callbackSetStatus(callbackToSetStatus),
-				callbackSetProgress(callbackToSetProgress) {
+				callbackSetStatus(std::move(callbackToSetStatus)),
+				callbackSetProgress(std::move(callbackToSetProgress)) {
 			this->callbackSetStatus(this->currentStatus);
 			this->callbackSetProgress(0.F);
 		}
@@ -120,7 +121,7 @@ namespace crawlservpp::Struct {
 		 * \param total The total number of units to
 		 *   be processed.
 		 */
-		void update(std::size_t done, std::size_t total) {
+		void update(std::size_t done, std::size_t total) const {
 			std::ostringstream statusStrStr;
 
 			statusStrStr.imbue(std::locale(""));
@@ -141,7 +142,7 @@ namespace crawlservpp::Struct {
 		 * \param percentage Progress between @c
 		 *   0.F (none) and @c 1.F (done).
 		 */
-		void update(float percentage) {
+		void update(float percentage) const {
 			std::ostringstream statusStrStr;
 
 			statusStrStr.precision(decimalsProgress);
