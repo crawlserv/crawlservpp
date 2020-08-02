@@ -719,6 +719,8 @@ namespace crawlservpp::Module::Analyzer {
 							<< ".";
 
 				this->log(this->getLoggingMin(), logStrStr.str());
+
+				statusSetter.finish();
 			}
 		}
 
@@ -1407,6 +1409,8 @@ namespace crawlservpp::Module::Analyzer {
 						false
 				);
 			}
+
+			statusSetter.finish();
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Analyzer::Database::createCorpus", e);

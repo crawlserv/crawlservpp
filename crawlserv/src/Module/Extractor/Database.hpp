@@ -200,7 +200,7 @@ namespace crawlservpp::Module::Extractor {
 		bool getContent(std::uint64_t urlId, IdString& contentTo);
 		void getLatestParsedData(std::uint64_t urlId, std::size_t sourceIndex, std::string& resultTo);
 		void updateOrAddEntries(std::queue<DataEntry>& entries, StatusSetter& statusSetter);
-		void updateOrAddLinked(std::queue<DataEntry>& entries);
+		void updateOrAddLinked(std::queue<DataEntry>& entries, StatusSetter& statusSetter);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
 

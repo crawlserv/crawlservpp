@@ -1679,6 +1679,8 @@ namespace crawlservpp::Module::Parser {
 				// execute SQL query
 				Database::sqlExecute(sqlStatement1);
 			}
+
+			statusSetter.finish();
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Parser::Database::updateOrAddEntries", e);

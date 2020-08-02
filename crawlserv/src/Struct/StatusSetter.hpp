@@ -168,6 +168,11 @@ namespace crawlservpp::Struct {
 			this->callbackSetStatus(statusStrStr.str());
 			this->callbackSetProgress(percentage);
 		}
+
+		//! Re-sets the progress of the thread.
+		void finish() {
+			this->callbackSetProgress(this->progressAfter);
+		}
 	};
 
 } /* namespace crawlservpp::Struct */

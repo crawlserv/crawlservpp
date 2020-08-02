@@ -282,11 +282,6 @@ namespace crawlservpp::Module::Extractor {
 			// wait for extracting table lock
 			this->setStatusMessage("Waiting for extracting table...");
 
-			this->log(
-					generalLoggingVerbose,
-					"waits for extracting table..."
-			);
-
 			DatabaseLock(
 					this->database,
 					"extractingTable." + this->extractingTable,
@@ -3081,7 +3076,7 @@ namespace crawlservpp::Module::Extractor {
 		Timer::Simple timer;
 
 		// save status message
-		const auto status(this->getStatusMessage());
+		const auto oldStatus{this->getStatusMessage()};
 
 		this->setStatusMessage("Waiting for linked target table...");
 
@@ -3095,16 +3090,25 @@ namespace crawlservpp::Module::Extractor {
 			);
 
 			// save linked data
-			this->setStatusMessage("Saving linked data...");
+			StatusSetter statusSetter(
+					"Saving linked data...",
+					this->getProgress(),
+					[this](const auto& status) {
+						this->setStatusMessage(status);
+					},
+					[this](const auto progress) {
+						this->setProgress(progress);
+					}
+			);
 
 			this->log(generalLoggingExtended, "saves linked data...");
 
 			// update or add entries in/to database
-			this->database.updateOrAddLinked(this->linked);
+			this->database.updateOrAddLinked(this->linked, statusSetter);
 		} // linked target table unlocked
 
 		// reset status
-		this->setStatusMessage(status);
+		this->setStatusMessage(oldStatus);
 
 		if(this->config.generalTiming) {
 			this->log(
