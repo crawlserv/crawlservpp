@@ -311,17 +311,18 @@ jQuery(function($) {
 	
 	// CLICK EVENT: navigation
 	$(document).on("click", "a.post-redirect", function() {
-		if(typeof $(this).data("mode") !== "undefined") {
-			reload({
-				"m" : $(this).data("m"),
-				"mode" : $(this).data("mode")
-			});
-		}
-		else {
-			reload({
+		var args = {
 				"m" : $(this).data("m")
-			});
+		};
+		
+		if(typeof $(this).data("website") !== "undefined") {
+			args.website = $(this).data("website");
 		}
+		if(typeof $(this).data("mode") !== "undefined") {
+			args.mode = $(this).data("mode");
+		}
+		
+		reload(args);
 		
 		return false;
 	});

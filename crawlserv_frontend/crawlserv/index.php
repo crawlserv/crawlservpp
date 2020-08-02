@@ -53,12 +53,15 @@ else {
     $m = "server";
 }
 
-// get optional attribute
-if(isset($_POST["mode"])) {
-    $mode_attribute = ' data-mode="'.$_POST["mode"].'"';
+// get optional attributes
+$opt_attributes = "";
+
+if(isset($_POST["website"])) {
+    $opt_attributes .= ' data-website="'.$_POST["website"].'"';
 }
-else {
-    $mode_attribute = "";
+
+if(isset($_POST["mode"])) {
+    $opt_attributes .= ' data-mode="'.$_POST["mode"].'"';
 }
 
 // send header with content type and character encoding
@@ -140,7 +143,7 @@ if($m == "server") {
 
 ?>"><a href="?m=server" class="post-redirect menu-item-link" data-m="server"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Server</a></div></div>
 
@@ -154,7 +157,7 @@ if($m == "websites") {
 
 ?>"><a href="?m=websites" class="post-redirect menu-item-link" data-m="websites"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Websites</a></div></div>
 
@@ -168,7 +171,7 @@ if($m == "queries") {
 
 ?>"><a href="?m=queries" class="post-redirect menu-item-link" data-m="queries"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Queries</a></div></div>
 
@@ -182,7 +185,7 @@ if($m == "crawlers") {
 
 ?>"><a href="?m=crawlers" class="post-redirect menu-item-link" data-m="crawlers"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Crawlers</a></div></div>
 
@@ -196,7 +199,7 @@ if($m == "parsers") {
 
 ?>"><a href="?m=parsers" class="post-redirect menu-item-link" data-m="parsers"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Parsers</a></div></div>
 
@@ -210,7 +213,7 @@ if($m == "extractors") {
 
 ?>"><a href="?m=extractors" class="post-redirect menu-item-link" data-m="extractors"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Extractors</a></div></div>
 
@@ -224,7 +227,7 @@ if($m == "analyzers") {
 
 ?>"><a href="?m=analyzers" class="post-redirect menu-item-link" data-m="analyzers"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Analyzers</a></div></div>
 
@@ -238,7 +241,7 @@ if($m == "threads") {
 
 ?>"><a href="?m=threads" class="post-redirect menu-item-link" data-m="threads"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Threads</a></div></div>
 
@@ -252,7 +255,7 @@ if($m == "search") {
 
 ?>"><a href="?m=search" class="post-redirect menu-item-link" data-m="search"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Search</a></div></div>
 
@@ -266,7 +269,7 @@ if($m == "content") {
 
 ?>"><a href="?m=content" class="post-redirect menu-item-link" data-m="content"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Content</a></div></div>
 
@@ -280,7 +283,7 @@ if($m == "data") {
 
 ?>"><a href="?m=data" class="post-redirect menu-item-link" data-m="data"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Import/Export</a></div></div>
 
@@ -294,7 +297,7 @@ if($m == "statistics") {
 
 ?>"><a href="?m=statistics" class="post-redirect menu-item-link" data-m="statistics"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Statistics</a></div></div>
 
@@ -308,7 +311,7 @@ if($m == "logs") {
 
 ?>"><a href="?m=logs" class="post-redirect menu-item-link" data-m="logs"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>Logs</a></div></div>
 
@@ -322,7 +325,7 @@ if($m == "about") {
 
 ?>"><a href="?m=about" class="post-redirect menu-item-link" data-m="about"<?php
 
-echo $mode_attribute;
+echo $opt_attributes;
 
 ?>>About</a></div></div>
 
