@@ -22,7 +22,7 @@
  *
  * CorpusGenerator.cpp
  *
- *   This algorithm just uses the built-in functionality for building text corpora from its input data and quits.
+ * This algorithm just uses the built-in functionality for building text corpora from its input data and quits.
  *
  *
  *  Created on: Mar 5, 2020
@@ -150,8 +150,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// algorithm has finished
 		this->log(generalLoggingExtended, "has finished.");
-
-		this->setProgress(1.F);
 
 		/*
 		 * NOTE: The status will be saved in-class and not set here, because
