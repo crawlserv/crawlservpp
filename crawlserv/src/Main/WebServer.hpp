@@ -141,7 +141,10 @@ namespace crawlservpp::Main {
 				ConnectionPtr connection,
 				const std::string& error
 		);
-		static void close(ConnectionPtr connection);
+		static void close(
+				ConnectionPtr connection,
+				bool immediately
+		);
 
 		///@}
 		///@name Static Helper

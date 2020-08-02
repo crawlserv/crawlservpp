@@ -939,7 +939,7 @@ namespace crawlservpp::Main {
 		// check authorization
 		if(this->allowed != "*") {
 			if(this->allowed.find(ip) == std::string::npos) {
-				WebServer::close(connection);
+				WebServer::close(connection, true);
 
 				if(this->offline) {
 					std::cout << "\nserver rejected client "
@@ -1036,7 +1036,7 @@ namespace crawlservpp::Main {
 			if(this->allowed.find(ip) == std::string::npos) {
 				this->database.log("Client " + ip + " rejected.");
 
-				WebServer::close(connection);
+				WebServer::close(connection, true);
 			}
 		}
 

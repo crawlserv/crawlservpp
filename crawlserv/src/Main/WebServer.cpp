@@ -289,19 +289,25 @@ namespace crawlservpp::Main {
 		);
 
 		// set closing flag
-		WebServer::close(connection);
+		WebServer::close(connection, false);
 	}
 
 	//! Closes a connection immediately.
 	/*!
 	 * \param connection Pointer to the connection
 	 *   that will closed immediately.
+	 * \param immediately Set to true to close the
+	 *   connection immediately, without sending
+	 *   any remaining data.
 	 *
 	 * \throws WebServer::Connection if no connection
 	 *  has been specified, i.e. the pointer to the
 	 *  connection is @c nullptr.
 	 */
-	void WebServer::close(ConnectionPtr connection) {
+	void WebServer::close(
+			ConnectionPtr connection,
+			bool immediately
+	) {
 		// check for connection
 		if(connection == nullptr) {
 			throw Exception(
@@ -312,7 +318,7 @@ namespace crawlservpp::Main {
 
 		// set closing flag
 		// NOLINTNEXTLINE(hicpp-signed-bitwise)
-		connection->flags |= MG_F_CLOSE_IMMEDIATELY;
+		connection->flags |= (immediately ? MG_F_CLOSE_IMMEDIATELY : MG_F_SEND_AND_CLOSE);
 	}
 
 	//! Static helper function retrieving the client IP from a connection.
@@ -438,7 +444,7 @@ namespace crawlservpp::Main {
 				);
 
 				// set closing flag
-				WebServer::close(connection);
+				WebServer::close(connection, false);
 			}
 
 	    	break;
