@@ -1,4 +1,3 @@
-
 <?php
 
 /*
@@ -42,15 +41,17 @@ if(isset($db_init) && $db_init) {
     $dbConnection = new mysqli($db_host, $db_user, $db_password, $db_name);
     
     // check for connection error
-    if($dbConnection->connect_error)
+    if($dbConnection->connect_error) {
         die("Connection to databank failed: " . $dbConnection->connect_error);
+    }
     
     // set charset to UTF-8
     $dbConnection->set_charset("utf8mb4");
 }
 
-if(isset($cc_init) && $cc_init) 
+if(isset($cc_init) && $cc_init) {
     // tranfer command-and-control server settings to JavaScript
     echo "<script>\n\nvar cc_host = \"$cc_host\";\n\n</script>\n";
+}
 
 ?>
