@@ -773,6 +773,32 @@ namespace crawlservpp::Main {
 
 									threadStartedTo = true;
 								}
+								else if(command == "deleteurls") {
+									// check whether the deletion of data is allowed
+									if(this->settings.dataDeletable) {
+										// create a worker thread for deleting URLs (to not block the server)
+										{
+											std::lock_guard<std::mutex> workersLocked{
+												this->workersLock
+											};
+
+											this->workersRunning.push_back(true);
+
+											this->workers.emplace_back(
+													&Server::cmdDeleteUrls,
+													this,
+													connection,
+													this->workers.size(),
+													msgBody
+											);
+										}
+
+										threadStartedTo = true;
+									}
+									else {
+										response = ServerCommandResponse::failed("Not allowed.");
+									}
+								}
 								else if(command == "testquery") {
 									// create a worker thread for testing query (to not block the server)
 									{
@@ -901,7 +927,6 @@ namespace crawlservpp::Main {
 		MAIN_SERVER_CMD("addurllist", this->cmdAddUrlList);
 		MAIN_SERVER_CMD("updateurllist", this->cmdUpdateUrlList);
 		MAIN_SERVER_CMD("deleteurllist", this->cmdDeleteUrlList);
-		MAIN_SERVER_CMD("deleteurls", this->cmdDeleteUrls);
 
 		MAIN_SERVER_CMD("addquery", this->cmdAddQuery);
 		MAIN_SERVER_CMD("updatequery", this->cmdUpdateQuery);
@@ -1064,7 +1089,7 @@ namespace crawlservpp::Main {
 					)
 			);
 
-			// send reply
+			// send reply, unless a thread has been started
 			if(fileDownload) {
 				this->webServer.sendFile(connection, reply, data);
 			}
@@ -3186,158 +3211,6 @@ namespace crawlservpp::Main {
 		);
 	}
 
-	// server command deleteurls(urllist,query): delete all URLs from the specified URL list that match the specified query
-	Server::ServerCommandResponse Server::cmdDeleteUrls() {
-		// check whether the deletion of data is allowed
-		if(!(this->settings.dataDeletable)) {
-			return ServerCommandResponse::failed("Not allowed.");
-		}
-
-		// get arguments
-		std::uint64_t urlList{0};
-		std::uint64_t query{0};
-		std::string error;
-
-		if(
-				!(this->getArgument("urllist", urlList, error))
-				|| !(this->getArgument("query", query, error))
-		) {
-			return ServerCommandResponse::failed(error);
-		}
-
-		// check URL list
-		if(!(this->database.isUrlList(urlList))) {
-			return ServerCommandResponse::failed(
-					"URL list #"
-					+ std::to_string(urlList)
-					+ " not found."
-			);
-		}
-
-		// get website from URL list
-		const auto website{this->database.getWebsiteNamespaceFromUrlList(urlList)};
-
-		if(website.first == 0) {
-			return ServerCommandResponse::failed(
-					"Could not get website for URL list #"
-					+ std::to_string(urlList)
-					+ "."
-			);
-		}
-
-		// check query
-		if(!(this->database.isQuery(query))) {
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(query)
-					+ " not found."
-			);
-		}
-
-		if(!(this->database.isQuery(website.first, query))) {
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(query)
-					+ " is not valid for website #"
-					+ std::to_string(website.first)
-					+ "."
-			);
-		}
-
-		// get query properties
-		QueryProperties properties{};
-
-		this->database.getQueryProperties(query, properties);
-
-		// check query type (must be RegEx)
-		if(properties.type != "regex") {
-			return ServerCommandResponse::failed(
-				"Query #"
-				+ std::to_string(query)
-				+ " has invalid type (must be RegEx)."
-			);
-		}
-
-		// check query result type (must be boolean)
-		if(!properties.resultBool) {
-			return ServerCommandResponse::failed(
-				"Query #"
-				+ std::to_string(query)
-				+ " has invalid result type (must be boolean)."
-			);
-		}
-
-		std::queue<std::uint64_t> toDelete;
-
-		try {
-			// create RegEx query
-			const Query::RegEx query(
-					properties.text,
-					true,
-					false
-			);
-
-			// get URLs from URL list
-			auto urls{this->database.getUrlsWithIds(urlList)};
-
-			// perform query on each URL in the URL list to identify which URLs to delete
-			while(!urls.empty()) {
-				if(query.getBool(urls.front().second)) {
-					toDelete.push(urls.front().first);
-				}
-
-				urls.pop();
-			}
-		}
-		catch(const RegExException& e) {
-			return ServerCommandResponse::failed(
-					"RegEx error: "
-					+ std::string(e.view())
-			);
-		}
-
-		// check for URLs matching the query
-		if(toDelete.empty()) {
-			return ServerCommandResponse(
-					"The query did not match any URLs in the URL list."
-			);
-		}
-
-		// deleteurls needs to be confirmed
-		if(this->cmdJson.HasMember("confirmed")) {
-			const auto numDeleted{this->database.deleteUrls(urlList, toDelete)};
-
-			if(numDeleted == 1) {
-				return ServerCommandResponse("One URL has been deleted.");
-			}
-
-			std::ostringstream responseStrStr;
-
-			responseStrStr.imbue(std::locale(""));
-
-			responseStrStr << numDeleted << " URLs have been deleted.";
-
-			return ServerCommandResponse(responseStrStr.str());
-		}
-
-		if(toDelete.size() == 1) {
-			return ServerCommandResponse::toBeConfirmed(
-					"Do you really want to delete one URL?"
-					"\n!!! All associated data will be lost !!!"
-			);
-		}
-
-		std::ostringstream responseStrStr;
-
-		responseStrStr.imbue(std::locale(""));
-
-		responseStrStr	<< "Do you really want to delete "
-						<< toDelete.size()
-						<< " URLs?\n!!! All associated data will be lost !!!";
-
-		return ServerCommandResponse::toBeConfirmed(responseStrStr.str());
-	}
-
 	// server command addquery(website, name, query, type, resultbool, resultsingle, resultmulti, resultsubsets, textonly):
 	//  add a query
 	Server::ServerCommandResponse Server::cmdAddQuery() {
@@ -4131,7 +4004,7 @@ namespace crawlservpp::Main {
 
 										switch(added) {
 										case 0:
-											responseStrStr << "Added no new URLs";
+											responseStrStr << "Added no new URL";
 											logStrStr << "no new URL";
 
 											break;
@@ -4290,12 +4163,12 @@ namespace crawlservpp::Main {
 							switch(added) {
 							case 0:
 								response = ServerCommandResponse(
-										"No new URLs added after "
+										"No new URL added after "
 										+ timerStr
 										+ "."
 								);
 
-								logStrStr << "no new URLs";
+								logStrStr << "no new URL";
 
 								break;
 
@@ -4565,6 +4438,189 @@ namespace crawlservpp::Main {
 						logStrStr << " after " << timer.tickStr() << ").";
 
 						db.log(0, logStrStr.str());
+					}
+				}
+			}
+		}
+
+		// end of worker thread
+		MAIN_SERVER_WORKER_END(response)
+
+		this->workerEnd(threadIndex, connection, message, response);
+	}
+
+	// server command deleteurls(urllist,query): delete all URLs from the specified URL list that match the specified query
+	void Server::cmdDeleteUrls(
+			ConnectionPtr connection,
+			std::size_t threadIndex,
+			const std::string& message
+	) {
+		DatabaseSettings dbSettingsCopy(this->dbSettings);
+		ServerCommandResponse response;
+		rapidjson::Document json;
+
+		// begin of worker thread
+		MAIN_SERVER_WORKER_BEGIN
+
+		if(Server::workerBegin(message, json, response)) {
+			// get arguments
+			std::uint64_t urlList{0};
+			std::uint64_t query{0};
+			std::string error;
+
+			if(
+					!Server::getArgument(json, "urllist", urlList, error)
+					|| !Server::getArgument(json, "query", query, error)
+			) {
+				response = ServerCommandResponse::failed(error);
+			}
+			else {
+				// create new database connection for worker thread
+				Module::Database db(dbSettingsCopy, "worker");
+
+				db.setSleepOnError(sleepOnSqlErrorS);
+
+				db.connect();
+				db.prepare();
+
+				// check URL list
+				if(!db.isUrlList(urlList)) {
+					response = ServerCommandResponse::failed(
+							"URL list #"
+							+ std::to_string(urlList)
+							+ " not found."
+					);
+				}
+
+				if(!response.fail) {
+					// get website from URL list
+					const auto website{
+						db.getWebsiteNamespaceFromUrlList(urlList)
+					};
+
+					if(website.first == 0) {
+						response = ServerCommandResponse::failed(
+								"Could not get website for URL list #"
+								+ std::to_string(urlList)
+								+ "."
+						);
+					}
+					else if(!db.isQuery(query)) {
+						response = ServerCommandResponse::failed(
+								"Query #"
+								+ std::to_string(query)
+								+ " not found."
+						);
+					}
+					else if(!db.isQuery(website.first, query)) {
+						response = ServerCommandResponse::failed(
+								"Query #"
+								+ std::to_string(query)
+								+ " is not valid for website #"
+								+ std::to_string(website.first)
+								+ "."
+						);
+					}
+					else {
+						// get query properties
+						QueryProperties properties{};
+
+						db.getQueryProperties(query, properties);
+
+						// check query type (must be RegEx)
+						if(properties.type != "regex") {
+							response = ServerCommandResponse::failed(
+									"Query #"
+									+ std::to_string(query)
+									+ " has invalid type (must be RegEx)."
+							);
+						}
+						// check query result type (must be boolean)
+						else if(!properties.resultBool) {
+							response  = ServerCommandResponse::failed(
+									"Query #"
+									+ std::to_string(query)
+									+ " has invalid result type (must be boolean)."
+							);
+						}
+						else {
+							std::queue<std::uint64_t> toDelete;
+
+							try {
+								// create RegEx query
+								const Query::RegEx query(
+										properties.text,
+										true,
+										false
+								);
+
+								// get URLs from URL list
+								auto urls{db.getUrlsWithIds(urlList)};
+
+								// perform query on each URL in the URL list to identify which URLs to delete
+								while(!urls.empty()) {
+									if(query.getBool(urls.front().second)) {
+										toDelete.push(urls.front().first);
+									}
+
+									urls.pop();
+								}
+							}
+							catch(const RegExException& e) {
+								response = ServerCommandResponse::failed(
+										"RegEx error: "
+										+ std::string(e.view())
+								);
+							}
+
+							// check for URLs matching the query
+							if(toDelete.empty()) {
+								response = ServerCommandResponse(
+										"The query did not match any URLs in the URL list."
+								);
+							}
+							// deleteurls needs to be confirmed
+							else if(json.HasMember("confirmed")) {
+								// delete URLS
+								const auto numDeleted{db.deleteUrls(urlList, toDelete)};
+
+								// return number of deleted URLs
+								if(numDeleted == 1) {
+									response = ServerCommandResponse("One URL has been deleted.");
+								}
+								else {
+									std::ostringstream responseStrStr;
+
+									responseStrStr.imbue(std::locale(""));
+
+									responseStrStr << numDeleted << " URLs have been deleted.";
+
+									response = ServerCommandResponse(responseStrStr.str());
+								}
+							}
+							else {
+								// return number of URLs to be deleted when confirmed
+								if(toDelete.size() == 1) {
+									response = ServerCommandResponse::toBeConfirmed(
+											"Do you really want to delete one URL?"
+											"\n!!! All associated data will be lost !!!"
+									);
+								}
+								else {
+									std::ostringstream responseStrStr;
+
+									responseStrStr.imbue(std::locale(""));
+
+									responseStrStr	<< "Do you really want to delete "
+													<< toDelete.size()
+													<< " URLs?\n!!! All associated data will be lost !!!";
+
+									response = ServerCommandResponse::toBeConfirmed(
+											responseStrStr.str()
+									);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -5607,13 +5663,13 @@ namespace crawlservpp::Main {
 		}
 	}
 
-	// private static helper function: begin of worker thread
+	// private static helper function: begin of worker thread, returns whether (re-)parsing command JSON was successful
 	bool Server::workerBegin(
 			const std::string& message,
 			rapidjson::Document& json,
 			ServerCommandResponse& response
 	) {
-		// parse JSON (again) for thread
+		// (re-)parse command JSON for the worker thread
 		try {
 			json = Helper::Json::parseRapid(message);
 

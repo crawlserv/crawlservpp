@@ -397,7 +397,6 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdAddUrlList();
 		ServerCommandResponse cmdUpdateUrlList();
 		ServerCommandResponse cmdDeleteUrlList();
-		ServerCommandResponse cmdDeleteUrls();
 
 		ServerCommandResponse cmdAddQuery();
 		ServerCommandResponse cmdUpdateQuery();
@@ -417,6 +416,8 @@ namespace crawlservpp::Main {
 		void cmdImport(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 		void cmdMerge(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 		void cmdExport(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
+
+		void cmdDeleteUrls(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
 		void cmdTestQuery(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
