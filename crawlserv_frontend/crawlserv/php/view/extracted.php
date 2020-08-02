@@ -423,7 +423,7 @@ if($result->num_rows) {
                                     echo "<tr>\n";
                                     
                                     echo "<th class=\"content-field\">Field</th>\n";
-                                    echo "<th>Value</th>\n";
+                                    echo "<th>Extracted value</th>\n";
                                     
                                     echo "</tr>\n";
                                     echo "</thead>\n";
