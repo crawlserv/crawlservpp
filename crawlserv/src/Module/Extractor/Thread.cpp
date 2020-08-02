@@ -3154,12 +3154,21 @@ namespace crawlservpp::Module::Extractor {
 			);
 
 			// save results
-			this->setStatusMessage("Saving results...");
+			StatusSetter statusSetter(
+					"Saving results...",
+					this->getProgress(),
+					[this](const auto& status) {
+						this->setStatusMessage(status);
+					},
+					[this](const auto progress) {
+						this->setProgress(progress);
+					}
+			);
 
 			this->log(generalLoggingExtended, "saves results...");
 
 			// update or add entries in/to database
-			this->database.updateOrAddEntries(this->results);
+			this->database.updateOrAddEntries(this->results, statusSetter);
 
 			// update target table
 			this->database.updateTargetTable();

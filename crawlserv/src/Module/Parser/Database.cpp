@@ -1437,6 +1437,8 @@ namespace crawlservpp::Module::Parser {
 	 *   containing the data to add. If empty,
 	 *   nothing will be done. The queue will be
 	 *   emptied as the data will be processed.
+	 * \param statusSetter Data needed to keep
+	 *   the status of the thread updated.
 	 *
 	 * \throws Module::Parser::Database::Exception
 	 *   if any of the prepared SQL statements for
@@ -1446,7 +1448,10 @@ namespace crawlservpp::Module::Parser {
 	 *   error occured while adding or updating
 	 *   parsed data in the database.
 	 */
-	void Database::updateOrAddEntries(std::queue<DataEntry>& entries) {
+	void Database::updateOrAddEntries(
+			std::queue<DataEntry>& entries,
+			StatusSetter& statusSetter
+	) {
 		// check argument
 		if(entries.empty()) {
 			return;
@@ -1488,6 +1493,9 @@ namespace crawlservpp::Module::Parser {
 		};
 
 		try {
+			const auto total{entries.size()};
+			std::size_t done{0};
+
 			// add 1,000 entries at once
 			while(entries.size() >= nAtOnce1000) {
 				for(std::uint16_t n{0}; n < nAtOnce1000; ++n) {
@@ -1530,6 +1538,11 @@ namespace crawlservpp::Module::Parser {
 
 				// execute SQL query
 				Database::sqlExecute(sqlStatement1000);
+
+				// update status
+				done += nAtOnce1000;
+
+				statusSetter.update(done, total);
 			}
 
 			// add 100 entries at once
@@ -1574,6 +1587,11 @@ namespace crawlservpp::Module::Parser {
 
 				// execute SQL query
 				Database::sqlExecute(sqlStatement100);
+
+				// update status
+				done += nAtOnce100;
+
+				statusSetter.update(done, total);
 			}
 
 			// add 10 entries at once

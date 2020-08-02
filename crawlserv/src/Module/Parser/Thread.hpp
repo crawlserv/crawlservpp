@@ -44,6 +44,7 @@
 #include "../../Struct/DataEntry.hpp"
 #include "../../Struct/QueryProperties.hpp"
 #include "../../Struct/QueryStruct.hpp"
+#include "../../Struct/StatusSetter.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/Simple.hpp"
@@ -91,6 +92,7 @@ namespace crawlservpp::Module::Parser {
 		using DataEntry = Struct::DataEntry;
 		using QueryProperties = Struct::QueryProperties;
 		using QueryStruct = Struct::QueryStruct;
+		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 

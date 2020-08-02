@@ -35,6 +35,7 @@
 #include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Main/Exception.hpp"
 #include "../../Struct/DataEntry.hpp"
+#include "../../Struct/StatusSetter.hpp"
 #include "../../Struct/TableColumn.hpp"
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Wrapper/Database.hpp"
@@ -124,9 +125,10 @@ namespace crawlservpp::Module::Parser {
 	//! Class providing database functionality for parser threads by implementing Wrapper::Database.
 	class Database final : public Wrapper::Database {
 		// for convenience
-		using TargetTableProperties = Struct::TargetTableProperties;
 		using DataEntry = Struct::DataEntry;
+		using StatusSetter = Struct::StatusSetter;
 		using TableColumn = Struct::TableColumn;
+		using TargetTableProperties = Struct::TargetTableProperties;
 
 		using IdString = std::pair<std::uint64_t, std::string>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
@@ -196,7 +198,7 @@ namespace crawlservpp::Module::Parser {
 		bool getLatestContent(std::uint64_t urlId, std::uint64_t index, IdString& contentTo);
 		[[nodiscard]] std::queue<IdString> getAllContents(std::uint64_t urlId);
 		[[nodiscard]] std::uint64_t getContentIdFromParsedId(const std::string& parsedId);
-		void updateOrAddEntries(std::queue<DataEntry>& entries);
+		void updateOrAddEntries(std::queue<DataEntry>& entries, StatusSetter& statusSetter);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
 
