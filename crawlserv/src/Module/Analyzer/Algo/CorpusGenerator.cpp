@@ -132,8 +132,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 							this->config.generalInputTables.at(n),
 							this->config.generalInputFields.at(n)
 					),
-					std::string(),
-					std::string(),
+					this->config.filterDateEnable ? this->config.filterDateFrom : std::string(),
+					this->config.filterDateEnable ? this->config.filterDateTo : std::string(),
 					corpus,
 					corpusSources,
 					statusSetter
