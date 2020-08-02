@@ -170,7 +170,7 @@ namespace crawlservpp::Struct {
 		}
 
 		//! Re-sets the progress of the thread.
-		void finish() {
+		void finish() const {
 			this->callbackSetProgress(this->progressAfter);
 		}
 	};
