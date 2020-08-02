@@ -32,9 +32,9 @@
 #define STRUCT_STATUSSETTER_HPP_
 
 #include <cstddef>		// std::size_t
+#include <functional>	// std::function
 #include <ios>			// std::fixed
 #include <locale>		// std::locale
-#include <functional>	// std::function
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string
 
