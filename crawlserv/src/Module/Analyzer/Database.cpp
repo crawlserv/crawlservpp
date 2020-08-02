@@ -690,7 +690,9 @@ namespace crawlservpp::Module::Analyzer {
 								statusSetter.update(
 										static_cast<float>(count)
 										/ total
-										* progressReceivedCorpus);
+										* progressReceivedCorpus,
+										false
+								);
 							}
 						}
 						else {
@@ -1222,7 +1224,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			Database::sqlExecute(deleteStatement);
 
-			statusSetter.update(progressDeletedCorpus);
+			statusSetter.update(progressDeletedCorpus, false);
 
 			// get texts and possibly parsed date/times and IDs from database
 			Data::GetColumns data;
@@ -1256,7 +1258,7 @@ namespace crawlservpp::Module::Analyzer {
 				);
 			}
 
-			statusSetter.update(progressReceivedSources);
+			statusSetter.update(progressReceivedSources, false);
 
 			// move received column data to vector(s) of strings
 			std::vector<std::string> texts;
@@ -1310,7 +1312,7 @@ namespace crawlservpp::Module::Analyzer {
 				}
 			}
 
-			statusSetter.update(progressMovedData);
+			statusSetter.update(progressMovedData, false);
 
 			// create corpus (and delete the input data)
 			if(data.values.size() > numColumns1) {
@@ -1320,7 +1322,7 @@ namespace crawlservpp::Module::Analyzer {
 				corpusTo.create(texts, true);
 			}
 
-			statusSetter.update(progressCreatedCorpus);
+			statusSetter.update(progressCreatedCorpus, false);
 
 			// slice corpus into chunks for the database
 			std::vector<std::string> chunks;
@@ -1340,7 +1342,7 @@ namespace crawlservpp::Module::Analyzer {
 					dateMaps
 			);
 
-			statusSetter.update(progressSlicedCorpus);
+			statusSetter.update(progressSlicedCorpus, false);
 
 			// add corpus chunks to the database
 			std::uint64_t last{0};
@@ -1401,7 +1403,8 @@ namespace crawlservpp::Module::Analyzer {
 						* (
 								static_cast<float>(n + 1)
 								/ chunks.size()
-						)
+						),
+						false
 				);
 			}
 		}

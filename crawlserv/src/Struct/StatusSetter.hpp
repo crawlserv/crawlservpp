@@ -45,7 +45,7 @@ namespace crawlservpp::Struct {
 	///@{
 
 	//! The precision (number of fractal digits) when showing the progress in percent.
-	constexpr auto decimalsProgress{2};
+	constexpr auto precisionProgress{2};
 
 	//! The factor for converting a fractal into a percentage.
 	constexpr auto percentageFactor{100};
@@ -144,11 +144,21 @@ namespace crawlservpp::Struct {
 		/*!
 		 * \param percentage Progress between @c
 		 *   0.F (none) and @c 1.F (done).
+		 * \param precise If set to true, the
+		 *   progress will be added to the status
+		 *   with higher precision.
+		 *
+		 * \sa precisionProgress
 		 */
-		void update(float percentage) const {
+		void update(float percentage, bool precise) const {
 			std::ostringstream statusStrStr;
 
-			statusStrStr.precision(decimalsProgress);
+			if(precise) {
+				statusStrStr.precision(precisionProgress);
+			}
+			else {
+				statusStrStr.precision(0);
+			}
 
 			statusStrStr << this->currentStatus;
 			statusStrStr << " [";
