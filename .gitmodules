@@ -16,3 +16,6 @@
 [submodule "crawlserv/src/_extern/asio"]
 	path = crawlserv/src/_extern/asio
 	url = https://github.com/chriskohlhoff/asio/
+[submodule "crawlserv/src/_extern/porter2_stemmer"]
+	path = crawlserv/src/_extern/porter2_stemmer
+	url = https://github.com/smassung/porter2_stemmer

@@ -229,6 +229,11 @@ set(jsoncons_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/jsoncons/include")
 
 message("jsoncons include directory set to: \"${jsoncons_INCLUDE}\".")
 
+# set include directory for porter2_stemmer to sub-directory of source code
+set(porter2_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/porter2_stemmer")
+
+message("porter2_stemmer include directory set to: \"${porter2_INCLUDE}\".")
+
 # source files
 add_executable(${PROJECT_NAME}
 		src/main.cpp
@@ -240,6 +245,7 @@ add_executable(${PROJECT_NAME}
 		src/Module/Analyzer/Algo/CorpusGenerator.cpp
 		src/Module/Analyzer/Algo/MarkovText.cpp
 		src/Module/Analyzer/Algo/MarkovTweet.cpp
+		src/Module/Analyzer/Algo/TokensOverTime.cpp
 		src/Module/Analyzer/Database.cpp
 		src/Module/Analyzer/Thread.cpp
 		src/Module/Crawler/Database.cpp
@@ -252,6 +258,7 @@ add_executable(${PROJECT_NAME}
 		src/Module/Thread.cpp
 		src/Wrapper/Curl.cpp
 		src/_extern/mongoose/mongoose.c
+		src/_extern/porter2_stemmer/porter2_stemmer.cpp
 
 # NOTE: The following might be removed in the near future.
 		src/_extern/rawr/histogram.cpp
@@ -267,6 +274,7 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 # set include directories
 target_include_directories(${PROJECT_NAME} PRIVATE ${asio_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncons_INCLUDE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${porter2_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${mysqlcppconn_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${tidy_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
