@@ -1,0 +1,39 @@
+{
+	"label": "Tokenizer",
+	"open": true,
+
+	"language": {
+		"type": "string",
+		"default": "",
+		"label": "Language:",
+		"description": "The language used by the tokenizer, if multiple languages are supported.",
+		"simple": true,
+		"position": 3
+	},
+	"sentence.manipulators": {
+		"type": "array",
+		"array-type": "enum",
+		"enum-values": [
+			"none"
+		],
+		"default": [],
+		"label": "Sentence Manipulators:",
+		"description": "Manipulators used on extracted sentences from the text corpus.",
+		"simple": true,
+		"position": 2
+	},
+	"word.manipulators": {
+		"type": "array",
+		"array-type": "enum",
+		"enum-values": [
+			"none",
+			"porter2_stemmer (English only)",
+			"simple German stemmer (German only)"
+		],
+		"default": [],
+		"label": "Word Manipulators:",
+		"description": "Manipulators used on extracted tokens from the text corpus.",
+		"simple": true,
+		"position": 2
+	}
+}
