@@ -77,6 +77,9 @@ namespace crawlservpp::Struct {
 		//! Callback function to update the progress of the current thread, in percent.
 		std::function<void(float)> callbackSetProgress;
 
+		//! Callback function to check whether the current thread should still be running.
+		std::function<bool()> callbackIsRunning;
+
 		///@}
 		///@name Constructor
 		///@{
@@ -97,25 +100,34 @@ namespace crawlservpp::Struct {
 		 *   1.F, if the progress should
 		 *   remain at @c 100% in the end.
 		 * \param callbackToSetStatus The
-		 *   function that will be used to
-		 *   set the status message of the
-		 *   current thread.
+		 *   function (or lambda) that will
+		 *   be used to set the status
+		 *   message of the current thread.
 		 * \param callbackToSetProgress The
-		 *   function that will be used to
-		 *   set the progress of the current
-		 *   thread, in percent.
+		 *   function (or lambda) that will
+		 *   be used to set the progress of
+		 *   the current thread, in percent.
+		 * \param callbackToCheckIsRunning
+		 *   The function (or lambda) that
+		 *   will be used to check whether
+		 *   the thread is still supposed
+		 *   to run.
 		 */
 		StatusSetter(
 				const std::string& setCurrentStatus,
 				float setProgressAfter,
 				std::function<void(const std::string&)> callbackToSetStatus,
-				std::function<void(float)> callbackToSetProgress
+				std::function<void(float)> callbackToSetProgress,
+				std::function<bool()> callbackToCheckIsRunning
 		) : 	currentStatus(setCurrentStatus),
 				progressAfter(setProgressAfter),
 				callbackSetStatus(std::move(callbackToSetStatus)),
-				callbackSetProgress(std::move(callbackToSetProgress)) {
-			this->callbackSetStatus(this->currentStatus);
-			this->callbackSetProgress(0.F);
+				callbackSetProgress(std::move(callbackToSetProgress)),
+				callbackIsRunning(std::move(callbackToCheckIsRunning)) {
+			if(this->callbackIsRunning()) {
+				this->callbackSetStatus(this->currentStatus);
+				this->callbackSetProgress(0.F);
+			}
 		}
 
 		//! Updates the status with a fractal progress.
@@ -148,6 +160,9 @@ namespace crawlservpp::Struct {
 		 *   progress will be added to the status
 		 *   with higher precision.
 		 *
+		 * \returns True, if the thread is supposed
+		 *   to continue running. False, otherwise.
+		 *
 		 * \sa precisionProgress
 		 */
 		void update(float percentage, bool precise) const {
@@ -167,6 +182,15 @@ namespace crawlservpp::Struct {
 
 			this->callbackSetStatus(statusStrStr.str());
 			this->callbackSetProgress(percentage);
+		}
+
+		//! Checks whether the thread is still supposed to run
+		/*!
+		 * \returns True, if the thread is supposed
+		 *   to continue running. False, otherwise.
+		 */
+		[[nodiscard]] bool isRunning() const {
+			return this->callbackIsRunning();
 		}
 
 		//! Re-sets the progress of the thread.

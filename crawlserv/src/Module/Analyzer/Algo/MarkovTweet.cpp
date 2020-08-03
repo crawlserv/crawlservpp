@@ -152,6 +152,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					},
 					[this](const auto progress) {
 						this->setProgress(progress);
+					},
+					[this]() {
+						return this->isRunning();
 					}
 			);
 

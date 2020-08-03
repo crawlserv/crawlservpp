@@ -1613,8 +1613,8 @@ namespace crawlservpp::Module::Parser {
 			DatabaseLock(
 					this->database,
 					"targetTable." + this->targetTable,
-					[this]() {
-						return this->isRunning();
+					[]() {
+						return true; // should run until the end
 					}
 			);
 
@@ -1627,6 +1627,9 @@ namespace crawlservpp::Module::Parser {
 					},
 					[this](const auto progress) {
 						this->setProgress(progress);
+					},
+					[]() {
+						return true; // should run until the end
 					}
 			);
 
