@@ -309,9 +309,9 @@ namespace crawlservpp::Main {
 		// status
 		std::string status;
 		std::string allowed;
-		bool running;
+		bool running{true};
 		std::chrono::steady_clock::time_point uptimeStart;
-		bool offline;
+		bool offline{true};
 
 		// threads
 		std::vector<std::unique_ptr<Module::Crawler::Thread>> crawlers;

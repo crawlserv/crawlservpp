@@ -51,12 +51,8 @@ namespace crawlservpp::Module {
 	 */
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 	 : Main::Database(dbSettings, dbModule),
-	   loggingLevel(std::numeric_limits<std::uint8_t>::max() - 1),
-	   loggingMin(1),
-	   loggingVerbose(std::numeric_limits<std::uint8_t>::max()),
 	   debugLogging(dbSettings.debugLogging),
-	   debugDir(dbSettings.debugDir),
-	   ps(_ps()) {
+	   debugDir(dbSettings.debugDir) {
 		if(Main::Database::driver == nullptr) {
 			throw Exception("MySQL driver not loaded");
 		}

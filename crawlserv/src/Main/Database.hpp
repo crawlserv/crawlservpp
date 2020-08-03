@@ -1023,10 +1023,10 @@ namespace crawlservpp::Main {
 
 	private:
 		// private connection information
-		const DatabaseSettings settings;	// database settings
-		std::uint64_t connectionId;			// MySQL connection ID
-		std::uint64_t maxAllowedPacketSize;	// maximum packet size
-		std::uint64_t sleepOnError;			// number of seconds to sleep on database error
+		const DatabaseSettings settings;		// database settings
+		std::uint64_t connectionId{0};			// MySQL connection ID
+		std::uint64_t maxAllowedPacketSize{0};	// maximum packet size
+		std::uint64_t sleepOnError{0};			// number of seconds to sleep on database error
 		std::string mysqlVersion;			// MySQL version
 		std::string dataDir;				// main data directory
 		std::vector<std::string> dirs;		// all known data directories
@@ -1057,7 +1057,7 @@ namespace crawlservpp::Main {
 			std::uint16_t lastId;
 			std::uint16_t setThreadStatus;
 			std::uint16_t setThreadStatusMessage;
-		} ps;
+		} ps{};
 	};
 
 } /* namespace crawlservpp::Main */

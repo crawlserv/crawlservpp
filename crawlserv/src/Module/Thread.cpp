@@ -55,23 +55,11 @@ namespace crawlservpp::Module {
 	)
 			: database(dbBase.getSettings(), threadOptions.module),
 			  databaseClass(dbBase),
-			  pausable(true),
-			  running(true),
 			  paused(threadStatus.paused),
-			  interrupted(false),
-			  terminated(false),
-			  shutdown(false),
-			  finished(false),
 			  id(threadStatus.id),
 			  module(threadOptions.module),
 			  options(threadOptions),
-			  last(threadStatus.last),
-			  overwriteLast(0),
-			  warpedOver(0),
-			  startTimePoint(std::chrono::steady_clock::time_point::min()),
-			  pauseTimePoint(std::chrono::steady_clock::time_point::min()),
-			  runTime(std::chrono::duration<std::uint64_t>::zero()),
-			  pauseTime(std::chrono::duration<std::uint64_t>::zero()) {
+			  last(threadStatus.last) {
 		// remove paused or interrupted thread status from status message
 		if(
 				threadStatus.status.length() >= statusPrefixInterrupted.length()

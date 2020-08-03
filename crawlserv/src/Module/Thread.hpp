@@ -275,21 +275,21 @@ namespace crawlservpp::Module {
 	private:
 		Main::Database& databaseClass;				// access to the database for the class
 
-		std::atomic<bool> pausable;					// thread is pausable
- 		std::atomic<bool> running;					// thread is running (or paused)
-		std::atomic<bool> paused;					// thread is paused
-		std::atomic<bool> interrupted;				// thread has been interrupted by shutdown
-		std::atomic<bool> terminated;				// thread has been terminated due to an exception
-		std::atomic<bool> shutdown;					// shutdown in progress
-		std::atomic<bool> finished;					// shutdown is finished
+		std::atomic<bool> pausable{true};			// thread is pausable
+ 		std::atomic<bool> running{true};			// thread is running (or paused)
+		std::atomic<bool> paused{false};			// thread is paused
+		std::atomic<bool> interrupted{false};		// thread has been interrupted by shutdown
+		std::atomic<bool> terminated{false};		// thread has been terminated due to an exception
+		std::atomic<bool> shutdown{false};			// shutdown in progress
+		std::atomic<bool> finished{false};			// shutdown is finished
 
-		std::uint64_t id;							// the ID of the thread in the database
+		std::uint64_t id{0};						// the ID of the thread in the database
 		std::string module;							// the module of the thread (used for logging)
 		ThreadOptions options;						// options for the thread
 
-		std::uint64_t last;							// last ID for the thread
-		std::atomic<std::uint64_t> overwriteLast;	// ID to overwrite last ID with ("time travel")
-		std::int64_t warpedOver;					// no. of IDs that have been skipped (might be negative, ONLY for threads!)
+		std::uint64_t last{0};						// last ID for the thread
+		std::atomic<std::uint64_t> overwriteLast{0};// ID to overwrite last ID with ("time travel")
+		std::int64_t warpedOver{0};					// no. of IDs that have been skipped (might be negative, ONLY for threads!)
 
 		std::condition_variable pauseCondition;		// condition variable to wait for unpause
 		mutable std::mutex pauseLock;				// lock for accessing the condition variable
@@ -297,16 +297,16 @@ namespace crawlservpp::Module {
 		std::string status; 						// status message of the thread (without pause state)
 		mutable std::mutex statusLock;				// lock for accessing the status message
 
-		float progress;								// current progress of the thread, in percent
+		float progress{0.F};						// current progress of the thread, in percent
 		mutable std::mutex progressLock;			// lock for accessing the current progress
 
 		std::thread thread;							// pointer to the thread
 
 		// timing statistics (in seconds)
-		std::chrono::steady_clock::time_point startTimePoint;
-		std::chrono::steady_clock::time_point pauseTimePoint;
-		std::chrono::duration<std::uint64_t> runTime;
-		std::chrono::duration<std::uint64_t> pauseTime;
+		std::chrono::steady_clock::time_point startTimePoint{std::chrono::steady_clock::time_point::min()};
+		std::chrono::steady_clock::time_point pauseTimePoint{std::chrono::steady_clock::time_point::min()};
+		std::chrono::duration<std::uint64_t> runTime{std::chrono::duration<std::uint64_t>::zero()};
+		std::chrono::duration<std::uint64_t> pauseTime{std::chrono::duration<std::uint64_t>::zero()};
 
 		// internal timing functions
 		std::uint64_t getRunTime() const;

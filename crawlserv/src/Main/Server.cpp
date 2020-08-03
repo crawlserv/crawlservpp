@@ -67,8 +67,6 @@ namespace crawlservpp::Main {
 			  netSettings(networkSettings),
 			  database(dbSettings, "server"),
 			  allowed(serverSettings.allowedClients),
-			  running(true),
-			  offline(true),
 			  webServer(cacheDir) {
 
 		// clear or create cache directory

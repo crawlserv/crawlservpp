@@ -60,11 +60,7 @@ namespace crawlservpp::Main {
 	 */
 	Database::Database(const DatabaseSettings& dbSettings, const std::string& dbModule)
 			: settings(dbSettings),
-			  connectionId(0),
-			  maxAllowedPacketSize(0),
-			  sleepOnError(0),
-			  module(dbModule),
-			  ps(_ps()) {
+			  module(dbModule) {
 		// get driver instance if necessary
 		if(Database::driver == nullptr) {
 			Database::driver = get_driver_instance();

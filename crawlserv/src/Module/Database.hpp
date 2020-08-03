@@ -163,11 +163,11 @@ namespace crawlservpp::Module {
 		std::string threadIdString;
 		std::string websiteIdString;
 		std::string urlListIdString;
-		std::uint8_t loggingLevel;
-		std::uint8_t loggingMin;
-		std::uint8_t loggingVerbose;
+		std::uint8_t loggingLevel{std::numeric_limits<std::uint8_t>::max() - 1};
+		std::uint8_t loggingMin{1};
+		std::uint8_t loggingVerbose{std::numeric_limits<std::uint8_t>::max()};
 		std::ofstream loggingFile;
-		bool debugLogging;
+		bool debugLogging{false};
 		const std::string_view debugDir;
 
 		// private helper function
@@ -178,7 +178,7 @@ namespace crawlservpp::Module {
 			std::uint16_t setThreadStatusMessage;
 			std::uint16_t setThreadProgress;
 			std::uint16_t setThreadLast;
-		} ps;
+		} ps{};
 	};
 
 } /* namespace crawlservpp::Module */

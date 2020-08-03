@@ -149,12 +149,12 @@ namespace crawlservpp::Network {
 
 	private:
 		// settings
-		const bool isActive;
+		const bool isActive{false};
 		const std::string server;
-		const std::uint16_t port;
+		const std::uint16_t port{0};
 		const std::string password;
-		std::uint64_t newIdentityNotBefore;
-		std::uint64_t newIdentityAfter;
+		std::uint64_t newIdentityNotBefore{0};
+		std::uint64_t newIdentityAfter{0};
 
 		// asio context and socket
 		asio::io_context context;
@@ -163,8 +163,8 @@ namespace crawlservpp::Network {
 		// identity time and timers
 		Timer::Simple minTimer;
 		Timer::Simple maxTimer;
-		std::uint64_t elapsedMin;
-		std::uint64_t elapsedMax;
+		std::uint64_t elapsedMin{0};
+		std::uint64_t elapsedMax{0};
 	};
 
 	/*
@@ -191,11 +191,7 @@ namespace crawlservpp::Network {
 				server(controlServer),
 				port(controlPort),
 				password(controlPassword),
-				newIdentityNotBefore(0),
-				newIdentityAfter(0),
-				socket(this->context),
-				elapsedMin(0),
-				elapsedMax(0) {}
+				socket(this->context) {}
 
 	//! Destructor shutting down remaining connections to the TOR control server/port if necessary.
 	/*!
