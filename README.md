@@ -3,6 +3,7 @@ _**WARNING!** This application is under development. It is neither complete nor 
  _~~Strikethrough~~ means a feature is not implemented yet._
 
 # crawlserv++
+
 **crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
 
 The architecture of **crawlserv++** consists of three distinct components:
@@ -12,6 +13,8 @@ The architecture of **crawlserv++** consists of three distinct components:
 * a mySQL **database** containing all permanent data (i.e. thread status, configurations, logs, crawled content, parsed and extracted data as well as the results of all analyses).
 
 ## Legal Notice
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 Before using crawlserv++ for crawling websites and other data, please make sure you are [legally allowed to do so](https://benbernardblog.com/web-scraping-and-crawling-are-perfectly-legal-right/).
 
@@ -49,7 +52,7 @@ The following additional components are required to build crawlserv++ on your sy
 * the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * the [`zlib`](https://www.zlib.net/) library (preinstalled on many Linux systems)
-* currently also the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
+* the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
 
 *&ast; Older Linux distributions may only have `libtidy-dev` v0.9 and `liburiparser-dev` v0.8.4 available. Install the current [versions](https://github.com/htacg/tidy-html5/releases) [manually](https://github.com/uriparser/uriparser), or add a newer repository, e.g. on Ubuntu via:*
 
@@ -233,6 +236,7 @@ Analyzers are implemented by their own set of subclasses &mdash; algorithm class
 * **CorpusGenerator**: Uses the built-in functionality for building text corpora from its input data and quits.
 * **MarkovText**: Markov Chain Text Generator.
 * **MarkovTweet**: Markov Chain Tweet Generator.
+* **TokensOverTime**: Counts the tokens in a text corpus over time.
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Main_1_1Database.html) class. Additionally, thread connections to the database (instances of [`Module::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Database.html) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Wrapper_1_1Database.html) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the [source code documentation](https://codedocs.xyz/crawlserv/crawlservpp/) of the command-and-control server for further details.
 
@@ -251,6 +255,7 @@ The following third-party libraries are used by the command-and-control server:
 * [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/_extern/mongoose`)
 * [MySQL Connector/C++ 8.0](https://dev.mysql.com/doc/connector-cpp/8.0/en/)
 * [Perl Compatible Regular Expressions 2](https://www.pcre.org/)
+* [porter2_stemmer](https://github.com/smassung/porter2_stemmer)  (included in `crawlserv/src/_extern/porter2_stemmer`)
 * [pugixml](https://github.com/zeux/pugixml)
 * [RapidJSON](https://github.com/Tencent/rapidjson) (included in `crawlserv/src/_extern/rapidjson`)
 * [rawr-gen](https://github.com/hatkirby/rawr-ebooks) (included in `crawlserv/src/_extern/rawr`)
