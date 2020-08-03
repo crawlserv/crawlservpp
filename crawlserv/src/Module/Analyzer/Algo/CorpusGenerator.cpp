@@ -92,7 +92,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t sources{0};
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
+			std::string dateFrom;
+			std::string dateTo;
 			std::size_t corpusSources{0};
+
+			if(this->config.filterDateEnable) {
+				dateFrom = this->config.filterDateFrom;
+				dateTo = this->config.filterDateTo;
+			}
 
 			Data::Corpus corpus(this->config.generalCorpusChecks);
 
@@ -123,6 +130,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					},
 					[this](const auto progress) {
 						this->setProgress(progress);
+					},
+					[this]() {
+						return this->isRunning();
 					}
 			);
 
@@ -132,8 +142,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 							this->config.generalInputTables.at(n),
 							this->config.generalInputFields.at(n)
 					),
-					this->config.filterDateEnable ? this->config.filterDateFrom : std::string(),
-					this->config.filterDateEnable ? this->config.filterDateTo : std::string(),
+					dateFrom,
+					dateTo,
 					corpus,
 					corpusSources,
 					statusSetter
