@@ -12,7 +12,7 @@
 	},
 	"sentence.manipulators": {
 		"type": "array",
-		"array-type": "enum",
+		"item-type": "enum",
 		"enum-values": [
 			"none"
 		],
@@ -24,11 +24,11 @@
 	},
 	"word.manipulators": {
 		"type": "array",
-		"array-type": "enum",
+		"item-type": "enum",
 		"enum-values": [
 			"none",
-			"porter2_stemmer (English only)",
-			"simple German stemmer (German only)"
+			"English stemmer (porter2)",
+			"German stemmer (cistem)"
 		],
 		"default": [],
 		"label": "Word Manipulators:",
