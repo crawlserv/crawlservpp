@@ -355,10 +355,10 @@ namespace crawlservpp::Data {
 	 *   has not been tokenized.
 	 */
 	inline std::vector<std::string>& Corpus::getTokens() {
-		if(this->tokenized) {
+		if(!(this->tokenized)) {
 			throw Exception(
 					"Corpus::getTokens():"
-					" Corpus has already been tokenized."
+					" Corpus has not been tokenized."
 			);
 		}
 
@@ -375,10 +375,10 @@ namespace crawlservpp::Data {
 	 *   has not been tokenized.
 	 */
 	inline const std::vector<std::string>& Corpus::getcTokens() const {
-		if(this->tokenized) {
+		if(!(this->tokenized)) {
 			throw Exception(
-					"Corpus::getTokens():"
-					" Corpus has already been tokenized."
+					"Corpus::getcTokens():"
+					" Corpus has not been tokenized."
 			);
 		}
 
@@ -1817,26 +1817,37 @@ namespace crawlservpp::Data {
 				}
 
 				if(callbackWord) {
-					// modify words of the sentence
-					for(auto& word : sentence) {
-						(*callbackWord)(word);
+					// modify words of the sentence, do not keep emptied words
+					for(auto wordIt{sentence.begin()}; wordIt != sentence.end(); ) {
+						(*callbackWord)(*wordIt);
+
+						if(wordIt->empty()) {
+							wordIt = sentence.erase(wordIt);
+
+							--currentWord;
+						}
+						else {
+							++wordIt;
+						}
 					}
 				}
 
-				// add sentence to map
-				this->sentenceMap.emplace_back(
-						sentenceFirstWord,
-						sentence.size()
-				);
+				if(!sentence.empty()) {
+					// add sentence to map
+					this->sentenceMap.emplace_back(
+							sentenceFirstWord,
+							sentence.size()
+					);
 
-				// move the words in the finished sentence into the tokens of the corpus
-				this->tokens.insert(
-						this->tokens.end(),
-						std::make_move_iterator(sentence.begin()),
-						std::make_move_iterator(sentence.end())
-				);
+					// move the words in the finished sentence into the tokens of the corpus
+					this->tokens.insert(
+							this->tokens.end(),
+							std::make_move_iterator(sentence.begin()),
+							std::make_move_iterator(sentence.end())
+					);
 
-				sentence.clear();
+					sentence.clear();
+				}
 
 				sentenceFirstWord = currentWord; /* (= already next word) */
 
@@ -1892,18 +1903,20 @@ namespace crawlservpp::Data {
 				}
 			}
 
-			// add sentence to map
-			this->sentenceMap.emplace_back(
-					sentenceFirstWord,
-					sentence.size()
-			);
+			if(!sentence.empty()) {
+				// add sentence to map
+				this->sentenceMap.emplace_back(
+						sentenceFirstWord,
+						sentence.size()
+				);
 
-			// move the words in the finished sentence into the tokens of the corpus
-			this->tokens.insert(
-					this->tokens.end(),
-					std::make_move_iterator(sentence.begin()),
-					std::make_move_iterator(sentence.end())
-			);
+				// move the words in the finished sentence into the tokens of the corpus
+				this->tokens.insert(
+						this->tokens.end(),
+						std::make_move_iterator(sentence.begin()),
+						std::make_move_iterator(sentence.end())
+				);
+			}
 		}
 
 		std::string{}.swap(this->corpus);
