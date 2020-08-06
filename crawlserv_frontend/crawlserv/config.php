@@ -38,11 +38,16 @@ $db_name = "crawled";               // database schema
 
 if(isset($db_init) && $db_init) {
     // connect to database
-    $dbConnection = new mysqli($db_host, $db_user, $db_password, $db_name);
+    try {
+        $dbConnection = new mysqli($db_host, $db_user, $db_password, $db_name);
+    }
+    catch(Exception $e) {
+        die("<br>Connection to databank failed: " . $e->getMessage());
+    }
     
     // check for connection error
     if($dbConnection->connect_error) {
-        die("Connection to databank failed: " . $dbConnection->connect_error);
+        die("<br>Connection to databank failed: " . $dbConnection->connect_error);
     }
     
     // set charset to UTF-8
