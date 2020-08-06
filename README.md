@@ -101,13 +101,13 @@ If you use `gcc`, add the following arguments to set all of these definitions:
 
 ## Command-and-Control Server
 
-[![Documentation](https://codedocs.xyz/crawlserv/crawlservpp.svg)](https://codedocs.xyz/crawlserv/crawlservpp/)
-
 The command-and-control server contains an embedded web server (implemented using the [mongoose library](https://github.com/cesanta/mongoose)) for interaction with the frontend by [cross-origin resource sharing](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) of JSON code.
 
 In the configuration file, access can (and should) be restricted to specific IPs only.
 
 ### Source Code Documentation
+
+[![Documentation](https://codedocs.xyz/crawlserv/crawlservpp.svg)](https://codedocs.xyz/crawlserv/crawlservpp/)
 
 To build the [source code documentation](https://codedocs.xyz/crawlserv/crawlservpp/) you will need [`doxygen`](https://www.doxygen.nl) installed. Use the following command inside the root directory of the repository:
 
@@ -262,6 +262,7 @@ The following third-party libraries are used by the command-and-control server:
 * [HTML Tidy API](http://www.html-tidy.org/)
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8`)
+* [Wapiti](https://github.com/Jekub/Wapiti) (included, modified, in `crawlserv/src/_extern/wapiti`)
 * [zlib](https://www.zlib.net/)
 
 While `Asio`, `date.h`, `jsoncons`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
