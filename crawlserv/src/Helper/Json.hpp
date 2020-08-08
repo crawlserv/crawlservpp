@@ -43,6 +43,7 @@
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
 
 #include <cctype>	// std::iscntrl, std::isxdigit, std::tolower
+#include <cstddef>	// std::size_t
 #include <string>	// std::string
 #include <utility>	// std::pair
 #include <vector>	// std::vector
@@ -89,7 +90,9 @@ namespace crawlservpp::Helper::Json {
 
 	[[nodiscard]] std::string stringify(const std::vector<std::string>& vectorToStringify);
 	[[nodiscard]] std::string stringify(const std::string& stringToStringify);
-	[[nodiscard]] std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify);
+	[[nodiscard]] std::string stringify(
+			const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify
+	);
 	[[nodiscard]] std::string stringify(const Struct::TextMap& textMapToStringify);
 	[[nodiscard]] std::string stringify(const rapidjson::Value& value);
 	[[nodiscard]] std::string stringify(const jsoncons::json& json);
@@ -102,6 +105,9 @@ namespace crawlservpp::Helper::Json {
 	[[nodiscard]] rapidjson::Document parseRapid(std::string_view json);
 	[[nodiscard]] jsoncons::json parseCons(std::string_view json);
 	[[nodiscard]] Struct::TextMap parseTextMapJson(std::string_view json);
+	[[nodiscard]] std::vector<std::pair<std::size_t, std::size_t>> parsePosLenPairsJson(
+			std::string_view json
+	);
 
 	///@}
 
@@ -113,7 +119,10 @@ namespace crawlservpp::Helper::Json {
 	/*!
 	 * This exception is being thrown when
 	 * - an error occurs while parsing JSON
-	 * - an error occurs while parsing a JSON text map
+	 * - an error occurs while parsing a JSON
+	 *    text map
+	 * - an error occurs while parsing a JSON
+	 *    array of @c [pos;length] pairs
 	 */
 	MAIN_EXCEPTION_CLASS();
 
@@ -123,14 +132,19 @@ namespace crawlservpp::Helper::Json {
 
 	//! Stringifies a vector of strings into one string containing a JSON array.
 	/*!
-	 * Uses the rapidJSON API for conversion into JSON. For more information, see
-	 *  its <a href="https://github.com/Tencent/rapidjson">GitHub repository</a>.
+	 * Uses @c RapidJSON for conversion into JSON.
+	 *  For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
 	 *
-	 * \param vectorToStringify A const reference to the vector of strings to be combined
+	 * \param vectorToStringify A const reference
+	 *   to the vector of strings to be combined
 	 *   and converted into valid JSON code.
 	 *
-	 * \returns The copy of a string containing valid JSON code representing
-	 *   an array contining all strings in the given vector
+	 * \returns The copy of a string containing
+	 *   valid JSON code representing an array
+	 *   contining all strings in the given vector.
 	 */
 	inline std::string stringify(const std::vector<std::string>& vectorToStringify) {
 		// create document as array and get reference to allocator
@@ -165,17 +179,24 @@ namespace crawlservpp::Helper::Json {
 
 	//! Converts a string into a JSON array with the string as the only element inside it.
 	/*!
-	 * Uses the rapidJSON API for conversion into JSON. For more information, see
-	 *  its <a href="https://github.com/Tencent/rapidjson">GitHub repository</a>.
+	 * Uses @c RapidJSON for conversion into JSON.
+	 *  For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
 	 *
-	 * \note A string view cannot be used, because the underlying API requires
-	 *   the const reference to a string.
+	 * \note A string view cannot be used, because
+	 *   the underlying API requires the constant
+	 *   reference to a string.
 	 *
-	 * \param stringToStringify A const reference to the string to be converted
-	 *   into a JSON array.
+	 * \param stringToStringify A const reference
+	 *   to the string to be converted into a JSON
+	 *   array.
 	 *
-	 * \returns The copy of a string containing valid JSON code representing
-	 *   an array containing the given string as its only element.
+	 * \returns The copy of a string containing
+	 *   valid JSON code representing an array
+	 *   containing the given string as its only
+	 *   element.
 	 */
 	inline std::string stringify(const std::string& stringToStringify) {
 		// create document as array and get reference to allocator
@@ -205,14 +226,21 @@ namespace crawlservpp::Helper::Json {
 
 	//! Converts a vector of vectors of string pairs into a JSON array with corresponding objects containing [key, value] pairs
 	/*!
-	 * Uses the rapidJSON API for conversion into JSON. For more information, see
-	 *  its <a href="https://github.com/Tencent/rapidjson">GitHub repository</a>.
+	 * Uses @c RapidJSON for conversion into JSON.
+	 *  For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
 	 *
-	 * \param vectorToStringify A const reference to the vector containing
-	 *   vectors of string pairs, each of which represents a [key, value] pair.
+	 * \param vectorToStringify A const reference
+	 *   to the vector containing vectors of string
+	 *   pairs, each of which represents a
+	 *   [key, value] pair.
 	 *
-	 * \returns The copy of a string containing valid JSON code representing
-	 *   an array of objects containing the given [key, value] pairs.
+	 * \returns The copy of a string containing
+	 *   valid JSON code representing an array of
+	 *   objects containing the given [key, value]
+	 *   pairs.
 	 */
 	inline std::string stringify(const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify) {
 		// create document as array and get reference to allocator
@@ -265,18 +293,23 @@ namespace crawlservpp::Helper::Json {
 
 	//! Converts a text map into a JSON array with corresponding objects containing [key, value] pairs
 	/*!
-	 * Uses the rapidJSON API for conversion into JSON. For more information, see
-	 *  its <a href="https://github.com/Tencent/rapidjson">GitHub repository</a>.
+	 * Uses @c RapidJSON for conversion into JSON.
+	 *  For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
 	 *
-	 * \param textMapToStringify A const reference to the text map
-	 *   to be represented as [key, value] pairs.
+	 * \param textMapToStringify A const reference
+	 *   to the text map to be represented as
+	 *   [key, value] pairs.
 	 *
-	 * \returns The copy of a string containing valid JSON code representing
-	 *   an array of objects containing the [key, value] pairs of the text map.
+	 * \returns The copy of a string containing
+	 *   valid JSON code representing an array of
+	 *   objects containing the [key, value] pairs
+	 *   of the text map.
 	 *
 	 * \sa Struct::TextMap, Module::Analyzer::Database::createCorpus
 	 */
-	// stringify a text map to a JSON array with corresponding objects containing [key, value] pairs
 	inline std::string stringify(const Struct::TextMap& textMapToStringify) {
 		// create document as array and get refference to allocator
 		rapidjson::Document document;
@@ -343,15 +376,19 @@ namespace crawlservpp::Helper::Json {
 		return std::string(buffer.GetString(), buffer.GetSize());
 	}
 
-	//! Stringifies a JSON value using the RapidJSON API.
+	//! Stringifies a JSON value using the @c RapidJSON.
 	/*!
-	 * For more information about the RapidJSON API, see its
-	 *  <a href="https://github.com/Tencent/rapidjson">GitHub repository</a>.
+	 * For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
 	 *
-	 * \param value The RapidJSON value to be stringified.
+	 * \param value The RapidJSON value to be
+	 *  stringified.
 	 *
-	 * \returns A copy of the string containing the
-	 *   representation of the given JSON value.
+	 * \returns A copy of the string containing
+	 *   the representation of the given JSON
+	 *   value.
 	 */
 	inline std::string stringify(const rapidjson::Value& value) {
 		rapidjson::StringBuffer buffer;
@@ -362,12 +399,15 @@ namespace crawlservpp::Helper::Json {
 		return std::string(buffer.GetString(), buffer.GetSize());
 	}
 
-	//! Stringifies a JSON value using the jsoncons API.
+	//! Stringifies a JSON value using @c jsoncons.
 	/*!
-	 * For more information about the jsoncons API, see its
-	 *  <a href="https://github.com/danielaparker/jsoncons">GitHub repository</a>.
+	 * For more information about @c jsoncons,
+	 *  see its
+	 *  <a href="https://github.com/danielaparker/jsoncons">
+	 *  GitHub repository</a>.
 	 *
-	 * \param json The jsoncons value to be stringified.
+	 * \param json The @c jsoncons value to be
+	 *   stringified.
 	 *
 	 * \returns A copy of the string containing the
 	 *   representation of the given JSON value.
@@ -382,17 +422,22 @@ namespace crawlservpp::Helper::Json {
 
 	//! Copies and cleans the given JSON code to prepare it for parsing.
 	/*!
-	 * Removes control characters and corrects escape sequences in the given JSON code.
+	 * Removes control characters and corrects
+	 *  escape sequences in the given JSON code.
 	 *
-	 * If the given JSON code is empty, an empty string will be returned.
+	 * If the given JSON code is empty, an empty
+	 *  string will be returned.
 	 *
-	 * \note In standard JSON, allowed escape sequence names are:
-	 *  @c " @c \ @c / @c b @c f @c n @c r @c t, as well as
-	 *  @c u + 4 hex digits.
+	 * \note In standard JSON, allowed escape
+	 *  sequence names are:
+	 *  @c " @c \ @c / @c b @c f @c n @c r @c t,
+	 *   as well as @c u + 4 hex digits.
 	 *
-	 * \param json A string view containing the JSON code to be copied and cleaned.
+	 * \param json A string view containing the
+	 *  JSON code to be copied and cleaned.
 	 *
-	 * \returns A copy of the string containing the cleaned JSON code.
+	 * \returns A copy of the string containing
+	 *   the cleaned JSON code.
 	 */
 	inline std::string cleanCopy(std::string_view json) {
 		if(json.empty()) {
@@ -471,16 +516,21 @@ namespace crawlservpp::Helper::Json {
 		return result;
 	}
 
-	//! Parses JSON code using the RapidJSON API.
+	//! Parses JSON code using @c RapidJSON.
 	/*!
-	 * For more information about the RapidJSON API, see
-	 *  its <a href="https://github.com/Tencent/rapidjson">GitHub repository</a>.
+	 * For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
 	 *
-	 * \param json A string view containing the JSON code to parse.
+	 * \param json A string view containing the
+	 *   JSON code to parse.
 	 *
-	 * \returns A RapidJSON document containing the parsed JSON.
+	 * \returns A @c RapidJSON document containing
+	 *   the parsed JSON.
 	 *
-	 * \throws Json::Exception if an error occurs while parsing the given JSON code.
+	 * \throws Json::Exception if an error occurs
+	 *   while parsing the given JSON code.
 	 */
 	inline rapidjson::Document parseRapid(std::string_view json) {
 		// clean input
@@ -491,7 +541,9 @@ namespace crawlservpp::Helper::Json {
 		doc.Parse(cleanJson);
 
 		if(doc.HasParseError()) {
-			std::string exceptionStr("Json::parseRapid(): ");
+			std::string exceptionStr{
+				"Json::parseRapid(): "
+			};
 
 			exceptionStr += rapidjson::GetParseError_En(doc.GetParseError());
 			exceptionStr += " at \'";
@@ -520,16 +572,21 @@ namespace crawlservpp::Helper::Json {
 		return doc;
 	}
 
-	//! Parses JSON code using the jsoncons API.
+	//! Parses JSON code using @c jsoncons.
 	/*!
-	 * For more information about the jsoncons API, see its
-	 *  <a href="https://github.com/danielaparker/jsoncons">GitHub repository</a>.
+	 * For more information about @c jsoncons,
+	 *  see its
+	 *  <a href="https://github.com/danielaparker/jsoncons">
+	 *  GitHub repository</a>.
 	 *
-	 * \param json A string view containing the JSON code to parse.
+	 * \param json A string view containing the
+	 *   JSON code to parse.
 	 *
-	 * \returns A jsoncons object containing the parsed JSON.
+	 * \returns A jsoncons object containing the
+	 *   parsed JSON.
 	 *
-	 * \throws Json::Exception if an error occurs while parsing the given JSON code.
+	 * \throws Json::Exception if an error occurs
+	 *   while parsing the given JSON code.
 	 */
 	inline jsoncons::json parseCons(std::string_view json) {
 		// clean input
@@ -548,41 +605,54 @@ namespace crawlservpp::Helper::Json {
 		}
 	}
 
-	//! Parses JSON code using the RapidJSON API and converts it into a text map.
+	//! Parses JSON code using @c RapidJSON and converts it into a text map.
 	/*!
-	 * If the given JSON code is empty, an empty text map will be returned.
+	 * If the given JSON code is empty, an empty
+	 *  text map will be returned.
 	 *
-	 * For more information about the RapidJSON API, see
-	 *  its <a href="https://github.com/Tencent/rapidjson">GitHub repository</a>.
+	 * For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
 	 *
-	 * \param json A string view containing the JSON code to be parsed
-	 *   and converted into a text map.
+	 * \param json A string view containing the
+	 *   JSON code to be parsed and converted
+	 *   into a text map.
 	 *
-	 * \returns The text map parsed from the given JSON code.
+	 * \returns The text map parsed from the
+	 *   given JSON code.
 	 *
-	 * \throws Json::Exception if the given string view does not contain valid
-	 *   JSON code or the contained JSON code does not describe a valid text map.
+	 * \throws Json::Exception if the given string
+	 *   view does not contain valid JSON code or
+	 *   the contained JSON code does not describe
+	 *   a valid text map.
 	 *
 	 * \sa parseRapid, Struct::TextMap
 	 */
 	inline Struct::TextMap parseTextMapJson(std::string_view json) {
-		Struct::TextMap result;
-
 		if(json.empty()) {
-			return result;
+			return {};
 		}
 
 		// parse JSON
 		rapidjson::Document document{parseRapid(json)};
 
 		if(!document.IsArray()) {
-			throw Exception("Json::parseTextMapJson(): Invalid text map (is not an array)");
+			throw Exception(
+					"Json::parseTextMapJson():"
+					" Invalid text map"
+					" (is not an array)"
+			);
 		}
+
+		Struct::TextMap result;
 
 		for(const auto& element : document.GetArray()) {
 			if(!element.IsObject()) {
 				throw Exception(
-						"Json::parseTextMapJson(): Invalid text map (an array element is not an object"
+						"Json::parseTextMapJson():"
+						" Invalid text map"
+						" (an array element is not an object"
 				);
 			}
 
@@ -592,26 +662,118 @@ namespace crawlservpp::Helper::Json {
 
 			if(p == element.MemberEnd() || !(p->value.IsUint64())) {
 				throw Exception(
-						"Json::parseTextMapJson(): Invalid text map (could not find valid position)"
+						"Json::parseTextMapJson():"
+						" Invalid text map"
+						" (could not find valid position)"
 				);
 			}
 
 			if(l == element.MemberEnd() || !(l->value.IsUint64())) {
 				throw Exception(
-						"Json::parseTextMapJson(): Invalid text map (could not find valid length)"
+						"Json::parseTextMapJson():"
+						" Invalid text map"
+						" (could not find valid length)"
 				);
 			}
 
 			if(v == element.MemberEnd() || !(v->value.IsString())) {
 				throw Exception(
-						"Json::parseTextMapJson(): Invalid text map (could not find valid value)"
+						"Json::parseTextMapJson():"
+						" Invalid text map"
+						" (could not find valid value)"
 				);
 			}
 
 			result.emplace_back(
 					p->value.GetUint64(),
 					l->value.GetUint64(),
-					std::string(v->value.GetString(), v->value.GetStringLength())
+					std::string(
+							v->value.GetString(),
+							v->value.GetStringLength()
+					)
+			);
+		}
+
+		return result;
+	}
+
+	//! Parses JSON code using @c RapidJSON and converts it into @c [pos;length] pairs.
+	/*!
+	 * If the given JSON code is empty, an
+	 *  empty array will be returned.
+	 *
+	 * For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
+	 *
+	 * \param json A string view containing the
+	 *   JSON code to be parsed and converted
+	 *   into pairs of numbers.
+	 *
+	 * \returns The pairs parsed from the
+	 *   given JSON code.
+	 *
+	 * \throws Json::Exception if the given
+	 *   string view does not contain valid JSON
+	 *   code or the contained JSON code does
+	 *   not describe a valid array of @c
+	 *   [pos;length] pairs.
+	 *
+	 * \sa parseRapid
+	 */
+	inline std::vector<std::pair<std::size_t, std::size_t>> parsePosLenPairsJson(
+			std::string_view json
+	) {
+		if(json.empty()) {
+			return {};
+		}
+
+		// parse JSON
+		rapidjson::Document document{parseRapid(json)};
+
+		if(!document.IsArray()) {
+			throw Exception(
+					"Json::parsePosLenPairsJson():"
+					" Invalid array of [pos;length] pairs"
+					" (is not an array)"
+			);
+		}
+
+		std::vector<std::pair<std::size_t, std::size_t>> result;
+
+		for(const auto& element : document.GetArray()) {
+			if(!element.IsObject()) {
+				throw Exception(
+						"Json::parsePosLenPairsJson():"
+						" Invalid array of [pos;length] pairs"
+						" (an array element is not an object)"
+				);
+			}
+
+			auto p{element.FindMember("p")};
+			auto l{element.FindMember("l")};
+			auto v{element.FindMember("v")};
+
+			if(p == element.MemberEnd() || !(p->value.IsUint64())) {
+				throw Exception(
+						"Json::parsePosLenPairsJson():"
+						" Invalid array of [pos;length] pairs"
+						" (could not find valid position)"
+				);
+			}
+
+			if(l == element.MemberEnd() || !(l->value.IsUint64())) {
+				throw Exception(
+						"Json::parsePosLenPairsJson():"
+						" Invalid array of [pos;length] pairs"
+						" (could not find valid length)"
+				);
+			}
+
+			result.emplace_back(
+					p->value.GetUint64(),
+					l->value.GetUint64()
 			);
 		}
 
