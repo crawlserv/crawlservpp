@@ -45,6 +45,7 @@
 #include "../Wrapper/DatabaseTryLock.hpp"
 
 #include <cppconn/prepared_statement.h>
+
 #include <mysql_connection.h>
 
 #include <cstddef>		// std::size_t
