@@ -72,16 +72,16 @@ namespace crawlservpp::Module {
 	///@{
 
 	//! Number of seconds to sleep on connection errors.
-	constexpr auto sleepOnConnectionErrorS{10};
+	inline constexpr auto sleepOnConnectionErrorS{10};
 
 	//! Number of milliseconds to sleep before checking whether the thread is still running.
-	constexpr auto sleepMs{800};
+	inline constexpr auto sleepMs{800};
 
 	//! Status message prefix for interrupted threads.
-	constexpr auto statusPrefixInterrupted{"INTERRUPTED "sv};
+	inline constexpr auto statusPrefixInterrupted{"INTERRUPTED "sv};
 
 	//! Status message prefix for paused threads.
-	constexpr auto statusPrefixPaused{"PAUSED "sv};
+	inline constexpr auto statusPrefixPaused{"PAUSED "sv};
 
 	///@}
 

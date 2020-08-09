@@ -49,7 +49,7 @@ namespace crawlservpp::Parsing {
 	///@{
 
 	//! The character encoding used by the tidy-html5 API.
-	constexpr std::string_view tidyEncoding{"utf8"};
+	inline constexpr std::string_view tidyEncoding{"utf8"};
 
 	///@}
 

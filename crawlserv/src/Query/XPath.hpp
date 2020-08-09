@@ -54,10 +54,10 @@ namespace crawlservpp::Query {
 	///@{
 
 	//! The beginning of a CDATA tag.
-	constexpr std::string_view cDataHead{"<![CDATA["};
+	inline constexpr std::string_view cDataHead{"<![CDATA["};
 
 	//! The end of a CDATA tag.
-	constexpr std::string_view cDataTail{"]]>"};
+	inline constexpr std::string_view cDataTail{"]]>"};
 
 	///@}
 

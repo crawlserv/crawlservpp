@@ -68,7 +68,7 @@ namespace crawlservpp::Module {
 	///@{
 
 	//! Protocols supported by the @c libcurl library.
-	constexpr std::array protocols{
+	inline constexpr std::array protocols{
 		"ftp://"sv,
 		"scp://"sv,
 		"smb://"sv,

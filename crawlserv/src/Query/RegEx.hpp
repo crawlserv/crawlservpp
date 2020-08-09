@@ -54,13 +54,13 @@ namespace crawlservpp::Query {
 	///@{
 
 	//! The length of the error buffer used by the PCRE2 library, in bytes.
-	constexpr auto pcre2ErrorBufferLength{1024};
+	inline constexpr auto pcre2ErrorBufferLength{1024};
 
 	//! Bit mask to extract the first bit of a multibyte character.
-	constexpr auto bitmaskTopBit{0x80};
+	inline constexpr auto bitmaskTopBit{0x80};
 
 	//! Bit mask to extract the top two bits of a multibyte character.
-	constexpr auto bitmaskTopTwoBits{0xc0};
+	inline constexpr auto bitmaskTopTwoBits{0xc0};
 
 	///@}
 

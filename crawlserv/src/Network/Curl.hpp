@@ -76,58 +76,64 @@ namespace crawlservpp::Network {
 	///@{
 
 	//! URL encoding of a space.
-	constexpr auto encodedSpace{"%20"};
+	inline constexpr auto encodedSpace{"%20"};
 
 	//! Length of a URL encoded space.
-	constexpr auto encodedSpaceLength{3};
+	inline constexpr auto encodedSpaceLength{3};
 
 	//! The number of milliseconds to sleep before re-checking the status of the application.
-	constexpr auto checkEveryMilliseconds{100};
+	inline constexpr auto checkEveryMilliseconds{100};
 
 	//! Reserved characters to be ignored when escaping a URL.
-	constexpr auto reservedCharacters{";/?:@=&#"};
+	inline constexpr auto reservedCharacters{";/?:@=&#"};
 
 	//! @c libcurl version needed for DNS-over-HTTPS support, i.e. @c 7.62.0.
-	constexpr auto versionDoH{0x073E00};
+	inline constexpr auto versionDoH{0x073E00};
 
 	//! @c libcurl version needed for DNS shuffling, i.e. @c 7.60.0.
-	constexpr auto versionDnsShuffle{0x073C00};
+	inline constexpr auto versionDnsShuffle{0x073C00};
 
 	//! @c libcurl version needed for Brotli encoding, i.e. @c 7.57.0.
-	constexpr auto versionBrotli{0x073900};
+	inline constexpr auto versionBrotli{0x073900};
 
 	//! @c libcurl version needed for zstd encoding, i.e. @c 7.72.0.
-	constexpr auto versionZstd{0x074800};
+	inline constexpr auto versionZstd{0x074800};
 
 	//! @c libcurl version needed for HTTP/2 support, i.e. @c 7.33.0.
-	constexpr auto versionHttp2{0x072100};
+	inline constexpr auto versionHttp2{0x072100};
 
 	//! @c libcurl version needed for HTTP/2 ONLY support, i.e. @c 7.49.0.
-	constexpr auto versionHttp2Only{0x073100};
+	inline constexpr auto versionHttp2Only{0x073100};
 
 	//! @c libcurl version needed for HTTP/2 OVER TLS ONLY support, i.e. @c 7.47.0.
-	constexpr auto versionHttp2Tls{0x072F00};
+	inline constexpr auto versionHttp2Tls{0x072F00};
 
 	//! @c libcurl version needed for HTTP/3 ONLY support, i.e. @c 7.66.0.
-	constexpr auto versionHttp3Only{0x074200};
+	inline constexpr auto versionHttp3Only{0x074200};
 
 	//! @c libcurl version needed for pre-proxy support, i.e. @c 7.52.0.
-	constexpr auto versionPreProxy{0x073400};
+	inline constexpr auto versionPreProxy{0x073400};
 
 	//! @c libcurl version needed for proxy TLS authentification, i.e. @c 7.52.0.
-	constexpr auto versionProxyTlsAuth{0x073400};
+	inline constexpr auto versionProxyTlsAuth{0x073400};
 
 	//! @c libcurl authentification type for the proxy TLS-SRP authentification.
-	constexpr auto authTypeTlsSrp{"SRP"};
+	inline constexpr auto authTypeTlsSrp{"SRP"};
 
 	//! @c libcurl version needed for SSL verification of proxy host and peer, i.e. @c 7.52.0.
-	constexpr auto versionProxySslVerify{0x073400};
+	inline constexpr auto versionProxySslVerify{0x073400};
 
 	//! @c libcurl version needed for TCP Fast Open support, i.e. @c 7.49.0.
-	constexpr auto versionTcpFastOpen{0x073100};
+	inline constexpr auto versionTcpFastOpen{0x073100};
 
 	//! @c libcurl version needed for the Happy Eyeballs algorithm, i.e. @c 7.59.0.
-	constexpr auto versionHappyEyeballs{0x073B00};
+	inline constexpr auto versionHappyEyeballs{0x073B00};
+
+	//! URL to retrieve the IP of the server from.
+	inline constexpr auto getPublicIpFrom{"https://myexternalip.com/raw"};
+
+	//! Errors when retrieving the IP of the server.
+	inline constexpr std::array getPublicIpErrors{429, 502, 503, 504, 521, 522, 524};
 
 	///@}
 
@@ -1329,8 +1335,6 @@ namespace crawlservpp::Network {
 	 *    not be determined. An error description might follow.
 	 */
 	inline std::string Curl::getPublicIp() {
-		constexpr auto getPublicIpFrom{"https://myexternalip.com/raw"};
-		constexpr std::array getPublicIpErrors{429, 502, 503, 504, 521, 522, 524};
 		std::string ip;
 
 		try {

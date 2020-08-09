@@ -46,25 +46,25 @@ namespace crawlservpp::Struct {
 		///@{
 
 		//! Unspecified query type.
-		static constexpr std::uint8_t typeNone{0};
+		inline static constexpr std::uint8_t typeNone{0};
 
 		//! %Query type identifying a RegEx query.
-		static constexpr std::uint8_t typeRegEx{1};
+		inline static constexpr std::uint8_t typeRegEx{1};
 
 		//! %Query type identifying a XPath query.
-		static constexpr std::uint8_t typeXPath{2};
+		inline static constexpr std::uint8_t typeXPath{2};
 
 		//! %Query type identifying a JSONPointer query.
-		static constexpr std::uint8_t typeJsonPointer{3};
+		inline static constexpr std::uint8_t typeJsonPointer{3};
 
 		//! %Query type identifying a JSONPath query.
-		static constexpr std::uint8_t typeJsonPath{4};
+		inline static constexpr std::uint8_t typeJsonPath{4};
 
 		//! %Query type identifying a combined XPath and JSONPointer query.
-		static constexpr std::uint8_t typeXPathJsonPointer{5};
+		inline static constexpr std::uint8_t typeXPathJsonPointer{5};
 
 		//! %Query type identifying a combined XPath and JSONPath query.
-		static constexpr std::uint8_t typeXPathJsonPath{6};
+		inline static constexpr std::uint8_t typeXPathJsonPath{6};
 
 		///@}
 		///@name Properties

@@ -54,10 +54,10 @@ namespace crawlservpp::Network {
 	///@{
 
 	//! The length of a HTTP response code.
-	constexpr auto responseCodeLength{3};
+	inline constexpr auto responseCodeLength{3};
 
 	//! The number of milliseconds per second.
-	constexpr auto millisecondsPerSecond{1000};
+	inline constexpr auto millisecondsPerSecond{1000};
 
 	///@}
 

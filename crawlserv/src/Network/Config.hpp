@@ -54,55 +54,55 @@ namespace crawlservpp::Network {
 	///@{
 
 	//! Use any available HTTP version.
-	constexpr std::uint16_t httpVersionAny{0};
+	inline constexpr std::uint16_t httpVersionAny{0};
 
 	//! Use HTTP/1 only.
-	constexpr std::uint16_t httpVersion1{1};
+	inline constexpr std::uint16_t httpVersion1{1};
 
 	//! Use HTTP/1.1 only.
-	constexpr std::uint16_t httpVersion11{2};
+	inline constexpr std::uint16_t httpVersion11{2};
 
 	//! Attempt to use HTTP/2, fall back to HTTP/1.1.
-	constexpr std::uint16_t httpVersion2{3};
+	inline constexpr std::uint16_t httpVersion2{3};
 
 	//! Use non-TLS HTTP/2, even if HTTPS is not available.
-	constexpr std::uint16_t httpVersion2Only{4};
+	inline constexpr std::uint16_t httpVersion2Only{4};
 
 	//! Attempt to use HTTP/2 over TLS, fall back to HTTP/1.1.
-	constexpr std::uint16_t httpVersion2Tls{5};
+	inline constexpr std::uint16_t httpVersion2Tls{5};
 
 	//! Use HTTP/3 only.
 	/*!
 	 * \warning Fails, if a server does not support HTTP/3.
 	 */
-	constexpr std::uint16_t httpVersion3Only{6};
+	inline constexpr std::uint16_t httpVersion3Only{6};
 
 	//! Default maximum number of connections.
-	constexpr std::uint16_t defaultConnectionsMax{5};
+	inline constexpr std::uint16_t defaultConnectionsMax{5};
 
 	//! Default lifetime of DNS cache entries.
-	constexpr std::int64_t defaultDnsCacheTimeOut{60};
+	inline constexpr std::int64_t defaultDnsCacheTimeOut{60};
 
 	//! Default maximum number of automatic redirects by default.
-	constexpr std::uint64_t defaultRedirectMax{20};
+	inline constexpr std::uint64_t defaultRedirectMax{20};
 
 	//! Default number of seconds that need to have been passed before requesting a new TOR identity.
-	constexpr std::uint64_t defaultResetTorOnlyAfter{60};
+	inline constexpr std::uint64_t defaultResetTorOnlyAfter{60};
 
 	//! Default delay that will be waited before sending keep-alive probes, in seconds.
-	constexpr std::uint64_t defaultTcpKeepAliveIdle{60};
+	inline constexpr std::uint64_t defaultTcpKeepAliveIdle{60};
 
 	//! Default interval for TCP Keep-alive probing, in seconds
-	constexpr std::uint64_t defaultTcpKeepAliveInterval{60};
+	inline constexpr std::uint64_t defaultTcpKeepAliveInterval{60};
 
 	//! Default connecting time-out, in seconds.
-	constexpr std::uint64_t defaultTimeOut{300};
+	inline constexpr std::uint64_t defaultTimeOut{300};
 
 	//! Default request time-out, in seconds.
-	constexpr std::uint64_t defaultTimeOutRequest{300};
+	inline constexpr std::uint64_t defaultTimeOutRequest{300};
 
 	//! Default protocol.
-	constexpr auto defaultProtocol{"https://"sv};
+	inline constexpr auto defaultProtocol{"https://"sv};
 
 	///@}
 

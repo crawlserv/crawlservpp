@@ -54,7 +54,7 @@ namespace crawlservpp::Parsing {
 	///@{
 
 	//! Maximum length of a URL-escaped character.
-	constexpr auto maxEscapedCharLength{6};
+	inline constexpr auto maxEscapedCharLength{6};
 
 	///@}
 

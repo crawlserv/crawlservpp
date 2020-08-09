@@ -66,13 +66,13 @@ namespace crawlservpp::Module {
 	///@{
 
 	//! First argument in a SQL query.
-	constexpr auto sqlArg1{1};
+	inline constexpr auto sqlArg1{1};
 
 	//! Second argument in a SQL query.
-	constexpr auto sqlArg2{2};
+	inline constexpr auto sqlArg2{2};
 
 	//! Third argument in a SQL query.
-	constexpr auto sqlArg3{3};
+	inline constexpr auto sqlArg3{3};
 
 	///@}
 

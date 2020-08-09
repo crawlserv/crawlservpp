@@ -62,58 +62,58 @@ namespace crawlservpp::Parsing {
 	///@{
 
 	//! The beginning of XML markup
-	constexpr std::string_view xmlBegin{"<?xml "};
+	inline constexpr std::string_view xmlBegin{"<?xml "};
 
 	//! The beginning of a CDATA element.
-	constexpr std::string_view cDataBegin{"<![CDATA["};
+	inline constexpr std::string_view cDataBegin{"<![CDATA["};
 
 	//! The end of a CDATA element.
-	constexpr std::string_view cDataEnd{"]]>"};
+	inline constexpr std::string_view cDataEnd{"]]>"};
 
 	//! The beginning of a conditional comment
-	constexpr std::string_view conditionalBegin{"<![if "};
+	inline constexpr std::string_view conditionalBegin{"<![if "};
 
 	//! The end of a conditional comment
-	constexpr std::string_view conditionalEnd{"<![endif]>"};
+	inline constexpr std::string_view conditionalEnd{"<![endif]>"};
 
 	//! Characters to be inserted/replaced to make conditional comments valid
-	constexpr std::string_view conditionalInsert{"--"};
+	inline constexpr std::string_view conditionalInsert{"--"};
 
 	//! Offset at which to insert at the beginning to make conditional comments valid
-	constexpr auto conditionalInsertOffsetBegin{2};
+	inline constexpr auto conditionalInsertOffsetBegin{2};
 
 	//! Offset at which to insert at the end to make conditional comments valid
-	constexpr auto conditionalInsertOffsetEnd{9};
+	inline constexpr auto conditionalInsertOffsetEnd{9};
 
 	//! Offset at which to insert into stray end tag left from conditional comment
-	constexpr auto conditionalInsertOffsetStrayEnd{2};
+	inline constexpr auto conditionalInsertOffsetStrayEnd{2};
 
 	//! Characters to be replaced inside comments
-	constexpr std::string_view commentCharsToReplace{"--"};
+	inline constexpr std::string_view commentCharsToReplace{"--"};
 
 	//! Characters used as replacement inside comments
-	constexpr std::string_view commentCharsReplaceBy{"=="};
+	inline constexpr std::string_view commentCharsReplaceBy{"=="};
 
 	//! The beginning of an invalid comment
-	constexpr std::string_view invalidBegin{"<? "};
+	inline constexpr std::string_view invalidBegin{"<? "};
 
 	//! The end of an invalid comment
-	constexpr std::string_view invalidEnd{" ?>"};
+	inline constexpr std::string_view invalidEnd{" ?>"};
 
 	//! Characters to be inserted at the beginning to make invalid comments valid
-	constexpr std::string_view invalidInsertBegin{"!--"};
+	inline constexpr std::string_view invalidInsertBegin{"!--"};
 
 	//! Characters to be inserted at the end to make invalid comments valid
-	constexpr std::string_view invalidInsertEnd{"--"};
+	inline constexpr std::string_view invalidInsertEnd{"--"};
 
 	//! Offset at which to insert at the beginning to make invalid comments valid
-	constexpr auto invalidInsertOffsetBegin{1};
+	inline constexpr auto invalidInsertOffsetBegin{1};
 
 	//! Offset at which to insert at the end to make invalid comments valid
-	constexpr auto invalidInsertOffsetEnd{2};
+	inline constexpr auto invalidInsertOffsetEnd{2};
 
 	//! The maximum number of characters to be shown in error messages.
-	constexpr auto numDebugCharacters{50};
+	inline constexpr auto numDebugCharacters{50};
 
 	///@}
 
