@@ -59,25 +59,25 @@ namespace crawlservpp::Helper::Json {
 	///@{
 
 	//! The length of an escaped Unicode character in JSON code (including the '\\u').
-	constexpr auto unicodeEscapeLength{7};
+	inline constexpr auto unicodeEscapeLength{7};
 
 	//! The offset of the first Unicode character digit in JSON code (from the '\\').
-	constexpr auto unicodeEscapeDigit1{2};
+	inline constexpr auto unicodeEscapeDigit1{2};
 
 	//! The offset of the second Unicode character digit in JSON code (from the '\\').
-	constexpr auto unicodeEscapeDigit2{3};
+	inline constexpr auto unicodeEscapeDigit2{3};
 
 	//! The offset of the third Unicode character digit in JSON code (from the '\\').
-	constexpr auto unicodeEscapeDigit3{4};
+	inline constexpr auto unicodeEscapeDigit3{4};
 
 	//! The offset of the fourth Unicode character digit in JSON code (from the '\\').
-	constexpr auto unicodeEscapeDigit4{5};
+	inline constexpr auto unicodeEscapeDigit4{5};
 
 	//! The offset of the fifth Unicode character digit in JSON code (from the '\\').
-	constexpr auto unicodeEscapeDigit5{6};
+	inline constexpr auto unicodeEscapeDigit5{6};
 
 	//! The number of characters to show before and behind a JSON error.
-	constexpr auto numDebugChars{25};
+	inline constexpr auto numDebugChars{25};
 
 	///@}
 
@@ -753,7 +753,6 @@ namespace crawlservpp::Helper::Json {
 
 			auto p{element.FindMember("p")};
 			auto l{element.FindMember("l")};
-			auto v{element.FindMember("v")};
 
 			if(p == element.MemberEnd() || !(p->value.IsUint64())) {
 				throw Exception(
