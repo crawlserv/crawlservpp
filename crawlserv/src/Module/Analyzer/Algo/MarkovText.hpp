@@ -62,25 +62,25 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	///@{
 
 	//! Default dimension parameter for the algorithm.
-	constexpr auto markovTextDefaultDimension{3};
+	inline constexpr auto markovTextDefaultDimension{3};
 
 	//! Default length of the generated texts.
-	constexpr auto markovTextDefaultLength{400};
+	inline constexpr auto markovTextDefaultLength{400};
 
 	//! Default name of the column in the target table for the generated texts to be written to.
-	constexpr auto markovTextDefaultResultField{"text"};
+	inline constexpr auto markovTextDefaultResultField{"text"};
 
 	//! Default name of the column in the target table for the number of source texts to be written to.
-	constexpr auto markovTextDefaultSourcesField{"sources"};
+	inline constexpr auto markovTextDefaultSourcesField{"sources"};
 
 	//! ASCII code for a space.
-	constexpr auto markovTextAsciiSpace{32};
+	inline constexpr auto markovTextAsciiSpace{32};
 
 	//! Number of iterations of the algorithm loop before the progress will be refreshed.
-	constexpr auto markovTextRefreshProgressEvery{1000000};
+	inline constexpr auto markovTextRefreshProgressEvery{1000000};
 
 	//! Average word lenght the algorithm expects in the processed texts.
-	constexpr auto markovTextGuessedWordLength{10};
+	inline constexpr auto markovTextGuessedWordLength{10};
 
 	//@}
 

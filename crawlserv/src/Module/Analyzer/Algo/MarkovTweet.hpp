@@ -60,19 +60,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	///@{
 
 	//! Default dimension parameter for the algorithm.
-	constexpr auto markovTweetDefaultDimension{5};
+	inline constexpr auto markovTweetDefaultDimension{5};
 
 	//! Default language for the algorithm.
-	constexpr auto markovTweetDefaultLanguage{"en_US"};
+	inline constexpr auto markovTweetDefaultLanguage{"en_US"};
 
 	//! Default length of the generated texts.
-	constexpr auto markovTweetDefaultLength{140};
+	inline constexpr auto markovTweetDefaultLength{140};
 
 	//! Default name of the column in the target table for the generated texts to be written to.
-	constexpr auto markovTweetDefaultResultField{"tweet"};
+	inline constexpr auto markovTweetDefaultResultField{"tweet"};
 
 	//! Default name of the column in the target table for the number of source texts to be written to.
-	constexpr auto markovTweetDefaultSourcesField{"sources"};
+	inline constexpr auto markovTweetDefaultSourcesField{"sources"};
 
 	//@}
 
