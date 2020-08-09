@@ -259,6 +259,7 @@ add_executable(${PROJECT_NAME}
 		src/Wrapper/Curl.cpp
 		src/_extern/mongoose/mongoose.c
 		src/_extern/porter2_stemmer/porter2_stemmer.cpp
+		src/_extern/wapiti/wapiti.cpp
 
 # NOTE: The following might be removed in the near future.
 		src/_extern/rawr/histogram.cpp
@@ -353,6 +354,7 @@ endif()
 #			"-cppcoreguidelines-pro-type-union-access,"
 #			"-fuchsia-default-arguments-calls,"
 #			"-fuchsia-multiple-inheritance,"
+#			"-fuchsia-overloaded-operator,"
 #			"-google-runtime-references,"
 #			"-llvm-header-guard,"
 #			"-misc-non-private-member-variables-in-classes,"
