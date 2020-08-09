@@ -53,64 +53,64 @@ namespace crawlservpp::Module::Extractor {
 	///@{
 
 	//! Logging is disabled.
-	constexpr std::uint8_t crawlerLoggingVerbose{0};
+	inline constexpr std::uint8_t crawlerLoggingVerbose{0};
 
 	//! Default logging is enabled.
-	constexpr std::uint8_t generalLoggingDefault{1};
+	inline constexpr std::uint8_t generalLoggingDefault{1};
 
 	//! Extended logging is enabled.
-	constexpr std::uint8_t generalLoggingExtended{2};
+	inline constexpr std::uint8_t generalLoggingExtended{2};
 
 	//! Verbose logging is enabled.
-	constexpr std::uint8_t generalLoggingVerbose{3};
+	inline constexpr std::uint8_t generalLoggingVerbose{3};
 
 	//! Extract variable value from parsed data.
-	constexpr std::uint8_t variablesSourcesParsed{0};
+	inline constexpr std::uint8_t variablesSourcesParsed{0};
 
 	//! Extract variable value from the content of a crawled web page.
-	constexpr std::uint8_t variablesSourcesContent{1};
+	inline constexpr std::uint8_t variablesSourcesContent{1};
 
 	//! Extract variable value from the URL of a crawled web page.
-	constexpr std::uint8_t variablesSourcesUrl{2};
+	inline constexpr std::uint8_t variablesSourcesUrl{2};
 
 	//! Extract data from other extracted data.
-	constexpr std::uint8_t expectedSourceExtracting{0};
+	inline constexpr std::uint8_t expectedSourceExtracting{0};
 
 	//! Extract data from parsed data.
-	constexpr std::uint8_t expectedSourceParsed{1};
+	inline constexpr std::uint8_t expectedSourceParsed{1};
 
 	//! Extract data from the content of a crawled web page.
-	constexpr std::uint8_t expectedSourceContent{2};
+	inline constexpr std::uint8_t expectedSourceContent{2};
 
 	//! HTTP status codes to retry by default.
-	constexpr std::array defaultRetryHttpStatusCodes{429, 502, 503, 504};
+	inline constexpr std::array defaultRetryHttpStatusCodes{429, 502, 503, 504};
 
 	//! Protocols to remove from URLs
-	constexpr std::array protocolsToRemove{"http://"sv, "https://"sv};
+	inline constexpr std::array protocolsToRemove{"http://"sv, "https://"sv};
 
 	//! Default cache size.
-	constexpr std::uint64_t defaultCacheSize{2500};
+	inline constexpr std::uint64_t defaultCacheSize{2500};
 
 	//! Default locking time, in seconds.
-	constexpr std::uint32_t defaultLockS{300};
+	inline constexpr std::uint32_t defaultLockS{300};
 
 	//! Default number of URLs and results to be processed in one MySQL query.
-	constexpr std::uint16_t defaultMaxBatchSize{500};
+	inline constexpr std::uint16_t defaultMaxBatchSize{500};
 
 	//! Default re-tries on connection error.
-	constexpr std::int64_t defaultReTries{720};
+	inline constexpr std::int64_t defaultReTries{720};
 
 	//! Default sleeping time on connection errors, in milliseconds.
-	constexpr std::uint64_t defaultSleepErrorMs{10000};
+	inline constexpr std::uint64_t defaultSleepErrorMs{10000};
 
 	//! Default time that will be waited between HTTP requests, in milliseconds.
-	constexpr std::uint64_t defaultSleepHttpMs{0};
+	inline constexpr std::uint64_t defaultSleepHttpMs{0};
 
 	//! Default time to wait before checking for new URLs when all URLs have been processed, in milliseconds.
-	constexpr std::uint64_t defaultSleepIdleMs{5000};
+	inline constexpr std::uint64_t defaultSleepIdleMs{5000};
 
 	//! Default time to wait before last try to re-connect to mySQL server, in seconds.
-	constexpr std::uint64_t defaultSleepMySqlS{20};
+	inline constexpr std::uint64_t defaultSleepMySqlS{20};
 
 	//! Default name of the paging variable.
 	/*!
@@ -122,10 +122,10 @@ namespace crawlservpp::Module::Extractor {
 	 *  Will be overwritten with either the
 	 *   number, or the name of the current page.
 	 */
-	constexpr auto defaultPagingVariable{"$p"sv};
+	inline constexpr auto defaultPagingVariable{"$p"sv};
 
 	//! Default maximum depth of recursive extracting.
-	constexpr std::uint64_t defaultRecursiveMaxDepth{100};
+	inline constexpr std::uint64_t defaultRecursiveMaxDepth{100};
 
 	///@}
 

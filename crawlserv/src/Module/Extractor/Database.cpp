@@ -897,15 +897,12 @@ namespace crawlservpp::Module::Extractor {
 			Database::sqlException("Extractor:Database::fetchUrls", e);
 		}
 
-		// number of arguments for setting a lock
-		constexpr std::uint8_t numArgsLock{3};
-
 		// set maximum number of locks at once
 		while(lockingQueue.size() >= this->maxBatchSize) {
 			for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
-				sqlStatementLockMax.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
-				sqlStatementLockMax.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
-				sqlStatementLockMax.setString(n * numArgsLock + sqlArg3, lockTime);
+				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
+				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
+				sqlStatementLockMax.setString(n * numArgsLockUrl + sqlArg3, lockTime);
 
 				lockingQueue.pop();
 			}
@@ -917,9 +914,9 @@ namespace crawlservpp::Module::Extractor {
 		// set 100 locks at once
 		while(lockingQueue.size() >= nAtOnce100) {
 			for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
-				sqlStatementLock100.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
-				sqlStatementLock100.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
-				sqlStatementLock100.setString(n * numArgsLock + sqlArg3, lockTime);
+				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
+				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
+				sqlStatementLock100.setString(n * numArgsLockUrl + sqlArg3, lockTime);
 
 				lockingQueue.pop();
 			}
@@ -931,9 +928,9 @@ namespace crawlservpp::Module::Extractor {
 		// set 10 locks at once
 		while(lockingQueue.size() >= nAtOnce10) {
 			for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
-				sqlStatementLock10.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
-				sqlStatementLock10.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
-				sqlStatementLock10.setString(n * numArgsLock + sqlArg3, lockTime);
+				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
+				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
+				sqlStatementLock10.setString(n * numArgsLockUrl + sqlArg3, lockTime);
 
 				lockingQueue.pop();
 			}
@@ -1652,15 +1649,6 @@ namespace crawlservpp::Module::Extractor {
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.updateOrAdd100Entries)};
 		auto& sqlStatementMax{this->getPreparedStatement(this->ps.updateOrAddMaxEntries)};
 
-		// number of arguments when adding an entry (without custom fields)
-		constexpr auto numArgsAdd{4};
-
-		// number of additional arguments when data is linked
-		constexpr auto numArgsLinked{2};
-
-		// number of additional arguments when overwriting existing entries
-		constexpr auto numArgsOverwrite{3};
-
 		// count fields
 		auto fields{
 			std::count_if(
@@ -1695,7 +1683,7 @@ namespace crawlservpp::Module::Extractor {
 						sqlStatementMax.setString(n * fields + sqlArg2, entries.front().dataId);
 						sqlStatementMax.setString(n * fields + sqlArg3, entries.front().dataId);
 
-						counter += numArgsOverwrite;
+						counter += numArgsOverwriteData;
 					}
 
 					sqlStatementMax.setUInt64(n * fields + counter + sqlArg1, entries.front().contentId);
@@ -1710,7 +1698,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// set custom values
-					counter += numArgsAdd;
+					counter += numArgsAddUpdateData;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -1773,7 +1761,7 @@ namespace crawlservpp::Module::Extractor {
 						sqlStatement100.setString(n * fields + sqlArg2, entries.front().dataId);
 						sqlStatement100.setString(n * fields + sqlArg3, entries.front().dataId);
 
-						counter += numArgsOverwrite;
+						counter += numArgsOverwriteData;
 					}
 
 					sqlStatement100.setUInt64(n * fields + counter + sqlArg1, entries.front().contentId);
@@ -1788,7 +1776,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// set custom values
-					counter += numArgsAdd;
+					counter += numArgsAddUpdateData;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -1852,7 +1840,7 @@ namespace crawlservpp::Module::Extractor {
 						sqlStatement10.setString(n * fields + sqlArg2, entries.front().dataId);
 						sqlStatement10.setString(n * fields + sqlArg3, entries.front().dataId);
 
-						counter += numArgsOverwrite;
+						counter += numArgsOverwriteData;
 					}
 
 					sqlStatement10.setUInt64(n * fields + counter + sqlArg1, entries.front().contentId);
@@ -1867,7 +1855,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					// set custom values
-					counter += numArgsAdd;
+					counter += numArgsAddUpdateData;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -1925,7 +1913,7 @@ namespace crawlservpp::Module::Extractor {
 					sqlStatement1.setString(sqlArg2, entries.front().dataId);
 					sqlStatement1.setString(sqlArg3, entries.front().dataId);
 
-					counter += numArgsOverwrite;
+					counter += numArgsOverwriteData;
 				}
 
 				sqlStatement1.setUInt64(counter + sqlArg1, entries.front().contentId);
@@ -1940,7 +1928,7 @@ namespace crawlservpp::Module::Extractor {
 				}
 
 				// set custom values
-				counter += numArgsAdd;
+				counter += numArgsAddUpdateData;
 
 				for(
 						auto it{entries.front().fields.cbegin()};
@@ -2046,12 +2034,6 @@ namespace crawlservpp::Module::Extractor {
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.updateOrAdd100Linked)};
 		auto& sqlStatementMax{this->getPreparedStatement(this->ps.updateOrAddMaxLinked)};
 
-		// number of arguments when adding an entry (without custom fields)
-		constexpr auto numArgsAdd{2};
-
-		// number of additional arguments when overwriting existing entries
-		constexpr auto numArgsOverwrite{2};
-
 		// count fields
 		auto fields{
 			std::count_if(
@@ -2064,7 +2046,7 @@ namespace crawlservpp::Module::Extractor {
 		};
 
 		if(this->overwriteLinked) {
-			fields += numArgsOverwrite;
+			fields += numArgsOverwriteLinkedData;
 		}
 
 		try {
@@ -2084,14 +2066,14 @@ namespace crawlservpp::Module::Extractor {
 						sqlStatementMax.setString(n * fields + sqlArg1, entries.front().dataId);
 						sqlStatementMax.setString(n * fields + sqlArg2, entries.front().dataId);
 
-						counter += numArgsOverwrite;
+						counter += numArgsOverwriteLinkedData;
 					}
 
 					sqlStatementMax.setString(n * fields + counter + sqlArg1, entries.front().dataId);
 					sqlStatementMax.setString(n * fields + counter + sqlArg2, entries.front().dataId);
 
 					// set custom values
-					counter += numArgsAdd;
+					counter += numArgsAddUpdateLinkedData;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -2133,14 +2115,14 @@ namespace crawlservpp::Module::Extractor {
 						sqlStatement100.setString(n * fields + sqlArg1, entries.front().dataId);
 						sqlStatement100.setString(n * fields + sqlArg2, entries.front().dataId);
 
-						counter += numArgsOverwrite;
+						counter += numArgsOverwriteLinkedData;
 					}
 
 					sqlStatement100.setString(n * fields + counter + sqlArg1, entries.front().dataId);
 					sqlStatement100.setString(n * fields + counter + sqlArg2, entries.front().dataId);
 
 					// set custom values
-					counter += numArgsAdd;
+					counter += numArgsAddUpdateLinkedData;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -2182,14 +2164,14 @@ namespace crawlservpp::Module::Extractor {
 						sqlStatement10.setString(n * fields + sqlArg1, entries.front().dataId);
 						sqlStatement10.setString(n * fields + sqlArg2, entries.front().dataId);
 
-						counter += numArgsOverwrite;
+						counter += numArgsOverwriteLinkedData;
 					}
 
 					sqlStatement10.setString(n * fields + counter + sqlArg1, entries.front().dataId);
 					sqlStatement10.setString(n * fields + counter + sqlArg2, entries.front().dataId);
 
 					// set custom values
-					counter += numArgsAdd;
+					counter += numArgsAddUpdateLinkedData;
 
 					for(
 							auto it{entries.front().fields.cbegin()};
@@ -2225,14 +2207,14 @@ namespace crawlservpp::Module::Extractor {
 					sqlStatement1.setString(sqlArg1, entries.front().dataId);
 					sqlStatement1.setString(sqlArg2, entries.front().dataId);
 
-					counter += numArgsOverwrite;
+					counter += numArgsOverwriteLinkedData;
 				}
 
 				sqlStatement1.setString(counter + sqlArg1, entries.front().dataId);
 				sqlStatement1.setString(counter + sqlArg2, entries.front().dataId);
 
 				// set custom values
-				counter += numArgsAdd;
+				counter += numArgsAddUpdateLinkedData;
 
 				for(
 						auto it{entries.front().fields.cbegin()};
@@ -2306,17 +2288,14 @@ namespace crawlservpp::Module::Extractor {
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.set100UrlsFinishedIfLockOk)};
 		auto& sqlStatementMax{this->getPreparedStatement(this->ps.setMaxUrlsFinishedIfLockOk)};
 
-		// number of arguments to set a URL to finished
-		constexpr auto numArgsFinish{2};
-
 		// set URLs to finished in database
 		try {
 
 			// set maximum number of URLs at once
 			while(finished.size() > this->maxBatchSize) {
 				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
-					sqlStatementMax.setUInt64(n * numArgsFinish + sqlArg1, finished.front().first);
-					sqlStatementMax.setString(n * numArgsFinish + sqlArg2, finished.front().second);
+					sqlStatementMax.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
+					sqlStatementMax.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
 					finished.pop();
 				}
@@ -2327,8 +2306,8 @@ namespace crawlservpp::Module::Extractor {
 			// set 100 URLs at once
 			while(finished.size() > nAtOnce100) {
 				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
-					sqlStatement100.setUInt64(n * numArgsFinish + sqlArg1, finished.front().first);
-					sqlStatement100.setString(n * numArgsFinish + sqlArg2, finished.front().second);
+					sqlStatement100.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
+					sqlStatement100.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
 					finished.pop();
 				}
@@ -2339,8 +2318,8 @@ namespace crawlservpp::Module::Extractor {
 			// set 10 URLs at once
 			while(finished.size() > nAtOnce10) {
 				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
-					sqlStatement10.setUInt64(n * numArgsFinish + sqlArg1, finished.front().first);
-					sqlStatement10.setString(n * numArgsFinish + sqlArg2, finished.front().second);
+					sqlStatement10.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
+					sqlStatement10.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
 					finished.pop();
 				}

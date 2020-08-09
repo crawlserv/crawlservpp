@@ -72,50 +72,71 @@ namespace crawlservpp::Module::Extractor {
 	///@{
 
 	//! Minimum number of columns in the target table.
-	constexpr auto minTargetColumns{4};
+	inline constexpr auto minTargetColumns{4};
 
 	//! Minimum number of columns in the linked target table.
-	constexpr auto minLinkedColumns{2};
+	inline constexpr auto minLinkedColumns{2};
 
 	//! Maximum size of database content (= 1 GiB).
-	constexpr auto maxContentSize{1073741824};
+	inline constexpr auto maxContentSize{1073741824};
 
 	//! Maximum size of database content as string.
-	constexpr auto maxContentSizeString{"1 GiB"sv};
+	inline constexpr auto maxContentSizeString{"1 GiB"sv};
 
 	///@}
 	///@name Constants for MySQL Queries
 	///@{
 
 	//! Process ten values at once.
-	constexpr auto nAtOnce10{10};
+	inline constexpr auto nAtOnce10{10};
 
 	//! Process one hundred values at once.
-	constexpr auto nAtOnce100{100};
+	inline constexpr auto nAtOnce100{100};
 
 	//! First argument in a SQL query.
-	constexpr auto sqlArg1{1};
+	inline constexpr auto sqlArg1{1};
 
 	//! Second argument in a SQL query.
-	constexpr auto sqlArg2{2};
+	inline constexpr auto sqlArg2{2};
 
 	//! Third argument in a SQL query.
-	constexpr auto sqlArg3{3};
+	inline constexpr auto sqlArg3{3};
 
 	//! Fourth argument in a SQL query.
-	constexpr auto sqlArg4{4};
+	inline constexpr auto sqlArg4{4};
 
 	//! Fifth argument in a SQL query.
-	constexpr auto sqlArg5{5};
+	inline constexpr auto sqlArg5{5};
 
 	//! Alias, used in SQL queries, for the extracting table.
-	constexpr auto extractingTableAlias{"a"sv};
+	inline constexpr auto extractingTableAlias{"a"sv};
 
 	//! Alias, used in SQL queries, for the target table.
-	constexpr auto targetTableAlias{"b"sv};
+	inline constexpr auto targetTableAlias{"b"sv};
 
 	//! Alias, used in SQL queries, for the linked target table.
-	constexpr auto linkedTableAlias{"c"sv};
+	inline constexpr auto linkedTableAlias{"c"sv};
+
+	//! Number of arguments to lock one URL.
+	inline constexpr auto numArgsLockUrl{3};
+
+	//! Number of arguments to add or update one data entry (without custom columns).
+	inline constexpr auto numArgsAddUpdateData{4};
+
+	//! Number of additional arguments when data is linked.
+	inline constexpr auto numArgsLinked{2};
+
+	//! Number of additional arguments when overwriting existing data.
+	inline constexpr auto numArgsOverwriteData{3};
+
+	//! Number of arguments to add or update one linked data entry.
+	inline constexpr auto numArgsAddUpdateLinkedData{2};
+
+	//! Number of additional arguments when overwriting existing linked data.
+	inline constexpr auto numArgsOverwriteLinkedData{2};
+
+	//! Number of arguments to set a URL to finished.
+	inline constexpr auto numArgsFinishUrl{2};
 
 	///@}
 

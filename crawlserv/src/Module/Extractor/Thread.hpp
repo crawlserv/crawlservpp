@@ -83,13 +83,13 @@ namespace crawlservpp::Module::Extractor {
 	///@{
 
 	//! Minimum HTTP error code.
-	constexpr auto httpResponseCodeMin{400};
+	inline constexpr auto httpResponseCodeMin{400};
 
 	//! Maximum HTTP error code.
-	constexpr auto httpResponseCodeMax{599};
+	inline constexpr auto httpResponseCodeMax{599};
 
 	//! HTTP response code to be ignored when checking for errors.
-	constexpr auto httpResponseCodeIgnore{200};
+	inline constexpr auto httpResponseCodeIgnore{200};
 
 	///@}
 
