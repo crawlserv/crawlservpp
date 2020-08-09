@@ -74,7 +74,7 @@ namespace crawlservpp::Module::Parser {
 	///@{
 
 	//! The number of archived URLs after which the thread status will be updated.
-	constexpr auto updateArchiveCounterEvery{100};
+	inline constexpr auto updateArchiveCounterEvery{100};
 
 	///@}
 

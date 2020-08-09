@@ -1662,7 +1662,7 @@ namespace crawlservpp::Module::Extractor {
 		};
 
 		if(this->overwrite) {
-			fields += numArgsOverwrite;
+			fields += numArgsOverwriteData;
 		}
 
 		try {

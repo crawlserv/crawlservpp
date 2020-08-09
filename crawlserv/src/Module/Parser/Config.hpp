@@ -50,37 +50,37 @@ namespace crawlservpp::Module::Parser {
 	///@{
 
 	//! Logging is disabled.
-	constexpr std::uint8_t crawlerLoggingVerbose{0};
+	inline constexpr std::uint8_t crawlerLoggingVerbose{0};
 
 	//! Default logging is enabled.
-	constexpr std::uint8_t generalLoggingDefault{1};
+	inline constexpr std::uint8_t generalLoggingDefault{1};
 
 	//! Extended logging is enabled.
-	constexpr std::uint8_t generalLoggingExtended{2};
+	inline constexpr std::uint8_t generalLoggingExtended{2};
 
 	//! Verbose logging is enabled.
-	constexpr std::uint8_t generalLoggingVerbose{3};
+	inline constexpr std::uint8_t generalLoggingVerbose{3};
 
 	//! Parse data from the URL of a crawled web page.
-	constexpr std::uint8_t parsingSourceUrl{0};
+	inline constexpr std::uint8_t parsingSourceUrl{0};
 
 	//! Parse data from the content of a crawled web page.
-	constexpr std::uint8_t parsingSourceContent{1};
+	inline constexpr std::uint8_t parsingSourceContent{1};
 
 	//! Default cache size.
-	constexpr std::uint64_t defaultCacheSize{2500};
+	inline constexpr std::uint64_t defaultCacheSize{2500};
 
 	//! Default URL locking time, in seconds.
-	constexpr std::uint32_t defaultLockS{300};
+	inline constexpr std::uint32_t defaultLockS{300};
 
 	//! Default maximum number of URLs to be processed in one MySQL query.
-	constexpr std::uint16_t defaultMaxBatchSize{500};
+	inline constexpr std::uint16_t defaultMaxBatchSize{500};
 
 	//! Default time to wait before checking for new URLs when all URLs have been parsed, in milliseconds.
-	constexpr std::uint64_t defaultSleepIdleMs{5000};
+	inline constexpr std::uint64_t defaultSleepIdleMs{5000};
 
 	//! Default time to wait before last try to re-connect to MySQL server, in seconds.
-	constexpr std::uint64_t defaultSleepMySqlS{20};
+	inline constexpr std::uint64_t defaultSleepMySqlS{20};
 
 	///@}
 

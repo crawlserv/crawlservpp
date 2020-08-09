@@ -174,8 +174,6 @@ namespace crawlservpp::Module::Parser {
 		this->targetTableFull += this->targetTableName;
 
 		// create table properties
-		constexpr auto minTargetColumns{4};
-
 		TargetTableProperties properties(
 				"parsed",
 				this->getOptions().websiteId,
@@ -636,13 +634,11 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// set maximum number of locks at once
-		constexpr auto numArgsLock{3};
-
 		while(lockingQueue.size() >= this->maxBatchSize) {
 			for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
-				sqlStatementLockMax.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
-				sqlStatementLockMax.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
-				sqlStatementLockMax.setString(n * numArgsLock + sqlArg3, lockTime);
+				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
+				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
+				sqlStatementLockMax.setString(n * numArgsLockUrl + sqlArg3, lockTime);
 
 				lockingQueue.pop();
 			}
@@ -654,9 +650,9 @@ namespace crawlservpp::Module::Parser {
 		// set 100 locks at once
 		while(lockingQueue.size() >= nAtOnce100) {
 			for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
-				sqlStatementLock100.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
-				sqlStatementLock100.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
-				sqlStatementLock100.setString(n * numArgsLock + sqlArg3, lockTime);
+				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
+				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
+				sqlStatementLock100.setString(n * numArgsLockUrl + sqlArg3, lockTime);
 
 				lockingQueue.pop();
 			}
@@ -668,9 +664,9 @@ namespace crawlservpp::Module::Parser {
 		// set 10 locks at once
 		while(lockingQueue.size() >= nAtOnce10) {
 			for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
-				sqlStatementLock10.setUInt64(n * numArgsLock + sqlArg1, lockingQueue.front());
-				sqlStatementLock10.setUInt64(n * numArgsLock + sqlArg2, lockingQueue.front());
-				sqlStatementLock10.setString(n * numArgsLock + sqlArg3, lockTime);
+				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
+				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
+				sqlStatementLock10.setString(n * numArgsLockUrl + sqlArg3, lockTime);
 
 				lockingQueue.pop();
 			}
@@ -1490,8 +1486,6 @@ namespace crawlservpp::Module::Parser {
 		auto& sqlStatementMax{this->getPreparedStatement(this->ps.updateOrAddMaxEntries)};
 
 		// count fields
-		constexpr auto minFields{5};
-
 		const auto fields{
 			std::count_if(
 					this->targetFieldNames.cbegin(),
@@ -1499,7 +1493,7 @@ namespace crawlservpp::Module::Parser {
 					[](const auto& fieldName) {
 						return !fieldName.empty();
 					}
-			) + minFields
+			) + minArsgAddUpdateData
 		};
 
 		try {
@@ -1743,14 +1737,12 @@ namespace crawlservpp::Module::Parser {
 		auto& sqlStatementMax{this->getPreparedStatement(this->ps.setMaxUrlsFinishedIfLockOk)};
 
 		// set URLs to finished in database
-		constexpr auto numFields{2};
-
 		try {
 			// set maximum number of URLs at once
 			while(finished.size() > this->maxBatchSize) {
 				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
-					sqlStatementMax.setUInt64(n * numFields + sqlArg1, finished.front().first);
-					sqlStatementMax.setString(n * numFields + sqlArg2, finished.front().second);
+					sqlStatementMax.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
+					sqlStatementMax.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
 					finished.pop();
 				}
@@ -1761,8 +1753,8 @@ namespace crawlservpp::Module::Parser {
 			// set 100 URLs at once
 			while(finished.size() > nAtOnce100) {
 				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
-					sqlStatement100.setUInt64(n * numFields + sqlArg1, finished.front().first);
-					sqlStatement100.setString(n * numFields + sqlArg2, finished.front().second);
+					sqlStatement100.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
+					sqlStatement100.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
 					finished.pop();
 				}
@@ -1773,8 +1765,8 @@ namespace crawlservpp::Module::Parser {
 			// set 10 URLs at once
 			while(finished.size() > nAtOnce10) {
 				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
-					sqlStatement10.setUInt64(n * numFields + sqlArg1, finished.front().first);
-					sqlStatement10.setString(n * numFields + sqlArg2, finished.front().second);
+					sqlStatement10.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
+					sqlStatement10.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
 					finished.pop();
 				}
