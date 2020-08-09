@@ -52,49 +52,49 @@ namespace crawlservpp::Data::Stemmer {
 	///@{
 
 	//! Minimum length of a word to strip two letters from the end or the beginning.
-	constexpr auto minLengthStrip2{6};
+	inline constexpr auto minLengthStrip2{6};
 
 	//! Minimum length of a word to strip one letter from the end.
-	constexpr auto minLengthStrip1{4};
+	inline constexpr auto minLengthStrip1{4};
 
 	//! Literal for binary inversion.
-	constexpr auto binInv{0xff};
+	inline constexpr auto binInv{0xff};
 
 	//! Number to add to make uppercase ASCII letters lowercase.
-	constexpr auto toLowerCase{32};
+	inline constexpr auto toLowerCase{32};
 
 	//! First byte of 2-byte UTF-8 characters for umlauts and sharp s.
-	constexpr auto utf8mb2{0xC3};
+	inline constexpr auto utf8mb2{0xC3};
 
 	//! First byte of 3-byte UTF-8 character for capital sharp s.
-	constexpr auto utf8mb3{0xE1};
+	inline constexpr auto utf8mb3{0xE1};
 
 	//! Second byte of UTF-8 umlaut ä.
-	constexpr auto umlautA2sm{0xA4};
+	inline constexpr auto umlautA2sm{0xA4};
 
 	//! Second byte of UTF-8 umlaut Ä.
-	constexpr auto umlautA2l{0x84};
+	inline constexpr auto umlautA2l{0x84};
 
 	//! Second byte of UTF-8 umlaut ö.
-	constexpr auto umlautO2sm{0xB6};
+	inline constexpr auto umlautO2sm{0xB6};
 
 	//! Second byte of UTF-8 umlaut Ö.
-	constexpr auto umlautO2l{0x96};
+	inline constexpr auto umlautO2l{0x96};
 
 	//! Second byte of UTF-8 umlaut ü.
-	constexpr auto umlautU2sm{0xBC};
+	inline constexpr auto umlautU2sm{0xBC};
 
 	//! Second byte of UTF-8 umlaut Ü.
-	constexpr auto umlautU2l{0x9C};
+	inline constexpr auto umlautU2l{0x9C};
 
 	//! Second byte of UTF-8 sharp s.
-	constexpr auto sharpS2sm{0x9F};
+	inline constexpr auto sharpS2sm{0x9F};
 
 	//! Second byte of UTF-8 capital sharp s.
-	constexpr auto sharpS2l{0xBA};
+	inline constexpr auto sharpS2l{0xBA};
 
 	//! Third byte of UTF-8 capital sharp s.
-	constexpr auto sharpS3l{0x9E};
+	inline constexpr auto sharpS3l{0x9E};
 
 	///@}
 
@@ -569,6 +569,5 @@ namespace crawlservpp::Data::Stemmer {
 	}
 
 } /* namespace crawlservpp::Data::Stemmer */
-
 
 #endif /* DATA_STEMMER_GERMAN_HPP_ */

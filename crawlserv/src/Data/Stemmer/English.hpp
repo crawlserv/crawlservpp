@@ -36,7 +36,7 @@
 #ifndef DATA_STEMMER_ENGLISH_HPP_
 #define DATA_STEMMER_ENGLISH_HPP_
 
-#include "../../../_extern/porter2_stemmer/porter2_stemmer.h"
+#include "../../_extern/porter2_stemmer/porter2_stemmer.h"
 
 #include <algorithm>	// std::remove_if, std::transform
 #include <cctype>		// ::tolower
@@ -44,13 +44,6 @@
 
 //! Namespace for linguistic stemmers.
 namespace crawlservpp::Data::Stemmer {
-
-	/*
-	 * CONSTANTS
-	 */
-
-	///@{
-	///@}
 
 	/*
 	 * DECLARATION
