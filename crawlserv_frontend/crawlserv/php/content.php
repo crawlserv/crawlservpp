@@ -152,7 +152,12 @@ if(
                  ON a.id = b.url
                  JOIN `$ptable` c
                  ON b.id = c.content
-                 WHERE c.parsed_id LIKE '".$_POST["parsed_id"]."%'
+                 WHERE c.id IN (
+                    SELECT id
+                     FROM `$ptable`
+                     WHERE hash = CRC32('".$_POST["parsed_id"]."')
+                 )
+                 AND c.parsed_id LIKE '".$_POST["parsed_id"]."%'
                  LIMIT 1"
         );
                 
