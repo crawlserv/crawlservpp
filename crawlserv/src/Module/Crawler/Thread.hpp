@@ -84,52 +84,52 @@ namespace crawlservpp::Module::Crawler {
 	///@{
 
 	//! The minimum length of a robots.txt line containing a useful sitemap.
-	constexpr auto robotsMinLineLength{9};
+	inline constexpr auto robotsMinLineLength{9};
 
 	//! The first letters of a robots.txt line containing a sitemap.
-	constexpr auto robotsFirstLetters{7};
+	inline constexpr auto robotsFirstLetters{7};
 
 	//! The beginning of a robots.txt line containing a sitemap.
-	constexpr auto robotsSitemapBegin{"sitemap:"sv};
+	inline constexpr auto robotsSitemapBegin{"sitemap:"sv};
 
 	//! The relative URL of robots.txt.
-	constexpr auto robotsRelativeUrl{"/robots.txt"sv};
+	inline constexpr auto robotsRelativeUrl{"/robots.txt"sv};
 
 	//! The number of custom URLs after which the thread status will be updated.
-	constexpr auto updateCustomUrlCountEvery{100};
+	inline constexpr auto updateCustomUrlCountEvery{100};
 
 	//! Minimum HTTP error code.
-	constexpr auto httpResponseCodeMin{400};
+	inline constexpr auto httpResponseCodeMin{400};
 
 	//! Maximum HTTP error code.
-	constexpr auto httpResponseCodeMax{599};
+	inline constexpr auto httpResponseCodeMax{599};
 
 	//! HTTP response code to be ignored when checking for errors.
-	constexpr auto httpResponseCodeIgnore{200};
+	inline constexpr auto httpResponseCodeIgnore{200};
 
 	//! The "www." in the beginning of a domain.
-	constexpr auto wwwString{"www."sv};
+	inline constexpr auto wwwString{"www."sv};
 
 	//! The beginning of a URL containing the HTTPS protocol.
-	constexpr auto httpsString{"https://"sv};
+	inline constexpr auto httpsString{"https://"sv};
 
 	//! The beginning of a HTTPS URL to be ignored.
-	constexpr auto httpsIgnoreString{"https://www."sv};
+	inline constexpr auto httpsIgnoreString{"https://www."sv};
 
 	//! The beginning of a URL containing the HTTP protocol.
-	constexpr auto httpString{"http://"sv};
+	inline constexpr auto httpString{"http://"sv};
 
 	//! The beginning of a HTTP URL to be ignored.
-	constexpr auto httpIgnoreString{"http://www."sv};
+	inline constexpr auto httpIgnoreString{"http://www."sv};
 
 	//! The content type of a memento.
-	constexpr auto archiveMementoContentType{"application/link-format"sv};
+	inline constexpr auto archiveMementoContentType{"application/link-format"sv};
 
 	//! The reference string in a memento referencing another memento.
-	constexpr auto archiveRefString{"found capture at "sv};
+	inline constexpr auto archiveRefString{"found capture at "sv};
 
 	//! The length of a memento time stamp.
-	constexpr auto archiveRefTimeStampLength{14};
+	inline constexpr auto archiveRefTimeStampLength{14};
 
 	///@}
 

@@ -839,18 +839,15 @@ namespace crawlservpp::Module::Crawler {
 		auto& sqlStatement100{this->getPreparedStatement(this->ps.add100UrlsIfNotExist)};
 		auto& sqlStatementMax{this->getPreparedStatement(this->ps.addMaxUrlsIfNotExist)};
 
-		// number of arguments for adding URLs
-		constexpr auto numArgsAdd{5};
-
 		try {
 			// add maximum number of URLs at once
 			while(urls.size() >= this->maxBatchSize) {
 				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
-					sqlStatementMax.setString(n * numArgsAdd + sqlArg1, urls.front());
-					sqlStatementMax.setString(n * numArgsAdd + sqlArg2, urls.front());
-					sqlStatementMax.setString(n * numArgsAdd + sqlArg3, urls.front());
-					sqlStatementMax.setBoolean(n * numArgsAdd + sqlArg4, manual);
-					sqlStatementMax.setString(n * numArgsAdd + sqlArg5, urls.front());
+					sqlStatementMax.setString(n * numArgsAddUrl + sqlArg1, urls.front());
+					sqlStatementMax.setString(n * numArgsAddUrl + sqlArg2, urls.front());
+					sqlStatementMax.setString(n * numArgsAddUrl + sqlArg3, urls.front());
+					sqlStatementMax.setBoolean(n * numArgsAddUrl + sqlArg4, manual);
+					sqlStatementMax.setString(n * numArgsAddUrl + sqlArg5, urls.front());
 
 					urls.pop();
 				}
@@ -865,11 +862,11 @@ namespace crawlservpp::Module::Crawler {
 			// add 100 URLs at once
 			while(urls.size() >= nAtOnce100) {
 				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
-					sqlStatement100.setString(n * numArgsAdd + sqlArg1, urls.front());
-					sqlStatement100.setString(n * numArgsAdd + sqlArg2, urls.front());
-					sqlStatement100.setString(n * numArgsAdd + sqlArg3, urls.front());
-					sqlStatement100.setBoolean(n * numArgsAdd + sqlArg4, manual);
-					sqlStatement100.setString(n * numArgsAdd + sqlArg5, urls.front());
+					sqlStatement100.setString(n * numArgsAddUrl + sqlArg1, urls.front());
+					sqlStatement100.setString(n * numArgsAddUrl + sqlArg2, urls.front());
+					sqlStatement100.setString(n * numArgsAddUrl + sqlArg3, urls.front());
+					sqlStatement100.setBoolean(n * numArgsAddUrl + sqlArg4, manual);
+					sqlStatement100.setString(n * numArgsAddUrl + sqlArg5, urls.front());
 
 					urls.pop();
 				}
@@ -884,11 +881,11 @@ namespace crawlservpp::Module::Crawler {
 			// add 10 URLs at once
 			while(urls.size() >= nAtOnce10) {
 				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
-					sqlStatement10.setString(n * numArgsAdd + sqlArg1, urls.front());
-					sqlStatement10.setString(n * numArgsAdd + sqlArg2, urls.front());
-					sqlStatement10.setString(n * numArgsAdd + sqlArg3, urls.front());
-					sqlStatement10.setBoolean(n * numArgsAdd + sqlArg4, manual);
-					sqlStatement10.setString(n * numArgsAdd + sqlArg5, urls.front());
+					sqlStatement10.setString(n * numArgsAddUrl + sqlArg1, urls.front());
+					sqlStatement10.setString(n * numArgsAddUrl + sqlArg2, urls.front());
+					sqlStatement10.setString(n * numArgsAddUrl + sqlArg3, urls.front());
+					sqlStatement10.setBoolean(n * numArgsAddUrl + sqlArg4, manual);
+					sqlStatement10.setString(n * numArgsAddUrl + sqlArg5, urls.front());
 
 					urls.pop();
 				}

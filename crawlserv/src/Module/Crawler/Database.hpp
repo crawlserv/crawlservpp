@@ -69,41 +69,44 @@ namespace crawlservpp::Module::Crawler {
 	///@{
 
 	//! Maximum size of database content (= 1 GiB).
-	constexpr auto maxContentSize{1073741824};
+	inline constexpr auto maxContentSize{1073741824};
 
 	//! Maximum size of database content as string.
-	constexpr auto maxContentSizeString{"1 GiB"sv};
+	inline constexpr auto maxContentSizeString{"1 GiB"sv};
 
 	///@}
 	///@name Constants for MySQL Queries
 	///@{
 
 	//! Process ten values at once.
-	constexpr auto nAtOnce10{10};
+	inline constexpr auto nAtOnce10{10};
 
 	//! Process one hundred values at once.
-	constexpr auto nAtOnce100{100};
+	inline constexpr auto nAtOnce100{100};
 
 	//! First argument in a SQL query.
-	constexpr auto sqlArg1{1};
+	inline constexpr auto sqlArg1{1};
 
 	//! Second argument in a SQL query.
-	constexpr auto sqlArg2{2};
+	inline constexpr auto sqlArg2{2};
 
 	//! Third argument in a SQL query.
-	constexpr auto sqlArg3{3};
+	inline constexpr auto sqlArg3{3};
 
 	//! Fourth argument in a SQL query.
-	constexpr auto sqlArg4{4};
+	inline constexpr auto sqlArg4{4};
 
 	//! Fifth argument in a SQL query.
-	constexpr auto sqlArg5{5};
+	inline constexpr auto sqlArg5{5};
 
 	//! Alias, used in SQL queries, for the crawling table.
-	constexpr auto crawlingTableAlias{"a"sv};
+	inline constexpr auto crawlingTableAlias{"a"sv};
 
 	//! Alias, used in SQL queries, for the URL list table.
-	constexpr auto urlListTableAlias{"b"sv};
+	inline constexpr auto urlListTableAlias{"b"sv};
+
+	//! Number of arguments for adding one URL
+	inline constexpr auto numArgsAddUrl{5};
 
 	///@}
 
