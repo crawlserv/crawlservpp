@@ -59,7 +59,7 @@ namespace crawlservpp::Helper::Strings {
 	///@{
 
 	//! UTF-8 whitespaces used by utfTidy().
-	constexpr std::array utfWhitespaces {
+	inline constexpr std::array utfWhitespaces {
 		"\u0085"sv, // next line (NEL)
 		"\u00a0"sv, // no-break space
 		"\u1680"sv, // Ogham space mark
@@ -82,10 +82,10 @@ namespace crawlservpp::Helper::Strings {
 	};
 
 	//! Length of a two-digit hexademical number including the preceding percentage sign.
-	constexpr auto checkHexLength{3};
+	inline constexpr auto checkHexLength{3};
 
 	//! Characters to be chosen from for random string generation performed by generateRandom().
-	constexpr auto randCharSet{
+	inline constexpr auto randCharSet{
 		"01234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"sv
 	};
 
