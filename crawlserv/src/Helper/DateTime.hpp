@@ -784,7 +784,8 @@ namespace crawlservpp::Helper::DateTime {
 	 *
 	 * \returns True, if the given date falls into the given range of dates
 	 *   or one of the two dates defining this range are too short.
-	 *   False otherwise.
+	 *   False, if the given date does not fall into the given range of
+	 *   dates, or the given date is too short.
 	 */
 	inline bool isISODateInRange(
 			std::string_view isoDate,
