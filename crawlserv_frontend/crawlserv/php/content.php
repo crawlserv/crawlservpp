@@ -157,7 +157,7 @@ if(
                      FROM `$ptable`
                      WHERE hash = CRC32('".$_POST["parsed_id"]."')
                  )
-                 AND c.parsed_id LIKE '".$_POST["parsed_id"]."%'
+                 AND c.parsed_id LIKE '".$_POST["parsed_id"]."'
                  LIMIT 1"
         );
                 
