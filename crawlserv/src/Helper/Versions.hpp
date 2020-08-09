@@ -63,26 +63,26 @@ namespace crawlservpp::Helper::Versions {
 	///@{
 
 	//! Divisor to retrieve the major version of the Boost library.
-	constexpr auto boostMajor{100000};
+	inline constexpr auto boostMajor{100000};
 
 	//! Divisor to retrieve the minor version of the Boost library.
-	constexpr auto boostMinor{1000};
+	inline constexpr auto boostMinor{1000};
 
 	//! Divisor to retrieve the patch level of the Boost library.
-	constexpr auto boostPatch{100};
+	inline constexpr auto boostPatch{100};
 
 	//! Divisor to retrieve the major version of the pugixml library.
-	constexpr auto pugixmlMajor{100};
+	inline constexpr auto pugixmlMajor{100};
 
 	//! Divisor to retrieve the minor version of the pugixml library.
-	constexpr auto pugixmlMinor{10};
+	inline constexpr auto pugixmlMinor{10};
 
 	//! The version of the @c UTF8-CPP library.
 	/*!
 	 * \warning Hard-coded version information
 	 *   might not be accurate!
 	 */
-	constexpr std::string_view utf8CppVersion{"2.1"};
+	inline constexpr std::string_view utf8CppVersion{"2.1"};
 
 	///@}
 
