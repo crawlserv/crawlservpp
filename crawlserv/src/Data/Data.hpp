@@ -48,10 +48,10 @@ namespace crawlservpp::Data {
 	///@{
 
 	//! The number of bytes of a 32-bit value.
-	constexpr auto bytes32bit{4};
+	inline constexpr auto bytes32bit{4};
 
 	//! The number of bytes of a 64-bit value.
-	constexpr auto bytes64bit{8};
+	inline constexpr auto bytes64bit{8};
 
 	///@}
 
