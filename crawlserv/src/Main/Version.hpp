@@ -47,16 +47,16 @@ namespace crawlservpp::Main::Version {
 	///@{
 
 	//! Major version of the application.
-	constexpr auto crawlservVersionMajor{0};
+	inline constexpr auto crawlservVersionMajor{0};
 
 	//! Minor version of the application
-	constexpr auto crawlservVersionMinor{0};
+	inline constexpr auto crawlservVersionMinor{0};
 
 	//! Current release (i.e. patch) version of the application.
-	constexpr auto crawlservVersionRelease{1};
+	inline constexpr auto crawlservVersionRelease{1};
 
 	//! Version suffix of the application.
-	constexpr auto crawlservVersionSuffix{"alpha"sv};
+	inline constexpr auto crawlservVersionSuffix{"alpha"sv};
 
 	///@}
 
