@@ -1,24 +1,38 @@
 {
-	"label": "Tokenizer",
+	"label": "Corpus Tokenization",
 	"open": true,
 
-	"language": {
-		"type": "string",
-		"default": "",
-		"label": "Language:",
-		"description": "The language used by the tokenizer, if multiple languages are supported.",
+	"savepoints": {
+		"type": "array",
+		"item-type": "numer",
+		"min": 0,
+		"max": 65535,
+		"default": [0],
+		"label": "Savepoints",
+		"description": "Steps after which the corpus will be stored in the database. Zero means the unmanipulated corpus will be saved, then the numbering starts with the sentence manipulators, and continues with the word manipulators.",
 		"simple": true,
-		"position": 3
+		"position": 5 
 	},
 	"sentence.manipulators": {
 		"type": "array",
 		"item-type": "enum",
 		"enum-values": [
-			"none"
+			"none",
+			"POS tagger, fast (wapiti)",
+			"POS tagger, accurate (wapiti)"
 		],
 		"default": [],
 		"label": "Sentence Manipulators:",
-		"description": "Manipulators used on extracted sentences from the text corpus.",
+		"description": "Manipulators used on the sentences of the text corpus.",
+		"simple": true,
+		"position": 1
+	},
+	"sentence.models": {
+		"type": "array",
+		"item-type": "string",
+		"default": [],
+		"label": "Sentence Models:",
+		"description": "Model for the sentence manipulator with the same array index. Empty strings will be ignored.",
 		"simple": true,
 		"position": 2
 	},
@@ -32,8 +46,17 @@
 		],
 		"default": [],
 		"label": "Word Manipulators:",
-		"description": "Manipulators used on extracted tokens from the text corpus.",
+		"description": "Manipulators used on the words of the text corpus.",
 		"simple": true,
-		"position": 2
+		"position": 3
+	},
+	"word.models": {
+		"type": "array",
+		"item-type": "string",
+		"default": [],
+		"label": "Word Models:",
+		"description": "Model for the word manipulator with the same array index. Empty strings will be ignored.",
+		"simple": true,
+		"position": 4
 	}
 }
