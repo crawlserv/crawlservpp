@@ -84,6 +84,7 @@ if($success) {
               website = $website
               AND urllist = $urllist
               AND previous IS NULL
+              AND savepoint IS NULL
               ORDER BY id"
     );
     
@@ -191,7 +192,8 @@ if($success) {
                             AND urllist = $urllist
                             AND source_type = ".$row['source_type']."
                             AND source_table LIKE '".$row['source_table']."'
-                            AND source_field LIKE '".$row['source_field']."'";
+                            AND source_field LIKE '".$row['source_field']."'
+                            AND savepoint IS NULL";
         $corpus_total = $row["length"];
         $corpus_size = $row["size"];
         $corpus_chunks = $row["chunks"];
@@ -223,9 +225,13 @@ if($success) {
         $markers = [];
         $markers_after = [];
         
-        $use_pos = isset($_POST["corpus_pos"]) && is_numeric($_POST["corpus_pos"]) && $_POST["corpus_pos"] >= 0;
+        $use_pos = isset($_POST["corpus_pos"]) 
+                    && is_numeric($_POST["corpus_pos"]) 
+                    && $_POST["corpus_pos"] >= 0;
         $pos_set = false;
-        $use_len = isset($_POST["corpus_len"]) && is_numeric($_POST["corpus_len"]) && $_POST["corpus_len"] >= 0;
+        $use_len = isset($_POST["corpus_len"]) 
+                    && is_numeric($_POST["corpus_len"]) 
+                    && $_POST["corpus_len"] >= 0;
         $len_set = false;
         
         if($source == "parsed") {
