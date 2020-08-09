@@ -47,7 +47,7 @@ namespace crawlservpp::Helper::Portability {
 
 #ifdef _WIN32
 	//! The size of the buffer to receive the description of a locale from Windows.
-	constexpr auto localeBufferSize = 1024;
+	inline constexpr auto localeBufferSize{1024};
 
 	//! Callback for adding a locale in Windows.
 	/*!
@@ -61,14 +61,16 @@ namespace crawlservpp::Helper::Portability {
 	 */
 	BOOL CALLBACK addLocale(LPWSTR pStr, DWORD dwFlags, LPARAM lparam) {
 		WCHAR wcBuffer[localeBufferSize];
-		int iResult = 0;
+		int iResult{0};
 
 		if(GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, localeBufferSize)) {
 			GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, localeBufferSize);
 
 			std::wstring wstr(wcBuffer);
 
-			reinterpret_cast<std::vector<std::string> *>(lparam)->emplace_back(wstr.cbegin(), wstr.cend());
+			reinterpret_cast<std::vector<std::string> *>(
+					lparam)->emplace_back(wstr.cbegin(), wstr.cend()
+			);
 		}
 
 		return TRUE;
@@ -93,6 +95,5 @@ namespace crawlservpp::Helper::Portability {
 	}
 
 } /* namespace crawlservpp::Helper::Portability */
-
 
 #endif /* HELPER_PORTABILITY_LOCALE_H_ */
