@@ -57,10 +57,10 @@ namespace crawlservpp::Main {
 	///@{
 
 	//! The length of randomly generated file names.
-	constexpr auto randFileNameLength{64};
+	inline constexpr auto randFileNameLength{64};
 
 	//! Name of the variable used for uploading the content of a file.
-	constexpr std::string_view fileUploadVarName{"fileToUpload"};
+	inline constexpr std::string_view fileUploadVarName{"fileToUpload"};
 
 	///@}
 
