@@ -49,31 +49,31 @@ namespace crawlservpp::Helper::Utf8 {
 	///@{
 
 	//! Factor for guessing the maximum amount of memory used for UTF-8 compared to ISO-8859-1.
-	constexpr auto utf8MemoryFactor{2};
+	inline constexpr auto utf8MemoryFactor{2};
 
 	//! Bit mask to extract the first bit of a multibyte character.
-	constexpr auto bitmaskTopBit{0x80};
+	inline constexpr auto bitmaskTopBit{0x80};
 
 	//! Bit mask to extract the top two bits of a multibyte character.
-	constexpr auto bitmaskTopTwoBits{0xc0};
+	inline constexpr auto bitmaskTopTwoBits{0xc0};
 
 	//! Shift six bits
-	constexpr auto shiftSixBits{6};
+	inline constexpr auto shiftSixBits{6};
 
 	//! Bit mask to check the last six bits for 0b000001.
-	constexpr auto bitmaskLastSixBits0b000001{0x3F};
+	inline constexpr auto bitmaskLastSixBits0b000001{0x3F};
 
 	//! One byte.
-	constexpr auto oneByte{1};
+	inline constexpr auto oneByte{1};
 
 	//! Two bytes.
-	constexpr auto twoBytes{2};
+	inline constexpr auto twoBytes{2};
 
 	//! Three bytes.
-	constexpr auto threeBytes{3};
+	inline constexpr auto threeBytes{3};
 
 	//! Four bytes.
-	constexpr auto fourBytes{4};
+	inline constexpr auto fourBytes{4};
 
 	///@}
 
