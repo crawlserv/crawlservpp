@@ -56,7 +56,7 @@ namespace crawlservpp::Data::Compression::Zlib {
 	///@{
 
 	//! The maximum buffer size for zlib compression and decompression.
-	constexpr auto bufferSize{65536};
+	inline constexpr auto bufferSize{65536};
 
 	///@}
 

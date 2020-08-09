@@ -56,7 +56,7 @@ namespace crawlservpp::Data::Compression::Gzip {
 	///@{
 
 	//! The compression level used when compressing with gzip.
-	constexpr auto compressionLevel{9};
+	inline constexpr auto compressionLevel{9};
 
 	///@}
 
