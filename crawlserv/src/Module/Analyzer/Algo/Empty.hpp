@@ -74,7 +74,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	/*
 	 * TODO: add constants for the algorithm here
 	 */
-	//constexpr auto ...{...};
+	//inline constexpr auto ...{...};
 
 	//@}
 
