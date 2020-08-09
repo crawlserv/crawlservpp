@@ -49,43 +49,43 @@ namespace crawlservpp::Module::Analyzer {
 	///@{
 
 	//! An analyzer uses a parsing table as data source.
-	constexpr std::uint8_t generalInputSourcesParsing{0};
+	inline constexpr std::uint8_t generalInputSourcesParsing{0};
 
 	//! An analyzer uses an extracting table as data source.
-	constexpr std::uint8_t generalInputSourcesExtracting{1};
+	inline constexpr std::uint8_t generalInputSourcesExtracting{1};
 
 	//! An analyzer uses an analyzing table as data source.
-	constexpr std::uint8_t generalInputSourcesAnalyzing{2};
+	inline constexpr std::uint8_t generalInputSourcesAnalyzing{2};
 
 	//! An analyzer uses a crawling table as data source.
-	constexpr std::uint8_t generalInputSourcesCrawling{3};
+	inline constexpr std::uint8_t generalInputSourcesCrawling{3};
 
 	//! Logging is disabled.
-	constexpr std::uint8_t generalLoggingSilent{0};
+	inline constexpr std::uint8_t generalLoggingSilent{0};
 
 	//! Default logging is enabled.
-	constexpr std::uint8_t generalLoggingDefault{1};
+	inline constexpr std::uint8_t generalLoggingDefault{1};
 
 	//! Extended logging is enabled.
-	constexpr std::uint8_t generalLoggingExtended{2};
+	inline constexpr std::uint8_t generalLoggingExtended{2};
 
 	//! Verbose logging is enabled.
-	constexpr std::uint8_t generalLoggingVerbose{3};
+	inline constexpr std::uint8_t generalLoggingVerbose{3};
 
 	//! Default time (in s) to wait before last try to re-connect to mySQL server.
-	constexpr std::uint64_t defaultSleepMySqlS{20};
+	inline constexpr std::uint64_t defaultSleepMySqlS{20};
 
 	//! Default time (in ms) to wait each tick when finished.
-	constexpr std::uint64_t defaultSleepWhenFinishedMs{5000};
+	inline constexpr std::uint64_t defaultSleepWhenFinishedMs{5000};
 
 	//! Minimum percentage of the maximum length for corpus slices.
-	constexpr auto minPercentageCorpusSlices{1};
+	inline constexpr auto minPercentageCorpusSlices{1};
 
 	//! Maximum percentage of the maximum length for corpus slices.
-	constexpr auto maxPercentageCorpusSlices{99};
+	inline constexpr auto maxPercentageCorpusSlices{99};
 
 	//! Default percentage of the maximum length for corpus slices.
-	constexpr auto defaultPercentageCorpusSlices{30};
+	inline constexpr auto defaultPercentageCorpusSlices{30};
 
 	///@}
 
@@ -164,6 +164,46 @@ namespace crawlservpp::Module::Analyzer {
 
 			//! The date until which to filter the parsed data.
 			std::string filterDateTo;
+
+			///@}
+			///@name Corpus Tokenization
+			///@{
+
+			//! Steps after which the corpus will be stored in the database.
+			/*!
+			 * Zero means that the unmanipulated corpus will
+			 *  be stored. After that, the numbering starts
+			 *  with the sentence manipulators, and continues
+			 *  with the word manipulators.
+			 */
+			std::vector<std::uint16_t> tokenizerSavePoints{0};
+
+			//! Manipulators used on the sentences of the text corpus.
+			/*!
+			 * \sa Data::sentenceManipNone,
+			 * 	 Data::sentenceManipTagger,
+			 */
+			std::vector<std::uint16_t> tokenizerSentenceManipulators;
+
+			//! Model for the sentence manipulator with the same array index.
+			/*!
+			 * Empty strings will be ignored.
+			 */
+			std::vector<std::string> tokenizerSentenceModels;
+
+			//! Manipulators used on the words of the text corpus.
+			/*!
+			 * \sa Data::wordManipNone,
+			 *   Data::wordManipPorter2Stemmer,
+			 *   Data::wordManipGermanStemmer
+			 */
+			std::vector<std::uint16_t> tokenizerWordManipulators;
+
+			//! Model for the word manipulator with the same array index.
+			/*!
+			 * Empty strings will be ignored.
+			 */
+			std::vector<std::string> tokenizerWordModels;
 
 			///@}
 		}
@@ -260,6 +300,14 @@ namespace crawlservpp::Module::Analyzer {
 		this->option("from", this->config.filterDateFrom);
 		this->option("to", this->config.filterDateTo);
 
+		// corpus tokenization options
+		this->category("tokenizer");
+		this->option("savepoints", this->config.tokenizerSavePoints);
+		this->option("sentence.manipulators", this->config.tokenizerSentenceManipulators);
+		this->option("sentence models", this->config.tokenizerSentenceModels);
+		this->option("word.manipulators", this->config.tokenizerWordManipulators);
+		this->option("word.models", this->config.tokenizerWordModels);
+
 		// parse algo options
 		this->parseAlgoOption();
 	}
@@ -322,6 +370,40 @@ namespace crawlservpp::Module::Analyzer {
 
 			this->warning("Incomplete input field(s) removed from configuration.");
 		}
+
+		// check number of corpus manipulators and their models
+		if(
+				this->config.tokenizerSentenceModels.size()
+				> this->config.tokenizerSentenceManipulators.size()
+		) {
+			this->warning(
+					"The configuration contains"
+					" more sentence models than sentence"
+					" manipulators, redundant models will"
+					" be ignored."
+			);
+		}
+
+		if(
+				this->config.tokenizerWordModels.size()
+				> this->config.tokenizerWordManipulators.size()
+		) {
+			this->warning(
+					"The configuration contains"
+					" more word models than word"
+					" manipulators, redundant models will"
+					" be ignored."
+			);
+		}
+
+		// resize so that the numbers of models equals the numbers of manipulators
+		this->config.tokenizerSentenceModels.resize(
+				this->config.tokenizerSentenceManipulators.size()
+		);
+
+		this->config.tokenizerWordModels.resize(
+				this->config.tokenizerWordManipulators.size()
+		);
 
 		// check algo options
 		this->checkAlgoOptions();
