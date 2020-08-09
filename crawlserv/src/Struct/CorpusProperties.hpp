@@ -33,6 +33,7 @@
 
 #include <cstdint>	// std::uint16_t
 #include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
 
@@ -56,6 +57,32 @@ namespace crawlservpp::Struct {
 		//! The name of the table column from which the corpus is created.
 		std::string sourceColumn;
 
+		//! IDs of manipulators to change whole sentences.
+		std::vector<std::uint16_t> sentenceManipulators;
+
+		//! The models used by the sentence manipulators with the same array index.
+		std::vector<std::string> sentenceModels;
+
+		//! IDs of manipulators to change single words.
+		std::vector<std::uint16_t> wordManipulators;
+
+		//! The models used by the word manipulators with the same array index.
+		std::vector<std::string> wordModels;
+
+		//! List of savepoints.
+		/*!
+		 * Manipulation steps after which the result will
+		 *  be stored in the database. Zero means that the
+		 *  unmanipulated corpus will be stored. After
+		 *  that, the numbering starts with the sentence
+		 *  manipulators, and continues with the word
+		 *  manipulators.
+		 *
+		 * Only the unmanipulated corpus will be stored
+		 *  by default.
+		 */
+		std::vector<std::uint16_t> savePoints{0};
+
 		///@}
 		///@name Construction
 		///@{
@@ -73,19 +100,46 @@ namespace crawlservpp::Struct {
 		 * \param setSourceColumn Constant reference to a
 		 *   string containing the name of the table column
 		 *   from which the corpus is created.
+		 * \param setSentenceManipulators Constant reference
+		 *   to a vector containing the manipulators to be
+		 *   applied on each sentence of the corpus.
+		 * \param setSentenceModels Constant reference to a
+		 *   vector of strings, containing a model for each
+		 *   sentence manipulator, or an empty string if no
+		 *   model is required by the manipulator.
+		 * \param setWordManipulators Constant reference to
+		 *   a vector containing the manipulators to be
+		 *   applied on each word of the corpus.
+		 * \param setWordModels Constant reference to a
+		 *   vector of strings, containing a model for each
+		 *   word manipulator, or an empty string if no
+		 *   model is required by the manipulator.
 		 *
 		 * \sa Module::Analyzer::generalInputSourcesParsing,
 		 *   Module::Analyzer::generalInputSourcesExtracting,
 		 *   Module::Analyzer::generalInputSourcesAnalyzing,
-		 *   Module::Analyzer::generalInputSourcesCrawling
+		 *   Module::Analyzer::generalInputSourcesCrawling,
+		 *	 Data::Corpus::sentenceManipNone,
+		 *	 Data::Corpus::sentenceManipTagger,
+		 *	 Data::Corpus::wordManipNone,
+		 *	 Data::Corpus::wordManipPorter2Stemmer,
+		 *	 Data::Corpus::wordManipGermanStemmer
 		 */
 		CorpusProperties(
 				std::uint16_t setSourceType,
 				const std::string& setSourceTable,
-				const std::string& setSourceColumn
+				const std::string& setSourceColumn,
+				const std::vector<std::uint16_t>& setSentenceManipulators,
+				const std::vector<std::string>& setSentenceModels,
+				const std::vector<std::uint16_t>& setWordManipulators,
+				const std::vector<std::string>& setWordModels
 		) : sourceType(setSourceType),
 			sourceTable(setSourceTable),
-			sourceColumn(setSourceColumn) {}
+			sourceColumn(setSourceColumn),
+			sentenceManipulators(setSentenceManipulators),
+			sentenceModels(setSentenceModels),
+			wordManipulators(setWordManipulators),
+			wordModels(setWordModels) {}
 
 		///@}
 	};
