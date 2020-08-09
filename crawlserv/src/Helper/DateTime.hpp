@@ -66,76 +66,76 @@ namespace crawlservpp::Helper::DateTime {
 	///@{
 
 	//! The 'long' format for date/times.
-	constexpr auto longDateTime{"%a, %d %b %Y %T %Z"};
+	inline constexpr auto longDateTime{"%a, %d %b %Y %T %Z"};
 
 	//! The keyword to use a UNIX time format.
-	constexpr auto unixTimeFormat{"UNIX"sv};
+	inline constexpr auto unixTimeFormat{"UNIX"sv};
 
 	//! The keyword to use a UNIX time format plus an offset.
-	constexpr auto unixTimeFormatPlus{"UNIX+"sv};
+	inline constexpr auto unixTimeFormatPlus{"UNIX+"sv};
 
 	//! The keyword to use a UNIX time format minus an offset
-	constexpr auto unixTimeFormatMinus{"UNIX-"sv};
+	inline constexpr auto unixTimeFormatMinus{"UNIX-"sv};
 
 	//! The length of the keyword to use a UNIX time format with offset
-	constexpr auto unixTimeFormatXLength{5};
+	inline constexpr auto unixTimeFormatXLength{5};
 
 	//! The position of the beginning of a UNIX time format offset.
-	constexpr auto unixTimeFormatXOffset{4};
+	inline constexpr auto unixTimeFormatXOffset{4};
 
 	//! An array containing English ordinal suffixes to be stripped from numbers
-	constexpr std::array englishOrdinalSuffixes{"st"sv, "nd"sv, "rd"sv, "th"sv};
+	inline constexpr std::array englishOrdinalSuffixes{"st"sv, "nd"sv, "rd"sv, "th"sv};
 
 	//! The length of English ordinal suffixes to be stripped from numbers
-	constexpr auto englishOrdinalSuffixLength{2};
+	inline constexpr auto englishOrdinalSuffixLength{2};
 
 	//! The date/time format used by the MySQL database.
-	constexpr auto sqlTimeStamp{"%F %T"};
+	inline constexpr auto sqlTimeStamp{"%F %T"};
 
 	//! The length of a formatted time stamp in the MySQL database.
-	constexpr auto sqlTimeStampLength{19};
+	inline constexpr auto sqlTimeStampLength{19};
 
 	//! The prefix for French locale.
-	constexpr auto frenchLocalePrefix{"fr"sv};
+	inline constexpr auto frenchLocalePrefix{"fr"sv};
 
 	//! The number of microseconds per day used for date/time formatting.
-	constexpr auto microsecondsPerDay{86400000000};
+	inline constexpr auto microsecondsPerDay{86400000000};
 
 	//! The number of milliseconds per day used for date/time formatting.
-	constexpr auto millisecondsPerDay{86400000};
+	inline constexpr auto millisecondsPerDay{86400000};
 
 	//! The number of seconds per day used for date/time formatting.
-	constexpr auto secondsPerDay{86400};
+	inline constexpr auto secondsPerDay{86400};
 
 	//! The number of microseconds per hour used for date/time formatting.
-	constexpr auto microsecondsPerHour{3600000000};
+	inline constexpr auto microsecondsPerHour{3600000000};
 
 	//! The number of milliseconds per hour used for date/time formatting.
-	constexpr auto millisecondsPerHour{3600000};
+	inline constexpr auto millisecondsPerHour{3600000};
 
 	//! The number of seconds per hour used for date/time formatting.
-	constexpr auto secondsPerHour{3600};
+	inline constexpr auto secondsPerHour{3600};
 
 	//! The number of microseconds per minute used for date/time formatting.
-	constexpr auto microsecondsPerMinute{60000000};
+	inline constexpr auto microsecondsPerMinute{60000000};
 
 	//! The number of milliseconds per minute used for date/time formatting.
-	constexpr auto millisecondsPerMinute{60000};
+	inline constexpr auto millisecondsPerMinute{60000};
 
 	//! The number of seconds per minute used for date/time formatting.
-	constexpr auto secondsPerMinute{60};
+	inline constexpr auto secondsPerMinute{60};
 
 	//! The number of microseconds per second used for date/time formatting.
-	constexpr auto microsecondsPerSecond{1000000};
+	inline constexpr auto microsecondsPerSecond{1000000};
 
 	//! The number of milliseconds per second used for date/time formatting.
-	constexpr auto millisecondsPerSecond{1000};
+	inline constexpr auto millisecondsPerSecond{1000};
 
 	//! The number of microseconds per millisecond used for date/time formatting.
-	constexpr auto microsecondsPerMillisecond{1000};
+	inline constexpr auto microsecondsPerMillisecond{1000};
 
 	//! The length of a date in valid ISO Format (YYYY-MM-DD)
-	constexpr auto isoDateLength{10};
+	inline constexpr auto isoDateLength{10};
 
 	///@}
 
