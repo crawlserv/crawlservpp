@@ -148,49 +148,49 @@ namespace crawlservpp::Main {
 	///@{
 
 	//! The name of the (sub-)directory for the file cache.
-	constexpr std::string_view cacheDir{"cache"};
+	inline constexpr std::string_view cacheDir{"cache"};
 
 	//! The name of the (sub-)directory for cookies.
-	constexpr std::string_view cookieDir{"cookies"};
+	inline constexpr std::string_view cookieDir{"cookies"};
 
 	//! The name of the (sub-)directory for debugging.
-	constexpr std::string_view debugDir{"debug"};
+	inline constexpr std::string_view debugDir{"debug"};
 
 	//! The number of seconds for the server to sleep when a MySQL error occured.
-	constexpr auto sleepOnSqlErrorS{5};
+	inline constexpr auto sleepOnSqlErrorS{5};
 
 	//! The timeout in milliseconds for the polling of the web server.
-	constexpr auto webServerPollTimeOutMs{1000};
+	inline constexpr auto webServerPollTimeOutMs{1000};
 
 	//! The HTTP status code for GET replies indicating the status of the server.
-	constexpr auto statusHttpCode{200};
+	inline constexpr auto statusHttpCode{200};
 
 	//! The HTTP content type for GET replies indicating the status of the server.
-	constexpr auto statusHttpContentType{"text/plain"};
+	inline constexpr auto statusHttpContentType{"text/plain"};
 
 	//! The HTTP status code for POST replies.
-	constexpr auto replyHttpCode{200};
+	inline constexpr auto replyHttpCode{200};
 
 	//! The HTTP content type for POST replies.
-	constexpr auto replyHttpContentType{"application/json"};
+	inline constexpr auto replyHttpContentType{"application/json"};
 
 	//! The HTTP status code for OPTIONS replies.
-	constexpr auto optionsHttpCode{200};
+	inline constexpr auto optionsHttpCode{200};
 
 	//! The minimum length of namespaces.
-	constexpr auto minNameSpaceLength{3};
+	inline constexpr auto minNameSpaceLength{3};
 
 	//! The minimum length of namespaces, as string.
-	constexpr std::string_view minNameSpaceLengthString{"three"};
+	inline constexpr std::string_view minNameSpaceLengthString{"three"};
 
 	//! The beginning of URLs using the HTTP protocol.
-	constexpr std::string_view httpString{"http://"};
+	inline constexpr std::string_view httpString{"http://"};
 
 	//! The beginning of URLs using the HTTPS protocol.
-	constexpr std::string_view httpsString{"https://"};
+	inline constexpr std::string_view httpsString{"https://"};
 
 	//! The number of XML warnings by default.
-	constexpr auto xmlWarningsDefault{25};
+	inline constexpr auto xmlWarningsDefault{25};
 
 	///@}
 
