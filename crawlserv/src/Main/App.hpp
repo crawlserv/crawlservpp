@@ -70,50 +70,50 @@ namespace crawlservpp::Main {
 	///@{
 
 	//! First part of the password prompt.
-	constexpr auto pwPrompt1{"Enter password for "sv};
+	inline constexpr auto pwPrompt1{"Enter password for "sv};
 
 	//! Second part of the password prompt.
-	constexpr auto pwPrompt2{"@"sv};
+	inline constexpr auto pwPrompt2{"@"sv};
 
 	//! Third part of the password prompt.
-	constexpr auto pwPrompt3{":"sv};
+	inline constexpr auto pwPrompt3{":"sv};
 
 	//! Fourth part of the password prompt.
-	constexpr auto pwPrompt4{": "sv};
+	inline constexpr auto pwPrompt4{": "sv};
 
 	//! Message when done with the password input.
-	constexpr auto doneMsg{"[DONE]"sv};
+	inline constexpr auto doneMsg{"[DONE]"sv};
 
 	//! Code for the backspace key.
-	constexpr auto inputBackspace{127};
+	inline constexpr auto inputBackspace{127};
 
 	//! Code for the CTRL+C keys or the end of the file.
-	constexpr auto inputEof{-1};
+	inline constexpr auto inputEof{-1};
 
 	//! Code for the CTRL+C keys or the end of the text.
-	constexpr auto inputEtx{3};
+	inline constexpr auto inputEtx{3};
 
 	//! Code for the Escape key.
-	constexpr auto inputEsc{27};
+	inline constexpr auto inputEsc{27};
 
 	//! The current year.
 	//NOLINTNEXTLINE(clang-diagnostic-string-plus-int, cppcoreguidelines-pro-bounds-pointer-arithmetic)
-	constexpr auto year{__DATE__ + 7};
+	inline constexpr auto year{__DATE__ + 7};
 
 	//! The name of the application.
-	constexpr auto descName{"crawlserv++ Command-and-Control Server"sv};
+	inline constexpr auto descName{"crawlserv++ Command-and-Control Server"sv};
 
 	//! The beginning of the version string.
-	constexpr auto descVer{"Version "sv};
+	inline constexpr auto descVer{"Version "sv};
 
 	//! The beginning of the copyright string.
-	constexpr auto descCopyrightHead{"Copyright (C) "sv};
+	inline constexpr auto descCopyrightHead{"Copyright (C) "sv};
 
 	//! The actual copyrigt.
-	constexpr auto descCopyrightTail{" Anselm Schmidt (ans[ät]ohai.su)"sv};
+	inline constexpr auto descCopyrightTail{" Anselm Schmidt (ans[ät]ohai.su)"sv};
 
 	//! The text of the license.
-	constexpr auto descLicense{
+	inline constexpr auto descLicense{
 		"This program is free software: you can redistribute it and/or modify\n"
 		"it under the terms of the GNU General Public License as published by\n"
 		"the Free Software Foundation, either version 3 of the License, or\n"
@@ -127,10 +127,10 @@ namespace crawlservpp::Main {
 	};
 
 	//! The string before the used libraries.
-	constexpr auto descUsing{"using"sv};
+	inline constexpr auto descUsing{"using"sv};
 
 	//! The usage string for the command line.
-	constexpr auto descUsage{"USAGE: crawlserv <config_file> or crawlserv -v"};
+	inline constexpr auto descUsage{"USAGE: crawlserv <config_file> or crawlserv -v"};
 
 	///@}
 
