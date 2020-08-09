@@ -33,12 +33,20 @@
 #include "../Main/Exception.hpp"
 
 #include <array>	// std::array
-#include <cstdio>	// ::fgets, FILE, pclose, pipe, popen
+#include <cstdio>	// ::fgets, FILE, pclose, popen
 #include <memory>	// std::unique_ptr
 #include <string>	// std::string
 
 //! Namespace for global system helper functions.
 namespace crawlservpp::Helper::System {
+
+	///@name Constants
+	///@{
+
+	//! The length of the buffer for executing system commands.
+	inline constexpr auto cmdBufferLength{128};
+
+	///@}
 
 	//! Executes a system command and returns the stdout of the program.
 	/*!
@@ -54,9 +62,7 @@ namespace crawlservpp::Helper::System {
 	 * \throws Main::Exception if the execution of the command failed.
 	 */
 	inline std::string exec(const char* cmd) {
-		constexpr auto bufferLength{128};
-
-	    std::array<char, bufferLength> buffer{};
+	    std::array<char, cmdBufferLength> buffer{};
 	    std::string result;
 
 	    // NOLINTNEXTLINE(cert-env33-c)
