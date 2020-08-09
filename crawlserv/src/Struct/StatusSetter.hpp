@@ -45,10 +45,10 @@ namespace crawlservpp::Struct {
 	///@{
 
 	//! The precision (number of fractal digits) when showing the progress in percent.
-	constexpr auto precisionProgress{2};
+	inline constexpr auto precisionProgress{2};
 
 	//! The factor for converting a fractal into a percentage.
-	constexpr auto percentageFactor{100};
+	inline constexpr auto percentageFactor{100};
 
 	///@}
 
@@ -135,8 +135,11 @@ namespace crawlservpp::Struct {
 		 * \param done The number of processed units.
 		 * \param total The total number of units to
 		 *   be processed.
+		 *
+		 * \returns True, if the thread is supposed
+		 *   to continue running. False, otherwise.
 		 */
-		void update(std::size_t done, std::size_t total) const {
+		bool update(std::size_t done, std::size_t total) const { //NOLINT(modernize-use-nodiscard)
 			std::ostringstream statusStrStr;
 
 			statusStrStr.imbue(std::locale(""));
@@ -150,6 +153,8 @@ namespace crawlservpp::Struct {
 
 			this->callbackSetStatus(statusStrStr.str());
 			this->callbackSetProgress(static_cast<float>(done) / total);
+
+			return this->callbackIsRunning();
 		}
 
 		//! Updates the status with a percentage.
@@ -165,7 +170,7 @@ namespace crawlservpp::Struct {
 		 *
 		 * \sa precisionProgress
 		 */
-		void update(float percentage, bool precise) const {
+		bool update(float percentage, bool precise) const { //NOLINT(modernize-use-nodiscard)
 			std::ostringstream statusStrStr;
 
 			if(precise) {
@@ -182,6 +187,8 @@ namespace crawlservpp::Struct {
 
 			this->callbackSetStatus(statusStrStr.str());
 			this->callbackSetProgress(percentage);
+
+			return this->callbackIsRunning();
 		}
 
 		//! Checks whether the thread is still supposed to run
