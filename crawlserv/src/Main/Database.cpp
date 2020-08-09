@@ -3896,13 +3896,10 @@ namespace crawlservpp::Main {
 			Database::sqlException("Main::Database::addUrlList", e);
 		}
 
-		// maximum number of columns created here
-		constexpr auto maxColumns{6};
-
 		// create table for URL list
 		std::vector<TableColumn> columns;
 
-		columns.reserve(maxColumns);
+		columns.reserve(maxColumnsUrlList);
 
 		columns.emplace_back("manual", "BOOLEAN DEFAULT FALSE NOT NULL");
 		columns.emplace_back("url", "VARCHAR(2000) NOT NULL");
@@ -4220,9 +4217,6 @@ namespace crawlservpp::Main {
 			// check connection
 			this->checkConnection();
 
-			// number of arguments for adding one URL
-			constexpr auto numArgsAdd{4};
-
 			try {
 				// prepare SQL statement
 				SqlPreparedStatementPtr sqlStatement{
@@ -4235,10 +4229,10 @@ namespace crawlservpp::Main {
 				const std::size_t max{urls.size() > nAtOnce500 ? nAtOnce500 : urls.size()};
 
 				for(std::size_t n{0}; n < max; ++n) {
-					sqlStatement->setString(n * numArgsAdd + sqlArg1, urls.front());
-					sqlStatement->setString(n * numArgsAdd + sqlArg2, urls.front());
-					sqlStatement->setString(n * numArgsAdd + sqlArg3, urls.front());
-					sqlStatement->setString(n * numArgsAdd + sqlArg4, urls.front());
+					sqlStatement->setString(n * numArgsAddUrl + sqlArg1, urls.front());
+					sqlStatement->setString(n * numArgsAddUrl + sqlArg2, urls.front());
+					sqlStatement->setString(n * numArgsAddUrl + sqlArg3, urls.front());
+					sqlStatement->setString(n * numArgsAddUrl + sqlArg4, urls.front());
 
 					urls.pop();
 				}

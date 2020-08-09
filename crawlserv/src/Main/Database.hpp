@@ -122,223 +122,229 @@ namespace crawlservpp::Main {
 	///@{
 
 	//! (Sub-)Directory for @c .sql files.
-	constexpr auto sqlDir{"sql"sv};
+	inline constexpr auto sqlDir{"sql"sv};
 
 	//! File extension for @c .sql files.
-	constexpr auto sqlExtension{".sql"sv};
+	inline constexpr auto sqlExtension{".sql"sv};
 
 	//! Time-out on table lock in seconds.
-	constexpr auto lockTimeOutSec{300};
+	inline constexpr auto lockTimeOutSec{300};
 
 	//! Idle time in milliseconds after which a re-connect to the database will be enforced.
-	constexpr auto reconnectAfterIdleMs{600000};
+	inline constexpr auto reconnectAfterIdleMs{600000};
 
 	//! Sleep time in milliseconds before re-attempting to add a database lock.
-	constexpr auto sleepOnLockMs{250};
+	inline constexpr auto sleepOnLockMs{250};
 
 	//! Recommended major MySQL version.
-	constexpr auto recommendedMySqlMajorVer{8};
+	inline constexpr auto recommendedMySqlMajorVer{8};
 
 	//! Maximum size of database content in bytes (= 1 GiB).
-	constexpr auto maxContentSize{1073741824};
+	inline constexpr auto maxContentSize{1073741824};
 
 	//! Maximum size of database content as string.
-	constexpr auto maxContentSizeString{"1 GiB"sv};
+	inline constexpr auto maxContentSizeString{"1 GiB"sv};
 
 	//! "www." prefix to be ignored when checking for a domain.
-	constexpr auto wwwPrefix{"www."sv};
+	inline constexpr auto wwwPrefix{"www."sv};
 
 	//! The minimum number of tables per URL list.
-	constexpr auto numUrlListTables{6};
+	inline constexpr auto numUrlListTables{6};
 
 	//! The MySQL keyword for a constraint, including the trailing space.
-	constexpr auto sqlConstraint{"CONSTRAINT "sv};
+	inline constexpr auto sqlConstraint{"CONSTRAINT "sv};
 
 	//! The factor for converting seconds to milliseconds and vice versa.
-	constexpr auto secToMs{1000};
+	inline constexpr auto secToMs{1000};
 
 	//! Time (in ms) to sleep on SQL deadlock.
-	constexpr auto sleepOnDeadLockMs{250};
+	inline constexpr auto sleepOnDeadLockMs{250};
+
+	//! Maximum number of columns needed for adding a URL list.
+	inline constexpr auto maxColumnsUrlList{6};
+
+	//! Number fo arguments needed for adding one URL.
+	inline constexpr auto numArgsAddUrl{4};
 
 	///@}
 	///@name Constants for MySQL Queries
 	///@{
 
 	//! Ten at once.
-	constexpr auto nAtOnce10{10};
+	inline constexpr auto nAtOnce10{10};
 
 	//! One hundred at once.
-	constexpr auto nAtOnce100{100};
+	inline constexpr auto nAtOnce100{100};
 
 	//! Five hundred at once.
-	constexpr auto nAtOnce500{500};
+	inline constexpr auto nAtOnce500{500};
 
 	//! First argument.
-	constexpr auto sqlArg1{1};
+	inline constexpr auto sqlArg1{1};
 
 	//! Second argument.
-	constexpr auto sqlArg2{2};
+	inline constexpr auto sqlArg2{2};
 
 	//! Third argument.
-	constexpr auto sqlArg3{3};
+	inline constexpr auto sqlArg3{3};
 
 	//! Fourth argument.
-	constexpr auto sqlArg4{4};
+	inline constexpr auto sqlArg4{4};
 
 	//! Fifth argument.
-	constexpr auto sqlArg5{5};
+	inline constexpr auto sqlArg5{5};
 
 	//! Sixth argument.
-	constexpr auto sqlArg6{6};
+	inline constexpr auto sqlArg6{6};
 
 	//! Seventh argument.
-	constexpr auto sqlArg7{7};
+	inline constexpr auto sqlArg7{7};
 
 	//! Eighth argument.
-	constexpr auto sqlArg8{8};
+	inline constexpr auto sqlArg8{8};
 
 	//! Ninth argument.
-	constexpr auto sqlArg9{9};
+	inline constexpr auto sqlArg9{9};
 
 	///@}
 	///@name Constants for MySQL Connection Errors
 	///@{
 
 	//! Sort aborted.
-	constexpr auto sqlSortAborted{1027};
+	inline constexpr auto sqlSortAborted{1027};
 
 	//! Too many connections.
-	constexpr auto sqlTooManyConnections{1040};
+	inline constexpr auto sqlTooManyConnections{1040};
 
 	//! Cannot get host name.
-	constexpr auto sqlCannotGetHostName{1042};
+	inline constexpr auto sqlCannotGetHostName{1042};
 
 	//! Bad handshake.
-	constexpr auto sqlBadHandShake{1043};
+	inline constexpr auto sqlBadHandShake{1043};
 
 	//! Server shutdown.
-	constexpr auto sqlServerShutDown{1053};
+	inline constexpr auto sqlServerShutDown{1053};
 
 	//! Normal shutdown.
-	constexpr auto sqlNormalShutdown{1077};
+	inline constexpr auto sqlNormalShutdown{1077};
 
 	//! Got signal.
-	constexpr auto sqlGotSignal{1078};
+	inline constexpr auto sqlGotSignal{1078};
 
 	//! Shutdown complete.
-	constexpr auto sqlShutDownComplete{1079};
+	inline constexpr auto sqlShutDownComplete{1079};
 
 	//! Forcing close of thread.
-	constexpr auto sqlForcingCloseOfThread{1080};
+	inline constexpr auto sqlForcingCloseOfThread{1080};
 
 	//! Cannot create IP socket.
-	constexpr auto sqlCannotCreateIPSocket{1081};
+	inline constexpr auto sqlCannotCreateIPSocket{1081};
 
 	//! Aborted connection.
-	constexpr auto sqlAbortedConnection{1152};
+	inline constexpr auto sqlAbortedConnection{1152};
 
 	//! Read error from connection pipe.
-	constexpr auto sqlReadErrorFromConnectionPipe{1154};
+	inline constexpr auto sqlReadErrorFromConnectionPipe{1154};
 
 	//! Packets out of order.
-	constexpr auto sqlPacketsOutOfOrder{1156};
+	inline constexpr auto sqlPacketsOutOfOrder{1156};
 
 	//! Could not uncompress packets.
-	constexpr auto sqlCouldNotUncompressPackets{1157};
+	inline constexpr auto sqlCouldNotUncompressPackets{1157};
 
 	//! Error reading packets
-	constexpr auto sqlErrorReadingPackets{1158};
+	inline constexpr auto sqlErrorReadingPackets{1158};
 
 	//! Timeout reading packets.
-	constexpr auto sqlTimeOutReadingPackets{1159};
+	inline constexpr auto sqlTimeOutReadingPackets{1159};
 
 	//! Error writing packets.
-	constexpr auto sqlErrorWritingPackets{1160};
+	inline constexpr auto sqlErrorWritingPackets{1160};
 
 	//! Timeout writing packets.
-	constexpr auto sqlTimeOutWritingPackets{1161};
+	inline constexpr auto sqlTimeOutWritingPackets{1161};
 
 	//! New aborted connection-
-	constexpr auto sqlNewAbortedConnection{1184};
+	inline constexpr auto sqlNewAbortedConnection{1184};
 
 	//! Network error reading from master.
-	constexpr auto sqlNetErrorReadingFromMaster{1189};
+	inline constexpr auto sqlNetErrorReadingFromMaster{1189};
 
 	//! Network error writing to master.
-	constexpr auto sqlNetErrorWritingToMaster{1190};
+	inline constexpr auto sqlNetErrorWritingToMaster{1190};
 
 	//! More than the maximum number of user connections.
-	constexpr auto sqlMoreThanMaxUserConnections{1203};
+	inline constexpr auto sqlMoreThanMaxUserConnections{1203};
 
 	//! Lock wait timeout exceeded.
-	constexpr auto sqlLockWaitTimeOutExceeded{1205};
+	inline constexpr auto sqlLockWaitTimeOutExceeded{1205};
 
 	//! Number of locks exceeds lock table size.
-	constexpr auto sqlNumOfLocksExceedsLockTableSize{1206};
+	inline constexpr auto sqlNumOfLocksExceedsLockTableSize{1206};
 
 	//! Deadlock.
-	constexpr auto sqlDeadLock{1213};
+	inline constexpr auto sqlDeadLock{1213};
 
 	//! Server error connecting to master.
-	constexpr auto sqlServerErrorConnectingToMaster{1218};
+	inline constexpr auto sqlServerErrorConnectingToMaster{1218};
 
 	//! Query execution interrupted.
-	constexpr auto sqlQueryExecutionInterrupted{1317};
+	inline constexpr auto sqlQueryExecutionInterrupted{1317};
 
 	//! Unable to connect to foreign data source.
-	constexpr auto sqlUnableToConnectToForeignDataSource{1429};
+	inline constexpr auto sqlUnableToConnectToForeignDataSource{1429};
 
 	//! Cannot connect to server through socket.
-	constexpr auto sqlCannotConnectToServerThroughSocket{2002};
+	inline constexpr auto sqlCannotConnectToServerThroughSocket{2002};
 
 	//! Cannot connect to server.
-	constexpr auto sqlCannotConnectToServer{2003};
+	inline constexpr auto sqlCannotConnectToServer{2003};
 
 	//! Unknown server host.
-	constexpr auto sqlUnknownServerHost{2005};
+	inline constexpr auto sqlUnknownServerHost{2005};
 
 	//! Server has gone away.
-	constexpr auto sqlServerHasGoneAway{2006};
+	inline constexpr auto sqlServerHasGoneAway{2006};
 
 	//! TCP error.
-	constexpr auto sqlTCPError{2011};
+	inline constexpr auto sqlTCPError{2011};
 
 	//! Error in server handshake.
-	constexpr auto sqlErrorInServerHandshake{2012};
+	inline constexpr auto sqlErrorInServerHandshake{2012};
 
 	//! Lost connection during query.
-	constexpr auto sqlLostConnectionDuringQuery{2013};
+	inline constexpr auto sqlLostConnectionDuringQuery{2013};
 
 	//! Client error connecting to slave.
-	constexpr auto sqlClientErrorConnectingToSlave{2024};
+	inline constexpr auto sqlClientErrorConnectingToSlave{2024};
 
 	//! Client error connecting to master.
-	constexpr auto sqlClientErrorConnectingToMaster{2025};
+	inline constexpr auto sqlClientErrorConnectingToMaster{2025};
 
 	//! SSL connection error.
-	constexpr auto sqlSSLConnectionError{2026};
+	inline constexpr auto sqlSSLConnectionError{2026};
 
 	//! Malformed packet.
-	constexpr auto sqlMalformedPacket{2027};
+	inline constexpr auto sqlMalformedPacket{2027};
 
 	//! Invalid connection handle.
-	constexpr auto sqlInvalidConnectionHandle{2048};
+	inline constexpr auto sqlInvalidConnectionHandle{2048};
 
 	///@}
 	///@name Constants for Other MySQL Errors
 	///@{
 
 	//! Storage engine error.
-	constexpr auto sqlStorageEngineError{1030};
+	inline constexpr auto sqlStorageEngineError{1030};
 
 	//! Insufficient privileges.
-	constexpr auto sqlInsufficientPrivileges{1045};
+	inline constexpr auto sqlInsufficientPrivileges{1045};
 
 	//! Wrong arguments.
-	constexpr auto sqlWrongArguments{1210};
+	inline constexpr auto sqlWrongArguments{1210};
 
 	//! Incorrect path.
-	constexpr auto sqlIncorrectPath{1525};
+	inline constexpr auto sqlIncorrectPath{1525};
 
 	///@}
 
