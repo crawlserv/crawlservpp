@@ -22,7 +22,7 @@
  *
  * File.hpp
  *
- * Namespace for functions for file access.
+ * Namespace for functions accessing files.
  *
  *  Created on: Apr 25, 2019
  *      Author: ans
