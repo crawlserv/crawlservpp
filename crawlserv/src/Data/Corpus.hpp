@@ -153,8 +153,10 @@ namespace crawlservpp::Data {
 
 		[[nodiscard]] std::string& getCorpus();
 		[[nodiscard]] const std::string& getcCorpus() const;
+		[[nodiscard]] bool isTokenized() const;
 		[[nodiscard]] std::vector<std::string>& getTokens();
 		[[nodiscard]] const std::vector<std::string>& getcTokens() const;
+		[[nodiscard]] std::size_t getNumTokens() const;
 		[[nodiscard]] TextMap& getArticleMap();
 		[[nodiscard]] const TextMap& getcArticleMap() const;
 		[[nodiscard]] TextMap& getDateMap();
@@ -166,7 +168,7 @@ namespace crawlservpp::Data {
 		[[nodiscard]] std::string getDate(const std::string& date) const;
 		[[nodiscard]] std::size_t size() const;
 		[[nodiscard]] bool empty() const;
-		std::string substr(std::size_t from, std::size_t len);
+		[[nodiscard]] std::string substr(std::size_t from, std::size_t len);
 
 		///@}
 		///@name Creation
@@ -374,6 +376,16 @@ namespace crawlservpp::Data {
 		return this->corpus;
 	}
 
+	//! Gets whether the corpus has been tokenized.
+	/*!
+	 * \returns True, if the corpus has been
+	 *   tokenized. False, if it has been not
+	 *   and is still continuous.
+	 */
+	inline bool Corpus::isTokenized() const {
+		return this->tokenized;
+	}
+
 	//! Gets a reference to the tokens in a tokenized text corpus.
 	/*!
 	 * \returns A reference to the vector
@@ -412,6 +424,25 @@ namespace crawlservpp::Data {
 		}
 
 		return this->tokens;
+	}
+
+	//! Gets the number of tokens in the corpus.
+	/*!
+	 * \returns The number of tokens in the
+	 *   corpus.
+	 *
+	 * \throws Corpus::Exception if the corpus
+	 *   has not been tokenized
+	 */
+	inline std::size_t Corpus::getNumTokens() const {
+		if(!(this->tokenized)) {
+			throw Exception(
+					"Corpus::tokens():"
+					" The corpus has not been tokenized."
+			);
+		}
+
+		return this->tokens.size();
 	}
 
 	//! Gets a reference to the article map of the corpus.
