@@ -132,14 +132,16 @@ namespace crawlservpp::Struct {
 				const std::vector<std::uint16_t>& setSentenceManipulators,
 				const std::vector<std::string>& setSentenceModels,
 				const std::vector<std::uint16_t>& setWordManipulators,
-				const std::vector<std::string>& setWordModels
+				const std::vector<std::string>& setWordModels,
+				const std::vector<std::uint16_t>& setSavePoints
 		) : sourceType(setSourceType),
 			sourceTable(setSourceTable),
 			sourceColumn(setSourceColumn),
 			sentenceManipulators(setSentenceManipulators),
 			sentenceModels(setSentenceModels),
 			wordManipulators(setWordManipulators),
-			wordModels(setWordModels) {}
+			wordModels(setWordModels),
+			savePoints(setSavePoints) {}
 
 		///@}
 	};

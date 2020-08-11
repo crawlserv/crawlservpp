@@ -166,7 +166,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 							this->config.tokenizerSentenceManipulators,
 							this->config.tokenizerSentenceModels,
 							this->config.tokenizerWordManipulators,
-							this->config.tokenizerWordModels
+							this->config.tokenizerWordModels,
+							this->config.tokenizerSavePoints
 					),
 					dateFrom,
 					dateTo,
