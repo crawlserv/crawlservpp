@@ -130,6 +130,24 @@ namespace crawlservpp::Struct {
 			}
 		}
 
+		//! Changes the status message and resets the current progress.
+		/*!
+		 * \param statusMessage Constant reference
+		 *   to a string containing the new status
+		 *   message.
+		 *
+		 * \returns True, if the thread is supposed
+		 *   to continue running. False, otherwise.
+		 */
+		bool change(const std::string& statusMessage) { //NOLINT(modernize-use-nodiscard)
+			this->currentStatus = statusMessage;
+			this->callbackSetStatus(statusMessage);
+
+			this->callbackSetProgress(0.F);
+
+			return this->callbackIsRunning();
+		}
+
 		//! Updates the status with a fractal progress.
 		/*!
 		 * \param done The number of processed units.
