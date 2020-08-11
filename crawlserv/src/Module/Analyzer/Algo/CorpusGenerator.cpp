@@ -89,6 +89,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::size_t corpora{0};
 		std::size_t bytes{0};
+		std::size_t tokens{0};
 		std::size_t sources{0};
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
@@ -159,6 +160,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				bytes += corpus.size();
 
+				if(corpus.isTokenized()) {
+					tokens += corpus.getNumTokens();
+				}
+
 				sources += corpusSources;
 			}
 		}
@@ -190,6 +195,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 			else {
 				statusStrStr << bytes << " bytes";
+			}
+
+			if(tokens > 0) {
+				statusStrStr << ", ";
+
+				if(tokens == 1) {
+					statusStrStr << "one token";
+				}
+				else {
+					statusStrStr << tokens << " tokens";
+				}
 			}
 
 			if(sources == 1) {
