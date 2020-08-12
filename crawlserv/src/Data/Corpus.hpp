@@ -2039,6 +2039,7 @@ namespace crawlservpp::Data {
 		std::size_t chunkNumCompleteTokens{0};
 		std::size_t nextArticleIndex{0};
 		std::size_t nextDateIndex{0};
+		bool reserveMemory{true};
 
 		for(const auto& sentence : this->sentenceMap) {
 			// save previous length of chunk
@@ -2046,18 +2047,31 @@ namespace crawlservpp::Data {
 				currentChunk.size()
 			};
 
-			// reserve memory for sentence
-			currentChunk.reserve(
-					oldChunkSize
-					+ std::accumulate(
-							this->tokens.begin() + sentence.first,
-							this->tokens.begin() + sentence.first + sentence.second,
-							std::size_t{},
-							[](auto a, const auto& b) {
-								return a + b.size() + 1;
-							}
-					)
-			);
+			if(reserveMemory) {
+				// reserve memory for chunk
+				std::size_t bytes{0};
+
+				for(
+						auto tokenIt = this->tokens.begin() + sentence.first;
+						tokenIt != this->tokens.begin() + sentence.first + sentence.second;
+						++tokenIt
+				) {
+					bytes += tokenIt->size() + 1;
+
+					if(bytes > chunkSize) {
+						break;
+					}
+				}
+
+				if(bytes > chunkSize) {
+					currentChunk.reserve(chunkSize + 1);
+				}
+				else {
+					currentChunk.reserve(bytes);
+				}
+
+				reserveMemory = false;
+			}
 
 			// add sentence to current chunk
 			for(
@@ -2091,7 +2105,7 @@ namespace crawlservpp::Data {
 					exceptionStrStr.imbue(std::locale(""));
 
 					exceptionStrStr <<	"Corpus::copyChunksTokenized():"
-										" Unexpected start of article"
+										" Unexpected begin of article"
 										" (@";
 					exceptionStrStr <<	nextArticle.pos;
 					exceptionStrStr <<	")"
@@ -2124,7 +2138,7 @@ namespace crawlservpp::Data {
 					exceptionStrStr.imbue(std::locale(""));
 
 					exceptionStrStr <<	"Corpus::copyChunksTokenized():"
-										" Unexpected start of date"
+										" Unexpected begin of date"
 										" (@";
 					exceptionStrStr <<	nextDate.pos;
 					exceptionStrStr <<	")"
@@ -2167,6 +2181,8 @@ namespace crawlservpp::Data {
 					rest = currentChunk.substr(chunkLength);
 
 					currentChunk.erase(chunkLength);
+
+					reserveMemory = true;
 
 					// check which tokens to (also) add to the next chunk
 					restNumTokens = sentence.second;
