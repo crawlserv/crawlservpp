@@ -114,6 +114,18 @@ namespace crawlservpp::Struct {
 		 *   vector of strings, containing a model for each
 		 *   word manipulator, or an empty string if no
 		 *   model is required by the manipulator.
+		 * \param setSavePoints Constant reference to a
+		 *   vector containing the save points to be
+		 *   generated, each of them counting from zero
+		 *   for the unmanipulated corpus, followed by
+		 *   the sentence manipulators, followed by the
+		 *   word manipulators. For example, if one sentence
+		 *   manipulator and one word manipulator are given,
+		 *   a save point of @c 0 means saving the
+		 *   unmanipulated corpus, @c 1 means saving the
+		 *   corpus after running the sentence manipulator,
+		 *   and @c 2 means saving the corpus after running
+		 *   the word manipulator.
 		 *
 		 * \sa Module::Analyzer::generalInputSourcesParsing,
 		 *   Module::Analyzer::generalInputSourcesExtracting,
