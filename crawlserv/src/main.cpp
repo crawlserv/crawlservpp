@@ -38,7 +38,8 @@
 /*!
  * Runs crawlservpp::Main::App::run().
  *
- * \returns EXIT_SUCCESS on success, EXIT_FAILURE on failure.
+ * \returns @c EXIT_SUCCESS on success,
+ *   @c EXIT_FAILURE on failure.
  */
 int main(int argc, char * argv[]) {
 	return crawlservpp::Main::App(crawlservpp::vectorize(argc, argv)).run();
