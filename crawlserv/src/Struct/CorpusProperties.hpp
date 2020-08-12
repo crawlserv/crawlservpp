@@ -83,6 +83,13 @@ namespace crawlservpp::Struct {
 		 */
 		std::vector<std::uint16_t> savePoints{0};
 
+		//! Number of processed bytes in a continuous corpus after which memory will be freed.
+		/*!
+		 * Zero means memory will only be freed after
+		 *  processing is complete.
+		 */
+		std::uint64_t freeMemoryEvery{0};
+
 		///@}
 		///@name Construction
 		///@{
@@ -126,6 +133,10 @@ namespace crawlservpp::Struct {
 		 *   corpus after running the sentence manipulator,
 		 *   and @c 2 means saving the corpus after running
 		 *   the word manipulator.
+		 * \param setFreeMemoryEvery Number of processed bytes
+		 *   in a continuous corpus after which memory will
+		 *   be freed. Zero means memory will only be freed
+		 *   after processing is complete.
 		 *
 		 * \sa Module::Analyzer::generalInputSourcesParsing,
 		 *   Module::Analyzer::generalInputSourcesExtracting,
@@ -145,15 +156,17 @@ namespace crawlservpp::Struct {
 				const std::vector<std::string>& setSentenceModels,
 				const std::vector<std::uint16_t>& setWordManipulators,
 				const std::vector<std::string>& setWordModels,
-				const std::vector<std::uint16_t>& setSavePoints
-		) : sourceType(setSourceType),
-			sourceTable(setSourceTable),
-			sourceColumn(setSourceColumn),
-			sentenceManipulators(setSentenceManipulators),
-			sentenceModels(setSentenceModels),
-			wordManipulators(setWordManipulators),
-			wordModels(setWordModels),
-			savePoints(setSavePoints) {}
+				const std::vector<std::uint16_t>& setSavePoints,
+				std::uint64_t setFreeMemoryEvery
+		) : sourceType{setSourceType},
+			sourceTable{setSourceTable},
+			sourceColumn{setSourceColumn},
+			sentenceManipulators{setSentenceManipulators},
+			sentenceModels{setSentenceModels},
+			wordManipulators{setWordManipulators},
+			wordModels{setWordModels},
+			savePoints{setSavePoints},
+			freeMemoryEvery{setFreeMemoryEvery} {}
 
 		///@}
 	};

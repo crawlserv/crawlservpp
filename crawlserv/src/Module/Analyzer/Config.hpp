@@ -87,6 +87,9 @@ namespace crawlservpp::Module::Analyzer {
 	//! Default percentage of the maximum length for corpus slices.
 	inline constexpr auto defaultPercentageCorpusSlices{30};
 
+	//! Default number of processed bytes in a continuous corpus after which memory will be freed.
+	inline constexpr auto defaultFreeMemoryEvery{1000000000};
+
 	///@}
 
 	/*
@@ -205,6 +208,13 @@ namespace crawlservpp::Module::Analyzer {
 			 */
 			std::vector<std::string> tokenizerWordModels;
 
+			//! Number of processed bytes in a continuous corpus after which memory will be freed.
+			/*!
+			 * Zero means memory will only be freed after
+			 *  processing is complete.
+			 */
+			std::uint64_t tokenizerFreeMemoryEvery{defaultFreeMemoryEvery};
+
 			///@}
 		}
 
@@ -307,6 +317,7 @@ namespace crawlservpp::Module::Analyzer {
 		this->option("sentence models", this->config.tokenizerSentenceModels);
 		this->option("word.manipulators", this->config.tokenizerWordManipulators);
 		this->option("word.models", this->config.tokenizerWordModels);
+		this->option("free.memory.every", this->config.tokenizerFreeMemoryEvery);
 
 		// parse algo options
 		this->parseAlgoOption();

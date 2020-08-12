@@ -58,5 +58,12 @@
 		"description": "Model for the word manipulator with the same array index. Empty strings will be ignored.",
 		"simple": true,
 		"position": 4
+	},
+	"free.memory.every": {
+		"type": "number",
+		"min": 0,
+		"default": 1000000000,
+		"description": "Number of bytes in a continuous corpus after which memory will be freed. Zero means memory will only be freed after processing is complete.",
+		"simple": false
 	}
 }
