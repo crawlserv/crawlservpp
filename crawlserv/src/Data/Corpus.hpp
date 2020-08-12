@@ -1940,14 +1940,25 @@ namespace crawlservpp::Data {
 
 		// check whether slicing is necessary
 		if(this->tokenBytes <= chunkSize) {
-			to.emplace_back(
-					std::accumulate(
-							this->tokens.begin(),
-							this->tokens.end(),
-							std::string{}
-					),
-					this->tokenBytes
-			);
+			// add whole corpus as one chunk
+			const auto size{
+				this->tokenBytes
+				+ this->tokens.size()
+			};
+
+			to.emplace_back(std::string{});
+
+			to.back().reserve(to.size() + size);
+
+			for(const auto& token : this->tokens) {
+				to.back() += token;
+
+				to.back().push_back('\n');
+			}
+
+			if(!to.back().empty()) {
+				to.back().pop_back(); /* remove last newline */
+			}
 
 			articleMapsTo.emplace_back(this->articleMap);
 			dateMapsTo.emplace_back(this->dateMap);
@@ -1994,15 +2005,29 @@ namespace crawlservpp::Data {
 				currentChunk.size()
 			};
 
-			// add sentence to current chunk
-			currentChunk += std::accumulate(
-						this->tokens.begin() + sentence.first,
-						this->tokens.begin() + sentence.first + sentence.second,
-						std::string{},
-						[](const auto& a, const auto& b) {
-							return a + b + '\n';
-						}
+			// reserve memory for sentence
+			currentChunk.reserve(
+					oldChunkSize
+					+ std::accumulate(
+							this->tokens.begin() + sentence.first,
+							this->tokens.begin() + sentence.first + sentence.second,
+							std::size_t{},
+							[](auto a, const auto& b) {
+								return a + b.size() + 1;
+							}
+					)
 			);
+
+			// add sentence to current chunk
+			for(
+					auto tokenIt = this->tokens.begin() + sentence.first;
+					tokenIt != this->tokens.begin() + sentence.first + sentence.second;
+					++tokenIt
+			) {
+				currentChunk += *tokenIt;
+
+				currentChunk.push_back('\n');
+			}
 
 			chunkNumCompleteTokens += sentence.second;
 
