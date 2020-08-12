@@ -2858,6 +2858,9 @@ namespace crawlservpp::Data {
 			StatusSetter& statusSetter
 	) {
 		if(this->tokenized) {
+			// reset number of bytes
+			this->tokenBytes = 0;
+
 			// run manipulators on already tokenized corpus
 			if(callbackSentence || callbackWord) {
 				std::size_t numDeletedWords{0};
@@ -2867,6 +2870,7 @@ namespace crawlservpp::Data {
 				bool inArticle{false};
 
 				for(auto& sentenceEntry : this->sentenceMap) {
+					// skip dates before current sentence
 					while(
 							dateIndex < this->dateMap.size()
 							&& this->dateMap[dateIndex].pos
@@ -2878,6 +2882,7 @@ namespace crawlservpp::Data {
 						++dateIndex;
 					}
 
+					// skip articles before current sentence
 					while(
 							articleIndex < this->articleMap.size()
 							&& this->articleMap[articleIndex].pos
@@ -2889,6 +2894,7 @@ namespace crawlservpp::Data {
 						++articleIndex;
 					}
 
+					// check for beginning of date
 					if(
 							dateIndex < this->dateMap.size()
 							&& this->dateMap[dateIndex].pos
@@ -2896,9 +2902,11 @@ namespace crawlservpp::Data {
 					) {
 						inDate = true;
 
+						// update beginning of date
 						this->dateMap[dateIndex].pos -= numDeletedWords;
 					}
 
+					// check for beginning of article
 					if(
 							articleIndex < this->articleMap.size()
 							&& this->articleMap[articleIndex].pos
@@ -2906,6 +2914,7 @@ namespace crawlservpp::Data {
 					) {
 						inArticle = true;
 
+						// update beginning of article
 						this->articleMap[articleIndex].pos -= numDeletedWords;
 					}
 
@@ -2935,6 +2944,7 @@ namespace crawlservpp::Data {
 						}
 
 						if(word.empty()) {
+							// delete empty word
 							this->tokens.erase(
 									this->tokens.begin()
 									+ n
@@ -2944,16 +2954,24 @@ namespace crawlservpp::Data {
 							--n;
 
 							if(inDate && this->dateMap[dateIndex].length > 0) {
+								// update length of date
 								--(this->dateMap[dateIndex].length);
 							}
 
 							if(inArticle && this->articleMap[articleIndex].length > 0) {
+								// update length of article
 								--(this->articleMap[articleIndex].length);
 							}
 
-							--(sentenceEntry.second);
+							if(sentenceEntry.second > 0) {
+								// update length of sentence
+								--(sentenceEntry.second);
+							}
 
 							++numDeletedWords;
+						}
+						else {
+							this->tokenBytes += word.size();
 						}
 					}
 				}
@@ -3110,6 +3128,8 @@ namespace crawlservpp::Data {
 							--currentWord;
 						}
 						else {
+							this->tokenBytes += wordIt->size();
+
 							++wordIt;
 						}
 					}
