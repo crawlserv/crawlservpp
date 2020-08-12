@@ -2821,8 +2821,54 @@ namespace crawlservpp::Data {
 			// run manipulators on already tokenized corpus
 			if(callbackSentence || callbackWord) {
 				std::size_t numDeletedWords{0};
+				std::size_t dateIndex{0};
+				std::size_t articleIndex{0};
+				bool inDate{false};
+				bool inArticle{false};
 
 				for(auto& sentenceEntry : this->sentenceMap) {
+					while(
+							dateIndex < this->dateMap.size()
+							&& this->dateMap[dateIndex].pos
+							+ this->dateMap[dateIndex].length
+							< sentenceEntry.first
+					) {
+						inDate = false;
+
+						++dateIndex;
+					}
+
+					while(
+							articleIndex < this->articleMap.size()
+							&& this->articleMap[articleIndex].pos
+							+ this->articleMap[articleIndex].length
+							< sentenceEntry.first
+					) {
+						inArticle = false;
+
+						++articleIndex;
+					}
+
+					if(
+							dateIndex < this->dateMap.size()
+							&& this->dateMap[dateIndex].pos
+							== sentenceEntry.first
+					) {
+						inDate = true;
+
+						this->dateMap[dateIndex].pos -= numDeletedWords;
+					}
+
+					if(
+							articleIndex < this->articleMap.size()
+							&& this->articleMap[articleIndex].pos
+							== sentenceEntry.first
+					) {
+						inArticle = true;
+
+						this->articleMap[articleIndex].pos -= numDeletedWords;
+					}
+
 					sentenceEntry.first -= numDeletedWords;
 
 					const auto sentenceEnd{
@@ -2856,6 +2902,14 @@ namespace crawlservpp::Data {
 							);
 
 							--n;
+
+							if(inDate && this->dateMap[dateIndex].length > 0) {
+								--(this->dateMap[dateIndex].length);
+							}
+
+							if(inArticle && this->articleMap[articleIndex].length > 0) {
+								--(this->articleMap[articleIndex].length);
+							}
 
 							--(sentenceEntry.second);
 
