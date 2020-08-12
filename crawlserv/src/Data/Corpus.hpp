@@ -1126,14 +1126,19 @@ namespace crawlservpp::Data {
 	 *   sentence maps will be cleared, freeing the
 	 *   used memory early.
 	 *
-	 * \throws Corpus::Exception if consistency checks
-	 *   are enabled and an article map or a sentence
-	 *   map does not start in the beginning of its
-	 *   corpus chunk, if the length of the first
-	 *   sentence in a chunk conflicts with the length
-	 *   given in the previous chunk, or if the length
-	 *   of the last sentence in the combined corpus
-	 *   exceeds the length of the corpus itself.
+	 * \throws Corpus::Exception if the corpus is not
+	 *   empty and no sentence map is given or the
+	 *   combined sentence map is empty, consistency
+	 *   checks are enabled and an article map or a
+	 *   sentence map does not start in the beginning
+	 *   of its corpus chunk, if the length of the
+	 *   first sentence in a chunk conflicts with the
+	 *   length given in the previous chunk, if the
+	 *   length of the last sentence in the combined
+	 *   corpus exceeds the length of the corpus
+	 *   itself, or if there are more word counts,
+	 *   article maps, date maps and/or sentence maps
+	 *   given than corpus chunks.
 	 *
 	 * \sa copyChunksTokenized
 	 */
@@ -1147,6 +1152,34 @@ namespace crawlservpp::Data {
 	) {
 		// clear old corpus
 		this->clear();
+
+		// check arguments
+		if(
+				this->checkConsistency
+				&& (
+						wordNums.size() > chunks.size()
+						|| articleMaps.size() > chunks.size()
+						|| dateMaps.size() > chunks.size()
+						|| sentenceMaps.size() > chunks.size()
+				)
+		) {
+			throw Exception(
+					"Corpus::combineTokenized():"
+					" More word counts, article maps, date maps,"
+					" and/or sentence maps than corpus chunks"
+			);
+		}
+
+		if(chunks.empty()) {
+			return;
+		}
+
+		if(sentenceMaps.empty()) {
+			throw Exception(
+					"Corpus::combineTokenized():"
+					" No sentence maps for non-empty corpus"
+			);
+		}
 
 		// reserve memory
 		const auto totalWords{
@@ -1402,6 +1435,13 @@ namespace crawlservpp::Data {
 			this->tokens.emplace_back(lastWord);
 
 			this->tokenBytes += lastWord.size();
+		}
+
+		if(this->sentenceMap.empty()) {
+			throw Exception(
+					"Corpus::combineTokenized():"
+					" Empty sentence map for non-empty corpus"
+			);
 		}
 
 		if(
