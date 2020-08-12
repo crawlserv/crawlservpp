@@ -1963,6 +1963,7 @@ namespace crawlservpp::Data {
 			articleMapsTo.emplace_back(this->articleMap);
 			dateMapsTo.emplace_back(this->dateMap);
 			sentenceMapsTo.emplace_back(this->sentenceMap);
+			wordNumsTo.emplace_back(this->tokens.size());
 
 			return;
 		}
