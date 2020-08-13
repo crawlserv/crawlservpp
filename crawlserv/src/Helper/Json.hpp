@@ -36,6 +36,10 @@
 
 #include "../_extern/jsoncons/include/jsoncons/json.hpp"
 
+#include <cstddef>	// std::size_t
+
+namespace rapidjson { typedef ::std::size_t SizeType; }
+
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 #include "../_extern/rapidjson/include/rapidjson/error/en.h"
 #include "../_extern/rapidjson/include/rapidjson/error/error.h"
@@ -43,7 +47,6 @@
 #include "../_extern/rapidjson/include/rapidjson/writer.h"
 
 #include <cctype>	// std::iscntrl, std::isxdigit, std::tolower
-#include <cstddef>	// std::size_t
 #include <string>	// std::string
 #include <utility>	// std::pair
 #include <vector>	// std::vector
@@ -656,9 +659,9 @@ namespace crawlservpp::Helper::Json {
 				);
 			}
 
-			auto p{element.FindMember("p")};
-			auto l{element.FindMember("l")};
-			auto v{element.FindMember("v")};
+			const auto p{element.FindMember("p")};
+			const auto l{element.FindMember("l")};
+			const auto v{element.FindMember("v")};
 
 			if(p == element.MemberEnd() || !(p->value.IsUint64())) {
 				throw Exception(
@@ -743,18 +746,25 @@ namespace crawlservpp::Helper::Json {
 		std::vector<std::pair<std::size_t, std::size_t>> result;
 
 		for(const auto& element : document.GetArray()) {
-			if(!element.IsObject()) {
+			if(!element.IsArray()) {
 				throw Exception(
 						"Json::parsePosLenPairsJson():"
 						" Invalid array of [pos;length] pairs"
-						" (an array element is not an object)"
+						" (an array element is not an array)"
 				);
 			}
 
-			auto p{element.FindMember("p")};
-			auto l{element.FindMember("l")};
+			if(element.Size() != 2) {
+				throw Exception(
+						"Json::parsePosLenPairsJson():"
+						" Invalid array of [pos;length] pairs"
+						" (a pair is not of size 2)"
+				);
+			}
 
-			if(p == element.MemberEnd() || !(p->value.IsUint64())) {
+			const auto a{element.GetArray()};
+
+			if(!(a[0].IsUint64())) {
 				throw Exception(
 						"Json::parsePosLenPairsJson():"
 						" Invalid array of [pos;length] pairs"
@@ -762,7 +772,7 @@ namespace crawlservpp::Helper::Json {
 				);
 			}
 
-			if(l == element.MemberEnd() || !(l->value.IsUint64())) {
+			if(!(a[1].IsUint64())) {
 				throw Exception(
 						"Json::parsePosLenPairsJson():"
 						" Invalid array of [pos;length] pairs"
@@ -771,8 +781,8 @@ namespace crawlservpp::Helper::Json {
 			}
 
 			result.emplace_back(
-					p->value.GetUint64(),
-					l->value.GetUint64()
+					a[0].GetUint64(),
+					a[1].GetUint64()
 			);
 		}
 
