@@ -43,10 +43,11 @@ class Config {
 		// link class to view
 		this.view = $("#config-view");
 		
-		if(!this.view)
+		if(!this.view) {
 			throw new Error(
 					"Config::constructor(): Content view not found."
 			);
+		}
 		
 		// set empty content
 		this.content = "";
@@ -129,10 +130,12 @@ class Config {
 					
 					for(var opt in thisClass.config_base[cat]) {
 						// ignore category properties
-						if(thisClass.config_base[cat].hasOwnProperty(opt)
+						if(
+								thisClass.config_base[cat].hasOwnProperty(opt)
 								&& opt != "id"
 								&& opt != "open"
-								&& opt != "label") {
+								&& opt != "label"
+						) {
 							idCounter++;
 							
 							thisClass.config_base[cat][opt].id = idCounter;
@@ -143,14 +146,17 @@ class Config {
 								
 								if(thisClass.config_base[cat][opt].type == "array") {
 									thisClass.config_base[cat][opt].default = [];
+									
 									warningStr += "set to empty array.";
 								}
 								else if(thisClass.config_base[cat][opt].type == "string") {
 									thisClass.config_base[cat][opt].default = "";
+									
 									warningStr += "set to empty string.";
 								}
 								else {
 									thisClass.config_base[cat][opt].default = 0;
+									
 									warningStr += "set to zero.";
 								}
 								
@@ -177,8 +183,9 @@ class Config {
 				thisClass.config_current = $.parseJSON(json);
 				
 				// remove categories of old algorithm
-				if(removal !== null)
+				if(removal !== null) {
 					thisClass.purgeCategories(removal);
+				}
 				
 				// combine configurations
 				thisClass.config_combined = [];
@@ -186,10 +193,12 @@ class Config {
 				for(var cat in thisClass.config_base) {
 					for(var opt in thisClass.config_base[cat]) {
 						// ignore category properties
-						if(thisClass.config_base[cat].hasOwnProperty(opt)
+						if(
+								thisClass.config_base[cat].hasOwnProperty(opt)
 								&& opt != "id"
 								&& opt != "open"
-								&& opt != "label") {
+								&& opt != "label"
+						) {
 							var optobj = {};
 							
 							optobj.cat = cat;
@@ -197,14 +206,24 @@ class Config {
 							optobj.value = thisClass.config_base[cat][opt].default;
 							
 							// overwrite value from database
-							for(var i = 0; i < thisClass.config_db.length; i++)
-								if(thisClass.config_db[i].cat == cat && thisClass.config_db[i].name == opt)
+							for(var i = 0; i < thisClass.config_db.length; i++) {
+								if(
+										thisClass.config_db[i].cat == cat
+										&& thisClass.config_db[i].name == opt
+								) {
 									optobj.value = thisClass.config_db[i].value;
+								}
+							}
 							
 							// overwrite value from current configuration
-							for(var i = 0; i < thisClass.config_current.length; i++)
-								if(thisClass.config_current[i].cat == cat && thisClass.config_current[i].name == opt)
+							for(var i = 0; i < thisClass.config_current.length; i++) {
+								if(
+										thisClass.config_current[i].cat == cat
+										&& thisClass.config_current[i].name == opt
+								) {
 									optobj.value = thisClass.config_current[i].value;
+								}
+							}
 							
 							thisClass.config_combined.push(optobj);
 						}
@@ -227,9 +246,10 @@ class Config {
 								break;
 							}
 						}
-						if(!found)
+						if(!found) {
 							// category not in filter: do not render it
 							continue;
+						}
 					}
 					
 					// start category
@@ -240,10 +260,12 @@ class Config {
 					// go through all options in category
 					for(var opt in thisClass.config_base[cat]) {
 						// ignore category (and internal JavaScript) properties
-						if(cobj.hasOwnProperty(opt)
+						if(
+								cobj.hasOwnProperty(opt)
 								&& opt != "id"
 								&& opt != "open"
-								&& opt != "label") {
+								&& opt != "label"
+						) {
 							// set current object
 							let obj = cobj[opt];
 							
@@ -251,18 +273,21 @@ class Config {
 							var value = thisClass.getConfValue(cat, opt);
 							
 							// show option according to mode
-							if(mode == "advanced")
+							if(mode == "advanced") {
 								// advanced configuration: show all entries
 								thisClass.content += thisClass.advancedOpt(cat, opt, obj, value);
+							}
 							else {
 								// simple configuration: hide options that are not simple
-								if(obj.simple)
+								if(obj.simple) {
 									// push simple option to array for sorting
 									simple.push([obj.position, cat, opt, obj, value]);
-								else
+								}
+								else {
 									thisClass.content += thisClass.hiddenOpt(
 											cat, opt, obj, value
 									);
+								}
 							}
 						}
 					}
@@ -271,10 +296,11 @@ class Config {
 						simple.sort(thisClass.sortByPos);
 						
 						// show simple configuration
-						for(var i = 0; i < simple.length; i++)
+						for(var i = 0; i < simple.length; i++) {
 							thisClass.content += thisClass.simpleOpt(
 									simple[i][1], simple[i][2], simple[i][3], simple[i][4]
 							);
+						}
 					}
 					
 					// end category
@@ -285,15 +311,18 @@ class Config {
 				endTime = +new Date();
 				
 				console.log(
-						"Config::constructor(): Content created after" +
-						" " + msToStr(endTime - startTime) + "."
+						"Config::constructor(): Content created after" 
+						+ " "
+						+ msToStr(endTime - startTime)
+						+ "."
 				);
 				
 				thisClass.renderToView();
 				
 				// success!
-				if(callback_when_finished != null)
+				if(callback_when_finished != null) {
 					callback_when_finished();
+				}
 			})
 			.fail(function(jqXHR, textStatus, errorThrown) {				
 				handleJsonError(
@@ -329,20 +358,22 @@ class Config {
 		result += this.label(name + ":");
 		result += this.startValue(obj);
 		
-		if(obj.type == "bool")
+		if(obj.type == "bool") {
 			result += this.check(
 					cat,
 					obj.id,
 					value
 			);
-		else if(obj.type == "string")
+		}
+		else if(obj.type == "string") {
 			result += this.text(
 					cat,
 					obj.id,
 					value,
 					obj.default
 			);
-		else if(obj.type == "number")
+		}
+		else if(obj.type == "number") {
 			result += this.number(
 					cat,
 					obj.id,
@@ -352,7 +383,8 @@ class Config {
 					obj.max,
 					obj.step
 			);
-		else if(obj.type == "date")
+		}
+		else if(obj.type == "date") {
 			result += this.date(
 					cat,
 					obj.id,
@@ -361,6 +393,7 @@ class Config {
 					obj.min,
 					obj.max
 			);
+		}
 		else if(obj.type == "array") {
 			result += this.array(
 					cat,
@@ -375,26 +408,29 @@ class Config {
 					obj.default
 			);
 		}
-		else if(obj.type == "locale")
+		else if(obj.type == "locale") {
 			result += this.locale(
 					cat,
 					obj.id,
 					value,
 			);
-		else if(obj.type == "query")
+		}
+		else if(obj.type == "query") {
 			result += this.query(
 					cat,
 					obj.id,
 					value,
 					this.getFilter(obj)
 			);
-		else if(obj.type == "enum")
+		}
+		else if(obj.type == "enum") {
 			result += this.valuelist(
 					cat,
 					obj.id,
 					value,
 					obj["enum-values"]
 			);
+		}
 		
 		result += this.endValue();
 		result += this.endOpt();
@@ -432,16 +468,18 @@ class Config {
 				false
 		);
 		
-		if(obj.type == "bool")
+		if(obj.type == "bool") {
 			result += this.label(
 					".",
 					name
 			);
-		else
+		}
+		else {
 			result += this.label(
 					obj.label,
 					name
 			);
+		}
 		
 		result += this.startValue(obj);
 		
@@ -457,14 +495,15 @@ class Config {
 					true
 			);
 		}
-		else if(obj.type == "string")
+		else if(obj.type == "string") {
 			result += this.text(
 					cat,
 					obj.id,
 					value,
 					obj.default
 			);
-		else if(obj.type == "number")
+		}
+		else if(obj.type == "number") {
 			result += this.number(
 					cat,
 					obj.id,
@@ -474,7 +513,8 @@ class Config {
 					obj.max,
 					obj.step
 			);
-		else if(obj.type == "date")
+		}
+		else if(obj.type == "date") {
 			result += this.date(
 					cat,
 					obj.id,
@@ -483,7 +523,8 @@ class Config {
 					obj.min,
 					obj.max
 			);
-		else if(obj.type == "array")
+		}
+		else if(obj.type == "array") {
 			result += this.array(
 					cat,
 					obj.id,
@@ -496,26 +537,30 @@ class Config {
 					obj["enum-values"],
 					obj.default
 			);
-		else if(obj.type == "locale")
+		}
+		else if(obj.type == "locale") {
 			result += this.locale(
 					cat,
 					obj.id,
 					value
 			);			
-		else if(obj.type == "query")
+		}
+		else if(obj.type == "query") {
 			result += this.query(
 					cat,
 					obj.id,
 					value,
 					this.getFilter(obj)
 			);
-		else if(obj.type == "enum")
+		}
+		else if(obj.type == "enum") {
 			result += this.valuelist(
 					cat,
 					obj.id,
 					value,
 					obj["enum-values"]
 			);
+		}
 		
 		result += this.endValue();
 		result += this.endOpt();
@@ -561,8 +606,9 @@ class Config {
 		
 		result +=	"<div class=\"opt-block";
 		
-		if(hidden)
+		if(hidden) {
 			result += " opt-hidden";
+		}
 		
 		result +=	"\" data-name=\"" + name +
 					"\" data-id=\"" + id +
@@ -598,43 +644,54 @@ class Config {
 					&& obj["query-types"].length
 			) {
 				
-				if(obj["query-types"].includes("regex"))
+				if(obj["query-types"].includes("regex")) {
 					types.push("RegEx");
+				}
 				
-				if(obj["query-types"].includes("xpath"))
+				if(obj["query-types"].includes("xpath")) {
 					types.push("XPath");
+				}
 				
-				if(obj["query-types"].includes("jsonpointer"))
+				if(obj["query-types"].includes("jsonpointer")) {
 					types.push("JSONPointer");
+				}
 				
-				if(obj["query-types"].includes("jsonpath"))
+				if(obj["query-types"].includes("jsonpath")) {
 					types.push("JSONPath");
+				}
 				
-				if(types.length)
+				if(types.length) {
 					requires = join(types, ", ", " or ");
+				}
 			}
 		
 			if(
 					typeof obj["query-results"] !== "undefined"
 					&& obj["query-results"].length
 			) {		
-				if(obj["query-results"].includes("bool"))
+				if(obj["query-results"].includes("bool")) {
 					results.push("boolean");
+				}
 				
-				if(obj["query-results"].includes("single"))
+				if(obj["query-results"].includes("single")) {
 					results.push("single")
+				}
 				
-				if(obj["query-results"].includes("multi"))
+				if(obj["query-results"].includes("multi")) {
 					results.push("multiple");
+				}
 				
-				if(obj["query-results"].includes("subsets"))
+				if(obj["query-results"].includes("subsets")) {
 					results.push("subset");
+				}
 				
 				if(results.length) {
-					if(requires.length)
+					if(requires.length) {
 						requires += " queries with ";
-					else
+					}
+					else {
 						requires = "Queries with ";
+					}
 					
 					requires += join(results, ", ", " or ");
 					
@@ -642,12 +699,13 @@ class Config {
 				}
 			}
 			
-			if(requires.length)
+			if(requires.length) {
 				return "<div class=\"opt-value\" data-tippy-content=\""
 						+ obj.description
 						+ "&#x3C;br&#x3E;&#x3C;span class=&#x22;tippy-requirement&#x22;&#x3E;"
 						+ requires
 						+ "&#x3C;/span&#x3E;\">\n";
+			}
 		}
 		
 		return "<div class=\"opt-value\" data-tippy-content=\""
@@ -695,10 +753,13 @@ class Config {
 		
 		result += "<input type=\"checkbox\" class=\"opt\" ";
 		
-		if(!array)
+		if(!array) {
 			result += "id=\"opt-" + cat + "-" + id + "\" ";
-		if(value)
+		}
+		
+		if(value) {
 			result += "checked ";
+		}
 		
 		result += "/> ";
 		
@@ -709,28 +770,36 @@ class Config {
 	text(cat, id, value, def, array = false) {
 		var result = "";
 		
-		if(value == null)
+		if(value == null) {
 			value = "";
+		}
 		
 		result += "<input type=\"text\" class=\"opt";
 		
-		if(array) result += " opt-array";
+		if(array) {
+			result += " opt-array";
+		}
 		
 		result += "\" ";
 		
-		if(!array) result += "id=\"opt-" + cat + "-" + id + "\"";
+		if(!array) {
+			result += "id=\"opt-" + cat + "-" + id + "\"";
+		}
 		
 		result += "placeholder=\"";
 		
-		if(!def.length)
+		if(!def.length) {
 			result += "[empty]";
-		else
+		}
+		else {
 			result += def;
+		}
 		
 		result += "\"";
 		
-		if(def != value)
+		if(def !== value) {
 			result += " value=\"" + htmlentities(value) + "\"";
+		}
 		
 		result += " />";
 		
@@ -743,26 +812,33 @@ class Config {
 		
 		result += "<input type=\"number\" class=\"opt";
 		
-		if(array)
+		if(array) {
 			result += " opt-array";
+		}
 
 		result += "\" ";
 		
-		if(!array)
+		if(!array) {
 			result += "id=\"opt-" + cat + "-" + id + "\" ";
+		}
 		
 		result += "placeholder=\"" + def + "\"";
 		
-		if(def != value)
+		if(def !== value) {
 			result += " value=\"" + value + "\"";
+		}
 		
-		if(typeof min !== "undefined")
+		if(typeof min !== "undefined") {
 			result += " min=\"" + min + "\"";
-		if(typeof max !== "undefined")
-			result += " max=\"" + max + "\"";
+		}
 		
-		if(step)
+		if(typeof max !== "undefined") {
+			result += " max=\"" + max + "\"";
+		}
+		
+		if(step) {
 			result += " step=\"" + step + "\"";
+		}
 		
 		result += " />";
 		
@@ -775,23 +851,29 @@ class Config {
 		
 		result += "<input type=\"date\" class=\"opt";
 		
-		if(array)
+		if(array) {
 			result += " opt-array";
+		}
 		
 		result += "\" ";
 		
-		if(!array)
+		if(!array) {
 			result += "id=\"opt-" + cat + "-" + id + "\" ";
+		}
 		
 		result += "placeholder=\"" + def + "\"";
 		
-		if(def != value)
+		if(def !== value) {
 			result += " value=\"" + value + "\"";
+		}
 		
-		if(typeof min !== "undefined")
+		if(typeof min !== "undefined") {
 			result += " min=\"" + min + "\"";
-		if(typeof max !== "undefined")
+		}
+		
+		if(typeof max !== "undefined") {
 			result += " max=\"" + max + "\"";
+		}
 		
 		result += " />";
 		
@@ -804,21 +886,24 @@ class Config {
 		
 		result += "<select class=\"opt";
 		
-		if(array)
+		if(array) {
 			result += " opt-array";
+		}
 		
 		result += "\"";
 		
-		if(!array)
+		if(!array) {
 			result += " id=\"opt-" + cat + "-" + id + "\"";
+		}
 		
 		result += ">\n";
 		
 		// no locale option
 		result += "<option value=\"\"";
 		
-		if(!value)
+		if(!value) {
 			result += " selected";
+		}
 		
 		result += ">[none]</option>\n";
 		
@@ -827,8 +912,9 @@ class Config {
 			// show locale as option
 			result += "<option value=\"" + locale + "\"";
 			
-			if(value && value.toLowerCase() == locale.toLowerCase())
+			if(value && value.toLowerCase() == locale.toLowerCase()) {
 				result += " selected";
+			}
 			
 			result += ">" + htmlentities(locale) + "</option>\n";
 		}
@@ -842,21 +928,24 @@ class Config {
 		
 		result += "<select class=\"opt";
 		
-		if(array)
+		if(array) {
 			result += " opt-array";
+		}
 		
 		result += "\"";
 		
-		if(!array)
+		if(!array) {
 			result += " id=\"opt-" + cat + "-" + id + "\"";
+		}
 		
 		result += ">\n";
 		
 		// no query option
 		result += "<option value=\"0\"";
 		
-		if(!value)
+		if(!value) {
 			result += " selected";
+		}
 		
 		result += ">[none]</option>\n";
 		
@@ -867,8 +956,9 @@ class Config {
 				// show query as option
 				result += "<option value=\"" + db_queries[i].id + "\"";
 				
-				if(value == db_queries[i].id)
+				if(value == db_queries[i].id) {
 					result += " selected";
+				}
 				
 				result += ">" + htmlentities(db_queries[i].name) + "</option>\n";
 			}
@@ -885,13 +975,15 @@ class Config {
 		
 		result += "<select class=\"opt";
 		
-		if(array)
+		if(array) {
 			result += " opt-array";
+		}
 		
 		result += "\"";
 		
-		if(!array)
+		if(!array) {
 			result += " id=\"opt-" + cat + "-" + id + "\"";
+		}
 		
 		result += ">\n";
 		
@@ -899,8 +991,9 @@ class Config {
 		for(var i = 0; i < enumvalues.length; i++) {
 			result += "<option value=\"" + i + "\"";
 			
-			if(value == i)
+			if(value == i) {
 				result += " selected";
+			}
 			
 			result += ">" + htmlentities(enumvalues[i]) + "</option>\n";
 		}
@@ -916,7 +1009,7 @@ class Config {
 		var isdef = false;
 		var result = "";
 		
-		if(!$.isArray(def))
+		if(!$.isArray(def)) {
 			throw new Error(
 					"config::array(): Invalid default value for '"
 					+ cat
@@ -928,6 +1021,7 @@ class Config {
 					+ def
 					+ "\')."
 			);
+		}
 		
 		isdef = def.equals(value);
 		
@@ -938,16 +1032,25 @@ class Config {
 					data-count=\"" + value.length + "\" \
 					data-type=\"" + type + "\"";
 		
-		if(typeof min !== "undefined")
+		if(typeof min !== "undefined") {
 			result += " data-min=\"" + min + "\"";
-		if(typeof max !== "undefined")
+		}
+		
+		if(typeof max !== "undefined") {
 			result += " data-max=\"" + max + "\"";
-		if(typeof step !== "undefined")
+		}
+		
+		if(typeof step !== "undefined") {
 			result += " data-step=\"" + step + "\"";
-		if(typeof filter !== "undefined")
+		}
+		
+		if(typeof filter !== "undefined") {
 			result += " data-filter=\"" + filter + "\"";
-		if(typeof enumvalues !== "undefined")
+		}
+		
+		if(typeof enumvalues !== "undefined") {
 			result += " data-enum-values=\'" + JSON.stringify(enumvalues) + "\'";
+		}
 		
 		result += ">\n";
 		
@@ -964,13 +1067,18 @@ class Config {
 						step,
 						filter,
 						enumvalues,
-						isdef);
+						isdef
+				);
 				
 				counter++;
 			}
 		}
-		else result += this.emptyarray(cat, id, type);
+		else {
+			result += this.emptyarray(cat, id, type);
+		}
+		
 		result += "</div>\n";
+		
 		return result;
 	}
 	
@@ -996,29 +1104,38 @@ class Config {
 			result += this.label("", "", true, true);
 		}
 		else if(type == "string") {
-			if(isdef)
+			if(isdef) {
 				result += this.text(cat, id, value, value, true);
-			else
+			}
+			else {
 				result += this.text(cat, id, value, "", true);
+			}
 		}
 		else if(type == "number") {
-			if(isdef)
+			if(isdef) {
 				result += this.number(cat, id, value, value, min, max, step, true);
-			else
+			}
+			else {
 				result += this.number(cat, id, value, "", min, max, step, true);
+			}
 		}
 		else if(type == "date") {
-			if(isdef)
+			if(isdef) {
 				result += this.date(cat, id, value, value, min, max, true);
-			else
+			}
+			else {
 				result += this.date(cat, id, value, "", min, max, true);
+			}
 		}
-		else if(type == "locale")
+		else if(type == "locale") {
 			result += this.locale(cat, id, value, true);
-		else if(type == "query")
+		}
+		else if(type == "query") {
 			result += this.query(cat, id, value, filter, true);
-		else if(type == "enum")
+		}
+		else if(type == "enum") {
 			result += this.valuelist(cat, id, value, enumvalues, true);
+		}
 	
 		result += "<input type=\"button\" \
 					class=\"opt-array-btn opt-array-del\" \
@@ -1043,10 +1160,14 @@ class Config {
 		// alternate rows
 		var optvalues = document.getElementsByClassName("opt-block");
 		var i = 0;
+		
 		for(i = 0; i < optvalues.length; i++) {
-			if(!optvalues[i].classList.contains("opt-hidden")
-					&& (i + 1) % 2 == 0)
+			if(
+					!optvalues[i].classList.contains("opt-hidden")
+					&& (i + 1) % 2 == 0
+			) {
 				optvalues[i].classList.add("opt-block-alternate");
+			}
 		}
 		
 		// activate tooltips
@@ -1056,7 +1177,9 @@ class Config {
 		);
 		
 		console.log(
-				"Config::renderToView(): Rendering took " + msToStr(+new Date() - startTime) + "."
+				"Config::renderToView(): Rendering took " 
+				+ msToStr(+new Date() - startTime) 
+				+ "."
 		);
 	}
 	
@@ -1070,10 +1193,23 @@ class Config {
 		var count = array.data("count");
 		
 		array.find("div.opt-array-item[data-item=0]").remove();
-		array.append(this.arrayitem(
-				count + 1, cat, id, array.data("type"), "", array.data("min"), array.data("max"),
-				array.data("step"), array.data("filter"), array.data("enum-values"), false
-		));
+		
+		array.append(
+				this.arrayitem(
+						count + 1, 
+						cat, 
+						id, 
+						array.data("type"), 
+						"", 
+						array.data("min"), 
+						array.data("max"),
+						array.data("step"), 
+						array.data("filter"), 
+						array.data("enum-values"), 
+						false
+				)
+		);
+		
 		array.data("count", count + 1);
 		array.children("div").last().children(
 				"input[type=text], input[type=number], input[type=date]"
@@ -1090,8 +1226,9 @@ class Config {
 		// rename and renumber
 		array.find("div.opt-array-item").each(function(i, obj) {			
   			var objn = parseInt($(obj).data("item"), 10);
-  			if(item == objn)
+  			if(item == objn) {
   				toRemove = obj;
+  			}
   			else if(item < objn) {
 				objn--;
 				
@@ -1105,8 +1242,9 @@ class Config {
   						element.attr("type") == "text"
   						|| element.attr("type") == "number"
   						|| element.attr("type") == "date"
-  				)
+  				) {
   					isPlaceholder = !($(element).val().length) && $(element).attr("placeholder") !== undefined;
+  				}
   			}
 		});
 		
@@ -1119,12 +1257,14 @@ class Config {
   						element.attr("type") == "text"
   						|| element.attr("type") == "number"
   						|| element.attr("type") == "date"
-  				)
+  				) {
 					if(
 							!($(element).val().length) && $(element).attr("placeholder") !== undefined
 							&& (element.attr("type") != "text" || $(element).attr("placeholder") != "[empty]")
-					)
+					) {
 						$(element).val($(element).attr("placeholder"));
+					}
+				}
 			});
 		}
 		
@@ -1134,7 +1274,9 @@ class Config {
 		// check for empty array
 		if(count == 1)
 			array.append(this.emptyarray(
-					array.data("cat"), array.data("id"), array.data("type")
+					array.data("cat"),
+					array.data("id"), 
+					array.data("type")
 			));
 		
 		// delete element
@@ -1153,9 +1295,12 @@ class Config {
 	// get value from current configuration
 	getConfValue(cat, opt) {
 		for(var i = 0; i < this.config_combined.length; i++) {
-			if(this.config_combined[i].cat == cat
-					&& this.config_combined[i].name == opt)
+			if(
+					this.config_combined[i].cat == cat
+					&& this.config_combined[i].name == opt
+			) {
 				return this.config_combined[i].value;
+			}
 		}
 		throw new Error(
 				"config::getConfValue(): Could not find \'"
@@ -1192,34 +1337,46 @@ class Config {
 					// check type and retrieve value
 					var nobj = { "cat": cat, "name": opt, "value": null };
 					
-					if(obj.type == "bool")
+					if(obj.type == "bool") {
 						nobj.value = $(element).is(":checked");
+					}
 					else if(obj.type == "string") {
 						// placeholder means default value
-						if(!($(element).val().length)
-								&& $(element).attr("placeholder") !== undefined)
+						if(
+								!($(element).val().length)
+								&& $(element).attr("placeholder") !== undefined) {
 							nobj.value = obj.default;
-						else
+						}
+						else {
 							nobj.value = $(element).val();
+						}
 					}
 					else if(obj.type == "number") {
 						// placeholder means default value
-						if(!($(element).val().length)
-								&& $(element).attr("placeholder") !== undefined)
+						if(
+								!($(element).val().length)
+								&& $(element).attr("placeholder") !== undefined) {
 							nobj.value = obj.default;
-						else if($(element).val().length)
+						}
+						else if($(element).val().length) {
 							nobj.value = parseInt($(element).val(), 10);
-						else
+						}
+						else {
 							nobj.value = 0;
+						}
 					}
-					else if(obj.type == "date")
+					else if(obj.type == "date") {
 						nobj.value = $(element).val();
-					else if(obj.type == "locale")
+					}
+					else if(obj.type == "locale") {
 						nobj.value = $(element).val();
-					else if(obj.type == "query")
+					}
+					else if(obj.type == "query") {
 						nobj.value = parseInt($(element).val(), 10);
-					else if(obj.type == "enum")
+					}
+					else if(obj.type == "enum") {
 						nobj.value = parseInt($(element).val(), 10);
+					}
 					else if(obj.type == "array") {
 						nobj.value = [];
 						
@@ -1231,8 +1388,9 @@ class Config {
 								index--;
 								
 								// add value to array according to type
-								if(obj["item-type"] == "bool")
+								if(obj["item-type"] == "bool") {
 									nobj.value[index] = $(this).is(":checked");
+								}
 								else if(obj["item-type"] == "string") {
 									// placeholder means default value (except
 									// when default value does not exist)
@@ -1240,10 +1398,12 @@ class Config {
 											!($(this).val().length)
 											&& $(this).attr("placeholder") !== undefined
 											&& index < obj.default.length
-									)
+									) {
 										nobj.value[index] = obj.default[index];
-									else
+									}
+									else {
 										nobj.value[index] = $(this).val();
+									}
 								}
 								else if(obj["item-type"] == "number") {
 									// placeholder means default value (except
@@ -1252,27 +1412,36 @@ class Config {
 											!($(this).val().length)
 											&& $(this).attr("placeholder") !== undefined
 											&& index < obj.default.length
-									)
-											nobj.value[index] = obj.default[index];
-									else if($(this).val().length)
+									) {
+										nobj.value[index] = obj.default[index];
+									}
+									else if($(this).val().length) {
 										nobj.value[index] = parseInt($(this).val(), 10);
+									}
 								}
-								else if(obj["item-type"] == "date")
+								else if(obj["item-type"] == "date") {
 									nobj.value[index] = $(this).val();
-								else if(obj["item-type"] == "locale")
+								}
+								else if(obj["item-type"] == "locale") {
 									nobj.value[index] = $(this).val();
+								}
 								else if(obj["item-type"] == "query") {
 									var id = parseInt($(this).val(), 10);
-									if(id) nobj.value[index] = id; 
+									
+									if(id) {
+										nobj.value[index] = id; 
+									}
 								}
-								else if(obj["item-type"] == "enum")
+								else if(obj["item-type"] == "enum") {
 									nobj.value[index] = parseInt($(this).val(), 10);
+								}
 							}
 						});
  					}
 					
 					// add new object to the current configuration
-					if(nobj.value == null) throw new Error(
+					if(nobj.value == null) {
+						throw new Error(
 							"Config::updateConf(): Could not get value of '"
 							+ cat
 							+ "."
@@ -1280,9 +1449,11 @@ class Config {
 							+ "' (of type '"
 							+ obj.type
 							+ "')."
-					);
-					else
-						this.config_current.push(nobj); 
+						);
+					}
+					else {
+						this.config_current.push(nobj);
+					}
 				}
 			}
 		}
@@ -1291,33 +1462,48 @@ class Config {
 		for(var i = 0; i < this.config_current.length; i++) {
 			let opt = this.config_current[i];
 			
-			if(opt.name == "_algo")
+			if(opt.name == "_algo") {
 				continue;
+			}
 			else if(this.config_base[opt.cat] === undefined) {
-				if(this.config_current.splice(i, 1).length < 1)
+				if(this.config_current.splice(i, 1).length < 1) {
 					console.log(
-							"Config::updateConf() WARNING:" +
-							" Could not delete " + opt.cat + "." + opt.name +
-							" from current configuration."
+							"Config::updateConf() WARNING:"
+							+ " Could not delete " 
+							+ opt.cat 
+							+ "." 
+							+ opt.name 
+							+ " from current configuration."
 					);
-				else
+				}
+				else {
 					i--;
+				}
 				
 				continue;
 			}
 			if(this.config_base[opt.cat][opt.name] === undefined) {
-				if(this.config_current.splice(i, 1).length < 1)
+				if(this.config_current.splice(i, 1).length < 1) {
 					console.log(
-							"Config::updateConf() WARNING:" +
-							" Could not delete " + opt.cat + "." + opt.name +
-							" from current configuration."
+							"Config::updateConf() WARNING:"
+							+ " Could not delete " 
+							+ opt.cat 
+							+ "." 
+							+ opt.name 
+							+ " from current configuration."
 					);
+				}
 				else {
 					console.log(
-							"Config::updateConf()" +
-							" WARNING: Invalid option \'" + opt.cat + "." + opt.name + "\'" +
-							" removed."
+							"Config::updateConf()" 
+							+ " WARNING: Invalid option \'" 
+							+ opt.cat 
+							+ "." 
+							+ opt.name 
+							+ "\'" 
+							+ " removed."
 					);
+					
 					i--;
 				}
 				
@@ -1328,26 +1514,36 @@ class Config {
 			
 			if($.isArray(opt.value)) {
 				if(opt.value.equals(def)) {
-					if(this.config_current.splice(i, 1).length < 1)
+					if(this.config_current.splice(i, 1).length < 1) {
 						console.log(
-								"Config::updateConf()" +
-								" WARNING: Could not delete " + opt.cat + "." + opt.name +
-								" from current configuration."
+								"Config::updateConf()"
+								+ " WARNING: Could not delete " 
+								+ opt.cat 
+								+ "." 
+								+ opt.name 
+								+ " from current configuration."
 						);
-					else
+					}
+					else {
 						i--;
+					}
 				}
 			}
 			else {
 				if(opt.value == def) {
-					if(this.config_current.splice(i, 1).length < 1)
+					if(this.config_current.splice(i, 1).length < 1) {
 						console.log(
-								"Config::updateConf()" +
-								" WARNING: Could not delete " + opt.cat + "." + opt.name +
-								" from current configuration."
+								"Config::updateConf()" 
+								+ " WARNING: Could not delete " 
+								+ opt.cat
+								+ "." 
+								+ opt.name 
+								+ " from current configuration."
 						);
-					else
+					}
+					else {
 						i--;
+					}
 				}
 			}
 		}
@@ -1365,8 +1561,9 @@ class Config {
 					break;
 				}
 			}
-			if(!found)
+			if(!found) {
 				this.config_current.unshift({ 'name': '_algo', 'value': algo.id });
+			}
 		}
 		
 		// return JSON
@@ -1400,8 +1597,9 @@ class Config {
 					});
 				}
 				
-				if(found)
+				if(found) {
 					return false; // break
+				}
 			});
 		}
 		
@@ -1419,63 +1617,82 @@ class Config {
 		if(
 				obj.type != "query"
 				&& obj["item-type"] != "query"
-		)
+		) {
 			return undefined;
+		}
 		
 		if(
 				typeof obj["query-results"] !== "undefined"
 				&& obj["query-results"].length
 		) {		
-			if(obj["query-results"].includes("bool"))
+			if(obj["query-results"].includes("bool")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 			
-			if(obj["query-results"].includes("single"))
+			if(obj["query-results"].includes("single")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 			
-			if(obj["query-results"].includes("multi"))
+			if(obj["query-results"].includes("multi")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 			
-			if(obj["query-results"].includes("subsets"))
+			if(obj["query-results"].includes("subsets")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 		}
-		else
+		else {
 			filter += "XXXX";
+		}
 
 		if(
 				typeof obj["query-types"] !== "undefined"
 				&& obj["query-types"].length
 		) {
 			
-			if(obj["query-types"].includes("regex"))
+			if(obj["query-types"].includes("regex")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 			
-			if(obj["query-types"].includes("xpath"))
+			if(obj["query-types"].includes("xpath")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 			
-			if(obj["query-types"].includes("jsonpointer"))
+			if(obj["query-types"].includes("jsonpointer")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 			
-			if(obj["query-types"].includes("jsonpath"))
+			if(obj["query-types"].includes("jsonpath")) {
 				filter += "X";
-			else
+			}
+			else {
 				filter += "0";
+			}
 		}
-		else
+		else {
 			filter += "XXXX";
+		}
 		
 		return filter;
 	}
@@ -1484,38 +1701,49 @@ class Config {
 	checkFilter(obj, filter) {
 		var result = false;
 		
-		if(filter[0] == "X" && obj.resultbool)
+		if(filter[0] == "X" && obj.resultbool) {
 			result = true;
+		}
 		
-		if(filter[1] == "X" && obj.resultsingle)
+		if(filter[1] == "X" && obj.resultsingle) {
 			result = true;
+		}
 		
-		if(filter[2] == "X" && obj.resultmulti)
+		if(filter[2] == "X" && obj.resultmulti) {
 			result = true;
+		}
 		
-		if(filter[3] == "X" && obj.resultsubsets)
+		if(filter[3] == "X" && obj.resultsubsets) {
 			result = true;
+		}
 		
-		if(!result)
+		if(!result) {
 			return false;
+		}
 		
-		if(filter[4] == "X" && obj.type == "regex")
+		if(filter[4] == "X" && obj.type == "regex") {
 			return true;
+		}
 		
-		if(filter[5] == "X" && obj.type == "xpath")
+		if(filter[5] == "X" && obj.type == "xpath") {
 			return true;
+		}
 		
-		if(filter[6] == "X" && obj.type == "jsonpointer")
+		if(filter[6] == "X" && obj.type == "jsonpointer") {
 			return true;
+		}
 		
-		if(filter[7] == "X" && obj.type == "jsonpath")
+		if(filter[7] == "X" && obj.type == "jsonpath") {
 			return true;
+		}
 		
-		if(filter[5] == "X" && filter[6] == "X" && obj.type == "xpathjsonpointer")
+		if(filter[5] == "X" && filter[6] == "X" && obj.type == "xpathjsonpointer") {
 			return true;
+		}
 		
-		if(filter[5] == "X" && filter[7] == "X" && obj.type == "xpathjsonpath")
+		if(filter[5] == "X" && filter[7] == "X" && obj.type == "xpathjsonpath") {
 			return true;
+		}
 		
 		return false;
 	}
@@ -1524,16 +1752,20 @@ class Config {
 	purgeCategories(removal) {
 		// remove from current configuration
 		for(var i = this.config_current.length - 1; i >= 0; i--) {
-			if(typeof this.config_current[i].cat !== "undefined")
-				if($.inArray(this.config_current[i].cat, removal) != -1)
+			if(typeof this.config_current[i].cat !== "undefined") {
+				if($.inArray(this.config_current[i].cat, removal) != -1) {
 					this.config_current.splice(i, 1);
+				}
+			}
 		}
 		
 		// remove from configuration read from database
 		for(var i = this.config_db.length - 1; i >= 0; i--) {
-			if(typeof this.config_db[i].cat !== "undefined")
-				if($.inArray(this.config_db[i].cat, removal) != -1)
+			if(typeof this.config_db[i].cat !== "undefined") {
+				if($.inArray(this.config_db[i].cat, removal) != -1) {
 					this.config_db.splice(i, 1);
+				}
+			}
 		}
 	}
 }
