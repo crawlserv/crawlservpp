@@ -77,6 +77,12 @@ namespace crawlservpp::Data {
 	//! Every after how many sentences the status is updated when tokenizing a corpus.
 	inline constexpr auto tokenizeUpdateEvery{1000};
 
+	//! Minimum length of single UTF-8 code points to remove.
+	inline constexpr auto minSingleUtf8CharSize{2};
+
+	//! Maximum length of single UTF-8 code points to remove.
+	inline constexpr auto maxSingleUtf8CharSize{4};
+
 	///@}
 	///@name Sentence Manipulation
 	///@{
@@ -99,6 +105,9 @@ namespace crawlservpp::Data {
 
 	//! Simple stemmer for German only, based on @c CISTEM by Leonie Weißweiler and Alexander Fraser.
 	inline constexpr std::uint16_t wordManipGermanStemmer{2};
+
+	//! Remove tokens that contain only one UTF-8 codepoint.
+	inline constexpr std::uint16_t wordManipRemoveSingleUtf8Chars{3};
 
 	///@}
 
@@ -2833,6 +2842,18 @@ namespace crawlservpp::Data {
 
 				case wordManipGermanStemmer:
 					Data::Stemmer::stemGerman(word);
+
+					break;
+
+				case wordManipRemoveSingleUtf8Chars:
+					if(
+							word.size() >= minSingleUtf8CharSize
+							&& word.size() <= maxSingleUtf8CharSize
+					) {
+						if(Helper::Utf8::isSingleUtf8Char(word)) {
+							word.clear();
+						}
+					}
 
 					break;
 

@@ -92,6 +92,7 @@ namespace crawlservpp::Helper::Utf8 {
 
 	bool isValidUtf8(std::string_view stringToCheck, std::string& errTo);
 	bool isLastCharValidUtf8(std::string_view stringToCheck);
+	bool isSingleUtf8Char(std::string_view stringToCheck);
 
 	///@}
 	///@name Repair
@@ -231,6 +232,21 @@ namespace crawlservpp::Helper::Utf8 {
 		}
 
 		return false;
+	}
+
+	//! Returns whether the given string contains exactly one UTF-8 code point.
+	/*!
+	 *  \param stringToCheck String view to a
+	 *    string that will be checked for
+	 *    containing exactly one UTF-8 code
+	 *    point.
+	 *
+	 *  \returns True, if the given string
+	 *    contains exactly one UTF-8 code
+	 *    point. False otherwise.
+	 */
+	inline bool isSingleUtf8Char(std::string_view stringToCheck) {
+		return utf8::distance(stringToCheck.begin(), stringToCheck.end()) == 1;
 	}
 
 	//! Replaces invalid UTF-8 characters in the given string and returns whether invalid characters occured.
