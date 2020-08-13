@@ -72,7 +72,7 @@ namespace crawlservpp::Struct {
 		//! List of savepoints.
 		/*!
 		 * Manipulation steps after which the result will
-		 *  be stored in the database. Zero means that the
+		 *  be stored in the database. If zero, the
 		 *  unmanipulated corpus will be stored. After
 		 *  that, the numbering starts with the sentence
 		 *  manipulators, and continues with the word
@@ -85,7 +85,7 @@ namespace crawlservpp::Struct {
 
 		//! Number of processed bytes in a continuous corpus after which memory will be freed.
 		/*!
-		 * Zero means memory will only be freed after
+		 * If zero, memory will only be freed after
 		 *  processing is complete.
 		 */
 		std::uint64_t freeMemoryEvery{0};
@@ -135,7 +135,7 @@ namespace crawlservpp::Struct {
 		 *   the word manipulator.
 		 * \param setFreeMemoryEvery Number of processed bytes
 		 *   in a continuous corpus after which memory will
-		 *   be freed. Zero means memory will only be freed
+		 *   be freed. If zero, memory will only be freed
 		 *   after processing is complete.
 		 *
 		 * \sa Module::Analyzer::generalInputSourcesParsing,
