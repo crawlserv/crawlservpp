@@ -1460,8 +1460,9 @@ namespace crawlservpp::Data {
 			exceptionStrStr <<	"Corpus::combineTokenized():"
 								" Length of last sentence"
 								" (";
-			exceptionStrStr <<	this->sentenceMap.back().first
-								+ this->sentenceMap.back().second;
+			exceptionStrStr <<	this->sentenceMap.back().first;
+			exceptionStrStr <<	" + ";
+			exceptionStrStr <<	this->sentenceMap.back().second;
 			exceptionStrStr <<	") exceeds length of corpus"
 								" (";
 			exceptionStrStr <<	this->tokens.size();
@@ -2933,9 +2934,12 @@ namespace crawlservpp::Data {
 					// skip dates before current sentence
 					while(
 							dateIndex < this->dateMap.size()
-							&& this->dateMap[dateIndex].pos
-							+ this->dateMap[dateIndex].length
-							< sentenceEntry.first
+							&& (
+									this->dateMap[dateIndex].pos
+									+ this->dateMap[dateIndex].length
+									< sentenceEntry.first
+									|| this->dateMap[dateIndex].length == 0
+							)
 					) {
 						inDate = false;
 
@@ -2945,9 +2949,12 @@ namespace crawlservpp::Data {
 					// skip articles before current sentence
 					while(
 							articleIndex < this->articleMap.size()
-							&& this->articleMap[articleIndex].pos
-							+ this->articleMap[articleIndex].length
-							< sentenceEntry.first
+							&& (
+									this->articleMap[articleIndex].pos
+									+ this->articleMap[articleIndex].length
+									< sentenceEntry.first
+									|| this->articleMap[articleIndex].length == 0
+							)
 					) {
 						inArticle = false;
 
